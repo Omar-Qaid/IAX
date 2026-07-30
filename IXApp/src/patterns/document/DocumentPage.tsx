@@ -1,0 +1,54 @@
+import React from 'react';
+import { PageContainer } from '@shared/components/page/PageContainer';
+import { PageHeader } from '@shared/components/page/PageHeader';
+import { ActionPane } from '@shared/components/action-pane/ActionPane';
+import { Paper, Box, Grid } from '@mui/material';
+
+export interface DocumentPageProps {
+  title: string;
+  subtitle?: string;
+  statusBadge?: string;
+  actionPane?: React.ReactNode;
+  headerContent: React.ReactNode;
+  linesContent: React.ReactNode;
+  totalsContent?: React.ReactNode;
+  dialogs?: React.ReactNode;
+}
+
+export const DocumentPage: React.FC<DocumentPageProps> = ({
+  title,
+  subtitle,
+  statusBadge,
+  actionPane,
+  headerContent,
+  linesContent,
+  totalsContent,
+  dialogs,
+}) => {
+  return (
+    <PageContainer>
+      <PageHeader title={title} subtitle={subtitle} badge={statusBadge} />
+      {actionPane && <ActionPane>{actionPane}</ActionPane>}
+
+      <Paper elevation={0} sx={{ p: 2, mb: 2, borderRadius: 1, border: (t) => `1px solid ${t.palette.divider}` }}>
+        <Box sx={{ mb: 2 }}>{headerContent}</Box>
+      </Paper>
+
+      <Paper elevation={0} sx={{ p: 2, mb: 2, borderRadius: 1, border: (t) => `1px solid ${t.palette.divider}` }}>
+        <Box sx={{ width: '100%' }}>{linesContent}</Box>
+      </Paper>
+
+      {totalsContent && (
+        <Grid container sx={{ justifyContent: 'flex-end' }}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+            <Paper elevation={0} sx={{ p: 2, borderRadius: 1, border: (t) => `1px solid ${t.palette.divider}`, bgcolor: (t) => (t.palette.mode === 'light' ? '#fafafa' : '#282828') }}>
+              {totalsContent}
+            </Paper>
+          </Grid>
+        </Grid>
+      )}
+
+      {dialogs}
+    </PageContainer>
+  );
+};

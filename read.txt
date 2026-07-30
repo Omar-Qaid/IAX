@@ -1,0 +1,2505 @@
+# Create IXApp React.js Frontend with a D365 Finance & Operations–Style Architecture
+https://github.com/Omar-Qaid/IAX
+You are a Senior React.js Architect, TypeScript Developer, Material UI Engineer, Enterprise UX Architect, and Microsoft Dynamics 365 Finance & Operations Solution Architect.
+
+Create a completely new frontend project named:
+
+```text
+IXApp
+```
+
+The project will connect later to an existing ASP.NET Core REST Web API, but the current task focuses exclusively on creating the React.js frontend architecture, application shell, reusable components, page patterns, folder structure, routing, theme, and representative sample pages.
+
+The frontend must be inspired by Microsoft Dynamics 365 Finance & Operations UI architecture and enterprise design patterns.
+
+Do not copy Microsoft proprietary source code, branding, icons, or exact visual design. Implement similar enterprise concepts using React.js and Material UI.
+
+---
+
+# 1. Technology Stack
+
+Create the project using:
+
+```text
+React.js
+TypeScript
+Vite
+Material UI
+MUI X Data Grid
+React Router
+Axios
+TanStack Query
+React Hook Form
+Zod
+Zustand
+i18next
+ESLint
+Prettier
+Vitest
+React Testing Library
+```
+
+Use the latest stable versions compatible with each other.
+
+Do not use:
+
+```text
+Next.js
+Angular
+Vue
+Bootstrap
+Tailwind CSS
+Redux unless technically required
+Multiple UI frameworks
+Multiple form libraries
+Multiple HTTP clients
+```
+
+Use npm as the package manager unless the existing environment explicitly requires another package manager.
+
+---
+
+# 2. Project Creation
+
+Create the project with the name:
+
+```text
+IXApp
+```
+
+The expected project root should be:
+
+```text
+IXApp/
+```
+
+Initialize the project using Vite with React and TypeScript.
+
+Example:
+
+```bash
+npm create vite@latest IXApp -- --template react-ts
+cd IXApp
+npm install
+```
+
+Install and configure all required dependencies.
+
+After generating the project, verify that the following commands succeed:
+
+```bash
+npm run dev
+npm run build
+npm run lint
+npm run test
+```
+
+---
+
+# 3. Main Objective
+
+Build a reusable enterprise frontend architecture that follows concepts similar to Microsoft Dynamics 365 Finance & Operations.
+
+The application must provide:
+
+```text
+Application shell
+Module navigation
+Collapsible navigation drawer
+Top application bar
+Breadcrumbs
+Company selector
+Global search placeholder
+User profile menu
+Notification center placeholder
+Page headers
+D365-style action panes
+Reusable page patterns
+Reusable forms
+Reusable fields
+Reusable data grids
+Reusable dialogs
+Reusable lookup controls
+FastTabs
+Role and permission guards
+Loading states
+Error states
+Empty states
+Localization
+LTR and RTL support
+Light and dark themes
+Responsive enterprise layouts
+```
+
+The architecture must support future business modules such as:
+
+```text
+Accounts Receivable
+Accounts Payable
+General Ledger
+Inventory Management
+Sales and Marketing
+Procurement and Sourcing
+Cash and Bank Management
+Fixed Assets
+Human Resources
+System Administration
+```
+
+Initially, implement representative pages for:
+
+```text
+Dashboard
+Customers
+Customer Groups
+Sales Orders
+Currencies
+Application Settings
+```
+
+Use mock data and mock services until the ASP.NET Core API is connected.
+
+---
+
+# 4. Architecture Principles
+
+Apply the following principles:
+
+```text
+Feature-based modular architecture
+Clear separation of responsibilities
+Composition over duplication
+Configuration over hardcoded page implementations
+Strong TypeScript typing
+Reusable page-pattern components
+Reusable enterprise controls
+Centralized API handling
+Centralized error handling
+Centralized notifications
+Centralized permissions
+Centralized route configuration
+Centralized theme configuration
+Centralized localization
+Small focused components
+Predictable state ownership
+Lazy-loaded modules
+No circular dependencies
+No oversized components
+No direct API calls inside visual components
+```
+
+Shared components must not contain module-specific business logic.
+
+Business modules must depend on shared and core layers.
+
+The core and shared layers must never depend on business modules.
+
+---
+
+# 5. Required Folder Structure
+
+Create and organize the project using this folder structure:
+
+```text
+IXApp/
+├── public/
+│   ├── favicon.ico
+│   └── locales/
+│       ├── en/
+│       │   └── translation.json
+│       └── ar/
+│           └── translation.json
+│
+├── src/
+│   ├── app/
+│   │   ├── App.tsx
+│   │   ├── main.tsx
+│   │   │
+│   │   ├── configuration/
+│   │   │   ├── appConfig.ts
+│   │   │   ├── environment.ts
+│   │   │   └── featureFlags.ts
+│   │   │
+│   │   ├── layouts/
+│   │   │   ├── AppLayout.tsx
+│   │   │   ├── AuthLayout.tsx
+│   │   │   └── FullScreenLayout.tsx
+│   │   │
+│   │   ├── providers/
+│   │   │   ├── AppProviders.tsx
+│   │   │   ├── QueryProvider.tsx
+│   │   │   ├── ThemeProvider.tsx
+│   │   │   ├── LocalizationProvider.tsx
+│   │   │   └── NotificationProvider.tsx
+│   │   │
+│   │   ├── routes/
+│   │   │   ├── AppRoutes.tsx
+│   │   │   ├── routeConfig.tsx
+│   │   │   ├── RouteGuard.tsx
+│   │   │   ├── routePaths.ts
+│   │   │   └── types.ts
+│   │   │
+│   │   ├── store/
+│   │   │   ├── useAppStore.ts
+│   │   │   ├── useNavigationStore.ts
+│   │   │   └── usePreferenceStore.ts
+│   │   │
+│   │   └── theme/
+│   │       ├── createAppTheme.ts
+│   │       ├── componentOverrides.ts
+│   │       ├── palette.ts
+│   │       ├── shadows.ts
+│   │       ├── spacing.ts
+│   │       ├── typography.ts
+│   │       └── types.ts
+│   │
+│   ├── core/
+│   │   ├── api/
+│   │   │   ├── apiClient.ts
+│   │   │   ├── apiConfig.ts
+│   │   │   ├── apiError.ts
+│   │   │   ├── apiResponse.ts
+│   │   │   ├── interceptors.ts
+│   │   │   └── queryKeys.ts
+│   │   │
+│   │   ├── auth/
+│   │   │   ├── AuthContext.tsx
+│   │   │   ├── AuthProvider.tsx
+│   │   │   ├── authService.ts
+│   │   │   ├── authStorage.ts
+│   │   │   ├── PermissionGuard.tsx
+│   │   │   ├── useAuth.ts
+│   │   │   └── types.ts
+│   │   │
+│   │   ├── errors/
+│   │   │   ├── AppError.ts
+│   │   │   ├── ErrorBoundary.tsx
+│   │   │   ├── errorMapper.ts
+│   │   │   └── errorMessages.ts
+│   │   │
+│   │   ├── localization/
+│   │   │   ├── i18n.ts
+│   │   │   ├── languages.ts
+│   │   │   ├── useAppTranslation.ts
+│   │   │   └── types.ts
+│   │   │
+│   │   ├── permissions/
+│   │   │   ├── permissions.ts
+│   │   │   ├── permissionService.ts
+│   │   │   ├── usePermission.ts
+│   │   │   └── types.ts
+│   │   │
+│   │   ├── routing/
+│   │   │   ├── navigationService.ts
+│   │   │   └── routeHelpers.ts
+│   │   │
+│   │   ├── constants/
+│   │   │   ├── appConstants.ts
+│   │   │   ├── dateFormats.ts
+│   │   │   └── storageKeys.ts
+│   │   │
+│   │   ├── types/
+│   │   │   ├── common.ts
+│   │   │   ├── entities.ts
+│   │   │   ├── pagination.ts
+│   │   │   └── selection.ts
+│   │   │
+│   │   └── utilities/
+│   │       ├── dateUtils.ts
+│   │       ├── enumUtils.ts
+│   │       ├── formatUtils.ts
+│   │       ├── objectUtils.ts
+│   │       ├── stringUtils.ts
+│   │       └── validationUtils.ts
+│   │
+│   ├── shared/
+│   │   ├── components/
+│   │   │   ├── app-shell/
+│   │   │   │   ├── AppShell.tsx
+│   │   │   │   ├── AppTopBar.tsx
+│   │   │   │   ├── AppNavigationDrawer.tsx
+│   │   │   │   ├── ModuleNavigation.tsx
+│   │   │   │   ├── NavigationGroup.tsx
+│   │   │   │   ├── NavigationItem.tsx
+│   │   │   │   ├── GlobalSearch.tsx
+│   │   │   │   ├── CompanySelector.tsx
+│   │   │   │   ├── UserMenu.tsx
+│   │   │   │   └── NotificationMenu.tsx
+│   │   │   │
+│   │   │   ├── page/
+│   │   │   │   ├── PageContainer.tsx
+│   │   │   │   ├── PageHeader.tsx
+│   │   │   │   ├── PageTitle.tsx
+│   │   │   │   ├── PageBreadcrumbs.tsx
+│   │   │   │   ├── PageContent.tsx
+│   │   │   │   ├── PageSection.tsx
+│   │   │   │   ├── PageStatusBar.tsx
+│   │   │   │   ├── PageSummary.tsx
+│   │   │   │   └── UnsavedChangesGuard.tsx
+│   │   │   │
+│   │   │   ├── action-pane/
+│   │   │   │   ├── ActionPane.tsx
+│   │   │   │   ├── ActionPaneGroup.tsx
+│   │   │   │   ├── ActionPaneButton.tsx
+│   │   │   │   ├── ActionPaneMenu.tsx
+│   │   │   │   ├── ActionPaneDivider.tsx
+│   │   │   │   ├── actionDefinitions.ts
+│   │   │   │   └── types.ts
+│   │   │   │
+│   │   │   ├── data-grid/
+│   │   │   │   ├── AppDataGrid.tsx
+│   │   │   │   ├── DataGridToolbar.tsx
+│   │   │   │   ├── DataGridFilterBar.tsx
+│   │   │   │   ├── DataGridSearch.tsx
+│   │   │   │   ├── DataGridColumnFactory.ts
+│   │   │   │   ├── DataGridSelectionSummary.tsx
+│   │   │   │   ├── DataGridEmptyState.tsx
+│   │   │   │   ├── DataGridErrorState.tsx
+│   │   │   │   ├── DataGridLoadingState.tsx
+│   │   │   │   ├── useDataGridState.ts
+│   │   │   │   ├── useGridEditing.ts
+│   │   │   │   └── types.ts
+│   │   │   │
+│   │   │   ├── forms/
+│   │   │   │   ├── EntityForm.tsx
+│   │   │   │   ├── FormContainer.tsx
+│   │   │   │   ├── FormSection.tsx
+│   │   │   │   ├── FormFieldGroup.tsx
+│   │   │   │   ├── FormRow.tsx
+│   │   │   │   ├── FormColumn.tsx
+│   │   │   │   ├── FormActions.tsx
+│   │   │   │   ├── FormValidationSummary.tsx
+│   │   │   │   ├── FormErrorSummary.tsx
+│   │   │   │   ├── useEntityForm.ts
+│   │   │   │   └── types.ts
+│   │   │   │
+│   │   │   ├── fields/
+│   │   │   │   ├── AppTextField.tsx
+│   │   │   │   ├── AppNumberField.tsx
+│   │   │   │   ├── AppCurrencyField.tsx
+│   │   │   │   ├── AppDateField.tsx
+│   │   │   │   ├── AppDateTimeField.tsx
+│   │   │   │   ├── AppBooleanField.tsx
+│   │   │   │   ├── AppSelectField.tsx
+│   │   │   │   ├── AppEnumField.tsx
+│   │   │   │   ├── AppLookupField.tsx
+│   │   │   │   ├── AppDisplayField.tsx
+│   │   │   │   ├── AppBilingualField.tsx
+│   │   │   │   ├── AppGeneratedCodeField.tsx
+│   │   │   │   ├── fieldDefaults.ts
+│   │   │   │   └── types.ts
+│   │   │   │
+│   │   │   ├── fast-tabs/
+│   │   │   │   ├── FastTabs.tsx
+│   │   │   │   ├── FastTab.tsx
+│   │   │   │   ├── FastTabHeader.tsx
+│   │   │   │   ├── FastTabSummary.tsx
+│   │   │   │   └── types.ts
+│   │   │   │
+│   │   │   ├── dialogs/
+│   │   │   │   ├── AppDialog.tsx
+│   │   │   │   ├── FormDialog.tsx
+│   │   │   │   ├── ConfirmationDialog.tsx
+│   │   │   │   ├── DeleteConfirmationDialog.tsx
+│   │   │   │   ├── LookupDialog.tsx
+│   │   │   │   ├── ProcessDialog.tsx
+│   │   │   │   ├── DialogActions.tsx
+│   │   │   │   ├── useDialog.ts
+│   │   │   │   └── types.ts
+│   │   │   │
+│   │   │   ├── lookups/
+│   │   │   │   ├── LookupField.tsx
+│   │   │   │   ├── LookupGrid.tsx
+│   │   │   │   ├── LookupSearchBar.tsx
+│   │   │   │   ├── LookupFilterPanel.tsx
+│   │   │   │   ├── LookupValueRenderer.tsx
+│   │   │   │   ├── useLookup.ts
+│   │   │   │   └── types.ts
+│   │   │   │
+│   │   │   ├── feedback/
+│   │   │   │   ├── AppAlert.tsx
+│   │   │   │   ├── AppNotification.tsx
+│   │   │   │   ├── LoadingState.tsx
+│   │   │   │   ├── ErrorState.tsx
+│   │   │   │   ├── EmptyState.tsx
+│   │   │   │   ├── NoResultsState.tsx
+│   │   │   │   ├── AccessDeniedState.tsx
+│   │   │   │   └── types.ts
+│   │   │   │
+│   │   │   ├── status/
+│   │   │   │   ├── StatusBadge.tsx
+│   │   │   │   ├── RecordStatus.tsx
+│   │   │   │   ├── DocumentStatus.tsx
+│   │   │   │   └── types.ts
+│   │   │   │
+│   │   │   └── common/
+│   │   │       ├── AsyncBoundary.tsx
+│   │   │       ├── AppIconButton.tsx
+│   │   │       ├── AppMenu.tsx
+│   │   │       ├── AppTooltip.tsx
+│   │   │       ├── ResponsiveStack.tsx
+│   │   │       └── VisuallyHidden.tsx
+│   │   │
+│   │   ├── hooks/
+│   │   │   ├── useDebounce.ts
+│   │   │   ├── useDisclosure.ts
+│   │   │   ├── useDocumentTitle.ts
+│   │   │   ├── useLocalStorage.ts
+│   │   │   ├── useMediaQuery.ts
+│   │   │   ├── useNotifications.ts
+│   │   │   ├── usePageMode.ts
+│   │   │   ├── usePageRefresh.ts
+│   │   │   ├── usePrevious.ts
+│   │   │   └── useUnsavedChanges.ts
+│   │   │
+│   │   ├── services/
+│   │   │   ├── preferenceService.ts
+│   │   │   ├── storageService.ts
+│   │   │   └── notificationService.ts
+│   │   │
+│   │   ├── validation/
+│   │   │   ├── commonSchemas.ts
+│   │   │   ├── validationMessages.ts
+│   │   │   └── zodHelpers.ts
+│   │   │
+│   │   ├── constants/
+│   │   │   ├── actionIds.ts
+│   │   │   ├── pageModes.ts
+│   │   │   └── recordStates.ts
+│   │   │
+│   │   ├── types/
+│   │   │   ├── actions.ts
+│   │   │   ├── forms.ts
+│   │   │   ├── navigation.ts
+│   │   │   ├── page.ts
+│   │   │   └── records.ts
+│   │   │
+│   │   └── utilities/
+│   │       ├── actionUtils.ts
+│   │       ├── gridUtils.ts
+│   │       ├── pageUtils.ts
+│   │       └── permissionUtils.ts
+│   │
+│   ├── patterns/
+│   │   ├── simple-list/
+│   │   │   ├── SimpleListPage.tsx
+│   │   │   ├── useSimpleListPage.ts
+│   │   │   └── types.ts
+│   │   │
+│   │   ├── list-details/
+│   │   │   ├── ListDetailsPage.tsx
+│   │   │   ├── ListDetailsLayout.tsx
+│   │   │   ├── useListDetailsPage.ts
+│   │   │   └── types.ts
+│   │   │
+│   │   ├── master-form/
+│   │   │   ├── MasterFormPage.tsx
+│   │   │   ├── useMasterFormPage.ts
+│   │   │   └── types.ts
+│   │   │
+│   │   ├── master-detail/
+│   │   │   ├── MasterDetailPage.tsx
+│   │   │   ├── MasterDetailLayout.tsx
+│   │   │   ├── useMasterDetailPage.ts
+│   │   │   └── types.ts
+│   │   │
+│   │   ├── document/
+│   │   │   ├── DocumentPage.tsx
+│   │   │   ├── DocumentHeader.tsx
+│   │   │   ├── DocumentLines.tsx
+│   │   │   ├── DocumentTotals.tsx
+│   │   │   ├── useDocumentPage.ts
+│   │   │   └── types.ts
+│   │   │
+│   │   ├── workspace/
+│   │   │   ├── WorkspacePage.tsx
+│   │   │   ├── WorkspaceTile.tsx
+│   │   │   ├── WorkspaceSection.tsx
+│   │   │   └── types.ts
+│   │   │
+│   │   ├── inquiry/
+│   │   │   ├── InquiryPage.tsx
+│   │   │   ├── InquiryFilterPanel.tsx
+│   │   │   └── types.ts
+│   │   │
+│   │   ├── setup/
+│   │   │   ├── SetupPage.tsx
+│   │   │   ├── SetupNavigation.tsx
+│   │   │   └── types.ts
+│   │   │
+│   │   ├── process/
+│   │   │   ├── ProcessPage.tsx
+│   │   │   ├── ProcessStepIndicator.tsx
+│   │   │   ├── ProcessNavigation.tsx
+│   │   │   └── types.ts
+│   │   │
+│   │   ├── tree-details/
+│   │   │   ├── TreeDetailsPage.tsx
+│   │   │   ├── TreeNavigation.tsx
+│   │   │   └── types.ts
+│   │   │
+│   │   └── profile/
+│   │       ├── ProfilePage.tsx
+│   │       ├── ProfileHeader.tsx
+│   │       ├── ProfileSummary.tsx
+│   │       └── types.ts
+│   │
+│   ├── modules/
+│   │   ├── dashboard/
+│   │   │   ├── components/
+│   │   │   ├── pages/
+│   │   │   │   └── DashboardPage.tsx
+│   │   │   ├── routes/
+│   │   │   │   └── dashboardRoutes.tsx
+│   │   │   └── index.ts
+│   │   │
+│   │   ├── accounts-receivable/
+│   │   │   ├── customers/
+│   │   │   │   ├── components/
+│   │   │   │   │   ├── CustomerForm.tsx
+│   │   │   │   │   ├── CustomerGrid.tsx
+│   │   │   │   │   └── CustomerSummary.tsx
+│   │   │   │   ├── hooks/
+│   │   │   │   │   ├── useCustomers.ts
+│   │   │   │   │   └── useCustomerForm.ts
+│   │   │   │   ├── pages/
+│   │   │   │   │   ├── CustomersPage.tsx
+│   │   │   │   │   └── CustomerDetailsPage.tsx
+│   │   │   │   ├── services/
+│   │   │   │   │   └── customerService.ts
+│   │   │   │   ├── validation/
+│   │   │   │   │   └── customerSchema.ts
+│   │   │   │   ├── types/
+│   │   │   │   │   └── customer.ts
+│   │   │   │   ├── constants/
+│   │   │   │   │   └── customerConstants.ts
+│   │   │   │   └── index.ts
+│   │   │   │
+│   │   │   ├── customer-groups/
+│   │   │   │   ├── components/
+│   │   │   │   ├── hooks/
+│   │   │   │   ├── pages/
+│   │   │   │   │   └── CustomerGroupsPage.tsx
+│   │   │   │   ├── services/
+│   │   │   │   ├── validation/
+│   │   │   │   ├── types/
+│   │   │   │   └── index.ts
+│   │   │   │
+│   │   │   ├── sales-orders/
+│   │   │   │   ├── components/
+│   │   │   │   │   ├── SalesOrderHeader.tsx
+│   │   │   │   │   ├── SalesOrderLines.tsx
+│   │   │   │   │   └── SalesOrderTotals.tsx
+│   │   │   │   ├── hooks/
+│   │   │   │   │   └── useSalesOrder.ts
+│   │   │   │   ├── pages/
+│   │   │   │   │   ├── SalesOrdersPage.tsx
+│   │   │   │   │   └── SalesOrderPage.tsx
+│   │   │   │   ├── services/
+│   │   │   │   │   └── salesOrderService.ts
+│   │   │   │   ├── validation/
+│   │   │   │   │   └── salesOrderSchema.ts
+│   │   │   │   ├── types/
+│   │   │   │   │   └── salesOrder.ts
+│   │   │   │   └── index.ts
+│   │   │   │
+│   │   │   ├── routes/
+│   │   │   │   └── accountsReceivableRoutes.tsx
+│   │   │   └── index.ts
+│   │   │
+│   │   ├── foundation/
+│   │   │   ├── currencies/
+│   │   │   │   ├── components/
+│   │   │   │   ├── hooks/
+│   │   │   │   ├── pages/
+│   │   │   │   │   └── CurrenciesPage.tsx
+│   │   │   │   ├── services/
+│   │   │   │   │   └── currencyService.ts
+│   │   │   │   ├── types/
+│   │   │   │   │   └── currency.ts
+│   │   │   │   └── index.ts
+│   │   │   ├── routes/
+│   │   │   │   └── foundationRoutes.tsx
+│   │   │   └── index.ts
+│   │   │
+│   │   └── system-administration/
+│   │       ├── settings/
+│   │       │   ├── pages/
+│   │       │   │   └── ApplicationSettingsPage.tsx
+│   │       │   └── index.ts
+│   │       ├── routes/
+│   │       │   └── systemAdministrationRoutes.tsx
+│   │       └── index.ts
+│   │
+│   ├── mocks/
+│   │   ├── data/
+│   │   │   ├── customers.ts
+│   │   │   ├── customerGroups.ts
+│   │   │   ├── salesOrders.ts
+│   │   │   └── currencies.ts
+│   │   ├── handlers/
+│   │   └── mockDelay.ts
+│   │
+│   ├── assets/
+│   │   ├── images/
+│   │   ├── icons/
+│   │   └── styles/
+│   │       └── global.css
+│   │
+│   └── test/
+│       ├── setupTests.ts
+│       ├── testUtils.tsx
+│       └── mocks/
+│
+├── .env
+├── .env.development
+├── .env.production
+├── .eslintrc.cjs
+├── .prettierrc
+├── index.html
+├── package.json
+├── tsconfig.json
+├── tsconfig.app.json
+├── tsconfig.node.json
+├── vite.config.ts
+└── README.md
+```
+
+Do not create empty folders without at least a placeholder index or an implemented responsibility.
+
+---
+
+# 6. Dependency Direction Rules
+
+Enforce the following dependency direction:
+
+```text
+app
+↓
+modules
+↓
+patterns
+↓
+shared
+↓
+core
+```
+
+The permitted dependencies are:
+
+```text
+app → modules, patterns, shared, core
+modules → patterns, shared, core
+patterns → shared, core
+shared → core
+core → external libraries only
+```
+
+The following dependencies are forbidden:
+
+```text
+core → shared
+core → patterns
+core → modules
+shared → patterns
+shared → modules
+patterns → modules
+one business module → another business module directly
+```
+
+When one module needs information from another module, use a shared contract, API service, or application-level orchestration.
+
+---
+
+# 7. Application Shell
+
+Create an enterprise application shell inspired by D365 Finance & Operations.
+
+The shell must include:
+
+```text
+Top application bar
+Application name: IXApp
+Navigation menu button
+Module selector
+Global search
+Current company selector
+Notifications button
+Settings button
+User profile menu
+Collapsible left navigation
+Breadcrumbs
+Main page content
+Responsive behavior
+```
+
+Desktop layout:
+
+```text
+┌──────────────────────────────────────────────────────────────┐
+│ IXApp | Module | Search | Company | Notifications | User    │
+├───────────────┬──────────────────────────────────────────────┤
+│ Navigation    │ Breadcrumbs                                  │
+│               ├──────────────────────────────────────────────┤
+│               │ Page Header                                  │
+│               │ Action Pane                                  │
+│               │ Page Content                                 │
+│               │                                              │
+└───────────────┴──────────────────────────────────────────────┘
+```
+
+On smaller screens:
+
+```text
+Navigation becomes temporary drawer
+Action pane supports horizontal scrolling or overflow
+Forms become single-column layouts
+Data grids remain usable
+Page padding is reduced
+```
+
+---
+
+# 8. D365-Inspired Visual Design
+
+Create an enterprise visual design with these characteristics:
+
+```text
+Compact but readable
+Neutral background
+White content surfaces
+Clear page hierarchy
+Minimal unnecessary decoration
+Structured action groups
+Dense data grids
+Compact form fields
+Collapsible FastTabs
+Strong selected-row state
+Subtle borders
+Consistent spacing
+Status badges
+Accessible contrast
+Responsive layout
+```
+
+Do not reproduce Microsoft branding exactly.
+
+Use an original IXApp identity.
+
+Suggested theme characteristics:
+
+```text
+Primary color: enterprise blue
+Secondary color: muted teal or slate
+Background: light neutral gray
+Surface: white
+Success: green
+Warning: amber
+Error: red
+Information: blue
+Border radius: small
+Grid density: compact
+Toolbar height: compact
+```
+
+All values must be defined through Material UI theme tokens.
+
+Do not hardcode colors inside components.
+
+---
+
+# 9. Theme Requirements
+
+Create centralized support for:
+
+```text
+Light theme
+Dark theme
+LTR layout
+RTL layout
+English language
+Arabic language
+Compact enterprise density
+Material UI component overrides
+```
+
+Configure theme overrides for:
+
+```text
+MuiButton
+MuiIconButton
+MuiTextField
+MuiInputBase
+MuiSelect
+MuiAutocomplete
+MuiDialog
+MuiDrawer
+MuiAppBar
+MuiToolbar
+MuiTabs
+MuiTab
+MuiAccordion
+MuiMenu
+MuiTooltip
+MuiDataGrid
+```
+
+Add a theme and language option inside the user settings menu.
+
+When Arabic is selected:
+
+```text
+Set document direction to RTL
+Use Arabic translations
+Reverse layout-sensitive icons where appropriate
+Maintain correct numeric and grid alignment
+```
+
+---
+
+# 10. Naming Conventions
+
+Use the following conventions consistently.
+
+## PascalCase
+
+Use for:
+
+```text
+React components
+Component files
+Interfaces
+Types
+Enums
+Classes
+```
+
+Examples:
+
+```text
+CustomerDetailsPage.tsx
+CustomerForm.tsx
+CustomerFormProps
+PageMode
+```
+
+## camelCase
+
+Use for:
+
+```text
+Variables
+Functions
+Methods
+Props
+Hooks
+Service instances
+```
+
+Examples:
+
+```text
+selectedCustomer
+handleSave
+useCustomerForm
+loadCustomers
+```
+
+## UPPER_SNAKE_CASE
+
+Use for:
+
+```text
+Constants
+Storage keys
+Fixed action identifiers
+Configuration constants
+```
+
+Examples:
+
+```text
+DEFAULT_PAGE_SIZE
+CUSTOMER_QUERY_KEY
+APP_STORAGE_KEY
+```
+
+Every component file must export a component with the same name as the file.
+
+Example:
+
+```text
+CustomerForm.tsx
+```
+
+must export:
+
+```tsx
+export function CustomerForm() {}
+```
+
+Do not use default exports for reusable components.
+
+---
+
+# 11. Path Aliases
+
+Configure TypeScript and Vite path aliases:
+
+```text
+@app/*
+@core/*
+@shared/*
+@patterns/*
+@modules/*
+@assets/*
+@mocks/*
+@test/*
+```
+
+Example:
+
+```tsx
+import { PageContainer } from '@shared/components/page/PageContainer';
+```
+
+Avoid long relative imports such as:
+
+```tsx
+../../../../shared/components/page/PageContainer
+```
+
+---
+
+# 12. Standard Page Composition
+
+All pages must follow this general structure:
+
+```text
+Page
+├── PageHeader
+├── ActionPane
+├── PageFilter
+├── PageContent
+├── PageDialogs
+└── PageFeedback
+```
+
+A page should primarily compose reusable components.
+
+Do not place all API calls, form logic, grid configuration, dialog state, and visual markup inside one large page file.
+
+---
+
+# 13. Required Page Patterns
+
+Implement the following reusable page patterns.
+
+## 13.1 Simple List Page
+
+Use for setup and reference data.
+
+```text
+SimpleListPage
+├── PageHeader
+├── ActionPane
+├── FilterBar
+├── DataGrid
+├── SelectionSummary
+├── Dialogs
+└── PageFeedback
+```
+
+Representative page:
+
+```text
+CurrenciesPage
+```
+
+## 13.2 List and Details Page
+
+Use for records with list and detail views.
+
+```text
+ListDetailsPage
+├── PageHeader
+├── ActionPane
+├── SplitView
+│   ├── RecordList
+│   └── DetailsPane
+├── Dialogs
+└── PageFeedback
+```
+
+Representative page:
+
+```text
+CustomersPage
+```
+
+## 13.3 Master Form Page
+
+Use for application settings and parameters.
+
+```text
+MasterFormPage
+├── PageHeader
+├── ActionPane
+├── FastTabs
+├── FormSections
+└── PageFeedback
+```
+
+Representative page:
+
+```text
+ApplicationSettingsPage
+```
+
+## 13.4 Header-Lines Document Page
+
+Use for transactional documents.
+
+```text
+DocumentPage
+├── DocumentHeader
+├── ActionPane
+├── StatusBar
+├── HeaderFastTabs
+├── LinesDataGrid
+├── LineDetails
+├── TotalsPanel
+├── Dialogs
+└── PageFeedback
+```
+
+Representative page:
+
+```text
+SalesOrderPage
+```
+
+## 13.5 Workspace Page
+
+Use for dashboards.
+
+```text
+WorkspacePage
+├── WorkspaceHeader
+├── ActionPane
+├── SummaryTiles
+├── KPISection
+├── Charts
+├── WorkLists
+└── QuickLinks
+```
+
+Representative page:
+
+```text
+DashboardPage
+```
+
+The architecture should also reserve patterns for:
+
+```text
+Master-detail
+Inquiry
+Setup
+Process or wizard
+Tree and details
+Profile
+Tabbed details
+Lookup and selection
+```
+
+---
+
+# 14. Action Pane
+
+Create a reusable D365-inspired action pane.
+
+The action pane must support groups such as:
+
+```text
+New
+Maintain
+Process
+Inquiries
+Print
+Options
+```
+
+Example commands:
+
+```text
+New
+Edit
+Delete
+Save
+Cancel
+Refresh
+Copy
+Confirm
+Post
+Submit
+Approve
+Reject
+Print
+Export
+Attachments
+History
+```
+
+Each action definition must support:
+
+```ts
+id
+label
+icon
+onClick
+group
+order
+hidden
+disabled
+loading
+permission
+requiresSelection
+allowedPageModes
+tooltip
+keyboardShortcut
+```
+
+Example:
+
+```tsx
+<ActionPane>
+  <ActionPaneGroup label="Maintain">
+    <ActionPaneButton
+      actionId="edit"
+      label="Edit"
+      icon={<EditOutlinedIcon />}
+      onClick={handleEdit}
+      disabled={!selectedCustomer}
+    />
+  </ActionPaneGroup>
+</ActionPane>
+```
+
+The shared ActionPane must not contain module-specific business logic.
+
+---
+
+# 15. Page Modes
+
+Create a typed page mode:
+
+```ts
+export type PageMode =
+  | 'view'
+  | 'create'
+  | 'edit'
+  | 'copy'
+  | 'readonly'
+  | 'process';
+```
+
+Use page mode instead of multiple conflicting Boolean flags.
+
+Page mode must control:
+
+```text
+Field editability
+Available actions
+Grid editability
+Validation
+Save behavior
+Cancel behavior
+Navigation protection
+```
+
+---
+
+# 16. Record States
+
+Create a typed record state:
+
+```ts
+export type RecordState =
+  | 'unchanged'
+  | 'added'
+  | 'modified'
+  | 'deleted'
+  | 'saving'
+  | 'saved'
+  | 'error';
+```
+
+Use it consistently for:
+
+```text
+Forms
+Grid rows
+Document lines
+Batch operations
+```
+
+---
+
+# 17. Data Grid Architecture
+
+Create `AppDataGrid` as the standard data-grid component.
+
+It must support:
+
+```text
+Typed rows
+Typed columns
+Compact density
+Pagination
+Sorting
+Filtering
+Search
+Column visibility
+Column resizing
+Column ordering
+Row selection
+Multiple selection
+Row double-click
+Editable rows
+Page-level save
+Loading state
+Error state
+Empty state
+Row actions
+Enum formatting
+Date formatting
+Currency formatting
+Boolean formatting
+Status cells
+Validation indicators
+Temporary row indicators
+Export
+Responsive behavior
+```
+
+Use the free version of MUI X Data Grid unless a paid version is already licensed.
+
+Do not use paid-only functionality without a license.
+
+Create column helpers:
+
+```text
+createTextColumn
+createNumberColumn
+createCurrencyColumn
+createDateColumn
+createBooleanColumn
+createEnumColumn
+createStatusColumn
+createLookupColumn
+createActionColumn
+```
+
+Column definitions must be typed.
+
+Do not use `any`.
+
+---
+
+# 18. Grid Editing Behavior
+
+Standardize editable grids with these rules:
+
+```text
+Double-click enters edit mode
+New creates a temporary client-side row
+Changed rows use RecordState
+Delete marks persisted rows for deletion
+Delete removes unsaved rows locally
+Page-level Save persists all changes
+Cancel discards unsaved changes
+Refresh reloads from the service
+Validation errors identify rows and fields
+Duplicate submissions are prevented
+```
+
+Do not place Save and Cancel buttons inside every row by default.
+
+---
+
+# 19. Form Architecture
+
+Use:
+
+```text
+React Hook Form
+Zod
+Material UI
+```
+
+Create a reusable `EntityForm` architecture.
+
+Support:
+
+```text
+View mode
+Create mode
+Edit mode
+Read-only mode
+Dirty tracking
+Validation
+Reset
+Save
+Cancel
+Field-level errors
+Form-level errors
+Loading
+Conditional fields
+Conditional read-only state
+Permission-based visibility
+Responsive form layouts
+FastTabs
+```
+
+Use a single form strategy throughout the project.
+
+Do not introduce competing form libraries.
+
+---
+
+# 20. Shared Field Architecture
+
+Create reusable field components:
+
+```text
+AppTextField
+AppNumberField
+AppCurrencyField
+AppDateField
+AppDateTimeField
+AppBooleanField
+AppSelectField
+AppEnumField
+AppLookupField
+AppDisplayField
+AppBilingualField
+AppGeneratedCodeField
+```
+
+Use consistent props:
+
+```ts
+interface BaseFieldProps {
+  name: string;
+  label: string;
+  required?: boolean;
+  disabled?: boolean;
+  readOnly?: boolean;
+  hidden?: boolean;
+  helperText?: string;
+  fullWidth?: boolean;
+}
+```
+
+Integrate fields with React Hook Form.
+
+Do not create separate fields that duplicate the same responsibility.
+
+---
+
+# 21. FastTabs
+
+Create collapsible D365-inspired FastTabs.
+
+Each FastTab must support:
+
+```text
+Title
+Expanded state
+Default expanded state
+Summary text
+Error indicator
+Required field indicator
+Lazy rendering
+Remembered state
+Keyboard accessibility
+Permission visibility
+```
+
+Example:
+
+```tsx
+<FastTab
+  id="general"
+  title="General"
+  summary={customer.name}
+  hasError={hasGeneralErrors}
+>
+  <CustomerGeneralFields />
+</FastTab>
+```
+
+---
+
+# 22. Dialog Architecture
+
+Create a unified dialog system:
+
+```text
+AppDialog
+FormDialog
+ConfirmationDialog
+DeleteConfirmationDialog
+LookupDialog
+ProcessDialog
+```
+
+All dialogs must have consistent:
+
+```text
+Title layout
+Content spacing
+Action buttons
+Loading behavior
+Validation
+Focus management
+Escape behavior
+Unsaved-change protection
+Accessibility
+```
+
+Do not directly create differently styled Material UI dialogs inside every page.
+
+---
+
+# 23. Lookup Architecture
+
+Implement reusable ERP-style lookup controls.
+
+Support:
+
+```text
+Stored value
+Display value
+Search
+Server-side loading
+Grid results
+Single selection
+Multiple selection
+Filters
+Clear selection
+Keyboard navigation
+Loading state
+Error state
+Create related record placeholder
+Open related record placeholder
+```
+
+Representative use cases:
+
+```text
+Customer group lookup
+Currency lookup
+Customer lookup
+Item lookup
+Warehouse lookup
+```
+
+---
+
+# 24. API Architecture
+
+Create an Axios API client prepared for ASP.NET Core REST APIs.
+
+Environment configuration:
+
+```env
+VITE_APP_NAME=IXApp
+VITE_API_BASE_URL=https://localhost:7001/api
+VITE_ENABLE_MOCK_API=true
+```
+
+The API layer must support:
+
+```text
+Base URL
+JSON content type
+Authorization token
+Request cancellation
+Timeout
+Centralized error transformation
+HTTP status handling
+Correlation ID
+Validation problem details
+Token expiration handling
+```
+
+Define a typed ASP.NET Core validation response:
+
+```ts
+export interface ApiValidationProblem {
+  type?: string;
+  title?: string;
+  status?: number;
+  detail?: string;
+  instance?: string;
+  errors?: Record<string, string[]>;
+  traceId?: string;
+}
+```
+
+Do not call Axios directly inside page components.
+
+Use module services such as:
+
+```text
+customerService
+customerGroupService
+salesOrderService
+currencyService
+```
+
+---
+
+# 25. Server-State Management
+
+Use TanStack Query for server state.
+
+Create consistent query keys.
+
+Example:
+
+```ts
+export const customerQueryKeys = {
+  all: ['customers'] as const,
+  lists: () => [...customerQueryKeys.all, 'list'] as const,
+  list: (parameters: CustomerQueryParameters) =>
+    [...customerQueryKeys.lists(), parameters] as const,
+  details: () => [...customerQueryKeys.all, 'detail'] as const,
+  detail: (id: string) =>
+    [...customerQueryKeys.details(), id] as const,
+};
+```
+
+Use TanStack Query for:
+
+```text
+Fetching
+Caching
+Invalidation
+Mutation
+Retry
+Loading state
+Error state
+Request cancellation
+```
+
+Do not duplicate server entities inside Zustand.
+
+---
+
+# 26. Global State
+
+Use Zustand only for true global client state:
+
+```text
+Navigation drawer state
+Current company
+Selected language
+Theme mode
+User preferences
+Global application settings
+```
+
+Do not store page form values or server query results globally unless technically necessary.
+
+---
+
+# 27. Routing
+
+Implement lazy-loaded module routes.
+
+Routes:
+
+```text
+/
+ /dashboard
+
+/accounts-receivable/customers
+/accounts-receivable/customers/:customerId
+/accounts-receivable/customer-groups
+/accounts-receivable/sales-orders
+/accounts-receivable/sales-orders/:salesOrderId
+
+/foundation/currencies
+
+/system-administration/settings
+
+/access-denied
+/not-found
+```
+
+Create route metadata:
+
+```ts
+interface AppRoute {
+  path: string;
+  element: React.ReactNode;
+  title: string;
+  breadcrumb?: string;
+  permission?: string;
+  module?: string;
+  navigation?: boolean;
+}
+```
+
+Generate navigation and breadcrumbs from route configuration where practical.
+
+Avoid duplicating route labels across multiple files.
+
+---
+
+# 28. Navigation Structure
+
+Create a module-oriented navigation system:
+
+```text
+Dashboard
+
+Accounts Receivable
+├── Customers
+│   ├── All customers
+│   └── Customer groups
+├── Orders
+│   ├── All sales orders
+│   └── Create sales order
+├── Inquiries
+└── Setup
+
+Foundation
+├── Currencies
+└── General setup
+
+System Administration
+├── Application settings
+├── Users
+└── Security
+```
+
+Use permission-based visibility.
+
+Navigation groups must be collapsible.
+
+The selected route must be visually highlighted.
+
+---
+
+# 29. Permission Architecture
+
+Create reusable permission support:
+
+```text
+PermissionGuard
+RouteGuard
+usePermission
+```
+
+Example permissions:
+
+```text
+dashboard.view
+customer.view
+customer.create
+customer.update
+customer.delete
+customerGroup.view
+salesOrder.view
+salesOrder.create
+salesOrder.update
+salesOrder.confirm
+salesOrder.post
+currency.view
+currency.manage
+settings.view
+settings.update
+```
+
+Frontend permissions improve the UI only.
+
+The backend remains responsible for security enforcement.
+
+---
+
+# 30. Notifications
+
+Create one global notification system supporting:
+
+```text
+Success
+Information
+Warning
+Error
+Persistent notifications
+Notifications with actions
+```
+
+Example API:
+
+```ts
+notify.success('Customer saved successfully.');
+notify.error('Unable to save the customer.');
+notify.warning('You have unsaved changes.');
+```
+
+Use one provider and one consistent Snackbar implementation.
+
+---
+
+# 31. Loading, Error, and Empty States
+
+Implement reusable states:
+
+```text
+LoadingState
+ErrorState
+EmptyState
+NoResultsState
+AccessDeniedState
+```
+
+Every page and asynchronous section must handle:
+
+```text
+Initial loading
+Background loading
+Empty data
+Filtered empty result
+API failure
+Access denied
+```
+
+Do not display a blank page during loading or failure.
+
+---
+
+# 32. Unsaved Changes
+
+Create a shared unsaved-changes system.
+
+Warn users before:
+
+```text
+Leaving the current route
+Refreshing a dirty page
+Changing the selected master record
+Closing a dirty dialog
+Cancelling edits
+Closing the browser tab where supported
+```
+
+Do not display a warning when there are no changes.
+
+---
+
+# 33. Refresh Behavior
+
+The page-level Refresh command must:
+
+```text
+Reload server data
+Clear stale errors
+Reset edit mode
+Clear temporary rows after confirmation
+Clear unsaved changes after confirmation
+Avoid duplicate API calls
+Preserve filters when appropriate
+Preserve selection only when the record still exists
+```
+
+Create reusable refresh behavior through:
+
+```text
+usePageRefresh
+```
+
+---
+
+# 34. Save Behavior
+
+The page-level Save command must:
+
+```text
+Validate all forms and edited rows
+Prevent duplicate submissions
+Create added records
+Update modified records
+Delete records marked for deletion
+Map backend validation errors
+Refresh saved data
+Reset dirty state
+Keep the current page context
+Show a success notification
+```
+
+Failed records must not be silently ignored.
+
+---
+
+# 35. Representative Pages
+
+## 35.1 DashboardPage
+
+Use the Workspace pattern.
+
+Include mock components:
+
+```text
+Total customers tile
+Open sales orders tile
+Monthly sales tile
+Overdue balance tile
+Recent customers list
+Recent sales orders list
+Quick links
+Basic chart placeholder using Material UI-compatible charting
+```
+
+## 35.2 CustomersPage
+
+Use the List and Details pattern.
+
+Include:
+
+```text
+Customer grid
+Customer search
+Customer status filter
+Selection
+Create
+Edit
+Delete
+Save
+Cancel
+Refresh
+Customer details panel
+General FastTab
+Addresses FastTab
+Financial FastTab
+Contact information FastTab
+```
+
+Customer model:
+
+```ts
+export interface Customer {
+  id: string;
+  accountNumber: string;
+  name: string;
+  nameAr?: string;
+  customerGroupId: string;
+  currencyCode: string;
+  email?: string;
+  phone?: string;
+  status: 'active' | 'onHold' | 'blocked';
+  creditLimit?: number;
+  createdAt: string;
+  modifiedAt?: string;
+}
+```
+
+## 35.3 CustomerGroupsPage
+
+Use the Simple List pattern.
+
+Columns:
+
+```text
+Group ID
+Name
+Description
+Default currency
+Payment terms
+Active
+```
+
+Support page-level bulk save.
+
+## 35.4 SalesOrdersPage
+
+Use the Simple List pattern.
+
+Columns:
+
+```text
+Sales order
+Customer account
+Customer name
+Order date
+Currency
+Total amount
+Status
+```
+
+Double-click a row to open the sales order.
+
+## 35.5 SalesOrderPage
+
+Use the Document pattern.
+
+Header fields:
+
+```text
+Sales order number
+Customer
+Order date
+Requested delivery date
+Currency
+Payment terms
+Delivery mode
+Status
+Customer reference
+```
+
+Line fields:
+
+```text
+Line number
+Item number
+Description
+Quantity
+Unit
+Unit price
+Discount
+Net amount
+Tax amount
+Line total
+```
+
+Totals:
+
+```text
+Subtotal
+Discount total
+Tax total
+Order total
+```
+
+Action groups:
+
+```text
+New
+Maintain
+Process
+Inquiries
+Print
+```
+
+Process actions:
+
+```text
+Confirm
+Post invoice
+Cancel order
+```
+
+These actions should initially use mock behavior and update local mock status.
+
+## 35.6 CurrenciesPage
+
+Use the Simple List pattern.
+
+Columns:
+
+```text
+Currency code
+Name
+Symbol
+Number of decimals
+Active
+```
+
+Support:
+
+```text
+Add
+Edit
+Delete
+Save
+Cancel
+Refresh
+```
+
+## 35.7 ApplicationSettingsPage
+
+Use the Master Form pattern.
+
+FastTabs:
+
+```text
+General
+Localization
+Number sequences
+User interface
+API configuration
+```
+
+Allow theme and language selection.
+
+---
+
+# 36. Mock Data
+
+Create strongly typed mock services.
+
+Mock services should simulate:
+
+```text
+Network delay
+List requests
+Single-record requests
+Create
+Update
+Delete
+Validation errors
+Not-found errors
+```
+
+Mock mode must be controlled by:
+
+```env
+VITE_ENABLE_MOCK_API=true
+```
+
+The module service interface must remain the same when switching from mock data to the real ASP.NET Core API.
+
+Example:
+
+```ts
+export interface CustomerService {
+  getCustomers(
+    parameters: CustomerQueryParameters
+  ): Promise<PagedResult<Customer>>;
+
+  getCustomer(id: string): Promise<Customer>;
+
+  createCustomer(request: CreateCustomerRequest): Promise<Customer>;
+
+  updateCustomer(
+    id: string,
+    request: UpdateCustomerRequest
+  ): Promise<Customer>;
+
+  deleteCustomer(id: string): Promise<void>;
+}
+```
+
+---
+
+# 37. TypeScript Requirements
+
+Enable strict TypeScript.
+
+Recommended settings:
+
+```json
+{
+  "strict": true,
+  "noImplicitAny": true,
+  "noUncheckedIndexedAccess": true,
+  "noFallthroughCasesInSwitch": true,
+  "exactOptionalPropertyTypes": true
+}
+```
+
+Do not use `any`.
+
+Use `unknown` and type guards for uncertain data.
+
+Create explicit types for:
+
+```text
+API responses
+Form values
+Grid rows
+Grid columns
+Actions
+Permissions
+Routes
+Page modes
+Record states
+Service contracts
+Query parameters
+Pagination
+Validation errors
+```
+
+---
+
+# 38. Index Files
+
+Use index files only as controlled public APIs.
+
+Example:
+
+```ts
+export { PageContainer } from './PageContainer';
+export { PageHeader } from './PageHeader';
+export type { PageHeaderProps } from './types';
+```
+
+Do not create broad barrel files that export the entire application and introduce circular dependencies.
+
+Business modules should expose only their public route or feature entry points.
+
+---
+
+# 39. Accessibility
+
+Ensure all components support:
+
+```text
+Keyboard navigation
+Visible focus
+ARIA labels
+Accessible dialogs
+Accessible form errors
+Logical tab order
+Screen-reader text
+Color contrast
+Non-color status indicators
+```
+
+Action-pane buttons must include accessible labels and tooltips.
+
+FastTabs must support keyboard expansion and collapse.
+
+Data grids must remain keyboard accessible.
+
+---
+
+# 40. Performance
+
+Implement:
+
+```text
+Route-level lazy loading
+Memoized grid columns
+Stable callbacks
+Debounced search
+TanStack Query caching
+Request cancellation
+Lazy dialog content
+Lazy FastTab content where useful
+```
+
+Avoid:
+
+```text
+Unnecessary global state
+Repeated API calls
+Large page components
+Premature memoization
+Recreating grid columns on every render
+Loading every module in the initial bundle
+```
+
+---
+
+# 41. Code Quality
+
+Configure:
+
+```text
+ESLint
+Prettier
+Import ordering
+Unused import detection
+React Hooks rules
+TypeScript strict rules
+```
+
+Add npm scripts:
+
+```json
+{
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  }
+}
+```
+
+---
+
+# 42. Testing
+
+Create representative tests for:
+
+```text
+App shell rendering
+Navigation rendering
+Route guard
+Permission guard
+Action pane
+FastTab
+Confirmation dialog
+Customer form validation
+Customers grid
+Page save behavior
+Page refresh behavior
+Unsaved changes
+Sales-order total calculation
+```
+
+Use:
+
+```text
+Vitest
+React Testing Library
+User Event
+```
+
+Do not test implementation details.
+
+Test user-visible behavior and state changes.
+
+---
+
+# 43. README
+
+Create a professional README containing:
+
+```text
+Project overview
+Technology stack
+Installation
+Environment configuration
+Development commands
+Build commands
+Testing commands
+Folder architecture
+Dependency rules
+Page patterns
+Adding a new module
+Adding a new page
+Adding a new action
+Adding a new field
+Connecting the ASP.NET Core API
+Enabling and disabling mock data
+Localization
+Theme customization
+Permission configuration
+```
+
+Include examples for creating:
+
+```text
+A new Simple List page
+A new List and Details page
+A new Document page
+A new service
+A new route
+A new navigation item
+```
+
+---
+
+# 44. Implementation Order
+
+Implement the project in this order.
+
+## Phase 1: Bootstrap
+
+```text
+Create Vite project
+Install dependencies
+Configure TypeScript
+Configure ESLint
+Configure Prettier
+Configure path aliases
+Configure environment variables
+```
+
+## Phase 2: Core Foundation
+
+```text
+API client
+Error models
+Authentication placeholder
+Permission system
+Localization
+Utilities
+```
+
+## Phase 3: Application Foundation
+
+```text
+Theme
+Providers
+Routing
+Global stores
+Application layouts
+```
+
+## Phase 4: Shared Components
+
+```text
+Application shell
+Page components
+Action pane
+Feedback states
+Dialogs
+FastTabs
+Fields
+Forms
+Data grid
+Lookups
+```
+
+## Phase 5: Page Patterns
+
+```text
+Workspace
+Simple list
+List and details
+Master form
+Document
+Remaining page patterns
+```
+
+## Phase 6: Representative Modules
+
+```text
+Dashboard
+Customers
+Customer groups
+Sales orders
+Currencies
+Application settings
+```
+
+## Phase 7: Quality
+
+```text
+Tests
+Linting
+Build validation
+Accessibility review
+README
+```
+
+---
+
+# 45. Required Validation
+
+Before completing the task, run:
+
+```bash
+npm install
+npm run lint
+npm run test:run
+npm run build
+```
+
+Resolve all errors.
+
+The completed project must have:
+
+```text
+No TypeScript errors
+No unresolved imports
+No invalid exports
+No circular dependencies
+No React Hook violations
+No ESLint errors
+No console errors during normal navigation
+No broken routes
+No unhandled loading states
+No unhandled error states
+```
+
+---
+
+# 46. Restrictions
+
+Do not:
+
+```text
+Create backend ASP.NET Core code
+Create database migrations
+Modify database schemas
+Use Microsoft proprietary code
+Copy D365 source code
+Copy Microsoft branding exactly
+Use paid MUI features without a license
+Use multiple state-management libraries for the same purpose
+Use multiple form libraries
+Use multiple HTTP libraries
+Use any to bypass TypeScript
+Put API calls directly in visual components
+Put module-specific logic inside shared components
+Create one oversized generic component for every use case
+Create empty placeholder files without purpose
+Leave generated demo Vite files that are no longer used
+Leave unused imports or dead code
+```
+
+---
+
+# 47. Expected Final Result
+
+The final output must be a working React.js frontend project named:
+
+```text
+IXApp
+```
+
+It must include:
+
+```text
+A scalable modular folder structure
+A D365 F&O–inspired application shell
+A responsive enterprise Material UI theme
+English and Arabic support
+LTR and RTL support
+Reusable action panes
+Reusable data grids
+Reusable forms and fields
+Reusable FastTabs
+Reusable dialogs
+Reusable lookups
+Reusable page patterns
+Mock API services
+Representative business pages
+Typed permissions
+Typed page modes
+Typed record states
+Unit and component tests
+A production build
+Complete documentation
+```
+
+At the end, provide:
+
+```text
+1. The final folder tree.
+2. The installed dependencies.
+3. The implemented pages.
+4. The implemented shared components.
+5. The implemented page patterns.
+6. The available npm commands.
+7. The API integration instructions.
+8. The validation results.
+9. Any remaining limitations.
+```
+
+Start by creating the `IXApp` project and its foundational configuration. Then implement the architecture incrementally according to the required implementation order.

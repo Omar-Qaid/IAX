@@ -1,0 +1,50 @@
+import React from 'react';
+import { FormControlLabel, Checkbox, FormHelperText, Box } from '@mui/material';
+import { Controller, type FieldValues } from 'react-hook-form';
+import type { BaseFieldProps } from './types';
+
+export function AppBooleanField<TFieldValues extends FieldValues = FieldValues>({
+  name,
+  label,
+  control,
+  disabled = false,
+  readOnly = false,
+  hidden = false,
+  helperText,
+}: BaseFieldProps<TFieldValues>): React.ReactElement | null {
+  if (hidden) return null;
+
+  if (!control) {
+    return (
+      <FormControlLabel
+        control={<Checkbox disabled={disabled || readOnly} size="small" />}
+        label={label}
+      />
+    );
+  }
+
+  return (
+    <Controller
+      name={name}
+      control={control}
+      render={({ field, fieldState: { error } }) => (
+        <Box>
+          <FormControlLabel
+            control={
+              <Checkbox
+                {...field}
+                checked={!!field.value}
+                disabled={disabled || readOnly}
+                size="small"
+              />
+            }
+            label={label}
+          />
+          {(error || helperText) && (
+            <FormHelperText error={!!error}>{error ? error.message : helperText}</FormHelperText>
+          )}
+        </Box>
+      )}
+    />
+  );
+}

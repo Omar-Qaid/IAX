@@ -1,0 +1,51 @@
+{
+  "app": {
+    "name": "IXApp",
+    "tagline": "Enterprise Resource Planning Solution"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "accountsReceivable": "Accounts Receivable",
+    "customers": "Customers",
+    "allCustomers": "All Customers",
+    "customerGroups": "Customer Groups",
+    "salesOrders": "Sales Orders",
+    "allSalesOrders": "All Sales Orders",
+    "foundation": "Foundation",
+    "currencies": "Currencies",
+    "systemAdmin": "System Administration",
+    "settings": "Application Settings"
+  },
+  "actions": {
+    "new": "New",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "refresh": "Refresh",
+    "confirm": "Confirm",
+    "post": "Post Invoice",
+    "search": "Search...",
+    "export": "Export",
+    "filter": "Filter",
+    "clear": "Clear"
+  },
+  "common": {
+    "company": "Company",
+    "language": "Language",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "status": "Status",
+    "active": "Active",
+    "onHold": "On Hold",
+    "blocked": "Blocked",
+    "confirmed": "Confirmed",
+    "invoiced": "Invoiced",
+    "cancelled": "Cancelled",
+    "open": "Open",
+    "loading": "Loading...",
+    "noData": "No records found",
+    "accessDenied": "Access Denied"
+  }
+}

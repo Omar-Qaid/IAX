@@ -1,0 +1,51 @@
+{
+  "app": {
+    "name": "IXApp",
+    "tagline": "نظام إدارة الموارد المؤسسية"
+  },
+  "nav": {
+    "dashboard": "لوحة التحكم",
+    "accountsReceivable": "الحسابات المدينة",
+    "customers": "العملاء",
+    "allCustomers": "جميع العملاء",
+    "customerGroups": "مجموعات العملاء",
+    "salesOrders": "أوامر البيع",
+    "allSalesOrders": "جميع أوامر البيع",
+    "foundation": "التأسيس",
+    "currencies": "العملات",
+    "systemAdmin": "إدارة النظام",
+    "settings": "إعدادات التطبيق"
+  },
+  "actions": {
+    "new": "جديد",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "refresh": "تحديث",
+    "confirm": "تأكيد",
+    "post": "ترحيل الفاتورة",
+    "search": "بحث...",
+    "export": "تصدير",
+    "filter": "تصفية",
+    "clear": "مسح"
+  },
+  "common": {
+    "company": "الشركة",
+    "language": "اللغة",
+    "theme": "المظهر",
+    "light": "فاتح",
+    "dark": "داكن",
+    "status": "الحالة",
+    "active": "نشط",
+    "onHold": "معلق",
+    "blocked": "محظور",
+    "confirmed": "مؤكد",
+    "invoiced": "مفوتر",
+    "cancelled": "ملغى",
+    "open": "مفتوح",
+    "loading": "جاري التحميل...",
+    "noData": "لم يتم العثور على سجلات",
+    "accessDenied": "تم رفض الوصول"
+  }
+}
