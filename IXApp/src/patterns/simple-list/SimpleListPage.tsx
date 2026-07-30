@@ -2,7 +2,8 @@ import React from 'react';
 import { PageContainer } from '@shared/components/page/PageContainer';
 import { PageHeader } from '@shared/components/page/PageHeader';
 import { ActionPane } from '@shared/components/action-pane/ActionPane';
-import { AppDataGrid, type AppDataGridProps } from '@shared/components/data-grid/AppDataGrid';
+import { DataGrid } from '@shared/components/data-grid/DataGrid';
+import type { DataGridProps } from '@shared/components/data-grid/Types';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { ErrorState } from '@shared/components/feedback/ErrorState';
 import { Box } from '@mui/material';
@@ -11,7 +12,7 @@ export interface SimpleListPageProps<T extends { id: string } = { id: string }> 
   title: string;
   subtitle?: string;
   actionPane?: React.ReactNode;
-  dataGridProps: AppDataGridProps<T>;
+  dataGridProps: DataGridProps<T>;
   loading?: boolean;
   error?: string | null;
   onRetry?: () => void;
@@ -38,8 +39,8 @@ export function SimpleListPage<T extends { id: string } = { id: string }>({
       ) : loading ? (
         <LoadingState message="Loading list records..." />
       ) : (
-        <Box sx={{ width: '100%' }}>
-          <AppDataGrid {...dataGridProps} />
+        <Box sx={{ width: '100%', height: 600 }}>
+          <DataGrid {...dataGridProps} />
         </Box>
       )}
 

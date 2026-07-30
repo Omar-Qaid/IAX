@@ -25,7 +25,11 @@ export function AppTextField<TFieldValues extends FieldValues = FieldValues>({
   multiline = false,
   rows = 3,
   type = 'text',
+  variant = 'outlined',
+  value,
+  onChange,
   slotProps,
+  ...rest
 }: AppTextFieldProps<TFieldValues>): React.ReactElement | null {
   if (hidden) return null;
 
@@ -52,6 +56,10 @@ export function AppTextField<TFieldValues extends FieldValues = FieldValues>({
         rows={multiline ? rows : undefined}
         type={type}
         size="small"
+        variant={variant}
+        value={value ?? ''}
+        onChange={(e) => onChange?.(e.target.value)}
+        {...rest}
       />
     );
   }

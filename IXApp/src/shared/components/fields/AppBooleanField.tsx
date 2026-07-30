@@ -11,14 +11,23 @@ export function AppBooleanField<TFieldValues extends FieldValues = FieldValues>(
   readOnly = false,
   hidden = false,
   helperText,
+  value,
+  onChange,
 }: BaseFieldProps<TFieldValues>): React.ReactElement | null {
   if (hidden) return null;
 
   if (!control) {
     return (
       <FormControlLabel
-        control={<Checkbox disabled={disabled || readOnly} size="small" />}
-        label={label}
+        control={
+          <Checkbox 
+            checked={!!value} 
+            onChange={(e) => onChange?.(e.target.checked)} 
+            disabled={disabled || readOnly} 
+            size="small" 
+          />
+        }
+        label={label || ''}
       />
     );
   }

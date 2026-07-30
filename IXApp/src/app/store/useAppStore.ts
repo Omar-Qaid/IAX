@@ -15,6 +15,12 @@ interface AppStoreState {
   notifications: NotificationItem[];
   addNotification: (notification: Omit<NotificationItem, 'id'>) => void;
   removeNotification: (id: string) => void;
+  commandPaletteOpen: boolean;
+  setCommandPaletteOpen: (open: boolean) => void;
+  notificationDrawerOpen: boolean;
+  setNotificationDrawerOpen: (open: boolean) => void;
+  settingsPanelOpen: boolean;
+  setSettingsPanelOpen: (open: boolean) => void;
 }
 
 const getInitialCompany = (): string => {
@@ -39,4 +45,10 @@ export const useAppStore = create<AppStoreState>((set) => ({
       notifications: state.notifications.filter((n) => n.id !== id),
     }));
   },
+  commandPaletteOpen: false,
+  setCommandPaletteOpen: (open) => set({ commandPaletteOpen: open }),
+  notificationDrawerOpen: false,
+  setNotificationDrawerOpen: (open) => set({ notificationDrawerOpen: open }),
+  settingsPanelOpen: false,
+  setSettingsPanelOpen: (open) => set({ settingsPanelOpen: open }),
 }));

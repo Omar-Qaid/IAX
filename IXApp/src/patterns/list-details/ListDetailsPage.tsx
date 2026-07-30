@@ -2,8 +2,9 @@ import React from 'react';
 import { PageContainer } from '@shared/components/page/PageContainer';
 import { PageHeader } from '@shared/components/page/PageHeader';
 import { ActionPane } from '@shared/components/action-pane/ActionPane';
-import { Grid, Paper } from '@mui/material';
-import { AppDataGrid, type AppDataGridProps } from '@shared/components/data-grid/AppDataGrid';
+import { Grid, Paper, Box } from '@mui/material';
+import { DataGrid } from '@shared/components/data-grid/DataGrid';
+import type { DataGridProps } from '@shared/components/data-grid/Types';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { EmptyState } from '@shared/components/feedback/EmptyState';
 
@@ -11,7 +12,7 @@ export interface ListDetailsPageProps<T extends { id: string } = { id: string }>
   title: string;
   subtitle?: string;
   actionPane?: React.ReactNode;
-  dataGridProps: AppDataGridProps<T>;
+  dataGridProps: DataGridProps<T>;
   detailsPane?: React.ReactNode;
   loading?: boolean;
   selectedId?: string | null;
@@ -36,7 +37,9 @@ export function ListDetailsPage<T extends { id: string } = { id: string }>({
       <Grid container spacing={2}>
         {/* Left pane: Data Grid List */}
         <Grid size={{ xs: 12, md: selectedId ? 5 : 12, lg: selectedId ? 4 : 12 }}>
-          <AppDataGrid {...dataGridProps} height={600} />
+          <Box sx={{ height: 600, width: '100%' }}>
+            <DataGrid {...dataGridProps} />
+          </Box>
         </Grid>
 
         {/* Right pane: Details FastTabs */}

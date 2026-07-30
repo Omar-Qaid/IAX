@@ -20,6 +20,9 @@ export function AppSelectField<TFieldValues extends FieldValues = FieldValues>({
   hidden = false,
   helperText,
   fullWidth = true,
+  variant = 'outlined',
+  value,
+  onChange,
 }: AppSelectFieldProps<TFieldValues>): React.ReactElement | null {
   if (hidden) return null;
 
@@ -34,6 +37,9 @@ export function AppSelectField<TFieldValues extends FieldValues = FieldValues>({
         helperText={helperText}
         fullWidth={fullWidth}
         size="small"
+        variant={variant}
+        value={value ?? ''}
+        onChange={(e) => onChange?.(e.target.value)}
       >
         {options.map((opt) => (
           <MenuItem key={opt.value} value={opt.value} disabled={opt.disabled}>
