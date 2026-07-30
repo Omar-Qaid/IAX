@@ -1,19 +1,27 @@
 import { useCallback } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { useAppStore } from '@app/store/useAppStore';
 
-export function usePageRefresh(queryKey?: readonly unknown[]) {
-  const queryClient = useQueryClient();
-  const addNotification = useAppStore((s) => s.addNotification);
+interface UsePageRefreshOptions {
+  onRefresh: () => void | Promise<void>;
+  isDirty?: boolean;
+  confirmMessage?: string;
+}
 
-  const refresh = useCallback(async () => {
-    if (queryKey) {
-      await queryClient.invalidateQueries({ queryKey });
-    } else {
-      await queryClient.invalidateQueries();
+export function usePageRefresh({
+  onRefresh,
+  isDirty = false,
+  confirmMessage = 'You have unsaved changes. Are you sure you want to refresh and discard changes?',
+}: UsePageRefreshOptions) {
+  const handleRefresh = useCallback(async () => {
+    if (isDirty) {
+      const confirmed = window.confirm(confirmMessage);
+      if (!confirmed) {
+        return;
+      }
     }
-    addNotification({ message: 'Page data refreshed successfully', type: 'info' });
-  }, [queryClient, queryKey, addNotification]);
+    await onRefresh();
+  }, [onRefresh, isDirty, confirmMessage]);
 
-  return { refresh };
+  return {
+    handleRefresh,
+  };
 }

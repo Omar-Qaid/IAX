@@ -5,7 +5,6 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
-    "ignoreDeprecations": "6.0",
 
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -25,16 +24,15 @@
     "noUnusedParameters": true,
 
     /* Path Aliases */
-    "baseUrl": ".",
     "paths": {
-      "@app/*": ["src/app/*"],
-      "@core/*": ["src/core/*"],
-      "@shared/*": ["src/shared/*"],
-      "@patterns/*": ["src/patterns/*"],
-      "@modules/*": ["src/modules/*"],
-      "@assets/*": ["src/assets/*"],
-      "@mocks/*": ["src/mocks/*"],
-      "@test/*": ["src/test/*"]
+      "@app/*": ["./src/app/*"],
+      "@core/*": ["./src/core/*"],
+      "@shared/*": ["./src/shared/*"],
+      "@patterns/*": ["./src/patterns/*"],
+      "@modules/*": ["./src/modules/*"],
+      "@assets/*": ["./src/assets/*"],
+      "@mocks/*": ["./src/mocks/*"],
+      "@test/*": ["./src/test/*"]
     }
   },
   "include": ["src"]

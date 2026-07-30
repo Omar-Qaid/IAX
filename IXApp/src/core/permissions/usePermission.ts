@@ -1,7 +1,12 @@
 import { useAuth } from '@core/auth/useAuth';
+import { permissionService } from './permissionService';
+import type { PermissionCode } from './permissions';
 
-export function usePermission(permission?: string): { hasPermission: boolean } {
-  const { hasPermission } = useAuth();
+export function usePermission(permission?: PermissionCode | string): { hasPermission: boolean } {
+  const { user } = useAuth();
   if (!permission) return { hasPermission: true };
-  return { hasPermission: hasPermission(permission) };
+  if (user?.permissions) {
+    permissionService.setPermissions(user.permissions);
+  }
+  return { hasPermission: permissionService.hasPermission(permission) };
 }
