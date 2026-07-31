@@ -32,7 +32,7 @@ export const AppDialog: React.FC<AppDialogProps> = ({
   return (
     <Dialog open={open} onClose={onClose} maxWidth={maxWidth} fullWidth={fullWidth}>
       <DialogTitle sx={{ m: 0, p: 1.5, px: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+        <Typography component="span" variant="h6" sx={{ fontWeight: 700 }}>
           {title}
         </Typography>
         <IconButton size="small" onClick={onClose}>
