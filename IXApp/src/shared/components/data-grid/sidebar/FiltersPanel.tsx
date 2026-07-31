@@ -6,7 +6,7 @@ import {
 import {
   Close as CloseIcon,
 } from '@mui/icons-material';
-import type { ColumnDef, FilterModel } from '../Types';
+import type { ColumnDef, FilterModel } from '../types';
 
 interface FiltersPanelProps<T> {
   filters: FilterModel[];

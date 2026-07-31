@@ -7,7 +7,7 @@ import {
 import {
   Search as SearchIcon,
   Close as CloseIcon,
-  AddCircleOutline as AddRowIcon,
+  AddCircleOutlined as AddRowIcon,
 } from '@mui/icons-material';
 import { AppTextField } from '@shared/components/fields/AppTextField';
 import { DataGridSelectionSummary } from './DataGridSelectionSummary';

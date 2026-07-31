@@ -4,7 +4,7 @@ import { Box, Typography, IconButton, useTheme } from '@mui/material';
 import { ArrowUpward, ArrowDownward, MoreVert, FilterList as FilterIcon } from '@mui/icons-material';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { ColumnDef, SortModel, FilterModel } from '../Types';
+import type { ColumnDef, SortModel, FilterModel } from '../types';
 import { FilterInput } from './FilterInput';
 
 interface SortableHeaderProps<T> {
@@ -57,7 +57,7 @@ export function SortableHeader<T>({
         overflow: 'hidden',
       }}
     >
-      {/* Name row — drag handle */}
+      {/* Name row ï¿½ drag handle */}
       <Box
         {...attributes} {...listeners}
         onClick={() => { if (!isDragging && column.sortable !== false) onSort(column.field as string); }}

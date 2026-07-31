@@ -8,7 +8,7 @@ import {
   ViewColumn as ViewColumnIcon, Check as CheckIcon
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-import type { ColumnDef } from '../Types';
+import type { ColumnDef } from '../types';
 
 interface HeaderMenuProps<T> {
   anchorEl: HTMLElement | null;
@@ -63,13 +63,13 @@ export function HeaderMenu<T>({
         {activeColumn?.sortable !== false && (
           <MenuItem onClick={() => { onSort(activeColumn?.field as string, 'asc'); onClose(); }}>
             <ListItemIcon><ArrowUpward fontSize="small" /></ListItemIcon>
-            <ListItemText primary={t('grid.sort_asc')} primaryTypographyProps={{ fontSize: '0.85rem' }} />
+            <ListItemText primary={t('grid.sort_asc')} slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
           </MenuItem>
         )}
         {activeColumn?.sortable !== false && (
           <MenuItem onClick={() => { onSort(activeColumn?.field as string, 'desc'); onClose(); }}>
             <ListItemIcon><ArrowDownward fontSize="small" /></ListItemIcon>
-            <ListItemText primary={t('grid.sort_desc')} primaryTypographyProps={{ fontSize: '0.85rem' }} />
+            <ListItemText primary={t('grid.sort_desc')} slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
           </MenuItem>
         )}
 
@@ -81,7 +81,7 @@ export function HeaderMenu<T>({
         >
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <ListItemIcon><PushPinIcon fontSize="small" /></ListItemIcon>
-            <ListItemText primary={t('grid.pin_column')} primaryTypographyProps={{ fontSize: '0.85rem' }} />
+            <ListItemText primary={t('grid.pin_column')} slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
           </Box>
           <ChevronRightIcon fontSize="small" />
         </MenuItem>
@@ -89,20 +89,20 @@ export function HeaderMenu<T>({
         <Divider />
 
         <MenuItem onClick={() => handleAutosize(false)}>
-          <ListItemText inset primary={t('grid.autosize_this')} primaryTypographyProps={{ fontSize: '0.85rem' }} />
+          <ListItemText inset primary={t('grid.autosize_this')} slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
         </MenuItem>
         <MenuItem onClick={() => handleAutosize(true)}>
-          <ListItemText inset primary={t('grid.autosize_all')} primaryTypographyProps={{ fontSize: '0.85rem' }} />
+          <ListItemText inset primary={t('grid.autosize_all')} slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
         </MenuItem>
 
         <Divider />
 
         <MenuItem onClick={() => { onOpenChooseColumns(); onClose(); }}>
           <ListItemIcon><ViewColumnIcon fontSize="small" /></ListItemIcon>
-          <ListItemText primary={t('grid.choose_columns')} primaryTypographyProps={{ fontSize: '0.85rem' }} />
+          <ListItemText primary={t('grid.choose_columns')} slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
         </MenuItem>
         <MenuItem onClick={() => { onResetColumns(); onClose(); }}>
-          <ListItemText inset primary={t('grid.reset_columns')} primaryTypographyProps={{ fontSize: '0.85rem' }} />
+          <ListItemText inset primary={t('grid.reset_columns')} slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
         </MenuItem>
       </Menu>
 
@@ -122,7 +122,7 @@ export function HeaderMenu<T>({
         ] as const).map(({ label, value }) => (
           <MenuItem key={value || 'none'} onClick={() => handlePin(value)}>
             {activeColumn?.pinned === value && <ListItemIcon><CheckIcon fontSize="small" /></ListItemIcon>}
-            <ListItemText inset={activeColumn?.pinned !== value} primary={label} primaryTypographyProps={{ fontSize: '0.85rem' }} />
+            <ListItemText inset={activeColumn?.pinned !== value} primary={label} slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
           </MenuItem>
         ))}
       </Menu>

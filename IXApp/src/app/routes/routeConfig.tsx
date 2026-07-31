@@ -1,44 +1,25 @@
-import { lazy } from 'react';
+import React from 'react';
 import type { RouteObject } from 'react-router-dom';
 import { AppLayout } from '@app/layouts/AppLayout';
 import { AuthLayout } from '@app/layouts/AuthLayout';
 import { RouteGuard } from './RouteGuard';
 import { ROUTE_PATHS } from './routePaths';
 
-const LoginPage = lazy(() => import('@modules/auth/pages/LoginPage'));
-const DashboardPage = lazy(() =>
-  import('@modules/dashboard/pages/DashboardPage').then((m) => ({ default: m.DashboardPage }))
+const makePlaceholder = (title: string) => () => (
+  <div style={{ padding: 24 }}>
+    <h2>{title} Page</h2>
+    <p>This module page will be implemented in a future phase.</p>
+  </div>
 );
-const CustomersPage = lazy(() =>
-  import('@modules/accounts-receivable/customers/pages/CustomersPage').then((m) => ({
-    default: m.CustomersPage,
-  }))
-);
-const CustomerGroupsPage = lazy(() =>
-  import('@modules/accounts-receivable/customer-groups/pages/CustomerGroupsPage').then((m) => ({
-    default: m.CustomerGroupsPage,
-  }))
-);
-const SalesOrdersPage = lazy(() =>
-  import('@modules/accounts-receivable/sales-orders/pages/SalesOrdersPage').then((m) => ({
-    default: m.SalesOrdersPage,
-  }))
-);
-const SalesOrderPage = lazy(() =>
-  import('@modules/accounts-receivable/sales-orders/pages/SalesOrderPage').then((m) => ({
-    default: m.SalesOrderPage,
-  }))
-);
-const CurrenciesPage = lazy(() =>
-  import('@modules/foundation/currencies/pages/CurrenciesPage').then((m) => ({
-    default: m.CurrenciesPage,
-  }))
-);
-const ApplicationSettingsPage = lazy(() =>
-  import('@modules/system-administration/settings/pages/ApplicationSettingsPage').then((m) => ({
-    default: m.ApplicationSettingsPage,
-  }))
-);
+
+const LoginPage = makePlaceholder('Login');
+const DashboardPage = makePlaceholder('Dashboard');
+const CustomersPage = makePlaceholder('Customers');
+const CustomerGroupsPage = makePlaceholder('Customer Groups');
+const SalesOrdersPage = makePlaceholder('Sales Orders');
+const SalesOrderPage = makePlaceholder('Sales Order Details');
+const CurrenciesPage = makePlaceholder('Currencies');
+const ApplicationSettingsPage = makePlaceholder('Application Settings');
 
 export const appRoutes: RouteObject[] = [
   {

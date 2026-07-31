@@ -1,4 +1,4 @@
-import type { ColumnDef } from './Types';
+import type { ColumnDef } from './types';
 
 export const downloadFile = (content: string, fileName: string, contentType: string) => {
     const a = document.createElement('a');

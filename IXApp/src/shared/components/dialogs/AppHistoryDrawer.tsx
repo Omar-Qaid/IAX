@@ -30,7 +30,7 @@ const EmptyHistory: React.FC = () => {
             }}>
                 <HistoryEduIcon sx={{ fontSize: 40, color: 'text.disabled' }} />
             </Box>
-            <Typography variant="subtitle1" fontWeight={700} color="text.secondary" gutterBottom>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.secondary' }} gutterBottom>
                 {t('common.no_history', 'No History')}
             </Typography>
             <Typography variant="body2" color="text.disabled" sx={{ maxWidth: 200 }}>
@@ -108,7 +108,7 @@ const AuditTimelineItem: React.FC<AuditTimelineItemProps> = ({
             </TimelineSeparator>
             <TimelineContent sx={{ py: '12px', px: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.5 }}>
-                    <Typography variant="subtitle2" fontWeight={600} sx={{ lineHeight: 1.2 }}>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
                         {t(`common.${action.toLowerCase()}`, action)}
                     </Typography>
                     <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
@@ -163,8 +163,8 @@ export const AppHistoryDrawer: React.FC<AppHistoryDrawerProps> = ({
             anchor="right"
             open={open}
             onClose={onClose}
-            PaperProps={{
-                sx: { width: { xs: '100%', sm: 400 }, borderLeft: 'none' }
+            slotProps={{
+                paper: { sx: { width: { xs: '100%', sm: 400 }, borderLeft: 'none' } }
             }}
             sx={{ zIndex: (theme) => theme.zIndex.drawer + 2 }}
         >
@@ -175,7 +175,7 @@ export const AppHistoryDrawer: React.FC<AppHistoryDrawerProps> = ({
                 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <HistoryIcon color="primary" />
-                        <Typography variant="subtitle1" fontWeight={700}>{displayTitle}</Typography>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>{displayTitle}</Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                         {onRefresh && (

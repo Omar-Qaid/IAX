@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { ColumnDef } from '../Types';
+import type { ColumnDef } from '../types';
 
 interface UseGridAutosizeOptions<T> {
     setColumns: React.Dispatch<React.SetStateAction<ColumnDef<T>[]>>;

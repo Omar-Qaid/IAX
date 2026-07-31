@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo, memo } from 'react';
+import React, { useState, useEffect, useMemo, memo } from 'react';
 import {
   Box, Typography,
   Dialog, DialogTitle, DialogContent, DialogActions,
@@ -14,7 +14,7 @@ import {
   sortableKeyboardCoordinates, horizontalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { useTranslation } from 'react-i18next';
-import type { ColumnDef, SortModel, FilterModel } from './Types';
+import type { ColumnDef, SortModel, FilterModel } from './types';
 import { AppBooleanField } from '@shared/components/fields/AppBooleanField';
 
 // New Modular Sub-components
@@ -319,4 +319,4 @@ export function DataGridHeaderInternal<T>({
   );
 }
 
-export const DataGridHeader = memo(GridHeaderInternal) as typeof DataGridHeaderInternal;
+export const DataGridHeader = memo(DataGridHeaderInternal) as typeof DataGridHeaderInternal;

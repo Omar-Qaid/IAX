@@ -3,7 +3,7 @@ import { Box, Checkbox, useTheme, alpha, IconButton, CircularProgress, Tooltip }
 import { Check as SaveIcon, Close as CancelIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { GridCell } from './GridCell';
-import type { ColumnDef } from '../Types';
+import type { ColumnDef } from '../types';
 
 interface GridRowProps<T> {
   row: T;

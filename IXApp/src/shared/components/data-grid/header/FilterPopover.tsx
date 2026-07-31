@@ -5,7 +5,7 @@ import {
 import {
   ArrowUpward, ArrowDownward, KeyboardArrowDown
 } from '@mui/icons-material';
-import type { ColumnDef, FilterModel } from '../Types';
+import type { ColumnDef, FilterModel } from '../types';
 import { GRID_FILTER_OPERATORS } from '../constants';
 import { AppTextField } from '@shared/components/fields/AppTextField';
 
@@ -71,11 +71,11 @@ export function FilterPopover<T>({
         <Box sx={{ mb: 1.5 }}>
           <MenuItem onClick={() => { onSort(column.field as string, 'asc'); onClose(); }} sx={{ p: '4px 8px', borderRadius: 1 }}>
             <ListItemIcon><ArrowUpward fontSize="small" /></ListItemIcon>
-            <ListItemText primary="Sort A to Z" primaryTypographyProps={{ fontSize: '0.85rem' }} />
+            <ListItemText primary="Sort A to Z" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
           </MenuItem>
           <MenuItem onClick={() => { onSort(column.field as string, 'desc'); onClose(); }} sx={{ p: '4px 8px', borderRadius: 1 }}>
             <ListItemIcon><ArrowDownward fontSize="small" /></ListItemIcon>
-            <ListItemText primary="Sort Z to A" primaryTypographyProps={{ fontSize: '0.85rem' }} />
+            <ListItemText primary="Sort Z to A" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
           </MenuItem>
         </Box>
 
@@ -163,7 +163,7 @@ export function FilterPopover<T>({
       >
         {GRID_FILTER_OPERATORS.map((op: { value: string; label: string }) => (
           <MenuItem key={op.value} onClick={() => { setLocalFilter(f => ({ ...f, operator: op.value as any })); setOperatorAnchor(null); }}>
-            <ListItemText primary={op.label} primaryTypographyProps={{ fontSize: '0.85rem' }} />
+            <ListItemText primary={op.label} slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
           </MenuItem>
         ))}
       </Menu>

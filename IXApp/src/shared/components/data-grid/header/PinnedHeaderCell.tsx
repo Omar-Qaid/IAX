@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, Typography, IconButton } from '@mui/material';
 import { MoreVert, FilterList as FilterIcon } from '@mui/icons-material';
-import type { ColumnDef, FilterModel } from '../Types';
+import type { ColumnDef, FilterModel } from '../types';
 import { FilterInput } from './FilterInput';
 
 interface PinnedHeaderCellProps<T> {

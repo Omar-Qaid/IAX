@@ -7,7 +7,7 @@ import {
   TableRows as TableRowsIcon,
   Functions as FunctionsIcon,
 } from '@mui/icons-material';
-import type { ColumnDef } from '../Types';
+import type { ColumnDef } from '../types';
 import { AppTextField } from '@shared/components/fields/AppTextField';
 import { AppBooleanField } from '@shared/components/fields/AppBooleanField';
 

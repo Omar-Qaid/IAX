@@ -4,7 +4,7 @@ import { PageHeader } from '@shared/components/page/PageHeader';
 import { ActionPane } from '@shared/components/action-pane/ActionPane';
 import { Grid, Paper, Box } from '@mui/material';
 import { DataGrid } from '@shared/components/data-grid/DataGrid';
-import type { DataGridProps } from '@shared/components/data-grid/Types';
+import type { DataGridProps } from '@shared/components/data-grid/types';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { EmptyState } from '@shared/components/feedback/EmptyState';
 

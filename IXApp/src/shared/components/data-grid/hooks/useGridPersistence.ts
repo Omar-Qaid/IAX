@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react';
-import type { ColumnDef, FilterModel, SortModel, SelectionMode } from '../Types';
+import type { ColumnDef, FilterModel, SortModel, SelectionMode } from '../types';
 
 const PERSISTENCE_VERSION = 2;
 

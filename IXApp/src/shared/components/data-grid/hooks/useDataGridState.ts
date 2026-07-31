@@ -1,5 +1,5 @@
 ﻿import { useState } from 'react';
-import type { ColumnDef, SelectionMode } from '../Types';
+import type { ColumnDef, SelectionMode } from '../types';
 import type { GridInitialState } from './useGridPersistence';
 
 function areColumnsStructurallyEqual<T>(cols1: ColumnDef<T>[], cols2: ColumnDef<T>[]): boolean {

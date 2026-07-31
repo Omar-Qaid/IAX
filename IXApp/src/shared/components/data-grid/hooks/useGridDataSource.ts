@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import type { SortModel, FilterModel, FetchRowsParams } from '../Types';
+import type { SortModel, FilterModel, FetchRowsParams } from '../types';
 
 interface UseGridDataSourceOptions {
     enabled: boolean;

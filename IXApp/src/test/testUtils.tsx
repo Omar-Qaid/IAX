@@ -14,5 +14,6 @@ const AllTheProviders: React.FC<{ children: React.ReactNode }> = ({ children }) 
 const customRender = (ui: React.ReactElement, options?: Omit<RenderOptions, 'wrapper'>) =>
   render(ui, { wrapper: AllTheProviders, ...options });
 
-export * from '@testing-library/react';
+export { screen, fireEvent, waitFor } from '@testing-library/dom';
+export { act } from '@testing-library/react';
 export { customRender as render };

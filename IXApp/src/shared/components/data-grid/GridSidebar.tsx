@@ -9,7 +9,7 @@ import {
   Close as CloseIcon,
   Settings as SettingsIcon,
 } from '@mui/icons-material';
-import type { ColumnDef, FilterModel, SelectionMode } from './Types';
+import type { ColumnDef, FilterModel, SelectionMode } from './types';
 import { ColumnsPanel } from './sidebar/ColumnsPanel';
 import { FiltersPanel } from './sidebar/FiltersPanel';
 import { FeaturesPanel } from './sidebar/FeaturesPanel';

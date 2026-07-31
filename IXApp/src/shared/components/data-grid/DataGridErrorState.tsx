@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Typography, useTheme, Button } from '@mui/material';
-import { ErrorOutline as ErrorIcon } from '@mui/icons-material';
+import { ErrorOutlined as ErrorIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 
 interface DataGridErrorStateProps {

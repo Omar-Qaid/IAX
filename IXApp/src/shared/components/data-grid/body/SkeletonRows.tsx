@@ -1,5 +1,5 @@
 import { Box, Skeleton } from '@mui/material';
-import type { ColumnDef } from '../Types';
+import type { ColumnDef } from '../types';
 
 interface SkeletonRowsProps<T> {
   rowHeight: number;

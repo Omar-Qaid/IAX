@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Chip, Typography, IconButton } from '@mui/material';
 import { FilterList as FilterIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-import type { ColumnDef, FilterModel } from '../Types';
+import type { ColumnDef, FilterModel } from '../types';
 import { AppTextField } from '@shared/components/fields/AppTextField';
 import { AppBooleanField } from '@shared/components/fields/AppBooleanField';
 

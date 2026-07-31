@@ -20,8 +20,8 @@ import { useTranslation } from 'react-i18next';
 import { useNavigationStore } from '@app/store/useNavigationStore';
 import { useAuth } from '@core/auth/useAuth';
 import { usePermissions } from '@core/auth/usePermissions';
-import { MODULE_NAV_CONFIGS } from '@app/config/navigation';
-import { LAYOUT } from '@app/config/constants';
+import { MODULE_NAV_CONFIGS } from '@app/configuration/navigation';
+import { LAYOUT } from '@app/configuration/constants';
 
 // Static sx objects - moved outside render to prevent re-creation
 const appBarSx = {

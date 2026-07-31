@@ -156,16 +156,16 @@ export const AppCommandPalette: React.FC = () => {
             fullWidth
             slotProps={{
                 backdrop: { sx: { bgcolor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(2px)' } },
-            }}
-            PaperProps={{
-                sx: {
-                    borderRadius: '2px',
-                    overflow: 'hidden',
-                    maxHeight: '70vh',
+                paper: {
+                    sx: {
+                        borderRadius: '2px',
+                        overflow: 'hidden',
+                        maxHeight: '70vh',
+                    },
                 },
-            }}
-            TransitionProps={{
-                onEntered: handleDialogEntered,
+                transition: {
+                    onEntered: handleDialogEntered,
+                },
             }}
         >
             {/* Search Header */}

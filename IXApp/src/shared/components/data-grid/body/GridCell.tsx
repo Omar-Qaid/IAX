@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { Box, useTheme } from '@mui/material';
-import type { ColumnDef } from '../Types';
+import type { ColumnDef } from '../types';
 
 interface GridCellProps<T> {
   row: T;

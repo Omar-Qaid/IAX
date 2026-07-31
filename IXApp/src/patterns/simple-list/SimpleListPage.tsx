@@ -3,7 +3,7 @@ import { PageContainer } from '@shared/components/page/PageContainer';
 import { PageHeader } from '@shared/components/page/PageHeader';
 import { ActionPane } from '@shared/components/action-pane/ActionPane';
 import { DataGrid } from '@shared/components/data-grid/DataGrid';
-import type { DataGridProps } from '@shared/components/data-grid/Types';
+import type { DataGridProps } from '@shared/components/data-grid/types';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { ErrorState } from '@shared/components/feedback/ErrorState';
 import { Box } from '@mui/material';

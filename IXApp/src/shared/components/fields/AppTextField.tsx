@@ -66,7 +66,7 @@ export function AppTextField<TFieldValues extends FieldValues = FieldValues>({
 
   return (
     <Controller
-      name={name}
+      name={name as any}
       control={control}
       render={({ field, fieldState: { error } }) => (
         <TextField

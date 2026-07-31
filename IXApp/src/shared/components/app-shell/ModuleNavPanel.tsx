@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { LAYOUT } from '@app/config/constants';
+import { LAYOUT } from '@app/configuration/constants';
 import { Box, Typography, Collapse, IconButton } from '@mui/material';
 import {
     ExpandMore as ExpandMoreIcon,
@@ -18,7 +18,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import type { ModuleNavSection } from '@app/config/navigation';
+import type { ModuleNavSection } from '@app/configuration/navigation';
 
 const mobileOverlaySx = {
     position: 'absolute',

@@ -1,4 +1,4 @@
-﻿import React, { useMemo, useCallback, memo } from 'react';
+import React, { useMemo, useCallback, memo } from 'react';
 import {
     Box, Typography, CircularProgress, useTheme, Card, IconButton, Divider, Chip, Checkbox
 } from '@mui/material';
@@ -255,4 +255,4 @@ export function DataGridMobileBodyInternal<T>({
     );
 }
 
-export const MobileGridBody = memo(MobileGridBodyInternal) as typeof MobileGridBodyInternal;
+export const DataGridMobileBody = memo(DataGridMobileBodyInternal) as typeof DataGridMobileBodyInternal;

@@ -22,7 +22,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useNavigationStore } from '@app/store/useNavigationStore';
-import { MODULE_NAV_CONFIGS } from '@app/config/navigation';
+import { MODULE_NAV_CONFIGS } from '@app/configuration/navigation';
 
 const SIDEBAR_ICON_MAP: Record<string, any> = {
     receipt: ReceiptIcon,

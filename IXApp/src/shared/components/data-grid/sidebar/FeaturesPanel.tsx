@@ -17,7 +17,7 @@ import {
   BorderAll as BorderAllIcon,
   BorderVertical as BorderVerticalIcon,
 } from '@mui/icons-material';
-import type { ColumnDef, SelectionMode } from '../Types';
+import type { ColumnDef, SelectionMode } from '../types';
 import { AppBooleanField } from '@shared/components/fields/AppBooleanField';
 
 interface FeaturesPanelProps<T> {

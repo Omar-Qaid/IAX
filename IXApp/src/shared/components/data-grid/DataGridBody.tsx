@@ -6,7 +6,7 @@ import {
   Inbox as InboxIcon,
   SearchOff as SearchOffIcon,
 } from '@mui/icons-material';
-import { NEW_ROW_ID } from './useInlineEdit';
+import { NEW_ROW_ID } from './hooks';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useTranslation } from 'react-i18next';
 import type { ColumnDef } from './types';
@@ -337,6 +337,6 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>({
   );
 });
 
-export const GridBody = memo(GridBodyInternal) as <T>(
+export const DataGridBody = memo(GridBodyInternal) as <T>(
     props: GridBodyProps<T> & { ref?: React.Ref<GridBodyHandle> }
 ) => React.ReactElement | null;

@@ -254,13 +254,15 @@ export const AppNotificationDrawer: React.FC = () => {
             anchor="right"
             open={notificationDrawerOpen}
             onClose={handleClose}
-            PaperProps={{
-                sx: {
-                    width: { xs: '100vw', sm: DRAWER_WIDTH },
-                    maxWidth: '100vw',
-                    borderRadius: 0,
-                    boxShadow: '-4px 0 24px rgba(0,0,0,0.08)',
-                    pt: '40px',
+            slotProps={{
+                paper: {
+                    sx: {
+                        width: { xs: '100vw', sm: DRAWER_WIDTH },
+                        maxWidth: '100vw',
+                        borderRadius: 0,
+                        boxShadow: '-4px 0 24px rgba(0,0,0,0.08)',
+                        pt: '40px',
+                    },
                 },
             }}
         >

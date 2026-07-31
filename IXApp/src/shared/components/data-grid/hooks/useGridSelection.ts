@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { SelectionMode } from '../Types';
+import type { SelectionMode } from '../types';
 
 interface UseGridSelectionOptions<T> {
     processedRows: T[];

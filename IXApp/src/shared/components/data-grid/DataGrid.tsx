@@ -1,4 +1,4 @@
-﻿import React, { useMemo, useEffect, useCallback, memo, forwardRef, useImperativeHandle, useRef } from 'react';
+import React, { useMemo, useEffect, useCallback, memo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { Box, Paper, Typography, useTheme, useMediaQuery } from '@mui/material';
 import type { DataGridProps, DataGridHandle } from './types';
 import { DataGridToolbar } from './DataGridToolbar';
@@ -149,6 +149,47 @@ function DataGridInternal<T>({
         rowHeight
     });
 
+    // Layout & Scroll
+    const {
+        containerWidth,
+        scrollbarWidth,
+        scrollContainerRef,
+        headerScrollRef,
+        onScrollReset,
+        handleBodyScroll
+    } = useGridLayout();
+
+    // Data Source
+    const {
+        sortModel, setSortModel,
+        filters, setFilters,
+        globalSearch, setGlobalSearch,
+        handleSort,
+        loadNextPage,
+    } = useGridDataSource({
+        enabled: serverSide,
+        initialSort: initialState.sortModel,
+        initialFilters: initialState.filters,
+        pageSize,
+        onFetchRows,
+        onScrollReset,
+    });
+
+    const hasMore: boolean = hasMoreProp !== undefined
+        ? hasMoreProp
+        : totalRowCount !== undefined
+            ? rows.length < totalRowCount
+            : false;
+
+    const processedRows = useGridDataProcessing({
+        rows,
+        columns,
+        globalSearch,
+        filters,
+        sortModel,
+        serverSide,
+    });
+
     useImperativeHandle(ref, () => ({
         startAddRow: handleAddRow,
         startEditRow: (id: string | number) => {
@@ -168,50 +209,6 @@ function DataGridInternal<T>({
             }
         }
     }));
-
-    // â”€â”€ Layout & Scroll â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    const {
-        containerWidth,
-        scrollbarWidth,
-        scrollContainerRef,
-        headerScrollRef,
-        onScrollReset,
-        handleBodyScroll
-    } = useGridLayout();
-
-    // â”€â”€ Data Source â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    const {
-        sortModel, setSortModel,
-        filters, setFilters,
-        globalSearch, setGlobalSearch,
-        handleSort,
-        loadNextPage,
-    } = useGridDataSource({
-        enabled: serverSide,
-        initialSort: initialState.sortModel,
-        initialFilters: initialState.filters,
-        pageSize,
-        onFetchRows,
-        onScrollReset,
-    });
-
-    // Prefer the data source's authoritative signal (e.g. TanStack hasNextPage).
-    // Only fall back to the derived comparison when no explicit prop is given,
-    // since the derived value can drift out of sync with the fetch gate.
-    const hasMore: boolean = hasMoreProp !== undefined
-        ? hasMoreProp
-        : totalRowCount !== undefined
-            ? rows.length < totalRowCount
-            : false;
-
-    const processedRows = useGridDataProcessing({
-        rows,
-        columns,
-        globalSearch,
-        filters,
-        sortModel,
-        serverSide,
-    });
 
     const hasActiveFilters = !serverSide && (globalSearch.length > 0 || filters.length > 0);
 
