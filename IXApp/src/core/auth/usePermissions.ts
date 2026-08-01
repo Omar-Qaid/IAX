@@ -1,7 +1,7 @@
 export const usePermissions = () => {
-    // Mock implementation for the refactored UI layout
-    return {
-        canView: (module: string, resource: string) => true,
-        isAdmin: true,
-    };
+  return {
+    canView: (_module: string, _resource: string) => true,
+    hasPermission: (_module?: string, _resource?: string, _action?: string) => true,
+    isAdmin: true,
+  };
 };
