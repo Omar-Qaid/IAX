@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography, useTheme } from '@mui/material';
-import { Inbox as InboxIcon, SearchOff as SearchOffIcon } from '@mui/icons-material';
+import InboxIcon from '@mui/icons-material/Inbox';
+import SearchOffIcon from '@mui/icons-material/SearchOff';
 import { useTranslation } from 'react-i18next';
 
 interface DataGridEmptyStateProps {

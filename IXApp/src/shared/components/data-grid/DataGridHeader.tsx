@@ -4,7 +4,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   FormGroup, FormControlLabel, Button, useTheme
 } from '@mui/material';
-import { FilterList as FilterIcon } from '@mui/icons-material';
+import FilterIcon from '@mui/icons-material/FilterList';
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor,
   useSensor, useSensors, type DragEndEvent,

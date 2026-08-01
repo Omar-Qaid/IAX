@@ -796,3 +796,5 @@ function DataGridInternal<T>({
 export const DataGrid = memo(forwardRef(DataGridInternal)) as <T>(
     props: DataGridProps<T> & { ref?: React.Ref<DataGridHandle> }
 ) => ReturnType<typeof DataGridInternal>;
+
+export const AppDataGrid = DataGrid;

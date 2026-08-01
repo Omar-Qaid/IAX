@@ -3,7 +3,7 @@ import { useState, useRef, useCallback, useLayoutEffect, useEffect } from 'react
 const SCROLLBAR_RESERVE = 8;
 
 export function useGridLayout() {
-  const [containerWidth, setContainerWidth] = useState<number>(0);
+  const [containerWidth, setContainerWidth] = useState<number>(1000);
   const [scrollbarWidth, setScrollbarWidth] = useState(SCROLLBAR_RESERVE);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const headerScrollRef = useRef<HTMLDivElement | null>(null);
@@ -35,6 +35,7 @@ export function useGridLayout() {
   useEffect(() => {
     const el = scrollContainerRef.current;
     if (!el) return;
+    if (typeof ResizeObserver === 'undefined') return;
     let rafId: number | null = null;
     const ro = new ResizeObserver(() => {
       if (rafId !== null) cancelAnimationFrame(rafId);

@@ -4,11 +4,9 @@ import {
   Box, IconButton, Tooltip, TextField, InputAdornment,
   Typography, Collapse, alpha, Button,
 } from '@mui/material';
-import {
-  Search as SearchIcon,
-  Close as CloseIcon,
-  AddCircleOutlined as AddRowIcon,
-} from '@mui/icons-material';
+import SearchIcon from '@mui/icons-material/Search';
+import CloseIcon from '@mui/icons-material/Close';
+import AddRowIcon from '@mui/icons-material/AddCircleOutlined';
 import { AppTextField } from '@shared/components/fields/AppTextField';
 import { DataGridSelectionSummary } from './DataGridSelectionSummary';
 

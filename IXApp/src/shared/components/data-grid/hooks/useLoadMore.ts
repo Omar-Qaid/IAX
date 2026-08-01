@@ -71,9 +71,11 @@ export function useLoadMore({
 
         if (el) {
             el.addEventListener('scroll', onScroll, { passive: true });
-            const ro = new ResizeObserver(() => tryLoad(true));
-            ro.observe(el);
-            resizeObserverRef.current = ro;
+            if (typeof ResizeObserver !== 'undefined') {
+                const ro = new ResizeObserver(() => tryLoad(true));
+                ro.observe(el);
+                resizeObserverRef.current = ro;
+            }
         }
     });
 

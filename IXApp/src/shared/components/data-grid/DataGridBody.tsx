@@ -105,7 +105,10 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>({
     rowVirtualizer.measure();
   }, [displayRows.length, headerHeight, rowVirtualizer]);
 
-  const virtualItems = rowVirtualizer.getVirtualItems();
+  const rawVirtualItems = rowVirtualizer.getVirtualItems();
+  const virtualItems = rawVirtualItems.length > 0
+    ? rawVirtualItems
+    : displayRows.map((_, i) => ({ index: i, start: i * rowHeight, size: rowHeight, key: i }));
 
   React.useImperativeHandle(ref, () => ({
     scrollToIndex: (index: number) => {
