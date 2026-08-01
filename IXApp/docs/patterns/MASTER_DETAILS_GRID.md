@@ -1,39 +1,48 @@
-# Master Details Grid
+# Master-Detail + DataGrid Page
 
-## Purpose
-A variation of Master Details where BOTH the master and detail sections are DataGrids stacked vertically or side-by-side.
+## 1. Pattern Purpose & When to Use It
+- **Purpose**: A dual-grid layout where both Master and Detail entities are presented as virtualized DataGrids.
+- **When to Use**: - Viewing Voucher Headers & Voucher Lines, Batch Jobs & Execution Tasks.
 
-## When to use
-- Comparing multiple parent records and their children simultaneously.
-- Worklists where the user needs to quickly scan through parent headers and view line items.
+## 2. UI Structure & Layout
+Split layout (vertical or horizontal split) containing two synchronized AppDataGrids.
 
-## Folder structure
+## 3. Page Sections & Components
+- PageHeader
+- ActionPane
+- Master DataGrid (Top/Left)
+- Detail DataGrid (Bottom/Right)
+
+## 4. Folder Structure
 ```text
 src/patterns/master-detail-grid/
-├── MasterDetailGridPage.tsx   # Pattern component
-└── types.ts                   # Pattern type exports
+├── MasterDetailGridPage.tsx
+└── types.ts
 ```
 
-## Required components
-```text
-MasterDetailGridPage
-├── PageHeader
-├── ActionPane
-├── Top Grid (Master Records)
-└── Bottom Grid (Detail Records)
+## 5. Required Reusable Components
+- AppDataGrid
+- SplitView / Box containers
+
+## 6. Data Flow & State Management
+- **Data Flow**: Master Grid row click -> updates selected master ID -> triggers detail grid refetch.
+- **State Management**: - Selected master ID in state drives detail grid query key.
+
+## 7. Actions & Commands
+- Filter Master, Refresh Grids, Export Master/Detail Data
+
+## 8. Validation Rules
+- Primary key constraints across grids.
+
+## 9. Naming Conventions & Best Practices
+- **Naming Conventions**: - MasterDetailGrid*.tsx
+- **Best Practices**: - Show empty state in detail grid when no master row selected.
+
+## 10. Do's and Don'ts Rules
+DO: Synchronize selection immediately.
+DON'T: Fetch all child records at once without filtering.
+
+## 11. Implementation Example
+```tsx
+// Dual grid usage
 ```
-
-## Data flow
-```text
-Top Grid row selection → Updates `selectedMasterId` state → Bottom Grid query refetches using `selectedMasterId`.
-```
-
-## Examples
-Voucher Inquiry where top is the voucher header and bottom is voucher lines.
-
-## Rules
-- Always show the currently selected master record context above the detail grid.
-- If no master is selected, the detail grid must display an empty state.
-
-## Description UI
-Two distinct DataGrid components separated by a horizontal splitter. The top grid acts as the driver. Clicking a row in the top grid highlights it, and the bottom grid instantaneously populates with the child rows associated with that highlighted parent.

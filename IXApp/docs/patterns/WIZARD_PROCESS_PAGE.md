@@ -1,39 +1,49 @@
-# Wizard Process Page
+# Wizard / Process Page
 
-## Purpose
-A multi-step guided process with step indicators, validation per step, and a final execution action.
+## 1. Pattern Purpose & When to Use It
+- **Purpose**: A multi-step guided workflow for executing multi-stage complex tasks.
+- **When to Use**: - Month-End Close Wizard, Data Import/Export Wizard, Initial Setup Wizard.
 
-## When to use
-- Period Close Wizard, Data Import Wizard, Year-End Processing.
+## 2. UI Structure & Layout
+Top step progress bar indicator, middle step content form, bottom action bar (Back, Next, Finish).
 
-## Folder structure
+## 3. Page Sections & Components
+- PageHeader
+- ProcessStepIndicator (Steps 1..N)
+- Current Step Form Region
+- Wizard Action Bar (Previous, Next, Execute, Cancel)
+
+## 4. Folder Structure
 ```text
 src/patterns/process/
-├── ProcessPage.tsx            # Pattern component
-├── ProcessStepIndicator.tsx   # Step circle/label
-└── types.ts                   # Pattern type exports
+├── ProcessPage.tsx
+├── ProcessStepIndicator.tsx
+└── types.ts
 ```
 
-## Required components
-```text
-ProcessPage
-├── ProcessStepIndicator (Step 1 → Step 2 → Step 3)
-├── Step Content (dynamic form)
-└── ActionPane (Back, Next, Execute)
+## 5. Required Reusable Components
+- ProcessStepIndicator
+- ActionPane / Button controls
+
+## 6. Data Flow & State Management
+- **Data Flow**: Step completion -> validates step state -> advances activeStep index -> final step submits whole execution payload.
+- **State Management**: - Multi-step form state accumulator.
+
+## 7. Actions & Commands
+- Next Step, Previous Step, Cancel Wizard, Finish/Execute Process
+
+## 8. Validation Rules
+- Strict per-step validation before allowing Next navigation.
+
+## 9. Naming Conventions & Best Practices
+- **Naming Conventions**: - *WizardPage.tsx or *ProcessPage.tsx
+- **Best Practices**: - Preserve state when user goes Back to previous steps.
+
+## 10. Do's and Don'ts Rules
+DO: Show clear progress indicator.
+DON'T: Allow jumping ahead to unvalidated future steps.
+
+## 11. Implementation Example
+```tsx
+// MonthEndCloseWizardPage
 ```
-
-## Data flow
-```text
-Step validates → Next → Next → Execute → API mutation.
-```
-
-## Examples
-Data Import Wizard.
-
-## Rules
-- Each step must validate independently.
-- `Back` preserves entered data.
-- `Execute` triggers final API operation.
-
-## Description UI
-A focused, linear workflow layout. The top of the page displays a prominent step indicator (e.g., circles connected by lines: [1] Upload -> [2] Map -> [3] Import). The center contains the form for the current step. The ActionPane provides standard Next/Back/Cancel navigation controls to guide the user through the process.

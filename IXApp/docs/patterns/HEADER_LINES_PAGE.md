@@ -1,43 +1,58 @@
-# Header Lines Page
+# Header-Lines Document Page
 
-## Purpose
-A transactional document page with a header form section, a lines DataGrid, and a totals summary panel.
+## 1. Pattern Purpose & When to Use It
+- **Purpose**: A transactional document page with order header metadata, line items DataGrid, and financial summary totals.
+- **When to Use**: - Sales Orders, Purchase Orders, Invoices, Transfer Orders, Quotations.
 
-## When to use
-- Sales Orders, Purchase Orders, Transfer Orders, Quotations.
-- Any transactional document following the Header + Lines + Totals structure.
+## 2. UI Structure & Layout
+Stacked document layout: Header FastTabs at top, Lines DataGrid in middle, Totals panel at bottom right.
 
-## Folder structure
+## 3. Page Sections & Components
+- PageHeader with Status Badge (Draft, Posted, Confirmed)
+- ActionPane (Workflow: Confirm, Post, Print)
+- Header Paper (FastTabs)
+- Lines Paper (AppDataGrid with masterForm=true)
+- Totals Summary Panel
+
+## 4. Folder Structure
 ```text
 src/patterns/document/
-├── DocumentPage.tsx           # Pattern component
-├── DocumentHeader.tsx         # Header form
-├── DocumentLines.tsx          # Lines grid
-└── types.ts                   # Pattern type exports
+├── DocumentPage.tsx
+├── DocumentHeader.tsx
+├── DocumentLines.tsx
+└── DocumentTotals.tsx
 ```
 
-## Required components
-```text
-DocumentPage
-├── PageHeader (statusBadge)
-├── ActionPane (Confirm, Post)
-├── Header Paper (FastTabs)
-├── Lines Paper (AppDataGrid)
-└── Totals Paper (right-aligned summary)
+## 5. Required Reusable Components
+- PageContainer
+- ActionPane
+- AppDataGrid
+- FastTabs
+- StatusBadge
+
+## 6. Data Flow & State Management
+- **Data Flow**: 1. Document loaded by ID.
+2. Header form & lines grid populated.
+3. Line modifications update financial totals dynamically.
+4. Process action (Post/Confirm) executes workflow API.
+- **State Management**: - Managed via useDocumentPage hook.
+- Lifecycle status transitions ('Draft' -> 'Confirmed').
+
+## 7. Actions & Commands
+- Save, Confirm, Post, Cancel Order, Print Document
+
+## 8. Validation Rules
+- Must have at least 1 line item before posting/confirming.
+
+## 9. Naming Conventions & Best Practices
+- **Naming Conventions**: - *DocumentPage.tsx or *OrderPage.tsx
+- **Best Practices**: - Right-align financial numeric fields in grid and totals.
+
+## 10. Do's and Don'ts Rules
+DO: Show clear status badges in header.
+DON'T: Allow line modifications on Posted documents.
+
+## 11. Implementation Example
+```tsx
+// SalesOrderPage usage
 ```
-
-## Data flow
-```text
-useDocumentPage(id) → loads order → updates header/lines → executeProcessAction() for lifecycle changes.
-```
-
-## Examples
-See `SalesOrderPage`.
-
-## Rules
-- `statusBadge` reflects lifecycle state.
-- Process actions must handle loading/errors.
-- Line item DataGrid uses `masterForm=true` for inline editing.
-
-## Description UI
-A comprehensive, document-centric layout. The top section is a Paper panel showing the Header (key metadata like Customer, Date, Currency in collapsed FastTabs). Below it is a full-width DataGrid for Lines (items, quantities, prices). At the bottom right, a distinct Totals panel aggregates the financial numbers (Subtotal, Tax, Grand Total).

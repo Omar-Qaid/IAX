@@ -1,40 +1,50 @@
-# Workspace Page
+# Workspace / Dashboard Page
 
-## Purpose
-An operational dashboard landing page with KPI summary tiles, charts, and data grid work lists.
+## 1. Pattern Purpose & When to Use It
+- **Purpose**: An operational hub featuring summary KPI tiles, work lists, charts, and quick actions.
+- **When to Use**: - Accounts Receivable Workspace, Inventory Management Dashboard, General Ledger Overview.
 
-## When to use
-- Module Dashboard (AR Workspace, Inventory Workspace).
-- Operational work centers for monitoring KPIs.
+## 2. UI Structure & Layout
+Grid layout: Top row KPI Tiles, Middle row Work List DataGrids, Right/Bottom row Quick Links & Charts.
 
-## Folder structure
+## 3. Page Sections & Components
+- PageHeader
+- Summary Tiles Grid (WorkspaceTile cards)
+- Active Worklists (AppDataGrids)
+- Quick Action Links & Analytics Charts
+
+## 4. Folder Structure
 ```text
 src/patterns/workspace/
-├── WorkspacePage.tsx          # Pattern component
-├── WorkspaceTile.tsx          # KPI summary tile card
-└── types.ts                   # Pattern type exports
+├── WorkspacePage.tsx
+├── WorkspaceTile.tsx
+└── types.ts
 ```
 
-## Required components
-```text
-WorkspacePage
-├── Summary Tiles Row (WorkspaceTile cards)
-├── Charts Section
-└── Work Lists (AppDataGrid)
+## 5. Required Reusable Components
+- WorkspaceTile
+- AppDataGrid
+- Grid container
+
+## 6. Data Flow & State Management
+- **Data Flow**: Independent concurrent queries fetch KPI metrics and worklist records.
+- **State Management**: - Dashboard filter state (Date range, Company / Legal Entity).
+
+## 7. Actions & Commands
+- Tile Drill-down, Quick Create, Refresh Metrics
+
+## 8. Validation Rules
+- Filter bar date ranges validation.
+
+## 9. Naming Conventions & Best Practices
+- **Naming Conventions**: - *WorkspacePage.tsx or *DashboardPage.tsx
+- **Best Practices**: - Keep tiles interactive (clickable for drill-down).
+
+## 10. Do's and Don'ts Rules
+DO: Highlight urgent items with red/warning colors.
+DON'T: Overcrowd workspace with more than 8 KPI tiles.
+
+## 11. Implementation Example
+```tsx
+// ARWorkspacePage usage
 ```
-
-## Data flow
-```text
-Module Page → useQuery for KPIs → WorkspacePage → renders Tiles and Grids.
-```
-
-## Examples
-See `DashboardPage`.
-
-## Rules
-- Tiles use `elevation={0}` with hover animations.
-- Tiles accept `onClick` for drill-down.
-- Limit to 4–8 KPI tiles.
-
-## Description UI
-A high-level landing dashboard. The top row features large, visually distinct KPI metric tiles (e.g., "Total Open Orders: 45"). Below the tiles, the layout is typically split into sections containing embedded DataGrids (Work Lists) showing items requiring immediate attention, alongside quick-action navigation cards.

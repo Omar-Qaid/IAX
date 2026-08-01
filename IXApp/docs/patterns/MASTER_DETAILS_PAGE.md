@@ -1,44 +1,54 @@
-# Master Details Page
+# Master-Detail Page
 
-## Purpose
-A vertically stacked layout showing a master record (form or grid) on top and dependent child collections in a detail DataGrid below.
+## 1. Pattern Purpose & When to Use It
+- **Purpose**: A parent-child stacked interface presenting a single master record on top and its child detail records in a DataGrid below.
+- **When to Use**: - Parent-child 1:N relations like Warehouse & Locations, Customer Group & Members, Journal Header & Lines.
 
-## When to use
-- Journals and Journal Lines, Warehouses and Locations, Chart of Accounts and Sub-accounts.
-- Any parent → child (1:N) relationship where both levels are visible simultaneously.
+## 2. UI Structure & Layout
+Top half features master record summary form/card; bottom half features child DataGrid. Connected via master selection context.
 
-## Folder structure
+## 3. Page Sections & Components
+- PageHeader
+- ActionPane (Master actions + Line actions)
+- Master Form/Card Region (Parent attributes)
+- Line Details Toolbar (Add Line, Remove Line)
+- Child AppDataGrid (Lines list)
+
+## 4. Folder Structure
 ```text
 src/patterns/master-detail/
-├── MasterDetailPage.tsx       # Pattern component
-├── MasterDetailLayout.tsx     # Split layout
-├── useMasterDetailPage.ts     # Pattern state hook
-└── types.ts                   # Pattern type exports
+├── MasterDetailPage.tsx
+├── MasterDetailLayout.tsx
+└── types.ts
 ```
 
-## Required components
-```text
-MasterDetailPage
-├── PageHeader
-├── ActionPane
-├── Master Section (Form or DataGrid)
-├── Detail Toolbar
-├── Detail DataGrid (filtered by master ID)
-└── Dialogs
+## 5. Required Reusable Components
+- PageContainer
+- ActionPane
+- AppDataGrid
+- FastTabs
+
+## 6. Data Flow & State Management
+- **Data Flow**: 1. Master record loaded -> populates top form.
+2. Master ID passed as query parameter to child lines query.
+3. Child lines rendered in bottom grid.
+- **State Management**: - Master dirty state + Detail lines dirty state unified via page hook.
+
+## 7. Actions & Commands
+- Add Line, Remove Line, Save All, Process Master
+
+## 8. Validation Rules
+- Validate Master header rules before allowing line creation.
+
+## 9. Naming Conventions & Best Practices
+- **Naming Conventions**: - Components named MasterDetail*.tsx
+- **Best Practices**: - Auto-focus newly created line item grid row.
+
+## 10. Do's and Don'ts Rules
+DO: Keep master and child relationship synchronized.
+DON'T: Orphan child records on delete.
+
+## 11. Implementation Example
+```tsx
+// MasterDetailPage usage
 ```
-
-## Data flow
-```text
-Master selection changes → Detail query key updates → Detail grid re-fetches.
-```
-
-## Examples
-Journals and Journal Lines view.
-
-## Rules
-- Detail DataGrid must re-fetch when master selection changes.
-- Save operations may need to persist both atomically.
-- Detail grid shows EmptyState when no master is selected.
-
-## Description UI
-The page is split horizontally. The top section presents the Master record (either as a concise form or a compact grid). The bottom section is a DataGrid showing child records tied to the selected master. Selecting a different master dynamically refreshes the lower grid without reloading the page.
