@@ -50,6 +50,7 @@ Specialized, comprehensive documentation is maintained in the `docs/` directory 
 | **Business Modules** | [`docs/modules.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/modules.md) | Domain business modules: Accounts Receivable, Dashboard, Auth, System Admin |
 | **Mock Services** | [`docs/mocks.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/mocks.md) | Typed mock datasets, repository implementations, and mock/HTTP service resolvers |
 | **Testing Strategy** | [`docs/testing.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/testing.md) | Vitest runner rules, JSDOM quirks, icon import rules, RTL rendering tests |
+| **Design Patterns** | [`docs/DESIGN-PATTERNS.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/DESIGN-PATTERNS.md) | All 13 page patterns: purpose, when to use, folder structure, components, data flow, examples, rules |
 
 ---
 
