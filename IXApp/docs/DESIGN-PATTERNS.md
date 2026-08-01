@@ -9,21 +9,24 @@ Each pattern is a reusable, enterprise-grade page template inspired by Microsoft
 
 ## Table of Contents
 
-| # | Pattern | Path | Status |
-|---|---|---|---|
-| 1 | [Simple List](#1-simple-list) | `src/patterns/simple-list/` | ✅ Implemented |
-| 2 | [List & Details](#2-list--details) | `src/patterns/list-details/` | ✅ Implemented |
-| 3 | [Master Form](#3-master-form) | `src/patterns/master-form/` | ✅ Implemented |
-| 4 | [Master-Detail](#4-master-detail) | `src/patterns/master-detail/` | 🔲 Scaffolded |
-| 5 | [Header-Lines Document](#5-header-lines-document) | `src/patterns/document/` | ✅ Implemented |
-| 6 | [Workspace](#6-workspace) | `src/patterns/workspace/` | ✅ Implemented |
-| 7 | [Inquiry](#7-inquiry) | `src/patterns/inquiry/` | 🔲 Scaffolded |
-| 8 | [Setup](#8-setup) | `src/patterns/setup/` | 🔲 Scaffolded |
-| 9 | [Process / Wizard](#9-process--wizard) | `src/patterns/process/` | 🔲 Scaffolded |
-| 10 | [Tree & Details](#10-tree--details) | `src/patterns/tree-details/` | 🔲 Scaffolded |
-| 11 | [Profile](#11-profile) | `src/patterns/profile/` | 🔲 Scaffolded |
-| 12 | [Tabbed Details](#12-tabbed-details) | `src/patterns/tabbed-details/` | 🔲 Scaffolded |
-| 13 | [Lookup Page](#13-lookup-page) | `src/patterns/lookup/` | 🔲 Scaffolded |
+| # | Pattern | Documentation | Source Path | Status |
+|---|---|---|---|---|
+| 1 | [Simple List](#1-simple-list) | [`SIMPLE_LIST_PAGE.md`](patterns/SIMPLE_LIST_PAGE.md) | `src/patterns/simple-list/` | ✅ Implemented |
+| 2 | [List & Details](#2-list--details) | [`LIST_DETAILS_PAGE.md`](patterns/LIST_DETAILS_PAGE.md) | `src/patterns/list-details/` | ✅ Implemented |
+| 3 | [Master Form](#3-master-form) | [`DETAILS_MASTER_FORM.md`](patterns/DETAILS_MASTER_FORM.md) | `src/patterns/master-form/` | ✅ Implemented |
+| 4 | [Master-Detail](#4-master-detail) | [`MASTER_DETAILS_PAGE.md`](patterns/MASTER_DETAILS_PAGE.md) | `src/patterns/master-detail/` | 🔲 Scaffolded |
+| 5 | [Header-Lines Document](#5-header-lines-document) | [`HEADER_LINES_PAGE.md`](patterns/HEADER_LINES_PAGE.md) | `src/patterns/document/` | ✅ Implemented |
+| 6 | [Workspace](#6-workspace) | [`WORKSPACE_PAGE.md`](patterns/WORKSPACE_PAGE.md) | `src/patterns/workspace/` | ✅ Implemented |
+| 7 | [Inquiry](#7-inquiry) | [`INQUIRY_PAGE.md`](patterns/INQUIRY_PAGE.md) | `src/patterns/inquiry/` | 🔲 Scaffolded |
+| 8 | [Setup](#8-setup) | [`PARAMETER_SETUP_PAGE.md`](patterns/PARAMETER_SETUP_PAGE.md) | `src/patterns/setup/` | 🔲 Scaffolded |
+| 9 | [Process / Wizard](#9-process--wizard) | [`WIZARD_PROCESS_PAGE.md`](patterns/WIZARD_PROCESS_PAGE.md) | `src/patterns/process/` | 🔲 Scaffolded |
+| 10 | [Tree & Details](#10-tree--details) | (See inline) | `src/patterns/tree-details/` | 🔲 Scaffolded |
+| 11 | [Profile](#11-profile) | (See inline) | `src/patterns/profile/` | 🔲 Scaffolded |
+| 12 | [Tabbed Details](#12-tabbed-details) | (See inline) | `src/patterns/tabbed-details/` | 🔲 Scaffolded |
+| 13 | [Lookup Page](#13-lookup-page) | (See inline) | `src/patterns/lookup/` | 🔲 Scaffolded |
+| 14 | [Master Details Grid](#master-details-grid) | [`MASTER_DETAILS_GRID.md`](patterns/MASTER_DETAILS_GRID.md) | `src/patterns/master-detail-grid/` | 🔲 Scaffolded |
+| 15 | [Document Page](#document-page) | [`DOCUMENT_PAGE.md`](patterns/DOCUMENT_PAGE.md) | `src/patterns/document/` | ✅ Implemented |
+| 16 | [Dashboard Page](#dashboard-page) | [`DASHBOARD_PAGE.md`](patterns/DASHBOARD_PAGE.md) | `src/patterns/dashboard/` | 🔲 Scaffolded |
 
 ---
 
