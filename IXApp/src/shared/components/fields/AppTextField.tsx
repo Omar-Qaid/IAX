@@ -1,6 +1,6 @@
 import React from 'react';
 import { TextField, type TextFieldProps } from '@mui/material';
-import { Controller, type FieldValues } from 'react-hook-form';
+import { Controller, useFormContext, type FieldValues } from 'react-hook-form';
 import type { BaseFieldProps } from './types';
 
 export interface AppTextFieldProps<TFieldValues extends FieldValues = FieldValues>
@@ -14,7 +14,7 @@ export interface AppTextFieldProps<TFieldValues extends FieldValues = FieldValue
 export function AppTextField<TFieldValues extends FieldValues = FieldValues>({
   name,
   label,
-  control,
+  control: controlProp,
   required = false,
   disabled = false,
   readOnly = false,
@@ -31,6 +31,9 @@ export function AppTextField<TFieldValues extends FieldValues = FieldValues>({
   slotProps,
   ...rest
 }: AppTextFieldProps<TFieldValues>): React.ReactElement | null {
+  const formContext = useFormContext();
+  const control = controlProp || formContext?.control;
+
   if (hidden) return null;
 
   const combinedSlotProps = {
@@ -67,7 +70,7 @@ export function AppTextField<TFieldValues extends FieldValues = FieldValues>({
   return (
     <Controller
       name={name as any}
-      control={control}
+      control={control as any}
       render={({ field, fieldState: { error } }) => (
         <TextField
           {...field}
