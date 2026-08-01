@@ -24,15 +24,28 @@ The application is engineered to connect to an ASP.NET Core REST Web API backend
 
 ---
 
-## 3. Documentation System Index
+## 3. Master Documentation Index
 
-Detailed, specialized documentation for every folder layer is maintained in the `docs/` directory:
+Specialized, comprehensive documentation is maintained in the `docs/` directory for every folder and sub-package:
 
-| Folder / Layer | Documentation File | Description & Scope |
+| Layer / Folder | Documentation File | Description & Scope |
 |---|---|---|
 | **Application Layer** | [`docs/app.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/app.md) | Bootstrap, global providers, layouts, routing, theme composition, Zustand stores |
 | **Core Layer** | [`docs/core.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/core.md) | Axios API client, authentication, RBAC permissions, error mapping, localization engine |
-| **Shared Layer** | [`docs/shared.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared.md) | Action pane, shell controls, virtualized DataGrid, form fields, FastTabs, dialogs, lookups, logistics drawers |
+| **Shared Layer Index** | [`docs/shared.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared.md) | Shared controls overview & sub-folder index |
+| ├─ **Action Pane** | [`docs/shared/action-pane.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/action-pane.md) | D365 command bar toolbars & RBAC command guards |
+| ├─ **App Shell** | [`docs/shared/app-shell.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/app-shell.md) | Shell topbar, sidebar, command palette (`Ctrl+K`), drawers |
+| ├─ **Data Grid** | [`docs/shared/data-grid.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/data-grid.md) | `AppDataGrid` virtualized data table, inline editing, persistence, CSV export |
+| ├─ **Dialogs** | [`docs/shared/dialogs.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/dialogs.md) | Modal dialog container (`AppDialog`), confirmation & delete warning dialogs |
+| ├─ **FastTabs** | [`docs/shared/fast-tabs.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/fast-tabs.md) | Collapsible form section accordions with summary text & error chips |
+| ├─ **Feedback States** | [`docs/shared/feedback.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/feedback.md) | Standardized loading, empty result, error alert, and access denied states |
+| ├─ **Form Fields** | [`docs/shared/fields.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/fields.md) | React Hook Form input controls (`AppTextField`, `AppSelectField`, `AppLookupGridField`) |
+| ├─ **Form Layouts** | [`docs/shared/forms.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/forms.md) | 12-column responsive layout wrappers (`FormRow`, `FormColumn`) & error banners |
+| ├─ **Logistics Drawers**| [`docs/shared/logistics.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/logistics.md) | Slide-out right drawers for postal addresses & electronic contact channels |
+| ├─ **Grid Lookups** | [`docs/shared/lookups.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/lookups.md) | Virtualized multi-column popover table dropdowns & RBAC field guards |
+| ├─ **Page Layouts** | [`docs/shared/page.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/page.md) | Structural page containers (`PageContainer`, `PageHeader`, `PageContent`, `PageSection`) |
+| ├─ **Shared Hooks** | [`docs/shared/hooks.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/hooks.md) | Generic hooks (`useNotifications`, `useDebounce`, `useLogisticsAddress`, `useLookupGridField`) |
+| └─ **Shared Utilities**| [`docs/shared/utilities.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/utilities.md) | Helper functions for column localization, action filtering, and grid exports |
 | **Page Patterns** | [`docs/patterns.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/patterns.md) | Reusable page templates: Simple List, List & Details, Master Form, Workspace, Document |
 | **Business Modules** | [`docs/modules.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/modules.md) | Domain business modules: Accounts Receivable, Dashboard, Auth, System Admin |
 | **Mock Services** | [`docs/mocks.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/mocks.md) | Typed mock datasets, repository implementations, and mock/HTTP service resolvers |
