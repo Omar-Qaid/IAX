@@ -46,7 +46,7 @@ export function SortableHeader<T>({
         display: 'flex',
         flexDirection: 'column',
         boxSizing: 'border-box',
-        backgroundColor: theme.palette.mode === 'light' ? '#f8f9fa' : '#1a202c',
+        backgroundColor: theme.palette.mode === 'light' ? '#f3f2f1' : '#1a202c',
         borderRight: showColumnBorders ? `1px solid ${theme.palette.divider}` : 'none',
         width: column.width || 150,
         minWidth: column.width || 150,
@@ -65,19 +65,19 @@ export function SortableHeader<T>({
           display: 'flex', alignItems: 'center', p: '4px 12px',
           borderBottom: `1px solid ${theme.palette.divider}`,
           justifyContent: column.headerAlign === 'center' ? 'center' : column.headerAlign === 'right' ? 'flex-end' : 'flex-start',
-          cursor: 'grab', userSelect: 'none', position: 'relative', height: 36,
-          '&:hover': { bgcolor: theme.palette.action.hover }
+          cursor: column.sortable === false ? 'default' : 'pointer', userSelect: 'none', position: 'relative', height: 36,
+          '&:hover': { bgcolor: theme.palette.mode === 'light' ? '#e9e8e7' : theme.palette.action.hover }
         }}
       >
         <Typography variant="subtitle2" sx={{ 
           flexGrow: 1, 
-          fontWeight: 700, 
+          fontWeight: 600,
           color: 'text.primary', 
           overflow: 'hidden', 
           textOverflow: 'ellipsis', 
           whiteSpace: 'nowrap', 
           fontSize: '0.75rem',
-          letterSpacing: '0.02em',
+          letterSpacing: 0,
         }}>
           {t(column.headerName || '')}
         </Typography>
@@ -114,7 +114,7 @@ export function SortableHeader<T>({
           position: 'absolute', top: 0, bottom: 0, width: 6,
           cursor: 'col-resize', zIndex: 10,
           ...(theme.direction === 'rtl' ? { left: 0 } : { right: 0 }),
-          '&:hover': { bgcolor: 'primary.main', opacity: 0.5 },
+          '&:hover': { bgcolor: 'primary.main', opacity: 0.65 },
         }}
       />
     </Box>

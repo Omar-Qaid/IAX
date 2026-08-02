@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Box, useTheme } from '@mui/material';
+import { Box, alpha, useTheme } from '@mui/material';
 import type { ColumnDef } from '../types';
 
 interface GridCellProps<T> {
@@ -25,6 +25,7 @@ const GridCellInternal = <T,>({
   return (
     <Box
       tabIndex={-1}
+      role="gridcell"
       data-row-index={rowIndex}
       data-col-index={colIndex}
       sx={{
@@ -47,15 +48,16 @@ const GridCellInternal = <T,>({
         ...(isPinned && {
           position: 'sticky',
           zIndex: 2,
-          bgcolor: theme.palette.mode === 'light' ? '#ffffff' : '#1a202c',
+          bgcolor: 'inherit',
           ...(position === 'left'
-            ? { left: offset, borderRight: `1px solid ${theme.palette.divider}` }
-            : { right: offset, borderLeft: `1px solid ${theme.palette.divider}` }),
+            ? { left: offset, boxShadow: `1px 0 0 ${theme.palette.divider}` }
+            : { right: offset, boxShadow: `-1px 0 0 ${theme.palette.divider}` }),
         }),
         '&:focus': {
-          outline: `2px solid ${theme.palette.primary.main}`,
+          outline: `1px solid ${theme.palette.primary.main}`,
           outlineOffset: '-2px',
           zIndex: 3,
+          bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.06 : 0.12),
         }
       }}
     >

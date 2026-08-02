@@ -2,9 +2,8 @@ import React, { useState, useEffect, useMemo, memo } from 'react';
 import {
   Box, Typography,
   Dialog, DialogTitle, DialogContent, DialogActions,
-  FormGroup, FormControlLabel, Button, useTheme
+  FormGroup, FormControlLabel, Button, Checkbox, useTheme
 } from '@mui/material';
-import FilterIcon from '@mui/icons-material/FilterList';
 import {
   DndContext, closestCenter, KeyboardSensor, PointerSensor,
   useSensor, useSensors, type DragEndEvent,
@@ -16,6 +15,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { ColumnDef, SortModel, FilterModel } from './types';
 import { AppBooleanField } from '@shared/components/fields/AppBooleanField';
+import { GRID_SELECTION_COLUMN_WIDTH } from './constants';
 
 // New Modular Sub-components
 import { PinnedHeaderCell } from './header/PinnedHeaderCell';
@@ -169,7 +169,7 @@ export function DataGridHeaderInternal<T>({
     <Box sx={{ 
       display: 'flex', 
       height: headerHeight,
-      bgcolor: theme.palette.mode === 'light' ? '#f8f9fa' : '#1a202c',
+      bgcolor: theme.palette.mode === 'light' ? '#f3f2f1' : '#1a202c',
       width: 'max-content',
       minWidth: '100%',
       position: 'relative'
@@ -179,28 +179,25 @@ export function DataGridHeaderInternal<T>({
         <Box sx={{
           display: 'flex', flexDirection: 'column',
           boxSizing: 'border-box',
-          bgcolor: theme.palette.mode === 'light' ? '#f8f9fa' : '#1a202c',
-          width: 42, position: 'sticky', left: 0, zIndex: 6,
+          bgcolor: theme.palette.mode === 'light' ? '#f3f2f1' : '#1a202c',
+          width: GRID_SELECTION_COLUMN_WIDTH, minWidth: GRID_SELECTION_COLUMN_WIDTH, maxWidth: GRID_SELECTION_COLUMN_WIDTH,
+          position: 'sticky', left: 0, zIndex: 6,
           borderRight: `1px solid ${theme.palette.divider}`,
           flexShrink: 0,
           flex: 'none'
         }}>
           <Box sx={{
             display: 'flex', alignItems: 'center', justifyContent: 'center', p: 0,
-            borderBottom: `1px solid ${theme.palette.divider}`, height: 36
+            borderBottom: `1px solid ${theme.palette.divider}`, height: headerHeight,
+            boxSizing: 'border-box', overflow: 'hidden',
           }}>
-            <AppBooleanField 
-              value={allSelected} 
-              onChange={(val) => onSelectAll?.(val)} 
-              sx={{ p: 0, '& .MuiCheckbox-root': { p: 0 } }}
+            <Checkbox
+              size="small"
+              checked={Boolean(allSelected)}
+              onChange={(event) => onSelectAll?.(event.target.checked)}
+              slotProps={{ input: { 'aria-label': t('grid.select_all') } }}
+              sx={{ p: 0.5, m: 0, color: 'text.secondary', '&.Mui-checked': { color: 'primary.main' } }}
             />
-          </Box>
-          <Box sx={{ 
-            p: '4px 8px', borderBottom: `1px solid ${theme.palette.divider}`, 
-            bgcolor: theme.palette.mode === 'light' ? '#ffffff' : '#2d3748', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center', height: 36 
-          }}>
-            <FilterIcon sx={{ fontSize: 12, color: 'action.disabled' }} />
           </Box>
         </Box>
       )}
@@ -209,7 +206,7 @@ export function DataGridHeaderInternal<T>({
         <PinnedHeaderCell
           key={col.field as string}
           column={col}
-          offset={pinnedLeftOffsets[i] + (selectionMode === 'multiple' ? 42 : 0)}
+          offset={pinnedLeftOffsets[i] + (selectionMode === 'multiple' ? GRID_SELECTION_COLUMN_WIDTH : 0)}
           side="left"
           filters={filters}
           onFilterChange={handleFilterChange}
@@ -249,7 +246,7 @@ export function DataGridHeaderInternal<T>({
         flexShrink: 0,
         minWidth: 0,
         borderBottom: `1px solid ${theme.palette.divider}`,
-        bgcolor: theme.palette.mode === 'light' ? '#f8f9fa' : '#1a202c',
+        bgcolor: theme.palette.mode === 'light' ? '#f3f2f1' : '#1a202c',
       }} />
 
       {pinnedRightCols.map((col, i) => (

@@ -14,10 +14,14 @@ import { DataGrid } from '@shared/components/data-grid/DataGrid';
 import { EnterpriseQuickFilter } from '@shared/components/data-grid/EnterpriseQuickFilter';
 import { EnterpriseListFilterBar } from '@shared/components/data-grid/EnterpriseListFilterBar';
 import { EnterpriseFilterPanel } from '@shared/components/data-grid/EnterpriseFilterPanel';
-import type { DataGridProps } from '@shared/components/data-grid/types';
+import type { ColumnDef, DataGridProps } from '@shared/components/data-grid/types';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { ErrorState } from '@shared/components/feedback/ErrorState';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import type { SimpleListDataSource } from './types';
+import { useSimpleListDataSource } from './useSimpleListDataSource';
+
+export type SimpleListGridProps<T> = Omit<DataGridProps<T>, 'rows' | 'columns'>;
 
 export interface EnterpriseListSearchField<T> {
   field: keyof T & string;
@@ -100,7 +104,9 @@ export interface SimpleListPageProps<T extends { id: string } = { id: string }> 
   filterBar?: React.ReactNode;
   sidePanels?: React.ReactNode;
   utilityRail?: React.ReactNode;
-  dataGridProps: DataGridProps<T>;
+  dataSource: SimpleListDataSource<T>;
+  columns: ColumnDef<T>[];
+  dataGridProps?: SimpleListGridProps<T>;
   loading?: boolean;
   error?: string | null;
   onRetry?: () => void;
@@ -113,12 +119,14 @@ export interface SimpleListPageProps<T extends { id: string } = { id: string }> 
 
 export function SimpleListPage<T extends { id: string } = { id: string }>(props: SimpleListPageProps<T>): React.ReactElement {
   const {
-    title, subtitle, variant = 'standard', enterpriseConfig, onViewClick, dataGridProps,
+    title, subtitle, variant = 'standard', enterpriseConfig, onViewClick, dataGridProps = {},
     loading = false, error, onRetry, dialogs, gridHeight, contentMinHeight = 520,
     containerSx, contentSx,
   } = props;
   const { t } = useAppTranslation();
-  const rows = dataGridProps.rows;
+  const sourceState = useSimpleListDataSource(props.dataSource);
+  const rows = sourceState.rows;
+  const columns = props.columns;
   const getRowId = dataGridProps.getRowId ?? ((row: T) => row.id);
   const initialRow = enterpriseConfig?.initialSelection === 'none' ? null : (rows[0] ?? null);
   const [selectedIds, setSelectedIds] = useState<(string | number)[]>(initialRow ? [getRowId(initialRow)] : []);
@@ -144,9 +152,12 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
     });
   }, [advancedFilter, enterpriseConfig, query, rows, searchField]);
 
-  const feedback = error
-    ? <ErrorState message={error} onRetry={onRetry} />
-    : loading
+  const resolvedError = error ?? sourceState.error;
+  const resolvedLoading = loading || sourceState.loading;
+  const retry = onRetry ?? sourceState.refresh;
+  const feedback = resolvedError
+    ? <ErrorState message={resolvedError} onRetry={retry} />
+    : resolvedLoading
       ? <LoadingState message={t('messages.loadingRecords')} />
       : null;
 
@@ -162,11 +173,13 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
       setInformationPanelOpen(config?.informationOpenOnLoad ?? false);
       setSelectedRow(firstRow);
       setSelectedIds(firstRow ? [getRowId(firstRow)] : []);
+      sourceState.refresh();
       config?.onReset?.();
     };
     const resolvedGridProps: DataGridProps<T> = config ? {
       ...dataGridProps,
       rows: processedRows,
+      columns,
       selectionMode: dataGridProps.selectionMode ?? 'multiple',
       selectedIds,
       onSelectionChange: (ids) => {
@@ -187,7 +200,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
       hideFooter: dataGridProps.hideFooter ?? true,
       showCellBorders: dataGridProps.showCellBorders ?? false,
       showColumnBorders: dataGridProps.showColumnBorders ?? false,
-    } : dataGridProps;
+    } : { ...dataGridProps, rows, columns };
     const generatedActionPane = config && <>
       <EnterpriseCrudActions
         editLabel={config.crud.editLabel}
@@ -244,7 +257,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
   return <PageContainer sx={containerSx}>
     <PageHeader title={title} subtitle={subtitle} />
     {props.actionPane && <ActionPane endActions={props.actionPaneEndActions}>{props.actionPane}</ActionPane>}
-    {feedback ?? <Box sx={{ width: '100%', height: gridHeight ?? 600 }}><DataGrid {...dataGridProps} /></Box>}
+    {feedback ?? <Box sx={{ width: '100%', height: gridHeight ?? 600 }}><DataGrid {...dataGridProps} rows={rows} columns={columns} /></Box>}
     {dialogs}
   </PageContainer>;
 }

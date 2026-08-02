@@ -7,3 +7,5 @@ export const GRID_FILTER_OPERATORS = [
   { value: 'isNotEmpty', label: 'Is not empty' },
   { value: 'in', label: 'Is one of' },
 ];
+
+export const GRID_SELECTION_COLUMN_WIDTH = 40;

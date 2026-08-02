@@ -28,7 +28,7 @@ export function PinnedHeaderCell<T>({
     <Box sx={{
       display: 'flex', flexDirection: 'column',
       boxSizing: 'border-box',
-      bgcolor: theme => theme.palette.mode === 'light' ? '#f8f9fa' : '#1a202c',
+      bgcolor: theme => theme.palette.mode === 'light' ? '#f3f2f1' : '#1a202c',
       width: column.width || 150, minWidth: column.width || 150, maxWidth: column.width || 150,
       overflow: 'hidden',
       position: 'sticky', zIndex: 6, flexShrink: 0, flexGrow: 0,
@@ -41,16 +41,16 @@ export function PinnedHeaderCell<T>({
         display: 'flex', alignItems: 'center', p: '4px 12px', 
         borderBottom: theme => `1px solid ${theme.palette.divider}`, 
         position: 'relative', height: 36,
-        '&:hover': { bgcolor: theme => theme.palette.action.hover }
+        '&:hover': { bgcolor: theme => theme.palette.mode === 'light' ? '#e9e8e7' : theme.palette.action.hover }
       }}>
         <Typography variant="subtitle2" sx={{ 
           flexGrow: 1, 
-          fontWeight: 700, 
+          fontWeight: 600,
           fontSize: '0.75rem', 
           overflow: 'hidden', 
           textOverflow: 'ellipsis', 
           whiteSpace: 'nowrap',
-          letterSpacing: '0.02em',
+          letterSpacing: 0,
         }}>
           {t(column.headerName || '')}
         </Typography>

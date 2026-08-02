@@ -599,7 +599,7 @@ function DataGridInternal<T>({
             minHeight: typeof height === 'number' ? height : undefined,
             overflow: 'hidden',
             borderRadius: 0,
-            border: `1px solid ${theme.palette.divider}`,
+            border: `1px solid ${theme.palette.mode === 'light' ? '#d6d6d6' : theme.palette.divider}`,
             boxShadow: 'none',
             bgcolor: 'background.paper'
         }}>
@@ -626,7 +626,7 @@ function DataGridInternal<T>({
                             ref={headerScrollRef}
                             sx={{
                                 overflow: 'hidden',
-                                bgcolor: theme.palette.mode === 'light' ? '#f8f9fa' : '#1a202c',
+                                bgcolor: theme.palette.mode === 'light' ? '#f3f2f1' : '#1a202c',
                                 flexShrink: 0,
                                 borderBottom: `1px solid ${theme.palette.divider}`,
                                 pr: `${scrollbarWidth || 0}px`,
@@ -663,15 +663,17 @@ function DataGridInternal<T>({
                             overflow: 'auto',
                             bgcolor: 'background.paper',
                             '&::-webkit-scrollbar': { width: 8, height: 8 },
-                            '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
+                            scrollbarColor: `${theme.palette.mode === 'light' ? '#b8b8b8' : '#5f6b7a'} transparent`,
+                            scrollbarWidth: 'thin',
+                            '&::-webkit-scrollbar-track': { bgcolor: theme.palette.mode === 'light' ? '#f7f7f7' : 'transparent' },
                             '&::-webkit-scrollbar-thumb': {
-                                bgcolor: theme.palette.mode === 'light' ? '#e0e0e0' : '#4a5568',
+                                bgcolor: theme.palette.mode === 'light' ? '#b8b8b8' : '#5f6b7a',
                                 borderRadius: 4,
                                 border: '2px solid transparent',
                                 backgroundClip: 'content-box'
                             },
                             '&::-webkit-scrollbar-thumb:hover': {
-                                bgcolor: theme.palette.mode === 'light' ? '#bdbdbd' : '#718096'
+                                bgcolor: theme.palette.mode === 'light' ? '#8f8f8f' : '#8290a3'
                             },
                         }}
                     >

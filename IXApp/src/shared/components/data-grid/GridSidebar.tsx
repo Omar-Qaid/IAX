@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Box, Typography, IconButton, Divider,
+  Badge, Box, Typography, IconButton, Tooltip,
 } from '@mui/material';
 import {
   ViewColumn as ViewColumnIcon,
@@ -89,18 +89,18 @@ export function GridSidebar<T>({
   };
 
   return (
-    <Box sx={{ display: 'flex', height: '100%', borderLeft: '1px solid #e0e0e0', bgcolor: 'background.paper' }}>
+    <Box sx={{ display: 'flex', height: '100%', minHeight: 0, borderInlineStart: (theme) => `1px solid ${theme.palette.divider}`, bgcolor: 'background.paper', boxShadow: open ? '-2px 0 8px rgba(0,0,0,0.06)' : 'none', zIndex: 5 }}>
 
       {/* Panel Content */}
       {activeTab ? (
-        <Box sx={{ width: 260, display: 'flex', flexDirection: 'column', borderRight: '1px solid #e0e0e0', overflow: 'hidden' }}>
+        <Box sx={{ width: 288, display: 'flex', flexDirection: 'column', borderInlineEnd: (theme) => `1px solid ${theme.palette.divider}`, overflow: 'hidden', bgcolor: 'background.paper' }}>
 
           {/* Panel header with close */}
-          <Box sx={{ display: 'flex', alignItems: 'center', px: 1.5, py: 0.75, borderBottom: '1px solid #e0e0e0', minHeight: 40 }}>
-            <Typography variant="subtitle2" sx={{ flexGrow: 1, fontWeight: 600, fontSize: '0.8rem' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', px: 1.5, borderBottom: (theme) => `1px solid ${theme.palette.divider}`, minHeight: 44, bgcolor: (theme) => theme.palette.mode === 'light' ? '#f3f2f1' : 'background.default' }}>
+            <Typography variant="subtitle2" sx={{ flexGrow: 1, fontWeight: 600, fontSize: '0.8125rem' }}>
               {activeTab === 'columns' ? t('grid.choose_columns') : activeTab === 'filters' ? t('grid.filters') : t('grid.features')}
             </Typography>
-            <IconButton size="small" sx={{ p: 0.25 }} onClick={() => { setActiveTab(null); onClose(); }}>
+            <IconButton size="small" aria-label={t('common.close')} sx={{ p: 0.5, borderRadius: 0.5 }} onClick={() => { setActiveTab(null); onClose(); }}>
               <CloseIcon sx={{ fontSize: 16 }} />
             </IconButton>
           </Box>
@@ -151,30 +151,26 @@ export function GridSidebar<T>({
       ) : null}
 
       {/* Vertical Tab Strip (Right Edge) */}
-      <Box sx={{ width: 40, display: 'flex', flexDirection: 'column', alignItems: 'center', pt: 1, bgcolor: '#f8f9fa' }}>
+      <Box component="nav" aria-label={t('grid.features')} sx={{ width: 44, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'stretch', py: 0.5, gap: 0.25, bgcolor: (theme) => theme.palette.mode === 'light' ? '#f3f2f1' : 'background.default' }}>
         <SidebarTab
           active={activeTab === 'columns'}
           onClick={() => handleTabClick('columns')}
-          icon={<ViewColumnIcon fontSize="small" sx={{ transform: 'rotate(90deg)' }} />}
+          icon={<ViewColumnIcon sx={{ fontSize: 19 }} />}
           label={t('grid.choose_columns')}
         />
-
-        <Divider flexItem sx={{ my: 0.5 }} />
 
         <SidebarTab
           active={activeTab === 'filters'}
           onClick={() => handleTabClick('filters')}
-          icon={<FilterIcon fontSize="small" sx={{ transform: 'rotate(90deg)' }} />}
+          icon={<FilterIcon sx={{ fontSize: 19 }} />}
           label={t('grid.filters')}
           badgeCount={filters.length}
         />
 
-        <Divider flexItem sx={{ my: 0.5 }} />
-
         <SidebarTab
           active={activeTab === 'features'}
           onClick={() => handleTabClick('features')}
-          icon={<SettingsIcon fontSize="small" sx={{ transform: 'rotate(90deg)' }} />}
+          icon={<SettingsIcon sx={{ fontSize: 19 }} />}
           label={t('grid.features')}
         />
       </Box>
@@ -192,34 +188,12 @@ interface SidebarTabProps {
 }
 
 function SidebarTab({ active, onClick, icon, label, badgeCount }: SidebarTabProps) {
-  return (
+  return <Tooltip title={label} placement="left">
     <IconButton
-      size="small"
-      onClick={onClick}
-      sx={{
-        borderRadius: 0,
-        width: '100%',
-        py: 1.5,
-        color: active ? 'primary.main' : 'text.secondary',
-        bgcolor: active ? 'white' : 'transparent',
-        position: 'relative'
-      }}
+      size="small" aria-label={label} aria-pressed={active} onClick={onClick}
+      sx={{ borderRadius: 0.5, width: 36, height: 36, mx: 0.5, color: active ? 'primary.main' : 'text.secondary', bgcolor: active ? 'background.paper' : 'transparent', border: '1px solid', borderColor: active ? 'primary.main' : 'transparent', '&:hover': { bgcolor: 'background.paper', color: 'primary.main' } }}
     >
-      <Box sx={{ writingMode: 'vertical-rl', display: 'flex', alignItems: 'center', gap: 1 }}>
-        {icon}
-        <Typography variant="caption" sx={{ letterSpacing: 1, fontWeight: 600 }}>{label}</Typography>
-      </Box>
-      {badgeCount && badgeCount > 0 && (
-        <Box sx={{
-          position: 'absolute', top: 6, right: 4, width: 14, height: 14,
-          bgcolor: 'primary.main', borderRadius: '50%',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <Typography sx={{ fontSize: '0.6rem', color: 'white', lineHeight: 1 }}>
-            {badgeCount}
-          </Typography>
-        </Box>
-      )}
+      <Badge badgeContent={badgeCount} color="primary" max={99} sx={{ '& .MuiBadge-badge': { minWidth: 14, height: 14, px: 0.25, fontSize: '0.5625rem' } }}>{icon}</Badge>
     </IconButton>
-  );
+  </Tooltip>;
 }

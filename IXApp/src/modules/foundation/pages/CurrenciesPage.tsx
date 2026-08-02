@@ -19,7 +19,9 @@ export function CurrenciesPage(): React.ReactElement {
     <SimpleListPage
       title={t('pages.currencies.title')}
       subtitle={t('pages.currencies.subtitle')}
-      dataGridProps={{ rows: MOCK_CURRENCIES, columns, storageKey: 'foundation.currencies', hideAddRowButton: true }}
+      dataSource={{ type: 'static', rows: MOCK_CURRENCIES }}
+      columns={columns}
+      dataGridProps={{ storageKey: 'foundation.currencies', hideAddRowButton: true }}
     />
   );
 }

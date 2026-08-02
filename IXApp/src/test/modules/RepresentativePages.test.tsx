@@ -37,8 +37,7 @@ describe('representative enterprise pages', () => {
     expect(screen.getByText('Major Key Accounts')).toBeDefined();
     act(() => fireEvent.click(screen.getByRole('button', { name: 'Filter' })));
     expect(screen.getByRole('heading', { name: 'Filters' })).toBeDefined();
-    act(() => fireEvent.click(screen.getByRole('button', { name: 'Information' })));
-    expect(screen.getByRole('heading', { name: 'Related information' })).toBeDefined();
+    expect(screen.queryByRole('button', { name: 'Information' })).toBeNull();
     unmount();
 
     render(<SalesOrdersPage />);

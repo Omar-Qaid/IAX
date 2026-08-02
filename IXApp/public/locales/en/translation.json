@@ -53,7 +53,7 @@
   "grid": {
     "rows_count_one": "{{count}} row", "rows_count_other": "{{count}} rows", "rows_loaded": "{{loaded}} of {{total}} rows loaded", "rows_filtered": "{{filtered}} of {{total}} rows",
     "no_data": "No data", "no_records": "No matching records", "no_records_msg": "There are no records to display.", "no_results_msg": "Change or clear the filters to see more results.", "loading_more": "Loading more…",
-    "add_row": "Add row", "add_row_disabled": "Save or cancel the current row first", "filter_placeholder": "Filter value", "filters": "Filters", "features": "Features", "choose_columns": "Choose columns",
+    "add_row": "Add row", "add_row_disabled": "Save or cancel the current row first", "filter_placeholder": "Filter value", "filters": "Filters", "features": "Features", "choose_columns": "Choose columns", "select_all": "Select all rows",
     "no_active_filters": "No active filters", "clear_all_filters": "Clear all filters", "themes": "Grid appearance", "compact_density": "Compact", "standard_density": "Standard", "comfortable_density": "Comfortable",
     "show_column_borders": "Show column borders", "show_cell_borders": "Show cell borders", "row_selection": "Row selection", "single_selection": "Single selection", "multiple_selection": "Multiple selection",
     "single_selection_desc": "Select one row at a time.", "multiple_selection_desc": "Select multiple rows.", "column_sizing": "Column sizing", "autosize_all": "Autosize all", "un_autosize_all": "Reset autosizing",

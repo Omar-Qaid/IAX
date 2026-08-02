@@ -70,6 +70,8 @@ export function CustomerListPage(): React.ReactElement {
     variant="enterprise"
     title={t('pages.customers.title')}
     enterpriseConfig={config}
-    dataGridProps={{ rows: MOCK_CUSTOMERS, columns, storageKey: 'accounts-receivable.customers.reference-view' }}
+    dataSource={{ type: 'static', rows: MOCK_CUSTOMERS }}
+    columns={columns}
+    dataGridProps={{ storageKey: 'accounts-receivable.customers.reference-view' }}
   />;
 }

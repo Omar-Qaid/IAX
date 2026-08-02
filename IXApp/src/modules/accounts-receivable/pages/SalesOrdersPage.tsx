@@ -20,5 +20,5 @@ export function SalesOrdersPage(): React.ReactElement {
   ], []);
 
   const openOrder = (order: SalesOrder) => navigate(ROUTE_PATHS.ACCOUNTS_RECEIVABLE.salesOrder(order.id));
-  return <SimpleListPage title={t('pages.salesOrders.title')} subtitle={t('pages.salesOrders.subtitle')} dataGridProps={{ rows: MOCK_SALES_ORDERS, columns, storageKey: 'accounts-receivable.sales-orders', hideAddRowButton: true, onRowDoubleClick: openOrder }} />;
+  return <SimpleListPage title={t('pages.salesOrders.title')} subtitle={t('pages.salesOrders.subtitle')} dataSource={{ type: 'static', rows: MOCK_SALES_ORDERS }} columns={columns} dataGridProps={{ storageKey: 'accounts-receivable.sales-orders', hideAddRowButton: true, onRowDoubleClick: openOrder }} />;
 }

@@ -4,6 +4,7 @@ import { Check as SaveIcon, Close as CancelIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { GridCell } from './GridCell';
 import type { ColumnDef } from '../types';
+import { GRID_SELECTION_COLUMN_WIDTH } from '../constants';
 
 interface GridRowProps<T> {
   row: T;
@@ -43,13 +44,13 @@ export const GridRow = memo(function GridRowInner<T>({
   const theme = useTheme();
   const { t } = useTranslation();
   const rowId = getRowId(row);
-  const rowBg = isSelected 
-    ? alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.08 : 0.15) 
-    : index % 2 === 1 ? (theme.palette.mode === 'light' ? '#fafafa' : alpha(theme.palette.action.hover, 0.05)) : 'transparent';
+  const rowBg = isSelected
+    ? alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.14 : 0.22)
+    : index % 2 === 1 ? (theme.palette.mode === 'light' ? '#fcfcfc' : alpha(theme.palette.action.hover, 0.04)) : 'background.paper';
   
   const hoverBg = isSelected 
-    ? alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.12 : 0.2) 
-    : theme.palette.mode === 'light' ? '#f5f5f5' : alpha(theme.palette.action.hover, 0.1);
+    ? alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.18 : 0.28)
+    : theme.palette.mode === 'light' ? '#f3f6fa' : alpha(theme.palette.action.hover, 0.1);
 
   const editingBg = isEditing
     ? alpha(theme.palette.warning.main, theme.palette.mode === 'light' ? 0.06 : 0.12)
@@ -64,6 +65,8 @@ export const GridRow = memo(function GridRowInner<T>({
       onContextMenu={isEditing ? undefined : e => onContextMenu(e, row)}
       onClick={() => { if (!isEditing) { onToggleRow(rowId); onRowClick?.(row); } }}
       onDoubleClick={() => { if (!isEditing) { onRowDoubleClick?.(row); } }}
+      role="row"
+      aria-selected={isSelected}
       sx={{
         position: 'absolute', top: 0, left: 0,
         width: 'max-content', minWidth: '100%', height: `${virtualRow.size}px`,
@@ -71,6 +74,8 @@ export const GridRow = memo(function GridRowInner<T>({
         display: 'flex',
         cursor: isEditing ? 'default' : (onRowClick ? 'pointer' : 'default'),
         bgcolor: editingBg ?? rowBg,
+        boxShadow: isSelected ? `inset 3px 0 0 ${theme.palette.primary.main}` : 'none',
+        transition: theme.transitions.create(['background-color', 'box-shadow'], { duration: theme.transitions.duration.shortest }),
         outline: isEditing ? `2px solid ${theme.palette.warning.main}` : undefined,
         outlineOffset: isEditing ? '-2px' : undefined,
         '&:hover': { bgcolor: isEditing ? editingBg : hoverBg },
@@ -79,7 +84,7 @@ export const GridRow = memo(function GridRowInner<T>({
       {selectionMode === 'multiple' && (
         <GridCell
           row={row}
-          col={{ field: '_selection', headerName: '', width: 42 } as ColumnDef<T>}
+          col={{ field: '_selection', headerName: '', width: GRID_SELECTION_COLUMN_WIDTH } as ColumnDef<T>}
           rowIndex={index}
           rowHeight={rowHeight}
           showColumnBorders={showColumnBorders}
@@ -88,7 +93,7 @@ export const GridRow = memo(function GridRowInner<T>({
           offset={0}
           position="left"
           renderCell={() => (
-            <Checkbox size="small" checked={isSelected} onChange={() => onToggleRow(rowId)} sx={{ p: 0 }} />
+            <Checkbox size="small" checked={isSelected} onChange={() => onToggleRow(rowId)} onClick={(event) => event.stopPropagation()} sx={{ p: 0, color: 'text.secondary', '&.Mui-checked': { color: 'primary.main' } }} />
           )}
           colIndex={0}
         />
@@ -104,7 +109,7 @@ export const GridRow = memo(function GridRowInner<T>({
           showColumnBorders={showColumnBorders}
           showCellBorders={showCellBorders}
           isPinned={true}
-          offset={pinnedLeftOffsets[i] + (selectionMode === 'multiple' ? 42 : 0)}
+          offset={pinnedLeftOffsets[i] + (selectionMode === 'multiple' ? GRID_SELECTION_COLUMN_WIDTH : 0)}
           position="left"
           renderCell={renderCell}
           colIndex={i + selectionOffset}

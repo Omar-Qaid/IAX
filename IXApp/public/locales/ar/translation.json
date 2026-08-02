@@ -49,7 +49,7 @@
     "rows_count_zero": "لا توجد صفوف", "rows_count_one": "صف واحد", "rows_count_two": "صفان", "rows_count_few": "{{count}} صفوف", "rows_count_many": "{{count}} صفاً", "rows_count_other": "{{count}} صف",
     "rows_loaded": "تم تحميل {{loaded}} من {{total}} صف", "rows_filtered": "{{filtered}} من {{total}} صف", "no_data": "لا توجد بيانات", "no_records": "لا توجد سجلات مطابقة",
     "no_records_msg": "لا توجد سجلات لعرضها.", "no_results_msg": "غيّر عوامل التصفية أو امسحها لعرض نتائج أخرى.", "loading_more": "جارٍ تحميل المزيد…", "add_row": "إضافة صف", "add_row_disabled": "احفظ الصف الحالي أو ألغِه أولاً",
-    "filter_placeholder": "قيمة التصفية", "filters": "عوامل التصفية", "features": "الميزات", "choose_columns": "اختيار الأعمدة", "no_active_filters": "لا توجد عوامل تصفية نشطة", "clear_all_filters": "مسح جميع عوامل التصفية",
+    "filter_placeholder": "قيمة التصفية", "filters": "عوامل التصفية", "features": "الميزات", "choose_columns": "اختيار الأعمدة", "select_all": "تحديد جميع الصفوف", "no_active_filters": "لا توجد عوامل تصفية نشطة", "clear_all_filters": "مسح جميع عوامل التصفية",
     "themes": "مظهر الشبكة", "compact_density": "مضغوط", "standard_density": "قياسي", "comfortable_density": "مريح", "show_column_borders": "إظهار حدود الأعمدة", "show_cell_borders": "إظهار حدود الخلايا",
     "row_selection": "تحديد الصفوف", "single_selection": "تحديد مفرد", "multiple_selection": "تحديد متعدد", "single_selection_desc": "حدد صفاً واحداً في كل مرة.", "multiple_selection_desc": "حدد عدة صفوف.",
     "column_sizing": "تحجيم الأعمدة", "autosize_all": "تحجيم الكل تلقائياً", "un_autosize_all": "إعادة ضبط التحجيم", "individual_columns": "الأعمدة الفردية", "export": "تصدير", "import_excel": "استيراد Excel",
