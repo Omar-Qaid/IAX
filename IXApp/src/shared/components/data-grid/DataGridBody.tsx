@@ -56,6 +56,7 @@ interface GridBodyProps<T> {
   onFieldChange?: (field: string, value: unknown) => void;
   onSaveEdit?: () => void;
   onCancelEdit?: () => void;
+  hideInlineEditActions?: boolean;
 }
 
 export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>({
@@ -64,7 +65,7 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>({
   selectionMode = 'single', selectedIds = [], onSelectionChange,
   showColumnBorders = false, showCellBorders = true,
   masterForm = false, editingRowId, editValues = {}, saving = false,
-  onFieldChange, onSaveEdit, onCancelEdit,
+  onFieldChange, onSaveEdit, onCancelEdit, hideInlineEditActions = false,
 }: GridBodyProps<T>, ref: React.Ref<GridBodyHandle>) {
   const { t } = useTranslation();
   const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number; row: T | null } | null>(null);
@@ -318,6 +319,7 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>({
               saving={saving}
               onSave={onSaveEdit}
               onCancel={onCancelEdit}
+              hideInlineEditActions={hideInlineEditActions}
             />
           );
         })}

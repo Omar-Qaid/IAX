@@ -15,15 +15,16 @@ export interface EnterpriseCommandUtilitiesProps {
   openWindowLabel: string;
   notificationCount?: number;
   onRefresh?: () => void;
+  disabled?: boolean;
 }
 
-export const EnterpriseCommandUtilities: React.FC<EnterpriseCommandUtilitiesProps> = ({ personalizeLabel, guideLabel, notificationsLabel, refreshLabel, openWindowLabel, notificationCount = 0, onRefresh }) => {
+export const EnterpriseCommandUtilities: React.FC<EnterpriseCommandUtilitiesProps> = ({ personalizeLabel, guideLabel, notificationsLabel, refreshLabel, openWindowLabel, notificationCount = 0, onRefresh, disabled = false }) => {
   const sx = { p: 0.5, color: 'primary.main', borderRadius: 0.5, '&:hover': { bgcolor: 'action.hover' } };
   return <>
-    <Tooltip title={personalizeLabel}><IconButton size="small" aria-label={personalizeLabel} sx={sx}><PersonalizeIcon sx={{ fontSize: 17 }} /></IconButton></Tooltip>
-    <Tooltip title={guideLabel}><IconButton size="small" aria-label={guideLabel} sx={sx}><GuideIcon sx={{ fontSize: 17 }} /></IconButton></Tooltip>
-    <Tooltip title={notificationsLabel}><IconButton size="small" aria-label={notificationsLabel} sx={sx}><Badge badgeContent={notificationCount} color="primary" sx={{ '& .MuiBadge-badge': { fontSize: 9, minWidth: 15, height: 15 } }}><NotificationIcon sx={{ fontSize: 17 }} /></Badge></IconButton></Tooltip>
-    <Tooltip title={refreshLabel}><IconButton size="small" aria-label={refreshLabel} onClick={onRefresh} sx={sx}><RefreshIcon sx={{ fontSize: 17 }} /></IconButton></Tooltip>
-    <Tooltip title={openWindowLabel}><IconButton size="small" aria-label={openWindowLabel} sx={{ ...sx, color: 'text.disabled' }}><OpenWindowIcon sx={{ fontSize: 17 }} /></IconButton></Tooltip>
+    <Tooltip title={personalizeLabel}><span><IconButton disabled={disabled} size="small" aria-label={personalizeLabel} sx={sx}><PersonalizeIcon sx={{ fontSize: 17 }} /></IconButton></span></Tooltip>
+    <Tooltip title={guideLabel}><span><IconButton disabled={disabled} size="small" aria-label={guideLabel} sx={sx}><GuideIcon sx={{ fontSize: 17 }} /></IconButton></span></Tooltip>
+    <Tooltip title={notificationsLabel}><span><IconButton disabled={disabled} size="small" aria-label={notificationsLabel} sx={sx}><Badge badgeContent={notificationCount} color="primary" sx={{ '& .MuiBadge-badge': { fontSize: 9, minWidth: 15, height: 15 } }}><NotificationIcon sx={{ fontSize: 17 }} /></Badge></IconButton></span></Tooltip>
+    <Tooltip title={refreshLabel}><span><IconButton disabled={disabled} size="small" aria-label={refreshLabel} onClick={onRefresh} sx={sx}><RefreshIcon sx={{ fontSize: 17 }} /></IconButton></span></Tooltip>
+    <Tooltip title={openWindowLabel}><span><IconButton disabled size="small" aria-label={openWindowLabel} sx={{ ...sx, color: 'text.disabled' }}><OpenWindowIcon sx={{ fontSize: 17 }} /></IconButton></span></Tooltip>
   </>;
 };

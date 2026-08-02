@@ -139,6 +139,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
   const [informationPanelOpen, setInformationPanelOpen] = useState(enterpriseConfig?.informationOpenOnLoad ?? false);
   const [draftAdvancedFilter, setDraftAdvancedFilter] = useState('');
   const [advancedFilter, setAdvancedFilter] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
 
   const processedRows = useMemo(() => {
     if (!enterpriseConfig) return rows;
@@ -184,14 +185,20 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
       selectionMode: dataGridProps.selectionMode ?? 'multiple',
       selectedIds,
       onSelectionChange: (ids) => {
+        if (isEditing) return;
         const normalizedIds = ids as (string | number)[];
         setSelectedIds(normalizedIds);
         setSelectedRow(rows.find((row) => getRowId(row) === normalizedIds.at(-1)) ?? null);
         dataGridProps.onSelectionChange?.(ids);
       },
       onRowClick: (row) => {
+        if (isEditing) return;
         setSelectedRow(row);
         dataGridProps.onRowClick?.(row);
+      },
+      onEditingChange: (editing) => {
+        setIsEditing(editing);
+        dataGridProps.onEditingChange?.(editing);
       },
       rowHeight: dataGridProps.rowHeight ?? 31,
       headerHeight: dataGridProps.headerHeight ?? 36,
@@ -201,6 +208,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
       hideFooter: dataGridProps.hideFooter ?? true,
       showCellBorders: dataGridProps.showCellBorders ?? false,
       showColumnBorders: dataGridProps.showColumnBorders ?? false,
+      hideInlineEditActions: dataGridProps.hideInlineEditActions ?? true,
     } : { ...dataGridProps, rows, columns };
     const generatedActionPane = config && <>
       <EnterpriseCrudActions
@@ -215,10 +223,15 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
         editPermission={config.crud.editPermission}
         newPermission={config.crud.newPermission}
         deletePermission={config.crud.deletePermission}
+        editing={isEditing}
+        saveLabel={t('actions.save')}
+        cancelLabel={t('actions.cancel')}
+        onSave={() => gridRef.current?.saveEdit()}
+        onCancel={() => gridRef.current?.cancelEdit()}
       />
-      {config.commands && <ActionPaneGroup>{config.commands.map((command) => <ActionPaneButton key={command.id} label={command.label} permission={command.permission} disabled={command.disabled} onClick={command.onClick} />)}</ActionPaneGroup>}
+      {config.commands && <ActionPaneGroup>{config.commands.map((command) => <ActionPaneButton key={command.id} label={command.label} permission={command.permission} disabled={isEditing || command.disabled} onClick={command.onClick} />)}</ActionPaneGroup>}
     </>;
-    const generatedUtilities = config && <EnterpriseCommandUtilities {...config.utilities} onRefresh={reset} />;
+    const generatedUtilities = config && <EnterpriseCommandUtilities {...config.utilities} onRefresh={reset} disabled={isEditing} />;
     const generatedFilterBar = config && quickFilterVisible && (config.searchMode === 'field'
       ? <EnterpriseListFilterBar filterLabel={config.filterLabel} searchByLabel={config.searchByLabel ?? config.filterLabel} query={query} field={searchField} options={config.searchFields.map(({ field, label }) => ({ value: field, label }))} onQueryChange={setQuery} onFieldChange={setSearchField} />
       : <EnterpriseQuickFilter label={config.filterLabel} value={query} onChange={setQuery} />);
@@ -236,6 +249,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
       filterActive={config.advancedFilter ? filterPanelOpen : quickFilterVisible} informationActive={informationPanelOpen}
       onFilter={() => config.advancedFilter ? setFilterPanelOpen((open) => !open) : setQuickFilterVisible((visible) => !visible)}
       onInformation={() => setInformationPanelOpen((open) => !open)} showInformation={Boolean(config.relatedInformation)}
+      disabled={isEditing}
     />;
 
     return (
@@ -244,7 +258,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
         <Box sx={[{ display: 'flex', flex: 1, height: '100%', minHeight: { xs: contentMinHeight, lg: 0 }, gap: 1, px: { xs: 0, sm: 1 }, pb: 0.5, overflow: 'hidden', position: 'relative', alignItems: 'stretch' }, ...(Array.isArray(contentSx) ? contentSx : [contentSx])]}>
           <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <EnterpriseListHeader contextLabel={config?.contextLabel ?? props.contextLabel ?? title} viewLabel={config?.viewLabel ?? props.viewLabel ?? title} onViewClick={onViewClick} />
-            {generatedFilterBar ?? props.filterBar}
+            <Box sx={{ pointerEvents: isEditing ? 'none' : 'auto', opacity: isEditing ? 0.6 : 1 }}>{generatedFilterBar ?? props.filterBar}</Box>
             <Box sx={{ flex: 1, minHeight: 0 }}>{feedback ?? <DataGrid ref={gridRef} {...resolvedGridProps} height={gridHeight ?? resolvedGridProps.height ?? '100%'} />}</Box>
           </Box>
           {generatedSidePanels ?? props.sidePanels}

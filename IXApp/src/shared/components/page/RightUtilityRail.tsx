@@ -12,15 +12,16 @@ export interface RightUtilityRailProps {
   filterActive?: boolean;
   informationActive?: boolean;
   showInformation?: boolean;
+  disabled?: boolean;
 }
 
-export const RightUtilityRail: React.FC<RightUtilityRailProps> = ({ filterLabel, informationLabel, onFilter, onInformation, filterActive = false, informationActive = false, showInformation = true }) => (
+export const RightUtilityRail: React.FC<RightUtilityRailProps> = ({ filterLabel, informationLabel, onFilter, onInformation, filterActive = false, informationActive = false, showInformation = true, disabled = false }) => (
   <Box
     component="aside"
     aria-label={informationLabel}
     sx={{ position: 'absolute', insetInlineEnd: 0, top: 0, bottom: 0, width: 38, minHeight: 0, boxSizing: 'border-box', overflow: 'hidden', borderInlineStart: (theme) => `1px solid ${theme.palette.divider}`, bgcolor: 'background.paper', display: { xs: 'none', lg: 'flex' }, alignItems: 'center', flexDirection: 'column', pt: 0.25, gap: 0.5, zIndex: 3 }}
   >
-    <Tooltip title={filterLabel} placement="left"><IconButton size="small" aria-label={filterLabel} aria-pressed={filterActive} onClick={onFilter} sx={{ border: '1px solid', borderColor: filterActive ? 'primary.main' : 'transparent', color: filterActive ? 'primary.main' : 'text.primary', borderRadius: 0.5 }}><FilterRailIcon sx={{ fontSize: 18 }} /></IconButton></Tooltip>
-    {showInformation && <Tooltip title={informationLabel} placement="left"><IconButton size="small" aria-label={informationLabel} aria-pressed={informationActive} onClick={onInformation} sx={{ border: '1px solid', borderColor: informationActive ? 'primary.main' : 'transparent', color: informationActive ? 'primary.main' : 'text.primary', borderRadius: 0.5 }}><InfoRailIcon sx={{ fontSize: 18 }} /></IconButton></Tooltip>}
+    <Tooltip title={filterLabel} placement="left"><span><IconButton disabled={disabled} size="small" aria-label={filterLabel} aria-pressed={filterActive} onClick={onFilter} sx={{ border: '1px solid', borderColor: filterActive ? 'primary.main' : 'transparent', color: filterActive ? 'primary.main' : 'text.primary', borderRadius: 0.5 }}><FilterRailIcon sx={{ fontSize: 18 }} /></IconButton></span></Tooltip>
+    {showInformation && <Tooltip title={informationLabel} placement="left"><span><IconButton disabled={disabled} size="small" aria-label={informationLabel} aria-pressed={informationActive} onClick={onInformation} sx={{ border: '1px solid', borderColor: informationActive ? 'primary.main' : 'transparent', color: informationActive ? 'primary.main' : 'text.primary', borderRadius: 0.5 }}><InfoRailIcon sx={{ fontSize: 18 }} /></IconButton></span></Tooltip>}
   </Box>
 );

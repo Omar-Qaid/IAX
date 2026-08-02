@@ -1,0 +1,98 @@
+import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Accordion, AccordionDetails, AccordionSummary, Alert, Box, Button, IconButton, MenuItem,
+  Snackbar, Switch, TextField, Typography,
+} from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import SearchIcon from '@mui/icons-material/Search';
+import { ActionPane } from '@shared/components/action-pane/ActionPane';
+import { EnterpriseCommandUtilities } from '@shared/components/action-pane/EnterpriseCommandUtilities';
+import { SetupNavigation } from './SetupNavigation';
+import type { SetupFieldConfig, SetupPageProps, SetupValue } from './types';
+
+function SetupField({ field, value, yesLabel, noLabel, onChange }: {
+  field: SetupFieldConfig; value: SetupValue | undefined; yesLabel: string; noLabel: string; onChange: (value: SetupValue) => void;
+}): React.ReactElement {
+  const inputSx = {
+    width: field.width ?? '100%', maxWidth: '100%',
+    '& .MuiInputBase-root': { height: 29, borderRadius: 0.5, fontSize: '0.75rem' },
+    '& .MuiInputBase-input': { px: 0.75, py: 0.5 },
+  };
+
+  return (
+    <Box sx={{ minWidth: 0 }}>
+      <Typography title={field.label} noWrap sx={{ mb: 0.25, color: 'text.secondary', fontSize: '0.6875rem', lineHeight: 1.3 }}>{field.label}</Typography>
+      {field.type === 'boolean' ? (
+        <Box sx={{ display: 'flex', alignItems: 'center', minHeight: 29 }}>
+          <Switch checked={Boolean(value)} disabled={field.disabled} onChange={(_, checked) => onChange(checked)} size="small" sx={{ ml: -0.75, mr: 0.25, '& .MuiSwitch-switchBase': { p: '5px' }, '& .MuiSwitch-thumb': { width: 13, height: 13 }, '& .MuiSwitch-track': { border: '1px solid', borderColor: 'text.secondary', bgcolor: 'transparent', opacity: 1 }, '& .Mui-checked + .MuiSwitch-track': { borderColor: 'primary.main', bgcolor: 'primary.main', opacity: 1 } }} />
+          <Typography sx={{ fontSize: '0.75rem' }}>{value ? yesLabel : noLabel}</Typography>
+        </Box>
+      ) : field.type === 'select' ? (
+        <TextField select value={value ?? ''} disabled={field.disabled} onChange={(event) => onChange(event.target.value)} sx={inputSx}>
+          {(field.options ?? []).map((option) => <MenuItem key={option.value} value={option.value} sx={{ fontSize: '0.75rem' }}>{option.label}</MenuItem>)}
+        </TextField>
+      ) : (
+        <TextField type={field.type === 'number' ? 'number' : 'text'} value={value ?? ''} disabled={field.disabled} slotProps={{ htmlInput: { min: field.min, max: field.max } }} onChange={(event) => onChange(field.type === 'number' ? Number(event.target.value) : event.target.value)} sx={inputSx} />
+      )}
+    </Box>
+  );
+}
+
+export function SetupPage({ title, viewLabel, navigationItems, sections, initialValues, saveLabel, optionsLabel, yesLabel, noLabel, savedMessage, headerContent, onSave }: SetupPageProps): React.ReactElement {
+  const navigate = useNavigate();
+  const [values, setValues] = useState(initialValues);
+  const [savedValues, setSavedValues] = useState(initialValues);
+  const [saving, setSaving] = useState(false);
+  const [showSaved, setShowSaved] = useState(false);
+  const [activeId, setActiveId] = useState(navigationItems[0]?.id ?? sections[0]?.id ?? '');
+  const dirty = useMemo(() => JSON.stringify(values) !== JSON.stringify(savedValues), [savedValues, values]);
+
+  const selectSection = (id: string) => {
+    setActiveId(id);
+    document.getElementById(`setup-section-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+  const save = async () => {
+    setSaving(true);
+    try { await onSave?.(values); setSavedValues(values); setShowSaved(true); } finally { setSaving(false); }
+  };
+
+  return (
+    <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', bgcolor: '#faf9f8', p: 0.75 }}>
+      <ActionPane variant="flat" endActions={<EnterpriseCommandUtilities personalizeLabel="Personalize" guideLabel="Page guide" notificationsLabel="Notifications" refreshLabel="Refresh" openWindowLabel="Open in new window" />}>
+        <IconButton size="small" aria-label="Back" onClick={() => navigate(-1)} sx={{ color: 'primary.main' }}><ArrowBackIcon sx={{ fontSize: 18 }} /></IconButton>
+        <Button startIcon={<SaveOutlinedIcon />} disabled={!dirty || saving} onClick={save} sx={{ minHeight: 30, color: 'text.primary', fontSize: '0.75rem', borderInlineStart: 1, borderColor: 'divider', borderRadius: 0 }}>{saveLabel}</Button>
+        <Button sx={{ minHeight: 30, color: 'text.primary', fontSize: '0.75rem', borderInlineStart: 1, borderColor: 'divider', borderRadius: 0 }}>{optionsLabel}</Button>
+        <IconButton size="small" sx={{ color: 'primary.main', ml: 0.5 }}><SearchIcon sx={{ fontSize: 17 }} /></IconButton>
+      </ActionPane>
+
+      <Box sx={{ px: 2, pt: 0.5, pb: 1.25 }}>
+        <Typography sx={{ fontSize: '0.75rem' }}>{viewLabel}</Typography>
+        <Typography component="h1" sx={{ fontSize: '1.35rem', fontWeight: 600, lineHeight: 1.35 }}>{title}</Typography>
+        {headerContent}
+      </Box>
+
+      <Box sx={{ mx: 2, mb: 0.5, minHeight: 0, flex: 1, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, overflow: 'hidden', bgcolor: 'background.paper', border: 1, borderColor: 'divider', borderRadius: 1, boxShadow: '0 1px 4px rgba(0,0,0,.12)' }}>
+        <SetupNavigation items={navigationItems} activeId={activeId} onSelect={selectSection} />
+        <Box sx={{ width: 7, display: { xs: 'none', md: 'block' }, bgcolor: '#c8c6c4', flexShrink: 0 }} />
+        <Box sx={{ minWidth: 0, flex: 1, overflowY: 'auto', px: 1.25, py: 0.25 }}>
+          {sections.map((section, index) => (
+            <Accordion key={section.id} id={`setup-section-${section.id}`} defaultExpanded={section.defaultExpanded ?? true} disableGutters elevation={0} square sx={{ '&::before': { display: 'none' }, borderBottom: 1, borderColor: 'divider', scrollMarginTop: 8 }}>
+              <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ fontSize: 18 }} />} sx={{ minHeight: 43, px: 1, borderBottom: 1, borderColor: 'divider', '&.Mui-expanded': { minHeight: 43 }, '& .MuiAccordionSummary-content': { my: 0.75 }, '& .MuiAccordionSummary-content.Mui-expanded': { my: 0.75 }, '& .MuiAccordionSummary-expandIconWrapper': { border: 1, borderColor: 'divider', borderRadius: 0.5, p: 0.25 } }}>
+                <Typography sx={{ fontSize: index === 0 ? '1rem' : '0.875rem', fontWeight: index === 0 ? 600 : 500 }}>{section.title}</Typography>
+              </AccordionSummary>
+              <AccordionDetails sx={{ px: 1, py: 1.25 }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(160px, 1fr))', lg: 'repeat(4, minmax(170px, 1fr))', xl: 'repeat(6, minmax(160px, 1fr))' }, columnGap: 3, rowGap: 1 }}>
+                  {section.fields.map((field) => <SetupField key={field.name} field={field} value={values[field.name]} yesLabel={yesLabel} noLabel={noLabel} onChange={(value) => setValues((current) => ({ ...current, [field.name]: value }))} />)}
+                </Box>
+              </AccordionDetails>
+            </Accordion>
+          ))}
+        </Box>
+      </Box>
+      <Snackbar open={showSaved} autoHideDuration={2500} onClose={() => setShowSaved(false)}><Alert severity="success" variant="filled">{savedMessage ?? saveLabel}</Alert></Snackbar>
+    </Box>
+  );
+}

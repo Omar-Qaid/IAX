@@ -38,6 +38,8 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
         links: [
           { label: 'nav.allCustomers', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMERS, permission: { module: 'AccountsReceivable', resource: 'Customers' } },
           { label: 'nav.customerGroups', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_GROUPS, permission: { module: 'AccountsReceivable', resource: 'CustomerGroups' } },
+          { label: 'nav.customerParameters', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PARAMETERS, permission: { module: 'AccountsReceivable', resource: 'Customers' } },
+          { label: 'nav.customerPaymentMethods', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_METHODS, permission: { module: 'AccountsReceivable', resource: 'Customers' } },
         ],
       },
       {

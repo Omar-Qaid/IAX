@@ -13,6 +13,8 @@ const LoginPage = lazy(() => import('@modules/auth/pages/LoginPage').then((modul
 const DashboardPage = lazy(() => import('@modules/dashboard/pages/DashboardPage').then((module) => ({ default: module.DashboardPage })));
 const CustomerListPage = lazy(() => import('@modules/accounts-receivable/pages/CustomerListPage').then((module) => ({ default: module.CustomerListPage })));
 const CustomerGroupListPage = lazy(() => import('@modules/accounts-receivable/pages/CustomerGroupListPage').then((module) => ({ default: module.CustomerGroupListPage })));
+const CustParametersPage = lazy(() => import('@modules/accounts-receivable/pages/CustParametersPage').then((module) => ({ default: module.CustParametersPage })));
+const CustPaymMode = lazy(() => import('@modules/accounts-receivable/pages/CustPaymModePage').then((module) => ({ default: module.CustPaymMode })));
 const SalesOrdersPage = lazy(() => import('@modules/accounts-receivable/pages/SalesOrdersPage').then((module) => ({ default: module.SalesOrdersPage })));
 const SalesOrderPage = lazy(() => import('@modules/accounts-receivable/pages/SalesOrderPage').then((module) => ({ default: module.SalesOrderPage })));
 const CurrenciesPage = lazy(() => import('@modules/foundation/pages/CurrenciesPage').then((module) => ({ default: module.CurrenciesPage })));
@@ -67,6 +69,14 @@ export const appRoutes: RouteObject[] = [
       {
         path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_GROUPS,
         element: load(<CustomerGroupListPage />),
+      },
+      {
+        path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PARAMETERS,
+        element: load(<CustParametersPage />),
+      },
+      {
+        path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_METHODS,
+        element: load(<CustPaymMode />),
       },
       {
         path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDERS,

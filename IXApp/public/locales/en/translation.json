@@ -3,7 +3,7 @@
   "nav": {
     "app_title": "IXApp Enterprise", "app_title_short": "IXApp", "home": "Home", "dashboard": "Dashboard",
     "accountsReceivable": "Accounts Receivable", "customers": "Customers", "allCustomers": "All customers",
-    "customerGroups": "Customer groups", "orders": "Orders", "salesOrders": "Sales orders",
+    "customerGroups": "Customer groups", "customerParameters": "Accounts receivable parameters", "customerPaymentMethods": "Methods of payment - customers", "orders": "Orders", "salesOrders": "Sales orders",
     "foundation": "Foundation", "currencies": "Currencies", "setup": "Setup",
     "systemAdmin": "System Administration", "system": "System", "settings": "Application settings",
     "favorites": "Favorites", "recent": "Recent", "modules": "Modules", "search_page": "Search pages"
@@ -13,6 +13,8 @@
     "dashboard": { "title": "Dashboard", "subtitle": "Operational overview from the current development dataset", "overview": "Business overview", "overviewHelp": "Read-only indicators; select a module from navigation for details.", "customers": "Customers", "customerAccounts": "Customer accounts", "openOrders": "Open sales orders", "totalOrders_one": "{{count}} total order", "totalOrders_other": "{{count}} total orders", "orderValue": "Order value", "configuredCurrencies_one": "{{count}} configured currency", "configuredCurrencies_other": "{{count}} configured currencies" },
     "customers": { "title": "Customers", "subtitle": "Select a customer to inspect account details", "allCustomers": "All customers", "standardView": "Standard view" },
     "customerGroups": { "title": "Customer groups", "subtitle": "Read-only customer group configuration", "standardView": "Standard view" },
+    "customerParameters": { "title": "Accounts receivable parameters", "standardView": "Standard view" },
+    "paymentMethods": { "title": "Methods of payment - customers", "standardView": "Standard view" },
     "salesOrders": { "title": "Sales orders", "subtitle": "Double-click an order to open its document details" },
     "salesOrder": { "title": "Sales order {{number}}", "breadcrumb": "Sales order" },
     "currencies": { "title": "Currencies", "subtitle": "Read-only currency configuration" },
@@ -35,7 +37,7 @@
   },
   "common": {
     "company": "Company", "language": "Language", "theme": "Theme", "light": "Light", "dark": "Dark", "status": "Status",
-    "active": "Active", "onhold": "On hold", "onHold": "On hold", "blocked": "Blocked", "confirmed": "Confirmed", "invoiced": "Invoiced", "cancelled": "Cancelled", "open": "Open",
+    "active": "Active", "yes": "Yes", "no": "No", "all": "All", "onhold": "On hold", "onHold": "On hold", "blocked": "Blocked", "confirmed": "Confirmed", "invoiced": "Invoiced", "cancelled": "Cancelled", "open": "Open",
     "loading": "Loading…", "loadingMore": "Loading more…", "noData": "No records found", "noResults": "No results", "notProvided": "Not provided", "readOnly": "Read only",
     "accessDenied": "Access denied", "search": "Search", "clear": "Clear", "close": "Close", "none": "None", "account": "Account", "notifications": "Notifications", "settings": "Settings", "help": "Help", "logout": "Log out",
     "expand_all": "Expand all", "collapse_all": "Collapse all", "breadcrumbs": "Breadcrumbs", "information": "Information", "save": "Save", "cancel": "Cancel", "edit": "Edit", "delete": "Delete",
@@ -70,4 +72,22 @@
   ,"relatedInformation": { "title": "Related information", "primaryAddress": "Primary address", "recentActivity": "Recent activity", "relationships": "Relationships", "statistics": "Statistics", "creditStatistics": "Credit statistics", "contacts": "Contacts", "recurringInvoice": "Recurring invoice template", "classificationBalances": "Classification balances", "insuranceGuarantees": "Insurance and guarantees", "selectCustomer": "Select a customer to view related information.", "noAddressFor": "No primary address is available for {{customer}}." }
   ,"customerCommands": { "customer": "Customer", "sell": "Sell", "invoice": "Invoice", "collect": "Collect", "service": "Service", "market": "Market", "commerce": "Commerce", "general": "General", "creditManagement": "Credit management", "options": "Options" }
   ,"customerGroupCommands": { "setup": "Setup", "forecast": "Forecast", "productFilters": "Product filters", "options": "Options" }
+  ,"customerParameters": {
+    "saved": "Accounts receivable parameters were saved.",
+    "navigation": { "general": "General", "updates": "Updates", "project": "Project", "summaryUpdate": "Summary update", "shipments": "Shipments", "ledgerSalesTax": "Ledger and sales tax", "settlement": "Settlement", "directDebit": "Direct debit", "creditCard": "Credit card", "creditManagement": "Credit management", "collections": "Collections", "collectionsAutomation": "Collections process automation", "deductions": "Deductions", "prices": "Prices", "electronicDocuments": "Electronic documents", "inventoryDimensions": "Inventory dimensions", "rebateProgram": "Rebate program" },
+    "sections": { "customized": "Set up requirements for sales order approval and customer information", "customer": "Customer", "salesDefaults": "Sales default values" },
+    "options": { "salesOrder": "Sales order", "legalEntity": "Legal entity", "manual": "Manual", "user": "User" },
+    "fields": {
+      "mandatorySettlement": "HBM Mandatory payment settlement", "preventInvoiceDateEditing": "HBM Prevent invoice date editing", "preventBelowCost": "HBM Prevent selling below cost price", "validateSettlementWorker": "HBM Validate settlement worker", "applyCustomerHeaderDimensions": "HBM Apply header dimensions for the customer", "preventFinancialModification": "HBM Prevent modification of financial dimensions", "requireOpenInvoiceSettlement": "HBM Require settlement when opening invoices", "preventDueDateEditing": "HBM Prevent due date editing", "checkTaxAmount": "HBM Check tax amount", "validateSettlementDepartment": "HBM Validate settlement department", "applyBankHeaderDimensions": "HBM Apply default dimensions for the bank account", "allowInvoiceBeforePackingSlip": "Allow invoice date before packing slip", "mandatorySettlementVoucher": "HBM Mandatory payment settlement voucher", "checkCostAllocateDiscount": "HBM Check cost allocated discount", "validateSettlementCostCenter": "HBM Validate settlement cost center", "roleException": "HBM Role exception for offer sales order", "validateSiteLocation": "HBM Validate site and location", "allowDuplicateVat": "HBM Allow duplicate customer VAT number", "validateWorkerDimension": "HBM Validate worker dimension", "validateSettlementProject": "HBM Validate settlement project", "applyBankLineDimensions": "HBM Apply header dimensions for bank lines", "validateHeaderLineDimensions": "HBM Validate header and line dimensions",
+      "invoiceTaxExemptRequirement": "Invoice tax exempt number requirement", "minimumReimbursement": "Minimum reimbursement", "mandatoryTaxGroup": "Mandatory tax group", "defaultTransactionFilter": "Default filter for customer transactions", "assignResponsibleEmployee": "Assign employee responsible from other legal entity", "preventRegistrationCopy": "Prevent copying registration number", "oneTimeCustomerAccount": "One-time customer account", "taxExemptRequirement": "Tax exempt number requirement", "suppressDepreciation": "Suppress depreciation of payment schedule", "orderType": "Order type", "salesOrderPool": "Sales order pool", "salesOrigin": "Sales origin", "autoBatchReservation": "Automatic batch reservation", "invoiceTimeZone": "Time zone preference for invoices", "freeTextInvoiceTimeZone": "Time zone preference for free text invoices", "validityPeriod": "Period of validity", "reservation": "Reservation", "enterprisePortalOrigin": "Sales origin from Enterprise Portal", "salesDocumentTimeZone": "Time zone preference for sales documents", "packingSlipTimeZone": "Time zone preference for packing slips", "deferDirectDelivery": "Defer creation of direct delivery chains"
+    }
+  }
+  ,"paymentMethods": {
+    "newMethod": "New method", "actions": { "setup": "Setup" },
+    "commands": { "paymentSpecification": "Payment specification", "paymentFeeSetup": "Payment fee setup", "remittanceFiles": "Remittance files for customers", "fileAnalyze": "File analyze", "options": "Options" },
+    "sections": { "general": "General", "fileFormats": "File formats" },
+    "groups": { "file": "File", "posting": "Posting", "invoiceUpdate": "Invoice update", "fileFormats": "File formats" },
+    "options": { "ledger": "Ledger", "noDraft": "No draft", "none": "None", "other": "Other" },
+    "fields": { "method": "Method of payment", "period": "Period", "description": "Description", "gracePeriod": "Grace period", "paymentStatus": "Payment status", "paymentType": "Payment type", "zatcaMethod": "ZATCA method", "lastFileNumber": "Last file No.", "today": "Today", "date": "Date", "accountType": "Account type", "paymentAccount": "Payment account", "bridgingPosting": "Bridging posting", "bridgingByBank": "Bridging account by bank account", "bridgingAccount": "Bridging account", "bankTransactionType": "Bank transaction type", "requireMandate": "Require mandate", "draftType": "Type of draft", "categoryPurpose": "Category purpose", "chargeBearer": "Charge bearer", "localInstrument": "Local instrument", "serviceLevel": "Service level", "directDebit": "Direct debit", "autoDrawJournal": "Create and post draw journal automatically", "runExportScript": "Run export script", "genericExport": "Generic electronic export format", "genericImport": "Generic electronic import format", "exportConfig": "Export format configuration", "importConfig": "Import format configuration", "exportFormat": "Export format", "importFormat": "Import format", "returnFormat": "Return format", "remittanceFormat": "Remittance format" }
+  }
 }

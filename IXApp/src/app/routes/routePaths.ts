@@ -9,6 +9,8 @@ export const ROUTE_PATHS = {
     CUSTOMERS: '/accounts-receivable/customers',
     CUSTOMER_DETAILS: '/accounts-receivable/customers/:customerId',
     CUSTOMER_GROUPS: '/accounts-receivable/customer-groups',
+    CUSTOMER_PARAMETERS: '/accounts-receivable/customer-parameters',
+    CUSTOMER_PAYMENT_METHODS: '/accounts-receivable/customer-payment-methods',
     SALES_ORDERS: '/accounts-receivable/sales-orders',
     SALES_ORDER_DETAILS: '/accounts-receivable/sales-orders/:salesOrderId',
     salesOrder: (salesOrderId: string) => `/accounts-receivable/sales-orders/${encodeURIComponent(salesOrderId)}`,

@@ -8,6 +8,7 @@ import { SalesOrderPage } from '@modules/accounts-receivable/pages/SalesOrderPag
 import { ApplicationSettingsPage } from '@modules/system-administration/pages/ApplicationSettingsPage';
 import { CustomerGroupListPage } from '@modules/accounts-receivable/pages/CustomerGroupListPage';
 import { SalesOrdersPage } from '@modules/accounts-receivable/pages/SalesOrdersPage';
+import { CustPaymMode } from '@modules/accounts-receivable/pages/CustPaymModePage';
 
 describe('representative enterprise pages', () => {
   it('renders the workspace dashboard indicators', () => {
@@ -37,6 +38,13 @@ describe('representative enterprise pages', () => {
     expect(screen.getByText('Major Key Accounts')).toBeDefined();
     act(() => fireEvent.click(screen.getByRole('button', { name: 'Edit' })));
     expect(screen.getByDisplayValue('CG-MAJOR')).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeDefined();
+    expect(screen.queryByRole('button', { name: 'New' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Filter' })).toHaveProperty('disabled', true);
+    act(() => fireEvent.click(screen.getByRole('button', { name: 'Cancel' })));
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeDefined();
+    expect(screen.getByText('CG-MAJOR')).toBeDefined();
     act(() => fireEvent.click(screen.getByRole('button', { name: 'Filter' })));
     expect(screen.getByRole('heading', { name: 'Filters' })).toBeDefined();
     expect(screen.queryByRole('button', { name: 'Information' })).toBeNull();
@@ -44,7 +52,7 @@ describe('representative enterprise pages', () => {
 
     render(<SalesOrdersPage />);
     expect(screen.getByText('SO-00101')).toBeDefined();
-  });
+  }, 15_000);
 
   it('renders document and setup representatives as read-only pages', () => {
     const { unmount } = render(<SalesOrderPage />);
@@ -55,5 +63,22 @@ describe('representative enterprise pages', () => {
     render(<ApplicationSettingsPage />);
     expect(screen.getByText('Current client configuration')).toBeDefined();
     expect(screen.getByText('API integration: ASP.NET Core REST')).toBeDefined();
+  });
+
+  it('uses the generic enterprise list-details edit lifecycle', () => {
+    render(<CustPaymMode />);
+    expect(screen.getByText('Methods of payment - customers')).toBeDefined();
+    expect(screen.getAllByText('Cash').length).toBeGreaterThan(0);
+    act(() => fireEvent.click(screen.getByRole('button', { name: 'Edit' })));
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeDefined();
+    expect(screen.queryByRole('button', { name: 'New' })).toBeNull();
+    act(() => fireEvent.click(screen.getByRole('button', { name: 'Cancel' })));
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeDefined();
+    expect(screen.getByPlaceholderText('Filter')).toBeDefined();
+    act(() => fireEvent.click(screen.getByRole('button', { name: 'Filter' })));
+    expect(screen.getByRole('heading', { name: 'Filters' })).toBeDefined();
+    act(() => fireEvent.click(screen.getByRole('button', { name: 'Information' })));
+    expect(screen.getByRole('heading', { name: 'Related information' })).toBeDefined();
   });
 });

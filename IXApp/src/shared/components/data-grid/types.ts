@@ -117,6 +117,7 @@ export interface DataGridProps<T> {
   onNewRow?: () => Partial<T>;
   hideAddRowButton?: boolean;
   onEditingChange?: (isEditing: boolean) => void;
+  hideInlineEditActions?: boolean;
   hideFilterRow?: boolean;
   hideColumnMenu?: boolean;
   hideToolbar?: boolean;

@@ -2,7 +2,7 @@
   "app": { "name": "IXApp", "tagline": "نظام تخطيط موارد المؤسسة" },
   "nav": {
     "app_title": "نظام IXApp المؤسسي", "app_title_short": "IXApp", "home": "الرئيسية", "dashboard": "لوحة المعلومات",
-    "accountsReceivable": "الحسابات المدينة", "customers": "العملاء", "allCustomers": "جميع العملاء", "customerGroups": "مجموعات العملاء",
+    "accountsReceivable": "الحسابات المدينة", "customers": "العملاء", "allCustomers": "جميع العملاء", "customerGroups": "مجموعات العملاء", "customerParameters": "معلمات الحسابات المدينة", "customerPaymentMethods": "طرق الدفع - العملاء",
     "orders": "الطلبات", "salesOrders": "أوامر البيع", "foundation": "البيانات الأساسية", "currencies": "العملات", "setup": "الإعداد",
     "systemAdmin": "إدارة النظام", "system": "النظام", "settings": "إعدادات التطبيق", "favorites": "المفضلة", "recent": "الأخيرة", "modules": "الوحدات", "search_page": "البحث في الصفحات"
   },
@@ -11,6 +11,8 @@
     "dashboard": { "title": "لوحة المعلومات", "subtitle": "نظرة تشغيلية عامة من بيانات التطوير الحالية", "overview": "نظرة عامة على الأعمال", "overviewHelp": "مؤشرات للقراءة فقط؛ اختر وحدة من التنقل لعرض التفاصيل.", "customers": "العملاء", "customerAccounts": "حسابات العملاء", "openOrders": "أوامر البيع المفتوحة", "totalOrders_zero": "لا توجد أوامر", "totalOrders_one": "أمر واحد إجمالاً", "totalOrders_two": "أمران إجمالاً", "totalOrders_few": "{{count}} أوامر إجمالاً", "totalOrders_many": "{{count}} أمراً إجمالاً", "totalOrders_other": "{{count}} أمر إجمالاً", "orderValue": "قيمة الأوامر", "configuredCurrencies_zero": "لا توجد عملات مهيأة", "configuredCurrencies_one": "عملة واحدة مهيأة", "configuredCurrencies_two": "عملتان مهيأتان", "configuredCurrencies_few": "{{count}} عملات مهيأة", "configuredCurrencies_many": "{{count}} عملة مهيأة", "configuredCurrencies_other": "{{count}} عملة مهيأة" },
     "customers": { "title": "العملاء", "subtitle": "اختر عميلاً لعرض تفاصيل الحساب", "allCustomers": "جميع العملاء", "standardView": "العرض القياسي" },
     "customerGroups": { "title": "مجموعات العملاء", "subtitle": "إعداد مجموعات العملاء للقراءة فقط", "standardView": "العرض القياسي" },
+    "customerParameters": { "title": "معلمات الحسابات المدينة", "standardView": "طريقة العرض القياسية" },
+    "paymentMethods": { "title": "طرق الدفع - العملاء", "standardView": "طريقة العرض القياسية" },
     "salesOrders": { "title": "أوامر البيع", "subtitle": "انقر نقراً مزدوجاً على أمر لفتح تفاصيل المستند" },
     "salesOrder": { "title": "أمر البيع {{number}}", "breadcrumb": "أمر البيع" },
     "currencies": { "title": "العملات", "subtitle": "إعداد العملات للقراءة فقط" },
@@ -32,7 +34,7 @@
     "backToDashboard": "العودة إلى لوحة المعلومات", "close": "إغلاق", "open": "فتح", "print": "طباعة", "import": "استيراد", "add": "إضافة", "apply": "تطبيق", "reset": "إعادة ضبط"
   },
   "common": {
-    "company": "الشركة", "language": "اللغة", "theme": "المظهر", "light": "فاتح", "dark": "داكن", "status": "الحالة",
+    "company": "الشركة", "language": "اللغة", "theme": "المظهر", "light": "فاتح", "dark": "داكن", "status": "الحالة", "yes": "نعم", "no": "لا", "all": "الكل",
     "active": "نشط", "onhold": "معلّق", "onHold": "معلّق", "blocked": "محظور", "confirmed": "مؤكد", "invoiced": "مفوتر", "cancelled": "ملغي", "open": "مفتوح",
     "loading": "جارٍ التحميل…", "loadingMore": "جارٍ تحميل المزيد…", "noData": "لا توجد سجلات", "noResults": "لا توجد نتائج", "notProvided": "غير متوفر", "readOnly": "للقراءة فقط",
     "accessDenied": "الوصول مرفوض", "search": "بحث", "clear": "مسح", "close": "إغلاق", "none": "لا شيء", "account": "الحساب", "notifications": "الإشعارات", "settings": "الإعدادات", "help": "المساعدة", "logout": "تسجيل الخروج",
@@ -66,4 +68,22 @@
   ,"relatedInformation": { "title": "المعلومات ذات الصلة", "primaryAddress": "العنوان الأساسي", "recentActivity": "النشاط الأخير", "relationships": "العلاقات", "statistics": "الإحصاءات", "creditStatistics": "إحصاءات الائتمان", "contacts": "جهات الاتصال", "recurringInvoice": "قالب الفاتورة المتكررة", "classificationBalances": "أرصدة التصنيف", "insuranceGuarantees": "التأمين والضمانات", "selectCustomer": "اختر عميلاً لعرض المعلومات ذات الصلة.", "noAddressFor": "لا يتوفر عنوان أساسي للعميل {{customer}}." }
   ,"customerCommands": { "customer": "العميل", "sell": "البيع", "invoice": "الفاتورة", "collect": "التحصيل", "service": "الخدمة", "market": "السوق", "commerce": "التجارة", "general": "عام", "creditManagement": "إدارة الائتمان", "options": "خيارات" }
   ,"customerGroupCommands": { "setup": "الإعداد", "forecast": "التنبؤ", "productFilters": "عوامل تصفية المنتجات", "options": "خيارات" }
+  ,"customerParameters": {
+    "saved": "تم حفظ معلمات الحسابات المدينة.",
+    "navigation": { "general": "عام", "updates": "التحديثات", "project": "المشروع", "summaryUpdate": "تحديث الملخص", "shipments": "الشحنات", "ledgerSalesTax": "دفتر الأستاذ وضريبة المبيعات", "settlement": "التسوية", "directDebit": "الخصم المباشر", "creditCard": "بطاقة الائتمان", "creditManagement": "إدارة الائتمان", "collections": "التحصيلات", "collectionsAutomation": "أتمتة عملية التحصيل", "deductions": "الاستقطاعات", "prices": "الأسعار", "electronicDocuments": "المستندات الإلكترونية", "inventoryDimensions": "أبعاد المخزون", "rebateProgram": "برنامج الخصم" },
+    "sections": { "customized": "إعداد متطلبات اعتماد أمر البيع ومعلومات العميل", "customer": "العميل", "salesDefaults": "القيم الافتراضية للمبيعات" },
+    "options": { "salesOrder": "أمر بيع", "legalEntity": "الكيان القانوني", "manual": "يدوي", "user": "المستخدم" },
+    "fields": {
+      "mandatorySettlement": "تسوية الدفعة إلزامية", "preventInvoiceDateEditing": "منع تعديل تاريخ الفاتورة", "preventBelowCost": "منع البيع بأقل من سعر التكلفة", "validateSettlementWorker": "التحقق من موظف التسوية", "applyCustomerHeaderDimensions": "تطبيق أبعاد الرأس للعميل", "preventFinancialModification": "منع تعديل الأبعاد المالية", "requireOpenInvoiceSettlement": "طلب التسوية عند فتح الفواتير", "preventDueDateEditing": "منع تعديل تاريخ الاستحقاق", "checkTaxAmount": "التحقق من مبلغ الضريبة", "validateSettlementDepartment": "التحقق من قسم التسوية", "applyBankHeaderDimensions": "تطبيق الأبعاد الافتراضية للحساب البنكي", "allowInvoiceBeforePackingSlip": "السماح بتاريخ فاتورة قبل إيصال التعبئة", "mandatorySettlementVoucher": "إيصال تسوية الدفعة إلزامي", "checkCostAllocateDiscount": "التحقق من خصم توزيع التكلفة", "validateSettlementCostCenter": "التحقق من مركز تكلفة التسوية", "roleException": "استثناء الدور لأمر عرض المبيعات", "validateSiteLocation": "التحقق من الموقع والمخزن", "allowDuplicateVat": "السماح بتكرار رقم ضريبة العميل", "validateWorkerDimension": "التحقق من بُعد الموظف", "validateSettlementProject": "التحقق من مشروع التسوية", "applyBankLineDimensions": "تطبيق أبعاد الرأس لسطور البنك", "validateHeaderLineDimensions": "التحقق من أبعاد الرأس والسطر",
+      "invoiceTaxExemptRequirement": "متطلب رقم الإعفاء الضريبي للفاتورة", "minimumReimbursement": "الحد الأدنى للسداد", "mandatoryTaxGroup": "مجموعة الضريبة إلزامية", "defaultTransactionFilter": "عامل التصفية الافتراضي لحركات العميل", "assignResponsibleEmployee": "تعيين موظف مسؤول من كيان قانوني آخر", "preventRegistrationCopy": "منع نسخ رقم التسجيل", "oneTimeCustomerAccount": "حساب العميل لمرة واحدة", "taxExemptRequirement": "متطلب رقم الإعفاء الضريبي", "suppressDepreciation": "منع إهلاك جدول الدفع", "orderType": "نوع الأمر", "salesOrderPool": "مجمع أوامر البيع", "salesOrigin": "أصل المبيعات", "autoBatchReservation": "حجز الدفعة تلقائياً", "invoiceTimeZone": "تفضيل المنطقة الزمنية للفواتير", "freeTextInvoiceTimeZone": "تفضيل المنطقة الزمنية لفواتير النص الحر", "validityPeriod": "فترة الصلاحية", "reservation": "الحجز", "enterprisePortalOrigin": "أصل المبيعات من بوابة المؤسسة", "salesDocumentTimeZone": "تفضيل المنطقة الزمنية لمستندات المبيعات", "packingSlipTimeZone": "تفضيل المنطقة الزمنية لإيصالات التعبئة", "deferDirectDelivery": "تأجيل إنشاء سلاسل التسليم المباشر"
+    }
+  }
+  ,"paymentMethods": {
+    "newMethod": "طريقة جديدة", "actions": { "setup": "إعداد" },
+    "commands": { "paymentSpecification": "مواصفات الدفع", "paymentFeeSetup": "إعداد رسوم الدفع", "remittanceFiles": "ملفات التحويل للعملاء", "fileAnalyze": "تحليل الملف", "options": "خيارات" },
+    "sections": { "general": "عام", "fileFormats": "تنسيقات الملفات" },
+    "groups": { "file": "الملف", "posting": "الترحيل", "invoiceUpdate": "تحديث الفاتورة", "fileFormats": "تنسيقات الملفات" },
+    "options": { "ledger": "دفتر الأستاذ", "noDraft": "لا توجد كمبيالة", "none": "لا شيء", "other": "أخرى" },
+    "fields": { "method": "طريقة الدفع", "period": "الفترة", "description": "الوصف", "gracePeriod": "فترة السماح", "paymentStatus": "حالة الدفع", "paymentType": "نوع الدفع", "zatcaMethod": "طريقة زاتكا", "lastFileNumber": "رقم آخر ملف", "today": "اليوم", "date": "التاريخ", "accountType": "نوع الحساب", "paymentAccount": "حساب الدفع", "bridgingPosting": "ترحيل التجسير", "bridgingByBank": "حساب التجسير حسب الحساب البنكي", "bridgingAccount": "حساب التجسير", "bankTransactionType": "نوع الحركة البنكية", "requireMandate": "التفويض مطلوب", "draftType": "نوع الكمبيالة", "categoryPurpose": "غرض الفئة", "chargeBearer": "متحمل الرسوم", "localInstrument": "الأداة المحلية", "serviceLevel": "مستوى الخدمة", "directDebit": "الخصم المباشر", "autoDrawJournal": "إنشاء وترحيل دفتر السحب تلقائياً", "runExportScript": "تشغيل برنامج التصدير", "genericExport": "تنسيق التصدير الإلكتروني العام", "genericImport": "تنسيق الاستيراد الإلكتروني العام", "exportConfig": "إعداد تنسيق التصدير", "importConfig": "إعداد تنسيق الاستيراد", "exportFormat": "تنسيق التصدير", "importFormat": "تنسيق الاستيراد", "returnFormat": "تنسيق الإرجاع", "remittanceFormat": "تنسيق التحويل" }
+  }
 }

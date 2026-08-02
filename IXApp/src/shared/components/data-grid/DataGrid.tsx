@@ -55,6 +55,7 @@ function DataGridInternal<T>({
     onNewRow,
     hideAddRowButton = false,
     onEditingChange,
+    hideInlineEditActions = false,
     onRefresh,
     onValidate,
     onExecute,
@@ -725,6 +726,7 @@ function DataGridInternal<T>({
                                 onFieldChange={updateField}
                                 onSaveEdit={handleSaveEdit}
                                 onCancelEdit={handleCancelEdit}
+                                hideInlineEditActions={hideInlineEditActions}
                                 ref={gridBodyRef}
                             />
                         )}

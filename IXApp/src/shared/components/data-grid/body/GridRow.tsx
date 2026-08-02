@@ -31,6 +31,7 @@ interface GridRowProps<T> {
   saving?: boolean;
   onSave?: () => void;
   onCancel?: () => void;
+  hideInlineEditActions?: boolean;
 }
 
 export const GridRow = memo(function GridRowInner<T>({
@@ -39,7 +40,7 @@ export const GridRow = memo(function GridRowInner<T>({
   showColumnBorders, showCellBorders,
   pinnedLeftCols, unpinnedCols, pinnedRightCols, pinnedLeftOffsets, pinnedRightOffsets,
   onContextMenu, renderCell,
-  isEditing = false, saving = false, onSave, onCancel,
+  isEditing = false, saving = false, onSave, onCancel, hideInlineEditActions = false,
 }: GridRowProps<T>) {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -160,7 +161,7 @@ export const GridRow = memo(function GridRowInner<T>({
         />
       ))}
 
-      {isEditing && (
+      {isEditing && !hideInlineEditActions && (
         <Box
           sx={{
             position: 'sticky',
