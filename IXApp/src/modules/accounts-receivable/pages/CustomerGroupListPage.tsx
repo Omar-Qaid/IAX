@@ -46,6 +46,7 @@ export function CustomerGroupListPage(): React.ReactElement {
       operatorLabel: t('filters.contains'),
       applyLabel: t('actions.apply'),
       resetLabel: t('actions.reset'),
+      getValue: (group) => group.groupId,
       matches: (group, value) => group.groupId.toLocaleLowerCase(currentLanguage.code).includes(value.trim().toLocaleLowerCase(currentLanguage.code)),
     },
   };

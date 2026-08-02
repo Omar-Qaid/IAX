@@ -20,6 +20,13 @@ export const ROUTE_PATHS = {
   FOUNDATION: {
     ROOT: '/foundation',
     CURRENCIES: '/foundation/currencies',
+    EXCHANGE_RATE_TYPES: '/foundation/exchange-rate-types',
+    EXCHANGE_RATES: '/foundation/exchange-rates',
+  },
+
+  ORGANIZATION_ADMINISTRATION: {
+    ROOT: '/organization-administration',
+    LEGAL_ENTITIES: '/organization-administration/legal-entities',
   },
 
   SYSTEM_ADMINISTRATION: {

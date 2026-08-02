@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { DetailValue, EnterpriseListDetailsConfig, ListDetailRecord } from './types';
+import { createEnterpriseFilterCondition, matchesEnterpriseFilter, type EnterpriseFilterCondition } from '@shared/components/data-grid/EnterpriseFilterPanel';
 
 export function useListDetailsPage<T extends ListDetailRecord>(config: EnterpriseListDetailsConfig<T>) {
   const source = config.dataSource;
@@ -15,8 +16,9 @@ export function useListDetailsPage<T extends ListDetailRecord>(config: Enterpris
   const [filterVisible, setFilterVisible] = useState(true);
   const [filterPanelOpen, setFilterPanelOpen] = useState(config.advancedFilterOpenOnLoad ?? false);
   const [informationPanelOpen, setInformationPanelOpen] = useState(config.informationOpenOnLoad ?? false);
-  const [draftAdvancedFilter, setDraftAdvancedFilter] = useState('');
-  const [advancedFilter, setAdvancedFilter] = useState('');
+  const defaultAdvancedField = config.advancedFilter?.fields?.[0]?.id ?? 'default';
+  const [draftAdvancedFilters, setDraftAdvancedFilters] = useState<EnterpriseFilterCondition[]>([createEnterpriseFilterCondition(defaultAdvancedField)]);
+  const [advancedFilters, setAdvancedFilters] = useState<EnterpriseFilterCondition[]>([]);
   const [editing, setEditing] = useState(false);
   const [isNew, setIsNew] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -40,9 +42,14 @@ export function useListDetailsPage<T extends ListDetailRecord>(config: Enterpris
     const normalized = query.trim();
     return records.filter((record) => {
       const matchesQuery = !normalized || (config.matchesSearch ? config.matchesSearch(record, normalized) : config.getPrimaryText(record).toLocaleLowerCase().includes(normalized.toLocaleLowerCase()));
-      return matchesQuery && (!advancedFilter || !config.advancedFilter || config.advancedFilter.matches(record, advancedFilter));
+      const matchesAdvanced = !config.advancedFilter || advancedFilters.every((condition) => {
+        const field = config.advancedFilter?.fields?.find((candidate) => candidate.id === condition.field);
+        const value = field?.getValue(record) ?? config.advancedFilter?.getValue?.(record);
+        return value !== undefined ? matchesEnterpriseFilter(value, condition) : config.advancedFilter!.matches(record, condition.value);
+      });
+      return matchesQuery && matchesAdvanced;
     });
-  }, [advancedFilter, config, query, records]);
+  }, [advancedFilters, config, query, records]);
   const replaceRecords = (next: T[]) => { if (source.type === 'controlled') source.onRecordsChange(next); else setLocalRecords(next); };
   const refresh = useCallback(() => { if (source.type === 'controlled') void source.refresh?.(); else if (source.type === 'remote') setReloadVersion((value) => value + 1); }, [source]);
   const choose = (record: T) => { if (editing) return; setSelectedId(record.id); setDraft(record); setValidationErrors({}); };
@@ -66,5 +73,5 @@ export function useListDetailsPage<T extends ListDetailRecord>(config: Enterpris
   };
   const changeValue = (name: string, value: DetailValue) => { setValidationErrors((current) => { const next = { ...current }; delete next[name]; return next; }); setDraft((current) => current ? config.setValues(current, { ...config.getValues(current), [name]: value }) : current); };
   const changeHeader = (fieldId: string, value: DetailValue) => { setValidationErrors((current) => { const next = { ...current }; delete next[fieldId]; return next; }); setDraft((current) => { const field = config.headerFields.find((candidate) => candidate.id === fieldId); return current && field ? field.setValue(current, value) : current; }); };
-  return { records, selectedId, selected, draft, query, filterVisible, filterPanelOpen, informationPanelOpen, draftAdvancedFilter, editing, isNew, saving, loading, error, validationErrors, visibleRecords, setQuery, setDraftAdvancedFilter, applyAdvancedFilter: () => setAdvancedFilter(draftAdvancedFilter), resetAdvancedFilter: () => { setDraftAdvancedFilter(''); setAdvancedFilter(''); }, toggleFilter: () => config.advancedFilter ? setFilterPanelOpen((open) => !open) : setFilterVisible((visible) => !visible), toggleInformation: () => setInformationPanelOpen((open) => !open), choose, startEdit, startNew, save, cancel, remove, refresh, changeValue, changeHeader };
+  return { records, selectedId, selected, draft, query, filterVisible, filterPanelOpen, informationPanelOpen, draftAdvancedFilters, editing, isNew, saving, loading, error, validationErrors, visibleRecords, setQuery, setDraftAdvancedFilters, applyAdvancedFilter: () => setAdvancedFilters(draftAdvancedFilters.filter((condition) => condition.value.trim())), resetAdvancedFilter: () => { setDraftAdvancedFilters([createEnterpriseFilterCondition(defaultAdvancedField)]); setAdvancedFilters([]); }, toggleFilter: () => config.advancedFilter ? setFilterPanelOpen((open) => !open) : setFilterVisible((visible) => !visible), toggleInformation: () => setInformationPanelOpen((open) => !open), choose, startEdit, startNew, save, cancel, remove, refresh, changeValue, changeHeader };
 }

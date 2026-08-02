@@ -4,7 +4,8 @@
     "app_title": "IXApp Enterprise", "app_title_short": "IXApp", "home": "Home", "dashboard": "Dashboard",
     "accountsReceivable": "Accounts Receivable", "customers": "Customers", "allCustomers": "All customers",
     "customerGroups": "Customer groups", "customerParameters": "Accounts receivable parameters", "customerPaymentMethods": "Methods of payment - customers", "customerPaymentTerms": "Terms of payment", "orders": "Orders", "salesOrders": "Sales orders",
-    "foundation": "Foundation", "currencies": "Currencies", "setup": "Setup",
+    "foundation": "Foundation", "generalLedger": "General ledger", "currencies": "Currencies", "exchangeRateTypes": "Exchange rate types", "exchangeRates": "Currency exchange rates", "setup": "Setup",
+    "organizationAdministration": "Organization administration", "legalEntities": "Legal entities",
     "systemAdmin": "System Administration", "system": "System", "settings": "Application settings",
     "favorites": "Favorites", "recent": "Recent", "modules": "Modules", "search_page": "Search pages"
   },
@@ -19,6 +20,9 @@
     "salesOrders": { "title": "Sales orders", "subtitle": "Double-click an order to open its document details" },
     "salesOrder": { "title": "Sales order {{number}}", "breadcrumb": "Sales order" },
     "currencies": { "title": "Currencies", "subtitle": "Read-only currency configuration" },
+    "exchangeRateTypes": { "title": "Exchange rate types" },
+    "exchangeRates": { "title": "Currency exchange rates" },
+    "legalEntities": { "title": "Legal entities" },
     "settings": { "title": "Application settings", "subtitle": "Current client configuration", "environment": "Environment", "environmentHelp": "Values are supplied by the application build and backend configuration.", "frontend": "Frontend: React and TypeScript", "api": "API integration: ASP.NET Core REST", "localization": "Localization: English and Arabic" },
     "accessDenied": { "title": "Access denied", "message": "You do not have permission to view this page." },
     "notFound": { "title": "Page not found", "message": "The requested page does not exist or is not available." }
@@ -34,11 +38,11 @@
   "actions": {
     "new": "New", "edit": "Edit", "delete": "Delete", "save": "Save", "cancel": "Cancel", "refresh": "Refresh", "confirm": "Confirm",
     "post": "Post", "search": "Search", "export": "Export", "filter": "Filter", "clear": "Clear", "signIn": "Sign in",
-    "retry": "Retry", "backToDashboard": "Back to dashboard", "close": "Close", "open": "Open", "print": "Print", "import": "Import", "add": "Add", "apply": "Apply", "reset": "Reset"
+    "retry": "Retry", "backToDashboard": "Back to dashboard", "close": "Close", "open": "Open", "print": "Print", "import": "Import", "add": "Add", "remove": "Remove", "apply": "Apply", "reset": "Reset"
   },
   "common": {
     "company": "Company", "language": "Language", "theme": "Theme", "light": "Light", "dark": "Dark", "status": "Status",
-    "active": "Active", "yes": "Yes", "no": "No", "all": "All", "standardView": "Standard view", "onhold": "On hold", "onHold": "On hold", "blocked": "Blocked", "confirmed": "Confirmed", "invoiced": "Invoiced", "cancelled": "Cancelled", "open": "Open",
+    "active": "Active", "yes": "Yes", "no": "No", "none": "None", "help": "Help", "all": "All", "standardView": "Standard view", "onhold": "On hold", "onHold": "On hold", "blocked": "Blocked", "confirmed": "Confirmed", "invoiced": "Invoiced", "cancelled": "Cancelled", "open": "Open",
     "loading": "Loading…", "loadingMore": "Loading more…", "noData": "No records found", "noResults": "No results", "notProvided": "Not provided", "readOnly": "Read only",
     "accessDenied": "Access denied", "search": "Search", "clear": "Clear", "close": "Close", "none": "None", "account": "Account", "notifications": "Notifications", "settings": "Settings", "help": "Help", "logout": "Log out",
     "expand_all": "Expand all", "collapse_all": "Collapse all", "breadcrumbs": "Breadcrumbs", "information": "Information", "save": "Save", "cancel": "Cancel", "edit": "Edit", "delete": "Delete",
@@ -69,7 +73,7 @@
   "logistics": { "state": "State", "city": "City", "county": "County", "street": "Street", "building": "Building", "zipCode": "ZIP/postal code", "buildingComplement": "Building complement", "postBox": "Post box", "primary": "Primary", "primaryForCountry": "Primary for country/region", "contactInformation": "Contact information", "editAddress": "Edit address", "newAddress": "New address" },
   "workflow": { "builder": "Builder" }
   ,"utilities": { "personalize": "Personalize", "guide": "Page guide", "openWindow": "Open in new window" }
-  ,"filters": { "title": "Filters", "customerAccount": "Customer account (Account)", "contains": "contains" }
+  ,"filters": { "title": "Filters", "customerAccount": "Customer account (Account)", "contains": "contains", "equals": "equals", "startsWith": "starts with", "endsWith": "ends with", "notEquals": "does not equal", "doesNotContain": "does not contain" }
   ,"relatedInformation": { "title": "Related information", "primaryAddress": "Primary address", "recentActivity": "Recent activity", "relationships": "Relationships", "statistics": "Statistics", "creditStatistics": "Credit statistics", "contacts": "Contacts", "recurringInvoice": "Recurring invoice template", "classificationBalances": "Classification balances", "insuranceGuarantees": "Insurance and guarantees", "selectCustomer": "Select a customer to view related information.", "noAddressFor": "No primary address is available for {{customer}}." }
   ,"customerCommands": { "customer": "Customer", "sell": "Sell", "invoice": "Invoice", "collect": "Collect", "service": "Service", "market": "Market", "commerce": "Commerce", "general": "General", "creditManagement": "Credit management", "options": "Options" }
   ,"customerGroupCommands": { "setup": "Setup", "forecast": "Forecast", "productFilters": "Product filters", "options": "Options" }
@@ -96,5 +100,34 @@
     "sections": { "setup": "Setup", "other": "Other" },
     "options": { "net": "Net", "noUpdate": "No update", "normal": "Normal" },
     "fields": { "term": "Terms of payment", "description": "Description", "paymentMethod": "Payment method", "cashPayment": "Cash payment", "months": "Months", "days": "Days", "paymentSchedule": "Payment schedule", "paymentDay": "Payment day", "cutoffDay": "Cutoff day", "defaultTerms": "Default terms of payment", "dueDateUpdate": "Due date update", "cashAccount": "Cash", "certifiedCompanyCheck": "Certified company check", "paymentType": "Payment type", "creditCheck": "Credit check" }
+  }
+  ,"currencyDetails": {
+    "sections": { "converter": "Currency converter", "rounding": "Rounding rules", "gender": "Currency gender", "electronicInvoices": "Electronic invoices" },
+    "groups": { "numericConversion": "Online numeric conversion tool", "general": "General", "salesOrders": "Sales orders", "purchaseOrders": "Purchase orders", "prices": "Prices" },
+    "options": { "normal": "Normal", "masculine": "Masculine" },
+    "fields": { "code": "Currency code", "name": "Name", "symbol": "Symbol", "arabicName": "Arabic name", "referenceCurrency": "Reference currency for triangulation", "conversion": "Conversion", "prefix": "Prefix", "suffix": "Suffix", "generalRounding": "General rounding rule", "roundingRule": "Rounding rule", "roundingMethod": "Rounding method", "gender": "Currency gender", "exchangeRateLimit": "Exchange rate variation limit", "satDecimals": "Number of decimals in SAT catalog" }
+  }
+  ,"exchangeRateTypes": { "commands": { "exchangeRates": "Exchange rates", "options": "Options" }, "fields": { "type": "Exchange rate type", "calendar": "Calendar" } }
+  ,"exchangeRates": {
+    "sections": { "addRemove": "Add or remove exchange rates" },
+    "options": { "default": "Default" },
+    "fields": { "type": "Exchange rate type", "fromCurrency": "From currency", "toCurrency": "To currency", "conversionFactor": "Conversion factor", "fromDate": "From date", "toDate": "To date", "startDate": "Start date", "exchangeRate": "Exchange rate", "exchangeValue": "Exchange value" },
+    "displayDateRange": "Display valid exchange rates for the date range",
+    "defaultValue": "1 SAR for 1 unit"
+  }
+  ,"customerQuickCreate": {
+    "title": "Create customer", "saveAndOpen": "Save and open",
+    "sections": { "details": "Details", "address": "Address" },
+    "fields": { "type": "Type", "category": "Customer category", "mainCrNumber": "Main CR Number", "branchCrNumber": "Branch CR Number", "vatNumber": "VAT Number", "notes": "Notes", "zatcaType": "ZATCA type", "paymentMethod": "Method of payment", "sourceCode": "Source code", "deliveryTerms": "Delivery terms", "deliveryMode": "Mode of delivery", "country": "Country/region", "street": "Street" },
+    "options": { "organization": "Organization", "person": "Person", "retail": "Retail", "wholesale": "Wholesale", "major": "Major accounts", "wholesaleGroup": "Wholesale", "vat15": "VAT 15%", "saudiArabia": "Saudi Arabia" }
+  }
+  ,"legalEntities": {
+    "sections": { "general": "General", "addresses": "Addresses", "contacts": "Contact information", "statutory": "Statutory reporting" },
+    "groups": { "language": "Language", "timeZone": "Time zone" },
+    "fields": { "name": "Name", "company": "Company", "memo": "Memo", "hierarchy": "In hierarchy", "consolidation": "Use for financial consolidation process", "elimination": "Use for financial elimination process", "fullName": "Full name", "localizedRegion": "Localized functionality region", "language": "Language", "timeZone": "Time zone", "branch": "Branch/Subsidiary", "dunsNumber": "DUNS number", "naics": "NAICS", "taxRepresentative": "Tax representative" },
+    "addresses": { "description": "Name or description", "address": "Address", "purpose": "Purpose", "primary": "Primary" },
+    "contacts": { "type": "Type", "contact": "Contact number/address" },
+    "actions": { "map": "Map", "moreOptions": "More options", "advanced": "Advanced" },
+    "commands": { "hierarchy": "View in hierarchy", "registrationIds": "Registration IDs", "registrationSearch": "Registration ID search", "electronicProperties": "Electronic document properties", "options": "Options" }
   }
 }

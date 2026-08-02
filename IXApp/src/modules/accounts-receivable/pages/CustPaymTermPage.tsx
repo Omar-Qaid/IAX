@@ -40,7 +40,7 @@ export function CustPaymTerm(): React.ReactElement {
     sections,
     permissions: { view: 'customer.view', create: 'customer.create', edit: 'customer.update', delete: 'customer.delete' },
     validate: (record) => ({ ...(!record.term.trim() ? { term: t('validation.required', { field: t('paymentTerms.fields.term') }) } : {}), ...(!record.description.trim() ? { description: t('validation.required', { field: t('paymentTerms.fields.description') }) } : {}) }),
-    advancedFilter: { fieldLabel: t('paymentTerms.fields.term'), matches: (record, value) => record.term.toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()) },
+    advancedFilter: { fieldLabel: t('paymentTerms.fields.term'), getValue: (record) => record.term, matches: (record, value) => record.term.toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()) },
     commands: ['translations', 'options'].map((id) => ({ id, label: t(`paymentTerms.commands.${id}`) })),
   };
   return <ListDetailsPage variant="enterprise" title={t('pages.paymentTerms.title')} config={config} />;

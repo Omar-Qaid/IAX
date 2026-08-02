@@ -13,7 +13,7 @@ import { EnterpriseCommandUtilities } from '@shared/components/action-pane/Enter
 import { DataGrid } from '@shared/components/data-grid/DataGrid';
 import { EnterpriseQuickFilter } from '@shared/components/data-grid/EnterpriseQuickFilter';
 import { EnterpriseListFilterBar } from '@shared/components/data-grid/EnterpriseListFilterBar';
-import { EnterpriseFilterPanel } from '@shared/components/data-grid/EnterpriseFilterPanel';
+import { createEnterpriseFilterCondition, EnterpriseFilterPanel, matchesEnterpriseFilter, type EnterpriseFilterCondition } from '@shared/components/data-grid/EnterpriseFilterPanel';
 import type { ColumnDef, DataGridHandle, DataGridProps } from '@shared/components/data-grid/types';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { ErrorState } from '@shared/components/feedback/ErrorState';
@@ -56,6 +56,8 @@ export interface EnterpriseListAdvancedFilter<T> {
   applyLabel: string;
   resetLabel: string;
   matches: (row: T, value: string) => boolean;
+  getValue?: (row: T) => unknown;
+  fields?: Array<{ field: keyof T & string; label: string }>;
 }
 
 export interface EnterpriseListConfig<T> {
@@ -137,8 +139,9 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
   const [quickFilterVisible, setQuickFilterVisible] = useState(enterpriseConfig?.showFilterOnLoad ?? true);
   const [filterPanelOpen, setFilterPanelOpen] = useState(enterpriseConfig?.advancedFilterOpenOnLoad ?? false);
   const [informationPanelOpen, setInformationPanelOpen] = useState(enterpriseConfig?.informationOpenOnLoad ?? false);
-  const [draftAdvancedFilter, setDraftAdvancedFilter] = useState('');
-  const [advancedFilter, setAdvancedFilter] = useState('');
+  const defaultAdvancedField = enterpriseConfig?.advancedFilter?.fields?.[0]?.field ?? enterpriseConfig?.searchFields[0]?.field ?? '';
+  const [draftAdvancedFilters, setDraftAdvancedFilters] = useState<EnterpriseFilterCondition[]>([createEnterpriseFilterCondition(defaultAdvancedField)]);
+  const [advancedFilters, setAdvancedFilters] = useState<EnterpriseFilterCondition[]>([]);
   const [isEditing, setIsEditing] = useState(false);
 
   const processedRows = useMemo(() => {
@@ -149,10 +152,14 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
         ? enterpriseConfig.searchFields.filter((candidate) => candidate.field === searchField)
         : enterpriseConfig.searchFields;
       const matchesSearch = !normalized || fields.some(({ field }) => String(row[field] ?? '').toLocaleLowerCase(enterpriseConfig.locale).includes(normalized));
-      const matchesAdvanced = !advancedFilter || !enterpriseConfig.advancedFilter || enterpriseConfig.advancedFilter.matches(row, advancedFilter);
+      const matchesAdvanced = !enterpriseConfig.advancedFilter || advancedFilters.every((condition) => {
+        const configuredField = [...(enterpriseConfig.advancedFilter?.fields ?? []), ...enterpriseConfig.searchFields].find((field) => field.field === condition.field);
+        const value = configuredField ? row[configuredField.field] : enterpriseConfig.advancedFilter?.getValue?.(row);
+        return value !== undefined ? matchesEnterpriseFilter(value, condition, enterpriseConfig.locale) : enterpriseConfig.advancedFilter!.matches(row, condition.value);
+      });
       return matchesSearch && matchesAdvanced;
     });
-  }, [advancedFilter, enterpriseConfig, query, rows, searchField]);
+  }, [advancedFilters, enterpriseConfig, query, rows, searchField]);
 
   const resolvedError = error ?? sourceState.error;
   const resolvedLoading = loading || sourceState.loading;
@@ -168,8 +175,8 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
     const reset = () => {
       const firstRow = config?.initialSelection === 'none' ? null : (rows[0] ?? null);
       setQuery('');
-      setAdvancedFilter('');
-      setDraftAdvancedFilter('');
+      setAdvancedFilters([]);
+      setDraftAdvancedFilters([createEnterpriseFilterCondition(config?.advancedFilter?.fields?.[0]?.field ?? config?.searchFields[0]?.field)]);
       setQuickFilterVisible(config?.showFilterOnLoad ?? true);
       setFilterPanelOpen(config?.advancedFilterOpenOnLoad ?? false);
       setInformationPanelOpen(config?.informationOpenOnLoad ?? false);
@@ -237,10 +244,10 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
       : <EnterpriseQuickFilter label={config.filterLabel} value={query} onChange={setQuery} />);
     const generatedSidePanels = config && <>
       {filterPanelOpen && config.advancedFilter && <Box sx={{ position: { xs: 'absolute', lg: 'static' }, insetInlineEnd: { xs: informationPanelOpen ? 253 : 0 }, top: 0, bottom: 0, zIndex: 4, height: '100%', minHeight: 0, display: 'flex' }}><EnterpriseFilterPanel
-        title={config.advancedFilter.title} addLabel={config.advancedFilter.addLabel} fieldLabel={config.advancedFilter.fieldLabel} operatorLabel={config.advancedFilter.operatorLabel}
-        value={draftAdvancedFilter} applyLabel={config.advancedFilter.applyLabel} resetLabel={config.advancedFilter.resetLabel}
-        onValueChange={setDraftAdvancedFilter} onApply={() => setAdvancedFilter(draftAdvancedFilter)}
-        onReset={() => { setDraftAdvancedFilter(''); setAdvancedFilter(''); }} onRemove={() => { setDraftAdvancedFilter(''); setAdvancedFilter(''); }}
+        title={config.advancedFilter.title} addLabel={config.advancedFilter.addLabel} fieldOptions={(config.advancedFilter.fields ?? config.searchFields).map(({ field, label }) => ({ value: field, label }))}
+        conditions={draftAdvancedFilters} operatorOptions={getFilterOperatorOptions(t)} applyLabel={config.advancedFilter.applyLabel} resetLabel={config.advancedFilter.resetLabel}
+        onConditionsChange={setDraftAdvancedFilters} onApply={() => setAdvancedFilters(draftAdvancedFilters.filter((condition) => condition.value.trim()))}
+        onReset={() => { setDraftAdvancedFilters([createEnterpriseFilterCondition(config.advancedFilter?.fields?.[0]?.field ?? config.searchFields[0]?.field)]); setAdvancedFilters([]); }}
       /></Box>}
       {informationPanelOpen && config.relatedInformation && <Box sx={{ position: { xs: 'absolute', lg: 'static' }, insetInlineEnd: 0, top: 0, bottom: 0, zIndex: 4, height: '100%', minHeight: 0, display: 'flex' }}><RelatedInformationPanel title={config.relatedInformation.title} sections={config.relatedInformation.sections(selectedRow)} /></Box>}
     </>;
@@ -276,3 +283,12 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
     {dialogs}
   </PageContainer>;
 }
+
+const getFilterOperatorOptions = (t: (key: string, options?: Record<string, unknown>) => string) => [
+  { value: 'contains' as const, label: t('filters.contains') },
+  { value: 'equals' as const, label: t('filters.equals') },
+  { value: 'startsWith' as const, label: t('filters.startsWith') },
+  { value: 'endsWith' as const, label: t('filters.endsWith') },
+  { value: 'notEquals' as const, label: t('filters.notEquals') },
+  { value: 'doesNotContain' as const, label: t('filters.doesNotContain') },
+];

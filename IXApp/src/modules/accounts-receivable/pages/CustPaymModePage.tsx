@@ -14,7 +14,11 @@ export function CustPaymMode(): React.ReactElement {
   const option = (value: string, key: string) => ({ value, label: t(`paymentMethods.options.${key}`) });
   const sections = useMemo<DetailSectionConfig[]>(() => [
     { id: 'general', title: t('paymentMethods.sections.general'), groups: [
-      { id: 'file', title: t('paymentMethods.groups.file'), fields: [...['lastFileNumber', 'today'].map((name) => ({ name, label: t(`paymentMethods.fields.${name}`), type: 'number' as const })), { name: 'date', label: t('paymentMethods.fields.date'), type: 'text' }] },
+      { id: 'file', title: t('paymentMethods.groups.file'), columns: 2, fields: [
+        { name: 'lastFileNumber', label: t('paymentMethods.fields.lastFileNumber'), type: 'number', width: 65, column: 1, row: 1 },
+        { name: 'today', label: t('paymentMethods.fields.today'), type: 'number', width: 65, column: 2, row: 1 },
+        { name: 'date', label: t('paymentMethods.fields.date'), type: 'text', width: 100, column: 2, row: 2 },
+      ] },
       { id: 'posting', title: t('paymentMethods.groups.posting'), fields: [{ name: 'accountType', label: t('paymentMethods.fields.accountType'), type: 'select', options: [option('ledger', 'ledger')] }, { name: 'paymentAccount', label: t('paymentMethods.fields.paymentAccount') }, { name: 'bridgingPosting', label: t('paymentMethods.fields.bridgingPosting'), type: 'boolean' }] },
       { id: 'bridging', fields: [{ name: 'bridgingByBank', label: t('paymentMethods.fields.bridgingByBank'), type: 'boolean' }, { name: 'bridgingAccount', label: t('paymentMethods.fields.bridgingAccount') }, { name: 'bankTransactionType', label: t('paymentMethods.fields.bankTransactionType') }] },
       { id: 'sepa', title: 'SEPA', fields: [{ name: 'requireMandate', label: t('paymentMethods.fields.requireMandate'), type: 'boolean' }, { name: 'draftType', label: t('paymentMethods.fields.draftType'), type: 'select', options: [option('noDraft', 'noDraft')] }, { name: 'categoryPurpose', label: t('paymentMethods.fields.categoryPurpose') }] },
@@ -41,7 +45,7 @@ export function CustPaymMode(): React.ReactElement {
     sections,
     permissions: { view: 'customer.view', create: 'customer.create', edit: 'customer.update', delete: 'customer.delete' },
     validate: (record) => ({ ...(!record.method.trim() ? { method: t('validation.required', { field: t('paymentMethods.fields.method') }) } : {}), ...(!record.period.trim() ? { period: t('validation.required', { field: t('paymentMethods.fields.period') }) } : {}) }),
-    advancedFilter: { fieldLabel: t('paymentMethods.fields.method'), matches: (record, value) => record.method.toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()) },
+    advancedFilter: { fieldLabel: t('paymentMethods.fields.method'), getValue: (record) => record.method, matches: (record, value) => record.method.toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()) },
     relatedInformation: { sections: (record) => [
       { id: 'summary', label: t('paymentMethods.sections.general'), defaultExpanded: true, content: record ? `${record.method} · ${record.period}` : t('messages.selectRecord') },
       { id: 'fileFormats', label: t('paymentMethods.sections.fileFormats') },

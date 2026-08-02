@@ -12,9 +12,12 @@ export interface DetailFieldConfig {
   type?: 'text' | 'number' | 'boolean' | 'select' | 'display';
   options?: DetailFieldOption[];
   disabled?: boolean;
+  width?: number | string;
+  column?: number;
+  row?: number;
 }
-export interface DetailFieldGroup { id: string; title?: string; fields: DetailFieldConfig[] }
-export interface DetailSectionConfig { id: string; title: string; groups: DetailFieldGroup[]; link?: ReactNode; defaultExpanded?: boolean }
+export interface DetailFieldGroup { id: string; title?: string; fields: DetailFieldConfig[]; columns?: number }
+export interface DetailSectionConfig { id: string; title: string; groups?: DetailFieldGroup[]; content?: ReactNode; link?: ReactNode; defaultExpanded?: boolean; columns?: number }
 
 export interface ListDetailRecord { id: string }
 
@@ -49,12 +52,21 @@ export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
   crud?: Partial<{ editLabel: string; newLabel: string; deleteLabel: string; saveLabel: string; cancelLabel: string }>;
   commands?: ListDetailsCommand[];
   utilities?: Partial<{ personalizeLabel: string; guideLabel: string; notificationsLabel: string; refreshLabel: string; openWindowLabel: string; notificationCount: number }>;
-  presentation?: { mode: 'list' | 'grid'; columns?: ColumnDef<T>[]; storageKey?: string; listWidth?: number };
+  presentation?: {
+    mode: 'list' | 'grid';
+    columns?: ColumnDef<T>[];
+    storageKey?: string;
+    listWidth?: number;
+    headerContent?: ReactNode;
+    headerMaxWidth?: number;
+    masterRowHeight?: number;
+    masterHeaderHeight?: number;
+  };
   permissions?: { view?: string; create?: string; edit?: string; delete?: string };
   validate?: (record: T) => Record<string, string> | Promise<Record<string, string>>;
   validationTitle?: string;
   showInformation?: boolean;
-  advancedFilter?: { title?: string; addLabel?: string; fieldLabel: string; operatorLabel?: string; applyLabel?: string; resetLabel?: string; matches: (record: T, value: string) => boolean };
+  advancedFilter?: { title?: string; addLabel?: string; fieldLabel: string; operatorLabel?: string; applyLabel?: string; resetLabel?: string; matches: (record: T, value: string) => boolean; getValue?: (record: T) => unknown; fields?: Array<{ id: string; label: string; getValue: (record: T) => unknown }> };
   relatedInformation?: { title?: string; sections: (record: T | null) => RelatedInformationSection[] };
   advancedFilterOpenOnLoad?: boolean;
   informationOpenOnLoad?: boolean;

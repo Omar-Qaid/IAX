@@ -1,13 +1,16 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link, Typography } from '@mui/material';
 import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
 import { StatusBadge } from '@shared/components/status/StatusBadge';
 import type { ColumnDef } from '@shared/components/data-grid/types';
 import { MOCK_CUSTOMERS, type Customer } from '@mocks/data/customers';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import { CustomerQuickCreate } from '../components/CustomerQuickCreate';
 
 export function CustomerListPage(): React.ReactElement {
   const { t, currentLanguage } = useAppTranslation();
+  const [customers, setCustomers] = useState(MOCK_CUSTOMERS);
+  const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const columns = useMemo<ColumnDef<Customer>[]>(() => [
     { field: 'accountNumber', headerName: 'fields.account', width: 150, pinned: 'left', renderCell: ({ row }) => <Link component="button" underline="none" sx={{ fontSize: '0.75rem', color: 'primary.main' }}>{row.accountNumber}</Link> },
     { field: 'name', headerName: 'fields.customerName', width: 205 },
@@ -39,7 +42,7 @@ export function CustomerListPage(): React.ReactElement {
     ],
     defaultSearchField: 'phone',
     locale: currentLanguage.code,
-    crud: { editLabel: t('actions.edit'), newLabel: t('actions.new'), deleteLabel: t('actions.delete') },
+    crud: { editLabel: t('actions.edit'), newLabel: t('actions.new'), deleteLabel: t('actions.delete'), onNew: () => setQuickCreateOpen(true) },
     commands: commandIds.map((id) => ({ id, label: t(`customerCommands.${id}`) })),
     utilities: {
       personalizeLabel: t('utilities.personalize'), guideLabel: t('utilities.guide'), notificationsLabel: t('common.notifications'),
@@ -48,6 +51,15 @@ export function CustomerListPage(): React.ReactElement {
     advancedFilter: {
       title: t('filters.title'), addLabel: t('actions.add'), fieldLabel: t('filters.customerAccount'), operatorLabel: t('filters.contains'),
       applyLabel: t('actions.apply'), resetLabel: t('actions.reset'),
+      fields: [
+        { field: 'accountNumber', label: t('filters.customerAccount') },
+        { field: 'name', label: t('fields.customerName') },
+        { field: 'nameAr', label: t('fields.arabicName') },
+        { field: 'customerGroupId', label: t('fields.customerGroup') },
+        { field: 'currencyCode', label: t('fields.currency') },
+        { field: 'phone', label: t('fields.phone') },
+      ],
+      getValue: (customer) => customer.accountNumber,
       matches: (customer, value) => customer.accountNumber.toLocaleLowerCase(currentLanguage.code).includes(value.trim().toLocaleLowerCase(currentLanguage.code)),
     },
     relatedInformation: {
@@ -70,8 +82,9 @@ export function CustomerListPage(): React.ReactElement {
     variant="enterprise"
     title={t('pages.customers.title')}
     enterpriseConfig={config}
-    dataSource={{ type: 'static', rows: MOCK_CUSTOMERS }}
+    dataSource={{ type: 'controlled', rows: customers }}
     columns={columns}
     dataGridProps={{ storageKey: 'accounts-receivable.customers.reference-view' }}
+    dialogs={<CustomerQuickCreate open={quickCreateOpen} nextAccount={`C-${String(4304 + customers.length - MOCK_CUSTOMERS.length).padStart(7, '0')}`} onClose={() => setQuickCreateOpen(false)} onSave={(customer) => { setCustomers((current) => [...current, customer]); setQuickCreateOpen(false); }} />}
   />;
 }

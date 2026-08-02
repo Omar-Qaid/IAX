@@ -38,9 +38,6 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
         links: [
           { label: 'nav.allCustomers', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMERS, permission: { module: 'AccountsReceivable', resource: 'Customers' } },
           { label: 'nav.customerGroups', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_GROUPS, permission: { module: 'AccountsReceivable', resource: 'CustomerGroups' } },
-          { label: 'nav.customerParameters', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PARAMETERS, permission: { module: 'AccountsReceivable', resource: 'Customers' } },
-          { label: 'nav.customerPaymentMethods', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_METHODS, permission: { module: 'AccountsReceivable', resource: 'Customers' } },
-          { label: 'nav.customerPaymentTerms', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_TERMS, permission: { module: 'AccountsReceivable', resource: 'Customers' } },
         ],
       },
       {
@@ -50,15 +47,24 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
           { label: 'nav.salesOrders', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDERS, permission: { module: 'AccountsReceivable', resource: 'SalesOrders' } },
         ],
       },
+      {
+        id: 'setup',
+        title: 'nav.setup',
+        links: [
+          { label: 'nav.customerParameters', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PARAMETERS, permission: { module: 'AccountsReceivable', resource: 'Customers' } },
+          { label: 'nav.customerPaymentMethods', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_METHODS, permission: { module: 'AccountsReceivable', resource: 'Customers' } },
+          { label: 'nav.customerPaymentTerms', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_TERMS, permission: { module: 'AccountsReceivable', resource: 'Customers' } },
+        ],
+      },
     ],
   },
   'mod-GeneralLedger': {
     moduleId: 'mod-GeneralLedger',
-    label: 'nav.foundation',
+    label: 'nav.generalLedger',
     icon: 'ledger',
     defaultPath: ROUTE_PATHS.FOUNDATION.CURRENCIES,
     matchPath: ROUTE_PATHS.FOUNDATION.ROOT,
-    sections: [{ id: 'currencies', title: 'nav.setup', links: [{ label: 'nav.currencies', path: ROUTE_PATHS.FOUNDATION.CURRENCIES, permission: { module: 'GeneralLedger', resource: 'Currencies' } }] }],
+    sections: [{ id: 'setup', title: 'nav.setup', links: [{ label: 'nav.currencies', path: ROUTE_PATHS.FOUNDATION.CURRENCIES, permission: { module: 'GeneralLedger', resource: 'Currencies' } }, { label: 'nav.exchangeRateTypes', path: ROUTE_PATHS.FOUNDATION.EXCHANGE_RATE_TYPES, permission: { module: 'GeneralLedger', resource: 'Currencies' } }, { label: 'nav.exchangeRates', path: ROUTE_PATHS.FOUNDATION.EXCHANGE_RATES, permission: { module: 'GeneralLedger', resource: 'Currencies' } }] }],
   },
   'mod-SystemAdministration': {
     moduleId: 'mod-SystemAdministration',
@@ -67,5 +73,13 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
     defaultPath: ROUTE_PATHS.SYSTEM_ADMINISTRATION.SETTINGS,
     matchPath: ROUTE_PATHS.SYSTEM_ADMINISTRATION.ROOT,
     sections: [{ id: 'system', title: 'nav.system', links: [{ label: 'nav.settings', path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.SETTINGS }] }],
+  },
+  'mod-OrganizationAdministration': {
+    moduleId: 'mod-OrganizationAdministration',
+    label: 'nav.organizationAdministration',
+    icon: 'corporate',
+    defaultPath: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.LEGAL_ENTITIES,
+    matchPath: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.ROOT,
+    sections: [{ id: 'setup', title: 'nav.setup', links: [{ label: 'nav.legalEntities', path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.LEGAL_ENTITIES, permission: { module: 'OrganizationAdministration', resource: 'LegalEntities' } }] }],
   },
 };

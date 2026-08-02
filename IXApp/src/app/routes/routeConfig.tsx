@@ -18,7 +18,10 @@ const CustPaymMode = lazy(() => import('@modules/accounts-receivable/pages/CustP
 const CustPaymTerm = lazy(() => import('@modules/accounts-receivable/pages/CustPaymTermPage').then((module) => ({ default: module.CustPaymTerm })));
 const SalesOrdersPage = lazy(() => import('@modules/accounts-receivable/pages/SalesOrdersPage').then((module) => ({ default: module.SalesOrdersPage })));
 const SalesOrderPage = lazy(() => import('@modules/accounts-receivable/pages/SalesOrderPage').then((module) => ({ default: module.SalesOrderPage })));
-const CurrenciesPage = lazy(() => import('@modules/foundation/pages/CurrenciesPage').then((module) => ({ default: module.CurrenciesPage })));
+const CurrencyPage = lazy(() => import('@modules/foundation/pages/CurrencyPage').then((module) => ({ default: module.CurrencyPage })));
+const ExchangeRateTypePage = lazy(() => import('@modules/foundation/pages/ExchangeRateTypePage').then((module) => ({ default: module.ExchangeRateTypePage })));
+const ExchangeRatePage = lazy(() => import('@modules/foundation/pages/ExchangeRatePage').then((module) => ({ default: module.ExchangeRatePage })));
+const LegalEntityPage = lazy(() => import('@modules/organization-administration/pages/LegalEntityPage').then((module) => ({ default: module.LegalEntityPage })));
 const ApplicationSettingsPage = lazy(() => import('@modules/system-administration/pages/ApplicationSettingsPage').then((module) => ({ default: module.ApplicationSettingsPage })));
 
 const RouteLoading = () => {
@@ -93,7 +96,19 @@ export const appRoutes: RouteObject[] = [
       },
       {
         path: ROUTE_PATHS.FOUNDATION.CURRENCIES,
-        element: load(<CurrenciesPage />),
+        element: load(<CurrencyPage />),
+      },
+      {
+        path: ROUTE_PATHS.FOUNDATION.EXCHANGE_RATE_TYPES,
+        element: load(<ExchangeRateTypePage />),
+      },
+      {
+        path: ROUTE_PATHS.FOUNDATION.EXCHANGE_RATES,
+        element: load(<ExchangeRatePage />),
+      },
+      {
+        path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.LEGAL_ENTITIES,
+        element: load(<LegalEntityPage />),
       },
       {
         path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.SETTINGS,

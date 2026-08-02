@@ -3,7 +3,8 @@
   "nav": {
     "app_title": "نظام IXApp المؤسسي", "app_title_short": "IXApp", "home": "الرئيسية", "dashboard": "لوحة المعلومات",
     "accountsReceivable": "الحسابات المدينة", "customers": "العملاء", "allCustomers": "جميع العملاء", "customerGroups": "مجموعات العملاء", "customerParameters": "معلمات الحسابات المدينة", "customerPaymentMethods": "طرق الدفع - العملاء", "customerPaymentTerms": "شروط الدفع",
-    "orders": "الطلبات", "salesOrders": "أوامر البيع", "foundation": "البيانات الأساسية", "currencies": "العملات", "setup": "الإعداد",
+    "orders": "الطلبات", "salesOrders": "أوامر البيع", "foundation": "البيانات الأساسية", "generalLedger": "دفتر الأستاذ العام", "currencies": "العملات", "exchangeRateTypes": "أنواع أسعار الصرف", "exchangeRates": "أسعار صرف العملات", "setup": "الإعداد",
+    "organizationAdministration": "إدارة المؤسسة", "legalEntities": "الكيانات القانونية",
     "systemAdmin": "إدارة النظام", "system": "النظام", "settings": "إعدادات التطبيق", "favorites": "المفضلة", "recent": "الأخيرة", "modules": "الوحدات", "search_page": "البحث في الصفحات"
   },
   "pages": {
@@ -17,6 +18,9 @@
     "salesOrders": { "title": "أوامر البيع", "subtitle": "انقر نقراً مزدوجاً على أمر لفتح تفاصيل المستند" },
     "salesOrder": { "title": "أمر البيع {{number}}", "breadcrumb": "أمر البيع" },
     "currencies": { "title": "العملات", "subtitle": "إعداد العملات للقراءة فقط" },
+    "exchangeRateTypes": { "title": "أنواع أسعار الصرف" },
+    "legalEntities": { "title": "الكيانات القانونية" },
+    "exchangeRates": { "title": "أسعار صرف العملات" },
     "settings": { "title": "إعدادات التطبيق", "subtitle": "إعدادات العميل الحالية", "environment": "البيئة", "environmentHelp": "تُوفَّر القيم من بناء التطبيق وإعدادات الخادم.", "frontend": "الواجهة: React وTypeScript", "api": "تكامل الواجهة البرمجية: ASP.NET Core REST", "localization": "اللغات: الإنجليزية والعربية" },
     "accessDenied": { "title": "الوصول مرفوض", "message": "ليس لديك إذن لعرض هذه الصفحة." },
     "notFound": { "title": "الصفحة غير موجودة", "message": "الصفحة المطلوبة غير موجودة أو غير متاحة." }
@@ -32,10 +36,10 @@
   "actions": {
     "new": "جديد", "edit": "تعديل", "delete": "حذف", "save": "حفظ", "cancel": "إلغاء", "refresh": "تحديث", "confirm": "تأكيد", "post": "ترحيل",
     "search": "بحث", "export": "تصدير", "filter": "تصفية", "clear": "مسح", "signIn": "تسجيل الدخول", "retry": "إعادة المحاولة",
-    "backToDashboard": "العودة إلى لوحة المعلومات", "close": "إغلاق", "open": "فتح", "print": "طباعة", "import": "استيراد", "add": "إضافة", "apply": "تطبيق", "reset": "إعادة ضبط"
+    "backToDashboard": "العودة إلى لوحة المعلومات", "close": "إغلاق", "open": "فتح", "print": "طباعة", "import": "استيراد", "add": "إضافة", "remove": "إزالة", "apply": "تطبيق", "reset": "إعادة ضبط"
   },
   "common": {
-    "company": "الشركة", "language": "اللغة", "theme": "المظهر", "light": "فاتح", "dark": "داكن", "status": "الحالة", "yes": "نعم", "no": "لا", "all": "الكل", "standardView": "طريقة العرض القياسية",
+    "company": "الشركة", "language": "اللغة", "theme": "المظهر", "light": "فاتح", "dark": "داكن", "status": "الحالة", "yes": "نعم", "no": "لا", "none": "لا شيء", "help": "مساعدة", "all": "الكل", "standardView": "طريقة العرض القياسية",
     "active": "نشط", "onhold": "معلّق", "onHold": "معلّق", "blocked": "محظور", "confirmed": "مؤكد", "invoiced": "مفوتر", "cancelled": "ملغي", "open": "مفتوح",
     "loading": "جارٍ التحميل…", "loadingMore": "جارٍ تحميل المزيد…", "noData": "لا توجد سجلات", "noResults": "لا توجد نتائج", "notProvided": "غير متوفر", "readOnly": "للقراءة فقط",
     "accessDenied": "الوصول مرفوض", "search": "بحث", "clear": "مسح", "close": "إغلاق", "none": "لا شيء", "account": "الحساب", "notifications": "الإشعارات", "settings": "الإعدادات", "help": "المساعدة", "logout": "تسجيل الخروج",
@@ -65,7 +69,7 @@
   "logistics": { "state": "المنطقة", "city": "المدينة", "county": "المقاطعة", "street": "الشارع", "building": "المبنى", "zipCode": "الرمز البريدي", "buildingComplement": "وصف إضافي للمبنى", "postBox": "صندوق البريد", "primary": "أساسي", "primaryForCountry": "أساسي للدولة أو المنطقة", "contactInformation": "معلومات الاتصال", "editAddress": "تعديل العنوان", "newAddress": "عنوان جديد" },
   "workflow": { "builder": "المصمم" }
   ,"utilities": { "personalize": "تخصيص", "guide": "دليل الصفحة", "openWindow": "فتح في نافذة جديدة" }
-  ,"filters": { "title": "عوامل التصفية", "customerAccount": "حساب العميل (الحساب)", "contains": "يحتوي على" }
+  ,"filters": { "title": "عوامل التصفية", "customerAccount": "حساب العميل (الحساب)", "contains": "يحتوي على", "equals": "يساوي", "startsWith": "يبدأ بـ", "endsWith": "ينتهي بـ", "notEquals": "لا يساوي", "doesNotContain": "لا يحتوي على" }
   ,"relatedInformation": { "title": "المعلومات ذات الصلة", "primaryAddress": "العنوان الأساسي", "recentActivity": "النشاط الأخير", "relationships": "العلاقات", "statistics": "الإحصاءات", "creditStatistics": "إحصاءات الائتمان", "contacts": "جهات الاتصال", "recurringInvoice": "قالب الفاتورة المتكررة", "classificationBalances": "أرصدة التصنيف", "insuranceGuarantees": "التأمين والضمانات", "selectCustomer": "اختر عميلاً لعرض المعلومات ذات الصلة.", "noAddressFor": "لا يتوفر عنوان أساسي للعميل {{customer}}." }
   ,"customerCommands": { "customer": "العميل", "sell": "البيع", "invoice": "الفاتورة", "collect": "التحصيل", "service": "الخدمة", "market": "السوق", "commerce": "التجارة", "general": "عام", "creditManagement": "إدارة الائتمان", "options": "خيارات" }
   ,"customerGroupCommands": { "setup": "الإعداد", "forecast": "التنبؤ", "productFilters": "عوامل تصفية المنتجات", "options": "خيارات" }
@@ -92,5 +96,34 @@
     "sections": { "setup": "إعداد", "other": "أخرى" },
     "options": { "net": "صافي", "noUpdate": "لا يوجد تحديث", "normal": "عادي" },
     "fields": { "term": "شروط الدفع", "description": "الوصف", "paymentMethod": "طريقة الدفع", "cashPayment": "الدفع النقدي", "months": "الأشهر", "days": "الأيام", "paymentSchedule": "جدول الدفع", "paymentDay": "يوم الدفع", "cutoffDay": "يوم الإقفال", "defaultTerms": "شروط الدفع الافتراضية", "dueDateUpdate": "تحديث تاريخ الاستحقاق", "cashAccount": "النقد", "certifiedCompanyCheck": "شيك شركة معتمد", "paymentType": "نوع الدفع", "creditCheck": "فحص الائتمان" }
+  }
+  ,"currencyDetails": {
+    "sections": { "converter": "محول العملة", "rounding": "قواعد التقريب", "gender": "جنس العملة", "electronicInvoices": "الفواتير الإلكترونية" },
+    "groups": { "numericConversion": "أداة تحويل الأرقام عبر الإنترنت", "general": "عام", "salesOrders": "أوامر البيع", "purchaseOrders": "أوامر الشراء", "prices": "الأسعار" },
+    "options": { "normal": "عادي", "masculine": "مذكر" },
+    "fields": { "code": "رمز العملة", "name": "الاسم", "symbol": "الرمز", "arabicName": "الاسم بالعربية", "referenceCurrency": "العملة المرجعية للتثليث", "conversion": "التحويل", "prefix": "البادئة", "suffix": "اللاحقة", "generalRounding": "قاعدة التقريب العامة", "roundingRule": "قاعدة التقريب", "roundingMethod": "طريقة التقريب", "gender": "جنس العملة", "exchangeRateLimit": "حد تغير سعر الصرف", "satDecimals": "عدد المنازل العشرية في كتالوج SAT" }
+  }
+  ,"exchangeRateTypes": { "commands": { "exchangeRates": "أسعار الصرف", "options": "خيارات" }, "fields": { "type": "نوع سعر الصرف", "calendar": "التقويم" } }
+  ,"exchangeRates": {
+    "sections": { "addRemove": "إضافة أسعار الصرف أو إزالتها" },
+    "options": { "default": "افتراضي" },
+    "fields": { "type": "نوع سعر الصرف", "fromCurrency": "من عملة", "toCurrency": "إلى عملة", "conversionFactor": "معامل التحويل", "fromDate": "من تاريخ", "toDate": "إلى تاريخ", "startDate": "تاريخ البدء", "exchangeRate": "سعر الصرف", "exchangeValue": "قيمة الصرف" },
+    "displayDateRange": "عرض أسعار الصرف السارية ضمن نطاق التاريخ",
+    "defaultValue": "1 ريال سعودي لكل وحدة"
+  }
+  ,"customerQuickCreate": {
+    "title": "إنشاء عميل", "saveAndOpen": "حفظ وفتح",
+    "sections": { "details": "التفاصيل", "address": "العنوان" },
+    "fields": { "type": "النوع", "category": "فئة العميل", "mainCrNumber": "رقم السجل التجاري الرئيسي", "branchCrNumber": "رقم سجل الفرع", "vatNumber": "الرقم الضريبي", "notes": "ملاحظات", "zatcaType": "نوع زاتكا", "paymentMethod": "طريقة الدفع", "sourceCode": "رمز المصدر", "deliveryTerms": "شروط التسليم", "deliveryMode": "طريقة التسليم", "country": "الدولة/المنطقة", "street": "الشارع" },
+    "options": { "organization": "مؤسسة", "person": "فرد", "retail": "تجزئة", "wholesale": "جملة", "major": "الحسابات الرئيسية", "wholesaleGroup": "الجملة", "vat15": "ضريبة 15%", "saudiArabia": "المملكة العربية السعودية" }
+  }
+  ,"legalEntities": {
+    "sections": { "general": "عام", "addresses": "العناوين", "contacts": "معلومات الاتصال", "statutory": "التقارير النظامية" },
+    "groups": { "language": "اللغة", "timeZone": "المنطقة الزمنية" },
+    "fields": { "name": "الاسم", "company": "الشركة", "memo": "مذكرة", "hierarchy": "ضمن التسلسل الهرمي", "consolidation": "استخدام لعملية التوحيد المالي", "elimination": "استخدام لعملية الاستبعاد المالي", "fullName": "الاسم الكامل", "localizedRegion": "منطقة الوظائف المحلية", "language": "اللغة", "timeZone": "المنطقة الزمنية", "branch": "فرع/شركة تابعة", "dunsNumber": "رقم DUNS", "naics": "NAICS", "taxRepresentative": "الممثل الضريبي" },
+    "addresses": { "description": "الاسم أو الوصف", "address": "العنوان", "purpose": "الغرض", "primary": "رئيسي" },
+    "contacts": { "type": "النوع", "contact": "رقم/عنوان الاتصال" },
+    "actions": { "map": "الخريطة", "moreOptions": "خيارات إضافية", "advanced": "متقدم" },
+    "commands": { "hierarchy": "عرض في التسلسل الهرمي", "registrationIds": "معرفات التسجيل", "registrationSearch": "البحث في معرف التسجيل", "electronicProperties": "خصائص المستند الإلكتروني", "options": "خيارات" }
   }
 }
