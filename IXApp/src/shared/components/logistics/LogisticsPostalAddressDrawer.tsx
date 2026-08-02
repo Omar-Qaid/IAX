@@ -126,7 +126,7 @@ export function LogisticsPostalAddressDrawer({
       }}
     >
       <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid', borderColor: 'divider' }}>
-        <Typography variant="h6" fontWeight={600}>
+        <Typography variant="h6" sx={{ fontWeight: 600 }}>
           {initialData ? tText('logistics.editAddress', 'Edit address') : tText('logistics.newAddress', 'New address')}
         </Typography>
         <IconButton size="small" onClick={onClose} aria-label={t('common.close') || 'Close'}>

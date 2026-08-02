@@ -30,8 +30,11 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           component="main"
           sx={{
             flexGrow: 1,
+            minHeight: 0,
             p: 2,
-            overflowY: 'auto',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
             width: isMobile || isHorizontal ? '100%' : `calc(100% - ${finalSidebarWidth}px)`,
             transition: theme.transitions.create(['margin', 'width'], {
               easing: theme.transitions.easing.sharp,
@@ -40,7 +43,9 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           }}
         >
           <PageBreadcrumbs />
-          {children}
+          <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', position: 'relative' }}>
+            {children}
+          </Box>
         </Box>
       </Box>
 

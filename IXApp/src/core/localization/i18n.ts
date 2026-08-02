@@ -15,6 +15,8 @@ i18n
     },
     fallbackLng: 'en',
     supportedLngs: ['en', 'ar'],
+    load: 'languageOnly',
+    returnNull: false,
     interpolation: {
       escapeValue: false,
     },
@@ -23,5 +25,14 @@ i18n
       caches: ['localStorage'],
     },
   });
+
+const applyDocumentLanguage = (language: string) => {
+  const code = language.substring(0, 2);
+  document.documentElement.lang = code;
+  document.documentElement.dir = code === 'ar' ? 'rtl' : 'ltr';
+};
+
+applyDocumentLanguage(i18n.resolvedLanguage ?? i18n.language ?? 'en');
+i18n.on('languageChanged', applyDocumentLanguage);
 
 export default i18n;

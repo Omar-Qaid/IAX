@@ -1,51 +1,73 @@
 {
-  "app": {
-    "name": "IXApp",
-    "tagline": "Enterprise Resource Planning Solution"
-  },
+  "app": { "name": "IXApp", "tagline": "Enterprise Resource Planning Solution" },
   "nav": {
-    "dashboard": "Dashboard",
-    "accountsReceivable": "Accounts Receivable",
-    "customers": "Customers",
-    "allCustomers": "All Customers",
-    "customerGroups": "Customer Groups",
-    "salesOrders": "Sales Orders",
-    "allSalesOrders": "All Sales Orders",
-    "foundation": "Foundation",
-    "currencies": "Currencies",
-    "systemAdmin": "System Administration",
-    "settings": "Application Settings"
+    "app_title": "IXApp Enterprise", "app_title_short": "IXApp", "home": "Home", "dashboard": "Dashboard",
+    "accountsReceivable": "Accounts Receivable", "customers": "Customers", "allCustomers": "All customers",
+    "customerGroups": "Customer groups", "orders": "Orders", "salesOrders": "Sales orders",
+    "foundation": "Foundation", "currencies": "Currencies", "setup": "Setup",
+    "systemAdmin": "System Administration", "system": "System", "settings": "Application settings",
+    "favorites": "Favorites", "recent": "Recent", "modules": "Modules", "search_page": "Search pages"
+  },
+  "pages": {
+    "login": { "title": "Sign in", "subtitle": "Enter your account name to continue." },
+    "dashboard": { "title": "Dashboard", "subtitle": "Operational overview from the current development dataset", "overview": "Business overview", "overviewHelp": "Read-only indicators; select a module from navigation for details.", "customers": "Customers", "customerAccounts": "Customer accounts", "openOrders": "Open sales orders", "totalOrders_one": "{{count}} total order", "totalOrders_other": "{{count}} total orders", "orderValue": "Order value", "configuredCurrencies_one": "{{count}} configured currency", "configuredCurrencies_other": "{{count}} configured currencies" },
+    "customers": { "title": "Customers", "subtitle": "Select a customer to inspect account details", "allCustomers": "All customers", "standardView": "Standard view" },
+    "customerGroups": { "title": "Customer groups", "subtitle": "Read-only customer group configuration", "standardView": "Standard view" },
+    "salesOrders": { "title": "Sales orders", "subtitle": "Double-click an order to open its document details" },
+    "salesOrder": { "title": "Sales order {{number}}", "breadcrumb": "Sales order" },
+    "currencies": { "title": "Currencies", "subtitle": "Read-only currency configuration" },
+    "settings": { "title": "Application settings", "subtitle": "Current client configuration", "environment": "Environment", "environmentHelp": "Values are supplied by the application build and backend configuration.", "frontend": "Frontend: React and TypeScript", "api": "API integration: ASP.NET Core REST", "localization": "Localization: English and Arabic" },
+    "accessDenied": { "title": "Access denied", "message": "You do not have permission to view this page." },
+    "notFound": { "title": "Page not found", "message": "The requested page does not exist or is not available." }
+  },
+  "fields": {
+    "username": "Username", "code": "Code", "name": "Name", "currencyName": "Currency name", "symbol": "Symbol", "decimals": "Decimals",
+    "account": "Account", "customerAccount": "Customer account", "customerName": "Name", "arabicName": "Arabic name", "invoiceAccount": "Invoice account", "extension": "Extension", "salesTaxGroup": "Sales tax group", "termsOfPayment": "Terms of payment", "group": "Group", "groupId": "Group ID", "customerGroup": "Customer group", "searchBy": "Search by", "description": "Description", "timeBetweenInvoiceDue": "Time between invoice due date and payment", "defaultTaxGroup": "Default tax group", "pricesIncludeTax": "Prices include sales tax", "defaultWriteOffReason": "Default write-off reason", "accountingCurrencyExchange": "Accounting currency exchange rate type", "reportingCurrencyExchange": "Reporting currency exchange rate type",
+    "currency": "Currency", "email": "Email", "phone": "Phone", "creditLimit": "Credit limit", "paymentTerms": "Payment terms",
+    "salesOrderNumber": "Sales order", "orderDate": "Order date", "requestedDelivery": "Requested delivery", "deliveryMode": "Delivery mode", "orderTotal": "Order total",
+    "line": "Line", "item": "Item", "description": "Description", "quantity": "Quantity", "unitPrice": "Unit price", "lineTotal": "Line total",
+    "subtotal": "Subtotal", "discount": "Discount", "tax": "Tax", "total": "Total"
   },
   "actions": {
-    "new": "New",
-    "edit": "Edit",
-    "delete": "Delete",
-    "save": "Save",
-    "cancel": "Cancel",
-    "refresh": "Refresh",
-    "confirm": "Confirm",
-    "post": "Post Invoice",
-    "search": "Search...",
-    "export": "Export",
-    "filter": "Filter",
-    "clear": "Clear"
+    "new": "New", "edit": "Edit", "delete": "Delete", "save": "Save", "cancel": "Cancel", "refresh": "Refresh", "confirm": "Confirm",
+    "post": "Post", "search": "Search", "export": "Export", "filter": "Filter", "clear": "Clear", "signIn": "Sign in",
+    "retry": "Retry", "backToDashboard": "Back to dashboard", "close": "Close", "open": "Open", "print": "Print", "import": "Import", "add": "Add", "apply": "Apply", "reset": "Reset"
   },
   "common": {
-    "company": "Company",
-    "language": "Language",
-    "theme": "Theme",
-    "light": "Light",
-    "dark": "Dark",
-    "status": "Status",
-    "active": "Active",
-    "onHold": "On Hold",
-    "blocked": "Blocked",
-    "confirmed": "Confirmed",
-    "invoiced": "Invoiced",
-    "cancelled": "Cancelled",
-    "open": "Open",
-    "loading": "Loading...",
-    "noData": "No records found",
-    "accessDenied": "Access Denied"
-  }
+    "company": "Company", "language": "Language", "theme": "Theme", "light": "Light", "dark": "Dark", "status": "Status",
+    "active": "Active", "onhold": "On hold", "onHold": "On hold", "blocked": "Blocked", "confirmed": "Confirmed", "invoiced": "Invoiced", "cancelled": "Cancelled", "open": "Open",
+    "loading": "Loading…", "loadingMore": "Loading more…", "noData": "No records found", "noResults": "No results", "notProvided": "Not provided", "readOnly": "Read only",
+    "accessDenied": "Access denied", "search": "Search", "clear": "Clear", "close": "Close", "none": "None", "account": "Account", "notifications": "Notifications", "settings": "Settings", "help": "Help", "logout": "Log out",
+    "expand_all": "Expand all", "collapse_all": "Collapse all", "breadcrumbs": "Breadcrumbs", "information": "Information", "save": "Save", "cancel": "Cancel", "edit": "Edit", "delete": "Delete",
+    "view_history": "View history", "show_all_fields": "Show all fields", "audit_history": "Audit history", "no_history": "No history", "no_history_msg": "No audit trail was found for this record.", "by": "By", "total_activities_one": "Total activities: {{count}}", "total_activities_other": "Total activities: {{count}}", "importing": "Importing…"
+  },
+  "messages": {
+    "loadingPage": "Loading page…", "verifyingCredentials": "Verifying security credentials…", "authenticationRequired": "Authentication is required to view this module.",
+    "permissionRequired": "Permission required: {{permission}}", "signingIn": "Signing in…", "noSalesOrders": "No sales orders are available.", "loadingModule": "Loading enterprise module…", "loadingRecords": "Loading records…", "loadingDetails": "Loading details…", "selectRecord": "Select a record", "selectRecordHelp": "Choose an item from the list to inspect its details."
+  },
+  "errors": { "generic": "An unexpected error occurred.", "loadFailed": "Failed to load data", "no_permission": "You do not have permission to view the source data." },
+  "validation": {
+    "required": "{{field}} is required.", "invalidEmail": "Enter a valid email address.", "invalidUrl": "Enter a valid URL.", "minLength": "{{field}} must contain at least {{min}} characters.",
+    "maxLength": "{{field}} must contain no more than {{max}} characters.", "minValue": "{{field}} must be at least {{min}}.", "maxValue": "{{field}} must not exceed {{max}}.", "invalidNumber": "Enter a valid number.", "invalidDate": "Enter a valid date."
+  },
+  "grid": {
+    "rows_count_one": "{{count}} row", "rows_count_other": "{{count}} rows", "rows_loaded": "{{loaded}} of {{total}} rows loaded", "rows_filtered": "{{filtered}} of {{total}} rows",
+    "no_data": "No data", "no_records": "No matching records", "no_records_msg": "There are no records to display.", "no_results_msg": "Change or clear the filters to see more results.", "loading_more": "Loading more…",
+    "add_row": "Add row", "add_row_disabled": "Save or cancel the current row first", "filter_placeholder": "Filter value", "filters": "Filters", "features": "Features", "choose_columns": "Choose columns",
+    "no_active_filters": "No active filters", "clear_all_filters": "Clear all filters", "themes": "Grid appearance", "compact_density": "Compact", "standard_density": "Standard", "comfortable_density": "Comfortable",
+    "show_column_borders": "Show column borders", "show_cell_borders": "Show cell borders", "row_selection": "Row selection", "single_selection": "Single selection", "multiple_selection": "Multiple selection",
+    "single_selection_desc": "Select one row at a time.", "multiple_selection_desc": "Select multiple rows.", "column_sizing": "Column sizing", "autosize_all": "Autosize all", "un_autosize_all": "Reset autosizing",
+    "individual_columns": "Individual columns", "export": "Export", "import_excel": "Import Excel", "download_template": "Download template", "reset_layout": "Reset layout", "pivot_mode": "Pivot mode",
+    "row_groups": "Row groups", "values": "Values", "drag_here": "Drag columns here", "drag_here_aggregate": "Drag values here", "copy_row": "Copy row", "export_row": "Export row",
+    "operators": { "contains": "Contains", "does_not_contain": "Does not contain", "equals": "Equals", "not_equals": "Does not equal", "starts_with": "Starts with", "ends_with": "Ends with", "greater_than": "Greater than", "less_than": "Less than", "is_one_of": "Is one of", "matches_regex": "Matches pattern" }
+  },
+  "settings": { "title": "Settings", "reset": "Reset", "mode": "Dark mode", "contrast": "Contrast", "rtl": "RTL direction", "compact": "Compact layout", "nav": "Navigation", "layout": "Layout", "color": "Color", "integrate": "Integrated", "apparent": "Apparent", "presets": "Presets", "font": "Typography", "family": "Font family", "size": "Font size", "zoom": "Desktop zoom" },
+  "notifications": { "mark_all_read": "Mark all as read", "all": "All", "unread": "Unread", "archived": "Archived", "no_notifications": "No notifications to display", "view_all": "View all notifications" },
+  "logistics": { "state": "State", "city": "City", "county": "County", "street": "Street", "building": "Building", "zipCode": "ZIP/postal code", "buildingComplement": "Building complement", "postBox": "Post box", "primary": "Primary", "primaryForCountry": "Primary for country/region", "contactInformation": "Contact information", "editAddress": "Edit address", "newAddress": "New address" },
+  "workflow": { "builder": "Builder" }
+  ,"utilities": { "personalize": "Personalize", "guide": "Page guide", "openWindow": "Open in new window" }
+  ,"filters": { "title": "Filters", "customerAccount": "Customer account (Account)", "contains": "contains" }
+  ,"relatedInformation": { "title": "Related information", "primaryAddress": "Primary address", "recentActivity": "Recent activity", "relationships": "Relationships", "statistics": "Statistics", "creditStatistics": "Credit statistics", "contacts": "Contacts", "recurringInvoice": "Recurring invoice template", "classificationBalances": "Classification balances", "insuranceGuarantees": "Insurance and guarantees", "selectCustomer": "Select a customer to view related information.", "noAddressFor": "No primary address is available for {{customer}}." }
+  ,"customerCommands": { "customer": "Customer", "sell": "Sell", "invoice": "Invoice", "collect": "Collect", "service": "Service", "market": "Market", "commerce": "Commerce", "general": "General", "creditManagement": "Credit management", "options": "Options" }
+  ,"customerGroupCommands": { "setup": "Setup", "forecast": "Forecast", "productFilters": "Product filters", "options": "Options" }
 }

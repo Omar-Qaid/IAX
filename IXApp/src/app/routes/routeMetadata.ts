@@ -1,0 +1,26 @@
+import { matchPath } from 'react-router-dom';
+import { ROUTE_PATHS } from './routePaths';
+
+export interface BreadcrumbDefinition {
+  labelKey: string;
+  path?: string;
+}
+
+interface RouteMetadata {
+  path: string;
+  breadcrumbs: BreadcrumbDefinition[];
+}
+
+const home: BreadcrumbDefinition = { labelKey: 'nav.home', path: ROUTE_PATHS.DASHBOARD };
+
+export const ROUTE_METADATA: RouteMetadata[] = [
+  { path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMERS, breadcrumbs: [home, { labelKey: 'nav.accountsReceivable', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMERS }, { labelKey: 'nav.customers' }] },
+  { path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_GROUPS, breadcrumbs: [home, { labelKey: 'nav.accountsReceivable', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMERS }, { labelKey: 'nav.customerGroups' }] },
+  { path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDERS, breadcrumbs: [home, { labelKey: 'nav.accountsReceivable', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMERS }, { labelKey: 'nav.salesOrders' }] },
+  { path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDER_DETAILS, breadcrumbs: [home, { labelKey: 'nav.accountsReceivable', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMERS }, { labelKey: 'nav.salesOrders', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDERS }, { labelKey: 'pages.salesOrder.breadcrumb' }] },
+  { path: ROUTE_PATHS.FOUNDATION.CURRENCIES, breadcrumbs: [home, { labelKey: 'nav.foundation', path: ROUTE_PATHS.FOUNDATION.CURRENCIES }, { labelKey: 'nav.currencies' }] },
+  { path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.SETTINGS, breadcrumbs: [home, { labelKey: 'nav.systemAdmin', path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.SETTINGS }, { labelKey: 'nav.settings' }] },
+];
+
+export const getRouteBreadcrumbs = (pathname: string): BreadcrumbDefinition[] =>
+  ROUTE_METADATA.find((route) => matchPath({ path: route.path, end: true }, pathname))?.breadcrumbs ?? [home];

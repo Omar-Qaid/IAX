@@ -1,9 +1,9 @@
 import React from 'react';
-import { Box, Paper } from '@mui/material';
+import { Box, Paper, type SxProps, type Theme } from '@mui/material';
 
-export const PageContainer: React.FC<{ children: React.ReactNode; sx?: object }> = ({ children, sx }) => {
+export const PageContainer: React.FC<{ children: React.ReactNode; sx?: SxProps<Theme> }> = ({ children, sx }) => {
   return (
-    <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 1.5, ...sx }}>
+    <Box sx={[{ width: '100%', display: 'flex', flexDirection: 'column', gap: 1.5 }, ...(Array.isArray(sx) ? sx : [sx])]}>
       {children}
     </Box>
   );

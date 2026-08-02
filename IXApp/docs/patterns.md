@@ -145,7 +145,7 @@ export type PageMode = 'view' | 'create' | 'edit' | 'copy' | 'readonly' | 'proce
 
 ### Implementing a Module Page using `ListDetailsPage`
 ```tsx
-export function CustomersPage() {
+export function CustomerListPage() {
   const { customers, selectedId, setSelectedId, saveCustomer } = useCustomers();
 
   return (

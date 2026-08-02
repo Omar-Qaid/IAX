@@ -72,7 +72,7 @@ export const DataGridToolbar = memo(function DataGridToolbar({
 
           <AppTextField
             inputRef={searchInputRef}
-            placeholder="Filter"
+            placeholder={t('actions.filter')}
             value={globalSearch}
             onChange={(val: any) => setGlobalSearch(val)}
             sx={{

@@ -26,11 +26,11 @@ src/modules/
 │   │   ├── services/currencyService.ts
 │   │   └── types/currency.ts
 │   ├── customer-groups/       # Customer Groups setup
-│   │   ├── pages/CustomerGroupsPage.tsx
+│   │   ├── pages/CustomerGroupListPage.tsx
 │   │   └── services/customerGroupService.ts
 │   ├── customers/             # Customers master data
 │   │   ├── components/CustomerForm.tsx
-│   │   ├── pages/CustomersPage.tsx
+│   │   ├── pages/CustomerListPage.tsx
 │   │   └── services/customerService.ts
 │   └── sales-orders/          # Sales Orders document processing
 │       ├── pages/SalesOrdersPage.tsx
@@ -62,8 +62,8 @@ feature-name/
 
 ### 4.1 Accounts Receivable (`@modules/accounts-receivable`)
 - **`CurrenciesPage.tsx`:** Validates `SimpleListPage` pattern. Manages Currency code, Name, Symbol, Decimals, and Active state with page-level Save/Cancel.
-- **`CustomerGroupsPage.tsx`:** Manages Customer Group ID, Name, Default Currency, and Payment Terms using the Currency lookup.
-- **`CustomersPage.tsx`:** Validates `ListDetailsPage` pattern. Features customer grid search, status filter, and FastTabs (General, Addresses, Financial, Contact info).
+- **`CustomerGroupListPage.tsx`:** Manages Customer Group ID, Name, Default Currency, and Payment Terms using the Currency lookup.
+- **`CustomerListPage.tsx`:** Implements the dense customer list pattern with command actions, field-aware filtering, and a bilingual customer grid.
 - **`SalesOrdersPage.tsx` & `SalesOrderPage.tsx`:** Validates `DocumentPage` pattern. Features order header form, lines DataGrid with real-time totals calculation, and process actions (Confirm, Post, Cancel).
 
 ### 4.2 Dashboard (`@modules/dashboard`)

@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuth } from '@core/auth/useAuth';
 import { AccessDeniedState } from '@shared/components/feedback/AccessDeniedState';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 
 export interface RouteGuardProps {
   permission?: string;
@@ -10,17 +11,18 @@ export interface RouteGuardProps {
 
 export function RouteGuard({ permission, children }: RouteGuardProps): React.ReactElement {
   const { isAuthenticated, isLoading, hasPermission } = useAuth();
+  const { t } = useAppTranslation();
 
   if (isLoading) {
-    return <LoadingState message="Verifying security credentials..." />;
+    return <LoadingState message={t('messages.verifyingCredentials')} />;
   }
 
   if (!isAuthenticated) {
-    return <AccessDeniedState message="Authentication required to view this module." />;
+    return <AccessDeniedState message={t('messages.authenticationRequired')} />;
   }
 
   if (permission && !hasPermission(permission)) {
-    return <AccessDeniedState message={`Permission required: ${permission}`} />;
+    return <AccessDeniedState message={t('messages.permissionRequired', { permission })} />;
   }
 
   return <>{children}</>;

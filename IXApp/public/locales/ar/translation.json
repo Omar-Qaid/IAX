@@ -1,51 +1,69 @@
 {
-  "app": {
-    "name": "IXApp",
-    "tagline": "نظام إدارة الموارد المؤسسية"
-  },
+  "app": { "name": "IXApp", "tagline": "نظام تخطيط موارد المؤسسة" },
   "nav": {
-    "dashboard": "لوحة التحكم",
-    "accountsReceivable": "الحسابات المدينة",
-    "customers": "العملاء",
-    "allCustomers": "جميع العملاء",
-    "customerGroups": "مجموعات العملاء",
-    "salesOrders": "أوامر البيع",
-    "allSalesOrders": "جميع أوامر البيع",
-    "foundation": "التأسيس",
-    "currencies": "العملات",
-    "systemAdmin": "إدارة النظام",
-    "settings": "إعدادات التطبيق"
+    "app_title": "نظام IXApp المؤسسي", "app_title_short": "IXApp", "home": "الرئيسية", "dashboard": "لوحة المعلومات",
+    "accountsReceivable": "الحسابات المدينة", "customers": "العملاء", "allCustomers": "جميع العملاء", "customerGroups": "مجموعات العملاء",
+    "orders": "الطلبات", "salesOrders": "أوامر البيع", "foundation": "البيانات الأساسية", "currencies": "العملات", "setup": "الإعداد",
+    "systemAdmin": "إدارة النظام", "system": "النظام", "settings": "إعدادات التطبيق", "favorites": "المفضلة", "recent": "الأخيرة", "modules": "الوحدات", "search_page": "البحث في الصفحات"
+  },
+  "pages": {
+    "login": { "title": "تسجيل الدخول", "subtitle": "أدخل اسم حسابك للمتابعة." },
+    "dashboard": { "title": "لوحة المعلومات", "subtitle": "نظرة تشغيلية عامة من بيانات التطوير الحالية", "overview": "نظرة عامة على الأعمال", "overviewHelp": "مؤشرات للقراءة فقط؛ اختر وحدة من التنقل لعرض التفاصيل.", "customers": "العملاء", "customerAccounts": "حسابات العملاء", "openOrders": "أوامر البيع المفتوحة", "totalOrders_zero": "لا توجد أوامر", "totalOrders_one": "أمر واحد إجمالاً", "totalOrders_two": "أمران إجمالاً", "totalOrders_few": "{{count}} أوامر إجمالاً", "totalOrders_many": "{{count}} أمراً إجمالاً", "totalOrders_other": "{{count}} أمر إجمالاً", "orderValue": "قيمة الأوامر", "configuredCurrencies_zero": "لا توجد عملات مهيأة", "configuredCurrencies_one": "عملة واحدة مهيأة", "configuredCurrencies_two": "عملتان مهيأتان", "configuredCurrencies_few": "{{count}} عملات مهيأة", "configuredCurrencies_many": "{{count}} عملة مهيأة", "configuredCurrencies_other": "{{count}} عملة مهيأة" },
+    "customers": { "title": "العملاء", "subtitle": "اختر عميلاً لعرض تفاصيل الحساب", "allCustomers": "جميع العملاء", "standardView": "العرض القياسي" },
+    "customerGroups": { "title": "مجموعات العملاء", "subtitle": "إعداد مجموعات العملاء للقراءة فقط", "standardView": "العرض القياسي" },
+    "salesOrders": { "title": "أوامر البيع", "subtitle": "انقر نقراً مزدوجاً على أمر لفتح تفاصيل المستند" },
+    "salesOrder": { "title": "أمر البيع {{number}}", "breadcrumb": "أمر البيع" },
+    "currencies": { "title": "العملات", "subtitle": "إعداد العملات للقراءة فقط" },
+    "settings": { "title": "إعدادات التطبيق", "subtitle": "إعدادات العميل الحالية", "environment": "البيئة", "environmentHelp": "تُوفَّر القيم من بناء التطبيق وإعدادات الخادم.", "frontend": "الواجهة: React وTypeScript", "api": "تكامل الواجهة البرمجية: ASP.NET Core REST", "localization": "اللغات: الإنجليزية والعربية" },
+    "accessDenied": { "title": "الوصول مرفوض", "message": "ليس لديك إذن لعرض هذه الصفحة." },
+    "notFound": { "title": "الصفحة غير موجودة", "message": "الصفحة المطلوبة غير موجودة أو غير متاحة." }
+  },
+  "fields": {
+    "username": "اسم المستخدم", "code": "الرمز", "name": "الاسم", "currencyName": "اسم العملة", "symbol": "الرمز", "decimals": "المنازل العشرية",
+    "account": "الحساب", "customerAccount": "حساب العميل", "customerName": "الاسم", "arabicName": "الاسم بالعربية", "invoiceAccount": "حساب الفاتورة", "extension": "التحويلة", "salesTaxGroup": "مجموعة ضريبة المبيعات", "termsOfPayment": "شروط الدفع", "group": "المجموعة", "groupId": "معرّف المجموعة", "customerGroup": "مجموعة العملاء", "searchBy": "البحث حسب", "currency": "العملة", "description": "الوصف", "timeBetweenInvoiceDue": "المدة بين استحقاق الفاتورة والدفع", "defaultTaxGroup": "مجموعة الضريبة الافتراضية", "pricesIncludeTax": "الأسعار تشمل ضريبة المبيعات", "defaultWriteOffReason": "سبب الشطب الافتراضي", "accountingCurrencyExchange": "نوع سعر صرف عملة المحاسبة", "reportingCurrencyExchange": "نوع سعر صرف عملة التقارير",
+    "email": "البريد الإلكتروني", "phone": "الهاتف", "creditLimit": "حد الائتمان", "paymentTerms": "شروط الدفع", "salesOrderNumber": "أمر البيع",
+    "orderDate": "تاريخ الأمر", "requestedDelivery": "التسليم المطلوب", "deliveryMode": "طريقة التسليم", "orderTotal": "إجمالي الأمر",
+    "line": "السطر", "item": "الصنف", "description": "الوصف", "quantity": "الكمية", "unitPrice": "سعر الوحدة", "lineTotal": "إجمالي السطر",
+    "subtotal": "الإجمالي الفرعي", "discount": "الخصم", "tax": "الضريبة", "total": "الإجمالي"
   },
   "actions": {
-    "new": "جديد",
-    "edit": "تعديل",
-    "delete": "حذف",
-    "save": "حفظ",
-    "cancel": "إلغاء",
-    "refresh": "تحديث",
-    "confirm": "تأكيد",
-    "post": "ترحيل الفاتورة",
-    "search": "بحث...",
-    "export": "تصدير",
-    "filter": "تصفية",
-    "clear": "مسح"
+    "new": "جديد", "edit": "تعديل", "delete": "حذف", "save": "حفظ", "cancel": "إلغاء", "refresh": "تحديث", "confirm": "تأكيد", "post": "ترحيل",
+    "search": "بحث", "export": "تصدير", "filter": "تصفية", "clear": "مسح", "signIn": "تسجيل الدخول", "retry": "إعادة المحاولة",
+    "backToDashboard": "العودة إلى لوحة المعلومات", "close": "إغلاق", "open": "فتح", "print": "طباعة", "import": "استيراد", "add": "إضافة", "apply": "تطبيق", "reset": "إعادة ضبط"
   },
   "common": {
-    "company": "الشركة",
-    "language": "اللغة",
-    "theme": "المظهر",
-    "light": "فاتح",
-    "dark": "داكن",
-    "status": "الحالة",
-    "active": "نشط",
-    "onHold": "معلق",
-    "blocked": "محظور",
-    "confirmed": "مؤكد",
-    "invoiced": "مفوتر",
-    "cancelled": "ملغى",
-    "open": "مفتوح",
-    "loading": "جاري التحميل...",
-    "noData": "لم يتم العثور على سجلات",
-    "accessDenied": "تم رفض الوصول"
-  }
+    "company": "الشركة", "language": "اللغة", "theme": "المظهر", "light": "فاتح", "dark": "داكن", "status": "الحالة",
+    "active": "نشط", "onhold": "معلّق", "onHold": "معلّق", "blocked": "محظور", "confirmed": "مؤكد", "invoiced": "مفوتر", "cancelled": "ملغي", "open": "مفتوح",
+    "loading": "جارٍ التحميل…", "loadingMore": "جارٍ تحميل المزيد…", "noData": "لا توجد سجلات", "noResults": "لا توجد نتائج", "notProvided": "غير متوفر", "readOnly": "للقراءة فقط",
+    "accessDenied": "الوصول مرفوض", "search": "بحث", "clear": "مسح", "close": "إغلاق", "none": "لا شيء", "account": "الحساب", "notifications": "الإشعارات", "settings": "الإعدادات", "help": "المساعدة", "logout": "تسجيل الخروج",
+    "expand_all": "توسيع الكل", "collapse_all": "طي الكل", "breadcrumbs": "مسار التنقل", "information": "معلومات", "save": "حفظ", "cancel": "إلغاء", "edit": "تعديل", "delete": "حذف",
+    "view_history": "عرض السجل", "show_all_fields": "عرض جميع الحقول", "audit_history": "سجل التدقيق", "no_history": "لا يوجد سجل", "no_history_msg": "لم يتم العثور على سجل تدقيق لهذا السجل.", "by": "بواسطة", "total_activities_zero": "لا توجد أنشطة", "total_activities_one": "إجمالي الأنشطة: نشاط واحد", "total_activities_two": "إجمالي الأنشطة: نشاطان", "total_activities_few": "إجمالي الأنشطة: {{count}} أنشطة", "total_activities_many": "إجمالي الأنشطة: {{count}} نشاطاً", "total_activities_other": "إجمالي الأنشطة: {{count}} نشاط", "importing": "جارٍ الاستيراد…"
+  },
+  "messages": { "loadingPage": "جارٍ تحميل الصفحة…", "verifyingCredentials": "جارٍ التحقق من بيانات الأمان…", "authenticationRequired": "يلزم تسجيل الدخول لعرض هذه الوحدة.", "permissionRequired": "الإذن المطلوب: {{permission}}", "signingIn": "جارٍ تسجيل الدخول…", "noSalesOrders": "لا توجد أوامر بيع متاحة.", "loadingModule": "جارٍ تحميل وحدة النظام…", "loadingRecords": "جارٍ تحميل السجلات…", "loadingDetails": "جارٍ تحميل التفاصيل…", "selectRecord": "اختر سجلاً", "selectRecordHelp": "اختر عنصراً من القائمة لعرض تفاصيله." },
+  "errors": { "generic": "حدث خطأ غير متوقع.", "loadFailed": "تعذر تحميل البيانات", "no_permission": "ليس لديك إذن لعرض بيانات المصدر." },
+  "validation": {
+    "required": "حقل {{field}} مطلوب.", "invalidEmail": "أدخل عنوان بريد إلكتروني صالحاً.", "invalidUrl": "أدخل رابطاً صالحاً.", "minLength": "يجب ألا يقل {{field}} عن {{min}} أحرف.",
+    "maxLength": "يجب ألا يزيد {{field}} على {{max}} أحرف.", "minValue": "يجب ألا تقل قيمة {{field}} عن {{min}}.", "maxValue": "يجب ألا تتجاوز قيمة {{field}} {{max}}.", "invalidNumber": "أدخل رقماً صالحاً.", "invalidDate": "أدخل تاريخاً صالحاً."
+  },
+  "grid": {
+    "rows_count_zero": "لا توجد صفوف", "rows_count_one": "صف واحد", "rows_count_two": "صفان", "rows_count_few": "{{count}} صفوف", "rows_count_many": "{{count}} صفاً", "rows_count_other": "{{count}} صف",
+    "rows_loaded": "تم تحميل {{loaded}} من {{total}} صف", "rows_filtered": "{{filtered}} من {{total}} صف", "no_data": "لا توجد بيانات", "no_records": "لا توجد سجلات مطابقة",
+    "no_records_msg": "لا توجد سجلات لعرضها.", "no_results_msg": "غيّر عوامل التصفية أو امسحها لعرض نتائج أخرى.", "loading_more": "جارٍ تحميل المزيد…", "add_row": "إضافة صف", "add_row_disabled": "احفظ الصف الحالي أو ألغِه أولاً",
+    "filter_placeholder": "قيمة التصفية", "filters": "عوامل التصفية", "features": "الميزات", "choose_columns": "اختيار الأعمدة", "no_active_filters": "لا توجد عوامل تصفية نشطة", "clear_all_filters": "مسح جميع عوامل التصفية",
+    "themes": "مظهر الشبكة", "compact_density": "مضغوط", "standard_density": "قياسي", "comfortable_density": "مريح", "show_column_borders": "إظهار حدود الأعمدة", "show_cell_borders": "إظهار حدود الخلايا",
+    "row_selection": "تحديد الصفوف", "single_selection": "تحديد مفرد", "multiple_selection": "تحديد متعدد", "single_selection_desc": "حدد صفاً واحداً في كل مرة.", "multiple_selection_desc": "حدد عدة صفوف.",
+    "column_sizing": "تحجيم الأعمدة", "autosize_all": "تحجيم الكل تلقائياً", "un_autosize_all": "إعادة ضبط التحجيم", "individual_columns": "الأعمدة الفردية", "export": "تصدير", "import_excel": "استيراد Excel",
+    "download_template": "تنزيل القالب", "reset_layout": "إعادة ضبط التخطيط", "pivot_mode": "وضع الجدول المحوري", "row_groups": "مجموعات الصفوف", "values": "القيم", "drag_here": "اسحب الأعمدة هنا", "drag_here_aggregate": "اسحب القيم هنا",
+    "copy_row": "نسخ الصف", "export_row": "تصدير الصف",
+    "operators": { "contains": "يحتوي على", "does_not_contain": "لا يحتوي على", "equals": "يساوي", "not_equals": "لا يساوي", "starts_with": "يبدأ بـ", "ends_with": "ينتهي بـ", "greater_than": "أكبر من", "less_than": "أقل من", "is_one_of": "إحدى القيم", "matches_regex": "يطابق النمط" }
+  },
+  "settings": { "title": "الإعدادات", "reset": "إعادة ضبط", "mode": "الوضع الداكن", "contrast": "التباين", "rtl": "اتجاه من اليمين لليسار", "compact": "تخطيط مضغوط", "nav": "التنقل", "layout": "التخطيط", "color": "اللون", "integrate": "متكامل", "apparent": "ظاهر", "presets": "الإعدادات المسبقة", "font": "الخطوط", "family": "نوع الخط", "size": "حجم الخط", "zoom": "تكبير سطح المكتب" },
+  "notifications": { "mark_all_read": "تعيين الكل كمقروء", "all": "الكل", "unread": "غير المقروء", "archived": "المؤرشف", "no_notifications": "لا توجد إشعارات لعرضها", "view_all": "عرض جميع الإشعارات" },
+  "logistics": { "state": "المنطقة", "city": "المدينة", "county": "المقاطعة", "street": "الشارع", "building": "المبنى", "zipCode": "الرمز البريدي", "buildingComplement": "وصف إضافي للمبنى", "postBox": "صندوق البريد", "primary": "أساسي", "primaryForCountry": "أساسي للدولة أو المنطقة", "contactInformation": "معلومات الاتصال", "editAddress": "تعديل العنوان", "newAddress": "عنوان جديد" },
+  "workflow": { "builder": "المصمم" }
+  ,"utilities": { "personalize": "تخصيص", "guide": "دليل الصفحة", "openWindow": "فتح في نافذة جديدة" }
+  ,"filters": { "title": "عوامل التصفية", "customerAccount": "حساب العميل (الحساب)", "contains": "يحتوي على" }
+  ,"relatedInformation": { "title": "المعلومات ذات الصلة", "primaryAddress": "العنوان الأساسي", "recentActivity": "النشاط الأخير", "relationships": "العلاقات", "statistics": "الإحصاءات", "creditStatistics": "إحصاءات الائتمان", "contacts": "جهات الاتصال", "recurringInvoice": "قالب الفاتورة المتكررة", "classificationBalances": "أرصدة التصنيف", "insuranceGuarantees": "التأمين والضمانات", "selectCustomer": "اختر عميلاً لعرض المعلومات ذات الصلة.", "noAddressFor": "لا يتوفر عنوان أساسي للعميل {{customer}}." }
+  ,"customerCommands": { "customer": "العميل", "sell": "البيع", "invoice": "الفاتورة", "collect": "التحصيل", "service": "الخدمة", "market": "السوق", "commerce": "التجارة", "general": "عام", "creditManagement": "إدارة الائتمان", "options": "خيارات" }
+  ,"customerGroupCommands": { "setup": "الإعداد", "forecast": "التنبؤ", "productFilters": "عوامل تصفية المنتجات", "options": "خيارات" }
 }

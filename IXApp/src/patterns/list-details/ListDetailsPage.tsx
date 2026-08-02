@@ -7,6 +7,7 @@ import { DataGrid } from '@shared/components/data-grid/DataGrid';
 import type { DataGridProps } from '@shared/components/data-grid/types';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { EmptyState } from '@shared/components/feedback/EmptyState';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 
 export interface ListDetailsPageProps<T extends { id: string } = { id: string }> {
   title: string;
@@ -29,6 +30,7 @@ export function ListDetailsPage<T extends { id: string } = { id: string }>({
   selectedId,
   dialogs,
 }: ListDetailsPageProps<T>): React.ReactElement {
+  const { t } = useAppTranslation();
   return (
     <PageContainer>
       <PageHeader title={title} subtitle={subtitle} />
@@ -47,11 +49,11 @@ export function ListDetailsPage<T extends { id: string } = { id: string }>({
           <Grid size={{ xs: 12, md: 7, lg: 8 }}>
             <Paper elevation={0} sx={{ p: 2, borderRadius: 1, border: (t) => `1px solid ${t.palette.divider}`, minHeight: 600 }}>
               {loading ? (
-                <LoadingState message="Loading details..." />
+                <LoadingState message={t('messages.loadingDetails')} />
               ) : detailsPane ? (
                 detailsPane
               ) : (
-                <EmptyState title="Select a record" message="Choose an item from the list to inspect details." />
+                <EmptyState title={t('messages.selectRecord')} message={t('messages.selectRecordHelp')} />
               )}
             </Paper>
           </Grid>

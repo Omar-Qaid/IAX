@@ -1,7 +1,9 @@
 import React from 'react';
 import { Box, CircularProgress, Typography } from '@mui/material';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 
-export const LoadingState: React.FC<{ message?: string }> = ({ message = 'Loading...' }) => {
+export const LoadingState: React.FC<{ message?: string }> = ({ message }) => {
+  const { t } = useAppTranslation();
   return (
     <Box
       sx={{
@@ -16,7 +18,7 @@ export const LoadingState: React.FC<{ message?: string }> = ({ message = 'Loadin
     >
       <CircularProgress size={32} color="primary" sx={{ mb: 1.5 }} />
       <Typography variant="body2" color="text.secondary">
-        {message}
+        {message ?? t('common.loading')}
       </Typography>
     </Box>
   );

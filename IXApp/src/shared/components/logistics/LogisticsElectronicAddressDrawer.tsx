@@ -116,7 +116,7 @@ export function LogisticsElectronicAddressDrawer({
           borderColor: 'divider',
         }}
       >
-        <Typography variant="h6" fontWeight={600}>
+        <Typography variant="h6" sx={{ fontWeight: 600 }}>
           {tText('logistics.contactInformation', 'Contact information')}
         </Typography>
         <IconButton size="small" onClick={onClose} aria-label={tText('common.close', 'Close')}>

@@ -1,32 +1,46 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import type { RouteObject } from 'react-router-dom';
 import { AppLayout } from '@app/layouts/AppLayout';
 import { AuthLayout } from '@app/layouts/AuthLayout';
 import { RouteGuard } from './RouteGuard';
 import { ROUTE_PATHS } from './routePaths';
+import { LoadingState } from '@shared/components/feedback/LoadingState';
+import { ErrorState } from '@shared/components/feedback/ErrorState';
+import { AccessDeniedState } from '@shared/components/feedback/AccessDeniedState';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 
-const makePlaceholder = (title: string) => () => (
-  <div style={{ padding: 24 }}>
-    <h2>{title} Page</h2>
-    <p>This module page will be implemented in a future phase.</p>
-  </div>
-);
+const LoginPage = lazy(() => import('@modules/auth/pages/LoginPage').then((module) => ({ default: module.LoginPage })));
+const DashboardPage = lazy(() => import('@modules/dashboard/pages/DashboardPage').then((module) => ({ default: module.DashboardPage })));
+const CustomerListPage = lazy(() => import('@modules/accounts-receivable/pages/CustomerListPage').then((module) => ({ default: module.CustomerListPage })));
+const CustomerGroupListPage = lazy(() => import('@modules/accounts-receivable/pages/CustomerGroupListPage').then((module) => ({ default: module.CustomerGroupListPage })));
+const SalesOrdersPage = lazy(() => import('@modules/accounts-receivable/pages/SalesOrdersPage').then((module) => ({ default: module.SalesOrdersPage })));
+const SalesOrderPage = lazy(() => import('@modules/accounts-receivable/pages/SalesOrderPage').then((module) => ({ default: module.SalesOrderPage })));
+const CurrenciesPage = lazy(() => import('@modules/foundation/pages/CurrenciesPage').then((module) => ({ default: module.CurrenciesPage })));
+const ApplicationSettingsPage = lazy(() => import('@modules/system-administration/pages/ApplicationSettingsPage').then((module) => ({ default: module.ApplicationSettingsPage })));
 
-const LoginPage = makePlaceholder('Login');
-const DashboardPage = makePlaceholder('Dashboard');
-const CustomersPage = makePlaceholder('Customers');
-const CustomerGroupsPage = makePlaceholder('Customer Groups');
-const SalesOrdersPage = makePlaceholder('Sales Orders');
-const SalesOrderPage = makePlaceholder('Sales Order Details');
-const CurrenciesPage = makePlaceholder('Currencies');
-const ApplicationSettingsPage = makePlaceholder('Application Settings');
+const RouteLoading = () => {
+  const { t } = useAppTranslation();
+  return <LoadingState message={t('messages.loadingPage')} />;
+};
+
+const NotFoundPage = () => {
+  const { t } = useAppTranslation();
+  return <ErrorState title={t('pages.notFound.title')} message={t('pages.notFound.message')} />;
+};
+
+const AccessDeniedPage = () => {
+  const { t } = useAppTranslation();
+  return <AccessDeniedState title={t('pages.accessDenied.title')} message={t('pages.accessDenied.message')} />;
+};
+
+const load = (element: React.ReactNode) => <Suspense fallback={<RouteLoading />}>{element}</Suspense>;
 
 export const appRoutes: RouteObject[] = [
   {
     path: ROUTE_PATHS.LOGIN,
     element: (
       <AuthLayout>
-        <LoginPage />
+        {load(<LoginPage />)}
       </AuthLayout>
     ),
   },
@@ -40,36 +54,38 @@ export const appRoutes: RouteObject[] = [
     children: [
       {
         index: true,
-        element: <DashboardPage />,
+        element: load(<DashboardPage />),
       },
       {
         path: ROUTE_PATHS.DASHBOARD,
-        element: <DashboardPage />,
+        element: load(<DashboardPage />),
       },
       {
         path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMERS,
-        element: <CustomersPage />,
+        element: load(<CustomerListPage />),
       },
       {
         path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_GROUPS,
-        element: <CustomerGroupsPage />,
+        element: load(<CustomerGroupListPage />),
       },
       {
         path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDERS,
-        element: <SalesOrdersPage />,
+        element: load(<SalesOrdersPage />),
       },
       {
         path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDER_DETAILS,
-        element: <SalesOrderPage />,
+        element: load(<SalesOrderPage />),
       },
       {
         path: ROUTE_PATHS.FOUNDATION.CURRENCIES,
-        element: <CurrenciesPage />,
+        element: load(<CurrenciesPage />),
       },
       {
         path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.SETTINGS,
-        element: <ApplicationSettingsPage />,
+        element: load(<ApplicationSettingsPage />),
       },
+      { path: ROUTE_PATHS.ACCESS_DENIED, element: <AccessDeniedPage /> },
+      { path: '*', element: <NotFoundPage /> },
     ],
   },
 ];

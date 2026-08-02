@@ -194,7 +194,7 @@ Module Page
 
 ### Example
 ```tsx
-export function CustomersPage() {
+export function CustomerListPage() {
   const {
     data, loading, selectedId, setSelectedIds, handleDelete, handleRefresh,
   } = useListPage({ loadData: customerService.getPaged });

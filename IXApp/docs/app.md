@@ -105,7 +105,7 @@ The `app` layer does **not** make direct Axios calls. It initializes the `QueryC
 ---
 
 ## 11. Best Practices & Reusability Rules
-- **Lazy Loading:** Always lazy load domain module pages (`const CustomersPage = lazy(() => import('@modules/accounts-receivable/...'))`).
+- **Lazy Loading:** Always lazy load domain module pages (`const CustomerListPage = lazy(() => import('@modules/accounts-receivable/...'))`).
 - **Centralized Route Paths:** Never hardcode route strings like `"/customers"` in components. Always reference `routePaths.accountsReceivable.customers`.
 
 ---

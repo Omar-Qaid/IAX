@@ -78,6 +78,8 @@ export interface LookupGridFieldProps<T extends Record<string, any>, TFieldValue
   name: string;
   label?: string;
   control?: Control<TFieldValues>;
+  value?: T[keyof T] | null;
+  onChange?: (value: T[keyof T] | null, row?: T | null) => void;
   error?: FieldError | { message?: string } | string;
 
   columns: GridLookupColumn<T>[];

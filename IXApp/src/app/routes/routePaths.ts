@@ -11,6 +11,7 @@ export const ROUTE_PATHS = {
     CUSTOMER_GROUPS: '/accounts-receivable/customer-groups',
     SALES_ORDERS: '/accounts-receivable/sales-orders',
     SALES_ORDER_DETAILS: '/accounts-receivable/sales-orders/:salesOrderId',
+    salesOrder: (salesOrderId: string) => `/accounts-receivable/sales-orders/${encodeURIComponent(salesOrderId)}`,
   },
 
   FOUNDATION: {
