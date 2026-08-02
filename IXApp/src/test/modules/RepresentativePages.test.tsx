@@ -35,6 +35,8 @@ describe('representative enterprise pages', () => {
   it('renders all routed accounts-receivable list pages', () => {
     const { unmount } = render(<CustomerGroupListPage />);
     expect(screen.getByText('Major Key Accounts')).toBeDefined();
+    act(() => fireEvent.click(screen.getByRole('button', { name: 'Edit' })));
+    expect(screen.getByDisplayValue('CG-MAJOR')).toBeDefined();
     act(() => fireEvent.click(screen.getByRole('button', { name: 'Filter' })));
     expect(screen.getByRole('heading', { name: 'Filters' })).toBeDefined();
     expect(screen.queryByRole('button', { name: 'Information' })).toBeNull();

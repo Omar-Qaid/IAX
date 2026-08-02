@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Box, type SxProps, type Theme } from '@mui/material';
 import { PageContainer } from '@shared/components/page/PageContainer';
 import { PageHeader } from '@shared/components/page/PageHeader';
@@ -14,7 +14,7 @@ import { DataGrid } from '@shared/components/data-grid/DataGrid';
 import { EnterpriseQuickFilter } from '@shared/components/data-grid/EnterpriseQuickFilter';
 import { EnterpriseListFilterBar } from '@shared/components/data-grid/EnterpriseListFilterBar';
 import { EnterpriseFilterPanel } from '@shared/components/data-grid/EnterpriseFilterPanel';
-import type { ColumnDef, DataGridProps } from '@shared/components/data-grid/types';
+import type { ColumnDef, DataGridHandle, DataGridProps } from '@shared/components/data-grid/types';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { ErrorState } from '@shared/components/feedback/ErrorState';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
@@ -124,6 +124,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
     containerSx, contentSx,
   } = props;
   const { t } = useAppTranslation();
+  const gridRef = useRef<DataGridHandle>(null);
   const sourceState = useSimpleListDataSource(props.dataSource);
   const rows = sourceState.rows;
   const columns = props.columns;
@@ -208,8 +209,8 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
         deleteLabel={config.crud.deleteLabel}
         canEdit={selectedIds.length === 1}
         canDelete={selectedIds.length > 0}
-        onEdit={selectedRow ? () => config.crud.onEdit?.(selectedRow) : undefined}
-        onNew={config.crud.onNew}
+        onEdit={selectedRow ? () => config.crud.onEdit ? config.crud.onEdit(selectedRow) : gridRef.current?.startEditRow(getRowId(selectedRow)) : undefined}
+        onNew={() => config.crud.onNew ? config.crud.onNew() : gridRef.current?.startAddRow()}
         onDelete={() => config.crud.onDelete?.(rows.filter((row) => selectedIds.includes(getRowId(row))))}
         editPermission={config.crud.editPermission}
         newPermission={config.crud.newPermission}
@@ -244,7 +245,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
           <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <EnterpriseListHeader contextLabel={config?.contextLabel ?? props.contextLabel ?? title} viewLabel={config?.viewLabel ?? props.viewLabel ?? title} onViewClick={onViewClick} />
             {generatedFilterBar ?? props.filterBar}
-            <Box sx={{ flex: 1, minHeight: 0 }}>{feedback ?? <DataGrid {...resolvedGridProps} height={gridHeight ?? resolvedGridProps.height ?? '100%'} />}</Box>
+            <Box sx={{ flex: 1, minHeight: 0 }}>{feedback ?? <DataGrid ref={gridRef} {...resolvedGridProps} height={gridHeight ?? resolvedGridProps.height ?? '100%'} />}</Box>
           </Box>
           {generatedSidePanels ?? props.sidePanels}
         </Box>

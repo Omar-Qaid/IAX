@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from '@mui/material';
 import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
 import type { ColumnDef } from '@shared/components/data-grid/types';
@@ -7,10 +7,11 @@ import { MOCK_CUSTOMER_GROUPS, type CustomerGroup } from '@mocks/data/customerGr
 
 export function CustomerGroupListPage(): React.ReactElement {
   const { t, currentLanguage } = useAppTranslation();
+  const [customerGroups, setCustomerGroups] = useState<CustomerGroup[]>(MOCK_CUSTOMER_GROUPS);
   const columns = useMemo<ColumnDef<CustomerGroup>[]>(() => [
-    { field: 'groupId', headerName: 'fields.customerGroup', width: 145, pinned: 'left', renderCell: ({ row }) => <Link component="button" underline="none" sx={{ color: 'primary.main', fontSize: '0.75rem' }}>{row.groupId}</Link> },
-    { field: 'description', headerName: 'fields.description', width: 205, renderCell: ({ row }) => row.name },
-    { field: 'paymentTerms', headerName: 'fields.termsOfPayment', width: 205 },
+    { field: 'groupId', headerName: 'fields.customerGroup', width: 145, pinned: 'left', editable: true, renderCell: ({ row }) => <Link component="button" underline="none" sx={{ color: 'primary.main', fontSize: '0.75rem' }}>{row.groupId}</Link> },
+    { field: 'name', headerName: 'fields.description', width: 205, editable: true },
+    { field: 'paymentTerms', headerName: 'fields.termsOfPayment', width: 205, editable: true },
     { field: 'invoiceDueInterval', headerName: 'fields.timeBetweenInvoiceDue', width: 210, sortable: false, filterable: false, valueGetter: () => '—' },
     { field: 'defaultTaxGroup', headerName: 'fields.defaultTaxGroup', width: 150, sortable: false, filterable: false, valueGetter: () => '—' },
     { field: 'pricesIncludeTax', headerName: 'fields.pricesIncludeTax', width: 130, sortable: false, filterable: false, valueGetter: () => '—' },
@@ -53,8 +54,19 @@ export function CustomerGroupListPage(): React.ReactElement {
     variant="enterprise"
     title={t('pages.customerGroups.title')}
     enterpriseConfig={config}
-    dataSource={{ type: 'static', rows: MOCK_CUSTOMER_GROUPS }}
+    dataSource={{ type: 'controlled', rows: customerGroups }}
     columns={columns}
-    dataGridProps={{ storageKey: 'accounts-receivable.customer-groups.reference-view', hideSidebar: false }}
+    dataGridProps={{
+      storageKey: 'accounts-receivable.customer-groups.reference-view',
+      hideSidebar: false,
+      masterForm: true,
+      onNewRow: () => ({ id: `cg-${Date.now()}`, groupId: '', name: '', description: '', defaultCurrency: 'USD', paymentTerms: '', active: true }),
+      onRowSave: (values, isNew) => {
+        const saved = values as CustomerGroup;
+        setCustomerGroups((current) => isNew
+          ? [...current, saved]
+          : current.map((group) => group.id === saved.id ? { ...group, ...saved } : group));
+      },
+    }}
   />;
 }

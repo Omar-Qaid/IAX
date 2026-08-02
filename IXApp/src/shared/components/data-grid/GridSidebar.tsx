@@ -93,7 +93,7 @@ export function GridSidebar<T>({
 
       {/* Panel Content */}
       {activeTab ? (
-        <Box sx={{ width: 288, display: 'flex', flexDirection: 'column', borderInlineEnd: (theme) => `1px solid ${theme.palette.divider}`, overflow: 'hidden', bgcolor: 'background.paper' }}>
+        <Box sx={{ width: 248, display: 'flex', flexDirection: 'column', borderInlineEnd: (theme) => `1px solid ${theme.palette.divider}`, overflow: 'hidden', bgcolor: 'background.paper' }}>
 
           {/* Panel header with close */}
           <Box sx={{ display: 'flex', alignItems: 'center', px: 1.5, borderBottom: (theme) => `1px solid ${theme.palette.divider}`, minHeight: 44, bgcolor: (theme) => theme.palette.mode === 'light' ? '#f3f2f1' : 'background.default' }}>
@@ -151,7 +151,7 @@ export function GridSidebar<T>({
       ) : null}
 
       {/* Vertical Tab Strip (Right Edge) */}
-      <Box component="nav" aria-label={t('grid.features')} sx={{ width: 44, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'stretch', py: 0.5, gap: 0.25, bgcolor: (theme) => theme.palette.mode === 'light' ? '#f3f2f1' : 'background.default' }}>
+      <Box component="nav" aria-label={t('grid.features')} sx={{ width: 38, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'stretch', py: 0.5, gap: 0.25, bgcolor: (theme) => theme.palette.mode === 'light' ? '#f3f2f1' : 'background.default' }}>
         <SidebarTab
           active={activeTab === 'columns'}
           onClick={() => handleTabClick('columns')}
@@ -191,7 +191,7 @@ function SidebarTab({ active, onClick, icon, label, badgeCount }: SidebarTabProp
   return <Tooltip title={label} placement="left">
     <IconButton
       size="small" aria-label={label} aria-pressed={active} onClick={onClick}
-      sx={{ borderRadius: 0.5, width: 36, height: 36, mx: 0.5, color: active ? 'primary.main' : 'text.secondary', bgcolor: active ? 'background.paper' : 'transparent', border: '1px solid', borderColor: active ? 'primary.main' : 'transparent', '&:hover': { bgcolor: 'background.paper', color: 'primary.main' } }}
+      sx={{ borderRadius: 0.5, width: 32, height: 32, mx: '3px', color: active ? 'primary.main' : 'text.secondary', bgcolor: active ? 'background.paper' : 'transparent', border: '1px solid', borderColor: active ? 'primary.main' : 'transparent', '&:hover': { bgcolor: 'background.paper', color: 'primary.main' } }}
     >
       <Badge badgeContent={badgeCount} color="primary" max={99} sx={{ '& .MuiBadge-badge': { minWidth: 14, height: 14, px: 0.25, fontSize: '0.5625rem' } }}>{icon}</Badge>
     </IconButton>
