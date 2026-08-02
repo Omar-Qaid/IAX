@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Accordion, AccordionDetails, AccordionSummary, Box, MenuItem, Switch, TextField, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import type { DetailSectionConfig, DetailValue, DetailValues } from './types';
@@ -13,11 +13,68 @@ export interface ListDetailsLayoutProps {
   noLabel: string;
   onChange: (name: string, value: DetailValue) => void;
   listWidth?: number;
+  listMinWidth?: number;
+  listMaxWidth?: number;
+  listResizable?: boolean;
+  listPaneVisible?: boolean;
+  listWidthStorageKey?: string;
 }
 
-export function ListDetailsLayout({ listPane, header, sections, values, editing, yesLabel, noLabel, onChange, listWidth = 264 }: ListDetailsLayoutProps): React.ReactElement {
-  return <Box sx={{ minHeight: 0, flex: 1, display: 'flex', gap: 2, overflow: 'hidden' }}>
-    <Box sx={{ width: { xs: '100%', md: listWidth }, flexShrink: 0, display: { xs: 'none', md: 'block' }, bgcolor: 'background.paper', border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,.12)' }}>{listPane}</Box>
+export function ListDetailsLayout({ listPane, header, sections, values, editing, yesLabel, noLabel, onChange, listWidth = 264, listMinWidth = 176, listMaxWidth = 520, listResizable = true, listPaneVisible = true, listWidthStorageKey }: ListDetailsLayoutProps): React.ReactElement {
+  const storageKey = listWidthStorageKey ? `ixapp.list-details.width.${listWidthStorageKey}` : null;
+  const constrainWidth = (width: number) => Math.min(listMaxWidth, Math.max(listMinWidth, width));
+  const readStoredWidth = () => {
+    if (!storageKey) return listWidth;
+    try {
+      const storedWidth = Number(globalThis.localStorage?.getItem(storageKey));
+      return Number.isFinite(storedWidth) && storedWidth > 0 ? constrainWidth(storedWidth) : listWidth;
+    } catch { return listWidth; }
+  };
+  const [currentListWidth, setCurrentListWidth] = useState(readStoredWidth);
+  const [resizing, setResizing] = useState(false);
+  const dragState = useRef<{ startX: number; startWidth: number; direction: 'ltr' | 'rtl' } | null>(null);
+
+  useEffect(() => setCurrentListWidth(readStoredWidth()), [listWidth, listMinWidth, listMaxWidth, storageKey]);
+  useEffect(() => {
+    if (!storageKey) return undefined;
+    const timeout = globalThis.setTimeout(() => {
+      try { globalThis.localStorage?.setItem(storageKey, String(Math.round(currentListWidth))); } catch { /* Storage can be unavailable in restricted browser contexts. */ }
+    }, 150);
+    return () => globalThis.clearTimeout(timeout);
+  }, [currentListWidth, storageKey]);
+
+  const startResize = (event: React.PointerEvent<HTMLDivElement>) => {
+    dragState.current = { startX: event.clientX, startWidth: currentListWidth, direction: getComputedStyle(event.currentTarget).direction as 'ltr' | 'rtl' };
+    setResizing(true);
+    event.currentTarget.setPointerCapture(event.pointerId);
+    event.preventDefault();
+  };
+  const resize = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragState.current) return;
+    const delta = event.clientX - dragState.current.startX;
+    setCurrentListWidth(constrainWidth(dragState.current.startWidth + (dragState.current.direction === 'rtl' ? -delta : delta)));
+  };
+  const stopResize = (event: React.PointerEvent<HTMLDivElement>) => {
+    dragState.current = null;
+    setResizing(false);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+  };
+  const resizeWithKeyboard = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const direction = getComputedStyle(event.currentTarget).direction;
+    const step = event.shiftKey ? 40 : 10;
+    if (event.key === 'Home') setCurrentListWidth(listMinWidth);
+    else if (event.key === 'End') setCurrentListWidth(listMaxWidth);
+    else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+      const delta = event.key === 'ArrowRight' ? step : -step;
+      setCurrentListWidth((width) => constrainWidth(width + (direction === 'rtl' ? -delta : delta)));
+    } else return;
+    event.preventDefault();
+  };
+
+  return <Box sx={{ minHeight: 0, flex: 1, display: 'flex', gap: 0, overflow: 'hidden' }}>
+    {listPaneVisible && <Box sx={{ width: { xs: '100%', md: currentListWidth }, flexShrink: 0, display: { xs: 'none', md: 'block' }, bgcolor: 'background.paper', border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,.12)', willChange: resizing ? 'width' : 'auto', transition: resizing ? 'none' : 'width 160ms ease-out' }}>{listPane}</Box>}
+    {listPaneVisible && listResizable && <Box role="separator" aria-label="Resize record list" aria-orientation="vertical" aria-valuemin={listMinWidth} aria-valuemax={listMaxWidth} aria-valuenow={Math.round(currentListWidth)} tabIndex={0} onPointerDown={startResize} onPointerMove={resize} onPointerUp={stopResize} onPointerCancel={stopResize} onDoubleClick={() => setCurrentListWidth(listWidth)} onKeyDown={resizeWithKeyboard} sx={{ width: 4, flexShrink: 0, position: 'relative', zIndex: 1, display: { xs: 'none', md: 'flex' }, alignItems: 'stretch', justifyContent: 'center', cursor: 'col-resize', touchAction: 'none', userSelect: 'none', outline: 'none', '&::before': { content: '""', position: 'absolute', insetBlock: 0, insetInline: -4 }, '&::after': { content: '""', width: resizing ? 2 : 1, bgcolor: resizing ? 'primary.main' : 'transparent', borderRadius: 1, opacity: resizing ? 1 : 0, transition: 'background-color 120ms ease, width 120ms ease, opacity 120ms ease' }, '&:hover::after, &:focus-visible::after': { width: 2, bgcolor: 'primary.main', opacity: 1 } }} />}
+    {listPaneVisible && !listResizable && <Box sx={{ width: 16, flexShrink: 0, display: { xs: 'none', md: 'block' } }} />}
     <Box sx={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       {header}
       <Box sx={{ minHeight: 0, flex: 1, overflowY: 'auto', pr: 0.5 }}>

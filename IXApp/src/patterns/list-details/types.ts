@@ -57,6 +57,10 @@ export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
     columns?: ColumnDef<T>[];
     storageKey?: string;
     listWidth?: number;
+    listMinWidth?: number;
+    listMaxWidth?: number;
+    listResizable?: boolean;
+    listWidthStorageKey?: string;
     headerContent?: ReactNode;
     headerMaxWidth?: number;
     masterRowHeight?: number;
