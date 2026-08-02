@@ -3,7 +3,7 @@
   "nav": {
     "app_title": "IXApp Enterprise", "app_title_short": "IXApp", "home": "Home", "dashboard": "Dashboard",
     "accountsReceivable": "Accounts Receivable", "customers": "Customers", "allCustomers": "All customers",
-    "customerGroups": "Customer groups", "customerParameters": "Accounts receivable parameters", "customerPaymentMethods": "Methods of payment - customers", "orders": "Orders", "salesOrders": "Sales orders",
+    "customerGroups": "Customer groups", "customerParameters": "Accounts receivable parameters", "customerPaymentMethods": "Methods of payment - customers", "customerPaymentTerms": "Terms of payment", "orders": "Orders", "salesOrders": "Sales orders",
     "foundation": "Foundation", "currencies": "Currencies", "setup": "Setup",
     "systemAdmin": "System Administration", "system": "System", "settings": "Application settings",
     "favorites": "Favorites", "recent": "Recent", "modules": "Modules", "search_page": "Search pages"
@@ -15,6 +15,7 @@
     "customerGroups": { "title": "Customer groups", "subtitle": "Read-only customer group configuration", "standardView": "Standard view" },
     "customerParameters": { "title": "Accounts receivable parameters", "standardView": "Standard view" },
     "paymentMethods": { "title": "Methods of payment - customers", "standardView": "Standard view" },
+    "paymentTerms": { "title": "Terms of payment", "standardView": "Standard view" },
     "salesOrders": { "title": "Sales orders", "subtitle": "Double-click an order to open its document details" },
     "salesOrder": { "title": "Sales order {{number}}", "breadcrumb": "Sales order" },
     "currencies": { "title": "Currencies", "subtitle": "Read-only currency configuration" },
@@ -37,7 +38,7 @@
   },
   "common": {
     "company": "Company", "language": "Language", "theme": "Theme", "light": "Light", "dark": "Dark", "status": "Status",
-    "active": "Active", "yes": "Yes", "no": "No", "all": "All", "onhold": "On hold", "onHold": "On hold", "blocked": "Blocked", "confirmed": "Confirmed", "invoiced": "Invoiced", "cancelled": "Cancelled", "open": "Open",
+    "active": "Active", "yes": "Yes", "no": "No", "all": "All", "standardView": "Standard view", "onhold": "On hold", "onHold": "On hold", "blocked": "Blocked", "confirmed": "Confirmed", "invoiced": "Invoiced", "cancelled": "Cancelled", "open": "Open",
     "loading": "Loading…", "loadingMore": "Loading more…", "noData": "No records found", "noResults": "No results", "notProvided": "Not provided", "readOnly": "Read only",
     "accessDenied": "Access denied", "search": "Search", "clear": "Clear", "close": "Close", "none": "None", "account": "Account", "notifications": "Notifications", "settings": "Settings", "help": "Help", "logout": "Log out",
     "expand_all": "Expand all", "collapse_all": "Collapse all", "breadcrumbs": "Breadcrumbs", "information": "Information", "save": "Save", "cancel": "Cancel", "edit": "Edit", "delete": "Delete",
@@ -49,7 +50,7 @@
   },
   "errors": { "generic": "An unexpected error occurred.", "loadFailed": "Failed to load data", "no_permission": "You do not have permission to view the source data." },
   "validation": {
-    "required": "{{field}} is required.", "invalidEmail": "Enter a valid email address.", "invalidUrl": "Enter a valid URL.", "minLength": "{{field}} must contain at least {{min}} characters.",
+    "required": "{{field}} is required.", "correctErrors": "Please correct the validation errors.", "invalidEmail": "Enter a valid email address.", "invalidUrl": "Enter a valid URL.", "minLength": "{{field}} must contain at least {{min}} characters.",
     "maxLength": "{{field}} must contain no more than {{max}} characters.", "minValue": "{{field}} must be at least {{min}}.", "maxValue": "{{field}} must not exceed {{max}}.", "invalidNumber": "Enter a valid number.", "invalidDate": "Enter a valid date."
   },
   "grid": {
@@ -89,5 +90,11 @@
     "groups": { "file": "File", "posting": "Posting", "invoiceUpdate": "Invoice update", "fileFormats": "File formats" },
     "options": { "ledger": "Ledger", "noDraft": "No draft", "none": "None", "other": "Other" },
     "fields": { "method": "Method of payment", "period": "Period", "description": "Description", "gracePeriod": "Grace period", "paymentStatus": "Payment status", "paymentType": "Payment type", "zatcaMethod": "ZATCA method", "lastFileNumber": "Last file No.", "today": "Today", "date": "Date", "accountType": "Account type", "paymentAccount": "Payment account", "bridgingPosting": "Bridging posting", "bridgingByBank": "Bridging account by bank account", "bridgingAccount": "Bridging account", "bankTransactionType": "Bank transaction type", "requireMandate": "Require mandate", "draftType": "Type of draft", "categoryPurpose": "Category purpose", "chargeBearer": "Charge bearer", "localInstrument": "Local instrument", "serviceLevel": "Service level", "directDebit": "Direct debit", "autoDrawJournal": "Create and post draw journal automatically", "runExportScript": "Run export script", "genericExport": "Generic electronic export format", "genericImport": "Generic electronic import format", "exportConfig": "Export format configuration", "importConfig": "Import format configuration", "exportFormat": "Export format", "importFormat": "Import format", "returnFormat": "Return format", "remittanceFormat": "Remittance format" }
+  }
+  ,"paymentTerms": {
+    "newTerm": "New term", "commands": { "translations": "Translations", "options": "Options" },
+    "sections": { "setup": "Setup", "other": "Other" },
+    "options": { "net": "Net", "noUpdate": "No update", "normal": "Normal" },
+    "fields": { "term": "Terms of payment", "description": "Description", "paymentMethod": "Payment method", "cashPayment": "Cash payment", "months": "Months", "days": "Days", "paymentSchedule": "Payment schedule", "paymentDay": "Payment day", "cutoffDay": "Cutoff day", "defaultTerms": "Default terms of payment", "dueDateUpdate": "Due date update", "cashAccount": "Cash", "certifiedCompanyCheck": "Certified company check", "paymentType": "Payment type", "creditCheck": "Credit check" }
   }
 }

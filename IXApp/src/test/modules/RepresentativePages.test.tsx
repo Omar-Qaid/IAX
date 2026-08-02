@@ -9,6 +9,7 @@ import { ApplicationSettingsPage } from '@modules/system-administration/pages/Ap
 import { CustomerGroupListPage } from '@modules/accounts-receivable/pages/CustomerGroupListPage';
 import { SalesOrdersPage } from '@modules/accounts-receivable/pages/SalesOrdersPage';
 import { CustPaymMode } from '@modules/accounts-receivable/pages/CustPaymModePage';
+import { CustPaymTerm } from '@modules/accounts-receivable/pages/CustPaymTermPage';
 
 describe('representative enterprise pages', () => {
   it('renders the workspace dashboard indicators', () => {
@@ -80,5 +81,16 @@ describe('representative enterprise pages', () => {
     expect(screen.getByRole('heading', { name: 'Filters' })).toBeDefined();
     act(() => fireEvent.click(screen.getByRole('button', { name: 'Information' })));
     expect(screen.getByRole('heading', { name: 'Related information' })).toBeDefined();
+  });
+
+  it('renders payment terms through the generic list-details pattern', () => {
+    render(<CustPaymTerm />);
+    expect(screen.getByRole('heading', { name: 'Terms of payment' })).toBeDefined();
+    expect(screen.getAllByText('07 Days').length).toBeGreaterThan(0);
+    expect(screen.getByText('Setup')).toBeDefined();
+    expect(screen.getByText('Other')).toBeDefined();
+    act(() => fireEvent.click(screen.getByRole('button', { name: 'Edit' })));
+    expect(screen.getByRole('button', { name: 'Save' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeDefined();
   });
 });

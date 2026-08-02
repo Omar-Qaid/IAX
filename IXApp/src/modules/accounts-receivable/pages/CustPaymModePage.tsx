@@ -38,19 +38,15 @@ export function CustPaymMode(): React.ReactElement {
       ...(['method', 'period', 'description'] as const).map((id) => ({ id, label: t(`paymentMethods.fields.${id}`), getValue: (record: PaymentMode) => record[id], setValue: (record: PaymentMode, value: string | number | boolean) => ({ ...record, [id]: String(value) }) })),
       ...(['gracePeriod', 'paymentStatus', 'paymentType', 'zatcaMethod'] as const).map((id) => ({ id, label: t(`paymentMethods.fields.${id}`), type: id === 'gracePeriod' || id === 'zatcaMethod' ? 'number' as const : 'text' as const, getValue: (record: PaymentMode) => record.values[id], setValue: (record: PaymentMode, value: string | number | boolean) => ({ ...record, values: { ...record.values, [id]: value } }) })),
     ],
-    sections, viewLabel: t('pages.paymentMethods.standardView'), filterLabel: t('actions.filter'), informationLabel: t('common.information'), yesLabel: t('common.yes'), noLabel: t('common.no'),
-    presentation: { mode: 'list', listWidth: 264 },
+    sections,
     permissions: { view: 'customer.view', create: 'customer.create', edit: 'customer.update', delete: 'customer.delete' },
     validate: (record) => ({ ...(!record.method.trim() ? { method: t('validation.required', { field: t('paymentMethods.fields.method') }) } : {}), ...(!record.period.trim() ? { period: t('validation.required', { field: t('paymentMethods.fields.period') }) } : {}) }),
-    validationTitle: t('validation.correctErrors', 'Please correct the validation errors.'),
-    advancedFilter: { title: t('filters.title'), addLabel: t('actions.add'), fieldLabel: t('paymentMethods.fields.method'), operatorLabel: t('filters.contains'), applyLabel: t('actions.apply'), resetLabel: t('actions.reset'), matches: (record, value) => record.method.toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()) },
-    relatedInformation: { title: t('relatedInformation.title'), sections: (record) => [
+    advancedFilter: { fieldLabel: t('paymentMethods.fields.method'), matches: (record, value) => record.method.toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()) },
+    relatedInformation: { sections: (record) => [
       { id: 'summary', label: t('paymentMethods.sections.general'), defaultExpanded: true, content: record ? `${record.method} · ${record.period}` : t('messages.selectRecord') },
       { id: 'fileFormats', label: t('paymentMethods.sections.fileFormats') },
     ] },
-    crud: { editLabel: t('actions.edit'), newLabel: t('actions.new'), deleteLabel: t('actions.delete'), saveLabel: t('actions.save'), cancelLabel: t('actions.cancel') },
     commands: ['paymentSpecification', 'paymentFeeSetup', 'remittanceFiles', 'fileAnalyze', 'options'].map((id) => ({ id, label: t(`paymentMethods.commands.${id}`), disabled: id === 'fileAnalyze' })),
-    utilities: { personalizeLabel: t('utilities.personalize'), guideLabel: t('utilities.guide'), notificationsLabel: t('common.notifications'), refreshLabel: t('actions.refresh'), openWindowLabel: t('utilities.openWindow'), notificationCount: 0 },
   };
   return <ListDetailsPage variant="enterprise" title={t('pages.paymentMethods.title')} config={config} />;
 }

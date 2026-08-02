@@ -2,7 +2,7 @@
   "app": { "name": "IXApp", "tagline": "نظام تخطيط موارد المؤسسة" },
   "nav": {
     "app_title": "نظام IXApp المؤسسي", "app_title_short": "IXApp", "home": "الرئيسية", "dashboard": "لوحة المعلومات",
-    "accountsReceivable": "الحسابات المدينة", "customers": "العملاء", "allCustomers": "جميع العملاء", "customerGroups": "مجموعات العملاء", "customerParameters": "معلمات الحسابات المدينة", "customerPaymentMethods": "طرق الدفع - العملاء",
+    "accountsReceivable": "الحسابات المدينة", "customers": "العملاء", "allCustomers": "جميع العملاء", "customerGroups": "مجموعات العملاء", "customerParameters": "معلمات الحسابات المدينة", "customerPaymentMethods": "طرق الدفع - العملاء", "customerPaymentTerms": "شروط الدفع",
     "orders": "الطلبات", "salesOrders": "أوامر البيع", "foundation": "البيانات الأساسية", "currencies": "العملات", "setup": "الإعداد",
     "systemAdmin": "إدارة النظام", "system": "النظام", "settings": "إعدادات التطبيق", "favorites": "المفضلة", "recent": "الأخيرة", "modules": "الوحدات", "search_page": "البحث في الصفحات"
   },
@@ -13,6 +13,7 @@
     "customerGroups": { "title": "مجموعات العملاء", "subtitle": "إعداد مجموعات العملاء للقراءة فقط", "standardView": "العرض القياسي" },
     "customerParameters": { "title": "معلمات الحسابات المدينة", "standardView": "طريقة العرض القياسية" },
     "paymentMethods": { "title": "طرق الدفع - العملاء", "standardView": "طريقة العرض القياسية" },
+    "paymentTerms": { "title": "شروط الدفع", "standardView": "طريقة العرض القياسية" },
     "salesOrders": { "title": "أوامر البيع", "subtitle": "انقر نقراً مزدوجاً على أمر لفتح تفاصيل المستند" },
     "salesOrder": { "title": "أمر البيع {{number}}", "breadcrumb": "أمر البيع" },
     "currencies": { "title": "العملات", "subtitle": "إعداد العملات للقراءة فقط" },
@@ -34,7 +35,7 @@
     "backToDashboard": "العودة إلى لوحة المعلومات", "close": "إغلاق", "open": "فتح", "print": "طباعة", "import": "استيراد", "add": "إضافة", "apply": "تطبيق", "reset": "إعادة ضبط"
   },
   "common": {
-    "company": "الشركة", "language": "اللغة", "theme": "المظهر", "light": "فاتح", "dark": "داكن", "status": "الحالة", "yes": "نعم", "no": "لا", "all": "الكل",
+    "company": "الشركة", "language": "اللغة", "theme": "المظهر", "light": "فاتح", "dark": "داكن", "status": "الحالة", "yes": "نعم", "no": "لا", "all": "الكل", "standardView": "طريقة العرض القياسية",
     "active": "نشط", "onhold": "معلّق", "onHold": "معلّق", "blocked": "محظور", "confirmed": "مؤكد", "invoiced": "مفوتر", "cancelled": "ملغي", "open": "مفتوح",
     "loading": "جارٍ التحميل…", "loadingMore": "جارٍ تحميل المزيد…", "noData": "لا توجد سجلات", "noResults": "لا توجد نتائج", "notProvided": "غير متوفر", "readOnly": "للقراءة فقط",
     "accessDenied": "الوصول مرفوض", "search": "بحث", "clear": "مسح", "close": "إغلاق", "none": "لا شيء", "account": "الحساب", "notifications": "الإشعارات", "settings": "الإعدادات", "help": "المساعدة", "logout": "تسجيل الخروج",
@@ -44,7 +45,7 @@
   "messages": { "loadingPage": "جارٍ تحميل الصفحة…", "verifyingCredentials": "جارٍ التحقق من بيانات الأمان…", "authenticationRequired": "يلزم تسجيل الدخول لعرض هذه الوحدة.", "permissionRequired": "الإذن المطلوب: {{permission}}", "signingIn": "جارٍ تسجيل الدخول…", "noSalesOrders": "لا توجد أوامر بيع متاحة.", "loadingModule": "جارٍ تحميل وحدة النظام…", "loadingRecords": "جارٍ تحميل السجلات…", "loadingDetails": "جارٍ تحميل التفاصيل…", "selectRecord": "اختر سجلاً", "selectRecordHelp": "اختر عنصراً من القائمة لعرض تفاصيله." },
   "errors": { "generic": "حدث خطأ غير متوقع.", "loadFailed": "تعذر تحميل البيانات", "no_permission": "ليس لديك إذن لعرض بيانات المصدر." },
   "validation": {
-    "required": "حقل {{field}} مطلوب.", "invalidEmail": "أدخل عنوان بريد إلكتروني صالحاً.", "invalidUrl": "أدخل رابطاً صالحاً.", "minLength": "يجب ألا يقل {{field}} عن {{min}} أحرف.",
+    "required": "حقل {{field}} مطلوب.", "correctErrors": "يرجى تصحيح أخطاء التحقق.", "invalidEmail": "أدخل عنوان بريد إلكتروني صالحاً.", "invalidUrl": "أدخل رابطاً صالحاً.", "minLength": "يجب ألا يقل {{field}} عن {{min}} أحرف.",
     "maxLength": "يجب ألا يزيد {{field}} على {{max}} أحرف.", "minValue": "يجب ألا تقل قيمة {{field}} عن {{min}}.", "maxValue": "يجب ألا تتجاوز قيمة {{field}} {{max}}.", "invalidNumber": "أدخل رقماً صالحاً.", "invalidDate": "أدخل تاريخاً صالحاً."
   },
   "grid": {
@@ -85,5 +86,11 @@
     "groups": { "file": "الملف", "posting": "الترحيل", "invoiceUpdate": "تحديث الفاتورة", "fileFormats": "تنسيقات الملفات" },
     "options": { "ledger": "دفتر الأستاذ", "noDraft": "لا توجد كمبيالة", "none": "لا شيء", "other": "أخرى" },
     "fields": { "method": "طريقة الدفع", "period": "الفترة", "description": "الوصف", "gracePeriod": "فترة السماح", "paymentStatus": "حالة الدفع", "paymentType": "نوع الدفع", "zatcaMethod": "طريقة زاتكا", "lastFileNumber": "رقم آخر ملف", "today": "اليوم", "date": "التاريخ", "accountType": "نوع الحساب", "paymentAccount": "حساب الدفع", "bridgingPosting": "ترحيل التجسير", "bridgingByBank": "حساب التجسير حسب الحساب البنكي", "bridgingAccount": "حساب التجسير", "bankTransactionType": "نوع الحركة البنكية", "requireMandate": "التفويض مطلوب", "draftType": "نوع الكمبيالة", "categoryPurpose": "غرض الفئة", "chargeBearer": "متحمل الرسوم", "localInstrument": "الأداة المحلية", "serviceLevel": "مستوى الخدمة", "directDebit": "الخصم المباشر", "autoDrawJournal": "إنشاء وترحيل دفتر السحب تلقائياً", "runExportScript": "تشغيل برنامج التصدير", "genericExport": "تنسيق التصدير الإلكتروني العام", "genericImport": "تنسيق الاستيراد الإلكتروني العام", "exportConfig": "إعداد تنسيق التصدير", "importConfig": "إعداد تنسيق الاستيراد", "exportFormat": "تنسيق التصدير", "importFormat": "تنسيق الاستيراد", "returnFormat": "تنسيق الإرجاع", "remittanceFormat": "تنسيق التحويل" }
+  }
+  ,"paymentTerms": {
+    "newTerm": "شرط جديد", "commands": { "translations": "الترجمات", "options": "خيارات" },
+    "sections": { "setup": "إعداد", "other": "أخرى" },
+    "options": { "net": "صافي", "noUpdate": "لا يوجد تحديث", "normal": "عادي" },
+    "fields": { "term": "شروط الدفع", "description": "الوصف", "paymentMethod": "طريقة الدفع", "cashPayment": "الدفع النقدي", "months": "الأشهر", "days": "الأيام", "paymentSchedule": "جدول الدفع", "paymentDay": "يوم الدفع", "cutoffDay": "يوم الإقفال", "defaultTerms": "شروط الدفع الافتراضية", "dueDateUpdate": "تحديث تاريخ الاستحقاق", "cashAccount": "النقد", "certifiedCompanyCheck": "شيك شركة معتمد", "paymentType": "نوع الدفع", "creditCheck": "فحص الائتمان" }
   }
 }

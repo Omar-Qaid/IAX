@@ -15,6 +15,7 @@ const CustomerListPage = lazy(() => import('@modules/accounts-receivable/pages/C
 const CustomerGroupListPage = lazy(() => import('@modules/accounts-receivable/pages/CustomerGroupListPage').then((module) => ({ default: module.CustomerGroupListPage })));
 const CustParametersPage = lazy(() => import('@modules/accounts-receivable/pages/CustParametersPage').then((module) => ({ default: module.CustParametersPage })));
 const CustPaymMode = lazy(() => import('@modules/accounts-receivable/pages/CustPaymModePage').then((module) => ({ default: module.CustPaymMode })));
+const CustPaymTerm = lazy(() => import('@modules/accounts-receivable/pages/CustPaymTermPage').then((module) => ({ default: module.CustPaymTerm })));
 const SalesOrdersPage = lazy(() => import('@modules/accounts-receivable/pages/SalesOrdersPage').then((module) => ({ default: module.SalesOrdersPage })));
 const SalesOrderPage = lazy(() => import('@modules/accounts-receivable/pages/SalesOrderPage').then((module) => ({ default: module.SalesOrderPage })));
 const CurrenciesPage = lazy(() => import('@modules/foundation/pages/CurrenciesPage').then((module) => ({ default: module.CurrenciesPage })));
@@ -77,6 +78,10 @@ export const appRoutes: RouteObject[] = [
       {
         path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_METHODS,
         element: load(<CustPaymMode />),
+      },
+      {
+        path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_TERMS,
+        element: load(<CustPaymTerm />),
       },
       {
         path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDERS,
