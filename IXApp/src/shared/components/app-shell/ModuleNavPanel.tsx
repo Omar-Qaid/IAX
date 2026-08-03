@@ -98,6 +98,10 @@ const toolbarButtonSx = {
     cursor: 'pointer',
     transition: 'opacity 0.2s',
     opacity: 0.9,
+    border: 0,
+    p: 0,
+    bgcolor: 'transparent',
+    font: 'inherit',
     '&:hover': { opacity: 1 },
     '&:hover .toolbar-text': { textDecoration: 'underline' },
 } as const;
@@ -150,6 +154,10 @@ const getSectionBorderSx = (isExpanded: boolean) => ({
 });
 
 const getSectionHeaderSx = (isExpanded: boolean, isMobileView: boolean) => ({
+    width: '100%',
+    border: 0,
+    font: 'inherit',
+    textAlign: 'start' as const,
     display: 'flex',
     alignItems: 'center',
     gap: 1,
@@ -199,6 +207,11 @@ const getExpandableLinkSx = (isMobileView: boolean) => ({
 });
 
 const getNavLinkSx = (isMobileView: boolean) => ({
+    width: '100%',
+    border: 0,
+    bgcolor: 'transparent',
+    font: 'inherit',
+    textAlign: 'start' as const,
     display: 'flex',
     alignItems: 'center',
     cursor: 'pointer',
@@ -238,7 +251,7 @@ const ModuleNavPanel: React.FC<ModuleNavPanelProps> = ({ title, sections, onClos
     const navigate = useNavigate();
 
     // Simplify permission checking for now, assuming all visible. Or we can mock it.
-    const isLinkVisible = (link: ModuleNavSection['links'][number]) => {
+    const isLinkVisible = (_link: ModuleNavSection['links'][number]) => {
         return true; // Simplified: Assuming no strict RBAC for now in IXApp UI layout refactor
     };
 
@@ -312,13 +325,13 @@ const ModuleNavPanel: React.FC<ModuleNavPanelProps> = ({ title, sections, onClos
             {/* Toolbar */}
             <Box sx={toolbarWrapperSx}>
                 <Box sx={toolbarRowSx}>
-                    <Box onClick={expandAll} sx={toolbarButtonSx}>
+                    <Box component="button" type="button" onClick={expandAll} sx={toolbarButtonSx} aria-label={t('common.expand_all', 'Expand All')}>
                         <ExpandAllIcon sx={toolbarIconSx} />
                         <Typography className="toolbar-text" sx={toolbarLabelSx}>
                             {t('common.expand_all', 'Expand All')}
                         </Typography>
                     </Box>
-                    <Box onClick={collapseAll} sx={toolbarButtonSx}>
+                    <Box component="button" type="button" onClick={collapseAll} sx={toolbarButtonSx} aria-label={t('common.collapse_all', 'Collapse All')}>
                         <CollapseAllIcon sx={toolbarIconSx} />
                         <Typography className="toolbar-text" sx={toolbarLabelSx}>
                             {t('common.collapse_all', 'Collapse All')}
@@ -336,7 +349,10 @@ const ModuleNavPanel: React.FC<ModuleNavPanelProps> = ({ title, sections, onClos
                             <Box sx={getSectionBorderSx(isExpanded)}>
                                 {/* Section header */}
                                 <Box
+                                    component="button"
+                                    type="button"
                                     onClick={() => toggle(section.id)}
+                                    aria-expanded={isExpanded}
                                     sx={getSectionHeaderSx(isExpanded, !!isMobileView)}
                                 >
                                     {isExpanded ? (
@@ -366,6 +382,8 @@ const ModuleNavPanel: React.FC<ModuleNavPanelProps> = ({ title, sections, onClos
                                             ) : (
                                                 <Box
                                                     key={link.label}
+                                                    component={link.path ? 'button' : 'div'}
+                                                    type={link.path ? 'button' : undefined}
                                                     onClick={() => handleLinkClick(link.path)}
                                                     sx={{
                                                         ...getNavLinkSx(!!isMobileView),

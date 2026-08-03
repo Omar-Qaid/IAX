@@ -1,7 +1,7 @@
 import React from 'react';
 import { ListItemButton, ListItemIcon, ListItemText, Tooltip, Box, useTheme, Badge } from '@mui/material';
 import { StarBorder as FavoritesIcon, Star as StarFilledIcon } from '@mui/icons-material';
-import { useNavigationStore } from '@app/store/useNavigationStore';
+import { usePreferenceStore } from '@app/store/usePreferenceStore';
 
 export interface NavItemProps {
     icon?: React.ReactNode;
@@ -20,7 +20,7 @@ export const NavItem = React.memo<NavItemProps>(({
     icon, label, collapsed = false, active = false, onClick, isFavorite, onToggleFavorite, showFavorite, indent, badge
 }) => {
     const theme = useTheme();
-    const navColor = useNavigationStore((s) => s.navColor);
+    const navColor = usePreferenceStore((s) => s.navColor);
     const isApparent = navColor === 'apparent';
     const isDark = theme.palette.mode === 'dark';
 

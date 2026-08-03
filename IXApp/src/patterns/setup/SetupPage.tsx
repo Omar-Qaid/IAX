@@ -11,6 +11,8 @@ import SearchIcon from '@mui/icons-material/Search';
 import { ActionPane } from '@shared/components/action-pane/ActionPane';
 import { EnterpriseCommandUtilities } from '@shared/components/action-pane/EnterpriseCommandUtilities';
 import { SetupNavigation } from './SetupNavigation';
+import { useUnsavedChanges } from '@shared/hooks/useUnsavedChanges';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 import type { SetupFieldConfig, SetupPageProps, SetupValue } from './types';
 
 function SetupField({ field, value, yesLabel, noLabel, onChange }: {
@@ -49,6 +51,8 @@ export function SetupPage({ title, viewLabel, navigationItems, sections, initial
   const [showSaved, setShowSaved] = useState(false);
   const [activeId, setActiveId] = useState(navigationItems[0]?.id ?? sections[0]?.id ?? '');
   const dirty = useMemo(() => JSON.stringify(values) !== JSON.stringify(savedValues), [savedValues, values]);
+  const { t } = useAppTranslation();
+  useUnsavedChanges(dirty, t('messages.unsavedChanges', 'You have unsaved changes.'));
 
   const selectSection = (id: string) => {
     setActiveId(id);
@@ -61,11 +65,11 @@ export function SetupPage({ title, viewLabel, navigationItems, sections, initial
 
   return (
     <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', bgcolor: '#faf9f8', p: 0.75 }}>
-      <ActionPane variant="flat" endActions={<EnterpriseCommandUtilities personalizeLabel="Personalize" guideLabel="Page guide" notificationsLabel="Notifications" refreshLabel="Refresh" openWindowLabel="Open in new window" />}>
-        <IconButton size="small" aria-label="Back" onClick={() => navigate(-1)} sx={{ color: 'primary.main' }}><ArrowBackIcon sx={{ fontSize: 18 }} /></IconButton>
+      <ActionPane variant="flat" endActions={<EnterpriseCommandUtilities personalizeLabel={t('utilities.personalize')} guideLabel={t('utilities.guide')} notificationsLabel={t('common.notifications')} refreshLabel={t('actions.refresh')} openWindowLabel={t('utilities.openWindow')} />}>
+        <IconButton size="small" aria-label={t('actions.back', 'Back')} onClick={() => navigate(-1)} sx={{ color: 'primary.main' }}><ArrowBackIcon sx={{ fontSize: 18 }} /></IconButton>
         <Button startIcon={<SaveOutlinedIcon />} disabled={!dirty || saving} onClick={save} sx={{ minHeight: 30, color: 'text.primary', fontSize: '0.75rem', borderInlineStart: 1, borderColor: 'divider', borderRadius: 0 }}>{saveLabel}</Button>
         <Button sx={{ minHeight: 30, color: 'text.primary', fontSize: '0.75rem', borderInlineStart: 1, borderColor: 'divider', borderRadius: 0 }}>{optionsLabel}</Button>
-        <IconButton size="small" sx={{ color: 'primary.main', ml: 0.5 }}><SearchIcon sx={{ fontSize: 17 }} /></IconButton>
+        <IconButton size="small" aria-label={t('actions.search')} sx={{ color: 'primary.main', ml: 0.5 }}><SearchIcon sx={{ fontSize: 17 }} /></IconButton>
       </ActionPane>
 
       <Box sx={{ px: 2, pt: 0.5, pb: 1.25 }}>

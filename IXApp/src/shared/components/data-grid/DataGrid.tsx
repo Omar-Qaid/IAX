@@ -70,6 +70,7 @@ function DataGridInternal<T>({
 }: DataGridProps<T>, ref: React.Ref<DataGridHandle>) {
     const { notifyError } = useNotifications();
     const searchInputRef = useRef<HTMLInputElement | null>(null);
+    const gridRootRef = useRef<HTMLDivElement | null>(null);
     const gridBodyRef = useRef<any>(null); // DataGridBodyHandle
     const focusedCellRef = useRef({ r: 0, c: 0 });
     const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -102,7 +103,7 @@ function DataGridInternal<T>({
         cancelEdit();
         setTimeout(() => {
             const { r, c } = focusedCellRef.current;
-            const cell = document.querySelector(`[data-row-index="${r}"][data-col-index="${c}"]`) as HTMLElement;
+            const cell = gridRootRef.current?.querySelector<HTMLElement>(`[data-row-index="${r}"][data-col-index="${c}"]`);
             if (cell) cell.focus();
         }, 100);
     }, [cancelEdit]);
@@ -125,7 +126,7 @@ function DataGridInternal<T>({
         } finally {
             setSaving(false);
         }
-    }, [onRowSave, editingRowId, editValues, handleCancelEdit, setSaving]);
+    }, [onRowSave, editingRowId, editValues, handleCancelEdit, setSaving, notifyError]);
 
 
     useEffect(() => {
@@ -302,19 +303,20 @@ function DataGridInternal<T>({
 
         if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
         focusTimeoutRef.current = setTimeout(() => {
-            const cell = document.querySelector(`[data-row-index="${targetR}"][data-col-index="${targetC}"]`) as HTMLElement;
+            const cell = gridRootRef.current?.querySelector<HTMLElement>(`[data-row-index="${targetR}"][data-col-index="${targetC}"]`);
             if (cell) {
                 const input = cell.querySelector('input, textarea') as HTMLElement;
                 if (input) input.focus();
                 else cell.focus();
             }
         }, 30);
-    }, [processedRows, getColCount, selectionMode, getRowId, handleSelectionChange]);
+    }, [processedRows, getColCount, selectionMode, getRowId, handleSelectionChange, editingRowId, masterForm]);
 
     // â”€â”€ Keyboard Shortcuts (Global) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             const activeEl = document.activeElement as HTMLElement | null;
+            if (!activeEl || !gridRootRef.current?.contains(activeEl)) return;
             const isInputActive = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable);
             const isGridCellFocused = activeEl && activeEl.hasAttribute('data-row-index');
 
@@ -540,7 +542,7 @@ function DataGridInternal<T>({
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [masterForm, editingRowId, selectedIds, processedRows, getRowId, handleSaveEdit, startEdit, handleAddRow, cancelEdit, onDeleteSelected, onDelete, handleSelectAll, setActiveSidebarTab, setIsSidebarOpen, onRefresh, onValidate, onExecute, onPrint, onCloseForm, focusCell, getColCount]);
+    }, [masterForm, editingRowId, selectedIds, processedRows, getRowId, handleSaveEdit, startEdit, handleAddRow, cancelEdit, handleCancelEdit, onDeleteSelected, onDelete, handleSelectAll, allSelected, setActiveSidebarTab, setIsSidebarOpen, onRefresh, onValidate, onExecute, onPrint, onCloseForm, focusCell, getColCount]);
 
     const computedColumns = useMemo(
         () => containerWidth > 0 ? computeFlexWidths(columns, containerWidth) : columns,
@@ -593,7 +595,14 @@ function DataGridInternal<T>({
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
     return (
-        <Paper sx={{
+        <Paper
+          ref={gridRootRef}
+          role="grid"
+          tabIndex={0}
+          aria-rowcount={processedRows.length}
+          aria-colcount={computedColumns.length + (selectionMode === 'multiple' ? 1 : 0)}
+          aria-busy={loading}
+          sx={{
             display: 'flex',
             flexDirection: 'column',
             height: height ?? '100%',
@@ -603,7 +612,8 @@ function DataGridInternal<T>({
             border: `1px solid ${theme.palette.mode === 'light' ? '#d6d6d6' : theme.palette.divider}`,
             boxShadow: 'none',
             bgcolor: 'background.paper'
-        }}>
+          }}
+        >
             {!hideToolbar && (
                 <DataGridToolbar
                     globalSearch={globalSearch}

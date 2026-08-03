@@ -8,6 +8,7 @@ import {
 import type { ColumnDef, FilterModel } from '../types';
 import { GRID_FILTER_OPERATORS } from '../constants';
 import { AppTextField } from '@shared/components/fields/AppTextField';
+import { useTranslation } from 'react-i18next';
 
 interface FilterPopoverProps<T> {
   anchorEl: HTMLElement | null;
@@ -21,6 +22,7 @@ interface FilterPopoverProps<T> {
 export function FilterPopover<T>({
   anchorEl, onClose, column, filters, setFilters, onSort
 }: FilterPopoverProps<T>) {
+  const { t } = useTranslation();
   const [operatorAnchor, setOperatorAnchor] = useState<HTMLElement | null>(null);
   const [tempValue, setTempValue] = useState('');
   
@@ -71,11 +73,11 @@ export function FilterPopover<T>({
         <Box sx={{ mb: 1.5 }}>
           <MenuItem onClick={() => { onSort(column.field as string, 'asc'); onClose(); }} sx={{ p: '4px 8px', borderRadius: 1 }}>
             <ListItemIcon><ArrowUpward fontSize="small" /></ListItemIcon>
-            <ListItemText primary="Sort A to Z" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
+            <ListItemText primary={t('grid.sort_ascending', 'Sort ascending')} slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
           </MenuItem>
           <MenuItem onClick={() => { onSort(column.field as string, 'desc'); onClose(); }} sx={{ p: '4px 8px', borderRadius: 1 }}>
             <ListItemIcon><ArrowDownward fontSize="small" /></ListItemIcon>
-            <ListItemText primary="Sort Z to A" slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
+            <ListItemText primary={t('grid.sort_descending', 'Sort descending')} slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
           </MenuItem>
         </Box>
 
@@ -93,14 +95,14 @@ export function FilterPopover<T>({
             endIcon={<KeyboardArrowDown />}
             sx={{ textTransform: 'none', fontSize: '0.85rem', p: 0, color: 'primary.main', fontWeight: 500 }}
           >
-            {GRID_FILTER_OPERATORS.find((o: { value: string; label: string }) => o.value === localFilter.operator)?.label}
+            {getOperatorLabel(localFilter.operator, t)}
           </Button>
         </Box>
 
         {/* Value input */}
         <AppTextField
           fullWidth
-          placeholder={localFilter.operator === 'in' ? 'Press Enter to add?' : 'Filter value?'}
+          placeholder={localFilter.operator === 'in' ? t('grid.press_enter_to_add', 'Press Enter to add') : t('grid.filter_placeholder')}
           value={localFilter.operator === 'in' ? tempValue : (localFilter.value || '')}
           onChange={(val: any) => {
             if (localFilter.operator === 'in') setTempValue(val);
@@ -143,14 +145,14 @@ export function FilterPopover<T>({
             onClick={handleApply}
             sx={{ bgcolor: '#3b5bdb', '&:hover': { bgcolor: '#2f49b5' }, textTransform: 'none', fontWeight: 600 }}
           >
-            Apply
+            {t('actions.apply')}
           </Button>
           <Button
             fullWidth variant="outlined" size="small"
             onClick={handleClear}
             sx={{ textTransform: 'none', color: '#333', borderColor: '#ccc', fontWeight: 600 }}
           >
-            Clear
+            {t('actions.clear')}
           </Button>
         </Box>
       </Popover>
@@ -163,10 +165,19 @@ export function FilterPopover<T>({
       >
         {GRID_FILTER_OPERATORS.map((op: { value: string; label: string }) => (
           <MenuItem key={op.value} onClick={() => { setLocalFilter(f => ({ ...f, operator: op.value as any })); setOperatorAnchor(null); }}>
-            <ListItemText primary={op.label} slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
+            <ListItemText primary={getOperatorLabel(op.value, t)} slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
           </MenuItem>
         ))}
       </Menu>
     </>
   );
 }
+
+const operatorTranslationKeys: Record<string, string> = {
+  contains: 'grid.operators.contains', equals: 'grid.operators.equals', startsWith: 'grid.operators.starts_with',
+  endsWith: 'grid.operators.ends_with', isEmpty: 'grid.operators.is_empty', isNotEmpty: 'grid.operators.is_not_empty', in: 'grid.operators.is_one_of',
+};
+const getOperatorLabel = (operator: string, t: (key: string, options: { defaultValue: string }) => string) => {
+  const fallback = GRID_FILTER_OPERATORS.find((candidate) => candidate.value === operator)?.label ?? operator;
+  return t(operatorTranslationKeys[operator] ?? operator, { defaultValue: fallback });
+};

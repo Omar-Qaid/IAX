@@ -18,7 +18,7 @@ export function ExchangeRateTypePage(): React.ReactElement {
     { field: 'type', headerName: 'exchangeRateTypes.fields.type', width: 150, pinned: 'left', editable: true },
     { field: 'name', headerName: 'fields.name', width: 240, editable: true },
     { field: 'calendar', headerName: 'exchangeRateTypes.fields.calendar', minWidth: 220, flex: 1, editable: true },
-  ], [currentLanguage.code]);
+  ], []);
   const config: EnterpriseListConfig<ExchangeRateType> = {
     contextLabel: t('pages.exchangeRateTypes.title'), viewLabel: t('common.standardView'),
     filterLabel: t('actions.filter'), informationLabel: t('common.information'), searchMode: 'quick',

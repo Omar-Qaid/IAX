@@ -159,7 +159,7 @@ function LookupGridFieldWrapper<T extends Record<string, any>, TFieldValues exte
         <LookupGridFieldInner<T>
           {...rest}
           value={field.value}
-          onChange={(val, row) => field.onChange(val)}
+          onChange={(val, _row) => field.onChange(val)}
           errorMessage={fieldState.error?.message || errorMessage}
         />
       )}

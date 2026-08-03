@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Link } from '@mui/material';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
 import type { DetailSectionConfig, DetailValues, EnterpriseListDetailsConfig } from '@patterns/list-details/types';
@@ -11,7 +11,7 @@ const INITIAL_RECORDS: PaymentMode[] = ['Cash', 'Check', 'SPAN', 'Transfer'].map
 export function CustPaymMode(): React.ReactElement {
   const { t } = useAppTranslation();
   const [records, setRecords] = useState(INITIAL_RECORDS);
-  const option = (value: string, key: string) => ({ value, label: t(`paymentMethods.options.${key}`) });
+  const option = useCallback((value: string, key: string) => ({ value, label: t(`paymentMethods.options.${key}`) }), [t]);
   const sections = useMemo<DetailSectionConfig[]>(() => [
     { id: 'general', title: t('paymentMethods.sections.general'), groups: [
       { id: 'file', title: t('paymentMethods.groups.file'), columns: 2, fields: [
@@ -31,7 +31,7 @@ export function CustPaymMode(): React.ReactElement {
       { id: 'configuration', fields: [{ name: 'exportConfig', label: t('paymentMethods.fields.exportConfig'), disabled: true }, { name: 'importConfig', label: t('paymentMethods.fields.importConfig'), disabled: true }] },
       { id: 'formatNames', fields: ['exportFormat', 'importFormat', 'returnFormat', 'remittanceFormat'].map((name) => ({ name, label: t(`paymentMethods.fields.${name}`) })) },
     ] },
-  ], [t]);
+  ], [option, t]);
   const config: EnterpriseListDetailsConfig<PaymentMode> = {
     dataSource: { type: 'controlled', records, onRecordsChange: setRecords },
     createRecord: () => ({ id: `payment-${Date.now()}`, method: t('paymentMethods.newMethod'), period: 'Invoice', description: '', values: { ...defaults } }),

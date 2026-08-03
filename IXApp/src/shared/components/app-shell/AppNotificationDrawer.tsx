@@ -10,7 +10,6 @@ import {
     Button,
     Divider,
     Tooltip,
-    CircularProgress,
 } from '@mui/material';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import SettingsIcon from '@mui/icons-material/Settings';

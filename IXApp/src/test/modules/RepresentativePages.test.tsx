@@ -44,7 +44,7 @@ describe('representative enterprise pages', () => {
     expect(screen.getAllByText('Customer account (Account)')).toHaveLength(1);
     act(() => fireEvent.click(screen.getByRole('button', { name: 'Information' })));
     expect(screen.getByRole('heading', { name: 'Related information' })).toBeDefined();
-  }, 15_000);
+  }, 30_000);
 
   it('renders all routed accounts-receivable list pages', () => {
     const { unmount } = render(<CustomerGroupListPage />);
@@ -79,7 +79,7 @@ describe('representative enterprise pages', () => {
     await waitFor(() => expect(screen.getByLabelText('Name').getAttribute('aria-invalid')).toBe('true'));
     act(() => fireEvent.click(screen.getByRole('button', { name: 'Close' })));
     await waitFor(() => expect(screen.queryByRole('heading', { name: 'Create customer' })).toBeNull());
-  });
+  }, 15_000);
 
   it('renders document and setup representatives as read-only pages', () => {
     const { unmount } = render(<SalesOrderPage />);

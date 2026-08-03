@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { DetailValue, EnterpriseListDetailsConfig, ListDetailRecord } from './types';
 import { createEnterpriseFilterCondition, matchesEnterpriseFilter, type EnterpriseFilterCondition } from '@shared/components/data-grid/EnterpriseFilterPanel';
+import { useUnsavedChanges } from '@shared/hooks/useUnsavedChanges';
 
 export function useListDetailsPage<T extends ListDetailRecord>(config: EnterpriseListDetailsConfig<T>) {
   const source = config.dataSource;
   const remoteLoader = source.type === 'remote' ? source.load : null;
+  const remoteSourceKey = source.type === 'remote' ? source.key : '';
   const loaderRef = useRef(remoteLoader);
   const [localRecords, setLocalRecords] = useState<T[]>(source.type === 'remote' ? (source.initialRecords ?? []) : source.records);
   const [loading, setLoading] = useState(source.type === 'remote' || (source.type === 'controlled' && Boolean(source.loading)));
@@ -20,6 +22,7 @@ export function useListDetailsPage<T extends ListDetailRecord>(config: Enterpris
   const [draftAdvancedFilters, setDraftAdvancedFilters] = useState<EnterpriseFilterCondition[]>([createEnterpriseFilterCondition(defaultAdvancedField)]);
   const [advancedFilters, setAdvancedFilters] = useState<EnterpriseFilterCondition[]>([]);
   const [editing, setEditing] = useState(false);
+  useUnsavedChanges(editing);
   const [isNew, setIsNew] = useState(false);
   const [saving, setSaving] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
@@ -35,7 +38,7 @@ export function useListDetailsPage<T extends ListDetailRecord>(config: Enterpris
       setLocalRecords(loaded); setSelectedId((current) => loaded.some((record) => record.id === current) ? current : (loaded[0]?.id ?? null)); setDraft((current) => loaded.find((record) => record.id === current?.id) ?? loaded[0] ?? null);
     }).catch((reason: unknown) => { if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : String(reason)); }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
-  }, [reloadVersion, source.type, source.type === 'remote' ? source.key : '']);
+  }, [reloadVersion, source.type, remoteSourceKey]);
   useEffect(() => { if (source.type === 'controlled') { setLoading(Boolean(source.loading)); setError(source.error ?? null); } }, [source]);
 
   const visibleRecords = useMemo(() => {

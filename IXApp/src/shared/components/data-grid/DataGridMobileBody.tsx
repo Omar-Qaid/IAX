@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback, memo } from 'react';
 import {
-    Box, Typography, CircularProgress, useTheme, Card, IconButton, Divider, Chip, Checkbox
+    Box, Typography, CircularProgress, useTheme, Card, IconButton, Divider, Checkbox
 } from '@mui/material';
 import {
     Inbox as InboxIcon,
@@ -57,6 +57,8 @@ export function DataGridMobileBodyInternal<T>({
     }, [selectionMode, onSelectionChange, selectedSet]);
 
     // Use a dynamic virtualizer for cards which vary in height
+    // TanStack Virtual returns mutable functions by design; React Compiler safely skips this component.
+    // eslint-disable-next-line react-hooks/incompatible-library
     const rowVirtualizer = useVirtualizer({
         count: rows.length,
         getScrollElement: () => scrollContainerRef.current,
@@ -89,7 +91,7 @@ export function DataGridMobileBodyInternal<T>({
                 {val != null ? String(val) : '-'}
             </Typography>
         );
-    }, [t]);
+    }, []);
 
     if (loading && rows.length === 0) {
         return (
@@ -165,6 +167,7 @@ export function DataGridMobileBodyInternal<T>({
                                 {selectionMode !== 'none' && (
                                     <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 2 }}>
                                         <Checkbox 
+                                            aria-label={t('grid.select_row', { id: rowId, defaultValue: `Select row ${rowId}` })}
                                             checked={isSelected}
                                             onClick={(e) => onToggleRow(rowId, e)}
                                             size="small"
@@ -222,17 +225,17 @@ export function DataGridMobileBodyInternal<T>({
                                         <Divider sx={{ mx: -2, mb: 1 }} />
                                         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
                                             {onViewHistory && (
-                                                <IconButton size="small" onClick={(e) => { e.stopPropagation(); onViewHistory(row); }} sx={{ color: 'text.secondary', border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+                                                <IconButton aria-label={t('common.view_history')} size="small" onClick={(e) => { e.stopPropagation(); onViewHistory(row); }} sx={{ color: 'text.secondary', border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
                                                     <HistoryIcon sx={{ fontSize: 18 }} />
                                                 </IconButton>
                                             )}
                                             {onEdit && (
-                                                <IconButton size="small" onClick={(e) => { e.stopPropagation(); onEdit(row); }} sx={{ color: 'primary.main', border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
+                                                <IconButton aria-label={t('common.edit')} size="small" onClick={(e) => { e.stopPropagation(); onEdit(row); }} sx={{ color: 'primary.main', border: '1px solid', borderColor: 'divider', borderRadius: 2 }}>
                                                     <EditIcon sx={{ fontSize: 18 }} />
                                                 </IconButton>
                                             )}
                                             {onDelete && (
-                                                <IconButton size="small" onClick={(e) => { e.stopPropagation(); onDelete(row); }} sx={{ color: 'error.main', border: '1px solid', borderColor: 'error.light', borderRadius: 2 }}>
+                                                <IconButton aria-label={t('common.delete')} size="small" onClick={(e) => { e.stopPropagation(); onDelete(row); }} sx={{ color: 'error.main', border: '1px solid', borderColor: 'error.light', borderRadius: 2 }}>
                                                     <DeleteIcon sx={{ fontSize: 18 }} />
                                                 </IconButton>
                                             )}

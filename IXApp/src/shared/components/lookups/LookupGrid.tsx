@@ -10,7 +10,6 @@ import {
   CircularProgress,
   Typography,
   Divider,
-  Stack,
   Button,
 } from '@mui/material';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
@@ -39,7 +38,7 @@ export function LookupGrid<T extends Record<string, any>>({
   placeholder,
   error,
   disabled,
-  required,
+  required: _required,
   fullWidth = true,
   size = 'small',
   pageSize = DEFAULT_PAGE_SIZE,
@@ -80,6 +79,8 @@ export function LookupGrid<T extends Record<string, any>>({
 
   const rowCount = rows.length + (hasNextPage ? 1 : 0);
 
+  // TanStack Virtual returns mutable functions by design; React Compiler safely skips this component.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const virtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => scrollRef.current,
@@ -94,17 +95,19 @@ export function LookupGrid<T extends Record<string, any>>({
     if (last.index >= rows.length - 1 && hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
+  // Virtual items are maintained by the virtualizer outside React state.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [virtualizer.getVirtualItems(), rows.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   useEffect(() => {
     setActiveIndex(rows.length ? 0 : -1);
-  }, [debouncedSearch, rows.length === 0]);
+  }, [debouncedSearch, rows.length]);
 
   useEffect(() => {
     if (open && rows.length === 0 && !isFetching && !isLoading) {
       refetch();
     }
-  }, [open]);
+  }, [open, rows.length, isFetching, isLoading, refetch]);
 
   useLayoutEffect(() => {
     if (!open) return;

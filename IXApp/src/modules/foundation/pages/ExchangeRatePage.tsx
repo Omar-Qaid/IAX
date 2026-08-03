@@ -51,7 +51,7 @@ export function ExchangeRatePage(): React.ReactElement {
     { field: 'fromCurrency', headerName: 'exchangeRates.fields.fromCurrency', width: 122, pinned: 'left' },
     { field: 'toCurrency', headerName: 'exchangeRates.fields.toCurrency', width: 94 },
     { field: 'conversionFactor', headerName: 'exchangeRates.fields.conversionFactor', minWidth: 132, flex: 1 },
-  ], [currentLanguage.code]);
+  ], []);
 
   const lineColumns = useMemo<ColumnDef<ExchangeRateLine>[]>(() => [
     { field: 'startDate', headerName: 'exchangeRates.fields.startDate', width: 185, renderCell: ({ value }) => formatDate(String(value), currentLanguage.code) },

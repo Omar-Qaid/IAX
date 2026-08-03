@@ -20,6 +20,8 @@ import { ErrorState } from '@shared/components/feedback/ErrorState';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import type { SimpleListDataSource } from './types';
 import { useSimpleListDataSource } from './useSimpleListDataSource';
+import { ConfirmationDialog } from '@shared/components/dialogs/ConfirmationDialog';
+import { useUnsavedChanges } from '@shared/hooks/useUnsavedChanges';
 
 export type SimpleListGridProps<T> = Omit<DataGridProps<T>, 'rows' | 'columns'>;
 
@@ -143,6 +145,8 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
   const [draftAdvancedFilters, setDraftAdvancedFilters] = useState<EnterpriseFilterCondition[]>([createEnterpriseFilterCondition(defaultAdvancedField)]);
   const [advancedFilters, setAdvancedFilters] = useState<EnterpriseFilterCondition[]>([]);
   const [isEditing, setIsEditing] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<T[]>([]);
+  useUnsavedChanges(isEditing, t('messages.unsavedChanges', 'You have unsaved changes.'));
 
   const processedRows = useMemo(() => {
     if (!enterpriseConfig) return rows;
@@ -222,11 +226,11 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
         editLabel={config.crud.editLabel}
         newLabel={config.crud.newLabel}
         deleteLabel={config.crud.deleteLabel}
-        canEdit={selectedIds.length === 1}
-        canDelete={selectedIds.length > 0}
+        canEdit={selectedIds.length === 1 && Boolean(config.crud.onEdit || dataGridProps.masterForm)}
+        canDelete={selectedIds.length > 0 && Boolean(config.crud.onDelete)}
         onEdit={selectedRow ? () => config.crud.onEdit ? config.crud.onEdit(selectedRow) : gridRef.current?.startEditRow(getRowId(selectedRow)) : undefined}
-        onNew={() => config.crud.onNew ? config.crud.onNew() : gridRef.current?.startAddRow()}
-        onDelete={() => config.crud.onDelete?.(rows.filter((row) => selectedIds.includes(getRowId(row))))}
+        onNew={config.crud.onNew ? config.crud.onNew : dataGridProps.masterForm ? () => gridRef.current?.startAddRow() : undefined}
+        onDelete={() => setPendingDelete(rows.filter((row) => selectedIds.includes(getRowId(row))))}
         editPermission={config.crud.editPermission}
         newPermission={config.crud.newPermission}
         deletePermission={config.crud.deletePermission}
@@ -272,6 +276,16 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
         </Box>
         {generatedUtilityRail ?? props.utilityRail}
         {dialogs}
+        <ConfirmationDialog
+          open={pendingDelete.length > 0}
+          onClose={() => setPendingDelete([])}
+          onConfirm={() => { config?.crud.onDelete?.(pendingDelete); setPendingDelete([]); }}
+          severity="error"
+          title={t('dialogs.confirmDeleteTitle', 'Confirm deletion')}
+          message={t('dialogs.confirmDeleteMessage', { count: pendingDelete.length, defaultValue: `Delete ${pendingDelete.length} selected record(s)?` })}
+          confirmLabel={t('actions.delete')}
+          cancelLabel={t('actions.cancel')}
+        />
       </PageContainer>
     );
   }

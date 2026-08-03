@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Accordion, AccordionDetails, AccordionSummary, Box, MenuItem, Switch, TextField, Typography } from '@mui/material';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Accordion, AccordionDetails, AccordionSummary, Box, Drawer, MenuItem, Switch, TextField, Typography, useMediaQuery, useTheme } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import type { DetailSectionConfig, DetailValue, DetailValues } from './types';
 
@@ -17,24 +17,27 @@ export interface ListDetailsLayoutProps {
   listMaxWidth?: number;
   listResizable?: boolean;
   listPaneVisible?: boolean;
+  onListPaneClose?: () => void;
   listWidthStorageKey?: string;
 }
 
-export function ListDetailsLayout({ listPane, header, sections, values, editing, yesLabel, noLabel, onChange, listWidth = 264, listMinWidth = 176, listMaxWidth = 520, listResizable = true, listPaneVisible = true, listWidthStorageKey }: ListDetailsLayoutProps): React.ReactElement {
+export function ListDetailsLayout({ listPane, header, sections, values, editing, yesLabel, noLabel, onChange, listWidth = 264, listMinWidth = 176, listMaxWidth = 520, listResizable = true, listPaneVisible = true, onListPaneClose, listWidthStorageKey }: ListDetailsLayoutProps): React.ReactElement {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const storageKey = listWidthStorageKey ? `ixapp.list-details.width.${listWidthStorageKey}` : null;
-  const constrainWidth = (width: number) => Math.min(listMaxWidth, Math.max(listMinWidth, width));
-  const readStoredWidth = () => {
+  const constrainWidth = useCallback((width: number) => Math.min(listMaxWidth, Math.max(listMinWidth, width)), [listMaxWidth, listMinWidth]);
+  const readStoredWidth = useCallback(() => {
     if (!storageKey) return listWidth;
     try {
       const storedWidth = Number(globalThis.localStorage?.getItem(storageKey));
       return Number.isFinite(storedWidth) && storedWidth > 0 ? constrainWidth(storedWidth) : listWidth;
     } catch { return listWidth; }
-  };
+  }, [constrainWidth, listWidth, storageKey]);
   const [currentListWidth, setCurrentListWidth] = useState(readStoredWidth);
   const [resizing, setResizing] = useState(false);
   const dragState = useRef<{ startX: number; startWidth: number; direction: 'ltr' | 'rtl' } | null>(null);
 
-  useEffect(() => setCurrentListWidth(readStoredWidth()), [listWidth, listMinWidth, listMaxWidth, storageKey]);
+  useEffect(() => setCurrentListWidth(readStoredWidth()), [readStoredWidth]);
   useEffect(() => {
     if (!storageKey) return undefined;
     const timeout = globalThis.setTimeout(() => {
@@ -72,7 +75,8 @@ export function ListDetailsLayout({ listPane, header, sections, values, editing,
   };
 
   return <Box sx={{ minHeight: 0, flex: 1, display: 'flex', gap: 0, overflow: 'hidden' }}>
-    {listPaneVisible && <Box sx={{ width: { xs: '100%', md: currentListWidth }, flexShrink: 0, display: { xs: 'none', md: 'block' }, bgcolor: 'background.paper', border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,.12)', willChange: resizing ? 'width' : 'auto', transition: resizing ? 'none' : 'width 160ms ease-out' }}>{listPane}</Box>}
+    {isMobile && <Drawer anchor={theme.direction === 'rtl' ? 'right' : 'left'} open={listPaneVisible} onClose={onListPaneClose} slotProps={{ paper: { sx: { width: 'min(86vw, 360px)', mt: '40px', height: 'calc(100% - 40px)' } } }}>{listPane}</Drawer>}
+    {listPaneVisible && <Box sx={{ width: currentListWidth, flexShrink: 0, display: { xs: 'none', md: 'block' }, bgcolor: 'background.paper', border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,.12)', willChange: resizing ? 'width' : 'auto', transition: resizing ? 'none' : 'width 160ms ease-out' }}>{listPane}</Box>}
     {listPaneVisible && listResizable && <Box role="separator" aria-label="Resize record list" aria-orientation="vertical" aria-valuemin={listMinWidth} aria-valuemax={listMaxWidth} aria-valuenow={Math.round(currentListWidth)} tabIndex={0} onPointerDown={startResize} onPointerMove={resize} onPointerUp={stopResize} onPointerCancel={stopResize} onDoubleClick={() => setCurrentListWidth(listWidth)} onKeyDown={resizeWithKeyboard} sx={{ width: 4, flexShrink: 0, position: 'relative', zIndex: 1, display: { xs: 'none', md: 'flex' }, alignItems: 'stretch', justifyContent: 'center', cursor: 'col-resize', touchAction: 'none', userSelect: 'none', outline: 'none', '&::before': { content: '""', position: 'absolute', insetBlock: 0, insetInline: -4 }, '&::after': { content: '""', width: resizing ? 2 : 1, bgcolor: resizing ? 'primary.main' : 'transparent', borderRadius: 1, opacity: resizing ? 1 : 0, transition: 'background-color 120ms ease, width 120ms ease, opacity 120ms ease' }, '&:hover::after, &:focus-visible::after': { width: 2, bgcolor: 'primary.main', opacity: 1 } }} />}
     {listPaneVisible && !listResizable && <Box sx={{ width: 16, flexShrink: 0, display: { xs: 'none', md: 'block' } }} />}
     <Box sx={{ minWidth: 0, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>

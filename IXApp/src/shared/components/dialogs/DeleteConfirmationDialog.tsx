@@ -1,6 +1,3 @@
-import React from 'react';
-
-export const DeleteConfirmationDialog: React.FC<any> = (props) => {
-  return <div>DeleteConfirmationDialog</div>;
-};
+export { DeleteConfirmationDialog as default, DeleteConfirmationDialog } from './ConfirmationDialog';
+export type { ConfirmationDialogProps } from './ConfirmationDialog';
 

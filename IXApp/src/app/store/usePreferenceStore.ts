@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { STORAGE_KEYS } from '@core/constants/storageKeys';
 
 export type ThemeMode = 'light' | 'dark';
@@ -36,6 +37,7 @@ const getInitialThemeMode = (): ThemeMode => {
 };
 
 const initialState = {
+  themeMode: getInitialThemeMode(),
   density: 'compact' as AppDensity,
   contrast: false,
   rtl: false,
@@ -47,9 +49,8 @@ const initialState = {
   zoom: 100,
 };
 
-export const usePreferenceStore = create<PreferenceState>((set) => ({
+export const usePreferenceStore = create<PreferenceState>()(persist((set) => ({
   ...initialState,
-  themeMode: getInitialThemeMode(),
   setThemeMode: (mode: ThemeMode) => {
     localStorage.setItem(STORAGE_KEYS.THEME_MODE, mode);
     set({ themeMode: mode });
@@ -70,5 +71,13 @@ export const usePreferenceStore = create<PreferenceState>((set) => ({
   setFontFamily: (fontFamily) => set({ fontFamily }),
   setFontSize: (fontSize) => set({ fontSize }),
   setZoom: (zoom) => set({ zoom }),
-  resetSettings: () => set(initialState),
+  resetSettings: () => {
+    localStorage.setItem(STORAGE_KEYS.THEME_MODE, initialState.themeMode);
+    set(initialState);
+  },
+}), {
+  name: STORAGE_KEYS.PREFERENCES,
+  partialize: ({ themeMode, density, contrast, rtl, navLayout, navColor, colorPreset, fontFamily, fontSize, zoom }) => ({
+    themeMode, density, contrast, rtl, navLayout, navColor, colorPreset, fontFamily, fontSize, zoom,
+  }),
 }));

@@ -1,6 +1,2 @@
-import React from 'react';
-
-export const LookupDialog: React.FC<any> = (props) => {
-  return <div>LookupDialog</div>;
-};
+export { LookupDialog as default, LookupDialog } from '@shared/components/lookups/LookupDialog';
 

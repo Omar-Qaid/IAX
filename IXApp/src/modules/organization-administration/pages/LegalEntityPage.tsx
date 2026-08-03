@@ -64,10 +64,10 @@ export function LegalEntityPage(): React.ReactElement {
   }, [editingContact]);
   const addressColumns = useMemo<ColumnDef<AddressRow>[]>(() => [
     { field: 'description', headerName: 'legalEntities.addresses.description', width: 210 }, { field: 'address', headerName: 'legalEntities.addresses.address', width: 280 }, { field: 'purpose', headerName: 'legalEntities.addresses.purpose', width: 170 }, { field: 'primary', headerName: 'legalEntities.addresses.primary', minWidth: 100, flex: 1 },
-  ], [currentLanguage.code]);
+  ], []);
   const contactColumns = useMemo<ColumnDef<ContactRow>[]>(() => [
     { field: 'description', headerName: 'fields.description', width: 165 }, { field: 'type', headerName: 'legalEntities.contacts.type', width: 125 }, { field: 'contact', headerName: 'legalEntities.contacts.contact', width: 220 }, { field: 'extension', headerName: 'fields.extension', width: 100 }, { field: 'primary', headerName: 'legalEntities.addresses.primary', minWidth: 100, flex: 1 },
-  ], [currentLanguage.code]);
+  ], []);
   const sections = useMemo<DetailSectionConfig[]>(() => [
     { id: 'general', title: t('legalEntities.sections.general'), columns: 8, groups: [
       { id: 'memo', fields: [{ name: 'memo', label: t('legalEntities.fields.memo') }] },

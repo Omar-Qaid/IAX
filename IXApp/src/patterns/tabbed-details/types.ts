@@ -1,2 +1,1 @@
-export interface Itypes {}
-
+export type { DetailsTab, TabbedDetailsPageProps } from './TabbedDetailsPage';

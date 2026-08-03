@@ -18,6 +18,7 @@ import {
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useNavigationStore } from '@app/store/useNavigationStore';
+import { usePreferenceStore } from '@app/store/usePreferenceStore';
 import { useAuth } from '@core/auth/useAuth';
 import { usePermissions } from '@core/auth/usePermissions';
 import { MODULE_NAV_CONFIGS } from '@app/configuration/navigation';
@@ -109,7 +110,7 @@ export const AppTopBar: React.FC = memo(() => {
     const setSettingsPanelOpen = useNavigationStore((s) => s.setSettingsPanelOpen);
     const setNotificationDrawerOpen = useNavigationStore((s) => s.setNotificationDrawerOpen);
     const setSidebarOpen = useNavigationStore((s) => s.setSidebarOpen);
-    const navLayout = useNavigationStore((s) => s.navLayout);
+    const navLayout = usePreferenceStore((s) => s.navLayout);
     
     // Auth & Permissions
     const { user, logout } = useAuth();

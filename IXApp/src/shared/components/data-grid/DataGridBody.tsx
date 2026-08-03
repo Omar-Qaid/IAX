@@ -1,14 +1,7 @@
 import React, { useRef, useState, useMemo, useCallback, memo } from 'react';
-import {
-  Box, Typography, CircularProgress, useTheme, Chip, TextField, Select, MenuItem
-} from '@mui/material';
-import {
-  Inbox as InboxIcon,
-  SearchOff as SearchOffIcon,
-} from '@mui/icons-material';
+import { Box, Typography } from '@mui/material';
 import { NEW_ROW_ID } from './hooks';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { useTranslation } from 'react-i18next';
 import type { ColumnDef } from './types';
 
 export interface GridBodyHandle {
@@ -67,7 +60,6 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>({
   masterForm = false, editingRowId, editValues = {}, saving = false,
   onFieldChange, onSaveEdit, onCancelEdit, hideInlineEditActions = false,
 }: GridBodyProps<T>, ref: React.Ref<GridBodyHandle>) {
-  const { t } = useTranslation();
   const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number; row: T | null } | null>(null);
 
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
@@ -261,9 +253,8 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>({
         {val != null ? String(val) : ''}
       </Typography>
     );
-  }, [t, masterForm, editingRowId, editValues, saving, onFieldChange, getRowId, firstEditableField]);
+  }, [masterForm, editingRowId, editValues, saving, onFieldChange, getRowId, firstEditableField]);
 
-  const theme = useTheme();
 
 
   if (loading && displayRows.length === 0) {

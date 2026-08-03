@@ -36,5 +36,9 @@ describe('AppDataGrid', () => {
     expect(screen.getByText('CUST-001')).toBeDefined();
     expect(screen.getByText('Acme Corporation')).toBeDefined();
     expect(screen.getByText('CUST-002')).toBeDefined();
+    const grid = screen.getByRole('grid');
+    expect(grid.getAttribute('aria-rowcount')).toBe('2');
+    expect(grid.getAttribute('aria-colcount')).toBe('2');
+    expect(grid.getAttribute('aria-busy')).toBe('false');
   });
 });

@@ -35,7 +35,7 @@ export const AppDialog: React.FC<AppDialogProps> = ({
         <Typography component="span" variant="h6" sx={{ fontWeight: 700 }}>
           {title}
         </Typography>
-        <IconButton size="small" onClick={onClose}>
+        <IconButton size="small" aria-label="Close" onClick={onClose}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>

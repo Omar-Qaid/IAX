@@ -15,10 +15,16 @@
     "jsx": "react-jsx",
 
     /* Strictness & Quality */
-    "strict": false,
-    "noImplicitAny": false,
+    "strict": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "strictBindCallApply": true,
+    "strictFunctionTypes": true,
     "noUncheckedIndexedAccess": false,
     "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "useUnknownInCatchVariables": true,
     "exactOptionalPropertyTypes": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,

@@ -23,6 +23,7 @@ import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { usePermission } from '@core/permissions/usePermission';
 import { ListDetailsLayout } from './ListDetailsLayout';
 import { useListDetailsPage } from './useListDetailsPage';
+import { ConfirmationDialog } from '@shared/components/dialogs/ConfirmationDialog';
 import type { DetailValue, EnterpriseListDetailsConfig, ListDetailRecord, ListDetailsHeaderField } from './types';
 
 interface LegacyListDetailsProps<T extends ListDetailRecord> {
@@ -42,6 +43,7 @@ export function ListDetailsPage<T extends ListDetailRecord = ListDetailRecord>(p
 function EnterpriseListDetailsPage<T extends ListDetailRecord>({ title, config, dialogs }: Omit<EnterpriseListDetailsProps<T>, 'variant'>): React.ReactElement {
   const { t } = useAppTranslation();
   const [listPaneVisible, setListPaneVisible] = React.useState(true);
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = React.useState(false);
   const state = useListDetailsPage(config);
   const { hasPermission: canView } = usePermission(config.permissions?.view);
   const { hasPermission: canCreate } = usePermission(config.permissions?.create);
@@ -59,11 +61,11 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({ title, config, 
     <ActionPane variant="flat" endActions={<EnterpriseCommandUtilities disabled={state.editing} {...utilities} onRefresh={state.refresh} />}>
       <IconButton size="small" sx={{ color: 'primary.main' }}><ArrowBackIcon sx={{ fontSize: 18 }} /></IconButton>
       <IconButton size="small" aria-label={t('actions.toggleList', 'Toggle record list')} aria-pressed={listPaneVisible} onClick={() => setListPaneVisible((visible) => !visible)} sx={{ bgcolor: listPaneVisible ? 'primary.main' : 'transparent', color: listPaneVisible ? 'primary.contrastText' : 'primary.main', borderRadius: 0.5, transition: 'background-color 140ms ease, color 140ms ease', '&:hover': { bgcolor: listPaneVisible ? 'primary.dark' : 'action.hover' } }}><MenuIcon sx={{ fontSize: 18 }} /></IconButton>
-      <EnterpriseCrudActions editing={state.editing} {...crud} canEdit={Boolean(state.selected) && canEdit && !state.saving} canDelete={Boolean(state.selected) && canDelete && !state.saving} editPermission={config.permissions?.edit} newPermission={config.permissions?.create} deletePermission={config.permissions?.delete} onEdit={state.startEdit} onNew={canCreate ? state.startNew : undefined} onDelete={state.remove} onSave={state.save} onCancel={state.cancel} />
+      <EnterpriseCrudActions editing={state.editing} {...crud} canEdit={Boolean(state.selected) && canEdit && !state.saving} canDelete={Boolean(state.selected) && canDelete && !state.saving} editPermission={config.permissions?.edit} newPermission={config.permissions?.create} deletePermission={config.permissions?.delete} onEdit={state.startEdit} onNew={canCreate ? state.startNew : undefined} onDelete={() => setDeleteConfirmationOpen(true)} onSave={state.save} onCancel={state.cancel} />
       <ActionPaneGroup>{config.commands?.map((command) => <ActionPaneButton key={command.id} label={command.label} disabled={state.editing || command.disabled} onClick={command.onClick} />)}<IconButton disabled={state.editing} size="small" sx={{ color: 'primary.main' }}><SearchIcon sx={{ fontSize: 17 }} /></IconButton></ActionPaneGroup>
     </ActionPane>
     <Box sx={{ display: 'flex', flex: 1, height: '100%', minHeight: 0, gap: 1, overflow: 'hidden', position: 'relative', alignItems: 'stretch' }}>
-    {state.error ? <ErrorState message={state.error} onRetry={state.refresh} /> : state.loading && !state.records.length ? <LoadingState /> : record ? <ListDetailsLayout editing={state.editing} values={config.getValues(record)} yesLabel={labels.yes} noLabel={labels.no} sections={config.sections} onChange={state.changeValue} listWidth={config.presentation?.listWidth} listMinWidth={config.presentation?.listMinWidth} listMaxWidth={config.presentation?.listMaxWidth} listResizable={config.presentation?.listResizable} listPaneVisible={listPaneVisible} listWidthStorageKey={config.presentation?.listWidthStorageKey ?? globalThis.location?.pathname}
+    {state.error ? <ErrorState message={state.error} onRetry={state.refresh} /> : state.loading && !state.records.length ? <LoadingState /> : record ? <ListDetailsLayout editing={state.editing} values={config.getValues(record)} yesLabel={labels.yes} noLabel={labels.no} sections={config.sections} onChange={state.changeValue} listWidth={config.presentation?.listWidth} listMinWidth={config.presentation?.listMinWidth} listMaxWidth={config.presentation?.listMaxWidth} listResizable={config.presentation?.listResizable} listPaneVisible={listPaneVisible} onListPaneClose={() => setListPaneVisible(false)} listWidthStorageKey={config.presentation?.listWidthStorageKey ?? globalThis.location?.pathname}
       listPane={listPane}
       header={<><RecordHeader title={title} viewLabel={labels.view} yesLabel={labels.yes} noLabel={labels.no} record={record} fields={config.headerFields} editing={state.editing} maxWidth={config.presentation?.headerMaxWidth} onChange={state.changeHeader} />{Object.keys(state.validationErrors).length > 0 && <Alert severity="error" sx={{ mb: 1 }}><Typography sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{config.validationTitle ?? t('validation.correctErrors', 'Please correct the validation errors.')}</Typography>{Object.entries(state.validationErrors).map(([field, message]) => <Typography key={field} sx={{ fontSize: '0.6875rem' }}>{message}</Typography>)}</Alert>}</>}
     /> : <EmptyState title="No records" />}
@@ -72,6 +74,7 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({ title, config, 
     </Box>
     <RightUtilityRail filterLabel={labels.filter} informationLabel={labels.information} filterActive={config.advancedFilter ? state.filterPanelOpen : state.filterVisible} informationActive={state.informationPanelOpen} onFilter={state.toggleFilter} onInformation={state.toggleInformation} showInformation={Boolean(config.relatedInformation) || Boolean(config.showInformation)} disabled={state.editing} />
     {dialogs}
+    <ConfirmationDialog open={deleteConfirmationOpen} onClose={() => setDeleteConfirmationOpen(false)} onConfirm={() => { setDeleteConfirmationOpen(false); void state.remove(); }} severity="error" title={t('dialogs.confirmDeleteTitle', 'Confirm deletion')} message={t('dialogs.confirmDeleteOne', 'Delete the selected record?')} confirmLabel={t('actions.delete')} cancelLabel={t('actions.cancel')} loading={state.saving} />
   </PageContainer>;
 }
 

@@ -8,6 +8,7 @@ interface UseDocumentPageOptions<T> {
 }
 
 export function useDocumentPage<T>(documentId: string | undefined, options: UseDocumentPageOptions<T>) {
+  const { loadData } = options;
   const [document, setDocument] = useState<T | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isDirty, setIsDirty] = useState<boolean>(false);
@@ -22,7 +23,7 @@ export function useDocumentPage<T>(documentId: string | undefined, options: UseD
     }
     try {
       setLoading(true);
-      const data = await options.loadData(documentId);
+      const data = await loadData(documentId);
       setDocument(data);
       setIsDirty(false);
     } catch {
@@ -30,7 +31,7 @@ export function useDocumentPage<T>(documentId: string | undefined, options: UseD
     } finally {
       setLoading(false);
     }
-  }, [documentId, options.loadData, notifyError]);
+  }, [documentId, loadData, notifyError]);
 
   const executeProcessAction = async (
     action: (id: string) => Promise<T>,

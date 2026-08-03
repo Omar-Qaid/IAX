@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { STORAGE_KEYS } from '@core/constants/storageKeys';
 
 export interface FavoritePage {
   path: string;
@@ -15,8 +16,6 @@ export interface RecentPage {
 interface NavigationState {
   sidebarOpen: boolean;
   sidebarPinned: boolean;
-  navLayout: 'default' | 'mini' | 'horizontal';
-  navColor: 'default' | 'apparent';
   commandPaletteOpen: boolean;
   settingsPanelOpen: boolean;
   notificationDrawerOpen: boolean;
@@ -26,8 +25,6 @@ interface NavigationState {
 
   setSidebarOpen: (open: boolean) => void;
   toggleSidebarPinned: () => void;
-  setNavLayout: (layout: 'default' | 'mini' | 'horizontal') => void;
-  setNavColor: (color: 'default' | 'apparent') => void;
   setCommandPaletteOpen: (open: boolean) => void;
   setSettingsPanelOpen: (open: boolean) => void;
   setNotificationDrawerOpen: (open: boolean) => void;
@@ -41,8 +38,6 @@ export const useNavigationStore = create<NavigationState>()(
     (set) => ({
       sidebarOpen: true,
       sidebarPinned: true,
-      navLayout: 'default',
-      navColor: 'default',
       commandPaletteOpen: false,
       settingsPanelOpen: false,
       notificationDrawerOpen: false,
@@ -52,8 +47,6 @@ export const useNavigationStore = create<NavigationState>()(
 
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
       toggleSidebarPinned: () => set((state) => ({ sidebarPinned: !state.sidebarPinned })),
-      setNavLayout: (layout) => set({ navLayout: layout }),
-      setNavColor: (color) => set({ navColor: color }),
       setCommandPaletteOpen: (open) => set({ commandPaletteOpen: open }),
       setSettingsPanelOpen: (open) => set({ settingsPanelOpen: open }),
       setNotificationDrawerOpen: (open) => set({ notificationDrawerOpen: open }),
@@ -76,11 +69,9 @@ export const useNavigationStore = create<NavigationState>()(
       setActiveModule: (moduleId) => set({ activeModuleId: moduleId }),
     }),
     {
-      name: 'ixapp-navigation-storage',
+      name: STORAGE_KEYS.NAVIGATION,
       partialize: (state) => ({
         sidebarPinned: state.sidebarPinned,
-        navLayout: state.navLayout,
-        navColor: state.navColor,
         favorites: state.favorites,
         recentPages: state.recentPages,
       }),

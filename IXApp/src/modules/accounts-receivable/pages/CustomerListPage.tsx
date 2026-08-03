@@ -24,7 +24,7 @@ export function CustomerListPage(): React.ReactElement {
     { field: 'termsOfPayment', headerName: 'fields.termsOfPayment', width: 145, sortable: false, filterable: false, valueGetter: () => '—' },
     { field: 'email', headerName: 'fields.email', width: 230 },
     { field: 'status', headerName: 'common.status', width: 110, renderCell: ({ row }) => <StatusBadge status={row.status} /> },
-  ], [currentLanguage.code]);
+  ], []);
 
   const commandIds = ['customer', 'sell', 'invoice', 'collect', 'service', 'market', 'commerce', 'general', 'creditManagement', 'options'] as const;
   const config: EnterpriseListConfig<Customer> = {

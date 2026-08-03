@@ -1,2 +1,1 @@
-export const useDocumentPage = () => {};
-
+export { useDocumentPage } from '@shared/hooks/useDocumentPage';

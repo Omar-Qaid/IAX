@@ -8,9 +8,5 @@ export const AVAILABLE_COMPANIES = [
   { code: 'DAT', name: 'Default Data Entity' },
 ];
 
-export const STORAGE_KEYS = {
-  AUTH_TOKEN: 'ixapp_auth_token',
-  USER_PREFERENCES: 'ixapp_user_prefs',
-  CURRENT_COMPANY: 'ixapp_current_company',
-  LANGUAGE: 'ixapp_language',
-} as const;
+// Compatibility aliases. New code should import STORAGE_KEYS from storageKeys.ts.
+export { STORAGE_KEYS } from './storageKeys';

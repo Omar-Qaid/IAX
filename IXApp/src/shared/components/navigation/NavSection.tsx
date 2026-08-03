@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography, Collapse, useTheme } from '@mui/material';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
-import { useNavigationStore } from '@app/store/useNavigationStore';
+import { usePreferenceStore } from '@app/store/usePreferenceStore';
 
 export interface NavSectionProps {
     label: string;
@@ -16,7 +16,7 @@ export const NavSection = React.memo<NavSectionProps>(({
     label, icon, collapsed = false, expanded = true, onToggle, children
 }) => {
     const theme = useTheme();
-    const navColor = useNavigationStore((s) => s.navColor);
+    const navColor = usePreferenceStore((s) => s.navColor);
     const isApparent = navColor === 'apparent';
     const isDark = theme.palette.mode === 'dark';
 

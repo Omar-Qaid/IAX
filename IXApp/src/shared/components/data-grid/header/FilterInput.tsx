@@ -74,7 +74,7 @@ export function FilterInput<T>({ column, filters, onFilterChange, onFilterIconCl
       slotProps={{
         input: {
           endAdornment: onFilterIconClick ? (
-            <IconButton size="small" sx={{ p: 0 }} onClick={(e) => onFilterIconClick(e, column)}>
+            <IconButton aria-label={t('grid.open_column_filter', { column: column.headerName, defaultValue: `Filter ${column.headerName}` })} size="small" sx={{ p: 0 }} onClick={(e) => onFilterIconClick(e, column)}>
               <FilterIcon sx={{ fontSize: 13, color: currentFilter ? 'primary.main' : 'text.disabled' }} />
             </IconButton>
           ) : (

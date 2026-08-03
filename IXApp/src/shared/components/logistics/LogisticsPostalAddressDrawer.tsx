@@ -83,7 +83,7 @@ export function LogisticsPostalAddressDrawer({
       });
       setErrors({});
     }
-  }, [open, initialData]);
+  }, [open, initialData, defaultValidFrom]);
 
   const { data: countries = [] } = useCountryRegions();
   const { data: states = [] } = useStates(formData.countryRegionId);

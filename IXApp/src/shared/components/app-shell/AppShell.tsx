@@ -7,13 +7,14 @@ import { AppNotificationDrawer } from './AppNotificationDrawer';
 import { AppSettingsDrawer } from './AppSettingsDrawer';
 import { PageBreadcrumbs } from '@shared/components/page/PageBreadcrumbs';
 import { useNavigationStore } from '@app/store/useNavigationStore';
+import { usePreferenceStore } from '@app/store/usePreferenceStore';
 import { useTheme, useMediaQuery } from '@mui/material';
 import { SIDEBARWIDTH, SIDEBARCOLLAPSEDWIDTH } from './AppSidebar';
 import { LAYOUT } from '@app/configuration/constants';
 
 export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const isDrawerOpen = useNavigationStore((s) => s.sidebarOpen);
-  const navLayout = useNavigationStore((s) => s.navLayout);
+  const navLayout = usePreferenceStore((s) => s.navLayout);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 

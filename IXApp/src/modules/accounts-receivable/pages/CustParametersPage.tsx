@@ -27,10 +27,10 @@ export function CustParametersPage(): React.ReactElement {
     'electronicDocuments', 'inventoryDimensions', 'rebateProgram',
   ].map((id) => ({ id, label: t(`customerParameters.navigation.${id}`) })), [t]);
 
-  const yesNo = [
+  const yesNo = useMemo(() => [
     { value: 'none', label: t('common.none') },
     { value: 'all', label: t('common.all', 'All') },
-  ];
+  ], [t]);
   const sections = useMemo<SetupSectionConfig[]>(() => [
     {
       id: 'general', title: t('customerParameters.sections.customized'), fields: [
@@ -73,7 +73,7 @@ export function CustParametersPage(): React.ReactElement {
         { name: 'deferDirectDelivery', label: t('customerParameters.fields.deferDirectDelivery'), type: 'boolean' },
       ],
     },
-  ], [t]);
+  ], [t, yesNo]);
 
   return <SetupPage title={t('pages.customerParameters.title')} viewLabel={t('pages.customerParameters.standardView')} navigationItems={navigationItems} sections={sections} initialValues={INITIAL_VALUES} saveLabel={t('actions.save')} optionsLabel={t('customerCommands.options')} yesLabel={t('common.yes', 'Yes')} noLabel={t('common.no', 'No')} savedMessage={t('customerParameters.saved')} />;
 }

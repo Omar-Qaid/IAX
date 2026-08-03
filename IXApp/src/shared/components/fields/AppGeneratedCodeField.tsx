@@ -1,6 +1,5 @@
 import React from 'react';
-
-export const AppGeneratedCodeField: React.FC<any> = (props) => {
-  return <div>AppGeneratedCodeField</div>;
-};
+import { AppTextField, type AppTextFieldProps } from './AppTextField';
+export type AppGeneratedCodeFieldProps = AppTextFieldProps;
+export const AppGeneratedCodeField: React.FC<AppGeneratedCodeFieldProps> = (props) => <AppTextField {...props} readOnly />;
 

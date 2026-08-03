@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
-import type { LookupDialogProps, LookupOption } from './types';
+import type { LookupDialogProps } from './types';
 
 export const LookupDialog: React.FC<LookupDialogProps> = ({
   open,

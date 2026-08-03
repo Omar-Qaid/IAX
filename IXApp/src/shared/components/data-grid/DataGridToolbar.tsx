@@ -1,8 +1,8 @@
 import { useState, memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Box, IconButton, Tooltip, TextField, InputAdornment,
-  Typography, Collapse, alpha, Button,
+  Box, IconButton, Tooltip, InputAdornment,
+  Typography, Collapse, Button,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
@@ -39,16 +39,16 @@ export const DataGridToolbar = memo(function DataGridToolbar({
   isEditing = false,
   hideAddRowButton = false,
   searchInputRef,
-  onSaveRow,
-  onCancelEdit,
-  saving = false,
+  onSaveRow: _onSaveRow,
+  onCancelEdit: _onCancelEdit,
+  saving: _saving = false,
 }: GridToolbarProps) {
   const { t } = useTranslation();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   // Client mode: show filtered vs total when a filter is active.
   // Server mode: show loaded vs total-from-server to reflect pagination state.
-  const rowLabel = (() => {
+  const _rowLabel = (() => {
     if (serverSide) {
       return loadedRows < totalRowCount
         ? t('grid.rows_loaded', { loaded: loadedRows.toLocaleString(), total: totalRowCount.toLocaleString() })
@@ -116,7 +116,7 @@ export const DataGridToolbar = memo(function DataGridToolbar({
                 ),
                 endAdornment: globalSearch ? (
                   <InputAdornment position="end">
-                    <IconButton size="small" edge="end" onClick={() => setGlobalSearch('')} sx={{ p: 0.5 }}>
+                    <IconButton aria-label={t('common.clear')} size="small" edge="end" onClick={() => setGlobalSearch('')} sx={{ p: 0.5 }}>
                       <CloseIcon sx={{ fontSize: 16 }} />
                     </IconButton>
                   </InputAdornment>
@@ -165,6 +165,7 @@ export const DataGridToolbar = memo(function DataGridToolbar({
         <Box sx={{ display: { xs: 'flex', sm: 'none' } }}>
           <Tooltip title={mobileSearchOpen ? t('common.close') : t('common.search')}>
             <IconButton
+              aria-label={mobileSearchOpen ? t('common.close') : t('common.search')}
               size="small"
               color={globalSearch ? 'primary' : 'default'}
               onClick={() => {

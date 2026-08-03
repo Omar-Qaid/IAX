@@ -84,7 +84,7 @@ const PageCard: React.FC<{ page: PageItem; onClick: () => void }> = React.memo((
                     lineHeight: 1.3,
                 }}
             >
-                {t(page.label, page.label.split('.').pop())}
+                {t(page.label, page.label.split('.').pop() ?? page.label)}
             </Typography>
         </Paper>
     );

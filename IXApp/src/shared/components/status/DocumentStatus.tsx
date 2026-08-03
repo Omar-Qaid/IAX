@@ -1,6 +1,3 @@
-import React from 'react';
-
-export const DocumentStatus: React.FC<any> = (props) => {
-  return <div>DocumentStatus</div>;
-};
+export { RecordStatus as DocumentStatus } from './RecordStatus';
+export type { RecordStatusProps as DocumentStatusProps } from './RecordStatus';
 

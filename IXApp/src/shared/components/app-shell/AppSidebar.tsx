@@ -9,7 +9,6 @@ import {
     Home as HomeIcon,
     StarBorder as StarIcon,
     AccessTime as RecentIcon,
-    GridView as WorkspacesIcon,
     ViewList as ModulesIcon,
     PushPin as PinIcon,
     Receipt as ReceiptIcon,
@@ -22,6 +21,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useNavigationStore } from '@app/store/useNavigationStore';
+import { usePreferenceStore } from '@app/store/usePreferenceStore';
 import { MODULE_NAV_CONFIGS } from '@app/configuration/navigation';
 
 const SIDEBAR_ICON_MAP: Record<string, any> = {
@@ -132,7 +132,7 @@ const SidebarContent = React.memo(({ collapsed, onToggle, onClose, pinned, onTog
 
     const isFavorite = (path: string) => favorites.some((f) => f.path === path);
 
-    const navColor = useNavigationStore((s) => s.navColor);
+    const navColor = usePreferenceStore((s) => s.navColor);
     const theme = useTheme();
     const isApparent = navColor === 'apparent';
     const isDark = theme.palette.mode === 'dark';
@@ -247,7 +247,7 @@ export const AppSidebar = () => {
     const setSidebarOpen = useNavigationStore((s) => s.setSidebarOpen);
     const toggleSidebarPinned = useNavigationStore((s) => s.toggleSidebarPinned);
     // Must be read before any early return below — hooks cannot run conditionally.
-    const navLayout = useNavigationStore((s) => s.navLayout);
+    const navLayout = usePreferenceStore((s) => s.navLayout);
 
     const [activeModulePanel, setActiveModulePanel] = useState<string | null>(null);
     const navRef = useRef<HTMLElement | null>(null);

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import { FastTabsDialog, type FastTabSection, type FastTabValue } from '@patterns/dialog-fast-tabs/FastTabsDialog';
 import type { Customer } from '@mocks/data/customers';
@@ -9,7 +9,7 @@ const initialValues = (accountNumber: string): Record<string, FastTabValue> => (
 
 export function CustomerQuickCreate({ open, nextAccount, onClose, onSave }: CustomerQuickCreateProps): React.ReactElement {
   const { t } = useAppTranslation();
-  const option = (value: string, key: string) => ({ value, label: t(key) });
+  const option = useCallback((value: string, key: string) => ({ value, label: t(key) }), [t]);
   const sections = useMemo<FastTabSection[]>(() => [{ id: 'details', title: t('customerQuickCreate.sections.details'), summary: <FastTabSummary values={['--', 'SAR', '--', '--', '--', '--']} />, fields: [
     { name: 'accountNumber', label: t('fields.customerAccount'), disabled: true }, { name: 'salesTaxGroup', label: t('fields.salesTaxGroup'), type: 'select', options: [option('vat15', 'customerQuickCreate.options.vat15')] },
     { name: 'type', label: t('customerQuickCreate.fields.type'), type: 'select', options: [option('organization', 'customerQuickCreate.options.organization'), option('person', 'customerQuickCreate.options.person')] }, { name: 'customerCategory', label: t('customerQuickCreate.fields.category'), type: 'select', required: true, options: [option('retail', 'customerQuickCreate.options.retail'), option('wholesale', 'customerQuickCreate.options.wholesale')] },
@@ -20,7 +20,7 @@ export function CustomerQuickCreate({ open, nextAccount, onClose, onSave }: Cust
     { name: 'termsOfPayment', label: t('fields.termsOfPayment'), type: 'select', options: ['07 Days', '30 Days', '90 Days'].map((value) => ({ value, label: value })) }, { name: 'zatcaType', label: t('customerQuickCreate.fields.zatcaType'), type: 'select', options: [option('none', 'common.none')] },
     { name: 'paymentMethod', label: t('customerQuickCreate.fields.paymentMethod'), type: 'select', options: ['Cash', 'Check', 'Transfer'].map((value) => ({ value, label: value })) }, { name: 'sourceCode', label: t('customerQuickCreate.fields.sourceCode'), type: 'select', options: [] },
     { name: 'deliveryTerms', label: t('customerQuickCreate.fields.deliveryTerms'), type: 'select', options: [] }, { name: 'deliveryMode', label: t('customerQuickCreate.fields.deliveryMode'), type: 'select', options: [] },
-  ] }, { id: 'address', title: t('customerQuickCreate.sections.address'), fields: [{ name: 'country', label: t('customerQuickCreate.fields.country'), type: 'select', required: true, options: [option('SA', 'customerQuickCreate.options.saudiArabia')] }, { name: 'street', label: t('customerQuickCreate.fields.street') }] }], [t]);
+  ] }, { id: 'address', title: t('customerQuickCreate.sections.address'), fields: [{ name: 'country', label: t('customerQuickCreate.fields.country'), type: 'select', required: true, options: [option('SA', 'customerQuickCreate.options.saudiArabia')] }, { name: 'street', label: t('customerQuickCreate.fields.street') }] }], [option, t]);
   return <FastTabsDialog
     open={open}
     resetKey={nextAccount}

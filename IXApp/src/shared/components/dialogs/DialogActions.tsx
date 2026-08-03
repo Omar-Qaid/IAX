@@ -1,6 +1,3 @@
-import React from 'react';
-
-export const DialogActions: React.FC<any> = (props) => {
-  return <div>DialogActions</div>;
-};
+export { DialogActions as default, DialogActions } from '@mui/material';
+export type { DialogActionsProps } from '@mui/material';
 

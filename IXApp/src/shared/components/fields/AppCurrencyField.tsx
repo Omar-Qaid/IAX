@@ -1,6 +1,3 @@
-import React from 'react';
-
-export const AppCurrencyField: React.FC<any> = (props) => {
-  return <div>AppCurrencyField</div>;
-};
+export { AppCurrencyField as default, AppCurrencyField } from './AppNumberField';
+export type { AppCurrencyFieldProps } from './AppNumberField';
 

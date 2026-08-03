@@ -1,6 +1,5 @@
 import React from 'react';
-
-export const AppDateTimeField: React.FC<any> = (props) => {
-  return <div>AppDateTimeField</div>;
-};
+import { AppTextField, type AppTextFieldProps } from './AppTextField';
+export interface AppDateTimeFieldProps extends AppTextFieldProps { includeTime?: boolean }
+export const AppDateTimeField: React.FC<AppDateTimeFieldProps> = ({ includeTime = true, ...props }) => <AppTextField {...props} type={includeTime ? 'datetime-local' : 'date'} slotProps={{ inputLabel: { shrink: true }, ...props.slotProps }} />;
 

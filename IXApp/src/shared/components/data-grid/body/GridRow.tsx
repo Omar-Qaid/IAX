@@ -94,7 +94,7 @@ export const GridRow = memo(function GridRowInner<T>({
           offset={0}
           position="left"
           renderCell={() => (
-            <Checkbox size="small" checked={isSelected} onChange={() => onToggleRow(rowId)} onClick={(event) => event.stopPropagation()} sx={{ p: 0, color: 'text.secondary', '&.Mui-checked': { color: 'primary.main' } }} />
+            <Checkbox aria-label={t('grid.select_row', { id: rowId, defaultValue: `Select row ${rowId}` })} size="small" checked={isSelected} onChange={() => onToggleRow(rowId)} onClick={(event) => event.stopPropagation()} sx={{ p: 0, color: 'text.secondary', '&.Mui-checked': { color: 'primary.main' } }} />
           )}
           colIndex={0}
         />
@@ -184,12 +184,12 @@ export const GridRow = memo(function GridRowInner<T>({
           ) : (
             <>
               <Tooltip title={t('common.save')}>
-                <IconButton size="small" color="success" onClick={onSave} sx={{ p: 0.25 }}>
+                <IconButton aria-label={t('common.save')} size="small" color="success" onClick={onSave} sx={{ p: 0.25 }}>
                   <SaveIcon sx={{ fontSize: 16 }} />
                 </IconButton>
               </Tooltip>
               <Tooltip title={t('common.cancel')}>
-                <IconButton size="small" color="error" onClick={onCancel} sx={{ p: 0.25 }}>
+                <IconButton aria-label={t('common.cancel')} size="small" color="error" onClick={onCancel} sx={{ p: 0.25 }}>
                   <CancelIcon sx={{ fontSize: 16 }} />
                 </IconButton>
               </Tooltip>

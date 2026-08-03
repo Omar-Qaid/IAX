@@ -18,7 +18,7 @@ export function CustomerGroupListPage(): React.ReactElement {
     { field: 'defaultWriteOffReason', headerName: 'fields.defaultWriteOffReason', width: 190, sortable: false, filterable: false, valueGetter: () => '—' },
     { field: 'accountingCurrencyExchange', headerName: 'fields.accountingCurrencyExchange', width: 190, sortable: false, filterable: false, valueGetter: () => '—' },
     { field: 'reportingCurrencyExchange', headerName: 'fields.reportingCurrencyExchange', width: 190, sortable: false, filterable: false, valueGetter: () => '—' },
-  ], [currentLanguage.code]);
+  ], []);
 
   const config: EnterpriseListConfig<CustomerGroup> = {
     contextLabel: t('pages.customerGroups.title'),

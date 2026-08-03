@@ -8,7 +8,6 @@ import {
     Slider,
     Tooltip,
     Divider,
-    Button,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -419,8 +418,8 @@ export const AppSettingsDrawer: React.FC = () => {
                             key={f.label}
                             label={f.label}
                             fontFamily={f.value}
-                            selected={fontFamily === f.label}
-                            onClick={() => setFontFamily(f.label)}
+                            selected={fontFamily === f.value}
+                            onClick={() => setFontFamily(f.value)}
                         />
                     ))}
                 </Box>

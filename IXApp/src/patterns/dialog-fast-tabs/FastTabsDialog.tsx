@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Accordion, AccordionDetails, AccordionSummary, Alert, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, IconButton, MenuItem, TextField, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import HelpOutlineIcon from '@mui/icons-material/Help';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { useUnsavedChanges } from '@shared/hooks/useUnsavedChanges';
 
 export type FastTabValue = string | number | boolean;
 export interface FastTabOption { value: string; label: string }
@@ -40,11 +41,16 @@ export interface FastTabsDialogProps<TValues extends Record<string, FastTabValue
 }
 
 export function FastTabsDialog<TValues extends Record<string, FastTabValue>>({ open, title, viewLabel, sections, initialValues, resetKey, validate, onSubmit, saveLabel, saveAndOpenLabel, cancelLabel, closeLabel = 'Close', helpLabel = 'Help', placement = 'center', canSave = true, onCancel }: FastTabsDialogProps<TValues>): React.ReactElement {
+  const initialValuesRef = useRef(initialValues);
+  useEffect(() => { initialValuesRef.current = initialValues; }, [initialValues]);
   const [values, setValues] = useState<TValues>(() => initialValues());
+  const [pristineValues, setPristineValues] = useState<TValues>(() => initialValues());
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState('');
   const [saving, setSaving] = useState(false);
-  useEffect(() => { if (open) { setValues(initialValues()); setErrors({}); setSubmitError(''); setSaving(false); } }, [open, resetKey]);
+  useEffect(() => { if (open) { const next = initialValuesRef.current(); setValues(next); setPristineValues(next); setErrors({}); setSubmitError(''); setSaving(false); } }, [open, resetKey]);
+  const dirty = JSON.stringify(values) !== JSON.stringify(pristineValues);
+  useUnsavedChanges(open && dirty);
   const changeValue = (name: string, value: FastTabValue) => {
     setValues((current) => ({ ...current, [name]: value }));
     setErrors((current) => { const next = { ...current }; delete next[name]; return next; });
@@ -78,7 +84,7 @@ export function FastTabsDialog<TValues extends Record<string, FastTabValue>>({ o
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, columnGap: 5.75, rowGap: 1.05 }}>
             {section.fields.map((field) => <Box key={field.name} sx={{ minWidth: 0 }}>
               <Typography sx={{ mb: 0.2, fontSize: '0.6875rem', color: 'text.secondary' }}>{field.label}{field.required && <Box component="span" sx={{ float: 'right', color: 'error.main', fontSize: '0.9rem' }}>*</Box>}</Typography>
-              <TextField select={field.type === 'select'} multiline={field.type === 'multiline'} rows={field.type === 'multiline' ? (field.rows ?? 4) : undefined} value={values[field.name] ?? ''} disabled={saving || field.disabled} error={Boolean(errors[field.name])} title={errors[field.name]} slotProps={{ input: { 'aria-label': field.label } }} onChange={(event) => changeValue(field.name, event.target.value)} sx={{ width: field.width ?? '100%', '& .MuiInputBase-root': { minHeight: field.type === 'multiline' ? 112 : 29, borderRadius: 0.5, fontSize: '0.75rem' }, '& .MuiInputBase-input': { px: 0.75, py: 0.5 } }}>
+              <TextField select={field.type === 'select'} multiline={field.type === 'multiline'} rows={field.type === 'multiline' ? (field.rows ?? 4) : undefined} value={values[field.name] ?? ''} disabled={saving || field.disabled} error={Boolean(errors[field.name])} helperText={errors[field.name]} slotProps={{ input: { 'aria-label': field.label, 'aria-required': field.required } }} onChange={(event) => changeValue(field.name, event.target.value)} sx={{ width: field.width ?? '100%', '& .MuiInputBase-root': { minHeight: field.type === 'multiline' ? 112 : 29, borderRadius: 0.5, fontSize: '0.75rem' }, '& .MuiInputBase-input': { px: 0.75, py: 0.5 }, '& .MuiFormHelperText-root': { mx: 0, fontSize: '0.65rem' } }}>
                 {(field.options ?? []).map((option) => <MenuItem key={option.value} value={option.value} sx={{ fontSize: '0.78rem' }}>{option.label}</MenuItem>)}
               </TextField>
             </Box>)}
