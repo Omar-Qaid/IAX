@@ -96,7 +96,7 @@ export function GridSidebar<T>({
         <Box sx={{ width: 248, display: 'flex', flexDirection: 'column', borderInlineEnd: (theme) => `1px solid ${theme.palette.divider}`, overflow: 'hidden', bgcolor: 'background.paper' }}>
 
           {/* Panel header with close */}
-          <Box sx={{ display: 'flex', alignItems: 'center', px: 1.5, borderBottom: (theme) => `1px solid ${theme.palette.divider}`, minHeight: 44, bgcolor: (theme) => theme.palette.mode === 'light' ? '#f3f2f1' : 'background.default' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', px: 1.5, borderBottom: (theme) => `1px solid ${theme.palette.divider}`, minHeight: 44, bgcolor: 'action.hover' }}>
             <Typography variant="subtitle2" sx={{ flexGrow: 1, fontWeight: 600, fontSize: '0.8125rem' }}>
               {activeTab === 'columns' ? t('grid.choose_columns') : activeTab === 'filters' ? t('grid.filters') : t('grid.features')}
             </Typography>
@@ -151,7 +151,7 @@ export function GridSidebar<T>({
       ) : null}
 
       {/* Vertical Tab Strip (Right Edge) */}
-      <Box component="nav" aria-label={t('grid.features')} sx={{ width: 38, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'stretch', py: 0.5, gap: 0.25, bgcolor: (theme) => theme.palette.mode === 'light' ? '#f3f2f1' : 'background.default' }}>
+      <Box component="nav" aria-label={t('grid.features')} sx={{ width: 38, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'stretch', py: 0.5, gap: 0.25, bgcolor: 'action.hover' }}>
         <SidebarTab
           active={activeTab === 'columns'}
           onClick={() => handleTabClick('columns')}

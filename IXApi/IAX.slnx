@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="IXApi.csproj" />
+  <Project Path="Tests\IXApi.Tests.csproj" />
+</Solution>

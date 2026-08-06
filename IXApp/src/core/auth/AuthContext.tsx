@@ -1,16 +1,7 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState } from 'react';
 import type { UserProfile } from './types';
-import { STORAGE_KEYS } from '@core/constants/appConstants';
-
-export const DEFAULT_USER_PROFILE: UserProfile = {
-  id: 'usr-admin-1',
-  username: 'admin',
-  email: 'admin@contoso.com',
-  displayName: 'Enterprise Admin',
-  roles: ['SystemAdmin', 'FinanceManager'],
-  permissions: ['*'],
-  defaultCompany: 'USMF',
-};
+import { authService } from './authService';
+import { userHasPermission } from '@core/permissions/permissionService';
 
 export interface AuthContextType {
   isAuthenticated: boolean;
@@ -25,26 +16,14 @@ export interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<UserProfile | null>(DEFAULT_USER_PROFILE);
+  const [user, setUser] = useState<UserProfile | null>(() => authService.getInitialUser());
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, 'mock_jwt_token_123');
-    } else {
-      localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-    }
-  }, [user]);
-
-  const login = async (username: string): Promise<void> => {
+  const login = async (username: string, _password?: string): Promise<void> => {
     setIsLoading(true);
     try {
-      const authenticatedUser: UserProfile = {
-        ...DEFAULT_USER_PROFILE,
-        username,
-        displayName: username || 'Enterprise User',
-      };
-      setUser(authenticatedUser);
+      const response = await authService.login(username);
+      setUser(response.user);
     } finally {
       setIsLoading(false);
     }
@@ -52,12 +31,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = (): void => {
     setUser(null);
+    void authService.logout();
   };
 
   const hasPermission = (permissionCode: string): boolean => {
-    if (!user) return false;
-    if (user.roles.includes('SystemAdmin') || user.permissions.includes('*')) return true;
-    return user.permissions.includes(permissionCode);
+    return userHasPermission(user, permissionCode);
   };
 
   const hasRole = (role: string): boolean => {

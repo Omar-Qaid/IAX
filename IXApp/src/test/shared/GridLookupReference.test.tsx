@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { LookupGrid } from '@shared/components/lookups/LookupGrid';
 import { LookupGridField } from '@shared/components/lookups/LookupGridField';
 import type { GridLookupColumn, LookupPage } from '@shared/components/lookups/types';
+import { AuthProvider } from '@core/auth/AuthProvider';
 
 interface TestItem {
   id: string;
@@ -68,7 +69,7 @@ describe('Grid Lookup Reference Integration', () => {
     fireEvent.click(openBtn);
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText('Search...')).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('Search')).toBeInTheDocument();
     });
   });
 
@@ -76,17 +77,19 @@ describe('Grid Lookup Reference Integration', () => {
     const queryClient = createTestQueryClient();
 
     render(
-      <QueryClientProvider client={queryClient}>
-        <LookupGridField<TestItem>
-          name="customerId"
-          label="Customer"
-          columns={mockColumns}
-          fetchPage={mockFetchPage}
-          queryKey={['form-grid-lookup']}
-          value="1"
-          onChange={() => {}}
-        />
-      </QueryClientProvider>
+      <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <LookupGridField<TestItem>
+            name="customerId"
+            label="Customer"
+            columns={mockColumns}
+            fetchPage={mockFetchPage}
+            queryKey={['form-grid-lookup']}
+            value="1"
+            onChange={() => {}}
+          />
+        </QueryClientProvider>
+      </AuthProvider>
     );
 
     expect(screen.getByLabelText('Customer')).toBeInTheDocument();

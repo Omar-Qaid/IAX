@@ -28,7 +28,7 @@ export function PinnedHeaderCell<T>({
     <Box sx={{
       display: 'flex', flexDirection: 'column',
       boxSizing: 'border-box',
-      bgcolor: theme => theme.palette.mode === 'light' ? '#f3f2f1' : '#1a202c',
+      bgcolor: theme => theme.palette.action.hover,
       width: column.width || 150, minWidth: column.width || 150, maxWidth: column.width || 150,
       overflow: 'hidden',
       position: 'sticky', zIndex: 6, flexShrink: 0, flexGrow: 0,

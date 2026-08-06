@@ -1,0 +1,7 @@
+**/bin/
+**/obj/
+.dotnet/
+TestResults/
+*.user
+*.suo
+appsettings.Local.json

@@ -1,0 +1,35 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "ConnectionStrings": {
+    "DbConnString": "YOUR_DB_CONNECTION_STRING"
+  },
+  "CorsAllowedOrigins": [
+    // leave this empty
+  ],
+  // Leave empty
+  "Uploads": {
+    "FileVirtualDirectory": "",
+    "FileUploadDirectory": "",
+    "MaxImageWidth": 1000,
+    "MaxImageHeight": 1000
+  },
+  "JwtSettings": {
+    "Secret": "YOUR_JWT_SECRET",
+    "Issuer": "YOUR_ISSUER",
+    "Audience": "YOUR_AUDIENCE",
+    // expires in 15 minutes
+    "AccessTokenExpiration": 300,
+    // expires in 24 hours
+    "RefreshTokenExpiration": 86400
+  },
+  "OpenAI": {
+    "ApiKey": "",
+    "Model": "gpt-4.1"
+  }
+}

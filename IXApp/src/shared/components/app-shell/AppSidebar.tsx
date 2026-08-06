@@ -23,8 +23,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useNavigationStore } from '@app/store/useNavigationStore';
 import { usePreferenceStore } from '@app/store/usePreferenceStore';
 import { MODULE_NAV_CONFIGS } from '@app/configuration/navigation';
+import { useAuth } from '@core/auth/useAuth';
+import type { SvgIconComponent } from '@mui/icons-material';
 
-const SIDEBAR_ICON_MAP: Record<string, any> = {
+const SIDEBAR_ICON_MAP: Record<string, SvgIconComponent> = {
     receipt: ReceiptIcon,
     payments: PaymentsIcon,
     ledger: LedgerIcon,
@@ -36,7 +38,6 @@ const SIDEBAR_ICON_MAP: Record<string, any> = {
 };
 
 import ModuleNavPanel from './ModuleNavPanel';
-import { usePermissions } from '@core/auth/usePermissions';
 import { NavItem, NavSection } from '../navigation';
 
 export const SIDEBARWIDTH = 260;
@@ -87,7 +88,8 @@ const SidebarContent = React.memo(({ collapsed, onToggle, onClose, pinned, onTog
     const recentPages = useNavigationStore((s) => s.recentPages);
     const toggleFavorite = useNavigationStore((s) => s.toggleFavorite);
     const addRecentPage = useNavigationStore((s) => s.addRecentPage);
-    const { canView, isAdmin } = usePermissions();
+    const { user, hasPermission } = useAuth();
+    const isAdmin = user?.roles.includes('SystemAdmin') ?? false;
 
     const hasModuleAccess = (moduleId: string): boolean => {
         if (isAdmin) return true;
@@ -95,7 +97,7 @@ const SidebarContent = React.memo(({ collapsed, onToggle, onClose, pinned, onTog
         if (!config) return false;
         return config.sections.some(section =>
             section.links.some(link =>
-                link.permission !== undefined && canView(link.permission.module, link.permission.resource)
+                link.permission !== undefined && hasPermission(link.permission)
             )
         );
     };

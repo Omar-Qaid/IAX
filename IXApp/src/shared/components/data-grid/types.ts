@@ -22,11 +22,11 @@ export interface ColumnDef<T> {
   hidden?: boolean;
   pinned?: 'left' | 'right' | null;
   renderCell?: (params: { row: T; value: unknown; rowIndex: number }) => React.ReactNode;
-  valueGetter?: (params: { row: T }) => any;
+  valueGetter?: (params: { row: T }) => unknown;
   align?: 'left' | 'center' | 'right';
   headerAlign?: 'left' | 'center' | 'right';
   type?: 'text' | 'number' | 'date' | 'boolean' | 'singleSelect';
-  valueOptions?: any[];
+  valueOptions?: readonly (unknown | { value: unknown; label: React.ReactNode })[];
   /** When masterForm=true, cells in this column render as inputs while a row is being edited. */
   editable?: boolean;
 }
@@ -66,7 +66,7 @@ export interface DataGridProps<T> {
   loading?: boolean;
   selectionMode?: SelectionMode;
   checkboxSelection?: boolean;
-  onSelectionChange?: (selection: any[]) => void;
+  onSelectionChange?: (selection: (string | number)[]) => void;
   height?: number | string;
   onRowClick?: (row: T) => void;
   onRowDoubleClick?: (row: T) => void;

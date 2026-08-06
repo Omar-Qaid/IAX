@@ -70,7 +70,7 @@ export function FilterInput<T>({ column, filters, onFilterChange, onFilterIconCl
       fullWidth
       type={inputType}
       value={typeof currentFilter?.value === 'string' ? currentFilter.value : (currentFilter?.value ?? '')}
-      onChange={(val: any) => onFilterChange(field, val)}
+      onChange={(val) => onFilterChange(field, String(val ?? ''))}
       slotProps={{
         input: {
           endAdornment: onFilterIconClick ? (

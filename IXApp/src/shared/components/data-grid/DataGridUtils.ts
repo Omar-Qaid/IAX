@@ -42,7 +42,7 @@ export function generateCSV<T>(rows: T[], columns: ColumnDef<T>[]): string {
     const header = visibleCols.map(c => `"${c.headerName}"`).join(',');
     const csvRows = rows.map(row => {
         return visibleCols.map(col => {
-            const val = col.valueGetter ? col.valueGetter({ row }) : (row as any)[col.field as string];
+            const val = col.valueGetter ? col.valueGetter({ row }) : getNestedValue(row, String(col.field));
             const str = val != null ? String(val) : '';
             return `"${str.replace(/"/g, '""')}"`;
         }).join(',');
@@ -50,8 +50,10 @@ export function generateCSV<T>(rows: T[], columns: ColumnDef<T>[]): string {
     return [header, ...csvRows].join('\n');
 }
 
-export function getNestedValue(obj: any, path: string): any {
+export function getNestedValue(obj: unknown, path: string): unknown {
     if (!obj || !path) return undefined;
-    if (!path.includes('.')) return obj[path];
-    return path.split('.').reduce((o, i) => o?.[i], obj);
+    return path.split('.').reduce<unknown>((value, key) => {
+        if (typeof value !== 'object' || value === null) return undefined;
+        return (value as Record<string, unknown>)[key];
+    }, obj);
 }

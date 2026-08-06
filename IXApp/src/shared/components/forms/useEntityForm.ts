@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
+import { deepEqual } from '@shared/utils/deepEqual';
 
 export type EntityFormErrors<T> = Partial<Record<keyof T, string>>;
 
@@ -12,7 +13,7 @@ export function useEntityForm<T extends object>({ initialValues, validate, onSub
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState<EntityFormErrors<T>>({});
   const [submitting, setSubmitting] = useState(false);
-  const dirty = useMemo(() => JSON.stringify(values) !== JSON.stringify(initialValues), [initialValues, values]);
+  const dirty = useMemo(() => !deepEqual(values, initialValues), [initialValues, values]);
 
   const setFieldValue = useCallback(<K extends keyof T>(field: K, value: T[K]) => {
     setValues(current => ({ ...current, [field]: value }));

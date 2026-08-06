@@ -47,7 +47,7 @@ export function ColumnsPanel<T>({
           fullWidth
           placeholder={t('common.search')}
           value={searchTerm}
-          onChange={(val: any) => setSearchTerm(val)}
+          onChange={(val) => setSearchTerm(String(val ?? ''))}
           slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment>, sx: { fontSize: '0.8rem', height: 30 } } }}
         />
       </Box>

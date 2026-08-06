@@ -20,7 +20,6 @@ import { useTranslation } from 'react-i18next';
 import { useNavigationStore } from '@app/store/useNavigationStore';
 import { usePreferenceStore } from '@app/store/usePreferenceStore';
 import { useAuth } from '@core/auth/useAuth';
-import { usePermissions } from '@core/auth/usePermissions';
 import { MODULE_NAV_CONFIGS } from '@app/configuration/navigation';
 import { LAYOUT } from '@app/configuration/constants';
 
@@ -113,9 +112,9 @@ export const AppTopBar: React.FC = memo(() => {
     const navLayout = usePreferenceStore((s) => s.navLayout);
     
     // Auth & Permissions
-    const { user, logout } = useAuth();
-    const userName = (user as any)?.name || (user as any)?.firstName || user?.email;
-    const { canView, isAdmin } = usePermissions();
+    const { user, logout, hasPermission } = useAuth();
+    const userName = user?.displayName || user?.username || user?.email;
+    const isAdmin = user?.roles.includes('SystemAdmin') ?? false;
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const isMenuOpen = Boolean(anchorEl);
@@ -208,7 +207,7 @@ export const AppTopBar: React.FC = memo(() => {
                                 if (isAdmin) return true;
                                 return config.sections.some(section =>
                                     section.links.some(link =>
-                                        link.permission !== undefined && canView(link.permission.module, link.permission.resource)
+                                        link.permission !== undefined && hasPermission(link.permission)
                                     )
                                 );
                             })();
@@ -401,7 +400,7 @@ export const AppTopBar: React.FC = memo(() => {
                             const visibleLinks = section.links.filter(link => {
                                 if (isAdmin) return true;
                                 if (!link.permission) return false;
-                                return canView(link.permission.module, link.permission.resource);
+                                return hasPermission(link.permission);
                             });
                             
                             if (visibleLinks.length === 0) return null;

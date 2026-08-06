@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from 'react';
-import type { RouteObject } from 'react-router-dom';
+import { useRouteError, type RouteObject } from 'react-router-dom';
 import { AppLayout } from '@app/layouts/AppLayout';
 import { AuthLayout } from '@app/layouts/AuthLayout';
 import { RouteGuard } from './RouteGuard';
@@ -8,21 +8,9 @@ import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { ErrorState } from '@shared/components/feedback/ErrorState';
 import { AccessDeniedState } from '@shared/components/feedback/AccessDeniedState';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import { APP_PAGE_DEFINITIONS, getPageDefinition } from './pageRegistry';
 
 const LoginPage = lazy(() => import('@modules/auth/pages/LoginPage').then((module) => ({ default: module.LoginPage })));
-const DashboardPage = lazy(() => import('@modules/dashboard/pages/DashboardPage').then((module) => ({ default: module.DashboardPage })));
-const CustomerListPage = lazy(() => import('@modules/accounts-receivable/pages/CustomerListPage').then((module) => ({ default: module.CustomerListPage })));
-const CustomerGroupListPage = lazy(() => import('@modules/accounts-receivable/pages/CustomerGroupListPage').then((module) => ({ default: module.CustomerGroupListPage })));
-const CustParametersPage = lazy(() => import('@modules/accounts-receivable/pages/CustParametersPage').then((module) => ({ default: module.CustParametersPage })));
-const CustPaymMode = lazy(() => import('@modules/accounts-receivable/pages/CustPaymModePage').then((module) => ({ default: module.CustPaymMode })));
-const CustPaymTerm = lazy(() => import('@modules/accounts-receivable/pages/CustPaymTermPage').then((module) => ({ default: module.CustPaymTerm })));
-const SalesOrdersPage = lazy(() => import('@modules/accounts-receivable/pages/SalesOrdersPage').then((module) => ({ default: module.SalesOrdersPage })));
-const SalesOrderPage = lazy(() => import('@modules/accounts-receivable/pages/SalesOrderPage').then((module) => ({ default: module.SalesOrderPage })));
-const CurrencyPage = lazy(() => import('@modules/foundation/pages/CurrencyPage').then((module) => ({ default: module.CurrencyPage })));
-const ExchangeRateTypePage = lazy(() => import('@modules/foundation/pages/ExchangeRateTypePage').then((module) => ({ default: module.ExchangeRateTypePage })));
-const ExchangeRatePage = lazy(() => import('@modules/foundation/pages/ExchangeRatePage').then((module) => ({ default: module.ExchangeRatePage })));
-const LegalEntityPage = lazy(() => import('@modules/organization-administration/pages/LegalEntityPage').then((module) => ({ default: module.LegalEntityPage })));
-const ApplicationSettingsPage = lazy(() => import('@modules/system-administration/pages/ApplicationSettingsPage').then((module) => ({ default: module.ApplicationSettingsPage })));
 
 const RouteLoading = () => {
   const { t } = useAppTranslation();
@@ -39,7 +27,20 @@ const AccessDeniedPage = () => {
   return <AccessDeniedState title={t('pages.accessDenied.title')} message={t('pages.accessDenied.message')} />;
 };
 
+const RouteErrorPage = () => {
+  const { t } = useAppTranslation();
+  const routeError = useRouteError();
+  const message = routeError instanceof Error ? routeError.message : t('errors.generic');
+  return <ErrorState title={t('errors.boundaryTitle', 'Application error')} message={message} />;
+};
+
 const load = (element: React.ReactNode) => <Suspense fallback={<RouteLoading />}>{element}</Suspense>;
+const pageRoutes: RouteObject[] = APP_PAGE_DEFINITIONS.map(page => ({
+  path: page.path,
+  element: <RouteGuard permission={page.permission}>{load(React.createElement(page.component))}</RouteGuard>,
+}));
+
+const dashboard = getPageDefinition(ROUTE_PATHS.DASHBOARD);
 
 export const appRoutes: RouteObject[] = [
   {
@@ -49,6 +50,7 @@ export const appRoutes: RouteObject[] = [
         {load(<LoginPage />)}
       </AuthLayout>
     ),
+    errorElement: <RouteErrorPage />,
   },
   {
     path: ROUTE_PATHS.HOME,
@@ -57,63 +59,10 @@ export const appRoutes: RouteObject[] = [
         <AppLayout />
       </RouteGuard>
     ),
+    errorElement: <RouteErrorPage />,
     children: [
-      {
-        index: true,
-        element: load(<DashboardPage />),
-      },
-      {
-        path: ROUTE_PATHS.DASHBOARD,
-        element: load(<DashboardPage />),
-      },
-      {
-        path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMERS,
-        element: load(<CustomerListPage />),
-      },
-      {
-        path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_GROUPS,
-        element: load(<CustomerGroupListPage />),
-      },
-      {
-        path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PARAMETERS,
-        element: load(<CustParametersPage />),
-      },
-      {
-        path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_METHODS,
-        element: load(<CustPaymMode />),
-      },
-      {
-        path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_TERMS,
-        element: load(<CustPaymTerm />),
-      },
-      {
-        path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDERS,
-        element: load(<SalesOrdersPage />),
-      },
-      {
-        path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDER_DETAILS,
-        element: load(<SalesOrderPage />),
-      },
-      {
-        path: ROUTE_PATHS.FOUNDATION.CURRENCIES,
-        element: load(<CurrencyPage />),
-      },
-      {
-        path: ROUTE_PATHS.FOUNDATION.EXCHANGE_RATE_TYPES,
-        element: load(<ExchangeRateTypePage />),
-      },
-      {
-        path: ROUTE_PATHS.FOUNDATION.EXCHANGE_RATES,
-        element: load(<ExchangeRatePage />),
-      },
-      {
-        path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.LEGAL_ENTITIES,
-        element: load(<LegalEntityPage />),
-      },
-      {
-        path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.SETTINGS,
-        element: load(<ApplicationSettingsPage />),
-      },
+      ...(dashboard ? [{ index: true, element: <RouteGuard permission={dashboard.permission}>{load(React.createElement(dashboard.component))}</RouteGuard> }] : []),
+      ...pageRoutes,
       { path: ROUTE_PATHS.ACCESS_DENIED, element: <AccessDeniedPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],

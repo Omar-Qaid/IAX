@@ -1,4 +1,5 @@
 {
+  "accessibility": { "skipToContent": "الانتقال إلى المحتوى الرئيسي" },
   "app": { "name": "IXApp", "tagline": "نظام تخطيط موارد المؤسسة" },
   "nav": {
     "app_title": "نظام IXApp المؤسسي", "app_title_short": "IXApp", "home": "الرئيسية", "dashboard": "لوحة المعلومات",

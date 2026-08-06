@@ -1,0 +1,15 @@
+using IAX.IXApi.Shared.Application.Attributes;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Identity;
+using IAX.IXApi.Infrastructure.Persistence.Services;
+
+namespace IAX.IXApi.Modules.Workflow.Activities
+{
+    [ScopedService]
+    public class WfActivityMappingVariableService : BaseService<WfActivityMappingVariable>, IWfActivityMappingVariableService
+    {
+        public WfActivityMappingVariableService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)
+        {
+        }
+    }
+}

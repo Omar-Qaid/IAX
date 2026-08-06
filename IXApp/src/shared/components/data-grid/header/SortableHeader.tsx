@@ -46,7 +46,7 @@ export function SortableHeader<T>({
         display: 'flex',
         flexDirection: 'column',
         boxSizing: 'border-box',
-        backgroundColor: theme.palette.mode === 'light' ? '#f3f2f1' : '#1a202c',
+        backgroundColor: theme.palette.action.hover,
         borderRight: showColumnBorders ? `1px solid ${theme.palette.divider}` : 'none',
         width: column.width || 150,
         minWidth: column.width || 150,

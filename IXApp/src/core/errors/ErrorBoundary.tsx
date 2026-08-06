@@ -2,6 +2,7 @@ import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Box, Typography, Button, Paper } from '@mui/material';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import i18n from '@core/localization/i18n';
+import { errorReporter } from './errorReporter';
 
 interface Props {
   children: ReactNode;
@@ -24,7 +25,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public override componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    console.error('Uncaught error in ErrorBoundary:', error, errorInfo);
+    errorReporter.report(error, { source: 'ErrorBoundary', componentStack: errorInfo.componentStack });
   }
 
   private handleReset = (): void => {

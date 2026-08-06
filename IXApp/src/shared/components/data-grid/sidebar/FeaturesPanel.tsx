@@ -38,7 +38,7 @@ interface FeaturesPanelProps<T> {
   setShowColumnBorders: (show: boolean) => void;
   showCellBorders: boolean;
   setShowCellBorders: (show: boolean) => void;
-  setActiveTab: (tab: any) => void;
+  setActiveTab: (tab: 'columns' | 'filters' | 'features') => void;
 }
 
 export function FeaturesPanel<T>({

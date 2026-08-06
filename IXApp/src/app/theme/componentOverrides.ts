@@ -1,5 +1,4 @@
 import type { Components, Theme } from '@mui/material/styles';
-import type {} from '@mui/x-data-grid/themeAugmentation';
 
 export const getComponentOverrides = (theme: Theme): Components => ({
   MuiButton: {

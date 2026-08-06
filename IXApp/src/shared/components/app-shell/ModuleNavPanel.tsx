@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { LAYOUT } from '@app/configuration/constants';
+import { COLORS, LAYOUT } from '@app/configuration/constants';
 import { Box, Typography, Collapse, IconButton } from '@mui/material';
 import {
     ExpandMore as ExpandMoreIcon,
@@ -19,6 +19,8 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { ModuleNavSection } from '@app/configuration/navigation';
+import { useAuth } from '@core/auth/useAuth';
+import { getRoutePermission } from '@app/routes/pageRegistry';
 
 const mobileOverlaySx = {
     position: 'absolute',
@@ -33,7 +35,7 @@ const mobileOverlaySx = {
 const desktopPanelBaseSx = {
     position: 'fixed',
     top: LAYOUT.TOPBARHEIGHT,
-    borderRight: '1px solid #edebe9',
+    borderRight: `1px solid ${COLORS.border}`,
     bottom: 0,
     width: LAYOUT.DRAWER_WIDTH,
     bgcolor: 'background.paper',
@@ -56,7 +58,7 @@ const mobileHeaderSx = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    bgcolor: '#0078d4',
+    bgcolor: COLORS.primary,
     color: 'white',
     px: 1,
     py: 0.5,
@@ -82,7 +84,7 @@ const mobileHeaderCloseBtnSx = {
 const toolbarWrapperSx = {
     px: 2,
     py: 1.5,
-    borderBottom: '1px solid #edebe9',
+    borderBottom: `1px solid ${COLORS.border}`,
 } as const;
 
 const toolbarRowSx = {
@@ -108,18 +110,18 @@ const toolbarButtonSx = {
 
 const toolbarIconSx = {
     fontSize: 18,
-    color: '#0078d4',
+    color: COLORS.primary,
 } as const;
 
 const toolbarLabelSx = {
     fontSize: '0.8125rem',
-    color: '#323130',
+    color: COLORS.neutralText,
     fontWeight: 400,
 } as const;
 
 const sectionIconSx = {
     fontSize: 20,
-    color: '#323130',
+    color: COLORS.neutralText,
     transition: 'transform 0.2s',
 } as const;
 
@@ -129,7 +131,7 @@ const expandableChevronSx = {
 } as const;
 
 const linkIconWrapperSx = {
-    color: '#0078d4',
+    color: COLORS.primary,
     display: 'flex',
     transition: 'color 0.2s',
 } as const;
@@ -147,7 +149,7 @@ const ICON_MAP: Record<string, React.ReactElement> = {
 const FALLBACK_ICON = <PeopleIcon sx={{ fontSize: 20 }} />;
 
 const getSectionBorderSx = (isExpanded: boolean) => ({
-    border: isExpanded ? '1px solid #0078d4' : '1px solid transparent',
+    border: isExpanded ? `1px solid ${COLORS.primary}` : '1px solid transparent',
     borderRadius: '2px',
     overflow: 'hidden',
     transition: 'border-color 0.2s ease, background-color 0.2s ease',
@@ -164,15 +166,15 @@ const getSectionHeaderSx = (isExpanded: boolean, isMobileView: boolean) => ({
     p: isMobileView ? 1.5 : 1,
     cursor: 'pointer',
     userSelect: 'none' as const,
-    bgcolor: isExpanded ? '#f3f2f1' : 'transparent',
+    bgcolor: isExpanded ? COLORS.neutralSurface : 'transparent',
     transition: 'background-color 0.2s',
-    '&:hover': { bgcolor: '#f3f2f1' },
+    '&:hover': { bgcolor: COLORS.neutralSurface },
 });
 
 const getSectionTitleSx = (isExpanded: boolean, isMobileView: boolean) => ({
     fontSize: isMobileView ? '0.9375rem' : '0.875rem',
     fontWeight: isExpanded ? 600 : 400,
-    color: '#323130',
+    color: COLORS.neutralText,
     transition: 'font-weight 0.2s',
 });
 
@@ -184,7 +186,7 @@ const getScrollableAreaSx = (isMobileView: boolean) => ({
     WebkitOverflowScrolling: 'touch' as const,
     '&::-webkit-scrollbar': { width: isMobileView ? '3px' : '6px' },
     '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
-    '&::-webkit-scrollbar-thumb': { bgcolor: '#c8c6c4', borderRadius: '3px' },
+    '&::-webkit-scrollbar-thumb': { bgcolor: COLORS.neutralScrollbar, borderRadius: '3px' },
 });
 
 const getLinkContainerSx = (isMobileView: boolean) => ({
@@ -203,7 +205,7 @@ const getExpandableLinkSx = (isMobileView: boolean) => ({
     borderRadius: '2px',
     px: 1,
     mx: -1,
-    '&:hover': { bgcolor: '#f3f2f1' },
+    '&:hover': { bgcolor: COLORS.neutralSurface },
 });
 
 const getNavLinkSx = (isMobileView: boolean) => ({
@@ -220,20 +222,20 @@ const getNavLinkSx = (isMobileView: boolean) => ({
     borderRadius: '2px',
     px: 1,
     mx: -1,
-    '&:hover': { bgcolor: '#f3f2f1' },
+    '&:hover': { bgcolor: COLORS.neutralSurface },
     '&:hover .link-text': { textDecoration: 'underline' },
 });
 
 const getLinkTextSx = (isMobileView: boolean) => ({
     fontSize: isMobileView ? '0.9375rem' : '0.875rem',
-    color: '#0078d4',
+    color: COLORS.primary,
     textDecoration: 'none',
     transition: 'color 0.2s',
 });
 
 const getExpandableTitleSx = (isMobileView: boolean) => ({
     fontSize: isMobileView ? '0.9375rem' : '0.875rem',
-    color: '#323130',
+    color: COLORS.neutralText,
     fontWeight: 600,
 });
 
@@ -249,10 +251,11 @@ interface ModuleNavPanelProps {
 const ModuleNavPanel: React.FC<ModuleNavPanelProps> = ({ title, sections, onClose, onBack, leftOffset, isMobileView }) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const { hasPermission } = useAuth();
 
-    // Simplify permission checking for now, assuming all visible. Or we can mock it.
-    const isLinkVisible = (_link: ModuleNavSection['links'][number]) => {
-        return true; // Simplified: Assuming no strict RBAC for now in IXApp UI layout refactor
+    const isLinkVisible = (link: ModuleNavSection['links'][number]) => {
+        const permission = link.permission ?? getRoutePermission(link.path);
+        return !permission || hasPermission(permission);
     };
 
     const visibleSections = sections

@@ -104,9 +104,10 @@ export function FilterPopover<T>({
           fullWidth
           placeholder={localFilter.operator === 'in' ? t('grid.press_enter_to_add', 'Press Enter to add') : t('grid.filter_placeholder')}
           value={localFilter.operator === 'in' ? tempValue : (localFilter.value || '')}
-          onChange={(val: any) => {
-            if (localFilter.operator === 'in') setTempValue(val);
-            else setLocalFilter(f => ({ ...f, value: val }));
+          onChange={(val) => {
+            const nextValue = String(val ?? '');
+            if (localFilter.operator === 'in') setTempValue(nextValue);
+            else setLocalFilter(f => ({ ...f, value: nextValue }));
           }}
           slotProps={{
             htmlInput: {
@@ -164,7 +165,7 @@ export function FilterPopover<T>({
         onClose={() => setOperatorAnchor(null)}
       >
         {GRID_FILTER_OPERATORS.map((op: { value: string; label: string }) => (
-          <MenuItem key={op.value} onClick={() => { setLocalFilter(f => ({ ...f, operator: op.value as any })); setOperatorAnchor(null); }}>
+          <MenuItem key={op.value} onClick={() => { setLocalFilter(f => ({ ...f, operator: op.value as FilterModel['operator'] })); setOperatorAnchor(null); }}>
             <ListItemText primary={getOperatorLabel(op.value, t)} slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }} />
           </MenuItem>
         ))}

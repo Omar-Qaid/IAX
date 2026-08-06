@@ -13,6 +13,7 @@ import { EnterpriseCommandUtilities } from '@shared/components/action-pane/Enter
 import { SetupNavigation } from './SetupNavigation';
 import { useUnsavedChanges } from '@shared/hooks/useUnsavedChanges';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import { deepEqual } from '@shared/utils/deepEqual';
 import type { SetupFieldConfig, SetupPageProps, SetupValue } from './types';
 
 function SetupField({ field, value, yesLabel, noLabel, onChange }: {
@@ -50,7 +51,7 @@ export function SetupPage({ title, viewLabel, navigationItems, sections, initial
   const [saving, setSaving] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
   const [activeId, setActiveId] = useState(navigationItems[0]?.id ?? sections[0]?.id ?? '');
-  const dirty = useMemo(() => JSON.stringify(values) !== JSON.stringify(savedValues), [savedValues, values]);
+  const dirty = useMemo(() => !deepEqual(values, savedValues), [savedValues, values]);
   const { t } = useAppTranslation();
   useUnsavedChanges(dirty, t('messages.unsavedChanges', 'You have unsaved changes.'));
 
@@ -80,7 +81,7 @@ export function SetupPage({ title, viewLabel, navigationItems, sections, initial
 
       <Box sx={{ mx: 2, mb: 0.5, minHeight: 0, flex: 1, display: 'flex', flexDirection: { xs: 'column', md: 'row' }, overflow: 'hidden', bgcolor: 'background.paper', border: 1, borderColor: 'divider', borderRadius: 1, boxShadow: '0 1px 4px rgba(0,0,0,.12)' }}>
         <SetupNavigation items={navigationItems} activeId={activeId} onSelect={selectSection} />
-        <Box sx={{ width: 7, display: { xs: 'none', md: 'block' }, bgcolor: '#c8c6c4', flexShrink: 0 }} />
+        <Box sx={{ width: 7, display: { xs: 'none', md: 'block' }, bgcolor: 'divider', flexShrink: 0 }} />
         <Box sx={{ minWidth: 0, flex: 1, overflowY: 'auto', px: 1.25, py: 0.25 }}>
           {sections.map((section, index) => (
             <Accordion key={section.id} id={`setup-section-${section.id}`} defaultExpanded={section.defaultExpanded ?? true} disableGutters elevation={0} square sx={{ '&::before': { display: 'none' }, borderBottom: 1, borderColor: 'divider', scrollMarginTop: 8 }}>

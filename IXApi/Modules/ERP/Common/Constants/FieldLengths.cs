@@ -1,0 +1,408 @@
+using System.Reflection.Metadata;
+
+namespace IAX.IXApi.Modules.ERP.Common
+{
+    public static class FieldLengths
+    {
+        public const int Email = 80;
+        public const int Url = 255;
+        public const int EndDisc = 10;
+        public const int LineDisc = 10;
+        public const int CompanyId = 4;
+        public const int CredManId = 100;
+        public const int IntercompanyPurchId = 100;
+        public const int QuotationId = 100;
+        public const int PaymentSched = 30;
+        public const int IntercompanyOriginalCustAccount = 20;
+        public const int IntercompanyOriginalSalesId = 100;
+        public const int PurchOrderFormNum = 20;
+        public const int ReturnReplacementId = 100;
+
+        
+
+    
+        public const int ConfirmId = 20;
+        public const int SalesId = 20;
+        public const int LanguageId = 7;
+        public const int PostingProfile = 10;
+        // InvoiceId defined below
+        // Voucher defined below
+        public const int OrderAccount = 20;
+        // DocumentNum defined below
+        public const int DlvTermId = 10;
+        public const int SalesGroupId = 10;
+        public const int SalesOriginId = 10;
+        public const int PriceGroupId = 10;
+        public const int CashDisc = 10;
+
+        public const int NameAlias = 60;
+        public const int Phone = 20;
+        public const int Num = 20;
+        public const int ReasonCodeId = 10;
+        public const int ProjId = 20;
+
+
+
+        public const int CollectionLetterCode = 10;
+        public const int Name = 60;
+
+        // Customer
+        public const int AccountNum = 20;
+        public const int CustGroupId = 20;
+        public const int CustCategory = 10;
+
+        // Financial
+        public const int CurrencyCode = 3;
+        public const int TaxGroupId = 10;
+        public const int PaymModeId = 10;
+        public const int PaymTermId = 100;
+        public const int DlvModeId = 10;
+        public const int SalesPoolId = 10;
+
+        // Accounts
+        public const int InvoiceAccount = 20;
+        public const int VendAccount = 20;
+        public const int VatNum = 20;
+
+        // Inventory
+        public const int InventSiteId = 10;
+        public const int InventLocationId = 10;
+
+        // Address
+        public const int CountryRegionId = 10;
+        public const int StateId = 30;
+
+        // Credit Management
+        public const int CredManAccountStatusId = 100;
+
+        // Memo/Text
+        public const int Memo = int.MaxValue;
+        public const int CredManNotes = int.MaxValue;
+
+
+        public const int PeriodId = 10;
+
+        // Auto-added properties
+        public const int PartyCountry = 10;
+        public const int PartyState = 30;
+        public const int CurrencyCodeIso = 3;
+        public const int Txt = 150;
+        public const int Symbol = 5;
+        public const int FromCurrencyCode = 3;
+        public const int ToCurrencyCode = 3;
+        public const int Description = 60;
+        public const int BaseEnumTypeName = 81;
+        public const int MainAccountValue = 30;
+        public const int AccountValue = 30;
+        public const int BusinessUnitValue = 30;
+        public const int CostCenterValue = 30;
+        public const int DepartmentValue = 30;
+        public const int DivisionValue = 30;
+        public const int ProjectValue = 30;
+        public const int ServiceLineValue = 30;
+        public const int FundValue = 30;
+        public const int ProgramValue = 30;
+        public const int ItemGroupValue = 30;
+        public const int ProductGroupValue = 30;
+        public const int AgreementValue = 30;
+        public const int RetailChannelValue = 30;
+        public const int TerminalValue = 30;
+        public const int WorkerValue = 30;
+        public const int GroupsValue = 30;
+        public const int ExpenseAndIncomeCodeValue = 30;
+        public const int ObjectClassValue = 30;
+        public const int FilialValue = 30;
+        public const int FiscalEstablishmentValue = 30;
+        public const int TaxBranchValue = 30;
+        public const int CostCenter_CnValue = 30;
+        public const int Department_CnValue = 30;
+        public const int CashFlow_CnValue = 30;
+        public const int DisplayValue = 30;
+        public const int BackingEntityTableName = 81;
+        public const int BackingEntityKeyFieldName = 81;
+        public const int BackingEntityValueFieldName = 81;
+        public const int ViewName = 81;
+        public const int DimensionKeyColumnName = 81;
+        public const int DimensionValueColumnName = 81;
+        public const int ReportColumnName = 6;
+        public const int TranslationTableName = 81;
+        public const int TranslationKeyFieldName = 81;
+        public const int TranslationNameFieldName = 81;
+        public const int TranslationLanguageIdFieldName = 81;
+        public const int TranslationViewName = 81;
+        public const int TranslationViewKeyFieldName = 81;
+        public const int TranslationViewValueFieldName = 81;
+        public const int TranslationViewNameFieldName = 81;
+        public const int TranslationViewLanguageIdFieldName = 81;
+        public const int TranslationViewSystemLanguageIdFieldName = 81;
+        public const int TranslationViewTranslatedNameFieldName = 81;
+        public const int BackingRecordDataAreaId = 4;
+        public const int GroupDimension = 10;
+        public const int Code = 10;
+        public const int MarkupGroup = 10;
+        public const int McrExpedite = 10;
+        public const int LegalEntityValue = 30;
+        public const int Ownership_CnValue = 30;
+        public const int SystemGeneratedAttributeFixedAssets_RuValue = 30;
+        public const int SystemGeneratedJournalAccountValue = 30;
+        public const int SystemGeneratedAttributeBankAccountValue = 30;
+        public const int SystemGeneratedAttributeCustomerValue = 30;
+        public const int SystemGeneratedAttributeVendorValue = 30;
+        public const int SystemGeneratedAttributeFixedAssetValue = 30;
+        public const int SystemGeneratedAttributeProjectValue = 30;
+        public const int SystemGeneratedAttributeRCashValue = 30;
+        public const int DraftName = 150;
+        public const int DraftDescription = 60;
+        public const int ContactPersonId = 20;
+        public const int CustAccount = 20;
+        public const int PostalAddressRoles = 1000;
+        public const int AddressBookNames = 1000;
+        public const int Initials = 10;
+        public const int OmOperatingUnitNumber = 30;
+        public const int TeamAdministrator = 20;
+        public const int DataArea = 4;
+        public const int OrgNumber = 25;
+        public const int CoRegNum = 25;
+        public const int ImportVatNum = 20;
+        public const int Bank = 10;
+        public const int DvrID = 20;
+        public const int RFullName = 150;
+        public const int CompanyRegComFr = 30;
+        public const int LegalFormFr = 100;
+        public const int PackMaterialFeeLicenseNum = 20;
+        public const int Tax1099RegNum = 11;
+        public const int AccountOfficeRefNum = 13;
+        public const int SiaCode = 5;
+        public const int SubordinateCode = 5;
+        public const int CityKey = 100;
+        public const int CountyId = 30;
+        public const int IsoCode = 2;
+        public const int AddrFormat = 10;
+        public const int ElectronicAddressId = 40;
+        public const int Locator = 255;
+        public const int LocatorExtension = 10;
+        public const int ElectronicAddressRoles = 1000;
+        public const int ChannelReferenceId = 38;
+        public const int LocationId = 40;
+        public const int Address = 250;
+        public const int Street = 250;
+        public const int StreetNumber = 20;
+        public const int BuildingCompliment = 60;
+        public const int PostBox = 20;
+        public const int City = 60;
+        public const int County = 30;
+        public const int State = 30;
+        public const int DistrictName = 60;
+        public const int MarkupCode = 10;
+        public const int TaxItemGroup = 10;
+        public const int PaymDayId = 10;
+        public const int PaymSched = 30;
+        public const int TaxCode = 10;
+        public const int TaxGroup = 10;
+        public const int TaxExemptCode = 10;
+        public const int TaxGroupName = 60;
+        public const int InventTransId = 100;
+        public const int SourceCurrencyCode = 3;
+        public const int ExemptCode = 10;
+        public const int PrintCode = 10;
+        public const int TaxName = 30;
+        public const int TaxPeriod = 10;
+        public const int TaxAccountGroup = 10;
+        public const int TaxCurrencyCode = 3;
+        public const int TaxOnTax = 10;
+        public const int TaxUnit = FieldLengths.Symbol;
+        public const int PaymentTaxCode = 10;
+        public const int TaxJurisdictionCode = 10;
+        public const int Voucher = 100;
+        public const int JournalNum = 100;
+        public const int AccountId = 10;
+        public const int AccountStatementNum = 20;
+        public const int BankGroupId = 10;
+        public const int Iban = 48;
+        public const int SwiftNo = 20;
+        public const int RegistrationNum = 12;
+        public const int CompanyPaymId = 35;
+        public const int DebitDirectId = 35;
+        public const int BankCompanyStatementName = 16;
+        public const int BankDestinationName = 23;
+        public const int CustPaymentJournalName = 10;
+        public const int VendPaymentJournalName = 10;
+        public const int NsfLedgerJournalName = 10;
+        public const int NsfFeeMarkupGroupId = 10;
+        public const int CorrAccount_W = 48;
+        public const int BankTransType = 10;
+        public const int BankTransCurrencyCode = 3;
+        public const int PaymentMode = 10;
+        public const int PaymReference = 35;
+        public const int ChequeNum = 20;
+        public const int DepositNum = 100;
+        public const int AccountStatement = 20;
+        public const int BankCorrAccount_W = 48;
+        public const int CalendarId = 10;
+        public const int ShortName = 8;
+        public const int LedgerAccount = 500;
+        public const int Text = 512;
+        public const int TransactionCurrencyCode = 3;
+        public const int PaymentReference = 35;
+        public const int JournalNumber = 100;
+        public const int SubledgerVoucher = 100;
+        public const int SubledgerVoucherDataAreaId = 4;
+        public const int DocumentNumber = 100;
+        public const int VoucherDataAreaId = 4;
+        public const int AccountingCurrency = 3;
+        public const int ReportingCurrency = 3;
+        public const int MainAccountFormatMask = 20;
+        public const int ConsolidationMainAccount = 10;
+        public const int GroupLevel01 = 20;
+        public const int GroupLevel02 = 20;
+        public const int GroupLevel03 = 20;
+        public const int AccountCategory = 20;
+        public const int ApproveGroupId = 10;
+        public const int Configuration = 100;
+        public const int OriginalJournalNum = 100;
+        public const int ParentJournalNum = 100;
+        public const int OriginalCompany = 4;
+        public const int RetailStatementId = 20;
+        public const int DocumentNum = 100;
+        public const int Log = 255;
+        public const int Company = 4;
+        public const int LedgerDimensionName = 160;
+        public const int OffsetCompany = 4;
+        public const int Invoice = 100;
+        public const int MarkedInvoice = 100;
+        public const int MarkedInvoiceCompany = 4;
+        public const int CashDiscCode = 10;
+        public const int PaymMode = 10;
+        public const int PaymSpec = 10;
+        public const int PaymentNotes = 1000;
+        public const int BankChequeNum = 20;
+        public const int BankDepositNum = 100;
+        public const int BankCentralBankPurposeText = 210;
+        public const int CustVendBankAccountID = 10;
+        public const int TaxWithholdGroup = 10;
+        public const int VatNumJournal = 20;
+        public const int ZatcaRetReason = 10;
+        public const int ZatcaRetInvoiceRef = 60;
+        public const int TransferredBy = 20;
+        public const int TransferredTo = 100;
+        public const int NegInstId = 100;
+        public const int Payment = 100;
+        public const int McrPaymOrderId = 100;
+        public const int SalesOrderId = 100;
+        public const int ForeignCompany = 4;
+        public const int ForeignVoucher = 100;
+        public const int InventBatchId = 20;
+        public const int ItemId = 20;
+        public const int PdsDispositionCode = 10;
+        public const int PdsVendBatchId = 20;
+        public const int PeriodCode = 10;
+        public const int InventDimId = 100;
+        public const int Sha1HashHex = 40;
+        public const int Sha3HashHex = 96;
+        public const int ConfigId = 50;
+        public const int InventSizeId = 10;
+        public const int InventColorId = 10;
+        public const int InventStyleId = 10;
+        public const int InventVersionId = 10;
+        public const int WmsLocationId = 10;
+        public const int LicensePlateId = 25;
+        public const int InventSerialId = 20;
+        public const int InventStatusId = 10;
+        public const int ItemGroupId = 10;
+        public const int ItemDataAreaId = 4;
+        public const int ItemGroupDataAreaId = 4;
+        public const int WmsLocationIdDefaultReceipt = 10;
+        public const int WmsLocationIdDefaultIssue = 10;
+        public const int CountGroupId = 10;
+        public const int JournalId = 100;
+        public const int JournalNameId = 10;
+        public const int Source = 20;
+        public const int JournalIdOrignal = 100;
+        public const int PostedUserId = 20;
+        public const int ToInventDimId = 100;
+        public const int ToInventTransId = 100;
+        public const int InventTransIdFather = 100;
+        public const int Unit = 10;
+        public const int ProjCategoryId = 30;
+        public const int ProjLinePropertyId = 10;
+        public const int ProjSalesCurrencyId = 3;
+        public const int ProjUnitId = 10;
+        public const int ProjTransId = 100;
+        public const int ProjTaxGroupId = 10;
+        public const int ProjTaxItemGroupId = 10;
+        public const int ProdGroupId = 10;
+        public const int InventLocationIdTransit = 10;
+        public const int InventLocationIdQuarantine = 10;
+        public const int InventLocationIdReqMain = 10;
+        public const int ItmInventLocationIdGit = 10;
+        public const int WmsRackFormat = 10;
+        public const int WmsLevelFormat = 10;
+        public const int WmsPositionFormat = 10;
+        public const int DefaultStatusID = 10;
+        public const int DefaultProductionInputLocation = 10;
+        public const int DefaultProductionFinishGoodsLocation = 10;
+        public const int DefaultKanbanFinishedGoodsLocation = 10;
+        public const int RboDefaultWmsLocationID = 10;
+        public const int RetailWmsLocationIDDefaultReturn = 10;
+        public const int DefaultReturnCreditOnlyLocation = 10;
+        public const int RejectOrderFulfillment = 10;
+        public const int ModelGroupId = 10;
+        public const int ModelGroupDataAreaId = 4;
+        public const int SettleTransId = 100;
+        public const int DefaultInventStatusID = 10;
+        public const int ItemBarcode = 80;
+        public const int BarcodeSetupId = 10;
+        public const int UnitId = 10;
+        public const int RetailVariantId = 10;
+        public const int VersionId = 10;
+        public const int PriceCalcId = 100;
+        public const int StdCostVoucher = 100;
+        public const int Sku = 40;
+        public const int PrimaryVendorID = 20;
+        public const int ItemBuyerGroupId = 10;
+        public const int CostGroupId = 10;
+        public const int BomUnitId = 10;
+        public const int BomCalcGroupId = 10;
+        public const int ProdOriginId = 40;
+        public const int BatchNumGroupId = 10;
+        public const int SerialNumGroupId = 10;
+        public const int PmfPlanningItemId = 20;
+        public const int PdsBaseAttributeID = 20;
+        public const int WmsPalletTypeIdId = 15;
+        public const int ReqGroupId = 10;
+        public const int StandardConfigId = 50;
+        public const int StandardInventSizeId = 10;
+        public const int StandardInventColorId = 10;
+        public const int StandardInventStyleId = 10;
+        public const int RevRecDefaultRevenueRecognitionSchedule = 10;
+        public const int ItmOverUnderToleranceGroupId = 10;
+        public const int ItmCostTypeGroupId = 100;
+        public const int ItmCostTransferGroupId = 10;
+        public const int ItmArrivalGroupId = 10;
+        public const int CommissionGroupId = 10;
+        public const int MarkupGroupId = 10;
+        public const int TaxItemGroupId = 10;
+        public const int RetailInventoryAvailabilityLevelProfile = 10;
+        public const int VoucherPhysical = 100;
+        public const int InvoiceId = 100;
+        public const int PackingSlipId = 100;
+        public const int ProjAdjustRefId = 100;
+        public const int PickingRouteId = 20;
+        public const int TransChildRefId = 100;
+        public const int ItemInventDimId = 100;
+        public const int ReferenceId = 100;
+        public const int TaxItemGroupIdSales = 10;
+        public const int TaxItemGroupIdPurch = 10;
+        public const int ItemRelation = 20;
+        public const int CustVendRelation = 20;
+
+    
+        public const int PackagingGroupId = 50;
+        public const int ParmId = 100;
+        public const int ZipCode = 10;
+        public const int PartyNumber = 20;
+        public const int GroupId = 10;
+        public const int CampaignId = 10;
+}
+}
+

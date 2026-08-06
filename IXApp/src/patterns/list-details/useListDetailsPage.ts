@@ -1,17 +1,21 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import type { DetailValue, EnterpriseListDetailsConfig, ListDetailRecord } from './types';
 import { createEnterpriseFilterCondition, matchesEnterpriseFilter, type EnterpriseFilterCondition } from '@shared/components/data-grid/EnterpriseFilterPanel';
 import { useUnsavedChanges } from '@shared/hooks/useUnsavedChanges';
 
 export function useListDetailsPage<T extends ListDetailRecord>(config: EnterpriseListDetailsConfig<T>) {
   const source = config.dataSource;
-  const remoteLoader = source.type === 'remote' ? source.load : null;
   const remoteSourceKey = source.type === 'remote' ? source.key : '';
-  const loaderRef = useRef(remoteLoader);
   const [localRecords, setLocalRecords] = useState<T[]>(source.type === 'remote' ? (source.initialRecords ?? []) : source.records);
   const [loading, setLoading] = useState(source.type === 'remote' || (source.type === 'controlled' && Boolean(source.loading)));
   const [error, setError] = useState<string | null>(source.type === 'controlled' ? (source.error ?? null) : null);
-  const [reloadVersion, setReloadVersion] = useState(0);
+  const remoteQuery = useQuery({
+    queryKey: ['list-details', remoteSourceKey],
+    queryFn: ({ signal }) => source.type === 'remote' ? source.load(signal) : Promise.resolve([] as T[]),
+    enabled: source.type === 'remote',
+    initialData: source.type === 'remote' ? source.initialRecords : undefined,
+  });
   const records = source.type === 'controlled' ? source.records : localRecords;
   const [selectedId, setSelectedId] = useState<string | null>(records[0]?.id ?? null);
   const [query, setQuery] = useState('');
@@ -29,16 +33,16 @@ export function useListDetailsPage<T extends ListDetailRecord>(config: Enterpris
   const selected = records.find((record) => record.id === selectedId) ?? null;
   const [draft, setDraft] = useState<T | null>(selected);
 
-  useEffect(() => { loaderRef.current = remoteLoader; }, [remoteLoader]);
   useEffect(() => {
-    if (source.type !== 'remote' || !loaderRef.current) return;
-    const controller = new AbortController(); setLoading(true); setError(null);
-    void loaderRef.current(controller.signal).then((loaded) => {
-      if (controller.signal.aborted) return;
-      setLocalRecords(loaded); setSelectedId((current) => loaded.some((record) => record.id === current) ? current : (loaded[0]?.id ?? null)); setDraft((current) => loaded.find((record) => record.id === current?.id) ?? loaded[0] ?? null);
-    }).catch((reason: unknown) => { if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : String(reason)); }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
-    return () => controller.abort();
-  }, [reloadVersion, source.type, remoteSourceKey]);
+    if (source.type !== 'remote') return;
+    setLoading(remoteQuery.isLoading || remoteQuery.isFetching);
+    setError(remoteQuery.error instanceof Error ? remoteQuery.error.message : remoteQuery.error ? String(remoteQuery.error) : null);
+    if (!remoteQuery.data) return;
+    const loaded = remoteQuery.data;
+    setLocalRecords(loaded);
+    setSelectedId((current) => loaded.some((record) => record.id === current) ? current : (loaded[0]?.id ?? null));
+    setDraft((current) => loaded.find((record) => record.id === current?.id) ?? loaded[0] ?? null);
+  }, [remoteQuery.data, remoteQuery.error, remoteQuery.isFetching, remoteQuery.isLoading, source.type]);
   useEffect(() => { if (source.type === 'controlled') { setLoading(Boolean(source.loading)); setError(source.error ?? null); } }, [source]);
 
   const visibleRecords = useMemo(() => {
@@ -54,7 +58,7 @@ export function useListDetailsPage<T extends ListDetailRecord>(config: Enterpris
     });
   }, [advancedFilters, config, query, records]);
   const replaceRecords = (next: T[]) => { if (source.type === 'controlled') source.onRecordsChange(next); else setLocalRecords(next); };
-  const refresh = useCallback(() => { if (source.type === 'controlled') void source.refresh?.(); else if (source.type === 'remote') setReloadVersion((value) => value + 1); }, [source]);
+  const refresh = useCallback(() => { if (source.type === 'controlled') void source.refresh?.(); else if (source.type === 'remote') void remoteQuery.refetch(); }, [remoteQuery, source]);
   const choose = (record: T) => { if (editing) return; setSelectedId(record.id); setDraft(record); setValidationErrors({}); };
   const startEdit = () => { if (!selected) return; setDraft(selected); setIsNew(false); setEditing(true); setValidationErrors({}); };
   const startNew = () => { const record = config.createRecord(); setDraft(record); setSelectedId(record.id); setIsNew(true); setEditing(true); setValidationErrors({}); };

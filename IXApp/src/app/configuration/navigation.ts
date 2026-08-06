@@ -1,11 +1,12 @@
 import { ROUTE_PATHS } from '@app/routes/routePaths';
+import { PERMISSIONS, type PermissionCode } from '@core/permissions/permissions';
 
 export interface ModuleNavLink {
   label: string;
   path?: string;
   icon?: string;
   expandable?: boolean;
-  permission?: { module: string; resource: string };
+  permission?: PermissionCode;
 }
 
 export interface ModuleNavSection {
@@ -36,24 +37,24 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
         id: 'customers',
         title: 'nav.customers',
         links: [
-          { label: 'nav.allCustomers', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMERS, permission: { module: 'AccountsReceivable', resource: 'Customers' } },
-          { label: 'nav.customerGroups', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_GROUPS, permission: { module: 'AccountsReceivable', resource: 'CustomerGroups' } },
+          { label: 'nav.allCustomers', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMERS, permission: PERMISSIONS.CUSTOMER_VIEW },
+          { label: 'nav.customerGroups', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_GROUPS, permission: PERMISSIONS.CUSTOMER_GROUP_VIEW },
         ],
       },
       {
         id: 'orders',
         title: 'nav.orders',
         links: [
-          { label: 'nav.salesOrders', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDERS, permission: { module: 'AccountsReceivable', resource: 'SalesOrders' } },
+          { label: 'nav.salesOrders', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDERS, permission: PERMISSIONS.SALES_ORDER_VIEW },
         ],
       },
       {
         id: 'setup',
         title: 'nav.setup',
         links: [
-          { label: 'nav.customerParameters', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PARAMETERS, permission: { module: 'AccountsReceivable', resource: 'Customers' } },
-          { label: 'nav.customerPaymentMethods', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_METHODS, permission: { module: 'AccountsReceivable', resource: 'Customers' } },
-          { label: 'nav.customerPaymentTerms', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_TERMS, permission: { module: 'AccountsReceivable', resource: 'Customers' } },
+          { label: 'nav.customerParameters', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PARAMETERS, permission: PERMISSIONS.CUSTOMER_VIEW },
+          { label: 'nav.customerPaymentMethods', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_METHODS, permission: PERMISSIONS.CUSTOMER_VIEW },
+          { label: 'nav.customerPaymentTerms', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_TERMS, permission: PERMISSIONS.CUSTOMER_VIEW },
         ],
       },
     ],
@@ -64,7 +65,7 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
     icon: 'ledger',
     defaultPath: ROUTE_PATHS.FOUNDATION.CURRENCIES,
     matchPath: ROUTE_PATHS.FOUNDATION.ROOT,
-    sections: [{ id: 'setup', title: 'nav.setup', links: [{ label: 'nav.currencies', path: ROUTE_PATHS.FOUNDATION.CURRENCIES, permission: { module: 'GeneralLedger', resource: 'Currencies' } }, { label: 'nav.exchangeRateTypes', path: ROUTE_PATHS.FOUNDATION.EXCHANGE_RATE_TYPES, permission: { module: 'GeneralLedger', resource: 'Currencies' } }, { label: 'nav.exchangeRates', path: ROUTE_PATHS.FOUNDATION.EXCHANGE_RATES, permission: { module: 'GeneralLedger', resource: 'Currencies' } }] }],
+    sections: [{ id: 'setup', title: 'nav.setup', links: [{ label: 'nav.currencies', path: ROUTE_PATHS.FOUNDATION.CURRENCIES, permission: PERMISSIONS.CURRENCY_VIEW }, { label: 'nav.exchangeRateTypes', path: ROUTE_PATHS.FOUNDATION.EXCHANGE_RATE_TYPES, permission: PERMISSIONS.CURRENCY_VIEW }, { label: 'nav.exchangeRates', path: ROUTE_PATHS.FOUNDATION.EXCHANGE_RATES, permission: PERMISSIONS.CURRENCY_VIEW }] }],
   },
   'mod-SystemAdministration': {
     moduleId: 'mod-SystemAdministration',
@@ -80,6 +81,6 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
     icon: 'corporate',
     defaultPath: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.LEGAL_ENTITIES,
     matchPath: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.ROOT,
-    sections: [{ id: 'setup', title: 'nav.setup', links: [{ label: 'nav.legalEntities', path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.LEGAL_ENTITIES, permission: { module: 'OrganizationAdministration', resource: 'LegalEntities' } }] }],
+    sections: [{ id: 'setup', title: 'nav.setup', links: [{ label: 'nav.legalEntities', path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.LEGAL_ENTITIES, permission: PERMISSIONS.LEGAL_ENTITY_VIEW }] }],
   },
 };

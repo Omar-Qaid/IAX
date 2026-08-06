@@ -17,6 +17,9 @@ export const PERMISSIONS = {
   
   CURRENCY_VIEW: 'currency.view',
   CURRENCY_MANAGE: 'currency.manage',
+
+  LEGAL_ENTITY_VIEW: 'legalEntity.view',
+  LEGAL_ENTITY_MANAGE: 'legalEntity.manage',
   
   SETTINGS_VIEW: 'settings.view',
   SETTINGS_UPDATE: 'settings.update',

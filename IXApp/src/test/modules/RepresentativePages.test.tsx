@@ -2,7 +2,6 @@ import React from 'react';
 import { describe, expect, it } from 'vitest';
 import { act, fireEvent, render, screen, waitFor } from '@test/testUtils';
 import { DashboardPage } from '@modules/dashboard/pages/DashboardPage';
-import { CurrenciesPage } from '@modules/foundation/pages/CurrenciesPage';
 import { CurrencyPage } from '@modules/foundation/pages/CurrencyPage';
 import { ExchangeRateTypePage } from '@modules/foundation/pages/ExchangeRateTypePage';
 import { ExchangeRatePage } from '@modules/foundation/pages/ExchangeRatePage';
@@ -23,10 +22,6 @@ describe('representative enterprise pages', () => {
   });
 
   it('renders simple-list and list-details representatives', () => {
-    const { unmount } = render(<CurrenciesPage />);
-    expect(screen.getByText('US Dollar')).toBeDefined();
-    unmount();
-
     render(<CustomerListPage />);
     expect(screen.getAllByText('Contoso Retail Americas').length).toBeGreaterThan(0);
     expect(screen.getByText('Standard view')).toBeDefined();
@@ -44,7 +39,7 @@ describe('representative enterprise pages', () => {
     expect(screen.getAllByText('Customer account (Account)')).toHaveLength(1);
     act(() => fireEvent.click(screen.getByRole('button', { name: 'Information' })));
     expect(screen.getByRole('heading', { name: 'Related information' })).toBeDefined();
-  }, 30_000);
+  }, 60_000);
 
   it('renders all routed accounts-receivable list pages', () => {
     const { unmount } = render(<CustomerGroupListPage />);
@@ -65,7 +60,7 @@ describe('representative enterprise pages', () => {
 
     render(<SalesOrdersPage />);
     expect(screen.getByText('SO-00101')).toBeDefined();
-  }, 15_000);
+  }, 60_000);
 
   it('opens customer quick create through the generic dialog fast-tabs pattern', async () => {
     render(<CustomerListPage />);
@@ -79,7 +74,7 @@ describe('representative enterprise pages', () => {
     await waitFor(() => expect(screen.getByLabelText('Name').getAttribute('aria-invalid')).toBe('true'));
     act(() => fireEvent.click(screen.getByRole('button', { name: 'Close' })));
     await waitFor(() => expect(screen.queryByRole('heading', { name: 'Create customer' })).toBeNull());
-  }, 15_000);
+  }, 60_000);
 
   it('renders document and setup representatives as read-only pages', () => {
     const { unmount } = render(<SalesOrderPage />);

@@ -3,7 +3,7 @@ import { Box, Paper, Typography, useTheme, useMediaQuery } from '@mui/material';
 import type { DataGridProps, DataGridHandle } from './types';
 import { DataGridToolbar } from './DataGridToolbar';
 import { DataGridHeader } from './DataGridHeader';
-import { DataGridBody } from './DataGridBody';
+import { DataGridBody, type GridBodyHandle } from './DataGridBody';
 import { DataGridMobileBody } from './DataGridMobileBody';
 import { GridSidebar } from './GridSidebar';
 import {
@@ -23,7 +23,7 @@ import { useNotifications } from '@shared/hooks/useNotifications';
 function DataGridInternal<T>({
     rows,
     columns: rawInitialColumns,
-    getRowId = (row: any) => row.id,
+    getRowId = (row: T) => (row as { id: string | number }).id,
     loading = false,
     onRowClick,
     onRowDoubleClick,
@@ -71,7 +71,7 @@ function DataGridInternal<T>({
     const { notifyError } = useNotifications();
     const searchInputRef = useRef<HTMLInputElement | null>(null);
     const gridRootRef = useRef<HTMLDivElement | null>(null);
-    const gridBodyRef = useRef<any>(null); // DataGridBodyHandle
+    const gridBodyRef = useRef<GridBodyHandle | null>(null);
     const focusedCellRef = useRef({ r: 0, c: 0 });
     const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const initialColumns = rawInitialColumns;
@@ -637,7 +637,7 @@ function DataGridInternal<T>({
                             ref={headerScrollRef}
                             sx={{
                                 overflow: 'hidden',
-                                bgcolor: theme.palette.mode === 'light' ? '#f3f2f1' : '#1a202c',
+                                bgcolor: theme.palette.action.hover,
                                 flexShrink: 0,
                                 borderBottom: `1px solid ${theme.palette.divider}`,
                                 pr: `${scrollbarWidth || 0}px`,

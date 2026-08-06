@@ -4,6 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import HelpOutlineIcon from '@mui/icons-material/Help';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useUnsavedChanges } from '@shared/hooks/useUnsavedChanges';
+import { deepEqual } from '@shared/utils/deepEqual';
 
 export type FastTabValue = string | number | boolean;
 export interface FastTabOption { value: string; label: string }
@@ -49,7 +50,7 @@ export function FastTabsDialog<TValues extends Record<string, FastTabValue>>({ o
   const [submitError, setSubmitError] = useState('');
   const [saving, setSaving] = useState(false);
   useEffect(() => { if (open) { const next = initialValuesRef.current(); setValues(next); setPristineValues(next); setErrors({}); setSubmitError(''); setSaving(false); } }, [open, resetKey]);
-  const dirty = JSON.stringify(values) !== JSON.stringify(pristineValues);
+  const dirty = !deepEqual(values, pristineValues);
   useUnsavedChanges(open && dirty);
   const changeValue = (name: string, value: FastTabValue) => {
     setValues((current) => ({ ...current, [name]: value }));

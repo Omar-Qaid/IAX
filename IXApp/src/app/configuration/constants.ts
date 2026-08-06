@@ -9,6 +9,11 @@ export const LAYOUT = {
     SIDEBARMINIWIDTH: 48,
     DRAWER_WIDTH: 380,
     SETTINGS_WIDTH: 340,
+    ACTION_PANE_HEIGHT: 42,
+    GRID_HEADER_HEIGHT: 36,
+    GRID_ROW_HEIGHT: 34,
+    UTILITY_RAIL_WIDTH: 44,
+    SPLITTER_WIDTH: 4,
 } as const;
 
 /** Breakpoint values (matching MUI defaults) */
@@ -49,6 +54,11 @@ export const COLORS = {
     errorBg: '#fef2f2',
     info: '#2563eb',
     infoBg: '#eff6ff',
+    commandSurface: '#ffffff',
+    neutralText: '#323130',
+    neutralSurface: '#f3f2f1',
+    neutralScrollbar: '#c8c6c4',
+    selectedRow: '#dce6f9',
 } as const;
 
 /**

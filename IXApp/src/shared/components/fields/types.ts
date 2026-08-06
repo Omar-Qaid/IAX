@@ -1,4 +1,5 @@
 import type { Control, FieldPath, FieldValues } from 'react-hook-form';
+import type { SxProps, Theme } from '@mui/material/styles';
 
 export interface BaseFieldProps<TFieldValues extends FieldValues = FieldValues> {
   name?: FieldPath<TFieldValues> | string;
@@ -14,6 +15,6 @@ export interface BaseFieldProps<TFieldValues extends FieldValues = FieldValues> 
   value?: unknown;
   onChange?: (value: any) => void;
   variant?: 'outlined' | 'standard' | 'filled';
-  sx?: any;
-  inputRef?: React.Ref<any>;
+  sx?: SxProps<Theme>;
+  inputRef?: React.Ref<HTMLInputElement>;
 }

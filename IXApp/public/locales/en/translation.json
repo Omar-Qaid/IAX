@@ -1,4 +1,5 @@
 {
+  "accessibility": { "skipToContent": "Skip to main content" },
   "app": { "name": "IXApp", "tagline": "Enterprise Resource Planning Solution" },
   "nav": {
     "app_title": "IXApp Enterprise", "app_title_short": "IXApp", "home": "Home", "dashboard": "Dashboard",

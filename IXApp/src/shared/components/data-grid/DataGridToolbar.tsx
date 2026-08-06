@@ -74,7 +74,7 @@ export const DataGridToolbar = memo(function DataGridToolbar({
             inputRef={searchInputRef}
             placeholder={t('actions.filter')}
             value={globalSearch}
-            onChange={(val: any) => setGlobalSearch(val)}
+            onChange={(val) => setGlobalSearch(String(val ?? ''))}
             sx={{
               width: { sm: 220, md: 280 },
               transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -186,7 +186,7 @@ export const DataGridToolbar = memo(function DataGridToolbar({
             fullWidth
             placeholder={`${t('common.search')}...`}
             value={globalSearch}
-            onChange={(val: any) => setGlobalSearch(val)}
+            onChange={(val) => setGlobalSearch(String(val ?? ''))}
             slotProps={{
               input: {
                 autoFocus: true,

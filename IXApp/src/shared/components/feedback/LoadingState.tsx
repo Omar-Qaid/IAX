@@ -6,6 +6,9 @@ export const LoadingState: React.FC<{ message?: string }> = ({ message }) => {
   const { t } = useAppTranslation();
   return (
     <Box
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
       sx={{
         display: 'flex',
         flexDirection: 'column',
@@ -16,7 +19,7 @@ export const LoadingState: React.FC<{ message?: string }> = ({ message }) => {
         width: '100%',
       }}
     >
-      <CircularProgress size={32} color="primary" sx={{ mb: 1.5 }} />
+      <CircularProgress size={32} color="primary" aria-hidden="true" sx={{ mb: 1.5 }} />
       <Typography variant="body2" color="text.secondary">
         {message ?? t('common.loading')}
       </Typography>

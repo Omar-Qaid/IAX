@@ -169,7 +169,7 @@ export function DataGridHeaderInternal<T>({
     <Box sx={{ 
       display: 'flex', 
       height: headerHeight,
-      bgcolor: theme.palette.mode === 'light' ? '#f3f2f1' : '#1a202c',
+      bgcolor: theme.palette.action.hover,
       width: 'max-content',
       minWidth: '100%',
       position: 'relative'
@@ -179,7 +179,7 @@ export function DataGridHeaderInternal<T>({
         <Box sx={{
           display: 'flex', flexDirection: 'column',
           boxSizing: 'border-box',
-          bgcolor: theme.palette.mode === 'light' ? '#f3f2f1' : '#1a202c',
+          bgcolor: theme.palette.action.hover,
           width: GRID_SELECTION_COLUMN_WIDTH, minWidth: GRID_SELECTION_COLUMN_WIDTH, maxWidth: GRID_SELECTION_COLUMN_WIDTH,
           position: 'sticky', left: 0, zIndex: 6,
           borderRight: `1px solid ${theme.palette.divider}`,
@@ -246,7 +246,7 @@ export function DataGridHeaderInternal<T>({
         flexShrink: 0,
         minWidth: 0,
         borderBottom: `1px solid ${theme.palette.divider}`,
-        bgcolor: theme.palette.mode === 'light' ? '#f3f2f1' : '#1a202c',
+        bgcolor: theme.palette.action.hover,
       }} />
 
       {pinnedRightCols.map((col, i) => (

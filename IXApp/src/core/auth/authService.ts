@@ -1,5 +1,6 @@
 import type { UserProfile, LoginResponse } from './types';
 import { authStorage } from './authStorage';
+import { environment } from '@app/configuration/environment';
 
 // Enterprise default admin user for initial dev/mock mode
 const MOCK_USER: UserProfile = {
@@ -29,18 +30,31 @@ const MOCK_USER: UserProfile = {
 };
 
 export const authService = {
+  getInitialUser(): UserProfile | null {
+    const cachedUser = authStorage.getUser<UserProfile>();
+    if (cachedUser && authStorage.getToken()) return cachedUser;
+    return environment.enableMockApi ? MOCK_USER : null;
+  },
+
   async getCurrentUser(): Promise<UserProfile> {
     const cachedUser = authStorage.getUser<UserProfile>();
     if (cachedUser) {
       return cachedUser;
     }
-    // Return mock user for dev
+    if (!environment.enableMockApi) {
+      throw new Error('No authenticated session is available.');
+    }
+
+    // Development-only mock session.
     authStorage.setUser(MOCK_USER);
     authStorage.setToken('mock-jwt-token-12345');
     return MOCK_USER;
   },
 
   async login(username: string): Promise<LoginResponse> {
+    if (!environment.enableMockApi) {
+      throw new Error('A production authentication adapter has not been configured.');
+    }
     const user: UserProfile = {
       ...MOCK_USER,
       username,
