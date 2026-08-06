@@ -11,7 +11,7 @@ using IAX.IXApi.Infrastructure.Persistence.Seeding.Entities;
 using IAX.IXApi.Modules.ERP.Foundation.LogisticsAddresses;
 using IAX.IXApi.Modules.ERP.Foundation.LegalEntities;
 
-namespace IAX.IXApi.Modules.ERP.Foundation.Features
+namespace IAX.IXApi.Modules.ERP.Foundation.LegalEntities
 {
     public interface ICompanyInfoService : IBaseService<CompanyInfo>
     {

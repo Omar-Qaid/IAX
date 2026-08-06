@@ -7,11 +7,11 @@ namespace IAX.IXApi.Modules.ERP
     {
         public static IServiceCollection AddErpModule(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddScoped<GeneralLedger.Features.FiscalCalendar.ILedgerFiscalCalendarPeriodService, GeneralLedger.Features.FiscalCalendar.LedgerFiscalCalendarPeriodService>();
-            services.AddScoped<GeneralLedger.Features.FiscalCalendar.IFiscalCalendarService, GeneralLedger.Features.FiscalCalendar.FiscalCalendarService>();
-            services.AddScoped<GeneralLedger.Features.FiscalCalendar.IFiscalCalendarYearService, GeneralLedger.Features.FiscalCalendar.FiscalCalendarYearService>();
-            services.AddScoped<GeneralLedger.Features.FiscalCalendar.IFiscalCalendarPeriodService, GeneralLedger.Features.FiscalCalendar.FiscalCalendarPeriodService>();
-            services.AddScoped<AccountsReceivable.Features.ICustPostingProfileService, AccountsReceivable.Features.CustPostingProfileService>();
+            services.AddScoped<GeneralLedger.FiscalCalendar.ILedgerFiscalCalendarPeriodService, GeneralLedger.FiscalCalendar.LedgerFiscalCalendarPeriodService>();
+            services.AddScoped<GeneralLedger.FiscalCalendar.IFiscalCalendarService, GeneralLedger.FiscalCalendar.FiscalCalendarService>();
+            services.AddScoped<GeneralLedger.FiscalCalendar.IFiscalCalendarYearService, GeneralLedger.FiscalCalendar.FiscalCalendarYearService>();
+            services.AddScoped<GeneralLedger.FiscalCalendar.IFiscalCalendarPeriodService, GeneralLedger.FiscalCalendar.FiscalCalendarPeriodService>();
+            services.AddScoped<AccountsReceivable.ICustPostingProfileService, AccountsReceivable.CustPostingProfileService>();
             return services;
         }
     }

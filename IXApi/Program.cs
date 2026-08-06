@@ -130,16 +130,3 @@ if (builder.Configuration.GetValue("DatabaseInitialization:Enabled", true))
 }
 
 app.Run();
-
-
-
-
-
-
-//Update the class in  shared module In to match the UOMDataModel.cs .,TaxDataModel.cs ,MasterDataModel.cs  Requirements: All ERP classes must inherit only from entity classes. Do not inherit from any other base classes. Compare every class in UOMDataModel.cs .,TaxDataModel.cs ,MasterDataModel.cs with the corresponding class in the shared module. Ensure all missing classes are added. Update existing classes to have the same structure, naming, properties, relationships, and inheritance as the  UOMDataModel.cs .,TaxDataModel.cs ,MasterDataModel.cs. Make  shared module fully consistent with the UOMDataModel.cs ,TaxDataModel.cs ,MasterDataModel.cs .
-//Update the  ledgerManagement module to match ledgerDataModel.cs`  file. Requirements: *All ERP classes must inherit **only** from entity classes. * Do **not** inherit from any other base classes. * Compare every class in ledgerManagement module  with the corresponding class in the ledgerDataModel.cs`  file module. * Ensure all missing classes are added. * Update existing classes to have the same structure, naming, properties, relationships, and inheritance as the ledger Management module. * Make ledger Management module  fully consistent with the  ledgerDataModel.cs`  file .
-//Update the class in  AccountsReceivablemodule In to match the CustomerDataModel.cs. Requirements: All ERP classes must inherit only from entity classes. Do not inherit from any other base classes. Compare every class in CustomerDataModel.cs with the corresponding class in the AccountsReceivable module. Ensure all missing classes are added. Update existing classes to have the same structure, naming, properties, relationships, and inheritance as the CustomerDataModel.cs. Make  AccountsReceivable module fully consistent with the CustomerDataModel.cs .
-//Update the  inveintoryManagement module to match inveintoryDataModel.cs`  file. Requirements: *All ERP classes must inherit **only** from entity classes. * Do **not** inherit from any other base classes. * Compare every class in inveintoryManagement module  with the corresponding class in the inveintoryDataModel.cs`  file module. * Ensure all missing classes are added. * Update existing classes to have the same structure, naming, properties, relationships, and inheritance as the inveintory Management module. * Make inveintory Management module  fully consistent with the  inveintoryDataModel.cs`  file .
-//do not change enum to  int
-//check it  BaseEntity<T> 
-//ignore upper case  or lower case
