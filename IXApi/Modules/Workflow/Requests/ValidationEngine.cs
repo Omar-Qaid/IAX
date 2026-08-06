@@ -9,7 +9,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Workflow.Requests
 {
-    [ScopedService]
     public class ValidationEngine : IValidationEngine
     {
         private readonly ApplicationDbContext _context;
@@ -277,4 +276,5 @@ namespace IAX.IXApi.Modules.Workflow.Requests
         }
     }
 }
+
 

@@ -2,18 +2,18 @@ using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Modules.Identity.Authentication;
 using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Identity.Roles;
-using IAX.IXApi.Modules.ERP.Shared.Features;
+using IAX.IXApi.Modules.Finance.Shared.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using IAX.IXApi.Modules.ERP.Inventory;
-using IAX.IXApi.Modules.ERP.Common;
+using IAX.IXApi.Modules.Finance.Inventory;
+using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Shared.Domain.Entities;
-using IAX.IXApi.Modules.ERP.Entities;
+using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Organization.Employees.Entities;
 using IAX.IXApi.Modules.Administration.AuditLogs.Entities;
 using IAX.IXApi.Modules.Administration.DataManagement.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.Seeding.Entities;
-using IAX.IXApi.Modules.ERP.AccountsReceivable;
+using IAX.IXApi.Modules.Finance.AccountsReceivable;
 
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
@@ -592,11 +592,11 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             #region Address Entities
             // 0. Location Roles
             var rolesToSeed = new[] {
-                new LogisticsLocationRole { Name = "Business", IsPostalAddress = IAX.IXApi.Modules.ERP.Common.NoYes.Yes, IsContactInfo = IAX.IXApi.Modules.ERP.Common.NoYes.Yes },
-                new LogisticsLocationRole { Name = "Delivery", IsPostalAddress = IAX.IXApi.Modules.ERP.Common.NoYes.Yes, IsContactInfo = IAX.IXApi.Modules.ERP.Common.NoYes.No },
-                new LogisticsLocationRole { Name = "Invoice", IsPostalAddress = IAX.IXApi.Modules.ERP.Common.NoYes.Yes, IsContactInfo = IAX.IXApi.Modules.ERP.Common.NoYes.No },
-                new LogisticsLocationRole { Name = "Home", IsPostalAddress = IAX.IXApi.Modules.ERP.Common.NoYes.Yes, IsContactInfo = IAX.IXApi.Modules.ERP.Common.NoYes.Yes },
-                new LogisticsLocationRole { Name = "Remit-to", IsPostalAddress = IAX.IXApi.Modules.ERP.Common.NoYes.Yes, IsContactInfo = IAX.IXApi.Modules.ERP.Common.NoYes.No }
+                new LogisticsLocationRole { Name = "Business", IsPostalAddress = IAX.IXApi.Modules.Finance.Common.NoYes.Yes, IsContactInfo = IAX.IXApi.Modules.Finance.Common.NoYes.Yes },
+                new LogisticsLocationRole { Name = "Delivery", IsPostalAddress = IAX.IXApi.Modules.Finance.Common.NoYes.Yes, IsContactInfo = IAX.IXApi.Modules.Finance.Common.NoYes.No },
+                new LogisticsLocationRole { Name = "Invoice", IsPostalAddress = IAX.IXApi.Modules.Finance.Common.NoYes.Yes, IsContactInfo = IAX.IXApi.Modules.Finance.Common.NoYes.No },
+                new LogisticsLocationRole { Name = "Home", IsPostalAddress = IAX.IXApi.Modules.Finance.Common.NoYes.Yes, IsContactInfo = IAX.IXApi.Modules.Finance.Common.NoYes.Yes },
+                new LogisticsLocationRole { Name = "Remit-to", IsPostalAddress = IAX.IXApi.Modules.Finance.Common.NoYes.Yes, IsContactInfo = IAX.IXApi.Modules.Finance.Common.NoYes.No }
             };
 
             foreach (var r in rolesToSeed)
@@ -906,6 +906,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
         }
     }
 }
+
 
 
 

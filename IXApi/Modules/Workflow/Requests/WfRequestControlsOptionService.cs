@@ -5,7 +5,6 @@ using IAX.IXApi.Infrastructure.Identity;
 
 namespace IAX.IXApi.Modules.Workflow.Requests
 {
-    [ScopedService]
     public class WfRequestControlsOptionService : BaseService<WfRequestControlsOption>, IWfRequestControlsOptionService
     {
         public WfRequestControlsOptionService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)
@@ -13,3 +12,4 @@ namespace IAX.IXApi.Modules.Workflow.Requests
         }
     }
 }
+

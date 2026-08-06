@@ -9,7 +9,6 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace IAX.IXApi.Modules.Administration.NumberSequences
 {
-    [ScopedService]
     public class SysNumberSequenceService : BaseService<SysNumberSequence>, ISysNumberSequenceService
     {
         public SysNumberSequenceService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
@@ -135,3 +134,4 @@ namespace IAX.IXApi.Modules.Administration.NumberSequences
         }
     }
 }
+

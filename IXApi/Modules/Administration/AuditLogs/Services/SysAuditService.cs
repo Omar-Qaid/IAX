@@ -1,6 +1,6 @@
 using IAX.IXApi.Shared.Application.Attributes;
 using IAX.IXApi.Shared.Domain.Entities;
-using IAX.IXApi.Modules.ERP.Entities;
+using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Organization.Employees.Entities;
 using IAX.IXApi.Modules.Administration.AuditLogs.Entities;
 using IAX.IXApi.Modules.Administration.DataManagement.Contracts;
@@ -19,8 +19,6 @@ namespace IAX.IXApi.Modules.Administration.AuditLogs.Services
         public EntityEntry Entry { get; set; } = default!;
         public string? PkNames { get; set; }
     }
-
-    [ScopedService]
     public class SysAuditService : ISysAuditService
     {
         public (IReadOnlyList<IProperty> PkProps, string? RecordId, bool IsTemporary) GetPkInfo(EntityEntry entry)
@@ -108,3 +106,5 @@ namespace IAX.IXApi.Modules.Administration.AuditLogs.Services
 
     }
 }
+
+

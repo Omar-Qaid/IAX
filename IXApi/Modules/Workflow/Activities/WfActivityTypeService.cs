@@ -6,7 +6,6 @@ using IAX.IXApi.Modules.Administration.NumberSequences;
 
 namespace IAX.IXApi.Modules.Workflow.Activities
 {
-    [ScopedService]
     public class WfActivityTypeService : BaseService<WfActivityType>, IWfActivityTypeService
     {
         private readonly ISysNumberSequenceService _sequences;
@@ -22,3 +21,4 @@ namespace IAX.IXApi.Modules.Workflow.Activities
         }
     }
 }
+

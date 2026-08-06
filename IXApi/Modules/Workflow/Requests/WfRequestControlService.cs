@@ -7,7 +7,6 @@ using IAX.IXApi.Infrastructure.Persistence.Services;
 
 namespace IAX.IXApi.Modules.Workflow.Requests
 {
-    [ScopedService]
     public class WfRequestControlService : BaseService<WfRequestControl>, IWfRequestControlService
     {
         public WfRequestControlService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)
@@ -15,3 +14,4 @@ namespace IAX.IXApi.Modules.Workflow.Requests
         }
     }
 }
+

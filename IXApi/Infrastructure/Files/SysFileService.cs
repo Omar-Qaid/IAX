@@ -18,7 +18,6 @@ using SixLabors.ImageSharp.Processing;
 
 namespace IAX.IXApi.Infrastructure.Files
 {
-    [ScopedService]
     public class SysFileService : ISysFileService
     {
         private readonly FileUploadSettings _fileUploadSettings;
@@ -110,3 +109,4 @@ namespace IAX.IXApi.Infrastructure.Files
         }
     }
 }
+

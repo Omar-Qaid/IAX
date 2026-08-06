@@ -6,7 +6,6 @@ using IAX.IXApi.Modules.Administration.NumberSequences;
 
 namespace IAX.IXApi.Modules.Workflow.Categories
 {
-    [ScopedService]
     public class WfCategoryService : BaseService<WfCategory>, IWfCategoryService
     {
         private readonly ISysNumberSequenceService _sequences;
@@ -22,3 +21,4 @@ namespace IAX.IXApi.Modules.Workflow.Categories
         }
     }
 }
+

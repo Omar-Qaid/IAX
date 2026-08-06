@@ -26,7 +26,7 @@ public sealed class ArchitectureTests
     [InlineData("IAX.IXApi.Modules.Identity.IdentityModule")]
     [InlineData("IAX.IXApi.Modules.Organization.OrganizationModule")]
     [InlineData("IAX.IXApi.Modules.Workflow.WorkflowModule")]
-    [InlineData("IAX.IXApi.Modules.ERP.ErpModule")]
+    [InlineData("IAX.IXApi.Modules.Finance.FinanceModule")]
     [InlineData("IAX.IXApi.Modules.Communication.CommunicationModule")]
     [InlineData("IAX.IXApi.Modules.Administration.AdministrationModule")]
     public void Every_module_has_an_explicit_composition_entry_point(string typeName)
@@ -46,3 +46,4 @@ public sealed class ArchitectureTests
         Assert.NotEmpty(context.Model.GetEntityTypes());
     }
 }
+

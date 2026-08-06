@@ -587,9 +587,9 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             await db.Database.OpenConnectionAsync(ct);
             try
             {
-                await db.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT {tableName} ON", ct);
+                await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT " + tableName + " ON", ct);
                 await db.SaveChangesAsync(ct);
-                await db.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT {tableName} OFF", ct);
+                await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT " + tableName + " OFF", ct);
             }
             finally
             {

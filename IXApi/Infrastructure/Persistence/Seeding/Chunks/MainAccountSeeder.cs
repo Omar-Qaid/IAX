@@ -1,6 +1,6 @@
 using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Shared.Domain.Entities;
-using IAX.IXApi.Modules.ERP.Entities;
+using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Organization.Employees.Entities;
 using IAX.IXApi.Modules.Administration.AuditLogs.Entities;
 using IAX.IXApi.Modules.Administration.DataManagement.Contracts;
@@ -10,7 +10,7 @@ using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Identity.Roles;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using IAX.IXApi.Modules.ERP.Common;
+using IAX.IXApi.Modules.Finance.Common;
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
 {
@@ -247,3 +247,4 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
         }
     }
 }
+

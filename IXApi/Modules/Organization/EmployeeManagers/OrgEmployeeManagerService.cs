@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Organization.EmployeeManagers
 {
-    [ScopedService]
     public class OrgEmployeeManagerService : BaseService<OrgEmployeeManager>, IOrgEmployeeManagerService
     {
         public OrgEmployeeManagerService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)
@@ -158,4 +157,5 @@ namespace IAX.IXApi.Modules.Organization.EmployeeManagers
         }
     }
 }
+
 

@@ -11,7 +11,6 @@ using System.Text;
 
 namespace IAX.IXApi.Modules.Identity.Authentication.Authentication
 {
-    [ScopedService]
     public class JwtTokenService
     {
         private readonly JwtSettings _jwtSettings;
@@ -63,3 +62,4 @@ namespace IAX.IXApi.Modules.Identity.Authentication.Authentication
         }
     }
 }
+

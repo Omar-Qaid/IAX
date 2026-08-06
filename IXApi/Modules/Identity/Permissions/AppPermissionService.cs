@@ -15,8 +15,6 @@ namespace IAX.IXApi.Modules.Identity.Permissions
         Task RemoveFromRoleAsync(string roleId, IEnumerable<int> permissionIds, CancellationToken ct = default);
         Task SetRolePermissionsAsync(string roleId, IEnumerable<int> permissionIds, CancellationToken ct = default);
     }
-
-    [ScopedService]
     public class AppPermissionService : IAppPermissionService
     {
         private readonly ApplicationDbContext _db;
@@ -144,3 +142,4 @@ namespace IAX.IXApi.Modules.Identity.Permissions
         }
     }
 }
+

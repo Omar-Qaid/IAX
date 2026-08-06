@@ -1,5 +1,5 @@
 using IAX.IXApi.Shared.Application.Contracts;
-using IAX.IXApi.Modules.ERP.Foundation.LogisticsAddresses;
+using IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses;
 using System;
 
 namespace IAX.IXApi.Modules.Organization.Employees
@@ -23,4 +23,5 @@ namespace IAX.IXApi.Modules.Organization.Employees
         public List<ContactInfoDto>? Contacts { get; set; }
     }
 }
+
 

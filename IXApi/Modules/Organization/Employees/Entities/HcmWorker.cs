@@ -1,8 +1,8 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using IAX.IXApi.Modules.ERP.Shared.Features;
-using IAX.IXApi.Modules.ERP.Common;
+using IAX.IXApi.Modules.Finance.Shared.Features;
+using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Organization.Departments;
 using IAX.IXApi.Modules.Organization.Occupations;
 using IAX.IXApi.Modules.Organization.Genders;
@@ -54,3 +54,4 @@ namespace IAX.IXApi.Modules.Organization.Employees.Entities
         #endregion
     }
 }
+

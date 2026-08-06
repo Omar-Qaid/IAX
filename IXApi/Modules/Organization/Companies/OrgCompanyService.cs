@@ -5,7 +5,6 @@ using IAX.IXApi.Infrastructure.Identity;
 
 namespace IAX.IXApi.Modules.Organization.Companies
 {
-    [ScopedService]
     public class OrgCompanyService : BaseService<OrgCompany>, IOrgCompanyService
     {
         public OrgCompanyService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)
@@ -13,3 +12,4 @@ namespace IAX.IXApi.Modules.Organization.Companies
         }
     }
 }
+

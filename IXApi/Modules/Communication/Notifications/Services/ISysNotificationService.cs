@@ -1,6 +1,6 @@
 using IAX.IXApi.Modules.Communication.Notifications;
 using IAX.IXApi.Shared.Domain.Entities;
-using IAX.IXApi.Modules.ERP.Entities;
+using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Organization.Employees.Entities;
 using IAX.IXApi.Modules.Administration.AuditLogs.Entities;
 using IAX.IXApi.Modules.Administration.DataManagement.Contracts;
@@ -135,3 +135,4 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
         Task DeleteAsync(long notificationId, string userId, CancellationToken ct = default);
     }
 }
+

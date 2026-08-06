@@ -4,7 +4,6 @@ using IAX.IXApi.Modules.Administration.DataManagement.Services;
 
 namespace IAX.IXApi.Modules.Administration.DataManagement.Providers
 {
-    [ScopedService]
     public class SysDataManagementEntityProvider : ISysDataManagementEntityProvider
     {
         private readonly Lazy<IReadOnlyDictionary<string, Type>> _allowedEntities;
@@ -57,3 +56,4 @@ namespace IAX.IXApi.Modules.Administration.DataManagement.Providers
         }
     }
 }
+

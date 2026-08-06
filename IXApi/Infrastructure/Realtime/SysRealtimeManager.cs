@@ -12,7 +12,6 @@ namespace IAX.IXApi.Infrastructure.Realtime
     ///   - Role:  "role_{roleName}"
     ///   - Custom groups: any string name
     /// </summary>
-    [ScopedService]
     public class SysRealtimeManager : ISysRealtimeManager
     {
         private readonly IHubContext<SysRealtimeHub> _hubContext;
@@ -123,3 +122,4 @@ namespace IAX.IXApi.Infrastructure.Realtime
         }
     }
 }
+

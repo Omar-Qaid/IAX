@@ -5,7 +5,6 @@ using IAX.IXApi.Infrastructure.Identity;
 
 namespace IAX.IXApi.Modules.Organization.Announcements
 {
-    [ScopedService]
     public class OrgAnnouncementService : BaseService<OrgAnnouncement>, IOrgAnnouncementService
     {
         public OrgAnnouncementService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)
@@ -13,3 +12,4 @@ namespace IAX.IXApi.Modules.Organization.Announcements
         }
     }
 }
+

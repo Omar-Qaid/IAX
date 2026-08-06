@@ -12,7 +12,6 @@ using System.Collections.Generic;
 
 namespace IAX.IXApi.Modules.Workflow.Processes
 {
-    [ScopedService]
     public class WfProcessService : BaseService<WfProcess>, IWfProcessService
     {
         private readonly ISysNumberSequenceService _sequences;
@@ -91,3 +90,4 @@ namespace IAX.IXApi.Modules.Workflow.Processes
         }
     }
 }
+

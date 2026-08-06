@@ -31,7 +31,6 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
     /// key→type map is built lazily inside a short-lived scope and only immutable
     /// <see cref="Type"/> metadata is cached (never handler instances).
     /// </summary>
-    [SingletonService]
     public sealed class SysBackgroundJobRegistry : ISysBackgroundJobRegistry
     {
         private readonly IServiceScopeFactory _scopeFactory;
@@ -68,3 +67,4 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
         }
     }
 }
+

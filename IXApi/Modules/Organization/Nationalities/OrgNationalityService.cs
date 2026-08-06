@@ -5,7 +5,6 @@ using IAX.IXApi.Infrastructure.Identity;
 
 namespace IAX.IXApi.Modules.Organization.Nationalities
 {
-    [ScopedService]
     public class OrgNationalityService : BaseService<OrgNationality>, IOrgNationalityService
     {
         public OrgNationalityService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)
@@ -13,3 +12,4 @@ namespace IAX.IXApi.Modules.Organization.Nationalities
         }
     }
 }
+

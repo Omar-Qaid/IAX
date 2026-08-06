@@ -3,7 +3,7 @@ using IAX.IXApi.Shared.Application.Attributes;
 using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Modules.Communication.Notifications;
 using IAX.IXApi.Shared.Domain.Entities;
-using IAX.IXApi.Modules.ERP.Entities;
+using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Organization.Employees.Entities;
 using IAX.IXApi.Modules.Administration.AuditLogs.Entities;
 using IAX.IXApi.Modules.Administration.DataManagement.Contracts;
@@ -20,7 +20,6 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
     /// Handles recipient resolution, notification persistence, template rendering,
     /// and real-time push via the generic ISysRealtimeManager.
     /// </summary>
-    [ScopedService]
     public class SysNotificationService : ISysNotificationService
     {
         private readonly ApplicationDbContext _db;
@@ -519,4 +518,6 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
         }
     }
 }
+
+
 

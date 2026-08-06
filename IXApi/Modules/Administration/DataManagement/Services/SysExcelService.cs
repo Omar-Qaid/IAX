@@ -3,7 +3,6 @@ using IAX.IXApi.Shared.Application.Attributes;
 
 namespace IAX.IXApi.Modules.Administration.DataManagement.Services
 {
-    [ScopedService]
     public class SysExcelService : ISysExcelService
     {
         public IEnumerable<Dictionary<string, string>> ReadData(Stream stream, string sheetName = "")
@@ -169,3 +168,4 @@ namespace IAX.IXApi.Modules.Administration.DataManagement.Services
         }
     }
 }
+

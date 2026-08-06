@@ -8,7 +8,6 @@ using IAX.IXApi.Modules.Administration.NumberSequences;
 
 namespace IAX.IXApi.Modules.Workflow.Requests
 {
-    [ScopedService]
     public class WfRequestService : BaseService<WfRequest>, IWfRequestService
     {
         private readonly ISysNumberSequenceService _sequences;
@@ -24,3 +23,4 @@ namespace IAX.IXApi.Modules.Workflow.Requests
         }
     }
 }
+

@@ -21,6 +21,11 @@ public static class CommunicationModule
         services.AddScoped<ISysNotificationChannelSender, SysTeamsNotificationChannelSender>();
         services.AddScoped<ISysNotificationChannelSender, SysSlackNotificationChannelSender>();
         services.AddScoped<ISysNotificationChannelSender, SysWebhookNotificationChannelSender>();
+
+        // Explicit Communication services
+        services.AddScoped<Chat.Services.ISysChatService, Chat.Services.SysChatService>();
+        services.AddScoped<Notifications.Services.ISysNotificationService, Notifications.Services.SysNotificationService>();
+
         return services;
     }
 }

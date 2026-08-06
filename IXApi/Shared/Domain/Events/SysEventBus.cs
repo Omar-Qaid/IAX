@@ -9,7 +9,6 @@ namespace IAX.IXApi.Shared.Domain.Events
     /// Resolves every <see cref="ISysEventHandler{TEvent}"/> for the concrete event type and
     /// invokes them sequentially with per-handler error isolation.
     /// </summary>
-    [ScopedService]
     public class SysEventBus : ISysEventBus
     {
         private readonly IServiceProvider _services;
@@ -49,3 +48,4 @@ namespace IAX.IXApi.Shared.Domain.Events
         }
     }
 }
+

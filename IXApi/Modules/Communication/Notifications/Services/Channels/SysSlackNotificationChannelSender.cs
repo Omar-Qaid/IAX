@@ -1,6 +1,6 @@
 using IAX.IXApi.Shared.Application.Attributes;
 using IAX.IXApi.Shared.Domain.Entities;
-using IAX.IXApi.Modules.ERP.Entities;
+using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Organization.Employees.Entities;
 using IAX.IXApi.Modules.Administration.AuditLogs.Entities;
 using IAX.IXApi.Modules.Administration.DataManagement.Contracts;
@@ -13,7 +13,6 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services.Channels
     /// <summary>
     /// Slack API/webhook channel sender strategy.
     /// </summary>
-    [ScopedService]
     public class SysSlackNotificationChannelSender : ISysNotificationChannelSender
     {
         private readonly ILogger<SysSlackNotificationChannelSender> _logger;
@@ -36,3 +35,5 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services.Channels
         }
     }
 }
+
+

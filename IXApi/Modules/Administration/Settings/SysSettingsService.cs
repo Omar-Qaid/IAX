@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Administration.Settings
 {
-    [ScopedService]
     public class SysSettingsService : ISysSettingsService
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -122,3 +121,4 @@ namespace IAX.IXApi.Modules.Administration.Settings
         }
     }
 }
+

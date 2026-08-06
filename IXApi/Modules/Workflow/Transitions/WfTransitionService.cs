@@ -8,7 +8,6 @@ using IAX.IXApi.Modules.Administration.NumberSequences;
 
 namespace IAX.IXApi.Modules.Workflow.Transitions
 {
-    [ScopedService]
     public class WfTransitionService : BaseService<WfTransition>, IWfTransitionService
     {
         private readonly ISysNumberSequenceService _sequences;
@@ -24,3 +23,4 @@ namespace IAX.IXApi.Modules.Workflow.Transitions
         }
     }
 }
+

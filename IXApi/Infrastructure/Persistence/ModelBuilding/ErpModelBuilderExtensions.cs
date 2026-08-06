@@ -1,14 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using IAX.IXApi.Shared.Domain.Entities;
-using IAX.IXApi.Modules.ERP.Entities;
+using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Organization.Employees.Entities;
 using IAX.IXApi.Modules.Administration.AuditLogs.Entities;
 using IAX.IXApi.Modules.Administration.DataManagement.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.Seeding.Entities;
-using IAX.IXApi.Modules.ERP.AccountsReceivable;
-using IAX.IXApi.Modules.ERP.Inventory;
-using IAX.IXApi.Modules.ERP.GeneralLedger;
-using IAX.IXApi.Modules.ERP.Shared.Features;
+using IAX.IXApi.Modules.Finance.AccountsReceivable;
+using IAX.IXApi.Modules.Finance.Inventory;
+using IAX.IXApi.Modules.Finance.GeneralLedger;
+using IAX.IXApi.Modules.Finance.Shared.Features;
 using DocumentFormat.OpenXml.Vml.Office;
 using DocumentFormat.OpenXml.Bibliography;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -2158,3 +2158,4 @@ namespace IAX.IXApi.Infrastructure.Persistence.ModelBuilding
         }
     }
 }
+

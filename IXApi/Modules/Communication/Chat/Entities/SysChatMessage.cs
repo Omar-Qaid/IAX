@@ -20,8 +20,7 @@ namespace IAX.IXApi.Modules.Communication.Chat.Entities
         public string Content { get; set; } = null!;
 
         public DateTime SentAt { get; set; } = DateTime.UtcNow;
-
-        public bool IsDeleted { get; set; }
     }
 }
+
 

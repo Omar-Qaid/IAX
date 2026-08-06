@@ -5,7 +5,6 @@ using IAX.IXApi.Infrastructure.Persistence.Services;
 
 namespace IAX.IXApi.Modules.Workflow.Activities
 {
-    [ScopedService]
     public class WfActivityMappingVariableService : BaseService<WfActivityMappingVariable>, IWfActivityMappingVariableService
     {
         public WfActivityMappingVariableService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)
@@ -13,3 +12,4 @@ namespace IAX.IXApi.Modules.Workflow.Activities
         }
     }
 }
+

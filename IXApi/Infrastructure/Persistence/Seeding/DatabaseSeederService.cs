@@ -1,7 +1,7 @@
 using IAX.IXApi.Shared.Application.Attributes;
 using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Shared.Domain.Entities;
-using IAX.IXApi.Modules.ERP.Entities;
+using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Organization.Employees.Entities;
 using IAX.IXApi.Modules.Administration.AuditLogs.Entities;
 using IAX.IXApi.Modules.Administration.DataManagement.Contracts;
@@ -14,7 +14,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding
 {
-    [ScopedService]
     public class DatabaseSeederService : IDatabaseSeederService
     {
         private readonly ApplicationDbContext _db;
@@ -73,4 +72,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding
         }
     }
 }
+
+
 

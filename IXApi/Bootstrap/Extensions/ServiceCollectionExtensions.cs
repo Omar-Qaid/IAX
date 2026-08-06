@@ -50,7 +50,6 @@ namespace IAX.IXApi.Bootstrap.Extensions
             services.AddScoped(typeof(IUnitOfWork), typeof(UnitOfWork));
             services.AddHttpContextAccessor();
 
-
             services.AddHttpClient();
             services.AddMemoryCache();
             services.AddDistributedMemoryCache();
@@ -95,6 +94,8 @@ namespace IAX.IXApi.Bootstrap.Extensions
                     ctx.ProblemDetails.Extensions["traceId"] = ctx.HttpContext.TraceIdentifier;
                 };
             });
+
+            services.AddExceptionHandler<IAX.IXApi.Api.Middleware.GlobalExceptionHandler>();
 
             services.AddControllers().ConfigureApiBehaviorOptions(options =>
             {
@@ -178,12 +179,7 @@ namespace IAX.IXApi.Bootstrap.Extensions
 
         public static IServiceCollection AddDomainServices(this IServiceCollection services)
         {
-            // Note: Most domain services are automatically registered via the [ScopedService] attribute
-            // using the RegisterServicesWithAttributes extension method in Program.cs.
-            // Only add services here that require complex registration or do not use the attribute.
-
             return services;
         }
     }
 }
-

@@ -1,5 +1,5 @@
 using IAX.IXApi.Shared.Domain.Entities;
-using IAX.IXApi.Modules.ERP.Entities;
+using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Organization.Employees.Entities;
 using IAX.IXApi.Modules.Administration.AuditLogs.Entities;
 using IAX.IXApi.Modules.Administration.DataManagement.Contracts;
@@ -26,3 +26,4 @@ namespace IAX.IXApi.Modules.Organization.Attachments
         public virtual OrgAttachment Attachment { get; set; } = null!;
     }
 }
+

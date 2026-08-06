@@ -32,8 +32,6 @@ namespace IAX.IXApi.Modules.Workflow.Activities
             Dictionary<string, string>? placeholders = null,
             CancellationToken ct = default);
     }
-
-    [ScopedService]
     public class WfActivityNotificationDispatcher : IWfActivityNotificationDispatcher
     {
         private readonly ISysNotificationService _notifications;
@@ -99,3 +97,4 @@ namespace IAX.IXApi.Modules.Workflow.Activities
         }
     }
 }
+

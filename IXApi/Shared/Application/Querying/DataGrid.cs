@@ -9,7 +9,7 @@ namespace IAX.IXApi.Shared.Application.Querying
         #region Operator Constants
         private static class Operators
         {
-            public const string Equals = "equals";
+            public new const string Equals = "equals";
             public const string DoesNotEqual = "doesnotequal";
             public const string Contains = "contains";
             public const string DoesNotContain = "doesnotcontain";

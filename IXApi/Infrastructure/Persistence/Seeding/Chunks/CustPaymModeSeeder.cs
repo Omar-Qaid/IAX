@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using IAX.IXApi.Modules.ERP.AccountsReceivable;
-using IAX.IXApi.Modules.ERP.Common;
+using IAX.IXApi.Modules.Finance.AccountsReceivable;
+using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Modules.Identity.Roles;
 using IAX.IXApi.Modules.Identity.Users;
@@ -195,3 +195,4 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
         }
     }
 }
+

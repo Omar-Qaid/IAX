@@ -5,7 +5,6 @@ using IAX.IXApi.Shared.Application.Attributes;
 
 namespace IAX.IXApi.Modules.Workflow.Variables
 {
-    [ScopedService]
     public class WfDataTypeService : BaseService<WfDataType>, IWfDataTypeService
     {
         public WfDataTypeService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)
@@ -13,3 +12,4 @@ namespace IAX.IXApi.Modules.Workflow.Variables
         }
     }
 }
+

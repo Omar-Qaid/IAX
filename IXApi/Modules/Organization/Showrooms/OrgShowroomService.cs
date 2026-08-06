@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Organization.Showrooms
 {
-    [ScopedService]
     public class OrgShowroomService : BaseService<OrgShowroom>, IOrgShowroomService
     {
         private readonly IGenericRepository<IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker> _employees;
@@ -66,5 +65,6 @@ namespace IAX.IXApi.Modules.Organization.Showrooms
         }
     }
 }
+
 
 

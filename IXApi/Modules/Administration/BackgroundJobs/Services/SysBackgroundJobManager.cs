@@ -11,7 +11,6 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
     /// <summary>
     /// Default <see cref="ISysBackgroundJobManager"/> implementation backed by EF Core.
     /// </summary>
-    [ScopedService]
     public class SysBackgroundJobManager : ISysBackgroundJobManager
     {
         private readonly ApplicationDbContext _db;
@@ -327,4 +326,5 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
         };
     }
 }
+
 

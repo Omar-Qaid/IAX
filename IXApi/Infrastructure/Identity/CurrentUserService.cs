@@ -4,7 +4,6 @@ using System.Security.Claims;
 
 namespace IAX.IXApi.Infrastructure.Identity
 {
-    [ScopedService]
     public class CurrentUserService : ICurrentUserService
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
@@ -64,3 +63,4 @@ namespace IAX.IXApi.Infrastructure.Identity
         }
     }
 }
+

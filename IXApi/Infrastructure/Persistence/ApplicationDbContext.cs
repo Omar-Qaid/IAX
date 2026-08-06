@@ -5,7 +5,7 @@ using IAX.IXApi.Modules.Administration.Settings;
 
 
 using IAX.IXApi.Shared.Domain.Entities;
-using IAX.IXApi.Modules.ERP.Entities;
+using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Organization.Employees.Entities;
 using IAX.IXApi.Modules.Administration.AuditLogs.Entities;
 using IAX.IXApi.Modules.Administration.DataManagement.Contracts;
@@ -23,7 +23,7 @@ using IAX.IXApi.Modules.Organization.Employees;
 using IAX.IXApi.Modules.Organization.Genders;
 using IAX.IXApi.Modules.Organization.Nationalities;
 using IAX.IXApi.Modules.Organization.Occupations;
-using IAX.IXApi.Modules.ERP.AccountsReceivable;
+using IAX.IXApi.Modules.Finance.AccountsReceivable;
 
 
 
@@ -57,9 +57,9 @@ using System.Linq.Expressions;
 using System.Reflection.Metadata;
 using IAX.IXApi.Modules.Organization.Features.OrgEmployeeGroup;
 using IAX.IXApi.Modules.Organization.Features.OrgEmployeeCategory;
-using IAX.IXApi.Modules.ERP.Inventory;
-using IAX.IXApi.Modules.ERP.Shared.Features;
-using IAX.IXApi.Modules.ERP.GeneralLedger;
+using IAX.IXApi.Modules.Finance.Inventory;
+using IAX.IXApi.Modules.Finance.Shared.Features;
+using IAX.IXApi.Modules.Finance.GeneralLedger;
 
 namespace IAX.IXApi.Infrastructure.Persistence
 {
@@ -420,5 +420,6 @@ namespace IAX.IXApi.Infrastructure.Persistence
         }
     }
 }
+
 
 

@@ -6,17 +6,16 @@ using IAX.IXApi.Modules.Organization.EmployeeManagers;
 using Microsoft.EntityFrameworkCore;
 
 using IAX.IXApi.Shared.Domain.Entities;
-using IAX.IXApi.Modules.ERP.Entities;
+using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Organization.Employees.Entities;
 using IAX.IXApi.Modules.Administration.AuditLogs.Entities;
 using IAX.IXApi.Modules.Administration.DataManagement.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.Seeding.Entities;
 using IAX.IXApi.Modules.Administration.NumberSequences;
-using IAX.IXApi.Modules.ERP.Foundation.LogisticsAddresses;
+using IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses;
 
 namespace IAX.IXApi.Modules.Organization.Employees
 {
-    [ScopedService]
     public class HcmWorkerService : BaseService<HcmWorker>, IHcmWorkerService
     {
         private readonly ISysNumberSequenceService _numberSequenceService;
@@ -56,7 +55,7 @@ namespace IAX.IXApi.Modules.Organization.Employees
                         AddressBookNames = string.Empty,
                         CreatedBy = _currentUser.GetCurrentUserId() ?? "sys",
                         OwnerAccountId = _currentUser.GetOwnerAccountId() ?? "sys",
-                        IsActive = IAX.IXApi.Modules.ERP.Common.NoYes.Yes
+                        IsActive = IAX.IXApi.Modules.Finance.Common.NoYes.Yes
                     };
                     _dbContext.Set<DirPartyTable>().Add(party);
                     await _dbContext.SaveChangesAsync(cancellationToken);
@@ -112,5 +111,7 @@ namespace IAX.IXApi.Modules.Organization.Employees
         }
     }
 }
+
+
 
 

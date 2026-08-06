@@ -11,7 +11,6 @@ namespace IAX.IXApi.Bootstrap
         {
             services.AddSignalR();
 
-            // ── Background Job Management ────────────────────────────────────
             // ── Event Bus ────────────────────────────────────────────────────
             // Auto-register every ISysEventHandler<TEvent> against its closed interface so the
             // event bus can fan an event out to all subscribers. Adding a handler needs no DI edit.
@@ -27,7 +26,16 @@ namespace IAX.IXApi.Bootstrap
 
             services.AddScoped(typeof(IBaseService<>), typeof(GenericService<>));
             
-            services.RegisterServicesWithAttributes(assembly);
+            // Infrastructure Services
+            services.AddScoped<Infrastructure.Files.ISysFileService, Infrastructure.Files.SysFileService>();
+            services.AddScoped<Infrastructure.Identity.ICurrentUserService, Infrastructure.Identity.CurrentUserService>();
+            services.AddScoped<Infrastructure.Persistence.Seeding.IDatabaseSeederService, Infrastructure.Persistence.Seeding.DatabaseSeederService>();
+            services.AddScoped<Infrastructure.Realtime.ISysRealtimeManager, Infrastructure.Realtime.SysRealtimeManager>();
+
+            // Shared Services
+            services.AddScoped<Shared.Application.Conversion.IValueConverter, Shared.Application.Conversion.ValueConverterService>();
+            services.AddScoped<Shared.Domain.Events.ISysEventBus, Shared.Domain.Events.SysEventBus>();
+
             services.RegisterValidators(assembly);
             services.RegisterMapsterConfigurations(assembly);
             

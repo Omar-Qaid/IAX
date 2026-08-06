@@ -105,11 +105,10 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Entities
         public string? LastError { get; set; }
 
         /// <summary>Soft-delete flag.</summary>
-        public bool IsDeleted { get; set; }
-
         /// <summary>Execution history for this job.</summary>
         public virtual ICollection<SysBackgroundJobExecution> Executions { get; set; }
             = new List<SysBackgroundJobExecution>();
     }
 }
+
 

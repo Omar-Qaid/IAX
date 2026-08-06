@@ -2,10 +2,10 @@ using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Modules.Identity.Authentication;
 using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Identity.Roles;
-using IAX.IXApi.Modules.ERP.AccountsReceivable;
+using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using IAX.IXApi.Modules.ERP.Common;
+using IAX.IXApi.Modules.Finance.Common;
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
 {
@@ -316,3 +316,4 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
         }
     }
 }
+

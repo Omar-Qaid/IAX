@@ -4,7 +4,7 @@ using IAX.IXApi.Infrastructure.Persistence.Seeding;
 using IAX.IXApi.Bootstrap.Extensions;
 using IAX.IXApi.Bootstrap;
 using IAX.IXApi.Modules.Workflow;
-using IAX.IXApi.Modules.ERP;
+using IAX.IXApi.Modules.Finance;
 using IAX.IXApi.Modules.Identity;
 using IAX.IXApi.Modules.Organization;
 using IAX.IXApi.Modules.Communication;
@@ -32,7 +32,7 @@ builder.WebHost.ConfigureKestrel(options =>
 
 // 1. Infrastructure & Core Services
 builder.Services.AddMemoryCache();
-builder.Services.AddSingleton<IAX.IXApi.Infrastructure.Caching.IErpLookupCacheService, IAX.IXApi.Infrastructure.Caching.ErpLookupCacheService>();
+builder.Services.AddSingleton<IAX.IXApi.Infrastructure.Caching.ILookupCacheService, IAX.IXApi.Infrastructure.Caching.LookupCacheService>();
 builder.Services.AddInfrastructure(builder.Configuration, builder.Environment.IsDevelopment());
 builder.Services.AddMapster();
 
@@ -42,7 +42,7 @@ builder.Services.AddApplicationServices(assembly);
 builder.Services.AddCommunicationModule(builder.Configuration);
 builder.Services.AddAdministrationModule(builder.Configuration, assembly);
 builder.Services.AddWorkflowModule(builder.Configuration);
-builder.Services.AddErpModule(builder.Configuration);
+builder.Services.AddFinanceModule(builder.Configuration);
 builder.Services.AddIdentityModule(builder.Configuration);
 builder.Services.AddOrganizationModule(builder.Configuration);
 
@@ -56,8 +56,6 @@ builder.Services.AddCustomAuthorization();
 builder.Services.AddApiServices();
 builder.Services.AddDomainServices();
 builder.Services.AddCustomRateLimiter();
-builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-builder.Services.AddProblemDetails();
 builder.Services.AddOutputCache(o =>
 {
     o.AddPolicy("default", p => p.Expire(TimeSpan.FromSeconds(30)).SetVaryByQuery("*"));
@@ -130,3 +128,4 @@ if (builder.Configuration.GetValue("DatabaseInitialization:Enabled", true))
 }
 
 app.Run();
+

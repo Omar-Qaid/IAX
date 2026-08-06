@@ -5,7 +5,6 @@ using IAX.IXApi.Infrastructure.Identity;
 
 namespace IAX.IXApi.Modules.Organization.Features.OrgEmployeeGroup
 {
-    [ScopedService]
     public class OrgEmployeeGroupService : BaseService<OrgEmployeeGroup>, IOrgEmployeeGroupService
     {
         public OrgEmployeeGroupService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)
@@ -13,4 +12,5 @@ namespace IAX.IXApi.Modules.Organization.Features.OrgEmployeeGroup
         }
     }
 }
+
 

@@ -1,7 +1,7 @@
 using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Shared.Application.Contracts;
 using IAX.IXApi.Shared.Domain.Entities;
-using IAX.IXApi.Modules.ERP.Entities;
+using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Organization.Employees.Entities;
 using IAX.IXApi.Modules.Administration.AuditLogs.Entities;
 using IAX.IXApi.Modules.Administration.DataManagement.Contracts;
@@ -45,41 +45,76 @@ namespace IAX.IXApi.Api.Middleware
             // Log to Database
             await PersistExceptionAsync(context, exception, status, sw.ElapsedMilliseconds, corrId);
 
-            var response = APIResponse<object>.Fail(title);
-            
+            ProblemDetails problemDetails;
+
             if (exception is FluentValidation.ValidationException vex)
             {
-                response.Errors = vex.Errors.Select(e => e.ErrorMessage).ToList();
+                var validationProblem = new ValidationProblemDetails(
+                    vex.Errors
+                        .GroupBy(e => e.PropertyName)
+                        .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray())
+                )
+                {
+                    Status = status,
+                    Title = "One or more validation errors occurred.",
+                    Detail = "Please refer to the errors property for additional details.",
+                    Instance = context.Request.Path
+                };
+                problemDetails = validationProblem;
             }
             else if (exception is Microsoft.EntityFrameworkCore.DbUpdateException dbex)
             {
                 var innerMsg = dbex.InnerException?.Message ?? "";
+                string detailMessage = "Database error occurred.";
+                
                 if (innerMsg.Contains("UNIQUE", StringComparison.OrdinalIgnoreCase) || 
                     innerMsg.Contains("duplicate key", StringComparison.OrdinalIgnoreCase))
                 {
                     status = (int)HttpStatusCode.Conflict;
-                    response.Message = "A record with the same unique data already exists.";
+                    title = "Conflict";
+                    detailMessage = "A record with the same unique data already exists.";
                 }
                 else if (innerMsg.Contains("REFERENCE", StringComparison.OrdinalIgnoreCase) || 
                          innerMsg.Contains("foreign key", StringComparison.OrdinalIgnoreCase))
                 {
                     status = (int)HttpStatusCode.Conflict;
-                    response.Message = "Cannot perform this action because the record is linked to other data.";
+                    title = "Conflict";
+                    detailMessage = "Cannot perform this action because the record is linked to other data.";
                 }
-                else
+                else if (_env.IsDevelopment())
                 {
-                    response.Errors = new List<string> { _env.IsDevelopment() ? innerMsg : "Database error occurred." };
+                    detailMessage = innerMsg;
                 }
+
+                problemDetails = new ProblemDetails
+                {
+                    Status = status,
+                    Title = title,
+                    Detail = detailMessage,
+                    Instance = context.Request.Path
+                };
             }
             else
             {
-                response.Errors = new List<string> { _env.IsDevelopment() ? exception.ToString() : exception.Message };
+                problemDetails = new ProblemDetails
+                {
+                    Status = status,
+                    Title = title,
+                    Detail = _env.IsDevelopment() ? exception.ToString() : exception.Message,
+                    Instance = context.Request.Path
+                };
             }
 
-            context.Response.ContentType = "application/json";
+            problemDetails.Extensions["traceId"] = traceId;
+            if (!string.IsNullOrEmpty(corrId))
+            {
+                problemDetails.Extensions["correlationId"] = corrId;
+            }
+
+            context.Response.ContentType = "application/problem+json";
             context.Response.StatusCode = status;
 
-            await context.Response.WriteAsJsonAsync(response, cancellationToken);
+            await context.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
 
             return true;
         }
@@ -164,3 +199,4 @@ namespace IAX.IXApi.Api.Middleware
         private static string? GetAppVersion() => System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version?.ToString();
     }
 }
+

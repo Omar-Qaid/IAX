@@ -5,7 +5,6 @@ using IAX.IXApi.Infrastructure.Identity;
 
 namespace IAX.IXApi.Modules.Identity.Roles
 {
-    [ScopedService]
     public class RoleService : BaseService<AspNetRole>, IRoleService
     {
         public RoleService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)
@@ -13,4 +12,5 @@ namespace IAX.IXApi.Modules.Identity.Roles
         }
     }
 }
+
 

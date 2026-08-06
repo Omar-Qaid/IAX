@@ -92,7 +92,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Entities
         /// <summary>
         /// Whether this template is active and can be used.
         /// </summary>
-        public bool IsDeleted { get; set; }
     }
 }
+
 

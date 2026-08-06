@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Organization.Features.OrgEmployeeCategory
 {
-    [ScopedService]
     public class OrgEmployeeCategoryService : BaseService<OrgEmployeeCategory>, IOrgEmployeeCategoryService
     {
         public OrgEmployeeCategoryService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)
@@ -70,5 +69,6 @@ namespace IAX.IXApi.Modules.Organization.Features.OrgEmployeeCategory
         }
     }
 }
+
 
 

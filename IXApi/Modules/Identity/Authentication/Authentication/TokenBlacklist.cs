@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 
 namespace IAX.IXApi.Modules.Identity.Authentication.Authentication
 {
-    [ScopedService]
     public class TokenBlacklist : ITokenBlacklist
     {
         private readonly IDistributedCache _cache;
@@ -32,3 +31,4 @@ namespace IAX.IXApi.Modules.Identity.Authentication.Authentication
         private string GetCacheKey(string jti) => $"blacklist:{jti}";
     }
 }
+

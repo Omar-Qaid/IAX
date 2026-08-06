@@ -13,7 +13,6 @@ namespace IAX.IXApi.Modules.Communication.Chat.Services
     /// Used both by the hub (real-time send) and the REST controller (e.g. system-posted
     /// messages), so delivery semantics are identical regardless of entry point.
     /// </summary>
-    [ScopedService]
     public class SysChatService : ISysChatService
     {
         private readonly ApplicationDbContext _db;
@@ -167,3 +166,4 @@ namespace IAX.IXApi.Modules.Communication.Chat.Services
         };
     }
 }
+

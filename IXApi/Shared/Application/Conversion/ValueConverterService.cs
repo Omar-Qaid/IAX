@@ -3,7 +3,6 @@ using System.Globalization;
 
 namespace IAX.IXApi.Shared.Application.Conversion
 {
-    [ScopedService]
     public class ValueConverterService : IValueConverter
     {
         public object? ConvertValue(string? stringValue, Type targetType)
@@ -56,3 +55,4 @@ namespace IAX.IXApi.Shared.Application.Conversion
         }
     }
 }
+

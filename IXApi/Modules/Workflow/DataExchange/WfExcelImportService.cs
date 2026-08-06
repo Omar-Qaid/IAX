@@ -10,7 +10,6 @@ using System.Reflection;
 
 namespace IAX.IXApi.Modules.Workflow.DataExchange
 {
-    [ScopedService]
     public class WfExcelImportService : IWfExcelImportService
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -102,7 +101,7 @@ namespace IAX.IXApi.Modules.Workflow.DataExchange
             }
         }
 
-        public async Task<byte[]> GenerateProcessTemplateAsync()
+        public Task<byte[]> GenerateProcessTemplateAsync()
         {
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Processes");
@@ -140,10 +139,10 @@ namespace IAX.IXApi.Modules.Workflow.DataExchange
 
             using var stream = new MemoryStream();
             workbook.SaveAs(stream);
-            return stream.ToArray();
+            return Task.FromResult(stream.ToArray());
         }
 
-        public async Task<byte[]> GenerateActivityTemplateAsync()
+        public Task<byte[]> GenerateActivityTemplateAsync()
         {
              using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Activities");
@@ -188,7 +187,8 @@ namespace IAX.IXApi.Modules.Workflow.DataExchange
 
             using var stream = new MemoryStream();
             workbook.SaveAs(stream);
-            return stream.ToArray();
+            return Task.FromResult(stream.ToArray());
         }
     }
 }
+

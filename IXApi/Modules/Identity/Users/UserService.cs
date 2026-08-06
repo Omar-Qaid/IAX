@@ -5,7 +5,6 @@ using IAX.IXApi.Infrastructure.Identity;
 
 namespace IAX.IXApi.Modules.Identity.Users
 {
-    [ScopedService]
     public class UserService : BaseService<AspNetUser>, IUserService
     {
         public UserService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)
@@ -13,4 +12,5 @@ namespace IAX.IXApi.Modules.Identity.Users
         }
     }
 }
+
 

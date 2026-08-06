@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Hosting;
 
 namespace IAX.IXApi.Modules.Organization.Attachments
 {
-    [ScopedService]
     public class OrgAttachmentService : BaseService<OrgAttachment>, IOrgAttachmentService
     {
         private readonly IWebHostEnvironment _env;
@@ -95,3 +94,4 @@ namespace IAX.IXApi.Modules.Organization.Attachments
         }
     }
 }
+

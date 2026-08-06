@@ -109,12 +109,11 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Entities
         /// <summary>
         /// Soft-delete flag.
         /// </summary>
-        public bool IsDeleted { get; set; }
-
         /// <summary>
         /// Collection of recipients for this notification.
         /// </summary>
         public virtual ICollection<SysNotificationRecipient> Recipients { get; set; } = new List<SysNotificationRecipient>();
     }
 }
+
 
