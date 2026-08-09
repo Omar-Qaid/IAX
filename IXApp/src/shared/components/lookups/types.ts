@@ -1,16 +1,16 @@
 import type React from 'react';
 import type { QueryKey } from '@tanstack/react-query';
-import type { Control, FieldError, FieldValues } from 'react-hook-form';
+import type { Control, FieldError, FieldPath, FieldValues } from 'react-hook-form';
 
 export interface LookupOption {
   id: string | number;
   code: string;
   name: string;
   description?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
-export interface GridLookupColumn<T extends Record<string, any> = Record<string, any>> {
+export interface GridLookupColumn<T extends object = Record<string, unknown>> {
   field: keyof T | string;
   header: string;
   headerAr?: string;
@@ -38,6 +38,8 @@ export interface LookupPage<T> {
   totalRecords: number;
 }
 
+export type LookupValue<T extends object> = Extract<T[keyof T], string | number>;
+
 export type FetchPageFn<T> = (params: {
   pageNumber: number;
   pageSize: number;
@@ -45,10 +47,10 @@ export type FetchPageFn<T> = (params: {
   signal?: AbortSignal;
 }) => Promise<LookupPage<T>>;
 
-export interface GridLookupProps<T extends Record<string, any>> {
-  value: T[keyof T] | null | undefined;
+export interface GridLookupProps<T extends object> {
+  value: LookupValue<T> | null | undefined;
   displayText?: string;
-  onChange: (value: T[keyof T] | null, row: T | null) => void;
+  onChange: (value: LookupValue<T> | null, row: T | null) => void;
 
   columns: GridLookupColumn<T>[];
   fetchPage: FetchPageFn<T>;
@@ -74,12 +76,15 @@ export interface GridLookupProps<T extends Record<string, any>> {
   actions?: GridLookupAction[];
 }
 
-export interface LookupGridFieldProps<T extends Record<string, any>, TFieldValues extends FieldValues = FieldValues> {
-  name: string;
+export interface LookupGridFieldProps<
+  T extends object,
+  TFieldValues extends FieldValues = FieldValues,
+> {
+  name: FieldPath<TFieldValues>;
   label?: string;
   control?: Control<TFieldValues>;
-  value?: T[keyof T] | null;
-  onChange?: (value: T[keyof T] | null, row?: T | null) => void;
+  value?: LookupValue<T> | null;
+  onChange?: (value: LookupValue<T> | null, row?: T | null) => void;
   error?: FieldError | { message?: string } | string;
 
   columns: GridLookupColumn<T>[];
@@ -97,7 +102,7 @@ export interface LookupGridFieldProps<T extends Record<string, any>, TFieldValue
     totalRecords: number;
   }>;
 
-  fetchById?: (id: string | number) => Promise<T | null>;
+  fetchById?: (id: LookupValue<T>) => Promise<T | null>;
 
   valueField?: keyof T;
   labelField?: keyof T;
@@ -114,21 +119,29 @@ export interface LookupGridFieldProps<T extends Record<string, any>, TFieldValue
   permissionResource?: string;
 }
 
-export interface LookupGridFieldBaseProps<T extends Record<string, any>>
-  extends Omit<LookupGridFieldProps<T, FieldValues>, 'control' | 'name' | 'error'> {
-  value: any;
-  onChange: (v: any, row?: T | null) => void;
+export interface LookupGridFieldBaseProps<T extends object> extends Omit<
+  LookupGridFieldProps<T, FieldValues>,
+  'control' | 'name' | 'error'
+> {
+  value: LookupValue<T> | null | undefined;
+  onChange: (value: LookupValue<T> | null, row?: T | null) => void;
   errorMessage?: string;
 }
 
-export type FormLookupGridFieldProps<T extends Record<string, any>, TFieldValues extends FieldValues = FieldValues> = LookupGridFieldProps<T, TFieldValues>;
-export type FormLookupGridFieldBaseProps<T extends Record<string, any>> = LookupGridFieldBaseProps<T>;
+export type FormLookupGridFieldProps<
+  T extends object,
+  TFieldValues extends FieldValues = FieldValues,
+> = LookupGridFieldProps<T, TFieldValues>;
+export type FormLookupGridFieldBaseProps<T extends object> = LookupGridFieldBaseProps<T>;
 
-export interface LookupFieldProps {
-  name: string;
+export interface LookupFieldProps<TFieldValues extends FieldValues = FieldValues> {
+  name: FieldPath<TFieldValues>;
   label: string;
   value?: string | number | (string | number)[];
-  onChange?: (value: string | number | (string | number)[] | null, option?: LookupOption | LookupOption[]) => void;
+  onChange?: (
+    value: string | number | (string | number)[] | null,
+    option?: LookupOption | LookupOption[]
+  ) => void;
   options?: LookupOption[];
   onFetchOptions?: (search: string) => Promise<LookupOption[]>;
   multiple?: boolean;
@@ -139,7 +152,7 @@ export interface LookupFieldProps {
   helperText?: string;
   placeholder?: string;
   fullWidth?: boolean;
-  control?: any;
+  control?: Control<TFieldValues>;
 }
 
 export interface LookupDialogProps {

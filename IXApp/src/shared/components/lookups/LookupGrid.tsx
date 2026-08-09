@@ -18,14 +18,17 @@ import SearchIcon from '@mui/icons-material/Search';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useTranslation } from 'react-i18next';
 
-import type { GridLookupProps, GridLookupColumn } from './types';
+import type { GridLookupProps, GridLookupColumn, LookupValue } from './types';
 import { useLookupGridField } from '@shared/hooks/useLookupGridField';
 
 const DEFAULT_PAGE_SIZE = 50;
 const DEFAULT_ROW_HEIGHT = 36;
 const HEADER_HEIGHT = 36;
 
-export function LookupGrid<T extends Record<string, any>>({
+const getLookupValue = <T extends object>(row: T, field: keyof T | string): unknown =>
+  (row as Record<PropertyKey, unknown>)[field];
+
+export function LookupGrid<T extends object>({
   value,
   displayText,
   onChange,
@@ -95,8 +98,8 @@ export function LookupGrid<T extends Record<string, any>>({
     if (last.index >= rows.length - 1 && hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
-  // Virtual items are maintained by the virtualizer outside React state.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Virtual items are maintained by the virtualizer outside React state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [virtualizer.getVirtualItems(), rows.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   useEffect(() => {
@@ -127,7 +130,7 @@ export function LookupGrid<T extends Record<string, any>>({
 
   const handleSelect = useCallback(
     (row: T) => {
-      onChange((row[valueField] ?? null) as T[keyof T] | null, row);
+      onChange((row[valueField] ?? null) as LookupValue<T> | null, row);
       handleClose();
     },
     [onChange, valueField, handleClose]
@@ -234,7 +237,7 @@ export function LookupGrid<T extends Record<string, any>>({
 
   const renderCell = (col: GridLookupColumn<T>, row: T) => {
     if (col.render) return col.render(row);
-    const v = (row as any)[col.field];
+    const v = getLookupValue(row, col.field);
     return v == null ? '' : String(v);
   };
 
@@ -272,8 +275,8 @@ export function LookupGrid<T extends Record<string, any>>({
       typeof popupWidth === 'number'
         ? popupWidth
         : typeof popupWidth === 'string'
-        ? rect.width
-        : Math.max(rect.width, 320);
+          ? rect.width
+          : Math.max(rect.width, 320);
     const width = Math.max(minWidthFloor, Math.min(desiredWidth, vw - margin * 2));
 
     let left = rect.left;
@@ -454,7 +457,9 @@ export function LookupGrid<T extends Record<string, any>>({
                   inputRef={searchInputRef}
                   size="small"
                   fullWidth
-                  placeholder={t('common.search') === 'common.search' ? 'Search...' : t('common.search')}
+                  placeholder={
+                    t('common.search') === 'common.search' ? 'Search...' : t('common.search')
+                  }
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   onKeyDown={handleKeyDown}
@@ -532,7 +537,14 @@ export function LookupGrid<T extends Record<string, any>>({
                       {t('common.noResults') || 'No results'}
                     </Box>
                   ) : (
-                    <Box sx={{ height: virtualizer.getTotalSize(), width: '100%', position: 'relative', minWidth: contentMinWidth }}>
+                    <Box
+                      sx={{
+                        height: virtualizer.getTotalSize(),
+                        width: '100%',
+                        position: 'relative',
+                        minWidth: contentMinWidth,
+                      }}
+                    >
                       {(virtualizer.getVirtualItems().length > 0
                         ? virtualizer.getVirtualItems()
                         : rows.map((_, index) => ({
@@ -566,8 +578,8 @@ export function LookupGrid<T extends Record<string, any>>({
                               bgcolor: selected
                                 ? 'primary.lighter'
                                 : active
-                                ? 'action.hover'
-                                : 'transparent',
+                                  ? 'action.hover'
+                                  : 'transparent',
                               color: selected ? 'primary.main' : 'inherit',
                               borderLeft: '3px solid',
                               borderLeftColor: selected ? 'primary.main' : 'transparent',
@@ -591,7 +603,7 @@ export function LookupGrid<T extends Record<string, any>>({
                                     textOverflow: 'ellipsis',
                                     whiteSpace: 'nowrap',
                                   }}
-                                  title={String((row as any)[col.field] ?? '')}
+                                  title={String(getLookupValue(row, col.field) ?? '')}
                                 >
                                   {renderCell(col, row!)}
                                 </Box>

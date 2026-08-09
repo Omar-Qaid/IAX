@@ -4,8 +4,9 @@ import { Controller, type FieldValues } from 'react-hook-form';
 import type { BaseFieldProps } from './types';
 import type { SelectOption } from '@core/types/common';
 
-export interface AppSelectFieldProps<TFieldValues extends FieldValues = FieldValues>
-  extends BaseFieldProps<TFieldValues> {
+export interface AppSelectFieldProps<
+  TFieldValues extends FieldValues = FieldValues,
+> extends BaseFieldProps<TFieldValues, string | number> {
   options: SelectOption[];
 }
 
@@ -26,7 +27,7 @@ export function AppSelectField<TFieldValues extends FieldValues = FieldValues>({
 }: AppSelectFieldProps<TFieldValues>): React.ReactElement | null {
   if (hidden) return null;
 
-  if (!control) {
+  if (!control || !name) {
     return (
       <TextField
         select
@@ -52,7 +53,7 @@ export function AppSelectField<TFieldValues extends FieldValues = FieldValues>({
 
   return (
     <Controller
-      name={name as any}
+      name={name}
       control={control}
       render={({ field, fieldState: { error } }) => (
         <TextField

@@ -1,39 +1,51 @@
 const TOKEN_KEY = 'ixapp_auth_token';
-const USER_KEY = 'ixapp_auth_user';
+
+let accessToken: string | null = null;
+
+const getSessionStorage = (): Storage | null => {
+  try {
+    return globalThis.sessionStorage ?? null;
+  } catch {
+    return null;
+  }
+};
+
+const migrateLegacyToken = (): string | null => {
+  try {
+    const legacyToken = globalThis.localStorage?.getItem(TOKEN_KEY) ?? null;
+    globalThis.localStorage?.removeItem(TOKEN_KEY);
+    globalThis.localStorage?.removeItem('ixapp_auth_user');
+    return legacyToken;
+  } catch {
+    return null;
+  }
+};
 
 export const authStorage = {
   getToken(): string | null {
-    return localStorage.getItem(TOKEN_KEY);
+    if (accessToken) return accessToken;
+    accessToken = getSessionStorage()?.getItem(TOKEN_KEY) ?? migrateLegacyToken();
+    if (accessToken) getSessionStorage()?.setItem(TOKEN_KEY, accessToken);
+    return accessToken;
   },
 
   setToken(token: string): void {
-    localStorage.setItem(TOKEN_KEY, token);
+    accessToken = token;
+    getSessionStorage()?.setItem(TOKEN_KEY, token);
   },
 
   removeToken(): void {
-    localStorage.removeItem(TOKEN_KEY);
-  },
-
-  getUser<T>(): T | null {
-    const raw = localStorage.getItem(USER_KEY);
-    if (!raw) return null;
     try {
-      return JSON.parse(raw) as T;
+      getSessionStorage()?.removeItem(TOKEN_KEY);
+      globalThis.localStorage?.removeItem(TOKEN_KEY);
+      globalThis.localStorage?.removeItem('ixapp_auth_user');
     } catch {
-      return null;
+      // Storage may be unavailable in restricted browser contexts.
     }
-  },
-
-  setUser<T>(user: T): void {
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
-  },
-
-  removeUser(): void {
-    localStorage.removeItem(USER_KEY);
+    accessToken = null;
   },
 
   clearAll(): void {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
+    this.removeToken();
   },
 };

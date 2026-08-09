@@ -1,4 +1,5 @@
 import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
+import { matchPath } from 'react-router-dom';
 import { PERMISSIONS, type PermissionCode } from '@core/permissions/permissions';
 import { ROUTE_PATHS } from './routePaths';
 
@@ -136,6 +137,9 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
 
 export const getPageDefinition = (path: string): AppPageDefinition | undefined =>
   APP_PAGE_DEFINITIONS.find((page) => page.path === path);
+
+export const findPageDefinitionForPath = (pathname: string): AppPageDefinition | undefined =>
+  APP_PAGE_DEFINITIONS.find((page) => matchPath({ path: page.path, end: true }, pathname));
 
 export const getRoutePermission = (path?: string): PermissionCode | undefined =>
   path ? getPageDefinition(path)?.permission : undefined;

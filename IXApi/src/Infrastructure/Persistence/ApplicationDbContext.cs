@@ -60,6 +60,7 @@ using IAX.IXApi.Modules.Organization.Features.OrgEmployeeCategory;
 using IAX.IXApi.Modules.Finance.Inventory;
 using IAX.IXApi.Modules.Finance.Shared.Features;
 using IAX.IXApi.Modules.Finance.GeneralLedger;
+using IAX.IXApi.Shared.Application.Identity;
 
 namespace IAX.IXApi.Infrastructure.Persistence
 {
@@ -81,33 +82,20 @@ namespace IAX.IXApi.Infrastructure.Persistence
        IAX.IXApi.Modules.Workflow.Persistence.IWorkflowDataContext
      {
         private readonly IHttpContextAccessor? _httpContextAccessor;
+        private readonly ICompanyExecutionContext? _companyContext;
 
         public ApplicationDbContext(
             DbContextOptions<ApplicationDbContext> options,
-            IHttpContextAccessor? httpContextAccessor = null) : base(options)
+            IHttpContextAccessor? httpContextAccessor = null,
+            ICompanyExecutionContext? companyContext = null) : base(options)
         {
             _httpContextAccessor = httpContextAccessor;
+            _companyContext = companyContext;
         }
 
         public string GetDataAreaId()
         {
-            var context = _httpContextAccessor?.HttpContext;
-            if (context == null) return "dat";
-
-            if (context.Request.Headers.TryGetValue("X-Company", out var headerValue) && !string.IsNullOrWhiteSpace(headerValue))
-                return headerValue.ToString();
-            if (context.Request.Headers.TryGetValue("X-DataAreaId", out var headerValue2) && !string.IsNullOrWhiteSpace(headerValue2))
-                return headerValue2.ToString();
-
-            var user = context.User;
-            if (user?.Identity?.IsAuthenticated == true)
-            {
-                var companyClaim = user.FindFirst("Company") ?? user.FindFirst("DataAreaId");
-                if (companyClaim != null && !string.IsNullOrWhiteSpace(companyClaim.Value))
-                    return companyClaim.Value;
-            }
-
-            return "dat";
+            return _companyContext?.GetDataAreaId() ?? "dat";
         }
 
         public async Task<long> CreateWorkerPartyAsync(

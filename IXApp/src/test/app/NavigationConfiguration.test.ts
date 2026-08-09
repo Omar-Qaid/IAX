@@ -1,0 +1,85 @@
+import { describe, expect, it } from 'vitest';
+import {
+  AVAILABLE_MODULE_NAV_CONFIGS,
+  filterModuleNavigation,
+  getModuleNavLinkPermission,
+  type ModuleNavConfig,
+} from '@app/configuration/navigation';
+import { getPageDefinition } from '@app/routes/pageRegistry';
+import { findPageDefinitionForPath } from '@app/routes/pageRegistry';
+import { COMMAND_PALETTE_PAGES } from '@app/shell/AppCommandPalette';
+import { ROUTE_PATHS } from '@app/routes/routePaths';
+import { PERMISSIONS } from '@core/permissions/permissions';
+
+describe('module navigation configuration', () => {
+  it('exposes only module defaults and links backed by registered pages', () => {
+    for (const config of Object.values(AVAILABLE_MODULE_NAV_CONFIGS)) {
+      expect(getPageDefinition(config.defaultPath)).toBeDefined();
+      for (const section of config.sections) {
+        for (const link of section.links) {
+          if (link.path) expect(getPageDefinition(link.path)).toBeDefined();
+        }
+      }
+    }
+  });
+
+  it('removes unsupported links and modules with unsupported default routes', () => {
+    const configs: Record<string, ModuleNavConfig> = {
+      supported: {
+        moduleId: 'supported',
+        label: 'nav.accountsReceivable',
+        icon: 'receipt',
+        defaultPath: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMERS,
+        matchPath: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.ROOT,
+        sections: [
+          {
+            id: 'customers',
+            title: 'nav.customers',
+            links: [
+              { label: 'nav.allCustomers', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMERS },
+              { label: 'nav.unsupported', path: '/unsupported' },
+            ],
+          },
+        ],
+      },
+      unsupported: {
+        moduleId: 'unsupported',
+        label: 'nav.unsupported',
+        icon: 'default',
+        defaultPath: '/unsupported',
+        matchPath: '/unsupported',
+        sections: [],
+      },
+    };
+
+    const filtered = filterModuleNavigation(configs);
+
+    expect(Object.keys(filtered)).toEqual(['supported']);
+    expect(filtered.supported.sections[0].links).toHaveLength(1);
+  });
+
+  it('derives omitted link permissions from the registered page', () => {
+    expect(
+      getModuleNavLinkPermission({
+        label: 'nav.settings',
+        path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.SETTINGS,
+      })
+    ).toBe(PERMISSIONS.SETTINGS_VIEW);
+  });
+
+  it('builds command-palette entries only from registered, non-parameterized pages', () => {
+    expect(COMMAND_PALETTE_PAGES.length).toBeGreaterThan(0);
+    for (const page of COMMAND_PALETTE_PAGES) {
+      expect(getPageDefinition(page.path)).toBeDefined();
+      expect(page.path).not.toContain(':');
+    }
+    expect(COMMAND_PALETTE_PAGES.some((page) => page.path === '/pointOfSale')).toBe(false);
+  });
+
+  it('matches concrete detail URLs without exposing unregistered paths', () => {
+    expect(findPageDefinitionForPath('/accounts-receivable/sales-orders/SO-1001')?.id).toBe(
+      'sales-order-details'
+    );
+    expect(findPageDefinitionForPath('/unsupported')).toBeUndefined();
+  });
+});

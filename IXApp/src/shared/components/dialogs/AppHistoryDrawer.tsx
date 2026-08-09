@@ -14,6 +14,7 @@ import UndoIcon from '@mui/icons-material/Undo';
 import HistoryEduIcon from '@mui/icons-material/HistoryEdu';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
+import type { TimelineDotProps } from '@mui/lab/TimelineDot';
 
 // ─── Sub-Components ─────────────────────────────────────────────────────────
 
@@ -119,7 +120,7 @@ export interface HistoryAuditRecord {
   date: string;
   user: string;
   action: string;
-  color?: any;
+  color?: TimelineDotProps['color'];
   icon?: React.ReactNode;
   changes?: HistoryChangeRecord[];
 }

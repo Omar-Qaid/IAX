@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Reflection;
 using System.Threading.RateLimiting;
+using IAX.IXApi.Shared.Application.Identity;
 
 namespace IAX.IXApi.Bootstrap.Extensions
 {
@@ -61,6 +62,7 @@ namespace IAX.IXApi.Bootstrap.Extensions
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped(typeof(IUnitOfWork), typeof(UnitOfWork));
             services.AddHttpContextAccessor();
+            services.AddScoped<ICompanyExecutionContext, IAX.IXApi.Infrastructure.Identity.CompanyExecutionContext>();
 
             services.AddHttpClient();
             services.AddMemoryCache();
@@ -177,7 +179,7 @@ namespace IAX.IXApi.Bootstrap.Extensions
         {
             // Dynamic policy provider resolves "permission:Module.Action" policies at runtime.
             services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
-            services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
+            services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
             services.AddAuthorization(options =>
             {

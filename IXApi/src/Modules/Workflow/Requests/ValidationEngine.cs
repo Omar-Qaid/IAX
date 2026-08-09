@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using IAX.IXApi.Shared.Application.Attributes;
 using IAX.IXApi.Modules.Workflow.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace IAX.IXApi.Modules.Workflow.Requests
 {
@@ -210,7 +211,28 @@ namespace IAX.IXApi.Modules.Workflow.Requests
 
         private async Task<bool> CheckDatabaseExistenceAsync(string tableName, string columnName, string value)
         {
-            var sql = $"SELECT COUNT(1) FROM [{tableName.Replace("]", "]]")}] WHERE [{columnName.Replace("]", "]]")}] = @p0";
+            var entityType = _context.Model.GetEntityTypes()
+                .FirstOrDefault(type => string.Equals(
+                    type.GetTableName(), tableName, StringComparison.OrdinalIgnoreCase));
+
+            if (entityType?.GetTableName() is not string mappedTable)
+                return false;
+
+            var storeObject = StoreObjectIdentifier.Table(mappedTable, entityType.GetSchema());
+            var mappedColumn = entityType.GetProperties()
+                .Select(property => property.GetColumnName(storeObject))
+                .FirstOrDefault(column => string.Equals(
+                    column, columnName, StringComparison.OrdinalIgnoreCase));
+
+            if (mappedColumn is null)
+                return false;
+
+            static string QuoteIdentifier(string identifier) => $"[{identifier.Replace("]", "]]")}]";
+
+            var qualifiedTable = entityType.GetSchema() is string schema
+                ? $"{QuoteIdentifier(schema)}.{QuoteIdentifier(mappedTable)}"
+                : QuoteIdentifier(mappedTable);
+            var sql = $"SELECT COUNT(1) FROM {qualifiedTable} WHERE {QuoteIdentifier(mappedColumn)} = @p0";
             try
             {
                 var count = await _context.Database.SqlQueryRaw<int>(sql, value).FirstOrDefaultAsync();

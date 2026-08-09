@@ -85,7 +85,7 @@ controller hooks.
 3. Add domain service/query boundaries matching existing ASP.NET contracts.
 4. Add create/edit/save/delete only after endpoint and validation contracts are known.
 5. Migrate remaining routed lists and detail pages.
-6. Validate navigation against route configuration and hide unsupported links.
+6. ~~Validate navigation against route configuration and hide unsupported links.~~ Completed.
 7. Remove obsolete scaffolds only after all imports and tests are migrated.
 
 ## Risks

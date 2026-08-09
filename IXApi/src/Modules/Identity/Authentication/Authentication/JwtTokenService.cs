@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using IAX.IXApi.Shared.Application.Identity;
 
 namespace IAX.IXApi.Modules.Identity.Authentication.Authentication
 {
@@ -15,22 +16,19 @@ namespace IAX.IXApi.Modules.Identity.Authentication.Authentication
     {
         private readonly JwtSettings _jwtSettings;
         private readonly UserManager<AspNetUser> _userManager;
-        private readonly IAppPermissionService _permissionService;
 
         public JwtTokenService(
             IOptions<JwtSettings> jwtSettings,
-            UserManager<AspNetUser> userManager,
-            IAppPermissionService permissionService)
+            UserManager<AspNetUser> userManager)
         {
             _jwtSettings = jwtSettings.Value;
             _userManager = userManager;
-            _permissionService = permissionService;
         }
 
         public async Task<string> GenerateTokenAsync(AspNetUser user)
         {
             var roles = await _userManager.GetRolesAsync(user);
-            var permissions = await _permissionService.GetPermissionKeysByUserAsync(user.Id);
+            var userClaims = await _userManager.GetClaimsAsync(user);
 
             var claims = new List<Claim>
             {
@@ -43,8 +41,20 @@ namespace IAX.IXApi.Modules.Identity.Authentication.Authentication
             foreach (var role in roles)
                 claims.Add(new Claim(ClaimTypes.Role, role));
 
-            foreach (var permission in permissions)
-                claims.Add(new Claim("permission", permission));
+            var companyClaims = userClaims
+                .Where(claim => claim.Type.Equals(CompanyContextDefaults.ClaimType, StringComparison.OrdinalIgnoreCase)
+                    || claim.Type.Equals("Company", StringComparison.OrdinalIgnoreCase)
+                    || claim.Type.Equals("DataAreaId", StringComparison.OrdinalIgnoreCase))
+                .Select(claim => claim.Value)
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (companyClaims.Count == 0)
+                companyClaims.Add(CompanyContextDefaults.DataAreaId);
+
+            foreach (var company in companyClaims)
+                claims.Add(new Claim(CompanyContextDefaults.ClaimType, company));
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Secret));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

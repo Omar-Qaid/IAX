@@ -21,3 +21,10 @@ export interface LoginResponse {
   token: string;
   expiresInSeconds: number;
 }
+
+export interface AuthAdapter {
+  login: (username: string, password: string) => Promise<LoginResponse>;
+  getCurrentUser: () => Promise<UserProfile>;
+  refreshToken: () => Promise<string>;
+  logout: () => Promise<void>;
+}

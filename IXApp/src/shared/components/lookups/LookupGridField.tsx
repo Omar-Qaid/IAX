@@ -12,9 +12,10 @@ import type {
   LookupGridFieldProps,
   LookupGridFieldBaseProps,
   LookupPage,
+  LookupValue,
 } from './types';
 
-function LookupGridFieldInner<T extends Record<string, any>>({
+function LookupGridFieldInner<T extends object>({
   value,
   onChange,
   errorMessage,
@@ -46,14 +47,16 @@ function LookupGridFieldInner<T extends Record<string, any>>({
       ? isAdmin || hasPermission(permissionModule, permissionResource, 'View')
       : true;
 
-  const localizedColumns = useMemo(
-    () => filterLocalizedColumns(columns as any, isRtl) as typeof columns,
-    [columns, isRtl]
-  );
+  const localizedColumns = useMemo(() => filterLocalizedColumns(columns, isRtl), [columns, isRtl]);
   const [selectedRow, setSelectedRow] = useState<T | null>(null);
 
   const adaptedFetch = useCallback(
-    async (params: { pageNumber: number; pageSize: number; search: string; signal?: AbortSignal }): Promise<LookupPage<T>> => {
+    async (params: {
+      pageNumber: number;
+      pageSize: number;
+      search: string;
+      signal?: AbortSignal;
+    }): Promise<LookupPage<T>> => {
       const r = await fetchPage(params);
       return {
         data: r.data,
@@ -94,8 +97,8 @@ function LookupGridFieldInner<T extends Record<string, any>>({
   const displayText = selectedRow
     ? String(selectedRow[displayField] ?? selectedRow[labelField] ?? '')
     : hasValue
-    ? String(value)
-    : '';
+      ? String(value)
+      : '';
 
   return (
     <Box sx={{ width: fullWidth ? '100%' : undefined }}>
@@ -122,7 +125,9 @@ function LookupGridFieldInner<T extends Record<string, any>>({
         actions={actions}
       />
       {!hasAccess && permissionModule && permissionResource && (
-        <FormHelperText sx={{ mx: 0, display: 'flex', alignItems: 'center', gap: 0.5, color: 'warning.main' }}>
+        <FormHelperText
+          sx={{ mx: 0, display: 'flex', alignItems: 'center', gap: 0.5, color: 'warning.main' }}
+        >
           <LockIcon sx={{ fontSize: '0.75rem' }} />
           {t('errors.no_permission') || 'No permission to view source data'}
         </FormHelperText>
@@ -131,7 +136,7 @@ function LookupGridFieldInner<T extends Record<string, any>>({
   );
 }
 
-function LookupGridFieldWrapper<T extends Record<string, any>, TFieldValues extends FieldValues = FieldValues>(
+function LookupGridFieldWrapper<T extends object, TFieldValues extends FieldValues = FieldValues>(
   props: LookupGridFieldProps<T, TFieldValues>
 ) {
   const { name, control: controlProp, error, ...rest } = props;
@@ -144,8 +149,8 @@ function LookupGridFieldWrapper<T extends Record<string, any>, TFieldValues exte
     return (
       <LookupGridFieldInner<T>
         {...rest}
-        value={(props as any).value}
-        onChange={(val, row) => (props as any).onChange?.(val, row)}
+        value={props.value}
+        onChange={(value, row) => props.onChange?.(value, row)}
         errorMessage={errorMessage}
       />
     );
@@ -158,7 +163,7 @@ function LookupGridFieldWrapper<T extends Record<string, any>, TFieldValues exte
       render={({ field, fieldState }) => (
         <LookupGridFieldInner<T>
           {...rest}
-          value={field.value}
+          value={field.value as LookupValue<T> | null | undefined}
           onChange={(val, _row) => field.onChange(val)}
           errorMessage={fieldState.error?.message || errorMessage}
         />

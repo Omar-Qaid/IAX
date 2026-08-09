@@ -17,8 +17,12 @@ import LedgerIcon from '@mui/icons-material/AccountBalance';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useNavigationStore } from '@app/store/useNavigationStore';
 import { usePreferenceStore } from '@app/store/usePreferenceStore';
-import { MODULE_NAV_CONFIGS } from '@app/configuration/navigation';
+import {
+  AVAILABLE_MODULE_NAV_CONFIGS,
+  getModuleNavLinkPermission,
+} from '@app/configuration/navigation';
 import { useAuth } from '@core/auth/useAuth';
+import { findPageDefinitionForPath } from '@app/routes/pageRegistry';
 
 const SIDEBAR_ICON_MAP: Record<string, React.ElementType> = {
   receipt: ReceiptIcon,
@@ -96,12 +100,13 @@ const SidebarContent = React.memo(
 
     const hasModuleAccess = (moduleId: string): boolean => {
       if (isAdmin) return true;
-      const config = MODULE_NAV_CONFIGS[moduleId];
+      const config = AVAILABLE_MODULE_NAV_CONFIGS[moduleId];
       if (!config) return false;
       return config.sections.some((section) =>
-        section.links.some(
-          (link) => link.permission !== undefined && hasPermission(link.permission)
-        )
+        section.links.some((link) => {
+          const permission = getModuleNavLinkPermission(link);
+          return permission !== undefined && hasPermission(permission);
+        })
       );
     };
 
@@ -114,13 +119,13 @@ const SidebarContent = React.memo(
 
     useEffect(() => {
       if (location.pathname !== '/login' && location.pathname !== '/') {
-        const normalizedPath = getNormalizedPath(location.pathname);
-        addRecentPage(normalizedPath, getLabelForPath(normalizedPath, t));
+        const page = findPageDefinitionForPath(location.pathname);
+        if (page) addRecentPage(location.pathname, getLabelForPath(location.pathname, t));
       }
     }, [location.pathname, addRecentPage, t]);
 
     const handleNavigate = (path: string, moduleId?: string) => {
-      if (moduleId && MODULE_NAV_CONFIGS[moduleId]) {
+      if (moduleId && AVAILABLE_MODULE_NAV_CONFIGS[moduleId]) {
         onModulePanel?.(moduleId);
         return;
       }
@@ -225,23 +230,25 @@ const SidebarContent = React.memo(
             expanded={!!expanded.favorites}
             onToggle={() => toggleSection('favorites')}
           >
-            {favorites.map((fav) => (
-              <NavItem
-                key={fav.path}
-                icon={<StarIcon sx={{ color: 'warning.main' }} />}
-                label={fav.label}
-                collapsed={collapsed}
-                active={location.pathname === fav.path}
-                onClick={() => handleNavigate(fav.path)}
-                isFavorite={true}
-                onToggleFavorite={(e) => {
-                  e.stopPropagation();
-                  toggleFavorite(fav.path, fav.label);
-                }}
-                showFavorite={!collapsed}
-                indent
-              />
-            ))}
+            {favorites
+              .filter((favorite) => findPageDefinitionForPath(favorite.path))
+              .map((fav) => (
+                <NavItem
+                  key={fav.path}
+                  icon={<StarIcon sx={{ color: 'warning.main' }} />}
+                  label={fav.label}
+                  collapsed={collapsed}
+                  active={location.pathname === fav.path}
+                  onClick={() => handleNavigate(fav.path)}
+                  isFavorite={true}
+                  onToggleFavorite={(e) => {
+                    e.stopPropagation();
+                    toggleFavorite(fav.path, fav.label);
+                  }}
+                  showFavorite={!collapsed}
+                  indent
+                />
+              ))}
           </NavSection>
 
           <NavSection
@@ -251,23 +258,25 @@ const SidebarContent = React.memo(
             expanded={!!expanded.recent}
             onToggle={() => toggleSection('recent')}
           >
-            {recentPages.map((page) => (
-              <NavItem
-                key={page.path}
-                icon={<RecentIcon />}
-                label={page.label}
-                collapsed={collapsed}
-                active={location.pathname === page.path}
-                onClick={() => handleNavigate(page.path)}
-                isFavorite={isFavorite(page.path)}
-                onToggleFavorite={(e) => {
-                  e.stopPropagation();
-                  toggleFavorite(page.path, page.label);
-                }}
-                showFavorite={!collapsed}
-                indent
-              />
-            ))}
+            {recentPages
+              .filter((page) => findPageDefinitionForPath(page.path))
+              .map((page) => (
+                <NavItem
+                  key={page.path}
+                  icon={<RecentIcon />}
+                  label={page.label}
+                  collapsed={collapsed}
+                  active={location.pathname === page.path}
+                  onClick={() => handleNavigate(page.path)}
+                  isFavorite={isFavorite(page.path)}
+                  onToggleFavorite={(e) => {
+                    e.stopPropagation();
+                    toggleFavorite(page.path, page.label);
+                  }}
+                  showFavorite={!collapsed}
+                  indent
+                />
+              ))}
           </NavSection>
 
           <NavSection
@@ -277,7 +286,7 @@ const SidebarContent = React.memo(
             expanded={!!expanded.modules}
             onToggle={() => toggleSection('modules')}
           >
-            {Object.values(MODULE_NAV_CONFIGS).map((config) => {
+            {Object.values(AVAILABLE_MODULE_NAV_CONFIGS).map((config) => {
               if (!hasModuleAccess(config.moduleId)) return null;
               const Icon = SIDEBAR_ICON_MAP[config.icon] || SIDEBAR_ICON_MAP['default'];
               return (
@@ -358,8 +367,8 @@ export const AppSidebar = () => {
           />
           {activeModulePanel && (
             <ModuleNavPanel
-              title={t(MODULE_NAV_CONFIGS[activeModulePanel]?.label || activeModulePanel)}
-              sections={MODULE_NAV_CONFIGS[activeModulePanel]?.sections || []}
+              title={t(AVAILABLE_MODULE_NAV_CONFIGS[activeModulePanel]?.label || activeModulePanel)}
+              sections={AVAILABLE_MODULE_NAV_CONFIGS[activeModulePanel]?.sections || []}
               onClose={() => setActiveModulePanel(null)}
               onBack={() => setActiveModulePanel(null)}
               leftOffset={0}
@@ -410,8 +419,8 @@ export const AppSidebar = () => {
 
       {activeModulePanel && (
         <ModuleNavPanel
-          title={t(MODULE_NAV_CONFIGS[activeModulePanel]?.label || activeModulePanel)}
-          sections={MODULE_NAV_CONFIGS[activeModulePanel]?.sections || []}
+          title={t(AVAILABLE_MODULE_NAV_CONFIGS[activeModulePanel]?.label || activeModulePanel)}
+          sections={AVAILABLE_MODULE_NAV_CONFIGS[activeModulePanel]?.sections || []}
           onClose={() => setActiveModulePanel(null)}
           leftOffset={finalSidebarWidth}
         />

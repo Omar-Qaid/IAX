@@ -22,14 +22,6 @@ builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 
-// Increase Kestrel request-line limit so that SignalR WebSocket URLs with large
-// JWT access_token query params (containing many permission claims) are not rejected.
-builder.WebHost.ConfigureKestrel(options =>
-{
-    options.Limits.MaxRequestLineSize = 16384;
-    options.Limits.MaxRequestHeadersTotalSize = 16384;
-});
-
 // 1. Infrastructure & Core Services
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IAX.IXApi.Infrastructure.Caching.ILookupCacheService, IAX.IXApi.Infrastructure.Caching.LookupCacheService>();
@@ -89,6 +81,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddTransient<CorrelationIdMiddleware>();
+builder.Services.AddTransient<CompanySelectionMiddleware>();
 
 var app = builder.Build();
 
@@ -109,6 +102,7 @@ else
 app.UseCors(MyAllowSpecificOrigins);
 app.UseWebSockets();
 app.UseAuthentication();
+app.UseMiddleware<CompanySelectionMiddleware>();
 app.UseAuthorization();
 app.UseRateLimiter();
 app.UseOutputCache();
@@ -122,8 +116,14 @@ app.MapHub<IAX.IXApi.Infrastructure.Realtime.SysChatHub>("/hubs/chat");
 app.MapHealthChecks("/health").AllowAnonymous();
 
 // 3. Data Initialization
-if (builder.Configuration.GetValue("DatabaseInitialization:Enabled", true))
+if (builder.Configuration.GetValue("DatabaseInitialization:Enabled", false))
 {
+    if (app.Environment.IsProduction())
+    {
+        throw new InvalidOperationException(
+            "DatabaseInitialization:Enabled cannot be true in the Production environment.");
+    }
+
     await app.InitializeDatabaseAsync();
 }
 

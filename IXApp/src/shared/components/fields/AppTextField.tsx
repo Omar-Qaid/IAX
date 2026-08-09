@@ -3,8 +3,11 @@ import { TextField, type TextFieldProps } from '@mui/material';
 import { Controller, useFormContext, type FieldValues } from 'react-hook-form';
 import type { BaseFieldProps } from './types';
 
-export interface AppTextFieldProps<TFieldValues extends FieldValues = FieldValues>
-  extends BaseFieldProps<TFieldValues> {
+export interface AppTextFieldProps<TFieldValues extends FieldValues = FieldValues> extends Omit<
+  BaseFieldProps<TFieldValues, string>,
+  'value'
+> {
+  value?: unknown;
   multiline?: boolean;
   rows?: number;
   type?: string;
@@ -31,7 +34,7 @@ export function AppTextField<TFieldValues extends FieldValues = FieldValues>({
   slotProps,
   ...rest
 }: AppTextFieldProps<TFieldValues>): React.ReactElement | null {
-  const formContext = useFormContext();
+  const formContext = useFormContext<TFieldValues>();
   const control = controlProp || formContext?.control;
 
   if (hidden) return null;
@@ -44,7 +47,7 @@ export function AppTextField<TFieldValues extends FieldValues = FieldValues>({
     },
   };
 
-  if (!control) {
+  if (!control || !name) {
     return (
       <TextField
         name={name}
@@ -69,8 +72,8 @@ export function AppTextField<TFieldValues extends FieldValues = FieldValues>({
 
   return (
     <Controller
-      name={name as any}
-      control={control as any}
+      name={name}
+      control={control}
       render={({ field, fieldState: { error } }) => (
         <TextField
           {...field}

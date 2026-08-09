@@ -12,7 +12,7 @@ export interface UseLookupGridFieldParams<T> {
   debounceMs?: number;
 }
 
-export function useLookupGridField<T extends Record<string, any>>({
+export function useLookupGridField<T extends object>({
   queryKey,
   fetchPage,
   enabled = true,

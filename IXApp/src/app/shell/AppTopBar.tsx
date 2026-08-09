@@ -31,7 +31,10 @@ import { useTranslation } from 'react-i18next';
 import { useNavigationStore } from '@app/store/useNavigationStore';
 import { usePreferenceStore } from '@app/store/usePreferenceStore';
 import { useAuth } from '@core/auth/useAuth';
-import { MODULE_NAV_CONFIGS } from '@app/configuration/navigation';
+import {
+  AVAILABLE_MODULE_NAV_CONFIGS,
+  getModuleNavLinkPermission,
+} from '@app/configuration/navigation';
 import { LAYOUT } from '@app/configuration/constants';
 
 // Static sx objects - moved outside render to prevent re-creation
@@ -232,13 +235,14 @@ export const AppTopBar: React.FC = memo(() => {
             >
               {t('nav.home', 'Home')}
             </Button>
-            {Object.entries(MODULE_NAV_CONFIGS).map(([key, config]) => {
+            {Object.entries(AVAILABLE_MODULE_NAV_CONFIGS).map(([key, config]) => {
               const hasAccess = (() => {
                 if (isAdmin) return true;
                 return config.sections.some((section) =>
-                  section.links.some(
-                    (link) => link.permission !== undefined && hasPermission(link.permission)
-                  )
+                  section.links.some((link) => {
+                    const permission = getModuleNavLinkPermission(link);
+                    return permission !== undefined && hasPermission(permission);
+                  })
                 );
               })();
 
@@ -279,12 +283,6 @@ export const AppTopBar: React.FC = memo(() => {
             <InputBase
               placeholder={t('nav.search_page', 'Search...')}
               onClick={openCommandPalette}
-              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                if (e.key === 'Enter' && e.currentTarget.value) {
-                  e.preventDefault();
-                  navigate(`/search?q=${encodeURIComponent(e.currentTarget.value)}`);
-                }
-              }}
               sx={inputSx}
               readOnly
             />
@@ -427,11 +425,11 @@ export const AppTopBar: React.FC = memo(() => {
           }}
         >
           <Box sx={{ display: 'flex', gap: 4, minWidth: 280 }}>
-            {MODULE_NAV_CONFIGS[activeModule]?.sections?.map((section) => {
+            {AVAILABLE_MODULE_NAV_CONFIGS[activeModule]?.sections?.map((section) => {
               const visibleLinks = section.links.filter((link) => {
                 if (isAdmin) return true;
-                if (!link.permission) return false;
-                return hasPermission(link.permission);
+                const permission = getModuleNavLinkPermission(link);
+                return permission ? hasPermission(permission) : true;
               });
 
               if (visibleLinks.length === 0) return null;

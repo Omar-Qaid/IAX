@@ -1,4 +1,5 @@
 import { ROUTE_PATHS } from '@app/routes/routePaths';
+import { getPageDefinition, getRoutePermission } from '@app/routes/pageRegistry';
 import { PERMISSIONS, type PermissionCode } from '@core/permissions/permissions';
 
 export interface ModuleNavLink {
@@ -37,24 +38,48 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
         id: 'customers',
         title: 'nav.customers',
         links: [
-          { label: 'nav.allCustomers', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMERS, permission: PERMISSIONS.CUSTOMER_VIEW },
-          { label: 'nav.customerGroups', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_GROUPS, permission: PERMISSIONS.CUSTOMER_GROUP_VIEW },
+          {
+            label: 'nav.allCustomers',
+            path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMERS,
+            permission: PERMISSIONS.CUSTOMER_VIEW,
+          },
+          {
+            label: 'nav.customerGroups',
+            path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_GROUPS,
+            permission: PERMISSIONS.CUSTOMER_GROUP_VIEW,
+          },
         ],
       },
       {
         id: 'orders',
         title: 'nav.orders',
         links: [
-          { label: 'nav.salesOrders', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDERS, permission: PERMISSIONS.SALES_ORDER_VIEW },
+          {
+            label: 'nav.salesOrders',
+            path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDERS,
+            permission: PERMISSIONS.SALES_ORDER_VIEW,
+          },
         ],
       },
       {
         id: 'setup',
         title: 'nav.setup',
         links: [
-          { label: 'nav.customerParameters', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PARAMETERS, permission: PERMISSIONS.CUSTOMER_VIEW },
-          { label: 'nav.customerPaymentMethods', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_METHODS, permission: PERMISSIONS.CUSTOMER_VIEW },
-          { label: 'nav.customerPaymentTerms', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_TERMS, permission: PERMISSIONS.CUSTOMER_VIEW },
+          {
+            label: 'nav.customerParameters',
+            path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PARAMETERS,
+            permission: PERMISSIONS.CUSTOMER_VIEW,
+          },
+          {
+            label: 'nav.customerPaymentMethods',
+            path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_METHODS,
+            permission: PERMISSIONS.CUSTOMER_VIEW,
+          },
+          {
+            label: 'nav.customerPaymentTerms',
+            path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_TERMS,
+            permission: PERMISSIONS.CUSTOMER_VIEW,
+          },
         ],
       },
     ],
@@ -65,7 +90,29 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
     icon: 'ledger',
     defaultPath: ROUTE_PATHS.FOUNDATION.CURRENCIES,
     matchPath: ROUTE_PATHS.FOUNDATION.ROOT,
-    sections: [{ id: 'setup', title: 'nav.setup', links: [{ label: 'nav.currencies', path: ROUTE_PATHS.FOUNDATION.CURRENCIES, permission: PERMISSIONS.CURRENCY_VIEW }, { label: 'nav.exchangeRateTypes', path: ROUTE_PATHS.FOUNDATION.EXCHANGE_RATE_TYPES, permission: PERMISSIONS.CURRENCY_VIEW }, { label: 'nav.exchangeRates', path: ROUTE_PATHS.FOUNDATION.EXCHANGE_RATES, permission: PERMISSIONS.CURRENCY_VIEW }] }],
+    sections: [
+      {
+        id: 'setup',
+        title: 'nav.setup',
+        links: [
+          {
+            label: 'nav.currencies',
+            path: ROUTE_PATHS.FOUNDATION.CURRENCIES,
+            permission: PERMISSIONS.CURRENCY_VIEW,
+          },
+          {
+            label: 'nav.exchangeRateTypes',
+            path: ROUTE_PATHS.FOUNDATION.EXCHANGE_RATE_TYPES,
+            permission: PERMISSIONS.CURRENCY_VIEW,
+          },
+          {
+            label: 'nav.exchangeRates',
+            path: ROUTE_PATHS.FOUNDATION.EXCHANGE_RATES,
+            permission: PERMISSIONS.CURRENCY_VIEW,
+          },
+        ],
+      },
+    ],
   },
   'mod-SystemAdministration': {
     moduleId: 'mod-SystemAdministration',
@@ -73,7 +120,13 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
     icon: 'admin',
     defaultPath: ROUTE_PATHS.SYSTEM_ADMINISTRATION.SETTINGS,
     matchPath: ROUTE_PATHS.SYSTEM_ADMINISTRATION.ROOT,
-    sections: [{ id: 'system', title: 'nav.system', links: [{ label: 'nav.settings', path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.SETTINGS }] }],
+    sections: [
+      {
+        id: 'system',
+        title: 'nav.system',
+        links: [{ label: 'nav.settings', path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.SETTINGS }],
+      },
+    ],
   },
   'mod-OrganizationAdministration': {
     moduleId: 'mod-OrganizationAdministration',
@@ -81,6 +134,44 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
     icon: 'corporate',
     defaultPath: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.LEGAL_ENTITIES,
     matchPath: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.ROOT,
-    sections: [{ id: 'setup', title: 'nav.setup', links: [{ label: 'nav.legalEntities', path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.LEGAL_ENTITIES, permission: PERMISSIONS.LEGAL_ENTITY_VIEW }] }],
+    sections: [
+      {
+        id: 'setup',
+        title: 'nav.setup',
+        links: [
+          {
+            label: 'nav.legalEntities',
+            path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.LEGAL_ENTITIES,
+            permission: PERMISSIONS.LEGAL_ENTITY_VIEW,
+          },
+        ],
+      },
+    ],
   },
 };
+
+export const getModuleNavLinkPermission = (link: ModuleNavLink): PermissionCode | undefined =>
+  link.permission ?? getRoutePermission(link.path);
+
+export const isRegisteredModuleNavLink = (link: ModuleNavLink): boolean =>
+  !link.path || getPageDefinition(link.path) !== undefined;
+
+export const filterModuleNavigation = (
+  configs: Record<string, ModuleNavConfig>
+): Record<string, ModuleNavConfig> =>
+  Object.fromEntries(
+    Object.entries(configs).flatMap(([key, config]) => {
+      if (!getPageDefinition(config.defaultPath)) return [];
+
+      const sections = config.sections
+        .map((section) => ({
+          ...section,
+          links: section.links.filter(isRegisteredModuleNavLink),
+        }))
+        .filter((section) => section.links.length > 0);
+
+      return sections.length > 0 ? [[key, { ...config, sections }]] : [];
+    })
+  );
+
+export const AVAILABLE_MODULE_NAV_CONFIGS = filterModuleNavigation(MODULE_NAV_CONFIGS);

@@ -16,9 +16,12 @@ import BackIcon from '@mui/icons-material/ArrowBackIosNew';
 import CloseIcon from '@mui/icons-material/Close';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import type { ModuleNavSection } from '@app/configuration/navigation';
+import {
+  getModuleNavLinkPermission,
+  isRegisteredModuleNavLink,
+  type ModuleNavSection,
+} from '@app/configuration/navigation';
 import { useAuth } from '@core/auth/useAuth';
-import { getRoutePermission } from '@app/routes/pageRegistry';
 
 const mobileOverlaySx = {
   position: 'absolute',
@@ -259,7 +262,8 @@ const ModuleNavPanel: React.FC<ModuleNavPanelProps> = ({
   const { hasPermission } = useAuth();
 
   const isLinkVisible = (link: ModuleNavSection['links'][number]) => {
-    const permission = link.permission ?? getRoutePermission(link.path);
+    if (!isRegisteredModuleNavLink(link)) return false;
+    const permission = getModuleNavLinkPermission(link);
     return !permission || hasPermission(permission);
   };
 

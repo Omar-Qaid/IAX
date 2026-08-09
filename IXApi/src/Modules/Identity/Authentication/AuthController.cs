@@ -53,7 +53,7 @@ namespace IAX.IXApi.Modules.Identity.Authentication
             if (!result.Succeeded) return Unauthorized(APIResponse<object>.Fail("Invalid username or password"));
 
             // Record last login so the "Online Users" view can derive recent activity.
-            user.LastLoginDate = DateTime.Now;
+            user.LastLoginDate = DateTime.UtcNow;
             await _userManager.UpdateAsync(user);
 
             var token = await _jwtService.GenerateTokenAsync(user);
@@ -245,7 +245,7 @@ namespace IAX.IXApi.Modules.Identity.Authentication
             if (user is null)
                 return BadRequest("The external-login user could not be resolved.");
 
-            // Issue the same JWT shape as password login (roles + permission claims).
+            // Issue the same compact JWT shape as password login.
             string jwt = await _jwtService.GenerateTokenAsync(user);
 
             // A fragment is not sent in HTTP requests, keeping the token out of server/proxy

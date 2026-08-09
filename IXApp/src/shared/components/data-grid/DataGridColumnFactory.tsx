@@ -4,7 +4,11 @@ import { formatDate } from '@core/utilities/dateUtils';
 import { StatusBadge } from '@shared/components/status/StatusBadge';
 
 export const DataGridColumnFactory = {
-  createTextColumn(field: string, headerName: string, options?: Partial<ColumnDef<any>>): ColumnDef<any> {
+  createTextColumn<T>(
+    field: keyof T | string,
+    headerName: string,
+    options?: Partial<ColumnDef<T>>
+  ): ColumnDef<T> {
     return {
       field,
       headerName,
@@ -17,7 +21,11 @@ export const DataGridColumnFactory = {
     };
   },
 
-  createNumberColumn(field: string, headerName: string, options?: Partial<ColumnDef<any>>): ColumnDef<any> {
+  createNumberColumn<T>(
+    field: keyof T | string,
+    headerName: string,
+    options?: Partial<ColumnDef<T>>
+  ): ColumnDef<T> {
     return {
       field,
       headerName,
@@ -30,7 +38,12 @@ export const DataGridColumnFactory = {
     };
   },
 
-  createCurrencyColumn(field: string, headerName: string, currencyCode: string = 'USD', options?: Partial<ColumnDef<any>>): ColumnDef<any> {
+  createCurrencyColumn<T>(
+    field: keyof T | string,
+    headerName: string,
+    currencyCode: string = 'USD',
+    options?: Partial<ColumnDef<T>>
+  ): ColumnDef<T> {
     return {
       field,
       headerName,
@@ -43,7 +56,11 @@ export const DataGridColumnFactory = {
     };
   },
 
-  createDateColumn(field: string, headerName: string, options?: Partial<ColumnDef<any>>): ColumnDef<any> {
+  createDateColumn<T>(
+    field: keyof T | string,
+    headerName: string,
+    options?: Partial<ColumnDef<T>>
+  ): ColumnDef<T> {
     return {
       field,
       headerName,
@@ -54,7 +71,11 @@ export const DataGridColumnFactory = {
     };
   },
 
-  createBooleanColumn(field: string, headerName: string, options?: Partial<ColumnDef<any>>): ColumnDef<any> {
+  createBooleanColumn<T>(
+    field: keyof T | string,
+    headerName: string,
+    options?: Partial<ColumnDef<T>>
+  ): ColumnDef<T> {
     return {
       field,
       headerName,
@@ -66,7 +87,11 @@ export const DataGridColumnFactory = {
     };
   },
 
-  createStatusColumn(field: string, headerName: string, options?: Partial<ColumnDef<any>>): ColumnDef<any> {
+  createStatusColumn<T>(
+    field: keyof T | string,
+    headerName: string,
+    options?: Partial<ColumnDef<T>>
+  ): ColumnDef<T> {
     return {
       field,
       headerName,

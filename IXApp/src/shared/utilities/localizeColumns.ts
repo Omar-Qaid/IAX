@@ -1,6 +1,6 @@
 import type { GridLookupColumn } from '../components/lookups/types';
 
-export function filterLocalizedColumns<T extends Record<string, any>>(
+export function filterLocalizedColumns<T extends object>(
   columns: GridLookupColumn<T>[],
   isRtl: boolean
 ): GridLookupColumn<T>[] {

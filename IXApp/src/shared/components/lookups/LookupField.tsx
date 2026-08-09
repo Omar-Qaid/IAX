@@ -5,8 +5,9 @@ import ClearIcon from '@mui/icons-material/Clear';
 import { LookupDialog } from './LookupDialog';
 import type { LookupFieldProps, LookupOption } from './types';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import type { FieldValues } from 'react-hook-form';
 
-export const LookupField: React.FC<LookupFieldProps> = ({
+export function LookupField<TFieldValues extends FieldValues = FieldValues>({
   label,
   value,
   onChange,
@@ -18,7 +19,7 @@ export const LookupField: React.FC<LookupFieldProps> = ({
   helperText,
   placeholder,
   fullWidth = true,
-}) => {
+}: LookupFieldProps<TFieldValues>): React.ReactElement {
   const { t } = useAppTranslation();
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -82,4 +83,4 @@ export const LookupField: React.FC<LookupFieldProps> = ({
       />
     </>
   );
-};
+}

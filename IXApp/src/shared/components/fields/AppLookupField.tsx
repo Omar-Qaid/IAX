@@ -1,9 +1,9 @@
 import React from 'react';
-import { Controller, useFormContext } from 'react-hook-form';
+import { Controller, useFormContext, type FieldValues } from 'react-hook-form';
 import { LookupField } from '../lookups/LookupField';
 import type { LookupFieldProps } from '../lookups/types';
 
-export const AppLookupField: React.FC<LookupFieldProps> = ({
+export function AppLookupField<TFieldValues extends FieldValues = FieldValues>({
   name,
   label,
   control: controlProp,
@@ -14,8 +14,8 @@ export const AppLookupField: React.FC<LookupFieldProps> = ({
   helperText,
   fullWidth = true,
   onChange: onChangeProp,
-}) => {
-  const formContext = useFormContext();
+}: LookupFieldProps<TFieldValues>): React.ReactElement {
+  const formContext = useFormContext<TFieldValues>();
   const control = controlProp || formContext?.control;
 
   if (!control) {
@@ -37,12 +37,12 @@ export const AppLookupField: React.FC<LookupFieldProps> = ({
   return (
     <Controller
       name={name}
-      control={control as any}
+      control={control}
       render={({ field, fieldState: { error } }) => (
         <LookupField
           name={name}
           label={label}
-          value={field.value}
+          value={field.value as string | number | (string | number)[] | undefined}
           onChange={(val, option) => {
             field.onChange(val);
             onChangeProp?.(val, option);
@@ -58,4 +58,4 @@ export const AppLookupField: React.FC<LookupFieldProps> = ({
       )}
     />
   );
-};
+}
