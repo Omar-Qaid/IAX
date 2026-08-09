@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <RootNamespace>IAX.IXApi.Modules.Workflow</RootNamespace>
+    <AssemblyName>IAX.IXApi.Modules.Workflow</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Infrastructure\IAX.IXApi.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

@@ -9,24 +9,24 @@ Each pattern is a reusable, enterprise-grade page template inspired by Microsoft
 
 ## Table of Contents
 
-| # | Pattern | Documentation | Source Path | Status |
-|---|---|---|---|---|
-| 1 | [Simple List](#1-simple-list) | [`SIMPLE_LIST_PAGE.md`](patterns/SIMPLE_LIST_PAGE.md) | `src/patterns/simple-list/` | ✅ Implemented |
-| 2 | [List & Details](#2-list--details) | [`LIST_DETAILS_PAGE.md`](patterns/LIST_DETAILS_PAGE.md) | `src/patterns/list-details/` | ✅ Implemented |
-| 3 | [Master Form](#3-master-form) | [`DETAILS_MASTER_FORM.md`](patterns/DETAILS_MASTER_FORM.md) | `src/patterns/master-form/` | ✅ Implemented |
-| 4 | [Master-Detail](#4-master-detail) | [`MASTER_DETAILS_PAGE.md`](patterns/MASTER_DETAILS_PAGE.md) | `src/patterns/master-detail/` | 🔲 Scaffolded |
-| 5 | [Header-Lines Document](#5-header-lines-document) | [`HEADER_LINES_PAGE.md`](patterns/HEADER_LINES_PAGE.md) | `src/patterns/document/` | ✅ Implemented |
-| 6 | [Workspace](#6-workspace) | [`WORKSPACE_PAGE.md`](patterns/WORKSPACE_PAGE.md) | `src/patterns/workspace/` | ✅ Implemented |
-| 7 | [Inquiry](#7-inquiry) | [`INQUIRY_PAGE.md`](patterns/INQUIRY_PAGE.md) | `src/patterns/inquiry/` | 🔲 Scaffolded |
-| 8 | [Setup](#8-setup) | [`PARAMETER_SETUP_PAGE.md`](patterns/PARAMETER_SETUP_PAGE.md) | `src/patterns/setup/` | 🔲 Scaffolded |
-| 9 | [Process / Wizard](#9-process--wizard) | [`WIZARD_PROCESS_PAGE.md`](patterns/WIZARD_PROCESS_PAGE.md) | `src/patterns/process/` | 🔲 Scaffolded |
-| 10 | [Tree & Details](#10-tree--details) | (See inline) | `src/patterns/tree-details/` | 🔲 Scaffolded |
-| 11 | [Profile](#11-profile) | (See inline) | `src/patterns/profile/` | 🔲 Scaffolded |
-| 12 | [Tabbed Details](#12-tabbed-details) | (See inline) | `src/patterns/tabbed-details/` | 🔲 Scaffolded |
-| 13 | [Lookup Page](#13-lookup-page) | (See inline) | `src/patterns/lookup/` | 🔲 Scaffolded |
-| 14 | [Master Details Grid](#master-details-grid) | [`MASTER_DETAILS_GRID.md`](patterns/MASTER_DETAILS_GRID.md) | `src/patterns/master-detail-grid/` | 🔲 Scaffolded |
-| 15 | [Document Page](#document-page) | [`DOCUMENT_PAGE.md`](patterns/DOCUMENT_PAGE.md) | `src/patterns/document/` | ✅ Implemented |
-| 16 | [Dashboard Page](#dashboard-page) | [`DASHBOARD_PAGE.md`](patterns/DASHBOARD_PAGE.md) | `src/patterns/dashboard/` | 🔲 Scaffolded |
+| #   | Pattern                                           | Documentation                                                 | Source Path                        | Status         |
+| --- | ------------------------------------------------- | ------------------------------------------------------------- | ---------------------------------- | -------------- |
+| 1   | [Simple List](#1-simple-list)                     | [`SIMPLE_LIST_PAGE.md`](patterns/SIMPLE_LIST_PAGE.md)         | `src/patterns/simple-list/`        | ✅ Implemented |
+| 2   | [List & Details](#2-list--details)                | [`LIST_DETAILS_PAGE.md`](patterns/LIST_DETAILS_PAGE.md)       | `src/patterns/list-details/`       | ✅ Implemented |
+| 3   | [Master Form](#3-master-form)                     | [`DETAILS_MASTER_FORM.md`](patterns/DETAILS_MASTER_FORM.md)   | `src/patterns/master-form/`        | ✅ Implemented |
+| 4   | [Master-Detail](#4-master-detail)                 | [`MASTER_DETAILS_PAGE.md`](patterns/MASTER_DETAILS_PAGE.md)   | `src/patterns/master-detail/`      | 🔲 Scaffolded  |
+| 5   | [Header-Lines Document](#5-header-lines-document) | [`HEADER_LINES_PAGE.md`](patterns/HEADER_LINES_PAGE.md)       | `src/patterns/document/`           | ✅ Implemented |
+| 6   | [Workspace](#6-workspace)                         | [`WORKSPACE_PAGE.md`](patterns/WORKSPACE_PAGE.md)             | `src/patterns/workspace/`          | ✅ Implemented |
+| 7   | [Inquiry](#7-inquiry)                             | [`INQUIRY_PAGE.md`](patterns/INQUIRY_PAGE.md)                 | `src/patterns/inquiry/`            | 🔲 Scaffolded  |
+| 8   | [Setup](#8-setup)                                 | [`PARAMETER_SETUP_PAGE.md`](patterns/PARAMETER_SETUP_PAGE.md) | `src/patterns/setup/`              | 🔲 Scaffolded  |
+| 9   | [Process / Wizard](#9-process--wizard)            | [`WIZARD_PROCESS_PAGE.md`](patterns/WIZARD_PROCESS_PAGE.md)   | `src/patterns/process/`            | 🔲 Scaffolded  |
+| 10  | [Tree & Details](#10-tree--details)               | (See inline)                                                  | `src/patterns/tree-details/`       | 🔲 Scaffolded  |
+| 11  | [Profile](#11-profile)                            | (See inline)                                                  | `src/patterns/profile/`            | 🔲 Scaffolded  |
+| 12  | [Tabbed Details](#12-tabbed-details)              | (See inline)                                                  | `src/patterns/tabbed-details/`     | 🔲 Scaffolded  |
+| 13  | [Lookup Page](#13-lookup-page)                    | (See inline)                                                  | `src/patterns/lookup/`             | 🔲 Scaffolded  |
+| 14  | [Master Details Grid](#master-details-grid)       | [`MASTER_DETAILS_GRID.md`](patterns/MASTER_DETAILS_GRID.md)   | `src/patterns/master-detail-grid/` | 🔲 Scaffolded  |
+| 15  | [Document Page](#document-page)                   | [`DOCUMENT_PAGE.md`](patterns/DOCUMENT_PAGE.md)               | `src/patterns/document/`           | ✅ Implemented |
+| 16  | [Dashboard Page](#dashboard-page)                 | [`DASHBOARD_PAGE.md`](patterns/DASHBOARD_PAGE.md)             | `src/patterns/dashboard/`          | 🔲 Scaffolded  |
 
 ---
 
@@ -35,49 +35,54 @@ Each pattern is a reusable, enterprise-grade page template inspired by Microsoft
 All patterns share common building blocks from `@shared` and common state hooks:
 
 ### Shared Page Components
-| Component | Import |
-|---|---|
-| `PageContainer` | `@shared/components/page/PageContainer` |
-| `PageHeader` | `@shared/components/page/PageHeader` |
-| `ActionPane` | `@shared/components/action-pane/ActionPane` |
-| `AppDataGrid` | `@shared/components/data-grid/DataGrid` |
-| `FastTabs` / `FastTab` | `@shared/components/fast-tabs/FastTabs` |
-| `LoadingState` / `ErrorState` / `EmptyState` | `@shared/components/feedback/*` |
-| `ConfirmationDialog` / `DeleteConfirmationDialog` | `@shared/components/dialogs/*` |
+
+| Component                                         | Import                                      |
+| ------------------------------------------------- | ------------------------------------------- |
+| `PageContainer`                                   | `@shared/components/page/PageContainer`     |
+| `PageHeader`                                      | `@shared/components/page/PageHeader`        |
+| `ActionPane`                                      | `@shared/components/action-pane/ActionPane` |
+| `AppDataGrid`                                     | `@shared/components/data-grid/DataGrid`     |
+| `FastTabs` / `FastTab`                            | `@shared/components/fast-tabs/FastTabs`     |
+| `LoadingState` / `ErrorState` / `EmptyState`      | `@shared/components/feedback/*`             |
+| `ConfirmationDialog` / `DeleteConfirmationDialog` | `@shared/components/dialogs/*`              |
 
 ### Shared Page State Hooks
-| Hook | Purpose |
-|---|---|
-| `usePageMode()` | Manages `PageMode` transitions (`'view'` \| `'create'` \| `'edit'` \| `'copy'` \| `'readonly'` \| `'process'`) |
-| `useListPage()` | Full lifecycle state for list-based pages (load, save, delete, dirty tracking, selection) |
-| `useDocumentPage()` | Full lifecycle state for transactional documents (load by ID, process actions, dirty tracking) |
-| `useUnsavedChanges()` | Prompts user when navigating away from dirty forms |
-| `usePageRefresh()` | Handles F5 / Refresh with dirty-state confirmation |
-| `useNotifications()` | Triggers global toast notifications (`notifySuccess`, `notifyError`) |
+
+| Hook                  | Purpose                                                                                                        |
+| --------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `usePageMode()`       | Manages `PageMode` transitions (`'view'` \| `'create'` \| `'edit'` \| `'copy'` \| `'readonly'` \| `'process'`) |
+| `useListPage()`       | Full lifecycle state for list-based pages (load, save, delete, dirty tracking, selection)                      |
+| `useDocumentPage()`   | Full lifecycle state for transactional documents (load by ID, process actions, dirty tracking)                 |
+| `useUnsavedChanges()` | Prompts user when navigating away from dirty forms                                                             |
+| `usePageRefresh()`    | Handles F5 / Refresh with dirty-state confirmation                                                             |
+| `useNotifications()`  | Triggers global toast notifications (`notifySuccess`, `notifyError`)                                           |
 
 ### Page Mode Behavior Matrix
 
-| Mode | Forms | DataGrid | Primary Actions |
-|---|---|---|---|
-| `view` | Read-only | Selectable | New, Edit, Delete, Refresh |
-| `create` | Editable | Context-dependent | Save, Cancel |
-| `edit` | Editable | Context-dependent | Save, Cancel, Refresh |
-| `copy` | Editable (pre-filled) | Context-dependent | Save, Cancel |
-| `readonly` | Read-only | View-only | Refresh, Print |
-| `process` | Step-driven | Disabled | Next, Back, Execute, Cancel |
+| Mode       | Forms                 | DataGrid          | Primary Actions             |
+| ---------- | --------------------- | ----------------- | --------------------------- |
+| `view`     | Read-only             | Selectable        | New, Edit, Delete, Refresh  |
+| `create`   | Editable              | Context-dependent | Save, Cancel                |
+| `edit`     | Editable              | Context-dependent | Save, Cancel, Refresh       |
+| `copy`     | Editable (pre-filled) | Context-dependent | Save, Cancel                |
+| `readonly` | Read-only             | View-only         | Refresh, Print              |
+| `process`  | Step-driven           | Disabled          | Next, Back, Execute, Cancel |
 
 ---
 
 ## 1. Simple List
 
 ### Purpose
+
 A single flat DataGrid for managing setup tables, reference data, and lightweight master data entities. Supports page-level Save/Cancel with inline editing (`masterForm` mode) or popup form dialogs.
 
 ### When to Use
+
 - Currencies, Units, Tax Groups, Customer Groups, Payment Terms, Number Sequences.
 - Any reference table where the primary interaction is a single editable grid.
 
 ### Folder Structure
+
 ```text
 src/patterns/simple-list/
 ├── SimpleListPage.tsx         # Pattern component
@@ -86,6 +91,7 @@ src/patterns/simple-list/
 ```
 
 ### Required Components
+
 ```text
 SimpleListPage
 ├── PageHeader (title, subtitle)
@@ -99,6 +105,7 @@ SimpleListPage
 ```
 
 ### Data Flow
+
 ```text
 Module Page
   → useListPage({ loadData, saveData, deleteData })
@@ -108,12 +115,20 @@ Module Page
 ```
 
 ### Example
+
 ```tsx
-// src/modules/accounts-receivable/currencies/pages/CurrenciesPage.tsx
+// src/modules/finance/accounts-receivable/currencies/pages/CurrenciesPage.tsx
 export function CurrenciesPage() {
   const {
-    data, loading, selectedIds, setSelectedIds,
-    handleSave, handleDelete, handleRefresh, isDirty, pageMode,
+    data,
+    loading,
+    selectedIds,
+    setSelectedIds,
+    handleSave,
+    handleDelete,
+    handleRefresh,
+    isDirty,
+    pageMode,
   } = useListPage({
     loadData: currencyService.getAll,
     saveData: currencyService.saveAll,
@@ -124,7 +139,9 @@ export function CurrenciesPage() {
     <SimpleListPage
       title="Currencies"
       subtitle="General Ledger"
-      actionPane={<CurrencyActions pageMode={pageMode} onSave={handleSave} onDelete={handleDelete} />}
+      actionPane={
+        <CurrencyActions pageMode={pageMode} onSave={handleSave} onDelete={handleDelete} />
+      }
       dataGridProps={{
         rows: data,
         columns: currencyColumns,
@@ -139,6 +156,7 @@ export function CurrenciesPage() {
 ```
 
 ### Rules
+
 - Page-level Save/Cancel — NOT row-level save buttons.
 - Use `masterForm={true}` on DataGrid for inline editing.
 - Always track `isDirty` and confirm unsaved changes on navigation.
@@ -150,13 +168,16 @@ export function CurrenciesPage() {
 ## 2. List & Details
 
 ### Purpose
+
 A split-view layout: the left pane shows a searchable record grid, and the right pane shows the selected record's details in FastTabs. The details pane appears only when a record is selected and adjusts responsively.
 
 ### When to Use
+
 - Customers, Vendors, Products, Employees, Warehouses.
 - Any master entity that requires viewing a summary grid alongside rich multi-tab detail forms.
 
 ### Folder Structure
+
 ```text
 src/patterns/list-details/
 ├── ListDetailsPage.tsx        # Pattern component
@@ -166,6 +187,7 @@ src/patterns/list-details/
 ```
 
 ### Required Components
+
 ```text
 ListDetailsPage
 ├── PageHeader (title, subtitle)
@@ -183,6 +205,7 @@ ListDetailsPage
 ```
 
 ### Data Flow
+
 ```text
 Module Page
   → useListPage({ loadData, deleteData })
@@ -193,11 +216,12 @@ Module Page
 ```
 
 ### Example
+
 ```tsx
 export function CustomerListPage() {
-  const {
-    data, loading, selectedId, setSelectedIds, handleDelete, handleRefresh,
-  } = useListPage({ loadData: customerService.getPaged });
+  const { data, loading, selectedId, setSelectedIds, handleDelete, handleRefresh } = useListPage({
+    loadData: customerService.getPaged,
+  });
 
   const { data: selectedCustomer } = useQuery({
     queryKey: ['customers', selectedId],
@@ -222,6 +246,7 @@ export function CustomerListPage() {
 ```
 
 ### Rules
+
 - Grid occupies full width (`md={12}`) when no record is selected; splits to `md={5}` grid + `md={7}` details on selection.
 - Switching records when the detail form is dirty must prompt the unsaved changes dialog.
 - Detail content is conditionally rendered — never loaded when `selectedId` is `null`.
@@ -232,13 +257,16 @@ export function CustomerListPage() {
 ## 3. Master Form
 
 ### Purpose
+
 A full-page form wrapped in a Paper container for configuring application settings, module parameters, and posting setup tables. Content is organized with `FastTabs` accordion sections.
 
 ### When to Use
+
 - Application Settings, Module Parameters (AR Parameters, AP Parameters), Posting Setup, Tax Configuration.
 - Any page where the user configures a singleton settings record or a small group of parameters.
 
 ### Folder Structure
+
 ```text
 src/patterns/master-form/
 ├── MasterFormPage.tsx         # Pattern component
@@ -247,6 +275,7 @@ src/patterns/master-form/
 ```
 
 ### Required Components
+
 ```text
 MasterFormPage
 ├── PageHeader (title, subtitle)
@@ -261,6 +290,7 @@ MasterFormPage
 ```
 
 ### Data Flow
+
 ```text
 Module Page
   → useForm (React Hook Form)
@@ -271,6 +301,7 @@ Module Page
 ```
 
 ### Example
+
 ```tsx
 export function ApplicationSettingsPage() {
   const form = useForm<AppSettings>({ resolver: zodResolver(appSettingsSchema) });
@@ -285,8 +316,12 @@ export function ApplicationSettingsPage() {
         <FastTabs>
           <FastTab id="general" title="General" defaultExpanded>
             <FormRow>
-              <FormColumn><AppTextField name="companyName" label="Company Name" required /></FormColumn>
-              <FormColumn><AppSelectField name="defaultCurrency" label="Default Currency" /></FormColumn>
+              <FormColumn>
+                <AppTextField name="companyName" label="Company Name" required />
+              </FormColumn>
+              <FormColumn>
+                <AppSelectField name="defaultCurrency" label="Default Currency" />
+              </FormColumn>
             </FormRow>
           </FastTab>
         </FastTabs>
@@ -297,6 +332,7 @@ export function ApplicationSettingsPage() {
 ```
 
 ### Rules
+
 - Wrap the page in `<FormProvider>` so all child field components inherit form context.
 - Domain Zod validation schemas remain inside `@modules/module-name/validation/`.
 - Mark unsaved changes via `useUnsavedChanges(form.formState.isDirty)`.
@@ -306,13 +342,16 @@ export function ApplicationSettingsPage() {
 ## 4. Master-Detail
 
 ### Purpose
+
 A vertically stacked layout where a top section shows a master record (either a form or grid), and a bottom section shows dependent child collections in a detail DataGrid. The detail grid filters based on the selected master record.
 
 ### When to Use
+
 - Journals and Journal Lines, Customer Groups and Posting Profiles, Warehouses and Locations, Chart of Accounts and Sub-accounts.
 - Any parent → child (1:N) relationship where both levels are visible simultaneously.
 
 ### Folder Structure
+
 ```text
 src/patterns/master-detail/
 ├── MasterDetailPage.tsx       # Pattern component (scaffolded)
@@ -322,6 +361,7 @@ src/patterns/master-detail/
 ```
 
 ### Required Components
+
 ```text
 MasterDetailPage
 ├── PageHeader
@@ -333,11 +373,13 @@ MasterDetailPage
 ```
 
 ### Data Flow
+
 ```text
 Master selection changes → Detail query key updates → Detail grid re-fetches
 ```
 
 ### Rules
+
 - Detail DataGrid must invalidate / re-fetch when master selection changes.
 - Save operations may need to persist both master and detail changes atomically.
 - Detail grid should display `EmptyState` when no master is selected.
@@ -347,13 +389,16 @@ Master selection changes → Detail query key updates → Detail grid re-fetches
 ## 5. Header-Lines Document
 
 ### Purpose
+
 A transactional document page with a header form section (order metadata), a lines DataGrid (line items), and a totals summary panel. Supports document lifecycle process actions (Confirm, Post, Cancel, Print).
 
 ### When to Use
+
 - Sales Orders, Purchase Orders, Invoices, Transfer Orders, Journals, Quotations.
 - Any transactional document that follows the Header + Lines + Totals structure.
 
 ### Folder Structure
+
 ```text
 src/patterns/document/
 ├── DocumentPage.tsx           # Pattern component
@@ -365,6 +410,7 @@ src/patterns/document/
 ```
 
 ### Required Components
+
 ```text
 DocumentPage
 ├── PageHeader (title, subtitle, statusBadge: "Draft" | "Confirmed" | "Posted")
@@ -378,6 +424,7 @@ DocumentPage
 ```
 
 ### Data Flow
+
 ```text
 Module Page
   → useDocumentPage(orderId, { loadData, saveData })
@@ -389,12 +436,16 @@ Module Page
 ```
 
 ### Example
+
 ```tsx
 export function SalesOrderPage() {
   const { id } = useParams();
   const {
-    document: order, loading, fetchDocument,
-    executeProcessAction, isDirty,
+    document: order,
+    loading,
+    fetchDocument,
+    executeProcessAction,
+    isDirty,
   } = useDocumentPage(id, {
     loadData: salesOrderService.getById,
     saveData: salesOrderService.save,
@@ -405,7 +456,9 @@ export function SalesOrderPage() {
       title={`Sales Order ${order?.orderNumber || ''}`}
       subtitle="Accounts Receivable"
       statusBadge={order?.status}
-      actionPane={<OrderActions status={order?.status} onConfirm={handleConfirm} onPost={handlePost} />}
+      actionPane={
+        <OrderActions status={order?.status} onConfirm={handleConfirm} onPost={handlePost} />
+      }
       headerContent={<OrderHeaderForm order={order} />}
       linesContent={<OrderLinesGrid lines={order?.lines || []} />}
       totalsContent={<OrderTotals order={order} />}
@@ -415,6 +468,7 @@ export function SalesOrderPage() {
 ```
 
 ### Rules
+
 - The `statusBadge` prop reflects the document lifecycle state.
 - Process actions (Confirm, Post) must call `executeProcessAction()` which handles loading, error, and success notifications.
 - Totals panel is right-aligned and spans `md={4}` on desktop.
@@ -425,13 +479,16 @@ export function SalesOrderPage() {
 ## 6. Workspace
 
 ### Purpose
+
 An operational dashboard landing page with KPI summary tiles, charts, data grid work lists, and quick-link navigation cards. This is the primary entry point for each business module.
 
 ### When to Use
+
 - Module Dashboard (Accounts Receivable Workspace, Inventory Workspace).
 - Operational work centers where managers monitor KPIs and access high-priority queues.
 
 ### Folder Structure
+
 ```text
 src/patterns/workspace/
 ├── WorkspacePage.tsx          # Pattern component
@@ -441,6 +498,7 @@ src/patterns/workspace/
 ```
 
 ### Required Components
+
 ```text
 WorkspacePage
 ├── PageHeader (title, subtitle)
@@ -455,6 +513,7 @@ WorkspacePage
 ```
 
 ### Data Flow
+
 ```text
 Module Page
   → Multiple useQuery hooks for each KPI tile
@@ -464,18 +523,32 @@ Module Page
 ```
 
 ### Example
+
 ```tsx
 export function DashboardPage() {
-  const { data: stats } = useQuery({ queryKey: ['dashboard-stats'], queryFn: dashboardService.getStats });
+  const { data: stats } = useQuery({
+    queryKey: ['dashboard-stats'],
+    queryFn: dashboardService.getStats,
+  });
 
   return (
     <WorkspacePage title="Dashboard" subtitle="Home">
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <WorkspaceTile title="Total Customers" value={stats?.totalCustomers || 0} color="primary" icon={<PeopleIcon />} />
+          <WorkspaceTile
+            title="Total Customers"
+            value={stats?.totalCustomers || 0}
+            color="primary"
+            icon={<PeopleIcon />}
+          />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <WorkspaceTile title="Open Orders" value={stats?.openOrders || 0} color="info" icon={<ShoppingCartIcon />} />
+          <WorkspaceTile
+            title="Open Orders"
+            value={stats?.openOrders || 0}
+            color="info"
+            icon={<ShoppingCartIcon />}
+          />
         </Grid>
       </Grid>
       <AppDataGrid rows={stats?.recentOrders || []} columns={recentOrderColumns} height={300} />
@@ -485,6 +558,7 @@ export function DashboardPage() {
 ```
 
 ### Rules
+
 - Tiles use `elevation={0}` with subtle hover lift animations (`translateY(-2px)`).
 - Tiles accept `onClick` for drill-down navigation to detail pages.
 - Do not overload the workspace — keep KPI tiles to 4–8 maximum.
@@ -494,13 +568,16 @@ export function DashboardPage() {
 ## 7. Inquiry
 
 ### Purpose
+
 A read-only analysis page with advanced filter panels and result DataGrids. Users search and filter data but cannot create, edit, or delete records.
 
 ### When to Use
+
 - Transaction Inquiry, Voucher Inquiry, Audit Log Viewer, Balance Inquiry.
 - Any page that presents filtered, read-only query results.
 
 ### Folder Structure
+
 ```text
 src/patterns/inquiry/
 ├── InquiryPage.tsx            # Pattern component (scaffolded)
@@ -509,6 +586,7 @@ src/patterns/inquiry/
 ```
 
 ### Required Components
+
 ```text
 InquiryPage
 ├── PageHeader
@@ -519,11 +597,13 @@ InquiryPage
 ```
 
 ### Data Flow
+
 ```text
 Filter changes → URL search params update → TanStack Query refetch → Grid re-renders
 ```
 
 ### Rules
+
 - DataGrid must be read-only (`masterForm={false}`).
 - Filters should map to URL search parameters for shareable / bookmarkable queries.
 - Support CSV export via DataGrid sidebar.
@@ -533,12 +613,15 @@ Filter changes → URL search params update → TanStack Query refetch → Grid 
 ## 8. Setup
 
 ### Purpose
+
 A hierarchical or grouped configuration page with a left-side navigation tree and a right-side configuration form. Similar to a settings panel with categorized subsections.
 
 ### When to Use
+
 - System Setup, Module Configuration, Posting Setup by Category, Workflow Configuration.
 
 ### Folder Structure
+
 ```text
 src/patterns/setup/
 ├── SetupPage.tsx              # Pattern component (scaffolded)
@@ -547,6 +630,7 @@ src/patterns/setup/
 ```
 
 ### Required Components
+
 ```text
 SetupPage
 ├── PageHeader
@@ -557,6 +641,7 @@ SetupPage
 ```
 
 ### Rules
+
 - Navigation items are configuration-driven.
 - Active category highlights in the tree.
 - Each category loads its own form or DataGrid content dynamically.
@@ -566,12 +651,15 @@ SetupPage
 ## 9. Process / Wizard
 
 ### Purpose
+
 A multi-step guided process with step indicators, validation per step, and a final execution action. Steps progress linearly or with conditional branching.
 
 ### When to Use
+
 - Period Close Wizard, Data Import Wizard, Batch Job Configuration, Year-End Processing.
 
 ### Folder Structure
+
 ```text
 src/patterns/process/
 ├── ProcessPage.tsx            # Pattern component (scaffolded)
@@ -581,6 +669,7 @@ src/patterns/process/
 ```
 
 ### Required Components
+
 ```text
 ProcessPage
 ├── PageHeader
@@ -591,11 +680,13 @@ ProcessPage
 ```
 
 ### Data Flow
+
 ```text
 Step 1 form validates → Next → Step 2 → ... → Execute → API mutation → Success/Error
 ```
 
 ### Rules
+
 - Each step must validate independently before allowing `Next`.
 - `Back` preserves entered data from previous steps.
 - `Execute` triggers the final API operation and shows progress feedback.
@@ -606,12 +697,15 @@ Step 1 form validates → Next → Step 2 → ... → Execute → API mutation �
 ## 10. Tree & Details
 
 ### Purpose
+
 A page with a hierarchical tree navigation on the left and a detail form/grid on the right. The tree represents a parent-child hierarchy.
 
 ### When to Use
+
 - Organization Units, Chart of Accounts, Product Categories, Menu Structures.
 
 ### Folder Structure
+
 ```text
 src/patterns/tree-details/
 ├── TreeDetailsPage.tsx        # Pattern component (scaffolded)
@@ -620,6 +714,7 @@ src/patterns/tree-details/
 ```
 
 ### Required Components
+
 ```text
 TreeDetailsPage
 ├── PageHeader
@@ -631,6 +726,7 @@ TreeDetailsPage
 ```
 
 ### Rules
+
 - Tree supports expand/collapse, drag-and-drop reordering (optional), and context menus.
 - Selecting a tree node fetches and displays associated detail data in the right pane.
 - Support keyboard navigation (`ArrowUp`, `ArrowDown`, `Enter`, `ArrowLeft` collapse, `ArrowRight` expand).
@@ -640,12 +736,15 @@ TreeDetailsPage
 ## 11. Profile
 
 ### Purpose
+
 An entity-centered card view with a header banner (avatar, name, status), summary metrics, and tabbed detail sections below. Designed for viewing an entity's complete profile at a glance.
 
 ### When to Use
+
 - Customer Profile, Vendor Profile, Employee Profile, User Profile.
 
 ### Folder Structure
+
 ```text
 src/patterns/profile/
 ├── ProfilePage.tsx            # Pattern component (scaffolded)
@@ -655,6 +754,7 @@ src/patterns/profile/
 ```
 
 ### Required Components
+
 ```text
 ProfilePage
 ├── ProfileHeader (avatar, name, code, status badge, quick actions)
@@ -668,6 +768,7 @@ ProfilePage
 ```
 
 ### Rules
+
 - Profile header is always visible (not scrollable).
 - Summary metrics use `WorkspaceTile` or similar card components.
 - Detail tabs load lazily to improve initial render performance.
@@ -677,13 +778,16 @@ ProfilePage
 ## 12. Tabbed Details
 
 ### Purpose
+
 A full-page tabbed interface where each tab represents a distinct detail section. Unlike FastTabs (which are collapsible accordions), this uses horizontal MUI Tabs for exclusive panel switching.
 
 ### When to Use
+
 - Entity detail views where sections are mutually exclusive (only one visible at a time).
 - Alternative to FastTabs when vertical screen space is limited.
 
 ### Folder Structure
+
 ```text
 src/patterns/tabbed-details/
 ├── TabbedDetailsPage.tsx      # Pattern component (scaffolded)
@@ -691,6 +795,7 @@ src/patterns/tabbed-details/
 ```
 
 ### Required Components
+
 ```text
 TabbedDetailsPage
 ├── PageHeader
@@ -701,6 +806,7 @@ TabbedDetailsPage
 ```
 
 ### Rules
+
 - Only one tab panel is rendered at a time (content switches, not stacks).
 - Tab labels must use localization keys.
 - Active tab state can optionally be stored in URL search params for shareable links.
@@ -710,13 +816,16 @@ TabbedDetailsPage
 ## 13. Lookup Page
 
 ### Purpose
+
 A dedicated full-page lookup selection interface. Used when inline `LookupGridField` popover dropdowns are insufficient and the user needs full search, filter, and multi-select capabilities.
 
 ### When to Use
+
 - Complex multi-criteria entity lookups that exceed the popover grid lookup UX.
 - Bulk item selection workflows.
 
 ### Folder Structure
+
 ```text
 src/patterns/lookup/
 ├── LookupPage.tsx             # Pattern component (scaffolded)
@@ -724,6 +833,7 @@ src/patterns/lookup/
 ```
 
 ### Required Components
+
 ```text
 LookupPage
 ├── PageHeader
@@ -734,6 +844,7 @@ LookupPage
 ```
 
 ### Rules
+
 - Must return selected items to the calling page (via route state, callback, or shared store).
 - Selection state persists across filter/search changes within the lookup session.
 
@@ -744,12 +855,14 @@ LookupPage
 These rules apply to **every** pattern across the entire application:
 
 ### Architecture Rules
+
 1. Patterns live in `src/patterns/` and import only from `@shared` and `@core`.
 2. Patterns must **never** import from `@modules` or `@app`.
 3. Domain modules compose patterns — patterns do not contain business logic.
 4. Each pattern folder contains a main component, supporting layout components, a state hook, and a types file.
 
 ### Page Composition Rules
+
 5. Every page must follow this structural hierarchy:
    ```text
    PageContainer → PageHeader → ActionPane → Content → Dialogs → Feedback
@@ -758,6 +871,7 @@ These rules apply to **every** pattern across the entire application:
 7. Destructive actions (Delete, Cancel unsaved changes) must require explicit user confirmation via `ConfirmationDialog` or `DeleteConfirmationDialog`.
 
 ### State Management Rules
+
 8. Server data is always fetched via TanStack Query (`useQuery`, `useMutation`).
 9. Form state is always managed by React Hook Form.
 10. Dirty state is always tracked via `useUnsavedChanges(isDirty)`.
@@ -765,12 +879,14 @@ These rules apply to **every** pattern across the entire application:
 12. URL search parameters are used for shareable filter and tab state where appropriate.
 
 ### DataGrid Rules
+
 13. Column definitions must be created outside render or memoized with `useMemo`.
 14. Row identifiers must be stable and unique — never use array index.
 15. Use `masterForm={true}` for inline editing patterns.
 16. Page-level Save/Cancel is preferred over row-level Save/Cancel buttons.
 
 ### Icon Import Rule (Vitest ESM Safety)
+
 17. All Material UI icons must be imported via specific path imports:
     ```tsx
     // ✅ CORRECT
@@ -780,6 +896,7 @@ These rules apply to **every** pattern across the entire application:
     ```
 
 ### Responsive Rules
+
 18. Desktop: Multi-column layouts, persistent sidebar, full action pane.
 19. Tablet: Reduced column count, collapsible details, action overflow.
 20. Mobile: Single-column forms, temporary drawer, horizontal grid scroll, full-screen dialogs.

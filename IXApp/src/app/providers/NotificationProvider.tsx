@@ -1,10 +1,10 @@
 import React from 'react';
 import { Snackbar, Alert } from '@mui/material';
-import { useAppStore } from '@app/store/useAppStore';
+import { useNotificationStore } from '@shared/services/notificationStore';
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const notifications = useAppStore((s) => s.notifications);
-  const removeNotification = useAppStore((s) => s.removeNotification);
+  const notifications = useNotificationStore((s) => s.notifications);
+  const removeNotification = useNotificationStore((s) => s.removeNotification);
 
   const activeNotification = notifications[0];
 

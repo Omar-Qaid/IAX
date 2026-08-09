@@ -165,36 +165,4 @@ export const getComponentOverrides = (theme: Theme): Components => ({
       },
     },
   },
-  MuiDataGrid: {
-    styleOverrides: {
-      root: {
-        borderRadius: 2,
-        border: `1px solid ${theme.palette.divider}`,
-        fontSize: '0.8125rem',
-        fontFamily: theme.typography.fontFamily,
-        '& .MuiDataGrid-columnHeaders': {
-          backgroundColor: theme.palette.mode === 'light' ? '#f3f2f1' : '#2d2c2b',
-          borderBottom: `1px solid ${theme.palette.divider}`,
-          minHeight: '34px !important',
-          maxHeight: '34px !important',
-        },
-        '& .MuiDataGrid-columnHeader': {
-          padding: '0 8px',
-        },
-        '& .MuiDataGrid-cell': {
-          padding: '0 8px',
-          borderBottom: `1px solid ${theme.palette.divider}`,
-        },
-        '& .MuiDataGrid-row:hover': {
-          backgroundColor: theme.palette.mode === 'light' ? '#edebe9' : '#323130',
-        },
-        '& .MuiDataGrid-row.Mui-selected': {
-          backgroundColor: theme.palette.mode === 'light' ? '#c7e0f4' : '#004e8c',
-          '&:hover': {
-            backgroundColor: theme.palette.mode === 'light' ? '#b1d6f0' : '#003966',
-          },
-        },
-      },
-    },
-  },
 });

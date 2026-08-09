@@ -13,16 +13,16 @@ warnings from TanStack Virtual, and the routed business pages were placeholders.
 
 ## Page-pattern classification
 
-| Route/page | Module | Current pattern | Target pattern | Shared components | Main issues | Risk |
-| --- | --- | --- | --- | --- | --- | --- |
-| Login | Authentication | Placeholder | Master Form | AuthLayout, EntityForm, fields, feedback | No real authentication form | High |
-| Dashboard | Dashboard | Placeholder | Workspace | WorkspacePage, WorkspaceTile, WorkspaceSection | No overview content | Low |
-| Customers | Accounts Receivable | Placeholder | List and Details | ListDetailsPage, DataGrid, FastTabs, StatusBadge | No service-backed list/detail controller | Medium |
-| Customer Groups | Accounts Receivable | Placeholder | Simple List | SimpleListPage, DataGrid | No page implementation | Low |
-| Sales Orders | Accounts Receivable | Placeholder | Simple List | SimpleListPage, DataGrid, StatusBadge | No list page or navigation to document | Low |
-| Sales Order Details | Accounts Receivable | Placeholder | Header-Lines Document | DocumentPage, DataGrid, StatusBadge | Document is not service-backed; mutation workflow absent | High |
-| Currencies | Foundation / General Ledger | Placeholder | Simple List | SimpleListPage, DataGrid | No page implementation | Low |
-| Application Settings | System Administration | Placeholder | Setup / Parameters | SetupPage, FastTabs, fields | No backend settings contract | Medium |
+| Route/page           | Module                      | Current pattern | Target pattern        | Shared components                                | Main issues                                              | Risk   |
+| -------------------- | --------------------------- | --------------- | --------------------- | ------------------------------------------------ | -------------------------------------------------------- | ------ |
+| Login                | Authentication              | Placeholder     | Master Form           | AuthLayout, EntityForm, fields, feedback         | No real authentication form                              | High   |
+| Dashboard            | Dashboard                   | Placeholder     | Workspace             | WorkspacePage, WorkspaceTile, WorkspaceSection   | No overview content                                      | Low    |
+| Customers            | Accounts Receivable         | Placeholder     | List and Details      | ListDetailsPage, DataGrid, FastTabs, StatusBadge | No service-backed list/detail controller                 | Medium |
+| Customer Groups      | Accounts Receivable         | Placeholder     | Simple List           | SimpleListPage, DataGrid                         | No page implementation                                   | Low    |
+| Sales Orders         | Accounts Receivable         | Placeholder     | Simple List           | SimpleListPage, DataGrid, StatusBadge            | No list page or navigation to document                   | Low    |
+| Sales Order Details  | Accounts Receivable         | Placeholder     | Header-Lines Document | DocumentPage, DataGrid, StatusBadge              | Document is not service-backed; mutation workflow absent | High   |
+| Currencies           | Foundation / General Ledger | Placeholder     | Simple List           | SimpleListPage, DataGrid                         | No page implementation                                   | Low    |
+| Application Settings | System Administration       | Placeholder     | Setup / Parameters    | SetupPage, FastTabs, fields                      | No backend settings contract                             | Medium |
 
 No routed pages currently implement Lookup, Inquiry, Process, Tree and Details,
 Tabbed Details, Profile, Master Form, or Master-Detail patterns. Pattern scaffolds exist
@@ -105,9 +105,9 @@ controller hooks.
 - `src/shared/components/page/PageSection.tsx`
 - `src/patterns/workspace/WorkspaceSection.tsx`
 - `src/modules/dashboard/pages/DashboardPage.tsx`
-- `src/modules/foundation/pages/CurrenciesPage.tsx`
-- `src/modules/accounts-receivable/pages/CustomerListPage.tsx`
-- `src/modules/accounts-receivable/pages/SalesOrderPage.tsx`
+- `src/modules/finance/foundation/pages/CurrenciesPage.tsx`
+- `src/modules/finance/accounts-receivable/pages/CustomerListPage.tsx`
+- `src/modules/finance/accounts-receivable/pages/SalesOrderPage.tsx`
 - `src/modules/system-administration/pages/ApplicationSettingsPage.tsx`
 - `src/app/routes/routeConfig.tsx`
 - focused tests for the new representative pages

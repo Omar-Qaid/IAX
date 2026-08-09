@@ -17,17 +17,19 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 import type { LookupDialogProps } from './types';
 
 export const LookupDialog: React.FC<LookupDialogProps> = ({
   open,
   onClose,
-  title = 'Select Option',
+  title,
   options,
   selectedId,
   onSelect,
   loading = false,
 }) => {
+  const { t } = useAppTranslation();
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredOptions = useMemo(() => {
@@ -43,11 +45,20 @@ export const LookupDialog: React.FC<LookupDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ m: 0, p: 1.5, px: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <DialogTitle
+        sx={{
+          m: 0,
+          p: 1.5,
+          px: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
         <Typography component="span" variant="h6" sx={{ fontWeight: 700 }}>
-          {title}
+          {title ?? t('lookups.selectOption')}
         </Typography>
-        <IconButton size="small" onClick={onClose}>
+        <IconButton size="small" aria-label={t('actions.close')} onClick={onClose}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
@@ -57,7 +68,7 @@ export const LookupDialog: React.FC<LookupDialogProps> = ({
           autoFocus
           fullWidth
           size="small"
-          placeholder="Search options..."
+          placeholder={t('lookups.searchOptions')}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           slotProps={{
@@ -79,7 +90,7 @@ export const LookupDialog: React.FC<LookupDialogProps> = ({
         ) : filteredOptions.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 4 }}>
             <Typography variant="body2" color="text.secondary">
-              No matching records found.
+              {t('lookups.noMatchingRecords')}
             </Typography>
           </Box>
         ) : (
@@ -110,7 +121,7 @@ export const LookupDialog: React.FC<LookupDialogProps> = ({
 
       <DialogActions sx={{ p: 1.5, px: 2 }}>
         <Button onClick={onClose} size="small">
-          Cancel
+          {t('actions.cancel')}
         </Button>
       </DialogActions>
     </Dialog>

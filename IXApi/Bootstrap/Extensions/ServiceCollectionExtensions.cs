@@ -45,6 +45,14 @@ namespace IAX.IXApi.Bootstrap.Extensions
                     options.EnableSensitiveDataLogging();
                 }
             });
+            services.AddScoped<IAX.IXApi.Modules.Identity.Persistence.IIdentityDataContext>(sp =>
+                sp.GetRequiredService<ApplicationDbContext>());
+            services.AddScoped<IAX.IXApi.Modules.Administration.Persistence.IAdministrationDataContext>(sp =>
+                sp.GetRequiredService<ApplicationDbContext>());
+            services.AddScoped<IAX.IXApi.Modules.Organization.Persistence.IOrganizationDataContext>(sp =>
+                sp.GetRequiredService<ApplicationDbContext>());
+            services.AddScoped<IAX.IXApi.Modules.Finance.Persistence.IFinanceDataContext>(sp =>
+                sp.GetRequiredService<ApplicationDbContext>());
 
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped(typeof(IUnitOfWork), typeof(UnitOfWork));

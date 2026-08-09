@@ -1,5 +1,8 @@
 using System.Reflection;
+using IAX.IXApi.Modules.Administration;
 using IAX.IXApi.Modules.Identity.Authentication;
+using IAX.IXApi.Modules.Organization;
+using IAX.IXApi.Modules.Finance;
 using IAX.IXApi.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
@@ -9,6 +12,14 @@ namespace IAX.IXApi.Tests;
 public sealed class ArchitectureTests
 {
     private static readonly Assembly ApplicationAssembly = typeof(AuthController).Assembly;
+    private static readonly Assembly[] RuntimeAssemblies =
+    [
+        typeof(AuthController).Assembly,
+        typeof(AdministrationModule).Assembly,
+        typeof(OrganizationModule).Assembly,
+        typeof(FinanceModule).Assembly,
+        typeof(ApplicationDbContext).Assembly
+    ];
 
     [Fact]
     public void Production_types_do_not_use_the_legacy_global_namespace()
@@ -31,7 +42,7 @@ public sealed class ArchitectureTests
     [InlineData("IAX.IXApi.Modules.Administration.AdministrationModule")]
     public void Every_module_has_an_explicit_composition_entry_point(string typeName)
     {
-        Assert.NotNull(ApplicationAssembly.GetType(typeName));
+        Assert.Contains(RuntimeAssemblies, candidate => candidate.GetType(typeName) is not null);
     }
 
     [Fact]

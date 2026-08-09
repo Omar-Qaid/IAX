@@ -2,17 +2,20 @@ import React from 'react';
 import { describe, expect, it } from 'vitest';
 import { act, fireEvent, render, screen, waitFor } from '@test/testUtils';
 import { DashboardPage } from '@modules/dashboard/pages/DashboardPage';
-import { CurrencyPage } from '@modules/foundation/pages/CurrencyPage';
-import { ExchangeRateTypePage } from '@modules/foundation/pages/ExchangeRateTypePage';
-import { ExchangeRatePage } from '@modules/foundation/pages/ExchangeRatePage';
-import { LegalEntityPage } from '@modules/organization-administration/pages/LegalEntityPage';
-import { CustomerListPage } from '@modules/accounts-receivable/pages/CustomerListPage';
-import { SalesOrderPage } from '@modules/accounts-receivable/pages/SalesOrderPage';
-import { ApplicationSettingsPage } from '@modules/system-administration/pages/ApplicationSettingsPage';
-import { CustomerGroupListPage } from '@modules/accounts-receivable/pages/CustomerGroupListPage';
-import { SalesOrdersPage } from '@modules/accounts-receivable/pages/SalesOrdersPage';
-import { CustPaymMode } from '@modules/accounts-receivable/pages/CustPaymModePage';
-import { CustPaymTerm } from '@modules/accounts-receivable/pages/CustPaymTermPage';
+import { CurrencyPage } from '@modules/finance/foundation/pages/CurrencyPage';
+import { ExchangeRateTypePage } from '@modules/finance/foundation/pages/ExchangeRateTypePage';
+import { ExchangeRatePage } from '@modules/finance/foundation/pages/ExchangeRatePage';
+import { LegalEntityPage } from '@modules/organization/pages/LegalEntityPage';
+import { CustomerListPage } from '@modules/finance/accounts-receivable/pages/CustomerListPage';
+import { SalesOrderPage } from '@modules/finance/accounts-receivable/pages/SalesOrderPage';
+import { ApplicationSettingsPage } from '@modules/administration/pages/ApplicationSettingsPage';
+import { CustomerGroupListPage } from '@modules/finance/accounts-receivable/pages/CustomerGroupListPage';
+import { SalesOrdersPage } from '@modules/finance/accounts-receivable/pages/SalesOrdersPage';
+import { CustPaymMode } from '@modules/finance/accounts-receivable/pages/CustPaymModePage';
+import { CustPaymTerm } from '@modules/finance/accounts-receivable/pages/CustPaymTermPage';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { render as renderWithoutProviders } from '@testing-library/react';
+import { AppProviders } from '@app/providers/AppProviders';
 
 describe('representative enterprise pages', () => {
   it('renders the workspace dashboard indicators', () => {
@@ -71,9 +74,13 @@ describe('representative enterprise pages', () => {
     expect(screen.getByDisplayValue('C-0004304')).toBeDefined();
     act(() => fireEvent.click(screen.getByRole('button', { name: 'Save' })));
     expect(screen.getByRole('heading', { name: 'Create customer' })).toBeDefined();
-    await waitFor(() => expect(screen.getByLabelText('Name').getAttribute('aria-invalid')).toBe('true'));
+    await waitFor(() =>
+      expect(screen.getByLabelText('Name').getAttribute('aria-invalid')).toBe('true')
+    );
     act(() => fireEvent.click(screen.getByRole('button', { name: 'Close' })));
-    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Create customer' })).toBeNull());
+    await waitFor(() =>
+      expect(screen.queryByRole('heading', { name: 'Create customer' })).toBeNull()
+    );
   }, 60_000);
 
   it('renders document and setup representatives as read-only pages', () => {
@@ -85,6 +92,24 @@ describe('representative enterprise pages', () => {
     render(<ApplicationSettingsPage />);
     expect(screen.getByText('Current client configuration')).toBeDefined();
     expect(screen.getByText('API integration: ASP.NET Core REST')).toBeDefined();
+  });
+
+  it('shows an error instead of substituting another order for an invalid route id', () => {
+    renderWithoutProviders(
+      <MemoryRouter initialEntries={['/accounts-receivable/sales-orders/missing-order']}>
+        <AppProviders>
+          <Routes>
+            <Route
+              path="/accounts-receivable/sales-orders/:salesOrderId"
+              element={<SalesOrderPage />}
+            />
+          </Routes>
+        </AppProviders>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('No sales orders are available.')).toBeDefined();
+    expect(screen.queryByText('Sales order SO-00101')).toBeNull();
   });
 
   it('uses the generic enterprise list-details edit lifecycle', () => {

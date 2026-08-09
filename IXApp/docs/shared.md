@@ -14,7 +14,6 @@ Every component sub-folder inside `src/shared/` has a dedicated documentation sp
 | Sub-Folder / Component | Dedicated Documentation File | Description |
 |---|---|---|
 | **Action Pane** | [`docs/shared/action-pane.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/action-pane.md) | D365 F&O-style grouped action toolbars & RBAC command guards |
-| **App Shell** | [`docs/shared/app-shell.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/app-shell.md) | Application shell, topbar, sidebar, command palette (`Ctrl+K`), notification drawer |
 | **Data Grid** | [`docs/shared/data-grid.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/data-grid.md) | `AppDataGrid` virtualized data table, inline editing, persistence, CSV export |
 | **Dialogs** | [`docs/shared/dialogs.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/dialogs.md) | Modal dialog container (`AppDialog`), confirmation & delete warning dialogs |
 | **FastTabs** | [`docs/shared/fast-tabs.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/fast-tabs.md) | Collapsible form section accordions with summary text & error chips |

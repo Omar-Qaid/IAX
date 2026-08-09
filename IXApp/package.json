@@ -11,13 +11,18 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format:check": "prettier --check package.json scripts docs/ARCHITECTURE-BOUNDARIES.md docs/app-shell.md src/app/routes/AppAccessDeniedState.tsx src/core/configuration/environment.ts src/shared/services/notificationStore.ts src/shared/components/lookups/LookupDialog.tsx src/shared/components/lookups/LookupField.tsx src/shared/components/page/UnsavedChangesGuard.tsx src/shared/hooks/useUnsavedChanges.ts src/modules/finance/accounts-receivable/pages/SalesOrderPage.tsx src/test/core/localization.test.ts src/test/modules/RepresentativePages.test.tsx src/test/shared/Lookup.test.tsx public/locales/en/translation.json public/locales/ar/translation.json",
+    "format:check:all": "prettier --check .",
+    "audit:architecture": "node scripts/audit-architecture.mjs",
+    "audit:encoding": "node scripts/audit-encoding.mjs",
+    "audit:unused": "node scripts/report-unused-exports.mjs",
+    "audit:static": "npm run audit:architecture && npm run audit:encoding",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:list": "playwright test --list",
-    "verify": "npm run lint && npm run typecheck && npm run test:run && npm run build"
+    "verify": "npm run format:check && npm run audit:static && npm run lint && npm run typecheck && npm run test:run && npm run build"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -61,6 +66,7 @@
     "globals": "^17.8.0",
     "jsdom": "^30.0.1",
     "oxlint": "^1.71.0",
+    "prettier": "^3.9.6",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.65.0",
     "vite": "^8.1.1",

@@ -8,7 +8,18 @@ namespace IAX.IXApi.Tests
 {
     public class ArchitectureComplianceTests
     {
-        private static readonly Assembly ApplicationAssembly = typeof(IAX.IXApi.Api.Middleware.GlobalExceptionHandler).Assembly;
+        private static readonly Assembly[] Assemblies = new[]
+        {
+            typeof(IAX.IXApi.Api.Middleware.GlobalExceptionHandler).Assembly,
+            typeof(IAX.IXApi.Modules.Identity.IdentityModule).Assembly,
+            typeof(IAX.IXApi.Modules.Organization.OrganizationModule).Assembly,
+            typeof(IAX.IXApi.Modules.Workflow.WorkflowModule).Assembly,
+            typeof(IAX.IXApi.Modules.Finance.FinanceModule).Assembly,
+            typeof(IAX.IXApi.Modules.Communication.CommunicationModule).Assembly,
+            typeof(IAX.IXApi.Modules.Administration.AdministrationModule).Assembly,
+            typeof(IAX.IXApi.Shared.Domain.Entities.AuditableEntity).Assembly,
+            typeof(IAX.IXApi.Infrastructure.Persistence.ApplicationDbContext).Assembly
+        };
 
         [Fact]
         public void Shared_Namespace_Should_Not_Depend_On_Infrastructure_Or_Api_Or_Bootstrap()
@@ -20,7 +31,7 @@ namespace IAX.IXApi.Tests
                 "IAX.IXApi.Bootstrap"
             };
 
-            var result = Types.InAssembly(ApplicationAssembly)
+            var result = Types.InAssemblies(Assemblies)
                 .That()
                 .ResideInNamespace("IAX.IXApi.Shared")
                 .ShouldNot()
@@ -33,8 +44,6 @@ namespace IAX.IXApi.Tests
         [Fact]
         public void Shared_Namespace_Should_Only_Depend_On_Identity_Module_For_User_Auditing()
         {
-            // Shared domain AuditableEntity references AspNetUser in Modules.Identity.
-            // Other modules (Organization, Workflow, Finance, etc.) must not be referenced by Shared.
             var forbiddenModules = new[]
             {
                 "IAX.IXApi.Modules.Organization",
@@ -44,7 +53,7 @@ namespace IAX.IXApi.Tests
                 "IAX.IXApi.Modules.Administration"
             };
 
-            var result = Types.InAssembly(ApplicationAssembly)
+            var result = Types.InAssemblies(Assemblies)
                 .That()
                 .ResideInNamespace("IAX.IXApi.Shared")
                 .ShouldNot()
@@ -63,7 +72,7 @@ namespace IAX.IXApi.Tests
                 "IAX.IXApi.Api"
             };
 
-            var result = Types.InAssembly(ApplicationAssembly)
+            var result = Types.InAssemblies(Assemblies)
                 .That()
                 .ResideInNamespace("IAX.IXApi.Shared.Domain")
                 .ShouldNot()
@@ -99,7 +108,7 @@ namespace IAX.IXApi.Tests
 
                 if (forbiddenModules.Length == 0) continue;
 
-                var result = Types.InAssembly(ApplicationAssembly)
+                var result = Types.InAssemblies(Assemblies)
                     .That()
                     .ResideInNamespace($"IAX.IXApi.Modules.{module}")
                     .ShouldNot()

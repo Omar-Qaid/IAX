@@ -1,8 +1,8 @@
 import React from 'react';
 import { useAuth } from '@core/auth/useAuth';
-import { AccessDeniedState } from '@shared/components/feedback/AccessDeniedState';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import { AppAccessDeniedState } from './AppAccessDeniedState';
 
 export interface RouteGuardProps {
   permission?: string;
@@ -18,11 +18,11 @@ export function RouteGuard({ permission, children }: RouteGuardProps): React.Rea
   }
 
   if (!isAuthenticated) {
-    return <AccessDeniedState message={t('messages.authenticationRequired')} />;
+    return <AppAccessDeniedState message={t('messages.authenticationRequired')} />;
   }
 
   if (permission && !hasPermission(permission)) {
-    return <AccessDeniedState message={t('messages.permissionRequired', { permission })} />;
+    return <AppAccessDeniedState message={t('messages.permissionRequired', { permission })} />;
   }
 
   return <>{children}</>;

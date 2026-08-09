@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@core/api/apiClient';
-import { environment } from '@app/configuration/environment';
+import { environment } from '@core/configuration/environment';
 import {
   MOCK_COUNTRY_REGIONS,
   MOCK_STATES,
   MOCK_CITIES,
   MOCK_COUNTIES,
-} from '@mocks/data/logistics';
+} from '@shared/services/logisticsAddressMockData';
 import type { CountryRegion, State, City, County } from '@shared/types/logistics';
 
 export const useCountryRegions = () => {
@@ -17,7 +17,9 @@ export const useCountryRegions = () => {
         return MOCK_COUNTRY_REGIONS;
       }
       try {
-        const { data } = await apiClient.get<CountryRegion[]>('/LogisticsPostalAddress/CountryRegions');
+        const { data } = await apiClient.get<CountryRegion[]>(
+          '/LogisticsPostalAddress/CountryRegions'
+        );
         return data;
       } catch {
         return MOCK_COUNTRY_REGIONS;
@@ -36,7 +38,9 @@ export const useStates = (countryRegionId?: string) => {
         return MOCK_STATES.filter((s) => s.countryRegionId === countryRegionId);
       }
       try {
-        const { data } = await apiClient.get<State[]>(`/LogisticsPostalAddress/States/${countryRegionId}`);
+        const { data } = await apiClient.get<State[]>(
+          `/LogisticsPostalAddress/States/${countryRegionId}`
+        );
         return data;
       } catch {
         return MOCK_STATES.filter((s) => s.countryRegionId === countryRegionId);
@@ -76,7 +80,9 @@ export const useCounties = (stateId?: string) => {
         return MOCK_COUNTIES.filter((c) => c.stateId === stateId);
       }
       try {
-        const { data } = await apiClient.get<County[]>(`/LogisticsPostalAddress/Counties/${stateId}`);
+        const { data } = await apiClient.get<County[]>(
+          `/LogisticsPostalAddress/Counties/${stateId}`
+        );
         return data;
       } catch {
         return MOCK_COUNTIES.filter((c) => c.stateId === stateId);

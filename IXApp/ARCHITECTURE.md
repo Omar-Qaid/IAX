@@ -34,7 +34,7 @@ Specialized, comprehensive documentation is maintained in the `docs/` directory 
 | **Core Layer** | [`docs/core.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/core.md) | Axios API client, authentication, RBAC permissions, error mapping, localization engine |
 | **Shared Layer Index** | [`docs/shared.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared.md) | Shared controls overview & sub-folder index |
 | ├─ **Action Pane** | [`docs/shared/action-pane.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/action-pane.md) | D365 command bar toolbars & RBAC command guards |
-| ├─ **App Shell** | [`docs/shared/app-shell.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/app-shell.md) | Shell topbar, sidebar, command palette (`Ctrl+K`), drawers |
+| **App Shell & Navigation** | [`docs/app-shell.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/app-shell.md) | App-owned shell, topbar, sidebar, command palette (`Ctrl+K`), navigation, and breadcrumbs |
 | ├─ **Data Grid** | [`docs/shared/data-grid.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/data-grid.md) | `AppDataGrid` virtualized data table, inline editing, persistence, CSV export |
 | ├─ **Dialogs** | [`docs/shared/dialogs.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/dialogs.md) | Modal dialog container (`AppDialog`), confirmation & delete warning dialogs |
 | ├─ **FastTabs** | [`docs/shared/fast-tabs.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/fast-tabs.md) | Collapsible form section accordions with summary text & error chips |
@@ -50,6 +50,7 @@ Specialized, comprehensive documentation is maintained in the `docs/` directory 
 | **Business Modules** | [`docs/modules.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/modules.md) | Domain business modules: Accounts Receivable, Dashboard, Auth, System Admin |
 | **Mock Services** | [`docs/mocks.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/mocks.md) | Typed mock datasets, repository implementations, and mock/HTTP service resolvers |
 | **Testing Strategy** | [`docs/testing.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/testing.md) | Vitest runner rules, JSDOM quirks, icon import rules, RTL rendering tests |
+| **Enforced Boundaries** | [`docs/ARCHITECTURE-BOUNDARIES.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/ARCHITECTURE-BOUNDARIES.md) | Dependency matrix, migration baseline, ownership decisions, and automated architecture gates |
 | **Design Patterns** | [`docs/DESIGN-PATTERNS.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/DESIGN-PATTERNS.md) | All 13 page patterns: purpose, when to use, folder structure, components, data flow, examples, rules |
 
 ---

@@ -1,6 +1,6 @@
 import type { UserProfile, LoginResponse } from './types';
 import { authStorage } from './authStorage';
-import { environment } from '@app/configuration/environment';
+import { environment } from '@core/configuration/environment';
 
 // Enterprise default admin user for initial dev/mock mode
 const MOCK_USER: UserProfile = {

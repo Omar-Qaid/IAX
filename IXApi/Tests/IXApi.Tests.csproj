@@ -17,5 +17,13 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IXApi.csproj" />
+    <ProjectReference Include="..\src\Shared\IAX.IXApi.Shared.csproj" />
+    <ProjectReference Include="..\src\Infrastructure\IAX.IXApi.Infrastructure.csproj" />
+    <ProjectReference Include="..\src\Modules\Identity\IAX.IXApi.Modules.Identity.csproj" />
+    <ProjectReference Include="..\src\Modules\Organization\IAX.IXApi.Modules.Organization.csproj" />
+    <ProjectReference Include="..\src\Modules\Workflow\IAX.IXApi.Modules.Workflow.csproj" />
+    <ProjectReference Include="..\src\Modules\Finance\IAX.IXApi.Modules.Finance.csproj" />
+    <ProjectReference Include="..\src\Modules\Communication\IAX.IXApi.Modules.Communication.csproj" />
+    <ProjectReference Include="..\src\Modules\Administration\IAX.IXApi.Modules.Administration.csproj" />
   </ItemGroup>
 </Project>

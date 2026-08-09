@@ -4,6 +4,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import { LookupDialog } from './LookupDialog';
 import type { LookupFieldProps, LookupOption } from './types';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 
 export const LookupField: React.FC<LookupFieldProps> = ({
   label,
@@ -15,9 +16,10 @@ export const LookupField: React.FC<LookupFieldProps> = ({
   required = false,
   error = false,
   helperText,
-  placeholder = 'Select...',
+  placeholder,
   fullWidth = true,
 }) => {
+  const { t } = useAppTranslation();
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const selectedOption = options.find((opt) => opt.id === value);
@@ -41,7 +43,7 @@ export const LookupField: React.FC<LookupFieldProps> = ({
         disabled={disabled}
         error={error}
         helperText={helperText}
-        placeholder={placeholder}
+        placeholder={placeholder ?? t('lookups.selectPlaceholder')}
         fullWidth={fullWidth}
         size="small"
         onClick={() => !disabled && !readOnly && setDialogOpen(true)}
@@ -51,11 +53,16 @@ export const LookupField: React.FC<LookupFieldProps> = ({
             endAdornment: (
               <InputAdornment position="end">
                 {value && !disabled && !readOnly ? (
-                  <IconButton size="small" onClick={handleClear}>
+                  <IconButton size="small" aria-label={t('actions.clear')} onClick={handleClear}>
                     <ClearIcon fontSize="small" />
                   </IconButton>
                 ) : null}
-                <IconButton size="small" disabled={disabled || readOnly} onClick={() => setDialogOpen(true)}>
+                <IconButton
+                  size="small"
+                  aria-label={t('actions.search')}
+                  disabled={disabled || readOnly}
+                  onClick={() => setDialogOpen(true)}
+                >
                   <SearchIcon fontSize="small" />
                 </IconButton>
               </InputAdornment>
@@ -68,7 +75,7 @@ export const LookupField: React.FC<LookupFieldProps> = ({
       <LookupDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
-        title={`Select ${label}`}
+        title={t('lookups.selectField', { field: label })}
         options={options}
         selectedId={value}
         onSelect={handleSelectOption}

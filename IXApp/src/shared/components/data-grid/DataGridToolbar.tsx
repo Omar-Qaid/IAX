@@ -66,7 +66,7 @@ export const DataGridToolbar = memo(function DataGridToolbar({
       {/* Main toolbar row */}
       <Box sx={{ display: 'flex', alignItems: 'center', px: 1.5, py: 0.75, gap: 1, minHeight: 40 }}>
 
-        {/* Row count â€” hidden on xs */}
+        {/* Row count — hidden on xs */}
         <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1 }}>
 
 

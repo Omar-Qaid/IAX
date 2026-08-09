@@ -10,8 +10,11 @@
   <ItemGroup>
     <Compile Remove="Tests\**\*.cs" />
     <Content Remove="Tests\**\*" />
-    <PackageReference Include="ClosedXML" Version="0.105.0" />
-    <PackageReference Include="DocumentFormat.OpenXml" Version="3.1.1" />
+    <Compile Remove="src\**\*.cs" />
+    <Content Remove="src\**\*" />
+    <None Include="src\**\*" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="FluentValidation" Version="11.11.0" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
     <PackageReference Include="Mapster" Version="7.4.0" />
@@ -26,5 +29,15 @@
     <PackageReference Include="OpenAI" Version="2.4.0" />
     <PackageReference Include="Scalar.AspNetCore" Version="2.8.5" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="src\Shared\IAX.IXApi.Shared.csproj" />
+    <ProjectReference Include="src\Infrastructure\IAX.IXApi.Infrastructure.csproj" />
+    <ProjectReference Include="src\Modules\Identity\IAX.IXApi.Modules.Identity.csproj" />
+    <ProjectReference Include="src\Modules\Organization\IAX.IXApi.Modules.Organization.csproj" />
+    <ProjectReference Include="src\Modules\Workflow\IAX.IXApi.Modules.Workflow.csproj" />
+    <ProjectReference Include="src\Modules\Finance\IAX.IXApi.Modules.Finance.csproj" />
+    <ProjectReference Include="src\Modules\Communication\IAX.IXApi.Modules.Communication.csproj" />
+    <ProjectReference Include="src\Modules\Administration\IAX.IXApi.Modules.Administration.csproj" />
   </ItemGroup>
 </Project>

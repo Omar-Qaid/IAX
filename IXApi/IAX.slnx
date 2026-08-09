@@ -1,4 +1,12 @@
 <Solution>
   <Project Path="IXApi.csproj" />
   <Project Path="Tests\IXApi.Tests.csproj" />
+  <Project Path="src\Shared\IAX.IXApi.Shared.csproj" />
+  <Project Path="src\Infrastructure\IAX.IXApi.Infrastructure.csproj" />
+  <Project Path="src\Modules\Identity\IAX.IXApi.Modules.Identity.csproj" />
+  <Project Path="src\Modules\Organization\IAX.IXApi.Modules.Organization.csproj" />
+  <Project Path="src\Modules\Workflow\IAX.IXApi.Modules.Workflow.csproj" />
+  <Project Path="src\Modules\Finance\IAX.IXApi.Modules.Finance.csproj" />
+  <Project Path="src\Modules\Communication\IAX.IXApi.Modules.Communication.csproj" />
+  <Project Path="src\Modules\Administration\IAX.IXApi.Modules.Administration.csproj" />
 </Solution>

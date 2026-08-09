@@ -76,10 +76,10 @@ function DataGridInternal<T>({
     const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const initialColumns = rawInitialColumns;
 
-    // â”€â”€ Persistence â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // -- Persistence ----------------------------------------------------------
     const { initialState, persist, clear } = useGridPersistence<T>(storageKey, initialColumns);
 
-    // â”€â”€ Inline editing (masterForm mode only) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // -- Inline editing (masterForm mode only) --------------------------------
     const { editingRowId, editValues, saving, startEdit, startAdd, updateField, setSaving, cancelEdit } = useInlineEdit<T>();
 
     const handleInlineEdit = useCallback((row: T) => {
@@ -133,7 +133,7 @@ function DataGridInternal<T>({
         onEditingChange?.(editingRowId != null);
     }, [editingRowId, onEditingChange]);
 
-    // â”€â”€ UI State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // -- UI State -------------------------------------------------------------
     const {
         columns, setColumns,
         selectionMode, setSelectionMode,
@@ -223,13 +223,13 @@ function DataGridInternal<T>({
         scrollContainerRef,
     });
 
-    // â”€â”€ Reset Scroll on filter change (local only) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // -- Reset Scroll on filter change (local only) ---------------------------
     useEffect(() => {
         if (serverSide) return;
         onScrollReset();
     }, [serverSide, globalSearch, filters, onScrollReset]);
 
-    // â”€â”€ Sync Persistence (Debounced) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // -- Sync Persistence (Debounced) ------------------------------------------
     useEffect(() => {
         const timer = setTimeout(() => {
             persist({
@@ -251,7 +251,7 @@ function DataGridInternal<T>({
         return () => clearTimeout(timer);
     }, [columns, sortModel, filters, localRowHeight, showColumnBorders, showCellBorders, selectionMode, persist]);
 
-    // â”€â”€ Selection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // -- Selection ------------------------------------------------------------
     const {
         selectedIds,
         setSelectedIds,
@@ -312,7 +312,7 @@ function DataGridInternal<T>({
         }, 30);
     }, [processedRows, getColCount, selectionMode, getRowId, handleSelectionChange, editingRowId, masterForm]);
 
-    // â”€â”€ Keyboard Shortcuts (Global) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // -- Keyboard Shortcuts (Global) ------------------------------------------
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             const activeEl = document.activeElement as HTMLElement | null;
@@ -320,7 +320,7 @@ function DataGridInternal<T>({
             const isInputActive = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable);
             const isGridCellFocused = activeEl && activeEl.hasAttribute('data-row-index');
 
-            // â”€â”€ Print â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // -- Print --------------------------------------------------------
             if (e.ctrlKey && e.key.toLowerCase() === 'p') {
                 e.preventDefault();
                 if (onPrint) onPrint();
@@ -328,7 +328,7 @@ function DataGridInternal<T>({
                 return;
             }
 
-            // â”€â”€ Advanced Filter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // -- Advanced Filter ----------------------------------------------
             if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'f') {
                 e.preventDefault();
                 setActiveSidebarTab('filters');
@@ -336,21 +336,21 @@ function DataGridInternal<T>({
                 return;
             }
 
-            // â”€â”€ Quick Filter / Find â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // -- Quick Filter / Find ------------------------------------------
             if (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === 'f') {
                 e.preventDefault();
                 searchInputRef.current?.focus();
                 return;
             }
 
-            // â”€â”€ Select All (Only if grid is focused or not in an input) â”€â”€â”€â”€â”€â”€
+            // -- Select All (Only if grid is focused or not in an input) ------
             if (e.ctrlKey && e.key.toLowerCase() === 'a' && (!isInputActive || isGridCellFocused)) {
                 e.preventDefault();
                 handleSelectAll(!allSelected);
                 return;
             }
 
-            // â”€â”€ Refresh / Validate / Execute â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // -- Refresh / Validate / Execute ---------------------------------
             if (e.key === 'F5') {
                 e.preventDefault();
                 onRefresh?.();
@@ -374,7 +374,7 @@ function DataGridInternal<T>({
                 return;
             }
 
-            // â”€â”€ Navigation (Arrows, Home, End, Tab, PageUp, PageDown) â”€â”€
+            // -- Navigation (Arrows, Home, End, Tab, PageUp, PageDown) --
             const cellContainer = isGridCellFocused ? activeEl : activeEl?.closest('[data-row-index]');
             if (cellContainer) {
                 const isInput = isInputActive && activeEl?.tagName === 'INPUT';
@@ -455,7 +455,7 @@ function DataGridInternal<T>({
                 }
             }
 
-            // â”€â”€ F2: Edit current field â”€â”€
+            // -- F2: Edit current field --
             if (e.key === 'F2') {
                 if (masterForm && editingRowId == null && isGridCellFocused) {
                     e.preventDefault();
@@ -469,7 +469,7 @@ function DataGridInternal<T>({
                 return;
             }
 
-            // â”€â”€ Clipboard â”€â”€
+            // -- Clipboard --
             if (e.ctrlKey && e.key.toLowerCase() === 'c' && isGridCellFocused) {
                 if (activeEl && activeEl.hasAttribute('data-row-index')) {
                     const text = activeEl.innerText;
@@ -479,7 +479,7 @@ function DataGridInternal<T>({
 
             if (!masterForm) return;
 
-            // â”€â”€ Master Form Shortcuts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // -- Master Form Shortcuts ----------------------------------------
             // Only trigger if we aren't typing in an input (except for save)
             if ((e.ctrlKey || e.altKey) && e.key.toLowerCase() === 's') {
                 e.preventDefault();
@@ -549,7 +549,7 @@ function DataGridInternal<T>({
         [columns, containerWidth],
     );
 
-    // â”€â”€ Export â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // -- Export ---------------------------------------------------------------
     const handleExport = useCallback(() => {
         const visibleCols = computedColumns.filter(c => !c.hidden);
 
@@ -567,7 +567,7 @@ function DataGridInternal<T>({
         downloadFile(csv, 'export.csv', 'text/csv;charset=utf-8;');
     }, [computedColumns, processedRows, serverSide, onServerExport, sortModel, filters, globalSearch]);
 
-    // â”€â”€ Autosize â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // -- Autosize -------------------------------------------------------------
     const {
         isAutosized,
         setIsAutosized,

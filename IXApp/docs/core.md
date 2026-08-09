@@ -1,18 +1,22 @@
 # Core Layer Documentation (`src/core`)
 
 ## 1. Purpose and Responsibilities
+
 The `core` layer contains infrastructure-neutral, low-level application foundations for **IXApp**. It is completely decoupled from UI components, page layouts, and business domain modules.
 
 The `core` layer provides:
+
 - Centralized HTTP Axios client and interceptors (`@core/api`).
 - Normalized API error models and problem details mapping (`@core/errors`).
 - Authentication contracts, session management, and RBAC permission evaluation (`@core/auth`, `@core/permissions`).
 - Bilingual localization engine configuration (`@core/localization`).
+- Runtime environment bindings shared by core infrastructure (`@core/configuration`).
 - Standard TypeScript contracts, pagination types, and pure helper utilities (`@core/types`, `@core/utilities`).
 
 ---
 
 ## 2. Folder Structure
+
 ```text
 src/core/
 ├── api/                       # HTTP API client infrastructure
@@ -54,6 +58,7 @@ src/core/
 ---
 
 ## 3. File Naming Conventions
+
 - **Files:** `camelCase.ts` or `PascalCase.tsx` for React context/guard components.
 - **Classes & Interfaces:** `PascalCase` (e.g., `AppError`, `ApiValidationProblem`, `PagedResult<T>`).
 - **Hooks:** `camelCase.ts` starting with `use` (e.g., `useAuth.ts`, `usePermissions.ts`).
@@ -61,9 +66,10 @@ src/core/
 ---
 
 ## 4. Components & Contracts in Core Layer
+
 - **`apiClient`:** Pre-configured Axios instance using `VITE_API_BASE_URL`. Includes request cancellation and authorization header injection.
 - **`AppError`:** Unified error class containing `category`, `message`, `statusCode`, `details`, and `fieldErrors`.
-- **`PermissionGuard`:** Component wrapper that conditionally renders `children` if the current user has the required permission:
+- **`PermissionGuard`:** Component wrapper that conditionally renders `children` if the current user has the required permission. It renders an optional caller-supplied fallback, otherwise nothing, when access is denied:
   ```tsx
   <PermissionGuard module="AccountsReceivable" resource="Customers" action="Create">
     <Button>New Customer</Button>
@@ -73,6 +79,7 @@ src/core/
 ---
 
 ## 5. Hooks
+
 - **`useAuth()`:** Accesses current authenticated user, login, logout, and token functions.
 - **`usePermissions()`:** Evaluates `hasPermission(module, resource, action)`, `canView(module, resource)`, and `isAdmin`.
 - **`usePermission(permissionCode)`:** Evaluates a single permission requirement string.
@@ -80,18 +87,21 @@ src/core/
 ---
 
 ## 6. Services & APIs
+
 - Core services (like `permissionService`) are pure, in-memory singletons.
 - Visual components **must never** import Axios directly; they consume services or hooks that use `apiClient`.
 
 ---
 
 ## 7. State Management
+
 - Authentication token is stored securely in memory / local storage and exposed via `AuthContext`.
-- Core layer contains **no Zustand stores** and **no UI state**.
+- Core layer contains **no Zustand stores** and **no application-specific UI state**.
 
 ---
 
 ## 8. Design Patterns
+
 - **Singleton Pattern (`apiClient`, `permissionService`):** Single shared instances configured at startup.
 - **Adapter Pattern (`errorMapper.ts`):** Translates raw HTTP 400/401/403/404/500 backend responses into standardized `AppError` objects.
 - **Guard Pattern (`PermissionGuard.tsx`):** Structural component guarding UI elements based on security rights.
@@ -99,12 +109,14 @@ src/core/
 ---
 
 ## 9. Architecture & Dependencies
+
 - **Dependencies Allowed:** External libraries only (`axios`, `i18next`, `react`).
 - **Forbidden Dependencies:** Core must **never** import from `@shared`, `@patterns`, `@modules`, or `@app`.
 
 ---
 
 ## 10. Data Flow
+
 1. API request is initiated via a service function calling `apiClient.get/post`.
 2. `interceptors.ts` injects Bearer Token and Correlation ID.
 3. Response is returned, or intercepted by `errorMapper.ts` if an HTTP error occurs.
@@ -113,12 +125,14 @@ src/core/
 ---
 
 ## 11. Best Practices & Reusability Rules
+
 - **No Direct DOM or MUI Imports in Core:** Core utilities (`dateUtils`, `formatUtils`, `enumUtils`) must remain pure TypeScript without React/MUI DOM dependencies.
 - **Strict Typing:** Always return generic types (`PagedResult<T>`, `ApiResponse<T>`).
 
 ---
 
 ## 12. Do's and Don'ts
+
 - **DO:** Centralize all API client configuration in `@core/api/apiClient.ts`.
 - **DO:** Standardize error mapping using `errorMapper`.
 - **DON'T:** Import React UI components or MUI theme styles inside core utilities.
@@ -127,6 +141,7 @@ src/core/
 ---
 
 ## 13. Common Mistakes
+
 - **Mistake:** Throwing raw Axios errors in services.
 - **Correction:** Pass errors through `errorMapper(error)` to ensure field errors and validation problems are structured cleanly.
 
@@ -135,6 +150,7 @@ src/core/
 ## 14. Examples
 
 ### Standardized `PagedResult<T>` Interface (`src/core/types/common.ts`)
+
 ```ts
 export interface PagedResult<T> {
   data: T[];
@@ -148,6 +164,7 @@ export interface PagedResult<T> {
 ```
 
 ### Standard Error Mapping (`src/core/errors/errorMapper.ts`)
+
 ```ts
 export function mapApiError(error: unknown): AppError {
   if (isAxiosError(error) && error.response?.data) {
@@ -165,6 +182,7 @@ export function mapApiError(error: unknown): AppError {
 ---
 
 ## 15. Decision Rules & Checklist
+
 - [ ] Is the utility function pure and free of UI/MUI dependencies?
 - [ ] Does the API function use `apiClient`?
 - [ ] Are response contracts generic (`<T>`)?
@@ -173,5 +191,6 @@ export function mapApiError(error: unknown): AppError {
 ---
 
 ## 16. Performance Considerations
+
 - Interceptors use lightweight memory operations.
 - Permission matrix evaluation is performed in $\mathcal{O}(1)$ time using indexed maps.

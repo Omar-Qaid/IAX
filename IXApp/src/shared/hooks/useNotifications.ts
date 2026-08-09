@@ -1,7 +1,7 @@
-import { useAppStore } from '@app/store/useAppStore';
+import { useNotificationStore } from '@shared/services/notificationStore';
 
 export function useNotifications() {
-  const addNotification = useAppStore((s) => s.addNotification);
+  const addNotification = useNotificationStore((s) => s.addNotification);
 
   return {
     notifySuccess: (message: string) => addNotification({ message, type: 'success' }),

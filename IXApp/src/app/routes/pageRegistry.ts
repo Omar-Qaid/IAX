@@ -11,27 +11,131 @@ export interface AppPageDefinition {
 
 const lazyPage = <TModule extends object>(
   importer: () => Promise<TModule>,
-  select: (module: TModule) => ComponentType,
+  select: (module: TModule) => ComponentType
 ) => lazy(async () => ({ default: select(await importer()) }));
 
 export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
-  { id: 'dashboard', path: ROUTE_PATHS.DASHBOARD, permission: PERMISSIONS.DASHBOARD_VIEW, component: lazyPage(() => import('@modules/dashboard/pages/DashboardPage'), module => module.DashboardPage) },
-  { id: 'customers', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMERS, permission: PERMISSIONS.CUSTOMER_VIEW, component: lazyPage(() => import('@modules/accounts-receivable/pages/CustomerListPage'), module => module.CustomerListPage) },
-  { id: 'customer-groups', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_GROUPS, permission: PERMISSIONS.CUSTOMER_GROUP_VIEW, component: lazyPage(() => import('@modules/accounts-receivable/pages/CustomerGroupListPage'), module => module.CustomerGroupListPage) },
-  { id: 'customer-parameters', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PARAMETERS, permission: PERMISSIONS.CUSTOMER_VIEW, component: lazyPage(() => import('@modules/accounts-receivable/pages/CustParametersPage'), module => module.CustParametersPage) },
-  { id: 'customer-payment-methods', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_METHODS, permission: PERMISSIONS.CUSTOMER_VIEW, component: lazyPage(() => import('@modules/accounts-receivable/pages/CustPaymModePage'), module => module.CustPaymMode) },
-  { id: 'customer-payment-terms', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_TERMS, permission: PERMISSIONS.CUSTOMER_VIEW, component: lazyPage(() => import('@modules/accounts-receivable/pages/CustPaymTermPage'), module => module.CustPaymTerm) },
-  { id: 'sales-orders', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDERS, permission: PERMISSIONS.SALES_ORDER_VIEW, component: lazyPage(() => import('@modules/accounts-receivable/pages/SalesOrdersPage'), module => module.SalesOrdersPage) },
-  { id: 'sales-order-details', path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDER_DETAILS, permission: PERMISSIONS.SALES_ORDER_VIEW, component: lazyPage(() => import('@modules/accounts-receivable/pages/SalesOrderPage'), module => module.SalesOrderPage) },
-  { id: 'currencies', path: ROUTE_PATHS.FOUNDATION.CURRENCIES, permission: PERMISSIONS.CURRENCY_VIEW, component: lazyPage(() => import('@modules/foundation/pages/CurrencyPage'), module => module.CurrencyPage) },
-  { id: 'exchange-rate-types', path: ROUTE_PATHS.FOUNDATION.EXCHANGE_RATE_TYPES, permission: PERMISSIONS.CURRENCY_VIEW, component: lazyPage(() => import('@modules/foundation/pages/ExchangeRateTypePage'), module => module.ExchangeRateTypePage) },
-  { id: 'exchange-rates', path: ROUTE_PATHS.FOUNDATION.EXCHANGE_RATES, permission: PERMISSIONS.CURRENCY_VIEW, component: lazyPage(() => import('@modules/foundation/pages/ExchangeRatePage'), module => module.ExchangeRatePage) },
-  { id: 'legal-entities', path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.LEGAL_ENTITIES, permission: PERMISSIONS.LEGAL_ENTITY_VIEW, component: lazyPage(() => import('@modules/organization-administration/pages/LegalEntityPage'), module => module.LegalEntityPage) },
-  { id: 'application-settings', path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.SETTINGS, permission: PERMISSIONS.SETTINGS_VIEW, component: lazyPage(() => import('@modules/system-administration/pages/ApplicationSettingsPage'), module => module.ApplicationSettingsPage) },
+  {
+    id: 'dashboard',
+    path: ROUTE_PATHS.DASHBOARD,
+    permission: PERMISSIONS.DASHBOARD_VIEW,
+    component: lazyPage(
+      () => import('@modules/dashboard/pages/DashboardPage'),
+      (module) => module.DashboardPage
+    ),
+  },
+  {
+    id: 'customers',
+    path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMERS,
+    permission: PERMISSIONS.CUSTOMER_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-receivable/pages/CustomerListPage'),
+      (module) => module.CustomerListPage
+    ),
+  },
+  {
+    id: 'customer-groups',
+    path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_GROUPS,
+    permission: PERMISSIONS.CUSTOMER_GROUP_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-receivable/pages/CustomerGroupListPage'),
+      (module) => module.CustomerGroupListPage
+    ),
+  },
+  {
+    id: 'customer-parameters',
+    path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PARAMETERS,
+    permission: PERMISSIONS.CUSTOMER_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-receivable/pages/CustParametersPage'),
+      (module) => module.CustParametersPage
+    ),
+  },
+  {
+    id: 'customer-payment-methods',
+    path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_METHODS,
+    permission: PERMISSIONS.CUSTOMER_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-receivable/pages/CustPaymModePage'),
+      (module) => module.CustPaymMode
+    ),
+  },
+  {
+    id: 'customer-payment-terms',
+    path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_TERMS,
+    permission: PERMISSIONS.CUSTOMER_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-receivable/pages/CustPaymTermPage'),
+      (module) => module.CustPaymTerm
+    ),
+  },
+  {
+    id: 'sales-orders',
+    path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDERS,
+    permission: PERMISSIONS.SALES_ORDER_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-receivable/pages/SalesOrdersPage'),
+      (module) => module.SalesOrdersPage
+    ),
+  },
+  {
+    id: 'sales-order-details',
+    path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDER_DETAILS,
+    permission: PERMISSIONS.SALES_ORDER_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-receivable/pages/SalesOrderPage'),
+      (module) => module.SalesOrderPage
+    ),
+  },
+  {
+    id: 'currencies',
+    path: ROUTE_PATHS.FOUNDATION.CURRENCIES,
+    permission: PERMISSIONS.CURRENCY_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/foundation/pages/CurrencyPage'),
+      (module) => module.CurrencyPage
+    ),
+  },
+  {
+    id: 'exchange-rate-types',
+    path: ROUTE_PATHS.FOUNDATION.EXCHANGE_RATE_TYPES,
+    permission: PERMISSIONS.CURRENCY_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/foundation/pages/ExchangeRateTypePage'),
+      (module) => module.ExchangeRateTypePage
+    ),
+  },
+  {
+    id: 'exchange-rates',
+    path: ROUTE_PATHS.FOUNDATION.EXCHANGE_RATES,
+    permission: PERMISSIONS.CURRENCY_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/foundation/pages/ExchangeRatePage'),
+      (module) => module.ExchangeRatePage
+    ),
+  },
+  {
+    id: 'legal-entities',
+    path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.LEGAL_ENTITIES,
+    permission: PERMISSIONS.LEGAL_ENTITY_VIEW,
+    component: lazyPage(
+      () => import('@modules/organization/pages/LegalEntityPage'),
+      (module) => module.LegalEntityPage
+    ),
+  },
+  {
+    id: 'application-settings',
+    path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.SETTINGS,
+    permission: PERMISSIONS.SETTINGS_VIEW,
+    component: lazyPage(
+      () => import('@modules/administration/pages/ApplicationSettingsPage'),
+      (module) => module.ApplicationSettingsPage
+    ),
+  },
 ] as const;
 
 export const getPageDefinition = (path: string): AppPageDefinition | undefined =>
-  APP_PAGE_DEFINITIONS.find(page => page.path === path);
+  APP_PAGE_DEFINITIONS.find((page) => page.path === path);
 
 export const getRoutePermission = (path?: string): PermissionCode | undefined =>
   path ? getPageDefinition(path)?.permission : undefined;

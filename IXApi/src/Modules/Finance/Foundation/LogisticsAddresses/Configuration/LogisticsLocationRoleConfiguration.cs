@@ -1,0 +1,20 @@
+using IAX.IXApi.Shared.Domain.Entities;
+using IAX.IXApi.Modules.Finance.Entities;
+using IAX.IXApi.Modules.Organization.Employees.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
+{
+    public class LogisticsLocationRoleConfiguration : IEntityTypeConfiguration<LogisticsLocationRole>
+    {
+        public void Configure(EntityTypeBuilder<LogisticsLocationRole> builder)
+        {
+            builder.ToTable("LogisticsLocationRole");
+            builder.HasKey(x => x.RecId);
+
+            builder.HasIndex(x => x.Name).IsUnique();
+        }
+    }
+}
+

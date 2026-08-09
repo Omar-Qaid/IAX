@@ -1,12 +1,16 @@
 import { useEffect } from 'react';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 
-export function useUnsavedChanges(isDirty: boolean, message = 'You have unsaved changes. Are you sure you want to leave?') {
+export function useUnsavedChanges(isDirty: boolean, message?: string) {
+  const { t } = useAppTranslation();
+  const resolvedMessage = message ?? t('messages.unsavedChanges');
+
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       if (isDirty) {
         event.preventDefault();
-        event.returnValue = message;
-        return message;
+        event.returnValue = resolvedMessage;
+        return resolvedMessage;
       }
     };
 
@@ -14,5 +18,5 @@ export function useUnsavedChanges(isDirty: boolean, message = 'You have unsaved 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [isDirty, message]);
+  }, [isDirty, resolvedMessage]);
 }

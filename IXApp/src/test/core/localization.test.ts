@@ -35,6 +35,8 @@ describe('localization', () => {
     expect(i18n.t('pages.salesOrders.title')).toBe('أوامر البيع');
     expect(i18n.t('actions.save')).toBe('حفظ');
     expect(i18n.t('validation.required', { field: 'الاسم' })).toBe('حقل الاسم مطلوب.');
+    expect(i18n.t('lookups.searchOptions')).toBe('البحث في الخيارات…');
+    expect(i18n.t('messages.unsavedChanges')).toContain('تغييرات غير محفوظة');
     expect(document.documentElement.dir).toBe('rtl');
     await i18n.changeLanguage('en');
   });

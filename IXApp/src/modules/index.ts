@@ -1,3 +1,3 @@
-export * from './auth';
+export * from './identity';
 export * from './dashboard';
-export * from './accounts-receivable';
+export * from './finance/accounts-receivable';

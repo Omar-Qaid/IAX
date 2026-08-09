@@ -1,7 +1,7 @@
 # Page Structural Components Documentation (`src/shared/components/page`)
 
 ## 1. Purpose and Responsibilities
-The `page` sub-system provides structural containers for assembling pages in **IXApp**. Inspired by Microsoft Dynamics 365 Finance & Operations page headers, it enforces consistent margins, paper background cards, breadcrumb alignment, and page section headers across all business modules.
+The `page` sub-system provides route-agnostic structural containers for assembling pages in **IXApp**. Inspired by Microsoft Dynamics 365 Finance & Operations page headers, it enforces consistent margins, paper background cards, and page section headers across all business modules.
 
 ---
 
@@ -10,7 +10,6 @@ The `page` sub-system provides structural containers for assembling pages in **I
 src/shared/components/page/
 ├── PageContainer.tsx          # Top-level page column layout wrapper (`PageContainer`, `PageContent`, `PageSection`)
 ├── PageHeader.tsx             # Standard page title & status header (`PageHeader`, `PageTitle`)
-├── PageBreadcrumbs.tsx        # Breadcrumb trail component
 ├── PageStatusBar.tsx          # Bottom status bar summary component
 └── types.ts                   # Page header & container contracts
 ```
@@ -18,7 +17,7 @@ src/shared/components/page/
 ---
 
 ## 3. Naming Conventions
-- **Components:** `PascalCase.tsx` prefixed with `Page` (e.g., `PageContainer.tsx`, `PageHeader.tsx`, `PageBreadcrumbs.tsx`).
+- **Components:** `PascalCase.tsx` prefixed with `Page` (e.g., `PageContainer.tsx`, `PageHeader.tsx`).
 
 ---
 
@@ -31,7 +30,7 @@ src/shared/components/page/
 ---
 
 ## 5. Hooks & Integrations
-Integrates with `useLocation` to compute automatic breadcrumbs in `PageBreadcrumbs`.
+Contains no route or application-store integrations. Route-aware breadcrumbs belong to `src/app/navigation`.
 
 ---
 

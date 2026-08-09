@@ -1,16 +1,23 @@
 import React, { lazy, Suspense } from 'react';
-import { useRouteError, type RouteObject } from 'react-router-dom';
+import { useNavigate, useRouteError, type RouteObject } from 'react-router-dom';
 import { AppLayout } from '@app/layouts/AppLayout';
 import { AuthLayout } from '@app/layouts/AuthLayout';
 import { RouteGuard } from './RouteGuard';
 import { ROUTE_PATHS } from './routePaths';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { ErrorState } from '@shared/components/feedback/ErrorState';
-import { AccessDeniedState } from '@shared/components/feedback/AccessDeniedState';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { APP_PAGE_DEFINITIONS, getPageDefinition } from './pageRegistry';
+import { AppAccessDeniedState } from './AppAccessDeniedState';
 
-const LoginPage = lazy(() => import('@modules/auth/pages/LoginPage').then((module) => ({ default: module.LoginPage })));
+const LoginPage = lazy(() =>
+  import('@modules/identity/pages/LoginPage').then((module) => ({ default: module.LoginPage }))
+);
+
+const LoginRoutePage = () => {
+  const navigate = useNavigate();
+  return <LoginPage onLoginSuccess={() => navigate(ROUTE_PATHS.DASHBOARD, { replace: true })} />;
+};
 
 const RouteLoading = () => {
   const { t } = useAppTranslation();
@@ -24,7 +31,12 @@ const NotFoundPage = () => {
 
 const AccessDeniedPage = () => {
   const { t } = useAppTranslation();
-  return <AccessDeniedState title={t('pages.accessDenied.title')} message={t('pages.accessDenied.message')} />;
+  return (
+    <AppAccessDeniedState
+      title={t('pages.accessDenied.title')}
+      message={t('pages.accessDenied.message')}
+    />
+  );
 };
 
 const RouteErrorPage = () => {
@@ -34,10 +46,16 @@ const RouteErrorPage = () => {
   return <ErrorState title={t('errors.boundaryTitle', 'Application error')} message={message} />;
 };
 
-const load = (element: React.ReactNode) => <Suspense fallback={<RouteLoading />}>{element}</Suspense>;
-const pageRoutes: RouteObject[] = APP_PAGE_DEFINITIONS.map(page => ({
+const load = (element: React.ReactNode) => (
+  <Suspense fallback={<RouteLoading />}>{element}</Suspense>
+);
+const pageRoutes: RouteObject[] = APP_PAGE_DEFINITIONS.map((page) => ({
   path: page.path,
-  element: <RouteGuard permission={page.permission}>{load(React.createElement(page.component))}</RouteGuard>,
+  element: (
+    <RouteGuard permission={page.permission}>
+      {load(React.createElement(page.component))}
+    </RouteGuard>
+  ),
 }));
 
 const dashboard = getPageDefinition(ROUTE_PATHS.DASHBOARD);
@@ -45,11 +63,7 @@ const dashboard = getPageDefinition(ROUTE_PATHS.DASHBOARD);
 export const appRoutes: RouteObject[] = [
   {
     path: ROUTE_PATHS.LOGIN,
-    element: (
-      <AuthLayout>
-        {load(<LoginPage />)}
-      </AuthLayout>
-    ),
+    element: <AuthLayout>{load(<LoginRoutePage />)}</AuthLayout>,
     errorElement: <RouteErrorPage />,
   },
   {
@@ -61,7 +75,18 @@ export const appRoutes: RouteObject[] = [
     ),
     errorElement: <RouteErrorPage />,
     children: [
-      ...(dashboard ? [{ index: true, element: <RouteGuard permission={dashboard.permission}>{load(React.createElement(dashboard.component))}</RouteGuard> }] : []),
+      ...(dashboard
+        ? [
+            {
+              index: true,
+              element: (
+                <RouteGuard permission={dashboard.permission}>
+                  {load(React.createElement(dashboard.component))}
+                </RouteGuard>
+              ),
+            },
+          ]
+        : []),
       ...pageRoutes,
       { path: ROUTE_PATHS.ACCESS_DENIED, element: <AccessDeniedPage /> },
       { path: '*', element: <NotFoundPage /> },

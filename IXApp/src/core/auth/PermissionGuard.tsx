@@ -1,6 +1,5 @@
 import React from 'react';
 import { useAuth } from './useAuth';
-import { AccessDeniedState } from '@shared/components/feedback/AccessDeniedState';
 
 export interface PermissionGuardProps {
   permission?: string;
@@ -18,11 +17,11 @@ export const PermissionGuard: React.FC<PermissionGuardProps> = ({
   const { hasPermission, hasRole } = useAuth();
 
   if (permission && !hasPermission(permission)) {
-    return fallback ? <>{fallback}</> : <AccessDeniedState />;
+    return fallback ? <>{fallback}</> : null;
   }
 
   if (role && !hasRole(role)) {
-    return fallback ? <>{fallback}</> : <AccessDeniedState />;
+    return fallback ? <>{fallback}</> : null;
   }
 
   return <>{children}</>;

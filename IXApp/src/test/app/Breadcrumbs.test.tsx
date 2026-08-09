@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
 import { AppProviders } from '@app/providers/AppProviders';
-import { PageBreadcrumbs } from '@shared/components/page/PageBreadcrumbs';
+import { PageBreadcrumbs } from '@app/navigation/PageBreadcrumbs';
 
 describe('localized route breadcrumbs', () => {
   it('uses route metadata for dynamic sales-order paths', () => {

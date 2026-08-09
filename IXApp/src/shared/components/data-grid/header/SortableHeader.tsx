@@ -57,7 +57,7 @@ export function SortableHeader<T>({
         overflow: 'hidden',
       }}
     >
-      {/* Name row � drag handle */}
+      {/* Name row - drag handle */}
       <Box
         {...attributes} {...listeners}
         onClick={() => { if (!isDragging && column.sortable !== false) onSort(column.field as string); }}
