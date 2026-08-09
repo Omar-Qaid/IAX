@@ -1,11 +1,6 @@
 using System.Net.Http.Json;
 using IAX.IXApi.Shared.Application.Attributes;
 using IAX.IXApi.Shared.Domain.Entities;
-using IAX.IXApi.Modules.Finance.Entities;
-using IAX.IXApi.Modules.Organization.Employees.Entities;
-using IAX.IXApi.Modules.Administration.AuditLogs.Entities;
-using IAX.IXApi.Modules.Administration.DataManagement.Contracts;
-using IAX.IXApi.Infrastructure.Persistence.Seeding.Entities;
 using IAX.IXApi.Modules.Communication.Notifications.Entities;
 using Microsoft.Extensions.Logging;
 
@@ -16,7 +11,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services.Channels
     /// Delivers a notification by HTTP POSTing a JSON envelope to a target URL.
     ///
     /// The target URL is taken from <see cref="SysNotification.Url"/> when it is an
-    /// absolute http(s) URL. This keeps the channel fully generic — any module can
+    /// absolute http(s) URL. This keeps the channel fully generic â€” any module can
     /// raise a webhook notification simply by setting the destination on the payload,
     /// with no coupling to business entities.
     /// </summary>

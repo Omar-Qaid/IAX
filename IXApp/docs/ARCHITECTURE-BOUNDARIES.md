@@ -42,8 +42,8 @@ contract that has no dependency on either business module.
 
 ## Current migration baseline
 
-The architecture audit currently permits zero forbidden layer edges and baselines
-18 files that use the MUI icon barrel. These entries are listed explicitly in
+The architecture audit permits zero forbidden layer edges and zero MUI icon-barrel
+imports. Any future exception must be listed explicitly in
 `scripts/audit-architecture.mjs`; broad directory exceptions are not permitted.
 
 The baseline is a ratchet:
@@ -63,7 +63,7 @@ The baseline is a ratchet:
 3. ~~Move validated environment ownership into `core/configuration` so authentication
    and generic data hooks do not import `app`.~~ Completed.
 4. ~~Move logistics mock selection behind a shared service adapter.~~ Completed.
-5. Replace each known MUI icon barrel import with a path import.
+5. ~~Replace each known MUI icon barrel import with a path import.~~ Completed.
 
 Each wave must preserve compatibility until all consumers are migrated and must run
 `npm run verify` plus Playwright discovery and assertions before its baseline entries

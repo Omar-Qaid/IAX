@@ -27,26 +27,7 @@ const allowedLayers = {
 // Existing debt is explicit so the gate blocks regressions while later phases remove it.
 const layerDebtBaseline = new Set([]);
 
-const iconBarrelBaseline = new Set([
-  'app/navigation/NavItem.tsx',
-  'app/navigation/NavSection.tsx',
-  'app/shell/AppSidebar.tsx',
-  'app/shell/AppTopBar.tsx',
-  'app/shell/ModuleNavPanel.tsx',
-  'shared/components/data-grid/DataGridMobileBody.tsx',
-  'shared/components/data-grid/GridSidebar.tsx',
-  'shared/components/data-grid/body/GridRow.tsx',
-  'shared/components/data-grid/body/RowContextMenu.tsx',
-  'shared/components/data-grid/header/FilterInput.tsx',
-  'shared/components/data-grid/header/FilterPopover.tsx',
-  'shared/components/data-grid/header/HeaderMenu.tsx',
-  'shared/components/data-grid/header/PinnedHeaderCell.tsx',
-  'shared/components/data-grid/header/SortableHeader.tsx',
-  'shared/components/data-grid/sidebar/ColumnsPanel.tsx',
-  'shared/components/data-grid/sidebar/FeaturesPanel.tsx',
-  'shared/components/data-grid/sidebar/FiltersPanel.tsx',
-  'shared/components/dialogs/AppHistoryDrawer.tsx',
-]);
+const iconBarrelBaseline = new Set([]);
 
 const walk = (directory) =>
   readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {

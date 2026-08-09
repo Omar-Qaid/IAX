@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Persistence;
+using IAX.IXApi.Modules.Communication.Persistence;
 using IAX.IXApi.Modules.Administration.BackgroundJobs.Services;
 using IAX.IXApi.Modules.Administration.BackgroundJobs.Services.Handlers;
 using IAX.IXApi.Modules.Communication.Notifications.Entities;
@@ -12,7 +12,7 @@ public sealed class CleanupExpiredNotificationsJobHandler : ISysBackgroundJobHan
 
     public async Task ExecuteAsync(SysBackgroundJobContext context, CancellationToken cancellationToken)
     {
-        var db = context.Services.GetRequiredService<ApplicationDbContext>();
+        var db = context.Services.GetRequiredService<ICommunicationDataContext>();
         var now = DateTime.UtcNow;
         var expired = await db.Set<SysNotification>()
             .Where(notification => notification.ExpiryDate != null

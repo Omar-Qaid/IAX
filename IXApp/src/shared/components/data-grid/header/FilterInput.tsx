@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Chip, Typography, IconButton } from '@mui/material';
-import { FilterList as FilterIcon } from '@mui/icons-material';
+import FilterIcon from '@mui/icons-material/FilterList';
 import { useTranslation } from 'react-i18next';
 import type { ColumnDef, FilterModel } from '../types';
 import { AppTextField } from '@shared/components/fields/AppTextField';
@@ -13,10 +13,15 @@ interface FilterInputProps<T> {
   onFilterIconClick?: (event: React.MouseEvent<HTMLElement>, column: ColumnDef<T>) => void;
 }
 
-export function FilterInput<T>({ column, filters, onFilterChange, onFilterIconClick }: FilterInputProps<T>) {
+export function FilterInput<T>({
+  column,
+  filters,
+  onFilterChange,
+  onFilterIconClick,
+}: FilterInputProps<T>) {
   const { t } = useTranslation();
   const field = column.field as string;
-  const currentFilter = filters.find(f => f.field === field);
+  const currentFilter = filters.find((f) => f.field === field);
 
   if (column.type === 'boolean') {
     return (
@@ -35,15 +40,24 @@ export function FilterInput<T>({ column, filters, onFilterChange, onFilterIconCl
     return (
       <Box
         sx={{
-          display: 'flex', alignItems: 'center', width: '100%',
-          height: 24, px: 0.5, gap: 0.5,
-          border: '1px solid', borderColor: 'primary.main',
-          borderRadius: 1, overflow: 'hidden', cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          width: '100%',
+          height: 24,
+          px: 0.5,
+          gap: 0.5,
+          border: '1px solid',
+          borderColor: 'primary.main',
+          borderRadius: 1,
+          overflow: 'hidden',
+          cursor: 'pointer',
         }}
         onClick={(e) => onFilterIconClick?.(e, column)}
       >
-        <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: 0.5, overflow: 'hidden' }}>
-          {items.slice(0, 2).map(v => (
+        <Box
+          sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: 0.5, overflow: 'hidden' }}
+        >
+          {items.slice(0, 2).map((v) => (
             <Chip
               key={v}
               label={v}
@@ -69,37 +83,51 @@ export function FilterInput<T>({ column, filters, onFilterChange, onFilterIconCl
       placeholder={t('grid.filter_placeholder')}
       fullWidth
       type={inputType}
-      value={typeof currentFilter?.value === 'string' ? currentFilter.value : (currentFilter?.value ?? '')}
+      value={
+        typeof currentFilter?.value === 'string'
+          ? currentFilter.value
+          : (currentFilter?.value ?? '')
+      }
       onChange={(val) => onFilterChange(field, String(val ?? ''))}
       slotProps={{
         input: {
           endAdornment: onFilterIconClick ? (
-            <IconButton aria-label={t('grid.open_column_filter', { column: column.headerName, defaultValue: `Filter ${column.headerName}` })} size="small" sx={{ p: 0 }} onClick={(e) => onFilterIconClick(e, column)}>
-              <FilterIcon sx={{ fontSize: 13, color: currentFilter ? 'primary.main' : 'text.disabled' }} />
+            <IconButton
+              aria-label={t('grid.open_column_filter', {
+                column: column.headerName,
+                defaultValue: `Filter ${column.headerName}`,
+              })}
+              size="small"
+              sx={{ p: 0 }}
+              onClick={(e) => onFilterIconClick(e, column)}
+            >
+              <FilterIcon
+                sx={{ fontSize: 13, color: currentFilter ? 'primary.main' : 'text.disabled' }}
+              />
             </IconButton>
           ) : (
             <FilterIcon sx={{ fontSize: 13, color: 'text.disabled' }} />
           ),
-          sx: { 
-            fontSize: '0.75rem', 
-            height: 26, 
+          sx: {
+            fontSize: '0.75rem',
+            height: 26,
             bgcolor: 'transparent',
-            '& input': { 
+            '& input': {
               padding: '2px 8px',
             },
-            '& input::placeholder': { 
-              fontSize: '0.7rem', 
-              opacity: 0.5 
+            '& input::placeholder': {
+              fontSize: '0.7rem',
+              opacity: 0.5,
             },
             '& fieldset': { border: 'none' },
             '&:hover fieldset': { border: 'none' },
-            '&.Mui-focused fieldset': { 
-                border: '1px solid',
-                borderColor: 'primary.main',
-                borderRadius: 1
+            '&.Mui-focused fieldset': {
+              border: '1px solid',
+              borderColor: 'primary.main',
+              borderRadius: 1,
             },
           },
-        }
+        },
       }}
     />
   );

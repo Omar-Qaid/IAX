@@ -53,6 +53,8 @@ namespace IAX.IXApi.Bootstrap.Extensions
                 sp.GetRequiredService<ApplicationDbContext>());
             services.AddScoped<IAX.IXApi.Modules.Finance.Persistence.IFinanceDataContext>(sp =>
                 sp.GetRequiredService<ApplicationDbContext>());
+            services.AddScoped<IAX.IXApi.Modules.Communication.Persistence.ICommunicationDataContext>(sp =>
+                sp.GetRequiredService<ApplicationDbContext>());
 
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped(typeof(IUnitOfWork), typeof(UnitOfWork));

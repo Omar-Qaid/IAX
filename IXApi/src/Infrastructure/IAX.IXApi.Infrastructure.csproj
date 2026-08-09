@@ -22,6 +22,7 @@
     <ProjectReference Include="..\Modules\Administration\IAX.IXApi.Modules.Administration.csproj" />
     <ProjectReference Include="..\Modules\Organization\IAX.IXApi.Modules.Organization.csproj" />
     <ProjectReference Include="..\Modules\Finance\IAX.IXApi.Modules.Finance.csproj" />
+    <ProjectReference Include="..\Modules\Communication\IAX.IXApi.Modules.Communication.csproj" />
   </ItemGroup>
   <!--
     Transitional build-recovery boundary: the migrated module sources still depend on
@@ -31,7 +32,7 @@
   <ItemGroup>
     <Compile Include="..\..\GlobalUsings.cs" Link="GlobalUsings.cs" />
     <Compile Include="..\Modules\**\*.cs"
-             Exclude="..\Modules\Identity\**\*.cs;..\Modules\Administration\**\*.cs;..\Modules\Organization\**\*.cs;..\Modules\Finance\**\*.cs;..\Modules\**\bin\**\*.cs;..\Modules\**\obj\**\*.cs" />
+             Exclude="..\Modules\Identity\**\*.cs;..\Modules\Administration\**\*.cs;..\Modules\Organization\**\*.cs;..\Modules\Finance\**\*.cs;..\Modules\Communication\**\*.cs;..\Modules\**\bin\**\*.cs;..\Modules\**\obj\**\*.cs" />
   </ItemGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />

@@ -1,6 +1,15 @@
 import React, { memo } from 'react';
-import { Box, Checkbox, useTheme, alpha, IconButton, CircularProgress, Tooltip } from '@mui/material';
-import { Check as SaveIcon, Close as CancelIcon } from '@mui/icons-material';
+import {
+  Box,
+  Checkbox,
+  useTheme,
+  alpha,
+  IconButton,
+  CircularProgress,
+  Tooltip,
+} from '@mui/material';
+import SaveIcon from '@mui/icons-material/Check';
+import CancelIcon from '@mui/icons-material/Close';
 import { useTranslation } from 'react-i18next';
 import { GridCell } from './GridCell';
 import type { ColumnDef } from '../types';
@@ -35,23 +44,48 @@ interface GridRowProps<T> {
 }
 
 export const GridRow = memo(function GridRowInner<T>({
-  row, index, virtualRow, getRowId, selectionMode, isSelected,
-  onToggleRow, onRowClick, onRowDoubleClick, headerHeight, rowHeight,
-  showColumnBorders, showCellBorders,
-  pinnedLeftCols, unpinnedCols, pinnedRightCols, pinnedLeftOffsets, pinnedRightOffsets,
-  onContextMenu, renderCell,
-  isEditing = false, saving = false, onSave, onCancel, hideInlineEditActions = false,
+  row,
+  index,
+  virtualRow,
+  getRowId,
+  selectionMode,
+  isSelected,
+  onToggleRow,
+  onRowClick,
+  onRowDoubleClick,
+  headerHeight,
+  rowHeight,
+  showColumnBorders,
+  showCellBorders,
+  pinnedLeftCols,
+  unpinnedCols,
+  pinnedRightCols,
+  pinnedLeftOffsets,
+  pinnedRightOffsets,
+  onContextMenu,
+  renderCell,
+  isEditing = false,
+  saving = false,
+  onSave,
+  onCancel,
+  hideInlineEditActions = false,
 }: GridRowProps<T>) {
   const theme = useTheme();
   const { t } = useTranslation();
   const rowId = getRowId(row);
   const rowBg = isSelected
     ? alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.14 : 0.22)
-    : index % 2 === 1 ? (theme.palette.mode === 'light' ? '#fcfcfc' : alpha(theme.palette.action.hover, 0.04)) : 'background.paper';
-  
-  const hoverBg = isSelected 
+    : index % 2 === 1
+      ? theme.palette.mode === 'light'
+        ? '#fcfcfc'
+        : alpha(theme.palette.action.hover, 0.04)
+      : 'background.paper';
+
+  const hoverBg = isSelected
     ? alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.18 : 0.28)
-    : theme.palette.mode === 'light' ? '#f3f6fa' : alpha(theme.palette.action.hover, 0.1);
+    : theme.palette.mode === 'light'
+      ? '#f3f6fa'
+      : alpha(theme.palette.action.hover, 0.1);
 
   const editingBg = isEditing
     ? alpha(theme.palette.warning.main, theme.palette.mode === 'light' ? 0.06 : 0.12)
@@ -63,20 +97,35 @@ export const GridRow = memo(function GridRowInner<T>({
 
   return (
     <Box
-      onContextMenu={isEditing ? undefined : e => onContextMenu(e, row)}
-      onClick={() => { if (!isEditing) { onToggleRow(rowId); onRowClick?.(row); } }}
-      onDoubleClick={() => { if (!isEditing) { onRowDoubleClick?.(row); } }}
+      onContextMenu={isEditing ? undefined : (e) => onContextMenu(e, row)}
+      onClick={() => {
+        if (!isEditing) {
+          onToggleRow(rowId);
+          onRowClick?.(row);
+        }
+      }}
+      onDoubleClick={() => {
+        if (!isEditing) {
+          onRowDoubleClick?.(row);
+        }
+      }}
       role="row"
       aria-selected={isSelected}
       sx={{
-        position: 'absolute', top: 0, left: 0,
-        width: 'max-content', minWidth: '100%', height: `${virtualRow.size}px`,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: 'max-content',
+        minWidth: '100%',
+        height: `${virtualRow.size}px`,
         transform: `translateY(${virtualRow.start - headerHeight}px)`,
         display: 'flex',
-        cursor: isEditing ? 'default' : (onRowClick ? 'pointer' : 'default'),
+        cursor: isEditing ? 'default' : onRowClick ? 'pointer' : 'default',
         bgcolor: editingBg ?? rowBg,
         boxShadow: isSelected ? `inset 3px 0 0 ${theme.palette.primary.main}` : 'none',
-        transition: theme.transitions.create(['background-color', 'box-shadow'], { duration: theme.transitions.duration.shortest }),
+        transition: theme.transitions.create(['background-color', 'box-shadow'], {
+          duration: theme.transitions.duration.shortest,
+        }),
         outline: isEditing ? `2px solid ${theme.palette.warning.main}` : undefined,
         outlineOffset: isEditing ? '-2px' : undefined,
         '&:hover': { bgcolor: isEditing ? editingBg : hoverBg },
@@ -85,7 +134,13 @@ export const GridRow = memo(function GridRowInner<T>({
       {selectionMode === 'multiple' && (
         <GridCell
           row={row}
-          col={{ field: '_selection', headerName: '', width: GRID_SELECTION_COLUMN_WIDTH } as ColumnDef<T>}
+          col={
+            {
+              field: '_selection',
+              headerName: '',
+              width: GRID_SELECTION_COLUMN_WIDTH,
+            } as ColumnDef<T>
+          }
           rowIndex={index}
           rowHeight={rowHeight}
           showColumnBorders={showColumnBorders}
@@ -94,7 +149,14 @@ export const GridRow = memo(function GridRowInner<T>({
           offset={0}
           position="left"
           renderCell={() => (
-            <Checkbox aria-label={t('grid.select_row', { id: rowId, defaultValue: `Select row ${rowId}` })} size="small" checked={isSelected} onChange={() => onToggleRow(rowId)} onClick={(event) => event.stopPropagation()} sx={{ p: 0, color: 'text.secondary', '&.Mui-checked': { color: 'primary.main' } }} />
+            <Checkbox
+              aria-label={t('grid.select_row', { id: rowId, defaultValue: `Select row ${rowId}` })}
+              size="small"
+              checked={isSelected}
+              onChange={() => onToggleRow(rowId)}
+              onClick={(event) => event.stopPropagation()}
+              sx={{ p: 0, color: 'text.secondary', '&.Mui-checked': { color: 'primary.main' } }}
+            />
           )}
           colIndex={0}
         />
@@ -110,7 +172,9 @@ export const GridRow = memo(function GridRowInner<T>({
           showColumnBorders={showColumnBorders}
           showCellBorders={showCellBorders}
           isPinned={true}
-          offset={pinnedLeftOffsets[i] + (selectionMode === 'multiple' ? GRID_SELECTION_COLUMN_WIDTH : 0)}
+          offset={
+            pinnedLeftOffsets[i] + (selectionMode === 'multiple' ? GRID_SELECTION_COLUMN_WIDTH : 0)
+          }
           position="left"
           renderCell={renderCell}
           colIndex={i + selectionOffset}
@@ -135,14 +199,16 @@ export const GridRow = memo(function GridRowInner<T>({
       ))}
 
       {/* Filler to absorb remaining space and stay aligned with the header filler */}
-      <Box sx={{
-        flexGrow: 1,
-        flexShrink: 0,
-        minWidth: 0,
-        height: rowHeight,
-        borderBottom: `1px solid ${theme.palette.divider}`,
-        bgcolor: 'inherit',
-      }} />
+      <Box
+        sx={{
+          flexGrow: 1,
+          flexShrink: 0,
+          minWidth: 0,
+          height: rowHeight,
+          borderBottom: `1px solid ${theme.palette.divider}`,
+          bgcolor: 'inherit',
+        }}
+      />
 
       {pinnedRightCols.map((col, i) => (
         <GridCell
@@ -177,19 +243,31 @@ export const GridRow = memo(function GridRowInner<T>({
             zIndex: 2,
             flexShrink: 0,
           }}
-          onClick={e => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
           {saving ? (
             <CircularProgress size={16} thickness={4} />
           ) : (
             <>
               <Tooltip title={t('common.save')}>
-                <IconButton aria-label={t('common.save')} size="small" color="success" onClick={onSave} sx={{ p: 0.25 }}>
+                <IconButton
+                  aria-label={t('common.save')}
+                  size="small"
+                  color="success"
+                  onClick={onSave}
+                  sx={{ p: 0.25 }}
+                >
                   <SaveIcon sx={{ fontSize: 16 }} />
                 </IconButton>
               </Tooltip>
               <Tooltip title={t('common.cancel')}>
-                <IconButton aria-label={t('common.cancel')} size="small" color="error" onClick={onCancel} sx={{ p: 0.25 }}>
+                <IconButton
+                  aria-label={t('common.cancel')}
+                  size="small"
+                  color="error"
+                  onClick={onCancel}
+                  sx={{ p: 0.25 }}
+                >
                   <CancelIcon sx={{ fontSize: 16 }} />
                 </IconButton>
               </Tooltip>

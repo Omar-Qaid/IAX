@@ -1,4 +1,4 @@
-﻿using IAX.IXApi.Infrastructure.Persistence;
+using IAX.IXApi.Modules.Communication.Persistence;
 using IAX.IXApi.Shared.Application.Contracts;
 using IAX.IXApi.Modules.Communication.Notifications.Entities;
 using IAX.IXApi.Infrastructure.Identity;
@@ -10,10 +10,10 @@ namespace IAX.IXApi.Modules.Communication.Notifications
 {
     public class SysNotificationPreferenceController : ControllerBase
     {
-        private readonly ApplicationDbContext _db;
+        private readonly ICommunicationDataContext _db;
         private readonly ICurrentUserService _currentUser;
 
-        public SysNotificationPreferenceController(ApplicationDbContext db, ICurrentUserService currentUser)
+        public SysNotificationPreferenceController(ICommunicationDataContext db, ICurrentUserService currentUser)
         {
             _db = db;
             _currentUser = currentUser;

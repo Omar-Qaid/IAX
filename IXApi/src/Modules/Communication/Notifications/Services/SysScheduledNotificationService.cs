@@ -1,11 +1,6 @@
-using IAX.IXApi.Infrastructure.Persistence;
+using IAX.IXApi.Modules.Communication.Persistence;
 using IAX.IXApi.Modules.Communication.Notifications;
 using IAX.IXApi.Shared.Domain.Entities;
-using IAX.IXApi.Modules.Finance.Entities;
-using IAX.IXApi.Modules.Organization.Employees.Entities;
-using IAX.IXApi.Modules.Administration.AuditLogs.Entities;
-using IAX.IXApi.Modules.Administration.DataManagement.Contracts;
-using IAX.IXApi.Infrastructure.Persistence.Seeding.Entities;
 using IAX.IXApi.Modules.Communication.Notifications.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,7 +10,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
 {
     /// <summary>
     /// Free, built-in ASP.NET Core BackgroundService for scheduled notification processing.
-    /// No external dependencies — uses IHostedService + Timer + database-persisted jobs.
+    /// No external dependencies â€” uses IHostedService + Timer + database-persisted jobs.
     /// 
     /// Supports:
     ///   - Delayed notifications (send at a specific time)
@@ -41,7 +36,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("[NotificationBgService] Started — polling every {Interval}", _checkInterval);
+            _logger.LogInformation("[NotificationBgService] Started â€” polling every {Interval}", _checkInterval);
 
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -65,7 +60,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
         private async Task ProcessPendingJobsAsync(CancellationToken ct)
         {
             using var scope = _serviceProvider.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var db = scope.ServiceProvider.GetRequiredService<ICommunicationDataContext>();
             var notificationService = scope.ServiceProvider.GetRequiredService<ISysNotificationService>();
 
             var now = DateTime.UtcNow;
@@ -94,7 +89,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                         {
                             job.Status = SysScheduledJobStatus.Cancelled;
                             job.CompletedAt = now;
-                            _logger.LogInformation("[NotificationBgService] Escalation {RecId} skipped — already read", job.RecId);
+                            _logger.LogInformation("[NotificationBgService] Escalation {RecId} skipped â€” already read", job.RecId);
                             continue;
                         }
                     }
@@ -186,7 +181,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
         private async Task CleanupExpiredNotificationsAsync(CancellationToken ct)
         {
             using var scope = _serviceProvider.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var db = scope.ServiceProvider.GetRequiredService<ICommunicationDataContext>();
 
             var now = DateTime.UtcNow;
 

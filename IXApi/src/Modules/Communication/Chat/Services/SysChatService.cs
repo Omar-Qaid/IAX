@@ -1,6 +1,5 @@
-using DocumentFormat.OpenXml.Spreadsheet;
 using IAX.IXApi.Shared.Application.Attributes;
-using IAX.IXApi.Infrastructure.Persistence;
+using IAX.IXApi.Modules.Communication.Persistence;
 using IAX.IXApi.Modules.Communication.Chat.Entities;
 using IAX.IXApi.Infrastructure.Realtime;
 using Microsoft.AspNetCore.SignalR;
@@ -15,10 +14,10 @@ namespace IAX.IXApi.Modules.Communication.Chat.Services
     /// </summary>
     public class SysChatService : ISysChatService
     {
-        private readonly ApplicationDbContext _db;
+        private readonly ICommunicationDataContext _db;
         private readonly IHubContext<SysChatHub> _hub;
 
-        public SysChatService(ApplicationDbContext db, IHubContext<SysChatHub> hub)
+        public SysChatService(ICommunicationDataContext db, IHubContext<SysChatHub> hub)
         {
             _db = db;
             _hub = hub;
@@ -42,7 +41,7 @@ namespace IAX.IXApi.Modules.Communication.Chat.Services
 
             var payload = SysRealtimeMessage.Create(SysRealtimeEventType.ChatMessage, dto, senderId);
 
-            // 1) Deliver to everyone currently in the room (open thread → live append).
+            // 1) Deliver to everyone currently in the room (open thread â†’ live append).
             await _hub.Clients
                 .Group(SysChatHub.ChatGroup(roomId))
                 .SendAsync("ReceiveMessage", payload, ct);
@@ -50,7 +49,7 @@ namespace IAX.IXApi.Modules.Communication.Chat.Services
             // 2) Also notify each conversation participant on their personal user group, so a
             //    recipient who is NOT currently viewing this room still gets a real-time signal
             //    to refresh their conversation list / unread badge (every authenticated client is
-            //    auto-joined to "user_{id}" on connect — see SysHubBase).
+            //    auto-joined to "user_{id}" on connect â€” see SysHubBase).
             foreach (var participant in DmParticipants(roomId))
             {
                 await _hub.Clients
@@ -76,7 +75,7 @@ namespace IAX.IXApi.Modules.Communication.Chat.Services
                 .Take(pageSize)
                 .ToListAsync(ct);
 
-            // Map in memory — Map() is a C# method EF can't translate to SQL.
+            // Map in memory â€” Map() is a C# method EF can't translate to SQL.
             var items = rows.Select(Map).ToList();
 
             return (items, total);
@@ -131,7 +130,7 @@ namespace IAX.IXApi.Modules.Communication.Chat.Services
         {
             var now = DateTime.UtcNow;
 
-            // Atomic SQL MERGE — a single round-trip that inserts or updates.
+            // Atomic SQL MERGE â€” a single round-trip that inserts or updates.
             // No race condition possible: the unique index (UserId, RoomId) is held
             // exclusively by the MERGE, so concurrent calls just serialise cleanly.
             await _db.Database.ExecuteSqlInterpolatedAsync($@"
@@ -147,7 +146,7 @@ namespace IAX.IXApi.Modules.Communication.Chat.Services
         }
 
         /// <summary>
-        /// Participant user ids encoded in a DM room key ("dm:a:b" → ["a","b"]).
+        /// Participant user ids encoded in a DM room key ("dm:a:b" â†’ ["a","b"]).
         /// Non-DM rooms return none (membership isn't tracked; the room broadcast + client
         /// polling cover those).
         /// </summary>

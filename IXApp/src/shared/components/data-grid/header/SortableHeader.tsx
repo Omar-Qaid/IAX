@@ -1,7 +1,10 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, Typography, IconButton, useTheme } from '@mui/material';
-import { ArrowUpward, ArrowDownward, MoreVert, FilterList as FilterIcon } from '@mui/icons-material';
+import ArrowUpward from '@mui/icons-material/ArrowUpward';
+import ArrowDownward from '@mui/icons-material/ArrowDownward';
+import MoreVert from '@mui/icons-material/MoreVert';
+import FilterIcon from '@mui/icons-material/FilterList';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { ColumnDef, SortModel, FilterModel } from '../types';
@@ -22,9 +25,17 @@ interface SortableHeaderProps<T> {
 }
 
 export function SortableHeader<T>({
-  column, sortModel, onSort, filters, onFilterChange,
-  onFilterIconClick, onMenuOpen, onResizeStart, showColumnBorders,
-  hideFilterRow = false, hideColumnMenu = false,
+  column,
+  sortModel,
+  onSort,
+  filters,
+  onFilterChange,
+  onFilterIconClick,
+  onMenuOpen,
+  onResizeStart,
+  showColumnBorders,
+  hideFilterRow = false,
+  hideColumnMenu = false,
 }: SortableHeaderProps<T>) {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -32,7 +43,7 @@ export function SortableHeader<T>({
     id: column.field as string,
   });
 
-  const sort = sortModel.find(s => s.field === column.field);
+  const sort = sortModel.find((s) => s.field === column.field);
 
   return (
     <Box
@@ -59,32 +70,61 @@ export function SortableHeader<T>({
     >
       {/* Name row - drag handle */}
       <Box
-        {...attributes} {...listeners}
-        onClick={() => { if (!isDragging && column.sortable !== false) onSort(column.field as string); }}
+        {...attributes}
+        {...listeners}
+        onClick={() => {
+          if (!isDragging && column.sortable !== false) onSort(column.field as string);
+        }}
         sx={{
-          display: 'flex', alignItems: 'center', p: '4px 12px',
+          display: 'flex',
+          alignItems: 'center',
+          p: '4px 12px',
           borderBottom: `1px solid ${theme.palette.divider}`,
-          justifyContent: column.headerAlign === 'center' ? 'center' : column.headerAlign === 'right' ? 'flex-end' : 'flex-start',
-          cursor: column.sortable === false ? 'default' : 'pointer', userSelect: 'none', position: 'relative', height: 36,
-          '&:hover': { bgcolor: theme.palette.mode === 'light' ? '#e9e8e7' : theme.palette.action.hover }
+          justifyContent:
+            column.headerAlign === 'center'
+              ? 'center'
+              : column.headerAlign === 'right'
+                ? 'flex-end'
+                : 'flex-start',
+          cursor: column.sortable === false ? 'default' : 'pointer',
+          userSelect: 'none',
+          position: 'relative',
+          height: 36,
+          '&:hover': {
+            bgcolor: theme.palette.mode === 'light' ? '#e9e8e7' : theme.palette.action.hover,
+          },
         }}
       >
-        <Typography variant="subtitle2" sx={{ 
-          flexGrow: 1, 
-          fontWeight: 600,
-          color: 'text.primary', 
-          overflow: 'hidden', 
-          textOverflow: 'ellipsis', 
-          whiteSpace: 'nowrap', 
-          fontSize: '0.75rem',
-          letterSpacing: 0,
-        }}>
+        <Typography
+          variant="subtitle2"
+          sx={{
+            flexGrow: 1,
+            fontWeight: 600,
+            color: 'text.primary',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            fontSize: '0.75rem',
+            letterSpacing: 0,
+          }}
+        >
           {t(column.headerName || '')}
         </Typography>
-        {sort?.sort === 'asc'  && <ArrowUpward   sx={{ fontSize: 12, ml: 0.25, color: 'primary.main' }} />}
-        {sort?.sort === 'desc' && <ArrowDownward  sx={{ fontSize: 12, ml: 0.25, color: 'primary.main' }} />}
+        {sort?.sort === 'asc' && (
+          <ArrowUpward sx={{ fontSize: 12, ml: 0.25, color: 'primary.main' }} />
+        )}
+        {sort?.sort === 'desc' && (
+          <ArrowDownward sx={{ fontSize: 12, ml: 0.25, color: 'primary.main' }} />
+        )}
         {!hideColumnMenu && (
-          <IconButton size="small" sx={{ p: 0.25, ml: 0.25 }} onClick={(e) => { e.stopPropagation(); onMenuOpen(e, column); }}>
+          <IconButton
+            size="small"
+            sx={{ p: 0.25, ml: 0.25 }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onMenuOpen(e, column);
+            }}
+          >
             <MoreVert sx={{ fontSize: 14 }} />
           </IconButton>
         )}
@@ -92,18 +132,26 @@ export function SortableHeader<T>({
 
       {/* Filter row */}
       {!hideFilterRow && (
-        <Box sx={{
-          p: '4px 12px',
-          borderBottom: `1px solid ${theme.palette.divider}`,
-          bgcolor: theme.palette.mode === 'light' ? '#ffffff' : '#2d3748',
-          display: 'flex',
-          alignItems: 'center',
-          height: 36
-        }}>
-          {column.filterable === false
-            ? <FilterIcon sx={{ fontSize: 12, color: 'action.disabled' }} />
-            : <FilterInput column={column} filters={filters} onFilterChange={onFilterChange} onFilterIconClick={onFilterIconClick} />
-          }
+        <Box
+          sx={{
+            p: '4px 12px',
+            borderBottom: `1px solid ${theme.palette.divider}`,
+            bgcolor: theme.palette.mode === 'light' ? '#ffffff' : '#2d3748',
+            display: 'flex',
+            alignItems: 'center',
+            height: 36,
+          }}
+        >
+          {column.filterable === false ? (
+            <FilterIcon sx={{ fontSize: 12, color: 'action.disabled' }} />
+          ) : (
+            <FilterInput
+              column={column}
+              filters={filters}
+              onFilterChange={onFilterChange}
+              onFilterIconClick={onFilterIconClick}
+            />
+          )}
         </Box>
       )}
 
@@ -111,8 +159,12 @@ export function SortableHeader<T>({
       <Box
         onMouseDown={(e) => onResizeStart(e, column.field as string)}
         sx={{
-          position: 'absolute', top: 0, bottom: 0, width: 6,
-          cursor: 'col-resize', zIndex: 10,
+          position: 'absolute',
+          top: 0,
+          bottom: 0,
+          width: 6,
+          cursor: 'col-resize',
+          zIndex: 10,
           ...(theme.direction === 'rtl' ? { left: 0 } : { right: 0 }),
           '&:hover': { bgcolor: 'primary.main', opacity: 0.65 },
         }}

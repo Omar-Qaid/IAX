@@ -1,14 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Badge, Box, Typography, IconButton, Tooltip,
-} from '@mui/material';
-import {
-  ViewColumn as ViewColumnIcon,
-  FilterList as FilterIcon,
-  Close as CloseIcon,
-  Settings as SettingsIcon,
-} from '@mui/icons-material';
+import { Badge, Box, Typography, IconButton, Tooltip } from '@mui/material';
+import ViewColumnIcon from '@mui/icons-material/ViewColumn';
+import FilterIcon from '@mui/icons-material/FilterList';
+import CloseIcon from '@mui/icons-material/Close';
+import SettingsIcon from '@mui/icons-material/Settings';
 import type { ColumnDef, FilterModel, SelectionMode } from './types';
 import { ColumnsPanel } from './sidebar/ColumnsPanel';
 import { FiltersPanel } from './sidebar/FiltersPanel';
@@ -41,29 +37,51 @@ interface GridSidebarProps<T> {
   showCellBorders: boolean;
   setShowCellBorders: (show: boolean) => void;
 }
-  
-export function GridSidebar<T>({
-  open, onOpen, onClose, activeTab, setActiveTab, columns, setColumns, filters, setFilters, selectionMode, setSelectionMode,
-  onExport, onServerImport, onDownloadTemplate, onAutosizeAll, onAutosizeColumn,
-  onUnAutosizeColumn, onResetColumns, isAutosized, rowHeight, setRowHeight,
-  showColumnBorders, setShowColumnBorders, showCellBorders, setShowCellBorders,
-}: GridSidebarProps<T>) {
 
+export function GridSidebar<T>({
+  open,
+  onOpen,
+  onClose,
+  activeTab,
+  setActiveTab,
+  columns,
+  setColumns,
+  filters,
+  setFilters,
+  selectionMode,
+  setSelectionMode,
+  onExport,
+  onServerImport,
+  onDownloadTemplate,
+  onAutosizeAll,
+  onAutosizeColumn,
+  onUnAutosizeColumn,
+  onResetColumns,
+  isAutosized,
+  rowHeight,
+  setRowHeight,
+  showColumnBorders,
+  setShowColumnBorders,
+  showCellBorders,
+  setShowCellBorders,
+}: GridSidebarProps<T>) {
   const { t } = useTranslation();
 
-  const OPERATOR_LABELS: Record<FilterModel['operator'], string> = useMemo(() => ({
-    contains: t('grid.operators.contains'),
-    doesNotContain: t('grid.operators.does_not_contain'),
-    equals: t('grid.operators.equals'),
-    notEquals: t('grid.operators.not_equals'),
-    startsWith: t('grid.operators.starts_with'),
-    endsWith: t('grid.operators.ends_with'),
-    gt: t('grid.operators.greater_than'),
-    lt: t('grid.operators.less_than'),
-    in: t('grid.operators.is_one_of'),
-    matches: t('grid.operators.matches_regex'),
-  }), [t]);
-
+  const OPERATOR_LABELS: Record<FilterModel['operator'], string> = useMemo(
+    () => ({
+      contains: t('grid.operators.contains'),
+      doesNotContain: t('grid.operators.does_not_contain'),
+      equals: t('grid.operators.equals'),
+      notEquals: t('grid.operators.not_equals'),
+      startsWith: t('grid.operators.starts_with'),
+      endsWith: t('grid.operators.ends_with'),
+      gt: t('grid.operators.greater_than'),
+      lt: t('grid.operators.less_than'),
+      in: t('grid.operators.is_one_of'),
+      matches: t('grid.operators.matches_regex'),
+    }),
+    [t]
+  );
 
   const [searchTerm, setSearchTerm] = useState('');
   const [pivotMode, setPivotMode] = useState(false);
@@ -89,18 +107,59 @@ export function GridSidebar<T>({
   };
 
   return (
-    <Box sx={{ display: 'flex', height: '100%', minHeight: 0, borderInlineStart: (theme) => `1px solid ${theme.palette.divider}`, bgcolor: 'background.paper', boxShadow: open ? '-2px 0 8px rgba(0,0,0,0.06)' : 'none', zIndex: 5 }}>
-
+    <Box
+      sx={{
+        display: 'flex',
+        height: '100%',
+        minHeight: 0,
+        borderInlineStart: (theme) => `1px solid ${theme.palette.divider}`,
+        bgcolor: 'background.paper',
+        boxShadow: open ? '-2px 0 8px rgba(0,0,0,0.06)' : 'none',
+        zIndex: 5,
+      }}
+    >
       {/* Panel Content */}
       {activeTab ? (
-        <Box sx={{ width: 248, display: 'flex', flexDirection: 'column', borderInlineEnd: (theme) => `1px solid ${theme.palette.divider}`, overflow: 'hidden', bgcolor: 'background.paper' }}>
-
+        <Box
+          sx={{
+            width: 248,
+            display: 'flex',
+            flexDirection: 'column',
+            borderInlineEnd: (theme) => `1px solid ${theme.palette.divider}`,
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
+          }}
+        >
           {/* Panel header with close */}
-          <Box sx={{ display: 'flex', alignItems: 'center', px: 1.5, borderBottom: (theme) => `1px solid ${theme.palette.divider}`, minHeight: 44, bgcolor: 'action.hover' }}>
-            <Typography variant="subtitle2" sx={{ flexGrow: 1, fontWeight: 600, fontSize: '0.8125rem' }}>
-              {activeTab === 'columns' ? t('grid.choose_columns') : activeTab === 'filters' ? t('grid.filters') : t('grid.features')}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              px: 1.5,
+              borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+              minHeight: 44,
+              bgcolor: 'action.hover',
+            }}
+          >
+            <Typography
+              variant="subtitle2"
+              sx={{ flexGrow: 1, fontWeight: 600, fontSize: '0.8125rem' }}
+            >
+              {activeTab === 'columns'
+                ? t('grid.choose_columns')
+                : activeTab === 'filters'
+                  ? t('grid.filters')
+                  : t('grid.features')}
             </Typography>
-            <IconButton size="small" aria-label={t('common.close')} sx={{ p: 0.5, borderRadius: 0.5 }} onClick={() => { setActiveTab(null); onClose(); }}>
+            <IconButton
+              size="small"
+              aria-label={t('common.close')}
+              sx={{ p: 0.5, borderRadius: 0.5 }}
+              onClick={() => {
+                setActiveTab(null);
+                onClose();
+              }}
+            >
               <CloseIcon sx={{ fontSize: 16 }} />
             </IconButton>
           </Box>
@@ -151,7 +210,20 @@ export function GridSidebar<T>({
       ) : null}
 
       {/* Vertical Tab Strip (Right Edge) */}
-      <Box component="nav" aria-label={t('grid.features')} sx={{ width: 38, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'stretch', py: 0.5, gap: 0.25, bgcolor: 'action.hover' }}>
+      <Box
+        component="nav"
+        aria-label={t('grid.features')}
+        sx={{
+          width: 38,
+          flexShrink: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'stretch',
+          py: 0.5,
+          gap: 0.25,
+          bgcolor: 'action.hover',
+        }}
+      >
         <SidebarTab
           active={activeTab === 'columns'}
           onClick={() => handleTabClick('columns')}
@@ -174,7 +246,6 @@ export function GridSidebar<T>({
           label={t('grid.features')}
         />
       </Box>
-
     </Box>
   );
 }
@@ -188,12 +259,36 @@ interface SidebarTabProps {
 }
 
 function SidebarTab({ active, onClick, icon, label, badgeCount }: SidebarTabProps) {
-  return <Tooltip title={label} placement="left">
-    <IconButton
-      size="small" aria-label={label} aria-pressed={active} onClick={onClick}
-      sx={{ borderRadius: 0.5, width: 32, height: 32, mx: '3px', color: active ? 'primary.main' : 'text.secondary', bgcolor: active ? 'background.paper' : 'transparent', border: '1px solid', borderColor: active ? 'primary.main' : 'transparent', '&:hover': { bgcolor: 'background.paper', color: 'primary.main' } }}
-    >
-      <Badge badgeContent={badgeCount} color="primary" max={99} sx={{ '& .MuiBadge-badge': { minWidth: 14, height: 14, px: 0.25, fontSize: '0.5625rem' } }}>{icon}</Badge>
-    </IconButton>
-  </Tooltip>;
+  return (
+    <Tooltip title={label} placement="left">
+      <IconButton
+        size="small"
+        aria-label={label}
+        aria-pressed={active}
+        onClick={onClick}
+        sx={{
+          borderRadius: 0.5,
+          width: 32,
+          height: 32,
+          mx: '3px',
+          color: active ? 'primary.main' : 'text.secondary',
+          bgcolor: active ? 'background.paper' : 'transparent',
+          border: '1px solid',
+          borderColor: active ? 'primary.main' : 'transparent',
+          '&:hover': { bgcolor: 'background.paper', color: 'primary.main' },
+        }}
+      >
+        <Badge
+          badgeContent={badgeCount}
+          color="primary"
+          max={99}
+          sx={{
+            '& .MuiBadge-badge': { minWidth: 14, height: 14, px: 0.25, fontSize: '0.5625rem' },
+          }}
+        >
+          {icon}
+        </Badge>
+      </IconButton>
+    </Tooltip>
+  );
 }

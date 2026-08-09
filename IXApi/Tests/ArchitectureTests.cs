@@ -3,6 +3,7 @@ using IAX.IXApi.Modules.Administration;
 using IAX.IXApi.Modules.Identity.Authentication;
 using IAX.IXApi.Modules.Organization;
 using IAX.IXApi.Modules.Finance;
+using IAX.IXApi.Modules.Communication;
 using IAX.IXApi.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
@@ -18,6 +19,7 @@ public sealed class ArchitectureTests
         typeof(AdministrationModule).Assembly,
         typeof(OrganizationModule).Assembly,
         typeof(FinanceModule).Assembly,
+        typeof(CommunicationModule).Assembly,
         typeof(ApplicationDbContext).Assembly
     ];
 
