@@ -1,72 +1,28 @@
-import type { UserProfile, LoginResponse } from './types';
-import { authStorage } from './authStorage';
 import { environment } from '@core/configuration/environment';
+import { apiAuthAdapter } from './apiAuthAdapter';
+import { authStorage } from './authStorage';
+import { mockAuthAdapter, MOCK_USER } from './mockAuthAdapter';
+import type { AuthAdapter, LoginResponse, UserProfile } from './types';
 
-// Enterprise default admin user for initial dev/mock mode
-const MOCK_USER: UserProfile = {
-  id: 'usr-001',
-  username: 'admin@ixapp.com',
-  email: 'admin@ixapp.com',
-  displayName: 'Enterprise Administrator',
-  roles: ['SystemAdmin', 'Accountant', 'SalesManager'],
-  permissions: [
-    'dashboard.view',
-    'customer.view',
-    'customer.create',
-    'customer.update',
-    'customer.delete',
-    'customerGroup.view',
-    'salesOrder.view',
-    'salesOrder.create',
-    'salesOrder.update',
-    'salesOrder.confirm',
-    'salesOrder.post',
-    'currency.view',
-    'currency.manage',
-    'settings.view',
-    'settings.update',
-  ],
-  defaultCompany: 'USMF',
-};
+const adapter: AuthAdapter = environment.enableMockApi ? mockAuthAdapter : apiAuthAdapter;
 
 export const authService = {
   getInitialUser(): UserProfile | null {
-    const cachedUser = authStorage.getUser<UserProfile>();
-    if (cachedUser && authStorage.getToken()) return cachedUser;
     return environment.enableMockApi ? MOCK_USER : null;
   },
-
-  async getCurrentUser(): Promise<UserProfile> {
-    const cachedUser = authStorage.getUser<UserProfile>();
-    if (cachedUser) {
-      return cachedUser;
-    }
-    if (!environment.enableMockApi) {
-      throw new Error('No authenticated session is available.');
-    }
-
-    // Development-only mock session.
-    authStorage.setUser(MOCK_USER);
-    authStorage.setToken('mock-jwt-token-12345');
-    return MOCK_USER;
+  hasSession(): boolean {
+    return environment.enableMockApi || Boolean(authStorage.getToken());
   },
-
-  async login(username: string): Promise<LoginResponse> {
-    if (!environment.enableMockApi) {
-      throw new Error('A production authentication adapter has not been configured.');
-    }
-    const user: UserProfile = {
-      ...MOCK_USER,
-      username,
-      displayName: username.split('@')[0] || 'Enterprise User',
-    };
-    const token = 'mock-jwt-token-12345';
-    authStorage.setToken(token);
-    authStorage.setUser(user);
-    return { user, token, expiresInSeconds: 86400 };
+  getCurrentUser(): Promise<UserProfile> {
+    return adapter.getCurrentUser();
   },
-
-  async logout(): Promise<void> {
-    authStorage.clearAll();
+  login(username: string, password: string): Promise<LoginResponse> {
+    return adapter.login(username, password);
+  },
+  refreshToken(): Promise<string> {
+    return adapter.refreshToken();
+  },
+  logout(): Promise<void> {
+    return adapter.logout();
   },
 };
