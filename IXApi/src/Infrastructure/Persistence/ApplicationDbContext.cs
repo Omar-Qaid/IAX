@@ -77,7 +77,8 @@ namespace IAX.IXApi.Infrastructure.Persistence
        IAX.IXApi.Modules.Administration.Persistence.IAdministrationDataContext,
        IAX.IXApi.Modules.Organization.Persistence.IOrganizationDataContext,
        IAX.IXApi.Modules.Finance.Persistence.IFinanceDataContext,
-       IAX.IXApi.Modules.Communication.Persistence.ICommunicationDataContext
+       IAX.IXApi.Modules.Communication.Persistence.ICommunicationDataContext,
+       IAX.IXApi.Modules.Workflow.Persistence.IWorkflowDataContext
      {
         private readonly IHttpContextAccessor? _httpContextAccessor;
 
@@ -381,6 +382,7 @@ namespace IAX.IXApi.Infrastructure.Persistence
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(IAX.IXApi.Modules.Organization.OrganizationModule).Assembly);
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(IAX.IXApi.Modules.Finance.FinanceModule).Assembly);
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(IAX.IXApi.Modules.Communication.CommunicationModule).Assembly);
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(IAX.IXApi.Modules.Workflow.WorkflowModule).Assembly);
             modelBuilder.ApplyMissingERPMappings();
 
             // Disable cascade delete globally

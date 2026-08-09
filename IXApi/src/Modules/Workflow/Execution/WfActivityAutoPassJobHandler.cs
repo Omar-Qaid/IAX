@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Persistence;
+using IAX.IXApi.Modules.Workflow.Persistence;
 using IAX.IXApi.Shared.Domain.Events;
 using IAX.IXApi.Modules.Administration.BackgroundJobs.Services;
 using IAX.IXApi.Modules.Administration.BackgroundJobs.Services.Handlers;
@@ -28,7 +28,7 @@ namespace IAX.IXApi.Modules.Workflow.Execution
 
         public async Task ExecuteAsync(SysBackgroundJobContext context, CancellationToken cancellationToken)
         {
-            var db = context.Services.GetRequiredService<ApplicationDbContext>();
+            var db = context.Services.GetRequiredService<IWorkflowDataContext>();
             var eventBus = context.Services.GetRequiredService<ISysEventBus>();
             var logger = context.Services.GetRequiredService<ILogger<WfActivityAutoPassJobHandler>>();
 

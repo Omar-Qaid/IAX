@@ -1,5 +1,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using IAX.IXApi.Modules.Administration.BackgroundJobs.Services.Handlers;
+using IAX.IXApi.Modules.Workflow.Activities;
+using IAX.IXApi.Modules.Workflow.Execution;
+using IAX.IXApi.Shared.Domain.Events;
 
 namespace IAX.IXApi.Modules.Workflow
 {
@@ -31,6 +35,9 @@ namespace IAX.IXApi.Modules.Workflow
             services.AddScoped<Transitions.IWfTransitionService, Transitions.WfTransitionService>();
             services.AddScoped<Variables.IWfDataTypeService, Variables.WfDataTypeService>();
             services.AddScoped<Variables.IWfVariableService, Variables.WfVariableService>();
+            services.AddScoped<ISysEventHandler<WfActivityAlertDispatchedEvent>, WfActivityAlertDispatchedEventHandler>();
+            services.AddScoped<ISysEventHandler<WfAssignmentAutoPassedEvent>, WfAssignmentAutoPassedNotificationHandler>();
+            services.AddScoped<ISysBackgroundJobHandler, WfActivityAutoPassJobHandler>();
             return services;
         }
     }

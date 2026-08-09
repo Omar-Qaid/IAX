@@ -1,5 +1,5 @@
-﻿using IAX.IXApi.Shared.Application.Attributes;
-using IAX.IXApi.Infrastructure.Persistence;
+using IAX.IXApi.Shared.Application.Attributes;
+using IAX.IXApi.Modules.Workflow.Persistence;
 using IAX.IXApi.Modules.Communication.Notifications;
 using IAX.IXApi.Modules.Communication.Notifications.Entities;
 using IAX.IXApi.Modules.Communication.Notifications.Services;
@@ -10,9 +10,9 @@ namespace IAX.IXApi.Modules.Workflow.Activities
     public class WfActivityNotificationDispatcher : IWfActivityNotificationDispatcher
     {
         private readonly ISysNotificationService _notifications;
-        private readonly ApplicationDbContext _db;
+        private readonly IWorkflowDataContext _db;
 
-        public WfActivityNotificationDispatcher(ISysNotificationService notifications, ApplicationDbContext db)
+        public WfActivityNotificationDispatcher(ISysNotificationService notifications, IWorkflowDataContext db)
         {
             _notifications = notifications;
             _db = db;

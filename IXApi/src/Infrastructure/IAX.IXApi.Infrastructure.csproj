@@ -23,16 +23,10 @@
     <ProjectReference Include="..\Modules\Organization\IAX.IXApi.Modules.Organization.csproj" />
     <ProjectReference Include="..\Modules\Finance\IAX.IXApi.Modules.Finance.csproj" />
     <ProjectReference Include="..\Modules\Communication\IAX.IXApi.Modules.Communication.csproj" />
+    <ProjectReference Include="..\Modules\Workflow\IAX.IXApi.Modules.Workflow.csproj" />
   </ItemGroup>
-  <!--
-    Transitional build-recovery boundary: the migrated module sources still depend on
-    Infrastructure while the central DbContext depends on their entity types. Compile
-    them together until those cycles are replaced with module-owned contracts.
-  -->
   <ItemGroup>
     <Compile Include="..\..\GlobalUsings.cs" Link="GlobalUsings.cs" />
-    <Compile Include="..\Modules\**\*.cs"
-             Exclude="..\Modules\Identity\**\*.cs;..\Modules\Administration\**\*.cs;..\Modules\Organization\**\*.cs;..\Modules\Finance\**\*.cs;..\Modules\Communication\**\*.cs;..\Modules\**\bin\**\*.cs;..\Modules\**\obj\**\*.cs" />
   </ItemGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />

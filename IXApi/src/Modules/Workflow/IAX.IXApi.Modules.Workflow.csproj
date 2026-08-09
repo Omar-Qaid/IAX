@@ -3,11 +3,20 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <RootNamespace>IAX.IXApi.Modules.Workflow</RootNamespace>
     <AssemblyName>IAX.IXApi.Modules.Workflow</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Infrastructure\IAX.IXApi.Infrastructure.csproj" />
+    <PackageReference Include="ClosedXML" Version="0.105.0" />
+    <PackageReference Include="FluentValidation" Version="11.11.0" />
+    <PackageReference Include="Mapster" Version="7.4.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.9" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.9" />
+    <ProjectReference Include="..\..\Shared\IAX.IXApi.Shared.csproj" />
+    <ProjectReference Include="..\Identity\IAX.IXApi.Modules.Identity.csproj" />
+    <ProjectReference Include="..\Administration\IAX.IXApi.Modules.Administration.csproj" />
+    <ProjectReference Include="..\Organization\IAX.IXApi.Modules.Organization.csproj" />
+    <ProjectReference Include="..\Communication\IAX.IXApi.Modules.Communication.csproj" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 </Project>

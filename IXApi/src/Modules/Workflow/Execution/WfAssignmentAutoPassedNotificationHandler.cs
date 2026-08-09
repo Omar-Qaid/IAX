@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Persistence;
+using IAX.IXApi.Modules.Workflow.Persistence;
 using IAX.IXApi.Shared.Domain.Events;
 using IAX.IXApi.Modules.Workflow.Activities;
 using Microsoft.EntityFrameworkCore;
@@ -16,11 +16,11 @@ namespace IAX.IXApi.Modules.Workflow.Execution
     public class WfAssignmentAutoPassedNotificationHandler : ISysEventHandler<WfAssignmentAutoPassedEvent>
     {
         private readonly IWfActivityNotificationDispatcher _dispatcher;
-        private readonly ApplicationDbContext _db;
+        private readonly IWorkflowDataContext _db;
 
         public WfAssignmentAutoPassedNotificationHandler(
             IWfActivityNotificationDispatcher dispatcher,
-            ApplicationDbContext db)
+            IWorkflowDataContext db)
         {
             _dispatcher = dispatcher;
             _db = db;

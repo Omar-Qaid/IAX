@@ -4,16 +4,16 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using IAX.IXApi.Shared.Application.Attributes;
-using IAX.IXApi.Infrastructure.Persistence;
+using IAX.IXApi.Modules.Workflow.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Workflow.Requests
 {
     public class ValidationEngine : IValidationEngine
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IWorkflowDataContext _context;
 
-        public ValidationEngine(ApplicationDbContext context)
+        public ValidationEngine(IWorkflowDataContext context)
         {
             _context = context;
         }

@@ -1,7 +1,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using IAX.IXApi.Infrastructure.Persistence;
+using IAX.IXApi.Modules.Workflow.Persistence;
 using IAX.IXApi.Shared.Domain.Events;
 using IAX.IXApi.Modules.Communication.Notifications;
 using IAX.IXApi.Modules.Communication.Notifications.Entities;
@@ -13,9 +13,9 @@ namespace IAX.IXApi.Modules.Workflow.Activities
     public class WfActivityAlertDispatchedEventHandler : ISysEventHandler<WfActivityAlertDispatchedEvent>
     {
         private readonly ISysNotificationService _notifications;
-        private readonly ApplicationDbContext _db;
+        private readonly IWorkflowDataContext _db;
 
-        public WfActivityAlertDispatchedEventHandler(ISysNotificationService notifications, ApplicationDbContext db)
+        public WfActivityAlertDispatchedEventHandler(ISysNotificationService notifications, IWorkflowDataContext db)
         {
             _notifications = notifications;
             _db = db;
