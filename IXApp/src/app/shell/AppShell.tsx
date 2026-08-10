@@ -5,7 +5,6 @@ import { AppSidebar } from './AppSidebar';
 import { AppCommandPalette } from './AppCommandPalette';
 import { AppNotificationDrawer } from './AppNotificationDrawer';
 import { AppSettingsDrawer } from './AppSettingsDrawer';
-import { PageBreadcrumbs } from '@app/navigation/PageBreadcrumbs';
 import { useNavigationStore } from '@app/store/useNavigationStore';
 import { usePreferenceStore } from '@app/store/usePreferenceStore';
 import { useTheme, useMediaQuery } from '@mui/material';
@@ -54,7 +53,6 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
             }),
           }}
         >
-          <PageBreadcrumbs />
           <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', position: 'relative' }}>
             {children}
           </Box>

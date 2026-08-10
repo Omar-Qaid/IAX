@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Box, useTheme, useMediaQuery, SwipeableDrawer, IconButton, Divider } from '@mui/material';
+import { Box, useTheme, useMediaQuery, SwipeableDrawer, IconButton } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import MenuIcon from '@mui/icons-material/Menu';
-import HomeIcon from '@mui/icons-material/Home';
+import HomeIcon from '@mui/icons-material/HomeOutlined';
 import StarIcon from '@mui/icons-material/StarBorder';
-import RecentIcon from '@mui/icons-material/AccessTime';
-import ModulesIcon from '@mui/icons-material/ViewList';
-import PinIcon from '@mui/icons-material/PushPin';
+import RecentIcon from '@mui/icons-material/AccessTimeOutlined';
+import WorkspacesIcon from '@mui/icons-material/WebAssetOutlined';
+import ModulesIcon from '@mui/icons-material/FormatListBulleted';
+import PinIcon from '@mui/icons-material/PushPinOutlined';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import PaymentsIcon from '@mui/icons-material/Payments';
 import CorporateIcon from '@mui/icons-material/CorporateFare';
@@ -37,9 +38,10 @@ const SIDEBAR_ICON_MAP: Record<string, React.ElementType> = {
 
 import ModuleNavPanel from './ModuleNavPanel';
 import { NavItem, NavSection } from '../navigation';
+import { navigationTokens as nav } from '../navigation/navigationTokens';
 
-export const SIDEBARWIDTH = 260;
-export const SIDEBARCOLLAPSEDWIDTH = 40;
+export const SIDEBARWIDTH = nav.expandedWidth;
+export const SIDEBARCOLLAPSEDWIDTH = nav.collapsedWidth;
 
 const PATH_LABELS: Record<string, string> = {
   '/dashboard': 'nav.dashboard',
@@ -111,7 +113,7 @@ const SidebarContent = React.memo(
     };
 
     const [expanded, setExpanded] = useState<Record<string, boolean>>({
-      modules: true,
+      modules: false,
       favorites: false,
       recent: false,
       workspaces: false,
@@ -147,12 +149,10 @@ const SidebarContent = React.memo(
 
     const isFavorite = (path: string) => favorites.some((f) => f.path === path);
 
-    const navColor = usePreferenceStore((s) => s.navColor);
     const theme = useTheme();
-    const isApparent = navColor === 'apparent';
     const isDark = theme.palette.mode === 'dark';
-    const sidebarBg = isApparent ? (isDark ? '#090d16' : '#0B1220') : 'background.paper';
-    const borderRightColor = isApparent ? 'rgba(255, 255, 255, 0.08)' : 'divider';
+    const sidebarBg = isDark ? '#201f1e' : nav.background;
+    const borderRightColor = isDark ? '#323130' : nav.border;
 
     return (
       <Box
@@ -168,46 +168,38 @@ const SidebarContent = React.memo(
         {/* Hamburger + pin row */}
         <Box
           sx={{
-            height: 40,
+            height: nav.headerHeight,
             display: 'flex',
             alignItems: 'center',
-            px: collapsed ? 0 : 1,
+            px: collapsed ? 0 : '7px',
             justifyContent: collapsed ? 'center' : 'space-between',
           }}
         >
           <IconButton
             size="small"
             onClick={onToggle}
-            sx={{ color: isApparent ? 'rgba(255, 255, 255, 0.75)' : 'text.primary' }}
+            sx={{ width: 34, height: 34, color: isDark ? '#f3f2f1' : nav.icon, '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,.08)' : nav.hover } }}
           >
-            <MenuIcon sx={{ fontSize: 20 }} />
+            <MenuIcon sx={{ fontSize: nav.iconSize }} />
           </IconButton>
           {!isMobileView && !collapsed && (
             <IconButton
               size="small"
               onClick={onTogglePin}
               sx={{
-                color: pinned
-                  ? 'primary.main'
-                  : isApparent
-                    ? 'rgba(255, 255, 255, 0.5)'
-                    : 'text.secondary',
+                width: 28,
+                height: 28,
+                color: isDark ? '#c8c6c4' : nav.mutedIcon,
+                '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,.08)' : nav.hover },
               }}
             >
-              <PinIcon sx={{ fontSize: 18, transform: pinned ? 'none' : 'rotate(45deg)' }} />
+              <PinIcon sx={{ fontSize: 15, transform: 'rotate(90deg)' }} />
             </IconButton>
           )}
         </Box>
 
-        <Divider sx={{ borderColor: isApparent ? 'rgba(255, 255, 255, 0.08)' : 'divider' }} />
-
         <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
-          <Box
-            sx={{
-              borderBottom: '1px solid',
-              borderColor: isApparent ? 'rgba(255, 255, 255, 0.08)' : 'divider',
-            }}
-          >
+          <Box>
             <NavItem
               icon={<HomeIcon />}
               label={t('nav.home', 'Home')}
@@ -278,6 +270,14 @@ const SidebarContent = React.memo(
                 />
               ))}
           </NavSection>
+
+          <NavSection
+            label={t('nav.workspaces', 'Workspaces')}
+            icon={<WorkspacesIcon />}
+            collapsed={collapsed}
+            expanded={!!expanded.workspaces}
+            onToggle={() => toggleSection('workspaces')}
+          />
 
           <NavSection
             label={t('nav.modules', 'Modules')}
@@ -354,7 +354,7 @@ export const AppSidebar = () => {
           open={sidebarOpen}
           onOpen={() => setSidebarOpen(true)}
           onClose={() => setSidebarOpen(false)}
-          sx={{ '& .MuiDrawer-paper': { width: '85%', maxWidth: 320, borderRadius: 0 } }}
+          sx={{ '& .MuiDrawer-paper': { width: SIDEBARWIDTH, maxWidth: 'calc(100vw - 40px)', borderRadius: 0 } }}
         >
           <SidebarContent
             collapsed={false}
@@ -395,6 +395,7 @@ export const AppSidebar = () => {
   return (
     <Box
       component="nav"
+      aria-label={t('nav.application_navigation', 'Application navigation')}
       ref={navRef}
       sx={{
         width: finalSidebarWidth,

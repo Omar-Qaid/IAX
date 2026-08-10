@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Typography, Collapse, useTheme } from '@mui/material';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
-import { usePreferenceStore } from '@app/store/usePreferenceStore';
+import { navigationTokens as nav } from './navigationTokens';
 
 export interface NavSectionProps {
   label: string;
@@ -16,28 +16,11 @@ export interface NavSectionProps {
 export const NavSection = React.memo<NavSectionProps>(
   ({ label, icon, collapsed = false, expanded = true, onToggle, children }) => {
     const theme = useTheme();
-    const navColor = usePreferenceStore((s) => s.navColor);
-    const isApparent = navColor === 'apparent';
     const isDark = theme.palette.mode === 'dark';
 
-    const headerColor = isApparent ? 'rgba(255, 255, 255, 0.7)' : 'text.primary';
-    const iconColor = isApparent ? 'rgba(255, 255, 255, 0.6)' : 'text.secondary';
-    const labelColor = isApparent ? '#ffffff' : 'primary.main';
-    const headerHoverBg = isApparent
-      ? 'rgba(255, 255, 255, 0.06)'
-      : isDark
-        ? 'rgba(255,255,255,0.02)'
-        : '#f5f5f5';
-    const headerActiveBg = isApparent
-      ? 'rgba(255, 255, 255, 0.03)'
-      : isDark
-        ? 'rgba(255,255,255,0.02)'
-        : '#f5f5f5';
-    const borderBottomColor = isApparent
-      ? 'rgba(255, 255, 255, 0.08)'
-      : isDark
-        ? 'rgba(255,255,255,0.05)'
-        : '#f3f2f1';
+    const headerColor = isDark ? '#f3f2f1' : nav.text;
+    const iconColor = isDark ? '#c8c6c4' : nav.icon;
+    const headerHoverBg = isDark ? 'rgba(255,255,255,0.08)' : nav.hover;
 
     if (collapsed) {
       // In collapsed state, show only the section header icon (no children)
@@ -48,11 +31,11 @@ export const NavSection = React.memo<NavSectionProps>(
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            height: 40,
+            height: nav.itemHeight,
             cursor: onToggle ? 'pointer' : 'default',
             color: iconColor,
             '&:hover': onToggle ? { bgcolor: headerHoverBg } : {},
-            '& svg': { fontSize: 20 },
+            '& svg': { fontSize: nav.iconSize },
           }}
         >
           {icon}
@@ -68,38 +51,38 @@ export const NavSection = React.memo<NavSectionProps>(
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            px: 2,
-            py: 1.25,
+            height: nav.itemHeight,
+            px: `${nav.horizontalPadding}px`,
+            py: 0,
             cursor: onToggle ? 'pointer' : 'default',
             color: headerColor,
-            borderBottom: '1px solid',
-            borderColor: borderBottomColor,
-            bgcolor: expanded ? headerActiveBg : 'transparent',
+            bgcolor: 'transparent',
+            fontFamily: nav.fontFamily,
             '&:hover': onToggle ? { bgcolor: headerHoverBg } : {},
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: `${nav.iconTextGap}px` }}>
             {icon && (
-              <Box sx={{ color: iconColor, display: 'flex', '& svg': { fontSize: 20 } }}>
+              <Box sx={{ color: iconColor, display: 'flex', '& svg': { fontSize: nav.iconSize } }}>
                 {icon}
               </Box>
             )}
-            <Typography sx={{ fontSize: '0.9rem', fontWeight: 500, color: labelColor }}>
+            <Typography sx={{ fontFamily: nav.fontFamily, fontSize: nav.fontSize, lineHeight: '20px', fontWeight: nav.fontWeight, color: headerColor }}>
               {label}
             </Typography>
           </Box>
           {onToggle && (
-            <Box sx={{ display: 'flex', color: labelColor }}>
+            <Box sx={{ display: 'flex', color: iconColor, mr: '-7px' }}>
               {expanded ? (
-                <ExpandLess sx={{ fontSize: 20 }} />
+                <ExpandLess sx={{ fontSize: nav.chevronSize }} />
               ) : (
-                <ExpandMore sx={{ fontSize: 20 }} />
+                <ExpandMore sx={{ fontSize: nav.chevronSize }} />
               )}
             </Box>
           )}
         </Box>
         <Collapse in={expanded} timeout="auto" unmountOnExit>
-          <Box sx={{ py: 0.5 }}>{children}</Box>
+          <Box>{children}</Box>
         </Collapse>
       </Box>
     );

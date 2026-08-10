@@ -1,0 +1,17 @@
+export const topBarTokens = {
+  height: 48,
+  background: '#0b0b0b',
+  launcherBackground: '#315bc8',
+  launcherWidth: 48,
+  productWidth: 220,
+  divider: '#605e5c',
+  text: '#ffffff',
+  mutedText: '#f3f2f1',
+  hover: 'rgba(255,255,255,0.1)',
+  fontFamily: '"Segoe UI", "Segoe UI Web (West European)", Arial, sans-serif',
+  fontSize: 12,
+  productFontSize: 14,
+  iconSize: 20,
+  actionWidth: 40,
+  avatarSize: 32,
+} as const;

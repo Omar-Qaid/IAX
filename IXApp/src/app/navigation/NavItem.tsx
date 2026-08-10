@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import FavoritesIcon from '@mui/icons-material/StarBorder';
 import StarFilledIcon from '@mui/icons-material/Star';
-import { usePreferenceStore } from '@app/store/usePreferenceStore';
+import { navigationTokens as nav } from './navigationTokens';
 
 export interface NavItemProps {
   icon?: React.ReactNode;
@@ -39,43 +39,21 @@ export const NavItem = React.memo<NavItemProps>(
     badge,
   }) => {
     const theme = useTheme();
-    const navColor = usePreferenceStore((s) => s.navColor);
-    const isApparent = navColor === 'apparent';
     const isDark = theme.palette.mode === 'dark';
 
     // Color definitions
-    let itemColor = 'text.primary';
-    let iconColor = 'text.secondary';
-    let hoverBgColor = isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)';
-    let activeBgColor = 'transparent';
-
-    if (isApparent) {
-      itemColor = active ? '#ffffff' : 'rgba(255, 255, 255, 0.7)';
-      iconColor = active ? '#ffffff' : 'rgba(255, 255, 255, 0.5)';
-      hoverBgColor = 'rgba(255, 255, 255, 0.06)';
-      activeBgColor = 'rgba(255, 255, 255, 0.08)';
-    } else {
-      if (indent) {
-        itemColor = active ? 'primary.main' : 'text.secondary';
-      } else {
-        itemColor = active ? 'primary.main' : 'text.primary';
-      }
-      iconColor = active ? 'primary.main' : 'text.secondary';
-      activeBgColor = active
-        ? isDark
-          ? 'rgba(255,255,255,0.02)'
-          : 'rgba(99,102,241,0.04)'
-        : 'transparent';
-    }
-
-    const borderLeftColor = isApparent ? 'primary.light' : 'primary.main';
+    const itemColor = active ? (isDark ? '#ffffff' : nav.text) : isDark ? '#f3f2f1' : nav.text;
+    const iconColor = active ? (isDark ? '#ffffff' : nav.icon) : isDark ? '#c8c6c4' : nav.icon;
+    const hoverBgColor = isDark ? 'rgba(255,255,255,0.08)' : nav.hover;
+    const activeBgColor = active ? (isDark ? 'rgba(255,255,255,0.12)' : nav.selected) : 'transparent';
 
     return (
       <ListItemButton
         onClick={onClick}
         sx={{
-          minHeight: indent ? 36 : 44,
-          px: collapsed ? 1.5 : indent ? 6 : 2,
+          minHeight: indent ? 36 : nav.itemHeight,
+          height: indent ? 36 : nav.itemHeight,
+          px: collapsed ? 0 : indent ? 5.75 : `${nav.horizontalPadding}px`,
           justifyContent: collapsed ? 'center' : 'initial',
           bgcolor: activeBgColor,
           color: itemColor,
@@ -85,8 +63,9 @@ export const NavItem = React.memo<NavItemProps>(
             '& .item-label': { textDecoration: indent ? 'underline' : 'none' },
           },
           borderRadius: 0,
-          borderLeft: active && !indent ? '3px solid' : '3px solid transparent',
-          borderColor: borderLeftColor,
+          fontFamily: nav.fontFamily,
+          borderInlineStart: active && !indent ? '3px solid' : '3px solid transparent',
+          borderColor: active ? nav.selectedBar : 'transparent',
         }}
       >
         {icon && (
@@ -94,10 +73,10 @@ export const NavItem = React.memo<NavItemProps>(
             <ListItemIcon
               sx={{
                 minWidth: 0,
-                mr: collapsed ? 0 : 2,
+                mr: collapsed ? 0 : `${nav.iconTextGap}px`,
                 justifyContent: 'center',
                 color: iconColor,
-                '& svg': { fontSize: 20 },
+                '& svg': { fontSize: nav.iconSize },
               }}
             >
               {badge ? (
@@ -118,8 +97,10 @@ export const NavItem = React.memo<NavItemProps>(
                 primary: {
                   className: 'item-label',
                   sx: {
-                    fontSize: '0.875rem',
-                    fontWeight: active && !indent ? 600 : 400,
+                    fontFamily: nav.fontFamily,
+                    fontSize: nav.fontSize,
+                    lineHeight: '20px',
+                    fontWeight: nav.fontWeight,
                     color: 'inherit',
                   },
                 },
@@ -135,9 +116,7 @@ export const NavItem = React.memo<NavItemProps>(
                   transition: 'opacity 0.2s',
                   color: isFavorite
                     ? 'warning.main'
-                    : isApparent
-                      ? 'rgba(255,255,255,0.4)'
-                      : 'text.disabled',
+                    : 'text.disabled',
                   '&:hover': { color: 'warning.dark' },
                 }}
               >

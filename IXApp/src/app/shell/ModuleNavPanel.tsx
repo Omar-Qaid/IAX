@@ -14,7 +14,7 @@ import TaskIcon from '@mui/icons-material/Assignment';
 import ProcessIcon from '@mui/icons-material/AccountTree';
 import BackIcon from '@mui/icons-material/ArrowBackIosNew';
 import CloseIcon from '@mui/icons-material/Close';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   getModuleNavLinkPermission,
@@ -22,6 +22,7 @@ import {
   type ModuleNavSection,
 } from '@app/configuration/navigation';
 import { useAuth } from '@core/auth/useAuth';
+import { moduleNavTokens as nav } from './moduleNavTokens';
 
 const mobileOverlaySx = {
   position: 'absolute',
@@ -38,12 +39,12 @@ const desktopPanelBaseSx = {
   top: LAYOUT.TOPBARHEIGHT,
   borderRight: `1px solid ${COLORS.border}`,
   bottom: 0,
-  width: LAYOUT.DRAWER_WIDTH,
-  bgcolor: 'background.paper',
-  boxShadow: '2px 0 8px rgba(0,0,0,0.1)',
+  width: `min(${nav.desktopWidth}px, calc(100vw - 40px))`,
+  bgcolor: nav.background,
+  boxShadow: 'none',
   zIndex: (theme: { zIndex: { drawer: number } }) => theme.zIndex.drawer + 1,
   overflow: 'hidden',
-  py: 1,
+  py: 0,
   transition: 'all 0.2s ease-in-out',
 } as const;
 
@@ -52,7 +53,8 @@ const contentWrapperSx = {
   height: '100%',
   display: 'flex',
   flexDirection: 'column',
-  bgcolor: 'background.paper',
+  bgcolor: nav.background,
+  fontFamily: nav.fontFamily,
 } as const;
 
 const mobileHeaderSx = {
@@ -83,15 +85,18 @@ const mobileHeaderCloseBtnSx = {
 } as const;
 
 const toolbarWrapperSx = {
-  px: 2,
-  py: 1.5,
-  borderBottom: `1px solid ${COLORS.border}`,
+  height: nav.toolbarHeight,
+  px: 1.25,
+  py: 0,
+  display: 'flex',
+  alignItems: 'center',
+  borderBottom: `1px solid ${nav.border}`,
 } as const;
 
 const toolbarRowSx = {
   display: 'flex',
   alignItems: 'center',
-  gap: 2,
+  gap: `${nav.toolbarGap}px`,
 } as const;
 
 const toolbarButtonSx = {
@@ -105,30 +110,31 @@ const toolbarButtonSx = {
   p: 0,
   bgcolor: 'transparent',
   font: 'inherit',
+  textDecoration: 'none',
   '&:hover': { opacity: 1 },
-  '&:hover .toolbar-text': { textDecoration: 'underline' },
 } as const;
 
 const toolbarIconSx = {
-  fontSize: 18,
-  color: COLORS.primary,
+  fontSize: 16,
+  color: nav.blue,
 } as const;
 
 const toolbarLabelSx = {
-  fontSize: '0.8125rem',
-  color: COLORS.neutralText,
+  fontFamily: nav.fontFamily,
+  fontSize: nav.fontSize,
+  color: nav.text,
   fontWeight: 400,
 } as const;
 
 const sectionIconSx = {
-  fontSize: 20,
-  color: COLORS.neutralText,
+  fontSize: 18,
+  color: nav.text,
   transition: 'transform 0.2s',
 } as const;
 
 const expandableChevronSx = {
-  fontSize: 16,
-  color: '#323130',
+  fontSize: 18,
+  color: nav.text,
 } as const;
 
 const linkIconWrapperSx = {
@@ -149,33 +155,37 @@ const ICON_MAP: Record<string, React.ReactElement> = {
 
 const FALLBACK_ICON = <PeopleIcon sx={{ fontSize: 20 }} />;
 
-const getSectionBorderSx = (isExpanded: boolean) => ({
-  border: isExpanded ? `1px solid ${COLORS.primary}` : '1px solid transparent',
-  borderRadius: '2px',
+const sectionBorderSx = {
+  border: '1px solid transparent',
+  borderRadius: `${nav.radius}px`,
   overflow: 'hidden',
-  transition: 'border-color 0.2s ease, background-color 0.2s ease',
-});
+  transition: 'border-color 0.15s ease, background-color 0.15s ease',
+  '&:focus-within': { borderColor: nav.focus },
+} as const;
 
-const getSectionHeaderSx = (isExpanded: boolean, isMobileView: boolean) => ({
+const getSectionHeaderSx = (isMobileView: boolean) => ({
   width: '100%',
   border: 0,
   font: 'inherit',
   textAlign: 'start' as const,
   display: 'flex',
   alignItems: 'center',
-  gap: 1,
-  p: isMobileView ? 1.5 : 1,
+  gap: 0.75,
+  height: isMobileView ? 44 : nav.rowHeight,
+  px: isMobileView ? 1.5 : `${nav.sectionHorizontalPadding}px`,
+  py: 0,
   cursor: 'pointer',
   userSelect: 'none' as const,
-  bgcolor: isExpanded ? COLORS.neutralSurface : 'transparent',
+  bgcolor: 'transparent',
   transition: 'background-color 0.2s',
-  '&:hover': { bgcolor: COLORS.neutralSurface },
+  '&:hover': { bgcolor: nav.hover },
 });
 
 const getSectionTitleSx = (isExpanded: boolean, isMobileView: boolean) => ({
-  fontSize: isMobileView ? '0.9375rem' : '0.875rem',
-  fontWeight: isExpanded ? 600 : 400,
-  color: COLORS.neutralText,
+  fontFamily: nav.fontFamily,
+  fontSize: isMobileView ? 15 : nav.fontSize,
+  fontWeight: 500,
+  color: nav.text,
   transition: 'font-weight 0.2s',
 });
 
@@ -183,7 +193,10 @@ const getScrollableAreaSx = (isMobileView: boolean) => ({
   flex: 1,
   overflowY: 'auto' as const,
   overflowX: 'hidden' as const,
-  p: 1,
+  px: isMobileView ? 1 : 0.5,
+  py: isMobileView ? 1 : 0,
+  columnCount: isMobileView ? 1 : 2,
+  columnGap: isMobileView ? 0 : `${nav.columnGap}px`,
   WebkitOverflowScrolling: 'touch' as const,
   '&::-webkit-scrollbar': { width: isMobileView ? '3px' : '6px' },
   '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
@@ -191,9 +204,10 @@ const getScrollableAreaSx = (isMobileView: boolean) => ({
 });
 
 const getLinkContainerSx = (isMobileView: boolean) => ({
-  p: 1,
-  pl: isMobileView ? 5 : 4,
-  bgcolor: 'background.paper',
+  px: 0,
+  py: 0,
+  pl: isMobileView ? 5 : `${nav.linkIndent}px`,
+  bgcolor: nav.background,
 });
 
 const getExpandableLinkSx = (isMobileView: boolean) => ({
@@ -201,12 +215,13 @@ const getExpandableLinkSx = (isMobileView: boolean) => ({
   alignItems: 'center',
   gap: 0.5,
   cursor: 'pointer',
-  py: isMobileView ? 1 : 0.5,
+  minHeight: isMobileView ? 40 : nav.rowHeight,
+  py: 0,
   transition: 'background-color 0.2s',
-  borderRadius: '2px',
+  borderRadius: `${nav.radius}px`,
   px: 1,
   mx: -1,
-  '&:hover': { bgcolor: COLORS.neutralSurface },
+  '&:hover': { bgcolor: nav.hover },
 });
 
 const getNavLinkSx = (isMobileView: boolean) => ({
@@ -218,26 +233,28 @@ const getNavLinkSx = (isMobileView: boolean) => ({
   display: 'flex',
   alignItems: 'center',
   cursor: 'pointer',
-  py: isMobileView ? 1 : 0.6,
+  minHeight: isMobileView ? 40 : nav.rowHeight,
+  py: 0,
   transition: 'background-color 0.2s',
-  borderRadius: '2px',
+  borderRadius: `${nav.radius}px`,
   px: 1,
   mx: -1,
-  '&:hover': { bgcolor: COLORS.neutralSurface },
-  '&:hover .link-text': { textDecoration: 'underline' },
+  '&:hover': { bgcolor: nav.hover },
 });
 
 const getLinkTextSx = (isMobileView: boolean) => ({
-  fontSize: isMobileView ? '0.9375rem' : '0.875rem',
-  color: COLORS.primary,
+  fontFamily: nav.fontFamily,
+  fontSize: isMobileView ? 15 : nav.fontSize,
+  color: nav.blue,
   textDecoration: 'none',
   transition: 'color 0.2s',
 });
 
 const getExpandableTitleSx = (isMobileView: boolean) => ({
-  fontSize: isMobileView ? '0.9375rem' : '0.875rem',
-  color: COLORS.neutralText,
-  fontWeight: 600,
+  fontFamily: nav.fontFamily,
+  fontSize: isMobileView ? 15 : nav.fontSize,
+  color: nav.text,
+  fontWeight: 500,
 });
 
 interface ModuleNavPanelProps {
@@ -259,6 +276,7 @@ const ModuleNavPanel: React.FC<ModuleNavPanelProps> = ({
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { hasPermission } = useAuth();
 
   const isLinkVisible = (link: ModuleNavSection['links'][number]) => {
@@ -370,15 +388,18 @@ const ModuleNavPanel: React.FC<ModuleNavPanelProps> = ({
         {visibleSections.map((section) => {
           const isExpanded = expanded.has(section.id);
           return (
-            <Box key={section.id} sx={{ mb: 0.5 }}>
-              <Box sx={getSectionBorderSx(isExpanded)}>
+            <Box
+              key={section.id}
+              sx={{ mb: `${nav.sectionGap}px`, breakInside: 'avoid-column' }}
+            >
+              <Box sx={sectionBorderSx}>
                 {/* Section header */}
                 <Box
                   component="button"
                   type="button"
                   onClick={() => toggle(section.id)}
                   aria-expanded={isExpanded}
-                  sx={getSectionHeaderSx(isExpanded, !!isMobileView)}
+                  sx={getSectionHeaderSx(!!isMobileView)}
                 >
                   {isExpanded ? (
                     <ExpandMoreIcon sx={sectionIconSx} />
@@ -410,12 +431,23 @@ const ModuleNavPanel: React.FC<ModuleNavPanelProps> = ({
                           sx={{
                             ...getNavLinkSx(!!isMobileView),
                             gap: link.icon ? 1.5 : 0,
+                            bgcolor:
+                              link.path && location.pathname === link.path
+                                ? `${nav.selected} !important`
+                                : 'transparent',
                           }}
                         >
                           {link.icon && (
                             <Box sx={linkIconWrapperSx}>{ICON_MAP[link.icon] || FALLBACK_ICON}</Box>
                           )}
-                          <Typography className="link-text" sx={getLinkTextSx(!!isMobileView)}>
+                          <Typography
+                            className="link-text"
+                            sx={{
+                              ...getLinkTextSx(!!isMobileView),
+                              fontWeight:
+                                link.path && location.pathname === link.path ? 500 : 400,
+                            }}
+                          >
                             {t(link.label)}
                           </Typography>
                         </Box>

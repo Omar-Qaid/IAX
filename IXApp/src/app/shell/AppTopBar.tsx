@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useState, useMemo } from 'react';
+import React, { memo, useCallback, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   AppBar,
@@ -6,7 +6,7 @@ import {
   Typography,
   IconButton,
   Box,
-  InputBase,
+  Avatar,
   Tooltip,
   Badge,
   useMediaQuery,
@@ -22,10 +22,12 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import WaffleIcon from '@mui/icons-material/Apps';
 import SearchIcon from '@mui/icons-material/Search';
-import NotificationsIcon from '@mui/icons-material/Notifications';
+import NotificationsIcon from '@mui/icons-material/NotificationsNoneOutlined';
 import SettingsIcon from '@mui/icons-material/Settings';
 import HelpIcon from '@mui/icons-material/HelpOutlined';
 import AccountIcon from '@mui/icons-material/AccountCircle';
+import FeedbackIcon from '@mui/icons-material/SentimentSatisfiedAltOutlined';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useTranslation } from 'react-i18next';
 import { useNavigationStore } from '@app/store/useNavigationStore';
@@ -36,10 +38,14 @@ import {
   getModuleNavLinkPermission,
 } from '@app/configuration/navigation';
 import { LAYOUT } from '@app/configuration/constants';
+import { getRouteBreadcrumbs } from '@app/routes/routeMetadata';
+import { useAppStore } from '@app/store/useAppStore';
+import { topBarTokens as topBar } from './topBarTokens';
+import { useNotificationStore } from '@shared/services/notificationStore';
 
 // Static sx objects - moved outside render to prevent re-creation
 const appBarSx = {
-  bgcolor: 'primary.dark',
+  bgcolor: topBar.background,
   color: 'common.white',
   borderBottom: 'none',
   zIndex: (theme: { zIndex: { drawer: number } }) => theme.zIndex.drawer + 1,
@@ -47,18 +53,22 @@ const appBarSx = {
 
 const toolbarSx = {
   minHeight: LAYOUT.TOPBARHEIGHT,
-  px: { xs: 0.5, sm: 1.5 },
-  gap: 0.5,
+  px: 0,
+  gap: 0,
+  fontFamily: topBar.fontFamily,
 } as const;
 
 const iconBtnSx = {
   color: 'rgba(255,255,255,0.85)',
-  p: { xs: '8px', sm: '6px' },
+  width: topBar.actionWidth,
+  height: topBar.height,
+  p: 0,
+  borderRadius: 0,
+  '&:hover': { bgcolor: topBar.hover },
 } as const;
 
 const hamburgerSx = { ...iconBtnSx, display: { xs: 'inline-flex', md: 'none' } } as const;
-const waffleSx = { ...iconBtnSx, mr: 0.5, display: { xs: 'none', md: 'inline-flex' } } as const;
-const searchMobileSx = { ...iconBtnSx, display: { xs: 'inline-flex', sm: 'none' } } as const;
+const waffleSx = { ...iconBtnSx, display: { xs: 'none', md: 'inline-flex' } } as const;
 const helpSx = { ...iconBtnSx, display: { xs: 'none', sm: 'inline-flex' } } as const;
 
 const titleSx = {
@@ -71,43 +81,25 @@ const titleSx = {
   display: { xs: 'none', sm: 'block' },
 } as const;
 
-const searchWrapperSx = {
-  flex: 1,
-  display: { xs: 'none', sm: 'flex' },
-  justifyContent: 'center',
-  maxWidth: { sm: 300, md: 600 },
-  mx: 'auto',
-} as const;
-
-const searchBarSx = {
-  display: 'flex',
-  alignItems: 'center',
-  bgcolor: 'rgba(255,255,255,0.12)',
-  borderRadius: 0,
-  px: 1.5,
-  py: 0.25,
-  width: '100%',
-  maxWidth: 480,
-  '&:hover': { bgcolor: 'rgba(255,255,255,0.18)' },
-  '&:focus-within': { bgcolor: 'rgba(255,255,255,0.22)' },
-  transition: 'background-color 0.2s',
-} as const;
-
-const inputSx = {
-  flex: 1,
-  color: '#ffffff',
-  fontSize: '0.8125rem',
-} as const;
-
 const actionsSx = {
   display: 'flex',
   alignItems: 'center',
-  gap: { xs: 0, sm: 0.25 },
+  gap: 0,
   flexShrink: 0,
 } as const;
 
 const badgeSx = {
-  '& .MuiBadge-badge': { fontSize: '0.625rem', minWidth: 16, height: 16 },
+  '& .MuiBadge-badge': {
+    top: 2,
+    right: -2,
+    fontFamily: topBar.fontFamily,
+    fontSize: 10,
+    minWidth: 18,
+    height: 18,
+    bgcolor: '#ffffff',
+    color: '#201f1e',
+    border: `1px solid ${topBar.background}`,
+  },
 } as const;
 
 export const AppTopBar: React.FC = memo(() => {
@@ -124,6 +116,8 @@ export const AppTopBar: React.FC = memo(() => {
   const setNotificationDrawerOpen = useNavigationStore((s) => s.setNotificationDrawerOpen);
   const setSidebarOpen = useNavigationStore((s) => s.setSidebarOpen);
   const navLayout = usePreferenceStore((s) => s.navLayout);
+  const currentCompany = useAppStore((s) => s.currentCompany);
+  const notificationCount = useNotificationStore((s) => s.notifications.length);
 
   // Auth & Permissions
   const { user, logout, hasPermission } = useAuth();
@@ -174,38 +168,91 @@ export const AppTopBar: React.FC = memo(() => {
   );
   const openSettings = useCallback(() => setSettingsPanelOpen(true), [setSettingsPanelOpen]);
 
-  const titleText = isTablet ? t('nav.app_title_short', 'IX App') : t('nav.app_title', 'IX App');
+  const titleText = isTablet
+    ? t('nav.app_title_short', 'Finance and Operations')
+    : t('nav.finance_operations', 'Finance and Operations');
   const userTooltip = userName || t('common.account', 'Account');
+  const userInitials = (userName || 'User')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('');
+  const breadcrumbs = getRouteBreadcrumbs(location.pathname).slice(1);
 
   const isHorizontal = navLayout === 'horizontal';
-
-  const currentSearchWrapperSx = useMemo(
-    () => ({
-      ...searchWrapperSx,
-      maxWidth: isHorizontal ? { sm: 140, md: 200, lg: 280 } : { sm: 300, md: 600 },
-      mr: isHorizontal ? 2 : 'auto',
-      ml: isHorizontal ? 2 : 'auto',
-    }),
-    [isHorizontal]
-  );
 
   return (
     <AppBar position="fixed" elevation={0} sx={appBarSx}>
       <Toolbar variant="dense" sx={toolbarSx}>
-        {/* Hamburger - mobile/tablet only */}
-        <IconButton size="small" onClick={openSidebar} sx={hamburgerSx}>
-          <MenuIcon sx={{ fontSize: 22 }} />
-        </IconButton>
+        <Box
+          sx={{
+            width: { xs: 48, md: topBar.launcherWidth },
+            height: topBar.height,
+            bgcolor: topBar.launcherBackground,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            borderInlineEnd: `1px solid ${topBar.divider}`,
+          }}
+        >
+          <IconButton size="small" onClick={openSidebar} sx={hamburgerSx}>
+            <MenuIcon sx={{ fontSize: topBar.iconSize }} />
+          </IconButton>
+          <IconButton size="small" sx={waffleSx} aria-label={t('nav.app_launcher', 'App launcher')}>
+            <WaffleIcon sx={{ fontSize: 24 }} />
+          </IconButton>
+        </Box>
 
-        {/* Waffle icon - desktop only */}
-        <IconButton size="small" sx={waffleSx}>
-          <WaffleIcon sx={{ fontSize: 22 }} />
-        </IconButton>
+        <Box
+          sx={{
+            width: { sm: topBar.productWidth },
+            height: topBar.height,
+            px: '25px',
+            display: { xs: 'none', sm: 'flex' },
+            alignItems: 'center',
+            flexShrink: 0,
+            borderInlineEnd: `1px solid ${topBar.divider}`,
+          }}
+        >
+          <Typography noWrap sx={{ ...titleSx, m: 0, fontFamily: topBar.fontFamily, fontSize: topBar.productFontSize }}>
+            {titleText}
+          </Typography>
+        </Box>
 
-        {/* App title - hidden on mobile */}
-        <Typography variant="subtitle2" noWrap sx={titleSx}>
-          {titleText}
-        </Typography>
+        {!isHorizontal && !isMobile && (
+          <Box
+            component="nav"
+            aria-label={t('common.breadcrumbs', 'Breadcrumbs')}
+            sx={{ display: 'flex', alignItems: 'center', minWidth: 0, px: '40px', gap: '11px' }}
+          >
+            {breadcrumbs.map((item, index) => (
+              <React.Fragment key={`${item.labelKey}-${index}`}>
+                {index > 0 && <ChevronRightIcon sx={{ fontSize: 24, color: topBar.text }} />}
+                <Typography
+                  component={item.path ? 'button' : 'span'}
+                  onClick={item.path ? () => navigate(item.path!) : undefined}
+                  noWrap
+                  sx={{
+                    appearance: 'none',
+                    border: 0,
+                    bgcolor: 'transparent',
+                    p: 0,
+                    color: topBar.text,
+                    fontFamily: topBar.fontFamily,
+                    fontSize: topBar.fontSize,
+                    fontWeight: 400,
+                    cursor: item.path ? 'pointer' : 'default',
+                    '&:hover': item.path ? { textDecoration: 'underline' } : undefined,
+                  }}
+                >
+                  {t(item.labelKey)}
+                </Typography>
+              </React.Fragment>
+            ))}
+          </Box>
+        )}
 
         {/* Horizontal navigation tabs */}
         {isHorizontal && !isMobile && (
@@ -276,51 +323,55 @@ export const AppTopBar: React.FC = memo(() => {
           </Box>
         )}
 
-        {/* Search bar - hidden on mobile, shown on sm+ */}
-        <Box sx={currentSearchWrapperSx}>
-          <Box sx={searchBarSx}>
-            <SearchIcon sx={{ fontSize: 18, color: 'rgba(255,255,255,0.7)', mr: 1 }} />
-            <InputBase
-              placeholder={t('nav.search_page', 'Search...')}
-              onClick={openCommandPalette}
-              sx={inputSx}
-              readOnly
-            />
-          </Box>
-        </Box>
-
-        {/* Spacer on mobile */}
-        <Box sx={{ flex: 1, display: { xs: 'block', sm: 'none' } }} />
+        <Box sx={{ flex: 1, minWidth: 8 }} />
 
         {/* Action icons */}
         <Box sx={actionsSx}>
-          {/* Search icon - mobile only */}
+          <Typography
+            noWrap
+            sx={{
+              px: { xs: 1, md: 2 },
+              fontFamily: topBar.fontFamily,
+              fontSize: topBar.fontSize,
+              fontWeight: 600,
+              color: topBar.text,
+            }}
+          >
+            {currentCompany}
+          </Typography>
+
           <Tooltip title={t('common.search', 'Search')}>
-            <IconButton size="small" onClick={openCommandPalette} sx={searchMobileSx}>
-              <SearchIcon sx={{ fontSize: 20 }} />
+            <IconButton size="small" onClick={openCommandPalette} sx={iconBtnSx}>
+              <SearchIcon sx={{ fontSize: 24 }} />
             </IconButton>
           </Tooltip>
 
           {/* Notifications */}
           <Tooltip title={t('common.notifications', 'Notifications')}>
             <IconButton size="small" onClick={openNotifications} sx={iconBtnSx}>
-              <Badge badgeContent={0} color="error" sx={badgeSx}>
-                <NotificationsIcon sx={{ fontSize: 20 }} />
+              <Badge badgeContent={notificationCount} max={99} sx={badgeSx}>
+                <NotificationsIcon sx={{ fontSize: topBar.iconSize }} />
               </Badge>
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title={t('common.feedback', 'Feedback')}>
+            <IconButton size="small" sx={{ ...iconBtnSx, display: { xs: 'none', md: 'inline-flex' } }}>
+              <FeedbackIcon sx={{ fontSize: topBar.iconSize }} />
             </IconButton>
           </Tooltip>
 
           {/* Settings */}
           <Tooltip title={t('common.settings', 'Settings')}>
             <IconButton size="small" onClick={openSettings} sx={iconBtnSx}>
-              <SettingsIcon sx={{ fontSize: 20 }} />
+              <SettingsIcon sx={{ fontSize: topBar.iconSize }} />
             </IconButton>
           </Tooltip>
 
           {/* Help - hidden on mobile */}
           <Tooltip title={t('common.help', 'Help')}>
             <IconButton size="small" sx={helpSx}>
-              <HelpIcon sx={{ fontSize: 20 }} />
+              <HelpIcon sx={{ fontSize: 23 }} />
             </IconButton>
           </Tooltip>
 
@@ -328,13 +379,25 @@ export const AppTopBar: React.FC = memo(() => {
           <Tooltip title={userTooltip}>
             <IconButton
               size="small"
-              sx={iconBtnSx}
+              sx={{
+                width: 64,
+                height: topBar.height,
+                borderInlineStart: `1px solid ${topBar.divider}`,
+                borderRadius: 0,
+                color: topBar.text,
+                '&:hover': { bgcolor: topBar.hover },
+              }}
               onClick={handleProfileMenuOpen}
               aria-controls={isMenuOpen ? 'account-menu' : undefined}
               aria-haspopup="true"
               aria-expanded={isMenuOpen ? 'true' : undefined}
             >
-              <AccountIcon sx={{ fontSize: 22 }} />
+              <Avatar
+                src={user?.avatarUrl}
+                sx={{ width: topBar.avatarSize, height: topBar.avatarSize, bgcolor: '#c7dbf6', color: '#172b4d', fontFamily: topBar.fontFamily, fontSize: 15 }}
+              >
+                {userInitials}
+              </Avatar>
             </IconButton>
           </Tooltip>
 
