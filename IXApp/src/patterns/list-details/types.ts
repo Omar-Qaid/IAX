@@ -17,9 +17,11 @@ export interface DetailFieldConfig {
   row?: number;
   multiline?: boolean;
   rows?: number;
+  sectionTitle?: string;
+  linkStyle?: boolean;
 }
 export interface DetailFieldGroup { id: string; title?: string; fields: DetailFieldConfig[]; columns?: number; column?: string | number; width?: number | string }
-export interface DetailSectionConfig { id: string; title: string; groups?: DetailFieldGroup[]; content?: ReactNode; link?: ReactNode; defaultExpanded?: boolean; columns?: number; gridTemplateColumns?: string; columnGap?: number | string; minHeight?: number; detailsPadding?: number | string }
+export interface DetailSectionConfig { id: string; title: string; groups?: DetailFieldGroup[]; content?: ReactNode; link?: ReactNode; defaultExpanded?: boolean; columns?: number; gridTemplateColumns?: string; columnGap?: number | string; minHeight?: number; detailsPadding?: number | string; visualVariant?: 'default' | 'legalEntity' }
 
 export interface ListDetailRecord { id: string }
 

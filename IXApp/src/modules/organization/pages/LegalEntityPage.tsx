@@ -63,19 +63,19 @@ export function LegalEntityPage(): React.ReactElement {
     ],
     sections: ({ record, editing, onRecordChange }) => [
       {
-        id: 'general', title: t('legalEntities.sections.general'), gridTemplateColumns: '270px 270px 270px 270px 220px', columnGap: 0, minHeight: 199,
+        id: 'general', title: t('legalEntities.sections.general'), visualVariant: 'legalEntity', gridTemplateColumns: '270px 270px 270px 270px 220px', columnGap: 0, minHeight: 199,
         groups: [
           { id: 'memo', width: 220, fields: [{ name: 'memo', label: t('legalEntities.fields.memo'), multiline: true, rows: 5 }] },
           { id: 'arabic', width: 220, fields: [{ name: 'arabicName', label: 'Arabic Name' }, { name: 'inHierarchy', label: 'In hierarchy', type: 'boolean' }, { name: 'useForFinancialConsolidation', label: 'Use for financial consolidation process', type: 'boolean' }] },
-          { id: 'middle', width: 220, fields: [{ name: 'useForFinancialElimination', label: 'Use for financial elimination process', type: 'boolean' }, { name: 'fullName', label: 'Full name' }, { name: 'localizedRegion', label: t('legalEntities.fields.localizedRegion') }] },
+          { id: 'middle', width: 220, fields: [{ name: 'useForFinancialElimination', label: 'Use for financial elimination process', type: 'boolean' }, { name: 'fullName', label: 'Full name', disabled: true }, { name: 'localizedRegion', label: t('legalEntities.fields.localizedRegion') }] },
           { id: 'registrations', width: 164, fields: [{ name: 'taxLicenseNum', label: 'Tax registration number' }, { name: 'federalTaxId', label: 'CR Number' }] },
           { id: 'locale', width: 220, title: 'LANGUAGE', fields: [{ name: 'languageId', label: 'Language', type: 'select', options: [{ value: 'en-US', label: 'en-US' }, { value: 'ar-SA', label: 'ar-SA' }] }, { name: 'timeZone', label: 'TIME ZONE   ·   Time zone', type: 'select', options: [{ value: '(GMT+03:00) Kuwait, Riyadh', label: '(GMT+03:00) Kuwait, Riyadh' }, { value: 'Arab Standard Time', label: '(GMT+03:00) Kuwait, Riyadh' }] }] },
         ],
       },
-      { id: 'addresses', title: 'Addresses', detailsPadding: '2px 10px 10px 12px', content: <AddressPanel key={`addresses-${record.id}`} record={record} editing={editing} onChange={onRecordChange} /> },
-      { id: 'contacts', title: 'Contact information', defaultExpanded: false, content: <ContactPanel key={`contacts-${record.id}`} record={record} editing={editing} onChange={onRecordChange} /> },
+      { id: 'addresses', title: 'Addresses', visualVariant: 'legalEntity', detailsPadding: '2px 10px 10px 12px', content: <AddressPanel key={`addresses-${record.id}`} record={record} editing={editing} onChange={onRecordChange} /> },
+      { id: 'contacts', title: 'Contact information', visualVariant: 'legalEntity', defaultExpanded: false, content: <ContactPanel key={`contacts-${record.id}`} record={record} editing={editing} onChange={onRecordChange} /> },
       {
-        id: 'statutory', title: t('legalEntities.sections.statutory'), defaultExpanded: false, columns: 3,
+        id: 'statutory', title: t('legalEntities.sections.statutory'), visualVariant: 'legalEntity', defaultExpanded: false, columns: 3,
         groups: [
           { id: 'currency', title: 'GENERAL', fields: [{ name: 'currencyCode', label: 'Currency' }] },
           { id: 'bankAccount', fields: [{ name: 'bankAccount', label: 'Bank account' }] },
@@ -83,7 +83,7 @@ export function LegalEntityPage(): React.ReactElement {
         ],
       },
     ],
-    presentation: { mode: 'list', listWidth: 264, headerMaxWidth: 520 },
+    presentation: { mode: 'list', listWidth: 281, headerMaxWidth: 520 },
     permissions: { view: 'legalEntity.view', create: 'legalEntity.manage', edit: 'legalEntity.manage', delete: 'legalEntity.manage' },
     validate: (record) => ({
       ...(!record.name.trim() ? { name: 'Name is required' } : {}),
