@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 
 namespace IAX.IXApi.Modules.Workflow.Requests
 {
+    [ApiController]
+    [Route("api/v1/[controller]")]
     public class WfRequestController : BaseController<WfRequest, WfRequestDto>
     {
         private readonly IValidationEngine _validationEngine;

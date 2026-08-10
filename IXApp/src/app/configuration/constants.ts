@@ -102,10 +102,11 @@ export const ANIMATION = {
 // ─── API Endpoints ───────────────────────────────────────────────────────────
 /** Centralized API route constants — prevents typos and enables global rename. */
 export const API_ENDPOINTS = {
-    LOGIN: '/Auth/login',
-    ME: '/Auth/me',
-    REFRESH_TOKEN: '/Auth/refresh-token',
-    EXTERNAL_PROVIDERS: '/Auth/external-providers',
+    LOGIN: '/v1/Auth/login',
+    LOGOUT: '/v1/Auth/logout',
+    ME: '/v1/Auth/me',
+    REFRESH_TOKEN: '/v1/Auth/refresh-token',
+    EXTERNAL_PROVIDERS: '/v1/Auth/external-providers',
     AR_CUSTOMERS: '/Customer',
     AR_CUSTOMER_GROUPS: '/CustomerGroup',
     AR_CURRENCIES: '/Currency',

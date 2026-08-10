@@ -24,22 +24,83 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
         {
         }
 
-        private async Task<(string countryId, string stateId, string countyId, string city, long cityId, string zipCode, long zipCodeId, string districtName, long districtId)> ResolveGeographicalHierarchyAsync(string countryId, string stateId, string countyId, string city, string zipCode, string districtName)
+        private async Task<(string countryId, string stateId, string countyId, string city, long cityId, string zipCode, long zipCodeId, string districtName, long districtId)> ResolveGeographicalHierarchyAsync(string countryId, string stateId, string countyId, string city, string zipCode, string districtName, CancellationToken cancellationToken)
         {
-            var cleanCountryId = countryId ?? string.Empty;
-            var cleanStateId = stateId ?? string.Empty;
-            var cleanCountyId = countyId ?? string.Empty;
-            var cleanCity = city ?? string.Empty;
+            var suppliedCountryId = (countryId ?? string.Empty).Trim();
+            var suppliedStateId = (stateId ?? string.Empty).Trim();
+            var suppliedCountyId = (countyId ?? string.Empty).Trim();
+            var cleanCity = (city ?? string.Empty).Trim();
             var cleanZipCode = zipCode ?? string.Empty;
             var cleanDistrictName = districtName ?? string.Empty;
 
-            // Simple logic matching what LogisticsAddressService used to do
+            // The UI can provide an ISO code (SA), address format (SAU), or the
+            // persisted country key. Always resolve that value before creating
+            // dependent geography rows so their foreign keys remain valid.
+            var normalizedCountry = suppliedCountryId.ToUpperInvariant();
+            var countryEntity = await _unitOfWork.Context.Set<LogisticsAddressCountryRegion>()
+                .FirstOrDefaultAsync(c =>
+                    c.CountryRegionId.ToUpper() == normalizedCountry ||
+                    c.IsoCode.ToUpper() == normalizedCountry ||
+                    c.AddrFormat.ToUpper() == normalizedCountry,
+                    cancellationToken);
+
+            if (countryEntity == null)
+            {
+                throw new ArgumentException($"Unknown country/region '{suppliedCountryId}'.");
+            }
+
+            var cleanCountryId = countryEntity.CountryRegionId;
+            var stateEntity = await _unitOfWork.Context.Set<LogisticsAddressState>()
+                .FirstOrDefaultAsync(s => s.CountryRegionId == cleanCountryId &&
+                    (s.StateId == suppliedStateId || s.Name == suppliedStateId), cancellationToken);
+            if (stateEntity == null)
+            {
+                var stateKey = string.IsNullOrWhiteSpace(suppliedStateId) ? string.Empty : suppliedStateId[..Math.Min(suppliedStateId.Length, 30)];
+                stateEntity = new LogisticsAddressState
+                {
+                    CountryRegionId = cleanCountryId,
+                    StateId = stateKey,
+                    Name = suppliedStateId,
+                    CreatedBy = "sys",
+                    OwnerAccountId = "sys",
+                    DataAreaId = "dat",
+                    IsActive = true
+                };
+                _unitOfWork.Context.Set<LogisticsAddressState>().Add(stateEntity);
+                await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
+            }
+
+            var cleanStateId = stateEntity.StateId;
+            var countyEntity = await _unitOfWork.Context.Set<LogisticsAddressCounty>()
+                .FirstOrDefaultAsync(c => c.CountryRegionId == cleanCountryId &&
+                    c.StateId == cleanStateId &&
+                    (c.CountyId == suppliedCountyId || c.Name == suppliedCountyId), cancellationToken);
+            if (countyEntity == null)
+            {
+                var countyKey = string.IsNullOrWhiteSpace(suppliedCountyId) ? string.Empty : suppliedCountyId[..Math.Min(suppliedCountyId.Length, 30)];
+                countyEntity = new LogisticsAddressCounty
+                {
+                    CountryRegionId = cleanCountryId,
+                    StateId = cleanStateId,
+                    CountyId = countyKey,
+                    Name = suppliedCountyId,
+                    CreatedBy = "sys",
+                    OwnerAccountId = "sys",
+                    DataAreaId = "dat",
+                    IsActive = true
+                };
+                _unitOfWork.Context.Set<LogisticsAddressCounty>().Add(countyEntity);
+                await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
+            }
+
+            var cleanCountyId = countyEntity.CountyId;
             var cityEntity = await _unitOfWork.Context.Set<LogisticsAddressCity>()
-                .FirstOrDefaultAsync(c => c.Name.ToLower() == cleanCity.ToLower());
+                .FirstOrDefaultAsync(c => c.Name.ToLower() == cleanCity.ToLower(), cancellationToken);
             if (cityEntity == null)
             {
                 cityEntity = new LogisticsAddressCity
                 {
+                    CityKey = $"{cleanCountryId}-{cleanStateId}-{cleanCity}"[..Math.Min($"{cleanCountryId}-{cleanStateId}-{cleanCity}".Length, 60)],
                     Name = cleanCity,
                     Description = $"{cleanCity} City",
                     CountryRegionId = cleanCountryId,
@@ -51,28 +112,35 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
                     IsActive = true
                 };
                 _unitOfWork.Context.Set<LogisticsAddressCity>().Add(cityEntity);
-                await _unitOfWork.Context.SaveChangesAsync();
+                await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
             }
 
             var zipEntity = await _unitOfWork.Context.Set<LogisticsAddressZipCode>()
-                .FirstOrDefaultAsync(z => z.ZipCode == cleanZipCode);
+                .FirstOrDefaultAsync(z => z.ZipCode == cleanZipCode, cancellationToken);
             if (zipEntity == null)
             {
                 zipEntity = new LogisticsAddressZipCode
                 {
                     ZipCode = cleanZipCode,
-                    City = cityEntity.RecId.ToString(),
+                    CountryRegionId = cleanCountryId,
+                    State = cleanStateId,
+                    County = cleanCountyId,
+                    City = cityEntity.Name,
+                    CityRecId = cityEntity.RecId,
+                    CityAlias = cityEntity.Name,
+                    DistrictName = cleanDistrictName,
+                    StreetName = string.Empty,
                     CreatedBy = "sys",
                     OwnerAccountId = "sys",
                     DataAreaId = "dat",
                     IsActive = true
                 };
                 _unitOfWork.Context.Set<LogisticsAddressZipCode>().Add(zipEntity);
-                await _unitOfWork.Context.SaveChangesAsync();
+                await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
             }
 
             var districtEntity = await _unitOfWork.Context.Set<LogisticsAddressDistrict>()
-                .FirstOrDefaultAsync(d => d.Name.ToLower() == cleanDistrictName.ToLower());
+                .FirstOrDefaultAsync(d => d.Name.ToLower() == cleanDistrictName.ToLower(), cancellationToken);
             if (districtEntity == null)
             {
                 districtEntity = new LogisticsAddressDistrict
@@ -86,7 +154,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
                     IsActive = true
                 };
                 _unitOfWork.Context.Set<LogisticsAddressDistrict>().Add(districtEntity);
-                await _unitOfWork.Context.SaveChangesAsync();
+                await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
             }
 
             return (cleanCountryId, cleanStateId, cleanCountyId, cityEntity.Name, cityEntity.RecId, zipEntity.ZipCode, zipEntity.RecId, districtEntity.Name, districtEntity.RecId);
@@ -94,7 +162,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
 
         public async Task<LogisticsPostalAddress> CreatePostalAddressAsync(long locationRecId, AddressInfoDto dto, CancellationToken cancellationToken = default)
         {
-            var geo = await ResolveGeographicalHierarchyAsync(dto.CountryRegionId, dto.State, dto.County, dto.City, dto.ZipCode, dto.DistrictName);
+            var geo = await ResolveGeographicalHierarchyAsync(dto.CountryRegionId, dto.State, dto.County, dto.City, dto.ZipCode, dto.DistrictName, cancellationToken);
 
             var postal = new LogisticsPostalAddress 
             {
@@ -128,7 +196,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
                 throw new ArgumentException($"LogisticsPostalAddress not found for RecId {postalRecId}");
             }
 
-            var geo = await ResolveGeographicalHierarchyAsync(dto.CountryRegionId, dto.State, dto.County, dto.City, dto.ZipCode, dto.DistrictName);
+            var geo = await ResolveGeographicalHierarchyAsync(dto.CountryRegionId, dto.State, dto.County, dto.City, dto.ZipCode, dto.DistrictName, cancellationToken);
 
             postal.CountryRegionId = geo.countryId;
             postal.ZipCode = geo.zipCode;

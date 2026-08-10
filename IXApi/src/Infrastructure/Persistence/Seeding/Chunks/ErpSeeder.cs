@@ -14,6 +14,8 @@ using IAX.IXApi.Modules.Administration.AuditLogs.Entities;
 using IAX.IXApi.Modules.Administration.DataManagement.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.Seeding.Entities;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
+using IAX.IXApi.Shared.Application.Identity;
+using System.Security.Claims;
 
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
@@ -798,6 +800,35 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 hbmcCompany = new CompanyInfo { DataArea = "HBMC", Name = "AlHayat Building Materials Company", Party = hbmcParty.RecId, LanguageId = "ar", TimeZone = "(GMT+03:00) Riyadh", IsActive = true, CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "HBMC" };
                 await db.Set<CompanyInfo>().AddAsync(hbmcCompany, ct);
                 await db.SaveChangesAsync(ct);
+            }
+
+            if (sysUser is not null)
+            {
+                var existingCompanyClaims = (await users.GetClaimsAsync(sysUser))
+                    .Where(claim => claim.Type == CompanyContextDefaults.ClaimType)
+                    .Select(claim => claim.Value)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                var legalEntityIds = await db.Set<CompanyInfo>()
+                    .IgnoreQueryFilters()
+                    .Where(company => company.IsActive)
+                    .Select(company => company.DataArea)
+                    .Distinct()
+                    .ToListAsync(ct);
+
+                foreach (var legalEntityId in legalEntityIds.Where(id => !existingCompanyClaims.Contains(id)))
+                {
+                    var result = await users.AddClaimAsync(
+                        sysUser,
+                        new Claim(CompanyContextDefaults.ClaimType, legalEntityId));
+
+                    if (!result.Succeeded)
+                    {
+                        throw new InvalidOperationException(
+                            $"Could not grant legal entity '{legalEntityId}' to the sys user: " +
+                            string.Join("; ", result.Errors.Select(error => error.Description)));
+                    }
+                }
             }
 
             // Seed DirPartyLocation

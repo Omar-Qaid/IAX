@@ -2503,3 +2503,97 @@ At the end, provide:
 ```
 
 Start by creating the `IXApp` project and its foundational configuration. Then implement the architecture incrementally according to the required implementation order.
+
+
+
+
+
+
+Phase 4 — Read-only business integration
+Suggested order:
+Currencies and exchange-rate types.
+Customers and customer groups.
+Exchange rates.
+Legal entities.
+Dashboard aggregations.
+Payment setup and customer parameters.
+Sales orders.
+For each feature:
+Verify routes, DTOs, pagination, sorting, filtering, permissions, and company isolation.
+Introduce a typed module-owned query boundary.
+Start read-only.
+Preserve the existing mock adapter.
+Add mutation support only after read behavior is stable.
+Acceptance:
+No page imports root mock datasets directly.
+Production mode never silently falls back to mock data.
+Loading/error/empty/permission states are consistent.
+Pagination and company context match backend contracts.
+Each migrated feature has contract and query tests.
+Risk: medium to high depending on backend contract completeness.
+Phase 5 — Mutation workflows
+Scope:
+Implement create/edit/delete/save one capability at a time.
+Add server validation mapping, optimistic or pessimistic update policy, conflict handling, invalidation, confirmation, and unsaved-state protection.
+Start with low-risk setup entities.
+Defer sales-order posting/confirmation until workflow semantics are verified.
+Acceptance:
+Save/delete survives reload.
+Failure does not leave false-success UI state.
+Permission checks exist in both UI and backend.
+Cache invalidation is feature-owned and tested.
+Sales-order workflow commands match backend state transitions exactly.
+Risk: high, especially for documents and posting operations.
+Phase 6 — UI consistency, accessibility, and theming
+Scope:
+Convert raw colors/shadows into named tokens while preserving appearance.
+Audit every route at desktop, tablet, and mobile sizes.
+Audit Arabic/RTL behavior.
+Add automated accessibility checks.
+Standardize accessible labels, focus restoration, error summaries, dialogs, and keyboard navigation.
+Correct source encoding defects.
+Acceptance:
+No known mojibake.
+Critical flows have no serious automated accessibility violations.
+Keyboard and focus behavior is tested.
+Dark/light and RTL states remain visually consistent.
+No unapproved UX redesign.
+Risk: medium.
+Phase 7 — Grid/shell performance and maintainability
+Scope:
+Add bundle analysis and budgets.
+Measure the grid before refactoring.
+Extract stable behavioral controllers from DataGrid.
+Review MUI, localization, and icon import contribution.
+Lazy-load heavy secondary drawers/panels where interaction permits.
+Reduce unnecessary rerenders with measured evidence.
+Avoid premature memoization.
+Proposed budgets, subject to approval after measurement:
+Main entry below 375 KB raw.
+DataGrid below 145 KB raw.
+No individual newly added route chunk above an agreed threshold.
+No measurable regression in grid interaction performance.
+Acceptance:
+Bundle reduction is measured against the recorded baseline.
+Grid keyboard/edit/selection behavior remains covered and unchanged.
+No accessibility regression.
+All desktop/mobile smoke tests remain green.
+Risk: medium to high.
+Phase 8 — Final production-readiness gate
+Run and record:
+npm run format:check
+npm run audit:static
+npm run audit:unused
+npm run lint
+npm run typecheck
+npm run test:coverage
+npm run test:run
+npm run build
+npm run test:e2e
+Architecture/import scan.
+Mock leakage scan.
+Public any scan.
+Encoding scan.
+Bundle comparison.
+Final git diff --check.
+Final human diff review.

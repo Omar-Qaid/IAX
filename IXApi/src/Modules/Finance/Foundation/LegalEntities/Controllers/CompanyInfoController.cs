@@ -18,6 +18,21 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LegalEntities
         {
         }
 
+        [HttpGet]
+        public override async Task<ActionResult<APIResponse<IEnumerable<CompanyInfoDto>>>> GetAll(CancellationToken cancellationToken = default)
+        {
+            var result = await base.GetAll(cancellationToken);
+            if (result.Result is OkObjectResult okResult &&
+                okResult.Value is APIResponse<IEnumerable<CompanyInfoDto>> apiResponse &&
+                apiResponse.Data != null &&
+                _service is ICompanyInfoService companyInfoService)
+            {
+                await companyInfoService.PopulateGlobalAddressBookAsync(apiResponse.Data, cancellationToken);
+            }
+
+            return result;
+        }
+
         [HttpPut("{id}")]
         public override async Task<ActionResult<APIResponse<CompanyInfoDto>>> Update(string id, [FromBody] CompanyInfoDto dto, CancellationToken cancellationToken = default)
         {

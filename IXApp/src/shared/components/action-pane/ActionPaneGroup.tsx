@@ -8,8 +8,8 @@ export interface ActionPaneGroupProps {
 
 export const ActionPaneGroup: React.FC<ActionPaneGroupProps> = ({ label, children }) => {
   return (
-    <Box sx={{ display: 'inline-flex', flexDirection: 'column', pr: 1.5, mr: 1.5, borderRight: (t) => `1px solid ${t.palette.divider}` }}>
-      <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
+    <Box sx={{ display: 'inline-flex', flexDirection: 'column', pr: 0.75, mr: 0.5, borderRight: (t) => `1px solid ${t.palette.divider}` }}>
+      <Stack direction="row" spacing={0} sx={{ alignItems: 'center' }}>
         {children}
       </Stack>
       {label && (

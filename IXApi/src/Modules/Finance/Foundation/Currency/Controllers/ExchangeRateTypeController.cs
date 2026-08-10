@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 
 namespace IAX.IXApi.Modules.Finance.Shared.Features
 {
+    [ApiController]
+    [Route("api/v1/[controller]")]
     public class ExchangeRateTypeController : BaseController<ExchangeRateType, ExchangeRateTypeDto>
     {
         public ExchangeRateTypeController(IExchangeRateTypeService service, ILogger<ExchangeRateTypeController> logger)

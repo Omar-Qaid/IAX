@@ -386,7 +386,7 @@ export const AppSidebar = () => {
 
   const isMini = navLayout === 'mini';
   const finalSidebarWidth = isMini
-    ? SIDEBARCOLLAPSEDWIDTH
+      ? SIDEBARCOLLAPSEDWIDTH
     : sidebarOpen
       ? SIDEBARWIDTH
       : SIDEBARCOLLAPSEDWIDTH;

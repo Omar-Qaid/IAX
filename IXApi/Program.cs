@@ -81,7 +81,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddTransient<CorrelationIdMiddleware>();
-builder.Services.AddTransient<CompanySelectionMiddleware>();
+// builder.Services.AddTransient<CompanySelectionMiddleware>(); // Convention-based middleware is not registered in DI
 
 var app = builder.Build();
 
@@ -91,7 +91,7 @@ app.UseInfrastructureMiddleware();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.MapOpenApi().AllowAnonymous();
     app.UseApiDocumentation();
 }
 else

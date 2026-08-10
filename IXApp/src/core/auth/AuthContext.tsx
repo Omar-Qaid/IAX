@@ -1,6 +1,8 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useCallback, useEffect, useState } from 'react';
+import { queryClient } from '@core/api/queryClient';
 import type { UserProfile } from './types';
 import { authService } from './authService';
+import { authEvents } from './authEvents';
 import { userHasPermission } from '@core/permissions/permissionService';
 
 export interface AuthContextType {
@@ -8,7 +10,7 @@ export interface AuthContextType {
   isLoading: boolean;
   user: UserProfile | null;
   login: (username: string, password?: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   hasPermission: (permissionCode: string) => boolean;
   hasRole: (role: string) => boolean;
 }
@@ -16,22 +18,54 @@ export interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<UserProfile | null>(() => authService.getInitialUser());
-  const [isLoading, setIsLoading] = useState(false);
+  const initialUser = authService.getInitialUser();
+  const [user, setUser] = useState<UserProfile | null>(initialUser);
+  const [isLoading, setIsLoading] = useState(!initialUser && authService.hasSession());
+  const clearSession = useCallback(() => {
+    setUser(null);
+    queryClient.clear();
+  }, []);
 
-  const login = async (username: string, _password?: string): Promise<void> => {
+  useEffect(
+    () =>
+      authEvents.subscribe((event) => {
+        if (event === 'session-expired') clearSession();
+      }),
+    [clearSession]
+  );
+
+  useEffect(() => {
+    if (initialUser || !authService.hasSession()) return;
+    let active = true;
+    authService
+      .getCurrentUser()
+      .then((currentUser) => {
+        if (active) setUser(currentUser);
+      })
+      .catch(() => {
+        if (active) clearSession();
+      })
+      .finally(() => {
+        if (active) setIsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [clearSession, initialUser]);
+
+  const login = async (username: string, password = ''): Promise<void> => {
     setIsLoading(true);
     try {
-      const response = await authService.login(username);
+      const response = await authService.login(username, password);
       setUser(response.user);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = (): void => {
-    setUser(null);
-    void authService.logout();
+  const logout = async (): Promise<void> => {
+    clearSession();
+    await authService.logout();
   };
 
   const hasPermission = (permissionCode: string): boolean => {

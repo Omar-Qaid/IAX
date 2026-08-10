@@ -10,13 +10,13 @@ export const AppProviders: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <ErrorBoundary>
       <LocalizationProvider>
-        <AuthProvider>
-          <QueryProvider>
+        <QueryProvider>
+          <AuthProvider>
             <ThemeProvider>
               <NotificationProvider>{children}</NotificationProvider>
             </ThemeProvider>
-          </QueryProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </QueryProvider>
       </LocalizationProvider>
     </ErrorBoundary>
   );

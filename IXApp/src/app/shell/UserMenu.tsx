@@ -65,16 +65,24 @@ export const UserMenu: React.FC = () => {
         <MenuItem disabled sx={{ opacity: '1 !important' }}>
           <ListItemText
             primary={<Typography variant="subtitle2">{user?.displayName}</Typography>}
-            secondary={<Typography variant="caption" color="text.secondary">{user?.email}</Typography>}
+            secondary={
+              <Typography variant="caption" color="text.secondary">
+                {user?.email}
+              </Typography>
+            }
           />
         </MenuItem>
         <Divider />
         <MenuItem onClick={handleOpenSettings}>
-          <ListItemIcon><SettingsOutlinedIcon fontSize="small" /></ListItemIcon>
+          <ListItemIcon>
+            <SettingsOutlinedIcon fontSize="small" />
+          </ListItemIcon>
           <ListItemText>{t('nav.settings') || 'Settings'}</ListItemText>
         </MenuItem>
         <MenuItem onClick={handleToggleLang}>
-          <ListItemIcon><TranslateIcon fontSize="small" /></ListItemIcon>
+          <ListItemIcon>
+            <TranslateIcon fontSize="small" />
+          </ListItemIcon>
           <ListItemText>
             {currentLanguage.code === 'en' ? 'العربية (Arabic)' : 'English'}
           </ListItemText>
@@ -88,12 +96,16 @@ export const UserMenu: React.FC = () => {
             )}
           </ListItemIcon>
           <ListItemText>
-            {themeMode === 'light' ? t('common.dark') || 'Dark Mode' : t('common.light') || 'Light Mode'}
+            {themeMode === 'light'
+              ? t('common.dark') || 'Dark Mode'
+              : t('common.light') || 'Light Mode'}
           </ListItemText>
         </MenuItem>
         <Divider />
-        <MenuItem onClick={logout}>
-          <ListItemIcon><LogoutIcon fontSize="small" color="error" /></ListItemIcon>
+        <MenuItem onClick={() => void logout()}>
+          <ListItemIcon>
+            <LogoutIcon fontSize="small" color="error" />
+          </ListItemIcon>
           <ListItemText sx={{ color: 'error.main' }}>Sign Out</ListItemText>
         </MenuItem>
       </Menu>

@@ -8,6 +8,8 @@ using Microsoft.Extensions.Logging;
 
 namespace IAX.IXApi.Modules.Finance.AccountsPayable
 {
+    [ApiController]
+    [Route("api/v1/[controller]")]
     public class VendorGroupController : BaseController<VendGroup, VendorGroupDto>
     {
         public VendorGroupController(IBaseService<VendGroup> service, ILogger<VendorGroupController> logger)

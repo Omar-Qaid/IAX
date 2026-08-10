@@ -83,15 +83,16 @@ describe('representative enterprise pages', () => {
     );
   }, 60_000);
 
-  it('renders document and setup representatives as read-only pages', () => {
+  it('renders document and setup representatives', async () => {
     const { unmount } = render(<SalesOrderPage />);
     expect(screen.getByText('Sales order SO-00101')).toBeDefined();
     expect(screen.getByText('Enterprise Server Rack Cabinet 42U')).toBeDefined();
     unmount();
 
     render(<ApplicationSettingsPage />);
-    expect(screen.getByText('Current client configuration')).toBeDefined();
-    expect(screen.getByText('API integration: ASP.NET Core REST')).toBeDefined();
+    expect(await screen.findByText('Current client configuration')).toBeDefined();
+    expect(screen.getByRole('tab', { name: 'Global settings' })).toBeDefined();
+    expect(screen.getByRole('textbox', { name: /Application name/ })).toBeDefined();
   });
 
   it('shows an error instead of substituting another order for an invalid route id', () => {
@@ -176,14 +177,12 @@ describe('representative enterprise pages', () => {
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDefined();
   });
 
-  it('renders legal entities through the generic list-details pattern', () => {
+  it('renders contract-backed legal entities through the generic list-details pattern', async () => {
     render(<LegalEntityPage />);
-    expect(screen.getByRole('heading', { name: 'Legal entities' })).toBeDefined();
+    expect(await screen.findByRole('heading', { name: 'Legal entities' })).toBeDefined();
     expect(screen.getAllByText('AlHayat Building Materials Company').length).toBeGreaterThan(0);
-    expect(screen.getByText('Addresses')).toBeDefined();
-    expect(screen.getByText('Contact information')).toBeDefined();
     expect(screen.getByText('Statutory reporting')).toBeDefined();
-    expect(screen.getByRole('button', { name: 'View in hierarchy' })).toBeDefined();
+    expect(screen.getByText('Currency')).toBeDefined();
     act(() => fireEvent.click(screen.getAllByRole('button', { name: 'Edit' })[0]));
     expect(screen.getByRole('button', { name: 'Save' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDefined();

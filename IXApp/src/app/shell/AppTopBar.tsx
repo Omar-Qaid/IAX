@@ -146,7 +146,7 @@ export const AppTopBar: React.FC = memo(() => {
 
   const handleLogout = useCallback(() => {
     handleMenuClose();
-    logout();
+    void logout();
   }, [logout, handleMenuClose]);
 
   const handleModuleClick = useCallback(

@@ -7,6 +7,7 @@ const port = 4173;
 const playwrightCli = resolve('node_modules', '@playwright', 'test', 'cli.js');
 
 const server = await createServer({
+  mode: 'test',
   logLevel: 'error',
   server: {
     host,

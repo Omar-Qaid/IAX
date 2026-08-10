@@ -637,7 +637,7 @@ function DataGridInternal<T>({
                             ref={headerScrollRef}
                             sx={{
                                 overflow: 'hidden',
-                                bgcolor: theme.palette.action.hover,
+                                bgcolor: theme.palette.mode === 'light' ? '#ffffff' : theme.palette.action.hover,
                                 flexShrink: 0,
                                 borderBottom: `1px solid ${theme.palette.divider}`,
                                 pr: `${scrollbarWidth || 0}px`,

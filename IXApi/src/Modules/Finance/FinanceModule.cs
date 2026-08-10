@@ -15,6 +15,9 @@ namespace IAX.IXApi.Modules.Finance
 
             // Explicit Finance registrations
             services.AddScoped<Shared.Features.ICurrencyService, Shared.Features.CurrencyService>();
+            services.AddScoped<Shared.Features.IExchangeRateTypeService, Shared.Features.ExchangeRateTypeService>();
+            services.AddScoped<Shared.Features.IExchangeRateCurrencyPairService, Shared.Features.ExchangeRateCurrencyPairService>();
+            services.AddScoped<Shared.Features.IExchangeRateService, Shared.Features.ExchangeRateService>();
             services.AddScoped<Shared.Features.IDlvModeService, Shared.Features.DlvModeService>();
             services.AddScoped<Shared.Features.IDlvTermService, Shared.Features.DlvTermService>();
             services.AddScoped<Foundation.LegalEntities.ICompanyInfoService, Foundation.LegalEntities.CompanyInfoService>();

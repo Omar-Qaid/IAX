@@ -116,6 +116,9 @@ namespace IAX.IXApi.Modules.Identity.Authentication
             var roles = await _userManager.GetRolesAsync(user);
             var permissions = await _permissionService.GetPermissionKeysByUserAsync(userId);
 
+            if (roles.Contains("Admin", StringComparer.OrdinalIgnoreCase) && !permissions.Contains("*"))
+                permissions.Add("*");
+
             var dto = user.Adapt<AspNetUserDto>();
             dto.Roles = roles.ToList();
             dto.Permissions = permissions;

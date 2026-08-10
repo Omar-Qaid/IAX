@@ -121,8 +121,8 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
 
             var userDefs = new[]
             {
-                new { Email = "sys",  UserName = "sys",  Password = "123", Role = "Admin" },
-                new { Email = "omar", UserName = "omar", Password = "123", Role = "Admin" },
+                new { Email = "sys@iax.local",  UserName = "sys",  Password = "123", Role = "Admin" },
+                new { Email = "omar@iax.local", UserName = "omar", Password = "123", Role = "Admin" },
             };
 
             foreach (var u in userDefs)

@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { GridCell } from './GridCell';
 import type { ColumnDef } from '../types';
 import { GRID_SELECTION_COLUMN_WIDTH } from '../constants';
+import { d365 } from '@patterns/list-details/d365Tokens';
 
 interface GridRowProps<T> {
   row: T;
@@ -74,7 +75,7 @@ export const GridRow = memo(function GridRowInner<T>({
   const { t } = useTranslation();
   const rowId = getRowId(row);
   const rowBg = isSelected
-    ? alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.14 : 0.22)
+    ? (theme.palette.mode === 'light' ? d365.selectedRow : alpha(theme.palette.primary.main, 0.22))
     : index % 2 === 1
       ? theme.palette.mode === 'light'
         ? '#fcfcfc'
@@ -122,7 +123,7 @@ export const GridRow = memo(function GridRowInner<T>({
         display: 'flex',
         cursor: isEditing ? 'default' : onRowClick ? 'pointer' : 'default',
         bgcolor: editingBg ?? rowBg,
-        boxShadow: isSelected ? `inset 3px 0 0 ${theme.palette.primary.main}` : 'none',
+        boxShadow: isSelected ? `inset 3px 0 0 ${d365.selectedBar}` : 'none',
         transition: theme.transitions.create(['background-color', 'box-shadow'], {
           duration: theme.transitions.duration.shortest,
         }),

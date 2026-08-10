@@ -43,12 +43,24 @@ const mapApiError = (error: unknown): ApiError => {
   const axiosError = error as AxiosError<ApiResponse<unknown>>;
   const status = axiosError.response?.status ?? 0;
   const response = axiosError.response?.data;
-  return new ApiError(response?.message || axiosError.message || 'Authentication request failed.', status);
+  const validationMessage = response?.errors?.filter(Boolean).join(' ');
+  return new ApiError(
+    validationMessage ||
+      response?.message ||
+      (status === 0
+        ? `Unable to reach IXApi at ${apiConfig.baseUrl}. Confirm the API is running and its development certificate is trusted.`
+        : axiosError.message) ||
+      'Authentication request failed.',
+    status
+  );
 };
 
 const requireData = <T>(response: ApiResponse<T>): T => {
   if (!response.success || response.data == null) {
-    throw new ApiError(response.message || 'The server returned an empty authentication response.', 500);
+    throw new ApiError(
+      response.message || 'The server returned an empty authentication response.',
+      500
+    );
   }
   return response.data;
 };
@@ -66,10 +78,13 @@ const mapUser = (user: ApiUserDto): UserProfile => ({
 export const apiAuthAdapter: AuthAdapter = {
   async login(username: string, password: string): Promise<LoginResponse> {
     try {
-      const response = await authHttpClient.post<ApiResponse<AccessTokenDto>>(AUTH_ENDPOINTS.login, {
-        username,
-        password,
-      });
+      const response = await authHttpClient.post<ApiResponse<AccessTokenDto>>(
+        AUTH_ENDPOINTS.login,
+        {
+          username,
+          password,
+        }
+      );
       const { accessToken } = requireData(response.data);
       authStorage.setToken(accessToken);
       const user = await this.getCurrentUser();

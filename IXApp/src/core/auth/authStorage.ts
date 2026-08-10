@@ -32,6 +32,12 @@ export const authStorage = {
   setToken(token: string): void {
     accessToken = token;
     getSessionStorage()?.setItem(TOKEN_KEY, token);
+    try {
+      globalThis.localStorage?.removeItem(TOKEN_KEY);
+      globalThis.localStorage?.removeItem('ixapp_auth_user');
+    } catch {
+      // Storage may be unavailable in restricted browser contexts.
+    }
   },
 
   removeToken(): void {

@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from 'react';
-import { useNavigate, useRouteError, type RouteObject } from 'react-router-dom';
+import { useLocation, useNavigate, useRouteError, type RouteObject } from 'react-router-dom';
 import { AppLayout } from '@app/layouts/AppLayout';
 import { AuthLayout } from '@app/layouts/AuthLayout';
 import { RouteGuard } from './RouteGuard';
@@ -16,7 +16,10 @@ const LoginPage = lazy(() =>
 
 const LoginRoutePage = () => {
   const navigate = useNavigate();
-  return <LoginPage onLoginSuccess={() => navigate(ROUTE_PATHS.DASHBOARD, { replace: true })} />;
+  const location = useLocation();
+  const state = location.state as { returnTo?: string } | null;
+  const returnTo = state?.returnTo?.startsWith('/') ? state.returnTo : ROUTE_PATHS.DASHBOARD;
+  return <LoginPage onLoginSuccess={() => navigate(returnTo, { replace: true })} />;
 };
 
 const RouteLoading = () => {

@@ -15,9 +15,11 @@ export interface DetailFieldConfig {
   width?: number | string;
   column?: number;
   row?: number;
+  multiline?: boolean;
+  rows?: number;
 }
-export interface DetailFieldGroup { id: string; title?: string; fields: DetailFieldConfig[]; columns?: number }
-export interface DetailSectionConfig { id: string; title: string; groups?: DetailFieldGroup[]; content?: ReactNode; link?: ReactNode; defaultExpanded?: boolean; columns?: number }
+export interface DetailFieldGroup { id: string; title?: string; fields: DetailFieldConfig[]; columns?: number; column?: string | number; width?: number | string }
+export interface DetailSectionConfig { id: string; title: string; groups?: DetailFieldGroup[]; content?: ReactNode; link?: ReactNode; defaultExpanded?: boolean; columns?: number; gridTemplateColumns?: string; columnGap?: number | string; minHeight?: number; detailsPadding?: number | string }
 
 export interface ListDetailRecord { id: string }
 
@@ -43,7 +45,11 @@ export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
   getValues: (record: T) => DetailValues;
   setValues: (record: T, values: DetailValues) => T;
   headerFields: ListDetailsHeaderField<T>[];
-  sections: DetailSectionConfig[];
+  sections: DetailSectionConfig[] | ((context: {
+    record: T;
+    editing: boolean;
+    onRecordChange: (record: T) => void;
+  }) => DetailSectionConfig[]);
   viewLabel?: string;
   filterLabel?: string;
   informationLabel?: string;
@@ -65,6 +71,7 @@ export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
     headerMaxWidth?: number;
     masterRowHeight?: number;
     masterHeaderHeight?: number;
+    fullscreenCanvas?: boolean;
   };
   permissions?: { view?: string; create?: string; edit?: string; delete?: string };
   validate?: (record: T) => Record<string, string> | Promise<Record<string, string>>;

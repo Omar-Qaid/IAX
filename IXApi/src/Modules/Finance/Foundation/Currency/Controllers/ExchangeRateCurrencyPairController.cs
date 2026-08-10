@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 
 namespace IAX.IXApi.Modules.Finance.Shared.Features
 {
+    [ApiController]
+    [Route("api/v1/[controller]")]
     public class ExchangeRateCurrencyPairController : BaseController<ExchangeRateCurrencyPair, ExchangeRateCurrencyPairDto>
     {
         private readonly IExchangeRateCurrencyPairService _pairService;

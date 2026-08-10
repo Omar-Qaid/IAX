@@ -34,7 +34,7 @@ namespace IAX.IXApi.Bootstrap.Extensions
                 options.Theme = ScalarTheme.BluePlanet;
                 options.DefaultHttpClient = new(ScalarTarget.JavaScript, ScalarClient.Fetch);
                 options.ShowSidebar = true;
-            });
+            }).AllowAnonymous();
 
             return app;
         }

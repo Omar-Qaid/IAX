@@ -1,5 +1,6 @@
 import React from 'react';
 import { Paper, Box } from '@mui/material';
+import { d365 } from '@patterns/list-details/d365Tokens';
 
 export interface ActionPaneProps {
   children: React.ReactNode;
@@ -12,12 +13,14 @@ export const ActionPane: React.FC<ActionPaneProps> = ({ children, variant = 'def
     <Paper
       elevation={0}
       sx={{
-        p: variant === 'flat' ? '3px 8px' : '6px 12px',
-        mb: variant === 'flat' ? 0.5 : 1.5,
-        borderRadius: variant === 'flat' ? 0.75 : 1,
+        p: variant === 'flat' ? '3px 5px' : '6px 12px',
+        minHeight: variant === 'flat' ? d365.toolbarHeight : undefined,
+        boxSizing: 'border-box',
+        mb: variant === 'flat' ? '10px' : 1.5,
+        borderRadius: variant === 'flat' ? d365.sectionRadius : 1,
         border: (t) => `1px solid ${t.palette.divider}`,
         bgcolor: variant === 'flat' ? 'background.paper' : (t) => (t.palette.mode === 'light' ? '#f8f9fa' : '#222222'),
-        boxShadow: variant === 'flat' ? '0 1px 3px rgba(0,0,0,0.10)' : 'none',
+        boxShadow: variant === 'flat' ? '0 1px 4px rgba(0,0,0,0.18)' : 'none',
         display: 'flex',
         alignItems: 'center',
         overflowX: 'auto',
