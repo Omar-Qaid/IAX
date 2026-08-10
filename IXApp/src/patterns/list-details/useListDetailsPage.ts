@@ -68,7 +68,7 @@ export function useListDetailsPage<T extends ListDetailRecord>(config: Enterpris
     setSaving(true); setError(null);
     try {
       const persisted = source.type === 'remote' ? await (isNew ? source.create(draft) : source.update(draft)) : draft;
-      replaceRecords(isNew ? [...records, persisted] : records.map((record) => record.id === draft.id ? persisted : record));
+      replaceRecords(isNew ? [persisted, ...records] : records.map((record) => record.id === draft.id ? persisted : record));
       setDraft(persisted); setSelectedId(persisted.id); setEditing(false); setIsNew(false);
     } catch (reason: unknown) { setError(reason instanceof Error ? reason.message : String(reason)); } finally { setSaving(false); }
   };

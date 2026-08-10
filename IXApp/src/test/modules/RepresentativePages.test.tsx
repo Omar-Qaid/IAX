@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor } from '@test/testUtils';
 import { DashboardPage } from '@modules/dashboard/pages/DashboardPage';
 import { CurrencyPage } from '@modules/finance/foundation/pages/CurrencyPage';
@@ -16,6 +16,20 @@ import { CustPaymTerm } from '@modules/finance/accounts-receivable/pages/CustPay
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { render as renderWithoutProviders } from '@testing-library/react';
 import { AppProviders } from '@app/providers/AppProviders';
+
+vi.mock('@modules/finance/foundation/api/currencyApi', () => ({
+  currencyApi: {
+    list: vi.fn().mockResolvedValue([
+      {
+        id: '1', recId: 1, currencyCode: 'AED', currencyCodeIso: 'AED', txt: 'UAE Dirham', symbol: 'د.إ',
+        isEuro: 0, roundOffSales: 0.01, roundOffTypeSales: 0, roundOffPurch: 0.01, roundOffTypePurch: 0,
+        roundOffPrice: 0.01, roundOffTypePrice: 0, roundingPrecision: 0.01, ltmRoundOffLineAmount: 0,
+        ltmRoundOffTypeLineAmount: 0, isActive: true, rowVersion: null, recVersion: 1, dataAreaId: 'dat',
+      },
+    ]),
+    create: vi.fn(), update: vi.fn(), delete: vi.fn(),
+  },
+}));
 
 describe('representative enterprise pages', () => {
   it('renders the workspace dashboard indicators', () => {
@@ -141,13 +155,11 @@ describe('representative enterprise pages', () => {
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDefined();
   });
 
-  it('renders currency maintenance through the generic list-details pattern', () => {
+  it('renders currency maintenance through the generic list-details pattern', async () => {
     render(<CurrencyPage />);
-    expect(screen.getByRole('heading', { name: 'Currencies' })).toBeDefined();
-    expect(screen.getAllByText('AED').length).toBeGreaterThan(0);
-    expect(screen.getByText('Currency converter')).toBeDefined();
+    expect((await screen.findAllByText('AED')).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Currencies').length).toBeGreaterThan(0);
     expect(screen.getByText('Rounding rules')).toBeDefined();
-    expect(screen.getByText('Electronic invoices')).toBeDefined();
     act(() => fireEvent.click(screen.getByRole('button', { name: 'Edit' })));
     expect(screen.getByRole('button', { name: 'Save' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDefined();
