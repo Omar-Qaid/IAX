@@ -72,9 +72,20 @@ function DataGridInternal<T>({
     const searchInputRef = useRef<HTMLInputElement | null>(null);
     const gridRootRef = useRef<HTMLDivElement | null>(null);
     const gridBodyRef = useRef<GridBodyHandle | null>(null);
+    const pendingScrollTopRef = useRef<number | null>(null);
     const focusedCellRef = useRef({ r: 0, c: 0 });
     const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const initialColumns = rawInitialColumns;
+
+    // Layout & Scroll
+    const {
+        containerWidth,
+        scrollbarWidth,
+        scrollContainerRef,
+        headerScrollRef,
+        onScrollReset,
+        handleBodyScroll
+    } = useGridLayout();
 
     // -- Persistence ----------------------------------------------------------
     const { initialState, persist, clear } = useGridPersistence<T>(storageKey, initialColumns);
@@ -111,22 +122,34 @@ function DataGridInternal<T>({
     const handleSaveEdit = useCallback(async () => {
         if (!onRowSave) { handleCancelEdit(); return; }
         const isNew = editingRowId === NEW_ROW_ID;
+        const scrollTop = scrollContainerRef.current?.scrollTop ?? 0;
         setSaving(true);
         try {
             await onRowSave(editValues, isNew);
+            pendingScrollTopRef.current = scrollTop;
             handleCancelEdit();
-            if (isNew) {
-                setTimeout(() => {
-                    gridBodyRef.current?.scrollToIndex(999999);
-                }, 300);
-            }
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : String(err);
             notifyError(msg);
         } finally {
             setSaving(false);
         }
-    }, [onRowSave, editingRowId, editValues, handleCancelEdit, setSaving, notifyError]);
+    }, [onRowSave, editingRowId, editValues, handleCancelEdit, setSaving, notifyError, scrollContainerRef]);
+
+    // Remote saves commonly replace the rows array after the mutation. Restore
+    // the exact viewport offset after that render instead of jumping to row 0.
+    React.useLayoutEffect(() => {
+        const savedScrollTop = pendingScrollTopRef.current;
+        const container = scrollContainerRef.current;
+        if (savedScrollTop == null || !container) return;
+
+        container.scrollTop = savedScrollTop;
+        const frame = requestAnimationFrame(() => {
+            container.scrollTop = savedScrollTop;
+            pendingScrollTopRef.current = null;
+        });
+        return () => cancelAnimationFrame(frame);
+    }, [rows, editingRowId, scrollContainerRef]);
 
 
     useEffect(() => {
@@ -150,16 +173,6 @@ function DataGridInternal<T>({
         initialShowCellBorders,
         rowHeight
     });
-
-    // Layout & Scroll
-    const {
-        containerWidth,
-        scrollbarWidth,
-        scrollContainerRef,
-        headerScrollRef,
-        onScrollReset,
-        handleBodyScroll
-    } = useGridLayout();
 
     // Data Source
     const {
