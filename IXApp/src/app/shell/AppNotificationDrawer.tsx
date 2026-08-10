@@ -19,6 +19,7 @@ import ArchiveIcon from '@mui/icons-material/ArchiveOutlined';
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import { useTranslation } from 'react-i18next';
 import { useNavigationStore } from '@app/store/useNavigationStore';
+import { LAYOUT } from '@app/configuration/constants';
 
 const DRAWER_WIDTH = 380;
 
@@ -254,20 +255,26 @@ export const AppNotificationDrawer: React.FC = () => {
             open={notificationDrawerOpen}
             onClose={handleClose}
             slotProps={{
+                backdrop: {
+                    sx: { top: `${LAYOUT.TOPBARHEIGHT}px` },
+                },
                 paper: {
                     sx: {
                         width: { xs: '100vw', sm: DRAWER_WIDTH },
                         maxWidth: '100vw',
+                        top: `${LAYOUT.TOPBARHEIGHT}px`,
+                        height: `calc(100% - ${LAYOUT.TOPBARHEIGHT}px)`,
                         borderRadius: 0,
                         boxShadow: '-4px 0 24px rgba(0,0,0,0.08)',
-                        pt: '40px',
+                        overflow: 'hidden',
                     },
                 },
             }}
         >
             <Box sx={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                px: 2.5, pt: 2, pb: 1,
+                px: 2.5, minHeight: 56, py: 1, flexShrink: 0,
+                borderBottom: '1px solid', borderColor: 'divider', bgcolor: 'background.paper', zIndex: 1,
             }}>
                 <Typography sx={{ fontSize: '1.125rem', fontWeight: 700, color: 'text.primary' }}>
                     {t('common.notifications', 'Notifications')}

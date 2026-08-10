@@ -22,6 +22,7 @@ import ViewCompactIcon from '@mui/icons-material/ViewCompact';
 import { useTranslation } from 'react-i18next';
 import { useNavigationStore } from '@app/store/useNavigationStore';
 import { usePreferenceStore } from '@app/store/usePreferenceStore';
+import { LAYOUT } from '@app/configuration/constants';
 
 // Temporary mock presets until we extend createAppTheme fully.
 const COLOR_PRESETS: Record<string, { primary: { main: string } }> = {
@@ -269,14 +270,19 @@ export const AppSettingsDrawer: React.FC = () => {
             open={settingsPanelOpen}
             onClose={handleClose}
             slotProps={{
+                backdrop: {
+                    sx: { top: `${LAYOUT.TOPBARHEIGHT}px` },
+                },
                 paper: {
                     sx: {
                         width: { xs: '100vw', sm: DRAWER_WIDTH },
                         maxWidth: '100vw',
+                        top: `${LAYOUT.TOPBARHEIGHT}px`,
+                        height: `calc(100% - ${LAYOUT.TOPBARHEIGHT}px)`,
                         borderRadius: 0,
                         boxShadow: '-4px 0 24px rgba(0,0,0,0.08)',
                         bgcolor: 'background.paper',
-                        pt: '40px',
+                        overflow: 'hidden',
                     },
                 },
             }}
@@ -287,8 +293,13 @@ export const AppSettingsDrawer: React.FC = () => {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 px: 2.5,
-                pt: 2.5,
-                pb: 1.5,
+                minHeight: 56,
+                py: 1,
+                flexShrink: 0,
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                bgcolor: 'background.paper',
+                zIndex: 1,
             }}>
                 <Typography sx={{ fontSize: '1.125rem', fontWeight: 700, color: 'text.primary' }}>
                     {t('settings.title', 'Settings')}
