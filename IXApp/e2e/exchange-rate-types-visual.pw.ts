@@ -31,6 +31,8 @@ test('renders Exchange rate types with the D365 list-page layout', async ({ page
 
   const grid = page.getByRole('grid');
   await expect(grid).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Choose columns' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Features' })).toBeVisible();
   await grid.screenshot({ path: 'test-results/exchange-rate-types-grid.png' });
   await page.screenshot({ path: 'test-results/exchange-rate-types-page.png', fullPage: true });
 });

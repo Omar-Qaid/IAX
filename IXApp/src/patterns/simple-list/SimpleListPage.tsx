@@ -279,13 +279,13 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
     />;
 
     return (
-      <PageContainer sx={[{ gap: 0.5, minHeight: { xs: contentMinHeight, lg: 0 }, height: { xs: 'auto', lg: '100%' }, maxHeight: { lg: '100%' }, overflow: { lg: 'hidden' }, position: 'relative', pr: { lg: '38px' } }, ...(Array.isArray(containerSx) ? containerSx : [containerSx])]}>
+      <PageContainer sx={[{ gap: 0.5, minHeight: { xs: contentMinHeight, lg: 0 }, height: { xs: 'auto', lg: '100%' }, maxHeight: { lg: '100%' }, overflow: { lg: 'hidden' }, position: 'relative', pr: { lg: '60px' } }, ...(Array.isArray(containerSx) ? containerSx : [containerSx])]}>
         {(generatedActionPane ?? props.actionPane) && <ActionPane variant="flat" endActions={generatedUtilities ?? props.actionPaneEndActions}>{generatedActionPane ?? props.actionPane}</ActionPane>}
-        <Box sx={[{ display: 'flex', flex: 1, height: '100%', minHeight: { xs: contentMinHeight, lg: 0 }, gap: 1, px: { xs: 0, sm: 1 }, pb: 0.5, overflow: 'hidden', position: 'relative', alignItems: 'stretch' }, ...(Array.isArray(contentSx) ? contentSx : [contentSx])]}>
+        <Box sx={[{ display: 'flex', flex: 1, height: '100%', minHeight: { xs: contentMinHeight, lg: 0 }, gap: 1, px: 0, pb: 0.5, overflow: 'hidden', position: 'relative', alignItems: 'stretch' }, ...(Array.isArray(contentSx) ? contentSx : [contentSx])]}>
           <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
             <EnterpriseListHeader contextLabel={config?.contextLabel ?? props.contextLabel ?? title} viewLabel={config?.viewLabel ?? props.viewLabel ?? title} onViewClick={onViewClick} />
             <Box sx={{ pointerEvents: isEditing ? 'none' : 'auto', opacity: isEditing ? 0.6 : 1 }}>{generatedFilterBar ?? props.filterBar}</Box>
-            <Box sx={{ flex: 1, minHeight: 0 }}>{feedback ?? <DataGrid ref={gridRef} {...resolvedGridProps} height={gridHeight ?? resolvedGridProps.height ?? '100%'} />}</Box>
+            <Box sx={{ flex: 1, minHeight: 0, mx: { xs: 1, sm: 2.5 } }}>{feedback ?? <DataGrid ref={gridRef} {...resolvedGridProps} height={gridHeight ?? resolvedGridProps.height ?? '100%'} />}</Box>
           </Box>
           {generatedSidePanels ?? props.sidePanels}
         </Box>

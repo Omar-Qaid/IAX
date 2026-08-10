@@ -9,8 +9,8 @@ export interface EnterpriseListHeaderProps {
 }
 
 export const EnterpriseListHeader: React.FC<EnterpriseListHeaderProps> = ({ contextLabel, viewLabel, onViewClick }) => (
-  <Box sx={{ px: { xs: 1, sm: 2.5 }, pt: 0.25, pb: 1.75, fontFamily: '"Segoe UI", Arial, sans-serif' }}>
-    <Typography sx={{ color: '#1b1b1b', fontFamily: 'inherit', fontSize: 16, lineHeight: 1.5 }}>
+  <Box sx={{ px: { xs: 1, sm: 2.5 }, pt: 0.25, pb: 2.625, fontFamily: '"Segoe UI", Arial, sans-serif' }}>
+    <Typography sx={{ color: '#1b1b1b', fontFamily: 'inherit', fontSize: 16, lineHeight: 1.5, mb: 1 }}>
       {contextLabel}
     </Typography>
     <ButtonBase

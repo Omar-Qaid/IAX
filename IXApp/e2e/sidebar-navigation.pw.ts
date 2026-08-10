@@ -6,6 +6,8 @@ test('renders the shared D365 navigation proportions', async ({ page }, testInfo
 
   const navigation = page.getByRole('navigation', { name: 'Application navigation' });
   await expect(navigation).toBeVisible();
+  await expect(navigation).toHaveCSS('width', '60px');
+  await navigation.getByRole('button', { name: 'Toggle navigation' }).click();
   await expect(navigation).toHaveCSS('width', '249px');
 
   for (const label of ['Home', 'Favorites', 'Recent', 'Workspaces', 'Modules']) {
@@ -22,7 +24,7 @@ test('renders the shared D365 navigation proportions', async ({ page }, testInfo
   const sectionLabels = ['Favorites', 'Recent', 'Workspaces', 'Modules'];
   for (const label of sectionLabels) {
     const row = navigation.getByText(label, { exact: true }).locator('..').locator('..');
-    await expect(row).toHaveCSS('height', '42px');
+    await expect(row).toHaveCSS('height', '52px');
   }
 
   await navigation.screenshot({ path: 'test-results/sidebar-navigation.png' });

@@ -1,9 +1,9 @@
 export const navigationTokens = {
   expandedWidth: 249,
-  collapsedWidth: 40,
-  headerHeight: 40,
-  itemHeight: 42,
-  iconSize: 18,
+  collapsedWidth: 60,
+  headerHeight: 50,
+  itemHeight: 52,
+  iconSize: 20,
   chevronSize: 17,
   horizontalPadding: 15,
   iconTextGap: 14,

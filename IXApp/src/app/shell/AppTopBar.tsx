@@ -7,6 +7,7 @@ import {
   IconButton,
   Box,
   Avatar,
+  InputBase,
   Tooltip,
   Badge,
   useMediaQuery,
@@ -26,7 +27,6 @@ import NotificationsIcon from '@mui/icons-material/NotificationsNoneOutlined';
 import SettingsIcon from '@mui/icons-material/Settings';
 import HelpIcon from '@mui/icons-material/HelpOutlined';
 import AccountIcon from '@mui/icons-material/AccountCircle';
-import FeedbackIcon from '@mui/icons-material/SentimentSatisfiedAltOutlined';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useTranslation } from 'react-i18next';
@@ -38,10 +38,10 @@ import {
   getModuleNavLinkPermission,
 } from '@app/configuration/navigation';
 import { LAYOUT } from '@app/configuration/constants';
-import { getRouteBreadcrumbs } from '@app/routes/routeMetadata';
 import { useAppStore } from '@app/store/useAppStore';
 import { topBarTokens as topBar } from './topBarTokens';
 import { useNotificationStore } from '@shared/services/notificationStore';
+import { getRouteBreadcrumbs } from '@app/routes/routeMetadata';
 
 // Static sx objects - moved outside render to prevent re-creation
 const appBarSx = {
@@ -179,7 +179,6 @@ export const AppTopBar: React.FC = memo(() => {
     .map((part) => part[0]?.toUpperCase())
     .join('');
   const breadcrumbs = getRouteBreadcrumbs(location.pathname).slice(1);
-
   const isHorizontal = navLayout === 'horizontal';
 
   return (
@@ -209,7 +208,7 @@ export const AppTopBar: React.FC = memo(() => {
           sx={{
             width: { sm: topBar.productWidth },
             height: topBar.height,
-            px: '25px',
+            px: '14px',
             display: { xs: 'none', sm: 'flex' },
             alignItems: 'center',
             flexShrink: 0,
@@ -221,15 +220,27 @@ export const AppTopBar: React.FC = memo(() => {
           </Typography>
         </Box>
 
-        {!isHorizontal && !isMobile && (
+        {!isHorizontal && !isMobile && breadcrumbs.length > 0 && (
           <Box
             component="nav"
             aria-label={t('common.breadcrumbs', 'Breadcrumbs')}
-            sx={{ display: 'flex', alignItems: 'center', minWidth: 0, px: '40px', gap: '11px' }}
+            sx={{
+              height: topBar.height,
+              display: 'flex',
+              alignItems: 'center',
+              minWidth: 0,
+              maxWidth: { md: 420, xl: 600 },
+              px: 2.5,
+              gap: 1,
+              flexShrink: 1,
+              overflow: 'hidden',
+            }}
           >
             {breadcrumbs.map((item, index) => (
               <React.Fragment key={`${item.labelKey}-${index}`}>
-                {index > 0 && <ChevronRightIcon sx={{ fontSize: 24, color: topBar.text }} />}
+                {index > 0 && (
+                  <ChevronRightIcon sx={{ fontSize: 23, color: topBar.text, flexShrink: 0 }} />
+                )}
                 <Typography
                   component={item.path ? 'button' : 'span'}
                   onClick={item.path ? () => navigate(item.path!) : undefined}
@@ -241,9 +252,11 @@ export const AppTopBar: React.FC = memo(() => {
                     p: 0,
                     color: topBar.text,
                     fontFamily: topBar.fontFamily,
-                    fontSize: topBar.fontSize,
+                    fontSize: 14,
                     fontWeight: 400,
                     cursor: item.path ? 'pointer' : 'default',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
                     '&:hover': item.path ? { textDecoration: 'underline' } : undefined,
                   }}
                 >
@@ -323,28 +336,68 @@ export const AppTopBar: React.FC = memo(() => {
           </Box>
         )}
 
-        <Box sx={{ flex: 1, minWidth: 8 }} />
+        <Box
+          sx={{
+            flex: 1,
+            minWidth: 8,
+            px: { xs: 1, md: 2 },
+            display: { xs: 'none', sm: 'flex' },
+            justifyContent: 'center',
+          }}
+        >
+          <Box
+            onClick={openCommandPalette}
+            sx={{
+              width: '100%',
+              maxWidth: topBar.searchWidth,
+              height: 40,
+              px: 2,
+              display: 'flex',
+              alignItems: 'center',
+              bgcolor: topBar.searchBackground,
+              borderRadius: '4px',
+              cursor: 'text',
+              '&:hover': { bgcolor: '#35517d' },
+            }}
+          >
+            <SearchIcon sx={{ color: '#ffffff', fontSize: 25, mr: 1.25 }} />
+            <InputBase
+              value=""
+              readOnly
+              placeholder={t('nav.global_search', 'Search for a page')}
+              inputProps={{ 'aria-label': t('nav.global_search', 'Search for a page') }}
+              sx={{
+                flex: 1,
+                color: '#ffffff',
+                fontFamily: topBar.fontFamily,
+                fontSize: 16,
+                '& input::placeholder': { color: '#ffffff', opacity: 1 },
+              }}
+            />
+          </Box>
+        </Box>
 
         {/* Action icons */}
         <Box sx={actionsSx}>
-          <Typography
-            noWrap
+          <Box
             sx={{
-              px: { xs: 1, md: 2 },
+              display: { xs: 'none', lg: 'flex' },
+              alignItems: 'center',
+              maxWidth: 307,
+              height: 40,
+              px: 1.25,
+              mr: 0.5,
+              bgcolor: '#f4f7fb',
+              border: '1px solid #a7b8d4',
+              borderRadius: '4px',
+              color: '#0b2f75',
               fontFamily: topBar.fontFamily,
-              fontSize: topBar.fontSize,
-              fontWeight: 600,
-              color: topBar.text,
             }}
           >
-            {currentCompany}
-          </Typography>
-
-          <Tooltip title={t('common.search', 'Search')}>
-            <IconButton size="small" onClick={openCommandPalette} sx={iconBtnSx}>
-              <SearchIcon sx={{ fontSize: 24 }} />
-            </IconButton>
-          </Tooltip>
+            <Typography noWrap sx={{ fontFamily: 'inherit', fontSize: 15, color: 'inherit' }}>
+              {currentCompany}{user?.defaultCompany && user.defaultCompany !== currentCompany ? ` | ${user.defaultCompany}` : ''}
+            </Typography>
+          </Box>
 
           {/* Notifications */}
           <Tooltip title={t('common.notifications', 'Notifications')}>
@@ -352,12 +405,6 @@ export const AppTopBar: React.FC = memo(() => {
               <Badge badgeContent={notificationCount} max={99} sx={badgeSx}>
                 <NotificationsIcon sx={{ fontSize: topBar.iconSize }} />
               </Badge>
-            </IconButton>
-          </Tooltip>
-
-          <Tooltip title={t('common.feedback', 'Feedback')}>
-            <IconButton size="small" sx={{ ...iconBtnSx, display: { xs: 'none', md: 'inline-flex' } }}>
-              <FeedbackIcon sx={{ fontSize: topBar.iconSize }} />
             </IconButton>
           </Tooltip>
 

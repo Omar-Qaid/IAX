@@ -178,6 +178,7 @@ const SidebarContent = React.memo(
           <IconButton
             size="small"
             onClick={onToggle}
+            aria-label={t('nav.toggle_navigation', 'Toggle navigation')}
             sx={{ width: 34, height: 34, color: isDark ? '#f3f2f1' : nav.icon, '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,.08)' : nav.hover } }}
           >
             <MenuIcon sx={{ fontSize: nav.iconSize }} />
@@ -186,6 +187,7 @@ const SidebarContent = React.memo(
             <IconButton
               size="small"
               onClick={onTogglePin}
+              aria-label={t('nav.toggle_pin', 'Toggle navigation pin')}
               sx={{
                 width: 28,
                 height: 28,

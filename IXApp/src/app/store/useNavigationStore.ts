@@ -36,8 +36,8 @@ interface NavigationState {
 export const useNavigationStore = create<NavigationState>()(
   persist(
     (set) => ({
-      sidebarOpen: true,
-      sidebarPinned: true,
+      sidebarOpen: false,
+      sidebarPinned: false,
       commandPaletteOpen: false,
       settingsPanelOpen: false,
       notificationDrawerOpen: false,
