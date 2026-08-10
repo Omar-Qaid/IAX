@@ -101,7 +101,12 @@ function DataGridInternal<T>({
     const handleAddRow = useCallback(() => {
         if (!masterForm) return;
         startAdd(onNewRow ? onNewRow() : {});
-    }, [masterForm, startAdd, onNewRow]);
+        focusedCellRef.current = { r: 0, c: 0 };
+        requestAnimationFrame(() => {
+            if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = 0;
+            gridBodyRef.current?.scrollToIndex(0);
+        });
+    }, [masterForm, startAdd, onNewRow, scrollContainerRef]);
 
     const handleRowDoubleClick = useCallback((row: T) => {
         if (masterForm) {
@@ -306,11 +311,13 @@ function DataGridInternal<T>({
         gridBodyRef.current?.scrollToIndex(targetR);
 
         if (selectionMode) {
-            if (targetR < processedRows.length) {
-                const targetRowId = getRowId(processedRows[targetR]);
-                handleSelectionChange([targetRowId]);
-            } else {
+            const targetsNewRow = isAddingNewRow && targetR === 0;
+            const processedRowIndex = isAddingNewRow ? targetR - 1 : targetR;
+            if (targetsNewRow) {
                 handleSelectionChange([NEW_ROW_ID]);
+            } else if (processedRowIndex >= 0 && processedRowIndex < processedRows.length) {
+                const targetRowId = getRowId(processedRows[processedRowIndex]);
+                handleSelectionChange([targetRowId]);
             }
         }
 

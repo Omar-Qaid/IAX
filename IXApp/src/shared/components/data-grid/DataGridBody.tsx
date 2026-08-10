@@ -77,11 +77,11 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>({
     }
   }, [selectionMode, onSelectionChange]);
 
-  // When masterForm is adding a new row, append a synthetic row at the end.
+  // New master-form records appear first, matching the D365 create workflow.
   const displayRows = useMemo((): T[] => {
     if (masterForm && editingRowId === NEW_ROW_ID) {
       const newRow = { ...editValues, id: NEW_ROW_ID } as unknown as T;
-      return [...rows, newRow];
+      return [newRow, ...rows];
     }
     return rows;
   }, [rows, masterForm, editingRowId, editValues]);
