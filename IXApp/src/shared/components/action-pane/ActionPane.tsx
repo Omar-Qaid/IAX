@@ -14,7 +14,7 @@ export const ActionPane: React.FC<ActionPaneProps> = ({ children, variant = 'def
       elevation={0}
       sx={{
         p: variant === 'flat' ? '4px 8px' : '6px 12px',
-        minHeight: variant === 'flat' ? 50 : undefined,
+        minHeight: variant === 'flat' ? d365.toolbarHeight : undefined,
         boxSizing: 'border-box',
         mx: 0,
         mt: 0,
