@@ -1,49 +1,77 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
-import type { DetailSectionConfig, DetailValues, EnterpriseListDetailsConfig } from '@patterns/list-details/types';
+import type { DetailSectionConfig, DetailValue, DetailValues, EnterpriseListDetailsConfig } from '@patterns/list-details/types';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import { currencyApi, type CurrencyRecord } from '../api/currencyApi';
 
-interface CurrencyDetails { id: string; code: string; name: string; symbol: string; arabicName: string; referenceCurrency: boolean; values: DetailValues }
-const defaults: DetailValues = { conversion: false, prefix: '', suffix: '', generalRounding: 0, salesRounding: 0, salesMethod: 'normal', purchaseRounding: 0, purchaseMethod: 'normal', priceRounding: 0, priceMethod: 'normal', gender: 'masculine', exchangeRateLimit: 0, satDecimals: 0 };
-const INITIAL_CURRENCIES: CurrencyDetails[] = [
-  ['AED', 'UAE Dirham', 'د.إ', 'درهم إماراتي'], ['EUR', 'Euro', '€', 'يورو أوروبي'], ['GBP', 'Pound Sterling', '£', 'جنيه إسترليني'],
-  ['QAR', 'Qatari Riyal', 'ر.ق', 'ريال قطري'], ['SAR', 'Saudi Riyal', 'ر.س', 'ريال سعودي'], ['USD', 'US Dollar', '$', 'دولار أمريكي'],
-].map(([code, name, symbol, arabicName], index) => ({ id: `currency-${index + 1}`, code, name, symbol, arabicName, referenceCurrency: false, values: { ...defaults } }));
+const emptyCurrency = (): CurrencyRecord => ({
+  id: `new-${crypto.randomUUID()}`, recId: 0, currencyCode: '', currencyCodeIso: '', txt: '', symbol: '',
+  isEuro: 0, roundOffSales: 0, roundOffTypeSales: 0, roundOffPurch: 0, roundOffTypePurch: 0,
+  roundOffPrice: 0, roundOffTypePrice: 0, roundingPrecision: 0, ltmRoundOffLineAmount: 0,
+  ltmRoundOffTypeLineAmount: 0, isActive: true, rowVersion: null, recVersion: 1, dataAreaId: 'dat',
+});
+
+const numberValue = (value: DetailValue): number => Number(value) || 0;
 
 export function CurrencyPage(): React.ReactElement {
   const { t } = useAppTranslation();
-  const [records, setRecords] = useState(INITIAL_CURRENCIES);
-  const normalOption = useMemo(() => [{ value: 'normal', label: t('currencyDetails.options.normal') }], [t]);
+  const roundOffOptions = useMemo(() => [
+    { value: '0', label: t('currencyDetails.options.normal') },
+    { value: '1', label: 'Round down' },
+    { value: '2', label: 'Round up' },
+  ], [t]);
   const sections = useMemo<DetailSectionConfig[]>(() => [
-    { id: 'converter', title: t('currencyDetails.sections.converter'), groups: [
-      { id: 'conversion', title: t('currencyDetails.groups.numericConversion'), fields: [{ name: 'conversion', label: t('currencyDetails.fields.conversion'), type: 'boolean' }] },
-      { id: 'affixes', fields: [{ name: 'prefix', label: t('currencyDetails.fields.prefix') }, { name: 'suffix', label: t('currencyDetails.fields.suffix') }] },
-    ] },
-    { id: 'rounding', title: t('currencyDetails.sections.rounding'), groups: [
-      { id: 'general', title: t('currencyDetails.groups.general'), fields: [{ name: 'generalRounding', label: t('currencyDetails.fields.generalRounding'), type: 'number' }] },
-      { id: 'sales', title: t('currencyDetails.groups.salesOrders'), fields: [{ name: 'salesRounding', label: t('currencyDetails.fields.roundingRule'), type: 'number' }, { name: 'salesMethod', label: t('currencyDetails.fields.roundingMethod'), type: 'select', options: normalOption }] },
-      { id: 'purchase', title: t('currencyDetails.groups.purchaseOrders'), fields: [{ name: 'purchaseRounding', label: t('currencyDetails.fields.roundingRule'), type: 'number' }, { name: 'purchaseMethod', label: t('currencyDetails.fields.roundingMethod'), type: 'select', options: normalOption }] },
-      { id: 'prices', title: t('currencyDetails.groups.prices'), fields: [{ name: 'priceRounding', label: t('currencyDetails.fields.roundingRule'), type: 'number' }, { name: 'priceMethod', label: t('currencyDetails.fields.roundingMethod'), type: 'select', options: normalOption }] },
-    ] },
-    { id: 'gender', title: t('currencyDetails.sections.gender'), groups: [{ id: 'genderValue', fields: [{ name: 'gender', label: t('currencyDetails.fields.gender'), type: 'select', options: [{ value: 'masculine', label: t('currencyDetails.options.masculine') }] }] }] },
-    { id: 'electronicInvoices', title: t('currencyDetails.sections.electronicInvoices'), groups: [
-      { id: 'exchange', fields: [{ name: 'exchangeRateLimit', label: t('currencyDetails.fields.exchangeRateLimit'), type: 'number' }] },
-      { id: 'sat', fields: [{ name: 'satDecimals', label: t('currencyDetails.fields.satDecimals'), type: 'number' }] },
-    ] },
-  ], [normalOption, t]);
-  const textHeader = (id: 'code' | 'name' | 'symbol' | 'arabicName') => ({ id, label: t(`currencyDetails.fields.${id}`), getValue: (record: CurrencyDetails) => record[id], setValue: (record: CurrencyDetails, value: string | number | boolean) => ({ ...record, [id]: String(value) }) });
-  const config: EnterpriseListDetailsConfig<CurrencyDetails> = {
-    dataSource: { type: 'controlled', records, onRecordsChange: setRecords },
-    createRecord: () => ({ id: `currency-${Date.now()}`, code: '', name: '', symbol: '', arabicName: '', referenceCurrency: false, values: { ...defaults } }),
-    getPrimaryText: (record) => record.code, getSecondaryText: (record) => record.arabicName,
-    matchesSearch: (record, query) => `${record.code} ${record.name} ${record.arabicName}`.toLocaleLowerCase().includes(query.toLocaleLowerCase()),
-    getValues: (record) => record.values, setValues: (record, values) => ({ ...record, values }),
-    headerFields: [textHeader('code'), textHeader('name'), textHeader('symbol'), textHeader('arabicName'), { id: 'referenceCurrency', label: t('currencyDetails.fields.referenceCurrency'), type: 'boolean', getValue: (record) => record.referenceCurrency, setValue: (record, value) => ({ ...record, referenceCurrency: Boolean(value) }) }],
+    {
+      id: 'rounding', title: t('currencyDetails.sections.rounding'), groups: [
+        { id: 'general', title: t('currencyDetails.groups.general'), fields: [{ name: 'roundingPrecision', label: t('currencyDetails.fields.generalRounding'), type: 'number' }] },
+        { id: 'sales', title: t('currencyDetails.groups.salesOrders'), fields: [{ name: 'roundOffSales', label: t('currencyDetails.fields.roundingRule'), type: 'number' }, { name: 'roundOffTypeSales', label: t('currencyDetails.fields.roundingMethod'), type: 'select', options: roundOffOptions }] },
+        { id: 'purchase', title: t('currencyDetails.groups.purchaseOrders'), fields: [{ name: 'roundOffPurch', label: t('currencyDetails.fields.roundingRule'), type: 'number' }, { name: 'roundOffTypePurch', label: t('currencyDetails.fields.roundingMethod'), type: 'select', options: roundOffOptions }] },
+        { id: 'prices', title: t('currencyDetails.groups.prices'), fields: [{ name: 'roundOffPrice', label: t('currencyDetails.fields.roundingRule'), type: 'number' }, { name: 'roundOffTypePrice', label: t('currencyDetails.fields.roundingMethod'), type: 'select', options: roundOffOptions }] },
+        { id: 'lineAmount', title: 'Line amount', fields: [{ name: 'ltmRoundOffLineAmount', label: t('currencyDetails.fields.roundingRule'), type: 'number' }, { name: 'ltmRoundOffTypeLineAmount', label: t('currencyDetails.fields.roundingMethod'), type: 'select', options: roundOffOptions }] },
+      ],
+    },
+  ], [roundOffOptions, t]);
+
+  const config: EnterpriseListDetailsConfig<CurrencyRecord> = {
+    dataSource: {
+      type: 'remote', key: 'foundation-currencies',
+      load: (signal) => currencyApi.list(signal), create: currencyApi.create, update: currencyApi.update, delete: currencyApi.delete,
+    },
+    createRecord: emptyCurrency,
+    getPrimaryText: (record) => record.currencyCode,
+    getSecondaryText: (record) => record.txt,
+    matchesSearch: (record, query) => `${record.currencyCode} ${record.currencyCodeIso} ${record.txt}`.toLocaleLowerCase().includes(query.toLocaleLowerCase()),
+    getValues: (record): DetailValues => ({
+      roundingPrecision: record.roundingPrecision, roundOffSales: record.roundOffSales,
+      roundOffTypeSales: String(record.roundOffTypeSales), roundOffPurch: record.roundOffPurch,
+      roundOffTypePurch: String(record.roundOffTypePurch), roundOffPrice: record.roundOffPrice,
+      roundOffTypePrice: String(record.roundOffTypePrice), ltmRoundOffLineAmount: record.ltmRoundOffLineAmount,
+      ltmRoundOffTypeLineAmount: String(record.ltmRoundOffTypeLineAmount),
+    }),
+    setValues: (record, values) => ({
+      ...record, roundingPrecision: numberValue(values.roundingPrecision), roundOffSales: numberValue(values.roundOffSales),
+      roundOffTypeSales: numberValue(values.roundOffTypeSales), roundOffPurch: numberValue(values.roundOffPurch),
+      roundOffTypePurch: numberValue(values.roundOffTypePurch), roundOffPrice: numberValue(values.roundOffPrice),
+      roundOffTypePrice: numberValue(values.roundOffTypePrice), ltmRoundOffLineAmount: numberValue(values.ltmRoundOffLineAmount),
+      ltmRoundOffTypeLineAmount: numberValue(values.ltmRoundOffTypeLineAmount),
+    }),
+    headerFields: [
+      { id: 'currencyCode', label: t('currencyDetails.fields.code'), getValue: (record) => record.currencyCode, setValue: (record, value) => ({ ...record, currencyCode: String(value).toUpperCase() }) },
+      { id: 'currencyCodeIso', label: 'ISO code', getValue: (record) => record.currencyCodeIso, setValue: (record, value) => ({ ...record, currencyCodeIso: String(value).toUpperCase() }) },
+      { id: 'txt', label: t('currencyDetails.fields.name'), getValue: (record) => record.txt, setValue: (record, value) => ({ ...record, txt: String(value) }) },
+      { id: 'symbol', label: t('currencyDetails.fields.symbol'), getValue: (record) => record.symbol, setValue: (record, value) => ({ ...record, symbol: String(value) }) },
+      { id: 'isEuro', label: 'Euro currency', type: 'boolean', getValue: (record) => record.isEuro === 1, setValue: (record, value) => ({ ...record, isEuro: value ? 1 : 0 }) },
+    ],
     sections,
     permissions: { view: 'currency.view', create: 'currency.manage', edit: 'currency.manage', delete: 'currency.manage' },
-    validate: (record) => ({ ...(!record.code.trim() ? { code: t('validation.required', { field: t('currencyDetails.fields.code') }) } : {}), ...(!record.name.trim() ? { name: t('validation.required', { field: t('currencyDetails.fields.name') }) } : {}) }),
-    advancedFilter: { fieldLabel: t('currencyDetails.fields.code'), getValue: (record) => record.code, matches: (record, value) => record.code.toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()) },
+    validate: (record) => ({
+      ...(!record.currencyCode.trim() ? { currencyCode: t('validation.required', { field: t('currencyDetails.fields.code') }) } : {}),
+      ...(!record.currencyCodeIso.trim() ? { currencyCodeIso: t('validation.required', { field: 'ISO code' }) } : {}),
+      ...(!record.txt.trim() ? { txt: t('validation.required', { field: t('currencyDetails.fields.name') }) } : {}),
+    }),
+    advancedFilter: { fieldLabel: t('currencyDetails.fields.code'), getValue: (record) => record.currencyCode, matches: (record, value) => record.currencyCode.toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()) },
     commands: [{ id: 'options', label: t('customerCommands.options') }],
   };
+
   return <ListDetailsPage variant="enterprise" title={t('pages.currencies.title')} config={config} />;
 }
