@@ -98,6 +98,7 @@ const SidebarContent = React.memo(
     const toggleFavorite = useNavigationStore((s) => s.toggleFavorite);
     const addRecentPage = useNavigationStore((s) => s.addRecentPage);
     const { user, hasPermission } = useAuth();
+    const navColor = usePreferenceStore((s) => s.navColor);
     const isAdmin = user?.roles.includes('SystemAdmin') ?? false;
 
     const hasModuleAccess = (moduleId: string): boolean => {
@@ -151,8 +152,9 @@ const SidebarContent = React.memo(
 
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
-    const sidebarBg = isDark ? '#201f1e' : nav.background;
-    const borderRightColor = isDark ? '#323130' : nav.border;
+    const apparent = navColor === 'apparent';
+    const sidebarBg = apparent ? '#061735' : isDark ? '#201f1e' : nav.background;
+    const borderRightColor = apparent ? '#31415c' : isDark ? '#323130' : nav.border;
 
     return (
       <Box
@@ -163,6 +165,7 @@ const SidebarContent = React.memo(
           bgcolor: sidebarBg,
           borderRight: '1px solid',
           borderColor: borderRightColor,
+          colorScheme: apparent ? 'dark' : undefined,
         }}
       >
         {/* Hamburger + pin row */}

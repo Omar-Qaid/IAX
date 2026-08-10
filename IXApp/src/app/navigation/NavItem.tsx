@@ -11,6 +11,7 @@ import {
 import FavoritesIcon from '@mui/icons-material/StarBorder';
 import StarFilledIcon from '@mui/icons-material/Star';
 import { navigationTokens as nav } from './navigationTokens';
+import { usePreferenceStore } from '@app/store/usePreferenceStore';
 
 export interface NavItemProps {
   icon?: React.ReactNode;
@@ -40,12 +41,14 @@ export const NavItem = React.memo<NavItemProps>(
   }) => {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
+    const apparent = usePreferenceStore((s) => s.navColor === 'apparent');
+    const useDarkNavigation = isDark || apparent;
 
     // Color definitions
-    const itemColor = active ? (isDark ? '#ffffff' : nav.text) : isDark ? '#f3f2f1' : nav.text;
-    const iconColor = active ? (isDark ? '#ffffff' : nav.icon) : isDark ? '#c8c6c4' : nav.icon;
-    const hoverBgColor = isDark ? 'rgba(255,255,255,0.08)' : nav.hover;
-    const activeBgColor = active ? (isDark ? 'rgba(255,255,255,0.12)' : nav.selected) : 'transparent';
+    const itemColor = active ? (useDarkNavigation ? '#ffffff' : nav.text) : useDarkNavigation ? '#f3f2f1' : nav.text;
+    const iconColor = active ? (useDarkNavigation ? '#ffffff' : nav.icon) : useDarkNavigation ? '#c8c6c4' : nav.icon;
+    const hoverBgColor = useDarkNavigation ? 'rgba(255,255,255,0.08)' : nav.hover;
+    const activeBgColor = active ? (useDarkNavigation ? 'rgba(255,255,255,0.12)' : nav.selected) : 'transparent';
 
     return (
       <ListItemButton

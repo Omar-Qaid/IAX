@@ -24,17 +24,17 @@ import { useNavigationStore } from '@app/store/useNavigationStore';
 import { usePreferenceStore } from '@app/store/usePreferenceStore';
 import { LAYOUT } from '@app/configuration/constants';
 
-// Temporary mock presets until we extend createAppTheme fully.
 const COLOR_PRESETS: Record<string, { primary: { main: string } }> = {
-    default: { primary: { main: '#6366f1' } },
-    emerald: { primary: { main: '#10b981' } },
-    rose: { primary: { main: '#f43f5e' } },
-    amber: { primary: { main: '#f59e0b' } },
-    cyan: { primary: { main: '#06b6d4' } },
-    violet: { primary: { main: '#8b5cf6' } }
+    default: { primary: { main: '#005a9e' } },
+    emerald: { primary: { main: '#107c41' } },
+    rose: { primary: { main: '#c4314b' } },
+    amber: { primary: { main: '#d83b01' } },
+    cyan: { primary: { main: '#0078d4' } },
+    violet: { primary: { main: '#5c2d91' } }
 };
 
 const FONT_OPTIONS = [
+    { label: 'Segoe UI', value: '"Segoe UI", "Segoe UI Web (West European)", Arial, sans-serif' },
     { label: 'Inter', value: 'Inter, sans-serif' },
     { label: 'Roboto', value: 'Roboto, sans-serif' },
     { label: 'Outfit', value: 'Outfit, sans-serif' },
@@ -440,7 +440,7 @@ export const AppSettingsDrawer: React.FC = () => {
                     <Slider
                         value={fontSize}
                         onChange={(_, v) => setFontSize(v as number)}
-                        min={12}
+                        min={11}
                         max={20}
                         step={1}
                         valueLabelDisplay="on"

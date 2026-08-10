@@ -3,6 +3,7 @@ import { Box, Typography, Collapse, useTheme } from '@mui/material';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { navigationTokens as nav } from './navigationTokens';
+import { usePreferenceStore } from '@app/store/usePreferenceStore';
 
 export interface NavSectionProps {
   label: string;
@@ -17,10 +18,12 @@ export const NavSection = React.memo<NavSectionProps>(
   ({ label, icon, collapsed = false, expanded = true, onToggle, children }) => {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
+    const apparent = usePreferenceStore((s) => s.navColor === 'apparent');
+    const useDarkNavigation = isDark || apparent;
 
-    const headerColor = isDark ? '#f3f2f1' : nav.text;
-    const iconColor = isDark ? '#c8c6c4' : nav.icon;
-    const headerHoverBg = isDark ? 'rgba(255,255,255,0.08)' : nav.hover;
+    const headerColor = useDarkNavigation ? '#f3f2f1' : nav.text;
+    const iconColor = useDarkNavigation ? '#c8c6c4' : nav.icon;
+    const headerHoverBg = useDarkNavigation ? 'rgba(255,255,255,0.08)' : nav.hover;
 
     if (collapsed) {
       // In collapsed state, show only the section header icon (no children)

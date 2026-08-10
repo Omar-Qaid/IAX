@@ -36,17 +36,22 @@ const getInitialThemeMode = (): ThemeMode => {
   return saved === 'dark' ? 'dark' : 'light';
 };
 
-const initialState = {
-  themeMode: getInitialThemeMode(),
+const defaultPreferences = {
+  themeMode: 'light' as ThemeMode,
   density: 'compact' as AppDensity,
   contrast: false,
   rtl: false,
   navLayout: 'vertical' as const,
   navColor: 'integrate' as const,
   colorPreset: 'default',
-  fontFamily: 'Inter',
-  fontSize: 14,
+  fontFamily: '"Segoe UI", "Segoe UI Web (West European)", Arial, sans-serif',
+  fontSize: 13,
   zoom: 100,
+};
+
+const initialState = {
+  ...defaultPreferences,
+  themeMode: getInitialThemeMode(),
 };
 
 export const usePreferenceStore = create<PreferenceState>()(persist((set) => ({
@@ -72,8 +77,8 @@ export const usePreferenceStore = create<PreferenceState>()(persist((set) => ({
   setFontSize: (fontSize) => set({ fontSize }),
   setZoom: (zoom) => set({ zoom }),
   resetSettings: () => {
-    localStorage.setItem(STORAGE_KEYS.THEME_MODE, initialState.themeMode);
-    set(initialState);
+    localStorage.setItem(STORAGE_KEYS.THEME_MODE, defaultPreferences.themeMode);
+    set(defaultPreferences);
   },
 }), {
   name: STORAGE_KEYS.PREFERENCES,
