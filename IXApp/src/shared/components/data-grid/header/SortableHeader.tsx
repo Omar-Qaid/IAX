@@ -57,7 +57,7 @@ export function SortableHeader<T>({
         display: 'flex',
         flexDirection: 'column',
         boxSizing: 'border-box',
-        backgroundColor: theme.palette.action.hover,
+        backgroundColor: '#ffffff',
         borderRight: showColumnBorders ? `1px solid ${theme.palette.divider}` : 'none',
         width: column.width || 150,
         minWidth: column.width || 150,
@@ -104,7 +104,8 @@ export function SortableHeader<T>({
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
-            fontSize: '0.75rem',
+            fontFamily: '"Segoe UI", Arial, sans-serif',
+            fontSize: 14,
             letterSpacing: 0,
           }}
         >

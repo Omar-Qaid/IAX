@@ -30,11 +30,11 @@ export const ActionPaneButton: React.FC<ActionPaneButtonProps> = ({
       disabled={disabled || loading}
       sx={{
         color: 'text.primary',
-        minHeight: 30,
+        minHeight: 38,
         fontFamily: d365.fontFamily,
         fontWeight: 400,
-        fontSize: d365.fontSize,
-        px: 1,
+        fontSize: 16,
+        px: 1.25,
         py: 0.25,
         borderRadius: d365.radius,
         border: '1px solid transparent',
@@ -42,6 +42,7 @@ export const ActionPaneButton: React.FC<ActionPaneButtonProps> = ({
           bgcolor: (t) => (t.palette.mode === 'light' ? '#e0e0e0' : '#333333'),
           borderColor: 'divider',
         },
+        '& .MuiButton-startIcon': { color: '#315efb', marginRight: '6px' },
         '&.Mui-disabled': {
           color: 'text.disabled',
         },

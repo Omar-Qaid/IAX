@@ -123,7 +123,7 @@ export const GridRow = memo(function GridRowInner<T>({
         display: 'flex',
         cursor: isEditing ? 'default' : onRowClick ? 'pointer' : 'default',
         bgcolor: editingBg ?? rowBg,
-        boxShadow: isSelected ? `inset 3px 0 0 ${d365.selectedBar}` : 'none',
+        boxShadow: isSelected ? `inset 4px 0 0 #315efb` : 'none',
         transition: theme.transitions.create(['background-color', 'box-shadow'], {
           duration: theme.transitions.duration.shortest,
         }),

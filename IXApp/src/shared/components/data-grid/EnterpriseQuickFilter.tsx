@@ -14,7 +14,7 @@ export const EnterpriseQuickFilter: React.FC<EnterpriseQuickFilterProps> = ({ la
     onChange={(event) => onChange(event.target.value)}
     placeholder={label}
     aria-label={label}
-    sx={{ width: { xs: '100%', sm: 208 }, px: { xs: 0.5, sm: 1 }, pb: 1, '& .MuiOutlinedInput-root': { height: 29, borderRadius: 0.5, bgcolor: 'background.paper', fontSize: '0.75rem' }, '& .MuiOutlinedInput-notchedOutline': { borderColor: 'text.secondary' } }}
-    slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchIcon sx={{ fontSize: 15, color: 'text.secondary' }} /></InputAdornment> } }}
+    sx={{ width: { xs: '100%', sm: 315 }, px: { xs: 1, sm: 2.5 }, pb: 1.25, '& .MuiOutlinedInput-root': { width: 275, height: 37, borderRadius: '4px', bgcolor: '#ffffff', fontFamily: '"Segoe UI", Arial, sans-serif', fontSize: 16 }, '& .MuiOutlinedInput-notchedOutline': { borderColor: '#605e5c' }, '& input::placeholder': { color: '#8a8886', opacity: 1 } }}
+    slotProps={{ input: { startAdornment: <InputAdornment position="start"><SearchIcon sx={{ fontSize: 18, color: '#605e5c' }} /></InputAdornment> } }}
   />
 );

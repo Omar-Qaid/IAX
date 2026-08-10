@@ -29,7 +29,7 @@ export function PinnedHeaderCell<T>({
   onFilterIconClick,
   onMenuOpen,
   onResizeStart,
-  showColumnBorders: _showColumnBorders = false,
+  showColumnBorders = false,
   hideFilterRow = false,
   hideColumnMenu = false,
 }: PinnedHeaderCellProps<T>) {
@@ -40,7 +40,7 @@ export function PinnedHeaderCell<T>({
         display: 'flex',
         flexDirection: 'column',
         boxSizing: 'border-box',
-        bgcolor: (theme) => theme.palette.action.hover,
+        bgcolor: '#ffffff',
         width: column.width || 150,
         minWidth: column.width || 150,
         maxWidth: column.width || 150,
@@ -50,8 +50,8 @@ export function PinnedHeaderCell<T>({
         flexShrink: 0,
         flexGrow: 0,
         ...(side === 'left'
-          ? { left: offset, borderRight: (theme) => `1px solid ${theme.palette.divider}` }
-          : { right: offset, borderLeft: (theme) => `1px solid ${theme.palette.divider}` }),
+          ? { left: offset, borderRight: (theme) => showColumnBorders ? `1px solid ${theme.palette.divider}` : 'none' }
+          : { right: offset, borderLeft: (theme) => showColumnBorders ? `1px solid ${theme.palette.divider}` : 'none' }),
       }}
     >
       {/* Name row */}
@@ -74,7 +74,8 @@ export function PinnedHeaderCell<T>({
           sx={{
             flexGrow: 1,
             fontWeight: 600,
-            fontSize: '0.75rem',
+            fontFamily: '"Segoe UI", Arial, sans-serif',
+            fontSize: 14,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',

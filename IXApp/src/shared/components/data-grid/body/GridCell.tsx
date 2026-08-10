@@ -50,8 +50,8 @@ const GridCellInternal = <T,>({
           zIndex: 2,
           bgcolor: 'inherit',
           ...(position === 'left'
-            ? { left: offset, boxShadow: `1px 0 0 ${theme.palette.divider}` }
-            : { right: offset, boxShadow: `-1px 0 0 ${theme.palette.divider}` }),
+            ? { left: offset, boxShadow: showColumnBorders ? `1px 0 0 ${theme.palette.divider}` : 'none' }
+            : { right: offset, boxShadow: showColumnBorders ? `-1px 0 0 ${theme.palette.divider}` : 'none' }),
         }),
         '&:focus': {
           outline: `1px solid ${theme.palette.primary.main}`,

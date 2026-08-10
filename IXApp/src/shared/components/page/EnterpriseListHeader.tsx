@@ -9,8 +9,8 @@ export interface EnterpriseListHeaderProps {
 }
 
 export const EnterpriseListHeader: React.FC<EnterpriseListHeaderProps> = ({ contextLabel, viewLabel, onViewClick }) => (
-  <Box sx={{ px: { xs: 0.5, sm: 1 }, pt: 0.25, pb: 1 }}>
-    <Typography sx={{ color: 'text.primary', fontSize: '0.75rem', lineHeight: 1.5 }}>
+  <Box sx={{ px: { xs: 1, sm: 2.5 }, pt: 0.25, pb: 1.75, fontFamily: '"Segoe UI", Arial, sans-serif' }}>
+    <Typography sx={{ color: '#1b1b1b', fontFamily: 'inherit', fontSize: 16, lineHeight: 1.5 }}>
       {contextLabel}
     </Typography>
     <ButtonBase
@@ -18,10 +18,10 @@ export const EnterpriseListHeader: React.FC<EnterpriseListHeaderProps> = ({ cont
       disableRipple={!onViewClick}
       sx={{ alignItems: 'center', borderRadius: 0.5, cursor: onViewClick ? 'pointer' : 'default' }}
     >
-      <Typography component="h1" sx={{ fontSize: { xs: '1.125rem', sm: '1.375rem' }, fontWeight: 600, lineHeight: 1.35 }}>
+      <Typography component="h1" sx={{ fontFamily: 'inherit', fontSize: { xs: 24, sm: 29 }, color: '#1b1b1b', fontWeight: 600, lineHeight: 1.3 }}>
         {viewLabel}
       </Typography>
-      <KeyboardArrowDownIcon sx={{ ml: 0.25, fontSize: 17, color: 'text.secondary' }} />
+      <KeyboardArrowDownIcon sx={{ ml: 0.25, fontSize: 20, color: '#1b1b1b' }} />
     </ButtonBase>
   </Box>
 );

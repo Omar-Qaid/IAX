@@ -5,12 +5,14 @@ import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { queryClient } from '@core/api/queryClient';
 import { useNotifications } from '@shared/hooks/useNotifications';
 import { exchangeRateTypeApi, type ExchangeRateTypeRecord } from '../api/exchangeRateTypeApi';
+import { useNavigate } from 'react-router-dom';
 
 const queryKey = ['simple-list', 'foundation-exchange-rate-types'] as const;
 
 export function ExchangeRateTypePage(): React.ReactElement {
   const { t, currentLanguage } = useAppTranslation();
   const { notifyError, notifySuccess } = useNotifications();
+  const navigate = useNavigate();
   const columns = useMemo<ColumnDef<ExchangeRateTypeRecord>[]>(() => [
     { field: 'type', headerName: 'exchangeRateTypes.fields.type', width: 150, pinned: 'left', editable: true },
     { field: 'name', headerName: 'fields.name', minWidth: 240, flex: 1, editable: true },
@@ -21,6 +23,8 @@ export function ExchangeRateTypePage(): React.ReactElement {
     filterLabel: t('actions.filter'), informationLabel: t('common.information'), searchMode: 'quick',
     searchFields: [{ field: 'type', label: t('exchangeRateTypes.fields.type') }, { field: 'name', label: t('fields.name') }],
     locale: currentLanguage.code,
+    backCommand: { label: t('actions.back', 'Back'), onClick: () => navigate(-1) },
+    showSearchCommand: true,
     crud: {
       editLabel: t('actions.edit'), newLabel: t('actions.new'), deleteLabel: t('actions.delete'),
       editPermission: 'currency.manage', newPermission: 'currency.manage', deletePermission: 'currency.manage',
@@ -40,7 +44,7 @@ export function ExchangeRateTypePage(): React.ReactElement {
   };
   return <SimpleListPage variant="enterprise" title={t('pages.exchangeRateTypes.title')} enterpriseConfig={config}
     dataSource={{ type: 'remote', key: 'foundation-exchange-rate-types', load: (signal) => exchangeRateTypeApi.list(signal) }} columns={columns} dataGridProps={{
-    storageKey: 'foundation.exchange-rate-types.reference-view', masterForm: true, hideSidebar: false,
+    storageKey: 'foundation.exchange-rate-types.reference-view', masterForm: true, hideSidebar: false, rowHeight: 42, headerHeight: 40,
     onNewRow: () => ({ id: `new-${crypto.randomUUID()}`, recId: 0, type: '', name: '', isActive: true, rowVersion: null, recVersion: 1, dataAreaId: 'dat' }),
     onRowSave: async (values, isNew) => {
       const record = values as ExchangeRateTypeRecord;

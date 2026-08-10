@@ -225,7 +225,7 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>({
       const result = col.renderCell({ row, value: getNestedValue(row, col.field as string), rowIndex });
       if (typeof result === 'string' || typeof result === 'number') {
         return (
-          <Typography variant="body2" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.75rem', color: 'text.primary' }}>
+          <Typography variant="body2" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: '"Segoe UI", Arial, sans-serif', fontSize: 15, color: '#323130' }}>
             {result}
           </Typography>
         );
@@ -249,7 +249,7 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>({
     }
 
     return (
-      <Typography variant="body2" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.75rem', color: 'text.primary' }}>
+      <Typography variant="body2" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: '"Segoe UI", Arial, sans-serif', fontSize: 15, color: '#323130' }}>
         {val != null ? String(val) : ''}
       </Typography>
     );

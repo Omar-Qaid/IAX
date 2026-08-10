@@ -31,6 +31,16 @@ vi.mock('@modules/finance/foundation/api/currencyApi', () => ({
   },
 }));
 
+vi.mock('@modules/finance/foundation/api/exchangeRateTypeApi', () => ({
+  exchangeRateTypeApi: {
+    list: vi.fn().mockResolvedValue([
+      { id: '1', recId: 1, type: 'Average', name: 'Default average rate', isActive: true, rowVersion: null, recVersion: 1, dataAreaId: 'dat' },
+      { id: '2', recId: 2, type: 'Budget', name: 'Default budget rate', isActive: true, rowVersion: null, recVersion: 1, dataAreaId: 'dat' },
+    ]),
+    create: vi.fn(), update: vi.fn(), delete: vi.fn(),
+  },
+}));
+
 describe('representative enterprise pages', () => {
   it('renders the workspace dashboard indicators', () => {
     render(<DashboardPage />);
@@ -165,10 +175,10 @@ describe('representative enterprise pages', () => {
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDefined();
   });
 
-  it('renders exchange rate types through the generic simple-list pattern', () => {
+  it('renders exchange rate types through the generic simple-list pattern', async () => {
     render(<ExchangeRateTypePage />);
     expect(screen.getByText('Exchange rate types')).toBeDefined();
-    expect(screen.getByText('Default average rate')).toBeDefined();
+    expect(await screen.findByText('Default average rate')).toBeDefined();
     expect(screen.getByText('Default budget rate')).toBeDefined();
     expect(screen.getByRole('button', { name: 'Exchange rates' })).toBeDefined();
     act(() => fireEvent.click(screen.getByRole('button', { name: 'Edit' })));

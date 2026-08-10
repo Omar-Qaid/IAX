@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, type SxProps, type Theme } from '@mui/material';
 import { PageContainer } from '@shared/components/page/PageContainer';
 import { PageHeader } from '@shared/components/page/PageHeader';
@@ -22,6 +22,8 @@ import type { SimpleListDataSource } from './types';
 import { useSimpleListDataSource } from './useSimpleListDataSource';
 import { ConfirmationDialog } from '@shared/components/dialogs/ConfirmationDialog';
 import { useUnsavedChanges } from '@shared/hooks/useUnsavedChanges';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import SearchIcon from '@mui/icons-material/Search';
 
 export type SimpleListGridProps<T> = Omit<DataGridProps<T>, 'rows' | 'columns'>;
 
@@ -92,6 +94,8 @@ export interface EnterpriseListConfig<T> {
   advancedFilterOpenOnLoad?: boolean;
   informationOpenOnLoad?: boolean;
   onReset?: () => void;
+  backCommand?: { label: string; onClick: () => void };
+  showSearchCommand?: boolean;
 }
 
 export interface SimpleListPageProps<T extends { id: string } = { id: string }> {
@@ -136,6 +140,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
   const initialRow = enterpriseConfig?.initialSelection === 'none' ? null : (rows[0] ?? null);
   const [selectedIds, setSelectedIds] = useState<(string | number)[]>(initialRow ? [getRowId(initialRow)] : []);
   const [selectedRow, setSelectedRow] = useState<T | null>(initialRow);
+  const initialSelectionApplied = useRef(Boolean(initialRow));
   const [query, setQuery] = useState('');
   const [searchField, setSearchField] = useState<string>(enterpriseConfig?.defaultSearchField ?? enterpriseConfig?.searchFields[0]?.field ?? '');
   const [quickFilterVisible, setQuickFilterVisible] = useState(enterpriseConfig?.showFilterOnLoad ?? true);
@@ -147,6 +152,14 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
   const [isEditing, setIsEditing] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<T[]>([]);
   useUnsavedChanges(isEditing, t('messages.unsavedChanges', 'You have unsaved changes.'));
+
+  useEffect(() => {
+    if (initialSelectionApplied.current || enterpriseConfig?.initialSelection === 'none' || rows.length === 0) return;
+    const firstRow = rows[0];
+    setSelectedRow(firstRow);
+    setSelectedIds([getRowId(firstRow)]);
+    initialSelectionApplied.current = true;
+  }, [enterpriseConfig?.initialSelection, getRowId, rows]);
 
   const processedRows = useMemo(() => {
     if (!enterpriseConfig) return rows;
@@ -222,6 +235,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
       hideInlineEditActions: dataGridProps.hideInlineEditActions ?? true,
     } : { ...dataGridProps, rows, columns };
     const generatedActionPane = config && <>
+      {config.backCommand && <ActionPaneGroup><ActionPaneButton label={config.backCommand.label} icon={<ArrowBackIcon sx={{ fontSize: 22 }} />} onClick={config.backCommand.onClick} /></ActionPaneGroup>}
       <EnterpriseCrudActions
         editLabel={config.crud.editLabel}
         newLabel={config.crud.newLabel}
@@ -241,6 +255,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
         onCancel={() => gridRef.current?.cancelEdit()}
       />
       {config.commands && <ActionPaneGroup>{config.commands.map((command) => <ActionPaneButton key={command.id} label={command.label} permission={command.permission} disabled={isEditing || command.disabled} onClick={command.onClick} />)}</ActionPaneGroup>}
+      {config.showSearchCommand && <ActionPaneGroup><ActionPaneButton label={t('common.search', 'Search')} icon={<SearchIcon sx={{ fontSize: 22 }} />} disabled={isEditing} onClick={() => setQuickFilterVisible((visible) => !visible)} /></ActionPaneGroup>}
     </>;
     const generatedUtilities = config && <EnterpriseCommandUtilities {...config.utilities} onRefresh={reset} disabled={isEditing} />;
     const generatedFilterBar = config && quickFilterVisible && (config.searchMode === 'field'
