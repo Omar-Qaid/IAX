@@ -114,6 +114,31 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
       },
     ],
   },
+  'mod-Workflow': {
+    moduleId: 'mod-Workflow',
+    label: 'nav.workflow',
+    icon: 'workflow',
+    defaultPath: ROUTE_PATHS.WORKFLOW.PROCESSES,
+    matchPath: ROUTE_PATHS.WORKFLOW.ROOT,
+    sections: [
+      {
+        id: 'setup',
+        title: 'nav.setup',
+        links: [
+          {
+            label: 'nav.workflowCategories',
+            path: ROUTE_PATHS.WORKFLOW.CATEGORIES,
+            permission: PERMISSIONS.WF_CATEGORY_VIEW,
+          },
+          {
+            label: 'nav.workflowProcesses',
+            path: ROUTE_PATHS.WORKFLOW.PROCESSES,
+            permission: PERMISSIONS.WF_PROCESS_VIEW,
+          },
+        ],
+      },
+    ],
+  },
   'mod-SystemAdministration': {
     moduleId: 'mod-SystemAdministration',
     label: 'nav.systemAdmin',

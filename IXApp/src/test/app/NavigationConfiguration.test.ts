@@ -82,4 +82,16 @@ describe('module navigation configuration', () => {
     );
     expect(findPageDefinitionForPath('/unsupported')).toBeUndefined();
   });
+
+  it('registers the backend-backed workflow processes page', () => {
+    expect(getPageDefinition(ROUTE_PATHS.WORKFLOW.PROCESSES)?.permission).toBe(
+      PERMISSIONS.WF_PROCESS_VIEW
+    );
+    expect(AVAILABLE_MODULE_NAV_CONFIGS['mod-Workflow']?.defaultPath).toBe(
+      ROUTE_PATHS.WORKFLOW.PROCESSES
+    );
+    expect(getPageDefinition(ROUTE_PATHS.WORKFLOW.CATEGORIES)?.permission).toBe(
+      PERMISSIONS.WF_CATEGORY_VIEW
+    );
+  });
 });

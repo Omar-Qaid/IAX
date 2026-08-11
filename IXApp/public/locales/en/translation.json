@@ -20,6 +20,9 @@
     "currencies": "Currencies",
     "exchangeRateTypes": "Exchange rate types",
     "exchangeRates": "Currency exchange rates",
+    "workflow": "Workflow",
+    "workflowProcesses": "Workflow processes",
+    "workflowCategories": "Workflow categories",
     "setup": "Setup",
     "organizationAdministration": "Organization administration",
     "legalEntities": "Legal entities",
@@ -73,6 +76,8 @@
     },
     "salesOrder": { "title": "Sales order {{number}}", "breadcrumb": "Sales order" },
     "currencies": { "title": "Currencies", "subtitle": "Read-only currency configuration" },
+    "wfProcesses": { "title": "Workflow processes" },
+    "wfCategories": { "title": "Workflow categories" },
     "exchangeRateTypes": { "title": "Exchange rate types" },
     "exchangeRates": { "title": "Currency exchange rates" },
     "legalEntities": { "title": "Legal entities" },
@@ -359,6 +364,34 @@
     "newAddress": "New address"
   },
   "workflow": { "builder": "Builder" },
+  "wfProcess": {
+    "sections": { "configuration": "Process configuration" },
+    "groups": { "classification": "Classification", "behavior": "Behavior" },
+    "fields": {
+      "code": "Process code",
+      "name": "English name",
+      "nameAR": "Arabic name",
+      "description": "English description",
+      "descriptionAR": "Arabic description",
+      "category": "Category",
+      "priority": "Priority",
+      "processType": "Process type",
+      "score": "Score",
+      "sortOrder": "Sort order",
+      "canRepeat": "Can repeat",
+      "mandatoryDocs": "Mandatory documents",
+      "systemProcess": "System process"
+    }
+  },
+  "wfCategory": {
+    "fields": {
+      "code": "Category code",
+      "name": "English name",
+      "nameAR": "Arabic name",
+      "sortOrder": "Sort order",
+      "systemCategory": "System category"
+    }
+  },
   "utilities": {
     "personalize": "Personalize",
     "guide": "Page guide",

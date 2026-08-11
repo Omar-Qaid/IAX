@@ -14,7 +14,8 @@ export const ROUTE_PATHS = {
     CUSTOMER_PAYMENT_TERMS: '/accounts-receivable/customer-payment-terms',
     SALES_ORDERS: '/accounts-receivable/sales-orders',
     SALES_ORDER_DETAILS: '/accounts-receivable/sales-orders/:salesOrderId',
-    salesOrder: (salesOrderId: string) => `/accounts-receivable/sales-orders/${encodeURIComponent(salesOrderId)}`,
+    salesOrder: (salesOrderId: string) =>
+      `/accounts-receivable/sales-orders/${encodeURIComponent(salesOrderId)}`,
   },
 
   FOUNDATION: {
@@ -22,6 +23,12 @@ export const ROUTE_PATHS = {
     CURRENCIES: '/foundation/currencies',
     EXCHANGE_RATE_TYPES: '/foundation/exchange-rate-types',
     EXCHANGE_RATES: '/foundation/exchange-rates',
+  },
+
+  WORKFLOW: {
+    ROOT: '/workflow',
+    PROCESSES: '/workflow/processes',
+    CATEGORIES: '/workflow/categories',
   },
 
   ORGANIZATION_ADMINISTRATION: {

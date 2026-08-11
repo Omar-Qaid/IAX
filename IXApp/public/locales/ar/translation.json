@@ -20,6 +20,9 @@
     "currencies": "العملات",
     "exchangeRateTypes": "أنواع أسعار الصرف",
     "exchangeRates": "أسعار صرف العملات",
+    "workflow": "سير العمل",
+    "workflowProcesses": "عمليات سير العمل",
+    "workflowCategories": "فئات سير العمل",
     "setup": "الإعداد",
     "organizationAdministration": "إدارة المؤسسة",
     "legalEntities": "الكيانات القانونية",
@@ -78,6 +81,8 @@
     },
     "salesOrder": { "title": "أمر البيع {{number}}", "breadcrumb": "أمر البيع" },
     "currencies": { "title": "العملات", "subtitle": "إعداد العملات للقراءة فقط" },
+    "wfProcesses": { "title": "عمليات سير العمل" },
+    "wfCategories": { "title": "فئات سير العمل" },
     "exchangeRateTypes": { "title": "أنواع أسعار الصرف" },
     "legalEntities": { "title": "الكيانات القانونية" },
     "exchangeRates": { "title": "أسعار صرف العملات" },
@@ -369,6 +374,34 @@
     "newAddress": "عنوان جديد"
   },
   "workflow": { "builder": "المصمم" },
+  "wfProcess": {
+    "sections": { "configuration": "إعداد العملية" },
+    "groups": { "classification": "التصنيف", "behavior": "السلوك" },
+    "fields": {
+      "code": "رمز العملية",
+      "name": "الاسم الإنجليزي",
+      "nameAR": "الاسم العربي",
+      "description": "الوصف الإنجليزي",
+      "descriptionAR": "الوصف العربي",
+      "category": "الفئة",
+      "priority": "الأولوية",
+      "processType": "نوع العملية",
+      "score": "الدرجة",
+      "sortOrder": "ترتيب الفرز",
+      "canRepeat": "قابل للتكرار",
+      "mandatoryDocs": "المستندات إلزامية",
+      "systemProcess": "عملية نظام"
+    }
+  },
+  "wfCategory": {
+    "fields": {
+      "code": "رمز الفئة",
+      "name": "الاسم الإنجليزي",
+      "nameAR": "الاسم العربي",
+      "sortOrder": "ترتيب الفرز",
+      "systemCategory": "فئة نظام"
+    }
+  },
   "utilities": {
     "personalize": "تخصيص",
     "guide": "دليل الصفحة",
