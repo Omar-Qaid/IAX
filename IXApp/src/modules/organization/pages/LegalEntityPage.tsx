@@ -63,7 +63,7 @@ export function LegalEntityPage(): React.ReactElement {
     ],
     sections: ({ record, editing, onRecordChange }) => [
       {
-        id: 'general', title: t('legalEntities.sections.general'), visualVariant: 'legalEntity', gridTemplateColumns: '270px 270px 270px 270px 220px', columnGap: 0, minHeight: 199,
+        id: 'general', title: t('legalEntities.sections.general'), visualVariant: 'legalEntity', defaultExpanded: false, gridTemplateColumns: '270px 270px 270px 270px 220px', columnGap: 0, minHeight: 199,
         groups: [
           { id: 'memo', width: 220, fields: [{ name: 'memo', label: t('legalEntities.fields.memo'), multiline: true, rows: 5 }] },
           { id: 'arabic', width: 220, fields: [{ name: 'arabicName', label: 'Arabic Name' }, { name: 'inHierarchy', label: 'In hierarchy', type: 'boolean' }, { name: 'useForFinancialConsolidation', label: 'Use for financial consolidation process', type: 'boolean' }] },
@@ -72,7 +72,7 @@ export function LegalEntityPage(): React.ReactElement {
           { id: 'locale', width: 220, title: 'LANGUAGE', fields: [{ name: 'languageId', label: 'Language', type: 'select', options: [{ value: 'en-US', label: 'en-US' }, { value: 'ar-SA', label: 'ar-SA' }] }, { name: 'timeZone', label: 'TIME ZONE   ·   Time zone', type: 'select', options: [{ value: '(GMT+03:00) Kuwait, Riyadh', label: '(GMT+03:00) Kuwait, Riyadh' }, { value: 'Arab Standard Time', label: '(GMT+03:00) Kuwait, Riyadh' }] }] },
         ],
       },
-      { id: 'addresses', title: 'Addresses', visualVariant: 'legalEntity', detailsPadding: '2px 10px 10px 12px', content: <AddressPanel key={`addresses-${record.id}`} record={record} editing={editing} onChange={onRecordChange} /> },
+      { id: 'addresses', title: 'Addresses', visualVariant: 'legalEntity', defaultExpanded: false, detailsPadding: '2px 10px 10px 12px', content: <AddressPanel key={`addresses-${record.id}`} record={record} editing={editing} onChange={onRecordChange} /> },
       { id: 'contacts', title: 'Contact information', visualVariant: 'legalEntity', defaultExpanded: false, content: <ContactPanel key={`contacts-${record.id}`} record={record} editing={editing} onChange={onRecordChange} /> },
       {
         id: 'statutory', title: t('legalEntities.sections.statutory'), visualVariant: 'legalEntity', defaultExpanded: false, columns: 3,
@@ -83,7 +83,7 @@ export function LegalEntityPage(): React.ReactElement {
         ],
       },
     ],
-    presentation: { mode: 'list', listWidth: 281, headerMaxWidth: 520 },
+    presentation: { mode: 'list', listWidth: 281, listWidthStorageKey: 'organization.legal-entities.reference-v1', headerMaxWidth: 520 },
     permissions: { view: 'legalEntity.view', create: 'legalEntity.manage', edit: 'legalEntity.manage', delete: 'legalEntity.manage' },
     validate: (record) => ({
       ...(!record.name.trim() ? { name: 'Name is required' } : {}),

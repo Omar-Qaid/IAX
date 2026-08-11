@@ -18,7 +18,7 @@ export const ActionPane: React.FC<ActionPaneProps> = ({ children, variant = 'def
         boxSizing: 'border-box',
         mx: 0,
         mt: 0,
-        mb: variant === 'flat' ? '14px' : 1.5,
+        mb: variant === 'flat' ? '10px' : 1.5,
         borderRadius: variant === 'flat' ? '9px' : 1,
         border: (t) => `1px solid ${t.palette.divider}`,
         bgcolor: variant === 'flat' ? 'background.paper' : (t) => (t.palette.mode === 'light' ? '#f8f9fa' : '#222222'),

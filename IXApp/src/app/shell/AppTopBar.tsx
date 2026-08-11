@@ -52,8 +52,9 @@ const appBarSx = {
 } as const;
 
 const toolbarSx = {
-  minHeight: LAYOUT.TOPBARHEIGHT,
-  px: 0,
+  minHeight: `${LAYOUT.TOPBARHEIGHT}px !important`,
+  height: LAYOUT.TOPBARHEIGHT,
+  px: '0 !important',
   gap: 0,
   fontFamily: topBar.fontFamily,
 } as const;
@@ -208,7 +209,7 @@ export const AppTopBar: React.FC = memo(() => {
           sx={{
             width: { sm: topBar.productWidth },
             height: topBar.height,
-            px: '14px',
+            px: '12px',
             display: { xs: 'none', sm: 'flex' },
             alignItems: 'center',
             flexShrink: 0,
@@ -350,8 +351,8 @@ export const AppTopBar: React.FC = memo(() => {
             sx={{
               width: '100%',
               maxWidth: topBar.searchWidth,
-              height: 40,
-              px: 2,
+              height: 30,
+              px: 1.5,
               display: 'flex',
               alignItems: 'center',
               bgcolor: topBar.searchBackground,
@@ -360,7 +361,7 @@ export const AppTopBar: React.FC = memo(() => {
               '&:hover': { bgcolor: '#35517d' },
             }}
           >
-            <SearchIcon sx={{ color: '#ffffff', fontSize: 25, mr: 1.25 }} />
+            <SearchIcon sx={{ color: '#ffffff', fontSize: 18, mr: 1 }} />
             <InputBase
               value=""
               readOnly
@@ -370,7 +371,7 @@ export const AppTopBar: React.FC = memo(() => {
                 flex: 1,
                 color: '#ffffff',
                 fontFamily: topBar.fontFamily,
-                fontSize: 16,
+                fontSize: 14,
                 '& input::placeholder': { color: '#ffffff', opacity: 1 },
               }}
             />
@@ -384,7 +385,7 @@ export const AppTopBar: React.FC = memo(() => {
               display: { xs: 'none', lg: 'flex' },
               alignItems: 'center',
               maxWidth: 307,
-              height: 40,
+              height: 30,
               px: 1.25,
               mr: 0.5,
               bgcolor: '#f4f7fb',

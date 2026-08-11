@@ -30,12 +30,12 @@ export const ActionPaneButton: React.FC<ActionPaneButtonProps> = ({
       disabled={disabled || loading}
       sx={{
         color: 'text.primary',
-        minHeight: 38,
+        minHeight: 31,
         fontFamily: d365.fontFamily,
         fontWeight: 400,
-        fontSize: 16,
-        px: 1.25,
-        py: 0.25,
+        fontSize: 14,
+        px: 1,
+        py: 0,
         borderRadius: d365.radius,
         border: '1px solid transparent',
         '&:hover': {

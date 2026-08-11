@@ -42,7 +42,8 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           sx={{
             flexGrow: 1,
             minHeight: 0,
-            p: 1.5,
+            p: '10px',
+            paddingInlineEnd: 0,
             overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column',

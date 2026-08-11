@@ -19,7 +19,7 @@ export const d365 = {
   gridHeaderHeight: 32,
   gridRowHeight: 31,
   listWidth: 281,
-  utilityRailWidth: 60,
+  utilityRailWidth: 48,
   radius: 2,
   sectionRadius: 7,
   sectionGap: 5,
