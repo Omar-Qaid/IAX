@@ -78,6 +78,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 // ─── Workflow ────────────────────────────────────────────────────
                 ("NS-WFCAT",     "Wf Category Sequence",      "تسلسل تصنيف العملية",     "WfCategory",          "WCT", "{PREFIX}-{SEQ}",       4, SequenceResetCycle.Never),
                 ("NS-WFPRI",     "Wf Priority Sequence",      "تسلسل أولوية العملية",    "WfPriority",          "WPR", "{PREFIX}-{SEQ}",       3, SequenceResetCycle.Never),
+                ("NS-WFPT",      "Wf Process Type Sequence",  "تسلسل نوع العملية",       "WfProcessType",       "WPT", "{PREFIX}-{SEQ}",       3, SequenceResetCycle.Never),
                 ("NS-WFPROC",    "Wf Process Sequence",       "تسلسل العملية",           "WfProcess",           "PROC","{PREFIX}-{SEQ}",       5, SequenceResetCycle.Never),
                 ("NS-WFSTEP",    "Wf Step Sequence",          "تسلسل خطوة العملية",      "WfStep",              "STEP","{PREFIX}-{SEQ}",       5, SequenceResetCycle.Never),
                 ("NS-WFACT",     "Wf Activity Sequence",      "تسلسل نشاط العملية",      "WfActivity",          "ACT", "{PREFIX}-{SEQ}",       5, SequenceResetCycle.Never),
@@ -87,6 +88,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 ("NS-WFCTL",     "Wf Control Sequence",       "تسلسل العنصر",            "WfControl",           "CTL", "{PREFIX}-{SEQ}",       3, SequenceResetCycle.Never),
                 ("NS-WFOP",      "Wf Operator Sequence",      "تسلسل المعامل",           "WfOperator",          "OP",  "{PREFIX}-{SEQ}",       3, SequenceResetCycle.Never),
                 ("NS-WFPERF",    "Wf Performer Sequence",     "تسلسل المنفذ",            "WfPerformer",         "PRF", "{PREFIX}-{SEQ}",       5, SequenceResetCycle.Never),
+                ("NS-WFPTYPE",   "Wf Performer Type Sequence","تسلسل نوع المنفذ",        "WfPerformerType",     "PRT", "{PREFIX}-{SEQ}",       3, SequenceResetCycle.Never),
                 ("NS-WFREQ",     "Wf Request Sequence",       "تسلسل الطلب",             "WfRequest",           "REQ", "{PREFIX}-{YYYY}-{SEQ}", 6, SequenceResetCycle.Yearly),
                 ("NS-WFREQD",    "Wf Request Detail Seq.",    "تسلسل بند الطلب",         "WfRequestDetail",     "REQD","{PREFIX}-{SEQ}",       6, SequenceResetCycle.Never),
                 ("NS-WFTRN",     "Wf Transition Sequence",    "تسلسل الانتقال",          "WfTransition",        "TRN", "{PREFIX}-{SEQ}",       5, SequenceResetCycle.Never),

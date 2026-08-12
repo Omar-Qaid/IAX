@@ -93,5 +93,18 @@ describe('module navigation configuration', () => {
     expect(getPageDefinition(ROUTE_PATHS.WORKFLOW.CATEGORIES)?.permission).toBe(
       PERMISSIONS.WF_CATEGORY_VIEW
     );
+    expect(getPageDefinition(ROUTE_PATHS.WORKFLOW.ACTIVITY_TYPES)?.permission).toBe(
+      PERMISSIONS.WF_ACTIVITY_TYPE_VIEW
+    );
+    expect(getPageDefinition(ROUTE_PATHS.WORKFLOW.DATA_TYPES)?.permission).toBeUndefined();
+    expect(getPageDefinition(ROUTE_PATHS.WORKFLOW.CONTROLS)?.permission).toBe(
+      PERMISSIONS.WF_CONTROL_VIEW
+    );
+    expect(getPageDefinition(ROUTE_PATHS.WORKFLOW.PRIORITIES)?.permission).toBe(
+      PERMISSIONS.WF_PRIORITY_VIEW
+    );
+    expect(getPageDefinition(ROUTE_PATHS.WORKFLOW.VARIABLES)?.permission).toBe(
+      PERMISSIONS.WF_VARIABLE_VIEW
+    );
   });
 });

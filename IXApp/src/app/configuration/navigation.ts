@@ -126,6 +126,27 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
         title: 'nav.setup',
         links: [
           {
+            label: 'nav.wfActivityTypes',
+            path: ROUTE_PATHS.WORKFLOW.ACTIVITY_TYPES,
+            permission: PERMISSIONS.WF_ACTIVITY_TYPE_VIEW,
+          },
+          { label: 'nav.wfDataTypes', path: ROUTE_PATHS.WORKFLOW.DATA_TYPES },
+          {
+            label: 'nav.wfControls',
+            path: ROUTE_PATHS.WORKFLOW.CONTROLS,
+            permission: PERMISSIONS.WF_CONTROL_VIEW,
+          },
+          {
+            label: 'nav.wfPriorities',
+            path: ROUTE_PATHS.WORKFLOW.PRIORITIES,
+            permission: PERMISSIONS.WF_PRIORITY_VIEW,
+          },
+          {
+            label: 'nav.wfVariables',
+            path: ROUTE_PATHS.WORKFLOW.VARIABLES,
+            permission: PERMISSIONS.WF_VARIABLE_VIEW,
+          },
+          {
             label: 'nav.workflowCategories',
             path: ROUTE_PATHS.WORKFLOW.CATEGORIES,
             permission: PERMISSIONS.WF_CATEGORY_VIEW,

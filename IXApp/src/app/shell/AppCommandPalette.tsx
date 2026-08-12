@@ -29,7 +29,7 @@ interface PageItem {
   path: string;
   icon: React.ReactNode;
   category: 'Application' | 'Data';
-  permission: (typeof APP_PAGE_DEFINITIONS)[number]['permission'];
+  permission?: (typeof APP_PAGE_DEFINITIONS)[number]['permission'];
 }
 
 const iconSx = { fontSize: 24, color: 'text.secondary' };
@@ -137,7 +137,9 @@ export const AppCommandPalette: React.FC = () => {
 
   const filteredPages = useMemo(() => {
     const q = query.toLowerCase().trim();
-    const availablePages = COMMAND_PALETTE_PAGES.filter((page) => hasPermission(page.permission));
+    const availablePages = COMMAND_PALETTE_PAGES.filter(
+      (page) => !page.permission || hasPermission(page.permission)
+    );
     if (!q) return availablePages;
     return availablePages.filter(
       (p) =>

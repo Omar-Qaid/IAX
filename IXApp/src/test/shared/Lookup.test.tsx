@@ -1,5 +1,5 @@
 import React from 'react';
-import { afterEach, describe, it, expect } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { LookupField } from '@shared/components/lookups/LookupField';
 import type { LookupOption } from '@shared/components/lookups/types';
@@ -35,5 +35,24 @@ describe('LookupField', () => {
     expect(screen.getByText('اختر الدولة')).toBeDefined();
     expect(screen.getByPlaceholderText('البحث في الخيارات…')).toBeDefined();
     expect(screen.getByRole('button', { name: 'إغلاق' })).toBeDefined();
+  });
+
+  it('supports an inline select mode without opening the lookup dialog', () => {
+    const onChange = vi.fn();
+    render(
+      <LookupField
+        name="country"
+        label="Country"
+        options={sampleOptions}
+        displayMode="select"
+        onChange={onChange}
+      />
+    );
+
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Country' }));
+    fireEvent.click(screen.getByRole('option', { name: 'CA - Canada' }));
+
+    expect(onChange).toHaveBeenCalledWith('2', sampleOptions[1]);
+    expect(screen.queryByText('Select Country')).toBeNull();
   });
 });

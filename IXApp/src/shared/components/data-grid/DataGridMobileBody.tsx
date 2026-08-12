@@ -9,7 +9,6 @@ import {
   Divider,
   Checkbox,
 } from '@mui/material';
-import InboxIcon from '@mui/icons-material/Inbox';
 import SearchOffIcon from '@mui/icons-material/SearchOff';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -19,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import type { ColumnDef } from './types';
 import { getNestedValue } from './DataGridUtils';
 import { AppBooleanField } from '@shared/components/fields/AppBooleanField';
+import { EmptyDataWatermark } from '@shared/components/feedback/EmptyDataWatermark';
 
 interface MobileGridBodyProps<T> {
   rows: T[];
@@ -138,6 +138,13 @@ export function DataGridMobileBodyInternal<T>({
   }
 
   if (!loading && rows.length === 0) {
+    if (!hasActiveFilters) {
+      return (
+        <Box sx={{ flex: 1, minHeight: 0, bgcolor: 'background.paper' }}>
+          <EmptyDataWatermark />
+        </Box>
+      );
+    }
     return (
       <Box
         sx={{
@@ -162,20 +169,16 @@ export function DataGridMobileBodyInternal<T>({
             mb: 2,
           }}
         >
-          {hasActiveFilters ? (
-            <SearchOffIcon sx={{ fontSize: 34, color: theme.palette.text.disabled }} />
-          ) : (
-            <InboxIcon sx={{ fontSize: 34, color: theme.palette.text.disabled }} />
-          )}
+          <SearchOffIcon sx={{ fontSize: 34, color: theme.palette.text.disabled }} />
         </Box>
         <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.secondary', mb: 0.5 }}>
-          {hasActiveFilters ? t('grid.no_records') : t('grid.no_data')}
+          {t('grid.no_records')}
         </Typography>
         <Typography
           variant="body2"
           sx={{ color: 'text.disabled', textAlign: 'center', maxWidth: 280, lineHeight: 1.6 }}
         >
-          {hasActiveFilters ? t('grid.no_results_msg') : t('grid.no_records_msg')}
+          {t('grid.no_results_msg')}
         </Typography>
       </Box>
     );

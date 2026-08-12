@@ -29,6 +29,11 @@ export const ROUTE_PATHS = {
     ROOT: '/workflow',
     PROCESSES: '/workflow/processes',
     CATEGORIES: '/workflow/categories',
+    ACTIVITY_TYPES: '/workflow/activity-types',
+    DATA_TYPES: '/workflow/data-types',
+    CONTROLS: '/workflow/controls',
+    PRIORITIES: '/workflow/priorities',
+    VARIABLES: '/workflow/variables',
   },
 
   ORGANIZATION_ADMINISTRATION: {

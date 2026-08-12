@@ -17,6 +17,7 @@ import { DataGrid } from '@shared/components/data-grid/DataGrid';
 import type { DataGridProps } from '@shared/components/data-grid/types';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { EmptyState } from '@shared/components/feedback/EmptyState';
+import { EmptyDataWatermark } from '@shared/components/feedback/EmptyDataWatermark';
 import { ErrorState } from '@shared/components/feedback/ErrorState';
 import { AccessDeniedState } from '@shared/components/feedback/AccessDeniedState';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
@@ -46,16 +47,19 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({ title, config, 
   const [listPaneVisible, setListPaneVisible] = React.useState(true);
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = React.useState(false);
   const state = useListDetailsPage(config);
+  const [emptyPreviewRecord] = React.useState<T>(() => config.createRecord());
   const { hasPermission: canView } = usePermission(config.permissions?.view);
   const { hasPermission: canCreate } = usePermission(config.permissions?.create);
   const { hasPermission: canEdit } = usePermission(config.permissions?.edit);
   const { hasPermission: canDelete } = usePermission(config.permissions?.delete);
   const record = state.draft;
+  const displayedRecord = record ?? emptyPreviewRecord;
+  const displayedEditing = Boolean(record) && state.editing;
   const labels = { view: config.viewLabel ?? t('common.standardView', 'Standard view'), filter: config.filterLabel ?? t('actions.filter'), information: config.informationLabel ?? t('common.information'), yes: config.yesLabel ?? t('common.yes', 'Yes'), no: config.noLabel ?? t('common.no', 'No') };
   const crud = { editLabel: t('actions.edit'), newLabel: t('actions.new'), deleteLabel: t('actions.delete'), saveLabel: t('actions.save'), cancelLabel: t('actions.cancel'), ...config.crud };
   const utilities = { personalizeLabel: t('utilities.personalize'), guideLabel: t('utilities.guide'), notificationsLabel: t('common.notifications'), refreshLabel: t('actions.refresh'), openWindowLabel: t('utilities.openWindow'), notificationCount: 0, ...config.utilities };
-  const sections = record && typeof config.sections === 'function'
-    ? config.sections({ record, editing: state.editing, onRecordChange: state.changeRecord })
+  const sections = typeof config.sections === 'function'
+    ? config.sections({ record: displayedRecord, editing: displayedEditing, onRecordChange: record ? state.changeRecord : () => undefined })
     : config.sections;
   if (!canView) return <AccessDeniedState />;
   const listPane = config.presentation?.mode === 'grid' && config.presentation.columns
@@ -67,13 +71,14 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({ title, config, 
       <IconButton size="small" sx={{ color: d365.primary, p: '5px' }}><ArrowBackIcon sx={{ fontSize: 17 }} /></IconButton>
       <IconButton size="small" aria-label={t('actions.toggleList', 'Toggle record list')} aria-pressed={listPaneVisible} onClick={() => setListPaneVisible((visible) => !visible)} sx={{ width: 31, height: 31, bgcolor: listPaneVisible ? d365.primary : 'transparent', color: listPaneVisible ? '#fff' : d365.primary, borderRadius: d365.radius, transition: 'background-color 140ms ease, color 140ms ease', '&:hover': { bgcolor: listPaneVisible ? '#2559d6' : 'action.hover' } }}><MenuIcon sx={{ fontSize: 17 }} /></IconButton>
       <EnterpriseCrudActions editing={state.editing} {...crud} canEdit={Boolean(state.selected) && canEdit && !state.saving} canDelete={Boolean(state.selected) && canDelete && !state.saving} editPermission={config.permissions?.edit} newPermission={config.permissions?.create} deletePermission={config.permissions?.delete} onEdit={state.startEdit} onNew={canCreate ? state.startNew : undefined} onDelete={() => setDeleteConfirmationOpen(true)} onSave={state.save} onCancel={state.cancel} />
-      <ActionPaneGroup>{config.commands?.map((command) => <ActionPaneButton key={command.id} label={command.label} disabled={state.editing || command.disabled} onClick={command.onClick} />)}<IconButton disabled={state.editing} size="small" sx={{ color: 'primary.main' }}><SearchIcon sx={{ fontSize: 17 }} /></IconButton></ActionPaneGroup>
+      <ActionPaneGroup>{config.commands?.map((command) => <ActionPaneButton key={command.id} label={command.label} disabled={state.editing || command.disabled || (command.requiresSelection && !state.selected)} onClick={() => command.onClick?.(state.selected)} />)}<IconButton disabled={state.editing} size="small" sx={{ color: 'primary.main' }}><SearchIcon sx={{ fontSize: 17 }} /></IconButton></ActionPaneGroup>
     </ActionPane>
     <Box sx={{ display: 'flex', flex: 1, height: '100%', minHeight: 0, gap: '23px', ml: '1px', overflow: 'hidden', position: 'relative', alignItems: 'stretch' }}>
-    {state.error ? <ErrorState message={state.error} onRetry={state.refresh} /> : state.loading && !state.records.length ? <LoadingState /> : record ? <ListDetailsLayout editing={state.editing} values={config.getValues(record)} yesLabel={labels.yes} noLabel={labels.no} sections={sections as DetailSectionConfig[]} onChange={state.changeValue} listWidth={config.presentation?.listWidth} listMinWidth={config.presentation?.listMinWidth} listMaxWidth={config.presentation?.listMaxWidth} listResizable={config.presentation?.listResizable} listPaneVisible={listPaneVisible} onListPaneClose={() => setListPaneVisible(false)} listWidthStorageKey={config.presentation?.listWidthStorageKey ?? globalThis.location?.pathname}
+    {state.error ? <ErrorState message={state.error} onRetry={state.refresh} /> : state.loading && !state.records.length ? <LoadingState /> : <ListDetailsLayout editing={displayedEditing} values={config.getValues(displayedRecord)} yesLabel={labels.yes} noLabel={labels.no} sections={sections as DetailSectionConfig[]} onChange={record ? state.changeValue : () => undefined} listWidth={config.presentation?.listWidth} listMinWidth={config.presentation?.listMinWidth} listMaxWidth={config.presentation?.listMaxWidth} listResizable={config.presentation?.listResizable} listPaneVisible={listPaneVisible} onListPaneClose={() => setListPaneVisible(false)} listWidthStorageKey={config.presentation?.listWidthStorageKey ?? globalThis.location?.pathname}
       listPane={listPane}
-      header={<><RecordHeader title={title} viewLabel={labels.view} yesLabel={labels.yes} noLabel={labels.no} record={record} fields={config.headerFields} editing={state.editing} maxWidth={config.presentation?.headerMaxWidth} onChange={state.changeHeader} />{Object.keys(state.validationErrors).length > 0 && <Alert severity="error" sx={{ mb: 1 }}><Typography sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{config.validationTitle ?? t('validation.correctErrors', 'Please correct the validation errors.')}</Typography>{Object.entries(state.validationErrors).map(([field, message]) => <Typography key={field} sx={{ fontSize: '0.6875rem' }}>{message}</Typography>)}</Alert>}</>}
-    /> : <EmptyState title="No records" />}
+      header={<><RecordHeader title={title} viewLabel={labels.view} yesLabel={labels.yes} noLabel={labels.no} record={displayedRecord} fields={config.headerFields} editing={displayedEditing} maxWidth={config.presentation?.headerMaxWidth} onChange={record ? state.changeHeader : () => undefined} />{record && Object.keys(state.validationErrors).length > 0 && <Alert severity="error" sx={{ mb: 1 }}><Typography sx={{ fontWeight: 600, fontSize: '0.75rem' }}>{config.validationTitle ?? t('validation.correctErrors', 'Please correct the validation errors.')}</Typography>{Object.entries(state.validationErrors).map(([field, message]) => <Typography key={field} sx={{ fontSize: '0.6875rem' }}>{message}</Typography>)}</Alert>}</>}
+    />}
+    {!record && !state.loading && !state.error && <Box sx={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}><EmptyDataWatermark /></Box>}
     {state.filterPanelOpen && config.advancedFilter && <Box sx={sidePanelSx}><EnterpriseFilterPanel title={config.advancedFilter.title ?? t('filters.title')} addLabel={config.advancedFilter.addLabel ?? t('actions.add')} fieldOptions={config.advancedFilter.fields?.map(({ id, label }) => ({ value: id, label })) ?? [{ value: 'default', label: config.advancedFilter.fieldLabel }]} conditions={state.draftAdvancedFilters} operatorOptions={getFilterOperatorOptions(t)} applyLabel={config.advancedFilter.applyLabel ?? t('actions.apply')} resetLabel={config.advancedFilter.resetLabel ?? t('actions.reset')} onConditionsChange={state.setDraftAdvancedFilters} onApply={state.applyAdvancedFilter} onReset={state.resetAdvancedFilter} /></Box>}
     {state.informationPanelOpen && config.relatedInformation && <Box sx={sidePanelSx}><RelatedInformationPanel title={config.relatedInformation.title ?? t('relatedInformation.title')} sections={config.relatedInformation.sections(state.selected)} /></Box>}
     </Box>

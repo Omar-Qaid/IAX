@@ -23,6 +23,11 @@
     "workflow": "Workflow",
     "workflowProcesses": "Workflow processes",
     "workflowCategories": "Workflow categories",
+    "wfActivityTypes": "Workflow activity types",
+    "wfDataTypes": "Workflow data types",
+    "wfControls": "Workflow controls",
+    "wfPriorities": "Workflow priorities",
+    "wfVariables": "Workflow variables",
     "setup": "Setup",
     "organizationAdministration": "Organization administration",
     "legalEntities": "Legal entities",
@@ -78,6 +83,11 @@
     "currencies": { "title": "Currencies", "subtitle": "Read-only currency configuration" },
     "wfProcesses": { "title": "Workflow processes" },
     "wfCategories": { "title": "Workflow categories" },
+    "wfActivityTypes": { "title": "Workflow activity types" },
+    "wfDataTypes": { "title": "Workflow data types" },
+    "wfControls": { "title": "Workflow controls" },
+    "wfPriorities": { "title": "Workflow priorities" },
+    "wfVariables": { "title": "Workflow variables" },
     "exchangeRateTypes": { "title": "Exchange rate types" },
     "exchangeRates": { "title": "Currency exchange rates" },
     "legalEntities": { "title": "Legal entities" },
@@ -365,6 +375,7 @@
   },
   "workflow": { "builder": "Builder" },
   "wfProcess": {
+    "commands": { "variables": "Variables" },
     "sections": { "configuration": "Process configuration" },
     "groups": { "classification": "Classification", "behavior": "Behavior" },
     "fields": {
@@ -390,6 +401,31 @@
       "nameAR": "Arabic name",
       "sortOrder": "Sort order",
       "systemCategory": "System category"
+    }
+  },
+  "wfVariable": {
+    "sections": { "configuration": "Variable configuration" },
+    "groups": { "assignment": "Assignment" },
+    "fields": {
+      "code": "Variable code",
+      "name": "English name",
+      "nameAR": "Arabic name",
+      "description": "English description",
+      "descriptionAR": "Arabic description",
+      "process": "Process",
+      "dataType": "Data type",
+      "sortOrder": "Sort order"
+    }
+  },
+  "workflowSetup": {
+    "fields": {
+      "code": "Code",
+      "name": "English name",
+      "nameAR": "Arabic name",
+      "description": "English description",
+      "descriptionAR": "Arabic description",
+      "sortOrder": "Sort order",
+      "controlType": "Control type"
     }
   },
   "utilities": {

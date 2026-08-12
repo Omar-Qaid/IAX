@@ -153,6 +153,7 @@ export interface LookupFieldProps<TFieldValues extends FieldValues = FieldValues
   placeholder?: string;
   fullWidth?: boolean;
   control?: Control<TFieldValues>;
+  displayMode?: 'dialog' | 'select';
 }
 
 export interface LookupDialogProps {

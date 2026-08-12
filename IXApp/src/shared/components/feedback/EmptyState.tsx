@@ -11,8 +11,31 @@ export const EmptyState: React.FC<{ title?: string; message?: string; actionLabe
 }) => {
   const { t } = useAppTranslation();
   return (
-    <Box sx={{ p: 4, display: 'flex', justifyContent: 'center', width: '100%' }}>
-      <Paper elevation={0} sx={{ p: 4, textAlign: 'center', border: (t) => `1px dashed ${t.palette.divider}`, maxWidth: 400, borderRadius: 1, bgcolor: 'transparent' }}>
+    <Box
+      sx={{
+        p: 4,
+        display: 'flex',
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '100%',
+        minWidth: 0,
+        minHeight: 0,
+        boxSizing: 'border-box',
+      }}
+    >
+      <Paper
+        elevation={0}
+        sx={{
+          width: 'min(100%, 400px)',
+          p: 4,
+          textAlign: 'center',
+          border: (theme) => `1px dashed ${theme.palette.divider}`,
+          borderRadius: 1,
+          bgcolor: 'transparent',
+          boxSizing: 'border-box',
+        }}
+      >
         <InboxOutlinedIcon color="action" sx={{ fontSize: 48, mb: 1, opacity: 0.7 }} />
         <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
           {title ?? t('common.noData')}

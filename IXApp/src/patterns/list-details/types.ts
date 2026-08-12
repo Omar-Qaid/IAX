@@ -19,17 +19,25 @@ export interface DetailFieldConfig {
   rows?: number;
   sectionTitle?: string;
   linkStyle?: boolean;
+  render?: (context: {
+    value: DetailValue | undefined;
+    editing: boolean;
+    disabled: boolean;
+    onChange: (value: DetailValue) => void;
+  }) => ReactNode;
+  renderOwnLabel?: boolean;
 }
 export interface DetailFieldGroup { id: string; title?: string; fields: DetailFieldConfig[]; columns?: number; column?: string | number; width?: number | string }
 export interface DetailSectionConfig { id: string; title: string; groups?: DetailFieldGroup[]; content?: ReactNode; link?: ReactNode; defaultExpanded?: boolean; columns?: number; gridTemplateColumns?: string; columnGap?: number | string; minHeight?: number; detailsPadding?: number | string; visualVariant?: 'default' | 'legalEntity' }
 
 export interface ListDetailRecord { id: string }
 
-export interface ListDetailsCommand {
+export interface ListDetailsCommand<T extends ListDetailRecord = ListDetailRecord> {
   id: string;
   label: string;
   disabled?: boolean;
-  onClick?: () => void;
+  requiresSelection?: boolean;
+  onClick?: (record: T | null) => void;
 }
 
 export interface ListDetailsHeaderField<T> extends Omit<DetailFieldConfig, 'name'> {
@@ -58,7 +66,7 @@ export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
   yesLabel?: string;
   noLabel?: string;
   crud?: Partial<{ editLabel: string; newLabel: string; deleteLabel: string; saveLabel: string; cancelLabel: string }>;
-  commands?: ListDetailsCommand[];
+  commands?: ListDetailsCommand<T>[];
   utilities?: Partial<{ personalizeLabel: string; guideLabel: string; notificationsLabel: string; refreshLabel: string; openWindowLabel: string; notificationCount: number }>;
   presentation?: {
     mode: 'list' | 'grid';

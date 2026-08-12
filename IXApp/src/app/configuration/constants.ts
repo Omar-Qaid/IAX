@@ -4,7 +4,7 @@
 
 /** Layout dimensions */
 export const LAYOUT = {
-    TOPBARHEIGHT: 48,
+    TOPBARHEIGHT: 58,
     SIDEBARWIDTH: 260,
     SIDEBARMINIWIDTH: 48,
     DRAWER_WIDTH: 380,

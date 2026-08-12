@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TextField, InputAdornment, IconButton } from '@mui/material';
+import { TextField, InputAdornment, IconButton, MenuItem } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import { LookupDialog } from './LookupDialog';
@@ -19,6 +19,7 @@ export function LookupField<TFieldValues extends FieldValues = FieldValues>({
   helperText,
   placeholder,
   fullWidth = true,
+  displayMode = 'dialog',
 }: LookupFieldProps<TFieldValues>): React.ReactElement {
   const { t } = useAppTranslation();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -34,6 +35,37 @@ export function LookupField<TFieldValues extends FieldValues = FieldValues>({
   const handleSelectOption = (option: LookupOption) => {
     onChange?.(option.id, option);
   };
+
+  if (displayMode === 'select') {
+    return (
+      <TextField
+        select
+        label={label}
+        value={value ?? ''}
+        required={required}
+        disabled={disabled || readOnly}
+        error={error}
+        helperText={helperText}
+        fullWidth={fullWidth}
+        size="small"
+        onChange={(event) => {
+          const option = options.find((item) => String(item.id) === event.target.value);
+          onChange?.(option?.id ?? null, option);
+        }}
+      >
+        {!required && (
+          <MenuItem value="">
+            <em>{placeholder ?? t('lookups.selectPlaceholder')}</em>
+          </MenuItem>
+        )}
+        {options.map((option) => (
+          <MenuItem key={option.id} value={option.id}>
+            {`${option.code} - ${option.name}`}
+          </MenuItem>
+        ))}
+      </TextField>
+    );
+  }
 
   return (
     <>

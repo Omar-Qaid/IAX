@@ -203,10 +203,55 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             }
             #endregion
 
+            #region WfProcessTypes
+            {
+                var processTypes = new[]
+                {
+                    new IAX.IXApi.Modules.Workflow.ProcessTypes.WfProcessType { RecId = 1, Code = "STD", Name = "Standard", NameAR = "قياسي", IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new IAX.IXApi.Modules.Workflow.ProcessTypes.WfProcessType { RecId = 2, Code = "REV", Name = "Review", NameAR = "مراجعة", IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new IAX.IXApi.Modules.Workflow.ProcessTypes.WfProcessType { RecId = 3, Code = "APP", Name = "Approval", NameAR = "اعتماد", IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy }
+                };
+
+                var existingIds = await db.WfProcessTypes.IgnoreQueryFilters().Select(x => x.RecId).ToListAsync(ct);
+                var toAdd = processTypes.Where(x => !existingIds.Contains(x.RecId)).ToList();
+                if (toAdd.Any())
+                {
+                    await db.WfProcessTypes.AddRangeAsync(toAdd, ct);
+                    await SeedWithIdentityInsertAsync(db, "WfProcessTypes", ct);
+                }
+            }
+            #endregion
+
+            #region WfProcesses
+            {
+                var hrCatId = (await db.WfCategories.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Code == "HR", ct))?.RecId ?? 1;
+                var itCatId = (await db.WfCategories.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Code == "IT", ct))?.RecId ?? 4;
+                var purCatId = (await db.WfCategories.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Code == "PUR", ct))?.RecId ?? 13;
+                var medPriorityId = (await db.WfPriorities.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Code == "MED", ct))?.RecId ?? 2;
+
+                var processes = new[]
+                {
+                    new WfProcess { RecId = 591, Code = "DISC_PROC", Name = "Disciplinary Process", NameAR = "عملية رصد المخالفات", CategoryId = hrCatId, PriorityId = medPriorityId, ProcessTypeId = 1, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfProcess { RecId = 592, Code = "ONBOARDING", Name = "Employee Onboarding", NameAR = "تهيئة موظف جديد", CategoryId = hrCatId, PriorityId = medPriorityId, ProcessTypeId = 1, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfProcess { RecId = 593, Code = "LEAVE_REQ", Name = "Leave Request", NameAR = "طلب إجازة", CategoryId = hrCatId, PriorityId = medPriorityId, ProcessTypeId = 1, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfProcess { RecId = 594, Code = "PO_APPROV", Name = "Purchase Order Approval", NameAR = "اعتماد أمر شراء", CategoryId = purCatId, PriorityId = medPriorityId, ProcessTypeId = 1, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfProcess { RecId = 595, Code = "IT_TICKET", Name = "IT Support Ticket", NameAR = "طلب دعم تقني", CategoryId = itCatId, PriorityId = medPriorityId, ProcessTypeId = 1, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy }
+                };
+
+                var existingIds = await db.WfProcesses.IgnoreQueryFilters().Select(x => x.RecId).ToListAsync(ct);
+                var toAdd = processes.Where(x => !existingIds.Contains(x.RecId)).ToList();
+                if (toAdd.Any())
+                {
+                    await db.WfProcesses.AddRangeAsync(toAdd, ct);
+                    await SeedWithIdentityInsertAsync(db, "WfProcesses", ct);
+                }
+            }
+            #endregion
+
             #region WfRequests
             if (!await db.WfRequests.IgnoreQueryFilters().AnyAsync(ct))
             {
-                if (!await db.WfProcesses.IgnoreQueryFilters().AnyAsync(p => p.RecId == 591, ct))
+                if (false)
                 {
                     var hrCatId = (await db.WfCategories.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Code == "HR", ct))?.RecId ?? 1;
                     var medPriorityId = (await db.WfPriorities.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Code == "MED", ct))?.RecId ?? 2;
@@ -425,6 +470,66 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 {
                     await db.WfDataTypes.AddRangeAsync(toAdd, ct);
                     await SeedWithIdentityInsertAsync(db, "WfDataTypes", ct);
+                }
+            }
+            #endregion
+
+            #region WfVariables
+            var variableProcessId = await db.WfProcesses
+                .IgnoreQueryFilters()
+                .Where(x => !x.IsDeleted)
+                .OrderByDescending(x => x.RecId == 591)
+                .ThenBy(x => x.RecId)
+                .Select(x => (long?)x.RecId)
+                .FirstOrDefaultAsync(ct);
+
+
+
+            if (variableProcessId.HasValue)
+            {
+                var dataTypeIds = await db.WfDataTypes
+                    .IgnoreQueryFilters()
+                    .Where(x => !x.IsDeleted && x.Code != null)
+                    .ToDictionaryAsync(x => x.Code!, x => x.RecId, StringComparer.OrdinalIgnoreCase, ct);
+
+                var variableSeeds = new[]
+                {
+                    new { Code = "REQUESTER_NAME", Name = "Requester name", NameAR = "اسم مقدم الطلب", Description = "Name of the workflow requester", DescriptionAR = "اسم مقدم طلب سير العمل", DataTypeCode = "STR", SortOrder = (byte)1 },
+                    new { Code = "REQUEST_DATE", Name = "Request date", NameAR = "تاريخ الطلب", Description = "Date the workflow request was created", DescriptionAR = "تاريخ إنشاء طلب سير العمل", DataTypeCode = dataTypeIds.ContainsKey("DATE") ? "DATE" : "DT", SortOrder = (byte)2 },
+                    new { Code = "TOTAL_AMOUNT", Name = "Total amount", NameAR = "المبلغ الإجمالي", Description = "Total amount associated with the request", DescriptionAR = "إجمالي المبلغ المرتبط بالطلب", DataTypeCode = dataTypeIds.ContainsKey("NUM") ? "NUM" : "INT", SortOrder = (byte)3 },
+                    new { Code = "IS_URGENT", Name = "Is urgent", NameAR = "طلب عاجل", Description = "Indicates whether the request is urgent", DescriptionAR = "يحدد ما إذا كان الطلب عاجلاً", DataTypeCode = "BOOL", SortOrder = (byte)4 }
+                };
+
+                var existingVariableCodes = await db.WfVariables
+                    .IgnoreQueryFilters()
+                    .Where(x => x.Code != null)
+                    .Select(x => x.Code!)
+                    .ToListAsync(ct);
+                var existingCodeSet = existingVariableCodes.ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                var variablesToAdd = variableSeeds
+                    .Where(x => !existingCodeSet.Contains(x.Code) && dataTypeIds.ContainsKey(x.DataTypeCode))
+                    .Select(x => new WfVariable
+                    {
+                        Code = x.Code,
+                        Name = x.Name,
+                        NameAR = x.NameAR,
+                        Description = x.Description,
+                        DescriptionAR = x.DescriptionAR,
+                        DataTypeId = dataTypeIds[x.DataTypeCode],
+                        ProcessId = variableProcessId.Value,
+                        SortOrder = x.SortOrder,
+                        IsActive = true,
+                        IsDeleted = false,
+                        CreatedBy = createdBy,
+                        OwnerAccountId = createdBy
+                    })
+                    .ToList();
+
+                if (variablesToAdd.Count > 0)
+                {
+                    await db.WfVariables.AddRangeAsync(variablesToAdd, ct);
+                    await db.SaveChangesAsync(ct);
                 }
             }
             #endregion

@@ -63,6 +63,12 @@ export const wfProcessApi = {
     const response = await apiClient.get<ApiResponse<WfProcessDto[]>>(endpoint, { signal });
     return requireData(response.data).map(toRecord);
   },
+  async getById(recId: number, signal?: AbortSignal): Promise<WfProcessRecord> {
+    const response = await apiClient.get<ApiResponse<WfProcessDto>>(`${endpoint}/${recId}`, {
+      signal,
+    });
+    return toRecord(requireData(response.data));
+  },
   async create(record: WfProcessRecord): Promise<WfProcessRecord> {
     const response = await apiClient.post<ApiResponse<WfProcessDto>>(endpoint, toDto(record));
     return toRecord(requireData(response.data));

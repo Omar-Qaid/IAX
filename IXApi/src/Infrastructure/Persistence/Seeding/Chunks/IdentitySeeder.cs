@@ -74,8 +74,10 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             ("Workflow", "Controls"),
             ("Workflow", "Operators"),
             ("Workflow", "Performers"),
+            ("Workflow", "PerformerTypes"),
             ("Workflow", "Categories"),
             ("Workflow", "Priorities"),
+            ("Workflow", "ProcessTypes"),
 
             // ── System ──────────────────────────────────────────────────────
             ("System", "AuditLog"),

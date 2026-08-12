@@ -20,9 +20,44 @@ export type WorkflowMasterRecord<TDto extends WorkflowMasterDto = WorkflowMaster
   id: string;
 };
 
+export const createEmptyWorkflowMaster = <TDto extends WorkflowMasterDto>(
+  extras: Omit<
+    TDto,
+    | 'recId'
+    | 'code'
+    | 'name'
+    | 'nameAR'
+    | 'description'
+    | 'descriptionAR'
+    | 'sortOrder'
+    | 'isActive'
+    | 'rowVersion'
+    | 'recVersion'
+    | 'dataAreaId'
+  >
+): WorkflowMasterRecord<TDto> =>
+  ({
+    id: `new-${crypto.randomUUID()}`,
+    recId: 0,
+    code: null,
+    name: '',
+    nameAR: '',
+    description: null,
+    descriptionAR: null,
+    sortOrder: 0,
+    isActive: true,
+    rowVersion: null,
+    recVersion: 1,
+    dataAreaId: 'dat',
+    ...extras,
+  }) as WorkflowMasterRecord<TDto>;
+
 const requireData = <T>(response: ApiResponse<T>, resourceName: string): T => {
   if (!response.success || response.data == null) {
-    throw new ApiError(response.message || `The ${resourceName} response did not contain data.`, 500);
+    throw new ApiError(
+      response.message || `The ${resourceName} response did not contain data.`,
+      500
+    );
   }
   return response.data;
 };
@@ -32,14 +67,15 @@ export const createWorkflowMasterApi = <TDto extends WorkflowMasterDto>(
   resourceName: string
 ) => {
   const toRecord = (dto: TDto): WorkflowMasterRecord<TDto> => ({ ...dto, id: String(dto.recId) });
-  const toDto = ({ id: _id, ...record }: WorkflowMasterRecord<TDto>): TDto => ({
-    ...record,
-    code: record.code?.trim() || null,
-    name: record.name?.trim() || null,
-    nameAR: record.nameAR?.trim() || null,
-    description: record.description?.trim() || null,
-    descriptionAR: record.descriptionAR?.trim() || null,
-  }) as TDto;
+  const toDto = ({ id: _id, ...record }: WorkflowMasterRecord<TDto>): TDto =>
+    ({
+      ...record,
+      code: record.code?.trim() || null,
+      name: record.name?.trim() || null,
+      nameAR: record.nameAR?.trim() || null,
+      description: record.description?.trim() || null,
+      descriptionAR: record.descriptionAR?.trim() || null,
+    }) as unknown as TDto;
 
   return {
     async list(signal?: AbortSignal): Promise<WorkflowMasterRecord<TDto>[]> {
@@ -51,7 +87,10 @@ export const createWorkflowMasterApi = <TDto extends WorkflowMasterDto>(
       return toRecord(requireData(response.data, resourceName));
     },
     async update(record: WorkflowMasterRecord<TDto>): Promise<WorkflowMasterRecord<TDto>> {
-      const response = await apiClient.put<ApiResponse<TDto>>(`${endpoint}/${record.recId}`, toDto(record));
+      const response = await apiClient.put<ApiResponse<TDto>>(
+        `${endpoint}/${record.recId}`,
+        toDto(record)
+      );
       return toRecord(requireData(response.data, resourceName));
     },
     async delete(record: WorkflowMasterRecord<TDto>): Promise<void> {

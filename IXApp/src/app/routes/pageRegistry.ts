@@ -6,7 +6,7 @@ import { ROUTE_PATHS } from './routePaths';
 export interface AppPageDefinition {
   id: string;
   path: string;
-  permission: PermissionCode;
+  permission?: PermissionCode;
   component: LazyExoticComponent<ComponentType>;
 }
 
@@ -131,6 +131,50 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     component: lazyPage(
       () => import('@modules/workflow/pages/WFCategoryPage'),
       (module) => module.WFCategoryPage
+    ),
+  },
+  {
+    id: 'workflow-activity-types',
+    path: ROUTE_PATHS.WORKFLOW.ACTIVITY_TYPES,
+    permission: PERMISSIONS.WF_ACTIVITY_TYPE_VIEW,
+    component: lazyPage(
+      () => import('@modules/workflow/pages/WfActivityTypesPage'),
+      (module) => module.WfActivityTypesPage
+    ),
+  },
+  {
+    id: 'workflow-data-types',
+    path: ROUTE_PATHS.WORKFLOW.DATA_TYPES,
+    component: lazyPage(
+      () => import('@modules/workflow/pages/WfDataTypesPage'),
+      (module) => module.WfDataTypesPage
+    ),
+  },
+  {
+    id: 'workflow-controls',
+    path: ROUTE_PATHS.WORKFLOW.CONTROLS,
+    permission: PERMISSIONS.WF_CONTROL_VIEW,
+    component: lazyPage(
+      () => import('@modules/workflow/pages/WfControlsPage'),
+      (module) => module.WfControlsPage
+    ),
+  },
+  {
+    id: 'workflow-priorities',
+    path: ROUTE_PATHS.WORKFLOW.PRIORITIES,
+    permission: PERMISSIONS.WF_PRIORITY_VIEW,
+    component: lazyPage(
+      () => import('@modules/workflow/pages/WfPrioritiesPage'),
+      (module) => module.WfPrioritiesPage
+    ),
+  },
+  {
+    id: 'workflow-variables',
+    path: ROUTE_PATHS.WORKFLOW.VARIABLES,
+    permission: PERMISSIONS.WF_VARIABLE_VIEW,
+    component: lazyPage(
+      () => import('@modules/workflow/pages/WFVariablesPage'),
+      (module) => module.WFVariablesPage
     ),
   },
   {

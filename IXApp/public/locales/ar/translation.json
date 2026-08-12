@@ -23,6 +23,11 @@
     "workflow": "سير العمل",
     "workflowProcesses": "عمليات سير العمل",
     "workflowCategories": "فئات سير العمل",
+    "wfActivityTypes": "أنواع أنشطة سير العمل",
+    "wfDataTypes": "أنواع بيانات سير العمل",
+    "wfControls": "عناصر تحكم سير العمل",
+    "wfPriorities": "أولويات سير العمل",
+    "wfVariables": "متغيرات سير العمل",
     "setup": "الإعداد",
     "organizationAdministration": "إدارة المؤسسة",
     "legalEntities": "الكيانات القانونية",
@@ -83,6 +88,11 @@
     "currencies": { "title": "العملات", "subtitle": "إعداد العملات للقراءة فقط" },
     "wfProcesses": { "title": "عمليات سير العمل" },
     "wfCategories": { "title": "فئات سير العمل" },
+    "wfActivityTypes": { "title": "أنواع أنشطة سير العمل" },
+    "wfDataTypes": { "title": "أنواع بيانات سير العمل" },
+    "wfControls": { "title": "عناصر تحكم سير العمل" },
+    "wfPriorities": { "title": "أولويات سير العمل" },
+    "wfVariables": { "title": "متغيرات سير العمل" },
     "exchangeRateTypes": { "title": "أنواع أسعار الصرف" },
     "legalEntities": { "title": "الكيانات القانونية" },
     "exchangeRates": { "title": "أسعار صرف العملات" },
@@ -375,6 +385,7 @@
   },
   "workflow": { "builder": "المصمم" },
   "wfProcess": {
+    "commands": { "variables": "المتغيرات" },
     "sections": { "configuration": "إعداد العملية" },
     "groups": { "classification": "التصنيف", "behavior": "السلوك" },
     "fields": {
@@ -400,6 +411,31 @@
       "nameAR": "الاسم العربي",
       "sortOrder": "ترتيب الفرز",
       "systemCategory": "فئة نظام"
+    }
+  },
+  "wfVariable": {
+    "sections": { "configuration": "إعداد المتغير" },
+    "groups": { "assignment": "التعيين" },
+    "fields": {
+      "code": "رمز المتغير",
+      "name": "الاسم الإنجليزي",
+      "nameAR": "الاسم العربي",
+      "description": "الوصف الإنجليزي",
+      "descriptionAR": "الوصف العربي",
+      "process": "العملية",
+      "dataType": "نوع البيانات",
+      "sortOrder": "ترتيب الفرز"
+    }
+  },
+  "workflowSetup": {
+    "fields": {
+      "code": "الرمز",
+      "name": "الاسم الإنجليزي",
+      "nameAR": "الاسم العربي",
+      "description": "الوصف الإنجليزي",
+      "descriptionAR": "الوصف العربي",
+      "sortOrder": "ترتيب الفرز",
+      "controlType": "نوع عنصر التحكم"
     }
   },
   "utilities": {

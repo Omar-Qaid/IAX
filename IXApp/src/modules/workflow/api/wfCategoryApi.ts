@@ -48,6 +48,12 @@ export const wfCategoryApi = {
     const response = await apiClient.get<ApiResponse<WfCategoryDto[]>>(endpoint, { signal });
     return requireData(response.data).map(toRecord);
   },
+  async getById(recId: number, signal?: AbortSignal): Promise<WfCategoryRecord> {
+    const response = await apiClient.get<ApiResponse<WfCategoryDto>>(`${endpoint}/${recId}`, {
+      signal,
+    });
+    return toRecord(requireData(response.data));
+  },
   async create(record: WfCategoryRecord): Promise<WfCategoryRecord> {
     const response = await apiClient.post<ApiResponse<WfCategoryDto>>(endpoint, toDto(record));
     return toRecord(requireData(response.data));

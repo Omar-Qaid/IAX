@@ -23,7 +23,9 @@ namespace IAX.IXApi.Modules.Workflow
             services.AddScoped<DataExchange.IWfExcelImportService, DataExchange.WfExcelImportService>();
             services.AddScoped<Operators.IWfOperatorService, Operators.WfOperatorService>();
             services.AddScoped<Performers.IWfPerformerService, Performers.WfPerformerService>();
+            services.AddScoped<Performers.IWfPerformerTypeService, Performers.WfPerformerTypeService>();
             services.AddScoped<Priorities.IWfPriorityService, Priorities.WfPriorityService>();
+            services.AddScoped<ProcessTypes.IWfProcessTypeService, ProcessTypes.WfProcessTypeService>();
             services.AddScoped<Processes.IWfProcessService, Processes.WfProcessService>();
             services.AddScoped<Requests.IValidationEngine, Requests.ValidationEngine>();
             services.AddScoped<Requests.IWfRequestControlService, Requests.WfRequestControlService>();

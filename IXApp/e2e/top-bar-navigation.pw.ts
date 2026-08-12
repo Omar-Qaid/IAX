@@ -2,15 +2,16 @@ import { expect, test } from '@playwright/test';
 
 test('renders the shared D365 Finance and Operations top bar', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop-chromium');
+  await page.setViewportSize({ width: 1918, height: 720 });
   await page.goto('/organization-administration/legal-entities');
 
   const header = page.getByRole('banner');
   await expect(header).toBeVisible();
-  await expect(header).toHaveCSS('height', '48px');
-  await expect(header).toHaveCSS('background-color', 'rgb(6, 23, 53)');
+  await expect(header).toHaveCSS('height', '58px');
+  await expect(header).toHaveCSS('background-color', 'rgb(17, 17, 17)');
   await expect(header.getByText('Finance and Operations', { exact: true })).toBeVisible();
   await expect(header.getByRole('button', { name: 'App launcher' })).toBeVisible();
-  await expect(header.getByRole('textbox', { name: 'Search for a page' })).toBeVisible();
+  await expect(header.getByRole('button', { name: 'Search for a page' })).toBeVisible();
   await expect(header.getByRole('navigation', { name: 'Breadcrumbs' })).toBeVisible();
   await expect(header.getByRole('button', { name: 'Notifications' })).toBeVisible();
   await expect(header.getByRole('button', { name: 'Settings' })).toBeVisible();

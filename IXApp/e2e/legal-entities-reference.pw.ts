@@ -5,7 +5,7 @@ test('matches the compact Legal entities reference shell and preserves settings'
   await page.setViewportSize({ width: 1920, height: 881 });
   await page.goto('/organization-administration/legal-entities');
 
-  await expect(page.getByRole('banner')).toHaveCSS('height', '48px');
+  await expect(page.getByRole('banner')).toHaveCSS('height', '58px');
   await expect(page.getByRole('button', { name: 'Settings' })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Breadcrumbs' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Legal entities' })).toBeVisible();

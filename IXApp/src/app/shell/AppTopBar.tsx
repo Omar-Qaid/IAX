@@ -7,7 +7,6 @@ import {
   IconButton,
   Box,
   Avatar,
-  InputBase,
   Tooltip,
   Badge,
   useMediaQuery,
@@ -26,6 +25,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import NotificationsIcon from '@mui/icons-material/NotificationsNoneOutlined';
 import SettingsIcon from '@mui/icons-material/Settings';
 import HelpIcon from '@mui/icons-material/HelpOutlined';
+import FeedbackIcon from '@mui/icons-material/SentimentSatisfiedAltOutlined';
 import AccountIcon from '@mui/icons-material/AccountCircle';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -209,7 +209,7 @@ export const AppTopBar: React.FC = memo(() => {
           sx={{
             width: { sm: topBar.productWidth },
             height: topBar.height,
-            px: '12px',
+            px: '27px',
             display: { xs: 'none', sm: 'flex' },
             alignItems: 'center',
             flexShrink: 0,
@@ -230,9 +230,9 @@ export const AppTopBar: React.FC = memo(() => {
               display: 'flex',
               alignItems: 'center',
               minWidth: 0,
-              maxWidth: { md: 420, xl: 600 },
-              px: 2.5,
-              gap: 1,
+              maxWidth: { md: 620, xl: 820 },
+              px: '44px',
+              gap: 1.25,
               flexShrink: 1,
               overflow: 'hidden',
             }}
@@ -240,7 +240,7 @@ export const AppTopBar: React.FC = memo(() => {
             {breadcrumbs.map((item, index) => (
               <React.Fragment key={`${item.labelKey}-${index}`}>
                 {index > 0 && (
-                  <ChevronRightIcon sx={{ fontSize: 23, color: topBar.text, flexShrink: 0 }} />
+                  <ChevronRightIcon sx={{ fontSize: 27, color: topBar.text, flexShrink: 0 }} />
                 )}
                 <Typography
                   component={item.path ? 'button' : 'span'}
@@ -253,7 +253,7 @@ export const AppTopBar: React.FC = memo(() => {
                     p: 0,
                     color: topBar.text,
                     fontFamily: topBar.fontFamily,
-                    fontSize: 14,
+                    fontSize: 16,
                     fontWeight: 400,
                     cursor: item.path ? 'pointer' : 'default',
                     overflow: 'hidden',
@@ -337,46 +337,7 @@ export const AppTopBar: React.FC = memo(() => {
           </Box>
         )}
 
-        <Box
-          sx={{
-            flex: 1,
-            minWidth: 8,
-            px: { xs: 1, md: 2 },
-            display: { xs: 'none', sm: 'flex' },
-            justifyContent: 'center',
-          }}
-        >
-          <Box
-            onClick={openCommandPalette}
-            sx={{
-              width: '100%',
-              maxWidth: topBar.searchWidth,
-              height: 30,
-              px: 1.5,
-              display: 'flex',
-              alignItems: 'center',
-              bgcolor: topBar.searchBackground,
-              borderRadius: '4px',
-              cursor: 'text',
-              '&:hover': { bgcolor: '#35517d' },
-            }}
-          >
-            <SearchIcon sx={{ color: '#ffffff', fontSize: 18, mr: 1 }} />
-            <InputBase
-              value=""
-              readOnly
-              placeholder={t('nav.global_search', 'Search for a page')}
-              inputProps={{ 'aria-label': t('nav.global_search', 'Search for a page') }}
-              sx={{
-                flex: 1,
-                color: '#ffffff',
-                fontFamily: topBar.fontFamily,
-                fontSize: 14,
-                '& input::placeholder': { color: '#ffffff', opacity: 1 },
-              }}
-            />
-          </Box>
-        </Box>
+        <Box sx={{ flex: 1, minWidth: 8 }} />
 
         {/* Action icons */}
         <Box sx={actionsSx}>
@@ -384,21 +345,23 @@ export const AppTopBar: React.FC = memo(() => {
             sx={{
               display: { xs: 'none', lg: 'flex' },
               alignItems: 'center',
-              maxWidth: 307,
-              height: 30,
-              px: 1.25,
-              mr: 0.5,
-              bgcolor: '#f4f7fb',
-              border: '1px solid #a7b8d4',
-              borderRadius: '4px',
-              color: '#0b2f75',
+              height: topBar.height,
+              px: 1.75,
+              bgcolor: 'transparent',
+              color: topBar.text,
               fontFamily: topBar.fontFamily,
             }}
           >
-            <Typography noWrap sx={{ fontFamily: 'inherit', fontSize: 15, color: 'inherit' }}>
+            <Typography noWrap sx={{ fontFamily: 'inherit', fontSize: 16, color: 'inherit' }}>
               {currentCompany}{user?.defaultCompany && user.defaultCompany !== currentCompany ? ` | ${user.defaultCompany}` : ''}
             </Typography>
           </Box>
+
+          <Tooltip title={t('nav.global_search', 'Search for a page')}>
+            <IconButton size="small" onClick={openCommandPalette} sx={iconBtnSx} aria-label={t('nav.global_search', 'Search for a page')}>
+              <SearchIcon sx={{ fontSize: 27 }} />
+            </IconButton>
+          </Tooltip>
 
           {/* Notifications */}
           <Tooltip title={t('common.notifications', 'Notifications')}>
@@ -409,9 +372,15 @@ export const AppTopBar: React.FC = memo(() => {
             </IconButton>
           </Tooltip>
 
+          <Tooltip title={t('common.feedback', 'Feedback')}>
+            <IconButton size="small" sx={iconBtnSx} aria-label={t('common.feedback', 'Feedback')}>
+              <FeedbackIcon sx={{ fontSize: 22 }} />
+            </IconButton>
+          </Tooltip>
+
           {/* Settings */}
           <Tooltip title={t('common.settings', 'Settings')}>
-            <IconButton size="small" onClick={openSettings} sx={iconBtnSx}>
+            <IconButton size="small" onClick={openSettings} sx={{ ...iconBtnSx, borderInlineStart: `1px solid ${topBar.divider}` }}>
               <SettingsIcon sx={{ fontSize: topBar.iconSize }} />
             </IconButton>
           </Tooltip>
@@ -428,7 +397,7 @@ export const AppTopBar: React.FC = memo(() => {
             <IconButton
               size="small"
               sx={{
-                width: 64,
+                width: 60,
                 height: topBar.height,
                 borderInlineStart: `1px solid ${topBar.divider}`,
                 borderRadius: 0,

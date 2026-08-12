@@ -32,6 +32,7 @@ using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Workflow.Processes;
 using IAX.IXApi.Modules.Workflow.Categories;
 using IAX.IXApi.Modules.Workflow.Priorities;
+using IAX.IXApi.Modules.Workflow.ProcessTypes;
 using IAX.IXApi.Modules.Workflow.Steps;
 using IAX.IXApi.Modules.Workflow.Controls;
 using IAX.IXApi.Modules.Workflow.Operators;
@@ -168,6 +169,7 @@ namespace IAX.IXApi.Infrastructure.Persistence
         #region ًWorkflow
         public DbSet<WfDataType> WfDataTypes => Set<WfDataType>();
         public DbSet<WfPriority> WfPriorities => Set<WfPriority>();
+        public DbSet<WfProcessType> WfProcessTypes => Set<WfProcessType>();
         public DbSet<WfCategory> WfCategories => Set<WfCategory>();
         public DbSet<WfActivityType> WfActivityTypes => Set<WfActivityType>();
         public DbSet<WfControl> WfControls => Set<WfControl>();
@@ -187,6 +189,7 @@ namespace IAX.IXApi.Infrastructure.Persistence
         public DbSet<WfActivityControlsOption> WfActivityControlsOptions => Set<WfActivityControlsOption>();
         public DbSet<WfTransition> WfTransitions => Set<WfTransition>();
         public DbSet<WfPerformer> WfPerformers => Set<WfPerformer>();
+        public DbSet<WfPerformerType> WfPerformerTypes => Set<WfPerformerType>();
         public DbSet<WfPerformerUsers> WfPerformerUsers => Set<WfPerformerUsers>();
         public DbSet<WfActivityMappingVariable> WfActivityMappingVariables => Set<WfActivityMappingVariable>();
         public DbSet<WfProcessData> WfProcessData => Set<WfProcessData>();

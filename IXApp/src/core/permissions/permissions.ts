@@ -28,6 +28,26 @@ export const PERMISSIONS = {
   WF_CATEGORY_EDIT: 'Workflow.Categories.Edit',
   WF_CATEGORY_DELETE: 'Workflow.Categories.Delete',
 
+  WF_ACTIVITY_TYPE_VIEW: 'Workflow.ActivityTypes.View',
+  WF_ACTIVITY_TYPE_CREATE: 'Workflow.ActivityTypes.Create',
+  WF_ACTIVITY_TYPE_EDIT: 'Workflow.ActivityTypes.Edit',
+  WF_ACTIVITY_TYPE_DELETE: 'Workflow.ActivityTypes.Delete',
+
+  WF_CONTROL_VIEW: 'Workflow.Controls.View',
+  WF_CONTROL_CREATE: 'Workflow.Controls.Create',
+  WF_CONTROL_EDIT: 'Workflow.Controls.Edit',
+  WF_CONTROL_DELETE: 'Workflow.Controls.Delete',
+
+  WF_PRIORITY_VIEW: 'Workflow.Priorities.View',
+  WF_PRIORITY_CREATE: 'Workflow.Priorities.Create',
+  WF_PRIORITY_EDIT: 'Workflow.Priorities.Edit',
+  WF_PRIORITY_DELETE: 'Workflow.Priorities.Delete',
+
+  WF_VARIABLE_VIEW: 'Workflow.Variables.View',
+  WF_VARIABLE_CREATE: 'Workflow.Variables.Create',
+  WF_VARIABLE_EDIT: 'Workflow.Variables.Edit',
+  WF_VARIABLE_DELETE: 'Workflow.Variables.Delete',
+
   LEGAL_ENTITY_VIEW: 'legalEntity.view',
   LEGAL_ENTITY_MANAGE: 'legalEntity.manage',
 
