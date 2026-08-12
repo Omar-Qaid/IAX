@@ -36,6 +36,13 @@ const navigationMetadata: RouteMetadata[] = Object.values(AVAILABLE_MODULE_NAV_C
 
 export const ROUTE_METADATA: RouteMetadata[] = [
   {
+    path: ROUTE_PATHS.PROCESS_BUILDER,
+    breadcrumbs: [
+      home,
+      { labelKey: 'pages.wfProcessBuilder.title' },
+    ],
+  },
+  {
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDER_DETAILS,
     breadcrumbs: [
       home,

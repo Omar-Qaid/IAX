@@ -87,6 +87,13 @@ describe('module navigation configuration', () => {
     expect(getPageDefinition(ROUTE_PATHS.WORKFLOW.PROCESSES)?.permission).toBe(
       PERMISSIONS.WF_PROCESS_VIEW
     );
+    expect(getPageDefinition(ROUTE_PATHS.PROCESS_BUILDER)?.permission).toBeUndefined();
+    expect(getPageDefinition(ROUTE_PATHS.PROCESS_BUILDER_NEW)).toBeDefined();
+    expect(
+      AVAILABLE_MODULE_NAV_CONFIGS['mod-Workflow']?.sections
+        .flatMap((section) => section.links)
+        .some((link) => link.path === ROUTE_PATHS.PROCESS_BUILDER_NEW)
+    ).toBe(true);
     expect(AVAILABLE_MODULE_NAV_CONFIGS['mod-Workflow']?.defaultPath).toBe(
       ROUTE_PATHS.WORKFLOW.PROCESSES
     );

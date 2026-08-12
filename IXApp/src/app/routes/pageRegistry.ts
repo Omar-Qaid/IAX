@@ -125,6 +125,22 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'process-builder',
+    path: ROUTE_PATHS.PROCESS_BUILDER,
+    component: lazyPage(
+      () => import('@modules/process-builder/pages/ProcessBuilderPage'),
+      (module) => module.ProcessBuilderPage
+    ),
+  },
+  {
+    id: 'process-builder-new',
+    path: ROUTE_PATHS.PROCESS_BUILDER_NEW,
+    component: lazyPage(
+      () => import('@modules/process-builder/pages/ProcessBuilderPage'),
+      (module) => module.ProcessBuilderPage
+    ),
+  },
+  {
     id: 'workflow-categories',
     path: ROUTE_PATHS.WORKFLOW.CATEGORIES,
     permission: PERMISSIONS.WF_CATEGORY_VIEW,

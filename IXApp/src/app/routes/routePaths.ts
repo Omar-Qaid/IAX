@@ -1,8 +1,14 @@
+import { WORKFLOW_ROUTE_PATHS } from '@modules/workflow/routes/workflowRoutePaths';
+
 export const ROUTE_PATHS = {
   ROOT: '/',
   HOME: '/',
   LOGIN: '/login',
   DASHBOARD: '/dashboard',
+  PROCESS_BUILDER: '/process-builder/:builderId',
+  PROCESS_BUILDER_NEW: '/process-builder/new',
+  processBuilder: (builderId: string | number) =>
+    `/process-builder/${encodeURIComponent(String(builderId))}`,
 
   ACCOUNTS_RECEIVABLE: {
     ROOT: '/accounts-receivable',
@@ -25,18 +31,7 @@ export const ROUTE_PATHS = {
     EXCHANGE_RATES: '/foundation/exchange-rates',
   },
 
-  WORKFLOW: {
-    ROOT: '/workflow',
-    PROCESSES: '/workflow/processes',
-    CATEGORIES: '/workflow/categories',
-    ACTIVITY_TYPES: '/workflow/activity-types',
-    DATA_TYPES: '/workflow/data-types',
-    CONTROLS: '/workflow/controls',
-    PRIORITIES: '/workflow/priorities',
-    VARIABLES: '/workflow/variables',
-    STEPS: '/workflow/steps',
-    ACTIVITIES: '/workflow/activities',
-  },
+  WORKFLOW: WORKFLOW_ROUTE_PATHS,
 
   ORGANIZATION_ADMINISTRATION: {
     ROOT: '/organization-administration',

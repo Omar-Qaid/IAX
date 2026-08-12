@@ -21,6 +21,7 @@
     "exchangeRateTypes": "Exchange rate types",
     "exchangeRates": "Currency exchange rates",
     "workflow": "Workflow",
+    "processBuilder": "Process builder",
     "workflowProcesses": "Workflow processes",
     "workflowCategories": "Workflow categories",
     "wfActivityTypes": "Workflow activity types",
@@ -84,6 +85,7 @@
     "salesOrder": { "title": "Sales order {{number}}", "breadcrumb": "Sales order" },
     "currencies": { "title": "Currencies", "subtitle": "Read-only currency configuration" },
     "wfProcesses": { "title": "Workflow processes" },
+    "wfProcessBuilder": { "title": "Process builder" },
     "wfCategories": { "title": "Workflow categories" },
     "wfActivityTypes": { "title": "Workflow activity types" },
     "wfDataTypes": { "title": "Workflow data types" },
@@ -379,7 +381,7 @@
   },
   "workflow": { "builder": "Builder" },
   "wfProcess": {
-    "commands": { "variables": "Variables", "steps": "Steps" },
+    "commands": { "processBuilder": "Process builder", "variables": "Variables", "steps": "Steps" },
     "sections": { "configuration": "Process configuration" },
     "groups": { "classification": "Classification", "behavior": "Behavior" },
     "fields": {
@@ -463,6 +465,17 @@
       "autoPassingHrs": "Automatic passing hours",
       "extendedProperties": "Extended properties"
     }
+  },
+  "wfProcessBuilder": {
+    "tabs": { "designer": "Designer", "variables": "Variables", "steps": "Steps", "activities": "Activities" },
+    "steps": "steps",
+    "activities": "activities",
+    "variables": "variables",
+    "start": "Start",
+    "openPage": "Open management page",
+    "selectNode": "Select an item to view its properties.",
+    "designerHelp": "Review the process flow and select an item from the structure to inspect its properties.",
+    "invalidProcess": "A valid workflow process is required."
   },
   "workflowSetup": {
     "fields": {

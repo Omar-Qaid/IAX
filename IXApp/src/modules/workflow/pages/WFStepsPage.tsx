@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ROUTE_PATHS } from '@app/routes/routePaths';
+import { WORKFLOW_ROUTE_PATHS } from '../routes/workflowRoutePaths';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
 import type {
@@ -200,7 +200,7 @@ export function WFStepsPage(): React.ReactElement {
         label: t('nav.wfActivities'),
         requiresSelection: true,
         onClick: (step) => {
-          if (step) navigate(`${ROUTE_PATHS.WORKFLOW.ACTIVITIES}?stepId=${step.recId}`);
+          if (step) navigate(`${WORKFLOW_ROUTE_PATHS.ACTIVITIES}?stepId=${step.recId}`);
         },
       },
       { id: 'options', label: t('customerCommands.options') },

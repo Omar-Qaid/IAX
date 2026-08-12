@@ -152,6 +152,10 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
             permission: PERMISSIONS.WF_STEP_VIEW,
           },
           {
+            label: 'nav.processBuilder',
+            path: ROUTE_PATHS.PROCESS_BUILDER_NEW,
+          },
+          {
             label: 'nav.wfActivities',
             path: ROUTE_PATHS.WORKFLOW.ACTIVITIES,
             permission: PERMISSIONS.WF_ACTIVITY_VIEW,

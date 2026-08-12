@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { ROUTE_PATHS } from '@app/routes/routePaths';
+import { WORKFLOW_ROUTE_PATHS } from '../routes/workflowRoutePaths';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { AppLookupGridField } from '@shared/components/fields/AppLookupGridField';
 import { AppLookupField } from '@shared/components/fields/AppLookupField';
@@ -309,7 +309,7 @@ export function WFProcessPage(): React.ReactElement {
         label: t('wfProcess.commands.variables'),
         requiresSelection: true,
         onClick: (process) => {
-          if (process) navigate(`${ROUTE_PATHS.WORKFLOW.VARIABLES}?processId=${process.recId}`);
+          if (process) navigate(`${WORKFLOW_ROUTE_PATHS.VARIABLES}?processId=${process.recId}`);
         },
       },
       {
@@ -317,7 +317,7 @@ export function WFProcessPage(): React.ReactElement {
         label: t('wfProcess.commands.steps'),
         requiresSelection: true,
         onClick: (process) => {
-          if (process) navigate(`${ROUTE_PATHS.WORKFLOW.STEPS}?processId=${process.recId}`);
+          if (process) navigate(`${WORKFLOW_ROUTE_PATHS.STEPS}?processId=${process.recId}`);
         },
       },
       { id: 'options', label: t('customerCommands.options') },

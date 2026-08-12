@@ -21,6 +21,7 @@
     "exchangeRateTypes": "أنواع أسعار الصرف",
     "exchangeRates": "أسعار صرف العملات",
     "workflow": "سير العمل",
+    "processBuilder": "مصمم العمليات",
     "workflowProcesses": "عمليات سير العمل",
     "workflowCategories": "فئات سير العمل",
     "wfActivityTypes": "أنواع أنشطة سير العمل",
@@ -89,6 +90,7 @@
     "salesOrder": { "title": "أمر البيع {{number}}", "breadcrumb": "أمر البيع" },
     "currencies": { "title": "العملات", "subtitle": "إعداد العملات للقراءة فقط" },
     "wfProcesses": { "title": "عمليات سير العمل" },
+    "wfProcessBuilder": { "title": "مصمم العمليات" },
     "wfCategories": { "title": "فئات سير العمل" },
     "wfActivityTypes": { "title": "أنواع أنشطة سير العمل" },
     "wfDataTypes": { "title": "أنواع بيانات سير العمل" },
@@ -389,7 +391,7 @@
   },
   "workflow": { "builder": "المصمم" },
   "wfProcess": {
-    "commands": { "variables": "المتغيرات", "steps": "الخطوات" },
+    "commands": { "processBuilder": "مصمم العمليات", "variables": "المتغيرات", "steps": "الخطوات" },
     "sections": { "configuration": "إعداد العملية" },
     "groups": { "classification": "التصنيف", "behavior": "السلوك" },
     "fields": {
@@ -473,6 +475,17 @@
       "autoPassingHrs": "ساعات التجاوز التلقائي",
       "extendedProperties": "الخصائص الإضافية"
     }
+  },
+  "wfProcessBuilder": {
+    "tabs": { "designer": "المصمم", "variables": "المتغيرات", "steps": "الخطوات", "activities": "الأنشطة" },
+    "steps": "خطوات",
+    "activities": "أنشطة",
+    "variables": "متغيرات",
+    "start": "البداية",
+    "openPage": "فتح صفحة الإدارة",
+    "selectNode": "اختر عنصراً لعرض خصائصه.",
+    "designerHelp": "راجع مسار العملية واختر عنصراً من الهيكل لعرض خصائصه.",
+    "invalidProcess": "يجب تحديد عملية سير عمل صالحة."
   },
   "workflowSetup": {
     "fields": {
