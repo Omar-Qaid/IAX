@@ -147,6 +147,16 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
             permission: PERMISSIONS.WF_VARIABLE_VIEW,
           },
           {
+            label: 'nav.wfSteps',
+            path: ROUTE_PATHS.WORKFLOW.STEPS,
+            permission: PERMISSIONS.WF_STEP_VIEW,
+          },
+          {
+            label: 'nav.wfActivities',
+            path: ROUTE_PATHS.WORKFLOW.ACTIVITIES,
+            permission: PERMISSIONS.WF_ACTIVITY_VIEW,
+          },
+          {
             label: 'nav.workflowCategories',
             path: ROUTE_PATHS.WORKFLOW.CATEGORIES,
             permission: PERMISSIONS.WF_CATEGORY_VIEW,

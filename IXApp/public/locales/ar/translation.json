@@ -28,6 +28,8 @@
     "wfControls": "عناصر تحكم سير العمل",
     "wfPriorities": "أولويات سير العمل",
     "wfVariables": "متغيرات سير العمل",
+    "wfSteps": "خطوات سير العمل",
+    "wfActivities": "أنشطة سير العمل",
     "setup": "الإعداد",
     "organizationAdministration": "إدارة المؤسسة",
     "legalEntities": "الكيانات القانونية",
@@ -93,6 +95,8 @@
     "wfControls": { "title": "عناصر تحكم سير العمل" },
     "wfPriorities": { "title": "أولويات سير العمل" },
     "wfVariables": { "title": "متغيرات سير العمل" },
+    "wfSteps": { "title": "خطوات سير العمل" },
+    "wfActivities": { "title": "أنشطة سير العمل" },
     "exchangeRateTypes": { "title": "أنواع أسعار الصرف" },
     "legalEntities": { "title": "الكيانات القانونية" },
     "exchangeRates": { "title": "أسعار صرف العملات" },
@@ -385,7 +389,7 @@
   },
   "workflow": { "builder": "المصمم" },
   "wfProcess": {
-    "commands": { "variables": "المتغيرات" },
+    "commands": { "variables": "المتغيرات", "steps": "الخطوات" },
     "sections": { "configuration": "إعداد العملية" },
     "groups": { "classification": "التصنيف", "behavior": "السلوك" },
     "fields": {
@@ -425,6 +429,49 @@
       "process": "العملية",
       "dataType": "نوع البيانات",
       "sortOrder": "ترتيب الفرز"
+    }
+  },
+  "wfStep": {
+    "sections": { "configuration": "إعداد الخطوة" },
+    "groups": { "assignment": "التعيين", "behavior": "السلوك" },
+    "fields": {
+      "code": "رمز الخطوة",
+      "name": "الاسم الإنجليزي",
+      "nameAR": "الاسم العربي",
+      "description": "الوصف الإنجليزي",
+      "descriptionAR": "الوصف العربي",
+      "process": "العملية",
+      "sortOrder": "ترتيب الفرز",
+      "score": "الدرجة",
+      "autoPassingHrs": "ساعات التجاوز التلقائي",
+      "allMandatory": "الكل إلزامي",
+      "systemStep": "خطوة نظام"
+    }
+  },
+  "wfActivity": {
+    "sections": { "configuration": "إعداد النشاط" },
+    "groups": { "assignment": "التعيين", "notifications": "الإشعارات", "behavior": "السلوك" },
+    "fields": {
+      "code": "رمز النشاط",
+      "name": "الاسم بالإنجليزية",
+      "nameAR": "الاسم بالعربية",
+      "description": "الوصف بالإنجليزية",
+      "descriptionAR": "الوصف بالعربية",
+      "step": "الخطوة",
+      "activityType": "نوع النشاط",
+      "performer": "المنفذ",
+      "score": "الدرجة",
+      "notificationTemplate": "قالب الإشعار",
+      "alertingBySystem": "إشعار النظام",
+      "alertingByEmail": "إشعار البريد الإلكتروني",
+      "alertingBySms": "إشعار الرسائل النصية",
+      "alertingByWhatsApp": "إشعار واتساب",
+      "showPreviousSteps": "إظهار الخطوات السابقة",
+      "showPreviousDocs": "إظهار المستندات السابقة",
+      "mandatoryDocs": "المستندات إلزامية",
+      "autoPassEnabled": "تمكين التجاوز التلقائي",
+      "autoPassingHrs": "ساعات التجاوز التلقائي",
+      "extendedProperties": "الخصائص الإضافية"
     }
   },
   "workflowSetup": {

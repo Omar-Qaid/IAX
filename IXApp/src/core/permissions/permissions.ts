@@ -48,6 +48,16 @@ export const PERMISSIONS = {
   WF_VARIABLE_EDIT: 'Workflow.Variables.Edit',
   WF_VARIABLE_DELETE: 'Workflow.Variables.Delete',
 
+  WF_STEP_VIEW: 'Workflow.Steps.View',
+  WF_STEP_CREATE: 'Workflow.Steps.Create',
+  WF_STEP_EDIT: 'Workflow.Steps.Edit',
+  WF_STEP_DELETE: 'Workflow.Steps.Delete',
+
+  WF_ACTIVITY_VIEW: 'Workflow.Activities.View',
+  WF_ACTIVITY_CREATE: 'Workflow.Activities.Create',
+  WF_ACTIVITY_EDIT: 'Workflow.Activities.Edit',
+  WF_ACTIVITY_DELETE: 'Workflow.Activities.Delete',
+
   LEGAL_ENTITY_VIEW: 'legalEntity.view',
   LEGAL_ENTITY_MANAGE: 'legalEntity.manage',
 

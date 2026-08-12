@@ -47,6 +47,40 @@ export const ROUTE_METADATA: RouteMetadata[] = [
   ...navigationMetadata,
 ];
 
-export const getRouteBreadcrumbs = (pathname: string): BreadcrumbDefinition[] =>
-  ROUTE_METADATA.find((route) => matchPath({ path: route.path, end: true }, pathname))
-    ?.breadcrumbs ?? [home];
+export const getRouteBreadcrumbs = (
+  pathname: string,
+  search = ''
+): BreadcrumbDefinition[] => {
+  const processScopedChild =
+    new URLSearchParams(search).has('processId') &&
+    (pathname === ROUTE_PATHS.WORKFLOW.VARIABLES || pathname === ROUTE_PATHS.WORKFLOW.STEPS);
+
+  if (processScopedChild) {
+    return [
+      home,
+      { labelKey: 'nav.workflow', path: ROUTE_PATHS.WORKFLOW.PROCESSES },
+      { labelKey: 'nav.workflowProcesses', path: ROUTE_PATHS.WORKFLOW.PROCESSES },
+      {
+        labelKey:
+          pathname === ROUTE_PATHS.WORKFLOW.VARIABLES ? 'nav.wfVariables' : 'nav.wfSteps',
+      },
+    ];
+  }
+
+  if (
+    pathname === ROUTE_PATHS.WORKFLOW.ACTIVITIES &&
+    new URLSearchParams(search).has('stepId')
+  ) {
+    return [
+      home,
+      { labelKey: 'nav.workflow', path: ROUTE_PATHS.WORKFLOW.PROCESSES },
+      { labelKey: 'nav.wfSteps', path: ROUTE_PATHS.WORKFLOW.STEPS },
+      { labelKey: 'nav.wfActivities' },
+    ];
+  }
+
+  return (
+    ROUTE_METADATA.find((route) => matchPath({ path: route.path, end: true }, pathname))
+      ?.breadcrumbs ?? [home]
+  );
+};

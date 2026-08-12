@@ -178,6 +178,24 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'workflow-steps',
+    path: ROUTE_PATHS.WORKFLOW.STEPS,
+    permission: PERMISSIONS.WF_STEP_VIEW,
+    component: lazyPage(
+      () => import('@modules/workflow/pages/WFStepsPage'),
+      (module) => module.WFStepsPage
+    ),
+  },
+  {
+    id: 'workflow-activities',
+    path: ROUTE_PATHS.WORKFLOW.ACTIVITIES,
+    permission: PERMISSIONS.WF_ACTIVITY_VIEW,
+    component: lazyPage(
+      () => import('@modules/workflow/pages/WfActivitiesPage'),
+      (module) => module.WfActivitiesPage
+    ),
+  },
+  {
     id: 'legal-entities',
     path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.LEGAL_ENTITIES,
     permission: PERMISSIONS.LEGAL_ENTITY_VIEW,

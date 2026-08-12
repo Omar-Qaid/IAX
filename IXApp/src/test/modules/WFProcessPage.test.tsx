@@ -102,6 +102,7 @@ describe('WFProcessPage', () => {
     expect(screen.getByRole('button', { name: 'Save' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'Variables' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Steps' })).toBeDefined();
   });
 
   it('enforces only the two backend validator requirements', async () => {

@@ -10,7 +10,7 @@ import { useAppTranslation } from '@core/localization/useAppTranslation';
 export const PageBreadcrumbs: React.FC = () => {
   const location = useLocation();
   const { t } = useAppTranslation();
-  const breadcrumbs = getRouteBreadcrumbs(location.pathname);
+  const breadcrumbs = getRouteBreadcrumbs(location.pathname, location.search);
 
   if (location.pathname === ROUTE_PATHS.DASHBOARD || location.pathname === '/') {
     return null;

@@ -34,6 +34,8 @@ export const ROUTE_PATHS = {
     CONTROLS: '/workflow/controls',
     PRIORITIES: '/workflow/priorities',
     VARIABLES: '/workflow/variables',
+    STEPS: '/workflow/steps',
+    ACTIVITIES: '/workflow/activities',
   },
 
   ORGANIZATION_ADMINISTRATION: {

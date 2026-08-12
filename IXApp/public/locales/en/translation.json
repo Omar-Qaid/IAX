@@ -28,6 +28,8 @@
     "wfControls": "Workflow controls",
     "wfPriorities": "Workflow priorities",
     "wfVariables": "Workflow variables",
+    "wfSteps": "Workflow steps",
+    "wfActivities": "Workflow activities",
     "setup": "Setup",
     "organizationAdministration": "Organization administration",
     "legalEntities": "Legal entities",
@@ -88,6 +90,8 @@
     "wfControls": { "title": "Workflow controls" },
     "wfPriorities": { "title": "Workflow priorities" },
     "wfVariables": { "title": "Workflow variables" },
+    "wfSteps": { "title": "Workflow steps" },
+    "wfActivities": { "title": "Workflow activities" },
     "exchangeRateTypes": { "title": "Exchange rate types" },
     "exchangeRates": { "title": "Currency exchange rates" },
     "legalEntities": { "title": "Legal entities" },
@@ -375,7 +379,7 @@
   },
   "workflow": { "builder": "Builder" },
   "wfProcess": {
-    "commands": { "variables": "Variables" },
+    "commands": { "variables": "Variables", "steps": "Steps" },
     "sections": { "configuration": "Process configuration" },
     "groups": { "classification": "Classification", "behavior": "Behavior" },
     "fields": {
@@ -415,6 +419,49 @@
       "process": "Process",
       "dataType": "Data type",
       "sortOrder": "Sort order"
+    }
+  },
+  "wfStep": {
+    "sections": { "configuration": "Step configuration" },
+    "groups": { "assignment": "Assignment", "behavior": "Behavior" },
+    "fields": {
+      "code": "Step code",
+      "name": "English name",
+      "nameAR": "Arabic name",
+      "description": "English description",
+      "descriptionAR": "Arabic description",
+      "process": "Process",
+      "sortOrder": "Sort order",
+      "score": "Score",
+      "autoPassingHrs": "Automatic passing hours",
+      "allMandatory": "All mandatory",
+      "systemStep": "System step"
+    }
+  },
+  "wfActivity": {
+    "sections": { "configuration": "Activity configuration" },
+    "groups": { "assignment": "Assignment", "notifications": "Notifications", "behavior": "Behavior" },
+    "fields": {
+      "code": "Activity code",
+      "name": "English name",
+      "nameAR": "Arabic name",
+      "description": "English description",
+      "descriptionAR": "Arabic description",
+      "step": "Step",
+      "activityType": "Activity type",
+      "performer": "Performer",
+      "score": "Score",
+      "notificationTemplate": "Notification template",
+      "alertingBySystem": "System notification",
+      "alertingByEmail": "Email notification",
+      "alertingBySms": "SMS notification",
+      "alertingByWhatsApp": "WhatsApp notification",
+      "showPreviousSteps": "Show previous steps",
+      "showPreviousDocs": "Show previous documents",
+      "mandatoryDocs": "Mandatory documents",
+      "autoPassEnabled": "Enable automatic passing",
+      "autoPassingHrs": "Automatic passing hours",
+      "extendedProperties": "Extended properties"
     }
   },
   "workflowSetup": {

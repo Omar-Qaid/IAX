@@ -106,5 +106,11 @@ describe('module navigation configuration', () => {
     expect(getPageDefinition(ROUTE_PATHS.WORKFLOW.VARIABLES)?.permission).toBe(
       PERMISSIONS.WF_VARIABLE_VIEW
     );
+    expect(getPageDefinition(ROUTE_PATHS.WORKFLOW.STEPS)?.permission).toBe(
+      PERMISSIONS.WF_STEP_VIEW
+    );
+    expect(getPageDefinition(ROUTE_PATHS.WORKFLOW.ACTIVITIES)?.permission).toBe(
+      PERMISSIONS.WF_ACTIVITY_VIEW
+    );
   });
 });

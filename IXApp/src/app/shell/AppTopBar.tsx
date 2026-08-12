@@ -179,7 +179,7 @@ export const AppTopBar: React.FC = memo(() => {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join('');
-  const breadcrumbs = getRouteBreadcrumbs(location.pathname).slice(1);
+  const breadcrumbs = getRouteBreadcrumbs(location.pathname, location.search).slice(1);
   const isHorizontal = navLayout === 'horizontal';
 
   return (
