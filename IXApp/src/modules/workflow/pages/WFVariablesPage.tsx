@@ -14,12 +14,7 @@ import { AppLookupGridField } from '@shared/components/fields/AppLookupGridField
 import { wfDataTypeApi } from '../api/workflowSetupApis';
 import { wfProcessApi, type WfProcessRecord } from '../api/wfProcessApi';
 import { wfVariableApi, type WfVariableRecord } from '../api/wfVariableApi';
-
-const processLookupColumns = [
-  { field: 'code', header: 'wfProcess.fields.code', width: 120 },
-  { field: 'name', header: 'wfProcess.fields.name', flex: 1 },
-  { field: 'nameAR', header: 'wfProcess.fields.nameAR', flex: 1 },
-] as const;
+import { fetchProcessPage, processLookupColumns } from '../lookups/processLookup';
 
 const emptyVariable = (processId = 0): WfVariableRecord => ({
   id: `new-${crypto.randomUUID()}`,
@@ -42,35 +37,6 @@ const emptyVariable = (processId = 0): WfVariableRecord => ({
 
 const numberValue = (value: DetailValue): number => Number(value) || 0;
 const textValue = (value: string | null): string => value ?? '';
-
-const fetchProcessPage = async ({
-  pageNumber,
-  pageSize,
-  search,
-  signal,
-}: {
-  pageNumber: number;
-  pageSize: number;
-  search: string;
-  signal?: AbortSignal;
-}) => {
-  const processes = await wfProcessApi.list(signal);
-  const query = search.trim().toLocaleLowerCase();
-  const filtered = query
-    ? processes.filter((process) =>
-        `${process.code ?? ''} ${process.name ?? ''} ${process.nameAR ?? ''}`
-          .toLocaleLowerCase()
-          .includes(query)
-      )
-    : processes;
-  const start = (pageNumber - 1) * pageSize;
-  return {
-    data: filtered.slice(start, start + pageSize),
-    pageNumber,
-    totalPages: Math.max(1, Math.ceil(filtered.length / pageSize)),
-    totalRecords: filtered.length,
-  };
-};
 
 export function WFVariablesPage(): React.ReactElement {
   const { t, isRtl } = useAppTranslation();
