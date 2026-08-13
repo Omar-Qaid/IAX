@@ -11,7 +11,7 @@ export function WfActivityTypesPage(): React.ReactElement {
       api={wfActivityTypeApi}
       createRecord={() => createEmptyWorkflowMaster({})}
       generatedCode
-      requiredCoreFields={['name', 'nameAR']}
+      requiredCoreFields={['name']}
       permissions={{
         create: 'Workflow.ActivityTypes.Create',
         edit: 'Workflow.ActivityTypes.Edit',

@@ -14,9 +14,6 @@ const process: WfProcessRecord = {
   recId: 10,
   code: 'WF-0010',
   name: 'Purchase approval',
-  nameAR: 'اعتماد المشتريات',
-  description: 'Purchase approval workflow',
-  descriptionAR: null,
   categoryId: 2,
   score: 10,
   canRepeat: true,
@@ -41,9 +38,7 @@ beforeEach(() => {
     recId: 2,
     code: 'PUR',
     name: 'Purchasing',
-    nameAR: 'المشتريات',
     description: null,
-    descriptionAR: null,
     sysField: false,
     sortOrder: 1,
     isActive: true,
@@ -57,9 +52,7 @@ beforeEach(() => {
       recId: 1,
       code: 'HIGH',
       name: 'High',
-      nameAR: 'عالي',
       description: null,
-      descriptionAR: null,
       sortOrder: 1,
       isActive: true,
       rowVersion: null,
@@ -73,9 +66,7 @@ beforeEach(() => {
       recId: 1,
       code: 'STANDARD',
       name: 'Standard',
-      nameAR: 'قياسي',
       description: null,
-      descriptionAR: null,
       sortOrder: 1,
       isActive: true,
       rowVersion: null,
@@ -105,14 +96,14 @@ describe('WFProcessPage', () => {
     expect(screen.getByRole('button', { name: 'Steps' })).toBeDefined();
   });
 
-  it('enforces only the two backend validator requirements', async () => {
+  it('enforces only the backend name requirement', async () => {
     const user = userEvent.setup();
     render(<WFProcessPage />);
 
-    await screen.findByText('Purchase approval workflow');
+    await screen.findAllByText('Purchase approval');
     await user.click(screen.getByRole('button', { name: 'New' }));
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
-    expect(await screen.findAllByText(/required/i)).toHaveLength(2);
+    expect(await screen.findAllByText(/required/i)).toHaveLength(1);
   });
 });

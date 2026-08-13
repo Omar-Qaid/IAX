@@ -14,9 +14,6 @@ export interface WfProcessDto {
   recId: number;
   code: string | null;
   name: string | null;
-  nameAR: string | null;
-  description: string | null;
-  descriptionAR: string | null;
   categoryId: number;
   score: number;
   canRepeat: boolean;
@@ -53,9 +50,6 @@ const toDto = ({ id: _id, ...record }: WfProcessRecord): WfProcessDto => ({
   ...record,
   code: record.code?.trim() || null,
   name: record.name?.trim() || null,
-  nameAR: record.nameAR?.trim() || null,
-  description: record.description?.trim() || null,
-  descriptionAR: record.descriptionAR?.trim() || null,
 });
 
 export const wfProcessApi = {

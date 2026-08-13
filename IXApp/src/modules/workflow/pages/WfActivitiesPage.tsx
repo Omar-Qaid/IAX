@@ -20,10 +20,9 @@ const textValue = (value: string | null): string => value ?? '';
 const lookupColumns = [
   { field: 'code', header: 'workflowSetup.fields.code', width: 120 },
   { field: 'name', header: 'workflowSetup.fields.name', flex: 1 },
-  { field: 'nameAR', header: 'workflowSetup.fields.nameAR', flex: 1 },
 ] as const;
 
-const createLookupPage = <T extends { code: string | null; name: string | null; nameAR: string | null }>(
+const createLookupPage = <T extends { code: string | null; name: string | null; description?: string | null }>(
   load: (signal?: AbortSignal) => Promise<T[]>
 ) =>
   async ({ pageNumber, pageSize, search, signal }: { pageNumber: number; pageSize: number; search: string; signal?: AbortSignal }) => {
@@ -31,7 +30,7 @@ const createLookupPage = <T extends { code: string | null; name: string | null; 
     const query = search.trim().toLocaleLowerCase();
     const filtered = query
       ? records.filter((record) =>
-          `${record.code ?? ''} ${record.name ?? ''} ${record.nameAR ?? ''}`
+          `${record.code ?? ''} ${record.name ?? ''} ${record.description ?? ''}`
             .toLocaleLowerCase()
             .includes(query)
         )
@@ -54,9 +53,7 @@ const emptyActivity = (stepId = 0): WfActivityRecord => ({
   recId: 0,
   code: null,
   name: '',
-  nameAR: '',
   description: null,
-  descriptionAR: null,
   sortOrder: 0,
   activityTypeId: 0,
   stepId,
@@ -115,7 +112,6 @@ export function WfActivitiesPage(): React.ReactElement {
                     }
                     valueField="recId"
                     labelField="name"
-                    labelFieldAr="nameAR"
                     pageSize={25}
                   />
                 ),
@@ -141,7 +137,6 @@ export function WfActivitiesPage(): React.ReactElement {
                     }
                     valueField="recId"
                     labelField="name"
-                    labelFieldAr="nameAR"
                     pageSize={25}
                   />
                 ),
@@ -167,7 +162,6 @@ export function WfActivitiesPage(): React.ReactElement {
                     }
                     valueField="recId"
                     labelField="name"
-                    labelFieldAr="nameAR"
                     pageSize={25}
                   />
                 ),
@@ -220,9 +214,9 @@ export function WfActivitiesPage(): React.ReactElement {
     },
     createRecord: () => emptyActivity(scopedStepId ?? 0),
     getPrimaryText: (record) => textValue(record.name) || textValue(record.code),
-    getSecondaryText: (record) => record.code || textValue(record.nameAR),
+    getSecondaryText: (record) => record.code || textValue(record.description),
     matchesSearch: (record, query) =>
-      `${record.code ?? ''} ${record.name ?? ''} ${record.nameAR ?? ''}`
+      `${record.code ?? ''} ${record.name ?? ''} ${record.description ?? ''}`
         .toLocaleLowerCase()
         .includes(query.toLocaleLowerCase()),
     getValues: (record): DetailValues => ({
@@ -263,9 +257,7 @@ export function WfActivitiesPage(): React.ReactElement {
     headerFields: [
       { id: 'code', label: t('wfActivity.fields.code'), disabled: true, getValue: (record) => textValue(record.code), setValue: (record, value) => ({ ...record, code: String(value) || null }) },
       { id: 'name', label: t('wfActivity.fields.name'), getValue: (record) => textValue(record.name), setValue: (record, value) => ({ ...record, name: String(value) || null }) },
-      { id: 'nameAR', label: t('wfActivity.fields.nameAR'), getValue: (record) => textValue(record.nameAR), setValue: (record, value) => ({ ...record, nameAR: String(value) || null }) },
       { id: 'description', label: t('wfActivity.fields.description'), getValue: (record) => textValue(record.description), setValue: (record, value) => ({ ...record, description: String(value) || null }) },
-      { id: 'descriptionAR', label: t('wfActivity.fields.descriptionAR'), getValue: (record) => textValue(record.descriptionAR), setValue: (record, value) => ({ ...record, descriptionAR: String(value) || null }) },
     ],
     sections,
     permissions: {
@@ -276,7 +268,6 @@ export function WfActivitiesPage(): React.ReactElement {
     },
     validate: (record) => ({
       ...(!record.name?.trim() ? { name: t('validation.required', { field: t('wfActivity.fields.name') }) } : {}),
-      ...(!record.nameAR?.trim() ? { nameAR: t('validation.required', { field: t('wfActivity.fields.nameAR') }) } : {}),
       ...(record.activityTypeId <= 0 ? { activityTypeId: t('validation.required', { field: t('wfActivity.fields.activityType') }) } : {}),
       ...(record.stepId <= 0 ? { stepId: t('validation.required', { field: t('wfActivity.fields.step') }) } : {}),
     }),

@@ -6,8 +6,8 @@ import { wfActivityApi, type WfActivityRecord } from '@modules/workflow/api/wfAc
 import { WfActivitiesPage } from '@modules/workflow/pages/WfActivitiesPage';
 
 const activity: WfActivityRecord = {
-  id: '1', recId: 1, code: 'ACT-001', name: 'Manager review', nameAR: 'مراجعة المدير',
-  description: null, descriptionAR: null, sortOrder: 0, activityTypeId: 1, stepId: 10,
+  id: '1', recId: 1, code: 'ACT-001', name: 'Manager review',
+  description: null, sortOrder: 0, activityTypeId: 1, stepId: 10,
   performerId: 2, score: 5, sysNotificationTemplateId: null, alertingBySystem: true,
   alertingByEmail: false, alertingBySms: false, alertingByWhatsApp: false,
   showPreviousSteps: true, showPreviousDocs: false, mandatoryDocs: false,

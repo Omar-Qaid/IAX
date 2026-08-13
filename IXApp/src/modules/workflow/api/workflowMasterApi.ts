@@ -6,9 +6,7 @@ export interface WorkflowMasterDto {
   recId: number;
   code: string | null;
   name: string | null;
-  nameAR: string | null;
   description: string | null;
-  descriptionAR: string | null;
   sortOrder: number;
   isActive: boolean;
   rowVersion: string | null;
@@ -26,9 +24,7 @@ export const createEmptyWorkflowMaster = <TDto extends WorkflowMasterDto>(
     | 'recId'
     | 'code'
     | 'name'
-    | 'nameAR'
     | 'description'
-    | 'descriptionAR'
     | 'sortOrder'
     | 'isActive'
     | 'rowVersion'
@@ -41,9 +37,7 @@ export const createEmptyWorkflowMaster = <TDto extends WorkflowMasterDto>(
     recId: 0,
     code: null,
     name: '',
-    nameAR: '',
     description: null,
-    descriptionAR: null,
     sortOrder: 0,
     isActive: true,
     rowVersion: null,
@@ -72,9 +66,7 @@ export const createWorkflowMasterApi = <TDto extends WorkflowMasterDto>(
       ...record,
       code: record.code?.trim() || null,
       name: record.name?.trim() || null,
-      nameAR: record.nameAR?.trim() || null,
       description: record.description?.trim() || null,
-      descriptionAR: record.descriptionAR?.trim() || null,
     }) as unknown as TDto;
 
   return {

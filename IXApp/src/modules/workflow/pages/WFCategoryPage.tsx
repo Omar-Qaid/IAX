@@ -11,7 +11,7 @@ export function WFCategoryPage(): React.ReactElement {
       api={wfCategoryApi}
       createRecord={() => createEmptyWorkflowMaster<WfCategoryDto>({ sysField: false })}
       generatedCode
-      requiredCoreFields={['name', 'nameAR']}
+      requiredCoreFields={['name']}
       permissions={{
         create: 'Workflow.Categories.Create',
         edit: 'Workflow.Categories.Edit',

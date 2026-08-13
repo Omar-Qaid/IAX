@@ -22,9 +22,7 @@ const emptyStep = (processId = 0): WfStepRecord => ({
   recId: 0,
   code: null,
   name: '',
-  nameAR: '',
   description: null,
-  descriptionAR: null,
   processId,
   sortOrder: 0,
   score: 0,
@@ -73,7 +71,6 @@ export function WFStepsPage(): React.ReactElement {
                     }
                     valueField="recId"
                     labelField="name"
-                    labelFieldAr="nameAR"
                     pageSize={25}
                   />
                 ),
@@ -126,9 +123,9 @@ export function WFStepsPage(): React.ReactElement {
     },
     createRecord: () => emptyStep(scopedProcessId ?? 0),
     getPrimaryText: (record) => textValue(record.name) || textValue(record.code),
-    getSecondaryText: (record) => record.code || textValue(record.nameAR),
+    getSecondaryText: (record) => record.code || textValue(record.description),
     matchesSearch: (record, query) =>
-      `${record.code ?? ''} ${record.name ?? ''} ${record.nameAR ?? ''}`
+      `${record.code ?? ''} ${record.name ?? ''} ${record.description ?? ''}`
         .toLocaleLowerCase()
         .includes(query.toLocaleLowerCase()),
     getValues: (record): DetailValues => ({
@@ -163,22 +160,10 @@ export function WFStepsPage(): React.ReactElement {
         setValue: (record, value) => ({ ...record, name: String(value) || null }),
       },
       {
-        id: 'nameAR',
-        label: t('wfStep.fields.nameAR'),
-        getValue: (record) => textValue(record.nameAR),
-        setValue: (record, value) => ({ ...record, nameAR: String(value) || null }),
-      },
-      {
         id: 'description',
         label: t('wfStep.fields.description'),
         getValue: (record) => textValue(record.description),
         setValue: (record, value) => ({ ...record, description: String(value) || null }),
-      },
-      {
-        id: 'descriptionAR',
-        label: t('wfStep.fields.descriptionAR'),
-        getValue: (record) => textValue(record.descriptionAR),
-        setValue: (record, value) => ({ ...record, descriptionAR: String(value) || null }),
       },
     ],
     sections,

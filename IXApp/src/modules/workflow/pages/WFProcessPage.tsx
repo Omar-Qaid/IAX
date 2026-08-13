@@ -19,7 +19,6 @@ import { wfPriorityApi, wfProcessTypeApi } from '../api/workflowSetupApis';
 const categoryLookupColumns = [
   { field: 'code', header: 'wfCategory.fields.code', width: 110 },
   { field: 'name', header: 'wfCategory.fields.name', flex: 1 },
-  { field: 'nameAR', header: 'wfCategory.fields.nameAR', flex: 1 },
 ] as const;
 
 const fetchCategoryPage = async ({
@@ -37,7 +36,7 @@ const fetchCategoryPage = async ({
   const normalizedSearch = search.trim().toLocaleLowerCase();
   const filtered = normalizedSearch
     ? categories.filter((category) =>
-        `${category.code ?? ''} ${category.name ?? ''} ${category.nameAR ?? ''}`
+        `${category.code ?? ''} ${category.name ?? ''}`
           .toLocaleLowerCase()
           .includes(normalizedSearch)
       )
@@ -56,9 +55,6 @@ const emptyProcess = (): WfProcessRecord => ({
   recId: 0,
   code: null,
   name: '',
-  nameAR: '',
-  description: null,
-  descriptionAR: null,
   categoryId: 0,
   score: 0,
   canRepeat: false,
@@ -78,7 +74,7 @@ const numberValue = (value: DetailValue): number => Number(value) || 0;
 const textValue = (value: string | null): string => value ?? '';
 
 export function WFProcessPage(): React.ReactElement {
-  const { t, isRtl } = useAppTranslation();
+  const { t } = useAppTranslation();
   const navigate = useNavigate();
   const prioritiesQuery = useQuery({
     queryKey: ['workflow', 'priority-lookup'],
@@ -93,25 +89,20 @@ export function WFProcessPage(): React.ReactElement {
       (prioritiesQuery.data ?? []).map((priority) => ({
         id: priority.recId,
         code: priority.code ?? '',
-        name: (isRtl ? priority.nameAR : priority.name) ?? priority.name ?? priority.nameAR ?? '',
-        description: (isRtl ? priority.descriptionAR : priority.description) ?? undefined,
+        name: priority.name ?? '',
+        description: priority.description ?? undefined,
       })),
-    [isRtl, prioritiesQuery.data]
+    [prioritiesQuery.data]
   );
   const processTypeOptions = useMemo(
     () =>
       (processTypesQuery.data ?? []).map((processType) => ({
         id: processType.recId,
         code: processType.code ?? '',
-        name:
-          (isRtl ? processType.nameAR : processType.name) ??
-          processType.name ??
-          processType.nameAR ??
-          '',
-        description:
-          (isRtl ? processType.descriptionAR : processType.description) ?? undefined,
+        name: processType.name ?? '',
+        description: processType.description ?? undefined,
       })),
-    [isRtl, processTypesQuery.data]
+    [processTypesQuery.data]
   );
   const sections = useMemo<DetailSectionConfig[]>(
     () => [
@@ -142,7 +133,6 @@ export function WFProcessPage(): React.ReactElement {
                     }
                     valueField="recId"
                     labelField="name"
-                    labelFieldAr="nameAR"
                     pageSize={25}
                   />
                 ),
@@ -223,9 +213,9 @@ export function WFProcessPage(): React.ReactElement {
     },
     createRecord: emptyProcess,
     getPrimaryText: (record) => textValue(record.name),
-    getSecondaryText: (record) => record.code || textValue(record.nameAR),
+    getSecondaryText: (record) => record.code ?? '',
     matchesSearch: (record, query) =>
-      `${record.code ?? ''} ${record.name ?? ''} ${record.nameAR ?? ''}`
+      `${record.code ?? ''} ${record.name ?? ''}`
         .toLocaleLowerCase()
         .includes(query.toLocaleLowerCase()),
     getValues: (record): DetailValues => ({
@@ -263,24 +253,6 @@ export function WFProcessPage(): React.ReactElement {
         getValue: (record) => textValue(record.name),
         setValue: (record, value) => ({ ...record, name: String(value) }),
       },
-      {
-        id: 'nameAR',
-        label: t('wfProcess.fields.nameAR'),
-        getValue: (record) => textValue(record.nameAR),
-        setValue: (record, value) => ({ ...record, nameAR: String(value) }),
-      },
-      {
-        id: 'description',
-        label: t('wfProcess.fields.description'),
-        getValue: (record) => textValue(record.description),
-        setValue: (record, value) => ({ ...record, description: String(value) || null }),
-      },
-      {
-        id: 'descriptionAR',
-        label: t('wfProcess.fields.descriptionAR'),
-        getValue: (record) => textValue(record.descriptionAR),
-        setValue: (record, value) => ({ ...record, descriptionAR: String(value) || null }),
-      },
     ],
     sections,
     permissions: {
@@ -292,9 +264,6 @@ export function WFProcessPage(): React.ReactElement {
     validate: (record) => ({
       ...(!record.name?.trim()
         ? { name: t('validation.required', { field: t('wfProcess.fields.name') }) }
-        : {}),
-      ...(!record.nameAR?.trim()
-        ? { nameAR: t('validation.required', { field: t('wfProcess.fields.nameAR') }) }
         : {}),
     }),
     advancedFilter: {

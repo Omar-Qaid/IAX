@@ -30,7 +30,7 @@ interface WorkflowSetupListPageProps<TDto extends WorkflowMasterDto> {
   api: WorkflowSetupApi<TDto>;
   createRecord: () => WorkflowMasterRecord<TDto>;
   generatedCode: boolean;
-  requiredCoreFields?: Array<'code' | 'name' | 'nameAR'>;
+  requiredCoreFields?: Array<'code' | 'name'>;
   permissions?: { create: string; edit: string; delete: string };
   extraFields?: WorkflowSetupField<TDto>[];
 }
@@ -65,13 +65,6 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
         flex: 1,
         editable: true,
       },
-      {
-        field: 'nameAR',
-        headerName: 'workflowSetup.fields.nameAR',
-        minWidth: 220,
-        flex: 1,
-        editable: true,
-      },
       ...extraFields.map<ColumnDef<WorkflowMasterRecord<TDto>>>((field) => ({
         field: field.field,
         headerName: field.labelKey,
@@ -100,7 +93,6 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
     searchFields: [
       { field: 'code', label: t('workflowSetup.fields.code') },
       { field: 'name', label: t('workflowSetup.fields.name') },
-      { field: 'nameAR', label: t('workflowSetup.fields.nameAR') },
     ],
     backCommand: { label: t('actions.back', 'Back'), onClick: () => navigate(-1) },
     showSearchCommand: true,

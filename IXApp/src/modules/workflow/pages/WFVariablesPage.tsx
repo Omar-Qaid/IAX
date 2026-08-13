@@ -21,9 +21,7 @@ const emptyVariable = (processId = 0): WfVariableRecord => ({
   recId: 0,
   code: null,
   name: '',
-  nameAR: '',
   description: null,
-  descriptionAR: null,
   dataTypeId: 0,
   processId,
   sortOrder: 0,
@@ -39,7 +37,7 @@ const numberValue = (value: DetailValue): number => Number(value) || 0;
 const textValue = (value: string | null): string => value ?? '';
 
 export function WFVariablesPage(): React.ReactElement {
-  const { t, isRtl } = useAppTranslation();
+  const { t } = useAppTranslation();
   const [searchParams] = useSearchParams();
   const requestedProcessId = Number(searchParams.get('processId'));
   const scopedProcessId =
@@ -53,9 +51,9 @@ export function WFVariablesPage(): React.ReactElement {
       (dataTypesQuery.data ?? []).map((dataType) => ({
         id: dataType.recId,
         code: dataType.code ?? '',
-        name: (isRtl ? dataType.nameAR : dataType.name) ?? dataType.name ?? dataType.nameAR ?? '',
+        name: dataType.name ?? '',
       })),
-    [dataTypesQuery.data, isRtl]
+    [dataTypesQuery.data]
   );
   const sections = useMemo<DetailSectionConfig[]>(
     () => [
@@ -86,7 +84,6 @@ export function WFVariablesPage(): React.ReactElement {
                     }
                     valueField="recId"
                     labelField="name"
-                    labelFieldAr="nameAR"
                     pageSize={25}
                   />
                 ),
@@ -136,9 +133,9 @@ export function WFVariablesPage(): React.ReactElement {
     },
     createRecord: () => emptyVariable(scopedProcessId ?? 0),
     getPrimaryText: (record) => textValue(record.name) || textValue(record.code),
-    getSecondaryText: (record) => record.code || textValue(record.nameAR),
+    getSecondaryText: (record) => record.code || textValue(record.description),
     matchesSearch: (record, query) =>
-      `${record.code ?? ''} ${record.name ?? ''} ${record.nameAR ?? ''}`
+      `${record.code ?? ''} ${record.name ?? ''} ${record.description ?? ''}`
         .toLocaleLowerCase()
         .includes(query.toLocaleLowerCase()),
     getValues: (record): DetailValues => ({
@@ -167,22 +164,10 @@ export function WFVariablesPage(): React.ReactElement {
         setValue: (record, value) => ({ ...record, name: String(value) || null }),
       },
       {
-        id: 'nameAR',
-        label: t('wfVariable.fields.nameAR'),
-        getValue: (record) => textValue(record.nameAR),
-        setValue: (record, value) => ({ ...record, nameAR: String(value) || null }),
-      },
-      {
         id: 'description',
         label: t('wfVariable.fields.description'),
         getValue: (record) => textValue(record.description),
         setValue: (record, value) => ({ ...record, description: String(value) || null }),
-      },
-      {
-        id: 'descriptionAR',
-        label: t('wfVariable.fields.descriptionAR'),
-        getValue: (record) => textValue(record.descriptionAR),
-        setValue: (record, value) => ({ ...record, descriptionAR: String(value) || null }),
       },
     ],
     sections,

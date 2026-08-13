@@ -11,7 +11,7 @@ export function WfPrioritiesPage(): React.ReactElement {
       api={wfPriorityApi}
       createRecord={() => createEmptyWorkflowMaster({})}
       generatedCode
-      requiredCoreFields={['name', 'nameAR']}
+      requiredCoreFields={['name']}
       permissions={{
         create: 'Workflow.Priorities.Create',
         edit: 'Workflow.Priorities.Edit',

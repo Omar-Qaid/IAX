@@ -11,7 +11,7 @@ export function WfControlsPage(): React.ReactElement {
       api={wfControlApi}
       createRecord={() => createEmptyWorkflowMaster<WfControlDto>({ controlType: '' })}
       generatedCode
-      requiredCoreFields={['name', 'nameAR']}
+      requiredCoreFields={['name']}
       permissions={{
         create: 'Workflow.Controls.Create',
         edit: 'Workflow.Controls.Edit',
