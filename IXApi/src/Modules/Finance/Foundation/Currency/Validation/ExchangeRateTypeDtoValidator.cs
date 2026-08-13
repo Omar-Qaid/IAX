@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 using IAX.IXApi.Modules.Finance.Common;
 
 namespace IAX.IXApi.Modules.Finance.Shared.Features

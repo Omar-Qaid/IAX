@@ -25,9 +25,7 @@ namespace IAX.IXApi.Modules.Organization.Features.OrgEmployeeCategory
             // Scalars
             existing.Code = scalars.Code;
             existing.Name = scalars.Name;
-            existing.NameAR = scalars.NameAR;
             existing.Description = scalars.Description;
-            existing.DescriptionAR = scalars.DescriptionAR;
             existing.IsActive = scalars.IsActive;
             existing.ForAll = scalars.ForAll;
             existing.Manager1 = scalars.Manager1;

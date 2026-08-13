@@ -8,7 +8,6 @@ namespace IAX.IXApi.Modules.Workflow.Activities
     {
         public WfActivityDtoValidator()
         {
-             RuleFor(x => x.NameAR).NotEmpty().WithMessage("Arabic Name is required");
              RuleFor(x => x.Name).NotEmpty().WithMessage("English Name is required");
              RuleFor(x => x.ActivityTypeId).GreaterThan((byte)0).WithMessage("Activity Type is required");
              RuleFor(x => x.StepId).GreaterThan(0).WithMessage("Step is required");

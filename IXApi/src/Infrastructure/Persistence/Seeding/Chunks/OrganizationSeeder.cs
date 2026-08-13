@@ -70,7 +70,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     RecId = n.Id,
                     Code = "NAT" + n.Id,
                     Name = n.Name,
-                    NameAR = n.Name,
                     IsActive = true,
                     CreatedBy = createdBy,
                     OwnerAccountId = createdBy
@@ -126,7 +125,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     RecId = d.Id,
                     Code = "DEP" + d.Id,
                     Name = d.Name,
-                    NameAR = d.Name,
                     IsActive = true,
                     CreatedBy = createdBy,
                     OwnerAccountId = createdBy
@@ -306,7 +304,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     RecId = o.Id,
                     Code = "OCC" + o.Id,
                     Name = o.Name,
-                    NameAR = o.Name,
                     IsActive = true,
                     CreatedBy = createdBy,
                     OwnerAccountId = createdBy
@@ -331,8 +328,8 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             {
                 var genders = new[]
                 {
-                    new OrgGender { RecId = 1, Code = "M", Name = "Male", NameAR = "ذكر", Description = null, DescriptionAR = null, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new OrgGender { RecId = 2, Code = "F", Name = "Female", NameAR = "أنثى", Description = null, DescriptionAR = null, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy }
+                    new OrgGender { RecId = 1, Code = "M", Name = "Male", Description = null, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new OrgGender { RecId = 2, Code = "F", Name = "Female", Description = null, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy }
                 };
 
                 await db.Genders.AddRangeAsync(genders, ct);
@@ -356,10 +353,10 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             {
                 var levels = new[]
                 {
-                    new OrgManagementLevel { RecId = 1, Code = "ML1", Name = "Supervisor", NameAR = "مشرف", Level = 1, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new OrgManagementLevel { RecId = 2, Code = "ML2", Name = "Area Manager", NameAR = "مدير منطقة", Level = 2, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new OrgManagementLevel { RecId = 3, Code = "ML3", Name = "Region Manager", NameAR = "مدير إقليم", Level = 3, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new OrgManagementLevel { RecId = 4, Code = "ML4", Name = "General Manager", NameAR = "مدير عام", Level = 4, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy }
+                    new OrgManagementLevel { RecId = 1, Code = "ML1", Name = "Supervisor", Level = 1, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new OrgManagementLevel { RecId = 2, Code = "ML2", Name = "Area Manager", Level = 2, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new OrgManagementLevel { RecId = 3, Code = "ML3", Name = "Region Manager", Level = 3, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new OrgManagementLevel { RecId = 4, Code = "ML4", Name = "General Manager", Level = 4, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy }
                 };
 
                 await db.OrgManagementLevels.AddRangeAsync(levels, ct);
@@ -432,14 +429,12 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 {
                     new OrgShowroom
                     {
-                        RecId = 101, Code = "SHR001", Name = "Riyadh Main Showroom", NameAR = "معرض الرياض الرئيسي",
-                        DepartmentId = 1, Location = "Riyadh - King Fahd Rd",
+                        RecId = 101, Code = "SHR001", Name = "Riyadh Main Showroom", DepartmentId = 1, Location = "Riyadh - King Fahd Rd",
                         IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy
                     },
                     new OrgShowroom
                     {
-                        RecId = 102, Code = "SHR002", Name = "Jeddah Showroom", NameAR = "معرض جدة",
-                        DepartmentId = 1, Location = "Jeddah - Tahlia St",
+                        RecId = 102, Code = "SHR002", Name = "Jeddah Showroom", DepartmentId = 1, Location = "Jeddah - Tahlia St",
                         IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy
                     }
                 };
@@ -823,7 +818,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     RecId = c.RecId,
                     Code = "UC" + c.RecId,
                     Name = c.Name,
-                    NameAR = c.Name,
                     ForAll = c.RecId == 2,
                     Manager1 = c.RecId == 176,
                     Manager2 = c.RecId == 177,
@@ -1170,5 +1164,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
         }
     }
 }
+
 
 

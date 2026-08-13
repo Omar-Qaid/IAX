@@ -16,10 +16,6 @@ namespace IAX.IXApi.Modules.Workflow.Categories
                 .HasMaxLength(50)
                 .IsRequired();
 
-            builder.Property(x => x.NameAR)
-                .HasMaxLength(200)
-                .IsRequired();
-
             builder.Property(x => x.Name)
                 .HasMaxLength(200)
                 .IsRequired();

@@ -26,17 +26,16 @@ namespace IAX.IXApi.Shared.Domain.Entities
         object IBaseEntity.RecId => RecId!;
     }
 
-    public abstract class LookupEntity<T> : BaseEntity<T>, IBaseEntity, IMultiCompany, ICode
+    public abstract class LookupEntity<T> : BaseEntity<T>, IBaseEntity, IMultiCompany
     {
         object IBaseEntity.RecId => RecId!;
         public string? Code { get; set; }
         public string? Name { get; set; }
-        public string? NameAR { get; set; }
     }
 
     public abstract class MasterEntity<T> : LookupEntity<T>
     {
         public string? Description { get; set; }
-        public string? DescriptionAR { get; set; }
+ 
     }
 }

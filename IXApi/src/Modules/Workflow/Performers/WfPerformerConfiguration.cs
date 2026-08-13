@@ -19,10 +19,6 @@ namespace IAX.IXApi.Modules.Workflow.Performers
                 .HasColumnName("PerformerName")
                 .IsRequired();
 
-            builder.Property(x => x.NameAR)
-                .HasColumnName("PerformerNameAR")
-                .IsRequired();
-
             builder.Property(x => x.IsActive)
                 .HasColumnName("Activated")
                 .IsRequired();

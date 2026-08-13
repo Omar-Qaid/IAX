@@ -8,7 +8,6 @@ namespace IAX.IXApi.Modules.Workflow.Requests
     {
         public WfRequestControlDtoValidator()
         {
-             RuleFor(x => x.NameAR).NotEmpty().WithMessage("Arabic Name is required");
              RuleFor(x => x.Name).NotEmpty().WithMessage("English Name is required");
         }
     }

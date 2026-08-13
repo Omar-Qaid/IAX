@@ -4,19 +4,16 @@ using IAX.IXApi.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace IAX.IXApi.Infrastructure.Persistence.Migrations
+namespace IAX.IXApi.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260813103914_UpdateSysNumberSequenceSchema")]
-    partial class UpdateSysNumberSequenceSchema
+    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -18663,9 +18660,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DescriptionAR")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime>("ExpiryDate")
                         .HasColumnType("datetime2");
 
@@ -18682,9 +18676,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NameAR")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerAccountId")
@@ -18841,105 +18832,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.ToTable("OrgAttachmentDetails", (string)null);
                 });
 
-            modelBuilder.Entity("IAX.IXApi.Modules.Organization.Companies.OrgCompany", b =>
-                {
-                    b.Property<short>("RecId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("smallint")
-                        .HasColumnName("RECID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<short>("RecId"));
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("ColorMode")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("ColorTheme")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DataAreaId")
-                        .IsRequired()
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<string>("DescriptionAR")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<string>("IdentityUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("LastModifiedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("LastModifiedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LogoUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("NameAR")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("NotificationEmail")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("OwnerAccountId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PrimaryEmail")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<int>("RecVersion")
-                        .HasColumnType("int");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.HasKey("RecId");
-
-                    b.HasIndex("Code")
-                        .IsUnique();
-
-                    b.ToTable("OrgCompanies", (string)null);
-                });
-
             modelBuilder.Entity("IAX.IXApi.Modules.Organization.Departments.OrgDepartment", b =>
                 {
                     b.Property<short>("RecId")
@@ -18969,10 +18861,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<string>("DescriptionAR")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -18986,11 +18874,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("NameAR")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
@@ -19154,9 +19037,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DescriptionAR")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool?>("ForAll")
                         .HasColumnType("bit");
 
@@ -19185,9 +19065,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NameAR")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerAccountId")
@@ -19236,9 +19113,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DescriptionAR")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -19252,9 +19126,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NameAR")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<short?>("OccupationID")
@@ -19318,9 +19189,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DescriptionAR")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -19334,9 +19202,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NameAR")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerAccountId")
@@ -19382,9 +19247,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DescriptionAR")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -19398,9 +19260,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NameAR")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerAccountId")
@@ -19455,9 +19314,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DescriptionAR")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -19471,9 +19327,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NameAR")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerAccountId")
@@ -19516,9 +19369,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DescriptionAR")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -19535,9 +19385,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("tinyint");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NameAR")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerAccountId")
@@ -19583,9 +19430,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DescriptionAR")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -19599,9 +19443,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NameAR")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerAccountId")
@@ -19647,9 +19488,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DescriptionAR")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -19663,9 +19501,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NameAR")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerAccountId")
@@ -19732,9 +19567,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DescriptionAR")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("ExtendedProperties")
                         .HasColumnType("nvarchar(max)");
 
@@ -19754,9 +19586,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NameAR")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerAccountId")
@@ -19835,9 +19664,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DescriptionAR")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("ExtendedProperties")
                         .HasColumnType("nvarchar(max)");
 
@@ -19854,9 +19680,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NameAR")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerAccountId")
@@ -20031,9 +19854,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("NameAR")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Operator")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)")
@@ -20172,9 +19992,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DescriptionAR")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -20188,9 +20005,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NameAR")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerAccountId")
@@ -20241,9 +20055,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DescriptionAR")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -20257,11 +20068,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("NameAR")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
@@ -20323,9 +20129,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DescriptionAR")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -20339,9 +20142,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NameAR")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerAccountId")
@@ -20480,9 +20280,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DescriptionAR")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -20496,9 +20293,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NameAR")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerAccountId")
@@ -20586,11 +20380,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("PerformerName");
 
-                    b.Property<string>("NameAR")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("PerformerNameAR");
-
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
 
@@ -20669,9 +20458,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NameAR")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerAccountId")
@@ -20778,9 +20564,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DescriptionAR")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -20794,9 +20577,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NameAR")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerAccountId")
@@ -20845,9 +20625,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DescriptionAR")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -20861,9 +20638,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NameAR")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerAccountId")
@@ -20915,9 +20689,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DescriptionAR")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -20934,9 +20705,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NameAR")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerAccountId")
@@ -21218,9 +20986,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("NameAR")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
@@ -21297,9 +21062,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DescriptionAR")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("ExtendedProperties")
                         .HasColumnType("nvarchar(max)");
 
@@ -21316,9 +21078,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NameAR")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerAccountId")
@@ -21789,9 +21548,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DescriptionAR")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -21805,9 +21561,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NameAR")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerAccountId")
@@ -21949,9 +21702,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DescriptionAR")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -21965,9 +21715,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NameAR")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerAccountId")
@@ -22000,7 +21747,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                             IsDeleted = false,
                             LastModifiedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "String",
-                            NameAR = "نص",
                             RecVersion = 1,
                             SortOrder = (byte)1
                         },
@@ -22014,7 +21760,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                             IsDeleted = false,
                             LastModifiedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Number",
-                            NameAR = "رقم",
                             RecVersion = 1,
                             SortOrder = (byte)2
                         },
@@ -22028,7 +21773,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                             IsDeleted = false,
                             LastModifiedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Boolean",
-                            NameAR = "منطقي",
                             RecVersion = 1,
                             SortOrder = (byte)3
                         },
@@ -22042,7 +21786,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                             IsDeleted = false,
                             LastModifiedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Date",
-                            NameAR = "تاريخ",
                             RecVersion = 1,
                             SortOrder = (byte)4
                         });
@@ -22077,9 +21820,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DescriptionAR")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -22093,9 +21833,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NameAR")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerAccountId")
@@ -22154,9 +21891,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DescriptionAR")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -22170,9 +21904,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NameAR")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OwnerAccountId")

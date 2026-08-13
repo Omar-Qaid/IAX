@@ -32,9 +32,7 @@ namespace IAX.IXApi.Modules.Workflow.DataExchange
                 var process = new WfProcess
                 {
                     Code = row.Cell(1).GetValue<string>(),
-                    NameAR = row.Cell(2).GetValue<string>(),
                     Name = row.Cell(3).GetValue<string>(),
-                    DescriptionAR = row.Cell(4).GetValue<string>(),
                     Description = row.Cell(5).GetValue<string>(),
                     CategoryId = row.Cell(6).GetValue<short>(),
                     Score = row.Cell(7).GetValue<decimal>(),
@@ -71,7 +69,6 @@ namespace IAX.IXApi.Modules.Workflow.DataExchange
                 var activity = new WfActivity
                 {
                     Code = row.Cell(1).GetValue<string>(),
-                    NameAR = row.Cell(2).GetValue<string>(),
                     Name = row.Cell(3).GetValue<string>(),
                     // Assuming similar order for base Entity properties
                     ActivityTypeId = row.Cell(4).GetValue<byte>(),

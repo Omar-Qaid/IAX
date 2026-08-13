@@ -16,7 +16,6 @@ namespace IAX.IXApi.Modules.Organization.Features.OrgEmployeeGroup
 
             config.NewConfig<OrgEmployeeGroupDto, OrgEmployeeGroup>()
                 .Map(dest => dest.Name, src => src.UserGroupName)
-                .Map(dest => dest.NameAR, src => src.UserGroupName)
                 .Ignore(dest => dest.OrgEmployeeGroupDetails);
             // Id is [AdaptIgnore(Destination)] — set by identity on create, route id on update.
         }

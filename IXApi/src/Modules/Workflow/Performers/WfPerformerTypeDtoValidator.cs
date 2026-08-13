@@ -7,7 +7,6 @@ namespace IAX.IXApi.Modules.Workflow.Performers
     {
         public WfPerformerTypeDtoValidator()
         {
-            RuleFor(x => x.NameAR).NotEmpty().WithMessage("Arabic Name is required");
             RuleFor(x => x.Name).NotEmpty().WithMessage("English Name is required");
         }
     }

@@ -9,7 +9,6 @@ namespace IAX.IXApi.Modules.Organization
         {
             services.AddScoped<Announcements.IOrgAnnouncementService, Announcements.OrgAnnouncementService>();
             services.AddScoped<Attachments.IOrgAttachmentService, Attachments.OrgAttachmentService>();
-            services.AddScoped<Companies.IOrgCompanyService, Companies.OrgCompanyService>();
             services.AddScoped<Departments.IOrgDepartmentService, Departments.OrgDepartmentService>();
             services.AddScoped<Features.OrgEmployeeCategory.IOrgEmployeeCategoryService, Features.OrgEmployeeCategory.OrgEmployeeCategoryService>();
             services.AddScoped<Features.OrgEmployeeGroup.IOrgEmployeeGroupService, Features.OrgEmployeeGroup.OrgEmployeeGroupService>();

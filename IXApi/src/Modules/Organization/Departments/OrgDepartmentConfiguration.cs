@@ -13,16 +13,9 @@ namespace IAX.IXApi.Modules.Organization.Departments
                 .HasMaxLength(50)
                 .IsRequired();
 
-            builder.Property(x => x.NameAR)
-                .HasMaxLength(200)
-                .IsRequired();
-
             builder.Property(x => x.Name)
                 .HasMaxLength(200)
                 .IsRequired();
-
-            builder.Property(x => x.DescriptionAR)
-                .HasMaxLength(1000);
 
             builder.Property(x => x.Description)
                 .HasMaxLength(1000);

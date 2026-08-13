@@ -54,7 +54,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     {
                         Code = "WF_REQUEST_SUBMITTED",
                         Name = "Workflow Request Submitted",
-                        NameAR = "تقديم طلب إجراء العمل",
                         Subject = "Workflow Request Submitted: {{RequestNumber}}",
                         SubjectAR = "تم تقديم طلب إجراء العمل: {{RequestNumber}}",
                         Body = "Hello {{UserName}},\n\nYour workflow request for '{{RequestType}}' (Ref: {{RequestNumber}}) has been successfully submitted and is currently pending approval.\n\nStatus: {{RequestStatus}}",
@@ -71,7 +70,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     {
                         Code = "WF_REQUEST_APPROVED",
                         Name = "Workflow Request Approved",
-                        NameAR = "الموافقة على طلب إجراء العمل",
                         Subject = "Workflow Request Approved: {{RequestNumber}}",
                         SubjectAR = "تمت الموافقة على طلب إجراء العمل: {{RequestNumber}}",
                         Body = "Hello {{UserName}},\n\nGreat news! Your workflow request for '{{RequestType}}' (Ref: {{RequestNumber}}) has been approved.\n\nDetails: Approved by {{ApproverName}}.",
@@ -88,7 +86,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     {
                         Code = "WF_REQUEST_REJECTED",
                         Name = "Workflow Request Rejected",
-                        NameAR = "رفض طلب إجراء العمل",
                         Subject = "Workflow Request Rejected: {{RequestNumber}}",
                         SubjectAR = "تم رفض طلب إجراء العمل: {{RequestNumber}}",
                         Body = "Hello {{UserName}},\n\nYour workflow request for '{{RequestType}}' (Ref: {{RequestNumber}}) has been rejected.\n\nReason: {{RejectionReason}}",
@@ -105,7 +102,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     {
                         Code = "INV_LOW_STOCK",
                         Name = "Inventory Low Stock Alert",
-                        NameAR = "تنبيه انخفاض المخزون",
                         Subject = "Low Stock Alert: {{ ame}}",
                         SubjectAR = "تنبيه انخفاض المخزون: {{ ame}}",
                         Body = "Attention Procurement Team,\n\nThe stock level for  '{{ ame}}' (SKU: {{SKU}}) has dropped below the safety threshold. Current stock is {{CurrentStock}} {{UOM}}, while the safety limit is {{SafetyLimit}} {{UOM}}.\n\nPlease arrange for reorder immediately.",
@@ -122,7 +118,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     {
                         Code = "FIN_INVOICE_DUE",
                         Name = "Invoice Payment Due Reminder",
-                        NameAR = "تذكير بموعد استحقاق الفاتورة",
                         Subject = "Invoice Due: {{InvoiceNumber}}",
                         SubjectAR = "استحقاق الفاتورة: {{InvoiceNumber}}",
                         Body = "Dear Customer,\n\nThis is a friendly reminder that invoice '{{InvoiceNumber}}' with an outstanding balance of {{Amount}} {{Currency}} is due on {{DueDate}}.\n\nPlease process your payment at your earliest convenience.",
@@ -139,7 +134,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     {
                         Code = "HR_LEAVE_APPROVED",
                         Name = "HR Leave Request Approved",
-                        NameAR = "الموافقة على طلب الإجازة",
                         Subject = "Leave Request Approved: {{LeaveType}}",
                         SubjectAR = "تمت الموافقة على طلب الإجازة: {{LeaveType}}",
                         Body = "Hello {{UserName}},\n\nYour leave request for '{{LeaveType}}' from {{StartDate}} to {{EndDate}} has been approved by your department manager.",
@@ -183,4 +177,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
         }
     }
 }
+
+
 

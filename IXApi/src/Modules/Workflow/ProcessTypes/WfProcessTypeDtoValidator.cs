@@ -7,7 +7,6 @@ namespace IAX.IXApi.Modules.Workflow.ProcessTypes
     {
         public WfProcessTypeDtoValidator()
         {
-            RuleFor(x => x.NameAR).NotEmpty().WithMessage("Arabic Name is required");
             RuleFor(x => x.Name).NotEmpty().WithMessage("English Name is required");
         }
     }
