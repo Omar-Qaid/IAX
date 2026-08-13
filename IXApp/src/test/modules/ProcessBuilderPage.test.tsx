@@ -18,8 +18,7 @@ describe('standalone ProcessBuilderPage', () => {
     expect(screen.getByRole('heading', { name: 'Process Builder' })).toBeDefined();
     expect(screen.getByRole('tab', { name: 'Designer' })).toBeDefined();
     expect(screen.getByRole('tab', { name: 'Transitions' })).toBeDefined();
-    await user.click(screen.getByRole('tab', { name: 'Palette' }));
-    await user.click(screen.getByRole('button', { name: 'Variable' }));
+    await user.click(screen.getByRole('button', { name: 'Add variable' }));
     expect(useProcessBuilderStore.getState().document.variables).toHaveLength(2);
     await user.click(screen.getByRole('button', { name: 'Export' }));
     expect(screen.getByRole('dialog', { name: 'Export process' })).toBeDefined();
@@ -47,9 +46,9 @@ describe('standalone ProcessBuilderPage', () => {
     const user = userEvent.setup();
     render(<ProcessBuilderPage />);
     await user.click(screen.getByRole('tab', { name: 'Palette' }));
-    expect(screen.getAllByRole('button', { name: 'API Action' }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('button', { name: 'Signature' })).toHaveLength(2);
-    expect(screen.getAllByRole('button', { name: 'Employee search' })).toHaveLength(2);
+    expect(screen.getAllByRole('button', { name: /API Action/ }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: /Signature/ })).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: /EmployeeSearch/ })).toHaveLength(1);
   });
 
   it('reorders steps without depending on workflow services', () => {

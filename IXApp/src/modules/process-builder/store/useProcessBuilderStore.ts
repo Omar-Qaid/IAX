@@ -3,7 +3,7 @@ import type { BuilderActivity, BuilderActivityAction, BuilderControl, BuilderNod
 
 const id = () => crypto.randomUUID();
 export const createProcessBuilderDocument = (builderId = 'new'): ProcessBuilderDocument => ({
-  id: builderId, code: builderId === 'new' ? 'PB-DRAFT' : `PB-${builderId}`, name: 'New approval process', nameAR: 'عملية اعتماد جديدة', description: 'Configure the request, steps, activities, and routing conditions.', active: true,
+  id: builderId, code: builderId === 'new' ? 'PB-DRAFT' : `PB-${builderId}`, name: 'New approval process', nameAR: 'عملية اعتماد جديدة', description: 'Configure the request, steps, activities, and routing conditions.', categoryId: '', priorityId: '', processType: 'Workflow Process', score: 100, canRepeat: false, mandatoryDocs: false, active: true,
   variables: [{ id: id(), code: 'AMOUNT', name: 'Request amount', nameAR: 'قيمة الطلب', description: '', descriptionAR: '', dataType: 'number', sortOrder: 10, required: true, active: true, scope: 'process', defaultValue: '0' }],
   requestControls: [{ id: id(), code: 'RCTL-0001', label: 'Request title', labelAR: 'عنوان الطلب', type: 'text', required: true, readOnly: false, visible: true, uniqueKey: false, usedAsCriteria: false, defaultValue: '', options: [], validations: [], visibilityCondition: null }],
   steps: [{ id: id(), code: 'STEP-00001', name: 'Manager review', nameAR: 'مراجعة المدير', order: 1, score: 0, autoPassingHours: 0, allMandatory: true, active: true, systemField: false, condition: null, activities: [] }], transitions: [],

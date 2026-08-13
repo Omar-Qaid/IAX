@@ -15,11 +15,18 @@ import {
 } from '@mui/material';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import Delete from '@mui/icons-material/Delete';
+import AccountTree from '@mui/icons-material/AccountTree';
 import IconButton from '@mui/material/IconButton';
 import { useProcessBuilderStore } from '../store/useProcessBuilderStore';
 import { ConditionBuilder } from './ConditionBuilder';
 import { activityPalette, controlPalette } from './ProcessBuilderPalette';
-import type { BuilderValidation, BuilderValidationType } from '../types/processBuilderTypes';
+import type {
+  BuilderStep,
+  BuilderTransition,
+  BuilderValidation,
+  BuilderValidationType,
+  BuilderVariable,
+} from '../types/processBuilderTypes';
 import { processBuilderTokens as tokens } from './processBuilderTokens';
 
 const SettingsTitle = ({
@@ -196,49 +203,6 @@ function ValidationRules({
               onChange={(event) => update(rule.id, { value: event.target.value })}
               sx={{ gridColumn: '1 / -1' }}
             />
-            {(rule.type === 'range' || rule.type === 'crossField') && (
-              <TextField
-                size="small"
-                label="Secondary Value"
-                value={rule.secondaryValue}
-                onChange={(event) => update(rule.id, { secondaryValue: event.target.value })}
-                sx={{ gridColumn: '1 / -1' }}
-              />
-            )}
-            {(rule.type === 'custom' || rule.type === 'crossField') && (
-              <TextField
-                size="small"
-                label="Operator"
-                value={rule.operator}
-                onChange={(event) => update(rule.id, { operator: event.target.value })}
-              />
-            )}
-            {(rule.type === 'phone' ||
-              rule.type === 'saudiMobile' ||
-              rule.type === 'saudiNationalId' ||
-              rule.type === 'saudiIban') && (
-              <TextField
-                size="small"
-                label="Input Mask"
-                value={rule.mask}
-                onChange={(event) => update(rule.id, { mask: event.target.value })}
-              />
-            )}
-            <TextField
-              size="small"
-              label="Error Message (EN)"
-              value={rule.message}
-              onChange={(event) => update(rule.id, { message: event.target.value })}
-              sx={{ gridColumn: '1 / -1' }}
-            />
-            <TextField
-              size="small"
-              label="Error Message (AR)"
-              value={rule.messageAR}
-              onChange={(event) => update(rule.id, { messageAR: event.target.value })}
-              sx={{ gridColumn: '1 / -1' }}
-              slotProps={{ htmlInput: { dir: 'rtl' } }}
-            />
             <TextField
               size="small"
               type="number"
@@ -278,6 +242,66 @@ function ValidationRules({
   );
 }
 
+function TransitionRules({
+  values,
+  variables,
+  steps,
+  onAdd,
+  onUpdate,
+  onRemove,
+}: {
+  values: BuilderTransition[];
+  variables: BuilderVariable[];
+  steps: BuilderStep[];
+  onAdd: () => void;
+  onUpdate: (id: string, values: Partial<BuilderTransition>) => void;
+  onRemove: (id: string) => void;
+}) {
+  return (
+    <Box sx={{ pt: '12px', borderTop: `1px solid ${tokens.border}` }}>
+      <Stack direction="row" sx={{ alignItems: 'center' }}>
+        <Typography sx={{ flex: 1, fontSize: 10, fontWeight: 600 }}>
+          Transitions ({values.length})
+        </Typography>
+        <Button size="small" onClick={onAdd}>+ Add</Button>
+      </Stack>
+      <Stack spacing="10px" sx={{ mt: '8px' }}>
+        {values.map((transition) => (
+          <Box
+            key={transition.id}
+            sx={{ p: '10px', border: `1px solid ${tokens.border}`, bgcolor: '#fff' }}
+          >
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <TextField select size="small" label="Variable" value={transition.variableId} onChange={(event) => onUpdate(transition.id, { variableId: event.target.value })}>
+                <MenuItem value="">Variable</MenuItem>
+                {variables.map((variable) => <MenuItem key={variable.id} value={variable.id}>{variable.name}</MenuItem>)}
+              </TextField>
+              <TextField select size="small" label="Operator" value={transition.operator} onChange={(event) => onUpdate(transition.id, { operator: event.target.value as BuilderTransition['operator'] })}>
+                {['=', '!=', '>', '<', '>=', '<=', 'contains', 'isEmpty'].map((operator) => <MenuItem key={operator} value={operator}>{operator}</MenuItem>)}
+              </TextField>
+              <TextField size="small" label="Value" value={transition.value} onChange={(event) => onUpdate(transition.id, { value: event.target.value })} />
+              <TextField select size="small" label="Target Step" value={transition.targetStepId} onChange={(event) => onUpdate(transition.id, { targetStepId: event.target.value })}>
+                <MenuItem value="">Target Step</MenuItem>
+                {steps.map((step) => <MenuItem key={step.id} value={step.id}>{step.name}</MenuItem>)}
+              </TextField>
+            </Box>
+            <Stack direction="row" sx={{ mt: '8px', alignItems: 'center' }}>
+              <FormControlLabel control={<Switch size="small" checked={transition.active} onChange={(_, active) => onUpdate(transition.id, { active })} />} label="Active" />
+              <Box sx={{ flex: 1 }} />
+              <IconButton size="small" color="error" aria-label="Delete transition" onClick={() => onRemove(transition.id)}><Delete /></IconButton>
+            </Stack>
+          </Box>
+        ))}
+        {values.length === 0 && (
+          <Typography color="text.secondary" sx={{ py: '12px', textAlign: 'center', fontSize: 8 }}>
+            No transitions yet.
+          </Typography>
+        )}
+      </Stack>
+    </Box>
+  );
+}
+
 export function ProcessBuilderSettingsPanel() {
   const s = useProcessBuilderStore();
   const d = s.document;
@@ -299,7 +323,7 @@ export function ProcessBuilderSettingsPanel() {
   );
   if (selected.kind === 'process')
     return (
-      <Stack spacing="14px" sx={{ p: '16px' }}>
+      <Stack spacing="14px" sx={{ p: '16px', minHeight: '100%' }}>
         <SettingsTitle title="Process Information" isNew />
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           <Box sx={{ flex: '0 1 220px', minWidth: 0 }}>
@@ -327,6 +351,104 @@ export function ProcessBuilderSettingsPanel() {
           onChange={(event) => s.updateProcess({ description: event.target.value })}
         />
         {text('Arabic name', d.nameAR, (nameAR) => s.updateProcess({ nameAR }))}
+        <TextField
+          select
+          size="small"
+          label="Category"
+          value={d.categoryId ?? ''}
+          onChange={(event) => s.updateProcess({ categoryId: event.target.value })}
+        >
+          <MenuItem value="">None</MenuItem>
+          <MenuItem value="1">1</MenuItem>
+        </TextField>
+        <TextField
+          select
+          size="small"
+          label="Priority"
+          value={d.priorityId ?? ''}
+          onChange={(event) => s.updateProcess({ priorityId: event.target.value })}
+        >
+          <MenuItem value="">None</MenuItem>
+        </TextField>
+        <TextField
+          select
+          size="small"
+          label="Process Type"
+          value={d.processType ?? 'Workflow Process'}
+          onChange={(event) => s.updateProcess({ processType: event.target.value })}
+        >
+          <MenuItem value="Workflow Process">Workflow Process</MenuItem>
+        </TextField>
+        {text(
+          'Score',
+          d.score ?? 100,
+          (value) => s.updateProcess({ score: Number(value) }),
+          'number'
+        )}
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+          <FormControlLabel
+            control={
+              <Switch
+                size="small"
+                checked={d.canRepeat ?? false}
+                onChange={(_, canRepeat) => s.updateProcess({ canRepeat })}
+              />
+            }
+            label="Can Repeat"
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                size="small"
+                checked={d.mandatoryDocs ?? false}
+                onChange={(_, mandatoryDocs) => s.updateProcess({ mandatoryDocs })}
+              />
+            }
+            label="Mandatory Docs"
+          />
+        </Box>
+        <Button
+          variant="contained"
+          startIcon={<AccountTree />}
+          onClick={s.markDraftSaved}
+          sx={{ alignSelf: 'stretch', bgcolor: tokens.accent, '&:hover': { bgcolor: tokens.accentHover } }}
+        >
+          Create Process
+        </Button>
+        <Box sx={{ pt: '12px', borderTop: `1px solid ${tokens.border}` }}>
+          <Stack direction="row" sx={{ alignItems: 'center', minHeight: 28 }}>
+            <Typography sx={{ flex: 1, fontSize: 10, fontWeight: 600 }}>Variables</Typography>
+            {s.dirty && <Chip size="small" label="unsaved" sx={{ mr: 1, height: 22, bgcolor: tokens.warning }} />}
+            <Button size="small" onClick={s.addVariable}>+ Add</Button>
+          </Stack>
+          {d.id === 'new' && (
+            <Typography sx={{ py: '8px', color: '#f97316', fontSize: 8 }}>
+              Save the Process first to enable variable creation (ProcessId required).
+            </Typography>
+          )}
+          <Stack spacing="8px">
+            {d.variables.map((variable) => (
+              <Box
+                key={variable.id}
+                sx={{ p: '8px', border: `1px solid ${tokens.warning}`, bgcolor: '#fff' }}
+              >
+                <Box sx={{ display: 'grid', gridTemplateColumns: '88px minmax(0, 1fr) 24px', gap: '6px' }}>
+                  <TextField size="small" label="Code" value={variable.code} onChange={(event) => s.updateVariable(variable.id, { code: event.target.value })} />
+                  <TextField size="small" value={variable.name} onChange={(event) => s.updateVariable(variable.id, { name: event.target.value })} />
+                  <IconButton color="error" size="small" aria-label="Delete variable" onClick={() => s.removeVariable(variable.id)}><Delete /></IconButton>
+                </Box>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 66px auto', gap: '6px', mt: '6px', alignItems: 'center' }}>
+                  <TextField select size="small" label="Data Type" value={variable.dataType} onChange={(event) => s.updateVariable(variable.id, { dataType: event.target.value as typeof variable.dataType })}>
+                    {['text', 'number', 'boolean', 'date', 'object'].map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}
+                  </TextField>
+                  <TextField size="small" type="number" value={variable.sortOrder} onChange={(event) => s.updateVariable(variable.id, { sortOrder: Number(event.target.value) })} />
+                  <FormControlLabel control={<Switch size="small" checked={variable.active} onChange={(_, active) => s.updateVariable(variable.id, { active })} />} label="Active" />
+                </Box>
+              </Box>
+            ))}
+          </Stack>
+          <Button fullWidth variant="contained" disabled sx={{ mt: '12px' }}>Save Variables</Button>
+        </Box>
       </Stack>
     );
   if (selected.kind === 'variable') {
@@ -677,18 +799,9 @@ export function ProcessBuilderSettingsPanel() {
             }
             label="Mandatory"
           />
-          <FormControlLabel
-            control={
-              <Switch
-                size="small"
-                checked={!control.readOnly}
-                onChange={(_, visible) => update({ readOnly: !visible })}
-              />
-            }
-            label="Active"
-          />
-          <FormControlLabel control={<Switch size="small" checked={false} />} label="Unique key" />
-          <FormControlLabel control={<Switch size="small" checked={false} />} label="Criteria" />
+          <FormControlLabel control={<Switch size="small" checked={control.uniqueKey} onChange={(_, uniqueKey) => update({ uniqueKey })} />} label="Unique Key" />
+          <FormControlLabel control={<Switch size="small" checked={control.usedAsCriteria} onChange={(_, usedAsCriteria) => update({ usedAsCriteria })} />} label="Criteria" />
+          <FormControlLabel control={<Switch size="small" checked={control.visible} onChange={(_, visible) => update({ visible })} />} label="Active" />
         </Box>
         <TextField
           select
@@ -717,27 +830,14 @@ export function ProcessBuilderSettingsPanel() {
           values={control.validations}
           onChange={(validations) => update({ validations })}
         />
-        <Box sx={{ pt: 1.5, borderTop: '1px solid #e5e7eb' }}>
-          <Stack direction="row" sx={{ alignItems: 'center' }}>
-            <Typography sx={{ flex: 1, fontSize: 10, fontWeight: 600 }}>
-              Transitions ({d.transitions.length})
-            </Typography>
-            <Button
-              size="small"
-              onClick={() => {
-                s.addTransition();
-                s.setCenterTab(7);
-              }}
-            >
-              + Add
-            </Button>
-          </Stack>
-          {d.transitions.length === 0 && (
-            <Typography color="text.secondary" sx={{ py: 2, textAlign: 'center', fontSize: 8 }}>
-              No transitions yet.
-            </Typography>
-          )}
-        </Box>
+        <TransitionRules
+          values={d.transitions}
+          variables={d.variables}
+          steps={d.steps}
+          onAdd={s.addTransition}
+          onUpdate={s.updateTransition}
+          onRemove={s.removeTransition}
+        />
       </Stack>
     );
   }
@@ -782,10 +882,8 @@ export function ProcessBuilderSettingsPanel() {
             })
           )}
         {text('Default value', control.defaultValue, (defaultValue) => update({ defaultValue }))}
-        <Box sx={settingsGroupSx}>
+        <Box sx={{ ...settingsGroupSx, gridTemplateColumns: '1fr 1fr' }}>
           <FormControlLabel
-            labelPlacement="start"
-            sx={switchRowSx}
             control={
               <Switch
                 size="small"
@@ -796,8 +894,16 @@ export function ProcessBuilderSettingsPanel() {
             label="Required"
           />
           <FormControlLabel
-            labelPlacement="start"
-            sx={switchRowSx}
+            control={
+              <Switch
+                size="small"
+                checked={control.readOnly}
+                onChange={(_, readOnly) => update({ readOnly })}
+              />
+            }
+            label="ReadOnly"
+          />
+          <FormControlLabel
             control={
               <Switch
                 size="small"
@@ -807,18 +913,6 @@ export function ProcessBuilderSettingsPanel() {
             }
             label="Visible"
           />
-          <FormControlLabel
-            labelPlacement="start"
-            sx={switchRowSx}
-            control={
-              <Switch
-                size="small"
-                checked={control.readOnly}
-                onChange={(_, readOnly) => update({ readOnly })}
-              />
-            }
-            label="Read only"
-          />
         </Box>
         <Button variant="contained" disabled sx={{ alignSelf: 'stretch' }}>
           Create Control
@@ -826,6 +920,14 @@ export function ProcessBuilderSettingsPanel() {
         <ValidationRules
           values={control.validations}
           onChange={(validations) => update({ validations })}
+        />
+        <TransitionRules
+          values={d.transitions}
+          variables={d.variables}
+          steps={d.steps}
+          onAdd={s.addTransition}
+          onUpdate={s.updateTransition}
+          onRemove={s.removeTransition}
         />
         <Typography sx={{ fontSize: 9, fontWeight: 600 }}>Visibility Rule</Typography>
         <ConditionBuilder
