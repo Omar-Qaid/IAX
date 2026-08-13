@@ -7,14 +7,14 @@ namespace IAX.IXApi.Modules.Administration.NumberSequences
     {
         public SysNumberSequenceDtoValidator()
         {
-           
-            RuleFor(x => x.EntityName).NotEmpty().WithMessage("EntityName is required").MaximumLength(150);
-            RuleFor(x => x.FormatPattern).NotEmpty().WithMessage("FormatPattern is required");
-            RuleFor(x => x.SmallestValue).GreaterThanOrEqualTo(0);
-            RuleFor(x => x.LargestValue).GreaterThan(x => x.SmallestValue)
-                .WithMessage("LargestValue must be greater than SmallestValue");
-            RuleFor(x => x.Step).GreaterThan(0);
-            RuleFor(x => x.PaddingLength).InclusiveBetween(0, 20);
+            RuleFor(x => x.NumberSequence).NotEmpty().WithMessage("NumberSequence is required").MaximumLength(22);
+            RuleFor(x => x.Txt).NotEmpty().WithMessage("Txt is required").MaximumLength(100);
+            RuleFor(x => x.Format).NotEmpty().WithMessage("Format is required").MaximumLength(20);
+            RuleFor(x => x.AnnotatedFormat).NotEmpty().WithMessage("AnnotatedFormat is required").MaximumLength(100);
+            
+            RuleFor(x => x.Lowest).GreaterThanOrEqualTo(0);
+            RuleFor(x => x.Highest).GreaterThan(x => x.Lowest)
+                .WithMessage("Highest must be greater than Lowest");
         }
     }
 }

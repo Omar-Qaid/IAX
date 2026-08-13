@@ -39,6 +39,18 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { SortableBuilderItem } from './SortableBuilderItem';
 import { processBuilderTokens as tokens } from './processBuilderTokens';
 
+function UnsavedStatus({ compact = false }: { compact?: boolean }) {
+  return (
+    <Chip
+      size="small"
+      variant="outlined"
+      label={compact ? 'Unsaved' : 'Unsaved changes'}
+      aria-label={compact ? 'Unsaved item' : 'Workspace has unsaved changes'}
+      sx={{ height: compact ? 22 : 24, color: '#7a4b00', bgcolor: '#fff3cd', borderColor: '#f0c36d' }}
+    />
+  );
+}
+
 function WorkspaceHeader({
   title,
   summary,
@@ -57,16 +69,16 @@ function WorkspaceHeader({
       sx={{ alignItems: { xs: 'stretch', sm: 'center' }, minHeight: 32 }}
     >
       <Box sx={{ flex: 1, minWidth: 0 }} title={summary}>
-        <Typography sx={{ fontSize: 12, fontWeight: 500 }}>{title}</Typography>
+        <Typography component="h2" sx={{ fontSize: tokens.fontSize.heading, fontWeight: 700 }}>{title}</Typography>
       </Box>
-      {dirty && <Chip size="small" label="unsaved changes" sx={{ bgcolor: tokens.warning }} />}
+      {dirty && <UnsavedStatus />}
       {action}
     </Stack>
   );
 }
 
 const workspaceCardSx = (selected = false) => ({
-  p: '12px 14px',
+  p: '8px 10px',
   border: '1px solid',
   borderColor: selected ? tokens.warning : tokens.border,
   borderRadius: `${tokens.radius}px`,
@@ -100,14 +112,14 @@ export function DesignerWorkspace() {
           strategy={verticalListSortingStrategy}
         >
           <Stack spacing="16px">
-            {s.document.steps.map((step) => (
+            {s.document.steps.map((step, index) => (
               <SortableBuilderItem key={step.id} id={step.id}>
                 {(attributes, listeners) => (
                   <Box
                     onClick={() => s.select({ kind: 'step', id: step.id })}
                     sx={{
                       ...workspaceCardSx(s.selected.kind === 'step' && s.selected.id === step.id),
-                      minHeight: 112,
+                      minHeight: 92,
                     }}
                   >
                     <Stack
@@ -116,7 +128,14 @@ export function DesignerWorkspace() {
                       useFlexGap
                       sx={{ alignItems: 'center', flexWrap: 'wrap' }}
                     >
-                      <Box {...attributes} {...listeners} sx={{ display: 'flex', cursor: 'grab' }}>
+                      <Box
+                        {...attributes}
+                        {...listeners}
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Drag ${step.name}`}
+                        sx={{ display: 'flex', cursor: 'grab' }}
+                      >
                         <DragIndicator />
                       </Box>
                       <Chip
@@ -159,6 +178,20 @@ export function DesignerWorkspace() {
                         slotProps={{ htmlInput: { 'aria-label': `Step ${step.order} name` } }}
                         sx={{ flex: '1 1 300px' }}
                       />
+                      <Tooltip title="Move step up">
+                        <span>
+                          <IconButton size="small" disabled={index === 0} aria-label={`Move ${step.name} up`} onClick={(event) => { event.stopPropagation(); s.moveStep(step.id, -1); }}>
+                            <ArrowUpward />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                      <Tooltip title="Move step down">
+                        <span>
+                          <IconButton size="small" disabled={index === s.document.steps.length - 1} aria-label={`Move ${step.name} down`} onClick={(event) => { event.stopPropagation(); s.moveStep(step.id, 1); }}>
+                            <ArrowDownward />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
                       <Button size="small" onClick={() => s.select({ kind: 'step', id: step.id })}>
                         Configure
                       </Button>
@@ -169,6 +202,7 @@ export function DesignerWorkspace() {
                           aria-label={`Delete ${step.name}`}
                           onClick={(event) => {
                             event.stopPropagation();
+                            if (step.activities.length > 0 && !window.confirm(`Delete ${step.name} and its ${step.activities.length} activities?`)) return;
                             s.removeStep(step.id);
                           }}
                         >
@@ -217,7 +251,7 @@ export function DesignerWorkspace() {
                             cursor: 'pointer',
                           }}
                         >
-                          <Typography sx={{ flex: 1, fontSize: 10 }}>{activity.name}</Typography>
+                          <Typography sx={{ flex: 1, fontSize: tokens.fontSize.body }}>{activity.name}</Typography>
                           <Chip size="small" variant="outlined" label={activity.type} />
                           <Chip size="small" label={`${activity.controls.length} controls`} />
                         </Box>
@@ -257,7 +291,7 @@ export function VariablesWorkspace() {
         }
       />
       {s.document.id === 'new' && (
-        <Typography sx={{ color: tokens.warning, fontSize: 9 }}>
+        <Typography sx={{ color: '#9a4f00', fontSize: tokens.fontSize.secondary }}>
           Save the Process first to enable variable creation (ProcessId required).
         </Typography>
       )}
@@ -466,7 +500,7 @@ export function StepsWorkspace() {
         }
       />
       {s.document.id === 'new' && (
-        <Typography sx={{ color: tokens.warning, fontSize: 9 }}>
+        <Typography sx={{ color: '#9a4f00', fontSize: tokens.fontSize.secondary }}>
           Save the Process first to enable steps (ProcessId required).
         </Typography>
       )}
@@ -615,12 +649,7 @@ export function StepsWorkspace() {
                           }
                           label="System"
                         />
-                        <Chip
-                          size="small"
-                          variant="outlined"
-                          label="unsaved"
-                          sx={{ color: tokens.warning, borderColor: tokens.warning }}
-                        />
+                        <UnsavedStatus compact />
                       </Stack>
                     </Box>
                   </Box>
@@ -659,10 +688,10 @@ export function ActivitiesWorkspace() {
         spacing={1}
         sx={{ alignItems: { sm: 'center' } }}
       >
-        <Typography sx={{ flex: 1, fontSize: 12, fontWeight: 500 }}>
+        <Typography component="h2" sx={{ flex: 1, fontSize: tokens.fontSize.heading, fontWeight: 700 }}>
           Activities · {step?.name ?? 'Select step'}
         </Typography>
-        {s.dirty && <Chip size="small" label="unsaved changes" sx={{ bgcolor: '#f59e0b' }} />}
+        {s.dirty && <UnsavedStatus />}
         <Button variant="outlined" size="small">
           Save Activities
         </Button>
@@ -682,7 +711,7 @@ export function ActivitiesWorkspace() {
         </TextField>
       </Stack>
       <Box sx={workspaceCardSx()}>
-        <Typography sx={{ mb: 1, fontSize: 9, fontWeight: 600 }}>ADD ACTIVITY</Typography>
+        <Typography sx={{ mb: 1, fontSize: tokens.fontSize.secondary, fontWeight: 700 }}>ADD ACTIVITY</Typography>
         <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
           {activityPalette.map((item) => (
             <Button
@@ -835,12 +864,7 @@ export function ActivitiesWorkspace() {
                           }
                           label="Required"
                         />
-                        <Chip
-                          size="small"
-                          variant="outlined"
-                          label="unsaved"
-                          sx={{ color: '#f97316', borderColor: '#fdba74' }}
-                        />
+                        <UnsavedStatus compact />
                         <Button
                           color="error"
                           size="small"
@@ -901,12 +925,12 @@ export function RequestFormWorkspace() {
         }
       />
       {s.document.id === 'new' && (
-        <Typography sx={{ color: tokens.warning, fontSize: 9 }}>
+        <Typography sx={{ color: '#9a4f00', fontSize: tokens.fontSize.secondary }}>
           Save the Process first to enable request controls (ProcessId required).
         </Typography>
       )}
-      <Box sx={{ ...workspaceCardSx(), minHeight: 78, mt: '-10px' }}>
-        <Typography sx={{ mb: 1, fontSize: 9, fontWeight: 600 }}>ADD CONTROL</Typography>
+      <Box sx={{ ...workspaceCardSx(), minHeight: 60, mt: '-6px' }}>
+        <Typography sx={{ mb: 1, fontSize: tokens.fontSize.secondary, fontWeight: 700 }}>ADD CONTROL</Typography>
         <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
           {palette.map((item) => (
             <Button
@@ -1055,12 +1079,7 @@ export function RequestFormWorkspace() {
                           label="Read Only"
                         />
                         <Chip size="small" variant="outlined" label={control.type} />
-                        <Chip
-                          size="small"
-                          variant="outlined"
-                          label="unsaved"
-                          sx={{ color: '#f97316', borderColor: '#fdba74' }}
-                        />
+                        <UnsavedStatus compact />
                       </Box>
                     </Box>
                   )}
@@ -1103,19 +1122,38 @@ export function ActivityFormWorkspace() {
           title="Activity Form"
           summary="Select an activity to design its controls and actions"
         />
-        {s.document.steps.map((step) => (
-          <Box key={step.id}>
-            <Typography sx={{ mb: 0.5, fontWeight: 700 }}>{step.name}</Typography>
-            {step.activities.map((item) => (
-              <Button
-                key={item.id}
-                onClick={() => s.select({ kind: 'activity', stepId: step.id, id: item.id })}
-              >
-                {item.name}
-              </Button>
-            ))}
-          </Box>
-        ))}
+        <Box
+          role="region"
+          aria-label="Activity form empty state"
+          sx={{
+            maxWidth: 560,
+            mx: 'auto',
+            mt: '48px !important',
+            p: '28px',
+            textAlign: 'center',
+            border: `1px dashed ${tokens.borderStrong}`,
+            bgcolor: '#fff',
+          }}
+        >
+          <Typography sx={{ fontSize: tokens.fontSize.heading, fontWeight: 700 }}>
+            Select an activity to design its form
+          </Typography>
+          <Typography sx={{ mt: '8px', color: tokens.textMuted, fontSize: tokens.fontSize.body }}>
+            Add an activity first, or choose an existing activity from the process tree.
+          </Typography>
+          <Button variant="outlined" sx={{ mt: '16px' }} onClick={() => s.setCenterTab(3)}>
+            Open Activities
+          </Button>
+          {s.document.steps.some((step) => step.activities.length > 0) && (
+            <Stack spacing="6px" sx={{ mt: '16px', alignItems: 'center' }}>
+              {s.document.steps.flatMap((step) => step.activities.map((item) => (
+                <Button key={item.id} onClick={() => s.select({ kind: 'activity', stepId: step.id, id: item.id })}>
+                  {item.name}
+                </Button>
+              )))}
+            </Stack>
+          )}
+        </Box>
       </Stack>
     );
   const dragControl = ({ active, over }: DragEndEvent) => {
@@ -1129,14 +1167,14 @@ export function ActivityFormWorkspace() {
         spacing={1}
         sx={{ alignItems: { xs: 'stretch', sm: 'center' }, minHeight: 44 }}
       >
-        <Typography sx={{ flex: 1, fontSize: 12, fontWeight: 500 }}>
+        <Typography component="h2" sx={{ flex: 1, fontSize: tokens.fontSize.heading, fontWeight: 700 }}>
           Activity Form · {activity.name}
         </Typography>
-        {s.dirty && <Chip size="small" label="unsaved" sx={{ bgcolor: tokens.warning }} />}
+        {s.dirty && <UnsavedStatus compact />}
         <Button variant="contained">Save Activity Controls</Button>
       </Stack>
-      <Box sx={{ ...workspaceCardSx(), minHeight: 78 }}>
-        <Typography sx={{ mb: 1, fontSize: 9, fontWeight: 600 }}>ADD CONTROL</Typography>
+      <Box sx={{ ...workspaceCardSx(), minHeight: 60 }}>
+        <Typography sx={{ mb: 1, fontSize: tokens.fontSize.secondary, fontWeight: 700 }}>ADD CONTROL</Typography>
         <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
           {palette.map((item) => (
             <Button
@@ -1249,7 +1287,7 @@ export function ActivityFormWorkspace() {
       </DndContext>
       <Box sx={{ ...workspaceCardSx(), mt: 0.5 }}>
         <Stack direction="row" sx={{ alignItems: 'center' }}>
-          <Typography sx={{ flex: 1, fontSize: 10, fontWeight: 600 }}>Actions</Typography>
+          <Typography sx={{ flex: 1, fontSize: tokens.fontSize.body, fontWeight: 600 }}>Actions</Typography>
           {(['approve', 'reject', 'return', 'escalate'] as const).map((type) => (
             <Button
               key={type}

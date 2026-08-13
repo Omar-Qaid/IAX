@@ -23,7 +23,7 @@ export const WorkspaceTile: React.FC<WorkspaceTileProps> = ({
       elevation={0}
       onClick={onClick}
       sx={{
-        p: 2,
+        p: 1.25,
         borderRadius: 1,
         border: (t) => `1px solid ${t.palette.divider}`,
         cursor: onClick ? 'pointer' : 'default',

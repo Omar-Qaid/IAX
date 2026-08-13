@@ -49,29 +49,32 @@ export function ProcessBuilderTreePanel() {
     mx: '8px',
     my: 0.25,
     borderRadius: 0,
-    minHeight: 38,
+    minHeight: 32,
     '&.Mui-selected': { bgcolor: tokens.accentSoft, color: tokens.accent },
     '&.Mui-selected:hover': { bgcolor: tokens.accentSoft },
-    '& .MuiListItemText-primary': { fontSize: 10, overflow: 'hidden', textOverflow: 'ellipsis' },
-    '& .MuiListItemText-secondary': { fontSize: 8 },
+    '&:focus-visible': { boxShadow: tokens.focusRing },
+    '& .MuiListItemText-primary': { fontSize: tokens.fontSize.body, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+    '& .MuiListItemText-secondary': { fontSize: tokens.fontSize.caption },
   };
   const sectionSx = {
-    px: '24px',
+    px: '16px',
     pt: '18px',
     pb: '8px',
-    fontSize: 9,
+    fontSize: tokens.fontSize.secondary,
     fontWeight: 600,
     color: tokens.textMuted,
   };
   return (
-    <List dense disablePadding aria-label="Process structure" sx={{ py: 1 }}>
+    <List dense disablePadding aria-label="Process structure" sx={{ py: 0.5 }}>
       <ListItemButton
         selected={active('process')}
         sx={itemSx}
         onClick={() => select({ kind: 'process' })}
       >
         <AccountTree sx={{ mr: '12px', color: tokens.textMuted }} />
-        <ListItemText primary={d.name} secondary={d.code} />
+        <Tooltip title={`${d.name} · ${d.code}`} placement="right">
+          <ListItemText primary={d.name} secondary={d.code} />
+        </Tooltip>
       </ListItemButton>
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <Typography sx={{ ...sectionSx, flex: 1 }}>VARIABLES</Typography>
@@ -88,7 +91,9 @@ export function ProcessBuilderTreePanel() {
           sx={{ ...itemSx, pl: '32px' }}
           onClick={() => select({ kind: 'variable', id: v.id })}
         >
-          <ListItemText primary={v.name} secondary={v.dataType} />
+          <Tooltip title={`${v.name} · ${v.dataType}`} placement="right">
+            <ListItemText primary={v.name} secondary={v.dataType} />
+          </Tooltip>
         </ListItemButton>
       ))}
       <Typography sx={sectionSx}>REQUEST CONTROLS</Typography>
@@ -99,7 +104,9 @@ export function ProcessBuilderTreePanel() {
           sx={{ ...itemSx, pl: '32px' }}
           onClick={() => select({ kind: 'requestControl', id: c.id })}
         >
-          <ListItemText primary={c.label} secondary={c.type} />
+          <Tooltip title={`${c.label} · ${c.type}`} placement="right">
+            <ListItemText primary={c.label} secondary={c.type} />
+          </Tooltip>
         </ListItemButton>
       ))}
       <Button
@@ -155,10 +162,9 @@ export function ProcessBuilderTreePanel() {
                         <ChevronRight fontSize="small" />
                       )}
                     </IconButton>
-                    <ListItemText
-                      primary={`${s.order}. ${s.name}`}
-                      secondary={`${s.activities.length} activities`}
-                    />
+                    <Tooltip title={`${s.order}. ${s.name} · ${s.activities.length} activities`} placement="right">
+                      <ListItemText primary={`${s.order}. ${s.name}`} secondary={`${s.activities.length} activities`} />
+                    </Tooltip>
                   </ListItemButton>
                   {expanded[s.id] &&
                     s.activities.map((a) => (
@@ -168,10 +174,9 @@ export function ProcessBuilderTreePanel() {
                           sx={{ ...itemSx, ml: 3, pl: 2 }}
                           onClick={() => select({ kind: 'activity', stepId: s.id, id: a.id })}
                         >
-                          <ListItemText
-                            primary={a.name}
-                            secondary={`${a.type} · ${a.controls.length} controls`}
-                          />
+                          <Tooltip title={`${a.name} · ${a.type} · ${a.controls.length} controls`} placement="right">
+                            <ListItemText primary={a.name} secondary={`${a.type} · ${a.controls.length} controls`} />
+                          </Tooltip>
                         </ListItemButton>
                         {a.controls.map((control) => (
                           <ListItemButton
@@ -187,7 +192,9 @@ export function ProcessBuilderTreePanel() {
                               })
                             }
                           >
-                            <ListItemText primary={control.label} secondary={control.type} />
+                            <Tooltip title={`${control.label} · ${control.type}`} placement="right">
+                              <ListItemText primary={control.label} secondary={control.type} />
+                            </Tooltip>
                           </ListItemButton>
                         ))}
                       </Box>

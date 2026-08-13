@@ -1,13 +1,14 @@
 import React from 'react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import userEvent from '@testing-library/user-event';
-import { render, screen } from '@test/testUtils';
+import { render, screen, waitFor } from '@test/testUtils';
 import { ProcessBuilderPage } from '@modules/process-builder/pages/ProcessBuilderPage';
 import { useProcessBuilderStore } from '@modules/process-builder/store/useProcessBuilderStore';
 import { createProcessBuilderDocument } from '@modules/process-builder/store/useProcessBuilderStore';
 
 beforeEach(() => {
   localStorage.clear();
+  sessionStorage.clear();
   useProcessBuilderStore.getState().initialize(createProcessBuilderDocument('test'));
 });
 
@@ -76,5 +77,44 @@ describe('standalone ProcessBuilderPage', () => {
     const [first, second] = useProcessBuilderStore.getState().document.variables;
     useProcessBuilderStore.getState().reorderVariables(first.id, second.id);
     expect(useProcessBuilderStore.getState().document.variables.map((variable) => [variable.id, variable.sortOrder])).toEqual([[second.id, 10], [first.id, 20]]);
+  });
+
+  it('provides responsive structure and settings drawer controls', async () => {
+    const user = userEvent.setup();
+    render(<ProcessBuilderPage />);
+
+    await user.click(screen.getByRole('button', { name: 'Open process structure' }));
+    expect(screen.getByRole('heading', { name: 'Process structure' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Close process structure' })).toBeDefined();
+
+    await user.click(screen.getByRole('button', { name: 'Close process structure' }));
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Process structure' })).toBeNull());
+    await user.click(screen.getByRole('button', { name: 'Open settings' }));
+    expect(screen.getByRole('heading', { name: 'Settings' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Close settings' })).toBeDefined();
+  });
+
+  it('offers keyboard-accessible step ordering alternatives', async () => {
+    const user = userEvent.setup();
+    render(<ProcessBuilderPage />);
+    await user.click(screen.getByRole('button', { name: 'Add Step' }));
+    const [first, second] = useProcessBuilderStore.getState().document.steps;
+
+    await user.click(screen.getByRole('button', { name: `Move ${first.name} down` }));
+    expect(useProcessBuilderStore.getState().document.steps.map((step) => step.id)).toEqual([
+      second.id,
+      first.id,
+    ]);
+  });
+
+  it('guides users when the activity form has no selected activity', async () => {
+    const user = userEvent.setup();
+    render(<ProcessBuilderPage />);
+
+    await user.click(screen.getByRole('tab', { name: 'Activity form' }));
+    expect(screen.getByRole('region', { name: 'Activity form empty state' })).toHaveTextContent(
+      'Select an activity to design its form'
+    );
+    expect(screen.getByRole('button', { name: 'Open Activities' })).toBeDefined();
   });
 });

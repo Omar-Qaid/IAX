@@ -8,8 +8,8 @@ export interface PageHeaderProps extends PageTitleProps {
 
 export const PageHeader: React.FC<PageHeaderProps> = ({ actions, ...titleProps }) => {
   return (
-    <Box sx={{ mb: 1.5 }}>
-      <Stack direction="row" spacing={2} sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+    <Box sx={{ mb: 1 }}>
+      <Stack direction="row" spacing={1} sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
         <PageTitle {...titleProps} />
         {actions && <Box>{actions}</Box>}
       </Stack>

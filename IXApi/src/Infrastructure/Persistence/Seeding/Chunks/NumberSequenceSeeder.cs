@@ -10,7 +10,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
 {
     /// <summary>
     /// Seeds one SysNumberSequence row for every entity that owns a Code field.
-    /// EntityName must match the value passed to ISysNumberSequenceService.NextAsync
+    /// NumberSequence must match the value passed to ISysNumberSequenceService.NextAsync
     /// (or AutoCodeExtensions.EnsureCodeAsync) from the corresponding service.
     /// </summary>
     public class NumberSequenceSeeder : ISeeder
@@ -20,113 +20,107 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             var sysUser = await users.FindByNameAsync("sys");
             var createdBy = sysUser?.Id ?? "sys";
 
-            // (Code, Name, NameAR, EntityName, Prefix, FormatPattern, PaddingLength, ResetCycle)
-            var defs = new (string Code, string Name, string NameAR, string EntityName, string Prefix, string FormatPattern, int PaddingLength, SequenceResetCycle Reset)[]
+            // (NumberSequence, Txt, Format, AnnotatedFormat, Cyclic)
+            var defs = new (string NumberSequence, string Txt, string Format, string AnnotatedFormat, int Cyclic)[]
             {
                 // ─── ERP / Accounts ──────────────────────────────────────────────
-                ("NS-CUS",       "Customer Sequence",         "تسلسل العميل",            "Customer",            "CUS", "{PREFIX}-{SEQ}",       5, SequenceResetCycle.Never),
-                ("NS-CUSGRP",    "Customer Group Sequence",   "تسلسل مجموعة العميل",     "CustomerGroup",       "CGRP","{PREFIX}-{SEQ}",       4, SequenceResetCycle.Never),
-                ("NS-VEN",       "Vendor Sequence",           "تسلسل المورد",            "Vendor",            "VEN", "{PREFIX}-{SEQ}",       5, SequenceResetCycle.Never),
-                ("NS-VENGRP",    "Vendor Group Sequence",     "تسلسل مجموعة المورد",     "VendorGroup",       "VGRP","{PREFIX}-{SEQ}",       4, SequenceResetCycle.Never),
-                ("NS-PARTNER",   "Partner Sequence",          "تسلسل الشريك",            "AccPartner",          "PRT", "{PREFIX}-{SEQ}",       5, SequenceResetCycle.Never),
-                ("NS-PARTNERGRP","Partner Group Sequence",    "تسلسل مجموعة الشريك",     "AccPartnerGroup",     "PGRP","{PREFIX}-{SEQ}",       4, SequenceResetCycle.Never),
-                ("NS-VOUCHER",   "Voucher Sequence",          "تسلسل القيد",             "Voucher",             "VOU", "{PREFIX}-{SEQ}",       6, SequenceResetCycle.Never),
+                ("Customer",            "Customer Sequence",         "CUS-######", "{PREFIX}-{SEQ}",       0),
+                ("CustomerGroup",       "Customer Group Sequence",   "CGRP-######", "{PREFIX}-{SEQ}",       0),
+                ("Vendor",              "Vendor Sequence",           "VEN-######", "{PREFIX}-{SEQ}",       0),
+                ("VendorGroup",         "Vendor Group Sequence",     "VGRP-######", "{PREFIX}-{SEQ}",       0),
+                ("AccPartner",          "Partner Sequence",          "PRT-######", "{PREFIX}-{SEQ}",       0),
+                ("AccPartnerGroup",     "Partner Group Sequence",    "PGRP-######", "{PREFIX}-{SEQ}",       0),
+                ("Voucher",             "Voucher Sequence",          "VOU-######", "{PREFIX}-{SEQ}",       0),
 
                 // ─── ERP / AR ────────────────────────────────────────────────────
-                ("NS-SO",        "Sales Order Sequence",      "تسلسل أمر البيع",         "SalesTable",          "SO",  "{PREFIX}-{YYYY}-{SEQ}", 5, SequenceResetCycle.Yearly),
-                ("NS-SOL",       "Sale Line Sequence",        "تسلسل بند البيع",         "SalesLine",           "SOL", "{PREFIX}-{SEQ}",       6, SequenceResetCycle.Never),
-                ("NS-PS",        "Packing Slip Sequence",     "تسلسل إشعار التعبئة",     "PackingSlip",         "PS",  "{PREFIX}-{YYYY}-{SEQ}", 5, SequenceResetCycle.Yearly),
-                ("NS-PICK",      "Picking Route Sequence",    "تسلسل قائمة الانتقاء",    "WMSPickingRoute",     "PICK","{PREFIX}-{YYYY}-{SEQ}", 5, SequenceResetCycle.Yearly),
-                ("NS-CNFRM",     "SO Confirm Sequence",       "تسلسل تأكيد أمر البيع",   "CustConfirmJour",     "CONF","{PREFIX}-{YYYY}-{SEQ}", 5, SequenceResetCycle.Yearly),
-                ("NS-PSJOURID",  "PS Journal ID Sequence",    "تسلسل قيد إشعار التعبئة", "CustPackingSlipJour", "PSJ", "{PREFIX}-{YYYY}-{SEQ}", 5, SequenceResetCycle.Yearly),
-                ("NS-INV",       "Invoice Sequence",          "تسلسل الفاتورة",          "CustInvoiceJour",     "INV", "{PREFIX}-{YYYY}-{SEQ}", 5, SequenceResetCycle.Yearly),
-                ("NS-INVT",      "Invoice Trans Sequence",    "تسلسل بند الفاتورة",      "CustInvoiceTrans",    "INVT","{PREFIX}-{SEQ}",       6, SequenceResetCycle.Never),
-                ("NS-CTRANS",    "Cust Transaction Sequence", "تسلسل حركة العميل",       "CustTrans",           "CTRX","{PREFIX}-{YYYY}-{SEQ}", 6, SequenceResetCycle.Never),
-                ("NS-CSETTLE",   "Cust Settlement Sequence",  "تسلسل تسوية العميل",      "CustSettlement",      "CSET","{PREFIX}-{SEQ}",       6, SequenceResetCycle.Never),
-                ("NS-ORG",       "Lot Origin Sequence",       "تسلسل أصل لوت الحركة",   "InventTransOriginId", "ORG",  "{PREFIX}-{SEQ}",       6, SequenceResetCycle.Never),
-                ("NS-LJT",       "Ledger Journal Sequence",   "تسلسل دفتر الأستاذ",      "LedgerJournalTable",  "LJT", "{PREFIX}-{YYYY}-{SEQ}", 5, SequenceResetCycle.Yearly),
-                ("NS-INVENTJRN", "Inventory Journal Sequence", "تسلسل دفاتر المخزون",     "InventJournalTable",  "IJRN", "{PREFIX}-{YYYY}-{SEQ}", 5, SequenceResetCycle.Yearly),
-                ("NS-PO",        "Purchase Order Sequence",   "تسلسل أمر الشراء",        "PurchTable",          "PO",  "{PREFIX}-{YYYY}-{SEQ}", 5, SequenceResetCycle.Yearly),
-                ("NS-VTRANS",    "Vend Transaction Sequence", "تسلسل حركة المورد",       "VendTrans",           "VTRX","{PREFIX}-{YYYY}-{SEQ}", 6, SequenceResetCycle.Never),
-                ("NS-VINVREG",   "Vend Invoice Register Seq", "تسلسل سجل فاتورة المورد", "VendInvoiceRegister", "VIR", "{PREFIX}-{YYYY}-{SEQ}", 6, SequenceResetCycle.Yearly),
-                ("NS-EXCHADJ",   "Exch Adjustment Sequence",  "تسلسل تسوية الصرف",       "ExchAdjustment",      "FXA", "{PREFIX}-{YYYY}-{SEQ}", 5, SequenceResetCycle.Yearly),
-                ("NS-VSETTLE",   "Vend Settlement Sequence",  "تسلسل تسوية المورد",      "VendSettlement",      "VSET","{PREFIX}-{SEQ}",       6, SequenceResetCycle.Never),
+                ("SalesTable",          "Sales Order Sequence",      "SO-######",  "{PREFIX}-{YYYY}-{SEQ}", 1),
+                ("SalesLine",           "Sale Line Sequence",        "SOL-######", "{PREFIX}-{SEQ}",       0),
+                ("PackingSlip",         "Packing Slip Sequence",     "PS-######",  "{PREFIX}-{YYYY}-{SEQ}", 1),
+                ("WMSPickingRoute",     "Picking Route Sequence",    "PICK-######","{PREFIX}-{YYYY}-{SEQ}", 1),
+                ("CustConfirmJour",     "SO Confirm Sequence",       "CONF-######","{PREFIX}-{YYYY}-{SEQ}", 1),
+                ("CustPackingSlipJour", "PS Journal ID Sequence",    "PSJ-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
+                ("CustInvoiceJour",     "Invoice Sequence",          "INV-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
+                ("CustInvoiceTrans",    "Invoice Trans Sequence",    "INVT-######","{PREFIX}-{SEQ}",       0),
+                ("CustTrans",           "Cust Transaction Sequence", "CTRX-######","{PREFIX}-{YYYY}-{SEQ}", 0),
+                ("CustSettlement",      "Cust Settlement Sequence",  "CSET-######","{PREFIX}-{SEQ}",       0),
+                ("InventTransOriginId", "Lot Origin Sequence",       "ORG-######", "{PREFIX}-{SEQ}",       0),
+                ("LedgerJournalTable",  "Ledger Journal Sequence",   "LJT-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
+                ("InventJournalTable",  "Inventory Journal Sequence","IJRN-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
+                ("PurchTable",          "Purchase Order Sequence",   "PO-######",  "{PREFIX}-{YYYY}-{SEQ}", 1),
+                ("VendTrans",           "Vend Transaction Sequence", "VTRX-######","{PREFIX}-{YYYY}-{SEQ}", 0),
+                ("VendInvoiceRegister", "Vend Invoice Register Seq", "VIR-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
+                ("ExchAdjustment",      "Exch Adjustment Sequence",  "FXA-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
+                ("VendSettlement",      "Vend Settlement Sequence",  "VSET-######","{PREFIX}-{SEQ}",       0),
 
                 // ─── ERP / Inventory ─────────────────────────────────────────────
     
-                ("NS-LOT",       "Invent Lot Sequence",       "تسلسل لوت المخزون",       "InventTransId",       "LOT", "{PREFIX}-{SEQ}",       8, SequenceResetCycle.Never),
-                ("NS- RP",   " Group Sequence",       "تسلسل مجموعة الصنف",      "Invent roup",        "IGRP","{PREFIX}-{SEQ}",       4, SequenceResetCycle.Never),
-                ("NS-UOM",       "UOM Sequence",              "تسلسل وحدة القياس",       "UnitOfMeasure",          "UOM", "{PREFIX}-{SEQ}",       3, SequenceResetCycle.Never),
-                ("NS-IUOM",      " UOM Sequence",         "تسلسل وحدة قياس الصنف",   "Invent OM",          "IUOM","{PREFIX}-{SEQ}",       4, SequenceResetCycle.Never),
-                ("NS-INVTRX",    "Inv Transaction Sequence",  "تسلسل حركة المخزون",      "InventTrans",            "ITRX","{PREFIX}-{YYYY}{MM}-{SEQ}", 6, SequenceResetCycle.Monthly),
+                ("InventTransId",       "Invent Lot Sequence",       "LOT-######", "{PREFIX}-{SEQ}",       0),
+                ("InventGroup",         "Group Sequence",            "IGRP-######","{PREFIX}-{SEQ}",       0),
+                ("UnitOfMeasure",       "UOM Sequence",              "UOM-######", "{PREFIX}-{SEQ}",       0),
+                ("InventUOM",           "UOM Sequence",              "IUOM-######","{PREFIX}-{SEQ}",       0),
+                ("InventTrans",         "Inv Transaction Sequence",  "ITRX-######","{PREFIX}-{YYYY}{MM}-{SEQ}", 1),
 
                 // ─── Organization ────────────────────────────────────────────────
-                ("NS-EMP",       "Employee Sequence",         "تسلسل الموظف",            "OrgEmployee",         "EMP", "{PREFIX}-{SEQ}",       5, SequenceResetCycle.Never),
-                ("NS-DEPT",      "Department Sequence",       "تسلسل القسم",             "OrgDepartment",       "DPT", "{PREFIX}-{SEQ}",       4, SequenceResetCycle.Never),
-                ("NS-OCC",       "Occupation Sequence",       "تسلسل المهنة",            "OrgOccupation",       "OCC", "{PREFIX}-{SEQ}",       4, SequenceResetCycle.Never),
-                ("NS-NAT",       "Nationality Sequence",      "تسلسل الجنسية",           "OrgNationality",      "NAT", "{PREFIX}-{SEQ}",       4, SequenceResetCycle.Never),
-                ("NS-GEN",       "Gender Sequence",           "تسلسل الجنس",             "OrgGender",           "GEN", "{PREFIX}-{SEQ}",       2, SequenceResetCycle.Never),
-                ("NS-COMP",      "Company Sequence",          "تسلسل الشركة",            "OrgCompany",          "COMP","{PREFIX}-{SEQ}",       3, SequenceResetCycle.Never),
-                ("NS-ANN",       "Announcement Sequence",     "تسلسل الإعلان",           "OrgAnnouncement",     "ANN", "{PREFIX}-{YYYY}-{SEQ}", 4, SequenceResetCycle.Yearly),
-                ("NS-ATT",       "Attachment Sequence",       "تسلسل المرفق",            "OrgAttachment",       "ATT", "{PREFIX}-{SEQ}",       6, SequenceResetCycle.Never),
-                ("NS-JOB",       "Job Sequence",              "تسلسل الوظيفة",           "OrgJob",              "JOB", "{PREFIX}-{SEQ}",       4, SequenceResetCycle.Never),
+                ("OrgEmployee",         "Employee Sequence",         "EMP-######", "{PREFIX}-{SEQ}",       0),
+                ("OrgDepartment",       "Department Sequence",       "DPT-######", "{PREFIX}-{SEQ}",       0),
+                ("OrgOccupation",       "Occupation Sequence",       "OCC-######", "{PREFIX}-{SEQ}",       0),
+                ("OrgNationality",      "Nationality Sequence",      "NAT-######", "{PREFIX}-{SEQ}",       0),
+                ("OrgGender",           "Gender Sequence",           "GEN-######", "{PREFIX}-{SEQ}",       0),
+                ("OrgCompany",          "Company Sequence",          "COMP-######","{PREFIX}-{SEQ}",       0),
+                ("OrgAnnouncement",     "Announcement Sequence",     "ANN-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
+                ("OrgAttachment",       "Attachment Sequence",       "ATT-######", "{PREFIX}-{SEQ}",       0),
+                ("OrgJob",              "Job Sequence",              "JOB-######", "{PREFIX}-{SEQ}",       0),
 
                 // ─── Identity / Users ────────────────────────────────────────────
-                ("NS-UGRP",      "User Group Sequence",       "تسلسل مجموعة المستخدم",   "OrgEmployeeGroup",           "UGRP","{PREFIX}-{SEQ}",       4, SequenceResetCycle.Never),
-                ("NS-UCAT",      "User Category Sequence",    "تسلسل فئة المستخدم",      "OrgEmployeeCategory",        "UCAT","{PREFIX}-{SEQ}",       4, SequenceResetCycle.Never),
+                ("OrgEmployeeGroup",    "User Group Sequence",       "UGRP-######","{PREFIX}-{SEQ}",       0),
+                ("OrgEmployeeCategory", "User Category Sequence",    "UCAT-######","{PREFIX}-{SEQ}",       0),
 
                 // ─── Workflow ────────────────────────────────────────────────────
-                ("NS-WFCAT",     "Wf Category Sequence",      "تسلسل تصنيف العملية",     "WfCategory",          "WCT", "{PREFIX}-{SEQ}",       4, SequenceResetCycle.Never),
-                ("NS-WFPRI",     "Wf Priority Sequence",      "تسلسل أولوية العملية",    "WfPriority",          "WPR", "{PREFIX}-{SEQ}",       3, SequenceResetCycle.Never),
-                ("NS-WFPT",      "Wf Process Type Sequence",  "تسلسل نوع العملية",       "WfProcessType",       "WPT", "{PREFIX}-{SEQ}",       3, SequenceResetCycle.Never),
-                ("NS-WFPROC",    "Wf Process Sequence",       "تسلسل العملية",           "WfProcess",           "PROC","{PREFIX}-{SEQ}",       5, SequenceResetCycle.Never),
-                ("NS-WFSTEP",    "Wf Step Sequence",          "تسلسل خطوة العملية",      "WfStep",              "STEP","{PREFIX}-{SEQ}",       5, SequenceResetCycle.Never),
-                ("NS-WFACT",     "Wf Activity Sequence",      "تسلسل نشاط العملية",      "WfActivity",          "ACT", "{PREFIX}-{SEQ}",       5, SequenceResetCycle.Never),
-                ("NS-WFATYPE",   "Wf Activity Type Sequence", "تسلسل نوع النشاط",        "WfActivityType",      "ATYP","{PREFIX}-{SEQ}",       3, SequenceResetCycle.Never),
-                ("NS-WFACTRL",   "Wf Activity Control Seq.",  "تسلسل عنصر نشاط العملية", "WfActivityControl",   "ACTL","{PREFIX}-{SEQ}",       5, SequenceResetCycle.Never),
-                ("NS-WFREQCTL",  "Wf Request Control Seq.",   "تسلسل عنصر الطلب",        "WfRequestControl",    "RCTL","{PREFIX}-{SEQ}",       5, SequenceResetCycle.Never),
-                ("NS-WFCTL",     "Wf Control Sequence",       "تسلسل العنصر",            "WfControl",           "CTL", "{PREFIX}-{SEQ}",       3, SequenceResetCycle.Never),
-                ("NS-WFOP",      "Wf Operator Sequence",      "تسلسل المعامل",           "WfOperator",          "OP",  "{PREFIX}-{SEQ}",       3, SequenceResetCycle.Never),
-                ("NS-WFPERF",    "Wf Performer Sequence",     "تسلسل المنفذ",            "WfPerformer",         "PRF", "{PREFIX}-{SEQ}",       5, SequenceResetCycle.Never),
-                ("NS-WFPTYPE",   "Wf Performer Type Sequence","تسلسل نوع المنفذ",        "WfPerformerType",     "PRT", "{PREFIX}-{SEQ}",       3, SequenceResetCycle.Never),
-                ("NS-WFREQ",     "Wf Request Sequence",       "تسلسل الطلب",             "WfRequest",           "REQ", "{PREFIX}-{YYYY}-{SEQ}", 6, SequenceResetCycle.Yearly),
-                ("NS-WFREQD",    "Wf Request Detail Seq.",    "تسلسل بند الطلب",         "WfRequestDetail",     "REQD","{PREFIX}-{SEQ}",       6, SequenceResetCycle.Never),
-                ("NS-WFTRN",     "Wf Transition Sequence",    "تسلسل الانتقال",          "WfTransition",        "TRN", "{PREFIX}-{SEQ}",       5, SequenceResetCycle.Never),
-                ("NS-WFVAR",     "Wf Variable Sequence",      "تسلسل المتغير",           "WfVariable",          "VAR", "{PREFIX}-{SEQ}",       5, SequenceResetCycle.Never),
-                ("NS-WFDT",      "Wf DataType Sequence",      "تسلسل نوع البيانات",      "WfDataType",          "DT",  "{PREFIX}-{SEQ}",       3, SequenceResetCycle.Never),
+                ("WfCategory",          "Wf Category Sequence",      "WCT-######", "{PREFIX}-{SEQ}",       0),
+                ("WfPriority",          "Wf Priority Sequence",      "WPR-######", "{PREFIX}-{SEQ}",       0),
+                ("WfProcessType",       "Wf Process Type Sequence",  "WPT-######", "{PREFIX}-{SEQ}",       0),
+                ("WfProcess",           "Wf Process Sequence",       "PROC-######","{PREFIX}-{SEQ}",       0),
+                ("WfStep",              "Wf Step Sequence",          "STEP-######","{PREFIX}-{SEQ}",       0),
+                ("WfActivity",          "Wf Activity Sequence",      "ACT-######", "{PREFIX}-{SEQ}",       0),
+                ("WfActivityType",      "Wf Activity Type Sequence", "ATYP-######","{PREFIX}-{SEQ}",       0),
+                ("WfActivityControl",   "Wf Activity Control Seq.",  "ACTL-######","{PREFIX}-{SEQ}",       0),
+                ("WfRequestControl",    "Wf Request Control Seq.",   "RCTL-######","{PREFIX}-{SEQ}",       0),
+                ("WfControl",           "Wf Control Sequence",       "CTL-######", "{PREFIX}-{SEQ}",       0),
+                ("WfOperator",          "Wf Operator Sequence",      "OP-######",  "{PREFIX}-{SEQ}",       0),
+                ("WfPerformer",         "Wf Performer Sequence",     "PRF-######", "{PREFIX}-{SEQ}",       0),
+                ("WfPerformerType",     "Wf Performer Type Sequence","PRT-######", "{PREFIX}-{SEQ}",       0),
+                ("WfRequest",           "Wf Request Sequence",       "REQ-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
+                ("WfRequestDetail",     "Wf Request Detail Seq.",    "REQD-######","{PREFIX}-{SEQ}",       0),
+                ("WfTransition",        "Wf Transition Sequence",    "TRN-######", "{PREFIX}-{SEQ}",       0),
+                ("WfVariable",          "Wf Variable Sequence",      "VAR-######", "{PREFIX}-{SEQ}",       0),
+                ("WfDataType",          "Wf DataType Sequence",      "DT-######",  "{PREFIX}-{SEQ}",       0),
 
                 // ─── System ──────────────────────────────────────────────────────
-                ("NS-LOC",       "Logistics Location Sequence", "تسلسل موقع الخدمات اللوجستية", "LogisticsLocation", "LOC", "{PREFIX}-{SEQ}", 6, SequenceResetCycle.Never),
-                ("NS-NS",        "Number Sequence Code",      "تسلسل تسلسلات الترقيم",   "SysNumberSequence",   "NS",  "{PREFIX}-{SEQ}",       4, SequenceResetCycle.Never),
+                ("LogisticsLocation",   "Logistics Location Sequence", "LOC-######", "{PREFIX}-{SEQ}", 0),
+                ("SysNumberSequence",   "Number Sequence Code",      "NS-######",  "{PREFIX}-{SEQ}",       0),
             };
 
             var existingCodes = await db.SysNumberSequences
-                .Where(s => s.Code != null)
-                .Select(s => s.Code!)
+                .Where(s => s.NumberSequence != null)
+                .Select(s => s.NumberSequence!)
                 .ToListAsync(ct);
             var existingSet = new HashSet<string>(existingCodes, StringComparer.OrdinalIgnoreCase);
 
             var toAdd = new List<SysNumberSequence>();
             foreach (var d in defs)
             {
-                if (existingSet.Contains(d.Code)) continue;
+                if (existingSet.Contains(d.NumberSequence)) continue;
                 toAdd.Add(new SysNumberSequence
                 {
-                    Code = d.Code,
-                    Name = d.Name,
-                    NameAR = d.NameAR,
-                    EntityName = d.EntityName,
-                    Prefix = d.Prefix,
-                    FormatPattern = d.FormatPattern,
-                    PaddingLength = d.PaddingLength,
-                    SmallestValue = 1,
-                    LargestValue = 999999999,
-                    NextValue = 1,
-                    Step = 1,
-                    ResetCycle = d.Reset,
-                    IsActive = true,
+                    NumberSequence = d.NumberSequence,
+                    Txt = d.Txt,
+                    Format = d.Format,
+                    AnnotatedFormat = d.AnnotatedFormat,
+                    Lowest = 1,
+                    Highest = 999999999,
+                    NextRec = 1,
+                    Cyclic = d.Cyclic,
                     CreatedBy = createdBy,
-                    OwnerAccountId = createdBy,
                 });
             }
 

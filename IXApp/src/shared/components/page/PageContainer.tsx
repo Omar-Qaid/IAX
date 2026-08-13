@@ -8,7 +8,7 @@ export const PageContainer: React.FC<{ children: React.ReactNode; sx?: SxProps<T
   return (
     <Box
       sx={[
-        { width: '100%', display: 'flex', flexDirection: 'column', gap: 1.5 },
+        { width: '100%', display: 'flex', flexDirection: 'column', gap: 1 },
         ...(Array.isArray(sx) ? sx : [sx]),
       ]}
     >

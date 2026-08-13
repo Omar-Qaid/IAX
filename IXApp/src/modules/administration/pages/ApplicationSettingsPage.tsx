@@ -42,7 +42,7 @@ export function ApplicationSettingsPage(): React.ReactElement {
           value={activeTab}
           onChange={(_event, value: SettingsTab) => setActiveTab(value)}
           aria-label={t('pages.settings.title')}
-          sx={{ mb: 2, borderBottom: 1, borderColor: 'divider' }}
+          sx={{ mb: 1, borderBottom: 1, borderColor: 'divider' }}
         >
           <Tab value="global" label={t('settings.globalTab', 'Global settings')} />
           <Tab value="user" label={t('settings.userTab', 'My preferences')} />

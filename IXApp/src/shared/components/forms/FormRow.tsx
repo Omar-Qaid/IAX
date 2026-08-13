@@ -3,10 +3,10 @@ import { Grid } from '@mui/material';
 
 export const FormRow: React.FC<{ children: React.ReactNode; spacing?: number }> = ({
   children,
-  spacing = 2,
+  spacing = 1.5,
 }) => {
   return (
-    <Grid container spacing={spacing} sx={{ mb: 1.5 }}>
+    <Grid container spacing={spacing} sx={{ mb: 1 }}>
       {children}
     </Grid>
   );

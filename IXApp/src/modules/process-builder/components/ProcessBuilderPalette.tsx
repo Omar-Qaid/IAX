@@ -15,6 +15,7 @@ import TextFields from '@mui/icons-material/TextFields';
 import { Box, Button, Chip, Divider, Stack, Typography } from '@mui/material';
 import { useProcessBuilderStore } from '../store/useProcessBuilderStore';
 import type { BuilderActivityType, BuilderControlType } from '../types/processBuilderTypes';
+import { processBuilderTokens as tokens } from './processBuilderTokens';
 
 export const activityPalette: ReadonlyArray<{ type: BuilderActivityType; label: string; icon: React.ReactNode }> = [
   { type: 'approval', label: 'Approval', icon: <HowToReg fontSize="small" /> },
@@ -52,9 +53,9 @@ export function ProcessBuilderPalette() {
   const selectedStep = store.selected.kind === 'step' ? store.selected.id : store.selected.kind === 'activity' ? store.selected.stepId : store.document.steps[0]?.id;
   const selectedActivity = store.selected.kind === 'activity' ? store.selected : null;
   const activityControlMode = store.centerTab === 5 && selectedActivity;
-  const titleSx = { fontSize: 9, lineHeight: 1.2, fontWeight: 700, color: '#334155' };
+  const titleSx = { fontSize: tokens.fontSize.secondary, lineHeight: 1.2, fontWeight: 700, color: tokens.text };
   const paletteButtonSx = {
-    minHeight: '46px !important',
+    minHeight: '44px !important',
     px: '12px',
     justifyContent: 'flex-start',
     borderColor: '#dfe4eb !important',
@@ -62,10 +63,11 @@ export function ProcessBuilderPalette() {
     boxShadow: '0 1px 2px rgb(15 23 42 / 6%)',
     color: '#1f2937 !important',
     '& .MuiButton-startIcon': { color: '#111827', mr: '10px' },
-    '&:hover': { bgcolor: '#fafafa', borderColor: '#cbd2dc !important' },
+    '&:hover': { bgcolor: tokens.accentSoft, borderColor: `${tokens.accentLight} !important` },
+    '&:focus-visible': { boxShadow: tokens.focusRing },
   };
   const addLabel = (
-    <Typography component="span" sx={{ ml: 'auto', pl: 1, fontSize: 8, color: '#8b5cf6' }}>
+    <Typography component="span" sx={{ ml: 'auto', pl: 1, fontSize: tokens.fontSize.caption, color: tokens.accent }}>
       Add
     </Typography>
   );
@@ -92,14 +94,19 @@ export function ProcessBuilderPalette() {
           variant="outlined"
           size="small"
           label={activityControlMode ? 'Activity Form' : 'Request Form (process-level)'}
-          sx={{ height: 24, maxWidth: 170, fontSize: 8, bgcolor: '#fff' }}
+          sx={{ height: 24, maxWidth: 190, fontSize: tokens.fontSize.caption, bgcolor: '#fff' }}
         />
       </Stack>
-      <Box sx={{ color: '#64748b', fontSize: 8, lineHeight: 1.65, pb: '2px' }}>
+      <Box role="status" sx={{ color: tokens.textMuted, fontSize: tokens.fontSize.caption, lineHeight: 1.55, pb: '2px' }}>
         {activityControlMode
           ? 'Adds a control to the selected activity form.'
           : 'Adds as a process-level Request Control. Select an activity to add there instead.'}
       </Box>
+      {store.centerTab === 5 && !selectedActivity && (
+        <Box sx={{ p: '8px', color: '#9a6700', bgcolor: '#fff7db', border: '1px solid #f4d06f', fontSize: tokens.fontSize.caption }}>
+          Select an activity from the Tree or Activities workspace to enable activity-form controls.
+        </Box>
+      )}
       {controlPalette.map((item) => (
         <Button
           key={item.type}

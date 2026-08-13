@@ -38,9 +38,9 @@ export function BuilderItemCard({
         tabIndex={onSelect ? 0 : undefined}
       >
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography sx={{ fontSize: 10, fontWeight: 500 }}>{title}</Typography>
+          <Typography sx={{ fontSize: tokens.fontSize.body, fontWeight: 600 }}>{title}</Typography>
           {subtitle && (
-            <Typography color="text.secondary" sx={{ fontSize: 9 }}>
+            <Typography color="text.secondary" sx={{ fontSize: tokens.fontSize.secondary }}>
               {subtitle}
             </Typography>
           )}

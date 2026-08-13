@@ -21,7 +21,7 @@ export const MasterFormPage: React.FC<MasterFormPageProps> = ({
     <PageContainer>
       <PageHeader title={title} subtitle={subtitle} />
       {actionPane && <ActionPane>{actionPane}</ActionPane>}
-      <Paper elevation={0} sx={{ p: 2, borderRadius: 1, border: (t) => `1px solid ${t.palette.divider}` }}>
+      <Paper elevation={0} sx={{ p: 1.25, borderRadius: 1, border: (t) => `1px solid ${t.palette.divider}` }}>
         <Box sx={{ width: '100%' }}>{children}</Box>
       </Paper>
     </PageContainer>

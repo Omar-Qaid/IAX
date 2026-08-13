@@ -48,8 +48,8 @@ export const LookupDialog: React.FC<LookupDialogProps> = ({
       <DialogTitle
         sx={{
           m: 0,
-          p: 1.5,
-          px: 2,
+          p: 1,
+          px: 1.5,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -63,7 +63,7 @@ export const LookupDialog: React.FC<LookupDialogProps> = ({
         </IconButton>
       </DialogTitle>
 
-      <DialogContent dividers sx={{ p: 2 }}>
+      <DialogContent dividers sx={{ p: 1.25 }}>
         <TextField
           autoFocus
           fullWidth
@@ -80,7 +80,7 @@ export const LookupDialog: React.FC<LookupDialogProps> = ({
               ),
             },
           }}
-          sx={{ mb: 2 }}
+          sx={{ mb: 1 }}
         />
 
         {loading ? (
@@ -119,7 +119,7 @@ export const LookupDialog: React.FC<LookupDialogProps> = ({
         )}
       </DialogContent>
 
-      <DialogActions sx={{ p: 1.5, px: 2 }}>
+      <DialogActions sx={{ p: 1, px: 1.5 }}>
         <Button onClick={onClose} size="small">
           {t('actions.cancel')}
         </Button>

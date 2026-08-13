@@ -7,7 +7,7 @@ export const PageContent: React.FC<PageContentProps> = ({ children, sx, ...props
   <Paper
     component="section"
     elevation={0}
-    sx={{ p: 2, borderRadius: 1, border: (theme) => `1px solid ${theme.palette.divider}`, ...sx }}
+    sx={{ p: 1.25, borderRadius: 1, border: (theme) => `1px solid ${theme.palette.divider}`, ...sx }}
     {...props}
   >
     {children}

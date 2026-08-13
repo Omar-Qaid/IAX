@@ -38,32 +38,45 @@ const SettingsTitle = ({
   dirty?: boolean;
   isNew?: boolean;
 }) => (
-  <Stack direction="row" spacing={1} sx={{ minHeight: 24, alignItems: 'center' }}>
-    <Typography sx={{ flex: 1, fontSize: 12, fontWeight: 600, color: tokens.text }}>
+  <Stack
+    direction="row"
+    spacing={1}
+    sx={{
+      position: 'sticky',
+      top: -16,
+      zIndex: 2,
+      minHeight: 34,
+      py: '4px',
+      bgcolor: '#fff',
+      borderBottom: `1px solid ${tokens.border}`,
+      alignItems: 'center',
+    }}
+  >
+    <Typography component="h2" sx={{ flex: 1, fontSize: tokens.fontSize.heading, fontWeight: 700, color: tokens.text }}>
       {title}
     </Typography>
-    {isNew && <Chip size="small" label="New" sx={{ height: 24, bgcolor: '#eeeeee' }} />}
-    {dirty && <Chip size="small" label="unsaved" sx={{ bgcolor: tokens.warning, height: 24 }} />}
+    {isNew && <Chip size="small" label="New record" sx={{ height: 20, bgcolor: '#eeeeee' }} />}
+    {dirty && <Chip size="small" label="Unsaved changes" sx={{ bgcolor: '#fff3cd', color: '#7a4b00', border: '1px solid #f0c36d', height: 20 }} />}
   </Stack>
 );
 
 const settingsGroupSx = {
   display: 'grid',
   gap: 0.5,
-  p: 1.25,
+  p: 0.75,
   border: `1px solid ${tokens.border}`,
   borderRadius: `${tokens.radius}px`,
   bgcolor: '#f9fafb',
 };
 
-const switchRowSx = { m: 0, minHeight: 42, justifyContent: 'space-between' };
+const switchRowSx = { m: 0, minHeight: 32, justifyContent: 'space-between' };
 
 const sectionSx = {
   boxShadow: 'none',
   border: `1px solid ${tokens.border}`,
   borderRadius: `${tokens.radius}px !important`,
   '&:before': { display: 'none' },
-  '& .MuiAccordionSummary-root': { minHeight: 48 },
+  '& .MuiAccordionSummary-root': { minHeight: 38 },
 };
 const Section = ({
   title,
@@ -76,7 +89,7 @@ const Section = ({
 }) => (
   <Accordion defaultExpanded={expanded} sx={sectionSx}>
     <AccordionSummary expandIcon={<ExpandMore />}>
-      <Typography sx={{ fontWeight: 700 }}>{title}</Typography>
+      <Typography sx={{ fontSize: tokens.fontSize.body, fontWeight: 700 }}>{title}</Typography>
     </AccordionSummary>
     <AccordionDetails>{children}</AccordionDetails>
   </Accordion>
@@ -150,7 +163,7 @@ function ValidationRules({
   return (
     <Box sx={{ pt: 1.5, borderTop: '1px solid #e5e7eb' }}>
       <Stack direction="row" sx={{ alignItems: 'center' }}>
-        <Typography sx={{ flex: 1, fontSize: 10, fontWeight: 600 }}>Validation Rules</Typography>
+        <Typography sx={{ flex: 1, fontSize: tokens.fontSize.body, fontWeight: 600 }}>Validation Rules</Typography>
         <Button size="small" onClick={add}>
           + Add
         </Button>
@@ -233,7 +246,7 @@ function ValidationRules({
           </Box>
         ))}
         {values.length === 0 && (
-          <Typography color="text.secondary" sx={{ py: 2, textAlign: 'center', fontSize: 8 }}>
+          <Typography color="text.secondary" sx={{ py: 2, textAlign: 'center', fontSize: tokens.fontSize.caption }}>
             No validation rules yet.
           </Typography>
         )}
@@ -260,7 +273,7 @@ function TransitionRules({
   return (
     <Box sx={{ pt: '12px', borderTop: `1px solid ${tokens.border}` }}>
       <Stack direction="row" sx={{ alignItems: 'center' }}>
-        <Typography sx={{ flex: 1, fontSize: 10, fontWeight: 600 }}>
+        <Typography sx={{ flex: 1, fontSize: tokens.fontSize.body, fontWeight: 600 }}>
           Transitions ({values.length})
         </Typography>
         <Button size="small" onClick={onAdd}>+ Add</Button>
@@ -293,7 +306,7 @@ function TransitionRules({
           </Box>
         ))}
         {values.length === 0 && (
-          <Typography color="text.secondary" sx={{ py: '12px', textAlign: 'center', fontSize: 8 }}>
+          <Typography color="text.secondary" sx={{ py: '12px', textAlign: 'center', fontSize: tokens.fontSize.caption }}>
             No transitions yet.
           </Typography>
         )}
@@ -323,7 +336,7 @@ export function ProcessBuilderSettingsPanel() {
   );
   if (selected.kind === 'process')
     return (
-      <Stack spacing="14px" sx={{ p: '16px', minHeight: '100%' }}>
+      <Stack spacing="8px" sx={{ p: '10px', minHeight: '100%' }}>
         <SettingsTitle title="Process Information" isNew />
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
           <Box sx={{ flex: '0 1 220px', minWidth: 0 }}>
@@ -417,12 +430,12 @@ export function ProcessBuilderSettingsPanel() {
         </Button>
         <Box sx={{ pt: '12px', borderTop: `1px solid ${tokens.border}` }}>
           <Stack direction="row" sx={{ alignItems: 'center', minHeight: 28 }}>
-            <Typography sx={{ flex: 1, fontSize: 10, fontWeight: 600 }}>Variables</Typography>
-            {s.dirty && <Chip size="small" label="unsaved" sx={{ mr: 1, height: 22, bgcolor: tokens.warning }} />}
+            <Typography sx={{ flex: 1, fontSize: tokens.fontSize.body, fontWeight: 600 }}>Variables</Typography>
+            {s.dirty && <Chip size="small" variant="outlined" label="Unsaved" sx={{ mr: 1, height: 22, color: '#7a4b00', bgcolor: '#fff3cd', borderColor: '#f0c36d' }} />}
             <Button size="small" onClick={s.addVariable}>+ Add</Button>
           </Stack>
           {d.id === 'new' && (
-            <Typography sx={{ py: '8px', color: '#f97316', fontSize: 8 }}>
+            <Typography sx={{ py: '8px', color: '#9a4f00', fontSize: tokens.fontSize.caption }}>
               Save the Process first to enable variable creation (ProcessId required).
             </Typography>
           )}
@@ -455,7 +468,7 @@ export function ProcessBuilderSettingsPanel() {
     const x = d.variables.find((v) => v.id === selected.id);
     if (!x) return null;
     return (
-      <Stack spacing="14px" sx={{ p: '16px' }}>
+      <Stack spacing="8px" sx={{ p: '10px' }}>
         <SettingsTitle title="Variable" dirty={s.dirty} isNew />
         {text('Code', x.code, (code) => s.updateVariable(x.id, { code }))}
         {text('Name', x.name, (name) => s.updateVariable(x.id, { name }))}
@@ -528,7 +541,7 @@ export function ProcessBuilderSettingsPanel() {
     if (!x) return null;
     const generatedCode = x.code || `STEP-${String(x.order).padStart(5, '0')}`;
     return (
-      <Stack spacing="14px" sx={{ p: '16px', minHeight: '100%' }}>
+      <Stack spacing="8px" sx={{ p: '10px', minHeight: '100%' }}>
         <SettingsTitle title="Step Settings" dirty={s.dirty} />
         <TextField size="small" label="Step Code *" value={generatedCode} disabled />
         {text('Step Name *', x.name, (name) => s.updateStep(x.id, { name }))}
@@ -605,7 +618,7 @@ export function ProcessBuilderSettingsPanel() {
       ?.activities.find((v) => v.id === selected.id);
     if (!x) return null;
     return (
-      <Stack spacing="14px" sx={{ p: '16px' }}>
+      <Stack spacing="8px" sx={{ p: '10px' }}>
         <SettingsTitle title="Activity Settings" dirty={s.dirty} isNew />
         {text('Activity code', x.code, (code) => s.updateActivity(selected.stepId, x.id, { code }))}
         {text('Activity name', x.name, (name) => s.updateActivity(selected.stepId, x.id, { name }))}
@@ -754,7 +767,7 @@ export function ProcessBuilderSettingsPanel() {
     if (!control) return null;
     const update = (values: Partial<typeof control>) => s.updateRequestControl(control.id, values);
     return (
-      <Stack spacing="16px" sx={{ p: '16px' }}>
+      <Stack spacing="8px" sx={{ p: '10px' }}>
         <SettingsTitle title="Request Control" dirty={s.dirty} isNew />
         {text(
           'Control code',
@@ -852,7 +865,7 @@ export function ProcessBuilderSettingsPanel() {
     const update = (values: Partial<typeof control>) =>
       s.updateActivityControl(selected.stepId, selected.activityId, control.id, values);
     return (
-      <Stack spacing="14px" sx={{ p: '16px' }}>
+      <Stack spacing="8px" sx={{ p: '10px' }}>
         <SettingsTitle title="Control Settings" dirty={s.dirty} isNew />
         {text('Code', control.code, (code) => update({ code }))}
         {text('Label', control.label, (label) => update({ label }))}
@@ -929,7 +942,7 @@ export function ProcessBuilderSettingsPanel() {
           onUpdate={s.updateTransition}
           onRemove={s.removeTransition}
         />
-        <Typography sx={{ fontSize: 9, fontWeight: 600 }}>Visibility Rule</Typography>
+        <Typography sx={{ fontSize: tokens.fontSize.body, fontWeight: 600 }}>Visibility Rule</Typography>
         <ConditionBuilder
           value={control.visibilityCondition}
           variables={d.variables}
@@ -942,7 +955,7 @@ export function ProcessBuilderSettingsPanel() {
     const x = d.transitions.find((v) => v.id === selected.id);
     if (!x) return null;
     return (
-      <Stack spacing="14px" sx={{ p: '16px' }}>
+      <Stack spacing="8px" sx={{ p: '10px' }}>
         <SettingsTitle title="Transition Settings" dirty={s.dirty} />
         {text('Name', x.name, (name) => s.updateTransition(x.id, { name }))}
         {text('Value', x.value, (value) => s.updateTransition(x.id, { value }))}
@@ -950,7 +963,7 @@ export function ProcessBuilderSettingsPanel() {
     );
   }
   return (
-    <Typography color="text.secondary" sx={{ p: '16px', fontSize: 9 }}>
+    <Typography color="text.secondary" sx={{ p: '10px', fontSize: tokens.fontSize.secondary }}>
       Select an item to edit its properties.
     </Typography>
   );

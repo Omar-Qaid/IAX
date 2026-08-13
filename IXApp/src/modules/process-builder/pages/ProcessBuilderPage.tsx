@@ -7,6 +7,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Drawer,
   IconButton,
   Paper,
   Tab,
@@ -26,6 +27,8 @@ import ViewWeek from '@mui/icons-material/ViewWeek';
 import TextFields from '@mui/icons-material/TextFields';
 import Visibility from '@mui/icons-material/Visibility';
 import AltRoute from '@mui/icons-material/AltRoute';
+import MenuOpen from '@mui/icons-material/MenuOpen';
+import Tune from '@mui/icons-material/Tune';
 import { useParams } from 'react-router-dom';
 import { ProcessBuilderPalette } from '../components/ProcessBuilderPalette';
 import { ProcessBuilderSettingsPanel } from '../components/ProcessBuilderSettingsPanel';
@@ -47,18 +50,71 @@ import {
 import { loadProcessBuilderDraft, useProcessBuilderDraft } from '../hooks/useProcessBuilderDraft';
 import { processBuilderTokens as tokens } from '../components/processBuilderTokens';
 
+const slimScrollbarSx = {
+  '&, & *': {
+    scrollbarWidth: 'thin',
+    scrollbarColor: '#a8a8a8 transparent',
+  },
+  '&::-webkit-scrollbar, & *::-webkit-scrollbar': { width: 6, height: 6 },
+  '&::-webkit-scrollbar-track, & *::-webkit-scrollbar-track': { backgroundColor: 'transparent' },
+  '&::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb': {
+    backgroundColor: '#a8a8a8',
+    borderRadius: 999,
+  },
+  '&::-webkit-scrollbar-thumb:hover, & *::-webkit-scrollbar-thumb:hover': {
+    backgroundColor: '#7d7d7d',
+  },
+} as const;
+
+function ProcessBuilderNavigationPanel() {
+  const s = useProcessBuilderStore();
+  return (
+    <>
+      <Tabs
+        value={s.leftTab}
+        onChange={(_, value: number) => s.setLeftTab(value)}
+        variant="fullWidth"
+        aria-label="Process Builder navigation"
+        sx={{
+          minHeight: 40,
+          '& .MuiTab-root': {
+            minHeight: 40,
+            fontSize: tokens.fontSize.secondary,
+            fontWeight: 600,
+            color: tokens.textMuted,
+          },
+          '& .Mui-selected': { color: `${tokens.accent} !important` },
+          '& .MuiTabs-indicator': { bgcolor: tokens.accent, height: 2 },
+        }}
+      >
+        <Tab label="Tree" />
+        <Tab label="Palette" />
+      </Tabs>
+      {s.leftTab === 0 ? <ProcessBuilderTreePanel /> : <ProcessBuilderPalette />}
+    </>
+  );
+}
+
 export function ProcessBuilderPage() {
   const { builderId = 'new' } = useParams();
   const s = useProcessBuilderStore();
   const initialize = s.initialize;
   const [exportOpen, setExportOpen] = useState(false);
-  const [leftOpen, setLeftOpen] = useState(true);
-  const [rightOpen, setRightOpen] = useState(true);
+  const [leftOpen, setLeftOpen] = useState(() => sessionStorage.getItem('ixapp.processBuilder.leftOpen') !== 'false');
+  const [rightOpen, setRightOpen] = useState(() => sessionStorage.getItem('ixapp.processBuilder.rightOpen') !== 'false');
+  const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
+  const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
   const draft = useProcessBuilderDraft(s.document, s.dirty, s.markDraftSaved);
   useEffect(() => {
     const fallback = createProcessBuilderDocument(builderId);
     initialize(loadProcessBuilderDraft(builderId, fallback));
   }, [builderId, initialize]);
+  useEffect(() => {
+    sessionStorage.setItem('ixapp.processBuilder.leftOpen', String(leftOpen));
+  }, [leftOpen]);
+  useEffect(() => {
+    sessionStorage.setItem('ixapp.processBuilder.rightOpen', String(rightOpen));
+  }, [rightOpen]);
   const activities = s.document.steps.reduce((n, x) => n + x.activities.length, 0);
   const controls =
     s.document.requestControls.length +
@@ -109,8 +165,9 @@ export function ProcessBuilderPage() {
   return (
     <Box
       sx={{
-        height: { xs: 'auto', md: 'calc(100vh - 108px)' },
-        minHeight: 620,
+        ...slimScrollbarSx,
+        height: { xs: 'calc(100dvh - 58px)', md: 'calc(100vh - 108px)' },
+        minHeight: { xs: 0, md: 620 },
         bgcolor: '#fff',
         borderTop: `2px solid ${tokens.accent}`,
         display: 'flex',
@@ -118,15 +175,17 @@ export function ProcessBuilderPage() {
         overflow: 'hidden',
         color: tokens.text,
         fontFamily: 'Roboto, Inter, "Segoe UI", Arial, sans-serif',
-        fontSize: 10,
+        fontSize: tokens.fontSize.body,
         '& .MuiButton-root': {
-          minHeight: 32,
+          minHeight: 28,
+          px: 1,
+          py: 0.375,
           borderRadius: `${tokens.radius}px`,
-          fontSize: 9,
+          fontSize: tokens.fontSize.secondary,
           fontWeight: 500,
           textTransform: 'none',
         },
-        '& .MuiButton-sizeSmall': { minHeight: 28 },
+        '& .MuiButton-sizeSmall': { minHeight: 26 },
         '& .MuiButton-outlined': { borderColor: tokens.border, color: tokens.textMuted },
         '& .MuiButton-text:not(.MuiButton-colorError)': { color: tokens.accent },
         '& .MuiButton-contained.Mui-disabled': {
@@ -135,15 +194,19 @@ export function ProcessBuilderPage() {
           opacity: 1,
         },
         '& .MuiIconButton-root': { borderRadius: `${tokens.radius}px` },
+        '& .MuiAccordionSummary-root': { px: 1.25 },
+        '& .MuiAccordionSummary-content': { my: 0.75 },
+        '& .MuiAccordionDetails-root': { p: 1.25 },
+        '& .MuiFormHelperText-root': { mt: 0.25, mx: 0.5, fontSize: tokens.fontSize.caption },
         '& .MuiOutlinedInput-root': {
           minHeight: tokens.controlHeight,
           borderRadius: `${tokens.radius}px`,
-          fontSize: 10,
+          fontSize: tokens.fontSize.body,
           bgcolor: '#fff',
         },
-        '& .MuiInputLabel-root': { fontSize: 9, fontWeight: 500 },
-        '& .MuiFormControlLabel-label': { fontSize: 10 },
-        '& .MuiChip-root': { fontSize: 9 },
+        '& .MuiInputLabel-root': { fontSize: tokens.fontSize.secondary, fontWeight: 500 },
+        '& .MuiFormControlLabel-label': { fontSize: tokens.fontSize.secondary },
+        '& .MuiChip-root': { fontSize: tokens.fontSize.caption },
         '& .MuiSvgIcon-root': { fontSize: 16 },
         '& .MuiSwitch-root': { width: 34, height: 20, p: 0.25 },
         '& .MuiSwitch-switchBase': { p: 0.5 },
@@ -158,6 +221,10 @@ export function ProcessBuilderPage() {
           opacity: 1,
         },
         '& .MuiPaper-outlined': { borderColor: tokens.border },
+        '& :focus-visible': { outline: 'none', boxShadow: tokens.focusRing },
+        '@media (prefers-reduced-motion: reduce)': {
+          '&, & *': { scrollBehavior: 'auto !important', transitionDuration: '0.01ms !important' },
+        },
       }}
     >
       <Typography
@@ -179,17 +246,17 @@ export function ProcessBuilderPage() {
       <Box
         sx={{
           minHeight: tokens.headerHeight,
-          px: 1.25,
+          px: 0.75,
           display: 'flex',
           alignItems: 'center',
-          gap: 0.75,
+          gap: 0.5,
           borderBottom: `1px solid ${tokens.border}`,
           flexWrap: 'nowrap',
           overflowX: 'auto',
         }}
       >
         <AccountTree sx={{ color: tokens.accent, fontSize: 16 }} />
-        <Typography sx={{ fontSize: 13, fontWeight: 500, color: '#1f2937', whiteSpace: 'nowrap' }}>
+        <Typography sx={{ fontSize: 12, fontWeight: 600, color: '#1f2937', whiteSpace: 'nowrap' }}>
           Process Builder
         </Typography>
         <Chip
@@ -202,14 +269,66 @@ export function ProcessBuilderPage() {
             color: s.document.active ? '#fff' : tokens.textMuted,
           }}
         />
-        <Chip size="small" variant="outlined" label={`#${s.document.id}`} sx={{ height: 22 }} />
-        <Chip size="small" variant="outlined" label={s.document.code} sx={{ height: 22 }} />
+        <Chip size="small" variant="outlined" label={`#${s.document.id}`} sx={{ display: { xs: 'none', sm: 'flex' }, height: 22 }} />
+        <Chip size="small" variant="outlined" label={s.document.code} sx={{ display: { xs: 'none', sm: 'flex' }, height: 22 }} />
+        <Tooltip title={leftOpen ? 'Collapse navigation' : 'Expand navigation'}>
+          <IconButton
+            size="small"
+            aria-label={leftOpen ? 'Collapse navigation' : 'Expand navigation'}
+            onClick={() => setLeftOpen((value) => !value)}
+            sx={{
+              display: { xs: 'none', lg: 'inline-flex' },
+              color: tokens.textMuted,
+              border: `1px solid ${tokens.border}`,
+              borderRadius: `${tokens.radius}px`,
+              '&:hover, &:focus-visible': { color: tokens.accent, bgcolor: tokens.accentSoft },
+            }}
+          >
+            {leftOpen ? <ChevronLeft /> : <ChevronRight />}
+          </IconButton>
+        </Tooltip>
+        <Tooltip title={rightOpen ? 'Collapse settings' : 'Expand settings'}>
+          <IconButton
+            size="small"
+            aria-label={rightOpen ? 'Collapse settings' : 'Expand settings'}
+            onClick={() => setRightOpen((value) => !value)}
+            sx={{
+              display: { xs: 'none', lg: 'inline-flex' },
+              color: tokens.textMuted,
+              border: `1px solid ${tokens.border}`,
+              borderRadius: `${tokens.radius}px`,
+              '&:hover, &:focus-visible': { color: tokens.accent, bgcolor: tokens.accentSoft },
+            }}
+          >
+            {rightOpen ? <ChevronRight /> : <ChevronLeft />}
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Open process structure">
+          <IconButton
+            size="small"
+            aria-label="Open process structure"
+            onClick={() => setMobileNavigationOpen(true)}
+            sx={{ display: { xs: 'inline-flex', lg: 'none' }, color: tokens.accent }}
+          >
+            <MenuOpen />
+          </IconButton>
+        </Tooltip>
+        <Tooltip title="Open settings">
+          <IconButton
+            size="small"
+            aria-label="Open settings"
+            onClick={() => setMobileSettingsOpen(true)}
+            sx={{ display: { xs: 'inline-flex', lg: 'none' }, color: tokens.accent }}
+          >
+            <Tune />
+          </IconButton>
+        </Tooltip>
         <Box sx={{ flex: 1, minWidth: 12 }} />
         {s.dirty ? (
           <Chip size="small" label="Local changes" sx={{ bgcolor: '#f59e0b' }} />
         ) : (
           draft.savedAt && (
-            <Typography sx={{ fontSize: 9, color: tokens.textMuted }}>
+            <Typography sx={{ fontSize: tokens.fontSize.secondary, color: tokens.textMuted }}>
               <Box component="span" sx={{ color: '#10b981' }}>
                 ●
               </Box>{' '}
@@ -222,10 +341,10 @@ export function ProcessBuilderPage() {
             size="small"
             aria-label="Process statistics"
             label={`${s.document.steps.length}S / ${activities}A / ${controls}C / ${s.document.transitions.length}T`}
-            sx={{ height: 24, borderRadius: 12, bgcolor: '#eeeeee' }}
+            sx={{ display: { xs: 'none', sm: 'flex' }, height: 24, borderRadius: 12, bgcolor: '#eeeeee' }}
           />
         </Tooltip>
-        <Button size="small" sx={{ color: '#d97706' }} startIcon={<RestartAlt />} onClick={reset}>
+        <Button size="small" sx={{ display: { xs: 'none', sm: 'inline-flex' }, color: '#d97706' }} startIcon={<RestartAlt />} onClick={reset}>
           Reset
         </Button>
         <Button
@@ -249,9 +368,9 @@ export function ProcessBuilderPage() {
           display: 'grid',
           gridTemplateColumns: {
             xs: '1fr',
-            md: `${leftOpen ? tokens.leftWidth : 42}px minmax(0, 1fr) ${rightOpen ? tokens.rightWidth : 42}px`,
+            lg: `${leftOpen ? tokens.leftWidth : 42}px minmax(0, 1fr) ${rightOpen ? tokens.rightWidth : 42}px`,
           },
-          gridTemplateRows: { xs: 'auto minmax(520px, auto) auto', md: '1fr' },
+          gridTemplateRows: '1fr',
           transition: 'grid-template-columns 160ms ease',
         }}
       >
@@ -260,57 +379,21 @@ export function ProcessBuilderPage() {
           elevation={0}
           sx={{
             position: 'relative',
+            display: { xs: 'none', lg: 'block' },
             minWidth: 0,
             overflow: 'auto',
             borderInlineEnd: `1px solid ${tokens.dividerStrong}`,
           }}
         >
-          <Tooltip title={leftOpen ? 'Collapse navigation' : 'Expand navigation'}>
-            <IconButton
-              size="small"
-              aria-label={leftOpen ? 'Collapse navigation' : 'Expand navigation'}
-              onClick={() => setLeftOpen((value) => !value)}
-              sx={{
-                position: 'absolute',
-                insetInlineEnd: 2,
-                top: 48,
-                zIndex: 3,
-                opacity: 0.08,
-                '&:hover, &:focus-visible': { opacity: 1, bgcolor: '#fff' },
-              }}
-            >
-              {leftOpen ? <ChevronLeft /> : <ChevronRight />}
-            </IconButton>
-          </Tooltip>
           {leftOpen && (
-            <>
-              <Tabs
-                value={s.leftTab}
-                onChange={(_, v: number) => s.setLeftTab(v)}
-                variant="fullWidth"
-                sx={{
-                  minHeight: 46,
-                  '& .MuiTab-root': {
-                    minHeight: 46,
-                    fontSize: 9,
-                    fontWeight: 500,
-                    color: tokens.textMuted,
-                  },
-                  '& .Mui-selected': { color: `${tokens.accent} !important` },
-                  '& .MuiTabs-indicator': { bgcolor: tokens.accent },
-                }}
-              >
-                <Tab label="Tree" />
-                <Tab label="Palette" />
-              </Tabs>
-              {s.leftTab === 0 ? <ProcessBuilderTreePanel /> : <ProcessBuilderPalette />}
-            </>
+            <ProcessBuilderNavigationPanel />
           )}
         </Paper>
         <Box sx={{ minWidth: 0, overflow: 'auto', bgcolor: tokens.canvas }}>
           <Tabs
             value={s.centerTab}
             onChange={(_, v: number) => s.setCenterTab(v)}
+            aria-label="Process Builder workspaces"
             variant="scrollable"
             scrollButtons="auto"
             allowScrollButtonsMobile
@@ -323,10 +406,10 @@ export function ProcessBuilderPage() {
               borderBottom: `1px solid ${tokens.border}`,
               '& .MuiTab-root': {
                 minHeight: tokens.tabsHeight,
-                px: 2.25,
+                px: { xs: 1.5, lg: 2.25 },
                 minWidth: 'auto',
-                fontSize: 9,
-                fontWeight: 500,
+                fontSize: tokens.fontSize.secondary,
+                fontWeight: 600,
                 color: tokens.textMuted,
                 textTransform: 'uppercase',
                 whiteSpace: 'nowrap',
@@ -334,13 +417,16 @@ export function ProcessBuilderPage() {
               '& .MuiSvgIcon-root': { fontSize: 16 },
               '& .Mui-selected': { color: `${tokens.accent} !important` },
               '& .MuiTabs-indicator': { bgcolor: tokens.accent, height: 2 },
+              '& .MuiTab-root:nth-of-type(4), & .MuiTab-root:nth-of-type(7)': {
+                borderInlineStart: `1px solid ${tokens.border}`,
+              },
             }}
           >
             {tabDefinitions.map((x) => (
               <Tab key={x.label} label={x.label} icon={x.icon} iconPosition="start" />
             ))}
           </Tabs>
-          <Box role="tabpanel" sx={{ p: '16px' }}>
+          <Box role="tabpanel" aria-label={tabDefinitions[s.centerTab]?.label} sx={{ p: { xs: '8px', sm: '10px' } }}>
             {tabs[s.centerTab]}
           </Box>
         </Box>
@@ -349,32 +435,41 @@ export function ProcessBuilderPage() {
           elevation={0}
           sx={{
             position: 'relative',
+            display: { xs: 'none', lg: 'block' },
             minWidth: 0,
             overflowY: 'auto',
             overflowX: 'hidden',
             borderInlineStart: `1px solid ${tokens.dividerStrong}`,
           }}
         >
-          <Tooltip title={rightOpen ? 'Collapse settings' : 'Expand settings'}>
-            <IconButton
-              size="small"
-              aria-label={rightOpen ? 'Collapse settings' : 'Expand settings'}
-              onClick={() => setRightOpen((value) => !value)}
-              sx={{
-                position: 'absolute',
-                insetInlineStart: 2,
-                top: 4,
-                zIndex: 3,
-                opacity: 0.08,
-                '&:hover, &:focus-visible': { opacity: 1, bgcolor: '#fff' },
-              }}
-            >
-              {rightOpen ? <ChevronRight /> : <ChevronLeft />}
-            </IconButton>
-          </Tooltip>
           {rightOpen && <ProcessBuilderSettingsPanel />}
         </Paper>
       </Box>
+      <Drawer
+        open={mobileNavigationOpen}
+        onClose={() => setMobileNavigationOpen(false)}
+        aria-label="Process structure and palette"
+        slotProps={{ paper: { sx: { ...slimScrollbarSx, top: 58, height: 'calc(100dvh - 58px)', width: 'min(88vw, 340px)' } } }}
+      >
+        <Box sx={{ minHeight: 48, px: '16px', display: 'flex', alignItems: 'center', borderBottom: `1px solid ${tokens.border}` }}>
+          <Typography component="h2" sx={{ flex: 1, fontSize: tokens.fontSize.heading, fontWeight: 700 }}>Process structure</Typography>
+          <IconButton aria-label="Close process structure" onClick={() => setMobileNavigationOpen(false)}><ChevronLeft /></IconButton>
+        </Box>
+        <Box sx={{ overflowY: 'auto' }}><ProcessBuilderNavigationPanel /></Box>
+      </Drawer>
+      <Drawer
+        anchor="right"
+        open={mobileSettingsOpen}
+        onClose={() => setMobileSettingsOpen(false)}
+        aria-label="Process Builder settings"
+        slotProps={{ paper: { sx: { ...slimScrollbarSx, top: 58, height: 'calc(100dvh - 58px)', width: 'min(92vw, 380px)' } } }}
+      >
+        <Box sx={{ minHeight: 48, px: '16px', display: 'flex', alignItems: 'center', borderBottom: `1px solid ${tokens.border}` }}>
+          <Typography component="h2" sx={{ flex: 1, fontSize: tokens.fontSize.heading, fontWeight: 700 }}>Settings</Typography>
+          <IconButton aria-label="Close settings" onClick={() => setMobileSettingsOpen(false)}><ChevronRight /></IconButton>
+        </Box>
+        <Box sx={{ overflowY: 'auto' }}><ProcessBuilderSettingsPanel /></Box>
+      </Drawer>
       <Dialog open={exportOpen} onClose={() => setExportOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>Export process</DialogTitle>
         <DialogContent dividers>

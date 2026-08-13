@@ -57,7 +57,7 @@ export function SalesOrderPage(): React.ReactElement {
       headerContent={
         <Stack
           direction={{ xs: 'column', md: 'row' }}
-          spacing={3}
+          spacing={1.5}
           useFlexGap
           sx={{ flexWrap: 'wrap' }}
         >

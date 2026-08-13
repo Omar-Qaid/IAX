@@ -13,7 +13,7 @@ export const WorkspacePage: React.FC<WorkspacePageProps> = ({ title, subtitle, c
   return (
     <PageContainer>
       <PageHeader title={title} subtitle={subtitle} />
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>{children}</Box>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>{children}</Box>
     </PageContainer>
   );
 };

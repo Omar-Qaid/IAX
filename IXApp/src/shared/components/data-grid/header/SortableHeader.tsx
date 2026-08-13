@@ -78,7 +78,7 @@ export function SortableHeader<T>({
         sx={{
           display: 'flex',
           alignItems: 'center',
-          p: '4px 12px',
+          p: '3px 8px',
           borderBottom: `1px solid ${theme.palette.divider}`,
           justifyContent:
             column.headerAlign === 'center'
@@ -89,7 +89,7 @@ export function SortableHeader<T>({
           cursor: column.sortable === false ? 'default' : 'pointer',
           userSelect: 'none',
           position: 'relative',
-          height: 36,
+          height: 32,
           '&:hover': {
             bgcolor: theme.palette.mode === 'light' ? '#e9e8e7' : theme.palette.action.hover,
           },
@@ -105,7 +105,7 @@ export function SortableHeader<T>({
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
             fontFamily: '"Segoe UI", Arial, sans-serif',
-            fontSize: 14,
+            fontSize: 12,
             letterSpacing: 0,
           }}
         >
@@ -135,12 +135,12 @@ export function SortableHeader<T>({
       {!hideFilterRow && (
         <Box
           sx={{
-            p: '4px 12px',
+            p: '3px 8px',
             borderBottom: `1px solid ${theme.palette.divider}`,
             bgcolor: theme.palette.mode === 'light' ? '#ffffff' : '#2d3748',
             display: 'flex',
             alignItems: 'center',
-            height: 36,
+            height: 32,
           }}
         >
           {column.filterable === false ? (

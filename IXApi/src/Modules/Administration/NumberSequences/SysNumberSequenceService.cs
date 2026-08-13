@@ -19,7 +19,7 @@ namespace IAX.IXApi.Modules.Administration.NumberSequences
         public async Task<NextSequenceResultDto> NextAsync(string entityName, string? tenantId = null, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(entityName))
-                throw new ArgumentException("EntityName is required", nameof(entityName));
+                throw new ArgumentException("EntityName (NumberSequence) is required", nameof(entityName));
 
             var db = _unitOfWork.Context;
             var strategy = db.Database.CreateExecutionStrategy();
@@ -33,16 +33,16 @@ namespace IAX.IXApi.Modules.Administration.NumberSequences
                 try
                 {
                     var seq = await db.Set<SysNumberSequence>()
-                        .FirstOrDefaultAsync(s => s.EntityName == entityName && s.TenantId == tenantId, cancellationToken)
+                        .FirstOrDefaultAsync(s => s.NumberSequence == entityName, cancellationToken)
                         ?? throw new InvalidOperationException($"No number sequence configured for entity '{entityName}'.");
 
                     ApplyResetIfDue(seq);
 
-                    if (seq.NextValue > seq.LargestValue)
-                        throw new InvalidOperationException($"Number sequence '{seq.Code}' has exceeded LargestValue ({seq.LargestValue}).");
+                    if (seq.NextRec > seq.Highest)
+                        throw new InvalidOperationException($"Number sequence '{seq.NumberSequence}' has exceeded Highest ({seq.Highest}).");
 
-                    var current = seq.NextValue;
-                    seq.NextValue = current + seq.Step;
+                    var current = seq.NextRec ?? 1;
+                    seq.NextRec = current + 1;
 
                     await db.SaveChangesAsync(cancellationToken);
                     if (tx != null) await tx.CommitAsync(cancellationToken);
@@ -69,16 +69,16 @@ namespace IAX.IXApi.Modules.Administration.NumberSequences
         public async Task<NextSequenceResultDto?> PeekAsync(string entityName, string? tenantId = null, CancellationToken cancellationToken = default)
         {
             var seq = await _repository.GetQueryable().AsNoTracking()
-                .FirstOrDefaultAsync(s => s.EntityName == entityName && s.TenantId == tenantId, cancellationToken);
+                .FirstOrDefaultAsync(s => s.NumberSequence == entityName, cancellationToken);
             if (seq == null) return null;
 
             var preview = seq;
-            ApplyResetIfDue(preview); // logical preview only — not persisted
+            ApplyResetIfDue(preview); 
             return new NextSequenceResultDto
             {
                 EntityName = entityName,
-                Value = preview.NextValue,
-                Code = FormatCode(preview, preview.NextValue)
+                Value = preview.NextRec ?? 1,
+                Code = FormatCode(preview, preview.NextRec ?? 1)
             };
         }
 
@@ -86,45 +86,34 @@ namespace IAX.IXApi.Modules.Administration.NumberSequences
         {
             var seq = await _repository.GetByIdAsync(id, cancellationToken)
                 ?? throw new InvalidOperationException("Sequence not found");
-            seq.NextValue = nextValue ?? seq.SmallestValue;
-            seq.LastResetAt = DateTime.UtcNow;
+            seq.NextRec = (int?)(nextValue ?? seq.Lowest) ?? 1;
+            seq.LatestCleanDateTime = DateTime.UtcNow;
             return await UpdateAsync(seq, cancellationToken);
         }
 
         private static void ApplyResetIfDue(SysNumberSequence seq)
         {
-            if (seq.ResetCycle == SequenceResetCycle.Never) return;
+            if (seq.Cyclic != 1) return;
             var now = DateTime.UtcNow;
-            var last = seq.LastResetAt ?? DateTime.MinValue;
-            bool due = seq.ResetCycle switch
+            var last = seq.LatestCleanDateTime ?? DateTime.MinValue;
+            // Simplified reset cycle (assume daily if cyclic is true for now)
+            if (last.Date != now.Date)
             {
-                SequenceResetCycle.Yearly => last.Year != now.Year,
-                SequenceResetCycle.Monthly => last.Year != now.Year || last.Month != now.Month,
-                SequenceResetCycle.Daily => last.Date != now.Date,
-                _ => false
-            };
-            if (due)
-            {
-                seq.NextValue = seq.SmallestValue;
-                seq.LastResetAt = now;
+                seq.NextRec = seq.Lowest ?? 1;
+                seq.LatestCleanDateTime = now;
             }
         }
 
-        /// <summary>
-        /// Formats the code from the pattern. Supported tokens:
-        ///   {PREFIX} {SUFFIX} {SEQ} {YYYY} {YY} {MM} {DD}
-        /// {SEQ} is left-padded with zeros up to PaddingLength.
-        /// </summary>
         public static string FormatCode(SysNumberSequence seq, long value)
         {
             var now = DateTime.UtcNow;
-            var seqStr = seq.PaddingLength > 0
-                ? value.ToString().PadLeft(seq.PaddingLength, '0')
-                : value.ToString();
+            var formatPattern = string.IsNullOrWhiteSpace(seq.AnnotatedFormat) 
+                ? (string.IsNullOrWhiteSpace(seq.Format) ? "{SEQ}" : seq.Format) 
+                : seq.AnnotatedFormat;
+                
+            var seqStr = value.ToString().PadLeft(5, '0'); // default pad
 
-            var sb = new StringBuilder(seq.FormatPattern);
-            sb.Replace("{PREFIX}", seq.Prefix ?? string.Empty);
-            sb.Replace("{SUFFIX}", seq.Suffix ?? string.Empty);
+            var sb = new StringBuilder(formatPattern);
             sb.Replace("{SEQ}", seqStr);
             sb.Replace("{YYYY}", now.Year.ToString("D4"));
             sb.Replace("{YY}", (now.Year % 100).ToString("D2"));

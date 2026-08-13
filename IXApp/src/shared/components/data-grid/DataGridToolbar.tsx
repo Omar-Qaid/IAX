@@ -9,6 +9,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import AddRowIcon from '@mui/icons-material/AddCircleOutlined';
 import { AppTextField } from '@shared/components/fields/AppTextField';
 import { DataGridSelectionSummary } from './DataGridSelectionSummary';
+import { uiDensity } from '@shared/constants/uiDensity';
 
 interface GridToolbarProps {
   globalSearch: string;
@@ -64,7 +65,7 @@ export const DataGridToolbar = memo(function DataGridToolbar({
   return (
     <Box sx={{ bgcolor: 'background.paper', borderBottom: '1px solid', borderColor: 'divider' }}>
       {/* Main toolbar row */}
-      <Box sx={{ display: 'flex', alignItems: 'center', px: 1.5, py: 0.75, gap: 1, minHeight: 40 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', px: 1, py: 0.5, gap: 0.75, minHeight: uiDensity.toolbarHeight }}>
 
         {/* Row count — hidden on xs */}
         <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1 }}>
@@ -76,10 +77,10 @@ export const DataGridToolbar = memo(function DataGridToolbar({
             value={globalSearch}
             onChange={(val) => setGlobalSearch(String(val ?? ''))}
             sx={{
-              width: { sm: 220, md: 280 },
+              width: { sm: 200, md: 240 },
               transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
               '& .MuiOutlinedInput-root': {
-                height: 32,
+                height: uiDensity.controlHeight,
                 borderRadius: '2px',
                 bgcolor: '#ffffff',
                 fontSize: '13px',

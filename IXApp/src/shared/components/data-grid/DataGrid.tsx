@@ -20,6 +20,7 @@ import {
 } from './hooks';
 import { computeFlexWidths, generateCSV, downloadFile } from './DataGridUtils';
 import { useNotifications } from '@shared/hooks/useNotifications';
+import { uiDensity } from '@shared/constants/uiDensity';
 function DataGridInternal<T>({
     rows,
     columns: rawInitialColumns,
@@ -33,8 +34,8 @@ function DataGridInternal<T>({
     onViewHistory,
     onShowAllFields,
     onBuild,
-    rowHeight = 36,
-    headerHeight = 72,
+    rowHeight = uiDensity.gridRowHeight,
+    headerHeight = uiDensity.gridHeaderHeight,
     height,
     onSelectionChange,
     selectionMode: initialSelectionMode,
@@ -693,7 +694,7 @@ function DataGridInternal<T>({
                             flexGrow: 1,
                             overflow: 'auto',
                             bgcolor: 'background.paper',
-                            '&::-webkit-scrollbar': { width: 8, height: 8 },
+                            '&::-webkit-scrollbar': { width: uiDensity.scrollbarSize, height: uiDensity.scrollbarSize },
                             scrollbarColor: `${theme.palette.mode === 'light' ? '#b8b8b8' : '#5f6b7a'} transparent`,
                             scrollbarWidth: 'thin',
                             '&::-webkit-scrollbar-track': { bgcolor: theme.palette.mode === 'light' ? '#f7f7f7' : 'transparent' },
@@ -797,7 +798,7 @@ function DataGridInternal<T>({
             {/* Grid Footer */}
             {!hideFooter && (
                 <Box sx={{
-                    height: 32,
+                    height: uiDensity.gridFooterHeight,
                     borderTop: `1px solid ${theme.palette.divider}`,
                     bgcolor: theme.palette.mode === 'light' ? '#f8f9fa' : '#1a202c',
                     display: 'flex',

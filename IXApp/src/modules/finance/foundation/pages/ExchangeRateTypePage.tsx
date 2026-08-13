@@ -4,6 +4,7 @@ import type { ColumnDef } from '@shared/components/data-grid/types';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { queryClient } from '@core/api/queryClient';
 import { useNotifications } from '@shared/hooks/useNotifications';
+import { uiDensity } from '@shared/constants/uiDensity';
 import { exchangeRateTypeApi, type ExchangeRateTypeRecord } from '../api/exchangeRateTypeApi';
 import { useNavigate } from 'react-router-dom';
 
@@ -44,7 +45,7 @@ export function ExchangeRateTypePage(): React.ReactElement {
   };
   return <SimpleListPage variant="enterprise" title={t('pages.exchangeRateTypes.title')} enterpriseConfig={config}
     dataSource={{ type: 'remote', key: 'foundation-exchange-rate-types', load: (signal) => exchangeRateTypeApi.list(signal) }} columns={columns} dataGridProps={{
-    storageKey: 'foundation.exchange-rate-types.reference-view', masterForm: true, hideSidebar: false, rowHeight: 42, headerHeight: 40,
+    storageKey: 'foundation.exchange-rate-types.reference-view', masterForm: true, hideSidebar: false, rowHeight: uiDensity.gridRowHeight, headerHeight: uiDensity.gridRowHeight,
     onNewRow: () => ({ id: `new-${crypto.randomUUID()}`, recId: 0, type: '', name: '', isActive: true, rowVersion: null, recVersion: 1, dataAreaId: 'dat' }),
     onRowSave: async (values, isNew) => {
       const record = values as ExchangeRateTypeRecord;

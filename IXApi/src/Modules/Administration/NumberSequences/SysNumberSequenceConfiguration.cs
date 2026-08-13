@@ -9,17 +9,13 @@ namespace IAX.IXApi.Modules.Administration.NumberSequences
         {
             builder.ToTable("SysNumberSequences");
 
-            builder.Property(x => x.Code).HasMaxLength(50).IsRequired();
-            builder.Property(x => x.NameAR).HasMaxLength(200).IsRequired();
-            builder.Property(x => x.Name).HasMaxLength(200).IsRequired();
-            builder.Property(x => x.EntityName).HasMaxLength(150).IsRequired();
-            builder.Property(x => x.Prefix).HasMaxLength(20);
-            builder.Property(x => x.Suffix).HasMaxLength(20);
-            builder.Property(x => x.FormatPattern).HasMaxLength(100).IsRequired();
-            builder.Property(x => x.TenantId).HasMaxLength(100);
+            builder.Property(x => x.NumberSequence).HasMaxLength(22).IsRequired();
+            builder.Property(x => x.Txt).HasMaxLength(100).IsRequired();
+            builder.Property(x => x.Format).HasMaxLength(20).IsRequired();
+            builder.Property(x => x.AnnotatedFormat).HasMaxLength(100).IsRequired();
 
-            builder.HasIndex(x => x.Code).IsUnique();
-            builder.HasIndex(x => new { x.EntityName, x.TenantId }).IsUnique();
+            // Constraints
+            builder.HasIndex(x => x.NumberSequence).IsUnique();
         }
     }
 }

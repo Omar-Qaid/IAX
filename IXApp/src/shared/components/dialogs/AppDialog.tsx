@@ -31,7 +31,7 @@ export const AppDialog: React.FC<AppDialogProps> = ({
 }) => {
   return (
     <Dialog open={open} onClose={onClose} maxWidth={maxWidth} fullWidth={fullWidth}>
-      <DialogTitle sx={{ m: 0, p: 1.5, px: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <DialogTitle sx={{ m: 0, p: 1, px: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Typography component="span" variant="h6" sx={{ fontWeight: 700 }}>
           {title}
         </Typography>
@@ -39,10 +39,10 @@ export const AppDialog: React.FC<AppDialogProps> = ({
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
-      <DialogContent dividers sx={{ p: 2 }}>
-        <Box sx={{ pt: 0.5 }}>{children}</Box>
+      <DialogContent dividers sx={{ p: 1.5 }}>
+        <Box>{children}</Box>
       </DialogContent>
-      {actions && <DialogActions sx={{ p: 1.5, px: 2 }}>{actions}</DialogActions>}
+      {actions && <DialogActions sx={{ p: 1, px: 1.5 }}>{actions}</DialogActions>}
     </Dialog>
   );
 };

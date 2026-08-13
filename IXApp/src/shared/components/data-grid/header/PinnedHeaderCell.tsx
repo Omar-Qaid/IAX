@@ -59,10 +59,10 @@ export function PinnedHeaderCell<T>({
         sx={{
           display: 'flex',
           alignItems: 'center',
-          p: '4px 12px',
+          p: '3px 8px',
           borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
           position: 'relative',
-          height: 36,
+          height: 32,
           '&:hover': {
             bgcolor: (theme) =>
               theme.palette.mode === 'light' ? '#e9e8e7' : theme.palette.action.hover,
@@ -75,7 +75,7 @@ export function PinnedHeaderCell<T>({
             flexGrow: 1,
             fontWeight: 600,
             fontFamily: '"Segoe UI", Arial, sans-serif',
-            fontSize: 14,
+            fontSize: 12,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
@@ -98,12 +98,12 @@ export function PinnedHeaderCell<T>({
       {!hideFilterRow && (
         <Box
           sx={{
-            p: '4px 12px',
+            p: '3px 8px',
             borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
             bgcolor: (theme) => (theme.palette.mode === 'light' ? '#ffffff' : '#2d3748'),
             display: 'flex',
             alignItems: 'center',
-            height: 36,
+            height: 32,
           }}
         >
           {column.filterable === false ? (
