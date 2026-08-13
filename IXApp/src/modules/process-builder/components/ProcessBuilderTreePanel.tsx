@@ -10,6 +10,7 @@ import {
   Typography,
 } from '@mui/material';
 import Add from '@mui/icons-material/Add';
+import AccountTree from '@mui/icons-material/AccountTree';
 import DragIndicator from '@mui/icons-material/DragIndicator';
 import ChevronRight from '@mui/icons-material/ChevronRight';
 import ExpandMore from '@mui/icons-material/ExpandMore';
@@ -45,21 +46,21 @@ export function ProcessBuilderTreePanel() {
   const active = (kind: string, id?: string) =>
     selected.kind === kind && (!id || ('id' in selected && selected.id === id));
   const itemSx = {
-    mx: 1,
+    mx: '8px',
     my: 0.25,
-    borderRadius: 1,
+    borderRadius: 0,
     minHeight: 38,
     '&.Mui-selected': { bgcolor: tokens.accentSoft, color: tokens.accent },
     '&.Mui-selected:hover': { bgcolor: tokens.accentSoft },
-    '& .MuiListItemText-primary': { fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis' },
-    '& .MuiListItemText-secondary': { fontSize: 11 },
+    '& .MuiListItemText-primary': { fontSize: 10, overflow: 'hidden', textOverflow: 'ellipsis' },
+    '& .MuiListItemText-secondary': { fontSize: 8 },
   };
   const sectionSx = {
-    px: 2,
-    pt: 1.5,
-    pb: 0.5,
-    fontSize: 11,
-    fontWeight: 800,
+    px: '24px',
+    pt: '18px',
+    pb: '8px',
+    fontSize: 9,
+    fontWeight: 600,
     color: tokens.textMuted,
   };
   return (
@@ -69,6 +70,7 @@ export function ProcessBuilderTreePanel() {
         sx={itemSx}
         onClick={() => select({ kind: 'process' })}
       >
+        <AccountTree sx={{ mr: '12px', color: tokens.textMuted }} />
         <ListItemText primary={d.name} secondary={d.code} />
       </ListItemButton>
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -83,7 +85,7 @@ export function ProcessBuilderTreePanel() {
         <ListItemButton
           key={v.id}
           selected={active('variable', v.id)}
-          sx={{ ...itemSx, pl: 3 }}
+          sx={{ ...itemSx, pl: '32px' }}
           onClick={() => select({ kind: 'variable', id: v.id })}
         >
           <ListItemText primary={v.name} secondary={v.dataType} />
@@ -94,7 +96,7 @@ export function ProcessBuilderTreePanel() {
         <ListItemButton
           key={c.id}
           selected={active('requestControl', c.id)}
-          sx={{ ...itemSx, pl: 3 }}
+          sx={{ ...itemSx, pl: '32px' }}
           onClick={() => select({ kind: 'requestControl', id: c.id })}
         >
           <ListItemText primary={c.label} secondary={c.type} />
@@ -104,7 +106,7 @@ export function ProcessBuilderTreePanel() {
         size="small"
         startIcon={<Add />}
         onClick={() => setCenterTab(4)}
-        sx={{ mx: 1.5, my: 0.5, justifyContent: 'flex-start', textTransform: 'none' }}
+        sx={{ width: '100%', my: '4px', justifyContent: 'center', textTransform: 'none' }}
       >
         Open Request Form
       </Button>
@@ -127,7 +129,7 @@ export function ProcessBuilderTreePanel() {
                 <Box>
                   <ListItemButton
                     selected={active('step', s.id)}
-                    sx={{ ...itemSx, pl: 1 }}
+                    sx={{ ...itemSx, pl: '34px' }}
                     onClick={() => select({ kind: 'step', id: s.id })}
                   >
                     <Box

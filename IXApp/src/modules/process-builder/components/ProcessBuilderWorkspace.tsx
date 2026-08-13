@@ -37,6 +37,45 @@ import {
 } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { SortableBuilderItem } from './SortableBuilderItem';
+import { processBuilderTokens as tokens } from './processBuilderTokens';
+
+function WorkspaceHeader({
+  title,
+  summary,
+  dirty,
+  action,
+}: {
+  title: string;
+  summary: string;
+  dirty?: boolean;
+  action?: React.ReactNode;
+}) {
+  return (
+    <Stack
+      direction={{ xs: 'column', sm: 'row' }}
+      spacing={1}
+      sx={{ alignItems: { xs: 'stretch', sm: 'center' }, minHeight: 32 }}
+    >
+      <Box sx={{ flex: 1, minWidth: 0 }} title={summary}>
+        <Typography sx={{ fontSize: 12, fontWeight: 500 }}>{title}</Typography>
+      </Box>
+      {dirty && <Chip size="small" label="unsaved changes" sx={{ bgcolor: tokens.warning }} />}
+      {action}
+    </Stack>
+  );
+}
+
+const workspaceCardSx = (selected = false) => ({
+  p: '12px 14px',
+  border: '1px solid',
+  borderColor: selected ? tokens.warning : tokens.border,
+  borderRadius: `${tokens.radius}px`,
+  bgcolor: '#fff',
+  boxShadow: 'none',
+  transition: 'border-color 120ms ease',
+  '&:hover': { borderColor: selected ? tokens.warning : tokens.borderStrong },
+  '&:focus-within': { borderColor: tokens.accent },
+});
 
 export function DesignerWorkspace() {
   const s = useProcessBuilderStore();
@@ -45,63 +84,80 @@ export function DesignerWorkspace() {
     if (over && active.id !== over.id) s.reorderSteps(String(active.id), String(over.id));
   };
   return (
-    <Stack spacing={1.5}>
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={1}
-        sx={{ alignItems: { xs: 'stretch', sm: 'center' } }}
-      >
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h6">Workflow Designer</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Build and reorder the complete process from request to completion.
-          </Typography>
-        </Box>
-        <Button variant="outlined" startIcon={<Add />} onClick={s.addStep}>
-          Add Step
-        </Button>
-      </Stack>
+    <Stack spacing="14px">
+      <WorkspaceHeader
+        title="Workflow Designer"
+        summary={`${s.document.steps.length} steps · ${s.document.steps.reduce((count, step) => count + step.activities.length, 0)} activities · build and reorder the process`}
+        action={
+          <Button variant="outlined" startIcon={<Add />} onClick={s.addStep}>
+            Add Step
+          </Button>
+        }
+      />
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={dragStep}>
         <SortableContext
           items={s.document.steps.map((step) => step.id)}
           strategy={verticalListSortingStrategy}
         >
-          <Stack spacing={1.25}>
+          <Stack spacing="16px">
             {s.document.steps.map((step) => (
               <SortableBuilderItem key={step.id} id={step.id}>
                 {(attributes, listeners) => (
                   <Box
                     onClick={() => s.select({ kind: 'step', id: step.id })}
                     sx={{
-                      p: { xs: 1, sm: 1.5 },
-                      border: '1px solid',
-                      borderColor:
-                        s.selected.kind === 'step' && s.selected.id === step.id
-                          ? '#6657e8'
-                          : '#e1e5ec',
-                      borderRadius: 2,
-                      bgcolor:
-                        s.selected.kind === 'step' && s.selected.id === step.id
-                          ? '#faf9ff'
-                          : '#fff',
-                      transition: 'border-color 120ms ease, background-color 120ms ease',
+                      ...workspaceCardSx(s.selected.kind === 'step' && s.selected.id === step.id),
+                      minHeight: 112,
                     }}
                   >
                     <Stack
                       direction="row"
-                      spacing={1}
+                      spacing="14px"
                       useFlexGap
                       sx={{ alignItems: 'center', flexWrap: 'wrap' }}
                     >
                       <Box {...attributes} {...listeners} sx={{ display: 'flex', cursor: 'grab' }}>
                         <DragIndicator />
                       </Box>
-                      <Chip size="small" label={`#${step.order}`} color="primary" />
-                      <Typography sx={{ flex: 1, fontWeight: 800 }}>{step.name}</Typography>
                       <Chip
                         size="small"
-                        label={step.active ? 'Active' : 'Inactive'}
-                        color={step.active ? 'success' : 'default'}
+                        label={`#${step.order}`}
+                        sx={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: '50%',
+                          bgcolor: tokens.accent,
+                          color: '#fff',
+                          '& .MuiChip-label': { px: 0 },
+                        }}
+                      />
+                      <Chip
+                        size="small"
+                        label={
+                          s.document.id === 'new' || s.dirty
+                            ? 'Pending'
+                            : step.active
+                              ? 'Active'
+                              : 'Inactive'
+                        }
+                        sx={{
+                          height: 24,
+                          borderRadius: 12,
+                          bgcolor:
+                            s.document.id === 'new' || s.dirty
+                              ? tokens.warning
+                              : step.active
+                                ? tokens.success
+                                : '#e0e0e0',
+                          color: s.dirty || step.active ? '#fff' : '#64748b',
+                        }}
+                      />
+                      <TextField
+                        size="small"
+                        value={step.name}
+                        onChange={(event) => s.updateStep(step.id, { name: event.target.value })}
+                        slotProps={{ htmlInput: { 'aria-label': `Step ${step.order} name` } }}
+                        sx={{ flex: '1 1 300px' }}
                       />
                       <Button size="small" onClick={() => s.select({ kind: 'step', id: step.id })}>
                         Configure
@@ -120,11 +176,17 @@ export function DesignerWorkspace() {
                         </IconButton>
                       </Tooltip>
                     </Stack>
-                    <Stack direction="row" spacing={1} useFlexGap sx={{ py: 1, flexWrap: 'wrap' }}>
+                    <Stack
+                      direction="row"
+                      spacing="12px"
+                      useFlexGap
+                      sx={{ pt: '12px', flexWrap: 'wrap' }}
+                    >
                       {activityPalette.map((item) => (
                         <Button
                           key={item.type}
                           size="small"
+                          variant="outlined"
                           startIcon={item.icon}
                           onClick={() => s.addActivity(step.id, item.type)}
                         >
@@ -145,20 +207,17 @@ export function DesignerWorkspace() {
                             flexWrap: 'wrap',
                             gap: 1,
                             p: 1,
-                            bgcolor:
-                              s.selected.kind === 'activity' && s.selected.id === activity.id
-                                ? '#f1efff'
-                                : '#f8f9fb',
+                            bgcolor: '#fff',
                             border: '1px solid',
                             borderColor:
                               s.selected.kind === 'activity' && s.selected.id === activity.id
-                                ? '#8b7ff0'
-                                : '#eef0f4',
-                            borderRadius: 1,
+                                ? tokens.warning
+                                : tokens.border,
+                            borderRadius: `${tokens.radius}px`,
                             cursor: 'pointer',
                           }}
                         >
-                          <Typography sx={{ flex: 1, fontSize: 13 }}>{activity.name}</Typography>
+                          <Typography sx={{ flex: 1, fontSize: 10 }}>{activity.name}</Typography>
                           <Chip size="small" variant="outlined" label={activity.type} />
                           <Chip size="small" label={`${activity.controls.length} controls`} />
                         </Box>
@@ -181,144 +240,196 @@ export function VariablesWorkspace() {
     if (over && active.id !== over.id) s.reorderVariables(String(active.id), String(over.id));
   };
   return (
-    <Stack spacing={1.25}>
-      <Stack direction="row" sx={{ alignItems: 'center' }}>
-        <Typography variant="h6" sx={{ flex: 1 }}>
-          Variables
+    <Stack spacing="16px">
+      <WorkspaceHeader
+        title="Variables"
+        summary={`${s.document.variables.length} variables · ${s.document.variables.filter((variable) => variable.active).length} active`}
+        dirty={s.document.id === 'new' || s.dirty}
+        action={
+          <Stack direction="row" spacing={1}>
+            <Button variant="outlined" startIcon={<Add />} onClick={s.addVariable}>
+              Add Variable
+            </Button>
+            <Button variant="contained" disabled>
+              Save Variables
+            </Button>
+          </Stack>
+        }
+      />
+      {s.document.id === 'new' && (
+        <Typography sx={{ color: tokens.warning, fontSize: 9 }}>
+          Save the Process first to enable variable creation (ProcessId required).
         </Typography>
-        {s.dirty && <Chip size="small" label="unsaved" sx={{ bgcolor: '#f59e0b' }} />}
-        <Button startIcon={<Add />} onClick={s.addVariable}>
-          Add Variable
-        </Button>
-      </Stack>
+      )}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={drag}>
         <SortableContext
           items={s.document.variables.map((variable) => variable.id)}
           strategy={verticalListSortingStrategy}
         >
-          <Stack spacing={1}>
+          <Stack spacing="14px">
             {s.document.variables.map((variable) => (
               <SortableBuilderItem key={variable.id} id={variable.id}>
                 {(attributes, listeners) => (
                   <Box
                     onClick={() => s.select({ kind: 'variable', id: variable.id })}
-                    sx={{
-                      display: 'grid',
-                      gridTemplateColumns: {
-                        xs: '28px 1fr',
-                        md: '28px 110px 1fr 1fr 150px 90px auto auto',
-                      },
-                      gap: 1,
-                      alignItems: 'center',
-                      p: 1.25,
-                      border: '1px solid',
-                      borderColor:
-                        s.selected.kind === 'variable' && s.selected.id === variable.id
-                          ? '#6657e8'
-                          : '#e1e5ec',
-                      bgcolor: '#fff',
-                    }}
+                    sx={workspaceCardSx(
+                      s.selected.kind === 'variable' && s.selected.id === variable.id
+                    )}
                   >
-                    <Box {...attributes} {...listeners} sx={{ display: 'flex', cursor: 'grab' }}>
-                      <DragIndicator />
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      useFlexGap
+                      sx={{ alignItems: 'center', flexWrap: 'wrap' }}
+                    >
+                      <Box
+                        {...attributes}
+                        {...listeners}
+                        sx={{ display: 'flex', cursor: 'grab', color: tokens.textMuted }}
+                      >
+                        <DragIndicator fontSize="small" />
+                      </Box>
+                      <TextField
+                        size="small"
+                        label="Variable name"
+                        value={variable.name}
+                        onChange={(event) =>
+                          s.updateVariable(variable.id, { name: event.target.value })
+                        }
+                        sx={{ flex: '1 1 240px' }}
+                      />
+                      <TextField
+                        size="small"
+                        label="Code"
+                        value={variable.code}
+                        onChange={(event) =>
+                          s.updateVariable(variable.id, { code: event.target.value })
+                        }
+                        sx={{ width: 130 }}
+                      />
+                      <Chip size="small" variant="outlined" label={variable.dataType} />
+                      <Chip
+                        size="small"
+                        label={variable.active ? 'Active' : 'Inactive'}
+                        color={variable.active ? 'success' : 'default'}
+                      />
+                      <Tooltip title={`Delete ${variable.name}`}>
+                        <IconButton
+                          color="error"
+                          size="small"
+                          aria-label={`Delete ${variable.name}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            s.removeVariable(variable.id);
+                          }}
+                        >
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Stack>
+                    <Box sx={{ mt: 1.5, pt: 1.5, borderTop: `1px solid ${tokens.border}` }}>
+                      <Box
+                        sx={{
+                          display: 'grid',
+                          gridTemplateColumns: {
+                            xs: '1fr',
+                            sm: 'minmax(180px, 1fr) minmax(150px, .7fr) 100px',
+                          },
+                          gap: 1,
+                        }}
+                      >
+                        <TextField
+                          size="small"
+                          label="Arabic name"
+                          value={variable.nameAR}
+                          onChange={(event) =>
+                            s.updateVariable(variable.id, { nameAR: event.target.value })
+                          }
+                          slotProps={{ htmlInput: { dir: 'rtl' } }}
+                        />
+                        <TextField
+                          select
+                          size="small"
+                          label="Data type"
+                          value={variable.dataType}
+                          onChange={(event) =>
+                            s.updateVariable(variable.id, {
+                              dataType: event.target.value as typeof variable.dataType,
+                            })
+                          }
+                        >
+                          {['text', 'number', 'boolean', 'date', 'object'].map((type) => (
+                            <MenuItem key={type} value={type}>
+                              {type}
+                            </MenuItem>
+                          ))}
+                        </TextField>
+                        <TextField
+                          size="small"
+                          type="number"
+                          label="Sort"
+                          value={variable.sortOrder}
+                          onChange={(event) =>
+                            s.updateVariable(variable.id, { sortOrder: Number(event.target.value) })
+                          }
+                        />
+                      </Box>
+                      <Box
+                        sx={{
+                          display: 'grid',
+                          gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+                          gap: 1,
+                          mt: 1,
+                        }}
+                      >
+                        <TextField
+                          size="small"
+                          label="Description"
+                          value={variable.description}
+                          onChange={(event) =>
+                            s.updateVariable(variable.id, { description: event.target.value })
+                          }
+                        />
+                        <TextField
+                          size="small"
+                          label="Description (AR)"
+                          value={variable.descriptionAR}
+                          onChange={(event) =>
+                            s.updateVariable(variable.id, { descriptionAR: event.target.value })
+                          }
+                          slotProps={{ htmlInput: { dir: 'rtl' } }}
+                        />
+                      </Box>
+                      <Stack
+                        direction="row"
+                        spacing={2}
+                        useFlexGap
+                        sx={{ mt: 1, flexWrap: 'wrap' }}
+                      >
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              size="small"
+                              checked={variable.required}
+                              onChange={(_, required) =>
+                                s.updateVariable(variable.id, { required })
+                              }
+                            />
+                          }
+                          label="Required"
+                        />
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              size="small"
+                              checked={variable.active}
+                              onChange={(_, active) => s.updateVariable(variable.id, { active })}
+                            />
+                          }
+                          label="Active"
+                        />
+                      </Stack>
                     </Box>
-                    <TextField
-                      size="small"
-                      label="Code"
-                      value={variable.code}
-                      onChange={(event) =>
-                        s.updateVariable(variable.id, { code: event.target.value })
-                      }
-                    />
-                    <TextField
-                      size="small"
-                      label="Name"
-                      value={variable.name}
-                      onChange={(event) =>
-                        s.updateVariable(variable.id, { name: event.target.value })
-                      }
-                    />
-                    <TextField
-                      size="small"
-                      label="Name (AR)"
-                      value={variable.nameAR}
-                      onChange={(event) =>
-                        s.updateVariable(variable.id, { nameAR: event.target.value })
-                      }
-                      slotProps={{ htmlInput: { dir: 'rtl' } }}
-                    />
-                    <TextField
-                      select
-                      size="small"
-                      label="Data type"
-                      value={variable.dataType}
-                      onChange={(event) =>
-                        s.updateVariable(variable.id, {
-                          dataType: event.target.value as typeof variable.dataType,
-                        })
-                      }
-                    >
-                      {['text', 'number', 'boolean', 'date', 'object'].map((type) => (
-                        <MenuItem key={type} value={type}>
-                          {type}
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                    <TextField
-                      size="small"
-                      type="number"
-                      label="Sort"
-                      value={variable.sortOrder}
-                      onChange={(event) =>
-                        s.updateVariable(variable.id, { sortOrder: Number(event.target.value) })
-                      }
-                    />
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          size="small"
-                          checked={variable.active}
-                          onChange={(_, active) => s.updateVariable(variable.id, { active })}
-                        />
-                      }
-                      label="Active"
-                    />
-                    <Button
-                      color="error"
-                      aria-label={`Delete ${variable.name}`}
-                      onClick={() => s.removeVariable(variable.id)}
-                    >
-                      <Delete />
-                    </Button>
-                    <TextField
-                      size="small"
-                      label="Description"
-                      value={variable.description}
-                      onChange={(event) =>
-                        s.updateVariable(variable.id, { description: event.target.value })
-                      }
-                      sx={{ gridColumn: { xs: '2', md: '2 / 5' } }}
-                    />
-                    <TextField
-                      size="small"
-                      label="Description (AR)"
-                      value={variable.descriptionAR}
-                      onChange={(event) =>
-                        s.updateVariable(variable.id, { descriptionAR: event.target.value })
-                      }
-                      sx={{ gridColumn: { xs: '2', md: '5 / 8' } }}
-                      slotProps={{ htmlInput: { dir: 'rtl' } }}
-                    />
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          size="small"
-                          checked={variable.required}
-                          onChange={(_, required) => s.updateVariable(variable.id, { required })}
-                        />
-                      }
-                      label="Required"
-                    />
                   </Box>
                 )}
               </SortableBuilderItem>
@@ -331,148 +442,186 @@ export function VariablesWorkspace() {
 }
 export function StepsWorkspace() {
   const s = useProcessBuilderStore();
+  const activeSteps = s.document.steps.filter((step) => step.active).length;
+  const activityCount = s.document.steps.reduce((count, step) => count + step.activities.length, 0);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const drag = ({ active, over }: DragEndEvent) => {
     if (over && active.id !== over.id) s.reorderSteps(String(active.id), String(over.id));
   };
   return (
-    <Stack spacing={1.25}>
-      <Stack direction="row" sx={{ alignItems: 'center' }}>
-        <Typography variant="h6" sx={{ flex: 1 }}>
-          Steps
+    <Stack spacing="12px">
+      <WorkspaceHeader
+        title="Workflow Steps"
+        summary={`${s.document.steps.length} steps · ${activeSteps} active · ${activityCount} activities`}
+        dirty={s.document.id === 'new' || s.dirty}
+        action={
+          <Stack direction="row" spacing={1}>
+            <Button variant="outlined" startIcon={<Add />} onClick={s.addStep}>
+              Add Step
+            </Button>
+            <Button variant="contained" disabled>
+              Save Steps
+            </Button>
+          </Stack>
+        }
+      />
+      {s.document.id === 'new' && (
+        <Typography sx={{ color: tokens.warning, fontSize: 9 }}>
+          Save the Process first to enable steps (ProcessId required).
         </Typography>
-        {s.dirty && <Chip size="small" label="unsaved changes" sx={{ bgcolor: '#f59e0b' }} />}
-        <Button startIcon={<Add />} onClick={s.addStep}>
-          Add Step
-        </Button>
-      </Stack>
+      )}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={drag}>
         <SortableContext
           items={s.document.steps.map((step) => step.id)}
           strategy={verticalListSortingStrategy}
         >
-          <Stack spacing={1}>
+          <Stack spacing="12px">
             {s.document.steps.map((step) => (
               <SortableBuilderItem key={step.id} id={step.id}>
                 {(attributes, listeners) => (
                   <Box
                     onClick={() => s.select({ kind: 'step', id: step.id })}
-                    sx={{
-                      display: 'grid',
-                      gridTemplateColumns: {
-                        xs: '28px 1fr',
-                        md: '28px 50px 120px 1fr 1fr auto auto auto',
-                      },
-                      gap: 1,
-                      alignItems: 'center',
-                      p: 1.25,
-                      border: '1px solid',
-                      borderColor:
-                        s.selected.kind === 'step' && s.selected.id === step.id
-                          ? '#6657e8'
-                          : '#e1e5ec',
-                      bgcolor: '#fff',
-                    }}
+                    sx={workspaceCardSx(s.selected.kind === 'step' && s.selected.id === step.id)}
                   >
-                    <Box {...attributes} {...listeners} sx={{ display: 'flex', cursor: 'grab' }}>
-                      <DragIndicator />
-                    </Box>
-                    <Chip size="small" label={`#${step.order}`} />
-                    <TextField
-                      size="small"
-                      label="Code"
-                      value={step.code}
-                      onChange={(event) => s.updateStep(step.id, { code: event.target.value })}
-                    />
-                    <TextField
-                      size="small"
-                      label="Name"
-                      value={step.name}
-                      onChange={(event) => s.updateStep(step.id, { name: event.target.value })}
-                    />
-                    <TextField
-                      size="small"
-                      label="Name (AR)"
-                      value={step.nameAR}
-                      onChange={(event) => s.updateStep(step.id, { nameAR: event.target.value })}
-                      slotProps={{ htmlInput: { dir: 'rtl' } }}
-                    />
-                    <Chip size="small" label={`${step.activities.length} activities`} />
-                    <Button
-                      size="small"
-                      onClick={() => {
-                        s.select({ kind: 'step', id: step.id });
-                        s.setCenterTab(3);
-                      }}
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      useFlexGap
+                      sx={{ alignItems: 'center', flexWrap: 'wrap' }}
                     >
-                      Open Activities
-                    </Button>
-                    <Button
-                      color="error"
-                      aria-label={`Delete ${step.name}`}
-                      onClick={() => s.removeStep(step.id)}
-                    >
-                      <Delete />
-                    </Button>
-                    <Box
-                      sx={{
-                        gridColumn: { xs: '2', md: '3 / -1' },
-                        display: 'flex',
-                        gap: 1.5,
-                        alignItems: 'center',
-                        flexWrap: 'wrap',
-                      }}
-                    >
-                      <TextField
+                      <Box
+                        {...attributes}
+                        {...listeners}
+                        sx={{ display: 'flex', cursor: 'grab', color: tokens.textMuted }}
+                      >
+                        <DragIndicator fontSize="small" />
+                      </Box>
+                      <Chip
                         size="small"
-                        type="number"
-                        label="Score"
-                        value={step.score}
-                        onChange={(event) =>
-                          s.updateStep(step.id, { score: Number(event.target.value) })
-                        }
-                        sx={{ width: 100 }}
+                        label={`#${step.order}`}
+                        sx={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: '50%',
+                          bgcolor: tokens.accent,
+                          color: '#fff',
+                          '& .MuiChip-label': { px: 0 },
+                        }}
                       />
                       <TextField
                         size="small"
-                        type="number"
-                        label="Auto passing hours"
-                        value={step.autoPassingHours}
-                        onChange={(event) =>
-                          s.updateStep(step.id, { autoPassingHours: Number(event.target.value) })
-                        }
-                        sx={{ width: 150 }}
+                        label="Code"
+                        value={step.code}
+                        onChange={(event) => s.updateStep(step.id, { code: event.target.value })}
+                        sx={{ flex: '0 1 170px' }}
                       />
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            size="small"
-                            checked={step.allMandatory}
-                            onChange={(_, allMandatory) => s.updateStep(step.id, { allMandatory })}
-                          />
-                        }
-                        label="All Mandatory"
+                      <TextField
+                        size="small"
+                        label="Step name"
+                        value={step.name}
+                        onChange={(event) => s.updateStep(step.id, { name: event.target.value })}
+                        sx={{ flex: '1 1 240px' }}
                       />
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            size="small"
-                            checked={step.active}
-                            onChange={(_, active) => s.updateStep(step.id, { active })}
-                          />
-                        }
-                        label="Active"
+                      <Chip
+                        size="small"
+                        variant="outlined"
+                        label={`${step.activities.length} act.`}
                       />
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            size="small"
-                            checked={step.systemField}
-                            onChange={(_, systemField) => s.updateStep(step.id, { systemField })}
-                          />
-                        }
-                        label="System Field"
-                      />
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          s.select({ kind: 'step', id: step.id });
+                          s.setCenterTab(3);
+                        }}
+                      >
+                        Activities
+                      </Button>
+                      <Button
+                        size="small"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          s.select({ kind: 'step', id: step.id });
+                        }}
+                      >
+                        Configure
+                      </Button>
+                      <Tooltip title={`Delete ${step.name}`}>
+                        <IconButton
+                          color="error"
+                          size="small"
+                          aria-label={`Delete ${step.name}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            s.removeStep(step.id);
+                          }}
+                        >
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </Stack>
+                    <Box sx={{ mt: '4px' }}>
+                      <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
+                        <TextField
+                          size="small"
+                          type="number"
+                          label="Score"
+                          value={step.score}
+                          onChange={(event) =>
+                            s.updateStep(step.id, { score: Number(event.target.value) })
+                          }
+                          sx={{ width: 75 }}
+                        />
+                        <TextField
+                          size="small"
+                          type="number"
+                          label="Auto passing hours"
+                          value={step.autoPassingHours}
+                          onChange={(event) =>
+                            s.updateStep(step.id, { autoPassingHours: Number(event.target.value) })
+                          }
+                          sx={{ width: 133 }}
+                        />
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              size="small"
+                              checked={step.allMandatory}
+                              onChange={(_, allMandatory) =>
+                                s.updateStep(step.id, { allMandatory })
+                              }
+                            />
+                          }
+                          label="Mandatory"
+                        />
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              size="small"
+                              checked={step.active}
+                              onChange={(_, active) => s.updateStep(step.id, { active })}
+                            />
+                          }
+                          label="Active"
+                        />
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              size="small"
+                              checked={step.systemField}
+                              onChange={(_, systemField) => s.updateStep(step.id, { systemField })}
+                            />
+                          }
+                          label="System"
+                        />
+                        <Chip
+                          size="small"
+                          variant="outlined"
+                          label="unsaved"
+                          sx={{ color: tokens.warning, borderColor: tokens.warning }}
+                        />
+                      </Stack>
                     </Box>
                   </Box>
                 )}
@@ -504,17 +653,17 @@ export function ActivitiesWorkspace() {
       s.reorderActivities(step.id, String(active.id), String(over.id));
   };
   return (
-    <Stack spacing={2}>
+    <Stack spacing="16px">
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         spacing={1}
         sx={{ alignItems: { sm: 'center' } }}
       >
-        <Typography sx={{ flex: 1, fontSize: 16, fontWeight: 800 }}>
+        <Typography sx={{ flex: 1, fontSize: 12, fontWeight: 500 }}>
           Activities · {step?.name ?? 'Select step'}
         </Typography>
         {s.dirty && <Chip size="small" label="unsaved changes" sx={{ bgcolor: '#f59e0b' }} />}
-        <Button variant="contained" size="small" sx={{ bgcolor: '#405de6', fontWeight: 700 }}>
+        <Button variant="outlined" size="small">
           Save Activities
         </Button>
         <TextField
@@ -523,7 +672,7 @@ export function ActivitiesWorkspace() {
           label="Step"
           value={step?.id ?? ''}
           onChange={(e) => s.select({ kind: 'step', id: e.target.value })}
-          sx={{ width: 180 }}
+          sx={{ width: { xs: '100%', sm: 180 } }}
         >
           {s.document.steps.map((x) => (
             <MenuItem key={x.id} value={x.id}>
@@ -532,8 +681,8 @@ export function ActivitiesWorkspace() {
           ))}
         </TextField>
       </Stack>
-      <Box sx={{ p: 1.5, border: '1px solid #e5e7eb', borderRadius: 2, bgcolor: '#fff' }}>
-        <Typography sx={{ mb: 1, fontSize: 11, fontWeight: 800 }}>ADD ACTIVITY</Typography>
+      <Box sx={workspaceCardSx()}>
+        <Typography sx={{ mb: 1, fontSize: 9, fontWeight: 600 }}>ADD ACTIVITY</Typography>
         <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
           {activityPalette.map((item) => (
             <Button
@@ -543,7 +692,7 @@ export function ActivitiesWorkspace() {
               startIcon={item.icon}
               disabled={!step}
               onClick={() => step && s.addActivity(step.id, item.type)}
-              sx={{ color: '#6657e8', borderColor: '#a9a1ff' }}
+              sx={{ color: tokens.accent, borderColor: tokens.accent }}
             >
               {item.label}
             </Button>
@@ -566,6 +715,7 @@ export function ActivitiesWorkspace() {
                         s.select({ kind: 'activity', stepId: step.id, id: activity.id })
                       }
                       sx={{
+                        ...workspaceCardSx(selected),
                         display: 'grid',
                         gridTemplateColumns: {
                           xs: '28px 1fr',
@@ -573,13 +723,6 @@ export function ActivitiesWorkspace() {
                         },
                         gap: 1,
                         alignItems: 'center',
-                        p: 1.5,
-                        border: '1px solid',
-                        borderColor: selected ? '#6657e8' : '#e1e5ec',
-                        boxShadow: s.dirty ? 'inset 3px 0 0 #f59e0b' : 'none',
-                        borderRadius: 1.5,
-                        bgcolor: selected ? '#f7f6ff' : '#fff',
-                        '&:focus-within': { borderColor: '#6657e8' },
                       }}
                     >
                       <Box
@@ -728,35 +871,42 @@ export function ActivitiesWorkspace() {
 }
 export function RequestFormWorkspace() {
   const s = useProcessBuilderStore();
-  const palette = controlPalette;
+  const paletteOrder = [
+    'text',
+    'longtext',
+    'date',
+    'dropdown-manual',
+    'checkbox',
+    'table',
+    'file',
+    'employeesearch',
+  ];
+  const palette = controlPalette
+    .filter((item) => paletteOrder.includes(item.type))
+    .sort((left, right) => paletteOrder.indexOf(left.type) - paletteOrder.indexOf(right.type));
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const dragControl = ({ active, over }: DragEndEvent) => {
     if (over && active.id !== over.id) s.reorderRequestControls(String(active.id), String(over.id));
   };
   return (
-    <Stack spacing={1.75}>
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={1}
-        sx={{ alignItems: { sm: 'center' } }}
-      >
-        <Typography sx={{ flex: 1, fontSize: 15, fontWeight: 700 }}>
-          Request Form{' '}
-          <Typography component="span" color="text.secondary" sx={{ fontSize: 13 }}>
-            (Process-level controls)
-          </Typography>
+    <Stack spacing="14px">
+      <WorkspaceHeader
+        title="Request Form (Process-level controls)"
+        summary={`${s.document.requestControls.length} process-level controls`}
+        dirty={s.document.id === 'new' || s.dirty}
+        action={
+          <Button variant="contained" disabled>
+            Save Request Controls
+          </Button>
+        }
+      />
+      {s.document.id === 'new' && (
+        <Typography sx={{ color: tokens.warning, fontSize: 9 }}>
+          Save the Process first to enable request controls (ProcessId required).
         </Typography>
-        {s.dirty && <Chip size="small" label="unsaved" sx={{ bgcolor: '#f59e0b', height: 24 }} />}
-        <Button
-          variant="contained"
-          size="small"
-          sx={{ bgcolor: '#405de6', borderRadius: 0.5, fontWeight: 700 }}
-        >
-          Save Request Controls
-        </Button>
-      </Stack>
-      <Box sx={{ p: 1.5, border: '1px solid #dfe3ea', bgcolor: '#fff' }}>
-        <Typography sx={{ mb: 1, fontSize: 11, fontWeight: 800 }}>ADD CONTROL</Typography>
+      )}
+      <Box sx={{ ...workspaceCardSx(), minHeight: 78, mt: '-10px' }}>
+        <Typography sx={{ mb: 1, fontSize: 9, fontWeight: 600 }}>ADD CONTROL</Typography>
         <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
           {palette.map((item) => (
             <Button
@@ -766,15 +916,19 @@ export function RequestFormWorkspace() {
               startIcon={item.icon}
               onClick={() => s.addRequestControl(item.type)}
               sx={{
-                minHeight: 40,
+                minHeight: 32,
                 color: '#475569',
                 borderColor: '#d9dee8',
-                borderRadius: 0,
+                borderRadius: `${tokens.radius}px`,
                 textTransform: 'none',
                 px: 1.5,
               }}
             >
-              {item.label}
+              {item.type === 'dropdown-manual'
+                ? 'Drop Down List (Fill Manually)'
+                : item.type === 'employeesearch'
+                  ? 'EmployeeSearch'
+                  : item.label}
             </Button>
           ))}
         </Stack>
@@ -793,6 +947,7 @@ export function RequestFormWorkspace() {
                     <Box
                       onClick={() => s.select({ kind: 'requestControl', id: control.id })}
                       sx={{
+                        ...workspaceCardSx(selected),
                         display: 'grid',
                         gridTemplateColumns: {
                           xs: '28px 1fr',
@@ -800,13 +955,6 @@ export function RequestFormWorkspace() {
                         },
                         gap: 1,
                         alignItems: 'center',
-                        p: 1.5,
-                        border: '1px solid',
-                        borderColor: selected ? '#6657e8' : '#e1e5ec',
-                        boxShadow: s.dirty ? 'inset 3px 0 0 #f59e0b' : 'none',
-                        borderRadius: 1.5,
-                        bgcolor: selected ? '#f7f6ff' : '#fff',
-                        '&:focus-within': { borderColor: '#6657e8' },
                       }}
                     >
                       <Box
@@ -927,6 +1075,19 @@ export function RequestFormWorkspace() {
 }
 export function ActivityFormWorkspace() {
   const s = useProcessBuilderStore();
+  const paletteOrder = [
+    'text',
+    'longtext',
+    'date',
+    'dropdown-manual',
+    'checkbox',
+    'table',
+    'file',
+    'employeesearch',
+  ];
+  const palette = controlPalette
+    .filter((item) => paletteOrder.includes(item.type))
+    .sort((left, right) => paletteOrder.indexOf(left.type) - paletteOrder.indexOf(right.type));
   const node = s.selected;
   const stepId = node.kind === 'activity' || node.kind === 'control' ? node.stepId : '';
   const activityId =
@@ -937,9 +1098,11 @@ export function ActivityFormWorkspace() {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   if (!activity)
     return (
-      <Stack spacing={1.5}>
-        <Typography variant="h6">Select an activity</Typography>
-        <Typography color="text.secondary">Choose an activity below to design its form.</Typography>
+      <Stack spacing="14px">
+        <WorkspaceHeader
+          title="Activity Form"
+          summary="Select an activity to design its controls and actions"
+        />
         {s.document.steps.map((step) => (
           <Box key={step.id}>
             <Typography sx={{ mb: 0.5, fontWeight: 700 }}>{step.name}</Typography>
@@ -960,17 +1123,22 @@ export function ActivityFormWorkspace() {
       s.reorderControls(stepId, activity.id, String(active.id), String(over.id));
   };
   return (
-    <Stack spacing={1.5}>
-      <Stack direction="row" sx={{ alignItems: 'center' }}>
-        <Typography variant="h6" sx={{ flex: 1 }}>
+    <Stack spacing="14px">
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={1}
+        sx={{ alignItems: { xs: 'stretch', sm: 'center' }, minHeight: 44 }}
+      >
+        <Typography sx={{ flex: 1, fontSize: 12, fontWeight: 500 }}>
           Activity Form · {activity.name}
         </Typography>
-        {s.dirty && <Chip size="small" label="unsaved" sx={{ bgcolor: '#f59e0b' }} />}
+        {s.dirty && <Chip size="small" label="unsaved" sx={{ bgcolor: tokens.warning }} />}
+        <Button variant="contained">Save Activity Controls</Button>
       </Stack>
-      <Box sx={{ p: 1.25, border: '1px solid #e1e5ec', bgcolor: '#fff' }}>
-        <Typography sx={{ mb: 1, fontSize: 11, fontWeight: 800 }}>ADD CONTROL</Typography>
+      <Box sx={{ ...workspaceCardSx(), minHeight: 78 }}>
+        <Typography sx={{ mb: 1, fontSize: 9, fontWeight: 600 }}>ADD CONTROL</Typography>
         <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
-          {controlPalette.slice(0, 8).map((item) => (
+          {palette.map((item) => (
             <Button
               key={item.type}
               size="small"
@@ -978,7 +1146,11 @@ export function ActivityFormWorkspace() {
               startIcon={item.icon}
               onClick={() => s.addActivityControl(stepId, activity.id, item.type)}
             >
-              {item.label}
+              {item.type === 'dropdown-manual'
+                ? 'Drop Down List (Fill Manually)'
+                : item.type === 'employeesearch'
+                  ? 'EmployeeSearch'
+                  : item.label}
             </Button>
           ))}
         </Stack>
@@ -994,6 +1166,9 @@ export function ActivityFormWorkspace() {
                 {(attributes, listeners) => (
                   <Box
                     sx={{
+                      ...workspaceCardSx(
+                        s.selected.kind === 'control' && s.selected.id === control.id
+                      ),
                       display: 'grid',
                       gridTemplateColumns: {
                         xs: '28px 1fr',
@@ -1001,12 +1176,6 @@ export function ActivityFormWorkspace() {
                       },
                       gap: 1,
                       alignItems: 'center',
-                      p: 1.25,
-                      border: '1px solid #e1e5ec',
-                      bgcolor:
-                        s.selected.kind === 'control' && s.selected.id === control.id
-                          ? '#f7f6ff'
-                          : '#fff',
                     }}
                   >
                     <Box {...attributes} {...listeners} sx={{ display: 'flex', cursor: 'grab' }}>
@@ -1078,9 +1247,9 @@ export function ActivityFormWorkspace() {
           </Stack>
         </SortableContext>
       </DndContext>
-      <Box sx={{ pt: 1.5, borderTop: '1px solid #e1e5ec' }}>
+      <Box sx={{ ...workspaceCardSx(), mt: 0.5 }}>
         <Stack direction="row" sx={{ alignItems: 'center' }}>
-          <Typography sx={{ flex: 1, fontWeight: 800 }}>Actions</Typography>
+          <Typography sx={{ flex: 1, fontSize: 10, fontWeight: 600 }}>Actions</Typography>
           {(['approve', 'reject', 'return', 'escalate'] as const).map((type) => (
             <Button
               key={type}
@@ -1167,107 +1336,114 @@ export function DiagramWorkspace() {
   const s = useProcessBuilderStore();
   const d = s.document;
   return (
-    <Box
-      sx={{
-        minWidth: 520,
-        minHeight: 500,
-        p: 2,
-        borderRadius: 2,
-        backgroundColor: '#f8f9fb',
-        backgroundImage: 'radial-gradient(#d8dde7 1px, transparent 1px)',
-        backgroundSize: '16px 16px',
-      }}
-    >
-      <Stack sx={{ alignItems: 'center' }}>
-        <Chip
-          label="Request flow"
-          size="small"
-          sx={{ alignSelf: 'flex-start', bgcolor: '#eef0ff', color: '#635bff' }}
-        />
-        <Box
-          sx={{
-            px: 3,
-            py: 1,
-            border: '2px solid #10b981',
-            borderRadius: 8,
-            bgcolor: '#ecfdf5',
-            fontWeight: 700,
-          }}
-        >
-          Start
-        </Box>
-        <Box sx={{ height: 22, borderInlineStart: '2px solid #635bff' }} />
-        <Box
-          onClick={() => {
-            s.select({ kind: 'process' });
-            s.setCenterTab(4);
-          }}
-          sx={{
-            width: 280,
-            p: 1.5,
-            border: '2px solid #635bff',
-            borderRadius: 2,
-            bgcolor: '#fff',
-            textAlign: 'center',
-            cursor: 'pointer',
-          }}
-        >
-          <Typography sx={{ fontWeight: 800 }}>Request Form</Typography>
-          <Typography variant="caption">{d.requestControls.length} controls</Typography>
-        </Box>
-        {d.steps.map((step) => (
-          <React.Fragment key={step.id}>
-            <Box sx={{ height: 26, borderInlineStart: '2px solid #635bff' }} />
-            {d.transitions
-              .filter((transition) => transition.targetStepId === step.id)
-              .map((transition) => (
-                <Chip
-                  key={transition.id}
-                  size="small"
-                  label={`${transition.operator} ${transition.value || '…'}`}
-                  sx={{ mb: 0.5, bgcolor: '#fff7ed', color: '#c2410c' }}
-                />
-              ))}
-            <Box
-              onClick={() => s.select({ kind: 'step', id: step.id })}
-              sx={{
-                width: 300,
-                p: 1.5,
-                border: '2px solid',
-                borderColor:
-                  s.selected.kind === 'step' && s.selected.id === step.id ? '#635bff' : '#a5b4fc',
-                borderRadius: 2,
-                bgcolor: '#fff',
-                textAlign: 'center',
-                cursor: 'pointer',
-              }}
-            >
-              <Stack direction="row" sx={{ justifyContent: 'center', gap: 0.75 }}>
-                <Chip size="small" label={`#${step.order}`} />
-                <Typography sx={{ fontWeight: 800 }}>{step.name}</Typography>
-              </Stack>
-              <Typography variant="caption">
-                {step.activities.map((activity) => activity.name).join(' · ') || 'No activities'}
-              </Typography>
-            </Box>
-          </React.Fragment>
-        ))}
-      </Stack>
-      <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
-        <Typography variant="caption">
-          <Box component="span" sx={{ color: '#635bff' }}>
-            ━
-          </Box>{' '}
-          Process path
-        </Typography>
-        <Typography variant="caption">
-          <Box component="span" sx={{ color: '#f59e0b' }}>
-            ●
-          </Box>{' '}
-          Conditional transition
-        </Typography>
-      </Stack>
-    </Box>
+    <Stack spacing={1.25}>
+      <WorkspaceHeader
+        title="Diagram"
+        summary={`${d.steps.length} steps · ${d.transitions.length} transitions · visual process flow`}
+        dirty={s.dirty}
+      />
+      <Box
+        sx={{
+          minWidth: 520,
+          minHeight: 500,
+          p: 2,
+          borderRadius: `${tokens.radius}px`,
+          backgroundColor: '#f8f9fb',
+          backgroundImage: 'radial-gradient(#d8dde7 1px, transparent 1px)',
+          backgroundSize: '16px 16px',
+        }}
+      >
+        <Stack sx={{ alignItems: 'center' }}>
+          <Chip
+            label="Request flow"
+            size="small"
+            sx={{ alignSelf: 'flex-start', bgcolor: '#eef0ff', color: '#635bff' }}
+          />
+          <Box
+            sx={{
+              px: 3,
+              py: 1,
+              border: '2px solid #10b981',
+              borderRadius: 8,
+              bgcolor: '#ecfdf5',
+              fontWeight: 700,
+            }}
+          >
+            Start
+          </Box>
+          <Box sx={{ height: 22, borderInlineStart: '2px solid #635bff' }} />
+          <Box
+            onClick={() => {
+              s.select({ kind: 'process' });
+              s.setCenterTab(4);
+            }}
+            sx={{
+              width: 280,
+              p: 1.5,
+              border: '2px solid #635bff',
+              borderRadius: `${tokens.radius}px`,
+              bgcolor: '#fff',
+              textAlign: 'center',
+              cursor: 'pointer',
+            }}
+          >
+            <Typography sx={{ fontWeight: 800 }}>Request Form</Typography>
+            <Typography variant="caption">{d.requestControls.length} controls</Typography>
+          </Box>
+          {d.steps.map((step) => (
+            <React.Fragment key={step.id}>
+              <Box sx={{ height: 26, borderInlineStart: '2px solid #635bff' }} />
+              {d.transitions
+                .filter((transition) => transition.targetStepId === step.id)
+                .map((transition) => (
+                  <Chip
+                    key={transition.id}
+                    size="small"
+                    label={`${transition.operator} ${transition.value || '…'}`}
+                    sx={{ mb: 0.5, bgcolor: '#fff7ed', color: '#c2410c' }}
+                  />
+                ))}
+              <Box
+                onClick={() => s.select({ kind: 'step', id: step.id })}
+                sx={{
+                  width: 300,
+                  p: 1.5,
+                  border: '2px solid',
+                  borderColor:
+                    s.selected.kind === 'step' && s.selected.id === step.id ? '#635bff' : '#a5b4fc',
+                  borderRadius: `${tokens.radius}px`,
+                  bgcolor: '#fff',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                }}
+              >
+                <Stack direction="row" sx={{ justifyContent: 'center', gap: 0.75 }}>
+                  <Chip size="small" label={`#${step.order}`} />
+                  <Typography sx={{ fontWeight: 800 }}>{step.name}</Typography>
+                </Stack>
+                <Typography variant="caption">
+                  {step.activities.map((activity) => activity.name).join(' · ') || 'No activities'}
+                </Typography>
+              </Box>
+            </React.Fragment>
+          ))}
+        </Stack>
+        <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
+          <Typography variant="caption">
+            <Box component="span" sx={{ color: '#635bff' }}>
+              ━
+            </Box>{' '}
+            Process path
+          </Typography>
+          <Typography variant="caption">
+            <Box component="span" sx={{ color: '#f59e0b' }}>
+              ●
+            </Box>{' '}
+            Conditional transition
+          </Typography>
+        </Stack>
+      </Box>
+    </Stack>
   );
 }
 export function TransitionsWorkspace() {
@@ -1278,19 +1454,22 @@ export function TransitionsWorkspace() {
     )
   );
   return (
-    <Stack spacing={1.25}>
-      <Stack direction="row" sx={{ alignItems: 'center' }}>
-        <Typography variant="h6" sx={{ flex: 1 }}>
-          Conditional Transitions
-        </Typography>
-        <Button
-          startIcon={<Add />}
-          disabled={s.document.steps.length < 2}
-          onClick={s.addTransition}
-        >
-          New transition
-        </Button>
-      </Stack>
+    <Stack spacing="12px">
+      <WorkspaceHeader
+        title="Conditional Transitions"
+        summary={`${s.document.transitions.length} transitions · route the process using configured conditions`}
+        dirty={s.dirty}
+        action={
+          <Button
+            variant="outlined"
+            startIcon={<Add />}
+            disabled={s.document.steps.length < 2}
+            onClick={s.addTransition}
+          >
+            New transition
+          </Button>
+        }
+      />
       {s.document.transitions.map((x) => {
         const variable = s.document.variables.find((item) => item.id === x.variableId);
         return (

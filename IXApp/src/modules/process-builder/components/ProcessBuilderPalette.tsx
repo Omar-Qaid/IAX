@@ -12,7 +12,7 @@ import Notifications from '@mui/icons-material/Notifications';
 import RateReview from '@mui/icons-material/RateReview';
 import Search from '@mui/icons-material/Search';
 import TextFields from '@mui/icons-material/TextFields';
-import { Button, Stack, Typography } from '@mui/material';
+import { Box, Button, Chip, Divider, Stack, Typography } from '@mui/material';
 import { useProcessBuilderStore } from '../store/useProcessBuilderStore';
 import type { BuilderActivityType, BuilderControlType } from '../types/processBuilderTypes';
 
@@ -30,18 +30,18 @@ export const controlPalette: ReadonlyArray<{ type: BuilderControlType; label: st
   { type: 'longtext', label: 'Long text', icon: <TextFields fontSize="small" /> },
   { type: 'date', label: 'Date', icon: <CalendarMonth fontSize="small" /> },
   { type: 'time', label: 'Time', icon: <CalendarMonth fontSize="small" /> },
-  { type: 'url', label: 'URL', icon: <Search fontSize="small" /> },
-  { type: 'dropdown-db', label: 'Database dropdown', icon: <ArrowDropDownCircle fontSize="small" /> },
-  { type: 'dropdown-manual', label: 'Manual dropdown', icon: <ArrowDropDownCircle fontSize="small" /> },
+  { type: 'url', label: 'Url', icon: <Search fontSize="small" /> },
+  { type: 'dropdown-db', label: 'Drop Down List (Fill From DataBase)', icon: <ArrowDropDownCircle fontSize="small" /> },
+  { type: 'dropdown-manual', label: 'Drop Down List (Fill Manually)', icon: <ArrowDropDownCircle fontSize="small" /> },
   { type: 'checkbox', label: 'Check box', icon: <CheckBox fontSize="small" /> },
-  { type: 'checkboxlist', label: 'Checkbox list', icon: <CheckBox fontSize="small" /> },
-  { type: 'radiobuttonlist', label: 'Radio button list', icon: <CheckBox fontSize="small" /> },
+  { type: 'checkboxlist', label: 'Check Box List', icon: <CheckBox fontSize="small" /> },
+  { type: 'radiobuttonlist', label: 'Radio Button List', icon: <CheckBox fontSize="small" /> },
   { type: 'table', label: 'Table', icon: <GridOn fontSize="small" /> },
   { type: 'label', label: 'Label', icon: <TextFields fontSize="small" /> },
-  { type: 'employeesearch', label: 'Employee search', icon: <HowToReg fontSize="small" /> },
+  { type: 'employeesearch', label: 'EmployeeSearch', icon: <HowToReg fontSize="small" /> },
   { type: 'employeeid', label: 'Employee ID', icon: <HowToReg fontSize="small" /> },
   { type: 'file', label: 'File', icon: <CloudUpload fontSize="small" /> },
-  { type: 'showroom', label: 'Showroom', icon: <Search fontSize="small" /> },
+  { type: 'showroom', label: 'ShowRoom', icon: <Search fontSize="small" /> },
   { type: 'signature', label: 'Signature', icon: <Draw fontSize="small" /> },
   { type: 'location', label: 'Location', icon: <Search fontSize="small" /> },
   { type: 'advertiser', label: 'Advertiser', icon: <Search fontSize="small" /> },
@@ -51,15 +51,74 @@ export function ProcessBuilderPalette() {
   const store = useProcessBuilderStore();
   const selectedStep = store.selected.kind === 'step' ? store.selected.id : store.selected.kind === 'activity' ? store.selected.stepId : store.document.steps[0]?.id;
   const selectedActivity = store.selected.kind === 'activity' ? store.selected : null;
-  const titleSx = { pt: 1, fontSize: '0.6875rem', fontWeight: 700, color: 'text.secondary' };
-  return <Stack spacing={1} sx={{ p: 1.5 }}>
-    <Typography sx={titleSx}>PROCESS ELEMENTS</Typography>
-    <Button variant="outlined" onClick={store.addStep}>Step</Button><Button variant="outlined" onClick={store.addVariable}>Variable</Button>
-    <Typography sx={titleSx}>ACTIVITIES</Typography>
-    {activityPalette.map((item) => <Button key={item.type} startIcon={item.icon} disabled={!selectedStep} onClick={() => selectedStep && store.addActivity(selectedStep, item.type)} sx={{ justifyContent: 'flex-start' }}>{item.label}</Button>)}
-    <Typography sx={titleSx}>REQUEST CONTROLS</Typography>
-    {controlPalette.map((item) => <Button key={`request-${item.type}`} startIcon={item.icon} onClick={() => store.addRequestControl(item.type)} sx={{ justifyContent: 'flex-start' }}>{item.label}</Button>)}
-    <Typography sx={titleSx}>ACTIVITY CONTROLS</Typography>
-    {controlPalette.map((item) => <Button key={`activity-${item.type}`} startIcon={item.icon} disabled={!selectedActivity} onClick={() => selectedActivity && store.addActivityControl(selectedActivity.stepId, selectedActivity.id, item.type)} sx={{ justifyContent: 'flex-start' }}>{item.label}</Button>)}
-  </Stack>;
+  const activityControlMode = store.centerTab === 5 && selectedActivity;
+  const titleSx = { fontSize: 9, lineHeight: 1.2, fontWeight: 700, color: '#334155' };
+  const paletteButtonSx = {
+    minHeight: '46px !important',
+    px: '12px',
+    justifyContent: 'flex-start',
+    borderColor: '#dfe4eb !important',
+    bgcolor: '#fff',
+    boxShadow: '0 1px 2px rgb(15 23 42 / 6%)',
+    color: '#1f2937 !important',
+    '& .MuiButton-startIcon': { color: '#111827', mr: '10px' },
+    '&:hover': { bgcolor: '#fafafa', borderColor: '#cbd2dc !important' },
+  };
+  const addLabel = (
+    <Typography component="span" sx={{ ml: 'auto', pl: 1, fontSize: 8, color: '#8b5cf6' }}>
+      Add
+    </Typography>
+  );
+  return (
+    <Stack spacing="8px" sx={{ p: '8px', pb: '20px' }}>
+      <Typography sx={{ ...titleSx, py: '7px' }}>ACTIVITY TYPES (click a step, then add)</Typography>
+      {activityPalette.map((item) => (
+        <Button
+          key={item.type}
+          variant="outlined"
+          startIcon={item.icon}
+          disabled={!selectedStep}
+          onClick={() => selectedStep && store.addActivity(selectedStep, item.type)}
+          sx={paletteButtonSx}
+        >
+          {item.label}
+          {addLabel}
+        </Button>
+      ))}
+      <Divider sx={{ my: '8px !important' }} />
+      <Stack direction="row" sx={{ alignItems: 'center', minHeight: 24 }}>
+        <Typography sx={{ ...titleSx, flex: 1 }}>CONTROLS</Typography>
+        <Chip
+          variant="outlined"
+          size="small"
+          label={activityControlMode ? 'Activity Form' : 'Request Form (process-level)'}
+          sx={{ height: 24, maxWidth: 170, fontSize: 8, bgcolor: '#fff' }}
+        />
+      </Stack>
+      <Box sx={{ color: '#64748b', fontSize: 8, lineHeight: 1.65, pb: '2px' }}>
+        {activityControlMode
+          ? 'Adds a control to the selected activity form.'
+          : 'Adds as a process-level Request Control. Select an activity to add there instead.'}
+      </Box>
+      {controlPalette.map((item) => (
+        <Button
+          key={item.type}
+          variant="outlined"
+          startIcon={item.icon}
+          disabled={Boolean(store.centerTab === 5 && !selectedActivity)}
+          onClick={() => {
+            if (activityControlMode) {
+              store.addActivityControl(selectedActivity.stepId, selectedActivity.id, item.type);
+            } else {
+              store.addRequestControl(item.type);
+            }
+          }}
+          sx={paletteButtonSx}
+        >
+          {item.label}
+          {addLabel}
+        </Button>
+      ))}
+    </Stack>
+  );
 }

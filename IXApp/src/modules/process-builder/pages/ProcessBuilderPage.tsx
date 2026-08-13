@@ -116,6 +116,48 @@ export function ProcessBuilderPage() {
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
+        color: tokens.text,
+        fontFamily: 'Roboto, Inter, "Segoe UI", Arial, sans-serif',
+        fontSize: 10,
+        '& .MuiButton-root': {
+          minHeight: 32,
+          borderRadius: `${tokens.radius}px`,
+          fontSize: 9,
+          fontWeight: 500,
+          textTransform: 'none',
+        },
+        '& .MuiButton-sizeSmall': { minHeight: 28 },
+        '& .MuiButton-outlined': { borderColor: tokens.border, color: tokens.textMuted },
+        '& .MuiButton-text:not(.MuiButton-colorError)': { color: tokens.accent },
+        '& .MuiButton-contained.Mui-disabled': {
+          bgcolor: '#dedede',
+          color: '#a3a3a3',
+          opacity: 1,
+        },
+        '& .MuiIconButton-root': { borderRadius: `${tokens.radius}px` },
+        '& .MuiOutlinedInput-root': {
+          minHeight: tokens.controlHeight,
+          borderRadius: `${tokens.radius}px`,
+          fontSize: 10,
+          bgcolor: '#fff',
+        },
+        '& .MuiInputLabel-root': { fontSize: 9, fontWeight: 500 },
+        '& .MuiFormControlLabel-label': { fontSize: 10 },
+        '& .MuiChip-root': { fontSize: 9 },
+        '& .MuiSvgIcon-root': { fontSize: 16 },
+        '& .MuiSwitch-root': { width: 34, height: 20, p: 0.25 },
+        '& .MuiSwitch-switchBase': { p: 0.5 },
+        '& .MuiSwitch-thumb': { width: 14, height: 14 },
+        '& .MuiSwitch-track': { borderRadius: 9, bgcolor: '#a3a3a3' },
+        '& .MuiSwitch-switchBase.Mui-checked': {
+          transform: 'translateX(14px)',
+          color: tokens.accent,
+        },
+        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+          bgcolor: tokens.accentLight,
+          opacity: 1,
+        },
+        '& .MuiPaper-outlined': { borderColor: tokens.border },
       }}
     >
       <Typography
@@ -146,24 +188,28 @@ export function ProcessBuilderPage() {
           overflowX: 'auto',
         }}
       >
-        <AccountTree sx={{ color: tokens.accent, fontSize: 22 }} />
-        <Typography sx={{ fontSize: 17, fontWeight: 700, color: '#1f2937', whiteSpace: 'nowrap' }}>
+        <AccountTree sx={{ color: tokens.accent, fontSize: 16 }} />
+        <Typography sx={{ fontSize: 13, fontWeight: 500, color: '#1f2937', whiteSpace: 'nowrap' }}>
           Process Builder
         </Typography>
         <Chip
           size="small"
           color={s.document.active ? 'success' : 'default'}
           label={s.document.active ? 'Active' : 'Inactive'}
-          sx={{ height: 25 }}
+          sx={{
+            height: 22,
+            bgcolor: s.document.active ? tokens.success : '#e0e0e0',
+            color: s.document.active ? '#fff' : tokens.textMuted,
+          }}
         />
-        <Chip size="small" variant="outlined" label={`#${s.document.id}`} sx={{ height: 25 }} />
-        <Chip size="small" variant="outlined" label={s.document.code} sx={{ height: 25 }} />
+        <Chip size="small" variant="outlined" label={`#${s.document.id}`} sx={{ height: 22 }} />
+        <Chip size="small" variant="outlined" label={s.document.code} sx={{ height: 22 }} />
         <Box sx={{ flex: 1, minWidth: 12 }} />
         {s.dirty ? (
           <Chip size="small" label="Local changes" sx={{ bgcolor: '#f59e0b' }} />
         ) : (
           draft.savedAt && (
-            <Typography sx={{ fontSize: 12, color: tokens.textMuted }}>
+            <Typography sx={{ fontSize: 9, color: tokens.textMuted }}>
               <Box component="span" sx={{ color: '#10b981' }}>
                 ●
               </Box>{' '}
@@ -171,11 +217,14 @@ export function ProcessBuilderPage() {
             </Typography>
           )
         )}
-        <Chip
-          size="small"
-          label={`${s.document.steps.length}S / ${activities}A / ${controls}C / ${s.document.transitions.length}T`}
-          sx={{ height: 26, borderRadius: 1 }}
-        />
+        <Tooltip title="Steps / Activities / Controls / Transitions">
+          <Chip
+            size="small"
+            aria-label="Process statistics"
+            label={`${s.document.steps.length}S / ${activities}A / ${controls}C / ${s.document.transitions.length}T`}
+            sx={{ height: 24, borderRadius: 12, bgcolor: '#eeeeee' }}
+          />
+        </Tooltip>
         <Button size="small" sx={{ color: '#d97706' }} startIcon={<RestartAlt />} onClick={reset}>
           Reset
         </Button>
@@ -185,9 +234,9 @@ export function ProcessBuilderPage() {
           onClick={() => setExportOpen(true)}
           sx={{
             bgcolor: tokens.accent,
-            borderRadius: 1.5,
+            borderRadius: `${tokens.radius}px`,
             fontWeight: 700,
-            '&:hover': { bgcolor: '#5546d7' },
+            '&:hover': { bgcolor: tokens.accentHover },
           }}
         >
           Export
@@ -209,20 +258,30 @@ export function ProcessBuilderPage() {
         <Paper
           square
           elevation={0}
-          sx={{ minWidth: 0, overflow: 'auto', borderInlineEnd: `1px solid ${tokens.border}` }}
+          sx={{
+            position: 'relative',
+            minWidth: 0,
+            overflow: 'auto',
+            borderInlineEnd: `1px solid ${tokens.dividerStrong}`,
+          }}
         >
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', minHeight: 36 }}>
-            <Tooltip title={leftOpen ? 'Collapse navigation' : 'Expand navigation'}>
-              <IconButton
-                size="small"
-                aria-label={leftOpen ? 'Collapse navigation' : 'Expand navigation'}
-                onClick={() => setLeftOpen((value) => !value)}
-                sx={{ m: 0.25 }}
-              >
-                {leftOpen ? <ChevronLeft /> : <ChevronRight />}
-              </IconButton>
-            </Tooltip>
-          </Box>
+          <Tooltip title={leftOpen ? 'Collapse navigation' : 'Expand navigation'}>
+            <IconButton
+              size="small"
+              aria-label={leftOpen ? 'Collapse navigation' : 'Expand navigation'}
+              onClick={() => setLeftOpen((value) => !value)}
+              sx={{
+                position: 'absolute',
+                insetInlineEnd: 2,
+                top: 48,
+                zIndex: 3,
+                opacity: 0.08,
+                '&:hover, &:focus-visible': { opacity: 1, bgcolor: '#fff' },
+              }}
+            >
+              {leftOpen ? <ChevronLeft /> : <ChevronRight />}
+            </IconButton>
+          </Tooltip>
           {leftOpen && (
             <>
               <Tabs
@@ -230,11 +289,11 @@ export function ProcessBuilderPage() {
                 onChange={(_, v: number) => s.setLeftTab(v)}
                 variant="fullWidth"
                 sx={{
-                  minHeight: 48,
+                  minHeight: 46,
                   '& .MuiTab-root': {
-                    minHeight: 48,
-                    fontSize: 13,
-                    fontWeight: 700,
+                    minHeight: 46,
+                    fontSize: 9,
+                    fontWeight: 500,
                     color: tokens.textMuted,
                   },
                   '& .Mui-selected': { color: `${tokens.accent} !important` },
@@ -264,15 +323,15 @@ export function ProcessBuilderPage() {
               borderBottom: `1px solid ${tokens.border}`,
               '& .MuiTab-root': {
                 minHeight: tokens.tabsHeight,
-                px: 1.5,
+                px: 2.25,
                 minWidth: 'auto',
-                fontSize: 12,
-                fontWeight: 700,
+                fontSize: 9,
+                fontWeight: 500,
                 color: tokens.textMuted,
                 textTransform: 'uppercase',
                 whiteSpace: 'nowrap',
               },
-              '& .MuiSvgIcon-root': { fontSize: 18 },
+              '& .MuiSvgIcon-root': { fontSize: 16 },
               '& .Mui-selected': { color: `${tokens.accent} !important` },
               '& .MuiTabs-indicator': { bgcolor: tokens.accent, height: 2 },
             }}
@@ -281,7 +340,7 @@ export function ProcessBuilderPage() {
               <Tab key={x.label} label={x.label} icon={x.icon} iconPosition="start" />
             ))}
           </Tabs>
-          <Box role="tabpanel" sx={{ p: { xs: 1, sm: 1.5 } }}>
+          <Box role="tabpanel" sx={{ p: '16px' }}>
             {tabs[s.centerTab]}
           </Box>
         </Box>
@@ -289,46 +348,30 @@ export function ProcessBuilderPage() {
           square
           elevation={0}
           sx={{
+            position: 'relative',
             minWidth: 0,
             overflowY: 'auto',
             overflowX: 'hidden',
-            borderInlineStart: `1px solid ${tokens.border}`,
+            borderInlineStart: `1px solid ${tokens.dividerStrong}`,
           }}
         >
-          <Box
-            sx={{
-              position: 'sticky',
-              top: 0,
-              zIndex: 2,
-              p: 1,
-              display: 'flex',
-              alignItems: 'center',
-              bgcolor: '#fff',
-              borderBottom: `1px solid ${tokens.border}`,
-            }}
-          >
-            <Tooltip title={rightOpen ? 'Collapse settings' : 'Expand settings'}>
-              <IconButton
-                size="small"
-                aria-label={rightOpen ? 'Collapse settings' : 'Expand settings'}
-                onClick={() => setRightOpen((value) => !value)}
-              >
-                {rightOpen ? <ChevronRight /> : <ChevronLeft />}
-              </IconButton>
-            </Tooltip>
-            {rightOpen && (
-              <>
-                <Typography sx={{ flex: 1, fontSize: 16, fontWeight: 800 }}>Settings</Typography>
-                {s.dirty && (
-                  <Chip
-                    size="small"
-                    label="unsaved"
-                    sx={{ bgcolor: '#f59e0b', color: '#111827', height: 24 }}
-                  />
-                )}
-              </>
-            )}
-          </Box>
+          <Tooltip title={rightOpen ? 'Collapse settings' : 'Expand settings'}>
+            <IconButton
+              size="small"
+              aria-label={rightOpen ? 'Collapse settings' : 'Expand settings'}
+              onClick={() => setRightOpen((value) => !value)}
+              sx={{
+                position: 'absolute',
+                insetInlineStart: 2,
+                top: 4,
+                zIndex: 3,
+                opacity: 0.08,
+                '&:hover, &:focus-visible': { opacity: 1, bgcolor: '#fff' },
+              }}
+            >
+              {rightOpen ? <ChevronRight /> : <ChevronLeft />}
+            </IconButton>
+          </Tooltip>
           {rightOpen && <ProcessBuilderSettingsPanel />}
         </Paper>
       </Box>

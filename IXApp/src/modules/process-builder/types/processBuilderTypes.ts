@@ -28,6 +28,12 @@ export interface ProcessBuilderDocument {
   name: string;
   nameAR: string;
   description: string;
+  categoryId: string;
+  priorityId: string;
+  processType: string;
+  score: number;
+  canRepeat: boolean;
+  mandatoryDocs: boolean;
   active: boolean;
   variables: BuilderVariable[];
   requestControls: BuilderControl[];

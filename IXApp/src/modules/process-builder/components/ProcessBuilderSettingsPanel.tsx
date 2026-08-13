@@ -20,13 +20,43 @@ import { useProcessBuilderStore } from '../store/useProcessBuilderStore';
 import { ConditionBuilder } from './ConditionBuilder';
 import { activityPalette, controlPalette } from './ProcessBuilderPalette';
 import type { BuilderValidation, BuilderValidationType } from '../types/processBuilderTypes';
+import { processBuilderTokens as tokens } from './processBuilderTokens';
+
+const SettingsTitle = ({
+  title,
+  dirty = false,
+  isNew = false,
+}: {
+  title: string;
+  dirty?: boolean;
+  isNew?: boolean;
+}) => (
+  <Stack direction="row" spacing={1} sx={{ minHeight: 24, alignItems: 'center' }}>
+    <Typography sx={{ flex: 1, fontSize: 12, fontWeight: 600, color: tokens.text }}>
+      {title}
+    </Typography>
+    {isNew && <Chip size="small" label="New" sx={{ height: 24, bgcolor: '#eeeeee' }} />}
+    {dirty && <Chip size="small" label="unsaved" sx={{ bgcolor: tokens.warning, height: 24 }} />}
+  </Stack>
+);
+
+const settingsGroupSx = {
+  display: 'grid',
+  gap: 0.5,
+  p: 1.25,
+  border: `1px solid ${tokens.border}`,
+  borderRadius: `${tokens.radius}px`,
+  bgcolor: '#f9fafb',
+};
+
+const switchRowSx = { m: 0, minHeight: 42, justifyContent: 'space-between' };
 
 const sectionSx = {
   boxShadow: 'none',
-  border: '1px solid #e5e7eb',
-  borderRadius: '8px !important',
+  border: `1px solid ${tokens.border}`,
+  borderRadius: `${tokens.radius}px !important`,
   '&:before': { display: 'none' },
-  '& .MuiAccordionSummary-root': { minHeight: 50 },
+  '& .MuiAccordionSummary-root': { minHeight: 48 },
 };
 const Section = ({
   title,
@@ -113,7 +143,7 @@ function ValidationRules({
   return (
     <Box sx={{ pt: 1.5, borderTop: '1px solid #e5e7eb' }}>
       <Stack direction="row" sx={{ alignItems: 'center' }}>
-        <Typography sx={{ flex: 1, fontSize: 12, fontWeight: 800 }}>Validation Rules</Typography>
+        <Typography sx={{ flex: 1, fontSize: 10, fontWeight: 600 }}>Validation Rules</Typography>
         <Button size="small" onClick={add}>
           + Add
         </Button>
@@ -239,7 +269,7 @@ function ValidationRules({
           </Box>
         ))}
         {values.length === 0 && (
-          <Typography color="text.secondary" sx={{ py: 2, textAlign: 'center', fontSize: 11 }}>
+          <Typography color="text.secondary" sx={{ py: 2, textAlign: 'center', fontSize: 8 }}>
             No validation rules yet.
           </Typography>
         )}
@@ -269,10 +299,24 @@ export function ProcessBuilderSettingsPanel() {
   );
   if (selected.kind === 'process')
     return (
-      <Stack spacing={1.25} sx={{ p: 2 }}>
-        {text('Code', d.code, (code) => s.updateProcess({ code }))}
+      <Stack spacing="14px" sx={{ p: '16px' }}>
+        <SettingsTitle title="Process Information" isNew />
+        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+          <Box sx={{ flex: '0 1 220px', minWidth: 0 }}>
+            {text('Code', d.code, (code) => s.updateProcess({ code }))}
+          </Box>
+          <FormControlLabel
+            control={
+              <Switch
+                size="small"
+                checked={d.active}
+                onChange={(_, active) => s.updateProcess({ active })}
+              />
+            }
+            label="Active"
+          />
+        </Stack>
         {text('Name', d.name, (name) => s.updateProcess({ name }))}
-        {text('Arabic name', d.nameAR, (nameAR) => s.updateProcess({ nameAR }))}
         <TextField
           fullWidth
           multiline
@@ -282,20 +326,15 @@ export function ProcessBuilderSettingsPanel() {
           value={d.description}
           onChange={(event) => s.updateProcess({ description: event.target.value })}
         />
-        <FormControlLabel
-          control={
-            <Switch checked={d.active} onChange={(_, active) => s.updateProcess({ active })} />
-          }
-          label="Active"
-        />
+        {text('Arabic name', d.nameAR, (nameAR) => s.updateProcess({ nameAR }))}
       </Stack>
     );
   if (selected.kind === 'variable') {
     const x = d.variables.find((v) => v.id === selected.id);
     if (!x) return null;
     return (
-      <Stack spacing={1.25} sx={{ p: 2 }}>
-        <Typography sx={{ fontSize: 16, fontWeight: 800 }}>Variable Settings</Typography>
+      <Stack spacing="14px" sx={{ p: '16px' }}>
+        <SettingsTitle title="Variable" dirty={s.dirty} isNew />
         {text('Code', x.code, (code) => s.updateVariable(x.id, { code }))}
         {text('Name', x.name, (name) => s.updateVariable(x.id, { name }))}
         {text('Name (AR)', x.nameAR, (nameAR) => s.updateVariable(x.id, { nameAR }))}
@@ -333,24 +372,32 @@ export function ProcessBuilderSettingsPanel() {
         {text('Default value', x.defaultValue, (defaultValue) =>
           s.updateVariable(x.id, { defaultValue })
         )}
-        <FormControlLabel
-          control={
-            <Switch
-              checked={x.required}
-              onChange={(_, required) => s.updateVariable(x.id, { required })}
-            />
-          }
-          label="Required"
-        />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={x.active}
-              onChange={(_, active) => s.updateVariable(x.id, { active })}
-            />
-          }
-          label="Active"
-        />
+        <Box sx={settingsGroupSx}>
+          <FormControlLabel
+            labelPlacement="start"
+            sx={switchRowSx}
+            control={
+              <Switch
+                size="small"
+                checked={x.required}
+                onChange={(_, required) => s.updateVariable(x.id, { required })}
+              />
+            }
+            label="Required"
+          />
+          <FormControlLabel
+            labelPlacement="start"
+            sx={switchRowSx}
+            control={
+              <Switch
+                size="small"
+                checked={x.active}
+                onChange={(_, active) => s.updateVariable(x.id, { active })}
+              />
+            }
+            label="Active"
+          />
+        </Box>
       </Stack>
     );
   }
@@ -359,24 +406,29 @@ export function ProcessBuilderSettingsPanel() {
     if (!x) return null;
     const generatedCode = x.code || `STEP-${String(x.order).padStart(5, '0')}`;
     return (
-      <Stack spacing={1.5} sx={{ p: 2 }}>
-        <Typography sx={{ fontSize: 16, fontWeight: 800 }}>Step Settings</Typography>
+      <Stack spacing="14px" sx={{ p: '16px', minHeight: '100%' }}>
+        <SettingsTitle title="Step Settings" dirty={s.dirty} />
         <TextField size="small" label="Step Code *" value={generatedCode} disabled />
         {text('Step Name *', x.name, (name) => s.updateStep(x.id, { name }))}
-        {text('Step Name (AR)', x.nameAR, (nameAR) => s.updateStep(x.id, { nameAR }))}
-        {text('Order', x.order, (value) => s.updateStep(x.id, { order: Number(value) }), 'number')}
-        {text(
-          'Auto passing hours',
-          x.autoPassingHours,
-          (value) => s.updateStep(x.id, { autoPassingHours: Number(value) }),
-          'number'
-        )}
-        <Box
-          sx={{ display: 'grid', gap: 0.5, p: 1.25, border: '1px solid #e0e4ec', bgcolor: '#fff' }}
-        >
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 1 }}>
+          {text(
+            'Order',
+            x.order,
+            (value) => s.updateStep(x.id, { order: Number(value) }),
+            'number'
+          )}
+          {text(
+            'Auto passing hours',
+            x.autoPassingHours,
+            (value) => s.updateStep(x.id, { autoPassingHours: Number(value) }),
+            'number'
+          )}
+        </Box>
+        {text('Score', x.score, (value) => s.updateStep(x.id, { score: Number(value) }), 'number')}
+        <Box sx={settingsGroupSx}>
           <FormControlLabel
             labelPlacement="start"
-            sx={{ m: 0, justifyContent: 'space-between' }}
+            sx={switchRowSx}
             control={
               <Switch
                 size="small"
@@ -388,7 +440,7 @@ export function ProcessBuilderSettingsPanel() {
           />
           <FormControlLabel
             labelPlacement="start"
-            sx={{ m: 0, justifyContent: 'space-between' }}
+            sx={switchRowSx}
             control={
               <Switch
                 size="small"
@@ -400,7 +452,7 @@ export function ProcessBuilderSettingsPanel() {
           />
           <FormControlLabel
             labelPlacement="start"
-            sx={{ m: 0, justifyContent: 'space-between' }}
+            sx={switchRowSx}
             control={
               <Switch
                 size="small"
@@ -418,12 +470,10 @@ export function ProcessBuilderSettingsPanel() {
             onChange={(condition) => s.updateStep(x.id, { condition })}
           />
         </Section>
-        <Button
-          variant="contained"
-          sx={{ minHeight: 40, bgcolor: '#405de6', borderRadius: 0.5, fontWeight: 700 }}
-        >
-          Save Steps
+        <Button variant="contained" disabled sx={{ alignSelf: 'stretch', mt: 'auto' }}>
+          Save Steps to DB
         </Button>
+        {text('Step Name (AR)', x.nameAR, (nameAR) => s.updateStep(x.id, { nameAR }))}
       </Stack>
     );
   }
@@ -433,11 +483,8 @@ export function ProcessBuilderSettingsPanel() {
       ?.activities.find((v) => v.id === selected.id);
     if (!x) return null;
     return (
-      <Stack spacing={1.25} sx={{ p: 2 }}>
-        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-          <Typography sx={{ flex: 1, fontSize: 16, fontWeight: 800 }}>Activity Settings</Typography>
-          <Chip size="small" label="unsaved" sx={{ bgcolor: '#f59e0b' }} />
-        </Stack>
+      <Stack spacing="14px" sx={{ p: '16px' }}>
+        <SettingsTitle title="Activity Settings" dirty={s.dirty} isNew />
         {text('Activity code', x.code, (code) => s.updateActivity(selected.stepId, x.id, { code }))}
         {text('Activity name', x.name, (name) => s.updateActivity(selected.stepId, x.id, { name }))}
         <Section title="General Information" expanded>
@@ -585,13 +632,8 @@ export function ProcessBuilderSettingsPanel() {
     if (!control) return null;
     const update = (values: Partial<typeof control>) => s.updateRequestControl(control.id, values);
     return (
-      <Stack spacing={1.5} sx={{ p: 2 }}>
-        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-          <Typography sx={{ flex: 1, fontSize: 16, fontWeight: 800 }}>
-            Request Control Settings
-          </Typography>
-          <Chip size="small" label="unsaved" sx={{ bgcolor: '#f59e0b' }} />
-        </Stack>
+      <Stack spacing="16px" sx={{ p: '16px' }}>
+        <SettingsTitle title="Request Control" dirty={s.dirty} isNew />
         {text(
           'Control code',
           `RCTL-${String(d.requestControls.indexOf(control) + 1).padStart(4, '0')}`,
@@ -624,7 +666,7 @@ export function ProcessBuilderSettingsPanel() {
                 .filter(Boolean),
             })
           )}
-        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0.5 }}>
+        <Box sx={{ ...settingsGroupSx, gridTemplateColumns: '1fr 1fr' }}>
           <FormControlLabel
             control={
               <Switch
@@ -668,7 +710,7 @@ export function ProcessBuilderSettingsPanel() {
             </MenuItem>
           ))}
         </TextField>
-        <Button variant="contained" sx={{ bgcolor: '#405de6', borderRadius: 0, fontWeight: 700 }}>
+        <Button variant="contained" disabled sx={{ alignSelf: 'stretch' }}>
           Create Request Control
         </Button>
         <ValidationRules
@@ -677,7 +719,7 @@ export function ProcessBuilderSettingsPanel() {
         />
         <Box sx={{ pt: 1.5, borderTop: '1px solid #e5e7eb' }}>
           <Stack direction="row" sx={{ alignItems: 'center' }}>
-            <Typography sx={{ flex: 1, fontSize: 12, fontWeight: 800 }}>
+            <Typography sx={{ flex: 1, fontSize: 10, fontWeight: 600 }}>
               Transitions ({d.transitions.length})
             </Typography>
             <Button
@@ -691,7 +733,7 @@ export function ProcessBuilderSettingsPanel() {
             </Button>
           </Stack>
           {d.transitions.length === 0 && (
-            <Typography color="text.secondary" sx={{ py: 2, textAlign: 'center', fontSize: 11 }}>
+            <Typography color="text.secondary" sx={{ py: 2, textAlign: 'center', fontSize: 8 }}>
               No transitions yet.
             </Typography>
           )}
@@ -710,8 +752,8 @@ export function ProcessBuilderSettingsPanel() {
     const update = (values: Partial<typeof control>) =>
       s.updateActivityControl(selected.stepId, selected.activityId, control.id, values);
     return (
-      <Stack spacing={1.25} sx={{ p: 2 }}>
-        <Typography sx={{ fontSize: 16, fontWeight: 800 }}>Control Settings</Typography>
+      <Stack spacing="14px" sx={{ p: '16px' }}>
+        <SettingsTitle title="Control Settings" dirty={s.dirty} isNew />
         {text('Code', control.code, (code) => update({ code }))}
         {text('Label', control.label, (label) => update({ label }))}
         {text('Arabic label', control.labelAR, (labelAR) => update({ labelAR }))}
@@ -740,29 +782,52 @@ export function ProcessBuilderSettingsPanel() {
             })
           )}
         {text('Default value', control.defaultValue, (defaultValue) => update({ defaultValue }))}
-        <FormControlLabel
-          control={
-            <Switch checked={control.required} onChange={(_, required) => update({ required })} />
-          }
-          label="Required"
-        />
-        <FormControlLabel
-          control={
-            <Switch checked={control.visible} onChange={(_, visible) => update({ visible })} />
-          }
-          label="Visible"
-        />
-        <FormControlLabel
-          control={
-            <Switch checked={control.readOnly} onChange={(_, readOnly) => update({ readOnly })} />
-          }
-          label="Read only"
-        />
+        <Box sx={settingsGroupSx}>
+          <FormControlLabel
+            labelPlacement="start"
+            sx={switchRowSx}
+            control={
+              <Switch
+                size="small"
+                checked={control.required}
+                onChange={(_, required) => update({ required })}
+              />
+            }
+            label="Required"
+          />
+          <FormControlLabel
+            labelPlacement="start"
+            sx={switchRowSx}
+            control={
+              <Switch
+                size="small"
+                checked={control.visible}
+                onChange={(_, visible) => update({ visible })}
+              />
+            }
+            label="Visible"
+          />
+          <FormControlLabel
+            labelPlacement="start"
+            sx={switchRowSx}
+            control={
+              <Switch
+                size="small"
+                checked={control.readOnly}
+                onChange={(_, readOnly) => update({ readOnly })}
+              />
+            }
+            label="Read only"
+          />
+        </Box>
+        <Button variant="contained" disabled sx={{ alignSelf: 'stretch' }}>
+          Create Control
+        </Button>
         <ValidationRules
           values={control.validations}
           onChange={(validations) => update({ validations })}
         />
-        <Typography sx={{ fontSize: 11, fontWeight: 700 }}>Visibility</Typography>
+        <Typography sx={{ fontSize: 9, fontWeight: 600 }}>Visibility Rule</Typography>
         <ConditionBuilder
           value={control.visibilityCondition}
           variables={d.variables}
@@ -775,14 +840,15 @@ export function ProcessBuilderSettingsPanel() {
     const x = d.transitions.find((v) => v.id === selected.id);
     if (!x) return null;
     return (
-      <Stack spacing={1.25} sx={{ p: 2 }}>
+      <Stack spacing="14px" sx={{ p: '16px' }}>
+        <SettingsTitle title="Transition Settings" dirty={s.dirty} />
         {text('Name', x.name, (name) => s.updateTransition(x.id, { name }))}
         {text('Value', x.value, (value) => s.updateTransition(x.id, { value }))}
       </Stack>
     );
   }
   return (
-    <Typography color="text.secondary" sx={{ p: 2, fontSize: 12 }}>
+    <Typography color="text.secondary" sx={{ p: '16px', fontSize: 9 }}>
       Select an item to edit its properties.
     </Typography>
   );
