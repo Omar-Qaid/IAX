@@ -63,6 +63,11 @@ export const PERMISSIONS = {
 
   SETTINGS_VIEW: 'settings.view',
   SETTINGS_UPDATE: 'settings.update',
+
+  NUMBER_SEQUENCE_VIEW: 'System.NumberSequences.View',
+  NUMBER_SEQUENCE_CREATE: 'System.NumberSequences.Create',
+  NUMBER_SEQUENCE_EDIT: 'System.NumberSequences.Edit',
+  NUMBER_SEQUENCE_DELETE: 'System.NumberSequences.Delete',
 } as const;
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

@@ -41,6 +41,7 @@ export const ROUTE_PATHS = {
   SYSTEM_ADMINISTRATION: {
     ROOT: '/system-administration',
     SETTINGS: '/system-administration/settings',
+    NUMBER_SEQUENCES: '/system-administration/number-sequences',
   },
 
   ACCESS_DENIED: '/access-denied',

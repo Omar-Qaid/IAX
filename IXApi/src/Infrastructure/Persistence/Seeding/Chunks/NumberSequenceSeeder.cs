@@ -28,15 +28,12 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 ("CustomerGroup",       "Customer Group Sequence",   "CGRP-######", "{PREFIX}-{SEQ}",       0),
                 ("Vendor",              "Vendor Sequence",           "VEN-######", "{PREFIX}-{SEQ}",       0),
                 ("VendorGroup",         "Vendor Group Sequence",     "VGRP-######", "{PREFIX}-{SEQ}",       0),
-                ("AccPartner",          "Partner Sequence",          "PRT-######", "{PREFIX}-{SEQ}",       0),
-                ("AccPartnerGroup",     "Partner Group Sequence",    "PGRP-######", "{PREFIX}-{SEQ}",       0),
                 ("Voucher",             "Voucher Sequence",          "VOU-######", "{PREFIX}-{SEQ}",       0),
 
                 // ─── ERP / AR ────────────────────────────────────────────────────
                 ("SalesTable",          "Sales Order Sequence",      "SO-######",  "{PREFIX}-{YYYY}-{SEQ}", 1),
                 ("SalesLine",           "Sale Line Sequence",        "SOL-######", "{PREFIX}-{SEQ}",       0),
                 ("PackingSlip",         "Packing Slip Sequence",     "PS-######",  "{PREFIX}-{YYYY}-{SEQ}", 1),
-                ("WMSPickingRoute",     "Picking Route Sequence",    "PICK-######","{PREFIX}-{YYYY}-{SEQ}", 1),
                 ("CustConfirmJour",     "SO Confirm Sequence",       "CONF-######","{PREFIX}-{YYYY}-{SEQ}", 1),
                 ("CustPackingSlipJour", "PS Journal ID Sequence",    "PSJ-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
                 ("CustInvoiceJour",     "Invoice Sequence",          "INV-######", "{PREFIX}-{YYYY}-{SEQ}", 1),

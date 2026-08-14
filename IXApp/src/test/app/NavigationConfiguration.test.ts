@@ -65,6 +65,9 @@ describe('module navigation configuration', () => {
         path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.SETTINGS,
       })
     ).toBe(PERMISSIONS.SETTINGS_VIEW);
+    expect(getPageDefinition(ROUTE_PATHS.SYSTEM_ADMINISTRATION.NUMBER_SEQUENCES)?.permission).toBe(
+      PERMISSIONS.NUMBER_SEQUENCE_VIEW
+    );
   });
 
   it('builds command-palette entries only from registered, non-parameterized pages', () => {

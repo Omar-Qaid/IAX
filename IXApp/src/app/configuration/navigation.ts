@@ -184,7 +184,14 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
       {
         id: 'system',
         title: 'nav.system',
-        links: [{ label: 'nav.settings', path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.SETTINGS }],
+        links: [
+          { label: 'nav.settings', path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.SETTINGS },
+          {
+            label: 'nav.numberSequences',
+            path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.NUMBER_SEQUENCES,
+            permission: PERMISSIONS.NUMBER_SEQUENCE_VIEW,
+          },
+        ],
       },
     ],
   },

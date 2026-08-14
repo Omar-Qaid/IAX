@@ -363,7 +363,6 @@ export function ProcessBuilderSettingsPanel() {
           value={d.description}
           onChange={(event) => s.updateProcess({ description: event.target.value })}
         />
-        {text('Arabic name', d.nameAR, (nameAR) => s.updateProcess({ nameAR }))}
         <TextField
           select
           size="small"
@@ -472,7 +471,6 @@ export function ProcessBuilderSettingsPanel() {
         <SettingsTitle title="Variable" dirty={s.dirty} isNew />
         {text('Code', x.code, (code) => s.updateVariable(x.id, { code }))}
         {text('Name', x.name, (name) => s.updateVariable(x.id, { name }))}
-        {text('Name (AR)', x.nameAR, (nameAR) => s.updateVariable(x.id, { nameAR }))}
         {text('Description', x.description, (description) =>
           s.updateVariable(x.id, { description })
         )}
@@ -608,7 +606,6 @@ export function ProcessBuilderSettingsPanel() {
         <Button variant="contained" disabled sx={{ alignSelf: 'stretch', mt: 'auto' }}>
           Save Steps to DB
         </Button>
-        {text('Step Name (AR)', x.nameAR, (nameAR) => s.updateStep(x.id, { nameAR }))}
       </Stack>
     );
   }
@@ -622,117 +619,104 @@ export function ProcessBuilderSettingsPanel() {
         <SettingsTitle title="Activity Settings" dirty={s.dirty} isNew />
         {text('Activity code', x.code, (code) => s.updateActivity(selected.stepId, x.id, { code }))}
         {text('Activity name', x.name, (name) => s.updateActivity(selected.stepId, x.id, { name }))}
-        <Section title="General Information" expanded>
-          <Stack spacing={1.25}>
-            {text('Arabic name', x.nameAR, (nameAR) =>
-              s.updateActivity(selected.stepId, x.id, { nameAR })
-            )}
-            <TextField
-              select
-              size="small"
-              label="Type"
-              value={x.type}
-              onChange={(e) =>
-                s.updateActivity(selected.stepId, x.id, { type: e.target.value as typeof x.type })
-              }
-            >
-              {activityPalette.map((item) => (
-                <MenuItem key={item.type} value={item.type}>
-                  {item.label}
-                </MenuItem>
-              ))}
-            </TextField>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={x.active}
-                  onChange={(_, active) => s.updateActivity(selected.stepId, x.id, { active })}
-                />
-              }
-              label="Active"
-            />
-          </Stack>
-        </Section>
-        <Section title="Performance & SLA">
-          <Stack spacing={1}>
-            {text(
-              'Auto passing hours',
-              x.autoPassingHours,
-              (value) =>
-                s.updateActivity(selected.stepId, x.id, { autoPassingHours: Number(value) }),
-              'number'
-            )}
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={x.autoPassEnabled}
-                  onChange={(_, autoPassEnabled) =>
-                    s.updateActivity(selected.stepId, x.id, { autoPassEnabled })
-                  }
-                />
-              }
-              label="Auto pass enabled"
-            />
-          </Stack>
-        </Section>
-        <Section title="Notification & Alerts">
-          {text('Notification emails', x.config.notifyEmails, (notifyEmails) =>
-            s.updateActivity(selected.stepId, x.id, { config: { ...x.config, notifyEmails } })
+        <Stack spacing={1.25}>
+          <TextField
+            select
+            size="small"
+            label="Type"
+            value={x.type}
+            onChange={(e) =>
+              s.updateActivity(selected.stepId, x.id, { type: e.target.value as typeof x.type })
+            }
+          >
+            {activityPalette.map((item) => (
+              <MenuItem key={item.type} value={item.type}>
+                {item.label}
+              </MenuItem>
+            ))}
+          </TextField>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={x.active}
+                onChange={(_, active) => s.updateActivity(selected.stepId, x.id, { active })}
+              />
+            }
+            label="Active"
+          />
+        </Stack>
+        <Stack spacing={1}>
+          {text(
+            'Auto passing hours',
+            x.autoPassingHours,
+            (value) =>
+              s.updateActivity(selected.stepId, x.id, { autoPassingHours: Number(value) }),
+            'number'
           )}
-        </Section>
-        <Section title="Behavioral Rules">
-          <Stack spacing={1}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={x.required}
-                  onChange={(_, required) => s.updateActivity(selected.stepId, x.id, { required })}
-                />
-              }
-              label="Required"
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={x.mandatoryDocs}
-                  onChange={(_, mandatoryDocs) =>
-                    s.updateActivity(selected.stepId, x.id, { mandatoryDocs })
-                  }
-                />
-              }
-              label="Mandatory documents"
-            />
-            <ConditionBuilder
-              value={x.condition}
-              variables={d.variables}
-              onChange={(condition) => s.updateActivity(selected.stepId, x.id, { condition })}
-            />
-          </Stack>
-        </Section>
-        <Section title="Assignment Configuration" expanded>
-          <Stack spacing={1}>
-            {text('Performer', x.performer, (performer) =>
-              s.updateActivity(selected.stepId, x.id, { performer })
-            )}
-            <TextField
-              select
-              size="small"
-              label="Assignment mode"
-              value={x.assignmentMode}
-              onChange={(e) =>
-                s.updateActivity(selected.stepId, x.id, {
-                  assignmentMode: e.target.value as typeof x.assignmentMode,
-                })
-              }
-            >
-              {['any', 'all', 'round-robin'].map((mode) => (
-                <MenuItem key={mode} value={mode}>
-                  {mode}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Stack>
-        </Section>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={x.autoPassEnabled}
+                onChange={(_, autoPassEnabled) =>
+                  s.updateActivity(selected.stepId, x.id, { autoPassEnabled })
+                }
+              />
+            }
+            label="Auto pass enabled"
+          />
+        </Stack>
+        {text('Notification emails', x.config.notifyEmails, (notifyEmails) =>
+          s.updateActivity(selected.stepId, x.id, { config: { ...x.config, notifyEmails } })
+        )}
+        <Stack spacing={1}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={x.required}
+                onChange={(_, required) => s.updateActivity(selected.stepId, x.id, { required })}
+              />
+            }
+            label="Required"
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                checked={x.mandatoryDocs}
+                onChange={(_, mandatoryDocs) =>
+                  s.updateActivity(selected.stepId, x.id, { mandatoryDocs })
+                }
+              />
+            }
+            label="Mandatory documents"
+          />
+          <ConditionBuilder
+            value={x.condition}
+            variables={d.variables}
+            onChange={(condition) => s.updateActivity(selected.stepId, x.id, { condition })}
+          />
+        </Stack>
+        <Stack spacing={1}>
+          {text('Performer', x.performer, (performer) =>
+            s.updateActivity(selected.stepId, x.id, { performer })
+          )}
+          <TextField
+            select
+            size="small"
+            label="Assignment mode"
+            value={x.assignmentMode}
+            onChange={(e) =>
+              s.updateActivity(selected.stepId, x.id, {
+                assignmentMode: e.target.value as typeof x.assignmentMode,
+              })
+            }
+          >
+            {['any', 'all', 'round-robin'].map((mode) => (
+              <MenuItem key={mode} value={mode}>
+                {mode}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Stack>
         {x.type === 'api' && (
           <Section title="API Action">
             <Stack spacing={1}>
@@ -857,9 +841,9 @@ export function ProcessBuilderSettingsPanel() {
   const control =
     selected.kind === 'control'
       ? d.steps
-          .find((x) => x.id === selected.stepId)
-          ?.activities.find((x) => x.id === selected.activityId)
-          ?.controls.find((x) => x.id === selected.id)
+        .find((x) => x.id === selected.stepId)
+        ?.activities.find((x) => x.id === selected.activityId)
+        ?.controls.find((x) => x.id === selected.id)
       : null;
   if (control && selected.kind === 'control') {
     const update = (values: Partial<typeof control>) =>

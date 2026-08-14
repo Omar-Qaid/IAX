@@ -37,6 +37,7 @@
     "systemAdmin": "System Administration",
     "system": "System",
     "settings": "Application settings",
+    "numberSequences": "Number sequences",
     "favorites": "Favorites",
     "recent": "Recent",
     "modules": "Modules",
@@ -94,6 +95,7 @@
     "wfVariables": { "title": "Workflow variables" },
     "wfSteps": { "title": "Workflow steps" },
     "wfActivities": { "title": "Workflow activities" },
+    "sysNumberSequences": { "title": "Number sequences", "command": "Number sequence" },
     "exchangeRateTypes": { "title": "Exchange rate types" },
     "exchangeRates": { "title": "Currency exchange rates" },
     "legalEntities": { "title": "Legal entities" },
@@ -442,7 +444,11 @@
   },
   "wfActivity": {
     "sections": { "configuration": "Activity configuration" },
-    "groups": { "assignment": "Assignment", "notifications": "Notifications", "behavior": "Behavior" },
+    "groups": {
+      "assignment": "Assignment",
+      "notifications": "Notifications",
+      "behavior": "Behavior"
+    },
     "fields": {
       "code": "Activity code",
       "name": "English name",
@@ -466,8 +472,86 @@
       "extendedProperties": "Extended properties"
     }
   },
+  "sysNumberSequence": {
+    "actions": { "moveUp": "Move up", "moveDown": "Move down" },
+    "sections": {
+      "identification": "Identification",
+      "scopeParameters": "Scope parameters",
+      "segments": "Segments",
+      "references": "References",
+      "general": "General",
+      "automaticCleanup": "Automatic cleanup",
+      "performance": "Performance"
+    },
+    "groups": {
+      "setup": "Setup",
+      "numberAllocation": "Number allocation",
+      "allowUserChanges": "Allow user changes",
+      "activateCleanup": "Activate complete cleanup",
+      "latestCleanup": "Latest complete cleanup",
+      "activatePreallocation": "Activate preallocation",
+      "allocatedNumbers": "Allocated numbers"
+    },
+    "fields": {
+      "numberSequence": "Number sequence",
+      "numberSequenceCode": "Number sequence code",
+      "name": "Name",
+      "description": "Description",
+      "format": "Format",
+      "annotatedFormat": "Annotated format",
+      "segment": "Segment",
+      "value": "Value",
+      "length": "Length",
+      "lowest": "Lowest",
+      "highest": "Highest",
+      "nextRec": "Next value",
+      "scope": "Scope",
+      "cleanInterval": "Clean interval",
+      "timeZoneId": "Time zone ID",
+      "fetchAheadQty": "Fetch-ahead quantity",
+      "continuous": "Continuous",
+      "cyclic": "Cyclic",
+      "manual": "Manual",
+      "blocked": "Blocked",
+      "stopped": "Stopped",
+      "inUse": "In use",
+      "noIncrement": "No increment",
+      "cleanAtAccess": "Clean at access",
+      "allowChangeUp": "Allow upward change",
+      "allowChangeDown": "Allow downward change",
+      "toLowerNumber": "To a lower number",
+      "toHigherNumber": "To a higher number",
+      "fetchAhead": "Fetch ahead",
+      "smallest": "Smallest",
+      "largest": "Largest",
+      "cleanUp": "Clean up",
+      "interval": "Interval",
+      "dateTime": "DateTime",
+      "preallocation": "Preallocation",
+      "quantityOfNumbers": "Quantity of numbers"
+    },
+    "segmentTypes": {
+      "company": "Company",
+      "constant": "Constant",
+      "alphanumeric": "Alphanumeric"
+    },
+    "referencesUnavailable": "Reference rows are not exposed by the current SysNumberSequence API.",
+    "help": {
+      "cleanup": "Complete cleanup periodically returns interrupted continuous-sequence allocations to the available pool. Enable cleanup and specify the interval used by the backend.",
+      "performance": "Preallocation reserves a configured quantity of numbers to reduce database access. Use it when the sequence workload benefits from allocating numbers ahead."
+    },
+    "validation": {
+      "lowest": "Lowest must be zero or greater.",
+      "highest": "Highest must be greater than Lowest."
+    }
+  },
   "wfProcessBuilder": {
-    "tabs": { "designer": "Designer", "variables": "Variables", "steps": "Steps", "activities": "Activities" },
+    "tabs": {
+      "designer": "Designer",
+      "variables": "Variables",
+      "steps": "Steps",
+      "activities": "Activities"
+    },
     "steps": "steps",
     "activities": "activities",
     "variables": "variables",

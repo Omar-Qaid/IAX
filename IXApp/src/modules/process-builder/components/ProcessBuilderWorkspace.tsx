@@ -367,20 +367,11 @@ export function VariablesWorkspace() {
                           display: 'grid',
                           gridTemplateColumns: {
                             xs: '1fr',
-                            sm: 'minmax(180px, 1fr) minmax(150px, .7fr) 100px',
+                            sm: 'minmax(150px, 1fr) 100px',
                           },
                           gap: 1,
                         }}
                       >
-                        <TextField
-                          size="small"
-                          label="Arabic name"
-                          value={variable.nameAR}
-                          onChange={(event) =>
-                            s.updateVariable(variable.id, { nameAR: event.target.value })
-                          }
-                          slotProps={{ htmlInput: { dir: 'rtl' } }}
-                        />
                         <TextField
                           select
                           size="small"
@@ -411,7 +402,7 @@ export function VariablesWorkspace() {
                       <Box
                         sx={{
                           display: 'grid',
-                          gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+                          gridTemplateColumns: '1fr',
                           gap: 1,
                           mt: 1,
                         }}
@@ -423,15 +414,6 @@ export function VariablesWorkspace() {
                           onChange={(event) =>
                             s.updateVariable(variable.id, { description: event.target.value })
                           }
-                        />
-                        <TextField
-                          size="small"
-                          label="Description (AR)"
-                          value={variable.descriptionAR}
-                          onChange={(event) =>
-                            s.updateVariable(variable.id, { descriptionAR: event.target.value })
-                          }
-                          slotProps={{ htmlInput: { dir: 'rtl' } }}
                         />
                       </Box>
                       <Stack

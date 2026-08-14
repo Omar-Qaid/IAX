@@ -37,6 +37,7 @@
     "systemAdmin": "إدارة النظام",
     "system": "النظام",
     "settings": "إعدادات التطبيق",
+    "numberSequences": "التسلسلات الرقمية",
     "favorites": "المفضلة",
     "recent": "الأخيرة",
     "modules": "الوحدات",
@@ -99,6 +100,7 @@
     "wfVariables": { "title": "متغيرات سير العمل" },
     "wfSteps": { "title": "خطوات سير العمل" },
     "wfActivities": { "title": "أنشطة سير العمل" },
+    "sysNumberSequences": { "title": "التسلسلات الرقمية", "command": "التسلسل الرقمي" },
     "exchangeRateTypes": { "title": "أنواع أسعار الصرف" },
     "legalEntities": { "title": "الكيانات القانونية" },
     "exchangeRates": { "title": "أسعار صرف العملات" },
@@ -476,8 +478,82 @@
       "extendedProperties": "الخصائص الإضافية"
     }
   },
+  "sysNumberSequence": {
+    "actions": { "moveUp": "نقل لأعلى", "moveDown": "نقل لأسفل" },
+    "sections": {
+      "identification": "التعريف",
+      "scopeParameters": "معلمات النطاق",
+      "segments": "المقاطع",
+      "references": "المراجع",
+      "general": "عام",
+      "automaticCleanup": "التنظيف التلقائي",
+      "performance": "الأداء"
+    },
+    "groups": {
+      "setup": "الإعداد",
+      "numberAllocation": "تخصيص الأرقام",
+      "allowUserChanges": "السماح بتغييرات المستخدم",
+      "activateCleanup": "تفعيل التنظيف الكامل",
+      "latestCleanup": "آخر تنظيف كامل",
+      "activatePreallocation": "تفعيل التخصيص المسبق",
+      "allocatedNumbers": "الأرقام المخصصة"
+    },
+    "fields": {
+      "numberSequence": "التسلسل الرقمي",
+      "numberSequenceCode": "رمز التسلسل الرقمي",
+      "name": "الاسم",
+      "description": "الوصف",
+      "format": "التنسيق",
+      "annotatedFormat": "التنسيق المشروح",
+      "segment": "المقطع",
+      "value": "القيمة",
+      "length": "الطول",
+      "lowest": "الحد الأدنى",
+      "highest": "الحد الأعلى",
+      "nextRec": "القيمة التالية",
+      "scope": "النطاق",
+      "cleanInterval": "فاصل التنظيف",
+      "timeZoneId": "معرف المنطقة الزمنية",
+      "fetchAheadQty": "كمية الجلب المسبق",
+      "continuous": "مستمر",
+      "cyclic": "دوري",
+      "manual": "يدوي",
+      "blocked": "محظور",
+      "stopped": "متوقف",
+      "inUse": "قيد الاستخدام",
+      "noIncrement": "بدون زيادة",
+      "cleanAtAccess": "تنظيف عند الوصول",
+      "allowChangeUp": "السماح بالتغيير لأعلى",
+      "allowChangeDown": "السماح بالتغيير لأسفل",
+      "toLowerNumber": "إلى رقم أقل",
+      "toHigherNumber": "إلى رقم أعلى",
+      "fetchAhead": "الجلب المسبق",
+      "smallest": "الأصغر",
+      "largest": "الأكبر",
+      "cleanUp": "تنظيف",
+      "interval": "الفاصل",
+      "dateTime": "التاريخ والوقت",
+      "preallocation": "التخصيص المسبق",
+      "quantityOfNumbers": "كمية الأرقام"
+    },
+    "segmentTypes": { "company": "الشركة", "constant": "ثابت", "alphanumeric": "أبجدي رقمي" },
+    "referencesUnavailable": "صفوف المراجع غير متاحة في واجهة SysNumberSequence الحالية.",
+    "help": {
+      "cleanup": "يعيد التنظيف الكامل دورياً تخصيصات التسلسل المستمر المتوقفة إلى مجموعة الأرقام المتاحة. فعّل التنظيف وحدد الفاصل الذي تستخدمه الواجهة الخلفية.",
+      "performance": "يحجز التخصيص المسبق كمية محددة من الأرقام لتقليل الوصول إلى قاعدة البيانات. استخدمه عندما يستفيد حمل التسلسل من تخصيص الأرقام مسبقاً."
+    },
+    "validation": {
+      "lowest": "يجب أن يكون الحد الأدنى صفراً أو أكبر.",
+      "highest": "يجب أن يكون الحد الأعلى أكبر من الحد الأدنى."
+    }
+  },
   "wfProcessBuilder": {
-    "tabs": { "designer": "المصمم", "variables": "المتغيرات", "steps": "الخطوات", "activities": "الأنشطة" },
+    "tabs": {
+      "designer": "المصمم",
+      "variables": "المتغيرات",
+      "steps": "الخطوات",
+      "activities": "الأنشطة"
+    },
     "steps": "خطوات",
     "activities": "أنشطة",
     "variables": "متغيرات",

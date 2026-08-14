@@ -229,6 +229,15 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
       (module) => module.ApplicationSettingsPage
     ),
   },
+  {
+    id: 'system-number-sequences',
+    path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.NUMBER_SEQUENCES,
+    permission: PERMISSIONS.NUMBER_SEQUENCE_VIEW,
+    component: lazyPage(
+      () => import('@modules/administration/pages/SysNumberSequencePage'),
+      (module) => module.SysNumberSequencePage
+    ),
+  },
 ] as const;
 
 export const getPageDefinition = (path: string): AppPageDefinition | undefined =>
