@@ -213,6 +213,7 @@ export function WfActivitiesPage(): React.ReactElement {
       delete: wfActivityApi.delete,
     },
     createRecord: () => emptyActivity(scopedStepId ?? 0),
+    numberSequence: { key: 'WfActivity', field: 'code' },
     getPrimaryText: (record) => textValue(record.name) || textValue(record.code),
     getSecondaryText: (record) => record.code || textValue(record.description),
     matchesSearch: (record, query) =>

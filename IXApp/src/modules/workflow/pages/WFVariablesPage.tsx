@@ -132,6 +132,7 @@ export function WFVariablesPage(): React.ReactElement {
       delete: wfVariableApi.delete,
     },
     createRecord: () => emptyVariable(scopedProcessId ?? 0),
+    numberSequence: { key: 'WfVariable', field: 'code' },
     getPrimaryText: (record) => textValue(record.name) || textValue(record.code),
     getSecondaryText: (record) => record.code || textValue(record.description),
     matchesSearch: (record, query) =>

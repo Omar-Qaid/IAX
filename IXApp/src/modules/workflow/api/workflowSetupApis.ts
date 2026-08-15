@@ -24,3 +24,7 @@ export const wfProcessTypeApi = createWorkflowMasterApi<WorkflowMasterDto>(
   '/v1/WfProcessType',
   'workflow process type'
 );
+export const wfOperatorApi = createWorkflowMasterApi<WorkflowMasterDto>(
+  '/v1/WfOperator',
+  'workflow operator'
+);

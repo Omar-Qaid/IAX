@@ -1,8 +1,10 @@
 using IAX.IXApi.Infrastructure.Persistence.Services;
 
+using IAX.IXApi.Shared.Application.NumberSequences;
+
 namespace IAX.IXApi.Modules.Administration.NumberSequences
 {
-    public interface ISysNumberSequenceService : IBaseService<SysNumberSequence>
+    public interface ISysNumberSequenceService : IBaseService<SysNumberSequence>, INumberSequenceRuntime
     {
         /// <summary>
         /// Atomically reserves and returns the next sequence value + formatted code for the given entity.

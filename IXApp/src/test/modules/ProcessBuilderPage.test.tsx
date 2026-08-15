@@ -20,7 +20,7 @@ describe('standalone ProcessBuilderPage', () => {
     expect(screen.getByRole('tab', { name: 'Designer' })).toBeDefined();
     expect(screen.getByRole('tab', { name: 'Transitions' })).toBeDefined();
     await user.click(screen.getByRole('button', { name: 'Add variable' }));
-    expect(useProcessBuilderStore.getState().document.variables).toHaveLength(2);
+    expect(useProcessBuilderStore.getState().document.variables).toHaveLength(1);
     await user.click(screen.getByRole('button', { name: 'Export' }));
     expect(screen.getByRole('dialog', { name: 'Export process' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'Copy JSON' })).toBeDefined();
@@ -28,7 +28,8 @@ describe('standalone ProcessBuilderPage', () => {
 
   it('keeps builder editing independent in the local frontend store', () => {
     const store = useProcessBuilderStore.getState();
-    const stepId = store.document.steps[0].id;
+    store.addStep();
+    const stepId = useProcessBuilderStore.getState().document.steps[0].id;
     store.addActivity(stepId, 'approval');
     const activity = useProcessBuilderStore.getState().document.steps[0].activities[0];
     useProcessBuilderStore.getState().addActivityControl(stepId, activity.id, 'dropdown-manual');
@@ -55,6 +56,7 @@ describe('standalone ProcessBuilderPage', () => {
   it('reorders steps without depending on workflow services', () => {
     const store = useProcessBuilderStore.getState();
     store.addStep();
+    useProcessBuilderStore.getState().addStep();
     const [first, second] = useProcessBuilderStore.getState().document.steps;
     useProcessBuilderStore.getState().reorderSteps(first.id, second.id);
     expect(useProcessBuilderStore.getState().document.steps.map((step) => step.id)).toEqual([second.id, first.id]);
@@ -62,7 +64,8 @@ describe('standalone ProcessBuilderPage', () => {
 
   it('manages activity actions and keeps them in the local document', () => {
     const store = useProcessBuilderStore.getState();
-    const stepId = store.document.steps[0].id;
+    store.addStep();
+    const stepId = useProcessBuilderStore.getState().document.steps[0].id;
     store.addActivity(stepId, 'approval');
     const activityId = useProcessBuilderStore.getState().document.steps[0].activities[0].id;
     useProcessBuilderStore.getState().addActivityAction(stepId, activityId, 'approve');
@@ -74,9 +77,29 @@ describe('standalone ProcessBuilderPage', () => {
   it('reorders variables with stable sort-order increments', () => {
     const store = useProcessBuilderStore.getState();
     store.addVariable();
+    useProcessBuilderStore.getState().addVariable();
     const [first, second] = useProcessBuilderStore.getState().document.variables;
     useProcessBuilderStore.getState().reorderVariables(first.id, second.id);
     expect(useProcessBuilderStore.getState().document.variables.map((variable) => [variable.id, variable.sortOrder])).toEqual([[second.id, 10], [first.id, 20]]);
+  });
+
+  it('keeps the active workspace when applying a saved server document', () => {
+    const store = useProcessBuilderStore.getState();
+    store.setCenterTab(2);
+    store.addStep();
+    const persisted = {
+      ...useProcessBuilderStore.getState().document,
+      steps: useProcessBuilderStore.getState().document.steps.map((step, index) => ({
+        ...step,
+        id: String(index + 100),
+        code: `STEP-${String(index + 1).padStart(6, '0')}`,
+      })),
+    };
+
+    useProcessBuilderStore.getState().applyPersistedDocument(persisted);
+
+    expect(useProcessBuilderStore.getState().centerTab).toBe(2);
+    expect(useProcessBuilderStore.getState().dirty).toBe(false);
   });
 
   it('provides responsive structure and settings drawer controls', async () => {
@@ -97,6 +120,7 @@ describe('standalone ProcessBuilderPage', () => {
   it('offers keyboard-accessible step ordering alternatives', async () => {
     const user = userEvent.setup();
     render(<ProcessBuilderPage />);
+    await user.click(screen.getByRole('button', { name: 'Add Step' }));
     await user.click(screen.getByRole('button', { name: 'Add Step' }));
     const [first, second] = useProcessBuilderStore.getState().document.steps;
 

@@ -14,10 +14,10 @@ namespace IAX.IXApi.Modules.Workflow.Processes
 [DomainPermission("Workflow", "Processes")]
     public class WfProcessController : BaseController<WfProcess, WfProcessDto>
     {
-        public WfProcessController(IWfProcessService service, ILogger<WfProcessController> logger) : base(service, logger)
+        public WfProcessController(IWfProcessService service, ILogger<WfProcessController> logger)
+            : base(service, logger)
         {
         }
-
     }
 }
 

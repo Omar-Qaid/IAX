@@ -39,13 +39,8 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                 .HasColumnName("MaskInput")
                 .HasMaxLength(1000);
 
-            builder.Property(x => x.ErrorMessageAr)
-                .HasColumnName("ErrorMessageAr")
-                .HasMaxLength(1000)
-                .IsRequired();
-
-            builder.Property(x => x.ErrorMessageEn)
-                .HasColumnName("ErrorMessageEn")
+            builder.Property(x => x.ErrorMessage)
+                .HasColumnName("ErrorMessage")
                 .HasMaxLength(1000)
                 .IsRequired();
 

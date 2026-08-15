@@ -10,7 +10,7 @@ export function WFCategoryPage(): React.ReactElement {
       resourceKey="workflow-categories"
       api={wfCategoryApi}
       createRecord={() => createEmptyWorkflowMaster<WfCategoryDto>({ sysField: false })}
-      generatedCode
+      numberSequenceKey="WfCategory"
       requiredCoreFields={['name']}
       permissions={{
         create: 'Workflow.Categories.Create',

@@ -15,9 +15,7 @@ namespace IAX.IXApi.Modules.Workflow.Activities
         [System.ComponentModel.DataAnnotations.StringLength(255)]
         public string Value { get; set; } = null!;   // value submitted when selected
         [System.ComponentModel.DataAnnotations.StringLength(255)]
-        public string NameEn { get; set; } = null!;   // English display label
-        [System.ComponentModel.DataAnnotations.StringLength(255)]
-        public string NameAr { get; set; } = null!;   // Arabic display label
+        public string Name { get; set; } = null!;   // English display label
         public int SortOrder { get; set; }
     }
 }

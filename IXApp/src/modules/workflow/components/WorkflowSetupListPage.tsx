@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { queryClient } from '@core/api/queryClient';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
@@ -7,6 +8,9 @@ import type { ColumnDef } from '@shared/components/data-grid/types';
 import { useNotifications } from '@shared/hooks/useNotifications';
 import { uiDensity } from '@shared/constants/uiDensity';
 import type { WorkflowMasterDto, WorkflowMasterRecord } from '../api/workflowMasterApi';
+import { apiClient } from '@core/api/apiClient';
+import type { ApiResponse } from '@core/api/apiResponse';
+import type { NumberSequenceMetadata } from '@patterns/list-details/useListDetailsPage';
 
 interface WorkflowSetupApi<TDto extends WorkflowMasterDto> {
   list(signal?: AbortSignal): Promise<WorkflowMasterRecord<TDto>[]>;
@@ -29,7 +33,7 @@ interface WorkflowSetupListPageProps<TDto extends WorkflowMasterDto> {
   resourceKey: string;
   api: WorkflowSetupApi<TDto>;
   createRecord: () => WorkflowMasterRecord<TDto>;
-  generatedCode: boolean;
+  numberSequenceKey: string;
   requiredCoreFields?: Array<'code' | 'name'>;
   permissions?: { create: string; edit: string; delete: string };
   extraFields?: WorkflowSetupField<TDto>[];
@@ -40,7 +44,7 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
   resourceKey,
   api,
   createRecord,
-  generatedCode,
+  numberSequenceKey,
   requiredCoreFields = [],
   permissions,
   extraFields = [],
@@ -49,6 +53,20 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
   const { notifyError, notifySuccess } = useNotifications();
   const navigate = useNavigate();
   const queryKey = useMemo(() => ['simple-list', resourceKey] as const, [resourceKey]);
+  const sequenceQuery = useQuery({
+    queryKey: ['number-sequence', numberSequenceKey],
+    queryFn: async ({ signal }) => {
+      const response = await apiClient.get<ApiResponse<NumberSequenceMetadata>>(
+        `/v1/${numberSequenceKey}/number-sequence`,
+        { signal }
+      );
+      if (!response.data.success || !response.data.data)
+        throw new Error(response.data.message || 'Number sequence is unavailable.');
+      return response.data.data;
+    },
+    staleTime: 0,
+  });
+  const sequence = sequenceQuery.data;
   const columns = useMemo<ColumnDef<WorkflowMasterRecord<TDto>>[]>(
     () => [
       {
@@ -56,7 +74,7 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
         headerName: 'workflowSetup.fields.code',
         width: 150,
         pinned: 'left',
-        editable: !generatedCode,
+        editable: sequence?.manual ?? false,
       },
       {
         field: 'name',
@@ -80,7 +98,7 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
         editable: true,
       },
     ],
-    [extraFields, generatedCode]
+    [extraFields, sequence?.manual]
   );
   const refresh = async () => queryClient.invalidateQueries({ queryKey });
   const config: EnterpriseListConfig<WorkflowMasterRecord<TDto>> = {
@@ -152,9 +170,16 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
         hideSidebar: false,
         rowHeight: uiDensity.gridRowHeight,
         headerHeight: uiDensity.gridRowHeight,
-        onNewRow: createRecord,
+        onNewRow: () => ({
+          ...createRecord(),
+          code: sequence?.manual ? '' : (sequence?.previewCode ?? null),
+        }),
         onRowSave: async (values, isNew) => {
           const record = values as WorkflowMasterRecord<TDto>;
+          if (!sequence?.available)
+            throw new Error(sequence?.message || 'Number sequence is unavailable.');
+          if (sequence.manual && !String(record.code ?? '').trim())
+            throw new Error(t('validation.required', { field: t('workflowSetup.fields.code') }));
           const missingCoreField = requiredCoreFields.find(
             (field) => !String(record[field] ?? '').trim()
           );
@@ -167,8 +192,10 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
           );
           if (missingExtra)
             throw new Error(t('validation.required', { field: t(missingExtra.labelKey) }));
-          if (isNew || record.recId === 0) await api.create(record);
+          if (isNew || record.recId === 0)
+            await api.create(sequence.manual ? record : { ...record, code: null });
           else await api.update(record);
+          await sequenceQuery.refetch();
           await refresh();
           notifySuccess(t('messages.savedSuccessfully', 'Saved successfully'));
         },

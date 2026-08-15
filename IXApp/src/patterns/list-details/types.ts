@@ -145,6 +145,11 @@ export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
   };
   advancedFilterOpenOnLoad?: boolean;
   informationOpenOnLoad?: boolean;
+  /** Runtime behavior (automatic/manual/blocked) is loaded from SysNumberSequences. */
+  numberSequence?: {
+    key: string;
+    field: keyof T;
+  };
 }
 
 export type ListDetailsDataSource<T extends ListDetailRecord> =

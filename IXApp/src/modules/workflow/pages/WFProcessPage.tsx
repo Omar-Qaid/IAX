@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { WORKFLOW_ROUTE_PATHS } from '../routes/workflowRoutePaths';
+import { ROUTE_PATHS } from '@app/routes/routePaths';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { AppLookupGridField } from '@shared/components/fields/AppLookupGridField';
 import { AppLookupField } from '@shared/components/fields/AppLookupField';
@@ -125,6 +126,7 @@ export function WFProcessPage(): React.ReactElement {
                     value={numberValue(value ?? 0)}
                     onChange={(categoryId) => onChange(Number(categoryId) || 0)}
                     disabled={disabled}
+                    required
                     columns={[...categoryLookupColumns]}
                     queryKey={['workflow', 'category-lookup']}
                     fetchPage={fetchCategoryPage}
@@ -148,6 +150,7 @@ export function WFProcessPage(): React.ReactElement {
                     value={numberValue(value ?? 0)}
                     onChange={(priorityId) => onChange(Number(priorityId) || 0)}
                     options={priorityOptions}
+                    required
                     disabled={disabled || prioritiesQuery.isLoading}
                   />
                 ),
@@ -163,6 +166,7 @@ export function WFProcessPage(): React.ReactElement {
                     value={numberValue(value ?? 0)}
                     onChange={(processTypeId) => onChange(Number(processTypeId) || 0)}
                     options={processTypeOptions}
+                    required
                     disabled={disabled || processTypesQuery.isLoading}
                     displayMode="select"
                   />
@@ -212,6 +216,7 @@ export function WFProcessPage(): React.ReactElement {
       delete: wfProcessApi.delete,
     },
     createRecord: emptyProcess,
+    numberSequence: { key: 'WfProcess', field: 'code' },
     getPrimaryText: (record) => textValue(record.name),
     getSecondaryText: (record) => record.code ?? '',
     matchesSearch: (record, query) =>
@@ -243,6 +248,7 @@ export function WFProcessPage(): React.ReactElement {
       {
         id: 'code',
         label: t('wfProcess.fields.code'),
+        width: 180,
         disabled: true,
         getValue: (record) => textValue(record.code),
         setValue: (record, value) => ({ ...record, code: String(value) || null }),
@@ -250,6 +256,7 @@ export function WFProcessPage(): React.ReactElement {
       {
         id: 'name',
         label: t('wfProcess.fields.name'),
+        width: 'minmax(320px, 520px)',
         getValue: (record) => textValue(record.name),
         setValue: (record, value) => ({ ...record, name: String(value) }),
       },
@@ -265,6 +272,19 @@ export function WFProcessPage(): React.ReactElement {
       ...(!record.name?.trim()
         ? { name: t('validation.required', { field: t('wfProcess.fields.name') }) }
         : {}),
+      ...(record.categoryId <= 0
+        ? { categoryId: t('validation.required', { field: t('wfProcess.fields.category') }) }
+        : {}),
+      ...(record.priorityId <= 0
+        ? { priorityId: t('validation.required', { field: t('wfProcess.fields.priority') }) }
+        : {}),
+      ...(record.processTypeId <= 0
+        ? {
+            processTypeId: t('validation.required', {
+              field: t('wfProcess.fields.processType'),
+            }),
+          }
+        : {}),
     }),
     advancedFilter: {
       fieldLabel: t('wfProcess.fields.name'),
@@ -273,6 +293,14 @@ export function WFProcessPage(): React.ReactElement {
         textValue(record.name).toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()),
     },
     commands: [
+      {
+        id: 'builder',
+        label: t('wfProcess.commands.processBuilder'),
+        requiresSelection: true,
+        onClick: (process) => {
+          if (process) navigate(ROUTE_PATHS.processBuilder(process.recId));
+        },
+      },
       {
         id: 'variables',
         label: t('wfProcess.commands.variables'),

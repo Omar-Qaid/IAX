@@ -9,8 +9,7 @@ namespace IAX.IXApi.Modules.Workflow.Activities
         {
             RuleFor(x => x.ActivityControlId).GreaterThan(0).WithMessage("Activity Control ID is required");
             RuleFor(x => x.ValidationType).NotEmpty().WithMessage("Validation Type is required");
-            RuleFor(x => x.ErrorMessageAr).NotEmpty().WithMessage("Arabic error message is required");
-            RuleFor(x => x.ErrorMessageEn).NotEmpty().WithMessage("English error message is required");
+            RuleFor(x => x.ErrorMessage).NotEmpty().WithMessage("Error message is required");
             RuleFor(x => x.Severity).NotEmpty().WithMessage("Severity is required");
         }
     }

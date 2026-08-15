@@ -122,6 +122,7 @@ export function WFStepsPage(): React.ReactElement {
       delete: wfStepApi.delete,
     },
     createRecord: () => emptyStep(scopedProcessId ?? 0),
+    numberSequence: { key: 'WfStep', field: 'code' },
     getPrimaryText: (record) => textValue(record.name) || textValue(record.code),
     getSecondaryText: (record) => record.code || textValue(record.description),
     matchesSearch: (record, query) =>

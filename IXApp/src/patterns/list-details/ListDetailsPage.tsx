@@ -312,7 +312,11 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
                   yesLabel={labels.yes}
                   noLabel={labels.no}
                   record={displayedRecord}
-                  fields={config.headerFields}
+                  fields={config.headerFields.map((field) =>
+                    config.numberSequence && field.id === String(config.numberSequence.field)
+                      ? { ...field, disabled: !state.numberSequenceMetadata?.manual }
+                      : field
+                  )}
                   editing={displayedEditing}
                   maxWidth={config.presentation?.headerMaxWidth}
                   onChange={record ? state.changeHeader : () => undefined}
@@ -584,10 +588,15 @@ function RecordHeader<T>({
           maxWidth,
           gridTemplateColumns: {
             xs: '1fr 1fr',
-            lg:
-              fields.length === 2
-                ? '220px 80px'
-                : `repeat(${Math.min(7, fields.length)},minmax(100px,1fr))`,
+            lg: fields.some((field) => field.width)
+              ? fields
+                  .map((field) =>
+                    typeof field.width === 'number'
+                      ? `${field.width}px`
+                      : (field.width ?? 'minmax(100px, 1fr)')
+                  )
+                  .join(' ')
+              : `repeat(${Math.min(7, fields.length)},minmax(140px,1fr))`,
           },
           gap: '10px',
         }}

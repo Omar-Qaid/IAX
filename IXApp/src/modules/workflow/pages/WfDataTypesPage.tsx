@@ -10,7 +10,7 @@ export function WfDataTypesPage(): React.ReactElement {
       resourceKey="data-types"
       api={wfDataTypeApi}
       createRecord={() => createEmptyWorkflowMaster({})}
-      generatedCode={false}
+      numberSequenceKey="WfDataType"
     />
   );
 }

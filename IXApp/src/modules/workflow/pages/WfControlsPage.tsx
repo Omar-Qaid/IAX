@@ -10,7 +10,7 @@ export function WfControlsPage(): React.ReactElement {
       resourceKey="controls"
       api={wfControlApi}
       createRecord={() => createEmptyWorkflowMaster<WfControlDto>({ controlType: '' })}
-      generatedCode
+      numberSequenceKey="WfControl"
       requiredCoreFields={['name']}
       permissions={{
         create: 'Workflow.Controls.Create',

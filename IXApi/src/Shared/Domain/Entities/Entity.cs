@@ -26,7 +26,7 @@ namespace IAX.IXApi.Shared.Domain.Entities
         object IBaseEntity.RecId => RecId!;
     }
 
-    public abstract class LookupEntity<T> : BaseEntity<T>, IBaseEntity, IMultiCompany
+    public abstract class LookupEntity<T> : BaseEntity<T>, IBaseEntity, IMultiCompany, ICode
     {
         object IBaseEntity.RecId => RecId!;
         public string? Code { get; set; }

@@ -10,7 +10,7 @@ export function WfActivityTypesPage(): React.ReactElement {
       resourceKey="activity-types"
       api={wfActivityTypeApi}
       createRecord={() => createEmptyWorkflowMaster({})}
-      generatedCode
+      numberSequenceKey="WfActivityType"
       requiredCoreFields={['name']}
       permissions={{
         create: 'Workflow.ActivityTypes.Create',

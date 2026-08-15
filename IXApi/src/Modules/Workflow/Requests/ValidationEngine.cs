@@ -199,8 +199,7 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                     {
                         RequestControlId = requestControlId,
                         ControlName = control.Name ?? string.Empty,
-                        ErrorMessageAr = validation.ErrorMessageAr,
-                        ErrorMessageEn = validation.ErrorMessageEn,
+                        ErrorMessage = validation.ErrorMessage,
                         Severity = validation.Severity
                     });
                 }

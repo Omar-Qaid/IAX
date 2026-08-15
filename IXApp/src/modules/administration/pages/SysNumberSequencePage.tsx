@@ -542,6 +542,7 @@ export function SysNumberSequencePage(): React.ReactElement {
       {
         id: 'numberSequence',
         label: t('sysNumberSequence.fields.numberSequenceCode'),
+        width: 280,
         linkStyle: true,
         getValue: (record) => record.numberSequence,
         setValue: (record, value) => ({ ...record, numberSequence: String(value) }),
@@ -549,6 +550,7 @@ export function SysNumberSequencePage(): React.ReactElement {
       {
         id: 'txt',
         label: t('sysNumberSequence.fields.name'),
+        width: 440,
         getValue: (record) => record.txt,
         setValue: (record, value) => ({ ...record, txt: String(value) }),
       },
@@ -574,6 +576,10 @@ export function SysNumberSequencePage(): React.ReactElement {
       create: 'System.NumberSequences.Create',
       edit: 'System.NumberSequences.Edit',
       delete: 'System.NumberSequences.Delete',
+    },
+    presentation: {
+      mode: 'list',
+      headerMaxWidth: 730,
     },
     validate: (record) => ({
       ...(!record.numberSequence.trim()

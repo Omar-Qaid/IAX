@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import {
   Box,
   Button,
@@ -29,7 +29,8 @@ import Visibility from '@mui/icons-material/Visibility';
 import AltRoute from '@mui/icons-material/AltRoute';
 import MenuOpen from '@mui/icons-material/MenuOpen';
 import Tune from '@mui/icons-material/Tune';
-import { useParams } from 'react-router-dom';
+import Save from '@mui/icons-material/Save';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ProcessBuilderPalette } from '../components/ProcessBuilderPalette';
 import { ProcessBuilderSettingsPanel } from '../components/ProcessBuilderSettingsPanel';
 import { ProcessBuilderTreePanel } from '../components/ProcessBuilderTreePanel';
@@ -49,6 +50,21 @@ import {
 } from '../store/useProcessBuilderStore';
 import { loadProcessBuilderDraft, useProcessBuilderDraft } from '../hooks/useProcessBuilderDraft';
 import { processBuilderTokens as tokens } from '../components/processBuilderTokens';
+import {
+  getProcessCodeMetadata,
+  getVariableCodeMetadata,
+  getStepCodeMetadata,
+  getActivityCodeMetadata,
+  getRequestControlCodeMetadata,
+  loadProcessBuilder,
+  saveProcessBuilder,
+  saveProcessVariables,
+  saveProcessActivities,
+  saveProcessRequestControls,
+  saveProcessTransitions,
+} from '../api/processBuilderApi';
+import { ROUTE_PATHS } from '@app/routes/routePaths';
+import { useNotifications } from '@shared/hooks/useNotifications';
 
 const slimScrollbarSx = {
   '&, & *': {
@@ -97,6 +113,8 @@ function ProcessBuilderNavigationPanel() {
 
 export function ProcessBuilderPage() {
   const { builderId = 'new' } = useParams();
+  const navigate = useNavigate();
+  const { notifyError, notifySuccess } = useNotifications();
   const s = useProcessBuilderStore();
   const initialize = s.initialize;
   const [exportOpen, setExportOpen] = useState(false);
@@ -104,11 +122,58 @@ export function ProcessBuilderPage() {
   const [rightOpen, setRightOpen] = useState(() => sessionStorage.getItem('ixapp.processBuilder.rightOpen') !== 'false');
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
   const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [savingVariables, setSavingVariables] = useState(false);
+  const [manualVariableCode, setManualVariableCode] = useState(false);
+  const [manualStepCode, setManualStepCode] = useState(false);
+  const [manualActivityCode, setManualActivityCode] = useState(false);
+  const [savingActivities, setSavingActivities] = useState(false);
+  const [manualRequestControlCode, setManualRequestControlCode] = useState(false);
+  const [savingRequestControls, setSavingRequestControls] = useState(false);
+  const [savingTransitions, setSavingTransitions] = useState(false);
   const draft = useProcessBuilderDraft(s.document, s.dirty, s.markDraftSaved);
-  useEffect(() => {
-    const fallback = createProcessBuilderDocument(builderId);
-    initialize(loadProcessBuilderDraft(builderId, fallback));
-  }, [builderId, initialize]);
+  useLayoutEffect(() => {
+    let active = true;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const [variableMetadata, stepMetadata, activityMetadata, requestControlMetadata] = await Promise.all([
+          getVariableCodeMetadata(),
+          getStepCodeMetadata(),
+          getActivityCodeMetadata(),
+          getRequestControlCodeMetadata(),
+        ]);
+        if (active) {
+          setManualVariableCode(variableMetadata.manual);
+          setManualStepCode(stepMetadata.manual);
+          setManualActivityCode(activityMetadata.manual);
+          setManualRequestControlCode(requestControlMetadata.manual);
+        }
+        if (builderId === 'new') {
+          const fallback = createProcessBuilderDocument('new');
+          const recovered = loadProcessBuilderDraft(builderId, fallback);
+          if (active) initialize(recovered);
+          const metadata = await getProcessCodeMetadata();
+          if (active && !metadata.manual)
+            useProcessBuilderStore.getState().setGeneratedCode(metadata.previewCode ?? '');
+        } else {
+          const fallback = await loadProcessBuilder(Number(builderId));
+          if (active) initialize(loadProcessBuilderDraft(builderId, fallback));
+        }
+      } catch (error) {
+        if (active) {
+          // A preview failure must not discard edits already made in a new draft.
+          if (builderId !== 'new') initialize(createProcessBuilderDocument(builderId));
+          notifyError(error instanceof Error ? error.message : 'Failed to load process builder.');
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    void load();
+    return () => { active = false; };
+  }, [builderId, initialize, notifyError]);
   useEffect(() => {
     sessionStorage.setItem('ixapp.processBuilder.leftOpen', String(leftOpen));
   }, [leftOpen]);
@@ -124,13 +189,25 @@ export function ProcessBuilderPage() {
     );
   const tabs = [
     <DesignerWorkspace />,
-    <VariablesWorkspace />,
-    <StepsWorkspace />,
-    <ActivitiesWorkspace />,
-    <RequestFormWorkspace />,
+    <VariablesWorkspace
+      onSave={() => void saveVariables()}
+      saving={savingVariables}
+      manualCode={manualVariableCode}
+    />,
+    <StepsWorkspace manualCode={manualStepCode} />,
+    <ActivitiesWorkspace
+      onSave={() => void saveActivities()}
+      saving={savingActivities}
+      manualCode={manualActivityCode}
+    />,
+    <RequestFormWorkspace
+      onSave={() => void saveRequestControls()}
+      saving={savingRequestControls}
+      manualCode={manualRequestControlCode}
+    />,
     <ActivityFormWorkspace />,
     <DiagramWorkspace />,
-    <TransitionsWorkspace />,
+    <TransitionsWorkspace onSave={() => void saveTransitions()} saving={savingTransitions} />,
   ];
   const tabDefinitions = [
     { label: 'Designer', icon: <Bolt /> },
@@ -161,6 +238,69 @@ export function ProcessBuilderPage() {
     a.download = `${s.document.code || 'process'}.json`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+  const save = async () => {
+    setSaving(true);
+    try {
+      const previousId = s.document.id;
+      const persisted = await saveProcessBuilder(s.document);
+      localStorage.removeItem(`ixapp.process-builder.${previousId}`);
+      useProcessBuilderStore.getState().applyPersistedDocument(persisted);
+      notifySuccess('Process saved successfully.');
+      if (previousId === 'new') navigate(ROUTE_PATHS.processBuilder(persisted.id), { replace: true });
+    } catch (error) {
+      notifyError(error instanceof Error ? error.message : 'Failed to save process.');
+    } finally {
+      setSaving(false);
+    }
+  };
+  const saveVariables = async () => {
+    setSavingVariables(true);
+    try {
+      const variables = await saveProcessVariables(useProcessBuilderStore.getState().document);
+      useProcessBuilderStore.getState().setPersistedVariables(variables);
+      notifySuccess('Variables saved successfully.');
+    } catch (error) {
+      notifyError(error instanceof Error ? error.message : 'Failed to save variables.');
+    } finally {
+      setSavingVariables(false);
+    }
+  };
+  const saveActivities = async () => {
+    setSavingActivities(true);
+    try {
+      const persisted = await saveProcessActivities(useProcessBuilderStore.getState().document);
+      useProcessBuilderStore.getState().applyPersistedDocument(persisted);
+      notifySuccess('Activities saved successfully.');
+    } catch (error) {
+      notifyError(error instanceof Error ? error.message : 'Failed to save activities.');
+    } finally {
+      setSavingActivities(false);
+    }
+  };
+  const saveRequestControls = async () => {
+    setSavingRequestControls(true);
+    try {
+      const controls = await saveProcessRequestControls(useProcessBuilderStore.getState().document);
+      useProcessBuilderStore.getState().setPersistedRequestControls(controls);
+      notifySuccess('Request controls saved successfully.');
+    } catch (error) {
+      notifyError(error instanceof Error ? error.message : 'Failed to save request controls.');
+    } finally {
+      setSavingRequestControls(false);
+    }
+  };
+  const saveTransitions = async () => {
+    setSavingTransitions(true);
+    try {
+      const persisted = await saveProcessTransitions(useProcessBuilderStore.getState().document);
+      useProcessBuilderStore.getState().applyPersistedDocument(persisted);
+      notifySuccess('Transitions saved successfully.');
+    } catch (error) {
+      notifyError(error instanceof Error ? error.message : 'Failed to save transitions.');
+    } finally {
+      setSavingTransitions(false);
+    }
   };
   return (
     <Box
@@ -324,6 +464,7 @@ export function ProcessBuilderPage() {
           </IconButton>
         </Tooltip>
         <Box sx={{ flex: 1, minWidth: 12 }} />
+        {loading && <Chip size="small" label="Loading from server…" />}
         {s.dirty ? (
           <Chip size="small" label="Local changes" sx={{ bgcolor: '#f59e0b' }} />
         ) : (
@@ -346,6 +487,15 @@ export function ProcessBuilderPage() {
         </Tooltip>
         <Button size="small" sx={{ display: { xs: 'none', sm: 'inline-flex' }, color: '#d97706' }} startIcon={<RestartAlt />} onClick={reset}>
           Reset
+        </Button>
+        <Button
+          variant="contained"
+          startIcon={<Save />}
+          disabled={loading || saving}
+          onClick={() => void save()}
+          sx={{ bgcolor: tokens.success, '&:hover': { bgcolor: '#047857' } }}
+        >
+          {saving ? 'Saving…' : builderId === 'new' ? 'Create' : 'Save'}
         </Button>
         <Button
           variant="contained"

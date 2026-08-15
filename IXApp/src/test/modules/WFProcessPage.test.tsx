@@ -1,6 +1,6 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { render } from '@test/testUtils';
 import { queryClient } from '@core/api/queryClient';
@@ -8,6 +8,7 @@ import { wfProcessApi, type WfProcessRecord } from '@modules/workflow/api/wfProc
 import { wfCategoryApi } from '@modules/workflow/api/wfCategoryApi';
 import { wfPriorityApi, wfProcessTypeApi } from '@modules/workflow/api/workflowSetupApis';
 import { WFProcessPage } from '@modules/workflow/pages/WFProcessPage';
+import { apiClient } from '@core/api/apiClient';
 
 const process: WfProcessRecord = {
   id: '10',
@@ -33,6 +34,21 @@ beforeEach(() => {
   queryClient.clear();
   vi.restoreAllMocks();
   vi.spyOn(wfProcessApi, 'list').mockResolvedValue([process]);
+  vi.spyOn(apiClient, 'get').mockResolvedValue({
+    data: {
+      success: true,
+      data: {
+        sequenceKey: 'WfProcess',
+        mode: 'automatic',
+        manual: false,
+        available: true,
+        blocked: false,
+        previewCode: 'PROC-000001',
+        scope: 'dat',
+        message: null,
+      },
+    },
+  });
   vi.spyOn(wfCategoryApi, 'getById').mockResolvedValue({
     id: '2',
     recId: 2,
@@ -92,18 +108,27 @@ describe('WFProcessPage', () => {
     await user.click(screen.getByRole('button', { name: 'Edit' }));
     expect(screen.getByRole('button', { name: 'Save' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Process builder' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'Variables' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'Steps' })).toBeDefined();
   });
 
-  it('enforces only the backend name requirement', async () => {
+  it('requires the process master fields and retains the selected process type', async () => {
     const user = userEvent.setup();
     render(<WFProcessPage />);
 
     await screen.findAllByText('Purchase approval');
+    await waitFor(() => expect(apiClient.get).toHaveBeenCalled());
     await user.click(screen.getByRole('button', { name: 'New' }));
+    expect(await screen.findByText('PROC-000001')).toBeDefined();
+
+    const processType = screen.getByRole('combobox', { name: /Process type/i });
+    await user.click(processType);
+    await user.click(await screen.findByRole('option', { name: 'STANDARD - Standard' }));
+    expect(processType).toHaveTextContent('STANDARD - Standard');
+
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
-    expect(await screen.findAllByText(/required/i)).toHaveLength(1);
+    expect(await screen.findAllByText(/required/i)).toHaveLength(3);
   });
 });

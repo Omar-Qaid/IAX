@@ -18,9 +18,7 @@ namespace IAX.IXApi.Modules.Workflow.Activities
         [System.ComponentModel.DataAnnotations.StringLength(255)]
         public string? MaskInput { get; set; } //  MaskInput 
         [System.ComponentModel.DataAnnotations.StringLength(255)]
-        public string ErrorMessageAr { get; set; } = null!;
-        [System.ComponentModel.DataAnnotations.StringLength(255)]
-        public string ErrorMessageEn { get; set; } = null!;
+        public string ErrorMessage { get; set; } = null!;
         [System.ComponentModel.DataAnnotations.StringLength(50)]
         public string Severity { get; set; } = null!; // Error, Warning, Information
         public int SortOrder { get; set; }

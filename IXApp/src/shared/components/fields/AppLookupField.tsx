@@ -21,6 +21,27 @@ export function AppLookupField<TFieldValues extends FieldValues = FieldValues>({
   const formContext = useFormContext<TFieldValues>();
   const control = controlProp || formContext?.control;
 
+  // List-details pages supply their own controlled value/onChange pair. Do not
+  // let an unrelated parent FormProvider capture those updates.
+  if (!controlProp && onChangeProp) {
+    return (
+      <LookupField
+        name={name}
+        label={label}
+        value={value}
+        options={options}
+        required={required}
+        disabled={disabled}
+        readOnly={readOnly}
+        helperText={helperText}
+        fullWidth={fullWidth}
+        placeholder={placeholder}
+        displayMode={displayMode}
+        onChange={onChangeProp}
+      />
+    );
+  }
+
   if (!control) {
     return (
       <LookupField

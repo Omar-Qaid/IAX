@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.Extensions.Logging;
+using IAX.IXApi.Shared.Application.NumberSequences;
+using Microsoft.Extensions.DependencyInjection;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 
 namespace IAX.IXApi.Api.Controllers
 {
@@ -101,15 +104,61 @@ namespace IAX.IXApi.Api.Controllers
             
             var entity = dto.Adapt<TEntity>();
             await OnBeforeCreateAsync(entity);
-
-            var createdEntity = await _service.AddAsync(entity, cancellationToken);
+            var sequenceRuntime = HttpContext.RequestServices.GetService<INumberSequenceRuntime>();
+            var unitOfWork = HttpContext.RequestServices.GetService<IUnitOfWork>();
+            TEntity createdEntity;
+            if (sequenceRuntime != null && unitOfWork != null)
+            {
+                var strategy = unitOfWork.Context.Database.CreateExecutionStrategy();
+                createdEntity = await strategy.ExecuteAsync(async () =>
+                {
+                    await unitOfWork.BeginTransactionAsync(cancellationToken);
+                    try
+                    {
+                        await sequenceRuntime.PrepareCreateAsync(entity, cancellationToken);
+                        var persisted = await _service.AddAsync(entity, cancellationToken);
+                        await unitOfWork.CommitTransactionAsync(cancellationToken);
+                        return persisted;
+                    }
+                    catch
+                    {
+                        await unitOfWork.RollbackTransactionAsync(cancellationToken);
+                        throw;
+                    }
+                });
+            }
+            else
+            {
+                if (sequenceRuntime != null)
+                    await sequenceRuntime.PrepareCreateAsync(entity, cancellationToken);
+                createdEntity = await _service.AddAsync(entity, cancellationToken);
+            }
             // Re-load with default includes so the returned DTO is fully populated and flattening
             // (e.g. DepartmentName <- Department.Name) doesn't dereference an un-loaded navigation.
-            var createdId = typeof(TEntity).GetProperty("Id")?.GetValue(createdEntity);
+            var createdId = typeof(TEntity).GetProperty("RecId")?.GetValue(createdEntity)
+                ?? typeof(TEntity).GetProperty("Id")?.GetValue(createdEntity);
             var resultDto = (await ReloadWithDefaultsAsync(createdId, cancellationToken) ?? createdEntity).Adapt<TDto>();
 
             await OnAfterCreateAsync(resultDto);
             return Ok(APIResponse<TDto>.Ok(resultDto, "Created successfully"));
+        }
+
+        /// <summary>
+        /// Returns runtime number-sequence behavior using this feature controller's
+        /// existing authorization policy. Previewing never consumes a number.
+        /// </summary>
+        [HttpGet("number-sequence")]
+        public virtual async Task<ActionResult<APIResponse<NumberSequenceMetadataDto>>> GetNumberSequence(
+            CancellationToken cancellationToken = default)
+        {
+            var runtime = HttpContext.RequestServices.GetService<INumberSequenceRuntime>();
+            if (runtime == null)
+                return NotFound(APIResponse<NumberSequenceMetadataDto>.Fail("Number-sequence runtime is unavailable."));
+
+            var metadata = await runtime.GetMetadataAsync(typeof(TEntity), cancellationToken: cancellationToken);
+            return metadata == null
+                ? NotFound(APIResponse<NumberSequenceMetadataDto>.Fail($"No number sequence is configured for '{_entityName}'."))
+                : Ok(APIResponse<NumberSequenceMetadataDto>.Ok(metadata));
         }
 
         /// <summary>

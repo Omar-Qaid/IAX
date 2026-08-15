@@ -10,7 +10,7 @@ export function WfPrioritiesPage(): React.ReactElement {
       resourceKey="priorities"
       api={wfPriorityApi}
       createRecord={() => createEmptyWorkflowMaster({})}
-      generatedCode
+      numberSequenceKey="WfPriority"
       requiredCoreFields={['name']}
       permissions={{
         create: 'Workflow.Priorities.Create',

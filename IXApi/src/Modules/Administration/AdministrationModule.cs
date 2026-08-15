@@ -31,6 +31,8 @@ public static class AdministrationModule
         services.AddScoped<DataManagement.Services.ISysDataManagementService, DataManagement.Services.SysDataManagementService>();
         services.AddScoped<DataManagement.Services.ISysExcelService, DataManagement.Services.SysExcelService>();
         services.AddScoped<NumberSequences.ISysNumberSequenceService, NumberSequences.SysNumberSequenceService>();
+        services.AddScoped<Shared.Application.NumberSequences.INumberSequenceRuntime>(provider =>
+            provider.GetRequiredService<NumberSequences.ISysNumberSequenceService>());
         services.AddScoped<Settings.ISysSettingsService, Settings.SysSettingsService>();
 
         return services;
