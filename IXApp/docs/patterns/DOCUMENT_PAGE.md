@@ -1,35 +1,13 @@
-# Document Page
+# Document pattern
 
-## Purpose
-A generic, unified wrapper for Header/Lines and other transactional entities that require lifecycle management and status badges.
+`DocumentPage` composes:
 
-## When to use
-- When dealing with complex business documents that undergo state transitions (Draft → Approved → Posted).
+- `PageHeader` with optional string badge;
+- optional `ActionPane` content;
+- bordered header and lines surfaces;
+- optional totals in a responsive `xs=12`, `sm=6`, `md=4` region;
+- optional dialogs.
 
-## Folder structure
-```text
-src/patterns/document/
-├── DocumentPage.tsx           # Main wrapper component
-```
+`DocumentHeader`, `DocumentLines`, and `DocumentTotals` are small reusable wrappers. `patterns/document/useDocumentPage.ts` manages a local document and lines collection; `shared/hooks/useDocumentPage.ts` is a separate legacy async hook.
 
-## Required components
-```text
-DocumentPage
-├── Status Badge
-├── Document ActionPane
-└── Body Regions
-```
-
-## Data flow
-```text
-Similar to Header Lines, relies on `useDocumentPage` hook for dirty tracking and API calls.
-```
-
-## Examples
-Generic Journal Entry.
-
-## Rules
-- Always use `DocumentPage` for entities with a workflow status.
-
-## Description UI
-Visually similar to Header Lines but can be adapted for non-line based documents. The distinguishing feature is the prominent Status Badge in the PageHeader and the workflow-oriented ActionPane (Submit, Approve, Reject buttons) that clearly indicate the document is in a process pipeline.
+The routed `SalesOrderPage` uses this presentation with mock sales-order data. Lifecycle mutations are not supplied by the pattern and must be implemented by the module.

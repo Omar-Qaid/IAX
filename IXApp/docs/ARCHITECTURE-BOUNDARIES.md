@@ -1,77 +1,41 @@
-# Architecture Boundaries and Migration Baseline
+# Architecture boundaries
 
-This document defines the enforceable dependency model for `src/`. It complements
-`ARCHITECTURE.md` and records temporary debt without redefining that debt as an
-accepted design.
+`scripts/audit-architecture.mjs` defines the intended dependency direction for `src`.
 
-## Dependency matrix
+| Source layer | Allowed target layers |
+| --- | --- |
+| `app` | `app`, `modules`, `patterns`, `shared`, `core`, `mocks` |
+| `modules` | same module, `patterns`, `shared`, `core`, `mocks` |
+| `patterns` | `patterns`, `shared`, `core` |
+| `shared` | `shared`, `core` |
+| `core` | `core` |
+| `mocks` | `mocks`, `shared`, `core` |
+| `test` | every source layer |
 
-| Source layer       | May import                                              |
-| ------------------ | ------------------------------------------------------- |
-| `app`              | `app`, `modules`, `patterns`, `shared`, `core`, `mocks` |
-| `modules/<module>` | Its own module, `patterns`, `shared`, `core`, `mocks`   |
-| `patterns`         | `patterns`, `shared`, `core`                            |
-| `shared`           | `shared`, `core`                                        |
-| `core`             | `core` and external packages                            |
-| `mocks`            | `mocks`, `shared`, `core`                               |
-| `test`             | Every source layer                                      |
+The audit also rejects direct imports between top-level modules, imports from the `@mui/icons-material` barrel, circular source dependencies, and unresolved internal imports.
 
-Business modules must not import another business module directly. Integration
-between modules belongs in `app` composition or in a deliberately shared/core
-contract that has no dependency on either business module.
+## Ownership
 
-## Ownership decisions
+- `app`: bootstrap, providers, routes, layouts, shell/navigation, theme, global UI stores.
+- `core`: API/auth/error/localization/permission infrastructure and pure generic contracts.
+- `shared`: reusable route-agnostic UI, hooks, services, types, and validation.
+- `patterns`: reusable page-level compositions with no business-domain ownership.
+- `modules`: business pages, components, DTOs, APIs/repositories, queries, schemas, and feature stores.
+- `mocks`: shared test/demo datasets; feature-specific adapters may remain with their module.
+- `test`: test utilities and suites.
 
-- `app` owns bootstrap, providers, routes, application layouts, shell composition,
-  navigation configuration, route-aware feedback, global UI stores, and theme
-  composition.
-- `core` owns framework-independent infrastructure: API transport, authentication
-  contracts and storage adapters, authorization logic, localization setup, error
-  normalization, and pure utilities. It must not render application-specific UI.
-- `shared` owns reusable, route-agnostic UI and hooks. Shared APIs receive labels,
-  navigation callbacks, configuration, and state through props or narrow contracts.
-- `patterns` owns reusable page-level workflows composed only from `shared` and
-  `core` capabilities.
-- `modules` own business pages, domain components, services, queries, DTOs, schemas,
-  and module-specific mock adapters.
-- `identity` owns authentication-facing pages. `finance` is the parent bounded context
-  for `foundation` and `accounts-receivable`; those subdomains may share only
-  deliberately finance-owned contracts.
-- `mocks` supplies development implementations and fixtures; production pages must
-  not select mocks directly.
+## Current audit state
 
-## Current migration baseline
+As of this documentation review, `npm run audit:architecture` is not clean. The script reports:
 
-The architecture audit permits zero forbidden layer edges and zero MUI icon-barrel
-imports. Any future exception must be listed explicitly in
-`scripts/audit-architecture.mjs`; broad directory exceptions are not permitted.
+- six upward layer edges, including module-to-app route imports and shared components importing pattern tokens;
+- direct Process Builder imports from the Workflow module APIs/components contracts;
+- no MUI icon-barrel violations.
 
-The baseline is a ratchet:
+The exact file list is produced by the command and may change. These are implementation debts, not allowed architecture. They are documented here because a zero-debt claim would be inaccurate. This documentation update does not alter application imports or weaken the audit.
 
-- A new forbidden layer edge fails the audit.
-- A direct cross-module import fails the audit with no baseline allowance.
-- A new `@mui/icons-material` barrel import fails the audit.
-- Any file-level circular dependency fails the audit.
-- When a known violation is removed, the audit reports the stale baseline entry so
-  it can be deleted in the same change.
+When fixing a violation, move the narrow contract/token to a lower shared owner or compose the dependency in `app`; do not add a broad exception. Process Builder and Workflow need an explicit ownership decision because the builder currently orchestrates Workflow APIs as a separate top-level module.
 
-## Planned removal order
+## Other audits
 
-1. ~~Move application shell and route-aware navigation from `shared` to `app`.~~ Completed.
-2. ~~Move route-specific access-denied rendering into `app/routes` and leave pure
-   authorization logic in `core`.~~ Completed.
-3. ~~Move validated environment ownership into `core/configuration` so authentication
-   and generic data hooks do not import `app`.~~ Completed.
-4. ~~Move logistics mock selection behind a shared service adapter.~~ Completed.
-5. ~~Replace each known MUI icon barrel import with a path import.~~ Completed.
-
-Each wave must preserve compatibility until all consumers are migrated and must run
-`npm run verify` plus Playwright discovery and assertions before its baseline entries
-are removed.
-
-## Unused-export report
-
-`npm run audit:unused` reports possible unused exports. It is non-blocking because
-text-based export analysis can produce false positives for dynamic loading, public
-package APIs, declaration merging, and framework conventions. No export may be
-deleted without checking runtime routes, barrel exports, tests, and documentation.
+`audit:encoding` checks source text. `audit:unused` is advisory because static export analysis can report false positives. See [Development guidelines](development.md) for the full command workflow.

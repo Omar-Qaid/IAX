@@ -1,144 +1,45 @@
-# IXApp Master Frontend Architecture & Single Source of Truth
+# IXApp frontend architecture
 
-## 1. Document Purpose
-This document serves as the **official single source of truth** for both software engineers and AI coding assistants working on **IXApp**. It defines the overall architecture, layer responsibilities, dependency rules, design principles, coding standards, naming conventions, AI decision guidelines, and references to all folder-level documentation.
+This file is a short compatibility entry point. The maintained documentation starts at [docs/README.md](docs/README.md); topic-specific documents are the source of truth instead of duplicating their content here.
 
-Whenever technical requirements, folder structures, component implementations, or refactoring strategies are ambiguous or conflicting, **this document and its referenced documentation files in `docs/` must be followed strictly**.
+## Runtime composition
 
----
+`src/main.tsx` mounts `App`. `AppProviders` composes error, localization, query, authentication, theme, and notification providers, and `AppRoutes` renders the route tree. Lazy page registrations live in `src/app/routes/pageRegistry.ts`; route composition lives in `src/app/routes/routeConfig.tsx`.
 
-## 2. Executive Architecture Overview
+Read [Application bootstrap](docs/app.md), [Routing and layouts](docs/routing-and-layouts.md), and [Authentication and authorization](docs/authentication.md) for the verified flow.
 
-IXApp is a high-performance, modular enterprise React.js frontend inspired by Microsoft Dynamics 365 Finance & Operations page patterns and enterprise interaction concepts. It does not copy Microsoft proprietary source code, branding, or exact visual assets. Instead, it provides a clean, scalable, maintainable architecture using:
+## Layers
 
-- **React 19 & TypeScript 5**
-- **Vite 8**
-- **Material UI v9 & MUI X Data Grid**
-- **TanStack Query (React Query v5)**
-- **React Hook Form & Zod**
-- **Zustand**
-- **i18next**
-- **Vitest & React Testing Library**
+| Layer | Current responsibility |
+| --- | --- |
+| `app` | Bootstrap, providers, routing, layouts, shell/navigation, theme, application UI stores |
+| `modules` | Business features, pages, APIs/adapters, queries, validation, and feature state |
+| `patterns` | Reusable page compositions without business ownership; several folders remain scaffolds |
+| `shared` | Route-agnostic components, hooks, services, validation, types, and utilities |
+| `core` | API/auth/error/localization/permission infrastructure and generic contracts |
+| `mocks` | Shared mock datasets used by the adapters that support mock mode |
 
-The application is engineered to connect to an ASP.NET Core REST Web API backend, operating seamlessly with typed in-memory mock repositories when `VITE_ENABLE_MOCK_API=true`.
+The precise allowed dependency matrix is in [Architecture boundaries](docs/ARCHITECTURE-BOUNDARIES.md). The architecture audit currently reports a small set of upward-layer and cross-module imports. Those imports are implementation debt, not approved exceptions; documentation must not claim the audit is clean until the code is changed.
 
----
+## Technology and implementation choices
 
-## 3. Master Documentation Index
+- React 19 and TypeScript 6 on Vite 8.
+- Material UI 9; the main table is a project-owned virtualized grid using MUI and TanStack Virtual, not MUI X Data Grid.
+- TanStack Query for server state, Zustand for selected application and feature state, and local React state where ownership is local.
+- React Hook Form and Zod for implemented form flows.
+- Axios-based API infrastructure with HTTP and mock adapters selected by feature services.
+- React Router 7 with lazy page registration and guarded protected routes.
+- i18next with English/Arabic resources and LTR/RTL theme direction.
+- Vitest/Testing Library for component and integration tests, plus Playwright browser tests.
 
-Specialized, comprehensive documentation is maintained in the `docs/` directory for every folder and sub-package:
+## Working conventions
 
-| Layer / Folder | Documentation File | Description & Scope |
-|---|---|---|
-| **Application Layer** | [`docs/app.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/app.md) | Bootstrap, global providers, layouts, routing, theme composition, Zustand stores |
-| **Core Layer** | [`docs/core.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/core.md) | Axios API client, authentication, RBAC permissions, error mapping, localization engine |
-| **Shared Layer Index** | [`docs/shared.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared.md) | Shared controls overview & sub-folder index |
-| ├─ **Action Pane** | [`docs/shared/action-pane.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/action-pane.md) | D365 command bar toolbars & RBAC command guards |
-| **App Shell & Navigation** | [`docs/app-shell.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/app-shell.md) | App-owned shell, topbar, sidebar, command palette (`Ctrl+K`), navigation, and breadcrumbs |
-| ├─ **Data Grid** | [`docs/shared/data-grid.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/data-grid.md) | `AppDataGrid` virtualized data table, inline editing, persistence, CSV export |
-| ├─ **Dialogs** | [`docs/shared/dialogs.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/dialogs.md) | Modal dialog container (`AppDialog`), confirmation & delete warning dialogs |
-| ├─ **FastTabs** | [`docs/shared/fast-tabs.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/fast-tabs.md) | Collapsible form section accordions with summary text & error chips |
-| ├─ **Feedback States** | [`docs/shared/feedback.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/feedback.md) | Standardized loading, empty result, error alert, and access denied states |
-| ├─ **Form Fields** | [`docs/shared/fields.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/fields.md) | React Hook Form input controls (`AppTextField`, `AppSelectField`, `AppLookupGridField`) |
-| ├─ **Form Layouts** | [`docs/shared/forms.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/forms.md) | 12-column responsive layout wrappers (`FormRow`, `FormColumn`) & error banners |
-| ├─ **Logistics Drawers**| [`docs/shared/logistics.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/logistics.md) | Slide-out right drawers for postal addresses & electronic contact channels |
-| ├─ **Grid Lookups** | [`docs/shared/lookups.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/lookups.md) | Virtualized multi-column popover table dropdowns & RBAC field guards |
-| ├─ **Page Layouts** | [`docs/shared/page.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/page.md) | Structural page containers (`PageContainer`, `PageHeader`, `PageContent`, `PageSection`) |
-| ├─ **Shared Hooks** | [`docs/shared/hooks.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/hooks.md) | Generic hooks (`useNotifications`, `useDebounce`, `useLogisticsAddress`, `useLookupGridField`) |
-| └─ **Shared Utilities**| [`docs/shared/utilities.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/utilities.md) | Helper functions for column localization, action filtering, and grid exports |
-| **Page Patterns** | [`docs/patterns.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/patterns.md) | Reusable page templates: Simple List, List & Details, Master Form, Workspace, Document |
-| **Business Modules** | [`docs/modules.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/modules.md) | Domain business modules: Accounts Receivable, Dashboard, Auth, System Admin |
-| **Mock Services** | [`docs/mocks.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/mocks.md) | Typed mock datasets, repository implementations, and mock/HTTP service resolvers |
-| **Testing Strategy** | [`docs/testing.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/testing.md) | Vitest runner rules, JSDOM quirks, icon import rules, RTL rendering tests |
-| **Enforced Boundaries** | [`docs/ARCHITECTURE-BOUNDARIES.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/ARCHITECTURE-BOUNDARIES.md) | Dependency matrix, migration baseline, ownership decisions, and automated architecture gates |
-| **Design Patterns** | [`docs/DESIGN-PATTERNS.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/DESIGN-PATTERNS.md) | All 13 page patterns: purpose, when to use, folder structure, components, data flow, examples, rules |
+- Inspect an existing feature and its documentation before introducing a new pattern.
+- Keep HTTP calls in API/adaptor/query layers rather than view components.
+- Keep server results out of Zustand unless a feature explicitly owns a client-side editing model.
+- Use the shared fields, forms, page primitives, feedback states, dialogs, and custom data grid where their contracts fit.
+- Import Material UI icons from their individual paths.
+- Add translated user-facing text and verify RTL-sensitive layouts.
+- Do not describe scaffold-only patterns as implemented.
 
----
-
-## 4. Layer Architecture & Responsibilities
-
-IXApp uses a **feature-based layered modular architecture**:
-
-```text
-app
- ↓
-modules
- ↓
-patterns
- ↓
-shared
- ↓
-core
-```
-
-### Layer Responsibilities Matrix
-
-| Layer | Path | Responsibility |
-|---|---|---|
-| **`app`** | `src/app/` | Application startup, providers, root layouts, router setup, global Zustand stores, theme factory |
-| **`modules`** | `src/modules/` | Domain business features, business pages, domain hooks, services, validation schemas, domain types |
-| **`patterns`** | `src/patterns/` | Standardized page layout templates (Simple List, List & Details, Master Form, Workspace, Document) |
-| **`shared`** | `src/shared/` | Reusable generic UI components, fields, virtualized data grids, dialogs, action panes, FastTabs, lookups, logistics drawers |
-| **`core`** | `src/core/` | Low-level infrastructure: Axios client, API error mapper, auth session, RBAC engine, i18n setup, pure utilities |
-
----
-
-## 5. Strict Dependency Rules
-
-To prevent spaghetti code, circular dependencies, and architectural decay, the following dependency rules are strictly enforced:
-
-### Permitted Import Directions
-- `app` $\rightarrow$ `modules`, `patterns`, `shared`, `core`
-- `modules` $\rightarrow$ `patterns`, `shared`, `core`
-- `patterns` $\rightarrow$ `shared`, `core`
-- `shared` $\rightarrow$ `core`
-- `core` $\rightarrow$ External NPM packages only
-
-### Forbidden Import Directions
-- `core` MUST NOT import from `shared`, `patterns`, `modules`, or `app`.
-- `shared` MUST NOT import from `patterns`, `modules`, or `app`.
-- `patterns` MUST NOT import from `modules` or `app`.
-- **Cross-Module Isolation:** One business module MUST NOT import directly from another business module (`accounts-receivable` must not import from `general-ledger`).
-
----
-
-## 6. Naming Conventions & Code Standards
-
-- **React Components & Files:** `PascalCase.tsx` matching component export (e.g., `CustomerForm.tsx`, `LookupGrid.tsx`).
-- **Hooks:** `camelCase.ts` starting with `use` (e.g., `useLookupGridField.ts`, `useNotifications.ts`).
-- **Utilities & Services:** `camelCase.ts` (e.g., `formatUtils.ts`, `customerService.ts`).
-- **Constants & Storage Keys:** `UPPER_SNAKE_CASE` (e.g., `DEFAULT_PAGE_SIZE`, `VITE_API_BASE_URL`).
-- **Path Aliases:** Always use configured aliases (`@app/*`, `@core/*`, `@shared/*`, `@patterns/*`, `@modules/*`, `@mocks/*`, `@test/*`). Never use long relative path chains like `../../../../shared`.
-
----
-
-## 7. AI Decision Guidelines & Assistant Rules
-
-When an AI assistant receives requests to edit, refactor, or create code in IXApp, it **must adhere strictly** to the following decision rules:
-
-1. **Check Existing Components First:** Never create custom helper classes or ad-hoc field controls if a generic component exists in `@shared/components` (e.g., use `AppLookupGridField` for popover grid lookups, `FastTabs` for form sections).
-2. **Obey Material UI Icon Import Rule:** Never import icons from the barrel `@mui/icons-material`. Always use specific path imports (`import SearchIcon from '@mui/icons-material/Search'`) to prevent Vitest ESM test suite crashes.
-3. **No Direct Axios Calls in Views:** Page components and visual components must never call Axios directly. Always route HTTP operations through domain services or TanStack Query hooks.
-4. **State Tool Separation:** 
-   - Server data $\rightarrow$ TanStack Query (`useQuery`, `useMutation`).
-   - Form fields & validation $\rightarrow$ React Hook Form & Zod.
-   - Client UI state (sidebar open, theme mode) $\rightarrow$ Zustand.
-   - Do **NOT** duplicate API results or form inputs inside Zustand.
-5. **Preserve Bilingual & RTL Support:** All user-facing strings must use translation keys (`useTranslation`). Components must adapt layouts when `i18n.language === 'ar'`.
-6. **Theme Token Rules:** Never hardcode hex color strings (like `#000` or `#fff`) inside components. Use Material UI theme tokens (`palette.primary.main`, `palette.divider`, `palette.text.secondary`).
-7. **Empirical Verification:** Never declare a task complete without executing validation commands (`npm run typecheck`, `npm run test:run`, `npm run build`).
-
----
-
-## 8. Definition of Done Checklist
-
-A feature or refactoring task is complete when:
-- [ ] Code is placed in the correct architectural layer.
-- [ ] Dependency direction rules are strictly respected.
-- [ ] TypeScript interfaces are strongly typed with zero `any`.
-- [ ] Path imports for icons are used (`@mui/icons-material/IconName`).
-- [ ] All user-facing strings are localizable.
-- [ ] Unit or integration tests are added/updated in `src/test`.
-- [ ] `npm run typecheck` passes with **0 errors**.
-- [ ] `npm run test:run` passes cleanly (**0 failed tests**).
-- [ ] `npm run build` generates Vite production distribution bundle.
+See [Development guidelines](docs/development.md), [UI/UX and responsive standards](docs/ui-ux-and-responsive.md), and [Testing](docs/testing.md) for actionable guidance.

@@ -1,131 +1,35 @@
-# Testing Strategy & Guidelines (`src/test`)
+# Testing strategy (`src/test` and `e2e`)
 
-## 1. Purpose and Responsibilities
-The `test` directory contains test utilities, setup mocks, and automated test suites for **IXApp**. 
+## Tooling
 
-Testing ensures that components, forms, page patterns, routing, permissions, error mapping, and data grids perform reliably across light/dark themes and LTR/RTL locales.
+Vitest 4 runs in jsdom with React Testing Library, jest-dom, and user-event. `vite.config.ts` loads `src/test/setupTests.ts`, which initializes localization and supplies a `ResizeObserver` fallback. `src/test/testUtils.tsx` exports a custom render wrapped in `MemoryRouter` and `AppProviders`.
 
----
+The repository currently organizes tests by `app`, `core`, `shared`, `patterns`, `modules`, and `mocks`. Process Builder has UI/store and API-integration suites. Playwright runs desktop Chromium and Pixel 7 projects against Vite and stores traces/screenshots on failure.
 
-## 2. Technology Stack & Frameworks
-- **Test Runner:** Vitest (`vitest`)
-- **DOM Environment:** jsdom (`jsdom`)
-- **React Testing Utility:** React Testing Library (`@testing-library/react`)
-- **DOM Assertions:** `@testing-library/jest-dom`
-- **User Interactions:** `@testing-library/user-event`
-
----
-
-## 3. Folder Structure & Test Organization
-```text
-src/test/
-├── setupTests.ts              # Global setup & ResizeObserver polyfill
-├── testUtils.tsx              # Custom renderWithProviders wrapper
-├── app/                       # App layer integration tests
-│   ├── AppProviders.test.tsx
-│   ├── AppShell.test.tsx
-│   ├── Routing.test.tsx
-│   └── EnterpriseCore.test.tsx
-├── core/                      # Core infrastructure unit tests
-│   ├── errorMapper.test.ts
-│   ├── formatUtils.test.ts
-│   ├── localization.test.ts
-│   └── Permissions.test.tsx
-├── shared/                    # Shared controls component tests
-│   ├── DataGrid.test.tsx
-│   ├── Dialog.test.tsx
-│   ├── FormField.test.tsx
-│   ├── GridLookupReference.test.tsx
-│   ├── LogisticsAddress.test.tsx
-│   ├── Lookup.test.tsx
-│   ├── Notification.test.tsx
-│   └── PageHeader.test.tsx
-├── patterns/                  # Page pattern architecture tests
-│   └── PagePatterns.test.tsx
-├── modules/                   # Module scaffolding tests
-│   └── ModulesScaffolding.test.tsx
-└── mocks/                     # Mock service integration tests
-    └── MockServices.test.tsx
-```
-
----
-
-## 4. Vitest ESM Icon Import Rule (CRITICAL)
-**CRITICAL RULE:** Do NOT import icons from `@mui/icons-material` barrel index (`import { Delete } from '@mui/icons-material'`). Vitest ESM in JSDOM resolves barrel icon imports to `undefined`, causing test suite runtime failures.
-
-**Always use specific path imports:**
-```tsx
-// CORRECT:
-import DeleteIcon from '@mui/icons-material/Delete';
-import SearchIcon from '@mui/icons-material/Search';
-import CloseIcon from '@mui/icons-material/Close';
-```
-
----
-
-## 5. JSDOM & TanStack Virtualization Quirk
-In JSDOM test environments, DOM scroll containers have 0 height by default. `@tanstack/react-virtual` relies on container dimensions and will return an empty virtual items list (`virtualItems = []`).
-
-**Rule:** Grid and list controls (`DataGridBody.tsx`, `LookupGrid.tsx`) must include a fallback to render items directly when `virtualItems.length === 0`:
-```tsx
-const displayVirtualItems =
-  virtualItems.length > 0
-    ? virtualItems
-    : rows.map((_, index) => ({
-        index,
-        key: index,
-        start: index * rowHeight,
-        size: rowHeight,
-      }));
-```
-
----
-
-## 6. Test Utility & Provider Wrapper (`testUtils.tsx`)
-Always render components inside `renderWithProviders` or wrap with `QueryClientProvider` and `MemoryRouter`:
-
-```tsx
-import React from 'react';
-import { render } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router-dom';
-
-export function renderWithProviders(ui: React.ReactElement) {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  });
-
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter>{ui}</MemoryRouter>
-    </QueryClientProvider>
-  );
-}
-```
-
----
-
-## 7. Quality & Execution Commands
-Run the following scripts to validate codebase quality:
+## Commands
 
 ```bash
-# Run unit tests
 npm run test:run
-
-# Run TypeScript type check
+npm run test:coverage
+npm run test:e2e
+npm run test:e2e:list
 npm run typecheck
-
-# Run ESLint validation
 npm run lint
-
-# Run Vite production build
+npm run audit:static
 npm run build
 ```
 
----
+Coverage uses V8 with text, HTML, and JSON-summary reporters. Current configured minimums are 20% statements/functions/lines and 15% branches; they are a floor, not a target for new code.
 
-## 8. Do's and Don'ts
-- **DO:** Use accessible queries (`getByRole`, `getByLabelText`, `getByText`) to test user-facing behavior.
-- **DO:** Polyfill `ResizeObserver` in `setupTests.ts`.
-- **DON'T:** Test private component implementation details or internal state variables.
-- **DON'T:** Use barrel icon imports anywhere in `@shared`, `@patterns`, or `@modules`.
+## Testing conventions
+
+- Render through `@test/testUtils` unless a test intentionally needs a custom provider/router.
+- Reset module stores, browser storage, mocks, and query state in test setup when state can leak.
+- Prefer accessible role/name queries and user-level interactions.
+- Mock API adapters at their module boundary and assert DTO/envelope integration for complex saves.
+- Test loading, error, empty, permission, validation, success, and responsive branches that the feature exposes.
+- Use stable deterministic fixtures; avoid array-index identity assertions.
+
+## Known environment considerations
+
+TanStack Virtual sees zero-sized containers in jsdom. Grid and lookup implementations include a direct-row fallback when no virtual items are measured; preserve it. Import MUI icons through specific paths because the architecture gate forbids the icon barrel. Browser-only behavior such as responsive shell layout and drag interactions may require Playwright coverage in addition to jsdom tests.

@@ -1,34 +1,30 @@
-# Shared Layer Master Documentation (`src/shared`)
+# Shared layer (`src/shared`)
 
-## 1. Purpose and Responsibilities
-The `shared` layer contains reusable UI controls, generic enterprise components, form fields, virtualized data grids, dialogs, action panes, FastTabs, lookups, logistics drawers, and generic hooks for **IXApp**.
+The shared layer contains domain-agnostic UI, hooks, services, validation helpers, types, and utilities. It may depend on `core` but not on `app`, `patterns`, or business modules.
 
-All components in the `shared` layer are **100% domain-agnostic**. They must never contain hardcoded business rules, domain-specific endpoints, or module-specific state.
+## Component families
 
----
+| Family | Guide | Notable exports |
+| --- | --- | --- |
+| Action pane | [action-pane.md](shared/action-pane.md) | `ActionPane`, groups, buttons, menus, enterprise CRUD/utilities |
+| Common | this page | `AppIconButton`, `AppMenu`, `AppTooltip`, `AsyncBoundary`, `ResponsiveStack`, `VisuallyHidden` |
+| Data grid | [data-grid.md](shared/data-grid.md) | `DataGrid`/`AppDataGrid`, toolbar, mobile body, sidebar, grid hooks |
+| Dialogs | [dialogs.md](shared/dialogs.md) | base, confirmation, delete, form, process, history, lookup dialogs |
+| FastTabs | [fast-tabs.md](shared/fast-tabs.md) | `FastTabs`, `FastTab`, header and summary |
+| Feedback | [feedback.md](shared/feedback.md) | loading, error, empty, no-results, access-denied, alert/notification |
+| Fields | [fields.md](shared/fields.md) | text, number, currency, date/time, select, enum, lookup, generated code |
+| Forms | [forms.md](shared/forms.md) | layout, entity form, validation summaries, local entity-form hook |
+| Logistics | [logistics.md](shared/logistics.md) | postal and electronic-address drawers |
+| Lookups | [lookups.md](shared/lookups.md) | virtualized grid lookup, form wrapper, dialog lookup |
+| Page | [page.md](shared/page.md) | page structure, related information, utility rail, unsaved guard |
+| Status | this page | `StatusBadge`, `RecordStatus`, `DocumentStatus` alias |
 
-## 2. Dedicated Sub-Folder Documentation Index
+## Other shared areas
 
-Every component sub-folder inside `src/shared/` has a dedicated documentation specification:
+- `hooks`: documented in [hooks.md](shared/hooks.md).
+- `services`: notifications, preferences/storage, and logistics fixture adapter.
+- `validation`: common Zod schemas, messages, and issue mapping.
+- `types`: actions, forms, logistics, navigation, page, and record contracts.
+- `utilities` and `utils`: pure UI/domain-neutral helpers, documented in [utilities.md](shared/utilities.md).
 
-| Sub-Folder / Component | Dedicated Documentation File | Description |
-|---|---|---|
-| **Action Pane** | [`docs/shared/action-pane.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/action-pane.md) | D365 F&O-style grouped action toolbars & RBAC command guards |
-| **Data Grid** | [`docs/shared/data-grid.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/data-grid.md) | `AppDataGrid` virtualized data table, inline editing, persistence, CSV export |
-| **Dialogs** | [`docs/shared/dialogs.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/dialogs.md) | Modal dialog container (`AppDialog`), confirmation & delete warning dialogs |
-| **FastTabs** | [`docs/shared/fast-tabs.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/fast-tabs.md) | Collapsible form section accordions with summary text & error chips |
-| **Feedback States** | [`docs/shared/feedback.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/feedback.md) | Standardized loading, empty result, error alert, and access denied states |
-| **Form Fields** | [`docs/shared/fields.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/fields.md) | React Hook Form input controls (`AppTextField`, `AppSelectField`, `AppLookupGridField`) |
-| **Form Layouts** | [`docs/shared/forms.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/forms.md) | 12-column responsive layout wrappers (`FormRow`, `FormColumn`) & error banners |
-| **Logistics Drawers** | [`docs/shared/logistics.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/logistics.md) | Slide-out right drawers for postal addresses & electronic contact channels |
-| **Grid Lookups** | [`docs/shared/lookups.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/lookups.md) | Virtualized multi-column popover table dropdowns & RBAC field guards |
-| **Page Layouts** | [`docs/shared/page.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/page.md) | Structural page containers (`PageContainer`, `PageHeader`, `PageContent`, `PageSection`) |
-| **Shared Hooks** | [`docs/shared/hooks.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/hooks.md) | Generic hooks (`useNotifications`, `useDebounce`, `useLogisticsAddress`, `useLookupGridField`) |
-| **Shared Utilities** | [`docs/shared/utilities.md`](file:///c:/Users/Omar.Qaid/Desktop/IAX/IXApp/docs/shared/utilities.md) | Helper functions for column localization, action filtering, and grid exports |
-
----
-
-## 3. Strict Architecture & Dependency Rules
-- **Allowed Dependencies:** `@shared` $\rightarrow$ `@core`.
-- **Forbidden Dependencies:** `@shared` MUST NOT import from `@patterns`, `@modules`, or `@app`.
-- **Vitest ESM Icon Import Rule:** Icons MUST NOT be imported from `@mui/icons-material` barrel index. Always use specific path imports (`import AddIcon from '@mui/icons-material/Add'`).
+Shared components are not universally mandatory. Use them when their public contract fits; specialized pattern internals may use MUI primitives directly. Keep business labels, endpoints, permissions, and data mapping at the caller boundary.

@@ -1,49 +1,15 @@
-# List + Details Page
+# List-details pattern
 
-## 1. Pattern Purpose & When to Use It
-- **Purpose**: A side-by-side split view with a record browser grid on the left and comprehensive detail FastTabs on the right.
-- **When to Use**: - Customers, Vendors, Products, Employees master pages.
+`ListDetailsPage` supports two contracts.
 
-## 2. UI Structure & Layout
-Left pane: 30-40% width DataGrid. Right pane: 60-70% width FastTabs detail form.
+## Standard variant
 
-## 3. Page Sections & Components
-- PageHeader
-- ActionPane
-- Split Grid View (Left DataGrid list, Right FastTabs details)
+The legacy/default variant accepts `title`, optional subtitle/action pane, `DataGridProps`, optional detail pane, loading, selection, and dialogs.
 
-## 4. Folder Structure
-```text
-src/patterns/list-details/
-├── ListDetailsPage.tsx
-├── ListDetailsLayout.tsx
-└── types.ts
-```
+## Enterprise variant
 
-## 5. Required Reusable Components
-- AppDataGrid
-- FastTabs
-- LogisticsPostalAddressDrawer
+`variant="enterprise"` accepts `EnterpriseListDetailsConfig<T>`. It supports static, controlled, or remote repositories; list or grid master presentation; search/filter and related-information panels; CRUD permissions; synchronous/async validation; typed detail sections/fields; number-sequence metadata; optional pane resizing/persistence; and confirmation around destructive or dirty transitions.
 
-## 6. Data Flow & State Management
-- **Data Flow**: Row selected in left grid -> loads right detail form via TanStack Query.
-- **State Management**: - Unsaved changes check when switching left grid rows.
+Module examples include currency, legal entity, number sequence, workflow process/step/activity, payment mode, and payment term pages. Define mapping functions (`getValues`/`setValues`) and `createRecord` at the module boundary. Remote repositories receive an `AbortSignal` for loads and explicit create/update/delete functions.
 
-## 7. Actions & Commands
-- New Record, Save Details, Delete Record, Refresh List
-
-## 8. Validation Rules
-- Validate detail form fields on change/submit.
-
-## 9. Naming Conventions & Best Practices
-- **Naming Conventions**: - ListDetails*.tsx
-- **Best Practices**: - Collapse left grid on small mobile screens.
-
-## 10. Do's and Don'ts Rules
-DO: Prompt on unsaved changes when clicking another row.
-DON'T: Lose modified detail form input.
-
-## 11. Implementation Example
-```tsx
-// ListDetailsPage usage
-```
+Use stable record IDs and do not mix a second uncontrolled form state with the pattern draft.

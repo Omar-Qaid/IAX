@@ -1,122 +1,25 @@
-# App Shell Components Documentation (`src/app/shell`)
+# Application shell (`src/app/shell`)
 
-## 1. Purpose and Responsibilities
+`AppShell` is the protected application frame. It renders the fixed `AppTopBar`, optional `AppSidebar`, scrollable main content, and the singleton command palette, notification drawer, and settings drawer.
 
-The `app-shell` sub-system provides the main enterprise application frame for **IXApp**. Inspired by Microsoft Dynamics 365 Finance & Operations, it wraps pages with a top navigation bar, dynamic sidebar navigation, quick command palette (`Ctrl+K`), notification drawer, application settings panel, and breadcrumb navigation.
+## Components
 
----
+- `AppTopBar`: product/module navigation, breadcrumbs in vertical mode, company display, command search, notifications, settings, help/feedback affordances, and account/logout menu.
+- `AppSidebar`: vertical/mini module navigation and mobile drawer behavior.
+- `ModuleNavPanel`: permission-filtered module sections and links.
+- `AppCommandPalette`: keyboard/page search dialog; the store controls its visibility.
+- `AppNotificationDrawer`: notification history surface backed by the shared notification store.
+- `AppSettingsDrawer`: edits preference-store theme, density, direction, navigation, typography, and zoom values.
+- `CompanySelector`, `GlobalSearch`, `NotificationMenu`, and `UserMenu`: smaller shell controls; not all are mounted directly by the current top bar.
 
-## 2. Folder Structure
+## State and permissions
 
-```text
-src/app/
-├── navigation/
-│   ├── NavItem.tsx
-│   ├── NavSection.tsx
-│   └── PageBreadcrumbs.tsx
-└── shell/
-    ├── AppShell.tsx               # Main layout frame container
-    ├── AppTopBar.tsx              # Top bar and module navigation
-    ├── AppSidebar.tsx             # Collapsible module navigation sidebar
-    ├── AppCommandPalette.tsx      # Quick command palette modal (Ctrl+K)
-    ├── AppNotificationDrawer.tsx  # Slide-out notification center drawer
-    ├── AppSettingsDrawer.tsx      # Application visual preferences drawer
-    ├── CompanySelector.tsx        # Legal entity / company selection dropdown
-    ├── GlobalSearch.tsx           # Application search control
-    ├── ModuleNavPanel.tsx         # Module navigation panel
-    ├── NotificationMenu.tsx       # Compact notification menu
-    └── UserMenu.tsx               # User profile and logout menu
-```
+The shell reads `useNavigationStore`, `usePreferenceStore`, `useAppStore`, `useNotificationStore`, and `useAuth`. Navigation links are filtered by page registration and permission. `SystemAdmin`, wildcard permission, or the exact permission grants access through the auth service.
 
----
+## Layout behavior
 
-## 3. Naming Conventions
+The top bar height is `LAYOUT.TOPBARHEIGHT` (58 px). Main content uses a flex layout with controlled overflow. Vertical navigation uses expanded or collapsed sidebar widths; horizontal navigation removes the sidebar. Below `md`, content takes full width and the menu button opens mobile navigation. A skip link targets `#main-content`.
 
-- **Components:** `PascalCase.tsx` prefixed with `App` (e.g., `AppShell.tsx`, `AppTopBar.tsx`, `AppSidebar.tsx`).
+Do not place feature commands in the top bar; use a page `ActionPane`. Do not calculate page widths from sidebar constants; the shell already provides the available content area.
 
----
-
-## 4. Components
-
-- **`AppShell`:** Top-level container managing layout spacing, main scroll container, and persistent drawers.
-- **`AppTopBar`:** Top app bar featuring global search trigger, company selector, notification bell badge, settings button, and user profile menu.
-- **`AppSidebar`:** Multi-level navigation tree supporting mini-collapsed state and full-expanded module navigation.
-- **`AppCommandPalette`:** Shortcut search dialog (`Ctrl+K` or search click) allowing instant jump to any page or module command.
-
----
-
-## 5. Hooks & Integrations
-
-- Reads global UI preferences from `useNavigationStore` and `usePreferenceStore`.
-
----
-
-## 6. Services & APIs
-
-Contains zero direct API calls. Interacts with `useNavigationStore` for menu navigation states.
-
----
-
-## 7. State Management
-
-- Sidebar open/collapsed state: Zustand `useNavigationStore`.
-- Search query and modal states: Local component state.
-
----
-
-## 8. Design Patterns
-
-- **Container / Frame Pattern:** Wraps active page views inside consistent top bar and side navigation bounds.
-- **Responsive Drawer Pattern:** Permanent drawer on desktop, auto-collapsing overlay drawer on mobile.
-
----
-
-## 9. Architecture & Dependencies
-
-- **Dependencies:** `@mui/material`, application stores/configuration/routes, reusable `shared` UI, and `core` localization/authentication.
-- **Forbidden:** Must not depend on domain business modules (`@modules/*`).
-
----
-
-## 10. Data Flow
-
-`AppShell` mounts `AppTopBar` and `AppSidebar` $\rightarrow$ reads `useNavigationStore` for sidebar width calculation $\rightarrow$ renders `<PageBreadcrumbs />` and page `children` inside `<main>` scroll container.
-
----
-
-## 11. Best Practices
-
-- Keep top bar height fixed (`LAYOUT.TOPBARHEIGHT = 48px`).
-- Ensure sidebar transitions smoothly between collapsed ($64\text{px}$) and expanded ($240\text{px}$) widths.
-
----
-
-## 12. Do's and Don'ts
-
-- **DO:** Support keyboard shortcut `Ctrl+K` for command palette.
-- **DON'T:** Place page-level action buttons inside `AppTopBar`. Action buttons belong in `ActionPane`.
-
----
-
-## 13. Common Mistakes
-
-- **Mistake:** Hardcoding sidebar width in page components.
-- **Correction:** Let `AppShell` calculate content bounds dynamically using `finalSidebarWidth`.
-
----
-
-## 14. Code Example
-
-```tsx
-export function CustomLayout({ children }: { children: React.ReactNode }) {
-  return <AppShell>{children}</AppShell>;
-}
-```
-
----
-
-## 15. Decision Rules & Checklist
-
-- [ ] Does topbar render correctly in RTL mode?
-- [ ] Is `AppCommandPalette` triggered by `Ctrl+K`?
-- [ ] Is mobile breakpoint handled cleanly?
+See [Routing and layouts](routing-and-layouts.md) and [UI/UX and responsive design](ui-ux-and-responsive.md).

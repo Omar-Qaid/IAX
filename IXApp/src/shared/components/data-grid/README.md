@@ -1,27 +1,19 @@
-# AdvancedDataGrid Features & Specifications
+# Custom DataGrid subsystem
 
-This document outlines the core features, keyboard shortcuts, and specific behaviors implemented in the `AdvancedDataGrid` component. **Do not remove or alter these features without explicit approval**, as they form the core user experience for fast, Excel-like data entry.
+## Overview
 
-## 1. Excel-Like Keyboard Navigation
-The grid provides a robust, keyboard-first navigation experience similar to Excel:
-- **Arrow Keys (`Up`, `Down`, `Left`, `Right`)**: Navigate focus seamlessly between individual cells.
-- **`Tab` / `Shift+Tab`**: Moves focus to the next or previous cell. Automatically wraps to the next/previous row when reaching the edge.
-- **`Home` / `End`**: Instantly jumps to the first or last column in the current row.
-- **`PageUp` / `PageDown`**: Jumps up or down by 10 rows for fast scrolling.
+`DataGrid.tsx` exports `DataGrid` and the `AppDataGrid` compatibility alias. This is a project-owned grid built from Material UI and TanStack Virtual, not MUI X.
 
-## 2. Inline Row Editing Workflow
-The inline editing system is optimized to never require a mouse click:
-- **Start Editing (`Enter` or `F2`)**: Pressing `Enter` or `F2` on a focused cell immediately switches the row to edit mode and *automatically focuses the input field* of that exact cell so you can start typing instantly.
-- **Save Changes (`Enter`)**: While editing an input, pressing `Enter` saves the changes and restores keyboard focus back to the grid. (Note: `Enter` is disabled for textareas to allow multiline input).
-- **Cancel Editing (`Escape`)**: Pressing `Escape` aborts the edit and gracefully returns focus to the grid cell you were previously highlighting.
-- **Adjacent Cell Editing (`ArrowLeft` / `ArrowRight`)**: If you are typing inside an input and your text cursor reaches the very end (or very beginning) of the text, pressing the arrow key again will automatically jump focus to the next/previous cell's input in that row, allowing continuous horizontal data entry.
+## Structure
 
-## 3. UI and Toolbar Optimizations
-- **No Bulky Edit Buttons**: The explicit "Save" and "Cancel" buttons in the toolbar have been permanently removed to maximize screen real estate, as the keyboard workflow (`Enter` / `Escape`) entirely replaces them.
-- **Responsive Search**: A dynamic global search input that collapses on mobile views.
+| Area | Responsibility | Documentation |
+| --- | --- | --- |
+| Root files | Public grid, toolbar, states, mobile body, filters, factories, types, utilities | This document |
+| `body` | Virtual row/cell rendering, skeletons, row context menu | [README](body/README.md) |
+| `header` | Sorting, filter popovers, pinned headers, header menus | [README](header/README.md) |
+| `hooks` | Processing, data source, selection, editing, layout, persistence, autosize/load-more | [README](hooks/README.md) |
+| `sidebar` | Column, filter, and feature panels | [README](sidebar/README.md) |
 
-## 4. Row Selection Behavior
-- When navigating the grid with arrow keys, the internal row selection state (`selectionMode`) automatically follows your focused cell. 
+At widths below the Material UI `md` breakpoint, `DataGridMobileBody` replaces the desktop table body. Features supply stable row IDs, columns, data/mutations, and controlled behavior where required.
 
----
-*Note for AI/Future Developers: The focus management relies heavily on the `focusCell` method querying the DOM for `[data-row-index]` and `[data-col-index]` attributes, and resolving `<input>` tags inside them. Do not break these data attributes.*
+[Complete DataGrid guide](../../../../docs/shared/data-grid.md) · [Responsive standards](../../../../docs/ui-ux-and-responsive.md)

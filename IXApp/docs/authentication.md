@@ -1,30 +1,28 @@
-# Authentication and session contract
+# Authentication and authorization
 
-IXApp has separate authentication adapters for development mock mode and the production IXApi contract.
+IXApp selects one `AuthAdapter` in `core/auth/authService.ts`: the API adapter when mock mode is off and `mockAuthAdapter` when `VITE_ENABLE_MOCK_API=true`.
 
-Local interactive development uses the real IXApi HTTP development endpoint at `http://localhost:33319/api`.
-Automated tests use `.env.test` and the explicit mock adapter; changing test mode does not silently change interactive login behavior.
+## API contract
 
-## Verified IXApi endpoints
+- `POST /v1/Auth/login` accepts username/password and returns an `ApiResponse` containing `accessToken`.
+- `GET /v1/Auth/me` returns the current user, roles, and permissions.
+- `POST /v1/Auth/refresh-token` returns a replacement access token and requires the current bearer token.
+- `POST /v1/Auth/logout` revokes the current token when the backend is reachable.
 
-- `POST /api/v1/Auth/login` accepts `{ username, password }` and returns an API envelope containing `accessToken`.
-- `GET /api/v1/Auth/me` returns the current user, roles, and permissions.
-- `POST /api/v1/Auth/refresh-token` issues a new access token but requires the existing bearer token to remain valid.
-- `POST /api/v1/Auth/logout` revokes the current JWT by its `jti` until expiration.
+The auth adapter has its own Axios client to avoid recursive use of the normal token-refresh interceptor.
 
-The backend does not currently issue a refresh token or authentication cookie. IXApp therefore renews a JWT proactively during the final minute before expiry. An expired token cannot be renewed and requires a new login.
+## Session lifecycle
 
-## Browser storage and security boundary
+The access token is held in memory and mirrored to `sessionStorage`. Legacy local-storage auth values are removed. On reload, `AuthProvider` calls `/Auth/me` when a token exists; it does not trust a stored user profile. During the final minute before JWT expiry, `ensureFreshAccessToken` coordinates one in-flight renewal. An already expired token is cleared and cannot be renewed by the current contract.
 
-The access token is held in memory and mirrored to `sessionStorage` so a same-tab reload can restore the session. Legacy `localStorage` authentication values are removed during migration. `sessionStorage` reduces persistence but remains readable by JavaScript, so preventing script injection remains mandatory. Moving renewal to an HttpOnly, Secure, SameSite cookie requires a separate backend contract change.
+`401` clears the session and query cache through the auth event flow. `403` is an authorization failure and does not sign the user out. Logout clears local user/query state even if server revocation fails.
 
-User profiles are not trusted from browser storage. On production bootstrap, IXApp calls `/Auth/me` to restore the authenticated user and fresh roles and permissions.
+## Guards and permissions
 
-## Request behavior
+`RouteGuard` protects routes, redirects anonymous users to `/login`, and preserves a safe return path. `PermissionGuard` conditionally renders a component subtree. Permission checks grant access to `SystemAdmin`, wildcard `*`, or an exact permission string; otherwise they fail closed.
 
-- Authenticated requests receive the current bearer token.
-- Requests include `X-Company` when a company is selected.
-- Near-expiry tokens are renewed through one shared in-flight refresh operation.
-- `401` clears the local session and query cache, then protected routes redirect to login.
-- `403` remains an authorization error and does not destroy an otherwise valid session.
-- Logout clears local identity and query state even if server-side revocation cannot be reached.
+Navigation and page registry entries should use constants from `core/permissions/permissions.ts`. UI guards improve usability but do not replace backend authorization.
+
+## Mock mode
+
+The mock adapter exposes `MOCK_USER`, accepts any submitted username, and stores a mock token. This behavior is for tests/mock mode only and must not be described as the production login contract.

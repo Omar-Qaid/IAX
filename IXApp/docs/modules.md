@@ -1,140 +1,35 @@
-# Business Modules Layer Documentation (`src/modules`)
+# Business modules (`src/modules`)
 
-## 1. Purpose and Responsibilities
+Modules own domain pages, DTOs/view models, APIs or repository adapters, queries, validation, and feature-specific components. They may compose `patterns`, `shared`, and `core`, but direct imports between top-level business modules are rejected by the architecture audit.
 
-The `modules` layer contains the domain-specific business features for **IXApp**. Each module owns its domain pages, business components, domain hooks, feature services, validation schemas, and TypeScript interfaces.
+## Current modules
 
-Modules compose reusable page patterns from `@patterns` and generic UI components from `@shared` to deliver complete enterprise business capabilities.
+| Module | Implemented pages and behavior |
+| --- | --- |
+| `identity` | Login form using `AuthContext` and the configured auth adapter. |
+| `dashboard` | `WorkspacePage` populated from the shared mock datasets. |
+| `finance/accounts-receivable` | Customer and customer-group lists, parameter setup, payment mode/term list-details pages, sales-order list and document view. Several pages currently use module-local state or shared mock datasets rather than HTTP. |
+| `finance/foundation` | Currency and exchange-rate-type API-backed pages; exchange-rate details currently use local page data. |
+| `administration` | API/mock repository settings forms with TanStack Query; API-backed number-sequence list-details page. |
+| `organization` | Legal-entity list-details page using a repository interface selected between API and mock adapters, plus logistics drawers. |
+| `workflow` | API-backed process/category/type/control/priority/variable/step/activity setup pages and reusable workflow APIs. |
+| `process-builder` | Multi-workspace workflow designer integrating process, activity, request-control, option, validation, and transition APIs. See [Process Builder](process-builder.md). |
 
----
+## Observed implementation styles
 
-## 2. Folder Structure
+The project does not require every module to contain every possible subfolder. Use only the folders a feature needs:
 
-```text
-src/modules/
-├── identity/                  # Authentication and identity experience
-│   └── pages/LoginPage.tsx
-├── dashboard/                 # Enterprise dashboard workspace
-│   └── pages/DashboardPage.tsx
-├── finance/                   # Finance bounded context
-│   ├── foundation/            # Currency and exchange-rate foundation
-│   │   └── pages/
-│   └── accounts-receivable/   # Customer and sales-order capabilities
-│       └── pages/
-└── system-administration/     # System setup and settings
-    └── pages/ApplicationSettingsPage.tsx
-```
+- `api/` for HTTP DTO mapping and resource operations;
+- `adapters/` plus `services/` when API/mock implementations share a repository contract;
+- `queries/` for reusable TanStack Query hooks and key factories;
+- `components/`, `pages/`, `types/`, and `validation/` as appropriate.
 
----
+Existing workflow setup pages intentionally share `WorkflowSetupListPage` and `createWorkflowMasterApi`. Enterprise list/detail pages often pass a remote data-source contract directly to their pattern instead of defining a separate query hook.
 
-## 3. Standard Feature Folder Layout
+## Module rules
 
-Every feature within a business module follows this internal structure:
-
-```text
-feature-name/
-├── components/                # Domain-specific components
-├── hooks/                     # Custom React Query & form hooks
-├── pages/                     # Feature page components
-├── services/                  # Feature API service functions
-├── validation/                # Zod schema definitions
-├── types/                     # Feature TypeScript interfaces
-├── constants/                 # Feature constants & query keys
-└── index.ts                   # Public feature exports
-```
-
----
-
-## 4. Representative Modules & Pages
-
-### 4.1 Accounts Receivable (`@modules/finance/accounts-receivable`)
-
-- **`CurrenciesPage.tsx`:** Validates `SimpleListPage` pattern. Manages Currency code, Name, Symbol, Decimals, and Active state with page-level Save/Cancel.
-- **`CustomerGroupListPage.tsx`:** Manages Customer Group ID, Name, Default Currency, and Payment Terms using the Currency lookup.
-- **`CustomerListPage.tsx`:** Implements the dense customer list pattern with command actions, field-aware filtering, and a bilingual customer grid.
-- **`SalesOrdersPage.tsx` & `SalesOrderPage.tsx`:** Validates `DocumentPage` pattern. Features order header form, lines DataGrid with real-time totals calculation, and process actions (Confirm, Post, Cancel).
-
-### 4.2 Dashboard (`@modules/dashboard`)
-
-- **`DashboardPage.tsx`:** Validates `WorkspacePage` pattern. Displays KPI summary tiles (Total Customers, Open Sales Orders, Monthly Sales, Overdue Balance), recent orders DataGrid, and quick links.
-
-### 4.3 System Administration (`@modules/system-administration`)
-
-- **`ApplicationSettingsPage.tsx`:** Validates `MasterFormPage` pattern. Features tabbed setup sections for General settings, Localization, UI Preferences, and API Configuration.
-
----
-
-## 5. Domain Service Architecture
-
-Module services wrap API calls or mock repositories behind a clean contract:
-
-```ts
-export const customerService = {
-  getPaged: async (params: PaginationParameters): Promise<PagedResult<Customer>> => {
-    if (environment.enableMockApi) return mockCustomerRepository.getPaged(params);
-    const { data } = await apiClient.get<PagedResult<Customer>>('/customers', { params });
-    return data;
-  },
-  getById: async (id: string | number): Promise<Customer> => {
-    if (environment.enableMockApi) return mockCustomerRepository.getById(id);
-    const { data } = await apiClient.get<Customer>(`/customers/${id}`);
-    return data;
-  },
-  save: async (customer: Customer): Promise<Customer> => {
-    if (environment.enableMockApi) return mockCustomerRepository.save(customer);
-    const { data } = await apiClient.post<Customer>('/customers', customer);
-    return data;
-  },
-};
-```
-
----
-
-## 6. Dependency & Isolation Rules
-
-- **Allowed Dependencies:** `@modules` $\rightarrow$ `@patterns`, `@shared`, `@core`.
-- **Forbidden Dependencies:**
-  - `@modules` must **never** be imported by `@shared`, `@patterns`, or `@core`.
-  - **Cross-Module Prohibition:** One business module must **never** import directly from another business module (`accounts-receivable` must not import from `accounts-payable`).
-
----
-
-## 7. Cross-Module Communication
-
-When a feature in Module A requires data or services from Module B:
-
-1. Move the shared type or contract to `@core/types` or `@shared/types`.
-2. Move the shared lookup service to `@shared/services` or resolve via backend REST API endpoints.
-
----
-
-## 8. Best Practices
-
-- Every module must export its public interface via `index.ts`.
-- Page components inside modules should remain thin orchestrators that delegate rendering to `@patterns` and `@shared` components.
-- Domain validation schemas must be defined with Zod inside `@modules/module-name/validation/`.
-
----
-
-## 9. Do's and Don'ts
-
-- **DO:** Keep domain logic and feature services inside their respective module folders.
-- **DO:** Use `environment.enableMockApi` inside services to support seamless switching to backend endpoints.
-- **DON'T:** Create direct cross-module imports between business features.
-- **DON'T:** Put raw Axios calls inside React page components.
-
----
-
-## 10. Decision Rules & Checklist
-
-- [ ] Is the feature placed inside the correct domain module folder?
-- [ ] Are public feature exports declared in `index.ts`?
-- [ ] Does the service fallback cleanly to mock data when `VITE_ENABLE_MOCK_API=true`?
-- [ ] Are Zod validation schemas typed and aligned with entity interfaces?
-
----
-
-## 11. Performance Considerations
-
-- Module pages are lazy-loaded in `routeConfig.tsx` to ensure code-splitting per business area.
-- Query invalidation in domain hooks is strictly scoped to the feature's query key prefix (e.g. `['customers']`).
+- Keep DTO conversion and API-envelope handling at the module boundary.
+- Do not call raw Axios from visual components; use `apiClient` in an API/repository.
+- Do not claim mock support unless the feature selects a real mock adapter or consumes a mock dataset.
+- Put feature query keys beside the feature and invalidate the narrowest stable prefix.
+- Pages may use a custom layout when a specialized workflow requires it, as Process Builder does; reusable behavior should still be extracted to the appropriate layer.

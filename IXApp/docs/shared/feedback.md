@@ -1,97 +1,15 @@
-# Feedback Components Documentation (`src/shared/components/feedback`)
+# Feedback components
 
-## 1. Purpose and Responsibilities
+The feedback family provides explicit async and result states:
 
-The `feedback` sub-system provides standardized UI state indicators for **IXApp**. It ensures that async network operations, empty search results, API server errors, and permission restrictions render consistent, user-friendly visual feedback.
+- `LoadingState`: spinner and optional message.
+- `ErrorState`: title/message and optional retry callback.
+- `EmptyState`: title/message and optional action.
+- `NoResultsState`: filtered-empty state with optional clear action.
+- `EmptyDataWatermark`: lightweight grid/form watermark.
+- `AccessDeniedState`: route-agnostic authorization message with optional action.
+- `AppAlert` and `AppNotification`: reusable alert/snackbar wrappers.
 
----
+The app-owned `AppAccessDeniedState` adds navigation behavior for routes. Global operation notifications are queued by `useNotificationStore` and rendered one at a time by `NotificationProvider`.
 
-## 2. Folder Structure
-
-```text
-src/shared/components/feedback/
-├── LoadingState.tsx           # Circular spinner & loading text indicator
-├── EmptyState.tsx             # No data / empty filter result state with optional action
-├── ErrorState.tsx             # Error alert card with retry action button
-└── AccessDeniedState.tsx      # Restricted resource lock warning state
-```
-
----
-
-## 3. Naming Conventions
-
-- **Components:** `PascalCase.tsx` ending with `State` (e.g., `LoadingState.tsx`, `EmptyState.tsx`, `ErrorState.tsx`, `AccessDeniedState.tsx`).
-
----
-
-## 4. Components
-
-- **`LoadingState`:** Renders centered `CircularProgress` and optional localized message.
-- **`EmptyState`:** Renders empty icon, title, description, and optional primary action button (e.g., `"Create Customer"`).
-- **`ErrorState`:** Renders alert icon, localized error message (`AppError`), and optional `"Retry"` button.
-- **`AccessDeniedState`:** Renders a route-agnostic security lock state with optional caller-supplied action label and callback. Application routes supply dashboard navigation through an app-owned adapter.
-
----
-
-## 5. Hooks & Integrations
-
-Integrates with `useTranslation` for localized feedback messages.
-
----
-
-## 6. Services & APIs
-
-Contains zero direct API calls. Re-executes fetch queries via `onRetry` callbacks.
-
----
-
-## 7. State Management
-
-Stateless presentation components driven by parent query status (`isLoading`, `isError`, `data.length === 0`).
-
----
-
-## 8. Design Patterns
-
-- **State Indicator Pattern:** Replaces complex conditional JSX with explicit state components (`if (isLoading) return <LoadingState />`).
-
----
-
-## 9. Architecture & Dependencies
-
-- **Dependencies:** `@mui/material`, `@core/localization`.
-- **Forbidden:** No business module imports (`@modules/*`).
-
----
-
-## 10. Best Practices
-
-- Always provide an `onRetry` callback in `ErrorState` when using TanStack Query (`refetch`).
-- Use `EmptyState` when filter search yields zero rows to guide users on next actions.
-
----
-
-## 11. Do's and Don'ts
-
-- **DO:** Render `LoadingState` during initial page data fetches.
-- **DON'T:** Leave blank white screens during async network loading.
-
----
-
-## 12. Code Example
-
-```tsx
-if (isLoading) return <LoadingState message="Fetching customers..." />;
-if (isError) return <ErrorState message={error.message} onRetry={refetch} />;
-if (data.length === 0)
-  return (
-    <EmptyState title="No customers found" actionText="New Customer" onAction={handleCreate} />
-  );
-```
-
----
-
-## 13. Decision Rules & Checklist
-
-- [ ] Are loading, error, and empty states explicitly handled in page components?
-- [ ] Does `ErrorState` provide a retry button?
+Handle initial loading before empty data, preserve retry for recoverable fetch errors, and keep validation errors close to the form. Do not render a blank page while a request is pending or failed.
