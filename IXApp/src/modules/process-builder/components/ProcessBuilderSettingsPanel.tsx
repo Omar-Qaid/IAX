@@ -19,8 +19,9 @@ import AccountTree from '@mui/icons-material/AccountTree';
 import IconButton from '@mui/material/IconButton';
 import { useProcessBuilderStore } from '../store/useProcessBuilderStore';
 import { ConditionBuilder } from './ConditionBuilder';
-import { activityPalette, controlPalette } from './ProcessBuilderPalette';
+import { controlPalette } from './ProcessBuilderPalette';
 import type {
+  BuilderActivityType,
   BuilderStep,
   BuilderTransition,
   BuilderValidation,
@@ -39,6 +40,13 @@ const categoryLookupColumns = [
 ] as const;
 
 const requestOptionControlTypes = new Set(['dropdown-manual', 'checkboxlist', 'radiobuttonlist']);
+const activityTypeOptions: ReadonlyArray<{ type: BuilderActivityType; label: string }> = [
+  { type: 'approval', label: 'Approval' },
+  { type: 'review', label: 'Review' },
+  { type: 'data-entry', label: 'Data Entry' },
+  { type: 'api', label: 'API Action' },
+  { type: 'notification', label: 'Notification' },
+];
 
 const fetchCategoryPage = async ({
   pageNumber,
@@ -451,6 +459,29 @@ export function ProcessBuilderSettingsPanel() {
       onChange={(e) => onChange(e.target.value)}
     />
   );
+  if (selected.kind === 'workspace') {
+    const workspaceSettings: Record<number, { title: string; message: string }> = {
+      1: { title: 'Variables Settings', message: 'Add or select a variable to edit its settings.' },
+      2: { title: 'Request Form Settings', message: 'Add or select a request field to edit its settings.' },
+      3: { title: 'Steps Settings', message: 'Add or select a step to edit its settings.' },
+      4: { title: 'Activities Settings', message: 'Add or select an activity to edit its settings.' },
+      5: { title: 'Activity Form Settings', message: 'Add or select an activity field to edit its settings.' },
+      6: { title: 'Transitions Settings', message: 'Add or select a transition to edit its settings.' },
+      7: { title: 'Diagram Settings', message: 'Select a process item in the diagram to edit its settings.' },
+    };
+    const content = workspaceSettings[selected.tab] ?? {
+      title: 'Settings',
+      message: 'Select an item to edit its settings.',
+    };
+    return (
+      <Stack spacing="8px" sx={{ p: '10px' }}>
+        <SettingsTitle title={content.title} dirty={s.dirty} />
+        <Typography color="text.secondary" sx={{ fontSize: tokens.fontSize.secondary }}>
+          {content.message}
+        </Typography>
+      </Stack>
+    );
+  }
   if (selected.kind === 'process')
     return (
       <Stack spacing="8px" sx={{ p: '10px', minHeight: '100%' }}>
@@ -728,7 +759,7 @@ export function ProcessBuilderSettingsPanel() {
               s.updateActivity(selected.stepId, x.id, { type: e.target.value as typeof x.type })
             }
           >
-            {activityPalette.map((item) => (
+            {activityTypeOptions.map((item) => (
               <MenuItem key={item.type} value={item.type}>
                 {item.label}
               </MenuItem>
@@ -877,7 +908,7 @@ export function ProcessBuilderSettingsPanel() {
         </TextField>
         {requestOptionControlTypes.has(control.type) && (
           <Stack spacing="6px" sx={settingsGroupSx}>
-            <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
               <Typography sx={{ fontSize: tokens.fontSize.body, fontWeight: 600 }}>Options</Typography>
               <Button
                 size="small"
@@ -892,7 +923,7 @@ export function ProcessBuilderSettingsPanel() {
               </Typography>
             )}
             {control.options.map((option, index) => (
-              <Stack key={`${index}-${control.options.length}`} direction="row" spacing="4px" alignItems="center">
+              <Stack key={`${index}-${control.options.length}`} direction="row" spacing="4px" sx={{ alignItems: 'center' }}>
                 <TextField
                   fullWidth
                   size="small"
@@ -940,7 +971,7 @@ export function ProcessBuilderSettingsPanel() {
           values={d.transitions}
           variables={d.variables}
           steps={d.steps}
-          onAdd={s.addTransition}
+          onAdd={() => s.addTransition({ triggerSource: 'requestControl', triggerId: control.id })}
           onUpdate={s.updateTransition}
           onRemove={s.removeTransition}
         />
@@ -1031,7 +1062,7 @@ export function ProcessBuilderSettingsPanel() {
           values={d.transitions}
           variables={d.variables}
           steps={d.steps}
-          onAdd={s.addTransition}
+          onAdd={() => s.addTransition({ triggerSource: 'activity', triggerId: selected.activityId })}
           onUpdate={s.updateTransition}
           onRemove={s.removeTransition}
         />

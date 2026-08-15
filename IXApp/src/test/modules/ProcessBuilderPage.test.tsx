@@ -19,6 +19,22 @@ describe('standalone ProcessBuilderPage', () => {
     expect(screen.getByRole('heading', { name: 'Process Builder' })).toBeDefined();
     expect(screen.getByRole('tab', { name: 'Designer' })).toBeDefined();
     expect(screen.getByRole('tab', { name: 'Transitions' })).toBeDefined();
+    expect(
+      Array.from(
+        screen.getByRole('tablist', { name: 'Process Builder workspaces' })
+          .querySelectorAll('[role="tab"]')
+      )
+        .map((tab) => tab.textContent)
+    ).toEqual([
+      'Designer',
+      'Variables',
+      'Request form',
+      'Steps',
+      'Activities',
+      'Activity form',
+      'Transitions',
+      'Diagram',
+    ]);
     await user.click(screen.getByRole('button', { name: 'Add variable' }));
     expect(useProcessBuilderStore.getState().document.variables).toHaveLength(1);
     await user.click(screen.getByRole('button', { name: 'Export' }));
@@ -44,13 +60,52 @@ describe('standalone ProcessBuilderPage', () => {
     });
   });
 
-  it('offers the complete reference activity and control palettes', async () => {
+  it('offers the control palette without activity types', async () => {
     const user = userEvent.setup();
     render(<ProcessBuilderPage />);
     await user.click(screen.getByRole('tab', { name: 'Palette' }));
-    expect(screen.getAllByRole('button', { name: /API Action/ }).length).toBeGreaterThan(0);
+    expect(screen.queryByText('ACTIVITY TYPES (click a step, then add)')).toBeNull();
+    expect(screen.queryByRole('button', { name: /API Action/ })).toBeNull();
     expect(screen.getAllByRole('button', { name: /Signature/ })).toHaveLength(1);
     expect(screen.getAllByRole('button', { name: /EmployeeSearch/ })).toHaveLength(1);
+    expect(screen.getByRole('button', { name: /Check Box List/ })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Radio Button List/ })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Fill From DataBase/ })).toBeDefined();
+  });
+
+  it('edits selectable request-control options directly in the request form', async () => {
+    const user = userEvent.setup();
+    render(<ProcessBuilderPage />);
+
+    await user.click(screen.getByRole('tab', { name: 'Request form' }));
+    await user.click(screen.getByRole('button', { name: 'Check Box List' }));
+
+    expect(screen.getByText('Add at least one selectable option.')).toBeDefined();
+    await user.click(screen.getByRole('button', { name: 'Add option to New field' }));
+    expect(useProcessBuilderStore.getState().document.requestControls[0].options).toEqual(['Option 1']);
+    expect(screen.getByRole('button', { name: 'Reorder option 1 for New field' })).toBeDefined();
+
+    const optionInput = screen.getByRole('textbox', { name: 'Option 1 for New field' });
+    await user.clear(optionInput);
+    await user.type(optionInput, 'Finance');
+    expect(useProcessBuilderStore.getState().document.requestControls[0].options).toEqual(['Finance']);
+
+    await user.click(screen.getByRole('button', { name: 'Remove option 1 from New field' }));
+    expect(useProcessBuilderStore.getState().document.requestControls[0].options).toEqual([]);
+  });
+
+  it('reorders request-control options and preserves their values', () => {
+    const store = useProcessBuilderStore.getState();
+    store.addRequestControl('dropdown-manual');
+    const controlId = useProcessBuilderStore.getState().document.requestControls[0].id;
+    useProcessBuilderStore.getState().updateRequestControl(controlId, {
+      options: ['First', 'Second', 'Third'],
+    });
+
+    useProcessBuilderStore.getState().reorderRequestControlOptions(controlId, 0, 2);
+
+    expect(useProcessBuilderStore.getState().document.requestControls[0].options)
+      .toEqual(['Second', 'Third', 'First']);
   });
 
   it('reorders steps without depending on workflow services', () => {
@@ -83,6 +138,28 @@ describe('standalone ProcessBuilderPage', () => {
     expect(useProcessBuilderStore.getState().document.variables.map((variable) => [variable.id, variable.sortOrder])).toEqual([[second.id, 10], [first.id, 20]]);
   });
 
+  it('remaps request-control transition triggers after controls are persisted', () => {
+    const store = useProcessBuilderStore.getState();
+    store.addRequestControl('checkboxlist');
+    const control = useProcessBuilderStore.getState().document.requestControls[0];
+    useProcessBuilderStore.getState().addTransition({
+      triggerSource: 'requestControl',
+      triggerId: control.id,
+    });
+    const persistedControl = { ...control, id: '321' };
+
+    useProcessBuilderStore.getState().setPersistedRequestControls(
+      [persistedControl],
+      { [control.id]: '321' }
+    );
+
+    expect(useProcessBuilderStore.getState().document.transitions[0]).toMatchObject({
+      triggerSource: 'requestControl',
+      triggerId: '321',
+    });
+    expect(useProcessBuilderStore.getState().dirty).toBe(true);
+  });
+
   it('keeps the active workspace when applying a saved server document', () => {
     const store = useProcessBuilderStore.getState();
     store.setCenterTab(2);
@@ -100,6 +177,92 @@ describe('standalone ProcessBuilderPage', () => {
 
     expect(useProcessBuilderStore.getState().centerTab).toBe(2);
     expect(useProcessBuilderStore.getState().dirty).toBe(false);
+  });
+
+  it('remembers the selected step when switching workspace tabs', () => {
+    const store = useProcessBuilderStore.getState();
+    store.addStep();
+    useProcessBuilderStore.getState().addStep();
+    const [, secondStep] = useProcessBuilderStore.getState().document.steps;
+    useProcessBuilderStore.getState().addActivity(secondStep.id, 'approval');
+    const secondStepActivity = useProcessBuilderStore.getState().document.steps[1].activities[0];
+
+    useProcessBuilderStore.getState().select({ kind: 'step', id: secondStep.id });
+    useProcessBuilderStore.getState().setCenterTab(2);
+    useProcessBuilderStore.getState().setCenterTab(4);
+
+    expect(useProcessBuilderStore.getState().selectedStepId).toBe(secondStep.id);
+    expect(useProcessBuilderStore.getState().selected).toEqual({
+      kind: 'activity',
+      stepId: secondStep.id,
+      id: secondStepActivity.id,
+    });
+
+    useProcessBuilderStore.getState().setCenterTab(5);
+    expect(useProcessBuilderStore.getState().selected).toEqual({
+      kind: 'activity',
+      stepId: secondStep.id,
+      id: secondStepActivity.id,
+    });
+  });
+
+  it('restores the selected tab, step, and activity after reload', () => {
+    const store = useProcessBuilderStore.getState();
+    store.addStep();
+    const step = useProcessBuilderStore.getState().document.steps[0];
+    useProcessBuilderStore.getState().addActivity(step.id, 'review');
+    const activity = useProcessBuilderStore.getState().document.steps[0].activities[0];
+    useProcessBuilderStore.getState().select({ kind: 'activity', stepId: step.id, id: activity.id });
+    useProcessBuilderStore.getState().setCenterTab(4);
+    useProcessBuilderStore.getState().setLeftTab(1);
+    const beforeReload = useProcessBuilderStore.getState();
+    const navigation = {
+      selected: beforeReload.selected,
+      selectedStepId: beforeReload.selectedStepId,
+      centerTab: beforeReload.centerTab,
+      leftTab: beforeReload.leftTab,
+    };
+    const document = beforeReload.document;
+
+    useProcessBuilderStore.getState().initialize(document);
+    useProcessBuilderStore.getState().restoreNavigation(navigation);
+
+    expect(useProcessBuilderStore.getState()).toMatchObject({
+      centerTab: 4,
+      leftTab: 1,
+      selectedStepId: step.id,
+      selected: { kind: 'activity', stepId: step.id, id: activity.id },
+    });
+  });
+
+  it('shows an activity selector in Activity Form', async () => {
+    const user = userEvent.setup();
+    render(<ProcessBuilderPage />);
+    await user.click(screen.getByRole('button', { name: 'Add Step' }));
+    const step = useProcessBuilderStore.getState().document.steps[0];
+    useProcessBuilderStore.getState().addActivity(step.id, 'approval');
+
+    await user.click(screen.getByRole('tab', { name: 'Activity form' }));
+
+    expect(screen.getByRole('combobox', { name: 'Activity' })).toBeDefined();
+  });
+
+  it('shows settings for the selected workspace tab', async () => {
+    const user = userEvent.setup();
+    render(<ProcessBuilderPage />);
+
+    await user.click(screen.getByRole('tab', { name: 'Variables' }));
+
+    expect(useProcessBuilderStore.getState().selected).toEqual({ kind: 'workspace', tab: 1 });
+    expect(screen.getByText('Variables Settings')).toBeDefined();
+    expect(screen.getByText('Add or select a variable to edit its settings.')).toBeDefined();
+
+    useProcessBuilderStore.getState().addStep();
+    const step = useProcessBuilderStore.getState().document.steps[0];
+    await user.click(screen.getByRole('tab', { name: 'Steps' }));
+
+    expect(useProcessBuilderStore.getState().selected).toEqual({ kind: 'step', id: step.id });
+    expect(screen.getByText('Step Settings')).toBeDefined();
   });
 
   it('provides responsive structure and settings drawer controls', async () => {

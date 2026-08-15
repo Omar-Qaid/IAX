@@ -26,7 +26,7 @@ import TextFields from '@mui/icons-material/TextFields';
 import { BuilderItemCard } from './BuilderItemCard';
 import { useProcessBuilderStore } from '../store/useProcessBuilderStore';
 import { ControlPreview } from './ControlPreview';
-import { activityPalette, controlPalette } from './ProcessBuilderPalette';
+import { controlPalette } from './ProcessBuilderPalette';
 import {
   closestCenter,
   DndContext,
@@ -42,6 +42,13 @@ import { AppLookupGridField } from '@shared/components/fields/AppLookupGridField
 import { wfActivityTypeApi, wfOperatorApi } from '@modules/workflow/api/workflowSetupApis';
 import { wfPerformerApi } from '@modules/workflow/api/wfPerformerApi';
 import type { WorkflowMasterRecord } from '@modules/workflow/api/workflowMasterApi';
+import type { BuilderControlType } from '../types/processBuilderTypes';
+
+const requestOptionControlTypes = new Set<BuilderControlType>([
+  'dropdown-manual',
+  'checkboxlist',
+  'radiobuttonlist',
+]);
 
 const activityLookupColumns = [
   { field: 'code', header: 'Code', width: 110 },
@@ -251,24 +258,6 @@ export function DesignerWorkspace() {
                         </IconButton>
                       </Tooltip>
                     </Stack>
-                    <Stack
-                      direction="row"
-                      spacing="12px"
-                      useFlexGap
-                      sx={{ pt: '12px', flexWrap: 'wrap' }}
-                    >
-                      {activityPalette.map((item) => (
-                        <Button
-                          key={item.type}
-                          size="small"
-                          variant="outlined"
-                          startIcon={item.icon}
-                          onClick={() => s.addActivity(step.id, item.type)}
-                        >
-                          {item.label}
-                        </Button>
-                      ))}
-                    </Stack>
                     <Stack spacing={0.75}>
                       {step.activities.map((activity) => (
                         <Box
@@ -293,7 +282,16 @@ export function DesignerWorkspace() {
                           }}
                         >
                           <Typography sx={{ flex: 1, fontSize: tokens.fontSize.body }}>{activity.name}</Typography>
-                          <Chip size="small" variant="outlined" label={activity.type} />
+                          <Button
+                            size="small"
+                            aria-label={`Configure ${activity.name}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              s.select({ kind: 'activity', stepId: step.id, id: activity.id });
+                            }}
+                          >
+                            Configure
+                          </Button>
                           <Chip size="small" label={`${activity.controls.length} controls`} />
                         </Box>
                       ))}
@@ -571,7 +569,7 @@ export function StepsWorkspace({ manualCode = false }: { manualCode?: boolean })
                         onClick={(event) => {
                           event.stopPropagation();
                           s.select({ kind: 'step', id: step.id });
-                          s.setCenterTab(3);
+                          s.setCenterTab(4);
                         }}
                       >
                         Activities
@@ -679,7 +677,9 @@ export function ActivitiesWorkspace({ onSave, saving = false, manualCode = false
       ? s.document.steps.find((x) => x.id === node.id)
       : node.kind === 'activity'
         ? s.document.steps.find((x) => x.id === node.stepId)
-        : s.document.steps[0];
+        : node.kind === 'control'
+          ? s.document.steps.find((x) => x.id === node.stepId)
+          : s.document.steps.find((x) => x.id === s.selectedStepId) ?? s.document.steps[0];
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const dragActivity = ({ active, over }: DragEndEvent) => {
     if (step && over && active.id !== over.id)
@@ -922,19 +922,7 @@ export function ActivitiesWorkspace({ onSave, saving = false, manualCode = false
 }
 export function RequestFormWorkspace({ onSave, saving = false, manualCode = false }: { onSave?: () => void; saving?: boolean; manualCode?: boolean }) {
   const s = useProcessBuilderStore();
-  const paletteOrder = [
-    'text',
-    'longtext',
-    'date',
-    'dropdown-manual',
-    'checkbox',
-    'table',
-    'file',
-    'employeesearch',
-  ];
-  const palette = controlPalette
-    .filter((item) => paletteOrder.includes(item.type))
-    .sort((left, right) => paletteOrder.indexOf(left.type) - paletteOrder.indexOf(right.type));
+  const palette = controlPalette;
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const dragControl = ({ active, over }: DragEndEvent) => {
     if (over && active.id !== over.id) s.reorderRequestControls(String(active.id), String(over.id));
@@ -1032,20 +1020,9 @@ export function RequestFormWorkspace({ onSave, saving = false, manualCode = fals
                           s.updateRequestControl(control.id, { label: e.target.value })
                         }
                       />
-                      {control.type === 'checkbox' ? (
-                        <Box sx={{ px: 1 }}>
-                          <ControlPreview control={control} />
-                        </Box>
-                      ) : (
-                        <TextField
-                          size="small"
-                          label="Preview"
-                          value={control.label}
-                          multiline={control.label.length > 24}
-                          minRows={control.label.length > 24 ? 2 : 1}
-                          disabled
-                        />
-                      )}
+                      <Box sx={{ px: 1 }}>
+                        <ControlPreview control={control} />
+                      </Box>
                       <Button
                         size="small"
                         onClick={() => s.select({ kind: 'requestControl', id: control.id })}
@@ -1088,9 +1065,9 @@ export function RequestFormWorkspace({ onSave, saving = false, manualCode = fals
                           control={
                             <Switch
                               size="small"
-                              checked={!control.readOnly}
+                              checked={control.visible}
                               onChange={(_, visible) =>
-                                s.updateRequestControl(control.id, { readOnly: !visible })
+                                s.updateRequestControl(control.id, { visible })
                               }
                             />
                           }
@@ -1111,6 +1088,103 @@ export function RequestFormWorkspace({ onSave, saving = false, manualCode = fals
                         <Chip size="small" variant="outlined" label={control.type} />
                         {s.dirty && <UnsavedStatus compact />}
                       </Box>
+                      {requestOptionControlTypes.has(control.type) && (
+                        <Box
+                          onClick={(event) => event.stopPropagation()}
+                          sx={{
+                            gridColumn: { xs: '2', md: '2 / -1' },
+                            p: 1.25,
+                            border: `1px solid ${tokens.border}`,
+                            bgcolor: '#f8fafc',
+                          }}
+                        >
+                          <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1 }}>
+                            <Typography sx={{ flex: 1, fontSize: tokens.fontSize.secondary, fontWeight: 700 }}>
+                              OPTIONS
+                            </Typography>
+                            <Button
+                              size="small"
+                              startIcon={<Add fontSize="small" />}
+                              aria-label={`Add option to ${control.label}`}
+                              onClick={() =>
+                                s.updateRequestControl(control.id, {
+                                  options: [...control.options, `Option ${control.options.length + 1}`],
+                                })
+                              }
+                            >
+                              Add option
+                            </Button>
+                          </Stack>
+                          {control.options.length === 0 ? (
+                            <Typography sx={{ color: tokens.textMuted, fontSize: tokens.fontSize.secondary }}>
+                              Add at least one selectable option.
+                            </Typography>
+                          ) : (
+                            <DndContext
+                              sensors={sensors}
+                              collisionDetection={closestCenter}
+                              onDragEnd={({ active, over }) => {
+                                if (!over || active.id === over.id) return;
+                                s.reorderRequestControlOptions(
+                                  control.id,
+                                  Number(active.id),
+                                  Number(over.id)
+                                );
+                              }}
+                            >
+                              <SortableContext
+                                items={control.options.map((_, index) => String(index))}
+                                strategy={verticalListSortingStrategy}
+                              >
+                                <Stack spacing={1}>
+                                  {control.options.map((option, optionIndex) => (
+                                    <SortableBuilderItem key={optionIndex} id={String(optionIndex)}>
+                                      {(optionAttributes, optionListeners) => (
+                                        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                                          <Tooltip title="Drag to reorder">
+                                            <Box
+                                              {...optionAttributes}
+                                              {...optionListeners}
+                                              aria-label={`Reorder option ${optionIndex + 1} for ${control.label}`}
+                                              sx={{ display: 'flex', color: tokens.textMuted, cursor: 'grab', touchAction: 'none' }}
+                                            >
+                                              <DragIndicator fontSize="small" />
+                                            </Box>
+                                          </Tooltip>
+                                          <TextField
+                                            fullWidth
+                                            size="small"
+                                            label={`Option ${optionIndex + 1}`}
+                                            value={option}
+                                            slotProps={{ htmlInput: { 'aria-label': `Option ${optionIndex + 1} for ${control.label}` } }}
+                                            onChange={(event) => {
+                                              const options = [...control.options];
+                                              options[optionIndex] = event.target.value;
+                                              s.updateRequestControl(control.id, { options });
+                                            }}
+                                          />
+                                          <IconButton
+                                            size="small"
+                                            color="error"
+                                            aria-label={`Remove option ${optionIndex + 1} from ${control.label}`}
+                                            onClick={() =>
+                                              s.updateRequestControl(control.id, {
+                                                options: control.options.filter((_, index) => index !== optionIndex),
+                                              })
+                                            }
+                                          >
+                                            <Delete fontSize="small" />
+                                          </IconButton>
+                                        </Stack>
+                                      )}
+                                    </SortableBuilderItem>
+                                  ))}
+                                </Stack>
+                              </SortableContext>
+                            </DndContext>
+                          )}
+                        </Box>
+                      )}
                     </Box>
                   )}
                 </SortableBuilderItem>
@@ -1122,8 +1196,11 @@ export function RequestFormWorkspace({ onSave, saving = false, manualCode = fals
     </Stack>
   );
 }
-export function ActivityFormWorkspace() {
+export function ActivityFormWorkspace({ onSave, saving = false }: { onSave?: () => void; saving?: boolean }) {
   const s = useProcessBuilderStore();
+  const activityOptions = s.document.steps.flatMap((step) =>
+    step.activities.map((activity) => ({ activity, stepId: step.id, stepName: step.name }))
+  );
   const paletteOrder = [
     'text',
     'longtext',
@@ -1171,7 +1248,7 @@ export function ActivityFormWorkspace() {
           <Typography sx={{ mt: '8px', color: tokens.textMuted, fontSize: tokens.fontSize.body }}>
             Add an activity first, or choose an existing activity from the process tree.
           </Typography>
-          <Button variant="outlined" sx={{ mt: '16px' }} onClick={() => s.setCenterTab(3)}>
+          <Button variant="outlined" sx={{ mt: '16px' }} onClick={() => s.setCenterTab(4)}>
             Open Activities
           </Button>
           {s.document.steps.some((step) => step.activities.length > 0) && (
@@ -1201,7 +1278,31 @@ export function ActivityFormWorkspace() {
           Activity Form · {activity.name}
         </Typography>
         {s.dirty && <UnsavedStatus compact />}
-        <Button variant="contained">Save Activity Controls</Button>
+        <Button
+          variant="contained"
+          disabled={s.document.id === 'new' || saving || !onSave}
+          onClick={onSave}
+        >
+          {saving ? 'Saving…' : 'Save Activity Controls'}
+        </Button>
+        <TextField
+          select
+          size="small"
+          label="Activity"
+          value={activity.id}
+          onChange={(event) => {
+            const option = activityOptions.find((item) => item.activity.id === event.target.value);
+            if (option)
+              s.select({ kind: 'activity', stepId: option.stepId, id: option.activity.id });
+          }}
+          sx={{ width: { xs: '100%', sm: 240 } }}
+        >
+          {activityOptions.map((option) => (
+            <MenuItem key={`${option.stepId}-${option.activity.id}`} value={option.activity.id}>
+              {option.stepName} · {option.activity.name}
+            </MenuItem>
+          ))}
+        </TextField>
       </Stack>
       <Box sx={{ ...workspaceCardSx(), minHeight: 60 }}>
         <Typography sx={{ mb: 1, fontSize: tokens.fontSize.secondary, fontWeight: 700 }}>ADD CONTROL</Typography>
@@ -1443,7 +1544,7 @@ export function DiagramWorkspace() {
           <Box
             onClick={() => {
               s.select({ kind: 'process' });
-              s.setCenterTab(4);
+              s.setCenterTab(2);
             }}
             sx={{
               width: 280,
@@ -1526,7 +1627,7 @@ export function TransitionsWorkspace({ onSave, saving = false }: { onSave?: () =
         summary={`${s.document.transitions.length} transitions · route the process using configured conditions`}
         dirty={s.dirty}
         action={<Stack direction="row" spacing={1}>
-          <Button variant="outlined" startIcon={<Add />} disabled={s.document.steps.length < 1} onClick={s.addTransition}>New transition</Button>
+          <Button variant="outlined" startIcon={<Add />} disabled={s.document.steps.length < 1} onClick={() => s.addTransition()}>New transition</Button>
           <Button variant="contained" disabled={s.document.id === 'new' || saving || !onSave} onClick={onSave}>{saving ? 'Saving…' : 'Save Transitions'}</Button>
         </Stack>}
       />

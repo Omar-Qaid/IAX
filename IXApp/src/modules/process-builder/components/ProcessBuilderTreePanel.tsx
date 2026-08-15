@@ -112,7 +112,7 @@ export function ProcessBuilderTreePanel() {
       <Button
         size="small"
         startIcon={<Add />}
-        onClick={() => setCenterTab(4)}
+        onClick={() => setCenterTab(2)}
         sx={{ width: '100%', my: '4px', justifyContent: 'center', textTransform: 'none' }}
       >
         Open Request Form

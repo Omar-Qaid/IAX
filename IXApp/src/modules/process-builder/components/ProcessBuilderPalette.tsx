@@ -1,28 +1,30 @@
 import React from 'react';
-import Api from '@mui/icons-material/Api';
 import ArrowDropDownCircle from '@mui/icons-material/ArrowDropDownCircle';
 import CalendarMonth from '@mui/icons-material/CalendarMonth';
 import CheckBox from '@mui/icons-material/CheckBox';
 import CloudUpload from '@mui/icons-material/CloudUpload';
 import Draw from '@mui/icons-material/Draw';
-import Edit from '@mui/icons-material/Edit';
 import GridOn from '@mui/icons-material/GridOn';
 import HowToReg from '@mui/icons-material/HowToReg';
-import Notifications from '@mui/icons-material/Notifications';
-import RateReview from '@mui/icons-material/RateReview';
 import Search from '@mui/icons-material/Search';
 import TextFields from '@mui/icons-material/TextFields';
-import { Box, Button, Chip, Divider, Stack, Typography } from '@mui/material';
+import { Box, Button, Chip, Stack, Typography } from '@mui/material';
 import { useProcessBuilderStore } from '../store/useProcessBuilderStore';
 import type { BuilderActivityType, BuilderControlType } from '../types/processBuilderTypes';
 import { processBuilderTokens as tokens } from './processBuilderTokens';
 
-export const activityPalette: ReadonlyArray<{ type: BuilderActivityType; label: string; icon: React.ReactNode }> = [
-  { type: 'approval', label: 'Approval', icon: <HowToReg fontSize="small" /> },
-  { type: 'review', label: 'Review', icon: <RateReview fontSize="small" /> },
-  { type: 'data-entry', label: 'Data Entry', icon: <Edit fontSize="small" /> },
-  { type: 'api', label: 'API Action', icon: <Api fontSize="small" /> },
-  { type: 'notification', label: 'Notification', icon: <Notifications fontSize="small" /> },
+// Kept as a compatibility export for already-loaded Vite modules. Activity types are
+// configured in Activity Settings and are no longer rendered in the Palette.
+export const activityPalette: ReadonlyArray<{
+  type: BuilderActivityType;
+  label: string;
+  icon: React.ReactNode;
+}> = [
+  { type: 'approval', label: 'Approval', icon: null },
+  { type: 'review', label: 'Review', icon: null },
+  { type: 'data-entry', label: 'Data Entry', icon: null },
+  { type: 'api', label: 'API Action', icon: null },
+  { type: 'notification', label: 'Notification', icon: null },
 ];
 
 export const controlPalette: ReadonlyArray<{ type: BuilderControlType; label: string; icon: React.ReactNode }> = [
@@ -50,7 +52,6 @@ export const controlPalette: ReadonlyArray<{ type: BuilderControlType; label: st
 
 export function ProcessBuilderPalette() {
   const store = useProcessBuilderStore();
-  const selectedStep = store.selected.kind === 'step' ? store.selected.id : store.selected.kind === 'activity' ? store.selected.stepId : store.document.steps[0]?.id;
   const selectedActivity = store.selected.kind === 'activity' ? store.selected : null;
   const activityControlMode = store.centerTab === 5 && selectedActivity;
   const titleSx = { fontSize: tokens.fontSize.secondary, lineHeight: 1.2, fontWeight: 700, color: tokens.text };
@@ -73,21 +74,6 @@ export function ProcessBuilderPalette() {
   );
   return (
     <Stack spacing="8px" sx={{ p: '8px', pb: '20px' }}>
-      <Typography sx={{ ...titleSx, py: '7px' }}>ACTIVITY TYPES (click a step, then add)</Typography>
-      {activityPalette.map((item) => (
-        <Button
-          key={item.type}
-          variant="outlined"
-          startIcon={item.icon}
-          disabled={!selectedStep}
-          onClick={() => selectedStep && store.addActivity(selectedStep, item.type)}
-          sx={paletteButtonSx}
-        >
-          {item.label}
-          {addLabel}
-        </Button>
-      ))}
-      <Divider sx={{ my: '8px !important' }} />
       <Stack direction="row" sx={{ alignItems: 'center', minHeight: 24 }}>
         <Typography sx={{ ...titleSx, flex: 1 }}>CONTROLS</Typography>
         <Chip

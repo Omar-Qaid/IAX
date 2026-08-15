@@ -19757,7 +19757,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)")
-                        .HasColumnName("NameAr");
+                        .HasColumnName("Name");
 
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
@@ -21139,7 +21139,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)")
-                        .HasColumnName("NameAr");
+                        .HasColumnName("Name");
 
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");

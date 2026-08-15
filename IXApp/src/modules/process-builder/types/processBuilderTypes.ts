@@ -1,5 +1,6 @@
 export type BuilderNode =
   | { kind: 'process' }
+  | { kind: 'workspace'; tab: number }
   | { kind: 'variable'; id: string }
   | { kind: 'requestControl'; id: string }
   | { kind: 'step'; id: string }

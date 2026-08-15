@@ -24,7 +24,7 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                 .IsRequired();
 
             builder.Property(x => x.Name)
-                .HasColumnName("NameAr")
+                .HasColumnName("Name")
                 .HasMaxLength(500)
                 .IsRequired();
 

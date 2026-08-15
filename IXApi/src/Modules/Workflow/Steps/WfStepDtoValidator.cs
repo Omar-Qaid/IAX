@@ -8,7 +8,6 @@ namespace IAX.IXApi.Modules.Workflow.Steps
     {
         public WfStepDtoValidator()
         {
-             //RuleFor(x => x.NameEn).NotEmpty().WithMessage("English Name is required");
         }
     }
 }

@@ -13,6 +13,7 @@ namespace IAX.IXApi.Modules.Workflow.Activities
         public bool UsedAsCriteria { get; set; }
         public bool UsedInSearch { get; set; }
         public byte SortOrder { get; set; }
+        public string? ValidationRules { get; set; }
         public string? ExtendedProperties { get; set; }
     }
 }

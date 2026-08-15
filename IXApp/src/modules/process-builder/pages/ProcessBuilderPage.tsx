@@ -47,6 +47,7 @@ import {
 import {
   createProcessBuilderDocument,
   useProcessBuilderStore,
+  type ProcessBuilderNavigationState,
 } from '../store/useProcessBuilderStore';
 import { loadProcessBuilderDraft, useProcessBuilderDraft } from '../hooks/useProcessBuilderDraft';
 import { processBuilderTokens as tokens } from '../components/processBuilderTokens';
@@ -81,6 +82,16 @@ const slimScrollbarSx = {
     backgroundColor: '#7d7d7d',
   },
 } as const;
+
+const navigationStorageKey = (builderId: string) => `ixapp.processBuilder.navigation.${builderId}`;
+const readNavigationState = (builderId: string): ProcessBuilderNavigationState | null => {
+  try {
+    const value = sessionStorage.getItem(navigationStorageKey(builderId));
+    return value ? JSON.parse(value) as ProcessBuilderNavigationState : null;
+  } catch {
+    return null;
+  }
+};
 
 function ProcessBuilderNavigationPanel() {
   const s = useProcessBuilderStore();
@@ -117,6 +128,7 @@ export function ProcessBuilderPage() {
   const { notifyError, notifySuccess } = useNotifications();
   const s = useProcessBuilderStore();
   const initialize = s.initialize;
+  const restoreNavigation = s.restoreNavigation;
   const [exportOpen, setExportOpen] = useState(false);
   const [leftOpen, setLeftOpen] = useState(() => sessionStorage.getItem('ixapp.processBuilder.leftOpen') !== 'false');
   const [rightOpen, setRightOpen] = useState(() => sessionStorage.getItem('ixapp.processBuilder.rightOpen') !== 'false');
@@ -153,13 +165,21 @@ export function ProcessBuilderPage() {
         if (builderId === 'new') {
           const fallback = createProcessBuilderDocument('new');
           const recovered = loadProcessBuilderDraft(builderId, fallback);
-          if (active) initialize(recovered);
+          if (active) {
+            initialize(recovered);
+            const navigation = readNavigationState(builderId);
+            if (navigation) restoreNavigation(navigation);
+          }
           const metadata = await getProcessCodeMetadata();
           if (active && !metadata.manual)
             useProcessBuilderStore.getState().setGeneratedCode(metadata.previewCode ?? '');
         } else {
           const fallback = await loadProcessBuilder(Number(builderId));
-          if (active) initialize(loadProcessBuilderDraft(builderId, fallback));
+          if (active) {
+            initialize(loadProcessBuilderDraft(builderId, fallback));
+            const navigation = readNavigationState(builderId);
+            if (navigation) restoreNavigation(navigation);
+          }
         }
       } catch (error) {
         if (active) {
@@ -173,13 +193,23 @@ export function ProcessBuilderPage() {
     };
     void load();
     return () => { active = false; };
-  }, [builderId, initialize, notifyError]);
+  }, [builderId, initialize, notifyError, restoreNavigation]);
   useEffect(() => {
     sessionStorage.setItem('ixapp.processBuilder.leftOpen', String(leftOpen));
   }, [leftOpen]);
   useEffect(() => {
     sessionStorage.setItem('ixapp.processBuilder.rightOpen', String(rightOpen));
   }, [rightOpen]);
+  useEffect(() => {
+    if (loading) return;
+    const navigation: ProcessBuilderNavigationState = {
+      selected: s.selected,
+      selectedStepId: s.selectedStepId,
+      leftTab: s.leftTab,
+      centerTab: s.centerTab,
+    };
+    sessionStorage.setItem(navigationStorageKey(builderId), JSON.stringify(navigation));
+  }, [builderId, loading, s.centerTab, s.leftTab, s.selected, s.selectedStepId]);
   const activities = s.document.steps.reduce((n, x) => n + x.activities.length, 0);
   const controls =
     s.document.requestControls.length +
@@ -194,30 +224,30 @@ export function ProcessBuilderPage() {
       saving={savingVariables}
       manualCode={manualVariableCode}
     />,
+    <RequestFormWorkspace
+      onSave={() => void saveRequestControls()}
+      saving={savingRequestControls}
+      manualCode={manualRequestControlCode}
+    />,
     <StepsWorkspace manualCode={manualStepCode} />,
     <ActivitiesWorkspace
       onSave={() => void saveActivities()}
       saving={savingActivities}
       manualCode={manualActivityCode}
     />,
-    <RequestFormWorkspace
-      onSave={() => void saveRequestControls()}
-      saving={savingRequestControls}
-      manualCode={manualRequestControlCode}
-    />,
-    <ActivityFormWorkspace />,
-    <DiagramWorkspace />,
+    <ActivityFormWorkspace onSave={() => void saveActivities()} saving={savingActivities} />,
     <TransitionsWorkspace onSave={() => void saveTransitions()} saving={savingTransitions} />,
+    <DiagramWorkspace />,
   ];
   const tabDefinitions = [
     { label: 'Designer', icon: <Bolt /> },
     { label: 'Variables', icon: <FormatListBulleted /> },
+    { label: 'Request form', icon: <TextFields /> },
     { label: 'Steps', icon: <ViewWeek /> },
     { label: 'Activities', icon: <Bolt /> },
-    { label: 'Request form', icon: <TextFields /> },
     { label: 'Activity form', icon: <Visibility /> },
-    { label: 'Diagram', icon: <AccountTree /> },
     { label: 'Transitions', icon: <AltRoute /> },
+    { label: 'Diagram', icon: <AccountTree /> },
   ];
   const reset = () => {
     if (
@@ -247,7 +277,11 @@ export function ProcessBuilderPage() {
       localStorage.removeItem(`ixapp.process-builder.${previousId}`);
       useProcessBuilderStore.getState().applyPersistedDocument(persisted);
       notifySuccess('Process saved successfully.');
-      if (previousId === 'new') navigate(ROUTE_PATHS.processBuilder(persisted.id), { replace: true });
+      if (previousId === 'new') {
+        const navigation = sessionStorage.getItem(navigationStorageKey(previousId));
+        if (navigation) sessionStorage.setItem(navigationStorageKey(persisted.id), navigation);
+        navigate(ROUTE_PATHS.processBuilder(persisted.id), { replace: true });
+      }
     } catch (error) {
       notifyError(error instanceof Error ? error.message : 'Failed to save process.');
     } finally {
@@ -281,8 +315,8 @@ export function ProcessBuilderPage() {
   const saveRequestControls = async () => {
     setSavingRequestControls(true);
     try {
-      const controls = await saveProcessRequestControls(useProcessBuilderStore.getState().document);
-      useProcessBuilderStore.getState().setPersistedRequestControls(controls);
+      const result = await saveProcessRequestControls(useProcessBuilderStore.getState().document);
+      useProcessBuilderStore.getState().setPersistedRequestControls(result.controls, result.controlIds);
       notifySuccess('Request controls saved successfully.');
     } catch (error) {
       notifyError(error instanceof Error ? error.message : 'Failed to save request controls.');

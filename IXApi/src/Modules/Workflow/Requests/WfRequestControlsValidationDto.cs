@@ -2,7 +2,7 @@ using IAX.IXApi.Shared.Application.Contracts;
 
 namespace IAX.IXApi.Modules.Workflow.Requests
 {
-    public class WfRequestControlsValidationDto : BaseEntityDto<long>
+    public class WfRequestControlsValidationDto : EntityDto<long>
     {
         public long RequestControlId { get; set; }
         public string ValidationType { get; set; } = null!;
@@ -13,6 +13,5 @@ namespace IAX.IXApi.Modules.Workflow.Requests
         public string ErrorMessage { get; set; } = null!;
         public string Severity { get; set; } = null!;
         public int SortOrder { get; set; }
-        public bool IsActive { get; set; }
     }
 }

@@ -9,22 +9,143 @@ export const createProcessBuilderDocument = (builderId = 'new'): ProcessBuilderD
   steps: [], transitions: [],
 });
 
+const selectionForTab = (
+  document: ProcessBuilderDocument,
+  selected: BuilderNode,
+  selectedStepId: string | null,
+  tab: number
+): BuilderNode => {
+  if (tab === 0) return { kind: 'process' };
+
+  if (tab === 1) {
+    const variable = selected.kind === 'variable'
+      ? document.variables.find((item) => item.id === selected.id)
+      : undefined;
+    const selectedVariable = variable ?? document.variables[0];
+    return selectedVariable
+      ? { kind: 'variable', id: selectedVariable.id }
+      : { kind: 'workspace', tab };
+  }
+
+  if (tab === 2) {
+    const control = selected.kind === 'requestControl'
+      ? document.requestControls.find((item) => item.id === selected.id)
+      : undefined;
+    const requestControl = control ?? document.requestControls[0];
+    return requestControl
+      ? { kind: 'requestControl', id: requestControl.id }
+      : { kind: 'workspace', tab };
+  }
+
+  if (tab === 3) {
+    const activeStepId = selected.kind === 'step'
+      ? selected.id
+      : selected.kind === 'activity' || selected.kind === 'control'
+        ? selected.stepId
+        : undefined;
+    const step = document.steps.find((item) => item.id === activeStepId)
+      ?? document.steps.find((item) => item.id === selectedStepId)
+      ?? document.steps[0];
+    return step ? { kind: 'step', id: step.id } : { kind: 'workspace', tab };
+  }
+
+  if (tab === 4) {
+    const selectedActivity = selected.kind === 'activity'
+      ? document.steps.find((step) => step.id === selected.stepId)
+        ?.activities.find((activity) => activity.id === selected.id)
+      : selected.kind === 'control'
+        ? document.steps.find((step) => step.id === selected.stepId)
+          ?.activities.find((activity) => activity.id === selected.activityId)
+        : selected.kind === 'step'
+          ? document.steps.find((step) => step.id === selected.id)?.activities[0]
+          : undefined;
+    const rememberedActivity = document.steps.find((step) => step.id === selectedStepId)?.activities[0];
+    const activity = selectedActivity ?? rememberedActivity ?? document.steps.flatMap((step) => step.activities)[0];
+    if (!activity) return { kind: 'workspace', tab };
+    const step = document.steps.find((item) => item.activities.some((item) => item.id === activity.id));
+    return step ? { kind: 'activity', stepId: step.id, id: activity.id } : { kind: 'workspace', tab };
+  }
+
+  if (tab === 5) {
+    const selectedActivity = selected.kind === 'activity'
+      ? document.steps.find((step) => step.id === selected.stepId)
+        ?.activities.find((activity) => activity.id === selected.id)
+      : selected.kind === 'control'
+        ? document.steps.find((step) => step.id === selected.stepId)
+          ?.activities.find((activity) => activity.id === selected.activityId)
+        : undefined;
+    const rememberedActivity = document.steps.find((step) => step.id === selectedStepId)?.activities[0];
+    const activity = selectedActivity ?? rememberedActivity ?? document.steps.flatMap((step) => step.activities)[0];
+    if (!activity) return { kind: 'workspace', tab };
+    const activityStep = document.steps.find((step) => step.activities.some((item) => item.id === activity.id));
+    if (!activityStep) return { kind: 'workspace', tab };
+    const selectedControl = selected.kind === 'control' && selected.activityId === activity.id
+      ? activity.controls.find((control) => control.id === selected.id)
+      : activity.controls[0];
+    const control = selectedControl;
+    if (!control) return { kind: 'activity', stepId: activityStep.id, id: activity.id };
+    for (const step of document.steps) {
+      const activity = step.activities.find((item) => item.controls.some((item) => item.id === control.id));
+      if (activity) return { kind: 'control', stepId: step.id, activityId: activity.id, id: control.id };
+    }
+    return { kind: 'workspace', tab };
+  }
+
+  if (tab === 6) {
+    const transition = selected.kind === 'transition'
+      ? document.transitions.find((item) => item.id === selected.id)
+      : undefined;
+    const selectedTransition = transition ?? document.transitions[0];
+    return selectedTransition
+      ? { kind: 'transition', id: selectedTransition.id }
+      : { kind: 'workspace', tab };
+  }
+
+  return { kind: 'workspace', tab };
+};
+
+export interface ProcessBuilderNavigationState {
+  selected: BuilderNode;
+  selectedStepId: string | null;
+  leftTab: number;
+  centerTab: number;
+}
+
+const selectionExists = (document: ProcessBuilderDocument, selected: BuilderNode | null | undefined): boolean => {
+  if (!selected) return false;
+  if (selected.kind === 'process') return true;
+  if (selected.kind === 'workspace') return Number.isInteger(selected.tab) && selected.tab >= 0 && selected.tab <= 7;
+  if (selected.kind === 'variable') return document.variables.some((item) => item.id === selected.id);
+  if (selected.kind === 'requestControl') return document.requestControls.some((item) => item.id === selected.id);
+  if (selected.kind === 'step') return document.steps.some((item) => item.id === selected.id);
+  if (selected.kind === 'activity')
+    return document.steps.find((step) => step.id === selected.stepId)?.activities.some((item) => item.id === selected.id) ?? false;
+  if (selected.kind === 'control')
+    return document.steps.find((step) => step.id === selected.stepId)
+      ?.activities.find((activity) => activity.id === selected.activityId)
+      ?.controls.some((item) => item.id === selected.id) ?? false;
+  if (selected.kind === 'transition') return document.transitions.some((item) => item.id === selected.id);
+  return false;
+};
+
 interface State {
   document: ProcessBuilderDocument;
   selected: BuilderNode;
+  selectedStepId: string | null;
   leftTab: number;
   centerTab: number;
   dirty: boolean;
   markDraftSaved: () => void;
   initialize: (document: ProcessBuilderDocument) => void;
   applyPersistedDocument: (document: ProcessBuilderDocument) => void;
+  restoreNavigation: (navigation: ProcessBuilderNavigationState) => void;
   select: (node: BuilderNode) => void;
   setLeftTab: (value: number) => void;
   setCenterTab: (value: number) => void;
   updateProcess: (values: Partial<ProcessBuilderDocument>) => void;
   setGeneratedCode: (code: string) => void;
   setPersistedVariables: (variables: BuilderVariable[]) => void;
-  setPersistedRequestControls: (controls: BuilderControl[]) => void;
+  setPersistedRequestControls: (controls: BuilderControl[], controlIds: Record<string, string>) => void;
   addVariable: () => void;
   updateVariable: (id: string, values: Partial<BuilderVariable>) => void;
   removeVariable: (id: string) => void;
@@ -33,6 +154,7 @@ interface State {
   updateRequestControl: (id: string, values: Partial<BuilderControl>) => void;
   removeRequestControl: (id: string) => void;
   reorderRequestControls: (activeId: string, overId: string) => void;
+  reorderRequestControlOptions: (controlId: string, fromIndex: number, toIndex: number) => void;
   addStep: () => void;
   updateStep: (id: string, values: Partial<BuilderStep>) => void;
   removeStep: (id: string) => void;
@@ -49,7 +171,7 @@ interface State {
   reorderSteps: (activeId: string, overId: string) => void;
   reorderActivities: (stepId: string, activeId: string, overId: string) => void;
   reorderControls: (stepId: string, activityId: string, activeId: string, overId: string) => void;
-  addTransition: () => void;
+  addTransition: (trigger?: { triggerSource: 'requestControl' | 'activity'; triggerId: string }) => void;
   updateTransition: (id: string, values: Partial<BuilderTransition>) => void;
   removeTransition: (id: string) => void;
 }
@@ -57,22 +179,76 @@ interface State {
 export const useProcessBuilderStore = create<State>((set) => {
   const change = (mutate: (document: ProcessBuilderDocument) => ProcessBuilderDocument) => set((state) => ({ document: mutate(state.document), dirty: true }));
   return {
-    document: createProcessBuilderDocument(), selected: { kind: 'process' }, leftTab: 0, centerTab: 0, dirty: false,
-    initialize: (document) => set({ document, selected: { kind: 'process' }, leftTab: 0, centerTab: 0, dirty: false }),
-    applyPersistedDocument: (document) => set((state) => ({
-      document,
-      selected: { kind: 'process' },
-      leftTab: state.leftTab,
-      centerTab: state.centerTab,
-      dirty: false,
-    })),
+    document: createProcessBuilderDocument(), selected: { kind: 'process' }, selectedStepId: null, leftTab: 0, centerTab: 0, dirty: false,
+    initialize: (document) => set({ document, selected: { kind: 'process' }, selectedStepId: document.steps[0]?.id ?? null, leftTab: 0, centerTab: 0, dirty: false }),
+    applyPersistedDocument: (document) => set((state) => {
+      const selectedStepId = document.steps.find((step) => step.id === state.selectedStepId)?.id
+        ?? document.steps[state.document.steps.findIndex((step) => step.id === state.selectedStepId)]?.id
+        ?? document.steps[0]?.id
+        ?? null;
+      return {
+        document,
+        selected: selectionForTab(document, state.selected, selectedStepId, state.centerTab),
+        selectedStepId,
+        leftTab: state.leftTab,
+        centerTab: state.centerTab,
+        dirty: false,
+      };
+    }),
+    restoreNavigation: (navigation) => set((state) => {
+      const requestedSelection = navigation.selected as BuilderNode | undefined;
+      const centerTab = Number.isInteger(navigation.centerTab) && navigation.centerTab >= 0 && navigation.centerTab <= 7
+        ? navigation.centerTab
+        : 0;
+      const leftTab = navigation.leftTab === 1 ? 1 : 0;
+      const selectedStepId = navigation.selectedStepId != null
+        && state.document.steps.some((step) => step.id === navigation.selectedStepId)
+        ? navigation.selectedStepId
+        : requestedSelection?.kind === 'step'
+          ? requestedSelection.id
+          : requestedSelection?.kind === 'activity' || requestedSelection?.kind === 'control'
+            ? requestedSelection.stepId
+            : state.document.steps[0]?.id ?? null;
+      const selected = selectionExists(state.document, requestedSelection)
+        ? requestedSelection!
+        : selectionForTab(state.document, { kind: 'workspace', tab: centerTab }, selectedStepId, centerTab);
+      return { centerTab, leftTab, selectedStepId, selected };
+    }),
     // Browser draft persistence is not a database save; keep server changes dirty.
     markDraftSaved: () => undefined,
-    select: (selected) => set({ selected }), setLeftTab: (leftTab) => set({ leftTab }), setCenterTab: (centerTab) => set({ centerTab }),
+    select: (selected) => set((state) => ({
+      selected,
+      selectedStepId: selected.kind === 'step'
+        ? selected.id
+        : selected.kind === 'activity' || selected.kind === 'control'
+          ? selected.stepId
+          : state.selectedStepId,
+    })),
+    setLeftTab: (leftTab) => set({ leftTab }),
+    setCenterTab: (centerTab) => set((state) => ({
+      centerTab,
+      selected: selectionForTab(state.document, state.selected, state.selectedStepId, centerTab),
+    })),
     updateProcess: (values) => change((document) => ({ ...document, ...values })),
     setGeneratedCode: (code) => set((state) => ({ document: { ...state.document, code } })),
     setPersistedVariables: (variables) => set((state) => ({ document: { ...state.document, variables } })),
-    setPersistedRequestControls: (requestControls) => set((state) => ({ document: { ...state.document, requestControls }, dirty: false })),
+    setPersistedRequestControls: (requestControls, controlIds) => set((state) => ({
+      document: {
+        ...state.document,
+        requestControls,
+        transitions: state.document.transitions.map((transition) =>
+          transition.triggerSource === 'requestControl' && controlIds[transition.triggerId]
+            ? { ...transition, triggerId: controlIds[transition.triggerId] }
+            : transition
+        ),
+      },
+      selected: state.selected.kind === 'requestControl' && controlIds[state.selected.id]
+        ? { kind: 'requestControl', id: controlIds[state.selected.id] }
+        : state.selected,
+      dirty: state.document.transitions.some((transition) =>
+        transition.triggerSource === 'requestControl' && Boolean(controlIds[transition.triggerId])
+      ),
+    })),
     addVariable: () => change((d) => ({ ...d, variables: [...d.variables, { id: id(), code: '', name: 'New variable', description: '', dataType: 'text', sortOrder: (d.variables.length + 1) * 10, required: false, active: true, scope: 'process', defaultValue: '' }] })),
     updateVariable: (key, values) => change((d) => ({ ...d, variables: d.variables.map((x) => x.id === key ? { ...x, ...values } : x) })),
     removeVariable: (key) => change((d) => ({ ...d, variables: d.variables.filter((x) => x.id !== key) })),
@@ -81,6 +257,19 @@ export const useProcessBuilderStore = create<State>((set) => {
     updateRequestControl: (key, values) => change((d) => ({ ...d, requestControls: d.requestControls.map((x) => x.id === key ? { ...x, ...values } : x) })),
     removeRequestControl: (key) => change((d) => ({ ...d, requestControls: d.requestControls.filter((x) => x.id !== key) })),
     reorderRequestControls: (activeId, overId) => change((d) => { const controls = [...d.requestControls]; const from = controls.findIndex((x) => x.id === activeId); const to = controls.findIndex((x) => x.id === overId); if (from < 0 || to < 0 || from === to) return d; const [moved] = controls.splice(from, 1); controls.splice(to, 0, moved); return { ...d, requestControls: controls.map((control, index) => ({ ...control, sortOrder: (index + 1) * 10 })) }; }),
+    reorderRequestControlOptions: (controlId, fromIndex, toIndex) => change((d) => ({
+      ...d,
+      requestControls: d.requestControls.map((control) => {
+        if (control.id !== controlId || fromIndex === toIndex
+          || fromIndex < 0 || toIndex < 0
+          || fromIndex >= control.options.length || toIndex >= control.options.length)
+          return control;
+        const options = [...control.options];
+        const [moved] = options.splice(fromIndex, 1);
+        options.splice(toIndex, 0, moved);
+        return { ...control, options };
+      }),
+    })),
     addStep: () => change((d) => ({ ...d, steps: [...d.steps, { id: id(), code: '', name: `Step ${d.steps.length + 1}`, order: d.steps.length + 1, score: 0, autoPassingHours: 0, allMandatory: false, active: true, systemField: false, condition: null, activities: [] }] })),
     updateStep: (key, values) => change((d) => ({ ...d, steps: d.steps.map((x) => x.id === key ? { ...x, ...values } : x) })),
     removeStep: (key) => change((d) => ({ ...d, steps: d.steps.filter((x) => x.id !== key).map((x, i) => ({ ...x, order: i + 1 })) })),
@@ -97,7 +286,7 @@ export const useProcessBuilderStore = create<State>((set) => {
     reorderSteps: (activeId, overId) => change((d) => { const steps = [...d.steps]; const from = steps.findIndex((x) => x.id === activeId); const to = steps.findIndex((x) => x.id === overId); if (from < 0 || to < 0 || from === to) return d; const [moved] = steps.splice(from, 1); steps.splice(to, 0, moved); return { ...d, steps: steps.map((x, index) => ({ ...x, order: index + 1 })) }; }),
     reorderActivities: (stepId, activeId, overId) => change((d) => ({ ...d, steps: d.steps.map((step) => { if (step.id !== stepId) return step; const activities = [...step.activities]; const from = activities.findIndex((x) => x.id === activeId); const to = activities.findIndex((x) => x.id === overId); if (from < 0 || to < 0 || from === to) return step; const [moved] = activities.splice(from, 1); activities.splice(to, 0, moved); return { ...step, activities }; }) })),
     reorderControls: (stepId, activityId, activeId, overId) => change((d) => ({ ...d, steps: d.steps.map((step) => step.id !== stepId ? step : { ...step, activities: step.activities.map((activity) => { if (activity.id !== activityId) return activity; const controls = [...activity.controls]; const from = controls.findIndex((x) => x.id === activeId); const to = controls.findIndex((x) => x.id === overId); if (from < 0 || to < 0 || from === to) return activity; const [moved] = controls.splice(from, 1); controls.splice(to, 0, moved); return { ...activity, controls }; }) }) })),
-    addTransition: () => change((d) => ({ ...d, transitions: [...d.transitions, { id: id(), name: 'New transition', sourceStepId: d.steps[0]?.id ?? '', targetStepId: d.steps[1]?.id ?? '', variableId: d.variables[0]?.id ?? '', operator: '=', operatorId: '', value: '', sortOrder: (d.transitions.length + 1) * 10, active: true, triggerSource: 'none', triggerId: '' }] })),
+    addTransition: (trigger) => change((d) => ({ ...d, transitions: [...d.transitions, { id: id(), name: 'New transition', sourceStepId: d.steps[0]?.id ?? '', targetStepId: d.steps[1]?.id ?? d.steps[0]?.id ?? '', variableId: d.variables[0]?.id ?? '', operator: '=', operatorId: '', value: '', sortOrder: (d.transitions.length + 1) * 10, active: true, triggerSource: trigger?.triggerSource ?? 'none', triggerId: trigger?.triggerId ?? '' }] })),
     updateTransition: (key, values) => change((d) => ({ ...d, transitions: d.transitions.map((x) => x.id === key ? { ...x, ...values } : x) })),
     removeTransition: (key) => change((d) => ({ ...d, transitions: d.transitions.filter((x) => x.id !== key) })),
   };
