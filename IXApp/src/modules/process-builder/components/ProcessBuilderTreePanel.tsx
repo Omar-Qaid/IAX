@@ -2,6 +2,7 @@ import React from 'react';
 import {
   Box,
   Button,
+  Chip,
   IconButton,
   List,
   ListItemButton,
@@ -39,6 +40,11 @@ export function ProcessBuilderTreePanel() {
   const [expanded, setExpanded] = React.useState<Record<string, boolean>>(() =>
     Object.fromEntries(d.steps.map((step) => [step.id, true]))
   );
+  React.useEffect(() => {
+    setExpanded((current) => Object.fromEntries(
+      d.steps.map((step) => [step.id, current[step.id] ?? true])
+    ));
+  }, [d.steps]);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const onDragEnd = ({ active: drag, over }: DragEndEvent) => {
     if (over && drag.id !== over.id) reorderSteps(String(drag.id), String(over.id));
@@ -46,69 +52,85 @@ export function ProcessBuilderTreePanel() {
   const active = (kind: string, id?: string) =>
     selected.kind === kind && (!id || ('id' in selected && selected.id === id));
   const itemSx = {
-    mx: '8px',
-    my: 0.25,
-    borderRadius: 0,
-    minHeight: 32,
+    mx: 0,
+    my: 0,
+    px: '8px',
+    py: '3px',
+    borderRadius: `${tokens.radius}px`,
+    minHeight: 36,
     '&.Mui-selected': { bgcolor: tokens.accentSoft, color: tokens.accent },
     '&.Mui-selected:hover': { bgcolor: tokens.accentSoft },
+    '&:hover': { bgcolor: '#f8fafc' },
     '&:focus-visible': { boxShadow: tokens.focusRing },
-    '& .MuiListItemText-primary': { fontSize: tokens.fontSize.body, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
-    '& .MuiListItemText-secondary': { fontSize: tokens.fontSize.caption },
+    '& .MuiListItemText-primary': { fontSize: tokens.fontSize.body, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+    '& .MuiListItemText-secondary': { fontSize: tokens.fontSize.caption, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
   };
   const sectionSx = {
-    px: '16px',
-    pt: '18px',
-    pb: '8px',
+    px: '8px',
+    pt: '12px',
+    pb: '4px',
     fontSize: tokens.fontSize.secondary,
     fontWeight: 600,
     color: tokens.textMuted,
   };
+  const branchSx = {
+    ml: '22px',
+    pl: '10px',
+    borderLeft: '1px solid #cbd5e1',
+  };
   return (
-    <List dense disablePadding aria-label="Process structure" sx={{ py: 0.5 }}>
+    <List dense disablePadding aria-label="Process structure" sx={{ px: '8px', py: '6px' }}>
       <ListItemButton
         selected={active('process')}
         sx={itemSx}
         onClick={() => select({ kind: 'process' })}
       >
-        <AccountTree sx={{ mr: '12px', color: tokens.textMuted }} />
+        <ExpandMore sx={{ mr: '4px', fontSize: 18, color: tokens.textMuted }} />
+        <AccountTree sx={{ mr: '8px', fontSize: 20, color: tokens.textMuted }} />
         <Tooltip title={`${d.name} · ${d.code}`} placement="right">
-          <ListItemText primary={d.name} secondary={d.code} />
+          <ListItemText
+            primary={d.name || 'Untitled process'}
+            secondary={`${d.code || 'Draft'} · ${d.active ? 'Active' : 'Inactive'} · ${d.steps.length} steps`}
+          />
         </Tooltip>
       </ListItemButton>
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <Typography sx={{ ...sectionSx, flex: 1 }}>VARIABLES</Typography>
+        <Typography component="div" sx={{ ...sectionSx, flex: 1 }}>VARIABLES <Chip size="small" label={d.variables.length} sx={{ ml: 0.5, height: 18 }} /></Typography>
         <Tooltip title="Add variable">
           <IconButton size="small" aria-label="Add variable" onClick={addVariable} sx={{ mr: 1 }}>
             <Add fontSize="small" />
           </IconButton>
         </Tooltip>
       </Box>
-      {d.variables.map((v) => (
-        <ListItemButton
-          key={v.id}
-          selected={active('variable', v.id)}
-          sx={{ ...itemSx, pl: '32px' }}
-          onClick={() => select({ kind: 'variable', id: v.id })}
-        >
-          <Tooltip title={`${v.name} · ${v.dataType}`} placement="right">
-            <ListItemText primary={v.name} secondary={v.dataType} />
-          </Tooltip>
-        </ListItemButton>
-      ))}
-      <Typography sx={sectionSx}>REQUEST CONTROLS</Typography>
-      {d.requestControls.map((c) => (
-        <ListItemButton
-          key={c.id}
-          selected={active('requestControl', c.id)}
-          sx={{ ...itemSx, pl: '32px' }}
-          onClick={() => select({ kind: 'requestControl', id: c.id })}
-        >
-          <Tooltip title={`${c.label} · ${c.type}`} placement="right">
-            <ListItemText primary={c.label} secondary={c.type} />
-          </Tooltip>
-        </ListItemButton>
-      ))}
+      <Box sx={branchSx}>
+        {d.variables.map((v) => (
+          <ListItemButton
+            key={v.id}
+            selected={active('variable', v.id)}
+            sx={itemSx}
+            onClick={() => select({ kind: 'variable', id: v.id })}
+          >
+            <Tooltip title={`${v.name} · ${v.dataType}`} placement="right">
+              <ListItemText primary={v.name} secondary={`${v.code || 'Draft'} · ${v.dataType} · #${v.sortOrder} · ${v.active ? 'Active' : 'Inactive'}`} />
+            </Tooltip>
+          </ListItemButton>
+        ))}
+      </Box>
+      <Typography component="div" sx={sectionSx}>REQUEST CONTROLS <Chip size="small" label={d.requestControls.length} sx={{ ml: 0.5, height: 18 }} /></Typography>
+      <Box sx={branchSx}>
+        {d.requestControls.map((c) => (
+          <ListItemButton
+            key={c.id}
+            selected={active('requestControl', c.id)}
+            sx={itemSx}
+            onClick={() => select({ kind: 'requestControl', id: c.id })}
+          >
+            <Tooltip title={`${c.label} · ${c.type}`} placement="right">
+              <ListItemText primary={c.label} secondary={`${c.code || 'Draft'} · ${c.type} · #${c.sortOrder} · ${c.required ? 'Required' : 'Optional'}`} />
+            </Tooltip>
+          </ListItemButton>
+        ))}
+      </Box>
       <Button
         size="small"
         startIcon={<Add />}
@@ -118,7 +140,7 @@ export function ProcessBuilderTreePanel() {
         Open Request Form
       </Button>
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <Typography sx={{ ...sectionSx, flex: 1 }}>STEPS</Typography>
+        <Typography component="div" sx={{ ...sectionSx, flex: 1 }}>STEPS <Chip size="small" label={d.steps.length} sx={{ ml: 0.5, height: 18 }} /></Typography>
         <Tooltip title="Add step">
           <IconButton size="small" aria-label="Add step" onClick={addStep} sx={{ mr: 1 }}>
             <Add fontSize="small" />
@@ -130,13 +152,14 @@ export function ProcessBuilderTreePanel() {
           items={d.steps.map((step) => step.id)}
           strategy={verticalListSortingStrategy}
         >
+          <Box sx={branchSx}>
           {d.steps.map((s) => (
             <SortableBuilderItem key={s.id} id={s.id}>
               {(attributes, listeners) => (
                 <Box>
                   <ListItemButton
                     selected={active('step', s.id)}
-                    sx={{ ...itemSx, pl: '34px' }}
+                    sx={itemSx}
                     onClick={() => select({ kind: 'step', id: s.id })}
                   >
                     <Box
@@ -163,26 +186,28 @@ export function ProcessBuilderTreePanel() {
                       )}
                     </IconButton>
                     <Tooltip title={`${s.order}. ${s.name} · ${s.activities.length} activities`} placement="right">
-                      <ListItemText primary={`${s.order}. ${s.name}`} secondary={`${s.activities.length} activities`} />
+                      <ListItemText primary={`${s.order}. ${s.name}`} secondary={`${s.code || 'Draft'} · ${s.activities.length} activities · ${s.active ? 'Active' : 'Inactive'}`} />
                     </Tooltip>
                   </ListItemButton>
-                  {expanded[s.id] &&
-                    s.activities.map((a) => (
+                  {expanded[s.id] && (
+                    <Box sx={{ ml: '20px', pl: '10px', borderLeft: '1px solid #cbd5e1' }}>
+                    {s.activities.map((a) => (
                       <Box key={a.id}>
                         <ListItemButton
                           selected={active('activity', a.id)}
-                          sx={{ ...itemSx, ml: 3, pl: 2 }}
+                          sx={itemSx}
                           onClick={() => select({ kind: 'activity', stepId: s.id, id: a.id })}
                         >
                           <Tooltip title={`${a.name} · ${a.type} · ${a.controls.length} controls`} placement="right">
-                            <ListItemText primary={a.name} secondary={`${a.type} · ${a.controls.length} controls`} />
+                            <ListItemText primary={a.name} secondary={`${a.code || 'Draft'} · ${a.type} · ${a.controls.length} controls · ${a.active ? 'Active' : 'Inactive'}`} />
                           </Tooltip>
                         </ListItemButton>
+                        <Box sx={{ ml: '20px', pl: '10px', borderLeft: '1px solid #dbe2ea' }}>
                         {a.controls.map((control) => (
                           <ListItemButton
                             key={control.id}
                             selected={active('control', control.id)}
-                            sx={{ ...itemSx, ml: 5, pl: 2 }}
+                            sx={{ ...itemSx, minHeight: 34 }}
                             onClick={() =>
                               select({
                                 kind: 'control',
@@ -193,16 +218,20 @@ export function ProcessBuilderTreePanel() {
                             }
                           >
                             <Tooltip title={`${control.label} · ${control.type}`} placement="right">
-                              <ListItemText primary={control.label} secondary={control.type} />
+                              <ListItemText primary={control.label} secondary={`${control.code || 'Draft'} · ${control.type} · ${control.required ? 'Required' : 'Optional'} · #${control.sortOrder}`} />
                             </Tooltip>
                           </ListItemButton>
                         ))}
+                        </Box>
                       </Box>
                     ))}
+                    </Box>
+                  )}
                 </Box>
               )}
             </SortableBuilderItem>
           ))}
+          </Box>
         </SortableContext>
       </DndContext>
     </List>

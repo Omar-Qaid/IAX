@@ -15,13 +15,12 @@ import {
 } from '@mui/material';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import Delete from '@mui/icons-material/Delete';
-import AccountTree from '@mui/icons-material/AccountTree';
 import IconButton from '@mui/material/IconButton';
 import { useProcessBuilderStore } from '../store/useProcessBuilderStore';
 import { ConditionBuilder } from './ConditionBuilder';
 import { controlPalette } from './ProcessBuilderPalette';
+import { normalizeTransitionValue, TransitionValueField } from './TransitionValueField';
 import type {
-  BuilderActivityType,
   BuilderStep,
   BuilderTransition,
   BuilderValidation,
@@ -31,8 +30,10 @@ import type {
 import { processBuilderTokens as tokens } from './processBuilderTokens';
 import { useQuery } from '@tanstack/react-query';
 import { wfCategoryApi, type WfCategoryRecord } from '@modules/workflow/api/wfCategoryApi';
-import { wfPriorityApi, wfProcessTypeApi } from '@modules/workflow/api/workflowSetupApis';
+import { wfActivityTypeApi, wfPriorityApi, wfProcessTypeApi } from '@modules/workflow/api/workflowSetupApis';
+import { wfPerformerApi } from '@modules/workflow/api/wfPerformerApi';
 import { AppLookupGridField } from '@shared/components/fields/AppLookupGridField';
+import { AppLookupField } from '@shared/components/fields/AppLookupField';
 
 const categoryLookupColumns = [
   { field: 'code', header: 'Code', width: 110 },
@@ -40,13 +41,14 @@ const categoryLookupColumns = [
 ] as const;
 
 const requestOptionControlTypes = new Set(['dropdown-manual', 'checkboxlist', 'radiobuttonlist']);
-const activityTypeOptions: ReadonlyArray<{ type: BuilderActivityType; label: string }> = [
-  { type: 'approval', label: 'Approval' },
-  { type: 'review', label: 'Review' },
-  { type: 'data-entry', label: 'Data Entry' },
-  { type: 'api', label: 'API Action' },
-  { type: 'notification', label: 'Notification' },
-];
+const builderTypeFromLabel = (label: string): 'approval' | 'review' | 'data-entry' | 'api' | 'notification' => {
+  const normalized = label.replace(/[^a-z0-9]/gi, '').toLocaleLowerCase();
+  if (normalized.includes('dataentry')) return 'data-entry';
+  if (normalized.includes('notification')) return 'notification';
+  if (normalized.includes('review')) return 'review';
+  if (normalized.includes('api')) return 'api';
+  return 'approval';
+};
 
 const fetchCategoryPage = async ({
   pageNumber,
@@ -117,7 +119,22 @@ const settingsGroupSx = {
   bgcolor: '#f9fafb',
 };
 
-const switchRowSx = { m: 0, minHeight: 32, justifyContent: 'space-between' };
+const settingsSwitchGridSx = {
+  ...settingsGroupSx,
+  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+  gap: '6px 10px',
+  '& .MuiFormControlLabel-root': { m: 0, minWidth: 0 },
+  '& .MuiFormControlLabel-label': { fontSize: tokens.fontSize.secondary },
+  '& .MuiSwitch-root': { width: 32, height: 18, p: 0, mr: '4px' },
+  '& .MuiSwitch-switchBase': {
+    p: '2px',
+    '&.Mui-checked': { transform: 'translateX(14px)' },
+  },
+  '& .MuiSwitch-thumb': { width: 14, height: 14 },
+  '& .MuiSwitch-track': { borderRadius: 9 },
+};
+
+const switchRowSx = { m: 0, minHeight: 28 };
 
 const sectionSx = {
   boxShadow: 'none',
@@ -402,20 +419,32 @@ function TransitionRules({
         <Button size="small" onClick={onAdd}>+ Add</Button>
       </Stack>
       <Stack spacing="10px" sx={{ mt: '8px' }}>
-        {values.map((transition) => (
+        {values.map((transition) => {
+          const variable = variables.find((item) => item.id === transition.variableId);
+          return (
           <Box
             key={transition.id}
             sx={{ p: '10px', border: `1px solid ${tokens.border}`, bgcolor: '#fff' }}
           >
             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-              <TextField select size="small" label="Variable" value={transition.variableId} onChange={(event) => onUpdate(transition.id, { variableId: event.target.value })}>
+              <TextField select size="small" label="Variable" value={transition.variableId} onChange={(event) => {
+                const variableId = event.target.value;
+                const dataType = variables.find((item) => item.id === variableId)?.dataType;
+                onUpdate(transition.id, { variableId, value: normalizeTransitionValue(transition.value, dataType) });
+              }}>
                 <MenuItem value="">Variable</MenuItem>
                 {variables.map((variable) => <MenuItem key={variable.id} value={variable.id}>{variable.name}</MenuItem>)}
               </TextField>
               <TextField select size="small" label="Operator" value={transition.operator} onChange={(event) => onUpdate(transition.id, { operator: event.target.value as BuilderTransition['operator'] })}>
                 {['=', '!=', '>', '<', '>=', '<=', 'contains', 'isEmpty'].map((operator) => <MenuItem key={operator} value={operator}>{operator}</MenuItem>)}
               </TextField>
-              <TextField size="small" label="Value" value={transition.value} onChange={(event) => onUpdate(transition.id, { value: event.target.value })} />
+              <TransitionValueField
+                label="Value"
+                dataType={variable?.dataType}
+                value={transition.value}
+                disabled={transition.operator === 'isEmpty'}
+                onChange={(value) => onUpdate(transition.id, { value })}
+              />
               <TextField select size="small" label="Target Step" value={transition.targetStepId} onChange={(event) => onUpdate(transition.id, { targetStepId: event.target.value })}>
                 <MenuItem value="">Target Step</MenuItem>
                 {steps.map((step) => <MenuItem key={step.id} value={step.id}>{step.name}</MenuItem>)}
@@ -427,7 +456,8 @@ function TransitionRules({
               <IconButton size="small" color="error" aria-label="Delete transition" onClick={() => onRemove(transition.id)}><Delete /></IconButton>
             </Stack>
           </Box>
-        ))}
+          );
+        })}
         {values.length === 0 && (
           <Typography color="text.secondary" sx={{ py: '12px', textAlign: 'center', fontSize: tokens.fontSize.caption }}>
             No transitions yet.
@@ -444,6 +474,8 @@ export function ProcessBuilderSettingsPanel() {
   const selected = s.selected;
   const priorities = useQuery({ queryKey: ['workflow', 'builder-priorities'], queryFn: ({ signal }) => wfPriorityApi.list(signal) });
   const processTypes = useQuery({ queryKey: ['workflow', 'builder-process-types'], queryFn: ({ signal }) => wfProcessTypeApi.list(signal) });
+  const activityTypes = useQuery({ queryKey: ['workflow', 'builder-activity-type-options'], queryFn: ({ signal }) => wfActivityTypeApi.list(signal) });
+  const performers = useQuery({ queryKey: ['workflow', 'builder-performer-options'], queryFn: ({ signal }) => wfPerformerApi.list(signal) });
   const text = (
     label: string,
     value: string | number,
@@ -486,21 +518,7 @@ export function ProcessBuilderSettingsPanel() {
     return (
       <Stack spacing="8px" sx={{ p: '10px', minHeight: '100%' }}>
         <SettingsTitle title="Process Information" isNew />
-        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-          <Box sx={{ flex: '0 1 220px', minWidth: 0 }}>
-            <TextField fullWidth size="small" label="Code" value={d.code} disabled />
-          </Box>
-          <FormControlLabel
-            control={
-              <Switch
-                size="small"
-                checked={d.active}
-                onChange={(_, active) => s.updateProcess({ active })}
-              />
-            }
-            label="Active"
-          />
-        </Stack>
+        <TextField fullWidth size="small" label="Code" value={d.code} disabled />
         {text('Name', d.name, (name) => s.updateProcess({ name }))}
         <TextField
           fullWidth
@@ -561,7 +579,11 @@ export function ProcessBuilderSettingsPanel() {
           (value) => s.updateProcess({ score: Number(value) }),
           'number'
         )}
-        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+        <Box sx={settingsSwitchGridSx}>
+          <FormControlLabel
+            control={<Switch size="small" checked={d.active} onChange={(_, active) => s.updateProcess({ active })} />}
+            label="Active"
+          />
           <FormControlLabel
             control={
               <Switch
@@ -644,13 +666,16 @@ export function ProcessBuilderSettingsPanel() {
             </MenuItem>
           ))}
         </TextField>
-        <Box sx={{ minHeight: 32, display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 1 }}>
-          <Typography sx={{ fontSize: tokens.fontSize.secondary }}>Sort order</Typography>
-          <Chip size="small" label={`#${x.sortOrder}`} sx={{ width: 24, height: 24, borderRadius: '50%', bgcolor: tokens.accent, color: '#fff', '& .MuiChip-label': { px: 0 } }} />
-        </Box>
-        <Box sx={settingsGroupSx}>
+        <TextField
+          size="small"
+          type="number"
+          label="Sort order"
+          value={x.sortOrder}
+          slotProps={{ htmlInput: { min: 0, max: 255, step: 1 } }}
+          onChange={(event) => s.updateVariable(x.id, { sortOrder: Number(event.target.value) })}
+        />
+        <Box sx={settingsSwitchGridSx}>
           <FormControlLabel
-            labelPlacement="start"
             sx={switchRowSx}
             control={
               <Switch
@@ -688,9 +713,8 @@ export function ProcessBuilderSettingsPanel() {
           )}
         </Box>
         {text('Score', x.score, (value) => s.updateStep(x.id, { score: Number(value) }), 'number')}
-        <Box sx={settingsGroupSx}>
+        <Box sx={settingsSwitchGridSx}>
           <FormControlLabel
-            labelPlacement="start"
             sx={switchRowSx}
             control={
               <Switch
@@ -702,7 +726,6 @@ export function ProcessBuilderSettingsPanel() {
             label="All Mandatory"
           />
           <FormControlLabel
-            labelPlacement="start"
             sx={switchRowSx}
             control={
               <Switch
@@ -714,7 +737,6 @@ export function ProcessBuilderSettingsPanel() {
             label="Active Step"
           />
           <FormControlLabel
-            labelPlacement="start"
             sx={switchRowSx}
             control={
               <Switch
@@ -746,107 +768,82 @@ export function ProcessBuilderSettingsPanel() {
     if (!x) return null;
     return (
       <Stack spacing="8px" sx={{ p: '10px' }}>
-        <SettingsTitle title="Activity Settings" dirty={s.dirty} isNew />
+        <SettingsTitle title="Activity Settings" dirty={s.dirty} isNew={!/^\d+$/.test(x.id)} />
         <TextField size="small" label="Activity code" value={x.code} placeholder="Managed by number sequence" disabled />
         {text('Activity name', x.name, (name) => s.updateActivity(selected.stepId, x.id, { name }))}
-        <Stack spacing={1.25}>
-          <TextField
-            select
-            size="small"
-            label="Type"
-            value={x.type}
-            onChange={(e) =>
-              s.updateActivity(selected.stepId, x.id, { type: e.target.value as typeof x.type })
-            }
-          >
-            {activityTypeOptions.map((item) => (
-              <MenuItem key={item.type} value={item.type}>
-                {item.label}
-              </MenuItem>
-            ))}
-          </TextField>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={x.active}
-                onChange={(_, active) => s.updateActivity(selected.stepId, x.id, { active })}
-              />
-            }
-            label="Active"
-          />
-        </Stack>
         <Stack spacing={1}>
-          {text(
-            'Auto passing hours',
-            x.autoPassingHours,
-            (value) =>
-              s.updateActivity(selected.stepId, x.id, { autoPassingHours: Number(value) }),
-            'number'
-          )}
-          <FormControlLabel
-            control={
-              <Switch
-                checked={x.autoPassEnabled}
-                onChange={(_, autoPassEnabled) =>
-                  s.updateActivity(selected.stepId, x.id, { autoPassEnabled })
-                }
-              />
-            }
-            label="Auto pass enabled"
+          <AppLookupField
+            name={`settings-performerId-${x.id}`}
+            label="Performer"
+            value={Number(x.performer) || undefined}
+            options={(performers.data ?? []).map((item) => ({
+              id: item.recId,
+              code: item.code ?? '',
+              name: item.name ?? '',
+            }))}
+            onChange={(value) => s.updateActivity(selected.stepId, x.id, {
+              performer: value == null ? '' : String(value),
+            })}
+            required
+            displayMode="select"
           />
         </Stack>
+        <Stack spacing={1.25}>
+          <AppLookupField
+            name={`settings-activityTypeId-${x.id}`}
+            label="Activity Type"
+            value={Number(x.activityTypeId) || undefined}
+            options={(activityTypes.data ?? []).map((item) => ({
+              id: item.recId,
+              code: item.code ?? '',
+              name: item.name ?? '',
+            }))}
+            onChange={(value, option) => s.updateActivity(selected.stepId, x.id, {
+              activityTypeId: value == null ? '' : String(value),
+              type: option && !Array.isArray(option) ? builderTypeFromLabel(option.name) : x.type,
+            })}
+            required
+            displayMode="select"
+          />
+        </Stack>
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+          <TextField
+            size="small"
+            type="number"
+            label="Score"
+            value={x.score}
+            onChange={(event) => s.updateActivity(selected.stepId, x.id, { score: Number(event.target.value) })}
+          />
+          <TextField
+            size="small"
+            type="number"
+            label="Auto passing hours"
+            value={x.autoPassingHours}
+            disabled={!x.autoPassEnabled}
+            onChange={(event) => s.updateActivity(selected.stepId, x.id, { autoPassingHours: Number(event.target.value) })}
+          />
+        </Box>
         {text('Notification emails', x.config.notifyEmails, (notifyEmails) =>
           s.updateActivity(selected.stepId, x.id, { config: { ...x.config, notifyEmails } })
         )}
-        <Stack spacing={1}>
+        <Box sx={settingsSwitchGridSx}>
           <FormControlLabel
-            control={
-              <Switch
-                checked={x.required}
-                onChange={(_, required) => s.updateActivity(selected.stepId, x.id, { required })}
-              />
-            }
+            control={<Switch size="small" checked={x.active} onChange={(_, active) => s.updateActivity(selected.stepId, x.id, { active })} />}
+            label="Active"
+          />
+          <FormControlLabel
+            control={<Switch size="small" checked={x.required} onChange={(_, required) => s.updateActivity(selected.stepId, x.id, { required })} />}
             label="Required"
           />
           <FormControlLabel
-            control={
-              <Switch
-                checked={x.mandatoryDocs}
-                onChange={(_, mandatoryDocs) =>
-                  s.updateActivity(selected.stepId, x.id, { mandatoryDocs })
-                }
-              />
-            }
+            control={<Switch size="small" checked={x.autoPassEnabled} onChange={(_, autoPassEnabled) => s.updateActivity(selected.stepId, x.id, { autoPassEnabled })} />}
+            label="Auto pass enabled"
+          />
+          <FormControlLabel
+            control={<Switch size="small" checked={x.mandatoryDocs} onChange={(_, mandatoryDocs) => s.updateActivity(selected.stepId, x.id, { mandatoryDocs })} />}
             label="Mandatory documents"
           />
-          <ConditionBuilder
-            value={x.condition}
-            variables={d.variables}
-            onChange={(condition) => s.updateActivity(selected.stepId, x.id, { condition })}
-          />
-        </Stack>
-        <Stack spacing={1}>
-          {text('Performer', x.performer, (performer) =>
-            s.updateActivity(selected.stepId, x.id, { performer })
-          )}
-          <TextField
-            select
-            size="small"
-            label="Assignment mode"
-            value={x.assignmentMode}
-            onChange={(e) =>
-              s.updateActivity(selected.stepId, x.id, {
-                assignmentMode: e.target.value as typeof x.assignmentMode,
-              })
-            }
-          >
-            {['any', 'all', 'round-robin'].map((mode) => (
-              <MenuItem key={mode} value={mode}>
-                {mode}
-              </MenuItem>
-            ))}
-          </TextField>
-        </Stack>
+        </Box>
         {x.type === 'api' && (
           <Section title="API Action">
             <Stack spacing={1}>
@@ -945,7 +942,7 @@ export function ProcessBuilderSettingsPanel() {
             ))}
           </Stack>
         )}
-        <Box sx={{ ...settingsGroupSx, gridTemplateColumns: '1fr 1fr' }}>
+        <Box sx={settingsSwitchGridSx}>
           <FormControlLabel
             control={
               <Switch
@@ -1019,7 +1016,7 @@ export function ProcessBuilderSettingsPanel() {
             })
           )}
         {text('Default value', control.defaultValue, (defaultValue) => update({ defaultValue }))}
-        <Box sx={{ ...settingsGroupSx, gridTemplateColumns: '1fr 1fr' }}>
+        <Box sx={settingsSwitchGridSx}>
           <FormControlLabel
             control={
               <Switch
@@ -1065,12 +1062,6 @@ export function ProcessBuilderSettingsPanel() {
           onAdd={() => s.addTransition({ triggerSource: 'activity', triggerId: selected.activityId })}
           onUpdate={s.updateTransition}
           onRemove={s.removeTransition}
-        />
-        <Typography sx={{ fontSize: tokens.fontSize.body, fontWeight: 600 }}>Visibility Rule</Typography>
-        <ConditionBuilder
-          value={control.visibilityCondition}
-          variables={d.variables}
-          onChange={(visibilityCondition) => update({ visibilityCondition })}
         />
       </Stack>
     );

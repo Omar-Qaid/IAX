@@ -114,6 +114,31 @@ const validateVariables = (variables: BuilderVariable[]) => {
   }
 };
 
+const validateTransitionValue = (transition: BuilderTransition, variable: BuilderVariable, index: number) => {
+  if (transition.operator === 'isEmpty') return;
+  const value = transition.value.trim();
+  if (!value) throw new Error(`Transition ${index + 1}: comparison value is required.`);
+  if (variable.dataType === 'number' && !Number.isFinite(Number(value)))
+    throw new Error(`Transition ${index + 1}: comparison value must be a number.`);
+  if (variable.dataType === 'boolean' && value !== 'true' && value !== 'false')
+    throw new Error(`Transition ${index + 1}: comparison value must be Yes or No.`);
+  if (variable.dataType === 'date') {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+    const date = match ? new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))) : null;
+    if (!match || !date || date.getUTCFullYear() !== Number(match[1])
+      || date.getUTCMonth() !== Number(match[2]) - 1 || date.getUTCDate() !== Number(match[3]))
+      throw new Error(`Transition ${index + 1}: comparison value must be a valid date.`);
+  }
+  if (variable.dataType === 'object') {
+    try {
+      const parsed = JSON.parse(value) as unknown;
+      if (parsed == null || typeof parsed !== 'object') throw new Error();
+    } catch {
+      throw new Error(`Transition ${index + 1}: comparison value must be a valid JSON object.`);
+    }
+  }
+};
+
 const toBuilderVariable = (variable: Awaited<ReturnType<typeof wfVariableApi.list>>[number]): BuilderVariable => ({
   id: String(variable.recId),
   code: variable.code ?? '',
@@ -170,7 +195,9 @@ export async function loadProcessBuilder(processId: number): Promise<ProcessBuil
     wfTransitionApi.list(),
     wfOperatorApi.list(),
   ]);
-  const processSteps = steps.filter((step) => step.processId === processId);
+  const processSteps = steps
+    .filter((step) => step.processId === processId)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
   const builderSteps: BuilderStep[] = processSteps.map((step) => ({
     id: String(step.recId),
     code: step.code ?? '',
@@ -184,6 +211,7 @@ export async function loadProcessBuilder(processId: number): Promise<ProcessBuil
     condition: null,
     activities: activities
       .filter((activity) => activity.stepId === step.recId)
+      .sort((a, b) => a.sortOrder - b.sortOrder)
       .map<BuilderActivity>((activity) => ({
         id: String(activity.recId),
         code: activity.code ?? '',
@@ -194,6 +222,7 @@ export async function loadProcessBuilder(processId: number): Promise<ProcessBuil
         activityTypeId: String(activity.activityTypeId || ''),
         performer: String(activity.performerId || ''),
         score: activity.score,
+        sortOrder: activity.sortOrder,
         assignmentMode: 'any',
         active: activity.isActive,
         required: true,
@@ -250,6 +279,7 @@ export async function loadProcessBuilder(processId: number): Promise<ProcessBuil
   }));
   const builderVariables: BuilderVariable[] = variables
     .filter((variable) => variable.processId === processId)
+    .sort((a, b) => a.sortOrder - b.sortOrder)
     .map(toBuilderVariable);
   const builderRequestControls: BuilderControl[] = requestControls
     .filter((control) => control.processId === processId)
@@ -322,7 +352,7 @@ export async function loadProcessBuilder(processId: number): Promise<ProcessBuil
     id: String(process.recId),
     code: process.code ?? '',
     name: process.name ?? '',
-    description: '',
+    description: process.description ?? '',
     categoryId: String(process.categoryId || ''),
     priorityId: String(process.priorityId || ''),
     processType: String(process.processTypeId || ''),
@@ -362,6 +392,7 @@ export async function saveProcessBuilder(
       sortOrder: 0,
     }),
     name: document.name.trim(),
+    description: document.description.trim() || null,
     categoryId,
     priorityId,
     processTypeId,
@@ -378,8 +409,8 @@ export async function saveProcessBuilder(
     wfActivityTypeApi.list(),
     getStepCodeMetadata(),
   ]);
-  await saveProcessVariables({ ...document, id: String(persisted.recId) });
-  await saveProcessRequestControls({ ...document, id: String(persisted.recId) });
+  const variableResult = await saveProcessVariables({ ...document, id: String(persisted.recId) });
+  const requestControlResult = await saveProcessRequestControls({ ...document, id: String(persisted.recId) });
 
   const stepIds = new Map<string, number>();
   for (const step of document.steps) {
@@ -443,6 +474,7 @@ export async function saveProcessBuilder(
           showPreviousSteps: false,
           showPreviousDocs: false,
           extendedProperties: null,
+          sortOrder: 0,
         }),
         code: current?.code ?? (activityCodeMetadata.manual ? activity.code.trim() || null : null),
         name: activity.name,
@@ -450,6 +482,7 @@ export async function saveProcessBuilder(
         activityTypeId: activityType.recId,
         performerId,
         score: activity.score,
+        sortOrder: activity.sortOrder,
         mandatoryDocs: activity.mandatoryDocs,
         autoPassEnabled: activity.autoPassEnabled,
         autoPassingHrs: activity.autoPassingHours,
@@ -464,10 +497,42 @@ export async function saveProcessBuilder(
 
   await syncActivityControls({ ...document, id: String(persisted.recId) }, persisted.recId, activityIds);
 
+  const persistedTransitionsDocument: ProcessBuilderDocument = {
+    ...document,
+    id: String(persisted.recId),
+    variables: variableResult.variables,
+    requestControls: requestControlResult.controls,
+    steps: document.steps.map((step) => ({
+      ...step,
+      id: String(stepIds.get(step.id) ?? step.id),
+      activities: step.activities.map((activity) => ({
+        ...activity,
+        id: String(activityIds.get(activity.id) ?? activity.id),
+      })),
+    })),
+    transitions: document.transitions.map((transition) => ({
+      ...transition,
+      sourceStepId: String(stepIds.get(transition.sourceStepId) ?? transition.sourceStepId),
+      targetStepId: String(stepIds.get(transition.targetStepId) ?? transition.targetStepId),
+      variableId: variableResult.variableIds[transition.variableId] ?? transition.variableId,
+      triggerId: transition.triggerSource === 'requestControl'
+        ? requestControlResult.controlIds[transition.triggerId] ?? transition.triggerId
+        : transition.triggerSource === 'activity'
+          ? String(activityIds.get(transition.triggerId) ?? transition.triggerId)
+          : '',
+    })),
+  };
+  await saveProcessTransitions(persistedTransitionsDocument);
+
   return loadProcessBuilder(persisted.recId);
 }
 
-export async function saveProcessVariables(document: ProcessBuilderDocument): Promise<BuilderVariable[]> {
+export interface SaveProcessVariablesResult {
+  variables: BuilderVariable[];
+  variableIds: Record<string, string>;
+}
+
+export async function saveProcessVariables(document: ProcessBuilderDocument): Promise<SaveProcessVariablesResult> {
   const processId = Number(document.id);
   if (!Number.isInteger(processId) || processId <= 0)
     throw new Error('Save the process before saving variables.');
@@ -487,6 +552,7 @@ export async function saveProcessVariables(document: ProcessBuilderDocument): Pr
     if (!retainedIds.has(variable.recId)) await wfVariableApi.delete(variable);
   }
 
+  const savedVariableIds = new Map<string, number>();
   for (const variable of [...document.variables].sort((a, b) => a.sortOrder - b.sortOrder)) {
     const id = numericId(variable.id);
     const current = id == null ? null : serverVariables.find((item) => item.recId === id);
@@ -510,14 +576,94 @@ export async function saveProcessVariables(document: ProcessBuilderDocument): Pr
       sortOrder: variable.sortOrder,
       isActive: variable.active,
     };
-    if (current) await wfVariableApi.update(variableRecord);
-    else await wfVariableApi.create(variableRecord);
+    const saved = current
+      ? await wfVariableApi.update(variableRecord)
+      : await wfVariableApi.create(variableRecord);
+    savedVariableIds.set(variable.id, saved.recId);
   }
 
-  return (await wfVariableApi.list())
+  const variables = (await wfVariableApi.list())
     .filter((variable) => variable.processId === processId)
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .map(toBuilderVariable);
+  return {
+    variables,
+    variableIds: Object.fromEntries(
+      [...savedVariableIds].map(([localId, persistedId]) => [localId, String(persistedId)])
+    ),
+  };
+}
+
+export interface SaveProcessStepsResult {
+  steps: BuilderStep[];
+  stepIds: Record<string, string>;
+}
+
+export async function saveProcessSteps(document: ProcessBuilderDocument): Promise<SaveProcessStepsResult> {
+  const processId = Number(document.id);
+  if (!Number.isInteger(processId) || processId <= 0)
+    throw new Error('Save the process before saving steps.');
+
+  const names = new Set<string>();
+  for (const [index, step] of document.steps.entries()) {
+    const name = step.name.trim();
+    if (!name) throw new Error(`Step ${index + 1}: name is required.`);
+    const normalizedName = name.toLocaleLowerCase();
+    if (names.has(normalizedName)) throw new Error(`Step name '${name}' is duplicated.`);
+    names.add(normalizedName);
+    if (!Number.isInteger(step.order) || step.order < 0 || step.order > 255)
+      throw new Error(`Step '${name}': order must be a whole number from 0 to 255.`);
+  }
+
+  const [process, allSteps, codeMetadata] = await Promise.all([
+    wfProcessApi.getById(processId),
+    wfStepApi.list(),
+    getStepCodeMetadata(),
+  ]);
+  const serverSteps = allSteps.filter((step) => step.processId === processId);
+  const retainedIds = new Set(
+    document.steps.map((step) => numericId(step.id)).filter((id): id is number => id != null)
+  );
+
+  for (const step of serverSteps) {
+    if (!retainedIds.has(step.recId)) await wfStepApi.delete(step);
+  }
+
+  const savedStepIds = new Map<string, number>();
+  for (const step of [...document.steps].sort((a, b) => a.order - b.order)) {
+    const id = numericId(step.id);
+    const current = id == null ? null : serverSteps.find((item) => item.recId === id);
+    const record = {
+      ...(current ?? {
+        id: `new-${crypto.randomUUID()}`,
+        recId: 0,
+        code: null,
+        description: null,
+        rowVersion: null,
+        recVersion: 1,
+        dataAreaId: process.dataAreaId,
+      }),
+      code: current?.code ?? (codeMetadata.manual ? step.code.trim() || null : null),
+      name: step.name.trim(),
+      processId,
+      sortOrder: step.order,
+      score: step.score,
+      autoPassingHrs: step.autoPassingHours,
+      allMandatory: step.allMandatory,
+      sysField: step.systemField,
+      isActive: step.active,
+    };
+    const saved = current ? await wfStepApi.update(record) : await wfStepApi.create(record);
+    savedStepIds.set(step.id, saved.recId);
+  }
+
+  const reloaded = await loadProcessBuilder(processId);
+  return {
+    steps: reloaded.steps,
+    stepIds: Object.fromEntries(
+      [...savedStepIds].map(([localId, persistedId]) => [localId, String(persistedId)])
+    ),
+  };
 }
 
 async function syncActivityControls(
@@ -691,7 +837,12 @@ async function syncActivityControls(
   }
 }
 
-export async function saveProcessActivities(document: ProcessBuilderDocument): Promise<ProcessBuilderDocument> {
+export interface SaveProcessActivitiesResult {
+  document: ProcessBuilderDocument;
+  activityIds: Record<string, string>;
+}
+
+export async function saveProcessActivities(document: ProcessBuilderDocument): Promise<SaveProcessActivitiesResult> {
   const processId = Number(document.id);
   if (!Number.isInteger(processId) || processId <= 0)
     throw new Error('Save the process before saving activities.');
@@ -754,6 +905,7 @@ export async function saveProcessActivities(document: ProcessBuilderDocument): P
           showPreviousSteps: false,
           showPreviousDocs: false,
           extendedProperties: null,
+          sortOrder: 0,
         }),
         code: current?.code ?? (codeMetadata.manual ? activity.code.trim() || null : null),
         name: activity.name.trim(),
@@ -761,6 +913,7 @@ export async function saveProcessActivities(document: ProcessBuilderDocument): P
         activityTypeId: activityType.recId,
         performerId,
         score: activity.score,
+        sortOrder: activity.sortOrder,
         mandatoryDocs: activity.mandatoryDocs,
         autoPassEnabled: activity.autoPassEnabled,
         autoPassingHrs: activity.autoPassingHours,
@@ -775,7 +928,12 @@ export async function saveProcessActivities(document: ProcessBuilderDocument): P
 
   await syncActivityControls(document, processId, activityIds);
 
-  return loadProcessBuilder(processId);
+  return {
+    document: await loadProcessBuilder(processId),
+    activityIds: Object.fromEntries(
+      [...activityIds].map(([localId, persistedId]) => [localId, String(persistedId)])
+    ),
+  };
 }
 
 export interface SaveProcessRequestControlsResult {
@@ -963,8 +1121,9 @@ export async function saveProcessTransitions(document: ProcessBuilderDocument): 
     const stepId = numericId(transition.targetStepId);
     if (!variableId) throw new Error(`Transition ${index + 1}: save and select a variable.`);
     if (!stepId) throw new Error(`Transition ${index + 1}: save and select a target step.`);
-    if (transition.operator !== 'isEmpty' && !transition.value.trim())
-      throw new Error(`Transition ${index + 1}: comparison value is required.`);
+    const variable = document.variables.find((item) => item.id === transition.variableId);
+    if (!variable) throw new Error(`Transition ${index + 1}: selected variable is unavailable.`);
+    validateTransitionValue(transition, variable, index);
     if (!Number.isInteger(transition.sortOrder) || transition.sortOrder < 0 || transition.sortOrder > 255)
       throw new Error(`Transition ${index + 1}: sort order must be from 0 to 255.`);
     const operator = operators.find((item) => item.recId === Number(transition.operatorId)) ?? operators.find((item) =>

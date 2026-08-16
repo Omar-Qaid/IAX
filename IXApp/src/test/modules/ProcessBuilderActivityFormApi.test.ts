@@ -132,7 +132,7 @@ import {
 } from '@modules/process-builder/api/processBuilderApi';
 
 const process = {
-  id: '1', recId: 1, code: 'PROC-1', name: 'Process', dataAreaId: 'dat',
+  id: '1', recId: 1, code: 'PROC-1', name: 'Process', description: 'Process description', dataAreaId: 'dat',
   categoryId: 1, priorityId: 1, processTypeId: 1, score: 0,
   canRepeat: false, mandatoryDocs: false, isActive: true,
 };
@@ -143,7 +143,7 @@ const step = {
 const activity = {
   id: '20', recId: 20, stepId: 10, code: 'ACT-1', name: 'Review', activityTypeId: 1,
   performerId: 2, score: 0, mandatoryDocs: false, autoPassEnabled: false,
-  autoPassingHrs: 0, isActive: true, dataAreaId: 'dat',
+  autoPassingHrs: 0, sortOrder: 10, isActive: true, dataAreaId: 'dat',
 };
 const activityControl = {
   id: '30', recId: 30, activityId: 20, processId: 1, controlId: 2,
@@ -195,6 +195,14 @@ describe('Process Builder Activity Form backend integration', () => {
   it('loads and saves activity controls, options, and validations', async () => {
     const document = await loadProcessBuilder(1);
     const control = document.steps[0].activities[0].controls[0];
+
+    expect(document).toMatchObject({
+      name: 'Process',
+      description: 'Process description',
+      categoryId: '1',
+      priorityId: '1',
+      processType: '1',
+    });
 
     expect(control).toMatchObject({
       id: '30',

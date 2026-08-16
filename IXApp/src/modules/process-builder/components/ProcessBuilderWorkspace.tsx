@@ -17,12 +17,6 @@ import ArrowDownward from '@mui/icons-material/ArrowDownward';
 import ArrowUpward from '@mui/icons-material/ArrowUpward';
 import DragIndicator from '@mui/icons-material/DragIndicator';
 import Delete from '@mui/icons-material/Delete';
-import CalendarMonth from '@mui/icons-material/CalendarMonth';
-import CheckBox from '@mui/icons-material/CheckBox';
-import CloudUpload from '@mui/icons-material/CloudUpload';
-import PersonSearch from '@mui/icons-material/PersonSearch';
-import TableChart from '@mui/icons-material/TableChart';
-import TextFields from '@mui/icons-material/TextFields';
 import { BuilderItemCard } from './BuilderItemCard';
 import { useProcessBuilderStore } from '../store/useProcessBuilderStore';
 import { ControlPreview } from './ControlPreview';
@@ -39,16 +33,31 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { SortableBuilderItem } from './SortableBuilderItem';
 import { processBuilderTokens as tokens } from './processBuilderTokens';
 import { AppLookupGridField } from '@shared/components/fields/AppLookupGridField';
+import { AppLookupField } from '@shared/components/fields/AppLookupField';
+import { useQuery } from '@tanstack/react-query';
 import { wfActivityTypeApi, wfOperatorApi } from '@modules/workflow/api/workflowSetupApis';
 import { wfPerformerApi } from '@modules/workflow/api/wfPerformerApi';
 import type { WorkflowMasterRecord } from '@modules/workflow/api/workflowMasterApi';
 import type { BuilderControlType } from '../types/processBuilderTypes';
+import { normalizeTransitionValue, TransitionValueField } from './TransitionValueField';
 
 const requestOptionControlTypes = new Set<BuilderControlType>([
   'dropdown-manual',
   'checkboxlist',
   'radiobuttonlist',
 ]);
+
+const compactSwitchSx = {
+  width: 32,
+  height: 18,
+  p: 0,
+  '& .MuiSwitch-switchBase': {
+    p: '2px',
+    '&.Mui-checked': { transform: 'translateX(14px)' },
+  },
+  '& .MuiSwitch-thumb': { width: 14, height: 14 },
+  '& .MuiSwitch-track': { borderRadius: 9 },
+};
 
 const activityLookupColumns = [
   { field: 'code', header: 'Code', width: 110 },
@@ -64,7 +73,6 @@ const activityLookupPage = (load: (signal?: AbortSignal) => Promise<WorkflowMast
     const start = (pageNumber - 1) * pageSize;
     return { data: filtered.slice(start, start + pageSize), pageNumber, totalPages: Math.max(1, Math.ceil(filtered.length / pageSize)), totalRecords: filtered.length };
   };
-const fetchActivityTypePage = activityLookupPage(wfActivityTypeApi.list);
 const fetchPerformerPage = activityLookupPage(wfPerformerApi.list);
 const fetchOperatorPage = activityLookupPage(wfOperatorApi.list);
 const builderTypeFromLabel = (label: string): 'approval' | 'review' | 'data-entry' | 'api' | 'notification' => {
@@ -478,7 +486,7 @@ export function VariablesWorkspace({ onSave, saving = false, manualCode = false 
     </Stack>
   );
 }
-export function StepsWorkspace({ manualCode = false }: { manualCode?: boolean }) {
+export function StepsWorkspace({ onSave, saving = false, manualCode = false }: { onSave?: () => void; saving?: boolean; manualCode?: boolean }) {
   const s = useProcessBuilderStore();
   const activeSteps = s.document.steps.filter((step) => step.active).length;
   const activityCount = s.document.steps.reduce((count, step) => count + step.activities.length, 0);
@@ -497,8 +505,12 @@ export function StepsWorkspace({ manualCode = false }: { manualCode?: boolean })
             <Button variant="outlined" startIcon={<Add />} onClick={s.addStep}>
               Add Step
             </Button>
-            <Button variant="contained" disabled>
-              Save Steps
+            <Button
+              variant="contained"
+              disabled={s.document.id === 'new' || saving || !onSave}
+              onClick={onSave}
+            >
+              {saving ? 'Saving…' : 'Save Steps'}
             </Button>
           </Stack>
         }
@@ -671,6 +683,15 @@ export function StepsWorkspace({ manualCode = false }: { manualCode?: boolean })
 }
 export function ActivitiesWorkspace({ onSave, saving = false, manualCode = false }: { onSave?: () => void; saving?: boolean; manualCode?: boolean }) {
   const s = useProcessBuilderStore();
+  const activityTypes = useQuery({
+    queryKey: ['workflow', 'builder-activity-type-options'],
+    queryFn: ({ signal }) => wfActivityTypeApi.list(signal),
+  });
+  const activityTypeOptions = (activityTypes.data ?? []).map((item) => ({
+    id: item.recId,
+    code: item.code ?? '',
+    name: item.name ?? '',
+  }));
   const node = s.selected;
   const step =
     node.kind === 'step'
@@ -823,22 +844,19 @@ export function ActivitiesWorkspace({ onSave, saving = false, manualCode = false
                             gap: 1,
                           }}
                         >
-                          <AppLookupGridField<WorkflowMasterRecord>
+                          <AppLookupField
                             name={`activityTypeId-${activity.id}`}
                             label="Activity Type"
-                            value={Number(activity.activityTypeId) || null}
-                            onChange={(value, row) => s.updateActivity(step.id, activity.id, {
+                            value={Number(activity.activityTypeId) || undefined}
+                            options={activityTypeOptions}
+                            onChange={(value, option) => s.updateActivity(step.id, activity.id, {
                               activityTypeId: value == null ? '' : String(value),
-                              type: row ? builderTypeFromLabel(row.name ?? '') : activity.type,
+                              type: option && !Array.isArray(option)
+                                ? builderTypeFromLabel(option.name)
+                                : activity.type,
                             })}
                             required
-                            columns={[...activityLookupColumns]}
-                            queryKey={['workflow', 'builder-activity-type-lookup']}
-                            fetchPage={fetchActivityTypePage}
-                            fetchById={async (value) => (await wfActivityTypeApi.list()).find((item) => item.recId === Number(value)) ?? null}
-                            valueField="recId"
-                            labelField="name"
-                            pageSize={25}
+                            displayMode="select"
                           />
                           <AppLookupGridField<WorkflowMasterRecord>
                             name={`performerId-${activity.id}`}
@@ -1050,9 +1068,11 @@ export function RequestFormWorkspace({ onSave, saving = false, manualCode = fals
                         }}
                       >
                         <FormControlLabel
+                          sx={{ m: 0 }}
                           control={
                             <Switch
                               size="small"
+                              sx={compactSwitchSx}
                               checked={control.required}
                               onChange={(_, required) =>
                                 s.updateRequestControl(control.id, { required })
@@ -1062,9 +1082,11 @@ export function RequestFormWorkspace({ onSave, saving = false, manualCode = fals
                           label="Required"
                         />
                         <FormControlLabel
+                          sx={{ m: 0 }}
                           control={
                             <Switch
                               size="small"
+                              sx={compactSwitchSx}
                               checked={control.visible}
                               onChange={(_, visible) =>
                                 s.updateRequestControl(control.id, { visible })
@@ -1074,9 +1096,11 @@ export function RequestFormWorkspace({ onSave, saving = false, manualCode = fals
                           label="Visible"
                         />
                         <FormControlLabel
+                          sx={{ m: 0 }}
                           control={
                             <Switch
                               size="small"
+                              sx={compactSwitchSx}
                               checked={control.readOnly}
                               onChange={(_, readOnly) =>
                                 s.updateRequestControl(control.id, { readOnly })
@@ -1207,6 +1231,8 @@ export function ActivityFormWorkspace({ onSave, saving = false }: { onSave?: () 
     'date',
     'dropdown-manual',
     'checkbox',
+    'checkboxlist',
+    'radiobuttonlist',
     'table',
     'file',
     'employeesearch',
@@ -1409,6 +1435,105 @@ export function ActivityFormWorkspace({ onSave, saving = false }: { onSave?: () 
                         <Chip size="small" variant="outlined" label="Read only" />
                       )}
                     </Box>
+                    {requestOptionControlTypes.has(control.type) && (
+                      <Box
+                        onClick={(event) => event.stopPropagation()}
+                        sx={{
+                          gridColumn: { xs: '2', md: '2 / -1' },
+                          p: 1.25,
+                          border: `1px solid ${tokens.border}`,
+                          bgcolor: '#f8fafc',
+                        }}
+                      >
+                        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1 }}>
+                          <Typography sx={{ flex: 1, fontSize: tokens.fontSize.secondary, fontWeight: 700 }}>
+                            OPTIONS
+                          </Typography>
+                          <Button
+                            size="small"
+                            startIcon={<Add fontSize="small" />}
+                            aria-label={`Add option to ${control.label}`}
+                            onClick={() =>
+                              s.updateActivityControl(stepId, activity.id, control.id, {
+                                options: [...control.options, `Option ${control.options.length + 1}`],
+                              })
+                            }
+                          >
+                            Add option
+                          </Button>
+                        </Stack>
+                        {control.options.length === 0 ? (
+                          <Typography sx={{ color: tokens.textMuted, fontSize: tokens.fontSize.secondary }}>
+                            Add at least one selectable option.
+                          </Typography>
+                        ) : (
+                          <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={({ active, over }) => {
+                              if (!over || active.id === over.id) return;
+                              s.reorderActivityControlOptions(
+                                stepId,
+                                activity.id,
+                                control.id,
+                                Number(active.id),
+                                Number(over.id)
+                              );
+                            }}
+                          >
+                            <SortableContext
+                              items={control.options.map((_, index) => String(index))}
+                              strategy={verticalListSortingStrategy}
+                            >
+                              <Stack spacing={1}>
+                                {control.options.map((option, optionIndex) => (
+                                  <SortableBuilderItem key={optionIndex} id={String(optionIndex)}>
+                                    {(optionAttributes, optionListeners) => (
+                                      <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                                        <Tooltip title="Drag to reorder">
+                                          <Box
+                                            {...optionAttributes}
+                                            {...optionListeners}
+                                            aria-label={`Reorder option ${optionIndex + 1} for ${control.label}`}
+                                            sx={{ display: 'flex', color: tokens.textMuted, cursor: 'grab', touchAction: 'none' }}
+                                          >
+                                            <DragIndicator fontSize="small" />
+                                          </Box>
+                                        </Tooltip>
+                                        <TextField
+                                          fullWidth
+                                          size="small"
+                                          label={`Option ${optionIndex + 1}`}
+                                          value={option}
+                                          slotProps={{ htmlInput: { 'aria-label': `Option ${optionIndex + 1} for ${control.label}` } }}
+                                          onChange={(event) => {
+                                            const options = [...control.options];
+                                            options[optionIndex] = event.target.value;
+                                            s.updateActivityControl(stepId, activity.id, control.id, { options });
+                                          }}
+                                        />
+                                        <IconButton
+                                          size="small"
+                                          color="error"
+                                          aria-label={`Remove option ${optionIndex + 1} from ${control.label}`}
+                                          onClick={() =>
+                                            s.updateActivityControl(stepId, activity.id, control.id, {
+                                              options: control.options.filter((_, index) => index !== optionIndex),
+                                            })
+                                          }
+                                        >
+                                          <Delete fontSize="small" />
+                                        </IconButton>
+                                      </Stack>
+                                    )}
+                                  </SortableBuilderItem>
+                                ))}
+                              </Stack>
+                            </SortableContext>
+                          </DndContext>
+                        )}
+                      </Box>
+                    )}
                   </Box>
                 )}
               </SortableBuilderItem>
@@ -1703,7 +1828,14 @@ export function TransitionsWorkspace({ onSave, saving = false }: { onSave?: () =
                 size="small"
                 label="Variable"
                 value={x.variableId}
-                onChange={(e) => s.updateTransition(x.id, { variableId: e.target.value })}
+                onChange={(e) => {
+                  const variableId = e.target.value;
+                  const dataType = s.document.variables.find((item) => item.id === variableId)?.dataType;
+                  s.updateTransition(x.id, {
+                    variableId,
+                    value: normalizeTransitionValue(x.value, dataType),
+                  });
+                }}
               >
                 {s.document.variables.map((item) => (
                   <MenuItem key={item.id} value={item.id}>
@@ -1722,25 +1854,12 @@ export function TransitionsWorkspace({ onSave, saving = false }: { onSave?: () =
                 fetchById={async (value) => (await wfOperatorApi.list()).find((item) => item.recId === Number(value)) ?? null}
                 valueField="recId" labelField="name" pageSize={25}
               />
-              {variable?.dataType === 'boolean' ? (
-                <TextField
-                  select
-                  size="small"
-                  label="Comparison value"
-                  value={x.value}
-                  onChange={(e) => s.updateTransition(x.id, { value: e.target.value })}
-                >
-                  <MenuItem value="true">Yes</MenuItem>
-                  <MenuItem value="false">No</MenuItem>
-                </TextField>
-              ) : (
-                <TextField
-                  size="small"
-                  label="Comparison value"
-                  value={x.value}
-                  onChange={(e) => s.updateTransition(x.id, { value: e.target.value })}
-                />
-              )}
+              <TransitionValueField
+                dataType={variable?.dataType}
+                value={x.value}
+                disabled={x.operator === 'isEmpty'}
+                onChange={(value) => s.updateTransition(x.id, { value })}
+              />
               <TextField
                 select
                 size="small"

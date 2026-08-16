@@ -14,6 +14,7 @@ export interface WfProcessDto {
   recId: number;
   code: string | null;
   name: string | null;
+  description?: string | null;
   categoryId: number;
   score: number;
   canRepeat: boolean;

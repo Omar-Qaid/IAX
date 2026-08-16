@@ -60,6 +60,7 @@ import {
   loadProcessBuilder,
   saveProcessBuilder,
   saveProcessVariables,
+  saveProcessSteps,
   saveProcessActivities,
   saveProcessRequestControls,
   saveProcessTransitions,
@@ -81,6 +82,18 @@ const slimScrollbarSx = {
   '&::-webkit-scrollbar-thumb:hover, & *::-webkit-scrollbar-thumb:hover': {
     backgroundColor: '#7d7d7d',
   },
+  '& .MuiSwitch-root': {
+    width: 32,
+    height: 18,
+    padding: 0,
+    marginRight: '4px',
+  },
+  '& .MuiSwitch-switchBase': {
+    padding: '2px',
+    '&.Mui-checked': { transform: 'translateX(14px)' },
+  },
+  '& .MuiSwitch-thumb': { width: 14, height: 14 },
+  '& .MuiSwitch-track': { borderRadius: 9 },
 } as const;
 
 const navigationStorageKey = (builderId: string) => `ixapp.processBuilder.navigation.${builderId}`;
@@ -137,6 +150,7 @@ export function ProcessBuilderPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savingVariables, setSavingVariables] = useState(false);
+  const [savingSteps, setSavingSteps] = useState(false);
   const [manualVariableCode, setManualVariableCode] = useState(false);
   const [manualStepCode, setManualStepCode] = useState(false);
   const [manualActivityCode, setManualActivityCode] = useState(false);
@@ -150,18 +164,6 @@ export function ProcessBuilderPage() {
     const load = async () => {
       setLoading(true);
       try {
-        const [variableMetadata, stepMetadata, activityMetadata, requestControlMetadata] = await Promise.all([
-          getVariableCodeMetadata(),
-          getStepCodeMetadata(),
-          getActivityCodeMetadata(),
-          getRequestControlCodeMetadata(),
-        ]);
-        if (active) {
-          setManualVariableCode(variableMetadata.manual);
-          setManualStepCode(stepMetadata.manual);
-          setManualActivityCode(activityMetadata.manual);
-          setManualRequestControlCode(requestControlMetadata.manual);
-        }
         if (builderId === 'new') {
           const fallback = createProcessBuilderDocument('new');
           const recovered = loadProcessBuilderDraft(builderId, fallback);
@@ -180,6 +182,18 @@ export function ProcessBuilderPage() {
             const navigation = readNavigationState(builderId);
             if (navigation) restoreNavigation(navigation);
           }
+        }
+        const [variableMetadata, stepMetadata, activityMetadata, requestControlMetadata] = await Promise.allSettled([
+          getVariableCodeMetadata(),
+          getStepCodeMetadata(),
+          getActivityCodeMetadata(),
+          getRequestControlCodeMetadata(),
+        ]);
+        if (active) {
+          if (variableMetadata.status === 'fulfilled') setManualVariableCode(variableMetadata.value.manual);
+          if (stepMetadata.status === 'fulfilled') setManualStepCode(stepMetadata.value.manual);
+          if (activityMetadata.status === 'fulfilled') setManualActivityCode(activityMetadata.value.manual);
+          if (requestControlMetadata.status === 'fulfilled') setManualRequestControlCode(requestControlMetadata.value.manual);
         }
       } catch (error) {
         if (active) {
@@ -217,28 +231,6 @@ export function ProcessBuilderPage() {
       (n, x) => n + x.activities.reduce((m, a) => m + a.controls.length, 0),
       0
     );
-  const tabs = [
-    <DesignerWorkspace />,
-    <VariablesWorkspace
-      onSave={() => void saveVariables()}
-      saving={savingVariables}
-      manualCode={manualVariableCode}
-    />,
-    <RequestFormWorkspace
-      onSave={() => void saveRequestControls()}
-      saving={savingRequestControls}
-      manualCode={manualRequestControlCode}
-    />,
-    <StepsWorkspace manualCode={manualStepCode} />,
-    <ActivitiesWorkspace
-      onSave={() => void saveActivities()}
-      saving={savingActivities}
-      manualCode={manualActivityCode}
-    />,
-    <ActivityFormWorkspace onSave={() => void saveActivities()} saving={savingActivities} />,
-    <TransitionsWorkspace onSave={() => void saveTransitions()} saving={savingTransitions} />,
-    <DiagramWorkspace />,
-  ];
   const tabDefinitions = [
     { label: 'Designer', icon: <Bolt /> },
     { label: 'Variables', icon: <FormatListBulleted /> },
@@ -291,8 +283,8 @@ export function ProcessBuilderPage() {
   const saveVariables = async () => {
     setSavingVariables(true);
     try {
-      const variables = await saveProcessVariables(useProcessBuilderStore.getState().document);
-      useProcessBuilderStore.getState().setPersistedVariables(variables);
+      const result = await saveProcessVariables(useProcessBuilderStore.getState().document);
+      useProcessBuilderStore.getState().setPersistedVariables(result.variables, result.variableIds);
       notifySuccess('Variables saved successfully.');
     } catch (error) {
       notifyError(error instanceof Error ? error.message : 'Failed to save variables.');
@@ -303,8 +295,8 @@ export function ProcessBuilderPage() {
   const saveActivities = async () => {
     setSavingActivities(true);
     try {
-      const persisted = await saveProcessActivities(useProcessBuilderStore.getState().document);
-      useProcessBuilderStore.getState().applyPersistedDocument(persisted);
+      const result = await saveProcessActivities(useProcessBuilderStore.getState().document);
+      useProcessBuilderStore.getState().setPersistedActivities(result.document, result.activityIds);
       notifySuccess('Activities saved successfully.');
     } catch (error) {
       notifyError(error instanceof Error ? error.message : 'Failed to save activities.');
@@ -328,7 +320,7 @@ export function ProcessBuilderPage() {
     setSavingTransitions(true);
     try {
       const persisted = await saveProcessTransitions(useProcessBuilderStore.getState().document);
-      useProcessBuilderStore.getState().applyPersistedDocument(persisted);
+      useProcessBuilderStore.getState().setPersistedTransitions(persisted.transitions);
       notifySuccess('Transitions saved successfully.');
     } catch (error) {
       notifyError(error instanceof Error ? error.message : 'Failed to save transitions.');
@@ -336,6 +328,44 @@ export function ProcessBuilderPage() {
       setSavingTransitions(false);
     }
   };
+  const saveSteps = async () => {
+    setSavingSteps(true);
+    try {
+      const result = await saveProcessSteps(useProcessBuilderStore.getState().document);
+      useProcessBuilderStore.getState().setPersistedSteps(result.steps, result.stepIds);
+      notifySuccess('Steps saved successfully.');
+    } catch (error) {
+      notifyError(error instanceof Error ? error.message : 'Failed to save steps.');
+    } finally {
+      setSavingSteps(false);
+    }
+  };
+  const tabs = [
+    <DesignerWorkspace />,
+    <VariablesWorkspace
+      onSave={() => void saveVariables()}
+      saving={savingVariables}
+      manualCode={manualVariableCode}
+    />,
+    <RequestFormWorkspace
+      onSave={() => void saveRequestControls()}
+      saving={savingRequestControls}
+      manualCode={manualRequestControlCode}
+    />,
+    <StepsWorkspace
+      onSave={() => void saveSteps()}
+      saving={savingSteps}
+      manualCode={manualStepCode}
+    />,
+    <ActivitiesWorkspace
+      onSave={() => void saveActivities()}
+      saving={savingActivities}
+      manualCode={manualActivityCode}
+    />,
+    <ActivityFormWorkspace onSave={() => void saveActivities()} saving={savingActivities} />,
+    <TransitionsWorkspace onSave={() => void saveTransitions()} saving={savingTransitions} />,
+    <DiagramWorkspace />,
+  ];
   return (
     <Box
       sx={{
@@ -382,8 +412,8 @@ export function ProcessBuilderPage() {
         '& .MuiFormControlLabel-label': { fontSize: tokens.fontSize.secondary },
         '& .MuiChip-root': { fontSize: tokens.fontSize.caption },
         '& .MuiSvgIcon-root': { fontSize: 16 },
-        '& .MuiSwitch-root': { width: 34, height: 20, p: 0.25 },
-        '& .MuiSwitch-switchBase': { p: 0.5 },
+        '& .MuiSwitch-root': { width: 32, height: 18, p: 0, mr: '4px' },
+        '& .MuiSwitch-switchBase': { p: '2px' },
         '& .MuiSwitch-thumb': { width: 14, height: 14 },
         '& .MuiSwitch-track': { borderRadius: 9, bgcolor: '#a3a3a3' },
         '& .MuiSwitch-switchBase.Mui-checked': {

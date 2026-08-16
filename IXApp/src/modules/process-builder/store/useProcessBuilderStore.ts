@@ -144,7 +144,10 @@ interface State {
   setCenterTab: (value: number) => void;
   updateProcess: (values: Partial<ProcessBuilderDocument>) => void;
   setGeneratedCode: (code: string) => void;
-  setPersistedVariables: (variables: BuilderVariable[]) => void;
+  setPersistedVariables: (variables: BuilderVariable[], variableIds: Record<string, string>) => void;
+  setPersistedSteps: (steps: BuilderStep[], stepIds: Record<string, string>) => void;
+  setPersistedActivities: (document: ProcessBuilderDocument, activityIds: Record<string, string>) => void;
+  setPersistedTransitions: (transitions: BuilderTransition[]) => void;
   setPersistedRequestControls: (controls: BuilderControl[], controlIds: Record<string, string>) => void;
   addVariable: () => void;
   updateVariable: (id: string, values: Partial<BuilderVariable>) => void;
@@ -155,6 +158,7 @@ interface State {
   removeRequestControl: (id: string) => void;
   reorderRequestControls: (activeId: string, overId: string) => void;
   reorderRequestControlOptions: (controlId: string, fromIndex: number, toIndex: number) => void;
+  reorderActivityControlOptions: (stepId: string, activityId: string, controlId: string, fromIndex: number, toIndex: number) => void;
   addStep: () => void;
   updateStep: (id: string, values: Partial<BuilderStep>) => void;
   removeStep: (id: string) => void;
@@ -231,7 +235,90 @@ export const useProcessBuilderStore = create<State>((set) => {
     })),
     updateProcess: (values) => change((document) => ({ ...document, ...values })),
     setGeneratedCode: (code) => set((state) => ({ document: { ...state.document, code } })),
-    setPersistedVariables: (variables) => set((state) => ({ document: { ...state.document, variables } })),
+    setPersistedVariables: (variables, variableIds) => set((state) => ({
+      document: {
+        ...state.document,
+        variables,
+        transitions: state.document.transitions.map((transition) =>
+          variableIds[transition.variableId]
+            ? { ...transition, variableId: variableIds[transition.variableId] }
+            : transition
+        ),
+      },
+      selected: state.selected.kind === 'variable' && variableIds[state.selected.id]
+        ? { kind: 'variable', id: variableIds[state.selected.id] }
+        : state.selected,
+    })),
+    setPersistedSteps: (persistedSteps, stepIds) => set((state) => {
+      const steps = state.document.steps.map((step) => {
+        const persistedId = stepIds[step.id] ?? step.id;
+        const persisted = persistedSteps.find((item) => item.id === persistedId);
+        return persisted
+          ? { ...persisted, activities: step.activities }
+          : { ...step, id: persistedId };
+      });
+      const selectedStepId = state.selectedStepId == null
+        ? null
+        : stepIds[state.selectedStepId] ?? state.selectedStepId;
+      const remapStepId = (stepId: string) => stepIds[stepId] ?? stepId;
+      return {
+        document: {
+          ...state.document,
+          steps,
+          transitions: state.document.transitions.map((transition) => ({
+            ...transition,
+            sourceStepId: remapStepId(transition.sourceStepId),
+            targetStepId: remapStepId(transition.targetStepId),
+          })),
+        },
+        selectedStepId,
+        selected: state.selected.kind === 'step'
+          ? { kind: 'step', id: remapStepId(state.selected.id) }
+          : state.selected.kind === 'activity' || state.selected.kind === 'control'
+            ? { ...state.selected, stepId: remapStepId(state.selected.stepId) }
+            : state.selected,
+      };
+    }),
+    setPersistedActivities: (persisted, activityIds) => set((state) => {
+      const steps = state.document.steps.map((step) => {
+        const persistedStep = persisted.steps.find((item) => item.id === step.id);
+        return persistedStep ? { ...step, activities: persistedStep.activities } : step;
+      });
+      return {
+        document: {
+          ...state.document,
+          steps,
+        transitions: state.document.transitions.map((transition) =>
+          transition.triggerSource === 'activity' && activityIds[transition.triggerId]
+            ? { ...transition, triggerId: activityIds[transition.triggerId] }
+            : transition
+        ),
+      },
+        selected: state.selected.kind === 'activity' && activityIds[state.selected.id]
+          ? { ...state.selected, id: activityIds[state.selected.id] }
+          : state.selected.kind === 'control'
+            ? selectionForTab(
+                { ...state.document, steps },
+                state.selected,
+                state.selectedStepId,
+                state.centerTab
+              )
+            : state.selected,
+      };
+    }),
+    setPersistedTransitions: (transitions) => set((state) => {
+      const selected = state.selected;
+      return {
+        document: { ...state.document, transitions },
+        selected: selected.kind === 'transition'
+          ? transitions.some((transition) => transition.id === selected.id)
+            ? selected
+            : transitions[0]
+              ? { kind: 'transition', id: transitions[0].id }
+              : { kind: 'workspace', tab: 6 }
+          : selected,
+      };
+    }),
     setPersistedRequestControls: (requestControls, controlIds) => set((state) => ({
       document: {
         ...state.document,
@@ -251,11 +338,31 @@ export const useProcessBuilderStore = create<State>((set) => {
     })),
     addVariable: () => change((d) => ({ ...d, variables: [...d.variables, { id: id(), code: '', name: 'New variable', description: '', dataType: 'text', sortOrder: (d.variables.length + 1) * 10, required: false, active: true, scope: 'process', defaultValue: '' }] })),
     updateVariable: (key, values) => change((d) => ({ ...d, variables: d.variables.map((x) => x.id === key ? { ...x, ...values } : x) })),
-    removeVariable: (key) => change((d) => ({ ...d, variables: d.variables.filter((x) => x.id !== key) })),
+    removeVariable: (key) => set((state) => {
+      const document = {
+        ...state.document,
+        variables: state.document.variables.filter((item) => item.id !== key),
+        transitions: state.document.transitions.map((transition) =>
+          transition.variableId === key ? { ...transition, variableId: '' } : transition
+        ),
+      };
+      return { document, selected: selectionForTab(document, state.selected, state.selectedStepId, state.centerTab), dirty: true };
+    }),
     reorderVariables: (activeId, overId) => change((d) => { const variables = [...d.variables]; const from = variables.findIndex((x) => x.id === activeId); const to = variables.findIndex((x) => x.id === overId); if (from < 0 || to < 0 || from === to) return d; const [moved] = variables.splice(from, 1); variables.splice(to, 0, moved); return { ...d, variables: variables.map((variable, index) => ({ ...variable, sortOrder: (index + 1) * 10 })) }; }),
     addRequestControl: (type = 'text') => change((d) => ({ ...d, requestControls: [...d.requestControls, { id: id(), code: '', label: 'New field', labelAR: 'حقل جديد', type, controlId: '', sortOrder: (d.requestControls.length + 1) * 10, score: 0, required: false, readOnly: false, visible: true, uniqueKey: false, usedAsCriteria: false, defaultValue: '', options: [], validations: [], visibilityCondition: null }] })),
     updateRequestControl: (key, values) => change((d) => ({ ...d, requestControls: d.requestControls.map((x) => x.id === key ? { ...x, ...values } : x) })),
-    removeRequestControl: (key) => change((d) => ({ ...d, requestControls: d.requestControls.filter((x) => x.id !== key) })),
+    removeRequestControl: (key) => set((state) => {
+      const document = {
+        ...state.document,
+        requestControls: state.document.requestControls.filter((item) => item.id !== key),
+        transitions: state.document.transitions.map((transition) =>
+          transition.triggerSource === 'requestControl' && transition.triggerId === key
+            ? { ...transition, triggerSource: 'none' as const, triggerId: '' }
+            : transition
+        ),
+      };
+      return { document, selected: selectionForTab(document, state.selected, state.selectedStepId, state.centerTab), dirty: true };
+    }),
     reorderRequestControls: (activeId, overId) => change((d) => { const controls = [...d.requestControls]; const from = controls.findIndex((x) => x.id === activeId); const to = controls.findIndex((x) => x.id === overId); if (from < 0 || to < 0 || from === to) return d; const [moved] = controls.splice(from, 1); controls.splice(to, 0, moved); return { ...d, requestControls: controls.map((control, index) => ({ ...control, sortOrder: (index + 1) * 10 })) }; }),
     reorderRequestControlOptions: (controlId, fromIndex, toIndex) => change((d) => ({
       ...d,
@@ -270,22 +377,85 @@ export const useProcessBuilderStore = create<State>((set) => {
         return { ...control, options };
       }),
     })),
+    reorderActivityControlOptions: (stepId, activityId, controlId, fromIndex, toIndex) => change((d) => ({
+      ...d,
+      steps: d.steps.map((step) => step.id !== stepId ? step : {
+        ...step,
+        activities: step.activities.map((activity) => activity.id !== activityId ? activity : {
+          ...activity,
+          controls: activity.controls.map((control) => {
+            if (control.id !== controlId || fromIndex === toIndex
+              || fromIndex < 0 || toIndex < 0
+              || fromIndex >= control.options.length || toIndex >= control.options.length)
+              return control;
+            const options = [...control.options];
+            const [moved] = options.splice(fromIndex, 1);
+            options.splice(toIndex, 0, moved);
+            return { ...control, options };
+          }),
+        }),
+      }),
+    })),
     addStep: () => change((d) => ({ ...d, steps: [...d.steps, { id: id(), code: '', name: `Step ${d.steps.length + 1}`, order: d.steps.length + 1, score: 0, autoPassingHours: 0, allMandatory: false, active: true, systemField: false, condition: null, activities: [] }] })),
     updateStep: (key, values) => change((d) => ({ ...d, steps: d.steps.map((x) => x.id === key ? { ...x, ...values } : x) })),
-    removeStep: (key) => change((d) => ({ ...d, steps: d.steps.filter((x) => x.id !== key).map((x, i) => ({ ...x, order: i + 1 })) })),
-    addActivity: (stepId, type = 'approval') => change((d) => ({ ...d, steps: d.steps.map((s) => s.id === stepId ? { ...s, activities: [...s.activities, { id: id(), code: '', name: 'New activity', type, activityTypeId: '', performer: '', score: 0, assignmentMode: 'any', active: true, required: true, mandatoryDocs: false, autoPassEnabled: false, autoPassingHours: 0, controls: [], actions: [], validations: [], condition: null, config: { apiMethod: 'GET', apiUrl: '', notifyEmails: '' } }] } : s) })),
+    removeStep: (key) => set((state) => {
+      const removedActivityIds = new Set(
+        state.document.steps.find((step) => step.id === key)?.activities.map((activity) => activity.id) ?? []
+      );
+      const steps = state.document.steps
+        .filter((step) => step.id !== key)
+        .map((step, index) => ({ ...step, order: index + 1 }));
+      const document = {
+        ...state.document,
+        steps,
+        transitions: state.document.transitions.map((transition) => ({
+          ...transition,
+          sourceStepId: transition.sourceStepId === key ? '' : transition.sourceStepId,
+          targetStepId: transition.targetStepId === key ? '' : transition.targetStepId,
+          ...(transition.triggerSource === 'activity' && removedActivityIds.has(transition.triggerId)
+            ? { triggerSource: 'none' as const, triggerId: '' }
+            : {}),
+        })),
+      };
+      const selectedStepId = state.selectedStepId === key ? steps[0]?.id ?? null : state.selectedStepId;
+      return { document, selectedStepId, selected: selectionForTab(document, state.selected, selectedStepId, state.centerTab), dirty: true };
+    }),
+    addActivity: (stepId, type = 'approval') => change((d) => ({ ...d, steps: d.steps.map((s) => s.id === stepId ? { ...s, activities: [...s.activities, { id: id(), code: '', name: 'New activity', type, activityTypeId: '', performer: '', score: 0, sortOrder: (s.activities.length + 1) * 10, assignmentMode: 'any', active: true, required: true, mandatoryDocs: false, autoPassEnabled: false, autoPassingHours: 0, controls: [], actions: [], validations: [], condition: null, config: { apiMethod: 'GET', apiUrl: '', notifyEmails: '' } }] } : s) })),
     updateActivity: (stepId, key, values) => change((d) => ({ ...d, steps: d.steps.map((s) => s.id === stepId ? { ...s, activities: s.activities.map((a) => a.id === key ? { ...a, ...values } : a) } : s) })),
-    removeActivity: (stepId, key) => change((d) => ({ ...d, steps: d.steps.map((s) => s.id === stepId ? { ...s, activities: s.activities.filter((a) => a.id !== key) } : s) })),
+    removeActivity: (stepId, key) => set((state) => {
+      const document = {
+        ...state.document,
+        steps: state.document.steps.map((step) => step.id === stepId
+          ? { ...step, activities: step.activities.filter((activity) => activity.id !== key) }
+          : step),
+        transitions: state.document.transitions.map((transition) =>
+          transition.triggerSource === 'activity' && transition.triggerId === key
+            ? { ...transition, triggerSource: 'none' as const, triggerId: '' }
+            : transition
+        ),
+      };
+      return { document, selected: selectionForTab(document, state.selected, state.selectedStepId, state.centerTab), dirty: true };
+    }),
     addActivityControl: (stepId, activityId, type = 'text') => change((d) => ({ ...d, steps: d.steps.map((s) => s.id === stepId ? { ...s, activities: s.activities.map((a) => a.id === activityId ? { ...a, controls: [...a.controls, { id: id(), code: '', label: 'New field', labelAR: 'حقل جديد', type, controlId: '', sortOrder: (a.controls.length + 1) * 10, score: 0, required: false, readOnly: false, visible: true, uniqueKey: false, usedAsCriteria: false, defaultValue: '', options: [], validations: [], visibilityCondition: null }] } : a) } : s) })),
     updateActivityControl: (stepId, activityId, key, values) => change((d) => ({ ...d, steps: d.steps.map((s) => s.id === stepId ? { ...s, activities: s.activities.map((a) => a.id === activityId ? { ...a, controls: a.controls.map((c) => c.id === key ? { ...c, ...values } : c) } : a) } : s) })),
-    removeActivityControl: (stepId, activityId, key) => change((d) => ({ ...d, steps: d.steps.map((s) => s.id === stepId ? { ...s, activities: s.activities.map((a) => a.id === activityId ? { ...a, controls: a.controls.filter((c) => c.id !== key) } : a) } : s) })),
+    removeActivityControl: (stepId, activityId, key) => set((state) => {
+      const document = {
+        ...state.document,
+        steps: state.document.steps.map((step) => step.id === stepId
+          ? { ...step, activities: step.activities.map((activity) => activity.id === activityId
+              ? { ...activity, controls: activity.controls.filter((control) => control.id !== key) }
+              : activity) }
+          : step),
+      };
+      return { document, selected: selectionForTab(document, state.selected, state.selectedStepId, state.centerTab), dirty: true };
+    }),
     addActivityAction: (stepId, activityId, type = 'approve') => change((d) => ({ ...d, steps: d.steps.map((step) => step.id !== stepId ? step : { ...step, activities: step.activities.map((activity) => activity.id !== activityId ? activity : { ...activity, actions: [...activity.actions, { id: id(), type, label: type[0].toUpperCase() + type.slice(1), nextStepId: '', condition: null }] }) }) })),
     updateActivityAction: (stepId, activityId, key, values) => change((d) => ({ ...d, steps: d.steps.map((step) => step.id !== stepId ? step : { ...step, activities: step.activities.map((activity) => activity.id !== activityId ? activity : { ...activity, actions: activity.actions.map((action) => action.id === key ? { ...action, ...values } : action) }) }) })),
     removeActivityAction: (stepId, activityId, key) => change((d) => ({ ...d, steps: d.steps.map((step) => step.id !== stepId ? step : { ...step, activities: step.activities.map((activity) => activity.id !== activityId ? activity : { ...activity, actions: activity.actions.filter((action) => action.id !== key) }) }) })),
     moveStep: (key, direction) => change((d) => { const steps = [...d.steps]; const index = steps.findIndex((x) => x.id === key); const target = index + direction; if (index < 0 || target < 0 || target >= steps.length) return d; [steps[index], steps[target]] = [steps[target], steps[index]]; return { ...d, steps: steps.map((x, i) => ({ ...x, order: i + 1 })) }; }),
     reorderSteps: (activeId, overId) => change((d) => { const steps = [...d.steps]; const from = steps.findIndex((x) => x.id === activeId); const to = steps.findIndex((x) => x.id === overId); if (from < 0 || to < 0 || from === to) return d; const [moved] = steps.splice(from, 1); steps.splice(to, 0, moved); return { ...d, steps: steps.map((x, index) => ({ ...x, order: index + 1 })) }; }),
-    reorderActivities: (stepId, activeId, overId) => change((d) => ({ ...d, steps: d.steps.map((step) => { if (step.id !== stepId) return step; const activities = [...step.activities]; const from = activities.findIndex((x) => x.id === activeId); const to = activities.findIndex((x) => x.id === overId); if (from < 0 || to < 0 || from === to) return step; const [moved] = activities.splice(from, 1); activities.splice(to, 0, moved); return { ...step, activities }; }) })),
-    reorderControls: (stepId, activityId, activeId, overId) => change((d) => ({ ...d, steps: d.steps.map((step) => step.id !== stepId ? step : { ...step, activities: step.activities.map((activity) => { if (activity.id !== activityId) return activity; const controls = [...activity.controls]; const from = controls.findIndex((x) => x.id === activeId); const to = controls.findIndex((x) => x.id === overId); if (from < 0 || to < 0 || from === to) return activity; const [moved] = controls.splice(from, 1); controls.splice(to, 0, moved); return { ...activity, controls }; }) }) })),
+    reorderActivities: (stepId, activeId, overId) => change((d) => ({ ...d, steps: d.steps.map((step) => { if (step.id !== stepId) return step; const activities = [...step.activities]; const from = activities.findIndex((x) => x.id === activeId); const to = activities.findIndex((x) => x.id === overId); if (from < 0 || to < 0 || from === to) return step; const [moved] = activities.splice(from, 1); activities.splice(to, 0, moved); return { ...step, activities: activities.map((activity, index) => ({ ...activity, sortOrder: (index + 1) * 10 })) }; }) })),
+    reorderControls: (stepId, activityId, activeId, overId) => change((d) => ({ ...d, steps: d.steps.map((step) => step.id !== stepId ? step : { ...step, activities: step.activities.map((activity) => { if (activity.id !== activityId) return activity; const controls = [...activity.controls]; const from = controls.findIndex((x) => x.id === activeId); const to = controls.findIndex((x) => x.id === overId); if (from < 0 || to < 0 || from === to) return activity; const [moved] = controls.splice(from, 1); controls.splice(to, 0, moved); return { ...activity, controls: controls.map((control, index) => ({ ...control, sortOrder: (index + 1) * 10 })) }; }) }) })),
     addTransition: (trigger) => change((d) => ({ ...d, transitions: [...d.transitions, { id: id(), name: 'New transition', sourceStepId: d.steps[0]?.id ?? '', targetStepId: d.steps[1]?.id ?? d.steps[0]?.id ?? '', variableId: d.variables[0]?.id ?? '', operator: '=', operatorId: '', value: '', sortOrder: (d.transitions.length + 1) * 10, active: true, triggerSource: trigger?.triggerSource ?? 'none', triggerId: trigger?.triggerId ?? '' }] })),
     updateTransition: (key, values) => change((d) => ({ ...d, transitions: d.transitions.map((x) => x.id === key ? { ...x, ...values } : x) })),
     removeTransition: (key) => change((d) => ({ ...d, transitions: d.transitions.filter((x) => x.id !== key) })),
