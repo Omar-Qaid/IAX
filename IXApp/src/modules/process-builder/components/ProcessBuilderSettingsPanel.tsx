@@ -30,7 +30,7 @@ import type {
 import { processBuilderTokens as tokens } from './processBuilderTokens';
 import { useQuery } from '@tanstack/react-query';
 import { wfCategoryApi, type WfCategoryRecord } from '@modules/workflow/api/wfCategoryApi';
-import { wfActivityTypeApi, wfPriorityApi, wfProcessTypeApi } from '@modules/workflow/api/workflowSetupApis';
+import { wfActivityTypeApi, wfOperatorApi, wfPriorityApi, wfProcessTypeApi } from '@modules/workflow/api/workflowSetupApis';
 import { wfPerformerApi } from '@modules/workflow/api/wfPerformerApi';
 import { AppLookupGridField } from '@shared/components/fields/AppLookupGridField';
 import { AppLookupField } from '@shared/components/fields/AppLookupField';
@@ -48,6 +48,19 @@ const builderTypeFromLabel = (label: string): 'approval' | 'review' | 'data-entr
   if (normalized.includes('review')) return 'review';
   if (normalized.includes('api')) return 'api';
   return 'approval';
+};
+
+const transitionOperatorFromLabel = (label: string): BuilderTransition['operator'] => {
+  const normalized = label.replace(/\s/g, '').toLocaleLowerCase();
+  if (normalized === '!=' || normalized.includes('notequal')) return '!=';
+  if (normalized === '>=' || normalized.includes('greaterthanorequal')) return '>=';
+  if (normalized === '<=' || normalized.includes('lessthanorequal')) return '<=';
+  if (normalized === '>' || normalized.includes('greaterthan')) return '>';
+  if (normalized === '<' || normalized.includes('lessthan')) return '<';
+  if (normalized.includes('contains')) return 'contains';
+  if (normalized.includes('isempty')) return 'isEmpty';
+  if (normalized.includes('between')) return 'between';
+  return '=';
 };
 
 const fetchCategoryPage = async ({
@@ -476,6 +489,7 @@ export function ProcessBuilderSettingsPanel() {
   const processTypes = useQuery({ queryKey: ['workflow', 'builder-process-types'], queryFn: ({ signal }) => wfProcessTypeApi.list(signal) });
   const activityTypes = useQuery({ queryKey: ['workflow', 'builder-activity-type-options'], queryFn: ({ signal }) => wfActivityTypeApi.list(signal) });
   const performers = useQuery({ queryKey: ['workflow', 'builder-performer-options'], queryFn: ({ signal }) => wfPerformerApi.list(signal) });
+  const operators = useQuery({ queryKey: ['workflow', 'builder-operator-options'], queryFn: ({ signal }) => wfOperatorApi.list(signal) });
   const text = (
     label: string,
     value: string | number,
@@ -1069,11 +1083,116 @@ export function ProcessBuilderSettingsPanel() {
   if (selected.kind === 'transition') {
     const x = d.transitions.find((v) => v.id === selected.id);
     if (!x) return null;
+    const variable = d.variables.find((item) => item.id === x.variableId);
+    const activities = d.steps.flatMap((step) =>
+      step.activities.map((activity) => ({ ...activity, stepName: step.name }))
+    );
     return (
       <Stack spacing="8px" sx={{ p: '10px' }}>
         <SettingsTitle title="Transition Settings" dirty={s.dirty} />
-        {text('Name', x.name, (name) => s.updateTransition(x.id, { name }))}
-        {text('Value', x.value, (value) => s.updateTransition(x.id, { value }))}
+        <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
+          <Box sx={{ flex: 1 }}>
+            {text('Transition name', x.name, (name) => s.updateTransition(x.id, { name }))}
+          </Box>
+          <IconButton size="small" color="error" aria-label="Delete transition" onClick={() => s.removeTransition(x.id)}>
+            <Delete />
+          </IconButton>
+        </Stack>
+
+        <Box sx={settingsGroupSx}>
+          <Typography sx={{ fontSize: tokens.fontSize.caption, fontWeight: 700, color: tokens.textMuted }}>
+            TRIGGER
+          </Typography>
+          <TextField
+            select
+            fullWidth
+            size="small"
+            label="Trigger source"
+            value={x.triggerSource}
+            onChange={(event) => s.updateTransition(x.id, {
+              triggerSource: event.target.value as BuilderTransition['triggerSource'],
+              triggerId: '',
+            })}
+          >
+            <MenuItem value="none">None</MenuItem>
+            <MenuItem value="requestControl">Request control</MenuItem>
+            <MenuItem value="activity">Activity</MenuItem>
+          </TextField>
+          {x.triggerSource === 'requestControl' && (
+            <TextField select fullWidth size="small" label="Request control" value={x.triggerId} onChange={(event) => s.updateTransition(x.id, { triggerId: event.target.value })}>
+              {d.requestControls.map((control) => <MenuItem key={control.id} value={control.id}>{control.label}</MenuItem>)}
+            </TextField>
+          )}
+          {x.triggerSource === 'activity' && (
+            <TextField select fullWidth size="small" label="Activity" value={x.triggerId} onChange={(event) => s.updateTransition(x.id, { triggerId: event.target.value })}>
+              {activities.map((activity) => <MenuItem key={activity.id} value={activity.id}>{activity.stepName} · {activity.name}</MenuItem>)}
+            </TextField>
+          )}
+        </Box>
+
+        <Box sx={settingsGroupSx}>
+          <Typography sx={{ fontSize: tokens.fontSize.caption, fontWeight: 700, color: tokens.textMuted }}>
+            CONDITION
+          </Typography>
+          <TextField
+            select
+            fullWidth
+            size="small"
+            label="Variable"
+            value={x.variableId}
+            onChange={(event) => {
+              const variableId = event.target.value;
+              const dataType = d.variables.find((item) => item.id === variableId)?.dataType;
+              s.updateTransition(x.id, { variableId, value: normalizeTransitionValue(x.value, dataType) });
+            }}
+          >
+            {d.variables.map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}
+          </TextField>
+          <AppLookupField
+            name={`settings-operatorId-${x.id}`}
+            label="Operator"
+            value={Number(x.operatorId) || undefined}
+            options={(operators.data ?? []).map((item) => ({ id: item.recId, code: item.code ?? '', name: item.name ?? '' }))}
+            onChange={(value, option) => s.updateTransition(x.id, {
+              operatorId: value == null ? '' : String(value),
+              operator: option && !Array.isArray(option) ? transitionOperatorFromLabel(option.name || option.code) : x.operator,
+            })}
+            required
+            displayMode="select"
+          />
+          <TransitionValueField
+            label="Comparison value"
+            dataType={variable?.dataType}
+            value={x.value}
+            disabled={x.operator === 'isEmpty'}
+            onChange={(value) => s.updateTransition(x.id, { value })}
+          />
+        </Box>
+
+        <Box sx={settingsGroupSx}>
+          <Typography sx={{ fontSize: tokens.fontSize.caption, fontWeight: 700, color: tokens.textMuted }}>
+            ROUTING
+          </Typography>
+          <TextField select fullWidth size="small" label="Target step" value={x.targetStepId} onChange={(event) => s.updateTransition(x.id, { targetStepId: event.target.value })}>
+            {d.steps.map((step) => <MenuItem key={step.id} value={step.id}>{step.name}</MenuItem>)}
+          </TextField>
+          <TextField
+            fullWidth
+            size="small"
+            type="number"
+            label="Sort order"
+            value={x.sortOrder}
+            slotProps={{ htmlInput: { min: 0, max: 255 } }}
+            onChange={(event) => s.updateTransition(x.id, { sortOrder: Number(event.target.value) })}
+          />
+        </Box>
+
+        <Box sx={settingsSwitchGridSx}>
+          <FormControlLabel
+            control={<Switch size="small" checked={x.active} onChange={(_, active) => s.updateTransition(x.id, { active })} />}
+            label="Active"
+          />
+        </Box>
       </Stack>
     );
   }
