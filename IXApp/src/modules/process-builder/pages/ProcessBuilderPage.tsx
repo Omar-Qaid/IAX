@@ -408,6 +408,20 @@ export function ProcessBuilderPage() {
           fontSize: tokens.fontSize.body,
           bgcolor: '#fff',
         },
+        '& .MuiOutlinedInput-root:not(.MuiInputBase-multiline)': {
+          height: tokens.controlHeight,
+        },
+        '& .MuiOutlinedInput-input:not(textarea)': {
+          px: '8px',
+          py: '4px',
+        },
+        '& .MuiSelect-select.MuiInputBase-input': {
+          pr: '28px !important',
+          py: '4px',
+        },
+        '& .MuiInputLabel-sizeSmall:not(.MuiInputLabel-shrink)': {
+          transform: 'translate(14px, 5px) scale(1)',
+        },
         '& .MuiInputLabel-root': { fontSize: tokens.fontSize.secondary, fontWeight: 500 },
         '& .MuiFormControlLabel-label': { fontSize: tokens.fontSize.secondary },
         '& .MuiChip-root': { fontSize: tokens.fontSize.caption },

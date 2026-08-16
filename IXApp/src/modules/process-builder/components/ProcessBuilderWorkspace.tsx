@@ -17,7 +17,6 @@ import ArrowDownward from '@mui/icons-material/ArrowDownward';
 import ArrowUpward from '@mui/icons-material/ArrowUpward';
 import DragIndicator from '@mui/icons-material/DragIndicator';
 import Delete from '@mui/icons-material/Delete';
-import { BuilderItemCard } from './BuilderItemCard';
 import { useProcessBuilderStore } from '../store/useProcessBuilderStore';
 import { ControlPreview } from './ControlPreview';
 import { controlPalette } from './ProcessBuilderPalette';
@@ -63,19 +62,39 @@ const activityLookupColumns = [
   { field: 'code', header: 'Code', width: 110 },
   { field: 'name', header: 'Name', flex: 1 },
 ] as const;
-const activityLookupPage = (load: (signal?: AbortSignal) => Promise<WorkflowMasterRecord[]>) =>
-  async ({ pageNumber, pageSize, search, signal }: { pageNumber: number; pageSize: number; search: string; signal?: AbortSignal }) => {
+const activityLookupPage =
+  (load: (signal?: AbortSignal) => Promise<WorkflowMasterRecord[]>) =>
+  async ({
+    pageNumber,
+    pageSize,
+    search,
+    signal,
+  }: {
+    pageNumber: number;
+    pageSize: number;
+    search: string;
+    signal?: AbortSignal;
+  }) => {
     const records = await load(signal);
     const query = search.trim().toLocaleLowerCase();
     const filtered = query
-      ? records.filter((record) => `${record.code ?? ''} ${record.name ?? ''}`.toLocaleLowerCase().includes(query))
+      ? records.filter((record) =>
+          `${record.code ?? ''} ${record.name ?? ''}`.toLocaleLowerCase().includes(query)
+        )
       : records;
     const start = (pageNumber - 1) * pageSize;
-    return { data: filtered.slice(start, start + pageSize), pageNumber, totalPages: Math.max(1, Math.ceil(filtered.length / pageSize)), totalRecords: filtered.length };
+    return {
+      data: filtered.slice(start, start + pageSize),
+      pageNumber,
+      totalPages: Math.max(1, Math.ceil(filtered.length / pageSize)),
+      totalRecords: filtered.length,
+    };
   };
 const fetchPerformerPage = activityLookupPage(wfPerformerApi.list);
 const fetchOperatorPage = activityLookupPage(wfOperatorApi.list);
-const builderTypeFromLabel = (label: string): 'approval' | 'review' | 'data-entry' | 'api' | 'notification' => {
+const builderTypeFromLabel = (
+  label: string
+): 'approval' | 'review' | 'data-entry' | 'api' | 'notification' => {
   const normalized = label.replace(/[^a-z0-9]/gi, '').toLocaleLowerCase();
   if (normalized.includes('dataentry')) return 'data-entry';
   if (normalized.includes('notification')) return 'notification';
@@ -83,7 +102,9 @@ const builderTypeFromLabel = (label: string): 'approval' | 'review' | 'data-entr
   if (normalized.includes('api')) return 'api';
   return 'approval';
 };
-const transitionOperatorFromLabel = (label: string): '=' | '!=' | '>' | '<' | '>=' | '<=' | 'contains' | 'isEmpty' | 'between' => {
+const transitionOperatorFromLabel = (
+  label: string
+): '=' | '!=' | '>' | '<' | '>=' | '<=' | 'contains' | 'isEmpty' | 'between' => {
   const value = label.trim().toLocaleLowerCase();
   if (value === '<>' || value === 'neq') return '!=';
   if (value === 'gt') return '>';
@@ -92,7 +113,8 @@ const transitionOperatorFromLabel = (label: string): '=' | '!=' | '>' | '<' | '>
   if (value === 'lte') return '<=';
   if (value === 'between') return 'between';
   return ['=', '!=', '>', '<', '>=', '<=', 'contains', 'isEmpty', 'between'].includes(label)
-    ? label as '=' | '!=' | '>' | '<' | '>=' | '<=' | 'contains' | 'isEmpty' | 'between' : '=';
+    ? (label as '=' | '!=' | '>' | '<' | '>=' | '<=' | 'contains' | 'isEmpty' | 'between')
+    : '=';
 };
 
 function UnsavedStatus({ compact = false }: { compact?: boolean }) {
@@ -102,7 +124,12 @@ function UnsavedStatus({ compact = false }: { compact?: boolean }) {
       variant="outlined"
       label={compact ? 'Unsaved' : 'Unsaved changes'}
       aria-label={compact ? 'Unsaved item' : 'Workspace has unsaved changes'}
-      sx={{ height: compact ? 22 : 24, color: '#7a4b00', bgcolor: '#fff3cd', borderColor: '#f0c36d' }}
+      sx={{
+        height: compact ? 22 : 24,
+        color: '#7a4b00',
+        bgcolor: '#fff3cd',
+        borderColor: '#f0c36d',
+      }}
     />
   );
 }
@@ -125,7 +152,9 @@ function WorkspaceHeader({
       sx={{ alignItems: { xs: 'stretch', sm: 'center' }, minHeight: 32 }}
     >
       <Box sx={{ flex: 1, minWidth: 0 }} title={summary}>
-        <Typography component="h2" sx={{ fontSize: tokens.fontSize.heading, fontWeight: 700 }}>{title}</Typography>
+        <Typography component="h2" sx={{ fontSize: tokens.fontSize.heading, fontWeight: 700 }}>
+          {title}
+        </Typography>
       </Box>
       {dirty && <UnsavedStatus />}
       {action}
@@ -236,14 +265,30 @@ export function DesignerWorkspace() {
                       />
                       <Tooltip title="Move step up">
                         <span>
-                          <IconButton size="small" disabled={index === 0} aria-label={`Move ${step.name} up`} onClick={(event) => { event.stopPropagation(); s.moveStep(step.id, -1); }}>
+                          <IconButton
+                            size="small"
+                            disabled={index === 0}
+                            aria-label={`Move ${step.name} up`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              s.moveStep(step.id, -1);
+                            }}
+                          >
                             <ArrowUpward />
                           </IconButton>
                         </span>
                       </Tooltip>
                       <Tooltip title="Move step down">
                         <span>
-                          <IconButton size="small" disabled={index === s.document.steps.length - 1} aria-label={`Move ${step.name} down`} onClick={(event) => { event.stopPropagation(); s.moveStep(step.id, 1); }}>
+                          <IconButton
+                            size="small"
+                            disabled={index === s.document.steps.length - 1}
+                            aria-label={`Move ${step.name} down`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              s.moveStep(step.id, 1);
+                            }}
+                          >
                             <ArrowDownward />
                           </IconButton>
                         </span>
@@ -258,7 +303,13 @@ export function DesignerWorkspace() {
                           aria-label={`Delete ${step.name}`}
                           onClick={(event) => {
                             event.stopPropagation();
-                            if (step.activities.length > 0 && !window.confirm(`Delete ${step.name} and its ${step.activities.length} activities?`)) return;
+                            if (
+                              step.activities.length > 0 &&
+                              !window.confirm(
+                                `Delete ${step.name} and its ${step.activities.length} activities?`
+                              )
+                            )
+                              return;
                             s.removeStep(step.id);
                           }}
                         >
@@ -289,7 +340,9 @@ export function DesignerWorkspace() {
                             cursor: 'pointer',
                           }}
                         >
-                          <Typography sx={{ flex: 1, fontSize: tokens.fontSize.body }}>{activity.name}</Typography>
+                          <Typography sx={{ flex: 1, fontSize: tokens.fontSize.body }}>
+                            {activity.name}
+                          </Typography>
                           <Button
                             size="small"
                             aria-label={`Configure ${activity.name}`}
@@ -314,7 +367,15 @@ export function DesignerWorkspace() {
     </Stack>
   );
 }
-export function VariablesWorkspace({ onSave, saving = false, manualCode = false }: { onSave?: () => void; saving?: boolean; manualCode?: boolean }) {
+export function VariablesWorkspace({
+  onSave,
+  saving = false,
+  manualCode = false,
+}: {
+  onSave?: () => void;
+  saving?: boolean;
+  manualCode?: boolean;
+}) {
   const s = useProcessBuilderStore();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const drag = ({ active, over }: DragEndEvent) => {
@@ -393,7 +454,9 @@ export function VariablesWorkspace({ onSave, saving = false, manualCode = false 
                         placeholder={manualCode ? 'Enter code' : 'Generated on save'}
                         disabled={!manualCode || /^\d+$/.test(variable.id)}
                         required={manualCode && !/^\d+$/.test(variable.id)}
-                        onChange={(event) => s.updateVariable(variable.id, { code: event.target.value })}
+                        onChange={(event) =>
+                          s.updateVariable(variable.id, { code: event.target.value })
+                        }
                         sx={{ width: 130 }}
                       />
                       <TextField
@@ -486,7 +549,15 @@ export function VariablesWorkspace({ onSave, saving = false, manualCode = false 
     </Stack>
   );
 }
-export function StepsWorkspace({ onSave, saving = false, manualCode = false }: { onSave?: () => void; saving?: boolean; manualCode?: boolean }) {
+export function StepsWorkspace({
+  onSave,
+  saving = false,
+  manualCode = false,
+}: {
+  onSave?: () => void;
+  saving?: boolean;
+  manualCode?: boolean;
+}) {
   const s = useProcessBuilderStore();
   const activeSteps = s.document.steps.filter((step) => step.active).length;
   const activityCount = s.document.steps.reduce((count, step) => count + step.activities.length, 0);
@@ -681,7 +752,15 @@ export function StepsWorkspace({ onSave, saving = false, manualCode = false }: {
     </Stack>
   );
 }
-export function ActivitiesWorkspace({ onSave, saving = false, manualCode = false }: { onSave?: () => void; saving?: boolean; manualCode?: boolean }) {
+export function ActivitiesWorkspace({
+  onSave,
+  saving = false,
+  manualCode = false,
+}: {
+  onSave?: () => void;
+  saving?: boolean;
+  manualCode?: boolean;
+}) {
   const s = useProcessBuilderStore();
   const activityTypes = useQuery({
     queryKey: ['workflow', 'builder-activity-type-options'],
@@ -700,7 +779,7 @@ export function ActivitiesWorkspace({ onSave, saving = false, manualCode = false
         ? s.document.steps.find((x) => x.id === node.stepId)
         : node.kind === 'control'
           ? s.document.steps.find((x) => x.id === node.stepId)
-          : s.document.steps.find((x) => x.id === s.selectedStepId) ?? s.document.steps[0];
+          : (s.document.steps.find((x) => x.id === s.selectedStepId) ?? s.document.steps[0]);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const dragActivity = ({ active, over }: DragEndEvent) => {
     if (step && over && active.id !== over.id)
@@ -713,7 +792,10 @@ export function ActivitiesWorkspace({ onSave, saving = false, manualCode = false
         spacing={1}
         sx={{ alignItems: { sm: 'center' } }}
       >
-        <Typography component="h2" sx={{ flex: 1, fontSize: tokens.fontSize.heading, fontWeight: 700 }}>
+        <Typography
+          component="h2"
+          sx={{ flex: 1, fontSize: tokens.fontSize.heading, fontWeight: 700 }}
+        >
           Activities · {step?.name ?? 'Select step'}
         </Typography>
         {s.dirty && <UnsavedStatus />}
@@ -807,7 +889,9 @@ export function ActivitiesWorkspace({ onSave, saving = false, manualCode = false
                         label="Score"
                         value={activity.score}
                         onChange={(event) =>
-                          s.updateActivity(step.id, activity.id, { score: Number(event.target.value) })
+                          s.updateActivity(step.id, activity.id, {
+                            score: Number(event.target.value),
+                          })
                         }
                         sx={{ width: 82 }}
                       />
@@ -849,12 +933,15 @@ export function ActivitiesWorkspace({ onSave, saving = false, manualCode = false
                             label="Activity Type"
                             value={Number(activity.activityTypeId) || undefined}
                             options={activityTypeOptions}
-                            onChange={(value, option) => s.updateActivity(step.id, activity.id, {
-                              activityTypeId: value == null ? '' : String(value),
-                              type: option && !Array.isArray(option)
-                                ? builderTypeFromLabel(option.name)
-                                : activity.type,
-                            })}
+                            onChange={(value, option) =>
+                              s.updateActivity(step.id, activity.id, {
+                                activityTypeId: value == null ? '' : String(value),
+                                type:
+                                  option && !Array.isArray(option)
+                                    ? builderTypeFromLabel(option.name)
+                                    : activity.type,
+                              })
+                            }
                             required
                             displayMode="select"
                           />
@@ -862,12 +949,20 @@ export function ActivitiesWorkspace({ onSave, saving = false, manualCode = false
                             name={`performerId-${activity.id}`}
                             label="Performer"
                             value={Number(activity.performer) || null}
-                            onChange={(value) => s.updateActivity(step.id, activity.id, { performer: value == null ? '' : String(value) })}
+                            onChange={(value) =>
+                              s.updateActivity(step.id, activity.id, {
+                                performer: value == null ? '' : String(value),
+                              })
+                            }
                             required
                             columns={[...activityLookupColumns]}
                             queryKey={['workflow', 'builder-performer-lookup']}
                             fetchPage={fetchPerformerPage}
-                            fetchById={async (value) => (await wfPerformerApi.list()).find((item) => item.recId === Number(value)) ?? null}
+                            fetchById={async (value) =>
+                              (await wfPerformerApi.list()).find(
+                                (item) => item.recId === Number(value)
+                              ) ?? null
+                            }
                             valueField="recId"
                             labelField="name"
                             pageSize={25}
@@ -938,7 +1033,15 @@ export function ActivitiesWorkspace({ onSave, saving = false, manualCode = false
     </Stack>
   );
 }
-export function RequestFormWorkspace({ onSave, saving = false, manualCode = false }: { onSave?: () => void; saving?: boolean; manualCode?: boolean }) {
+export function RequestFormWorkspace({
+  onSave,
+  saving = false,
+  manualCode = false,
+}: {
+  onSave?: () => void;
+  saving?: boolean;
+  manualCode?: boolean;
+}) {
   const s = useProcessBuilderStore();
   const palette = controlPalette;
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
@@ -952,7 +1055,11 @@ export function RequestFormWorkspace({ onSave, saving = false, manualCode = fals
         summary={`${s.document.requestControls.length} process-level controls`}
         dirty={s.document.id === 'new' || s.dirty}
         action={
-          <Button variant="contained" disabled={s.document.id === 'new' || saving || !onSave} onClick={onSave}>
+          <Button
+            variant="contained"
+            disabled={s.document.id === 'new' || saving || !onSave}
+            onClick={onSave}
+          >
             {saving ? 'Saving…' : 'Save Request Controls'}
           </Button>
         }
@@ -963,7 +1070,9 @@ export function RequestFormWorkspace({ onSave, saving = false, manualCode = fals
         </Typography>
       )}
       <Box sx={{ ...workspaceCardSx(), minHeight: 60, mt: '-6px' }}>
-        <Typography sx={{ mb: 1, fontSize: tokens.fontSize.secondary, fontWeight: 700 }}>ADD CONTROL</Typography>
+        <Typography sx={{ mb: 1, fontSize: tokens.fontSize.secondary, fontWeight: 700 }}>
+          ADD CONTROL
+        </Typography>
         <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
           {palette.map((item) => (
             <Button
@@ -1028,7 +1137,9 @@ export function RequestFormWorkspace({ onSave, saving = false, manualCode = fals
                         placeholder={manualCode ? 'Enter code' : 'Generated on save'}
                         disabled={!manualCode || /^\d+$/.test(control.id)}
                         required={manualCode && !/^\d+$/.test(control.id)}
-                        onChange={(event) => s.updateRequestControl(control.id, { code: event.target.value })}
+                        onChange={(event) =>
+                          s.updateRequestControl(control.id, { code: event.target.value })
+                        }
                       />
                       <TextField
                         size="small"
@@ -1123,7 +1234,9 @@ export function RequestFormWorkspace({ onSave, saving = false, manualCode = fals
                           }}
                         >
                           <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1 }}>
-                            <Typography sx={{ flex: 1, fontSize: tokens.fontSize.secondary, fontWeight: 700 }}>
+                            <Typography
+                              sx={{ flex: 1, fontSize: tokens.fontSize.secondary, fontWeight: 700 }}
+                            >
                               OPTIONS
                             </Typography>
                             <Button
@@ -1132,7 +1245,10 @@ export function RequestFormWorkspace({ onSave, saving = false, manualCode = fals
                               aria-label={`Add option to ${control.label}`}
                               onClick={() =>
                                 s.updateRequestControl(control.id, {
-                                  options: [...control.options, `Option ${control.options.length + 1}`],
+                                  options: [
+                                    ...control.options,
+                                    `Option ${control.options.length + 1}`,
+                                  ],
                                 })
                               }
                             >
@@ -1140,7 +1256,9 @@ export function RequestFormWorkspace({ onSave, saving = false, manualCode = fals
                             </Button>
                           </Stack>
                           {control.options.length === 0 ? (
-                            <Typography sx={{ color: tokens.textMuted, fontSize: tokens.fontSize.secondary }}>
+                            <Typography
+                              sx={{ color: tokens.textMuted, fontSize: tokens.fontSize.secondary }}
+                            >
                               Add at least one selectable option.
                             </Typography>
                           ) : (
@@ -1164,13 +1282,22 @@ export function RequestFormWorkspace({ onSave, saving = false, manualCode = fals
                                   {control.options.map((option, optionIndex) => (
                                     <SortableBuilderItem key={optionIndex} id={String(optionIndex)}>
                                       {(optionAttributes, optionListeners) => (
-                                        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                                        <Stack
+                                          direction="row"
+                                          spacing={1}
+                                          sx={{ alignItems: 'center' }}
+                                        >
                                           <Tooltip title="Drag to reorder">
                                             <Box
                                               {...optionAttributes}
                                               {...optionListeners}
                                               aria-label={`Reorder option ${optionIndex + 1} for ${control.label}`}
-                                              sx={{ display: 'flex', color: tokens.textMuted, cursor: 'grab', touchAction: 'none' }}
+                                              sx={{
+                                                display: 'flex',
+                                                color: tokens.textMuted,
+                                                cursor: 'grab',
+                                                touchAction: 'none',
+                                              }}
                                             >
                                               <DragIndicator fontSize="small" />
                                             </Box>
@@ -1180,7 +1307,11 @@ export function RequestFormWorkspace({ onSave, saving = false, manualCode = fals
                                             size="small"
                                             label={`Option ${optionIndex + 1}`}
                                             value={option}
-                                            slotProps={{ htmlInput: { 'aria-label': `Option ${optionIndex + 1} for ${control.label}` } }}
+                                            slotProps={{
+                                              htmlInput: {
+                                                'aria-label': `Option ${optionIndex + 1} for ${control.label}`,
+                                              },
+                                            }}
                                             onChange={(event) => {
                                               const options = [...control.options];
                                               options[optionIndex] = event.target.value;
@@ -1193,7 +1324,9 @@ export function RequestFormWorkspace({ onSave, saving = false, manualCode = fals
                                             aria-label={`Remove option ${optionIndex + 1} from ${control.label}`}
                                             onClick={() =>
                                               s.updateRequestControl(control.id, {
-                                                options: control.options.filter((_, index) => index !== optionIndex),
+                                                options: control.options.filter(
+                                                  (_, index) => index !== optionIndex
+                                                ),
                                               })
                                             }
                                           >
@@ -1220,7 +1353,13 @@ export function RequestFormWorkspace({ onSave, saving = false, manualCode = fals
     </Stack>
   );
 }
-export function ActivityFormWorkspace({ onSave, saving = false }: { onSave?: () => void; saving?: boolean }) {
+export function ActivityFormWorkspace({
+  onSave,
+  saving = false,
+}: {
+  onSave?: () => void;
+  saving?: boolean;
+}) {
   const s = useProcessBuilderStore();
   const activityOptions = s.document.steps.flatMap((step) =>
     step.activities.map((activity) => ({ activity, stepId: step.id, stepName: step.name }))
@@ -1279,11 +1418,16 @@ export function ActivityFormWorkspace({ onSave, saving = false }: { onSave?: () 
           </Button>
           {s.document.steps.some((step) => step.activities.length > 0) && (
             <Stack spacing="6px" sx={{ mt: '16px', alignItems: 'center' }}>
-              {s.document.steps.flatMap((step) => step.activities.map((item) => (
-                <Button key={item.id} onClick={() => s.select({ kind: 'activity', stepId: step.id, id: item.id })}>
-                  {item.name}
-                </Button>
-              )))}
+              {s.document.steps.flatMap((step) =>
+                step.activities.map((item) => (
+                  <Button
+                    key={item.id}
+                    onClick={() => s.select({ kind: 'activity', stepId: step.id, id: item.id })}
+                  >
+                    {item.name}
+                  </Button>
+                ))
+              )}
             </Stack>
           )}
         </Box>
@@ -1300,7 +1444,10 @@ export function ActivityFormWorkspace({ onSave, saving = false }: { onSave?: () 
         spacing={1}
         sx={{ alignItems: { xs: 'stretch', sm: 'center' }, minHeight: 44 }}
       >
-        <Typography component="h2" sx={{ flex: 1, fontSize: tokens.fontSize.heading, fontWeight: 700 }}>
+        <Typography
+          component="h2"
+          sx={{ flex: 1, fontSize: tokens.fontSize.heading, fontWeight: 700 }}
+        >
           Activity Form · {activity.name}
         </Typography>
         {s.dirty && <UnsavedStatus compact />}
@@ -1331,7 +1478,9 @@ export function ActivityFormWorkspace({ onSave, saving = false }: { onSave?: () 
         </TextField>
       </Stack>
       <Box sx={{ ...workspaceCardSx(), minHeight: 60 }}>
-        <Typography sx={{ mb: 1, fontSize: tokens.fontSize.secondary, fontWeight: 700 }}>ADD CONTROL</Typography>
+        <Typography sx={{ mb: 1, fontSize: tokens.fontSize.secondary, fontWeight: 700 }}>
+          ADD CONTROL
+        </Typography>
         <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap' }}>
           {palette.map((item) => (
             <Button
@@ -1446,7 +1595,9 @@ export function ActivityFormWorkspace({ onSave, saving = false }: { onSave?: () 
                         }}
                       >
                         <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1 }}>
-                          <Typography sx={{ flex: 1, fontSize: tokens.fontSize.secondary, fontWeight: 700 }}>
+                          <Typography
+                            sx={{ flex: 1, fontSize: tokens.fontSize.secondary, fontWeight: 700 }}
+                          >
                             OPTIONS
                           </Typography>
                           <Button
@@ -1455,7 +1606,10 @@ export function ActivityFormWorkspace({ onSave, saving = false }: { onSave?: () 
                             aria-label={`Add option to ${control.label}`}
                             onClick={() =>
                               s.updateActivityControl(stepId, activity.id, control.id, {
-                                options: [...control.options, `Option ${control.options.length + 1}`],
+                                options: [
+                                  ...control.options,
+                                  `Option ${control.options.length + 1}`,
+                                ],
                               })
                             }
                           >
@@ -1463,7 +1617,9 @@ export function ActivityFormWorkspace({ onSave, saving = false }: { onSave?: () 
                           </Button>
                         </Stack>
                         {control.options.length === 0 ? (
-                          <Typography sx={{ color: tokens.textMuted, fontSize: tokens.fontSize.secondary }}>
+                          <Typography
+                            sx={{ color: tokens.textMuted, fontSize: tokens.fontSize.secondary }}
+                          >
                             Add at least one selectable option.
                           </Typography>
                         ) : (
@@ -1489,13 +1645,22 @@ export function ActivityFormWorkspace({ onSave, saving = false }: { onSave?: () 
                                 {control.options.map((option, optionIndex) => (
                                   <SortableBuilderItem key={optionIndex} id={String(optionIndex)}>
                                     {(optionAttributes, optionListeners) => (
-                                      <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                                      <Stack
+                                        direction="row"
+                                        spacing={1}
+                                        sx={{ alignItems: 'center' }}
+                                      >
                                         <Tooltip title="Drag to reorder">
                                           <Box
                                             {...optionAttributes}
                                             {...optionListeners}
                                             aria-label={`Reorder option ${optionIndex + 1} for ${control.label}`}
-                                            sx={{ display: 'flex', color: tokens.textMuted, cursor: 'grab', touchAction: 'none' }}
+                                            sx={{
+                                              display: 'flex',
+                                              color: tokens.textMuted,
+                                              cursor: 'grab',
+                                              touchAction: 'none',
+                                            }}
                                           >
                                             <DragIndicator fontSize="small" />
                                           </Box>
@@ -1505,11 +1670,20 @@ export function ActivityFormWorkspace({ onSave, saving = false }: { onSave?: () 
                                           size="small"
                                           label={`Option ${optionIndex + 1}`}
                                           value={option}
-                                          slotProps={{ htmlInput: { 'aria-label': `Option ${optionIndex + 1} for ${control.label}` } }}
+                                          slotProps={{
+                                            htmlInput: {
+                                              'aria-label': `Option ${optionIndex + 1} for ${control.label}`,
+                                            },
+                                          }}
                                           onChange={(event) => {
                                             const options = [...control.options];
                                             options[optionIndex] = event.target.value;
-                                            s.updateActivityControl(stepId, activity.id, control.id, { options });
+                                            s.updateActivityControl(
+                                              stepId,
+                                              activity.id,
+                                              control.id,
+                                              { options }
+                                            );
                                           }}
                                         />
                                         <IconButton
@@ -1517,9 +1691,16 @@ export function ActivityFormWorkspace({ onSave, saving = false }: { onSave?: () 
                                           color="error"
                                           aria-label={`Remove option ${optionIndex + 1} from ${control.label}`}
                                           onClick={() =>
-                                            s.updateActivityControl(stepId, activity.id, control.id, {
-                                              options: control.options.filter((_, index) => index !== optionIndex),
-                                            })
+                                            s.updateActivityControl(
+                                              stepId,
+                                              activity.id,
+                                              control.id,
+                                              {
+                                                options: control.options.filter(
+                                                  (_, index) => index !== optionIndex
+                                                ),
+                                              }
+                                            )
                                           }
                                         >
                                           <Delete fontSize="small" />
@@ -1543,7 +1724,9 @@ export function ActivityFormWorkspace({ onSave, saving = false }: { onSave?: () 
       </DndContext>
       <Box sx={{ ...workspaceCardSx(), mt: 0.5 }}>
         <Stack direction="row" sx={{ alignItems: 'center' }}>
-          <Typography sx={{ flex: 1, fontSize: tokens.fontSize.body, fontWeight: 600 }}>Actions</Typography>
+          <Typography sx={{ flex: 1, fontSize: tokens.fontSize.body, fontWeight: 600 }}>
+            Actions
+          </Typography>
           {(['approve', 'reject', 'return', 'escalate'] as const).map((type) => (
             <Button
               key={type}
@@ -1740,7 +1923,13 @@ export function DiagramWorkspace() {
     </Stack>
   );
 }
-export function TransitionsWorkspace({ onSave, saving = false }: { onSave?: () => void; saving?: boolean }) {
+export function TransitionsWorkspace({
+  onSave,
+  saving = false,
+}: {
+  onSave?: () => void;
+  saving?: boolean;
+}) {
   const s = useProcessBuilderStore();
   const activities = s.document.steps.flatMap((step) =>
     step.activities.map((activity) => ({ ...activity, stepName: step.name }))
@@ -1751,28 +1940,89 @@ export function TransitionsWorkspace({ onSave, saving = false }: { onSave?: () =
         title="Conditional Transitions"
         summary={`${s.document.transitions.length} transitions · route the process using configured conditions`}
         dirty={s.dirty}
-        action={<Stack direction="row" spacing={1}>
-          <Button variant="outlined" startIcon={<Add />} disabled={s.document.steps.length < 1} onClick={() => s.addTransition()}>New transition</Button>
-          <Button variant="contained" disabled={s.document.id === 'new' || saving || !onSave} onClick={onSave}>{saving ? 'Saving…' : 'Save Transitions'}</Button>
-        </Stack>}
+        action={
+          <Stack direction="row" spacing={1}>
+            <Button
+              variant="outlined"
+              startIcon={<Add />}
+              disabled={s.document.steps.length < 1}
+              onClick={() => s.addTransition()}
+            >
+              New transition
+            </Button>
+            <Button
+              variant="contained"
+              disabled={s.document.id === 'new' || saving || !onSave}
+              onClick={onSave}
+            >
+              {saving ? 'Saving…' : 'Save Transitions'}
+            </Button>
+          </Stack>
+        }
       />
       {s.document.transitions.map((x) => {
         const variable = s.document.variables.find((item) => item.id === x.variableId);
         return (
-          <BuilderItemCard
+          <Box
             key={x.id}
-            title={x.name}
-            subtitle={`${x.operator} ${x.value}`}
-            selected={s.selected.kind === 'transition' && s.selected.id === x.id}
-            onSelect={() => s.select({ kind: 'transition', id: x.id })}
-            onDelete={() => s.removeTransition(x.id)}
+            onClick={() => s.select({ kind: 'transition', id: x.id })}
+            sx={workspaceCardSx(s.selected.kind === 'transition' && s.selected.id === x.id)}
           >
+            <Stack
+              direction="row"
+              spacing={1}
+              useFlexGap
+              sx={{ alignItems: 'center', flexWrap: 'wrap' }}
+            >
+              <Box sx={{ display: 'flex', color: tokens.textMuted }} aria-hidden="true">
+                <DragIndicator fontSize="small" />
+              </Box>
+              <Chip
+                size="small"
+                label={`#${x.sortOrder}`}
+                sx={{
+                  minWidth: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  bgcolor: tokens.accent,
+                  color: '#fff',
+                  '& .MuiChip-label': { px: 0.5 },
+                }}
+              />
+              <TextField
+                size="small"
+                label="Transition name"
+                value={x.name}
+                onChange={(event) => s.updateTransition(x.id, { name: event.target.value })}
+                sx={{ flex: '1 1 260px' }}
+              />
+              <Tooltip title={`Delete ${x.name}`}>
+                <IconButton
+                  color="error"
+                  size="small"
+                  aria-label={`Delete ${x.name}`}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    s.removeTransition(x.id);
+                  }}
+                >
+                  <Delete fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Stack>
             <Box
               sx={{
+                mt: 1.5,
+                ml: { xs: 0, md: '52px' },
+                pt: 1.5,
+                borderTop: `1px solid ${tokens.border}`,
                 display: 'grid',
-                gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(150px, 1fr))' },
+                gridTemplateColumns: {
+                  xs: '1fr',
+                  sm: 'repeat(2, minmax(150px, 1fr))',
+                  lg: 'repeat(3, minmax(150px, 1fr))',
+                },
                 gap: 1,
-                mt: 1,
               }}
             >
               <TextField
@@ -1830,7 +2080,9 @@ export function TransitionsWorkspace({ onSave, saving = false }: { onSave?: () =
                 value={x.variableId}
                 onChange={(e) => {
                   const variableId = e.target.value;
-                  const dataType = s.document.variables.find((item) => item.id === variableId)?.dataType;
+                  const dataType = s.document.variables.find(
+                    (item) => item.id === variableId
+                  )?.dataType;
                   s.updateTransition(x.id, {
                     variableId,
                     value: normalizeTransitionValue(x.value, dataType),
@@ -1847,12 +2099,24 @@ export function TransitionsWorkspace({ onSave, saving = false }: { onSave?: () =
                 name={`operatorId-${x.id}`}
                 label="Operator"
                 value={Number(x.operatorId) || null}
-                onChange={(value, row) => s.updateTransition(x.id, { operatorId: value == null ? '' : String(value), operator: row ? transitionOperatorFromLabel(row.name ?? row.code ?? '') : x.operator })}
-                required columns={[...activityLookupColumns]}
+                onChange={(value, row) =>
+                  s.updateTransition(x.id, {
+                    operatorId: value == null ? '' : String(value),
+                    operator: row
+                      ? transitionOperatorFromLabel(row.name ?? row.code ?? '')
+                      : x.operator,
+                  })
+                }
+                required
+                columns={[...activityLookupColumns]}
                 queryKey={['workflow', 'builder-operator-lookup']}
                 fetchPage={fetchOperatorPage}
-                fetchById={async (value) => (await wfOperatorApi.list()).find((item) => item.recId === Number(value)) ?? null}
-                valueField="recId" labelField="name" pageSize={25}
+                fetchById={async (value) =>
+                  (await wfOperatorApi.list()).find((item) => item.recId === Number(value)) ?? null
+                }
+                valueField="recId"
+                labelField="name"
+                pageSize={25}
               />
               <TransitionValueField
                 dataType={variable?.dataType}
@@ -1888,9 +2152,10 @@ export function TransitionsWorkspace({ onSave, saving = false }: { onSave?: () =
                   />
                 }
                 label="Active"
+                sx={{ m: 0, alignSelf: 'center' }}
               />
             </Box>
-          </BuilderItemCard>
+          </Box>
         );
       })}
     </Stack>

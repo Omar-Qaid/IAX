@@ -15,7 +15,7 @@ export const processBuilderTokens = {
   textSubtle: '#94a3b8',
   focusRing: '0 0 0 3px rgb(139 92 246 / 24%)',
   radius: 2,
-  controlHeight: 32,
+  controlHeight: 28,
   headerHeight: 40,
   tabsHeight: 52,
   leftWidth: 250,

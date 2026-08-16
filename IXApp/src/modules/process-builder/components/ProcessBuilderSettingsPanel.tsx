@@ -30,7 +30,12 @@ import type {
 import { processBuilderTokens as tokens } from './processBuilderTokens';
 import { useQuery } from '@tanstack/react-query';
 import { wfCategoryApi, type WfCategoryRecord } from '@modules/workflow/api/wfCategoryApi';
-import { wfActivityTypeApi, wfOperatorApi, wfPriorityApi, wfProcessTypeApi } from '@modules/workflow/api/workflowSetupApis';
+import {
+  wfActivityTypeApi,
+  wfOperatorApi,
+  wfPriorityApi,
+  wfProcessTypeApi,
+} from '@modules/workflow/api/workflowSetupApis';
 import { wfPerformerApi } from '@modules/workflow/api/wfPerformerApi';
 import { AppLookupGridField } from '@shared/components/fields/AppLookupGridField';
 import { AppLookupField } from '@shared/components/fields/AppLookupField';
@@ -41,7 +46,9 @@ const categoryLookupColumns = [
 ] as const;
 
 const requestOptionControlTypes = new Set(['dropdown-manual', 'checkboxlist', 'radiobuttonlist']);
-const builderTypeFromLabel = (label: string): 'approval' | 'review' | 'data-entry' | 'api' | 'notification' => {
+const builderTypeFromLabel = (
+  label: string
+): 'approval' | 'review' | 'data-entry' | 'api' | 'notification' => {
   const normalized = label.replace(/[^a-z0-9]/gi, '').toLocaleLowerCase();
   if (normalized.includes('dataentry')) return 'data-entry';
   if (normalized.includes('notification')) return 'notification';
@@ -115,11 +122,20 @@ const SettingsTitle = ({
       alignItems: 'center',
     }}
   >
-    <Typography component="h2" sx={{ flex: 1, fontSize: tokens.fontSize.heading, fontWeight: 700, color: tokens.text }}>
+    <Typography
+      component="h2"
+      sx={{ flex: 1, fontSize: tokens.fontSize.heading, fontWeight: 700, color: tokens.text }}
+    >
       {title}
     </Typography>
     {isNew && <Chip size="small" label="New record" sx={{ height: 20, bgcolor: '#eeeeee' }} />}
-    {dirty && <Chip size="small" label="Unsaved changes" sx={{ bgcolor: '#fff3cd', color: '#7a4b00', border: '1px solid #f0c36d', height: 20 }} />}
+    {dirty && (
+      <Chip
+        size="small"
+        label="Unsaved changes"
+        sx={{ bgcolor: '#fff3cd', color: '#7a4b00', border: '1px solid #f0c36d', height: 20 }}
+      />
+    )}
   </Stack>
 );
 
@@ -183,17 +199,37 @@ function ValidationRules({
   type ConditionalValidationField = 'value' | 'secondaryValue' | 'operator' | 'expression' | 'mask';
   const fieldsByType: Record<BuilderValidationType, readonly ConditionalValidationField[]> = {
     required: [],
-    regex: ['expression'], pattern: ['expression'],
-    minLength: ['value'], maxLength: ['value'], exactLength: ['value'], length: ['value'],
-    minValue: ['value'], maxValue: ['value'],
+    regex: ['expression'],
+    pattern: ['expression'],
+    minLength: ['value'],
+    maxLength: ['value'],
+    exactLength: ['value'],
+    length: ['value'],
+    minValue: ['value'],
+    maxValue: ['value'],
     range: ['value', 'secondaryValue'],
-    compare: ['operator', 'value'], comparison: ['operator', 'value'], crossField: ['operator', 'value'],
-    expression: ['expression', 'operator', 'value'], custom: ['expression', 'operator', 'value'],
-    mask: ['mask'], inputMask: ['mask'],
-    startsWith: ['value'], endsWith: ['value'], contains: ['value'],
-    fileExtensions: ['value'], fileSize: ['value'], minSelected: ['value'], maxSelected: ['value'],
-    email: [], url: [], phone: [], saudiMobile: ['mask'], saudiNationalId: [], saudiIban: [],
-    taxNumber: [], passport: [],
+    compare: ['operator', 'value'],
+    comparison: ['operator', 'value'],
+    crossField: ['operator', 'value'],
+    expression: ['expression', 'operator', 'value'],
+    custom: ['expression', 'operator', 'value'],
+    mask: ['mask'],
+    inputMask: ['mask'],
+    startsWith: ['value'],
+    endsWith: ['value'],
+    contains: ['value'],
+    fileExtensions: ['value'],
+    fileSize: ['value'],
+    minSelected: ['value'],
+    maxSelected: ['value'],
+    email: [],
+    url: [],
+    phone: [],
+    saudiMobile: ['mask'],
+    saudiNationalId: [],
+    saudiIban: [],
+    taxNumber: [],
+    passport: [],
   };
   const update = (id: string, patch: Partial<BuilderValidation>) =>
     onChange(values.map((rule) => (rule.id === id ? { ...rule, ...patch } : rule)));
@@ -245,9 +281,10 @@ function ValidationRules({
     const visible = new Set(fieldsByType[type]);
     const previouslyVisible = new Set(fieldsByType[current.type] ?? []);
     const defaultMessages = Object.values(messages);
-    const message = !current.message || defaultMessages.includes(current.message)
-      ? messages[type] ?? ''
-      : current.message;
+    const message =
+      !current.message || defaultMessages.includes(current.message)
+        ? (messages[type] ?? '')
+        : current.message;
     update(id, {
       type,
       message,
@@ -257,7 +294,8 @@ function ValidationRules({
         (visible.has('expression') && previouslyVisible.has('expression'))
           ? current.secondaryValue
           : '',
-      operator: visible.has('operator') && previouslyVisible.has('operator') ? current.operator : '',
+      operator:
+        visible.has('operator') && previouslyVisible.has('operator') ? current.operator : '',
       mask: visible.has('mask') && previouslyVisible.has('mask') ? current.mask : '',
     });
   };
@@ -280,7 +318,9 @@ function ValidationRules({
   return (
     <Box sx={{ pt: 1.5, borderTop: '1px solid #e5e7eb' }}>
       <Stack direction="row" sx={{ alignItems: 'center' }}>
-        <Typography sx={{ flex: 1, fontSize: tokens.fontSize.body, fontWeight: 600 }}>Validation Rules</Typography>
+        <Typography sx={{ flex: 1, fontSize: tokens.fontSize.body, fontWeight: 600 }}>
+          Validation Rules
+        </Typography>
         <Button size="small" onClick={add}>
           + Add
         </Button>
@@ -289,117 +329,132 @@ function ValidationRules({
         {values.map((rule) => {
           const visible = new Set(fieldsByType[rule.type] ?? []);
           return (
-          <Box
-            key={rule.id}
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0, 1fr) minmax(100px, .75fr)',
-              gap: 1,
-              p: 1.25,
-              border: '1px solid #dfe3ea',
-              bgcolor: '#fff',
-            }}
-          >
-            <TextField
-              select
-              size="small"
-              label="Validation Type"
-              value={rule.type}
-              onChange={(event) => changeType(rule.id, event.target.value as BuilderValidationType)}
+            <Box
+              key={rule.id}
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: 'minmax(0, 1fr) minmax(100px, .75fr)',
+                gap: 1,
+                p: 1.25,
+                border: '1px solid #dfe3ea',
+                bgcolor: '#fff',
+              }}
             >
-              {validationTypes.map((type) => (
-                <MenuItem key={type.value} value={type.value}>
-                  {type.label}
-                </MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              select
-              size="small"
-              label="Severity"
-              value={rule.severity}
-              onChange={(event) =>
-                update(rule.id, { severity: event.target.value as BuilderValidation['severity'] })
-              }
-            >
-              {['Error', 'Warning', 'Information'].map((severity) => (
-                <MenuItem key={severity} value={severity}>
-                  {severity}
-                </MenuItem>
-              ))}
-            </TextField>
-            {visible.has('value') && <TextField
-              size="small"
-              label={rule.type === 'range' ? 'Minimum value' : 'Value'}
-              value={rule.value}
-              onChange={(event) => update(rule.id, { value: event.target.value })}
-            />}
-            {visible.has('secondaryValue') && <TextField
-              size="small"
-              label="Maximum value"
-              value={rule.secondaryValue}
-              onChange={(event) => update(rule.id, { secondaryValue: event.target.value })}
-            />}
-            {visible.has('operator') && <TextField
-              size="small"
-              label="Operator"
-              value={rule.operator}
-              onChange={(event) => update(rule.id, { operator: event.target.value })}
-            />}
-            {visible.has('expression') && <TextField
-              size="small"
-              label="Validation expression"
-              value={rule.secondaryValue}
-              onChange={(event) => update(rule.id, { secondaryValue: event.target.value })}
-              sx={{ gridColumn: '1 / -1' }}
-            />}
-            {visible.has('mask') && <TextField
-              size="small"
-              label="Input mask"
-              value={rule.mask}
-              onChange={(event) => update(rule.id, { mask: event.target.value })}
-              sx={{ gridColumn: '1 / -1' }}
-            />}
-            <TextField
-              required
-              size="small"
-              label="Error message"
-              value={rule.message}
-              onChange={(event) => update(rule.id, { message: event.target.value })}
-              sx={{ gridColumn: '1 / -1' }}
-            />
-            <TextField
-              size="small"
-              type="number"
-              label="Sort Order"
-              value={rule.sortOrder}
-              onChange={(event) => update(rule.id, { sortOrder: Number(event.target.value) })}
-            />
-            <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    size="small"
-                    checked={rule.active}
-                    onChange={(_, active) => update(rule.id, { active })}
-                  />
-                }
-                label="Active"
-              />
-              <IconButton
-                color="error"
+              <TextField
+                select
                 size="small"
-                aria-label="Delete validation"
-                onClick={() => onChange(values.filter((item) => item.id !== rule.id))}
+                label="Validation Type"
+                value={rule.type}
+                onChange={(event) =>
+                  changeType(rule.id, event.target.value as BuilderValidationType)
+                }
               >
-                <Delete fontSize="small" />
-              </IconButton>
-            </Stack>
-          </Box>
+                {validationTypes.map((type) => (
+                  <MenuItem key={type.value} value={type.value}>
+                    {type.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <TextField
+                select
+                size="small"
+                label="Severity"
+                value={rule.severity}
+                onChange={(event) =>
+                  update(rule.id, { severity: event.target.value as BuilderValidation['severity'] })
+                }
+              >
+                {['Error', 'Warning', 'Information'].map((severity) => (
+                  <MenuItem key={severity} value={severity}>
+                    {severity}
+                  </MenuItem>
+                ))}
+              </TextField>
+              {visible.has('value') && (
+                <TextField
+                  size="small"
+                  label={rule.type === 'range' ? 'Minimum value' : 'Value'}
+                  value={rule.value}
+                  onChange={(event) => update(rule.id, { value: event.target.value })}
+                />
+              )}
+              {visible.has('secondaryValue') && (
+                <TextField
+                  size="small"
+                  label="Maximum value"
+                  value={rule.secondaryValue}
+                  onChange={(event) => update(rule.id, { secondaryValue: event.target.value })}
+                />
+              )}
+              {visible.has('operator') && (
+                <TextField
+                  size="small"
+                  label="Operator"
+                  value={rule.operator}
+                  onChange={(event) => update(rule.id, { operator: event.target.value })}
+                />
+              )}
+              {visible.has('expression') && (
+                <TextField
+                  size="small"
+                  label="Validation expression"
+                  value={rule.secondaryValue}
+                  onChange={(event) => update(rule.id, { secondaryValue: event.target.value })}
+                  sx={{ gridColumn: '1 / -1' }}
+                />
+              )}
+              {visible.has('mask') && (
+                <TextField
+                  size="small"
+                  label="Input mask"
+                  value={rule.mask}
+                  onChange={(event) => update(rule.id, { mask: event.target.value })}
+                  sx={{ gridColumn: '1 / -1' }}
+                />
+              )}
+              <TextField
+                required
+                size="small"
+                label="Error message"
+                value={rule.message}
+                onChange={(event) => update(rule.id, { message: event.target.value })}
+                sx={{ gridColumn: '1 / -1' }}
+              />
+              <TextField
+                size="small"
+                type="number"
+                label="Sort Order"
+                value={rule.sortOrder}
+                onChange={(event) => update(rule.id, { sortOrder: Number(event.target.value) })}
+              />
+              <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      size="small"
+                      checked={rule.active}
+                      onChange={(_, active) => update(rule.id, { active })}
+                    />
+                  }
+                  label="Active"
+                />
+                <IconButton
+                  color="error"
+                  size="small"
+                  aria-label="Delete validation"
+                  onClick={() => onChange(values.filter((item) => item.id !== rule.id))}
+                >
+                  <Delete fontSize="small" />
+                </IconButton>
+              </Stack>
+            </Box>
           );
         })}
         {values.length === 0 && (
-          <Typography color="text.secondary" sx={{ py: 2, textAlign: 'center', fontSize: tokens.fontSize.caption }}>
+          <Typography
+            color="text.secondary"
+            sx={{ py: 2, textAlign: 'center', fontSize: tokens.fontSize.caption }}
+          >
             No validation rules yet.
           </Typography>
         )}
@@ -429,50 +484,110 @@ function TransitionRules({
         <Typography sx={{ flex: 1, fontSize: tokens.fontSize.body, fontWeight: 600 }}>
           Transitions ({values.length})
         </Typography>
-        <Button size="small" onClick={onAdd}>+ Add</Button>
+        <Button size="small" onClick={onAdd}>
+          + Add
+        </Button>
       </Stack>
       <Stack spacing="10px" sx={{ mt: '8px' }}>
         {values.map((transition) => {
           const variable = variables.find((item) => item.id === transition.variableId);
           return (
-          <Box
-            key={transition.id}
-            sx={{ p: '10px', border: `1px solid ${tokens.border}`, bgcolor: '#fff' }}
-          >
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-              <TextField select size="small" label="Variable" value={transition.variableId} onChange={(event) => {
-                const variableId = event.target.value;
-                const dataType = variables.find((item) => item.id === variableId)?.dataType;
-                onUpdate(transition.id, { variableId, value: normalizeTransitionValue(transition.value, dataType) });
-              }}>
-                <MenuItem value="">Variable</MenuItem>
-                {variables.map((variable) => <MenuItem key={variable.id} value={variable.id}>{variable.name}</MenuItem>)}
-              </TextField>
-              <TextField select size="small" label="Operator" value={transition.operator} onChange={(event) => onUpdate(transition.id, { operator: event.target.value as BuilderTransition['operator'] })}>
-                {['=', '!=', '>', '<', '>=', '<=', 'contains', 'isEmpty'].map((operator) => <MenuItem key={operator} value={operator}>{operator}</MenuItem>)}
-              </TextField>
-              <TransitionValueField
-                label="Value"
-                dataType={variable?.dataType}
-                value={transition.value}
-                disabled={transition.operator === 'isEmpty'}
-                onChange={(value) => onUpdate(transition.id, { value })}
-              />
-              <TextField select size="small" label="Target Step" value={transition.targetStepId} onChange={(event) => onUpdate(transition.id, { targetStepId: event.target.value })}>
-                <MenuItem value="">Target Step</MenuItem>
-                {steps.map((step) => <MenuItem key={step.id} value={step.id}>{step.name}</MenuItem>)}
-              </TextField>
+            <Box
+              key={transition.id}
+              sx={{ p: '10px', border: `1px solid ${tokens.border}`, bgcolor: '#fff' }}
+            >
+              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <TextField
+                  select
+                  size="small"
+                  label="Variable"
+                  value={transition.variableId}
+                  onChange={(event) => {
+                    const variableId = event.target.value;
+                    const dataType = variables.find((item) => item.id === variableId)?.dataType;
+                    onUpdate(transition.id, {
+                      variableId,
+                      value: normalizeTransitionValue(transition.value, dataType),
+                    });
+                  }}
+                >
+                  <MenuItem value="">Variable</MenuItem>
+                  {variables.map((variable) => (
+                    <MenuItem key={variable.id} value={variable.id}>
+                      {variable.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <TextField
+                  select
+                  size="small"
+                  label="Operator"
+                  value={transition.operator}
+                  onChange={(event) =>
+                    onUpdate(transition.id, {
+                      operator: event.target.value as BuilderTransition['operator'],
+                    })
+                  }
+                >
+                  {['=', '!=', '>', '<', '>=', '<=', 'contains', 'isEmpty'].map((operator) => (
+                    <MenuItem key={operator} value={operator}>
+                      {operator}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <TransitionValueField
+                  label="Value"
+                  dataType={variable?.dataType}
+                  value={transition.value}
+                  disabled={transition.operator === 'isEmpty'}
+                  onChange={(value) => onUpdate(transition.id, { value })}
+                />
+                <TextField
+                  select
+                  size="small"
+                  label="Target Step"
+                  value={transition.targetStepId}
+                  onChange={(event) =>
+                    onUpdate(transition.id, { targetStepId: event.target.value })
+                  }
+                >
+                  <MenuItem value="">Target Step</MenuItem>
+                  {steps.map((step) => (
+                    <MenuItem key={step.id} value={step.id}>
+                      {step.name}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Box>
+              <Stack direction="row" sx={{ mt: '8px', alignItems: 'center' }}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      size="small"
+                      checked={transition.active}
+                      onChange={(_, active) => onUpdate(transition.id, { active })}
+                    />
+                  }
+                  label="Active"
+                />
+                <Box sx={{ flex: 1 }} />
+                <IconButton
+                  size="small"
+                  color="error"
+                  aria-label="Delete transition"
+                  onClick={() => onRemove(transition.id)}
+                >
+                  <Delete />
+                </IconButton>
+              </Stack>
             </Box>
-            <Stack direction="row" sx={{ mt: '8px', alignItems: 'center' }}>
-              <FormControlLabel control={<Switch size="small" checked={transition.active} onChange={(_, active) => onUpdate(transition.id, { active })} />} label="Active" />
-              <Box sx={{ flex: 1 }} />
-              <IconButton size="small" color="error" aria-label="Delete transition" onClick={() => onRemove(transition.id)}><Delete /></IconButton>
-            </Stack>
-          </Box>
           );
         })}
         {values.length === 0 && (
-          <Typography color="text.secondary" sx={{ py: '12px', textAlign: 'center', fontSize: tokens.fontSize.caption }}>
+          <Typography
+            color="text.secondary"
+            sx={{ py: '12px', textAlign: 'center', fontSize: tokens.fontSize.caption }}
+          >
             No transitions yet.
           </Typography>
         )}
@@ -485,11 +600,26 @@ export function ProcessBuilderSettingsPanel() {
   const s = useProcessBuilderStore();
   const d = s.document;
   const selected = s.selected;
-  const priorities = useQuery({ queryKey: ['workflow', 'builder-priorities'], queryFn: ({ signal }) => wfPriorityApi.list(signal) });
-  const processTypes = useQuery({ queryKey: ['workflow', 'builder-process-types'], queryFn: ({ signal }) => wfProcessTypeApi.list(signal) });
-  const activityTypes = useQuery({ queryKey: ['workflow', 'builder-activity-type-options'], queryFn: ({ signal }) => wfActivityTypeApi.list(signal) });
-  const performers = useQuery({ queryKey: ['workflow', 'builder-performer-options'], queryFn: ({ signal }) => wfPerformerApi.list(signal) });
-  const operators = useQuery({ queryKey: ['workflow', 'builder-operator-options'], queryFn: ({ signal }) => wfOperatorApi.list(signal) });
+  const priorities = useQuery({
+    queryKey: ['workflow', 'builder-priorities'],
+    queryFn: ({ signal }) => wfPriorityApi.list(signal),
+  });
+  const processTypes = useQuery({
+    queryKey: ['workflow', 'builder-process-types'],
+    queryFn: ({ signal }) => wfProcessTypeApi.list(signal),
+  });
+  const activityTypes = useQuery({
+    queryKey: ['workflow', 'builder-activity-type-options'],
+    queryFn: ({ signal }) => wfActivityTypeApi.list(signal),
+  });
+  const performers = useQuery({
+    queryKey: ['workflow', 'builder-performer-options'],
+    queryFn: ({ signal }) => wfPerformerApi.list(signal),
+  });
+  const operators = useQuery({
+    queryKey: ['workflow', 'builder-operator-options'],
+    queryFn: ({ signal }) => wfOperatorApi.list(signal),
+  });
   const text = (
     label: string,
     value: string | number,
@@ -508,12 +638,27 @@ export function ProcessBuilderSettingsPanel() {
   if (selected.kind === 'workspace') {
     const workspaceSettings: Record<number, { title: string; message: string }> = {
       1: { title: 'Variables Settings', message: 'Add or select a variable to edit its settings.' },
-      2: { title: 'Request Form Settings', message: 'Add or select a request field to edit its settings.' },
+      2: {
+        title: 'Request Form Settings',
+        message: 'Add or select a request field to edit its settings.',
+      },
       3: { title: 'Steps Settings', message: 'Add or select a step to edit its settings.' },
-      4: { title: 'Activities Settings', message: 'Add or select an activity to edit its settings.' },
-      5: { title: 'Activity Form Settings', message: 'Add or select an activity field to edit its settings.' },
-      6: { title: 'Transitions Settings', message: 'Add or select a transition to edit its settings.' },
-      7: { title: 'Diagram Settings', message: 'Select a process item in the diagram to edit its settings.' },
+      4: {
+        title: 'Activities Settings',
+        message: 'Add or select an activity to edit its settings.',
+      },
+      5: {
+        title: 'Activity Form Settings',
+        message: 'Add or select an activity field to edit its settings.',
+      },
+      6: {
+        title: 'Transitions Settings',
+        message: 'Add or select a transition to edit its settings.',
+      },
+      7: {
+        title: 'Diagram Settings',
+        message: 'Select a process item in the diagram to edit its settings.',
+      },
     };
     const content = workspaceSettings[selected.tab] ?? {
       title: 'Settings',
@@ -547,7 +692,9 @@ export function ProcessBuilderSettingsPanel() {
           name="categoryId"
           label="Category"
           value={Number(d.categoryId) || null}
-          onChange={(categoryId) => s.updateProcess({ categoryId: categoryId == null ? '' : String(categoryId) })}
+          onChange={(categoryId) =>
+            s.updateProcess({ categoryId: categoryId == null ? '' : String(categoryId) })
+          }
           required
           columns={[...categoryLookupColumns]}
           queryKey={['workflow', 'builder-category-lookup']}
@@ -595,7 +742,13 @@ export function ProcessBuilderSettingsPanel() {
         )}
         <Box sx={settingsSwitchGridSx}>
           <FormControlLabel
-            control={<Switch size="small" checked={d.active} onChange={(_, active) => s.updateProcess({ active })} />}
+            control={
+              <Switch
+                size="small"
+                checked={d.active}
+                onChange={(_, active) => s.updateProcess({ active })}
+              />
+            }
             label="Active"
           />
           <FormControlLabel
@@ -621,9 +774,26 @@ export function ProcessBuilderSettingsPanel() {
         </Box>
         <Box sx={{ pt: '12px', borderTop: `1px solid ${tokens.border}` }}>
           <Stack direction="row" sx={{ alignItems: 'center', minHeight: 28 }}>
-            <Typography sx={{ flex: 1, fontSize: tokens.fontSize.body, fontWeight: 600 }}>Variables</Typography>
-            {s.dirty && <Chip size="small" variant="outlined" label="Unsaved" sx={{ mr: 1, height: 22, color: '#7a4b00', bgcolor: '#fff3cd', borderColor: '#f0c36d' }} />}
-            <Button size="small" onClick={s.addVariable}>+ Add</Button>
+            <Typography sx={{ flex: 1, fontSize: tokens.fontSize.body, fontWeight: 600 }}>
+              Variables
+            </Typography>
+            {s.dirty && (
+              <Chip
+                size="small"
+                variant="outlined"
+                label="Unsaved"
+                sx={{
+                  mr: 1,
+                  height: 22,
+                  color: '#7a4b00',
+                  bgcolor: '#fff3cd',
+                  borderColor: '#f0c36d',
+                }}
+              />
+            )}
+            <Button size="small" onClick={s.addVariable}>
+              + Add
+            </Button>
           </Stack>
           {d.id === 'new' && (
             <Typography sx={{ py: '8px', color: '#9a4f00', fontSize: tokens.fontSize.caption }}>
@@ -636,17 +806,84 @@ export function ProcessBuilderSettingsPanel() {
                 key={variable.id}
                 sx={{ p: '8px', border: `1px solid ${tokens.warning}`, bgcolor: '#fff' }}
               >
-                <Box sx={{ display: 'grid', gridTemplateColumns: '88px minmax(0, 1fr) 24px', gap: '6px' }}>
-                  <TextField size="small" label="Code" value={variable.code} placeholder="Managed by number sequence" disabled />
-                  <TextField size="small" value={variable.name} onChange={(event) => s.updateVariable(variable.id, { name: event.target.value })} />
-                  <IconButton color="error" size="small" aria-label="Delete variable" onClick={() => s.removeVariable(variable.id)}><Delete /></IconButton>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: '88px minmax(0, 1fr) 24px',
+                    gap: '6px',
+                  }}
+                >
+                  <TextField
+                    size="small"
+                    label="Code"
+                    value={variable.code}
+                    placeholder="Managed by number sequence"
+                    disabled
+                  />
+                  <TextField
+                    size="small"
+                    value={variable.name}
+                    onChange={(event) =>
+                      s.updateVariable(variable.id, { name: event.target.value })
+                    }
+                  />
+                  <IconButton
+                    color="error"
+                    size="small"
+                    aria-label="Delete variable"
+                    onClick={() => s.removeVariable(variable.id)}
+                  >
+                    <Delete />
+                  </IconButton>
                 </Box>
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 24px auto', gap: '6px', mt: '6px', alignItems: 'center' }}>
-                  <TextField select size="small" label="Data Type" value={variable.dataType} onChange={(event) => s.updateVariable(variable.id, { dataType: event.target.value as typeof variable.dataType })}>
-                    {['text', 'number', 'boolean', 'date', 'object'].map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: 'minmax(0, 1fr) 24px auto',
+                    gap: '6px',
+                    mt: '6px',
+                    alignItems: 'center',
+                  }}
+                >
+                  <TextField
+                    select
+                    size="small"
+                    label="Data Type"
+                    value={variable.dataType}
+                    onChange={(event) =>
+                      s.updateVariable(variable.id, {
+                        dataType: event.target.value as typeof variable.dataType,
+                      })
+                    }
+                  >
+                    {['text', 'number', 'boolean', 'date', 'object'].map((value) => (
+                      <MenuItem key={value} value={value}>
+                        {value}
+                      </MenuItem>
+                    ))}
                   </TextField>
-                  <Chip size="small" label={`#${variable.sortOrder}`} sx={{ width: 24, height: 24, borderRadius: '50%', bgcolor: tokens.accent, color: '#fff', '& .MuiChip-label': { px: 0 } }} />
-                  <FormControlLabel control={<Switch size="small" checked={variable.active} onChange={(_, active) => s.updateVariable(variable.id, { active })} />} label="Active" />
+                  <Chip
+                    size="small"
+                    label={`#${variable.sortOrder}`}
+                    sx={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: '50%',
+                      bgcolor: tokens.accent,
+                      color: '#fff',
+                      '& .MuiChip-label': { px: 0 },
+                    }}
+                  />
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        size="small"
+                        checked={variable.active}
+                        onChange={(_, active) => s.updateVariable(variable.id, { active })}
+                      />
+                    }
+                    label="Active"
+                  />
                 </Box>
               </Box>
             ))}
@@ -660,7 +897,13 @@ export function ProcessBuilderSettingsPanel() {
     return (
       <Stack spacing="8px" sx={{ p: '10px' }}>
         <SettingsTitle title="Variable" dirty={s.dirty} isNew />
-        <TextField size="small" label="Code" value={x.code} placeholder="Managed by number sequence" disabled />
+        <TextField
+          size="small"
+          label="Code"
+          value={x.code}
+          placeholder="Managed by number sequence"
+          disabled
+        />
         {text('Name', x.name, (name) => s.updateVariable(x.id, { name }))}
         {text('Description', x.description, (description) =>
           s.updateVariable(x.id, { description })
@@ -710,7 +953,13 @@ export function ProcessBuilderSettingsPanel() {
     return (
       <Stack spacing="8px" sx={{ p: '10px', minHeight: '100%' }}>
         <SettingsTitle title="Step Settings" dirty={s.dirty} />
-        <TextField size="small" label="Step Code" value={x.code} placeholder="Generated on save" disabled />
+        <TextField
+          size="small"
+          label="Step Code"
+          value={x.code}
+          placeholder="Generated on save"
+          disabled
+        />
         {text('Step Name *', x.name, (name) => s.updateStep(x.id, { name }))}
         <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 1 }}>
           {text(
@@ -783,7 +1032,13 @@ export function ProcessBuilderSettingsPanel() {
     return (
       <Stack spacing="8px" sx={{ p: '10px' }}>
         <SettingsTitle title="Activity Settings" dirty={s.dirty} isNew={!/^\d+$/.test(x.id)} />
-        <TextField size="small" label="Activity code" value={x.code} placeholder="Managed by number sequence" disabled />
+        <TextField
+          size="small"
+          label="Activity code"
+          value={x.code}
+          placeholder="Managed by number sequence"
+          disabled
+        />
         {text('Activity name', x.name, (name) => s.updateActivity(selected.stepId, x.id, { name }))}
         <Stack spacing={1}>
           <AppLookupField
@@ -795,9 +1050,11 @@ export function ProcessBuilderSettingsPanel() {
               code: item.code ?? '',
               name: item.name ?? '',
             }))}
-            onChange={(value) => s.updateActivity(selected.stepId, x.id, {
-              performer: value == null ? '' : String(value),
-            })}
+            onChange={(value) =>
+              s.updateActivity(selected.stepId, x.id, {
+                performer: value == null ? '' : String(value),
+              })
+            }
             required
             displayMode="select"
           />
@@ -812,10 +1069,12 @@ export function ProcessBuilderSettingsPanel() {
               code: item.code ?? '',
               name: item.name ?? '',
             }))}
-            onChange={(value, option) => s.updateActivity(selected.stepId, x.id, {
-              activityTypeId: value == null ? '' : String(value),
-              type: option && !Array.isArray(option) ? builderTypeFromLabel(option.name) : x.type,
-            })}
+            onChange={(value, option) =>
+              s.updateActivity(selected.stepId, x.id, {
+                activityTypeId: value == null ? '' : String(value),
+                type: option && !Array.isArray(option) ? builderTypeFromLabel(option.name) : x.type,
+              })
+            }
             required
             displayMode="select"
           />
@@ -826,7 +1085,9 @@ export function ProcessBuilderSettingsPanel() {
             type="number"
             label="Score"
             value={x.score}
-            onChange={(event) => s.updateActivity(selected.stepId, x.id, { score: Number(event.target.value) })}
+            onChange={(event) =>
+              s.updateActivity(selected.stepId, x.id, { score: Number(event.target.value) })
+            }
           />
           <TextField
             size="small"
@@ -834,7 +1095,11 @@ export function ProcessBuilderSettingsPanel() {
             label="Auto passing hours"
             value={x.autoPassingHours}
             disabled={!x.autoPassEnabled}
-            onChange={(event) => s.updateActivity(selected.stepId, x.id, { autoPassingHours: Number(event.target.value) })}
+            onChange={(event) =>
+              s.updateActivity(selected.stepId, x.id, {
+                autoPassingHours: Number(event.target.value),
+              })
+            }
           />
         </Box>
         {text('Notification emails', x.config.notifyEmails, (notifyEmails) =>
@@ -842,19 +1107,47 @@ export function ProcessBuilderSettingsPanel() {
         )}
         <Box sx={settingsSwitchGridSx}>
           <FormControlLabel
-            control={<Switch size="small" checked={x.active} onChange={(_, active) => s.updateActivity(selected.stepId, x.id, { active })} />}
+            control={
+              <Switch
+                size="small"
+                checked={x.active}
+                onChange={(_, active) => s.updateActivity(selected.stepId, x.id, { active })}
+              />
+            }
             label="Active"
           />
           <FormControlLabel
-            control={<Switch size="small" checked={x.required} onChange={(_, required) => s.updateActivity(selected.stepId, x.id, { required })} />}
+            control={
+              <Switch
+                size="small"
+                checked={x.required}
+                onChange={(_, required) => s.updateActivity(selected.stepId, x.id, { required })}
+              />
+            }
             label="Required"
           />
           <FormControlLabel
-            control={<Switch size="small" checked={x.autoPassEnabled} onChange={(_, autoPassEnabled) => s.updateActivity(selected.stepId, x.id, { autoPassEnabled })} />}
+            control={
+              <Switch
+                size="small"
+                checked={x.autoPassEnabled}
+                onChange={(_, autoPassEnabled) =>
+                  s.updateActivity(selected.stepId, x.id, { autoPassEnabled })
+                }
+              />
+            }
             label="Auto pass enabled"
           />
           <FormControlLabel
-            control={<Switch size="small" checked={x.mandatoryDocs} onChange={(_, mandatoryDocs) => s.updateActivity(selected.stepId, x.id, { mandatoryDocs })} />}
+            control={
+              <Switch
+                size="small"
+                checked={x.mandatoryDocs}
+                onChange={(_, mandatoryDocs) =>
+                  s.updateActivity(selected.stepId, x.id, { mandatoryDocs })
+                }
+              />
+            }
             label="Mandatory documents"
           />
         </Box>
@@ -920,10 +1213,14 @@ export function ProcessBuilderSettingsPanel() {
         {requestOptionControlTypes.has(control.type) && (
           <Stack spacing="6px" sx={settingsGroupSx}>
             <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
-              <Typography sx={{ fontSize: tokens.fontSize.body, fontWeight: 600 }}>Options</Typography>
+              <Typography sx={{ fontSize: tokens.fontSize.body, fontWeight: 600 }}>
+                Options
+              </Typography>
               <Button
                 size="small"
-                onClick={() => update({ options: [...control.options, `Option ${control.options.length + 1}`] })}
+                onClick={() =>
+                  update({ options: [...control.options, `Option ${control.options.length + 1}`] })
+                }
               >
                 + Add option
               </Button>
@@ -934,21 +1231,34 @@ export function ProcessBuilderSettingsPanel() {
               </Typography>
             )}
             {control.options.map((option, index) => (
-              <Stack key={`${index}-${control.options.length}`} direction="row" spacing="4px" sx={{ alignItems: 'center' }}>
+              <Stack
+                key={`${index}-${control.options.length}`}
+                direction="row"
+                spacing="4px"
+                sx={{ alignItems: 'center' }}
+              >
                 <TextField
                   fullWidth
                   size="small"
                   label={`Option ${index + 1}`}
                   value={option}
-                  onChange={(event) => update({
-                    options: control.options.map((item, itemIndex) => itemIndex === index ? event.target.value : item),
-                  })}
+                  onChange={(event) =>
+                    update({
+                      options: control.options.map((item, itemIndex) =>
+                        itemIndex === index ? event.target.value : item
+                      ),
+                    })
+                  }
                 />
                 <IconButton
                   size="small"
                   color="error"
                   aria-label={`Remove option ${index + 1}`}
-                  onClick={() => update({ options: control.options.filter((_, itemIndex) => itemIndex !== index) })}
+                  onClick={() =>
+                    update({
+                      options: control.options.filter((_, itemIndex) => itemIndex !== index),
+                    })
+                  }
                 >
                   <Delete fontSize="small" />
                 </IconButton>
@@ -967,9 +1277,36 @@ export function ProcessBuilderSettingsPanel() {
             }
             label="Mandatory"
           />
-          <FormControlLabel control={<Switch size="small" checked={control.uniqueKey} onChange={(_, uniqueKey) => update({ uniqueKey })} />} label="Unique Key" />
-          <FormControlLabel control={<Switch size="small" checked={control.usedAsCriteria} onChange={(_, usedAsCriteria) => update({ usedAsCriteria })} />} label="Criteria" />
-          <FormControlLabel control={<Switch size="small" checked={control.visible} onChange={(_, visible) => update({ visible })} />} label="Active" />
+          <FormControlLabel
+            control={
+              <Switch
+                size="small"
+                checked={control.uniqueKey}
+                onChange={(_, uniqueKey) => update({ uniqueKey })}
+              />
+            }
+            label="Unique Key"
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                size="small"
+                checked={control.usedAsCriteria}
+                onChange={(_, usedAsCriteria) => update({ usedAsCriteria })}
+              />
+            }
+            label="Criteria"
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                size="small"
+                checked={control.visible}
+                onChange={(_, visible) => update({ visible })}
+              />
+            }
+            label="Active"
+          />
         </Box>
         <Button variant="contained" disabled sx={{ alignSelf: 'stretch' }}>
           Create Request Control
@@ -992,9 +1329,9 @@ export function ProcessBuilderSettingsPanel() {
   const control =
     selected.kind === 'control'
       ? d.steps
-        .find((x) => x.id === selected.stepId)
-        ?.activities.find((x) => x.id === selected.activityId)
-        ?.controls.find((x) => x.id === selected.id)
+          .find((x) => x.id === selected.stepId)
+          ?.activities.find((x) => x.id === selected.activityId)
+          ?.controls.find((x) => x.id === selected.id)
       : null;
   if (control && selected.kind === 'control') {
     const update = (values: Partial<typeof control>) =>
@@ -1073,7 +1410,9 @@ export function ProcessBuilderSettingsPanel() {
           values={d.transitions}
           variables={d.variables}
           steps={d.steps}
-          onAdd={() => s.addTransition({ triggerSource: 'activity', triggerId: selected.activityId })}
+          onAdd={() =>
+            s.addTransition({ triggerSource: 'activity', triggerId: selected.activityId })
+          }
           onUpdate={s.updateTransition}
           onRemove={s.removeTransition}
         />
@@ -1094,87 +1433,130 @@ export function ProcessBuilderSettingsPanel() {
           <Box sx={{ flex: 1 }}>
             {text('Transition name', x.name, (name) => s.updateTransition(x.id, { name }))}
           </Box>
-          <IconButton size="small" color="error" aria-label="Delete transition" onClick={() => s.removeTransition(x.id)}>
+          <IconButton
+            size="small"
+            color="error"
+            aria-label="Delete transition"
+            onClick={() => s.removeTransition(x.id)}
+          >
             <Delete />
           </IconButton>
         </Stack>
 
-        <Box sx={settingsGroupSx}>
-          <Typography sx={{ fontSize: tokens.fontSize.caption, fontWeight: 700, color: tokens.textMuted }}>
-            TRIGGER
-          </Typography>
-          <TextField
-            select
-            fullWidth
-            size="small"
-            label="Trigger source"
-            value={x.triggerSource}
-            onChange={(event) => s.updateTransition(x.id, {
+        <TextField
+          select
+          fullWidth
+          size="small"
+          label="Trigger source"
+          value={x.triggerSource}
+          onChange={(event) =>
+            s.updateTransition(x.id, {
               triggerSource: event.target.value as BuilderTransition['triggerSource'],
               triggerId: '',
-            })}
-          >
-            <MenuItem value="none">None</MenuItem>
-            <MenuItem value="requestControl">Request control</MenuItem>
-            <MenuItem value="activity">Activity</MenuItem>
-          </TextField>
-          {x.triggerSource === 'requestControl' && (
-            <TextField select fullWidth size="small" label="Request control" value={x.triggerId} onChange={(event) => s.updateTransition(x.id, { triggerId: event.target.value })}>
-              {d.requestControls.map((control) => <MenuItem key={control.id} value={control.id}>{control.label}</MenuItem>)}
-            </TextField>
-          )}
-          {x.triggerSource === 'activity' && (
-            <TextField select fullWidth size="small" label="Activity" value={x.triggerId} onChange={(event) => s.updateTransition(x.id, { triggerId: event.target.value })}>
-              {activities.map((activity) => <MenuItem key={activity.id} value={activity.id}>{activity.stepName} · {activity.name}</MenuItem>)}
-            </TextField>
-          )}
-        </Box>
-
-        <Box sx={settingsGroupSx}>
-          <Typography sx={{ fontSize: tokens.fontSize.caption, fontWeight: 700, color: tokens.textMuted }}>
-            CONDITION
-          </Typography>
+            })
+          }
+        >
+          <MenuItem value="none">None</MenuItem>
+          <MenuItem value="requestControl">Request control</MenuItem>
+          <MenuItem value="activity">Activity</MenuItem>
+        </TextField>
+        {x.triggerSource === 'requestControl' && (
           <TextField
             select
             fullWidth
             size="small"
-            label="Variable"
-            value={x.variableId}
-            onChange={(event) => {
-              const variableId = event.target.value;
-              const dataType = d.variables.find((item) => item.id === variableId)?.dataType;
-              s.updateTransition(x.id, { variableId, value: normalizeTransitionValue(x.value, dataType) });
-            }}
+            label="Request control"
+            value={x.triggerId}
+            onChange={(event) => s.updateTransition(x.id, { triggerId: event.target.value })}
           >
-            {d.variables.map((item) => <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>)}
+            {d.requestControls.map((control) => (
+              <MenuItem key={control.id} value={control.id}>
+                {control.label}
+              </MenuItem>
+            ))}
           </TextField>
+        )}
+        {x.triggerSource === 'activity' && (
+          <TextField
+            select
+            fullWidth
+            size="small"
+            label="Activity"
+            value={x.triggerId}
+            onChange={(event) => s.updateTransition(x.id, { triggerId: event.target.value })}
+          >
+            {activities.map((activity) => (
+              <MenuItem key={activity.id} value={activity.id}>
+                {activity.stepName} · {activity.name}
+              </MenuItem>
+            ))}
+          </TextField>
+        )}
+        <TextField
+          select
+          fullWidth
+          size="small"
+          label="Variable"
+          value={x.variableId}
+          onChange={(event) => {
+            const variableId = event.target.value;
+            const dataType = d.variables.find((item) => item.id === variableId)?.dataType;
+            s.updateTransition(x.id, {
+              variableId,
+              value: normalizeTransitionValue(x.value, dataType),
+            });
+          }}
+        >
+          {d.variables.map((item) => (
+            <MenuItem key={item.id} value={item.id}>
+              {item.name}
+            </MenuItem>
+          ))}
+        </TextField>
+        <Stack spacing={1.25}>
           <AppLookupField
             name={`settings-operatorId-${x.id}`}
             label="Operator"
             value={Number(x.operatorId) || undefined}
-            options={(operators.data ?? []).map((item) => ({ id: item.recId, code: item.code ?? '', name: item.name ?? '' }))}
-            onChange={(value, option) => s.updateTransition(x.id, {
-              operatorId: value == null ? '' : String(value),
-              operator: option && !Array.isArray(option) ? transitionOperatorFromLabel(option.name || option.code) : x.operator,
-            })}
+            options={(operators.data ?? []).map((item) => ({
+              id: item.recId,
+              code: item.code ?? '',
+              name: item.name ?? '',
+            }))}
+            onChange={(value, option) =>
+              s.updateTransition(x.id, {
+                operatorId: value == null ? '' : String(value),
+                operator:
+                  option && !Array.isArray(option)
+                    ? transitionOperatorFromLabel(option.name || option.code)
+                    : x.operator,
+              })
+            }
             required
             displayMode="select"
           />
-          <TransitionValueField
-            label="Comparison value"
-            dataType={variable?.dataType}
-            value={x.value}
-            disabled={x.operator === 'isEmpty'}
-            onChange={(value) => s.updateTransition(x.id, { value })}
-          />
-        </Box>
-
-        <Box sx={settingsGroupSx}>
-          <Typography sx={{ fontSize: tokens.fontSize.caption, fontWeight: 700, color: tokens.textMuted }}>
-            ROUTING
-          </Typography>
-          <TextField select fullWidth size="small" label="Target step" value={x.targetStepId} onChange={(event) => s.updateTransition(x.id, { targetStepId: event.target.value })}>
-            {d.steps.map((step) => <MenuItem key={step.id} value={step.id}>{step.name}</MenuItem>)}
+        </Stack>
+        <TransitionValueField
+          label="Comparison value"
+          dataType={variable?.dataType}
+          value={x.value}
+          disabled={x.operator === 'isEmpty'}
+          onChange={(value) => s.updateTransition(x.id, { value })}
+        />
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
+          <TextField
+            select
+            fullWidth
+            size="small"
+            label="Target step"
+            value={x.targetStepId}
+            onChange={(event) => s.updateTransition(x.id, { targetStepId: event.target.value })}
+          >
+            {d.steps.map((step) => (
+              <MenuItem key={step.id} value={step.id}>
+                {step.name}
+              </MenuItem>
+            ))}
           </TextField>
           <TextField
             fullWidth
@@ -1183,13 +1565,21 @@ export function ProcessBuilderSettingsPanel() {
             label="Sort order"
             value={x.sortOrder}
             slotProps={{ htmlInput: { min: 0, max: 255 } }}
-            onChange={(event) => s.updateTransition(x.id, { sortOrder: Number(event.target.value) })}
+            onChange={(event) =>
+              s.updateTransition(x.id, { sortOrder: Number(event.target.value) })
+            }
           />
         </Box>
 
         <Box sx={settingsSwitchGridSx}>
           <FormControlLabel
-            control={<Switch size="small" checked={x.active} onChange={(_, active) => s.updateTransition(x.id, { active })} />}
+            control={
+              <Switch
+                size="small"
+                checked={x.active}
+                onChange={(_, active) => s.updateTransition(x.id, { active })}
+              />
+            }
             label="Active"
           />
         </Box>
