@@ -1,0 +1,71 @@
+import { ApiError } from '@core/api/apiError';
+import { apiClient } from '@core/api/apiClient';
+import type { ApiResponse } from '@core/api/apiResponse';
+
+export interface WfRequestDto {
+  recId: number;
+  code: string | null;
+  name: string | null;
+  description: string | null;
+  requestDate: string;
+  processId: number;
+  employeeId: number | null;
+  requestDetails: string | null;
+  isFinished: boolean;
+  finishedDate: string | null;
+  isStopped: boolean;
+  stoppedDate: string | null;
+  score: number;
+  progress: number;
+  notes: string | null;
+  attachmentId: number | null;
+  isActive: boolean;
+  rowVersion: string | null;
+  recVersion: number;
+  dataAreaId: string;
+}
+
+export interface WfRequestRecord extends WfRequestDto {
+  id: string;
+}
+
+const endpoint = '/v1/WfRequest';
+
+const requireData = <T>(response: ApiResponse<T>): T => {
+  if (!response.success || response.data == null) {
+    throw new ApiError(response.message || 'The workflow-request response did not contain data.', 500);
+  }
+  return response.data;
+};
+
+const toRecord = (dto: WfRequestDto): WfRequestRecord => ({ ...dto, id: String(dto.recId) });
+const toDto = ({ id: _id, ...record }: WfRequestRecord): WfRequestDto => ({
+  ...record,
+  code: record.code?.trim() || null,
+  name: record.name?.trim() || null,
+  description: record.description?.trim() || null,
+  requestDetails: record.requestDetails?.trim() || null,
+  notes: record.notes?.trim() || null,
+});
+
+export const wfRequestApi = {
+  async list(signal?: AbortSignal): Promise<WfRequestRecord[]> {
+    const response = await apiClient.get<ApiResponse<WfRequestDto[]>>(endpoint, { signal });
+    return requireData(response.data).map(toRecord);
+  },
+  async create(record: WfRequestRecord): Promise<WfRequestRecord> {
+    const response = await apiClient.post<ApiResponse<WfRequestDto>>(endpoint, toDto(record));
+    return toRecord(requireData(response.data));
+  },
+  async update(record: WfRequestRecord): Promise<WfRequestRecord> {
+    const response = await apiClient.put<ApiResponse<WfRequestDto>>(
+      `${endpoint}/${record.recId}`,
+      toDto(record)
+    );
+    return toRecord(requireData(response.data));
+  },
+  async delete(record: WfRequestRecord): Promise<void> {
+    const response = await apiClient.delete<ApiResponse<boolean>>(`${endpoint}/${record.recId}`);
+    requireData(response.data);
+  },
+};

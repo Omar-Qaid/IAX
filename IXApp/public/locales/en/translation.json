@@ -21,6 +21,8 @@
     "exchangeRateTypes": "Exchange rate types",
     "exchangeRates": "Currency exchange rates",
     "workflow": "Workflow",
+    "requestSubmission": "Request Submission",
+    "requests": "Requests",
     "processBuilder": "Process builder",
     "workflowProcesses": "Workflow processes",
     "workflowCategories": "Workflow categories",

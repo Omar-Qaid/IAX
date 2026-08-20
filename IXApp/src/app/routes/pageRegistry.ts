@@ -116,6 +116,22 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'request-submission',
+    path: ROUTE_PATHS.WORKFLOW.REQUEST_SUBMISSION,
+    component: lazyPage(
+      () => import('@modules/workflow/pages/RequestSubmissionPage'),
+      (module) => module.RequestSubmissionPage
+    ),
+  },
+  {
+    id: 'request-from',
+    path: ROUTE_PATHS.WORKFLOW.REQUEST_FROM,
+    component: lazyPage(
+      () => import('@modules/workflow/pages/RequestFromPage'),
+      (module) => module.RequestFromPage
+    ),
+  },
+  {
     id: 'workflow-processes',
     path: ROUTE_PATHS.WORKFLOW.PROCESSES,
     permission: PERMISSIONS.WF_PROCESS_VIEW,

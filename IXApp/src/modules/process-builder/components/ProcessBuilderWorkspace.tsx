@@ -47,15 +47,19 @@ const requestOptionControlTypes = new Set<BuilderControlType>([
 ]);
 
 const compactSwitchSx = {
-  width: 32,
-  height: 18,
+  width: 24,
+  height: 14,
   p: 0,
   '& .MuiSwitch-switchBase': {
     p: '2px',
-    '&.Mui-checked': { transform: 'translateX(14px)' },
+    '&.Mui-checked': { transform: 'translateX(10px)' },
   },
-  '& .MuiSwitch-thumb': { width: 14, height: 14 },
-  '& .MuiSwitch-track': { borderRadius: 9 },
+  '& .MuiSwitch-thumb': { width: 10, height: 10 },
+  '& .MuiSwitch-track': { borderRadius: 7, bgcolor: '#cbd5e1', opacity: 1 },
+  '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+    bgcolor: 'primary.main',
+    opacity: 1,
+  },
 };
 
 const activityLookupColumns = [
@@ -2147,6 +2151,8 @@ export function TransitionsWorkspace({
               <FormControlLabel
                 control={
                   <Switch
+                    size="small"
+                    sx={compactSwitchSx}
                     checked={x.active}
                     onChange={(_, active) => s.updateTransition(x.id, { active })}
                   />

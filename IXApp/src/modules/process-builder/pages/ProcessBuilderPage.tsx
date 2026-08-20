@@ -83,17 +83,21 @@ const slimScrollbarSx = {
     backgroundColor: '#7d7d7d',
   },
   '& .MuiSwitch-root': {
-    width: 32,
-    height: 18,
+    width: 24,
+    height: 14,
     padding: 0,
     marginRight: '4px',
   },
   '& .MuiSwitch-switchBase': {
     padding: '2px',
-    '&.Mui-checked': { transform: 'translateX(14px)' },
+    '&.Mui-checked': { transform: 'translateX(10px)' },
   },
-  '& .MuiSwitch-thumb': { width: 14, height: 14 },
-  '& .MuiSwitch-track': { borderRadius: 9 },
+  '& .MuiSwitch-thumb': { width: 10, height: 10 },
+  '& .MuiSwitch-track': { borderRadius: 7, bgcolor: '#cbd5e1', opacity: 1 },
+  '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+    bgcolor: 'primary.main',
+    opacity: 1,
+  },
 } as const;
 
 const navigationStorageKey = (builderId: string) => `ixapp.processBuilder.navigation.${builderId}`;
@@ -426,12 +430,12 @@ export function ProcessBuilderPage() {
         '& .MuiFormControlLabel-label': { fontSize: tokens.fontSize.secondary },
         '& .MuiChip-root': { fontSize: tokens.fontSize.caption },
         '& .MuiSvgIcon-root': { fontSize: 16 },
-        '& .MuiSwitch-root': { width: 32, height: 18, p: 0, mr: '4px' },
+        '& .MuiSwitch-root': { width: 24, height: 14, p: 0, mr: '4px' },
         '& .MuiSwitch-switchBase': { p: '2px' },
-        '& .MuiSwitch-thumb': { width: 14, height: 14 },
-        '& .MuiSwitch-track': { borderRadius: 9, bgcolor: '#a3a3a3' },
+        '& .MuiSwitch-thumb': { width: 10, height: 10 },
+        '& .MuiSwitch-track': { borderRadius: 7, bgcolor: '#a3a3a3' },
         '& .MuiSwitch-switchBase.Mui-checked': {
-          transform: 'translateX(14px)',
+          transform: 'translateX(10px)',
           color: tokens.accent,
         },
         '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {

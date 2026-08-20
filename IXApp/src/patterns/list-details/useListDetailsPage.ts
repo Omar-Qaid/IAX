@@ -47,7 +47,7 @@ export function useListDetailsPage<T extends ListDetailRecord>(config: Enterpris
   });
   const records = source.type === 'controlled' ? source.records : localRecords;
   const [selectedId, setSelectedId] = useState<string | null>(records[0]?.id ?? null);
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(config.initialQuery ?? '');
   const [filterVisible, setFilterVisible] = useState(true);
   const [filterPanelOpen, setFilterPanelOpen] = useState(config.advancedFilterOpenOnLoad ?? false);
   const [informationPanelOpen, setInformationPanelOpen] = useState(config.informationOpenOnLoad ?? false);
@@ -63,6 +63,10 @@ export function useListDetailsPage<T extends ListDetailRecord>(config: Enterpris
   const [draft, setDraft] = useState<T | null>(selected);
 
   useEffect(() => {
+    setQuery(config.initialQuery ?? '');
+  }, [config.initialQuery]);
+
+  useEffect(() => {
     if (source.type !== 'remote') return;
     setLoading(remoteQuery.isLoading || remoteQuery.isFetching);
     setError(remoteQuery.error instanceof Error ? remoteQuery.error.message : remoteQuery.error ? String(remoteQuery.error) : null);
@@ -72,7 +76,18 @@ export function useListDetailsPage<T extends ListDetailRecord>(config: Enterpris
     setSelectedId((current) => loaded.some((record) => record.id === current) ? current : (loaded[0]?.id ?? null));
     setDraft((current) => loaded.find((record) => record.id === current?.id) ?? loaded[0] ?? null);
   }, [remoteQuery.data, remoteQuery.error, remoteQuery.isFetching, remoteQuery.isLoading, source.type]);
-  useEffect(() => { if (source.type === 'controlled') { setLoading(Boolean(source.loading)); setError(source.error ?? null); } }, [source]);
+  useEffect(() => {
+    if (source.type !== 'controlled') return;
+    setLoading(Boolean(source.loading));
+    setError(source.error ?? null);
+    if (editing) return;
+    setSelectedId((current) =>
+      source.records.some((record) => record.id === current) ? current : (source.records[0]?.id ?? null)
+    );
+    setDraft((current) =>
+      source.records.find((record) => record.id === current?.id) ?? source.records[0] ?? null
+    );
+  }, [editing, source]);
 
   const visibleRecords = useMemo(() => {
     const normalized = query.trim();

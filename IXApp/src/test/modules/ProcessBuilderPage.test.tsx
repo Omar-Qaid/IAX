@@ -492,6 +492,7 @@ describe('standalone ProcessBuilderPage', () => {
     act(() => {
       useProcessBuilderStore.getState().addActivity(step.id, 'approval');
       const activity = useProcessBuilderStore.getState().document.steps[0].activities[0];
+      useProcessBuilderStore.getState().addActivityControl(step.id, activity.id, 'text');
       useProcessBuilderStore.getState().select({ kind: 'activity', stepId: step.id, id: activity.id });
     });
 
@@ -499,6 +500,9 @@ describe('standalone ProcessBuilderPage', () => {
     expect(screen.getByRole('combobox', { name: /Activity Type/ })).toBeDefined();
     expect(screen.getByRole('combobox', { name: /Performer/ })).toBeDefined();
     expect(screen.getByRole('spinbutton', { name: 'Score' })).toBeDefined();
+    expect(screen.getByRole('combobox', { name: 'Validation control' })).toBeDefined();
+    expect(screen.getByText('Validation Rules')).toBeDefined();
+    expect(screen.getByText('Transitions (0)')).toBeDefined();
     expect(screen.queryByRole('combobox', { name: 'Assignment mode' })).toBeNull();
     const autoPassingHours = screen.getByRole('spinbutton', { name: 'Auto passing hours' });
     expect(autoPassingHours).toBeDisabled();

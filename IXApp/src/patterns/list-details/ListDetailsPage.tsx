@@ -239,20 +239,22 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
         >
           <MenuIcon sx={{ fontSize: 17 }} />
         </IconButton>
-        <EnterpriseCrudActions
-          editing={state.editing}
-          {...crud}
-          canEdit={Boolean(state.selected) && canEdit && !state.saving}
-          canDelete={Boolean(state.selected) && canDelete && !state.saving}
-          editPermission={config.permissions?.edit}
-          newPermission={config.permissions?.create}
-          deletePermission={config.permissions?.delete}
-          onEdit={state.startEdit}
-          onNew={canCreate ? state.startNew : undefined}
-          onDelete={() => setDeleteConfirmationOpen(true)}
-          onSave={state.save}
-          onCancel={state.cancel}
-        />
+        {!config.readOnly && (
+          <EnterpriseCrudActions
+            editing={state.editing}
+            {...crud}
+            canEdit={Boolean(state.selected) && canEdit && !state.saving}
+            canDelete={Boolean(state.selected) && canDelete && !state.saving}
+            editPermission={config.permissions?.edit}
+            newPermission={config.permissions?.create}
+            deletePermission={config.permissions?.delete}
+            onEdit={state.startEdit}
+            onNew={canCreate ? state.startNew : undefined}
+            onDelete={() => setDeleteConfirmationOpen(true)}
+            onSave={state.save}
+            onCancel={state.cancel}
+          />
+        )}
         <ActionPaneGroup>
           {config.commands?.map((command) => (
             <ActionPaneButton

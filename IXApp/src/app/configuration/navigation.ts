@@ -122,6 +122,16 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
     matchPath: ROUTE_PATHS.WORKFLOW.ROOT,
     sections: [
       {
+        id: 'requests',
+        title: 'nav.requests',
+        links: [
+          {
+            label: 'nav.requestSubmission',
+            path: ROUTE_PATHS.WORKFLOW.REQUEST_SUBMISSION,
+          },
+        ],
+      },
+      {
         id: 'setup',
         title: 'nav.setup',
         links: [

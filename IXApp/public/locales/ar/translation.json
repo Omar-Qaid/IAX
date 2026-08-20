@@ -4,6 +4,8 @@
   "nav": {
     "app_title": "نظام IXApp المؤسسي",
     "app_title_short": "IXApp",
+    "requestSubmission": "Request Submission",
+    "requests": "Requests",
     "home": "الرئيسية",
     "dashboard": "لوحة المعلومات",
     "accountsReceivable": "الحسابات المدينة",

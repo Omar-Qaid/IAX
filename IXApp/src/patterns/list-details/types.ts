@@ -72,10 +72,14 @@ export interface ListDetailsHeaderField<T> extends Omit<DetailFieldConfig, 'name
 }
 
 export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
+  /** Shows records as a selectable reference list without record-level CRUD actions. */
+  readOnly?: boolean;
   dataSource: ListDetailsDataSource<T>;
   createRecord: () => T;
   getPrimaryText: (record: T) => string;
   getSecondaryText?: (record: T) => string;
+  /** Initial value shown in the list Filter input. End users can edit or clear it. */
+  initialQuery?: string;
   matchesSearch?: (record: T, query: string) => boolean;
   getValues: (record: T) => DetailValues;
   setValues: (record: T, values: DetailValues) => T;

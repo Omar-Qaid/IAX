@@ -148,19 +148,39 @@ const settingsGroupSx = {
   bgcolor: '#f9fafb',
 };
 
+const compactSwitchSx = {
+  width: 24,
+  height: 14,
+  p: 0,
+  '& .MuiSwitch-switchBase': {
+    p: '2px',
+    '&.Mui-checked': { transform: 'translateX(10px)' },
+  },
+  '& .MuiSwitch-thumb': { width: 10, height: 10 },
+  '& .MuiSwitch-track': { borderRadius: 7, bgcolor: '#cbd5e1', opacity: 1 },
+  '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+    bgcolor: 'primary.main',
+    opacity: 1,
+  },
+};
+
 const settingsSwitchGridSx = {
   ...settingsGroupSx,
   gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
   gap: '6px 10px',
   '& .MuiFormControlLabel-root': { m: 0, minWidth: 0 },
   '& .MuiFormControlLabel-label': { fontSize: tokens.fontSize.secondary },
-  '& .MuiSwitch-root': { width: 32, height: 18, p: 0, mr: '4px' },
+  '& .MuiSwitch-root': { width: 24, height: 14, p: 0, mr: '4px' },
   '& .MuiSwitch-switchBase': {
     p: '2px',
-    '&.Mui-checked': { transform: 'translateX(14px)' },
+    '&.Mui-checked': { transform: 'translateX(10px)' },
   },
-  '& .MuiSwitch-thumb': { width: 14, height: 14 },
-  '& .MuiSwitch-track': { borderRadius: 9 },
+  '& .MuiSwitch-thumb': { width: 10, height: 10 },
+  '& .MuiSwitch-track': { borderRadius: 7, bgcolor: '#cbd5e1', opacity: 1 },
+  '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+    bgcolor: 'primary.main',
+    opacity: 1,
+  },
 };
 
 const switchRowSx = { m: 0, minHeight: 28 };
@@ -192,9 +212,11 @@ const Section = ({
 function ValidationRules({
   values,
   onChange,
+  disabled = false,
 }: {
   values: BuilderValidation[];
   onChange: (values: BuilderValidation[]) => void;
+  disabled?: boolean;
 }) {
   type ConditionalValidationField = 'value' | 'secondaryValue' | 'operator' | 'expression' | 'mask';
   const fieldsByType: Record<BuilderValidationType, readonly ConditionalValidationField[]> = {
@@ -321,7 +343,7 @@ function ValidationRules({
         <Typography sx={{ flex: 1, fontSize: tokens.fontSize.body, fontWeight: 600 }}>
           Validation Rules
         </Typography>
-        <Button size="small" onClick={add}>
+        <Button size="small" disabled={disabled} onClick={add}>
           + Add
         </Button>
       </Stack>
@@ -432,6 +454,7 @@ function ValidationRules({
                   control={
                     <Switch
                       size="small"
+                      sx={compactSwitchSx}
                       checked={rule.active}
                       onChange={(_, active) => update(rule.id, { active })}
                     />
@@ -564,6 +587,7 @@ function TransitionRules({
                   control={
                     <Switch
                       size="small"
+                      sx={compactSwitchSx}
                       checked={transition.active}
                       onChange={(_, active) => onUpdate(transition.id, { active })}
                     />
@@ -600,6 +624,7 @@ export function ProcessBuilderSettingsPanel() {
   const s = useProcessBuilderStore();
   const d = s.document;
   const selected = s.selected;
+  const [activityValidationControlId, setActivityValidationControlId] = React.useState('');
   const priorities = useQuery({
     queryKey: ['workflow', 'builder-priorities'],
     queryFn: ({ signal }) => wfPriorityApi.list(signal),
@@ -1029,6 +1054,11 @@ export function ProcessBuilderSettingsPanel() {
       .find((v) => v.id === selected.stepId)
       ?.activities.find((v) => v.id === selected.id);
     if (!x) return null;
+    const validationControl =
+      x.controls.find((control) => control.id === activityValidationControlId) ?? x.controls[0];
+    const activityTransitions = d.transitions.filter(
+      (transition) => transition.triggerSource === 'activity' && transition.triggerId === x.id
+    );
     return (
       <Stack spacing="8px" sx={{ p: '10px' }}>
         <SettingsTitle title="Activity Settings" dirty={s.dirty} isNew={!/^\d+$/.test(x.id)} />
@@ -1177,6 +1207,38 @@ export function ProcessBuilderSettingsPanel() {
             </Stack>
           </Section>
         )}
+        {x.controls.length > 0 && (
+          <TextField
+            select
+            size="small"
+            label="Validation control"
+            value={validationControl?.id ?? ''}
+            onChange={(event) => setActivityValidationControlId(event.target.value)}
+          >
+            {x.controls.map((control) => (
+              <MenuItem key={control.id} value={control.id}>
+                {control.label || control.code || 'Unnamed control'}
+              </MenuItem>
+            ))}
+          </TextField>
+        )}
+        <ValidationRules
+          values={validationControl?.validations ?? []}
+          disabled={!validationControl}
+          onChange={(validations) => {
+            if (validationControl) {
+              s.updateActivityControl(selected.stepId, x.id, validationControl.id, { validations });
+            }
+          }}
+        />
+        <TransitionRules
+          values={activityTransitions}
+          variables={d.variables}
+          steps={d.steps}
+          onAdd={() => s.addTransition({ triggerSource: 'activity', triggerId: x.id })}
+          onUpdate={s.updateTransition}
+          onRemove={s.removeTransition}
+        />
       </Stack>
     );
   }
@@ -1316,7 +1378,10 @@ export function ProcessBuilderSettingsPanel() {
           onChange={(validations) => update({ validations })}
         />
         <TransitionRules
-          values={d.transitions}
+          values={d.transitions.filter(
+            (transition) =>
+              transition.triggerSource === 'requestControl' && transition.triggerId === control.id
+          )}
           variables={d.variables}
           steps={d.steps}
           onAdd={() => s.addTransition({ triggerSource: 'requestControl', triggerId: control.id })}
@@ -1407,7 +1472,10 @@ export function ProcessBuilderSettingsPanel() {
           onChange={(validations) => update({ validations })}
         />
         <TransitionRules
-          values={d.transitions}
+          values={d.transitions.filter(
+            (transition) =>
+              transition.triggerSource === 'activity' && transition.triggerId === selected.activityId
+          )}
           variables={d.variables}
           steps={d.steps}
           onAdd={() =>
