@@ -1,13 +1,11 @@
 import React from 'react';
-import { Alert, Box, Button, Paper, Stack, TextField, Typography } from '@mui/material';
-import AssignmentOutlined from '@mui/icons-material/AssignmentOutlined';
+import { Box, Button, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
 import type { DetailSectionConfig, EnterpriseListDetailsConfig } from '@patterns/list-details/types';
-import { useNotifications } from '@shared/hooks/useNotifications';
 import { wfProcessApi, type WfProcessRecord } from '../api/wfProcessApi';
-import { wfRequestApi, type WfRequestRecord } from '../api/wfRequestApi';
+import { DynamicForm, type DynamicFormHandle, type DynamicFormStatus } from '../components/DynamicForm';
 
 const emptyProcess = (): WfProcessRecord => ({
   id: 'empty-process', recId: 0, code: null, name: '', description: null, categoryId: 0,
@@ -16,93 +14,12 @@ const emptyProcess = (): WfProcessRecord => ({
   recVersion: 1, dataAreaId: 'dat',
 });
 
-const newRequest = (process: WfProcessRecord): WfRequestRecord => ({
-  id: `new-${crypto.randomUUID()}`, recId: 0, code: null,
-  name: process.name || process.code || 'Workflow request',
-  description: process.description ?? null,
-  requestDate: new Date().toISOString(), processId: process.recId, employeeId: null,
-  requestDetails: null, isFinished: false, finishedDate: null, isStopped: false,
-  stoppedDate: null, score: 0, progress: 0, notes: null, attachmentId: null,
-  isActive: true, rowVersion: null, recVersion: 1, dataAreaId: process.dataAreaId,
-});
-
-function RequestForm({ process }: { process: WfProcessRecord }) {
-  const { notifyError, notifySuccess } = useNotifications();
-  const [request, setRequest] = React.useState<WfRequestRecord>(() => newRequest(process));
-  const [saving, setSaving] = React.useState(false);
-  const [error, setError] = React.useState('');
-
-  React.useEffect(() => {
-    setRequest(newRequest(process));
-    setError('');
-  }, [process]);
-
-  const submit = async () => {
-    if (!request.name?.trim()) {
-      setError('Request name is required.');
-      return;
-    }
-    setSaving(true);
-    setError('');
-    try {
-      const saved = await wfRequestApi.create(request);
-      notifySuccess(`Request ${saved.code || saved.name} submitted successfully.`);
-      setRequest(newRequest(process));
-    } catch (reason) {
-      const message = reason instanceof Error ? reason.message : String(reason);
-      setError(message);
-      notifyError(message);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 1fr) 230px' }, gap: 2 }}>
-      <Stack spacing={2}>
-        <Typography component="h2" sx={{ fontSize: 18, fontWeight: 700 }}>Basic information</Typography>
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 1.25 }}>
-          <TextField required size="small" label="Request name" value={request.name ?? ''}
-            onChange={(event) => setRequest((current) => ({ ...current, name: event.target.value }))} />
-          <TextField size="small" type="date" label="Request date" value={request.requestDate.slice(0, 10)}
-            slotProps={{ inputLabel: { shrink: true } }}
-            onChange={(event) => setRequest((current) => ({ ...current,
-              requestDate: new Date(`${event.target.value}T00:00:00`).toISOString() }))} />
-          <TextField size="small" type="number" label="Employee ID" value={request.employeeId ?? ''}
-            onChange={(event) => setRequest((current) => ({ ...current,
-              employeeId: Number(event.target.value) || null }))} />
-          <TextField size="small" type="number" label="Attachment ID" value={request.attachmentId ?? ''}
-            onChange={(event) => setRequest((current) => ({ ...current,
-              attachmentId: Number(event.target.value) || null }))} />
-          <TextField size="small" multiline rows={4} label="Request description"
-            value={request.requestDetails ?? ''}
-            onChange={(event) => setRequest((current) => ({ ...current,
-              requestDetails: event.target.value || null }))} sx={{ gridColumn: '1 / -1' }} />
-          <TextField size="small" multiline rows={3} label="Notes" value={request.notes ?? ''}
-            onChange={(event) => setRequest((current) => ({ ...current,
-              notes: event.target.value || null }))} sx={{ gridColumn: '1 / -1' }} />
-        </Box>
-        {error && <Alert severity="error">{error}</Alert>}
-        <Button variant="contained" disabled={saving} onClick={submit} sx={{ alignSelf: 'flex-end' }}>
-          {saving ? 'Submitting…' : 'Submit request'}
-        </Button>
-      </Stack>
-
-      <Paper variant="outlined" sx={{ p: 2, alignSelf: 'start', textAlign: 'center' }}>
-        <AssignmentOutlined sx={{ fontSize: 56, color: 'primary.main', mb: 1 }} />
-        <Typography sx={{ fontWeight: 800 }}>Request summary</Typography>
-        <Typography sx={{ mt: 1, fontWeight: 700 }}>{process.name || process.code}</Typography>
-        <Typography variant="body2" color="text.secondary">Process: {process.code || process.recId}</Typography>
-        <Typography variant="body2" color="text.secondary">Status: Draft</Typography>
-        <Typography variant="body2" color="text.secondary">
-          Date: {new Date(request.requestDate).toLocaleDateString('en')}
-        </Typography>
-      </Paper>
-    </Box>
-  );
-}
-
 export function RequestFromPage(): React.ReactElement {
+  const formRef = React.useRef<DynamicFormHandle>(null);
+  const [formStatus, setFormStatus] = React.useState<DynamicFormStatus>({ score: 0, saving: false, canSubmit: false });
+  const updateFormStatus = React.useCallback((status: DynamicFormStatus) => setFormStatus((current) =>
+    current.score === status.score && current.saving === status.saving && current.canSubmit === status.canSubmit ? current : status
+  ), []);
   const { categoryId: categoryParam, processId: processParam } = useParams();
   const categoryId = Number(categoryParam);
   const requestedProcessId = Number(processParam);
@@ -121,6 +38,7 @@ export function RequestFromPage(): React.ReactElement {
   const records = processes.data ?? [];
   const requestedProcess = records.find((process) => process.recId === requestedProcessId);
   const requestDate = React.useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const requestDateLabel = React.useMemo(() => new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${requestDate}T00:00:00Z`)), [requestDate]);
 
   const config: EnterpriseListDetailsConfig<WfProcessRecord> = {
     readOnly: true,
@@ -135,13 +53,23 @@ export function RequestFromPage(): React.ReactElement {
       .toLocaleLowerCase().includes(query.toLocaleLowerCase()),
     getValues: () => ({}),
     setValues: (process) => process,
+    actionPaneAfterListContent: <Box sx={{ display: 'flex', alignItems: 'center', px: 0.75, ml: 0.5, borderLeft: '1px solid', borderRight: '1px solid', borderColor: 'divider' }}>
+      <Button size="small" variant="contained" disabled={!formStatus.canSubmit || formStatus.saving} onClick={() => formRef.current?.submit()} sx={{ minWidth: 122, height: 30, borderRadius: 0.75, fontSize: 11.5 }}>{formStatus.saving ? 'Submitting…' : 'Submit Request'}</Button>
+    </Box>,
+    actionPaneEndContent: <Box sx={{ px: 0.8, py: 0.15, mr: 0.5, borderLeft: '1px solid', borderColor: 'divider', minWidth: 74 }}><Typography sx={{ fontSize: 11.5, lineHeight: 1.2, fontWeight: 750 }}>Score: {formStatus.score}</Typography></Box>,
     headerFields: [
-      { id: 'code', label: 'Process code', disabled: true, getValue: (process) => process.code ?? '', setValue: (process) => process },
-      { id: 'name', label: 'Process name', disabled: true, getValue: (process) => process.name ?? '', setValue: (process) => process },
-      { id: 'requestDate', label: 'Request date', disabled: true, getValue: () => requestDate, setValue: (process) => process },
+      { id: 'summary', label: '', type: 'display', disabled: true, renderOwnLabel: true,
+        getValue: (process) => `${process.name ?? ''}\u001f${process.code ?? ''}\u001f${requestDateLabel}`,
+        setValue: (process) => process,
+        render: ({ value }) => { const [name, code, date] = String(value ?? '').split('\u001f'); return <Box sx={{ minWidth: 0, display: 'flex', alignItems: 'baseline', gap: 0.75, overflow: 'hidden' }}><Typography component="h1" noWrap sx={{ flexShrink: 0, fontSize: 14, lineHeight: 1.25, fontWeight: 750 }}>{name || 'Request'}</Typography><Typography color="text.secondary" noWrap sx={{ minWidth: 0, fontSize: 10.5, lineHeight: 1.2 }}>{[code, date].filter(Boolean).join(' · ')}</Typography></Box>; } },
     ],
     sections: ({ record }): DetailSectionConfig[] => [{ id: 'request-form', title: 'Request Form',
-      defaultExpanded: true, content: <RequestForm key={record.id} process={record} /> }],
+      hideHeader: true, defaultExpanded: true, content: <Box sx={{ width: { xs: '100%', md: 'calc(100% + 28px)' }, maxWidth: { xs: '100%', md: 'calc(100% + 28px)' }, mr: { md: '-28px' }, minWidth: 0, alignSelf: 'stretch', boxSizing: 'border-box', height: { xs: 'auto', md: 'calc(100dvh - 172px)' }, minHeight: { md: 420 }, maxHeight: { xs: 'none', md: 'calc(100dvh - 172px)' }, border: '1px solid', borderColor: '#c9c9c9', borderRadius: 1.25, bgcolor: '#fff', overflow: 'hidden', boxShadow: '0 1px 3px rgba(15,23,42,.08)' }}>
+        <Box sx={{ width: '100%', maxWidth: '100%', minWidth: 0, height: '100%', boxSizing: 'border-box', overflowY: { xs: 'visible', md: 'auto' }, overflowX: 'hidden', p: { xs: 0.5, sm: 0.75 }, scrollbarGutter: 'stable', scrollbarWidth: 'thin', scrollbarColor: '#9b9b9b #f1f1f1', '&::-webkit-scrollbar': { width: 11 }, '&::-webkit-scrollbar-track': { bgcolor: '#f1f1f1', borderLeft: '1px solid #e1e1e1' }, '&::-webkit-scrollbar-thumb': { bgcolor: '#9b9b9b', borderRadius: 6, border: '3px solid #f1f1f1' }, '&::-webkit-scrollbar-thumb:hover': { bgcolor: '#707070' } }}>
+          <DynamicForm ref={formRef} key={record.id} processId={record.recId} showActions={false} onStatusChange={updateFormStatus} />
+        </Box>
+      </Box> }],
+    presentation: { mode: 'list', compactRecordHeader: true, listInitiallyVisible: false },
     advancedFilter: { fieldLabel: 'Process', getValue: (process) => process.name,
       matches: (process, value) => (process.name ?? '').toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()) },
   };

@@ -65,7 +65,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 ("OrgGender",           "Gender Sequence",           "GEN-######", "{PREFIX}-{SEQ}",       0),
                 ("OrgCompany",          "Company Sequence",          "COMP-######","{PREFIX}-{SEQ}",       0),
                 ("OrgAnnouncement",     "Announcement Sequence",     "ANN-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
-                ("OrgAttachment",       "Attachment Sequence",       "ATT-######", "{PREFIX}-{SEQ}",       0),
                 ("OrgJob",              "Job Sequence",              "JOB-######", "{PREFIX}-{SEQ}",       0),
 
                 // ─── Identity / Users ────────────────────────────────────────────

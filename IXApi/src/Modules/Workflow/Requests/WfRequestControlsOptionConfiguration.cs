@@ -31,6 +31,13 @@ namespace IAX.IXApi.Modules.Workflow.Requests
             builder.Property(x => x.SortOrder)
                 .HasColumnName("SortOrder");
 
+            builder.Property(x => x.Score)
+                .HasColumnName("Score")
+                .HasPrecision(18, 4);
+
+            builder.Property(x => x.ExtendedProperties)
+                .HasColumnName("ExtendedProperties");
+
             builder.Property(x => x.IsActive)
                 .HasColumnName("IsActive");
 

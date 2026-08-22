@@ -44,7 +44,7 @@ namespace IAX.IXApi.Bootstrap.Extensions
             using var scope = app.ApplicationServices.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             //await db.Database.EnsureDeletedAsync();
-            //await db.Database.MigrateAsync();
+            await db.Database.MigrateAsync();
 
 
             var seeder = scope.ServiceProvider.GetRequiredService<IDatabaseSeederService>();

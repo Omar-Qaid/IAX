@@ -92,24 +92,39 @@ describe('standalone ProcessBuilderPage', () => {
     expect(screen.getByRole('button', { name: /Fill From DataBase/ })).toBeDefined();
   });
 
-  it('edits selectable request-control options directly in the request form', async () => {
+  it('edits selectable request-control options in the options settings pane', async () => {
     const user = userEvent.setup();
     render(<ProcessBuilderPage />);
 
     await user.click(screen.getByRole('tab', { name: 'Request form' }));
     await user.click(screen.getByRole('button', { name: 'Check Box List' }));
 
+    await user.click(screen.getByRole('button', { name: 'Options (0)' }));
     expect(screen.getByText('Add at least one selectable option.')).toBeDefined();
-    await user.click(screen.getByRole('button', { name: 'Add option to New field' }));
+    await user.click(screen.getByRole('button', { name: '+ Add option' }));
     expect(useProcessBuilderStore.getState().document.requestControls[0].options).toEqual(['Option 1']);
-    expect(screen.getByRole('button', { name: 'Reorder option 1 for New field' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Reorder option 1' })).toBeDefined();
+    await user.click(screen.getByRole('button', { name: 'Feature Configuration' }));
+    await user.click(screen.getByRole('switch', { name: 'Require File Upload' }));
+    await user.click(screen.getByRole('switch', { name: 'Send Alert Message' }));
+    expect(screen.getByRole('combobox', { name: 'Performers' })).toBeDefined();
+    expect(screen.queryByRole('combobox', { name: 'Show Other Controls' })).toBeNull();
+    await user.click(screen.getByRole('switch', { name: 'Show Other Controls' }));
+    expect(screen.getByRole('combobox', { name: 'Show Other Controls' })).toBeDefined();
+    await user.type(screen.getByRole('textbox', { name: 'Alert message' }), 'Upload the signed form.');
+    expect(useProcessBuilderStore.getState().document.requestControls[0].optionFeatureConfigurations?.[0]).toMatchObject({
+      requireFileUpload: true,
+      sendAlertMessage: true,
+      showOtherControls: true,
+      alertMessage: 'Upload the signed form.',
+    });
 
-    const optionInput = screen.getByRole('textbox', { name: 'Option 1 for New field' });
+    const optionInput = screen.getByRole('textbox', { name: 'Option 1' });
     await user.clear(optionInput);
     await user.type(optionInput, 'Finance');
     expect(useProcessBuilderStore.getState().document.requestControls[0].options).toEqual(['Finance']);
 
-    await user.click(screen.getByRole('button', { name: 'Remove option 1 from New field' }));
+    await user.click(screen.getByRole('button', { name: 'Remove option 1' }));
     expect(useProcessBuilderStore.getState().document.requestControls[0].options).toEqual([]);
   });
 
@@ -184,9 +199,20 @@ describe('standalone ProcessBuilderPage', () => {
       useProcessBuilderStore.getState().document.steps[0].activities[0].controls
         .map((control) => [control.id, control.sortOrder])
     ).toEqual([
-      [secondControl.id, 10],
-      [firstControl.id, 20],
+      [secondControl.id, 1],
+      [firstControl.id, 2],
     ]);
+
+    store.addRequestControl();
+    store.addRequestControl();
+    const [firstRequestControl, secondRequestControl] = useProcessBuilderStore.getState().document.requestControls;
+    store.reorderRequestControls(firstRequestControl.id, secondRequestControl.id);
+    expect(useProcessBuilderStore.getState().document.requestControls.map((control) => [control.id, control.sortOrder])).toEqual([
+      [secondRequestControl.id, 1],
+      [firstRequestControl.id, 2],
+    ]);
+    store.removeRequestControl(secondRequestControl.id);
+    expect(useProcessBuilderStore.getState().document.requestControls.map((control) => control.sortOrder)).toEqual([1]);
   });
 
   it('manages activity actions and keeps them in the local document', () => {

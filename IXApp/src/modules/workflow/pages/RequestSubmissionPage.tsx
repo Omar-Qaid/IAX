@@ -47,7 +47,6 @@ function CategoryRequestForm({ category }: { category: WfCategoryRecord }) {
                   aria-pressed={selected}
                   onClick={() => {
                     setSelectedProcessId(process.recId);
-                    navigate(WORKFLOW_ROUTE_PATHS.requestFrom(category.recId, process.recId));
                   }}
                   sx={{ minHeight: 112, p: 1.5, display: 'flex', flexDirection: 'column', gap: 0.75,
                     borderColor: selected ? 'primary.main' : 'divider',
@@ -66,9 +65,13 @@ function CategoryRequestForm({ category }: { category: WfCategoryRecord }) {
           <Typography color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>No active request types are available in this category.</Typography>
         )}
       </Box>
-      {/* Submission is intentionally handled outside this category-selection page.
-        {saving ? 'Submitting…' : 'Submit request'}
-      */}
+      {(processes.data ?? []).length > 0 && <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 0.5 }}>
+        <Button variant="contained" disabled={!selectedProcessId}
+          onClick={() => navigate(WORKFLOW_ROUTE_PATHS.requestFrom(category.recId, selectedProcessId))}
+          sx={{ minWidth: 168, height: 40, fontWeight: 700 }}>
+          Submit Request
+        </Button>
+      </Box>}
     </Stack>
   );
 }

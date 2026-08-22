@@ -13,7 +13,6 @@ namespace IAX.IXApi.Modules.Workflow.Processes
         public DateTime FinishDate { get; set; }
         public string ActivityDetails { get; set; } = null!;
         public string? ExtendedProperties { get; set; }
-        public long? AttachmentId { get; set; }
     }
 }
 

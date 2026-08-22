@@ -15,6 +15,5 @@ namespace IAX.IXApi.Modules.Workflow.Requests
         public decimal Score { get; set; }
         public decimal Progress { get; set; }
         public string? Notes { get; set; }
-        public long? AttachmentId { get; set; }
     }
 }

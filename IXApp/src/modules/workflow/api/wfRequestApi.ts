@@ -18,7 +18,6 @@ export interface WfRequestDto {
   score: number;
   progress: number;
   notes: string | null;
-  attachmentId: number | null;
   isActive: boolean;
   rowVersion: string | null;
   recVersion: number;

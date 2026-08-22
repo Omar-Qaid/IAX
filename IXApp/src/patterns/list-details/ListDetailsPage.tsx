@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Alert,
   Box,
@@ -39,6 +40,7 @@ import { usePermission } from '@core/permissions/usePermission';
 import { ListDetailsLayout } from './ListDetailsLayout';
 import { useListDetailsPage } from './useListDetailsPage';
 import { ConfirmationDialog } from '@shared/components/dialogs/ConfirmationDialog';
+import { RecordAttachmentsButton, recordTableId } from '@shared/components/documents';
 import type {
   DetailSectionConfig,
   DetailValue,
@@ -84,7 +86,10 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
   dialogs,
 }: Omit<EnterpriseListDetailsProps<T>, 'variant'>): React.ReactElement {
   const { t } = useAppTranslation();
-  const [listPaneVisible, setListPaneVisible] = React.useState(true);
+  const navigate = useNavigate();
+  const [listPaneVisible, setListPaneVisible] = React.useState(
+    config.presentation?.listInitiallyVisible ?? true
+  );
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = React.useState(false);
   const state = useListDetailsPage(config);
   const [emptyPreviewRecord] = React.useState<T>(() => config.createRecord());
@@ -93,6 +98,11 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
   const { hasPermission: canEdit } = usePermission(config.permissions?.edit);
   const { hasPermission: canDelete } = usePermission(config.permissions?.delete);
   const record = state.draft;
+  const attachmentTableId = config.attachments?.refTableId ?? recordTableId(title);
+  const selectedAttachmentRecId = state.selected
+    ? (config.attachments?.getRefRecId?.(state.selected) ?? Number(state.selected.id))
+    : null;
+  const attachmentRecId = selectedAttachmentRecId != null && Number.isSafeInteger(selectedAttachmentRecId) && selectedAttachmentRecId > 0 ? selectedAttachmentRecId : null;
   const displayedRecord = record ?? emptyPreviewRecord;
   const displayedEditing = Boolean(record) && state.editing;
   const labels = {
@@ -212,14 +222,18 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
       <ActionPane
         variant="flat"
         endActions={
-          <EnterpriseCommandUtilities
-            disabled={state.editing}
-            {...utilities}
-            onRefresh={state.refresh}
-          />
+          <>
+            {config.actionPaneEndContent}
+            <EnterpriseCommandUtilities
+              disabled={state.editing}
+              {...utilities}
+              attachmentAction={config.showAttachmentAction === false ? false : <RecordAttachmentsButton refTableId={attachmentTableId} refRecId={attachmentRecId} disabled={state.editing} />}
+              onRefresh={state.refresh}
+            />
+          </>
         }
       >
-        <IconButton size="small" sx={{ color: d365.primary, p: '5px' }}>
+        <IconButton size="small" aria-label={t('actions.back', 'Back')} onClick={() => navigate(-1)} sx={{ color: d365.primary, p: '5px' }}>
           <ArrowBackIcon sx={{ fontSize: 17 }} />
         </IconButton>
         <IconButton
@@ -239,6 +253,7 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
         >
           <MenuIcon sx={{ fontSize: 17 }} />
         </IconButton>
+        {config.actionPaneAfterListContent}
         {!config.readOnly && (
           <EnterpriseCrudActions
             editing={state.editing}
@@ -321,6 +336,7 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
                   )}
                   editing={displayedEditing}
                   maxWidth={config.presentation?.headerMaxWidth}
+                  compact={config.presentation?.compactRecordHeader}
                   onChange={record ? state.changeHeader : () => undefined}
                 />
                 {record && Object.keys(state.validationErrors).length > 0 && (
@@ -555,6 +571,7 @@ function RecordHeader<T>({
   fields,
   editing,
   maxWidth,
+  compact = false,
   onChange,
 }: {
   title: string;
@@ -565,8 +582,23 @@ function RecordHeader<T>({
   fields: ListDetailsHeaderField<T>[];
   editing: boolean;
   maxWidth?: number;
+  compact?: boolean;
   onChange: (id: string, value: DetailValue) => void;
 }) {
+  if (compact) return (
+    <Box sx={{ px: { xs: 1, sm: 0 }, py: { xs: 1, sm: 0.75 }, minHeight: 0, borderBottom: '1px solid', borderColor: 'divider', bgcolor: { xs: '#f3f3f7', sm: 'transparent' } }}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { sm: 'center' }, flexWrap: 'wrap', gap: { xs: 0.25, sm: 0 } }}>
+        {fields.map((field, index) => {
+          const value = field.getValue(record);
+          const custom = field.render?.({ value, editing: false, disabled: true, onChange: (next) => onChange(field.id, next) });
+          return <Box key={field.id} sx={{ display: 'flex', alignItems: 'baseline', minWidth: 0, '&:not(:last-of-type)::after': { content: { xs: 'none', sm: '"|"' }, mx: { sm: 1.25 }, color: 'text.disabled', fontWeight: 400 } }}>
+            {!field.renderOwnLabel && <Typography component="span" sx={{ mr: 0.5, fontSize: 12, lineHeight: 1.35, fontWeight: 700 }}>{field.label}:</Typography>}
+            {custom ?? <Typography component="span" noWrap title={String(value)} sx={{ fontSize: 12, lineHeight: 1.35, color: index === 0 ? 'primary.main' : 'text.primary' }}>{String(value)}</Typography>}
+          </Box>;
+        })}
+      </Box>
+    </Box>
+  );
   return (
     <Box sx={{ px: 0, pt: '3px', pb: '3px', minHeight: 130, boxSizing: 'border-box' }}>
       <Typography sx={{ fontSize: 11, lineHeight: 1.5 }}>{viewLabel}</Typography>
@@ -685,7 +717,7 @@ function LegacyListDetailsPage<T extends ListDetailRecord>({
   return (
     <PageContainer>
       <PageHeader title={title} subtitle={subtitle} />
-      {actionPane && <ActionPane>{actionPane}</ActionPane>}
+      <ActionPane endActions={<RecordAttachmentsButton refTableId={recordTableId(title)} refRecId={selectedId && Number.isSafeInteger(Number(selectedId)) ? Number(selectedId) : null} />}>{actionPane}</ActionPane>
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: selectedId ? 5 : 12, lg: selectedId ? 4 : 12 }}>
           <Box sx={{ height: 600, width: '100%' }}>

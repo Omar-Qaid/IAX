@@ -26,6 +26,14 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'docu-view',
+    path: ROUTE_PATHS.DOCU_VIEW,
+    component: lazyPage(
+      () => import('@modules/organization/documents/pages/DocuView'),
+      (module) => module.DocuView
+    ),
+  },
+  {
     id: 'customers',
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMERS,
     permission: PERMISSIONS.CUSTOMER_VIEW,

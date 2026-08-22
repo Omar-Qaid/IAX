@@ -125,8 +125,8 @@ export function ProcessBuilderTreePanel() {
             sx={itemSx}
             onClick={() => select({ kind: 'requestControl', id: c.id })}
           >
-            <Tooltip title={`${c.label} · ${c.type}`} placement="right">
-              <ListItemText primary={c.label} secondary={`${c.code || 'Draft'} · ${c.type} · #${c.sortOrder} · ${c.required ? 'Required' : 'Optional'}`} />
+            <Tooltip title={c.label} placement="right">
+              <ListItemText primary={c.label} secondary={`${c.code || 'Draft'} · #${c.sortOrder}`} />
             </Tooltip>
           </ListItemButton>
         ))}
@@ -218,7 +218,7 @@ export function ProcessBuilderTreePanel() {
                             }
                           >
                             <Tooltip title={`${control.label} · ${control.type}`} placement="right">
-                              <ListItemText primary={control.label} secondary={`${control.code || 'Draft'} · ${control.type} · ${control.required ? 'Required' : 'Optional'} · #${control.sortOrder}`} />
+                              <ListItemText primary={control.label} secondary={`${control.code || 'Draft'} · ${control.type} · #${control.sortOrder}`} />
                             </Tooltip>
                           </ListItemButton>
                         ))}

@@ -15,10 +15,18 @@ export type BuilderOperator = '=' | '!=' | '>' | '<' | '>=' | '<=' | 'contains' 
 export type BuilderActionType = 'approve' | 'reject' | 'return' | 'escalate';
 
 export interface BuilderVariable { id: string; code: string; name: string; description: string; dataType: BuilderDataType; sortOrder: number; required: boolean; active: boolean; scope: 'process' | 'step' | 'activity' | 'global'; defaultValue: string }
-export type BuilderValidationType = 'required' | 'minLength' | 'maxLength' | 'exactLength' | 'length' | 'minValue' | 'maxValue' | 'range' | 'regex' | 'pattern' | 'startsWith' | 'endsWith' | 'contains' | 'email' | 'url' | 'phone' | 'saudiMobile' | 'saudiNationalId' | 'saudiIban' | 'taxNumber' | 'passport' | 'fileExtensions' | 'fileSize' | 'minSelected' | 'maxSelected' | 'compare' | 'comparison' | 'expression' | 'custom' | 'crossField' | 'mask' | 'inputMask';
+export type BuilderValidationType = 'required' | 'minLength' | 'maxLength' | 'exactLength' | 'length' | 'minValue' | 'maxValue' | 'range' | 'regex' | 'pattern' | 'startsWith' | 'endsWith' | 'contains' | 'email' | 'url' | 'phone' | 'saudiMobile' | 'saudiNationalId' | 'saudiIban' | 'taxNumber' | 'passport' | 'fileExtensions' | 'fileSize' | 'maxFiles' | 'minSelected' | 'maxSelected' | 'compare' | 'comparison' | 'expression' | 'custom' | 'crossField' | 'mask' | 'inputMask';
 export interface BuilderValidation { id: string; type: BuilderValidationType; value: string; secondaryValue: string; operator: string; mask: string; message: string; severity: 'Error' | 'Warning' | 'Information'; sortOrder: number; active: boolean }
 export interface BuilderCondition { variableId: string; operator: BuilderOperator; value: string }
-export interface BuilderControl { id: string; code: string; label: string; labelAR: string; type: BuilderControlType; controlId: string; sortOrder: number; score: number; required: boolean; readOnly: boolean; visible: boolean; uniqueKey: boolean; usedAsCriteria: boolean; defaultValue: string; options: string[]; validations: BuilderValidation[]; visibilityCondition: BuilderCondition | null }
+export interface BuilderOptionFeatureConfiguration {
+  requireFileUpload: boolean;
+  sendAlertMessage: boolean;
+  alertMessage: string;
+  performerIds: string[];
+  showOtherControls: boolean;
+  visibleControlIds: string[];
+}
+export interface BuilderControl { id: string; code: string; label: string; labelAR: string; labelColor?: string; type: BuilderControlType; controlId: string; sortOrder: number; columnSpan?: 1 | 2 | 3; score: number; required: boolean; readOnly: boolean; visible: boolean; uniqueKey: boolean; usedAsCriteria: boolean; defaultValue: string; options: string[]; optionScores?: number[]; optionFeatureConfigurations?: BuilderOptionFeatureConfiguration[]; validations: BuilderValidation[]; visibilityCondition: BuilderCondition | null }
 export interface BuilderActivityAction { id: string; type: BuilderActionType; label: string; nextStepId: string; condition: BuilderCondition | null }
 export interface BuilderActivity { id: string; code: string; name: string; type: BuilderActivityType; activityTypeId: string; performer: string; score: number; sortOrder: number; assignmentMode: 'any' | 'all' | 'round-robin'; active: boolean; required: boolean; mandatoryDocs: boolean; autoPassEnabled: boolean; autoPassingHours: number; controls: BuilderControl[]; actions: BuilderActivityAction[]; validations: BuilderValidation[]; condition: BuilderCondition | null; config: { apiMethod: 'GET' | 'POST' | 'PUT' | 'DELETE'; apiUrl: string; notifyEmails: string } }
 export interface BuilderStep { id: string; code: string; name: string; order: number; score: number; autoPassingHours: number; allMandatory: boolean; active: boolean; systemField: boolean; condition: BuilderCondition | null; activities: BuilderActivity[] }

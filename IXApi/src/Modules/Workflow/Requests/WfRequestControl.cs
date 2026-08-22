@@ -1,18 +1,16 @@
-using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Workflow.Controls;
 using IAX.IXApi.Modules.Workflow.Processes;
-using System.Collections.ObjectModel;
-using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IAX.IXApi.Modules.Workflow.Requests
 {
     public class WfRequestControl: MasterEntity<long>
     {
         public long ProcessId { get; set; }
-        [System.ComponentModel.DataAnnotations.Schema.ForeignKey(nameof(ProcessId))]
+        [ForeignKey(nameof(ProcessId))]
         public virtual WfProcess Process { get; set; } = null!;
         public byte ControlId { get; set; }
-        [System.ComponentModel.DataAnnotations.Schema.ForeignKey(nameof(ControlId))]
+        [ForeignKey(nameof(ControlId))]
         public virtual WfControl Control { get; set; } = null!;
         public decimal Score { get; set; }
         public byte SortOrder { get; set; }

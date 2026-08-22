@@ -24,6 +24,7 @@ import { ConfirmationDialog } from '@shared/components/dialogs/ConfirmationDialo
 import { useUnsavedChanges } from '@shared/hooks/useUnsavedChanges';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SearchIcon from '@mui/icons-material/Search';
+import { RecordAttachmentsButton, recordTableId } from '@shared/components/documents';
 
 export type SimpleListGridProps<T> = Omit<DataGridProps<T>, 'rows' | 'columns'>;
 
@@ -76,6 +77,7 @@ export interface EnterpriseListConfig<T> {
   locale?: string;
   crud: EnterpriseListCrudConfig<T>;
   commands?: EnterpriseListCommand[];
+  attachments?: { refTableId: number; getRefRecId?: (record: T) => number };
   utilities: {
     personalizeLabel: string;
     guideLabel: string;
@@ -187,6 +189,9 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
       ? <LoadingState message={t('messages.loadingRecords')} />
       : null;
 
+  const standardSelectedRecId = selectedRow ? Number(getRowId(selectedRow)) : null;
+  const standardAttachmentRecId = standardSelectedRecId != null && Number.isSafeInteger(standardSelectedRecId) && standardSelectedRecId > 0 ? standardSelectedRecId : null;
+
   if (variant === 'enterprise') {
     const config = enterpriseConfig;
     const reset = () => {
@@ -257,7 +262,11 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
       {config.commands && <ActionPaneGroup>{config.commands.map((command) => <ActionPaneButton key={command.id} label={command.label} permission={command.permission} disabled={isEditing || command.disabled} onClick={command.onClick} />)}</ActionPaneGroup>}
       {config.showSearchCommand && <ActionPaneGroup><ActionPaneButton label={t('common.search', 'Search')} icon={<SearchIcon sx={{ fontSize: 22 }} />} disabled={isEditing} onClick={() => setQuickFilterVisible((visible) => !visible)} /></ActionPaneGroup>}
     </>;
-    const generatedUtilities = config && <EnterpriseCommandUtilities {...config.utilities} onRefresh={reset} disabled={isEditing} />;
+    const selectedAttachmentRecId = selectedRow
+      ? (config?.attachments?.getRefRecId?.(selectedRow) ?? Number(getRowId(selectedRow)))
+      : null;
+    const attachmentRecId = selectedAttachmentRecId != null && Number.isSafeInteger(selectedAttachmentRecId) && selectedAttachmentRecId > 0 ? selectedAttachmentRecId : null;
+    const generatedUtilities = config && <EnterpriseCommandUtilities {...config.utilities} attachmentAction={<RecordAttachmentsButton refTableId={config.attachments?.refTableId ?? recordTableId(title)} refRecId={attachmentRecId} disabled={isEditing} />} onRefresh={reset} disabled={isEditing} />;
     const generatedFilterBar = config && quickFilterVisible && (config.searchMode === 'field'
       ? <EnterpriseListFilterBar filterLabel={config.filterLabel} searchByLabel={config.searchByLabel ?? config.filterLabel} query={query} field={searchField} options={config.searchFields.map(({ field, label }) => ({ value: field, label }))} onQueryChange={setQuery} onFieldChange={setSearchField} />
       : <EnterpriseQuickFilter label={config.filterLabel} value={query} onChange={setQuery} />);
@@ -307,7 +316,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
 
   return <PageContainer sx={containerSx}>
     <PageHeader title={title} subtitle={subtitle} />
-    {props.actionPane && <ActionPane endActions={props.actionPaneEndActions}>{props.actionPane}</ActionPane>}
+    <ActionPane endActions={<>{props.actionPaneEndActions}<RecordAttachmentsButton refTableId={recordTableId(title)} refRecId={standardAttachmentRecId} /></>}>{props.actionPane}</ActionPane>
     {feedback ?? <Box sx={{ width: '100%', height: gridHeight ?? 600 }}><DataGrid {...dataGridProps} rows={rows} columns={columns} /></Box>}
     {dialogs}
   </PageContainer>;

@@ -208,6 +208,7 @@ describe('Process Builder Activity Form backend integration', () => {
       id: '30',
       label: 'Decision',
       type: 'dropdown-manual',
+      sortOrder: 1,
       required: true,
       options: ['Approve'],
       validations: [{ id: '40', type: 'required', message: 'Decision is required' }],
@@ -222,6 +223,7 @@ describe('Process Builder Activity Form backend integration', () => {
       activityId: 20,
       processId: 1,
       name: 'Final decision',
+      sortOrder: 1,
       validationRules: expect.any(String),
     }));
     expect(mocks.activityValidationUpdate).toHaveBeenCalledWith(expect.objectContaining({
@@ -258,7 +260,10 @@ describe('Process Builder Activity Form backend integration', () => {
       id: '31', recId: 31, processId: 1, controlId: 4, code: 'REQ-1', name: 'Choices',
       description: null, mandatory: true, uniqueKey: false, score: 0, usedAsCriteria: true,
       sortOrder: 10, validationRules: null,
-      extendedProperties: JSON.stringify({ required: true, visible: true }),
+      extendedProperties: JSON.stringify({
+        required: true,
+        visible: true,
+      }),
       isActive: true, rowVersion: null, recVersion: 1, dataAreaId: 'dat',
     };
     const requestValidation = {
@@ -268,7 +273,15 @@ describe('Process Builder Activity Form backend integration', () => {
       isActive: true, rowVersion: null, recVersion: 1, dataAreaId: 'dat',
     };
     const requestOption = {
-      id: '51', recId: 51, requestControlId: 31, value: 'One', name: 'One', sortOrder: 10,
+      id: '51', recId: 51, requestControlId: 31, value: 'One', name: 'One', score: 0, sortOrder: 10,
+      extendedProperties: JSON.stringify({
+          requireFileUpload: true,
+          sendAlertMessage: true,
+          alertMessage: 'Upload approval evidence.',
+          performerIds: ['5', '7'],
+          showOtherControls: true,
+          visibleControlIds: ['33'],
+      }),
       isActive: true, rowVersion: null, recVersion: 1, dataAreaId: 'dat',
     };
     const variable = {
@@ -296,7 +309,15 @@ describe('Process Builder Activity Form backend integration', () => {
     expect(control).toMatchObject({
       id: '31',
       type: 'checkboxlist',
+      sortOrder: 1,
       options: ['One'],
+      optionFeatureConfigurations: [{
+        requireFileUpload: true,
+        sendAlertMessage: true,
+        performerIds: ['5', '7'],
+        showOtherControls: true,
+        visibleControlIds: ['33'],
+      }],
       validations: [{ id: '41', type: 'minSelected', value: '1' }],
     });
     expect(document.transitions[0]).toMatchObject({
@@ -309,13 +330,17 @@ describe('Process Builder Activity Form backend integration', () => {
     const result = await saveProcessRequestControls(document);
     expect(result.controlIds).toEqual({ '31': '31' });
     expect(mocks.requestControlUpdate).toHaveBeenCalledWith(expect.objectContaining({
-      recId: 31, processId: 1, controlId: 4, name: 'Choices',
+      recId: 31, processId: 1, controlId: 4, name: 'Choices', sortOrder: 1,
+    }));
+    expect(mocks.requestControlUpdate).toHaveBeenLastCalledWith(expect.objectContaining({
+      extendedProperties: expect.not.stringContaining('optionFeatureConfigurations'),
     }));
     expect(mocks.requestValidationUpdate).toHaveBeenCalledWith(expect.objectContaining({
       recId: 41, requestControlId: 31, validationType: 'minSelected',
     }));
     expect(mocks.requestOptionUpdate).toHaveBeenCalledWith(expect.objectContaining({
       recId: 51, requestControlId: 31, name: 'One',
+      extendedProperties: expect.stringContaining('requireFileUpload'),
     }));
 
     await saveProcessTransitions(document);

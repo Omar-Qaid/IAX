@@ -51,6 +51,7 @@ export interface DetailSectionConfig {
   minHeight?: number;
   detailsPadding?: number | string;
   visualVariant?: 'default' | 'legalEntity';
+  hideHeader?: boolean;
 }
 
 export interface ListDetailRecord {
@@ -104,6 +105,10 @@ export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
     cancelLabel: string;
   }>;
   commands?: ListDetailsCommand<T>[];
+  actionPaneAfterListContent?: ReactNode;
+  actionPaneEndContent?: ReactNode;
+  attachments?: { refTableId: number; getRefRecId?: (record: T) => number };
+  showAttachmentAction?: boolean;
   utilities?: Partial<{
     personalizeLabel: string;
     guideLabel: string;
@@ -126,6 +131,8 @@ export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
     masterRowHeight?: number;
     masterHeaderHeight?: number;
     fullscreenCanvas?: boolean;
+    compactRecordHeader?: boolean;
+    listInitiallyVisible?: boolean;
     recordListBatchSize?: number;
   };
   permissions?: { view?: string; create?: string; edit?: string; delete?: string };

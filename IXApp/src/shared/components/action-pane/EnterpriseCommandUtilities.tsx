@@ -1,5 +1,6 @@
 import React from 'react';
 import { Badge, IconButton, SvgIcon, Tooltip, type SvgIconProps } from '@mui/material';
+import { RecordAttachmentsButton } from '@shared/components/documents/RecordAttachmentsButton';
 
 const PersonalizeIcon = (props: SvgIconProps) => <SvgIcon {...props}><path d="m12 3 3 3-3 3-3-3 3-3Zm-6 6 3 3-3 3-3-3 3-3Zm12 0 3 3-3 3-3-3 3-3Zm-6 6 3 3-3 3-3-3 3-3Z" fill="none" stroke="currentColor" strokeWidth="1.4" /></SvgIcon>;
 const GuideIcon = (props: SvgIconProps) => <SvgIcon {...props}><path d="M5 5.5c3-1 5-.5 7 1.2v12c-2-1.7-4-2.2-7-1.2v-12Zm14 0c-3-1-5-.5-7 1.2v12c2-1.7 4-2.2 7-1.2v-12Z" fill="none" stroke="currentColor" strokeWidth="1.4" /></SvgIcon>;
@@ -14,16 +15,18 @@ export interface EnterpriseCommandUtilitiesProps {
   refreshLabel: string;
   openWindowLabel: string;
   notificationCount?: number;
+  attachmentAction?: React.ReactNode;
   onRefresh?: () => void;
   disabled?: boolean;
 }
 
-export const EnterpriseCommandUtilities: React.FC<EnterpriseCommandUtilitiesProps> = ({ personalizeLabel, guideLabel, notificationsLabel, refreshLabel, openWindowLabel, notificationCount = 0, onRefresh, disabled = false }) => {
+export const EnterpriseCommandUtilities: React.FC<EnterpriseCommandUtilitiesProps> = ({ personalizeLabel, guideLabel, notificationsLabel, refreshLabel, openWindowLabel, notificationCount = 0, attachmentAction, onRefresh, disabled = false }) => {
   const sx = { p: 0.5, color: 'primary.main', borderRadius: 0.5, '&:hover': { bgcolor: 'action.hover' } };
   return <>
     <Tooltip title={personalizeLabel}><span><IconButton disabled={disabled} size="small" aria-label={personalizeLabel} sx={sx}><PersonalizeIcon sx={{ fontSize: 17 }} /></IconButton></span></Tooltip>
     <Tooltip title={guideLabel}><span><IconButton disabled={disabled} size="small" aria-label={guideLabel} sx={sx}><GuideIcon sx={{ fontSize: 17 }} /></IconButton></span></Tooltip>
     <Tooltip title={notificationsLabel}><span><IconButton disabled={disabled} size="small" aria-label={notificationsLabel} sx={sx}><Badge badgeContent={notificationCount} color="primary" sx={{ '& .MuiBadge-badge': { fontSize: 9, minWidth: 15, height: 15 } }}><NotificationIcon sx={{ fontSize: 17 }} /></Badge></IconButton></span></Tooltip>
+    {attachmentAction ?? <RecordAttachmentsButton refTableId={0} refRecId={null} />}
     <Tooltip title={refreshLabel}><span><IconButton disabled={disabled} size="small" aria-label={refreshLabel} onClick={onRefresh} sx={sx}><RefreshIcon sx={{ fontSize: 17 }} /></IconButton></span></Tooltip>
     <Tooltip title={openWindowLabel}><span><IconButton disabled size="small" aria-label={openWindowLabel} sx={{ ...sx, color: 'text.disabled' }}><OpenWindowIcon sx={{ fontSize: 17 }} /></IconButton></span></Tooltip>
   </>;

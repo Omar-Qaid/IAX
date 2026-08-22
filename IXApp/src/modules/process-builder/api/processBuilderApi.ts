@@ -6,7 +6,7 @@ import { wfActivityControlApi } from '@modules/workflow/api/wfActivityControlApi
 import { wfActivityControlOptionApi } from '@modules/workflow/api/wfActivityControlOptionApi';
 import { wfActivityControlValidationApi } from '@modules/workflow/api/wfActivityControlValidationApi';
 import { wfActivityTypeApi, wfControlApi, wfOperatorApi } from '@modules/workflow/api/workflowSetupApis';
-import { wfRequestControlApi } from '@modules/workflow/api/wfRequestControlApi';
+import { wfRequestControlApi, type WfRequestControlRecord } from '@modules/workflow/api/wfRequestControlApi';
 import { wfRequestControlOptionApi } from '@modules/workflow/api/wfRequestControlOptionApi';
 import { wfRequestControlValidationApi } from '@modules/workflow/api/wfRequestControlValidationApi';
 import { wfTransitionApi } from '@modules/workflow/api/wfTransitionApi';
@@ -22,6 +22,7 @@ import type {
   BuilderVariable,
   ProcessBuilderDocument,
 } from '../types/processBuilderTypes';
+import { resolvedValidationMessage, validationUsesCustomMessage } from '../validationDefaults';
 
 const dataType = (id: number): BuilderDataType =>
   ({ 1: 'text', 2: 'number', 3: 'boolean', 4: 'date', 5: 'object' })[id] as BuilderDataType ?? 'text';
@@ -42,6 +43,21 @@ const parseObject = (value: string | null): Record<string, unknown> => {
   if (!value) return {};
   try { return JSON.parse(value) as Record<string, unknown>; } catch { return {}; }
 };
+const normalizeOptionFeatureConfiguration = (value: unknown): NonNullable<BuilderControl['optionFeatureConfigurations']>[number] => {
+  const item = value && typeof value === 'object' ? value as Record<string, unknown> : {};
+  return {
+    requireFileUpload: item.requireFileUpload === true || item.allowFileUpload === true,
+    sendAlertMessage: item.sendAlertMessage === true || item.sendAlert === true,
+    alertMessage: typeof item.alertMessage === 'string' ? item.alertMessage : '',
+    performerIds: Array.isArray(item.performerIds)
+      ? item.performerIds.filter((id): id is string => typeof id === 'string')
+      : [],
+    showOtherControls: item.showOtherControls === true || Array.isArray(item.visibleControlIds) && item.visibleControlIds.length > 0,
+    visibleControlIds: Array.isArray(item.visibleControlIds)
+      ? item.visibleControlIds.filter((id): id is string => typeof id === 'string')
+      : [],
+  };
+};
 const builderValidationType = (value: string): BuilderControl['validations'][number]['type'] => {
   const normalized = value.replace(/[^a-z0-9]/gi, '').toLocaleLowerCase();
   const aliases: Record<string, BuilderControl['validations'][number]['type']> = {
@@ -52,7 +68,7 @@ const builderValidationType = (value: string): BuilderControl['validations'][num
     mask: 'mask', inputmask: 'inputMask', startswith: 'startsWith', endswith: 'endsWith',
     contains: 'contains', email: 'email', url: 'url', phone: 'phone', saudimobile: 'saudiMobile',
     saudinationalid: 'saudiNationalId', saudiiban: 'saudiIban', taxnumber: 'taxNumber',
-    passport: 'passport', fileextensions: 'fileExtensions', filesize: 'fileSize',
+    passport: 'passport', fileextensions: 'fileExtensions', filesize: 'fileSize', maxfiles: 'maxFiles',
     minselected: 'minSelected', maxselected: 'maxSelected',
   };
   return aliases[normalized] ?? 'custom';
@@ -232,16 +248,21 @@ export async function loadProcessBuilder(processId: number): Promise<ProcessBuil
         controls: activityControls
           .filter((control) => control.activityId === activity.recId)
           .sort((a, b) => a.sortOrder - b.sortOrder)
-          .map<BuilderControl>((control) => {
+          .map<BuilderControl>((control, controlIndex) => {
             const properties = parseObject(control.extendedProperties);
             return {
               id: String(control.recId),
               code: control.code ?? '',
               label: control.name ?? '',
               labelAR: typeof properties.labelAR === 'string' ? properties.labelAR : '',
-              type: builderControlType(controlTypes.find((item) => item.recId === control.controlId)?.controlType ?? ''),
+              labelColor: typeof properties.labelColor === 'string' ? properties.labelColor : '#7a4b00',
+              type: (() => {
+                const item = controlTypes.find((candidate) => candidate.recId === control.controlId);
+                return builderControlType(`${item?.code ?? ''} ${item?.name ?? ''} ${item?.controlType ?? ''}`);
+              })(),
               controlId: String(control.controlId || ''),
-              sortOrder: control.sortOrder,
+              sortOrder: controlIndex + 1,
+              columnSpan: ([1, 2, 3].includes(Number(properties.columnSpan)) ? Number(properties.columnSpan) : 1) as 1 | 2 | 3,
               score: control.score,
               required: Boolean(properties.required ?? control.mandatory),
               readOnly: Boolean(properties.readOnly),
@@ -284,8 +305,14 @@ export async function loadProcessBuilder(processId: number): Promise<ProcessBuil
   const builderRequestControls: BuilderControl[] = requestControls
     .filter((control) => control.processId === processId)
     .sort((a, b) => a.sortOrder - b.sortOrder)
-    .map((control) => {
+    .map((control, controlIndex) => {
       const properties = parseObject(control.extendedProperties);
+      const controlOptions = requestOptions
+        .filter((option) => option.requestControlId === control.recId && option.isActive)
+        .sort((a, b) => a.sortOrder - b.sortOrder);
+      const optionFeatures = Array.isArray(properties.optionFeatureConfigurations)
+        ? properties.optionFeatureConfigurations
+        : [];
       const validations = requestValidations
         .filter((validation) => validation.requestControlId === control.recId)
         .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -306,9 +333,14 @@ export async function loadProcessBuilder(processId: number): Promise<ProcessBuil
         code: control.code ?? '',
         label: control.name ?? '',
         labelAR: typeof properties.labelAR === 'string' ? properties.labelAR : '',
-        type: builderControlType(controlTypes.find((item) => item.recId === control.controlId)?.controlType ?? ''),
+        labelColor: typeof properties.labelColor === 'string' ? properties.labelColor : '#7a4b00',
+        type: (() => {
+          const item = controlTypes.find((candidate) => candidate.recId === control.controlId);
+          return builderControlType(`${item?.code ?? ''} ${item?.name ?? ''} ${item?.controlType ?? ''}`);
+        })(),
         controlId: String(control.controlId || ''),
-        sortOrder: control.sortOrder,
+        sortOrder: controlIndex + 1,
+        columnSpan: ([1, 2, 3].includes(Number(properties.columnSpan)) ? Number(properties.columnSpan) : 1) as 1 | 2 | 3,
         score: control.score,
         required: Boolean(properties.required ?? control.mandatory),
         readOnly: Boolean(properties.readOnly),
@@ -316,12 +348,27 @@ export async function loadProcessBuilder(processId: number): Promise<ProcessBuil
         uniqueKey: Boolean(properties.uniqueKey ?? control.uniqueKey),
         usedAsCriteria: Boolean(properties.usedAsCriteria ?? control.usedAsCriteria),
         defaultValue: typeof properties.defaultValue === 'string' ? properties.defaultValue : '',
-        options: requestOptions
-          .filter((option) => option.requestControlId === control.recId && option.isActive)
-          .sort((a, b) => a.sortOrder - b.sortOrder)
-          .map((option) => option.name || option.value),
+        options: controlOptions.map((option) => option.name || option.value),
+        optionScores: controlOptions.map((option) => option.score ?? 0),
+        optionFeatureConfigurations: controlOptions.map((option, index) =>
+          normalizeOptionFeatureConfiguration(
+            Object.keys(parseObject(option.extendedProperties)).length > 0
+              ? parseObject(option.extendedProperties)
+              : optionFeatures[index]
+          )
+        ),
         validations,
-        visibilityCondition: null,
+        visibilityCondition: (() => {
+          const condition = properties.visibilityCondition;
+          if (!condition || typeof condition !== 'object') return null;
+          const item = condition as Record<string, unknown>;
+          const sourceControlId = Number(item.sourceControlId);
+          return sourceControlId > 0 ? {
+            variableId: String(sourceControlId),
+            operator: builderOperator(typeof item.operator === 'string' ? item.operator : '='),
+            value: typeof item.value === 'string' ? item.value : '',
+          } : null;
+        })(),
       };
     });
   const builderTransitions: BuilderTransition[] = transitions
@@ -681,7 +728,7 @@ async function syncActivityControls(
   const persistedActivityIds = new Set(activityIds.values());
   const processControls = serverControls.filter((control) => persistedActivityIds.has(control.activityId));
   const controls = document.steps.flatMap((step) => step.activities.flatMap((activity) =>
-    activity.controls.map((control) => ({ activity, control }))
+    activity.controls.map((control, controlIndex) => ({ activity, control: { ...control, sortOrder: controlIndex + 1 } }))
   ));
   const retainedIds = new Set(
     controls.map(({ control }) => numericId(control.id)).filter((id): id is number => id != null)
@@ -704,9 +751,7 @@ async function syncActivityControls(
     }
     for (const rule of control.validations) {
       if (!rule.type) throw new Error(`Validation type is required for '${control.label}'.`);
-      if (!rule.message.trim()) throw new Error(`Error message is required for '${control.label}'.`);
-      if (!Number.isInteger(rule.sortOrder) || rule.sortOrder < 0)
-        throw new Error(`Validation sort order is invalid for '${control.label}'.`);
+      if (validationUsesCustomMessage(rule.type) && !rule.message.trim()) throw new Error(`Error message is required for '${control.label}'.`);
     }
     return { activityId, control, controlType };
   });
@@ -746,12 +791,15 @@ async function syncActivityControls(
       validationRules: JSON.stringify({ validations: control.validations }),
       extendedProperties: JSON.stringify({
         labelAR: control.labelAR,
+        labelColor: control.labelColor,
         required: control.required,
         readOnly: control.readOnly,
         visible: control.visible,
         uniqueKey: control.uniqueKey,
         usedAsCriteria: control.usedAsCriteria,
         defaultValue: control.defaultValue,
+        columnSpan: control.columnSpan ?? 1,
+        optionFeatureConfigurations: control.optionFeatureConfigurations ?? [],
       }),
       isActive: control.visible,
     };
@@ -774,7 +822,7 @@ async function syncActivityControls(
   for (const { control } of controls) {
     const activityControlId = savedControlIds.get(control.id);
     if (!activityControlId) continue;
-    for (const rule of control.validations) {
+    for (const [ruleIndex, rule] of control.validations.entries()) {
       const id = numericId(rule.id);
       const current = id == null ? null : serverValidations.find((item) => item.recId === id);
       const record = {
@@ -791,9 +839,9 @@ async function syncActivityControls(
         operator: rule.operator.trim() || null,
         value: rule.value.trim() || null,
         maskInput: rule.mask.trim() || null,
-        errorMessage: rule.message.trim(),
+        errorMessage: resolvedValidationMessage(rule),
         severity: rule.severity,
-        sortOrder: rule.sortOrder,
+        sortOrder: (ruleIndex + 1) * 10,
         isActive: rule.active,
       };
       if (current) await wfActivityControlValidationApi.update(record);
@@ -954,8 +1002,9 @@ export async function saveProcessRequestControls(document: ProcessBuilderDocumen
     wfRequestControlOptionApi.list(),
   ]);
   const processControls = serverControls.filter((control) => control.processId === processId);
-  const retainedIds = new Set(document.requestControls.map((control) => numericId(control.id)).filter((id): id is number => id != null));
-  const resolved = document.requestControls.map((control, index) => {
+  const requestControls = document.requestControls.map((control, index) => ({ ...control, sortOrder: index + 1 }));
+  const retainedIds = new Set(requestControls.map((control) => numericId(control.id)).filter((id): id is number => id != null));
+  const resolved = requestControls.map((control, index) => {
     if (!control.label.trim()) throw new Error(`Request control ${index + 1}: label is required.`);
     if (!Number.isInteger(control.sortOrder) || control.sortOrder < 0 || control.sortOrder > 255)
       throw new Error(`Request control '${control.label}': sort order must be from 0 to 255.`);
@@ -970,10 +1019,8 @@ export async function saveProcessRequestControls(document: ProcessBuilderDocumen
     }
     for (const rule of control.validations) {
       if (!rule.type) throw new Error(`Validation type is required for '${control.label}'.`);
-      if (!rule.message.trim())
+      if (validationUsesCustomMessage(rule.type) && !rule.message.trim())
         throw new Error(`Error message is required for '${control.label}'.`);
-      if (!Number.isInteger(rule.sortOrder) || rule.sortOrder < 0)
-        throw new Error(`Validation sort order is invalid for '${control.label}'.`);
     }
     return { control, controlType };
   });
@@ -982,6 +1029,7 @@ export async function saveProcessRequestControls(document: ProcessBuilderDocumen
     if (!retainedIds.has(control.recId)) await wfRequestControlApi.delete(control);
   }
   const savedControlIds = new Map<string, number>();
+  const savedControlRecords = new Map<number, WfRequestControlRecord>();
   for (const { control, controlType } of resolved) {
     const id = numericId(control.id);
     const current = id == null ? null : processControls.find((item) => item.recId === id);
@@ -1010,12 +1058,14 @@ export async function saveProcessRequestControls(document: ProcessBuilderDocumen
       validationRules: JSON.stringify({ validations: control.validations }),
       extendedProperties: JSON.stringify({
         labelAR: control.labelAR,
+        labelColor: control.labelColor,
         required: control.required,
         readOnly: control.readOnly,
         visible: control.visible,
         uniqueKey: control.uniqueKey,
         usedAsCriteria: control.usedAsCriteria,
         defaultValue: control.defaultValue,
+        columnSpan: control.columnSpan ?? 1,
       }),
       isActive: control.visible,
     };
@@ -1023,10 +1073,11 @@ export async function saveProcessRequestControls(document: ProcessBuilderDocumen
       ? await wfRequestControlApi.update(record)
       : await wfRequestControlApi.create(record);
     savedControlIds.set(control.id, saved.recId);
+    savedControlRecords.set(saved.recId, saved);
   }
 
   const retainedValidationIds = new Set(
-    document.requestControls.flatMap((control) => control.validations)
+    requestControls.flatMap((control) => control.validations)
       .map((rule) => numericId(rule.id))
       .filter((id): id is number => id != null)
   );
@@ -1035,10 +1086,10 @@ export async function saveProcessRequestControls(document: ProcessBuilderDocumen
     if (retainedControlIds.has(validation.requestControlId) && !retainedValidationIds.has(validation.recId))
       await wfRequestControlValidationApi.delete(validation);
   }
-  for (const control of document.requestControls) {
+  for (const control of requestControls) {
     const requestControlId = savedControlIds.get(control.id);
     if (!requestControlId) continue;
-    for (const rule of control.validations) {
+    for (const [ruleIndex, rule] of control.validations.entries()) {
       const id = numericId(rule.id);
       const current = id == null ? null : serverValidations.find((item) => item.recId === id);
       const record = {
@@ -1055,9 +1106,9 @@ export async function saveProcessRequestControls(document: ProcessBuilderDocumen
         operator: rule.operator.trim() || null,
         value: rule.value.trim() || null,
         maskInput: rule.mask.trim() || null,
-        errorMessage: rule.message.trim(),
+        errorMessage: resolvedValidationMessage(rule),
         severity: rule.severity,
-        sortOrder: rule.sortOrder,
+        sortOrder: (ruleIndex + 1) * 10,
         isActive: rule.active,
       };
       if (current) await wfRequestControlValidationApi.update(record);
@@ -1070,15 +1121,29 @@ export async function saveProcessRequestControls(document: ProcessBuilderDocumen
     options.push(option);
     existingOptionsByControl.set(option.requestControlId, options);
   }
-  for (const control of document.requestControls) {
+  for (const control of requestControls) {
     const requestControlId = savedControlIds.get(control.id);
     if (!requestControlId) continue;
     const existing = (existingOptionsByControl.get(requestControlId) ?? []).sort((a, b) => a.sortOrder - b.sortOrder);
-    const values = optionControlTypes.has(control.type)
-      ? control.options.map((option) => option.trim()).filter(Boolean)
+    const entries = optionControlTypes.has(control.type)
+      ? control.options.map((option, index) => {
+        const features = normalizeOptionFeatureConfiguration(control.optionFeatureConfigurations?.[index]);
+        const resolveControlId = (value: string) => savedControlIds.get(value) ?? Number(value);
+        return {
+          value: option.trim(),
+          score: control.optionScores?.[index] ?? 0,
+          extendedProperties: JSON.stringify({
+            ...features,
+            visibleControlIds: features.visibleControlIds
+              .map(resolveControlId)
+              .filter((value) => value > 0)
+              .map(String),
+          }),
+        };
+      }).filter((entry) => Boolean(entry.value))
       : [];
-    for (const stale of existing.slice(values.length)) await wfRequestControlOptionApi.delete(stale);
-    for (const [index, value] of values.entries()) {
+    for (const stale of existing.slice(entries.length)) await wfRequestControlOptionApi.delete(stale);
+    for (const [index, entry] of entries.entries()) {
       const current = existing[index];
       const record = {
         ...(current ?? {
@@ -1087,16 +1152,41 @@ export async function saveProcessRequestControls(document: ProcessBuilderDocumen
           rowVersion: null,
           recVersion: 1,
           dataAreaId: process.dataAreaId,
+          extendedProperties: null,
         }),
         requestControlId,
-        value,
-        name: value,
+        value: entry.value,
+        name: entry.value,
+        score: entry.score,
         sortOrder: (index + 1) * 10,
+        extendedProperties: entry.extendedProperties,
         isActive: true,
       };
       if (current) await wfRequestControlOptionApi.update(record);
       else await wfRequestControlOptionApi.create(record);
     }
+  }
+  for (const control of requestControls) {
+    const requestControlId = savedControlIds.get(control.id);
+    if (!requestControlId) continue;
+    const saved = savedControlRecords.get(requestControlId);
+    if (!saved) continue;
+    const sourceControlId = control.visibilityCondition
+      ? savedControlIds.get(control.visibilityCondition.variableId) ?? Number(control.visibilityCondition.variableId)
+      : null;
+    const properties = parseObject(saved.extendedProperties);
+    await wfRequestControlApi.update({
+      ...saved,
+      extendedProperties: JSON.stringify({
+        ...properties,
+        optionFeatureConfigurations: undefined,
+        visibilityCondition: sourceControlId && sourceControlId > 0 ? {
+          sourceControlId,
+          operator: control.visibilityCondition?.operator ?? '=',
+          value: control.visibilityCondition?.value ?? '',
+        } : null,
+      }),
+    });
   }
   const reloaded = await loadProcessBuilder(processId);
   return {

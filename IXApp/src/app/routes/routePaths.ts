@@ -5,6 +5,7 @@ export const ROUTE_PATHS = {
   HOME: '/',
   LOGIN: '/login',
   DASHBOARD: '/dashboard',
+  DOCU_VIEW: '/documents/docu-view',
   PROCESS_BUILDER: '/process-builder/:builderId',
   PROCESS_BUILDER_NEW: '/process-builder/new',
   processBuilder: (builderId: string | number) =>

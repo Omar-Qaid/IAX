@@ -1,6 +1,4 @@
 using IAX.IXApi.Shared.Domain.Entities;
-using IAX.IXApi.Modules.Organization.Attachments;
-
 using IAX.IXApi.Modules.Workflow.Processes;
 using System.ComponentModel.DataAnnotations;
 
@@ -24,9 +22,6 @@ namespace IAX.IXApi.Modules.Workflow.Requests
         public decimal Progress { get; set; }
         public string? Notes { get; set; }
         
-        public long? AttachmentId { get; set; }
-        [System.ComponentModel.DataAnnotations.Schema.ForeignKey(nameof(AttachmentId))]
-        public virtual OrgAttachment? Attachment { get; set; }
     }
 }
 

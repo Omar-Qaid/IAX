@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using IAX.IXApi.Modules.Organization.DocumentManagement.Services;
+using IAX.IXApi.Modules.Organization.DocumentManagement.Storage;
 
 namespace IAX.IXApi.Modules.Organization
 {
@@ -8,7 +10,9 @@ namespace IAX.IXApi.Modules.Organization
         public static IServiceCollection AddOrganizationModule(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddScoped<Announcements.IOrgAnnouncementService, Announcements.OrgAnnouncementService>();
-            services.AddScoped<Attachments.IOrgAttachmentService, Attachments.OrgAttachmentService>();
+            services.Configure<DocumentStorageOptions>(configuration.GetSection("DocumentStorage"));
+            services.AddSingleton<IFileStorageProvider, FileStorageService>();
+            services.AddScoped<IDocumentService, DocumentService>();
             services.AddScoped<Departments.IOrgDepartmentService, Departments.OrgDepartmentService>();
             services.AddScoped<Features.OrgEmployeeCategory.IOrgEmployeeCategoryService, Features.OrgEmployeeCategory.OrgEmployeeCategoryService>();
             services.AddScoped<Features.OrgEmployeeGroup.IOrgEmployeeGroupService, Features.OrgEmployeeGroup.OrgEmployeeGroupService>();

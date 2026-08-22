@@ -59,6 +59,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             ("SystemAdministration", "UserGroups"),
             ("SystemAdministration", "UserCategories"),
             ("SystemAdministration", "Permissions"),
+            ("System", "Documents"),
 
             // ── Workflow ────────────────────────────────────────────────────
             ("Workflow", "Processes"),

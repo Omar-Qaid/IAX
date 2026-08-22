@@ -138,6 +138,18 @@ function UnsavedStatus({ compact = false }: { compact?: boolean }) {
   );
 }
 
+const stickyWorkspaceHeaderSx = {
+  position: 'sticky',
+  top: `${tokens.tabsHeight}px`,
+  zIndex: 1,
+  mx: { xs: '-8px', sm: '-10px' },
+  px: { xs: '8px', sm: '10px' },
+  py: '6px',
+  minHeight: 44,
+  bgcolor: tokens.canvas,
+  borderBottom: `1px solid ${tokens.border}`,
+};
+
 function WorkspaceHeader({
   title,
   summary,
@@ -153,7 +165,10 @@ function WorkspaceHeader({
     <Stack
       direction={{ xs: 'column', sm: 'row' }}
       spacing={1}
-      sx={{ alignItems: { xs: 'stretch', sm: 'center' }, minHeight: 32 }}
+      sx={{
+        ...stickyWorkspaceHeaderSx,
+        alignItems: { xs: 'stretch', sm: 'center' },
+      }}
     >
       <Box sx={{ flex: 1, minWidth: 0 }} title={summary}>
         <Typography component="h2" sx={{ fontSize: tokens.fontSize.heading, fontWeight: 700 }}>
@@ -794,7 +809,10 @@ export function ActivitiesWorkspace({
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         spacing={1}
-        sx={{ alignItems: { sm: 'center' } }}
+        sx={{
+          ...stickyWorkspaceHeaderSx,
+          alignItems: { xs: 'stretch', sm: 'center' },
+        }}
       >
         <Typography
           component="h2"
@@ -1111,6 +1129,17 @@ export function RequestFormWorkspace({
           <Stack spacing={1}>
             {s.document.requestControls.map((control) => {
               const selected = s.selected.kind === 'requestControl' && s.selected.id === control.id;
+              const controlTransitions = s.document.transitions.filter(
+                (transition) =>
+                  transition.triggerSource === 'requestControl' && transition.triggerId === control.id
+              );
+              const openSettings = (
+                event: React.MouseEvent,
+                pane: 'configure' | 'options' | 'validation' | 'transitions'
+              ) => {
+                event.stopPropagation();
+                s.openControlSettings({ kind: 'requestControl', id: control.id }, pane);
+              };
               return (
                 <SortableBuilderItem key={control.id} id={control.id}>
                   {(attributes, listeners) => (
@@ -1156,10 +1185,7 @@ export function RequestFormWorkspace({
                       <Box sx={{ px: 1 }}>
                         <ControlPreview control={control} />
                       </Box>
-                      <Button
-                        size="small"
-                        onClick={() => s.select({ kind: 'requestControl', id: control.id })}
-                      >
+                      <Button size="small" onClick={(event) => openSettings(event, 'configure')}>
                         Configure
                       </Button>
                       <Button
@@ -1188,20 +1214,6 @@ export function RequestFormWorkspace({
                             <Switch
                               size="small"
                               sx={compactSwitchSx}
-                              checked={control.required}
-                              onChange={(_, required) =>
-                                s.updateRequestControl(control.id, { required })
-                              }
-                            />
-                          }
-                          label="Required"
-                        />
-                        <FormControlLabel
-                          sx={{ m: 0 }}
-                          control={
-                            <Switch
-                              size="small"
-                              sx={compactSwitchSx}
                               checked={control.visible}
                               onChange={(_, visible) =>
                                 s.updateRequestControl(control.id, { visible })
@@ -1210,142 +1222,19 @@ export function RequestFormWorkspace({
                           }
                           label="Visible"
                         />
-                        <FormControlLabel
-                          sx={{ m: 0 }}
-                          control={
-                            <Switch
-                              size="small"
-                              sx={compactSwitchSx}
-                              checked={control.readOnly}
-                              onChange={(_, readOnly) =>
-                                s.updateRequestControl(control.id, { readOnly })
-                              }
-                            />
-                          }
-                          label="Read Only"
-                        />
-                        <Chip size="small" variant="outlined" label={control.type} />
+                        {requestOptionControlTypes.has(control.type) && (
+                          <Button size="small" onClick={(event) => openSettings(event, 'options')}>
+                            Options ({control.options.length})
+                          </Button>
+                        )}
+                        <Button size="small" onClick={(event) => openSettings(event, 'validation')}>
+                          Validation ({control.validations.length})
+                        </Button>
+                        <Button size="small" onClick={(event) => openSettings(event, 'transitions')}>
+                          Transitions ({controlTransitions.length})
+                        </Button>
                         {s.dirty && <UnsavedStatus compact />}
                       </Box>
-                      {requestOptionControlTypes.has(control.type) && (
-                        <Box
-                          onClick={(event) => event.stopPropagation()}
-                          sx={{
-                            gridColumn: { xs: '2', md: '2 / -1' },
-                            p: 1.25,
-                            border: `1px solid ${tokens.border}`,
-                            bgcolor: '#f8fafc',
-                          }}
-                        >
-                          <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1 }}>
-                            <Typography
-                              sx={{ flex: 1, fontSize: tokens.fontSize.secondary, fontWeight: 700 }}
-                            >
-                              OPTIONS
-                            </Typography>
-                            <Button
-                              size="small"
-                              startIcon={<Add fontSize="small" />}
-                              aria-label={`Add option to ${control.label}`}
-                              onClick={() =>
-                                s.updateRequestControl(control.id, {
-                                  options: [
-                                    ...control.options,
-                                    `Option ${control.options.length + 1}`,
-                                  ],
-                                })
-                              }
-                            >
-                              Add option
-                            </Button>
-                          </Stack>
-                          {control.options.length === 0 ? (
-                            <Typography
-                              sx={{ color: tokens.textMuted, fontSize: tokens.fontSize.secondary }}
-                            >
-                              Add at least one selectable option.
-                            </Typography>
-                          ) : (
-                            <DndContext
-                              sensors={sensors}
-                              collisionDetection={closestCenter}
-                              onDragEnd={({ active, over }) => {
-                                if (!over || active.id === over.id) return;
-                                s.reorderRequestControlOptions(
-                                  control.id,
-                                  Number(active.id),
-                                  Number(over.id)
-                                );
-                              }}
-                            >
-                              <SortableContext
-                                items={control.options.map((_, index) => String(index))}
-                                strategy={verticalListSortingStrategy}
-                              >
-                                <Stack spacing={1}>
-                                  {control.options.map((option, optionIndex) => (
-                                    <SortableBuilderItem key={optionIndex} id={String(optionIndex)}>
-                                      {(optionAttributes, optionListeners) => (
-                                        <Stack
-                                          direction="row"
-                                          spacing={1}
-                                          sx={{ alignItems: 'center' }}
-                                        >
-                                          <Tooltip title="Drag to reorder">
-                                            <Box
-                                              {...optionAttributes}
-                                              {...optionListeners}
-                                              aria-label={`Reorder option ${optionIndex + 1} for ${control.label}`}
-                                              sx={{
-                                                display: 'flex',
-                                                color: tokens.textMuted,
-                                                cursor: 'grab',
-                                                touchAction: 'none',
-                                              }}
-                                            >
-                                              <DragIndicator fontSize="small" />
-                                            </Box>
-                                          </Tooltip>
-                                          <TextField
-                                            fullWidth
-                                            size="small"
-                                            label={`Option ${optionIndex + 1}`}
-                                            value={option}
-                                            slotProps={{
-                                              htmlInput: {
-                                                'aria-label': `Option ${optionIndex + 1} for ${control.label}`,
-                                              },
-                                            }}
-                                            onChange={(event) => {
-                                              const options = [...control.options];
-                                              options[optionIndex] = event.target.value;
-                                              s.updateRequestControl(control.id, { options });
-                                            }}
-                                          />
-                                          <IconButton
-                                            size="small"
-                                            color="error"
-                                            aria-label={`Remove option ${optionIndex + 1} from ${control.label}`}
-                                            onClick={() =>
-                                              s.updateRequestControl(control.id, {
-                                                options: control.options.filter(
-                                                  (_, index) => index !== optionIndex
-                                                ),
-                                              })
-                                            }
-                                          >
-                                            <Delete fontSize="small" />
-                                          </IconButton>
-                                        </Stack>
-                                      )}
-                                    </SortableBuilderItem>
-                                  ))}
-                                </Stack>
-                              </SortableContext>
-                            </DndContext>
-                          )}
-                        </Box>
-                      )}
                     </Box>
                   )}
                 </SortableBuilderItem>
@@ -1446,7 +1335,10 @@ export function ActivityFormWorkspace({
       <Stack
         direction={{ xs: 'column', sm: 'row' }}
         spacing={1}
-        sx={{ alignItems: { xs: 'stretch', sm: 'center' }, minHeight: 44 }}
+        sx={{
+          ...stickyWorkspaceHeaderSx,
+          alignItems: { xs: 'stretch', sm: 'center' },
+        }}
       >
         <Typography
           component="h2"
@@ -1545,14 +1437,13 @@ export function ActivityFormWorkspace({
                     </Box>
                     <Button
                       size="small"
-                      onClick={() =>
-                        s.select({
-                          kind: 'control',
-                          stepId,
-                          activityId: activity.id,
-                          id: control.id,
-                        })
-                      }
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        s.openControlSettings(
+                          { kind: 'control', stepId, activityId: activity.id, id: control.id },
+                          'configure'
+                        );
+                      }}
                     >
                       Configure
                     </Button>
@@ -1577,16 +1468,36 @@ export function ActivityFormWorkspace({
                       <Chip
                         size="small"
                         variant="outlined"
-                        label={control.required ? 'Required' : 'Optional'}
-                      />
-                      <Chip
-                        size="small"
-                        variant="outlined"
                         label={control.visible ? 'Visible' : 'Hidden'}
                       />
-                      {control.readOnly && (
-                        <Chip size="small" variant="outlined" label="Read only" />
-                      )}
+                      <Button
+                        size="small"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          s.openControlSettings(
+                            { kind: 'control', stepId, activityId: activity.id, id: control.id },
+                            'validation'
+                          );
+                        }}
+                      >
+                        Validation ({control.validations.length})
+                      </Button>
+                      <Button
+                        size="small"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          s.openControlSettings(
+                            { kind: 'control', stepId, activityId: activity.id, id: control.id },
+                            'transitions'
+                          );
+                        }}
+                      >
+                        Transitions ({s.document.transitions.filter(
+                          (transition) =>
+                            transition.triggerSource === 'activity' &&
+                            transition.triggerId === activity.id
+                        ).length})
+                      </Button>
                     </Box>
                     {requestOptionControlTypes.has(control.type) && (
                       <Box

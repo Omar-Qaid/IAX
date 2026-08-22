@@ -35,6 +35,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding
             var seeders = new List<ISeeder>
             {
                 new IdentitySeeder(),
+                new DocumentManagementSeeder(),
                 new OrganizationSeeder(),
                 new WorkflowSeeder(),
                 new ErpSeeder(),

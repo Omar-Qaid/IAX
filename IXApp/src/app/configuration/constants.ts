@@ -134,7 +134,7 @@ export const API_ENDPOINTS = {
     GENDERS: '/OrgGender',
     EMPLOYEES: '/OrgEmployee',
     ANNOUNCEMENTS: '/OrgAnnouncement',
-    ATTACHMENTS: '/OrgAttachment',
+    ATTACHMENTS: '/documents',
     INVENT_ITEMS: '/InventItem',
     INVENT_ITEM_GROUPS: '/InventItemGroup',
     INVENT_UOMS: '/InventUOM',

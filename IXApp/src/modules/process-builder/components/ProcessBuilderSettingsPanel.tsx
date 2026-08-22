@@ -3,6 +3,7 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
+  Autocomplete,
   Box,
   Button,
   Chip,
@@ -15,7 +16,10 @@ import {
 } from '@mui/material';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import Delete from '@mui/icons-material/Delete';
+import DragIndicator from '@mui/icons-material/DragIndicator';
 import IconButton from '@mui/material/IconButton';
+import { closestCenter, DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useProcessBuilderStore } from '../store/useProcessBuilderStore';
 import { ConditionBuilder } from './ConditionBuilder';
 import { controlPalette } from './ProcessBuilderPalette';
@@ -26,8 +30,10 @@ import type {
   BuilderValidation,
   BuilderValidationType,
   BuilderVariable,
+  BuilderOptionFeatureConfiguration,
 } from '../types/processBuilderTypes';
 import { processBuilderTokens as tokens } from './processBuilderTokens';
+import { DEFAULT_VALIDATION_MESSAGES, validationUsesCustomMessage } from '../validationDefaults';
 import { useQuery } from '@tanstack/react-query';
 import { wfCategoryApi, type WfCategoryRecord } from '@modules/workflow/api/wfCategoryApi';
 import {
@@ -39,6 +45,7 @@ import {
 import { wfPerformerApi } from '@modules/workflow/api/wfPerformerApi';
 import { AppLookupGridField } from '@shared/components/fields/AppLookupGridField';
 import { AppLookupField } from '@shared/components/fields/AppLookupField';
+import { SortableBuilderItem } from './SortableBuilderItem';
 
 const categoryLookupColumns = [
   { field: 'code', header: 'Code', width: 110 },
@@ -46,6 +53,14 @@ const categoryLookupColumns = [
 ] as const;
 
 const requestOptionControlTypes = new Set(['dropdown-manual', 'checkboxlist', 'radiobuttonlist']);
+const emptyOptionFeatures = (): BuilderOptionFeatureConfiguration => ({
+  requireFileUpload: false,
+  sendAlertMessage: false,
+  alertMessage: '',
+  performerIds: [],
+  showOtherControls: false,
+  visibleControlIds: [],
+});
 const builderTypeFromLabel = (
   label: string
 ): 'approval' | 'review' | 'data-entry' | 'api' | 'notification' => {
@@ -242,6 +257,7 @@ function ValidationRules({
     contains: ['value'],
     fileExtensions: ['value'],
     fileSize: ['value'],
+    maxFiles: ['value'],
     minSelected: ['value'],
     maxSelected: ['value'],
     email: [],
@@ -253,8 +269,13 @@ function ValidationRules({
     taxNumber: [],
     passport: [],
   };
+  const normalizeRules = (rules: BuilderValidation[]) => rules.map((rule, index) => ({
+    ...rule,
+    message: rule.message.trim() || DEFAULT_VALIDATION_MESSAGES[rule.type],
+    sortOrder: (index + 1) * 10,
+  }));
   const update = (id: string, patch: Partial<BuilderValidation>) =>
-    onChange(values.map((rule) => (rule.id === id ? { ...rule, ...patch } : rule)));
+    onChange(normalizeRules(values.map((rule) => (rule.id === id ? { ...rule, ...patch } : rule))));
   const validationTypes: ReadonlyArray<{ value: BuilderValidationType; label: string }> = [
     ['required', 'Required'],
     ['minLength', 'Minimum length'],
@@ -279,6 +300,7 @@ function ValidationRules({
     ['passport', 'Passport number'],
     ['fileExtensions', 'Allowed file extensions'],
     ['fileSize', 'File size'],
+    ['maxFiles', 'Maximum number of files'],
     ['minSelected', 'Minimum selected items'],
     ['maxSelected', 'Maximum selected items'],
     ['compare', 'Compare'],
@@ -289,24 +311,14 @@ function ValidationRules({
     ['mask', 'Mask'],
     ['inputMask', 'Input mask'],
   ].map(([value, label]) => ({ value: value as BuilderValidationType, label }));
-  const messages: Partial<Record<BuilderValidationType, string>> = {
-    required: 'This field is required.',
-    email: 'Enter a valid email address.',
-    url: 'Enter a valid URL.',
-    saudiMobile: 'Enter a valid Saudi mobile number.',
-    saudiNationalId: 'Enter a valid Saudi National ID.',
-    saudiIban: 'Enter a valid Saudi IBAN.',
-  };
   const changeType = (id: string, type: BuilderValidationType) => {
     const current = values.find((rule) => rule.id === id);
     if (!current) return;
     const visible = new Set(fieldsByType[type]);
     const previouslyVisible = new Set(fieldsByType[current.type] ?? []);
-    const defaultMessages = Object.values(messages);
-    const message =
-      !current.message || defaultMessages.includes(current.message)
-        ? (messages[type] ?? '')
-        : current.message;
+    const message = validationUsesCustomMessage(type) && validationUsesCustomMessage(current.type) && current.message.trim()
+      ? current.message
+      : DEFAULT_VALIDATION_MESSAGES[type];
     update(id, {
       type,
       message,
@@ -322,7 +334,7 @@ function ValidationRules({
     });
   };
   const add = () =>
-    onChange([
+    onChange(normalizeRules([
       ...values,
       {
         id: crypto.randomUUID(),
@@ -331,12 +343,12 @@ function ValidationRules({
         secondaryValue: '',
         operator: '',
         mask: '',
-        message: messages.required ?? '',
+        message: DEFAULT_VALIDATION_MESSAGES.required,
         severity: 'Error',
         sortOrder: (values.length + 1) * 10,
         active: true,
       },
-    ]);
+    ]));
   return (
     <Box sx={{ pt: 1.5, borderTop: '1px solid #e5e7eb' }}>
       <Stack direction="row" sx={{ alignItems: 'center' }}>
@@ -434,22 +446,15 @@ function ValidationRules({
                   sx={{ gridColumn: '1 / -1' }}
                 />
               )}
-              <TextField
+              {validationUsesCustomMessage(rule.type) && <TextField
                 required
                 size="small"
                 label="Error message"
                 value={rule.message}
                 onChange={(event) => update(rule.id, { message: event.target.value })}
                 sx={{ gridColumn: '1 / -1' }}
-              />
-              <TextField
-                size="small"
-                type="number"
-                label="Sort Order"
-                value={rule.sortOrder}
-                onChange={(event) => update(rule.id, { sortOrder: Number(event.target.value) })}
-              />
-              <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+              />}
+              <Stack direction="row" sx={{ gridColumn: '1 / -1', alignItems: 'center', justifyContent: 'space-between' }}>
                 <FormControlLabel
                   control={
                     <Switch
@@ -465,7 +470,7 @@ function ValidationRules({
                   color="error"
                   size="small"
                   aria-label="Delete validation"
-                  onClick={() => onChange(values.filter((item) => item.id !== rule.id))}
+                  onClick={() => onChange(normalizeRules(values.filter((item) => item.id !== rule.id)))}
                 >
                   <Delete fontSize="small" />
                 </IconButton>
@@ -625,6 +630,10 @@ export function ProcessBuilderSettingsPanel() {
   const d = s.document;
   const selected = s.selected;
   const [activityValidationControlId, setActivityValidationControlId] = React.useState('');
+  const [showAllRequestOptions, setShowAllRequestOptions] = React.useState(false);
+  const [showAllRequestValidations, setShowAllRequestValidations] = React.useState(false);
+  const [showAllRequestTransitions, setShowAllRequestTransitions] = React.useState(false);
+  const optionSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
   const priorities = useQuery({
     queryKey: ['workflow', 'builder-priorities'],
     queryFn: ({ signal }) => wfPriorityApi.list(signal),
@@ -1246,33 +1255,37 @@ export function ProcessBuilderSettingsPanel() {
     const control = d.requestControls.find((x) => x.id === selected.id);
     if (!control) return null;
     const update = (values: Partial<typeof control>) => s.updateRequestControl(control.id, values);
-    return (
-      <Stack spacing="8px" sx={{ p: '10px' }}>
-        <SettingsTitle title="Request Control" dirty={s.dirty} isNew />
-        {text(
-          'Control code',
-          `RCTL-${String(d.requestControls.indexOf(control) + 1).padStart(4, '0')}`,
-          () => undefined
-        )}
-        {text('Label', control.label, (label) => update({ label }))}
-        {text('Arabic label', control.labelAR, (labelAR) => update({ labelAR }))}
-        <TextField
-          select
-          size="small"
-          label="Control type"
-          value={control.type}
-          onChange={(e) => {
-            const type = e.target.value as typeof control.type;
-            update({ type, options: requestOptionControlTypes.has(type) ? control.options : [] });
-          }}
-        >
-          {controlPalette.map((item) => (
-            <MenuItem key={item.type} value={item.type}>
-              {item.label}
-            </MenuItem>
-          ))}
-        </TextField>
-        {requestOptionControlTypes.has(control.type) && (
+    const controlTransitions = d.transitions.filter(
+      (transition) =>
+        transition.triggerSource === 'requestControl' && transition.triggerId === control.id
+    );
+    const validationSummary = control.validations.map((rule) =>
+      rule.type.replace(/([A-Z])/g, ' $1').toLocaleLowerCase()
+    );
+    const transitionSummary = controlTransitions.map((transition) => {
+      const variable = d.variables.find((item) => item.id === transition.variableId);
+      const target = d.steps.find((step) => step.id === transition.targetStepId);
+      const condition = `${variable?.name || 'Variable'} ${transition.operator}${
+        transition.operator === 'isEmpty' ? '' : ` ${transition.value || '…'}`
+      }`;
+      return `${condition} → ${target?.name || 'Unassigned step'}`;
+    });
+    const optionFeaturesAt = (index: number) => ({
+      ...emptyOptionFeatures(),
+      ...(control.optionFeatureConfigurations?.[index] ?? {}),
+    });
+    const updateOptionFeatures = (index: number, patch: Partial<BuilderOptionFeatureConfiguration>) =>
+      update({
+        optionFeatureConfigurations: control.options.map((_, itemIndex) =>
+          itemIndex === index
+            ? { ...optionFeaturesAt(itemIndex), ...patch }
+            : optionFeaturesAt(itemIndex)
+        ),
+      });
+    if (s.controlSettingsPane === 'options' && requestOptionControlTypes.has(control.type)) {
+      return (
+        <Stack spacing="8px" sx={{ p: '10px' }}>
+          <SettingsTitle title={`Request Control Options (${control.options.length})`} dirty={s.dirty} />
           <Stack spacing="6px" sx={settingsGroupSx}>
             <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
               <Typography sx={{ fontSize: tokens.fontSize.body, fontWeight: 600 }}>
@@ -1281,7 +1294,14 @@ export function ProcessBuilderSettingsPanel() {
               <Button
                 size="small"
                 onClick={() =>
-                  update({ options: [...control.options, `Option ${control.options.length + 1}`] })
+                  update({
+                    options: [...control.options, `Option ${control.options.length + 1}`],
+                    optionScores: [...(control.optionScores ?? []), 0],
+                    optionFeatureConfigurations: [
+                      ...(control.optionFeatureConfigurations ?? control.options.map(() => emptyOptionFeatures())),
+                      emptyOptionFeatures(),
+                    ],
+                  })
                 }
               >
                 + Add option
@@ -1292,102 +1312,402 @@ export function ProcessBuilderSettingsPanel() {
                 Add at least one selectable option.
               </Typography>
             )}
-            {control.options.map((option, index) => (
-              <Stack
-                key={`${index}-${control.options.length}`}
-                direction="row"
-                spacing="4px"
-                sx={{ alignItems: 'center' }}
+            <DndContext
+              sensors={optionSensors}
+              collisionDetection={closestCenter}
+              onDragEnd={({ active, over }) => {
+                if (!over || active.id === over.id) return;
+                s.reorderRequestControlOptions(control.id, Number(active.id), Number(over.id));
+              }}
+            >
+              <SortableContext
+                items={control.options.map((_, index) => String(index))}
+                strategy={verticalListSortingStrategy}
               >
-                <TextField
-                  fullWidth
-                  size="small"
-                  label={`Option ${index + 1}`}
-                  value={option}
-                  onChange={(event) =>
-                    update({
-                      options: control.options.map((item, itemIndex) =>
-                        itemIndex === index ? event.target.value : item
-                      ),
-                    })
-                  }
-                />
-                <IconButton
-                  size="small"
-                  color="error"
-                  aria-label={`Remove option ${index + 1}`}
-                  onClick={() =>
-                    update({
-                      options: control.options.filter((_, itemIndex) => itemIndex !== index),
-                    })
-                  }
-                >
-                  <Delete fontSize="small" />
-                </IconButton>
-              </Stack>
-            ))}
+                <Stack spacing="6px">
+                  {control.options.map((option, index) => (
+                    <SortableBuilderItem key={`${index}-${control.options.length}`} id={String(index)}>
+                      {(attributes, listeners) => (
+                        <Stack spacing="4px">
+                          <Stack direction="row" spacing="4px" sx={{ alignItems: 'center' }}>
+                            <Box
+                              {...attributes}
+                              {...listeners}
+                              aria-label={`Reorder option ${index + 1}`}
+                              sx={{ display: 'flex', color: tokens.textMuted, cursor: 'grab', touchAction: 'none' }}
+                            >
+                              <DragIndicator fontSize="small" />
+                            </Box>
+                            <TextField
+                              fullWidth
+                              size="small"
+                              label={`Option ${index + 1}`}
+                              value={option}
+                              onChange={(event) =>
+                                update({
+                                  options: control.options.map((item, itemIndex) =>
+                                    itemIndex === index ? event.target.value : item
+                                  ),
+                                })
+                              }
+                            />
+                            <IconButton
+                              size="small"
+                              color="error"
+                              aria-label={`Remove option ${index + 1}`}
+                              onClick={() =>
+                                update({
+                                  options: control.options.filter((_, itemIndex) => itemIndex !== index),
+                                  optionScores: (control.optionScores ?? []).filter((_, itemIndex) => itemIndex !== index),
+                                  optionFeatureConfigurations: (control.optionFeatureConfigurations ?? []).filter(
+                                    (_, itemIndex) => itemIndex !== index
+                                  ),
+                                })
+                              }
+                            >
+                              <Delete fontSize="small" />
+                            </IconButton>
+                          </Stack>
+                          <Stack direction="row" spacing="4px" sx={{ ml: '28px', mr: '32px' }}>
+                            <TextField
+                              fullWidth
+                              size="small"
+                              type="number"
+                              label="Score"
+                              value={control.optionScores?.[index] ?? 0}
+                              onChange={(event) =>
+                                update({
+                                  optionScores: control.options.map((_, itemIndex) =>
+                                    itemIndex === index
+                                      ? Number(event.target.value) || 0
+                                      : control.optionScores?.[itemIndex] ?? 0
+                                  ),
+                                })
+                              }
+                            />
+                            <TextField
+                              fullWidth
+                              size="small"
+                              type="number"
+                              label="Sort order"
+                              value={index + 1}
+                              slotProps={{ input: { readOnly: true } }}
+                            />
+                          </Stack>
+                          <Accordion sx={{ ...sectionSx, ml: '28px', mr: '32px' }}>
+                            <AccordionSummary expandIcon={<ExpandMore fontSize="small" />}>
+                              <Typography sx={{ fontSize: tokens.fontSize.secondary, fontWeight: 700 }}>
+                                Feature Configuration
+                              </Typography>
+                            </AccordionSummary>
+                            <AccordionDetails>
+                              <Stack spacing="8px">
+                                <Box sx={settingsSwitchGridSx}>
+                                  <FormControlLabel
+                                    control={
+                                      <Switch
+                                        size="small"
+                                        checked={optionFeaturesAt(index).requireFileUpload}
+                                        onChange={(_, requireFileUpload) => updateOptionFeatures(index, { requireFileUpload })}
+                                      />
+                                    }
+                                    label="Require File Upload"
+                                  />
+                                  <FormControlLabel
+                                    control={
+                                      <Switch
+                                        size="small"
+                                        checked={optionFeaturesAt(index).sendAlertMessage}
+                                        onChange={(_, sendAlertMessage) => updateOptionFeatures(index, {
+                                          sendAlertMessage,
+                                          ...(!sendAlertMessage ? { alertMessage: '', performerIds: [] } : {}),
+                                        })}
+                                      />
+                                    }
+                                    label="Send Alert Message"
+                                  />
+                                  <FormControlLabel
+                                    control={
+                                      <Switch
+                                        size="small"
+                                        checked={optionFeaturesAt(index).showOtherControls}
+                                        onChange={(_, showOtherControls) => updateOptionFeatures(index, {
+                                          showOtherControls,
+                                          ...(!showOtherControls ? { visibleControlIds: [] } : {}),
+                                        })}
+                                      />
+                                    }
+                                    label="Show Other Controls"
+                                  />
+                                </Box>
+                                {optionFeaturesAt(index).sendAlertMessage && (
+                                  <Stack spacing="8px">
+                                    <TextField
+                                      fullWidth
+                                      size="small"
+                                      label="Alert message"
+                                      value={optionFeaturesAt(index).alertMessage}
+                                      onChange={(event) => updateOptionFeatures(index, { alertMessage: event.target.value })}
+                                    />
+                                    <Autocomplete
+                                      multiple
+                                      size="small"
+                                      options={performers.data ?? []}
+                                      loading={performers.isLoading}
+                                      getOptionLabel={(item) => `${item.code ?? ''} - ${item.name ?? ''}`}
+                                      value={(performers.data ?? []).filter((item) =>
+                                        optionFeaturesAt(index).performerIds.includes(String(item.recId))
+                                      )}
+                                      onChange={(_, selectedPerformers) => updateOptionFeatures(index, {
+                                        performerIds: selectedPerformers.map((item) => String(item.recId)),
+                                      })}
+                                      renderInput={(params) => (
+                                        <TextField {...params} label="Performers" placeholder="Search performers" />
+                                      )}
+                                    />
+                                  </Stack>
+                                )}
+                                {optionFeaturesAt(index).showOtherControls && <TextField
+                                  fullWidth
+                                  select
+                                  size="small"
+                                  label="Show Other Controls"
+                                  value={optionFeaturesAt(index).visibleControlIds}
+                                  slotProps={{ select: { multiple: true } }}
+                                  onChange={(event) => {
+                                    const value: unknown = event.target.value;
+                                    updateOptionFeatures(index, {
+                                      visibleControlIds: Array.isArray(value)
+                                        ? value.map(String)
+                                        : String(value).split(',').filter(Boolean),
+                                    });
+                                  }}
+                                >
+                                  {d.requestControls.filter((item) => item.id !== control.id).map((item) => (
+                                    <MenuItem key={item.id} value={item.id}>
+                                      {item.label || item.code || 'Unnamed control'}
+                                    </MenuItem>
+                                  ))}
+                                </TextField>}
+                              </Stack>
+                            </AccordionDetails>
+                          </Accordion>
+                        </Stack>
+                      )}
+                    </SortableBuilderItem>
+                  ))}
+                </Stack>
+              </SortableContext>
+            </DndContext>
           </Stack>
+        </Stack>
+      );
+    }
+    if (s.controlSettingsPane === 'validation') {
+      return (
+        <Stack spacing="8px" sx={{ p: '10px' }}>
+          <SettingsTitle title={`Request Control Validation (${control.validations.length})`} dirty={s.dirty} />
+          <ValidationRules
+            values={control.validations}
+            onChange={(validations) => update({ validations })}
+          />
+        </Stack>
+      );
+    }
+    if (s.controlSettingsPane === 'transitions') {
+      return (
+        <Stack spacing="8px" sx={{ p: '10px' }}>
+          <SettingsTitle title={`Request Control Transitions (${controlTransitions.length})`} dirty={s.dirty} />
+          <TransitionRules
+            values={controlTransitions}
+            variables={d.variables}
+            steps={d.steps}
+            onAdd={() => s.addTransition({ triggerSource: 'requestControl', triggerId: control.id })}
+            onUpdate={s.updateTransition}
+            onRemove={s.removeTransition}
+          />
+        </Stack>
+      );
+    }
+    return (
+      <Stack spacing="8px" sx={{ p: '10px' }}>
+        <SettingsTitle title="Request Control" dirty={s.dirty} isNew />
+        {text(
+          'Control code',
+          `RCTL-${String(d.requestControls.indexOf(control) + 1).padStart(4, '0')}`,
+          () => undefined
         )}
-        <Box sx={settingsSwitchGridSx}>
-          <FormControlLabel
-            control={
-              <Switch
-                size="small"
-                checked={control.required}
-                onChange={(_, required) => update({ required })}
-              />
-            }
-            label="Mandatory"
+        {text('Label', control.label, (label) => update({ label }))}
+        <Stack direction="row" spacing="8px">
+          <TextField
+            fullWidth
+            size="small"
+            type="number"
+            label="Score"
+            value={control.score}
+            onChange={(event) => update({ score: Number(event.target.value) || 0 })}
           />
-          <FormControlLabel
-            control={
-              <Switch
-                size="small"
-                checked={control.uniqueKey}
-                onChange={(_, uniqueKey) => update({ uniqueKey })}
-              />
-            }
-            label="Unique Key"
+          <TextField
+            fullWidth
+            size="small"
+            type="number"
+            label="Sort order"
+            value={control.sortOrder}
+            slotProps={{ input: { readOnly: true } }}
           />
+          <TextField
+            fullWidth
+            select
+            size="small"
+            label="Width"
+            value={control.columnSpan ?? 1}
+            onChange={(event) => update({ columnSpan: Number(event.target.value) as 1 | 2 | 3 })}
+          >
+            <MenuItem value={1}>1 column</MenuItem>
+            <MenuItem value={2}>2 columns</MenuItem>
+            <MenuItem value={3}>Full row</MenuItem>
+          </TextField>
+        </Stack>
+        {control.type === 'label' && <TextField
+          size="small" type="color" label="Note color"
+          value={control.labelColor || '#7a4b00'}
+          onChange={(event) => update({ labelColor: event.target.value })}
+          slotProps={{ inputLabel: { shrink: true }, htmlInput: { 'aria-label': 'Note color' } }}
+          sx={{ '& input': { minHeight: 30, p: 0.5, cursor: 'pointer' } }}
+        />}
+        <Box sx={{ ...settingsGroupSx, display: 'flex', alignItems: 'center', py: 0.5 }}>
           <FormControlLabel
+            sx={switchRowSx}
             control={
               <Switch
                 size="small"
-                checked={control.usedAsCriteria}
-                onChange={(_, usedAsCriteria) => update({ usedAsCriteria })}
-              />
-            }
-            label="Criteria"
-          />
-          <FormControlLabel
-            control={
-              <Switch
-                size="small"
+                sx={compactSwitchSx}
                 checked={control.visible}
                 onChange={(_, visible) => update({ visible })}
               />
             }
-            label="Active"
+            label="Visible"
           />
         </Box>
+        <Stack spacing="6px">
+          {requestOptionControlTypes.has(control.type) && (
+            <Box sx={{ border: `1px solid ${tokens.border}` }}>
+              <Button
+                fullWidth
+                onClick={() => s.openControlSettings({ kind: 'requestControl', id: control.id }, 'options')}
+                sx={{ justifyContent: 'flex-start', textTransform: 'none', px: 1, py: 0.5 }}
+              >
+                <Typography sx={{ fontSize: tokens.fontSize.body, fontWeight: 700 }}>
+                  Options ({control.options.length})
+                </Typography>
+              </Button>
+              <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.5, px: 1, pb: 0.75 }}>
+                {(showAllRequestOptions ? control.options : control.options.slice(0, 4)).map((option, index) => (
+                  <Chip
+                    key={`${option}-${index}`}
+                    size="small"
+                    variant="outlined"
+                    label={option || `Option ${index + 1}`}
+                    title={option || `Option ${index + 1}`}
+                    sx={{ height: 22 }}
+                  />
+                ))}
+                {control.options.length === 0 && (
+                  <Typography sx={{ color: tokens.textMuted, fontSize: tokens.fontSize.caption }}>
+                    No options
+                  </Typography>
+                )}
+                {control.options.length > 4 && (
+                  <Chip
+                    size="small"
+                    variant="outlined"
+                    clickable
+                    label={showAllRequestOptions ? 'Show less' : `Show ${control.options.length - 4} more`}
+                    onClick={() => setShowAllRequestOptions((value) => !value)}
+                    sx={{ height: 22 }}
+                  />
+                )}
+              </Box>
+            </Box>
+          )}
+          <Box sx={{ border: `1px solid ${tokens.border}` }}>
+            <Button
+              fullWidth
+              onClick={() => s.openControlSettings({ kind: 'requestControl', id: control.id }, 'validation')}
+              sx={{ justifyContent: 'flex-start', textTransform: 'none', px: 1, py: 0.5 }}
+            >
+              <Typography sx={{ fontSize: tokens.fontSize.body, fontWeight: 700 }}>
+                Validation ({control.validations.length})
+              </Typography>
+            </Button>
+            <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.5, px: 1, pb: 0.75 }}>
+              {(showAllRequestValidations ? validationSummary : validationSummary.slice(0, 4)).map((summary, index) => (
+                <Chip
+                  key={`${summary}-${index}`}
+                  size="small"
+                  variant="outlined"
+                  label={summary}
+                  title={summary}
+                  sx={{ height: 22, color: '#7a4b00', bgcolor: '#fff3cd', borderColor: '#f0c36d' }}
+                />
+              ))}
+              {validationSummary.length === 0 && (
+                <Typography sx={{ color: tokens.textMuted, fontSize: tokens.fontSize.caption }}>
+                  No validation rules
+                </Typography>
+              )}
+              {validationSummary.length > 4 && (
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  clickable
+                  label={showAllRequestValidations ? 'Show less' : `Show ${validationSummary.length - 4} more`}
+                  onClick={() => setShowAllRequestValidations((value) => !value)}
+                  sx={{ height: 22, color: '#7a4b00', bgcolor: '#fff3cd', borderColor: '#f0c36d' }}
+                />
+              )}
+            </Box>
+          </Box>
+          <Box sx={{ border: `1px solid ${tokens.border}` }}>
+            <Button
+              fullWidth
+              onClick={() => s.openControlSettings({ kind: 'requestControl', id: control.id }, 'transitions')}
+              sx={{ justifyContent: 'flex-start', textTransform: 'none', px: 1, py: 0.5 }}
+            >
+              <Typography sx={{ fontSize: tokens.fontSize.body, fontWeight: 700 }}>
+                Transitions ({controlTransitions.length})
+              </Typography>
+            </Button>
+            <Stack spacing="2px" sx={{ px: 1, pb: 0.75 }}>
+              {(showAllRequestTransitions ? transitionSummary : transitionSummary.slice(0, 4)).map((summary, index) => (
+                <Typography
+                  key={`${summary}-${index}`}
+                  title={summary}
+                  sx={{ color: tokens.textMuted, fontSize: tokens.fontSize.caption, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                >
+                  {summary}
+                </Typography>
+              ))}
+              {transitionSummary.length === 0 && (
+                <Typography sx={{ color: tokens.textMuted, fontSize: tokens.fontSize.caption }}>
+                  No transitions
+                </Typography>
+              )}
+              {transitionSummary.length > 4 && (
+                <Button
+                  size="small"
+                  onClick={() => setShowAllRequestTransitions((value) => !value)}
+                  sx={{ alignSelf: 'flex-start', minWidth: 0, p: 0, textTransform: 'none' }}
+                >
+                  {showAllRequestTransitions ? 'Show less' : `Show ${transitionSummary.length - 4} more`}
+                </Button>
+              )}
+            </Stack>
+          </Box>
+        </Stack>
         <Button variant="contained" disabled sx={{ alignSelf: 'stretch' }}>
           Create Request Control
         </Button>
-        <ValidationRules
-          values={control.validations}
-          onChange={(validations) => update({ validations })}
-        />
-        <TransitionRules
-          values={d.transitions.filter(
-            (transition) =>
-              transition.triggerSource === 'requestControl' && transition.triggerId === control.id
-          )}
-          variables={d.variables}
-          steps={d.steps}
-          onAdd={() => s.addTransition({ triggerSource: 'requestControl', triggerId: control.id })}
-          onUpdate={s.updateTransition}
-          onRemove={s.removeTransition}
-        />
       </Stack>
     );
   }
@@ -1401,12 +1721,51 @@ export function ProcessBuilderSettingsPanel() {
   if (control && selected.kind === 'control') {
     const update = (values: Partial<typeof control>) =>
       s.updateActivityControl(selected.stepId, selected.activityId, control.id, values);
+    const controlTransitions = d.transitions.filter(
+      (transition) =>
+        transition.triggerSource === 'activity' && transition.triggerId === selected.activityId
+    );
+    if (s.controlSettingsPane === 'validation') {
+      return (
+        <Stack spacing="8px" sx={{ p: '10px' }}>
+          <SettingsTitle title={`Control Validation (${control.validations.length})`} dirty={s.dirty} />
+          <ValidationRules
+            values={control.validations}
+            onChange={(validations) => update({ validations })}
+          />
+        </Stack>
+      );
+    }
+    if (s.controlSettingsPane === 'transitions') {
+      return (
+        <Stack spacing="8px" sx={{ p: '10px' }}>
+          <SettingsTitle title={`Control Transitions (${controlTransitions.length})`} dirty={s.dirty} />
+          <TransitionRules
+            values={controlTransitions}
+            variables={d.variables}
+            steps={d.steps}
+            onAdd={() =>
+              s.addTransition({ triggerSource: 'activity', triggerId: selected.activityId })
+            }
+            onUpdate={s.updateTransition}
+            onRemove={s.removeTransition}
+          />
+        </Stack>
+      );
+    }
     return (
       <Stack spacing="8px" sx={{ p: '10px' }}>
         <SettingsTitle title="Control Settings" dirty={s.dirty} isNew />
         {text('Code', control.code, (code) => update({ code }))}
         {text('Label', control.label, (label) => update({ label }))}
         {text('Arabic label', control.labelAR, (labelAR) => update({ labelAR }))}
+        {control.type === 'label' && <TextField
+          size="small" type="color" label="Note color"
+          value={control.labelColor || '#7a4b00'}
+          onChange={(event) => update({ labelColor: event.target.value })}
+          slotProps={{ inputLabel: { shrink: true }, htmlInput: { 'aria-label': 'Note color' } }}
+          sx={{ '& input': { minHeight: 30, p: 0.5, cursor: 'pointer' } }}
+        />}
         <TextField
           select
           size="small"
@@ -1437,26 +1796,6 @@ export function ProcessBuilderSettingsPanel() {
             control={
               <Switch
                 size="small"
-                checked={control.required}
-                onChange={(_, required) => update({ required })}
-              />
-            }
-            label="Required"
-          />
-          <FormControlLabel
-            control={
-              <Switch
-                size="small"
-                checked={control.readOnly}
-                onChange={(_, readOnly) => update({ readOnly })}
-              />
-            }
-            label="ReadOnly"
-          />
-          <FormControlLabel
-            control={
-              <Switch
-                size="small"
                 checked={control.visible}
                 onChange={(_, visible) => update({ visible })}
               />
@@ -1467,23 +1806,6 @@ export function ProcessBuilderSettingsPanel() {
         <Button variant="contained" disabled sx={{ alignSelf: 'stretch' }}>
           Create Control
         </Button>
-        <ValidationRules
-          values={control.validations}
-          onChange={(validations) => update({ validations })}
-        />
-        <TransitionRules
-          values={d.transitions.filter(
-            (transition) =>
-              transition.triggerSource === 'activity' && transition.triggerId === selected.activityId
-          )}
-          variables={d.variables}
-          steps={d.steps}
-          onAdd={() =>
-            s.addTransition({ triggerSource: 'activity', triggerId: selected.activityId })
-          }
-          onUpdate={s.updateTransition}
-          onRemove={s.removeTransition}
-        />
       </Stack>
     );
   }

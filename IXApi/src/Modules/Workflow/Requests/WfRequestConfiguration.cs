@@ -21,10 +21,6 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                 .HasForeignKey(x => x.EmployeeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasOne(x => x.Attachment)
-                .WithMany()
-                .HasForeignKey(x => x.AttachmentId)
-                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

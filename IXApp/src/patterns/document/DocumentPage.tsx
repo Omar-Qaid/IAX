@@ -3,6 +3,7 @@ import { PageContainer } from '@shared/components/page/PageContainer';
 import { PageHeader } from '@shared/components/page/PageHeader';
 import { ActionPane } from '@shared/components/action-pane/ActionPane';
 import { Paper, Box, Grid } from '@mui/material';
+import { RecordAttachmentsButton, recordTableId } from '@shared/components/documents';
 
 export interface DocumentPageProps {
   title: string;
@@ -13,6 +14,8 @@ export interface DocumentPageProps {
   linesContent: React.ReactNode;
   totalsContent?: React.ReactNode;
   dialogs?: React.ReactNode;
+  refTableId?: number;
+  refRecId?: number | null;
 }
 
 export const DocumentPage: React.FC<DocumentPageProps> = ({
@@ -24,11 +27,13 @@ export const DocumentPage: React.FC<DocumentPageProps> = ({
   linesContent,
   totalsContent,
   dialogs,
+  refTableId,
+  refRecId = null,
 }) => {
   return (
     <PageContainer>
       <PageHeader title={title} subtitle={subtitle} badge={statusBadge} />
-      {actionPane && <ActionPane>{actionPane}</ActionPane>}
+      <ActionPane endActions={<RecordAttachmentsButton refTableId={refTableId ?? recordTableId(title)} refRecId={refRecId} />}>{actionPane}</ActionPane>
 
       <Paper elevation={0} sx={{ p: 1.25, mb: 1, borderRadius: 1, border: (t) => `1px solid ${t.palette.divider}` }}>
         <Box>{headerContent}</Box>

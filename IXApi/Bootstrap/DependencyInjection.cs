@@ -27,7 +27,6 @@ namespace IAX.IXApi.Bootstrap
             services.AddScoped(typeof(IBaseService<>), typeof(GenericService<>));
             
             // Infrastructure Services
-            services.AddScoped<Infrastructure.Files.ISysFileService, Infrastructure.Files.SysFileService>();
             services.AddScoped<Infrastructure.Identity.ICurrentUserService, Infrastructure.Identity.CurrentUserService>();
             services.AddScoped<Infrastructure.Persistence.Seeding.IDatabaseSeederService, Infrastructure.Persistence.Seeding.DatabaseSeederService>();
             services.AddScoped<Infrastructure.Realtime.ISysRealtimeManager, Infrastructure.Realtime.SysRealtimeManager>();
