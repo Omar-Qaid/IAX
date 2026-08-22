@@ -72,6 +72,7 @@ export function DynamicControlRenderer({
   error,
   helperText,
   preview = false,
+  onFilesChange,
 }: {
   control: RenderableControl;
   value: string;
@@ -79,6 +80,7 @@ export function DynamicControlRenderer({
   error?: boolean;
   helperText?: string;
   preview?: boolean;
+  onFilesChange?: (files: File[]) => void;
 }): React.ReactElement {
   const type = normalizeDynamicControlType(control.controlType);
   const options = control.options ?? [];
@@ -124,7 +126,7 @@ export function DynamicControlRenderer({
       {helperText && <FormHelperText>{helperText}</FormHelperText>}
     </FormControl>
   );
-  if (type === 'file') return <FileDropControl control={control} value={value} onChange={onChange} error={error} helperText={helperText} preview={preview} />;
+  if (type === 'file') return <FileDropControl control={control} value={value} onChange={onChange} onFilesChange={onFilesChange} error={error} helperText={helperText} preview={preview} />;
   if (type === 'signature') return <SignatureControl control={control} value={value} onChange={onChange} error={error} helperText={helperText} preview={preview} />;
   if (type === 'location') return <LocationControl control={control} value={value} onChange={onChange} error={error} helperText={helperText} preview={preview} />;
   if (type === 'table') return (

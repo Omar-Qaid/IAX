@@ -3,6 +3,8 @@ import { Alert, Box, Button, CircularProgress, Paper, Stack, Typography } from '
 import AssignmentOutlined from '@mui/icons-material/AssignmentOutlined';
 import { useQuery } from '@tanstack/react-query';
 import { useNotifications } from '@shared/hooks/useNotifications';
+import { documentApi } from '@shared/components/documents/documentApi';
+import { documentTableIds } from '@shared/components/documents/recordTableIds';
 import {
   dynamicRequestFormApi,
   type DynamicRequestCondition,
@@ -119,8 +121,8 @@ const initialValues = (controls: DynamicRequestControl[]): Values => Object.from
   controls.map((control) => [control.requestControlId, control.defaultValue ?? (normalized(control.controlType) === 'checkbox' ? 'false' : '')])
 );
 export interface DynamicFormHandle { submit: () => void }
-export interface DynamicFormStatus { score: number; saving: boolean; canSubmit: boolean }
-export const DynamicForm = React.forwardRef<DynamicFormHandle, { processId: number; showActions?: boolean; onStatusChange?: (status: DynamicFormStatus) => void }>(function DynamicForm({ processId, showActions = true, onStatusChange }, ref): React.ReactElement {
+export interface DynamicFormStatus { score: number; saving: boolean; canSubmit: boolean; requestId: number | null }
+export const DynamicForm = React.forwardRef<DynamicFormHandle, { processId: number; requestFiles?: File[]; showActions?: boolean; onStatusChange?: (status: DynamicFormStatus) => void }>(function DynamicForm({ processId, requestFiles = [], showActions = true, onStatusChange }, ref): React.ReactElement {
   const { notifyError, notifySuccess } = useNotifications();
   const definition = useQuery({
     queryKey: ['workflow', 'dynamic-request-form', processId],
@@ -130,12 +132,15 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, { processId: numb
   const [values, setValues] = React.useState<Values>({});
   const [errors, setErrors] = React.useState<Errors>({});
   const [optionFeatureValues, setOptionFeatureValues] = React.useState<Record<string, string>>({});
+  const [controlFiles, setControlFiles] = React.useState<Record<number, File[]>>({});
+  const [optionFiles, setOptionFiles] = React.useState<Record<string, File[]>>({});
   const [formError, setFormError] = React.useState('');
   const [saving, setSaving] = React.useState(false);
+  const [savedRequestId, setSavedRequestId] = React.useState<number | null>(null);
 
   React.useEffect(() => {
     if (!definition.data) return;
-    setErrors({}); setFormError(''); setOptionFeatureValues({});
+    setErrors({}); setFormError(''); setOptionFeatureValues({}); setControlFiles({}); setOptionFiles({}); setSavedRequestId(null);
     setValues(initialValues(definition.data.controls));
   }, [definition.data]);
 
@@ -242,8 +247,32 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, { processId: numb
             fileValue: optionFeatureValues[`${control.requestControlId}:${option.optionId}:files`] ?? '',
           }))),
       });
+      const uploads: Promise<unknown>[] = [];
+      const attachmentOwners = result.attachmentOwners ?? [];
+      for (const file of requestFiles) uploads.push(documentApi.create(documentTableIds.wfRequest, result.requestId, {
+        typeId: 'File', name: file.name, notes: 'Workflow request attachment', url: '', file,
+      }));
+      for (const [requestControlIdText, files] of Object.entries(controlFiles)) {
+        const requestControlId = Number(requestControlIdText);
+        const owner = attachmentOwners.find((item) => item.requestControlId === requestControlId && item.optionId == null);
+        if (!owner) continue;
+        for (const file of files) uploads.push(documentApi.create(documentTableIds.wfRequestDetail, owner.detailRecId, {
+          typeId: 'File', name: file.name, notes: `Request control ${requestControlId}`, url: '', file,
+        }));
+      }
+      for (const [key, files] of Object.entries(optionFiles)) {
+        const [requestControlId, optionId] = key.split(':').map(Number);
+        const owner = attachmentOwners.find((item) => item.requestControlId === requestControlId && item.optionId === optionId);
+        if (!owner) continue;
+        for (const file of files) uploads.push(documentApi.create(documentTableIds.wfRequestDetail, owner.detailRecId, {
+          typeId: 'File', name: file.name, notes: `Request option ${optionId}`, url: '', file,
+        }));
+      }
+      const uploadResults = await Promise.allSettled(uploads);
+      const failedUploads = uploadResults.filter((item) => item.status === 'rejected').length;
+      setSavedRequestId(result.requestId);
       notifySuccess(`Request ${result.code ?? result.requestId} submitted successfully. Score: ${result.score}.`);
-      setValues(initialValues(definition.data?.controls ?? [])); setErrors({}); setOptionFeatureValues({});
+      if (failedUploads > 0) notifyError(`The request was saved, but ${failedUploads} attachment${failedUploads === 1 ? '' : 's'} could not be uploaded.`);
     } catch (reason) {
       const message = reason instanceof Error ? reason.message : String(reason);
       setFormError(message); notifyError(message);
@@ -253,8 +282,8 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, { processId: numb
   submitRef.current = submit;
   React.useImperativeHandle(ref, () => ({ submit: () => { void submitRef.current(); } }), []);
   React.useEffect(() => {
-    onStatusChange?.({ score, saving, canSubmit: inputControls.length > 0 });
-  }, [inputControls.length, onStatusChange, saving, score]);
+    onStatusChange?.({ score, saving, canSubmit: inputControls.length > 0 && savedRequestId == null, requestId: savedRequestId });
+  }, [inputControls.length, onStatusChange, savedRequestId, saving, score]);
 
   if (definition.isLoading) return <Box sx={{ py: 6, display: 'grid', placeItems: 'center' }}><CircularProgress aria-label="Loading request form" /></Box>;
   if (definition.isError) return <Alert severity="error">{definition.error instanceof Error ? definition.error.message : 'Unable to load the request form.'}</Alert>;
@@ -284,6 +313,8 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, { processId: numb
         control={{ label: 'Supporting document', hideLabel: true, compact: true, required: true, controlType: 'file' }}
         value={optionFeatureValues[`${featureKey}:files`] ?? ''}
         onChange={(value) => setOptionFeatureValues((current) => ({ ...current, [`${featureKey}:files`]: value }))}
+        onFilesChange={(files) => setOptionFiles((current) => ({ ...current, [featureKey]: files }))}
+        preview={savedRequestId != null}
       />}
     </Stack>;
   };
@@ -306,7 +337,8 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, { processId: numb
     }} value={values[control.requestControlId] ?? ''} onChange={(value) => {
       setValues((current) => ({ ...current, [control.requestControlId]: value }));
       setErrors((current) => { const next = { ...current }; delete next[control.requestControlId]; return next; });
-    }} error={Boolean(errors[control.requestControlId])} helperText={errors[control.requestControlId]} />
+    }} onFilesChange={(files) => setControlFiles((current) => ({ ...current, [control.requestControlId]: files }))}
+      preview={savedRequestId != null} error={Boolean(errors[control.requestControlId])} helperText={errors[control.requestControlId]} />
     {activeOptions.filter((option) => !externalizeFullRows || !usesFullDependencyRow(option)).map((option) => renderDependency(control, option, nextAncestors, false))}
   </Box>;
   };

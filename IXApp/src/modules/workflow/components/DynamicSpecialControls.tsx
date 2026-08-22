@@ -90,19 +90,21 @@ export const readFileMetadata = (value: string): FileMetadata[] => {
   } catch { return []; }
 };
 
-export function FileDropControl({ control, value, onChange, error, helperText, preview }: {
+export function FileDropControl({ control, value, onChange, onFilesChange, error, helperText, preview }: {
   control: RenderableControl;
   value: string;
   onChange: (value: string) => void;
   error?: boolean;
   helperText?: string;
   preview?: boolean;
+  onFilesChange?: (files: File[]) => void;
 }) {
   const inputRef = React.useRef<HTMLInputElement>(null);
   const previewUrlsRef = React.useRef<string[]>([]);
   const [dragging, setDragging] = React.useState(false);
   const [localError, setLocalError] = React.useState('');
   const [previewUrls, setPreviewUrls] = React.useState<Array<string | null>>([]);
+  const [selectedFiles, setSelectedFiles] = React.useState<File[]>([]);
   const validations = control.validations ?? [];
   const metadata = readFileMetadata(value);
   const [previewIndex, setPreviewIndex] = React.useState<number | null>(null);
@@ -134,6 +136,7 @@ export function FileDropControl({ control, value, onChange, error, helperText, p
     previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
     previewUrlsRef.current = [];
     setPreviewUrls([]);
+    setSelectedFiles([]);
   }, [value]);
 
   const selectFiles = (incoming: File[]) => {
@@ -156,6 +159,9 @@ export function FileDropControl({ control, value, onChange, error, helperText, p
     updatePreviewUrls(files, multiple);
     const selected = files.map((file) => ({ name: file.name, size: file.size, type: file.type }));
     const nextMetadata = multiple ? [...metadata, ...selected] : selected;
+    const nextFiles = multiple ? [...selectedFiles, ...files] : files;
+    setSelectedFiles(nextFiles);
+    onFilesChange?.(nextFiles);
     onChange(JSON.stringify(nextMetadata.map((file) => ({ n: file.name, s: file.size, t: file.type }))));
   };
   const remove = (index: number) => {
@@ -164,6 +170,9 @@ export function FileDropControl({ control, value, onChange, error, helperText, p
     const nextPreviews = previewUrls.filter((_, itemIndex) => itemIndex !== index);
     previewUrlsRef.current = nextPreviews.filter((url): url is string => Boolean(url));
     setPreviewUrls(nextPreviews);
+    const nextFiles = selectedFiles.filter((_, itemIndex) => itemIndex !== index);
+    setSelectedFiles(nextFiles);
+    onFilesChange?.(nextFiles);
     setPreviewIndex((current) => current === index ? null : current != null && current > index ? current - 1 : current);
     onChange(JSON.stringify(metadata.filter((_, itemIndex) => itemIndex !== index).map((file) => ({ n: file.name, s: file.size, t: file.type }))));
   };
@@ -173,6 +182,8 @@ export function FileDropControl({ control, value, onChange, error, helperText, p
     setPreviewUrls([]);
     setPreviewIndex(null);
     setLocalError('');
+    setSelectedFiles([]);
+    onFilesChange?.([]);
     onChange('[]');
   };
   const canEdit = !preview && !control.readOnly;

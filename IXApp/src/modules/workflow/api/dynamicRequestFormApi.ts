@@ -9,7 +9,8 @@ export interface DynamicRequestCondition { sourceControlId: number; operator: st
 export interface DynamicRequestControl { requestControlId: number; controlId: number; code: string; label: string; labelAr: string | null; labelColor: string | null; controlType: string; sortOrder: number; columnSpan?: number; score: number; required: boolean; readOnly: boolean; uniqueKey: boolean; usedAsCriteria: boolean; defaultValue: string | null; visibilityCondition: DynamicRequestCondition | null; options: DynamicRequestOption[]; validations: DynamicRequestValidation[] }
 export interface DynamicRequestFormDefinition { processId: number; processName: string; processDescription: string | null; controls: DynamicRequestControl[] }
 export interface DynamicRequestSubmit { processId: number; values: Array<{ requestControlId: number; value: string }>; optionFeatureValues: Array<{ optionId: number; fileValue: string }> }
-export interface DynamicRequestSubmitResult { requestId: number; code: string | null; score: number }
+export interface DynamicRequestAttachmentOwner { requestControlId: number; optionId: number | null; detailRecId: number }
+export interface DynamicRequestSubmitResult { requestId: number; code: string | null; score: number; attachmentOwners: DynamicRequestAttachmentOwner[] }
 
 const requireData = <T>(response: ApiResponse<T>): T => {
   if (!response.success || response.data == null) throw new ApiError(response.message || 'The dynamic request response did not contain data.', 500);

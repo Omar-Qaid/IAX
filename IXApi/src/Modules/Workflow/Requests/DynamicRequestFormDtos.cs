@@ -94,6 +94,14 @@ public sealed class SubmitDynamicRequestResultDto
     public long RequestId { get; set; }
     public string? Code { get; set; }
     public decimal Score { get; set; }
+    public List<DynamicRequestAttachmentOwnerDto> AttachmentOwners { get; set; } = [];
+}
+
+public sealed class DynamicRequestAttachmentOwnerDto
+{
+    public long RequestControlId { get; set; }
+    public long? OptionId { get; set; }
+    public long DetailRecId { get; set; }
 }
 
 public sealed class DynamicRequestValidationException(List<ValidationResult> errors)

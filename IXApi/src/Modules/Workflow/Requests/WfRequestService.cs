@@ -231,16 +231,20 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                     await OnBeforeAddAsync(request, cancellationToken);
                     await _unitOfWork.Repository<WfRequest>().AddAsync(request, cancellationToken);
                     await _unitOfWork.CompleteAsync(cancellationToken);
-                    var details = scored.Select(item => new WfRequestDetail
+                    var controlDetails = scored.Select(item => new
                     {
-                        ProcessId = submission.ProcessId, RequestId = request.RecId,
-                        ControlId = item.Control.ControlId, ControlDataId = item.Control.RequestControlId,
-                        ControlLabel = item.Control.Label, ControlLabelAR = item.Control.LabelAr ?? item.Control.Label,
-                        ControlValue = item.Value, ControlValueAR = item.Value, ControlValueEN = item.Value,
-                        UsedAsCriteria = item.Control.UsedAsCriteria, SortOrder = item.Control.SortOrder,
-                        Score = item.Score, DataAreaId = request.DataAreaId
+                        item.Control.RequestControlId,
+                        Detail = new WfRequestDetail
+                        {
+                            ProcessId = submission.ProcessId, RequestId = request.RecId,
+                            ControlId = item.Control.ControlId, ControlDataId = item.Control.RequestControlId,
+                            ControlLabel = item.Control.Label, ControlLabelAR = item.Control.LabelAr ?? item.Control.Label,
+                            ControlValue = item.Value, ControlValueAR = item.Value, ControlValueEN = item.Value,
+                            UsedAsCriteria = item.Control.UsedAsCriteria, SortOrder = item.Control.SortOrder,
+                            Score = item.Score, DataAreaId = request.DataAreaId
+                        }
                     }).ToList();
-                    details.AddRange(selectedOptionContexts
+                    var optionDetails = selectedOptionContexts
                         .Where(item => item.Option.FeatureConfiguration.RequireFileUpload &&
                             featureValues.TryGetValue(item.Option.OptionId, out var fileValue) && !IsEmpty(fileValue))
                         .Select(item =>
@@ -248,16 +252,23 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                             var fileValue = featureValues[item.Option.OptionId];
                             var label = $"{item.Control.Label} - {item.Option.Label} file upload";
                             if (label.Length > 255) label = label[..255];
-                            return new WfRequestDetail
+                            return new
                             {
-                                ProcessId = submission.ProcessId, RequestId = request.RecId,
-                                ControlId = item.Control.ControlId, ControlDataId = null,
-                                ControlLabel = label, ControlLabelAR = label,
-                                ControlValue = fileValue, ControlValueAR = fileValue, ControlValueEN = fileValue,
-                                UsedAsCriteria = false, SortOrder = item.Control.SortOrder,
-                                Score = 0, DataAreaId = request.DataAreaId
+                                item.Control.RequestControlId,
+                                item.Option.OptionId,
+                                Detail = new WfRequestDetail
+                                {
+                                    ProcessId = submission.ProcessId, RequestId = request.RecId,
+                                    ControlId = item.Control.ControlId, ControlDataId = item.Option.OptionId,
+                                    ControlLabel = label, ControlLabelAR = label,
+                                    ControlValue = fileValue, ControlValueAR = fileValue, ControlValueEN = fileValue,
+                                    UsedAsCriteria = false, SortOrder = item.Control.SortOrder,
+                                    Score = 0, DataAreaId = request.DataAreaId
+                                }
                             };
-                        }));
+                        }).ToList();
+                    var details = controlDetails.Select(item => item.Detail)
+                        .Concat(optionDetails.Select(item => item.Detail)).ToList();
                     await _unitOfWork.Repository<WfRequestDetail>().AddRangeAsync(details, cancellationToken);
                     await _unitOfWork.CompleteAsync(cancellationToken);
                     var alertOptions = selectedOptionContexts
@@ -291,7 +302,22 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                         }
                     }
                     await _unitOfWork.CommitTransactionAsync(cancellationToken);
-                    return new SubmitDynamicRequestResultDto { RequestId = request.RecId, Code = request.Code, Score = request.Score };
+                    return new SubmitDynamicRequestResultDto
+                    {
+                        RequestId = request.RecId,
+                        Code = request.Code,
+                        Score = request.Score,
+                        AttachmentOwners = controlDetails.Select(item => new DynamicRequestAttachmentOwnerDto
+                        {
+                            RequestControlId = item.RequestControlId,
+                            DetailRecId = item.Detail.RecId
+                        }).Concat(optionDetails.Select(item => new DynamicRequestAttachmentOwnerDto
+                        {
+                            RequestControlId = item.RequestControlId,
+                            OptionId = item.OptionId,
+                            DetailRecId = item.Detail.RecId
+                        })).ToList()
+                    };
                 }
                 catch
                 {
