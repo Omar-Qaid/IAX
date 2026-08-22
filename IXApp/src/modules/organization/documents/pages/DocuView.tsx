@@ -64,7 +64,9 @@ function DocumentPreview({ record }: { record: DocuViewRecord }): React.ReactEle
     return () => URL.revokeObjectURL(next);
   }, [preview.data]);
   if (record.kind === 'Note') return <Typography sx={{ whiteSpace: 'pre-wrap', fontSize: 12 }}>{record.notes || 'No note content.'}</Typography>;
-  if (record.kind === 'URL') return <Button href={record.url ?? undefined} target="_blank" rel="noreferrer">Open URL</Button>;
+  if (record.kind === 'URL') return record.url
+    ? <Button component="a" href={record.url} target="_blank" rel="noreferrer">Open URL</Button>
+    : <Typography sx={{ color: 'text.secondary', fontSize: 12 }}>No URL is available.</Typography>;
   if (preview.isLoading) return <CircularProgress size={22} />;
   if (!url || preview.isError) return <Typography sx={{ color: 'text.secondary', fontSize: 12 }}>Preview is not available.</Typography>;
   if (record.contentType?.startsWith('image/')) return <Box component="img" src={url} alt={record.name} sx={{ maxWidth: '100%', maxHeight: 420, objectFit: 'contain' }} />;
@@ -138,6 +140,7 @@ export function DocuView(): React.ReactElement {
       { id: 'open', label: 'Open', requiresSelection: true, onClick: (record) => { if (record) void documentApi.preview({ ...record, id: record.documentId }); } },
       { id: 'history', label: 'View history', disabled: true },
       { id: 'deleted', label: 'Deleted attachments', disabled: true },
+      { id: 'created-by', label: 'Created by', disabled: true },
       { id: 'settings', label: 'Settings', disabled: true },
       { id: 'references', label: 'References', disabled: true },
       { id: 'options', label: 'Options', disabled: true },
