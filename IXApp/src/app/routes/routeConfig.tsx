@@ -13,6 +13,9 @@ import { AppAccessDeniedState } from './AppAccessDeniedState';
 const LoginPage = lazy(() =>
   import('@modules/identity/pages/LoginPage').then((module) => ({ default: module.LoginPage }))
 );
+const DocuView = lazy(() =>
+  import('@modules/organization/documents/pages/DocuView').then((module) => ({ default: module.DocuView }))
+);
 
 const LoginRoutePage = () => {
   const navigate = useNavigate();
@@ -91,6 +94,10 @@ export const appRoutes: RouteObject[] = [
           ]
         : []),
       ...pageRoutes,
+      {
+        path: ROUTE_PATHS.DOCU_VIEW,
+        element: <RouteGuard>{load(<DocuView />)}</RouteGuard>,
+      },
       { path: ROUTE_PATHS.ACCESS_DENIED, element: <AccessDeniedPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],

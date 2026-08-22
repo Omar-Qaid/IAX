@@ -122,19 +122,19 @@ export function DocuView(): React.ReactElement {
     }),
     setValues: (record, values) => ({ ...record, notes: String(values.notes ?? ''), restriction: Number(values.restriction ?? 0) }),
     headerFields: [
-      { id: 'name', label: 'Description', getValue: (record) => record.name, setValue: (record, value) => ({ ...record, name: String(value) }), width: 220 },
-      { id: 'typeId', label: 'Type', type: 'select', options: typeOptions, getValue: (record) => record.typeId, setValue: (record, value) => { const selected = types.data?.find((type) => type.typeId === String(value)); return { ...record, typeId: String(value), documentTypeName: selected?.name ?? String(value), typeGroup: selected?.typeGroup ?? record.typeGroup, kind: selected?.kind ?? record.kind }; }, width: 165, linkStyle: true },
+      { id: 'name', label: 'Description', getValue: (record) => record.name, setValue: (record, value) => ({ ...record, name: String(value) }), width: 'minmax(320px, 520px)' },
+      { id: 'typeId', label: 'Type', type: 'select', options: typeOptions, getValue: (record) => record.typeId, setValue: (record, value) => { const selected = types.data?.find((type) => type.typeId === String(value)); return { ...record, typeId: String(value), documentTypeName: selected?.name ?? String(value), typeGroup: selected?.typeGroup ?? record.typeGroup, kind: selected?.kind ?? record.kind }; }, width: 180, linkStyle: true },
       { id: 'attached', label: 'Attached', type: 'boolean', disabled: true, getValue: () => true, setValue: (record) => record, width: 115 },
     ],
     sections: ({ record, editing, onRecordChange }) => [
-      { id: 'general', title: 'General', visualVariant: 'legalEntity', minHeight: 245, groups: [
+      { id: 'general', title: 'General', groups: [
         { id: 'details', title: 'DETAILS', fields: [{ name: 'notes', label: 'Notes', multiline: true, rows: 5, width: 220 }] },
         { id: 'create', title: 'CREATE', fields: [{ name: 'createdBy', label: 'Created by', type: 'display', width: 220 }, { name: 'createdAt', label: 'Created date and time', type: 'display', width: 220 }] },
         { id: 'restriction', fields: [{ name: 'restriction', label: 'Restriction', type: 'select', width: 165, options: [{ value: '0', label: 'Internal' }, { value: '1', label: 'External' }] }] },
       ] },
-      { id: 'attachment', title: 'Attachment', visualVariant: 'legalEntity', minHeight: 225, content: <AttachmentDetails record={record} editing={editing} onChange={onRecordChange} /> },
-      { id: 'preview', title: 'Preview', visualVariant: 'legalEntity', defaultExpanded: true, content: <DocumentPreview record={record} /> },
-      { id: 'more-details', title: 'More details', visualVariant: 'legalEntity', groups: [{ id: 'identification', title: 'IDENTIFICATION', fields: [{ name: 'typeId', label: 'Type', type: 'display', linkStyle: true, width: 165 }, { name: 'company', label: 'Company account', type: 'display', linkStyle: true, width: 165 }] }] },
+      { id: 'attachment', title: 'Attachment', content: <AttachmentDetails record={record} editing={editing} onChange={onRecordChange} /> },
+      { id: 'preview', title: 'Preview', defaultExpanded: true, content: <DocumentPreview record={record} /> },
+      { id: 'more-details', title: 'More details', groups: [{ id: 'identification', title: 'IDENTIFICATION', fields: [{ name: 'typeId', label: 'Type', type: 'display', linkStyle: true, width: 165 }, { name: 'company', label: 'Company account', type: 'display', linkStyle: true, width: 165 }] }] },
     ],
     commands: [
       { id: 'open', label: 'Open', requiresSelection: true, onClick: (record) => { if (record) void documentApi.preview({ ...record, id: record.documentId }); } },
@@ -147,7 +147,11 @@ export function DocuView(): React.ReactElement {
     ],
     showAttachmentAction: false,
     viewLabel: 'Standard view', filterLabel: 'Filter', yesLabel: 'Yes', noLabel: 'No',
-    presentation: { mode: 'list', listWidth: 282, listMinWidth: 220, listMaxWidth: 420, fullscreenCanvas: true, compactRecordHeader: true },
+    advancedFilter: {
+      fieldLabel: 'Description',
+      getValue: (record) => record.name,
+      matches: (record, value) => `${record.name} ${record.fileName ?? ''} ${record.documentTypeName}`.toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()),
+    },
     validate: (record) => {
       const errors: Record<string, string> = {};
       if (record.kind === 'Note' && (!record.name.trim() || !record.notes?.trim())) errors.notes = 'Subject and note are required.';

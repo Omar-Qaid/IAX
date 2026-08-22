@@ -23,7 +23,6 @@ const processIcon = (index: number) => {
 
 function CategoryRequestForm({ category }: { category: WfCategoryRecord }) {
   const navigate = useNavigate();
-  const [selectedProcessId, setSelectedProcessId] = React.useState(0);
   const processes = useQuery({
     queryKey: ['workflow', 'request-submission-processes', category.recId],
     queryFn: async ({ signal }) =>
@@ -39,19 +38,14 @@ function CategoryRequestForm({ category }: { category: WfCategoryRecord }) {
         {processes.isLoading ? <CircularProgress size={22} aria-label="Loading request types" /> : (
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 1.25 }}>
             {(processes.data ?? []).map((process, index) => {
-              const selected = selectedProcessId === process.recId;
               return (
                 <Button
                   key={process.id}
                   variant="outlined"
-                  aria-pressed={selected}
-                  onClick={() => {
-                    setSelectedProcessId(process.recId);
-                  }}
+                  onClick={() => navigate(WORKFLOW_ROUTE_PATHS.requestFrom(category.recId, process.recId))}
                   sx={{ minHeight: 112, p: 1.5, display: 'flex', flexDirection: 'column', gap: 0.75,
-                    borderColor: selected ? 'primary.main' : 'divider',
-                    bgcolor: selected ? 'rgba(99, 91, 255, 0.08)' : '#fff',
-                    color: selected ? 'primary.main' : 'text.primary', textTransform: 'none' }}
+                    borderColor: 'divider', bgcolor: '#fff', color: 'text.primary', textTransform: 'none',
+                    '&:hover': { borderColor: 'primary.main', bgcolor: 'rgba(99, 91, 255, 0.08)', color: 'primary.main' } }}
                 >
                   {processIcon(index)}
                   <Typography sx={{ fontWeight: 700, textAlign: 'center' }}>{process.name || process.code}</Typography>
@@ -65,13 +59,6 @@ function CategoryRequestForm({ category }: { category: WfCategoryRecord }) {
           <Typography color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>No active request types are available in this category.</Typography>
         )}
       </Box>
-      {(processes.data ?? []).length > 0 && <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 0.5 }}>
-        <Button variant="contained" disabled={!selectedProcessId}
-          onClick={() => navigate(WORKFLOW_ROUTE_PATHS.requestFrom(category.recId, selectedProcessId))}
-          sx={{ minWidth: 168, height: 40, fontWeight: 700 }}>
-          Submit Request
-        </Button>
-      </Box>}
     </Stack>
   );
 }
@@ -108,6 +95,7 @@ export function RequestSubmissionPage(): React.ReactElement {
       defaultExpanded: true, content: <CategoryRequestForm key={record.id} category={record} /> }],
     advancedFilter: { fieldLabel: 'Category', getValue: (category) => category.name,
       matches: (category, value) => (category.name ?? '').toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()) },
+    showAttachmentAction: false,
   };
   return <ListDetailsPage variant="enterprise" title="Request Submission" config={config} />;
 }

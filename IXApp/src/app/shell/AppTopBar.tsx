@@ -25,7 +25,6 @@ import SearchIcon from '@mui/icons-material/Search';
 import NotificationsIcon from '@mui/icons-material/NotificationsNoneOutlined';
 import SettingsIcon from '@mui/icons-material/Settings';
 import HelpIcon from '@mui/icons-material/HelpOutlined';
-import FeedbackIcon from '@mui/icons-material/SentimentSatisfiedAltOutlined';
 import AccountIcon from '@mui/icons-material/AccountCircle';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -41,6 +40,8 @@ import { LAYOUT } from '@app/configuration/constants';
 import { useAppStore } from '@app/store/useAppStore';
 import { topBarTokens as topBar } from './topBarTokens';
 import { useNotificationStore } from '@shared/services/notificationStore';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { legalEntityApiRepository } from '@modules/organization/api/legalEntityApiRepository';
 import { getRouteBreadcrumbs } from '@app/routes/routeMetadata';
 
 // Static sx objects - moved outside render to prevent re-creation
@@ -105,6 +106,7 @@ const badgeSx = {
 
 export const AppTopBar: React.FC = memo(() => {
   const theme = useTheme();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
@@ -118,6 +120,7 @@ export const AppTopBar: React.FC = memo(() => {
   const setSidebarOpen = useNavigationStore((s) => s.setSidebarOpen);
   const navLayout = usePreferenceStore((s) => s.navLayout);
   const currentCompany = useAppStore((s) => s.currentCompany);
+  const setCompany = useAppStore((s) => s.setCompany);
   const notificationCount = useNotificationStore((s) => s.notifications.length);
 
   // Auth & Permissions
@@ -127,6 +130,15 @@ export const AppTopBar: React.FC = memo(() => {
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const isMenuOpen = Boolean(anchorEl);
+  const [companyAnchorEl, setCompanyAnchorEl] = useState<null | HTMLElement>(null);
+  const legalEntities = useQuery({
+    queryKey: ['legal-entities', 'company-switcher'],
+    queryFn: ({ signal }) => legalEntityApiRepository.list(signal),
+    staleTime: 60_000,
+  });
+  const selectedLegalEntity = legalEntities.data?.find(
+    (entity) => entity.dataArea.toLocaleUpperCase() === currentCompany.toLocaleUpperCase()
+  );
 
   const [activeModule, setActiveModule] = useState<string | null>(null);
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
@@ -143,6 +155,12 @@ export const AppTopBar: React.FC = memo(() => {
     handleMenuClose();
     void logout();
   }, [logout, handleMenuClose]);
+
+  const handleCompanyChange = useCallback((companyCode: string) => {
+    setCompany(companyCode);
+    setCompanyAnchorEl(null);
+    void queryClient.invalidateQueries();
+  }, [queryClient, setCompany]);
 
   const handleModuleClick = useCallback(
     (event: React.MouseEvent<HTMLElement>, moduleId: string) => {
@@ -200,7 +218,7 @@ export const AppTopBar: React.FC = memo(() => {
           <IconButton size="small" onClick={openSidebar} sx={hamburgerSx}>
             <MenuIcon sx={{ fontSize: topBar.iconSize }} />
           </IconButton>
-          <IconButton size="small" sx={waffleSx} aria-label={t('nav.app_launcher', 'App launcher')}>
+          <IconButton size="small" onClick={openSidebar} sx={waffleSx} aria-label={t('nav.app_launcher', 'App launcher')}>
             <WaffleIcon sx={{ fontSize: 24 }} />
           </IconButton>
         </Box>
@@ -209,7 +227,7 @@ export const AppTopBar: React.FC = memo(() => {
           sx={{
             width: { sm: topBar.productWidth },
             height: topBar.height,
-            px: '27px',
+            px: '15px',
             display: { xs: 'none', sm: 'flex' },
             alignItems: 'center',
             flexShrink: 0,
@@ -222,49 +240,13 @@ export const AppTopBar: React.FC = memo(() => {
         </Box>
 
         {!isHorizontal && !isMobile && breadcrumbs.length > 0 && (
-          <Box
-            component="nav"
-            aria-label={t('common.breadcrumbs', 'Breadcrumbs')}
-            sx={{
-              height: topBar.height,
-              display: 'flex',
-              alignItems: 'center',
-              minWidth: 0,
-              maxWidth: { md: 620, xl: 820 },
-              px: '44px',
-              gap: 1.25,
-              flexShrink: 1,
-              overflow: 'hidden',
-            }}
-          >
-            {breadcrumbs.map((item, index) => (
-              <React.Fragment key={`${item.labelKey}-${index}`}>
-                {index > 0 && (
-                  <ChevronRightIcon sx={{ fontSize: 27, color: topBar.text, flexShrink: 0 }} />
-                )}
-                <Typography
-                  component={item.path ? 'button' : 'span'}
-                  onClick={item.path ? () => navigate(item.path!) : undefined}
-                  noWrap
-                  sx={{
-                    appearance: 'none',
-                    border: 0,
-                    bgcolor: 'transparent',
-                    p: 0,
-                    color: topBar.text,
-                    fontFamily: topBar.fontFamily,
-                    fontSize: 16,
-                    fontWeight: 400,
-                    cursor: item.path ? 'pointer' : 'default',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    '&:hover': item.path ? { textDecoration: 'underline' } : undefined,
-                  }}
-                >
-                  {t(item.labelKey)}
-                </Typography>
-              </React.Fragment>
-            ))}
+          <Box component="nav" aria-label={t('common.breadcrumbs', 'Breadcrumbs')} sx={{ height: topBar.height, display: 'flex', alignItems: 'center', minWidth: 0, maxWidth: { md: 260, xl: 390 }, px: 1.5, gap: 0.5, flexShrink: 1, overflow: 'hidden' }}>
+            {breadcrumbs.map((item, index) => <React.Fragment key={`${item.labelKey}-${index}`}>
+              {index > 0 && <ChevronRightIcon sx={{ fontSize: 17, color: topBar.mutedText, flexShrink: 0 }} />}
+              <Typography component={item.path ? 'button' : 'span'} onClick={item.path ? () => navigate(item.path!) : undefined} noWrap sx={{ appearance: 'none', border: 0, bgcolor: 'transparent', p: 0, color: topBar.text, fontFamily: topBar.fontFamily, fontSize: 12, cursor: item.path ? 'pointer' : 'default', overflow: 'hidden', textOverflow: 'ellipsis', '&:hover': item.path ? { textDecoration: 'underline' } : undefined }}>
+                {t(item.labelKey)}
+              </Typography>
+            </React.Fragment>)}
           </Box>
         )}
 
@@ -337,31 +319,66 @@ export const AppTopBar: React.FC = memo(() => {
           </Box>
         )}
 
-        <Box sx={{ flex: 1, minWidth: 8 }} />
+        <Box sx={{ flex: 1, minWidth: 40, px: { xs: 0.5, md: 2 }, display: 'flex', justifyContent: 'center' }}>
+          <Button
+            onClick={openCommandPalette}
+            startIcon={<SearchIcon sx={{ fontSize: 18 }} />}
+            aria-label={t('nav.global_search', 'Search for a page')}
+            sx={{ display: { xs: 'none', md: 'flex' }, width: 'min(100%, 510px)', height: 30, justifyContent: 'flex-start', px: 1.5, color: '#fff', bgcolor: topBar.searchBackground, borderRadius: '3px', textTransform: 'none', fontFamily: topBar.fontFamily, fontSize: 13, fontWeight: 400, '&:hover': { bgcolor: '#36557f' }, '& .MuiButton-startIcon': { mr: 1, color: '#fff' } }}
+          >
+            {t('nav.global_search', 'Search for a page')}
+          </Button>
+        </Box>
 
         {/* Action icons */}
         <Box sx={actionsSx}>
-          <Box
+          <Button
+            onClick={(event) => setCompanyAnchorEl(event.currentTarget)}
+            aria-label={t('common.company', 'Company')}
+            aria-controls={companyAnchorEl ? 'company-menu' : undefined}
+            aria-haspopup="true"
+            aria-expanded={companyAnchorEl ? 'true' : undefined}
             sx={{
               display: { xs: 'none', lg: 'flex' },
               alignItems: 'center',
-              height: topBar.height,
-              px: 1.75,
-              bgcolor: 'transparent',
-              color: topBar.text,
+              height: 30,
+              maxWidth: 290,
+              px: 1,
+              mx: 0.5,
+              bgcolor: '#f3f7ff',
+              color: '#003b78',
               fontFamily: topBar.fontFamily,
+              textTransform: 'none',
+              borderRadius: '3px',
+              border: '1px solid #c7d7ee',
+              '&:hover': { bgcolor: '#fff' },
             }}
           >
-            <Typography noWrap sx={{ fontFamily: 'inherit', fontSize: 16, color: 'inherit' }}>
-              {currentCompany}{user?.defaultCompany && user.defaultCompany !== currentCompany ? ` | ${user.defaultCompany}` : ''}
+            <Typography noWrap sx={{ fontFamily: 'inherit', fontSize: 12, color: 'inherit' }}>
+              {currentCompany}{selectedLegalEntity?.name ? ` | ${selectedLegalEntity.name}` : ''}
             </Typography>
-          </Box>
+          </Button>
 
-          <Tooltip title={t('nav.global_search', 'Search for a page')}>
-            <IconButton size="small" onClick={openCommandPalette} sx={iconBtnSx} aria-label={t('nav.global_search', 'Search for a page')}>
-              <SearchIcon sx={{ fontSize: 27 }} />
-            </IconButton>
-          </Tooltip>
+          <Menu
+            id="company-menu"
+            anchorEl={companyAnchorEl}
+            open={Boolean(companyAnchorEl)}
+            onClose={() => setCompanyAnchorEl(null)}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+            slotProps={{ paper: { sx: { mt: 0.25, minWidth: 380, maxHeight: 360, borderRadius: 0, border: 1, borderColor: 'divider' } } }}
+          >
+            {legalEntities.isLoading && <MenuItem disabled>{t('common.loading', 'Loading...')}</MenuItem>}
+            {legalEntities.isError && <MenuItem disabled>{t('errors.generic', 'Unable to load legal entities.')}</MenuItem>}
+            {(legalEntities.data ?? []).map((entity) => {
+              const selected = entity.dataArea.toLocaleUpperCase() === currentCompany.toLocaleUpperCase();
+              return <MenuItem key={entity.recId} selected={selected} onClick={() => handleCompanyChange(entity.dataArea)} sx={{ display: 'grid', gridTemplateColumns: '88px minmax(210px, 1fr)', gap: 1.5, borderInlineStart: selected ? 3 : 0, borderInlineStartColor: 'primary.main', '&.Mui-selected': { bgcolor: '#d4e0f7' } }}>
+                <Typography noWrap sx={{ fontSize: 13, color: selected ? 'primary.main' : 'text.primary' }}>{entity.dataArea}</Typography>
+                <Typography noWrap sx={{ fontSize: 13 }}>{entity.name}</Typography>
+              </MenuItem>;
+            })}
+            {!legalEntities.isLoading && !legalEntities.isError && !legalEntities.data?.length && <MenuItem disabled>{t('common.noData', 'No legal entities found.')}</MenuItem>}
+          </Menu>
 
           {/* Notifications */}
           <Tooltip title={t('common.notifications', 'Notifications')}>
@@ -369,12 +386,6 @@ export const AppTopBar: React.FC = memo(() => {
               <Badge badgeContent={notificationCount} max={99} sx={badgeSx}>
                 <NotificationsIcon sx={{ fontSize: topBar.iconSize }} />
               </Badge>
-            </IconButton>
-          </Tooltip>
-
-          <Tooltip title={t('common.feedback', 'Feedback')}>
-            <IconButton size="small" sx={iconBtnSx} aria-label={t('common.feedback', 'Feedback')}>
-              <FeedbackIcon sx={{ fontSize: 22 }} />
             </IconButton>
           </Tooltip>
 
@@ -397,7 +408,7 @@ export const AppTopBar: React.FC = memo(() => {
             <IconButton
               size="small"
               sx={{
-                width: 60,
+                width: 48,
                 height: topBar.height,
                 borderInlineStart: `1px solid ${topBar.divider}`,
                 borderRadius: 0,
