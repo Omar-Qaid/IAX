@@ -194,6 +194,8 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
         getPrimaryText={config.getPrimaryText}
         getSecondaryText={config.getSecondaryText}
         batchSize={config.presentation?.recordListBatchSize}
+        headerContent={config.presentation?.headerContent}
+        rowHeight={config.presentation?.masterRowHeight}
         onQueryChange={state.setQuery}
         onSelect={state.choose}
       />
@@ -429,6 +431,8 @@ export function RecordList<T extends ListDetailRecord>({
   getPrimaryText,
   getSecondaryText,
   batchSize = 30,
+  headerContent,
+  rowHeight = 67,
   onQueryChange,
   onSelect,
 }: {
@@ -441,6 +445,8 @@ export function RecordList<T extends ListDetailRecord>({
   getPrimaryText: (record: T) => string;
   getSecondaryText?: (record: T) => string;
   batchSize?: number;
+  headerContent?: React.ReactNode;
+  rowHeight?: number;
   onQueryChange: (value: string) => void;
   onSelect: (record: T) => void;
 }) {
@@ -477,6 +483,7 @@ export function RecordList<T extends ListDetailRecord>({
 
   return (
     <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+      {headerContent}
       {filterVisible && (
         <Box sx={{ p: '14px 10px 8px', flexShrink: 0 }}>
           <TextField
@@ -514,7 +521,7 @@ export function RecordList<T extends ListDetailRecord>({
                 display: 'block',
                 px: '10px',
                 py: '10px',
-                minHeight: 67,
+                minHeight: rowHeight,
                 borderBottom: `1px solid ${d365.darkBorder}`,
                 borderInlineStart: record.id === selectedId ? 4 : 0,
                 borderInlineStartColor: d365.selectedBar,

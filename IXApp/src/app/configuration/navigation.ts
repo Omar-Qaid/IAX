@@ -126,6 +126,10 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
         title: 'nav.requests',
         links: [
           {
+            label: 'nav.mail',
+            path: ROUTE_PATHS.WORKFLOW.MAIL,
+          },
+          {
             label: 'nav.requestSubmission',
             path: ROUTE_PATHS.WORKFLOW.REQUEST_SUBMISSION,
           },

@@ -116,6 +116,14 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'workflow-mail',
+    path: ROUTE_PATHS.WORKFLOW.MAIL,
+    component: lazyPage(
+      () => import('@modules/workflow/pages/MailPage'),
+      (module) => module.MailPage
+    ),
+  },
+  {
     id: 'request-submission',
     path: ROUTE_PATHS.WORKFLOW.REQUEST_SUBMISSION,
     component: lazyPage(

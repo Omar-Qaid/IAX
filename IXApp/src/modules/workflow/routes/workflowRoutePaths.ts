@@ -1,5 +1,6 @@
 export const WORKFLOW_ROUTE_PATHS = {
   ROOT: '/workflow',
+  MAIL: '/workflow/mail',
   REQUEST_SUBMISSION: '/workflow/request-submission',
   REQUEST_FROM: '/workflow/request-from/:categoryId/:processId',
   requestFrom: (categoryId: string | number, processId: string | number) =>
