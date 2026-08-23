@@ -131,7 +131,7 @@ function MailAttachments({ requestId }: { requestId: number }) {
 function TrackingHistory({ request }: { request: MailRecord }) {
   const { history } = React.useMemo(() => getTemporaryMailDetails(request), [request]);
   return (
-    <Box sx={{ minWidth: 0, width: '100%', maxWidth: 242, height: '100%', mx: 'auto', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <Box sx={{ minWidth: 0, width: '100%', maxWidth: 340, height: '100%', mx: 'auto', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <Stack direction="row" spacing={0.55} sx={{ alignItems: 'center', justifyContent: 'flex-start', mb: 1.05, pr: 0.75 }}>
         <AccessTimeOutlined sx={{ fontSize: 16 }} />
         <Typography sx={{ fontSize: 11.5, fontWeight: 650 }}>Tracking history</Typography>
@@ -168,7 +168,7 @@ function MailDetails({ request }: { request: MailRecord }) {
   const statusColor = request.isStopped ? 'error' : request.isFinished ? 'success' : 'primary';
 
   return (
-    <Box sx={{ direction: 'ltr', height: { xs: 'auto', lg: 'calc(100dvh - 188px)' }, minHeight: 0, overflow: 'hidden', display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'minmax(460px, 1.55fr) minmax(210px, .72fr)' }, gap: 2, alignItems: 'stretch' }}>
+    <Box sx={{ direction: 'ltr', height: { xs: 'auto', lg: 'calc(100dvh - 188px)' }, minHeight: 0, overflow: 'hidden', display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'minmax(460px, 1.45fr) minmax(300px, .95fr)' }, gap: 2, alignItems: 'stretch' }}>
       <Box sx={{ direction: 'ltr', height: '100%', minHeight: 0, overflow: 'hidden', gridColumn: { lg: 2 } }}><TrackingHistory request={request} /></Box>
       <Stack spacing={1.5} sx={{ direction: 'ltr', minWidth: 0, height: 'fit-content', overflow: 'hidden', gridColumn: { lg: 1 }, gridRow: { lg: 1 } }}>
         <Paper variant="outlined" sx={{ borderRadius: 1.25, overflow: 'hidden', minHeight: 354, boxShadow: '0 1px 3px rgba(0,0,0,.10)' }}>
