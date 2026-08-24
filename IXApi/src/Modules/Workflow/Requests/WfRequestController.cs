@@ -30,6 +30,15 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                 : Ok(APIResponse<DynamicRequestFormDto>.Ok(definition));
         }
 
+        [HttpGet("{requestId:long}/mail-details")]
+        public async Task<ActionResult<APIResponse<MailRequestDetailsDto>>> GetMailDetails(long requestId, CancellationToken cancellationToken)
+        {
+            var details = await _requestService.GetMailDetailsAsync(requestId, cancellationToken);
+            return details == null
+                ? NotFound(APIResponse<MailRequestDetailsDto>.Fail("The workflow request was not found."))
+                : Ok(APIResponse<MailRequestDetailsDto>.Ok(details));
+        }
+
         [HttpPost("submit")]
         public async Task<ActionResult<APIResponse<SubmitDynamicRequestResultDto>>> SubmitDynamic([FromBody] SubmitDynamicRequestDto submission, CancellationToken cancellationToken)
         {

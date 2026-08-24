@@ -4,12 +4,16 @@ using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Communication.Notifications.Services;
+using IAX.IXApi.Modules.Organization.Employees.Entities;
+using IAX.IXApi.Modules.Workflow.Execution;
 using IAX.IXApi.Modules.Workflow.Performers;
 using IAX.IXApi.Modules.Workflow.Persistence;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace IAX.IXApi.Modules.Workflow.Requests
 {
@@ -100,6 +104,117 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                         }).ToList()
                     };
                 }).ToList()
+            };
+        }
+
+        public async Task<MailRequestDetailsDto?> GetMailDetailsAsync(long requestId, CancellationToken cancellationToken = default)
+        {
+            var request = await _context.WfRequests.AsNoTracking()
+                .Include(item => item.Process)
+                .SingleOrDefaultAsync(item => item.RecId == requestId, cancellationToken);
+            if (request == null) return null;
+
+            var detailRows = await _context.WfRequestDetails.AsNoTracking()
+                .Where(item => item.RequestId == requestId)
+                .OrderBy(item => item.SortOrder).ThenBy(item => item.RecId)
+                .ToListAsync(cancellationToken);
+            var parsedRows = detailRows.Count > 0
+                ? detailRows.Select(item => new MailFieldSource(
+                    item.RecId, item.ControlId, item.ControlDataId, item.ControlLabel,
+                    item.ControlLabelAR, item.ControlValue, item.ControlValueAR,
+                    item.ControlValueEN, item.SortOrder)).ToList()
+                : ParseSerializedRequestDetails(request.RequestDetails);
+
+            var controlIds = parsedRows.Where(item => item.ControlId.HasValue)
+                .Select(item => item.ControlId!.Value).Distinct().ToList();
+            var controls = await _context.WfControls.AsNoTracking()
+                .Where(item => controlIds.Contains(item.RecId))
+                .ToDictionaryAsync(item => item.RecId, cancellationToken);
+            var fields = parsedRows.OrderBy(item => item.Order).ThenBy(item => item.DetailId).Select(item =>
+            {
+                controls.TryGetValue(item.ControlId ?? 0, out var control);
+                return new MailRequestFieldDto
+                {
+                    DetailId = item.DetailId,
+                    ControlId = item.ControlId,
+                    ControlDataId = item.ControlDataId,
+                    Label = FirstText(item.Label, item.LabelAr, $"Field {item.ControlDataId}"),
+                    LabelAr = FirstText(item.LabelAr, item.Label, $"Field {item.ControlDataId}"),
+                    Value = FirstText(item.ValueAr, item.Value, item.ValueEn),
+                    ValueAr = item.ValueAr,
+                    ValueEn = item.ValueEn,
+                    ControlType = ResolveRuntimeControlType(control?.Code, control?.Name, control?.ControlType),
+                    ControlOrder = item.Order
+                };
+            }).ToList();
+
+            var assignments = await _context.Set<WfAssignment>().AsNoTracking()
+                .Include(item => item.Activity).ThenInclude(item => item.Step)
+                .Where(item => item.RequestId == requestId)
+                .OrderBy(item => item.AssignDate).ThenBy(item => item.RecId)
+                .ToListAsync(cancellationToken);
+            var assignmentIds = assignments.Select(item => item.RecId).ToList();
+            var activityDetails = assignmentIds.Count == 0
+                ? []
+                : await _context.WfActivityDetails.AsNoTracking()
+                    .Where(item => assignmentIds.Contains(item.AssignmentID))
+                    .OrderBy(item => item.SortOrder).ThenBy(item => item.RecId)
+                    .ToListAsync(cancellationToken);
+
+            var employeeIds = assignments.Select(item => item.UserId)
+                .Append(request.EmployeeId ?? 0).Where(item => item > 0).Distinct().ToList();
+            var workers = await _context.Set<HcmWorker>().AsNoTracking()
+                .Where(item => employeeIds.Contains(item.RecId)).ToListAsync(cancellationToken);
+            var partyIds = workers.Select(item => item.Person).Distinct().ToList();
+            var parties = await _context.Database.SqlQueryRaw<MailPartyLookup>(
+                    "SELECT RECID AS PartyId, COALESCE(NULLIF(RFullName, ''), NULLIF(Name, ''), PartyNumber) AS DisplayName FROM dbo.DirPartyTable")
+                .Where(item => partyIds.Contains(item.PartyId))
+                .ToDictionaryAsync(item => item.PartyId, cancellationToken);
+            string EmployeeDisplay(long? id)
+            {
+                var worker = workers.FirstOrDefault(item => item.RecId == id);
+                if (worker == null) return id.HasValue ? $"Employee {id.Value}" : "Workflow queue";
+                parties.TryGetValue(worker.Person, out var party);
+                return FirstText(party?.DisplayName, worker.PersonnelNumber);
+            }
+
+            var latest = assignments.LastOrDefault();
+            var history = assignments.OrderByDescending(item => item.AssignDate).Select(item =>
+            {
+                var notes = activityDetails.Where(detail => detail.AssignmentID == item.RecId)
+                    .Where(detail => !IsSignature(detail.ControlLabel, detail.ControlLabelAR, detail.ControlValue))
+                    .Select(detail => (Label: FirstText(detail.ControlLabelAR, detail.ControlLabel), Value: FirstText(detail.ControlValueAR, detail.ControlValue, detail.ControlValueEN)))
+                    .Where(detail => !string.IsNullOrWhiteSpace(detail.Value) && !LooksSerialized(detail.Value))
+                    .Select(detail => $"{detail.Label}: {detail.Value}").ToList();
+                return new MailTrackingEntryDto
+                {
+                    AssignmentId = item.RecId,
+                    Title = FirstText(item.Activity.Name, item.Activity.Code, "Workflow activity"),
+                    Stage = FirstText(item.Activity.Step.Name, item.Activity.Step.Code, "Workflow stage"),
+                    Responsible = EmployeeDisplay(item.UserId),
+                    Action = item.IsFinished ? item.Automatically == true ? "Passed automatically" : "Completed" : "In progress",
+                    Date = item.FinishedDate ?? item.AssignDate,
+                    Notes = notes.Count > 0 ? string.Join(" · ", notes) : "—",
+                    IsCurrent = !request.IsFinished && !request.IsStopped && !item.IsFinished && item.RecId == latest?.RecId,
+                    IsCompleted = item.IsFinished
+                };
+            }).ToList();
+
+            var employee = workers.FirstOrDefault(item => item.RecId == request.EmployeeId);
+            return new MailRequestDetailsDto
+            {
+                RequestId = request.RecId,
+                ProcessName = FirstText(request.Process.Name, request.Process.Code, $"Process {request.ProcessId}"),
+                Status = request.IsStopped ? "Stopped" : request.IsFinished ? "Completed" : "In progress",
+                RequestDate = request.RequestDate,
+                EmployeeName = EmployeeDisplay(request.EmployeeId),
+                EmployeeNumber = employee?.PersonnelNumber ?? request.EmployeeId?.ToString(CultureInfo.InvariantCulture) ?? "—",
+                TransactionType = request.IsStopped ? "Request stopped" : request.IsFinished ? "Request completed" : FirstText(latest?.Activity.Name, request.Name, "Workflow request"),
+                TransactionTime = request.RequestDate,
+                TransactionEndTime = request.FinishedDate ?? request.StoppedDate,
+                ResponsibleEmployee = latest == null ? null : EmployeeDisplay(latest.UserId),
+                Fields = fields,
+                History = history
             };
         }
 
@@ -527,6 +642,41 @@ namespace IAX.IXApi.Modules.Workflow.Requests
             if (value.TryGetInt64(out var result)) return result;
             return value.ValueKind == JsonValueKind.String && long.TryParse(value.GetString(), out result) ? result : 0;
         }
+        private static List<MailFieldSource> ParseSerializedRequestDetails(string? serialized)
+        {
+            if (string.IsNullOrWhiteSpace(serialized) || !serialized.TrimStart().StartsWith('<')) return [];
+            try
+            {
+                using var text = new StringReader(serialized);
+                using var reader = XmlReader.Create(text, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null });
+                var document = XDocument.Load(reader, LoadOptions.None);
+                return document.Descendants("Control").Select((control, index) =>
+                {
+                    byte? controlId = byte.TryParse(control.Element("ControlId")?.Value, out var parsedControlId) ? parsedControlId : null;
+                    long? controlDataId = long.TryParse(control.Element("ControlDataId")?.Value, out var parsedDataId) ? parsedDataId : null;
+                    var order = byte.TryParse(control.Element("ControlOrder")?.Value, out var parsedOrder) ? parsedOrder : (byte)Math.Min(index, byte.MaxValue);
+                    return new MailFieldSource(
+                        index + 1, controlId, controlDataId,
+                        control.Element("ControlLabel")?.Value ?? string.Empty,
+                        control.Element("ControlLabelAR")?.Value ?? string.Empty,
+                        control.Element("ControlValue")?.Value ?? string.Empty,
+                        control.Element("ControlValueAR")?.Value ?? string.Empty,
+                        control.Element("ControlValueEN")?.Value ?? string.Empty,
+                        order);
+                }).ToList();
+            }
+            catch (XmlException) { return []; }
+        }
+        private static string FirstText(params string?[] values) => values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value))?.Trim() ?? string.Empty;
+        private static bool LooksSerialized(string value) => value.TrimStart().StartsWith("<Details", StringComparison.OrdinalIgnoreCase);
+        private static bool IsSignature(string? label, string? labelAr, string? value)
+        {
+            var metadata = Normalize($"{label} {labelAr}");
+            var raw = value?.TrimStart() ?? string.Empty;
+            return metadata.Contains("signature") || (labelAr?.Contains("توقيع", StringComparison.OrdinalIgnoreCase) ?? false)
+                || raw.StartsWith("sig:", StringComparison.OrdinalIgnoreCase)
+                || raw.StartsWith("data:image/", StringComparison.OrdinalIgnoreCase);
+        }
         private static string Normalize(string value) => Regex.Replace(value ?? string.Empty, "[^a-z0-9]", string.Empty, RegexOptions.IgnoreCase).ToLowerInvariant();
         private static string ResolveRuntimeControlType(string? code, string? name, string? controlType)
         {
@@ -617,6 +767,8 @@ namespace IAX.IXApi.Modules.Workflow.Requests
             return true;
         }
         private static ValidationResult Error(long id, string name, string message) => new() { RequestControlId = id, ControlName = name, ErrorMessage = message, Severity = "Error" };
+        private sealed class MailPartyLookup { public long PartyId { get; set; } public string DisplayName { get; set; } = string.Empty; }
+        private sealed record MailFieldSource(long DetailId, byte? ControlId, long? ControlDataId, string Label, string LabelAr, string Value, string ValueAr, string ValueEn, byte Order);
         private sealed record FileValue(string Name, long Size, string Type);
         private sealed class RuntimeProperties
         {

@@ -177,7 +177,8 @@ export type ListDetailsDataSource<T extends ListDetailRecord> =
       type: 'remote';
       key: string;
       load: (signal: AbortSignal) => Promise<T[]>;
-      create: (record: T) => Promise<T>;
+      /** A create operation may persist one record or a batch created from one editor action. */
+      create: (record: T) => Promise<T | T[]>;
       update: (record: T) => Promise<T>;
       delete: (record: T) => Promise<void>;
       initialRecords?: T[];

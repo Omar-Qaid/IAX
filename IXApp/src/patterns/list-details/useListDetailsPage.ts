@@ -136,8 +136,11 @@ export function useListDetailsPage<T extends ListDetailRecord>(config: Enterpris
       const createPayload = isNew && config.numberSequence && !numberSequenceQuery.data?.manual
         ? { ...draft, [config.numberSequence.field]: null }
         : draft;
-      const persisted = source.type === 'remote' ? await (isNew ? source.create(createPayload) : source.update(draft)) : draft;
-      replaceRecords(isNew ? [persisted, ...records] : records.map((record) => record.id === draft.id ? persisted : record));
+      const result = source.type === 'remote' ? await (isNew ? source.create(createPayload) : source.update(draft)) : draft;
+      const created = isNew && Array.isArray(result) ? result : [result as T];
+      if (created.length === 0) throw new Error('The create operation did not return any records.');
+      const persisted = created[0];
+      replaceRecords(isNew ? [...created, ...records] : records.map((record) => record.id === draft.id ? persisted : record));
       setDraft(persisted); setSelectedId(persisted.id); setEditing(false); setIsNew(false);
       if (isNew && config.numberSequence) await numberSequenceQuery.refetch();
     } catch (reason: unknown) { setError(reason instanceof Error ? reason.message : String(reason)); } finally { setSaving(false); }

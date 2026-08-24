@@ -37,7 +37,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding
                 new IdentitySeeder(),
                 new DocumentManagementSeeder(),
                 new OrganizationSeeder(),
-                new WorkflowSeeder(),
+                new WorkflowRequestTrackingSeeder(),
                 new ErpSeeder(),
                 new VendSeeder(),
                 new TaxSeeder(),

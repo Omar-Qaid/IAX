@@ -183,6 +183,7 @@ namespace IAX.IXApi.Infrastructure.Persistence
         public DbSet<WfRequestControlsValidation> WfRequestControlsValidations => Set<WfRequestControlsValidation>();
         public DbSet<WfRequestDetail> WfRequestDetails => Set<WfRequestDetail>();
         public DbSet<WfActivity> WfActivities => Set<WfActivity>();
+        public DbSet<WfActivityDetail> WfActivityDetails => Set<WfActivityDetail>();
         public DbSet<WfActivityControl> WfActivityControls => Set<WfActivityControl>();
         public DbSet<WfActivityControlsValidation> WfActivityControlsValidations => Set<WfActivityControlsValidation>();
         public DbSet<WfRequestControlsOption> WfRequestControlsOptions => Set<WfRequestControlsOption>();

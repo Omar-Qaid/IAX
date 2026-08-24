@@ -10,7 +10,7 @@ namespace IAX.IXApi.Modules.Workflow.Activities
         public byte ControlId { get; set; }
         public long ControlDataId { get; set; }
         [StringLength(255)]
-        public string ControlLabel { get; set; } =null!;
+        public string ControlLabel { get; set; } = null!;
         [StringLength(255)]
         public string ControlLabelAR { get; set; } = null!;
         [StringLength(255)]
@@ -21,9 +21,5 @@ namespace IAX.IXApi.Modules.Workflow.Activities
         public string ControlValueEN { get; set; } = null!;
         public bool UsedAsCriteria { get; set; }
         public byte SortOrder { get; set; }
-
     }
 }
-
-
-

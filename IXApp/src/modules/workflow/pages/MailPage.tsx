@@ -14,7 +14,7 @@ import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
 import AssignmentTurnedInOutlined from '@mui/icons-material/AssignmentTurnedInOutlined';
 import AttachFileOutlined from '@mui/icons-material/AttachFileOutlined';
 import PersonOutlineOutlined from '@mui/icons-material/PersonOutlineOutlined';
-import { useQuery } from '@tanstack/react-query';
+import { useQueries, useQuery } from '@tanstack/react-query';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
 import type {
   DetailSectionConfig,
@@ -23,8 +23,14 @@ import type {
 import { documentApi } from '@shared/components/documents/documentApi';
 import { documentTableIds } from '@shared/components/documents/recordTableIds';
 import { wfProcessApi } from '../api/wfProcessApi';
-import { wfRequestApi, type WfRequestRecord } from '../api/wfRequestApi';
-import { getTemporaryMailDetails } from './mailTemporaryData';
+import {
+  wfRequestApi,
+  type MailRequestFieldDto,
+  type MailTrackingEntryDto,
+  type WfRequestRecord,
+} from '../api/wfRequestApi';
+import { normalizeDynamicControlType } from '../components/DynamicControlRenderer';
+import { SignatureControl } from '../components/DynamicSpecialControls';
 
 type MailFolder = 'all' | 'inbox' | 'sent' | 'important';
 
@@ -136,14 +142,29 @@ const formatFileSize = (bytes: number | null): string => {
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 };
 
-function MailAttachments({ requestId }: { requestId: number }) {
+function MailAttachments({ requestId, detailIds }: { requestId: number; detailIds: number[] }) {
   const [previewError, setPreviewError] = React.useState(false);
   const attachments = useQuery({
     queryKey: ['documents', documentTableIds.wfRequest, requestId],
     queryFn: ({ signal }) => documentApi.list(documentTableIds.wfRequest, requestId, signal),
     enabled: requestId > 0,
   });
-  const items = attachments.data?.items ?? [];
+  const detailAttachments = useQueries({
+    queries: [...new Set(detailIds.filter((id) => id > 0))].map((detailId) => ({
+      queryKey: ['documents', documentTableIds.wfRequestDetail, detailId],
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        documentApi.list(documentTableIds.wfRequestDetail, detailId, signal),
+    })),
+  });
+  const items = React.useMemo(() => {
+    const combined = [
+      ...(attachments.data?.items ?? []),
+      ...detailAttachments.flatMap((query) => query.data?.items ?? []),
+    ];
+    return [...new Map(combined.map((item) => [item.id, item])).values()];
+  }, [attachments.data?.items, detailAttachments]);
+  const loading = attachments.isLoading || detailAttachments.some((query) => query.isLoading);
+  const failed = attachments.isError || detailAttachments.some((query) => query.isError);
 
   return (
     <Paper variant="outlined" sx={{ borderRadius: 1.25, overflow: 'hidden' }}>
@@ -155,15 +176,15 @@ function MailAttachments({ requestId }: { requestId: number }) {
         <AttachFileOutlined sx={{ fontSize: 16 }} />
         <Typography sx={{ flex: 1, fontSize: 12.5, fontWeight: 700 }}>Attachments</Typography>
         <Typography color="text.secondary" sx={{ fontSize: 11 }}>
-          ({attachments.data?.totalCount ?? 0})
+          ({items.length})
         </Typography>
       </Stack>
-      {attachments.isLoading && (
+      {loading && (
         <Box sx={{ display: 'grid', placeItems: 'center', minHeight: 72 }}>
           <CircularProgress size={20} />
         </Box>
       )}
-      {attachments.isError && (
+      {failed && (
         <Alert severity="error" sx={{ borderRadius: 0 }}>
           Unable to load attachments.
         </Alert>
@@ -173,7 +194,7 @@ function MailAttachments({ requestId }: { requestId: number }) {
           Unable to open this attachment.
         </Alert>
       )}
-      {!attachments.isLoading && !attachments.isError && items.length === 0 && (
+      {!loading && !failed && items.length === 0 && (
         <Typography
           color="text.secondary"
           sx={{ py: 2.5, px: 1.5, textAlign: 'center', fontSize: 11.5 }}
@@ -221,7 +242,7 @@ function MailAttachments({ requestId }: { requestId: number }) {
 }
 
 interface TrackingTimelineProps {
-  entries: ReturnType<typeof getTemporaryMailDetails>['history'];
+  entries: MailTrackingEntryDto[];
 }
 
 export function TrackingTimeline({ entries }: TrackingTimelineProps): React.ReactElement {
@@ -287,7 +308,7 @@ export function TrackingTimeline({ entries }: TrackingTimelineProps): React.Reac
       >
         {entries.map((entry) => (
           <Box
-            key={entry.id}
+            key={entry.assignmentId}
             sx={{
               position: 'relative',
               display: 'grid',
@@ -315,13 +336,13 @@ export function TrackingTimeline({ entries }: TrackingTimelineProps): React.Reac
                   transform: 'translateX(-50%)',
                   display: 'grid',
                   placeItems: 'center',
-                  width: entry.current ? 14 : 11,
-                  height: entry.current ? 14 : 11,
+                  width: entry.isCurrent ? 14 : 11,
+                  height: entry.isCurrent ? 14 : 11,
                   borderRadius: '50%',
-                  bgcolor: entry.current ? '#fff' : '#d8dadd',
-                  border: entry.current ? '2px solid #1976d2' : 0,
+                  bgcolor: entry.isCurrent ? '#fff' : '#d8dadd',
+                  border: entry.isCurrent ? '2px solid #1976d2' : 0,
                   boxShadow: '0 0 0 2px #fff',
-                  '&::before': entry.current
+                  '&::before': entry.isCurrent
                     ? {
                         content: '""',
                         width: 6,
@@ -331,7 +352,7 @@ export function TrackingTimeline({ entries }: TrackingTimelineProps): React.Reac
                       }
                     : undefined,
                   '&::after':
-                    entry.completed && !entry.current
+                    entry.isCompleted && !entry.isCurrent
                       ? {
                           content: '"✓"',
                           color: '#fff',
@@ -352,7 +373,7 @@ export function TrackingTimeline({ entries }: TrackingTimelineProps): React.Reac
                 boxSizing: 'border-box',
                 p: '14px 12px',
                 borderRadius: '6px',
-                border: `1px solid ${entry.current ? '#1976d2' : '#e5e7eb'}`,
+                border: `1px solid ${entry.isCurrent ? '#1976d2' : '#e5e7eb'}`,
                 bgcolor: '#fff',
                 boxShadow: '0 1px 2px rgba(0,0,0,.02)',
               }}
@@ -364,10 +385,10 @@ export function TrackingTimeline({ entries }: TrackingTimelineProps): React.Reac
                 <Box sx={{ minWidth: 0 }}>
                   <Typography
                     sx={{
-                      color: entry.current ? '#171717' : '#444',
+                      color: entry.isCurrent ? '#171717' : '#444',
                       fontSize: 13,
                       lineHeight: 1.45,
-                      fontWeight: entry.current ? 600 : 500,
+                      fontWeight: entry.isCurrent ? 600 : 500,
                     }}
                   >
                     {entry.title}
@@ -375,12 +396,12 @@ export function TrackingTimeline({ entries }: TrackingTimelineProps): React.Reac
                   <Typography
                     sx={{
                       mt: 0.15,
-                      color: entry.current ? '#1976d2' : '#757575',
+                      color: entry.isCurrent ? '#1976d2' : '#757575',
                       fontSize: 11,
                       lineHeight: 1.5,
                     }}
                   >
-                    {entry.subtitle}
+                    {entry.stage}
                   </Typography>
                 </Box>
                 <Typography
@@ -397,17 +418,17 @@ export function TrackingTimeline({ entries }: TrackingTimelineProps): React.Reac
               <Box sx={{ display: 'flex', mt: 0.65, justifyContent: 'flex-start' }}>
                 <Box
                   sx={{
-                    px: entry.current ? 0.875 : 0.75,
-                    py: entry.current ? 0.375 : 0.25,
+                    px: entry.isCurrent ? 0.875 : 0.75,
+                    py: entry.isCurrent ? 0.375 : 0.25,
                     borderRadius: '3px',
-                    bgcolor: entry.current ? '#1976d2' : '#e8e8e8',
-                    color: entry.current ? '#fff' : '#666',
+                    bgcolor: entry.isCurrent ? '#1976d2' : '#e8e8e8',
+                    color: entry.isCurrent ? '#fff' : '#666',
                     fontSize: 10,
                     lineHeight: 1.35,
                     fontWeight: 600,
                   }}
                 >
-                  {entry.current ? 'Processing' : 'Completed'}
+                  {entry.isCurrent ? 'Processing' : 'Completed'}
                 </Box>
               </Box>
               <Box
@@ -417,7 +438,7 @@ export function TrackingTimeline({ entries }: TrackingTimelineProps): React.Reac
                   gridTemplateColumns: 'max-content minmax(0, 1fr)',
                   columnGap: '6px',
                   rowGap: 0.55,
-                  color: entry.current ? '#171717' : '#737373',
+                  color: entry.isCurrent ? '#171717' : '#737373',
                   fontSize: 11,
                   lineHeight: 1.7,
                 }}
@@ -425,7 +446,7 @@ export function TrackingTimeline({ entries }: TrackingTimelineProps): React.Reac
                 <Box component="span" sx={{ color: '#555' }}>
                   Responsible:
                 </Box>
-                <Box component="span">{entry.actor}</Box>
+                <Box component="span">{entry.responsible}</Box>
                 <Box component="span" sx={{ color: '#555' }}>
                   Action:
                 </Box>
@@ -434,7 +455,7 @@ export function TrackingTimeline({ entries }: TrackingTimelineProps): React.Reac
                   Notes:
                 </Box>
                 <Box component="span" sx={{ overflowWrap: 'anywhere' }}>
-                  {entry.details}
+                  {entry.notes}
                 </Box>
               </Box>
             </Paper>
@@ -445,13 +466,27 @@ export function TrackingTimeline({ entries }: TrackingTimelineProps): React.Reac
   );
 }
 
-function TrackingHistory({ request }: { request: MailRecord }) {
-  const { history } = React.useMemo(() => getTemporaryMailDetails(request), [request]);
-  return <TrackingTimeline entries={history} />;
-}
+const dynamicFieldValue = (field: MailRequestFieldDto): React.ReactNode => {
+  if (normalizeDynamicControlType(field.controlType) === 'signature') {
+    return (
+      <SignatureControl
+        control={{ label: field.labelAr || field.label, hideLabel: true, controlType: 'signature', readOnly: true }}
+        value={field.value}
+        onChange={() => undefined}
+        preview
+      />
+    );
+  }
+  return field.value || '—';
+};
 
 function MailDetails({ request }: { request: MailRecord }) {
-  const details = React.useMemo(() => getTemporaryMailDetails(request), [request]);
+  const mailDetails = useQuery({
+    queryKey: ['workflow', 'mail', 'request-details', request.recId],
+    queryFn: ({ signal }) => wfRequestApi.mailDetails(request.recId, signal),
+    enabled: request.recId > 0,
+  });
+  const details = mailDetails.data;
   const progress = Math.max(0, Math.min(100, request.progress));
   const statusColor = request.isStopped ? 'error' : request.isFinished ? 'success' : 'primary';
 
@@ -480,15 +515,22 @@ function MailDetails({ request }: { request: MailRecord }) {
           gridColumn: { lg: 2 },
         }}
       >
-        <TrackingHistory request={request} />
+        {mailDetails.isLoading ? (
+          <Box sx={{ display: 'grid', placeItems: 'center', height: '100%' }}><CircularProgress size={22} /></Box>
+        ) : mailDetails.isError ? (
+          <Alert severity="error">Unable to load workflow tracking history.</Alert>
+        ) : (
+          <TrackingTimeline entries={details?.history ?? []} />
+        )}
       </Box>
       <Stack
         spacing={1.5}
         sx={{
           direction: 'ltr',
           minWidth: 0,
-          height: 'fit-content',
-          overflow: 'hidden',
+          height: '100%',
+          overflowX: 'hidden',
+          overflowY: 'auto',
           gridColumn: { lg: 1 },
           gridRow: { lg: 1 },
         }}
@@ -518,32 +560,45 @@ function MailDetails({ request }: { request: MailRecord }) {
             <Typography sx={{ fontSize: 14, fontWeight: 600 }}>Transaction details</Typography>
           </Stack>
           <Box>
+            <LabelValue label="Request ID" value={details?.requestId ?? request.recId} />
+            <LabelValue label="Process name" value={details?.processName ?? request.processName} />
+            <LabelValue label="Request status" value={details?.status ?? getStatus(request)} />
+            <LabelValue label="Request date" value={formatDateTime(details?.requestDate ?? request.requestDate)} />
             <LabelValue
               label="Employee name"
               value={
                 <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
                   <PersonOutlineOutlined sx={{ fontSize: 14 }} />
-                  {details.assignment.assignee}
+                  {details?.employeeName ?? '—'}
                 </Stack>
               }
             />
             <LabelValue
               label="Employee number"
-              value={request.employeeId ? `F${request.employeeId}` : '—'}
+              value={details?.employeeNumber ?? '—'}
             />
             <LabelValue
               label="Transaction type"
-              value={request.description || details.assignment.activity}
+              value={details?.transactionType ?? '—'}
             />
             <LabelValue
               label="Transaction time"
-              value={formatDateTime(details.assignment.assignedAt)}
+              value={formatDateTime(details?.transactionTime ?? request.requestDate)}
             />
             <LabelValue
               label="Transaction end time"
-              value={formatDateTime(details.assignment.finishedAt)}
+              value={formatDateTime(details?.transactionEndTime ?? null)}
             />
-            <LabelValue label="Notes" value={details.processData.activityDetails} />
+            {details?.responsibleEmployee && <LabelValue label="Responsible employee" value={details.responsibleEmployee} />}
+            {details?.fields.map((field) => (
+              <LabelValue
+                key={`${field.detailId}-${field.controlDataId ?? field.controlId ?? field.controlOrder}`}
+                label={field.labelAr || field.label}
+                value={<Box dir={field.labelAr ? 'rtl' : 'ltr'}>{dynamicFieldValue(field)}</Box>}
+              />
+            ))}
+            {mailDetails.isLoading && <Box sx={{ display: 'grid', placeItems: 'center', minHeight: 72 }}><CircularProgress size={20} /></Box>}
+            {mailDetails.isError && <Alert severity="error" sx={{ borderRadius: 0 }}>Unable to load request details.</Alert>}
           </Box>
         </Paper>
 
@@ -604,7 +659,7 @@ function MailDetails({ request }: { request: MailRecord }) {
               <Chip size="small" color="error" label="Stopped" sx={{ mt: 0.75 }} />
             )}
           </Paper>
-          <MailAttachments requestId={request.recId} />
+          <MailAttachments requestId={request.recId} detailIds={details?.fields.map((field) => field.detailId) ?? []} />
         </Box>
       </Stack>
     </Box>

@@ -231,6 +231,14 @@ describe('DynamicControlRenderer', () => {
     contextSpy.mockRestore();
   });
 
+  it('renders a stored image signature without exposing its encoded value', () => {
+    const signature = 'data:image/svg+xml;base64,PHN2Zy8+';
+    render(<DynamicControlRenderer control={{ label: 'E-Signature', controlType: 'signature' }} value={signature} onChange={() => undefined} preview />);
+
+    expect(screen.getByRole('img', { name: 'E-Signature signature' })).toHaveAttribute('src', signature);
+    expect(screen.queryByText(signature)).not.toBeInTheDocument();
+  });
+
   it('keeps signature inline and opens only the location editor in a dialog', async () => {
     const canvasContext = {
       clearRect: vi.fn(), beginPath: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(), stroke: vi.fn(),

@@ -34,4 +34,8 @@
   <ItemGroup>
     <Folder Include="Migrations\" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Persistence\Seeding\Data\LegacyWorkflowMasterData.json" />
+    <EmbeddedResource Include="Persistence\Seeding\Data\LegacyOrganizationEmployeeData.json" />
+  </ItemGroup>
 </Project>
