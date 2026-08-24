@@ -98,19 +98,19 @@ const formatElapsed = (request: WfRequestRecord): string => {
   return `${Math.floor(minutes / 60)} hours ${minutes % 60} minutes`;
 };
 
-function LabelValue({ label, value }: { label: string; value: React.ReactNode }) {
+function LabelValue({ label, value, compact = false }: { label: string; value: React.ReactNode; compact?: boolean }) {
   return (
     <Box
       sx={{
         display: 'grid',
         gridTemplateColumns: '34% minmax(0, 66%)',
-        minHeight: 48,
+        minHeight: compact ? 40 : 48,
         borderBottom: '1px solid #e5e5e5',
       }}
     >
       <Typography
         sx={{
-          p: '8px 12px',
+          p: compact ? '6px 10px' : '8px 12px',
           bgcolor: '#f7f7f7',
           color: '#111',
           fontSize: 12,
@@ -121,7 +121,7 @@ function LabelValue({ label, value }: { label: string; value: React.ReactNode })
       </Typography>
       <Box
         sx={{
-          p: '8px 12px',
+          p: compact ? '6px 10px' : '8px 12px',
           bgcolor: '#fff',
           color: '#222',
           fontSize: 12,
@@ -530,7 +530,8 @@ function MailDetails({ request }: { request: MailRecord }) {
           minWidth: 0,
           height: '100%',
           overflowX: 'hidden',
-          overflowY: 'auto',
+          overflowY: { xs: 'auto', lg: 'hidden' },
+          overscrollBehavior: 'contain',
           gridColumn: { lg: 1 },
           gridRow: { lg: 1 },
         }}
@@ -541,7 +542,9 @@ function MailDetails({ request }: { request: MailRecord }) {
             borderRadius: '3px',
             overflow: 'hidden',
             minHeight: 0,
-            height: 'auto',
+            flex: { xs: '0 0 auto', lg: '1 1 0' },
+            display: 'flex',
+            flexDirection: 'column',
             boxShadow: 'none',
           }}
         >
@@ -550,6 +553,7 @@ function MailDetails({ request }: { request: MailRecord }) {
             spacing={0.7}
             sx={{
               alignItems: 'center',
+              flexShrink: 0,
               px: '10px',
               height: 38,
               color: '#004b8d',
@@ -559,44 +563,61 @@ function MailDetails({ request }: { request: MailRecord }) {
             <AssignmentTurnedInOutlined sx={{ fontSize: 17 }} />
             <Typography sx={{ fontSize: 14, fontWeight: 600 }}>Transaction details</Typography>
           </Stack>
-          <Box>
-            <LabelValue label="Request ID" value={details?.requestId ?? request.recId} />
-            <LabelValue label="Process name" value={details?.processName ?? request.processName} />
-            <LabelValue label="Request status" value={details?.status ?? getStatus(request)} />
-            <LabelValue label="Request date" value={formatDateTime(details?.requestDate ?? request.requestDate)} />
-            <LabelValue
-              label="Employee name"
-              value={
-                <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
-                  <PersonOutlineOutlined sx={{ fontSize: 14 }} />
-                  {details?.employeeName ?? '—'}
-                </Stack>
-              }
-            />
-            <LabelValue
-              label="Employee number"
-              value={details?.employeeNumber ?? '—'}
-            />
-            <LabelValue
-              label="Transaction type"
-              value={details?.transactionType ?? '—'}
-            />
-            <LabelValue
-              label="Transaction time"
-              value={formatDateTime(details?.transactionTime ?? request.requestDate)}
-            />
-            <LabelValue
-              label="Transaction end time"
-              value={formatDateTime(details?.transactionEndTime ?? null)}
-            />
-            {details?.responsibleEmployee && <LabelValue label="Responsible employee" value={details.responsibleEmployee} />}
-            {details?.fields.map((field) => (
+          <Box
+            role="region"
+            aria-label="Scrollable request data"
+            tabIndex={0}
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflowX: 'hidden',
+              overflowY: { xs: 'visible', lg: 'scroll' },
+              scrollbarGutter: 'stable',
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#8795a7 #eef1f4',
+              '&::-webkit-scrollbar': { width: 10 },
+              '&::-webkit-scrollbar-track': { bgcolor: '#eef1f4' },
+              '&::-webkit-scrollbar-thumb': {
+                bgcolor: '#8795a7',
+                border: '2px solid #eef1f4',
+                borderRadius: 8,
+              },
+              '&:focus-visible': { outline: '2px solid #2f6fed', outlineOffset: -2 },
+            }}
+          >
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, minmax(0, 1fr))' } }}>
               <LabelValue
-                key={`${field.detailId}-${field.controlDataId ?? field.controlId ?? field.controlOrder}`}
-                label={field.labelAr || field.label}
-                value={<Box dir={field.labelAr ? 'rtl' : 'ltr'}>{dynamicFieldValue(field)}</Box>}
+                compact
+                label="Employee name"
+                value={
+                  <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
+                    <PersonOutlineOutlined sx={{ fontSize: 14 }} />
+                    {details?.employeeName ?? '—'}
+                  </Stack>
+                }
               />
-            ))}
+              <LabelValue compact label="Employee number" value={details?.employeeNumber ?? '—'} />
+              <LabelValue compact label="Transaction end time" value={formatDateTime(details?.transactionEndTime ?? null)} />
+              <LabelValue compact label="Responsible employee" value={details?.responsibleEmployee ?? '—'} />
+            </Box>
+            {details && (
+              <Box sx={{ px: '12px', py: '7px', bgcolor: '#eef4fb', color: '#004b8d', borderBottom: '1px solid #d8e4f0', fontSize: 11.5, fontWeight: 700 }}>
+                Request data ({details.fields.length})
+              </Box>
+            )}
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, minmax(0, 1fr))' } }}>
+              {details?.fields.map((field) => {
+                const controlType = normalizeDynamicControlType(field.controlType);
+                const fullWidth = ['signature', 'longtext', 'file', 'table', 'label'].includes(controlType);
+                return <Box key={`${field.detailId}-${field.controlDataId ?? field.controlId ?? field.controlOrder}`} sx={{ minWidth: 0, gridColumn: { xs: '1', lg: fullWidth ? '1 / -1' : 'auto' } }}>
+                  <LabelValue
+                    compact
+                    label={field.labelAr || field.label}
+                    value={<Box dir={field.labelAr ? 'rtl' : 'ltr'}>{dynamicFieldValue(field)}</Box>}
+                  />
+                </Box>;
+              })}
+            </Box>
             {mailDetails.isLoading && <Box sx={{ display: 'grid', placeItems: 'center', minHeight: 72 }}><CircularProgress size={20} /></Box>}
             {mailDetails.isError && <Alert severity="error" sx={{ borderRadius: 0 }}>Unable to load request details.</Alert>}
           </Box>
@@ -608,6 +629,7 @@ function MailDetails({ request }: { request: MailRecord }) {
             gridTemplateColumns: { xs: '1fr', sm: 'minmax(180px, .85fr) minmax(220px, 1.15fr)' },
             gap: 1.5,
             alignItems: 'start',
+            flexShrink: 0,
           }}
         >
           <Paper

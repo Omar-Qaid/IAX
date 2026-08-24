@@ -114,16 +114,18 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                 .SingleOrDefaultAsync(item => item.RecId == requestId, cancellationToken);
             if (request == null) return null;
 
-            var detailRows = await _context.WfRequestDetails.AsNoTracking()
-                .Where(item => item.RequestId == requestId)
+            // The visible request has already passed the tenant/soft-delete query filters. Read all of
+            // its non-deleted child rows explicitly so legacy rows with an inconsistent DataAreaId are
+            // not silently omitted from Mail.
+            var detailRows = await _context.WfRequestDetails.IgnoreQueryFilters().AsNoTracking()
+                .Where(item => item.RequestId == requestId && !item.IsDeleted)
                 .OrderBy(item => item.SortOrder).ThenBy(item => item.RecId)
                 .ToListAsync(cancellationToken);
-            var parsedRows = detailRows.Count > 0
-                ? detailRows.Select(item => new MailFieldSource(
+            var databaseRows = detailRows.Select(item => new MailFieldSource(
                     item.RecId, item.ControlId, item.ControlDataId, item.ControlLabel,
                     item.ControlLabelAR, item.ControlValue, item.ControlValueAR,
-                    item.ControlValueEN, item.SortOrder)).ToList()
-                : ParseSerializedRequestDetails(request.RequestDetails);
+                    item.ControlValueEN, item.SortOrder)).ToList();
+            var parsedRows = MergeMailFieldSources(databaseRows, ParseSerializedRequestDetails(request.RequestDetails));
 
             var controlIds = parsedRows.Where(item => item.ControlId.HasValue)
                 .Select(item => item.ControlId!.Value).Distinct().ToList();
@@ -666,6 +668,30 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                 }).ToList();
             }
             catch (XmlException) { return []; }
+        }
+        private static List<MailFieldSource> MergeMailFieldSources(List<MailFieldSource> databaseRows, List<MailFieldSource> serializedRows)
+        {
+            static string Key(MailFieldSource item) => item.ControlDataId is > 0
+                ? $"data:{item.ControlDataId.Value}"
+                : $"control:{item.ControlId}:{item.Order}:{Normalize(FirstText(item.LabelAr, item.Label))}";
+
+            var serializedByKey = serializedRows.GroupBy(Key).ToDictionary(group => group.Key, group => group.First());
+            var result = databaseRows.Select(database =>
+            {
+                if (!serializedByKey.Remove(Key(database), out var serialized)) return database;
+                return database with
+                {
+                    ControlId = database.ControlId ?? serialized.ControlId,
+                    ControlDataId = database.ControlDataId ?? serialized.ControlDataId,
+                    Label = FirstText(database.Label, serialized.Label),
+                    LabelAr = FirstText(database.LabelAr, serialized.LabelAr),
+                    Value = FirstText(database.Value, serialized.Value),
+                    ValueAr = FirstText(database.ValueAr, serialized.ValueAr),
+                    ValueEn = FirstText(database.ValueEn, serialized.ValueEn)
+                };
+            }).ToList();
+            result.AddRange(serializedRows.Where(serialized => serializedByKey.ContainsKey(Key(serialized))));
+            return result.OrderBy(item => item.Order).ThenBy(item => item.DetailId).ToList();
         }
         private static string FirstText(params string?[] values) => values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value))?.Trim() ?? string.Empty;
         private static bool LooksSerialized(string value) => value.TrimStart().StartsWith("<Details", StringComparison.OrdinalIgnoreCase);
