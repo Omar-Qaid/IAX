@@ -57,7 +57,8 @@ const requestStatus = (request: WfRequestRecord): MailAssignment['status'] => {
 export const getTemporaryMailDetails = (request: WfRequestRecord): TemporaryMailDetails => {
   const assignmentId = `assignment-${request.recId}`;
   const status = requestStatus(request);
-  const requestText = request.requestDetails || request.description || request.notes || 'No details provided.';
+  const requestText =
+    request.requestDetails || request.description || request.notes || 'No details provided.';
 
   return {
     assignment: {
@@ -79,17 +80,29 @@ export const getTemporaryMailDetails = (request: WfRequestRecord): TemporaryMail
     },
     processDataDetails: [
       { id: 'request-code', label: 'Request number', value: request.code || `#${request.recId}` },
-      { id: 'requester', label: 'Requester', value: request.employeeId ? `Employee ${request.employeeId}` : 'Not assigned' },
+      {
+        id: 'requester',
+        label: 'Requester',
+        value: request.employeeId ? `Employee ${request.employeeId}` : 'Not assigned',
+      },
       { id: 'company', label: 'Company', value: request.dataAreaId || '—' },
       { id: 'version', label: 'Version', value: String(request.recVersion) },
     ],
     history: [
       {
         id: 'current',
-        title: request.isFinished ? 'Request completed' : request.isStopped ? 'Request stopped' : 'Execution department',
-        subtitle: request.isFinished ? 'Final stage' : 'Current stage',
-        actor: request.employeeId ? `Employee ${request.employeeId}` : 'Human Resources',
-        action: request.isFinished ? 'Approve transaction' : request.isStopped ? 'Stop transaction' : 'Apply administrative action',
+        title: request.isFinished
+          ? 'Request Completed'
+          : request.isStopped
+            ? 'Request Stopped'
+            : 'Current Step',
+        subtitle: 'Final Stage',
+        actor: request.employeeId ? `Employee ${request.employeeId}` : 'Human Resources Department',
+        action: request.isFinished
+          ? 'Approve Transaction'
+          : request.isStopped
+            ? 'Stop Transaction'
+            : 'Apply Administrative Penalty',
         date: request.finishedDate || request.stoppedDate || request.requestDate,
         details: request.notes || requestText,
         current: !request.isFinished && !request.isStopped,
@@ -97,23 +110,26 @@ export const getTemporaryMailDetails = (request: WfRequestRecord): TemporaryMail
       },
       {
         id: 'assigned',
-        title: 'Department manager',
-        subtitle: 'Approved',
-        actor: request.employeeId ? `Employee ${request.employeeId}` : 'Direct manager',
-        action: 'Approval completed',
+        title: 'Department Manager',
+        subtitle: 'Operations Department',
+        actor: request.employeeId ? `Employee ${request.employeeId}` : 'Khalid Al-Sudairi',
+        action: 'Approved',
         date: request.requestDate,
-        details: 'The request was reviewed, approved, and forwarded to the next stage.',
+        details:
+          'The violation details and elapsed time were reviewed. The required action is recommended according to company policy.',
         current: false,
         completed: true,
       },
       {
         id: 'submitted',
-        title: 'First step',
-        subtitle: request.code || `Request ${request.recId}`,
-        actor: request.employeeId ? `Employee ${request.employeeId}` : 'Requester',
-        action: 'Submit transaction',
+        title: 'Quality 11',
+        subtitle: 'Audit Unit',
+        actor: request.employeeId ? `Employee ${request.employeeId}` : 'Quality Team',
+        action: 'Data Verification',
         date: request.requestDate,
-        details: request.description || 'The workflow request was created and submitted successfully.',
+        details:
+          request.description ||
+          'The reported time was verified and confirmed against the system policy.',
         current: false,
         completed: true,
       },
