@@ -34,7 +34,7 @@ export function CustomerGroupListPage(): React.ReactElement {
     ],
     locale: currentLanguage.code,
     crud: { editLabel: t('actions.edit'), newLabel: t('actions.new'), deleteLabel: t('actions.delete') },
-    commands: ['setup', 'forecast', 'productFilters', 'options'].map((id) => ({ id, label: t(`customerGroupCommands.${id}`) })),
+    commands: ['setup', 'forecast', 'productFilters'].map((id) => ({ id, label: t(`customerGroupCommands.${id}`) })),
     utilities: {
       personalizeLabel: t('utilities.personalize'), guideLabel: t('utilities.guide'), notificationsLabel: t('common.notifications'),
       refreshLabel: t('actions.refresh'), openWindowLabel: t('utilities.openWindow'), notificationCount: 0,

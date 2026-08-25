@@ -89,7 +89,7 @@ describe('representative enterprise pages', () => {
   it('renders simple-list and list-details representatives', () => {
     render(<CustomerListPage />);
     expect(screen.getAllByText('Contoso Retail Americas').length).toBeGreaterThan(0);
-    expect(screen.getByText('Standard view')).toBeDefined();
+    expect(screen.queryByText('Standard view')).toBeNull();
     expect(screen.getByText('Arabic name')).toBeDefined();
     expect(screen.getByRole('button', { name: 'Edit' })).toBeDefined();
     act(() => fireEvent.click(screen.getByRole('button', { name: 'Filter' })));

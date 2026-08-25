@@ -207,6 +207,7 @@ export function WFProcessPage(): React.ReactElement {
   );
 
   const config: EnterpriseListDetailsConfig<WfProcessRecord> = {
+    recordTableName: 'WfProcess',
     dataSource: {
       type: 'remote',
       key: 'workflow-processes',

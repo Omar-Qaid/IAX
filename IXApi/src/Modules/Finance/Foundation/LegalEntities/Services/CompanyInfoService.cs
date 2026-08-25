@@ -10,7 +10,6 @@ using Microsoft.EntityFrameworkCore;
 
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses;
-using Mapster;
 
 namespace IAX.IXApi.Modules.Finance.Foundation.LegalEntities
 {
@@ -106,7 +105,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LegalEntities
 
                     // 2. Save CompanyInfo
                     var company = new CompanyInfo();
-                    dto.Adapt(company);
+                    ApplyCompanyFields(dto, company);
                     company.Party = party.RecId;
                     company.CreatedBy = _currentUser.GetCurrentUserId() ?? "sys";
                     company.OwnerAccountId = _currentUser.GetOwnerAccountId() ?? "sys";
@@ -148,7 +147,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LegalEntities
                     var originalRecId = company.RecId;
                     var originalParty = company.Party;
                     
-                    dto.Adapt(company);
+                    ApplyCompanyFields(dto, company);
                     
                     company.RecId = originalRecId;
                     company.Party = originalParty;
@@ -183,6 +182,25 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LegalEntities
         }
 
         // UpdateGlobalAddressBookAsync has been moved to GlobalAddressBookService
+
+        private static void ApplyCompanyFields(CompanyInfoDto dto, CompanyInfo company)
+        {
+            company.DataArea = dto.DataArea;
+            company.Name = dto.Name;
+            company.LanguageId = dto.LanguageId;
+            company.CurrencyCode = dto.CurrencyCode;
+            company.TaxLicenseNum = dto.TaxLicenseNum;
+            company.FederalTaxId = dto.FederalTaxId;
+            company.BankAccount = dto.BankAccount;
+            company.Calendar = dto.Calendar;
+            company.TimeZone = dto.TimeZone;
+            company.Memo = dto.Memo;
+            company.ArabicName = dto.ArabicName;
+            company.LocalizedRegion = dto.LocalizedRegion;
+
+            // Logo and ReportLogo are legacy byte[] columns. New images are stored
+            // through Document Management, so normal legal-entity saves preserve them.
+        }
 
         public async Task PopulateGlobalAddressBookAsync(IEnumerable<CompanyInfoDto> dtos, CancellationToken cancellationToken)
         {

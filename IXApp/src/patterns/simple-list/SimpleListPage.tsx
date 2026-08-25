@@ -8,6 +8,7 @@ import { RelatedInformationPanel, type RelatedInformationSection } from '@shared
 import { ActionPane } from '@shared/components/action-pane/ActionPane';
 import { ActionPaneGroup } from '@shared/components/action-pane/ActionPaneGroup';
 import { ActionPaneButton } from '@shared/components/action-pane/ActionPaneButton';
+import { OptionsMenu } from '@shared/components/action-pane/OptionsMenu';
 import { EnterpriseCrudActions } from '@shared/components/action-pane/EnterpriseCrudActions';
 import { EnterpriseCommandUtilities } from '@shared/components/action-pane/EnterpriseCommandUtilities';
 import { DataGrid } from '@shared/components/data-grid/DataGrid';
@@ -98,6 +99,8 @@ export interface EnterpriseListConfig<T> {
   onReset?: () => void;
   backCommand?: { label: string; onClick: () => void };
   showSearchCommand?: boolean;
+  recordTableName?: string;
+  getAuditRecordId?: (record: T) => string | number;
 }
 
 export interface SimpleListPageProps<T extends { id: string } = { id: string }> {
@@ -240,7 +243,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
       hideInlineEditActions: dataGridProps.hideInlineEditActions ?? true,
     } : { ...dataGridProps, rows, columns };
     const generatedActionPane = config && <>
-      {config.backCommand && <ActionPaneGroup><ActionPaneButton label={config.backCommand.label} icon={<ArrowBackIcon sx={{ fontSize: 22 }} />} onClick={config.backCommand.onClick} /></ActionPaneGroup>}
+      {config.backCommand && <ActionPaneGroup><ActionPaneButton label={config.backCommand.label} icon={<ArrowBackIcon />} onClick={config.backCommand.onClick} /></ActionPaneGroup>}
       <EnterpriseCrudActions
         editLabel={config.crud.editLabel}
         newLabel={config.crud.newLabel}
@@ -260,7 +263,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
         onCancel={() => gridRef.current?.cancelEdit()}
       />
       {config.commands && <ActionPaneGroup>{config.commands.map((command) => <ActionPaneButton key={command.id} label={command.label} permission={command.permission} disabled={isEditing || command.disabled} onClick={command.onClick} />)}</ActionPaneGroup>}
-      {config.showSearchCommand && <ActionPaneGroup><ActionPaneButton label={t('common.search', 'Search')} icon={<SearchIcon sx={{ fontSize: 22 }} />} disabled={isEditing} onClick={() => setQuickFilterVisible((visible) => !visible)} /></ActionPaneGroup>}
+      {config.showSearchCommand && <ActionPaneGroup><ActionPaneButton label={t('common.search', 'Search')} icon={<SearchIcon />} disabled={isEditing} onClick={() => setQuickFilterVisible((visible) => !visible)} /><OptionsMenu record={selectedRow} tableName={config.recordTableName ?? title} getRecordId={config.getAuditRecordId ?? getRowId} title={config.contextLabel} disabled={isEditing} /></ActionPaneGroup>}
     </>;
     const selectedAttachmentRecId = selectedRow
       ? (config?.attachments?.getRefRecId?.(selectedRow) ?? Number(getRowId(selectedRow)))

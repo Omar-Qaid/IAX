@@ -67,6 +67,7 @@ export function ExchangeRatePage(): React.ReactElement {
   });
 
   const config: EnterpriseListDetailsConfig<ExchangeRatePair> = {
+    recordTableName: 'ExchangeRateCurrencyPair',
     dataSource: { type: 'controlled', records, onRecordsChange: setRecords },
     createRecord: () => ({ id: `pair-${Date.now()}`, exchangeRateType, fromCurrency: '', toCurrency: 'SAR', conversionFactor: 1, values: {} }),
     getPrimaryText: (record) => record.fromCurrency,
@@ -129,7 +130,6 @@ export function ExchangeRatePage(): React.ReactElement {
       ...(!record.toCurrency.trim() ? { toCurrency: t('validation.required', { field: t('exchangeRates.fields.toCurrency') }) } : {}),
     }),
     advancedFilter: { fieldLabel: t('exchangeRates.fields.fromCurrency'), getValue: (record) => record.fromCurrency, matches: (record, value) => record.fromCurrency.toLocaleLowerCase(currentLanguage.code).includes(value.trim().toLocaleLowerCase(currentLanguage.code)) },
-    commands: [{ id: 'options', label: t('customerCommands.options') }],
   };
 
   return <ListDetailsPage variant="enterprise" title={t('pages.exchangeRates.title')} config={config} />;

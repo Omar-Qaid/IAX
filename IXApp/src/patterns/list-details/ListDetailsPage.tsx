@@ -24,6 +24,7 @@ import { ActionPane } from '@shared/components/action-pane/ActionPane';
 import { ActionPaneButton } from '@shared/components/action-pane/ActionPaneButton';
 import { ActionPaneGroup } from '@shared/components/action-pane/ActionPaneGroup';
 import { ActionPaneMenu } from '@shared/components/action-pane/ActionPaneMenu';
+import { OptionsMenu } from '@shared/components/action-pane/OptionsMenu';
 import { EnterpriseCrudActions } from '@shared/components/action-pane/EnterpriseCrudActions';
 import { EnterpriseCommandUtilities } from '@shared/components/action-pane/EnterpriseCommandUtilities';
 import { RightUtilityRail } from '@shared/components/page/RightUtilityRail';
@@ -107,7 +108,6 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
   const displayedRecord = record ?? emptyPreviewRecord;
   const displayedEditing = Boolean(record) && state.editing;
   const labels = {
-    view: config.viewLabel ?? t('common.standardView', 'Standard view'),
     filter: config.filterLabel ?? t('actions.filter'),
     information: config.informationLabel ?? t('common.information'),
     yes: config.yesLabel ?? t('common.yes', 'Yes'),
@@ -238,9 +238,13 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
           </>
         }
       >
-        <IconButton size="small" aria-label={t('actions.back', 'Back')} onClick={() => navigate(-1)} sx={{ color: d365.primary, p: '5px' }}>
-          <ArrowBackIcon sx={{ fontSize: 17 }} />
-        </IconButton>
+        <ActionPaneGroup>
+          <ActionPaneButton
+            label={t('actions.back', 'Back')}
+            icon={<ArrowBackIcon />}
+            onClick={() => navigate(-1)}
+          />
+        </ActionPaneGroup>
         <IconButton
           size="small"
           aria-label={t('actions.toggleList', 'Toggle record list')}
@@ -275,33 +279,41 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
             onCancel={state.cancel}
           />
         )}
+        {(standaloneCommands.length > 0 || commandMenus.length > 0) && (
+          <ActionPaneGroup>
+            {standaloneCommands.map((command) => (
+              <ActionPaneButton
+                key={command.id}
+                label={command.label}
+                disabled={
+                  state.editing || command.disabled || (command.requiresSelection && !state.selected)
+                }
+                onClick={() => command.onClick?.(state.selected)}
+              />
+            ))}
+            {commandMenus.map((menuLabel) => (
+              <ActionPaneMenu
+                key={menuLabel}
+                label={menuLabel}
+                disabled={state.editing}
+                actions={(config.commands ?? []).filter((command) => command.menuLabel === menuLabel).map((command) => ({
+                  id: command.id,
+                  label: command.label,
+                  disabled: command.disabled || (command.requiresSelection && !state.selected),
+                  onClick: command.onClick ? () => command.onClick?.(state.selected) : undefined,
+                }))}
+              />
+            ))}
+          </ActionPaneGroup>
+        )}
         <ActionPaneGroup>
-          {standaloneCommands.map((command) => (
-            <ActionPaneButton
-              key={command.id}
-              label={command.label}
-              disabled={
-                state.editing || command.disabled || (command.requiresSelection && !state.selected)
-              }
-              onClick={() => command.onClick?.(state.selected)}
-            />
-          ))}
-          {commandMenus.map((menuLabel) => (
-            <ActionPaneMenu
-              key={menuLabel}
-              label={menuLabel}
-              disabled={state.editing}
-              actions={(config.commands ?? []).filter((command) => command.menuLabel === menuLabel).map((command) => ({
-                id: command.id,
-                label: command.label,
-                disabled: command.disabled || (command.requiresSelection && !state.selected),
-                onClick: command.onClick ? () => command.onClick?.(state.selected) : undefined,
-              }))}
-            />
-          ))}
-          <IconButton disabled={state.editing} size="small" sx={{ color: 'primary.main' }}>
-            <SearchIcon sx={{ fontSize: 17 }} />
-          </IconButton>
+          <ActionPaneButton
+            label={t('common.search', 'Search')}
+            icon={<SearchIcon />}
+            disabled={state.editing}
+            onClick={state.toggleFilter}
+          />
+          <OptionsMenu record={state.selected} tableName={config.recordTableName ?? title} getRecordId={config.getAuditRecordId} title={title} disabled={state.editing} />
         </ActionPaneGroup>
       </ActionPane>
       <Box
@@ -343,7 +355,6 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
               <>
                 <RecordHeader
                   title={title}
-                  viewLabel={labels.view}
                   yesLabel={labels.yes}
                   noLabel={labels.no}
                   record={displayedRecord}
@@ -587,7 +598,6 @@ export function RecordList<T extends ListDetailRecord>({
 
 function RecordHeader<T>({
   title,
-  viewLabel,
   yesLabel,
   noLabel,
   record,
@@ -598,7 +608,6 @@ function RecordHeader<T>({
   onChange,
 }: {
   title: string;
-  viewLabel: string;
   yesLabel: string;
   noLabel: string;
   record: T;
@@ -624,11 +633,10 @@ function RecordHeader<T>({
   );
   return (
     <Box sx={{ px: 0, pt: '3px', pb: '3px', minHeight: 130, boxSizing: 'border-box' }}>
-      <Typography sx={{ fontSize: 11, lineHeight: 1.5 }}>{viewLabel}</Typography>
       <Typography
         component="h1"
         sx={{
-          mt: '5px',
+          mt: 0,
           mb: '21px',
           fontSize: d365.titleFontSize,
           lineHeight: 1.2,

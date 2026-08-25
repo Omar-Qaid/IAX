@@ -13,7 +13,6 @@ import {
 import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
 import AssignmentTurnedInOutlined from '@mui/icons-material/AssignmentTurnedInOutlined';
 import AttachFileOutlined from '@mui/icons-material/AttachFileOutlined';
-import PersonOutlineOutlined from '@mui/icons-material/PersonOutlineOutlined';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
 import type {
@@ -36,6 +35,7 @@ type MailFolder = 'all' | 'inbox' | 'sent' | 'important';
 
 interface MailRecord extends WfRequestRecord {
   processName: string;
+  requestedBy: string;
   stepNumber: number;
 }
 
@@ -61,6 +61,7 @@ const emptyMailRecord = (): MailRecord => ({
   recVersion: 1,
   dataAreaId: 'dat',
   processName: '',
+  requestedBy: '',
   stepNumber: 1,
 });
 
@@ -522,92 +523,75 @@ function MailDetails({ request }: { request: MailRecord }) {
           gridRow: { lg: 1 },
         }}
       >
-        <Paper
-          variant="outlined"
+        <Box
           sx={{
-            borderRadius: '3px',
-            overflow: 'hidden',
             minHeight: 0,
             flex: { xs: '0 0 auto', lg: '1 1 0' },
             display: 'flex',
             flexDirection: 'column',
-            boxShadow: 'none',
           }}
         >
           <Stack
             direction="row"
-            spacing={0.7}
+            spacing={0.55}
             sx={{
               alignItems: 'center',
+              justifyContent: 'flex-start',
               flexShrink: 0,
-              px: '10px',
-              height: 38,
-              color: '#004b8d',
-              borderBottom: '1px solid #e5e5e5',
+              mb: 1.5,
+              paddingInlineStart: 0.75,
             }}
           >
             <AssignmentTurnedInOutlined sx={{ fontSize: 17 }} />
-            <Typography sx={{ fontSize: 14, fontWeight: 600 }}>Transaction details</Typography>
+            <Typography sx={{ fontSize: 13, lineHeight: 1.35, fontWeight: 600 }}>Transaction details</Typography>
           </Stack>
-          <Box
-            role="region"
-            aria-label="Scrollable request data"
-            tabIndex={0}
-            sx={{
-              flex: 1,
-              minHeight: 0,
-              overflowX: 'hidden',
-              overflowY: { xs: 'visible', lg: 'scroll' },
-              scrollbarGutter: 'stable',
-              scrollbarWidth: 'thin',
-              scrollbarColor: '#8795a7 #eef1f4',
-              '&::-webkit-scrollbar': { width: 10 },
-              '&::-webkit-scrollbar-track': { bgcolor: '#eef1f4' },
-              '&::-webkit-scrollbar-thumb': {
-                bgcolor: '#8795a7',
-                border: '2px solid #eef1f4',
-                borderRadius: 8,
-              },
-              '&:focus-visible': { outline: '2px solid #2f6fed', outlineOffset: -2 },
-            }}
-          >
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, minmax(0, 1fr))' } }}>
-              <LabelValue
-                compact
-                label="Employee name"
-                value={
-                  <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
-                    <PersonOutlineOutlined sx={{ fontSize: 14 }} />
-                    {details?.employeeName ?? '—'}
-                  </Stack>
-                }
-              />
-              <LabelValue compact label="Employee number" value={details?.employeeNumber ?? '—'} />
-              <LabelValue compact label="Transaction end time" value={formatDateTime(details?.transactionEndTime ?? null)} />
-              <LabelValue compact label="Responsible employee" value={details?.responsibleEmployee ?? '—'} />
+          <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <Box
+              role="region"
+              aria-label="Scrollable request data"
+              tabIndex={0}
+              sx={{
+                flex: 1,
+                minHeight: 0,
+                overflowX: 'hidden',
+                overflowY: { xs: 'visible', lg: 'scroll' },
+                scrollbarGutter: 'stable',
+                scrollbarWidth: 'thin',
+                px: 0.5,
+                pb: 0.5,
+                scrollbarColor: '#b8b8b8 transparent',
+                '&::-webkit-scrollbar': { width: 10 },
+                '&::-webkit-scrollbar-track': { bgcolor: 'transparent' },
+                '&::-webkit-scrollbar-thumb': {
+                  bgcolor: '#b8b8b8',
+                  border: '2px solid transparent',
+                  borderRadius: 8,
+                },
+                '&:focus-visible': { outline: '2px solid #2f6fed', outlineOffset: -2 },
+              }}
+            >
+              {details && (
+                <Paper variant="outlined" sx={{ overflow: 'hidden', borderRadius: '6px', borderColor: '#e5e7eb', bgcolor: '#fff', boxShadow: '0 1px 2px rgba(0,0,0,.02)' }}>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, minmax(0, 1fr))' } }}>
+                    {details.fields.map((field) => {
+                      const controlType = normalizeDynamicControlType(field.controlType);
+                      const fullWidth = ['signature', 'longtext', 'file', 'table', 'label'].includes(controlType);
+                      return <Box key={`${field.detailId}-${field.controlDataId ?? field.controlId ?? field.controlOrder}`} sx={{ minWidth: 0, gridColumn: { xs: '1', lg: fullWidth ? '1 / -1' : 'auto' } }}>
+                        <LabelValue
+                          compact
+                          label={field.labelAr || field.label}
+                          value={<Box dir={field.labelAr ? 'rtl' : 'ltr'}><MailFieldValue field={field} /></Box>}
+                        />
+                      </Box>;
+                    })}
+                  </Box>
+                </Paper>
+              )}
+              {mailDetails.isLoading && <Box sx={{ display: 'grid', placeItems: 'center', minHeight: 72 }}><CircularProgress size={20} /></Box>}
+              {mailDetails.isError && <Alert severity="error" sx={{ borderRadius: 0 }}>Unable to load request details.</Alert>}
             </Box>
-            {details && (
-              <Box sx={{ px: '12px', py: '7px', bgcolor: '#eef4fb', color: '#004b8d', borderBottom: '1px solid #d8e4f0', fontSize: 11.5, fontWeight: 700 }}>
-                Request data ({details.fields.length})
-              </Box>
-            )}
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, minmax(0, 1fr))' } }}>
-              {details?.fields.map((field) => {
-                const controlType = normalizeDynamicControlType(field.controlType);
-                const fullWidth = ['signature', 'longtext', 'file', 'table', 'label'].includes(controlType);
-                return <Box key={`${field.detailId}-${field.controlDataId ?? field.controlId ?? field.controlOrder}`} sx={{ minWidth: 0, gridColumn: { xs: '1', lg: fullWidth ? '1 / -1' : 'auto' } }}>
-                  <LabelValue
-                    compact
-                    label={field.labelAr || field.label}
-                    value={<Box dir={field.labelAr ? 'rtl' : 'ltr'}><MailFieldValue field={field} /></Box>}
-                  />
-                </Box>;
-              })}
-            </Box>
-            {mailDetails.isLoading && <Box sx={{ display: 'grid', placeItems: 'center', minHeight: 72 }}><CircularProgress size={20} /></Box>}
-            {mailDetails.isError && <Alert severity="error" sx={{ borderRadius: 0 }}>Unable to load request details.</Alert>}
           </Box>
-        </Paper>
+        </Box>
 
         <Box
           sx={{
@@ -674,6 +658,25 @@ function MailDetails({ request }: { request: MailRecord }) {
   );
 }
 
+function RequestedByHeaderValue({ requestId }: { requestId: number }) {
+  const mailDetails = useQuery({
+    queryKey: ['workflow', 'mail', 'request-details', requestId],
+    queryFn: ({ signal }) => wfRequestApi.mailDetails(requestId, signal),
+    enabled: requestId > 0,
+  });
+
+  return (
+    <Typography
+      component="span"
+      noWrap
+      title={mailDetails.data?.employeeName || undefined}
+      sx={{ fontSize: 12, lineHeight: 1.35, color: 'text.primary' }}
+    >
+      {mailDetails.isLoading ? '...' : mailDetails.data?.employeeName || '-'}
+    </Typography>
+  );
+}
+
 const folderMatches = (request: MailRecord, folder: MailFolder): boolean => {
   if (folder === 'inbox') return !request.isFinished && !request.isStopped;
   if (folder === 'sent') return request.isFinished;
@@ -692,12 +695,25 @@ export function MailPage(): React.ReactElement {
     queryKey: ['workflow', 'mail', 'processes'],
     queryFn: ({ signal }) => wfProcessApi.list(signal),
   });
+  const requesterDetails = useQueries({
+    queries: (requests.data ?? []).map((request) => ({
+      queryKey: ['workflow', 'mail', 'request-details', request.recId],
+      queryFn: ({ signal }) => wfRequestApi.mailDetails(request.recId, signal),
+      enabled: request.recId > 0,
+    })),
+  });
 
   const records = React.useMemo(() => {
     const processNames = new Map(
       (processes.data ?? []).map((process) => [
         process.recId,
         process.name || process.code || `Process ${process.recId}`,
+      ])
+    );
+    const requesterNames = new Map(
+      (requests.data ?? []).map((request, index) => [
+        request.recId,
+        requesterDetails[index]?.data?.employeeName || '—',
       ])
     );
     return [...(requests.data ?? [])]
@@ -708,10 +724,11 @@ export function MailPage(): React.ReactElement {
       .map((request, index): MailRecord => ({
         ...request,
         processName: processNames.get(request.processId) || `Process ${request.processId}`,
+        requestedBy: requesterNames.get(request.recId) || '—',
         stepNumber: index + 1,
       }))
       .filter((request) => folderMatches(request, folder));
-  }, [folder, processes.data, requests.data]);
+  }, [folder, processes.data, requesterDetails, requests.data]);
 
   const folderButtons: Array<{ id: MailFolder; label: string }> = [
     { id: 'all', label: 'All' },
@@ -721,6 +738,7 @@ export function MailPage(): React.ReactElement {
   ];
 
   const config: EnterpriseListDetailsConfig<MailRecord> = {
+    recordTableName: 'WfRequest',
     readOnly: true,
     dataSource: {
       type: 'controlled',
@@ -738,9 +756,10 @@ export function MailPage(): React.ReactElement {
       },
     },
     createRecord: emptyMailRecord,
-    getPrimaryText: (request) => request.name || request.code || `Request ${request.recId}`,
+    getPrimaryText: (request) =>
+      `Request name: ${request.name || request.code || `Request ${request.recId}`}`,
     getSecondaryText: (request) =>
-      `${request.processName} · ${getStatus(request)} · ${formatDateTime(request.requestDate)}`,
+      `Requested by: ${request.requestedBy} · Request date: ${formatDateTime(request.requestDate)}`,
     matchesSearch: (request, query) =>
       `${request.code ?? ''} ${request.name ?? ''} ${request.description ?? ''} ${request.processName}`
         .toLocaleLowerCase()
@@ -780,6 +799,15 @@ export function MailPage(): React.ReactElement {
         getValue: (request) => formatDateTime(request.requestDate),
         setValue: (request) => request,
       },
+      {
+        id: 'requestedBy',
+        label: 'Requested by',
+        type: 'display',
+        disabled: true,
+        getValue: (request) => request.recId,
+        setValue: (request) => request,
+        render: ({ value }) => <RequestedByHeaderValue requestId={Number(value)} />,
+      },
     ],
     sections: ({ record }): DetailSectionConfig[] => [
       {
@@ -792,23 +820,9 @@ export function MailPage(): React.ReactElement {
     ],
     commands: [
       {
-        id: 'record-audit',
-        label: 'Record Audit',
-        menuLabel: 'Record',
-        requiresSelection: true,
-        disabled: true,
-      },
-      {
-        id: 'record-info',
-        label: 'Record Info',
-        menuLabel: 'Record',
-        requiresSelection: true,
-        disabled: true,
-      },
-      {
         id: 'printout',
         label: 'Printout',
-        menuLabel: 'Record',
+        menuLabel: 'View',
         requiresSelection: true,
         onClick: (request) => setPrintRequest(request),
       },

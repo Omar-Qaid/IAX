@@ -46,6 +46,9 @@ export interface LegalEntity {
   localizedRegion: string | null;
   logo: string | null;
   reportLogo: string | null;
+  /** Pending attachment changes; undefined means keep the current attachment. */
+  logoFile?: File | null;
+  reportLogoFile?: File | null;
   addresses: LegalEntityAddress[];
   contacts: LegalEntityContact[];
   /** UI fields represented in the D365 form but not yet exposed by CompanyInfoDto. */

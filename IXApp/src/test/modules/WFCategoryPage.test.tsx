@@ -22,7 +22,7 @@ const category: WfCategoryRecord = {
 beforeEach(() => {
   queryClient.clear();
   vi.restoreAllMocks();
-  vi.spyOn(wfCategoryApi, 'list').mockResolvedValue([category]);
+  vi.spyOn(wfCategoryApi, 'listPage').mockResolvedValue({ rows: [category], totalCount: 1 });
 });
 
 describe('WFCategoryPage', () => {
@@ -36,5 +36,21 @@ describe('WFCategoryPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
     expect(screen.getByRole('button', { name: 'Save' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDefined();
+    expect(wfCategoryApi.listPage).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 0, pageSize: 50, isFirstPage: true })
+    );
+  });
+
+  it('opens record information from the Options menu after Search', async () => {
+    render(<WFCategoryPage />);
+
+    expect(await screen.findByText('Procurement')).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: 'Options' }));
+    expect(screen.getByRole('menuitem', { name: 'Record Info' })).toBeDefined();
+    expect(screen.getByRole('menuitem', { name: 'Record Audit' })).toBeDefined();
+
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Record Info' }));
+    expect(screen.getByText('Sys Field')).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Close' })).toBeDefined();
   });
 });

@@ -41,7 +41,7 @@ export interface FastTabsDialogProps<TValues extends Record<string, FastTabValue
   onCancel: () => void;
 }
 
-export function FastTabsDialog<TValues extends Record<string, FastTabValue>>({ open, title, viewLabel, sections, initialValues, resetKey, validate, onSubmit, saveLabel, saveAndOpenLabel, cancelLabel, closeLabel = 'Close', helpLabel = 'Help', placement = 'center', canSave = true, onCancel }: FastTabsDialogProps<TValues>): React.ReactElement {
+export function FastTabsDialog<TValues extends Record<string, FastTabValue>>({ open, title, sections, initialValues, resetKey, validate, onSubmit, saveLabel, saveAndOpenLabel, cancelLabel, closeLabel = 'Close', helpLabel = 'Help', placement = 'center', canSave = true, onCancel }: FastTabsDialogProps<TValues>): React.ReactElement {
   const initialValuesRef = useRef(initialValues);
   useEffect(() => { initialValuesRef.current = initialValues; }, [initialValues]);
   const [values, setValues] = useState<TValues>(() => initialValues());
@@ -72,8 +72,7 @@ export function FastTabsDialog<TValues extends Record<string, FastTabValue>>({ o
         <IconButton size="small" aria-label={helpLabel}><HelpOutlineIcon sx={{ fontSize: 18 }} /></IconButton>
         <IconButton size="small" aria-label={closeLabel} disabled={saving} onClick={onCancel}><CloseIcon sx={{ fontSize: 18 }} /></IconButton>
       </Box>
-      <Typography sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>{viewLabel}</Typography>
-      <Typography component="h2" sx={{ mt: 0.25, fontSize: '1.1rem', fontWeight: 600 }}>{title}</Typography>
+      <Typography component="h2" sx={{ fontSize: '1.1rem', fontWeight: 600 }}>{title}</Typography>
     </Box>
     <DialogContent sx={{ px: 3, py: 0, overflowY: 'auto', '&::-webkit-scrollbar': { width: 8 }, '&::-webkit-scrollbar-thumb': { bgcolor: '#999', borderRadius: 4 } }}>
       {submitError && <Alert severity="error" sx={{ mb: 1 }}>{submitError}</Alert>}

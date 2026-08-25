@@ -1,10 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { queryClient } from '@core/api/queryClient';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
-import type { ColumnDef } from '@shared/components/data-grid/types';
+import type { ColumnDef, FetchRowsParams } from '@shared/components/data-grid/types';
 import { useNotifications } from '@shared/hooks/useNotifications';
 import { uiDensity } from '@shared/constants/uiDensity';
 import type { WorkflowMasterDto, WorkflowMasterRecord } from '../api/workflowMasterApi';
@@ -14,9 +14,84 @@ import type { NumberSequenceMetadata } from '@patterns/list-details/useListDetai
 
 interface WorkflowSetupApi<TDto extends WorkflowMasterDto> {
   list(signal?: AbortSignal): Promise<WorkflowMasterRecord<TDto>[]>;
+  listPage?(
+    params: FetchRowsParams
+  ): Promise<{ rows: WorkflowMasterRecord<TDto>[]; totalCount: number }>;
   create(record: WorkflowMasterRecord<TDto>): Promise<WorkflowMasterRecord<TDto>>;
   update(record: WorkflowMasterRecord<TDto>): Promise<WorkflowMasterRecord<TDto>>;
   delete(record: WorkflowMasterRecord<TDto>): Promise<void>;
+}
+
+const defaultPageRequest = (): Omit<FetchRowsParams, 'signal'> => ({
+  sort: [],
+  filters: [],
+  globalSearch: '',
+  page: 0,
+  pageSize: 50,
+  isFirstPage: true,
+});
+
+function useWorkflowSetupPaging<TDto extends WorkflowMasterDto>(
+  loadPage: WorkflowSetupApi<TDto>['listPage']
+) {
+  const [rows, setRows] = useState<WorkflowMasterRecord<TDto>[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(Boolean(loadPage));
+  const [error, setError] = useState<string | null>(null);
+  const requestIdRef = useRef(0);
+  const latestRequestRef = useRef(defaultPageRequest());
+
+  const fetchRows = useCallback(
+    async (params: FetchRowsParams) => {
+      if (!loadPage) return;
+      if (params.isFirstPage) {
+        latestRequestRef.current = {
+          sort: params.sort,
+          filters: params.filters,
+          globalSearch: params.globalSearch,
+          page: 0,
+          pageSize: params.pageSize,
+          isFirstPage: true,
+          columns: params.columns,
+        };
+      }
+      const requestId = ++requestIdRef.current;
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await loadPage(params);
+        if (requestId !== requestIdRef.current || params.signal.aborted) return;
+        setTotalCount(result.totalCount);
+        setRows((current) => {
+          if (params.isFirstPage) return result.rows;
+          const merged = new Map(current.map((row) => [row.id, row]));
+          result.rows.forEach((row) => merged.set(row.id, row));
+          return [...merged.values()];
+        });
+      } catch (loadError) {
+        if (params.signal.aborted || requestId !== requestIdRef.current) return;
+        setError(loadError instanceof Error ? loadError.message : String(loadError));
+      } finally {
+        if (requestId === requestIdRef.current) setLoading(false);
+      }
+    },
+    [loadPage]
+  );
+
+  const refresh = useCallback(() => {
+    if (!loadPage) return Promise.resolve();
+    const controller = new AbortController();
+    return fetchRows({ ...latestRequestRef.current, signal: controller.signal });
+  }, [fetchRows, loadPage]);
+
+  useEffect(() => {
+    if (!loadPage) return;
+    const controller = new AbortController();
+    void fetchRows({ ...defaultPageRequest(), signal: controller.signal });
+    return () => controller.abort();
+  }, [fetchRows, loadPage]);
+
+  return { rows, totalCount, loading, error, fetchRows, refresh };
 }
 
 export interface WorkflowSetupField<TDto extends WorkflowMasterDto> {
@@ -53,6 +128,7 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
   const { notifyError, notifySuccess } = useNotifications();
   const navigate = useNavigate();
   const queryKey = useMemo(() => ['simple-list', resourceKey] as const, [resourceKey]);
+  const paging = useWorkflowSetupPaging(api.listPage);
   const sequenceQuery = useQuery({
     queryKey: ['number-sequence', numberSequenceKey],
     queryFn: async ({ signal }) => {
@@ -100,7 +176,10 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
     ],
     [extraFields, sequence?.manual]
   );
-  const refresh = async () => queryClient.invalidateQueries({ queryKey });
+  const refresh = async () => {
+    if (api.listPage) await paging.refresh();
+    else await queryClient.invalidateQueries({ queryKey });
+  };
   const config: EnterpriseListConfig<WorkflowMasterRecord<TDto>> = {
     contextLabel: t(titleKey),
     viewLabel: t('common.standardView'),
@@ -114,6 +193,8 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
     ],
     backCommand: { label: t('actions.back', 'Back'), onClick: () => navigate(-1) },
     showSearchCommand: true,
+    recordTableName: numberSequenceKey,
+    getAuditRecordId: (record) => record.recId,
     crud: {
       editLabel: t('actions.edit'),
       newLabel: t('actions.new'),
@@ -133,7 +214,6 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
         }
       },
     },
-    commands: [{ id: 'options', label: t('customerCommands.options') }],
     utilities: {
       personalizeLabel: t('utilities.personalize'),
       guideLabel: t('utilities.guide'),
@@ -162,9 +242,25 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
       variant="enterprise"
       title={t(titleKey)}
       enterpriseConfig={config}
-      dataSource={{ type: 'remote', key: resourceKey, load: (signal) => api.list(signal) }}
+      dataSource={
+        api.listPage
+          ? {
+              type: 'controlled',
+              rows: paging.rows,
+              loading: paging.loading && paging.rows.length === 0,
+              error: paging.error,
+              refresh: paging.refresh,
+            }
+          : { type: 'remote', key: resourceKey, load: (signal) => api.list(signal) }
+      }
       columns={columns}
       dataGridProps={{
+        serverSide: Boolean(api.listPage),
+        pageSize: 50,
+        totalRowCount: api.listPage ? paging.totalCount : undefined,
+        hasMore: api.listPage ? paging.rows.length < paging.totalCount : undefined,
+        loading: api.listPage ? paging.loading : undefined,
+        onFetchRows: api.listPage ? paging.fetchRows : undefined,
         storageKey: `workflow.${resourceKey}.reference-view`,
         masterForm: true,
         hideSidebar: false,

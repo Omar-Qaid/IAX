@@ -50,7 +50,7 @@ export function CustPaymMode(): React.ReactElement {
       { id: 'summary', label: t('paymentMethods.sections.general'), defaultExpanded: true, content: record ? `${record.method} · ${record.period}` : t('messages.selectRecord') },
       { id: 'fileFormats', label: t('paymentMethods.sections.fileFormats') },
     ] },
-    commands: ['paymentSpecification', 'paymentFeeSetup', 'remittanceFiles', 'fileAnalyze', 'options'].map((id) => ({ id, label: t(`paymentMethods.commands.${id}`), disabled: id === 'fileAnalyze' })),
+    commands: ['paymentSpecification', 'paymentFeeSetup', 'remittanceFiles', 'fileAnalyze'].map((id) => ({ id, label: t(`paymentMethods.commands.${id}`), disabled: id === 'fileAnalyze' })),
   };
   return <ListDetailsPage variant="enterprise" title={t('pages.paymentMethods.title')} config={config} />;
 }

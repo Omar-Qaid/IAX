@@ -16,8 +16,8 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LegalEntities
                 .Map(dest => dest.ReportLogo, src => src.ReportLogo != null && src.ReportLogo.Length > 0 ? Convert.ToBase64String(src.ReportLogo) : null);
 
             config.NewConfig<CompanyInfoDto, CompanyInfo>()
-                .Map(dest => dest.Logo, src => string.IsNullOrWhiteSpace(src.Logo) ? null : Convert.FromBase64String(src.Logo))
-                .Map(dest => dest.ReportLogo, src => string.IsNullOrWhiteSpace(src.ReportLogo) ? null : Convert.FromBase64String(src.ReportLogo));
+                .Ignore(dest => dest.Logo!)
+                .Ignore(dest => dest.ReportLogo!);
         }
     }
 }

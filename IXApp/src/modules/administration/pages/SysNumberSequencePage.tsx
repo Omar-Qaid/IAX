@@ -471,6 +471,7 @@ export function SysNumberSequencePage(): React.ReactElement {
   );
 
   const config: EnterpriseListDetailsConfig<SysNumberSequenceRecord> = {
+    recordTableName: 'SysNumberSequence',
     dataSource: {
       type: 'remote',
       key: 'system-number-sequences',

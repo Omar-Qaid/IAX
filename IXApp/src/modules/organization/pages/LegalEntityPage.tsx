@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
 import { Alert, Box, Button, Chip, Stack, Typography } from '@mui/material';
@@ -12,6 +13,12 @@ import { LogisticsElectronicAddressDrawer } from '@shared/components/logistics/L
 import type { ElectronicAddressType, LogisticsElectronicAddress, LogisticsPostalAddress } from '@shared/types/logistics';
 import { legalEntityService } from '../services/legalEntityService';
 import type { LegalEntityAddress, LegalEntityContact, LegalEntityRecord } from '../types/legalEntityTypes';
+import { documentApi } from '@shared/components/documents/documentApi';
+import {
+  LEGAL_ENTITY_DASHBOARD_IMAGE,
+  LEGAL_ENTITY_REPORT_LOGO,
+  LEGAL_ENTITY_TABLE_ID,
+} from '../api/legalEntityImageAttachments';
 
 const emptyEntity = (): LegalEntityRecord => ({
   id: `new-${crypto.randomUUID()}`, recId: 0, party: 0, dataArea: '', name: '', languageId: null,
@@ -27,6 +34,8 @@ export function LegalEntityPage(): React.ReactElement {
   const { t, currentLanguage } = useAppTranslation();
 
   const config = useMemo<EnterpriseListDetailsConfig<LegalEntityRecord>>(() => ({
+    recordTableName: 'CompanyInfo',
+    attachments: { refTableId: LEGAL_ENTITY_TABLE_ID, getRefRecId: (record) => record.recId },
     dataSource: {
       type: 'remote', key: 'organization-legal-entities', load: async (signal) => (await legalEntityService.list(signal)).sort((left, right) => left.name.localeCompare(right.name)),
       create: (record) => legalEntityService.create(record), update: (record) => legalEntityService.update(record),
@@ -82,8 +91,8 @@ export function LegalEntityPage(): React.ReactElement {
           { id: 'calendar', fields: [{ name: 'calendar', label: 'Fiscal calendar', type: 'number' }] },
         ],
       },
-      { id: 'dashboard-image', title: 'Dashboard image', visualVariant: 'legalEntity', defaultExpanded: true, content: <CompanyImagePanel key={`dashboard-image-${record.id}`} label="Dashboard company image" value={record.logo} mode="banner" editing={editing} onChange={(logo) => onRecordChange({ ...record, logo })} /> },
-      { id: 'report-logo', title: 'Report company logo image', visualVariant: 'legalEntity', defaultExpanded: true, content: <CompanyImagePanel key={`report-logo-${record.id}`} label="Report company logo" value={record.reportLogo} mode="logo" editing={editing} onChange={(reportLogo) => onRecordChange({ ...record, reportLogo })} /> },
+      { id: 'dashboard-image', title: 'Dashboard image', visualVariant: 'legalEntity', defaultExpanded: true, content: <CompanyImagePanel key={`dashboard-image-${record.id}`} label="Dashboard company image" attachmentName={LEGAL_ENTITY_DASHBOARD_IMAGE} refRecId={record.recId} value={record.logo} pendingFile={record.logoFile} mode="banner" editing={editing} onChange={(logo, logoFile) => onRecordChange({ ...record, logo, logoFile })} /> },
+      { id: 'report-logo', title: 'Report company logo image', visualVariant: 'legalEntity', defaultExpanded: true, content: <CompanyImagePanel key={`report-logo-${record.id}`} label="Report company logo" attachmentName={LEGAL_ENTITY_REPORT_LOGO} refRecId={record.recId} value={record.reportLogo} pendingFile={record.reportLogoFile} mode="logo" editing={editing} onChange={(reportLogo, reportLogoFile) => onRecordChange({ ...record, reportLogo, reportLogoFile })} /> },
     ],
     presentation: { mode: 'list', listWidth: 281, listWidthStorageKey: 'organization.legal-entities.reference-v1', headerMaxWidth: 520 },
     permissions: { view: 'legalEntity.view', create: 'legalEntity.manage', edit: 'legalEntity.manage', delete: 'legalEntity.manage' },
@@ -99,13 +108,6 @@ export function LegalEntityPage(): React.ReactElement {
       ],
       matches: (record, query) => record.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()),
     },
-    commands: [
-      { id: 'hierarchy', label: 'View in hierarchy' },
-      { id: 'registrationIds', label: 'Registration IDs' },
-      { id: 'registrationSearch', label: 'Registration ID search' },
-      { id: 'electronicDocuments', label: 'Electronic document properties' },
-      { id: 'options', label: 'Options' },
-    ],
   }), [currentLanguage.code, t]);
 
   return <ListDetailsPage variant="enterprise" title={t('pages.legalEntities.title')} config={config} />;
@@ -115,10 +117,13 @@ interface CollectionPanelProps { record: LegalEntityRecord; editing: boolean; on
 
 interface CompanyImagePanelProps {
   label: string;
+  attachmentName: string;
+  refRecId: number;
   value: string | null;
+  pendingFile?: File | null;
   mode: 'banner' | 'logo';
   editing: boolean;
-  onChange: (value: string | null) => void;
+  onChange: (value: string | null, file: File | null) => void;
 }
 
 const imageSource = (value: string | null): string | null => {
@@ -131,9 +136,27 @@ const imageSource = (value: string | null): string | null => {
   return `data:image/png;base64,${image}`;
 };
 
-function CompanyImagePanel({ label, value, mode, editing, onChange }: CompanyImagePanelProps): React.ReactElement {
+function CompanyImagePanel({ label, attachmentName, refRecId, value, pendingFile, mode, editing, onChange }: CompanyImagePanelProps): React.ReactElement {
   const [error, setError] = useState<string | null>(null);
-  const source = imageSource(value);
+  const documents = useQuery({
+    queryKey: ['documents', LEGAL_ENTITY_TABLE_ID, refRecId],
+    queryFn: ({ signal }) => documentApi.list(LEGAL_ENTITY_TABLE_ID, refRecId, signal),
+    enabled: refRecId > 0,
+  });
+  const attachment = documents.data?.items.find((document) => document.name === attachmentName);
+  const preview = useQuery({
+    queryKey: ['document-preview', attachment?.id],
+    queryFn: ({ signal }) => documentApi.previewBlob(attachment!.id, signal),
+    enabled: Boolean(attachment?.id),
+  });
+  const [attachmentSource, setAttachmentSource] = useState<string | null>(null);
+  React.useEffect(() => {
+    if (!preview.data) { setAttachmentSource(null); return undefined; }
+    const url = URL.createObjectURL(preview.data);
+    setAttachmentSource(url);
+    return () => URL.revokeObjectURL(url);
+  }, [preview.data]);
+  const source = pendingFile !== undefined ? imageSource(value) : (attachmentSource ?? imageSource(value));
   const loadImage = (file: File | undefined) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) { setError('Select a valid image file.'); return; }
@@ -145,7 +168,7 @@ function CompanyImagePanel({ label, value, mode, editing, onChange }: CompanyIma
       const base64 = result.match(/^data:image\/[^;]+;base64,(.+)$/)?.[1];
       if (!base64) { setError('The selected image could not be encoded.'); return; }
       setError(null);
-      onChange(base64);
+      onChange(result, file);
     };
     reader.readAsDataURL(file);
   };
@@ -155,7 +178,7 @@ function CompanyImagePanel({ label, value, mode, editing, onChange }: CompanyIma
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Stack direction="row" spacing={1.5} sx={{ mb: 1 }}>
           <Button component="label" size="small" disabled={!editing} sx={{ minWidth: 0, p: 0, fontSize: 12, textTransform: 'none' }}>Change<input hidden type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={(event) => { loadImage(event.target.files?.[0]); event.currentTarget.value = ''; }} /></Button>
-          <Button size="small" disabled={!editing || !value} onClick={() => { setError(null); onChange(null); }} sx={{ minWidth: 0, p: 0, color: 'text.secondary', fontSize: 12, textTransform: 'none' }}>Remove</Button>
+          <Button size="small" disabled={!editing || !source} onClick={() => { setError(null); onChange(null, null); }} sx={{ minWidth: 0, p: 0, color: 'text.secondary', fontSize: 12, textTransform: 'none' }}>Remove</Button>
         </Stack>
         {error ? <Alert severity="error" sx={{ mb: 1, py: 0 }}>{error}</Alert> : null}
         <Box sx={{ width: mode === 'banner' ? { xs: '100%', sm: 470 } : 112, height: mode === 'banner' ? 105 : 112, display: 'grid', placeItems: 'center', overflow: 'hidden', border: source && mode === 'logo' ? '1px solid #315efb' : '1px solid transparent', borderRadius: 0.5, bgcolor: '#fff' }}>

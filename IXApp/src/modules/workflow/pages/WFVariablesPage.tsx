@@ -118,6 +118,7 @@ export function WFVariablesPage(): React.ReactElement {
   );
 
   const config: EnterpriseListDetailsConfig<WfVariableRecord> = {
+    recordTableName: 'WfVariable',
     dataSource: {
       type: 'remote',
       key: scopedProcessId ? `workflow-variables-process-${scopedProcessId}` : 'workflow-variables',
@@ -184,7 +185,6 @@ export function WFVariablesPage(): React.ReactElement {
       matches: (record, value) =>
         textValue(record.name).toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()),
     },
-    commands: [{ id: 'options', label: t('customerCommands.options') }],
   };
 
   return (

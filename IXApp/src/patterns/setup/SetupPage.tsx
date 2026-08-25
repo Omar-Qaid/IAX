@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Accordion, AccordionDetails, AccordionSummary, Alert, Box, Button, IconButton, MenuItem,
+  Accordion, AccordionDetails, AccordionSummary, Alert, Box, MenuItem,
   Snackbar, Switch, TextField, Typography,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -9,7 +9,10 @@ import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
 import { ActionPane } from '@shared/components/action-pane/ActionPane';
+import { ActionPaneButton } from '@shared/components/action-pane/ActionPaneButton';
+import { ActionPaneGroup } from '@shared/components/action-pane/ActionPaneGroup';
 import { EnterpriseCommandUtilities } from '@shared/components/action-pane/EnterpriseCommandUtilities';
+import { OptionsMenu } from '@shared/components/action-pane/OptionsMenu';
 import { SetupNavigation } from './SetupNavigation';
 import { useUnsavedChanges } from '@shared/hooks/useUnsavedChanges';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
@@ -30,21 +33,21 @@ function SetupField({ field, value, yesLabel, noLabel, onChange }: {
       <Typography title={field.label} noWrap sx={{ mb: 0.25, color: 'text.secondary', fontSize: '0.6875rem', lineHeight: 1.3 }}>{field.label}</Typography>
       {field.type === 'boolean' ? (
         <Box sx={{ display: 'flex', alignItems: 'center', minHeight: 29 }}>
-          <Switch checked={Boolean(value)} disabled={field.disabled} onChange={(_, checked) => onChange(checked)} size="small" sx={{ ml: -0.75, mr: 0.25, '& .MuiSwitch-switchBase': { p: '5px' }, '& .MuiSwitch-thumb': { width: 13, height: 13 }, '& .MuiSwitch-track': { border: '1px solid', borderColor: 'text.secondary', bgcolor: 'transparent', opacity: 1 }, '& .Mui-checked + .MuiSwitch-track': { borderColor: 'primary.main', bgcolor: 'primary.main', opacity: 1 } }} />
+          <Switch checked={Boolean(value)} disabled={field.disabled} onChange={(_, checked) => onChange(checked)} size="small" slotProps={{ input: { 'aria-label': field.label } }} sx={{ ml: -0.75, mr: 0.25, '& .MuiSwitch-switchBase': { p: '5px' }, '& .MuiSwitch-thumb': { width: 13, height: 13 }, '& .MuiSwitch-track': { border: '1px solid', borderColor: 'text.secondary', bgcolor: 'transparent', opacity: 1 }, '& .Mui-checked + .MuiSwitch-track': { borderColor: 'primary.main', bgcolor: 'primary.main', opacity: 1 } }} />
           <Typography sx={{ fontSize: '0.75rem' }}>{value ? yesLabel : noLabel}</Typography>
         </Box>
       ) : field.type === 'select' ? (
-        <TextField select value={value ?? ''} disabled={field.disabled} onChange={(event) => onChange(event.target.value)} sx={inputSx}>
+        <TextField select value={value ?? ''} disabled={field.disabled} onChange={(event) => onChange(event.target.value)} slotProps={{ htmlInput: { 'aria-label': field.label } }} sx={inputSx}>
           {(field.options ?? []).map((option) => <MenuItem key={option.value} value={option.value} sx={{ fontSize: '0.75rem' }}>{option.label}</MenuItem>)}
         </TextField>
       ) : (
-        <TextField type={field.type === 'number' ? 'number' : 'text'} value={value ?? ''} disabled={field.disabled} slotProps={{ htmlInput: { min: field.min, max: field.max } }} onChange={(event) => onChange(field.type === 'number' ? Number(event.target.value) : event.target.value)} sx={inputSx} />
+        <TextField type={field.type === 'number' ? 'number' : 'text'} value={value ?? ''} disabled={field.disabled} slotProps={{ htmlInput: { min: field.min, max: field.max, 'aria-label': field.label } }} onChange={(event) => onChange(field.type === 'number' ? Number(event.target.value) : event.target.value)} sx={inputSx} />
       )}
     </Box>
   );
 }
 
-export function SetupPage({ title, viewLabel, navigationItems, sections, initialValues, saveLabel, optionsLabel, yesLabel, noLabel, savedMessage, headerContent, onSave }: SetupPageProps): React.ReactElement {
+export function SetupPage({ title, navigationItems, sections, initialValues, saveLabel, yesLabel, noLabel, savedMessage, headerContent, onSave }: SetupPageProps): React.ReactElement {
   const navigate = useNavigate();
   const [values, setValues] = useState(initialValues);
   const [savedValues, setSavedValues] = useState(initialValues);
@@ -67,14 +70,19 @@ export function SetupPage({ title, viewLabel, navigationItems, sections, initial
   return (
     <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', bgcolor: '#faf9f8', p: 0.75 }}>
       <ActionPane variant="flat" endActions={<EnterpriseCommandUtilities personalizeLabel={t('utilities.personalize')} guideLabel={t('utilities.guide')} notificationsLabel={t('common.notifications')} refreshLabel={t('actions.refresh')} openWindowLabel={t('utilities.openWindow')} />}>
-        <IconButton size="small" aria-label={t('actions.back', 'Back')} onClick={() => navigate(-1)} sx={{ color: 'primary.main' }}><ArrowBackIcon sx={{ fontSize: 18 }} /></IconButton>
-        <Button startIcon={<SaveOutlinedIcon />} disabled={!dirty || saving} onClick={save} sx={{ minHeight: 30, color: 'text.primary', fontSize: '0.75rem', borderInlineStart: 1, borderColor: 'divider', borderRadius: 0 }}>{saveLabel}</Button>
-        <Button sx={{ minHeight: 30, color: 'text.primary', fontSize: '0.75rem', borderInlineStart: 1, borderColor: 'divider', borderRadius: 0 }}>{optionsLabel}</Button>
-        <IconButton size="small" aria-label={t('actions.search')} sx={{ color: 'primary.main', ml: 0.5 }}><SearchIcon sx={{ fontSize: 17 }} /></IconButton>
+        <ActionPaneGroup>
+          <ActionPaneButton label={t('actions.back', 'Back')} icon={<ArrowBackIcon />} onClick={() => navigate(-1)} />
+        </ActionPaneGroup>
+        <ActionPaneGroup>
+          <ActionPaneButton label={saveLabel} icon={<SaveOutlinedIcon />} disabled={!dirty || saving} onClick={save} />
+        </ActionPaneGroup>
+        <ActionPaneGroup>
+          <ActionPaneButton label={t('actions.search', 'Search')} icon={<SearchIcon />} />
+          <OptionsMenu record={values} tableName={title} getRecordId={() => 1} title={title} disabled={saving} />
+        </ActionPaneGroup>
       </ActionPane>
 
       <Box sx={{ px: 2, pt: 0.5, pb: 1.25 }}>
-        <Typography sx={{ fontSize: '0.75rem' }}>{viewLabel}</Typography>
         <Typography component="h1" sx={{ fontSize: '1.35rem', fontWeight: 600, lineHeight: 1.35 }}>{title}</Typography>
         {headerContent}
       </Box>

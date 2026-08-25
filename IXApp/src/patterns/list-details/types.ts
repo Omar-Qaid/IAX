@@ -106,6 +106,8 @@ export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
     cancelLabel: string;
   }>;
   commands?: ListDetailsCommand<T>[];
+  recordTableName?: string;
+  getAuditRecordId?: (record: T) => string | number;
   actionPaneAfterListContent?: ReactNode;
   actionPaneEndContent?: ReactNode;
   attachments?: { refTableId: number; getRefRecId?: (record: T) => number };

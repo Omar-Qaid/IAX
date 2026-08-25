@@ -57,17 +57,24 @@ describe('Workflow mail printout', () => {
     expect(mapped.registrationLines).toContain('Tax: TAX-123');
   });
 
+  it('uses the managed report-logo attachment ahead of legacy CompanyInfo images', () => {
+    expect(toPrintoutCompany(company, 'HBMC', 'blob:managed-report-logo').logoSource).toBe('blob:managed-report-logo');
+  });
+
   it('renders company, request metadata, dynamic fields, and footer reference', () => {
     const printCompany = toPrintoutCompany(company, 'HBMC');
     render(
-      <PrintoutDocument company={printCompany} title="Workflow Mail" reference="REQ-42">
+      <PrintoutDocument company={printCompany} title="Workflow Mail" reference="REQ-42" reportDate="2026-08-25T08:00:00Z" status="In progress" generatedBy="Omar" generatedAt="2026-08-25T20:52:00Z">
         <WorkflowMailPrintoutBody request={request} details={details} />
       </PrintoutDocument>
     );
-    expect(screen.getAllByText('AlHayat Company').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText('AlHayat Company')).toBeInTheDocument();
     expect(screen.getByText('Omar Qaid')).toBeInTheDocument();
     expect(screen.getByText('Family trip')).toBeInTheDocument();
     expect(screen.getAllByText('REQ-42').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('In progress').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText(/Omar/).length).toBeGreaterThan(0);
+    expect(screen.getByText('Confidential / Internal Use Only')).toBeInTheDocument();
     expect(screen.getByText('Manager review required')).toBeInTheDocument();
   });
 
@@ -81,5 +88,13 @@ describe('Workflow mail printout', () => {
     expect(screen.queryByText('Workflow Mail')).not.toBeInTheDocument();
     expect(screen.queryByText('Hidden body')).not.toBeInTheDocument();
     expect(screen.queryByText('Workflow mail printout')).not.toBeInTheDocument();
+  });
+
+  it('supports report-specific header and footer overrides without replacing the page shell', () => {
+    render(<PrintoutDocument company={toPrintoutCompany(company, 'HBMC')} title="Workflow Mail" header={<div>Custom report header</div>} footer={<div>Custom report footer</div>}><span>Shared page content</span></PrintoutDocument>);
+    expect(screen.getByText('Custom report header')).toBeInTheDocument();
+    expect(screen.getByText('Shared page content')).toBeInTheDocument();
+    expect(screen.getByText('Custom report footer')).toBeInTheDocument();
+    expect(screen.queryByText('Confidential / Internal Use Only')).not.toBeInTheDocument();
   });
 });

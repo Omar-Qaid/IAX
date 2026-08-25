@@ -26,6 +26,8 @@ export function ExchangeRateTypePage(): React.ReactElement {
     locale: currentLanguage.code,
     backCommand: { label: t('actions.back', 'Back'), onClick: () => navigate(-1) },
     showSearchCommand: true,
+    recordTableName: 'ExchangeRateType',
+    getAuditRecordId: (record) => record.recId,
     crud: {
       editLabel: t('actions.edit'), newLabel: t('actions.new'), deleteLabel: t('actions.delete'),
       editPermission: 'currency.manage', newPermission: 'currency.manage', deletePermission: 'currency.manage',
@@ -39,7 +41,7 @@ export function ExchangeRateTypePage(): React.ReactElement {
         }
       },
     },
-    commands: ['exchangeRates', 'options'].map((id) => ({ id, label: t(`exchangeRateTypes.commands.${id}`) })),
+    commands: [{ id: 'exchangeRates', label: t('exchangeRateTypes.commands.exchangeRates') }],
     utilities: { personalizeLabel: t('utilities.personalize'), guideLabel: t('utilities.guide'), notificationsLabel: t('common.notifications'), refreshLabel: t('actions.refresh'), openWindowLabel: t('utilities.openWindow'), notificationCount: 0 },
     advancedFilter: { title: t('filters.title'), addLabel: t('actions.add'), fieldLabel: t('exchangeRateTypes.fields.type'), operatorLabel: t('filters.contains'), applyLabel: t('actions.apply'), resetLabel: t('actions.reset'), getValue: (record) => record.type, matches: (record, value) => record.type.toLocaleLowerCase(currentLanguage.code).includes(value.trim().toLocaleLowerCase(currentLanguage.code)) },
   };

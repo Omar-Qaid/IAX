@@ -2,7 +2,7 @@ import React from 'react';
 import { Button, CircularProgress, Tooltip } from '@mui/material';
 import { usePermission } from '@core/permissions/usePermission';
 import type { ActionDefinition } from './types';
-import { d365 } from '@patterns/list-details/d365Tokens';
+import { actionPaneControlSx } from './actionPaneControlStyles';
 
 export interface ActionPaneButtonProps extends Omit<ActionDefinition, 'id'> {
   actionId?: string;
@@ -28,25 +28,7 @@ export const ActionPaneButton: React.FC<ActionPaneButtonProps> = ({
       startIcon={loading ? <CircularProgress size={14} color="inherit" /> : icon}
       onClick={onClick}
       disabled={disabled || loading}
-      sx={{
-        color: 'text.primary',
-        minHeight: 31,
-        fontFamily: d365.fontFamily,
-        fontWeight: 400,
-        fontSize: 14,
-        px: 1,
-        py: 0,
-        borderRadius: d365.radius,
-        border: '1px solid transparent',
-        '&:hover': {
-          bgcolor: (t) => (t.palette.mode === 'light' ? '#e0e0e0' : '#333333'),
-          borderColor: 'divider',
-        },
-        '& .MuiButton-startIcon': { color: '#315efb', marginRight: '6px' },
-        '&.Mui-disabled': {
-          color: 'text.disabled',
-        },
-      }}
+      sx={actionPaneControlSx}
     >
       {label}
     </Button>

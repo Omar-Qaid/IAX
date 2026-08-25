@@ -6,29 +6,28 @@ import type {
   LegalEntityRecord,
   LegalEntityRepository,
 } from '../types/legalEntityTypes';
+import { saveLegalEntityImageAttachments } from './legalEntityImageAttachments';
 
 const endpoint = '/v1/CompanyInfo';
 const toRecord = (entity: LegalEntity): LegalEntityRecord => ({
   ...entity,
   id: String(entity.recId),
 });
-const normalizeImageBase64 = (value: string | null): string | null => {
-  const normalized = value?.trim();
-  if (!normalized) return null;
-  const payload = normalized.match(/^data:image\/[^;]+;base64,(.+)$/i)?.[1] ?? normalized;
-  return payload.replace(/\s+/g, '');
-};
 const toDto = ({
   id: _id,
   inHierarchy: _inHierarchy,
   useForFinancialConsolidation: _useForFinancialConsolidation,
   useForFinancialElimination: _useForFinancialElimination,
   fullName: _fullName,
+  logoFile: _logoFile,
+  reportLogoFile: _reportLogoFile,
   ...entity
 }: LegalEntityRecord): LegalEntity => ({
   ...entity,
-  logo: normalizeImageBase64(entity.logo),
-  reportLogo: normalizeImageBase64(entity.reportLogo),
+  // Images are managed as document attachments. The API preserves legacy byte[]
+  // columns while these null values prevent string-to-byte[] mapping failures.
+  logo: null,
+  reportLogo: null,
 });
 const requireData = <T>(response: ApiResponse<T>): T => {
   if (!response.success || response.data == null)
@@ -43,14 +42,18 @@ export const legalEntityApiRepository: LegalEntityRepository = {
   },
   async create(entity) {
     const response = await apiClient.post<ApiResponse<LegalEntity>>(endpoint, toDto(entity));
-    return toRecord(requireData(response.data));
+    const saved = toRecord(requireData(response.data));
+    await saveLegalEntityImageAttachments(entity, saved);
+    return saved;
   },
   async update(entity) {
     const response = await apiClient.put<ApiResponse<LegalEntity>>(
       `${endpoint}/${entity.recId}`,
       toDto(entity)
     );
-    return toRecord(requireData(response.data));
+    const saved = toRecord(requireData(response.data));
+    await saveLegalEntityImageAttachments(entity, saved);
+    return saved;
   },
   async delete(entity) {
     const response = await apiClient.delete<ApiResponse<boolean>>(`${endpoint}/${entity.recId}`);

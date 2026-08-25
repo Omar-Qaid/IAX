@@ -3,6 +3,14 @@ export interface ApiResponse<T> {
   success: boolean;
   message: string;
   errors?: string[] | null;
+  pagination?: PaginationMetadata;
+}
+
+export interface PaginationMetadata {
+  pageNumber: number;
+  pageSize: number;
+  totalRecords: number;
+  totalPages: number;
 }
 
 export interface PagedResult<T> {

@@ -199,6 +199,7 @@ export function WfActivitiesPage(): React.ReactElement {
   );
 
   const config: EnterpriseListDetailsConfig<WfActivityRecord> = {
+    recordTableName: 'WfActivity',
     dataSource: {
       type: 'remote',
       key: scopedStepId ? `workflow-activities-step-${scopedStepId}` : 'workflow-activities',
@@ -277,7 +278,6 @@ export function WfActivitiesPage(): React.ReactElement {
       getValue: (record) => record.name,
       matches: (record, value) => textValue(record.name).toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()),
     },
-    commands: [{ id: 'options', label: t('customerCommands.options') }],
   };
 
   return <ListDetailsPage variant="enterprise" title={t('pages.wfActivities.title')} config={config} />;

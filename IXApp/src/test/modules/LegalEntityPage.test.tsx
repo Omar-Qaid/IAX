@@ -22,6 +22,11 @@ describe('LegalEntityPage', () => {
     expect(screen.getByText('Dashboard image')).toBeInTheDocument();
     expect(screen.getByText('Report company logo image')).toBeInTheDocument();
     expect(screen.getByText('Dashboard company image type')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'View in hierarchy' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Registration IDs' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Registration ID search' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Electronic document properties' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Options' })).toHaveLength(1);
     await user.click(screen.getByRole('button', { name: 'Edit' }));
     const name = screen.getByDisplayValue('AlHayat Building Materials Company');
     await user.clear(name);
@@ -33,7 +38,7 @@ describe('LegalEntityPage', () => {
     expect(update.mock.calls[0]?.[0].dataArea).toBe('HBMC');
   });
 
-  it('stores uploaded report images as backend-compatible raw base64', async () => {
+  it('keeps uploaded report images as pending managed attachments until save', async () => {
     const user = userEvent.setup();
     const update = vi.spyOn(legalEntityMockRepository, 'update');
     const { container } = render(<LegalEntityPage />);
@@ -45,6 +50,9 @@ describe('LegalEntityPage', () => {
     await waitFor(() => expect(screen.getByAltText('Report company logo')).toHaveAttribute('src', 'data:image/png;base64,aW1hZ2U='));
     await user.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(update).toHaveBeenCalledTimes(1));
-    expect(update.mock.calls[0]?.[0].reportLogo).toBe('aW1hZ2U=');
+    expect(update.mock.calls[0]?.[0].reportLogoFile).toMatchObject({
+      name: 'report.png',
+      type: 'image/png',
+    });
   });
 });

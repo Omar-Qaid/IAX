@@ -33,6 +33,7 @@ export function CurrencyPage(): React.ReactElement {
   ], [roundOffOptions, t]);
 
   const config: EnterpriseListDetailsConfig<CurrencyRecord> = {
+    recordTableName: 'Currency',
     dataSource: {
       type: 'remote', key: 'foundation-currencies',
       load: (signal) => currencyApi.list(signal), create: currencyApi.create, update: currencyApi.update, delete: currencyApi.delete,
@@ -70,7 +71,6 @@ export function CurrencyPage(): React.ReactElement {
       ...(!record.txt.trim() ? { txt: t('validation.required', { field: t('currencyDetails.fields.name') }) } : {}),
     }),
     advancedFilter: { fieldLabel: t('currencyDetails.fields.code'), getValue: (record) => record.currencyCode, matches: (record, value) => record.currencyCode.toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()) },
-    commands: [{ id: 'options', label: t('customerCommands.options') }],
   };
 
   return <ListDetailsPage variant="enterprise" title={t('pages.currencies.title')} config={config} />;

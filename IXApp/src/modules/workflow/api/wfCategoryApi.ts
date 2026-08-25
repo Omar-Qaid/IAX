@@ -1,6 +1,7 @@
 import { ApiError } from '@core/api/apiError';
 import { apiClient } from '@core/api/apiClient';
 import type { ApiResponse } from '@core/api/apiResponse';
+import type { FetchRowsParams } from '@shared/components/data-grid/types';
 
 export interface WfCategoryDto {
   recId: number;
@@ -43,6 +44,37 @@ export const wfCategoryApi = {
   async list(signal?: AbortSignal): Promise<WfCategoryRecord[]> {
     const response = await apiClient.get<ApiResponse<WfCategoryDto[]>>(endpoint, { signal });
     return requireData(response.data).map(toRecord);
+  },
+  async listPage({
+    page,
+    pageSize,
+    sort,
+    filters,
+    globalSearch,
+    signal,
+  }: FetchRowsParams): Promise<{ rows: WfCategoryRecord[]; totalCount: number }> {
+    const params = new URLSearchParams({
+      PageNumber: String(page + 1),
+      PageSize: String(pageSize),
+    });
+    const activeSort = sort.find((item) => item.sort != null);
+    if (activeSort) {
+      params.set('SortField', activeSort.field);
+      params.set('SortOrder', activeSort.sort ?? 'asc');
+    }
+    if (globalSearch.trim()) params.set('SearchTerm', globalSearch.trim());
+    filters.forEach((filter, index) => {
+      params.set(`Filters[${index}].Field`, filter.field);
+      params.set(`Filters[${index}].Operator`, filter.operator);
+      params.set(`Filters[${index}].Value`, String(filter.value ?? ''));
+    });
+
+    const response = await apiClient.get<ApiResponse<WfCategoryDto[]>>(`${endpoint}/paged`, {
+      params,
+      signal,
+    });
+    const rows = requireData(response.data).map(toRecord);
+    return { rows, totalCount: response.data.pagination?.totalRecords ?? rows.length };
   },
   async getById(recId: number, signal?: AbortSignal): Promise<WfCategoryRecord> {
     const response = await apiClient.get<ApiResponse<WfCategoryDto>>(`${endpoint}/${recId}`, {

@@ -1,11 +1,12 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useAppStore } from '@app/store/useAppStore';
+import { useAuth } from '@core/auth/useAuth';
+import { useCompanyStore } from '@core/company/useCompanyStore';
 import { ReportViewer, type ReportExportFormat } from '@patterns/report-viewer/ReportViewer';
 import { PrintoutDocument } from '@shared/components/printout/PrintoutDocument';
-import { legalEntityService } from '@modules/organization/services/legalEntityService';
+import { fetchPrintoutCompany, toPrintoutCompany } from '@shared/components/printout/reportCompany';
 import { wfRequestApi, type WfRequestRecord } from '../api/wfRequestApi';
-import { WorkflowMailPrintoutBody, toPrintoutCompany } from '../components/WorkflowMailPrintout';
+import { WorkflowMailPrintoutBody } from '../components/WorkflowMailPrintout';
 
 interface WorkflowMailPrintoutViewerProps {
   open: boolean;
@@ -24,13 +25,17 @@ const downloadText = (contents: string, fileName: string, type: string) => {
 
 export function WorkflowMailPrintoutViewer({ open, request, onClose }: WorkflowMailPrintoutViewerProps): React.ReactElement {
   const requestId = request?.recId ?? 0;
-  const currentCompany = useAppStore((state) => state.currentCompany);
+  const currentCompany = useCompanyStore((state) => state.currentCompany);
+  const { user } = useAuth();
   const reportContainerRef = React.useRef<HTMLDivElement | null>(null);
+  const [generatedAt, setGeneratedAt] = React.useState(() => new Date());
+  React.useEffect(() => {
+    if (open && requestId > 0) setGeneratedAt(new Date());
+  }, [open, requestId]);
   const details = useQuery({ queryKey: ['workflow', 'mail', 'printout-details', requestId], queryFn: ({ signal }) => wfRequestApi.mailDetails(requestId, signal), enabled: open && requestId > 0 });
-  const companies = useQuery({ queryKey: ['legal-entities', 'workflow-mail-printout'], queryFn: ({ signal }) => legalEntityService.list(signal), staleTime: 60_000, enabled: open });
-  const companyCode = request?.dataAreaId || currentCompany;
-  const entity = companies.data?.find((item) => item.dataArea.localeCompare(companyCode, undefined, { sensitivity: 'accent' }) === 0) ?? companies.data?.find((item) => item.dataArea.localeCompare(currentCompany, undefined, { sensitivity: 'accent' }) === 0);
-  const company = toPrintoutCompany(entity, companyCode);
+  const companyCode = currentCompany || request?.dataAreaId || '';
+  const reportCompany = useQuery({ queryKey: ['report-company', companyCode], queryFn: ({ signal }) => fetchPrintoutCompany(companyCode, signal), staleTime: 60_000, enabled: open && Boolean(companyCode) });
+  const company = reportCompany.data ?? toPrintoutCompany(undefined, companyCode);
   const baseName = request?.code || `workflow-request-${requestId}`;
 
   const print = () => {
@@ -54,9 +59,9 @@ export function WorkflowMailPrintoutViewer({ open, request, onClose }: WorkflowM
     downloadText(html, `${baseName}.${format === 'Word' ? 'doc' : 'mhtml'}`, format === 'Word' ? 'application/msword' : 'multipart/related');
   };
 
-  const loading = details.isLoading || companies.isLoading;
-  const error = details.isError || companies.isError ? 'Unable to load the workflow mail printout.' : null;
-  const report = request && details.data ? <div ref={reportContainerRef}><PrintoutDocument company={company} title="Workflow Mail" reference={request.code || `Request ${request.recId}`}><WorkflowMailPrintoutBody request={request} details={details.data} /></PrintoutDocument></div> : undefined;
+  const loading = details.isLoading || reportCompany.isLoading;
+  const error = details.isError || reportCompany.isError ? 'Unable to load the workflow mail printout.' : null;
+  const report = request && details.data ? <div ref={reportContainerRef}><PrintoutDocument company={company} title="Workflow Mail" reference={request.code || `Request ${request.recId}`} reportDate={details.data.requestDate} status={details.data.status} generatedBy={user?.displayName || user?.username} headerConfig={{ subtitle: details.data.processName }} footerConfig={{ generatedBy: user?.displayName || user?.username, generatedAt }} pageSettings={{ paperSize: 'A4', orientation: 'portrait', margin: 'normal', direction: 'ltr' }}><WorkflowMailPrintoutBody request={request} details={details.data} /></PrintoutDocument></div> : undefined;
 
-  return <ReportViewer open={open} title={`Workflow Mail · ${baseName}`} loading={loading} error={error} emptyMessage="Select a workflow request to print." onClose={onClose} onReload={() => void Promise.all([details.refetch(), companies.refetch()])} onPrint={print} onExport={exportReport}>{report}</ReportViewer>;
+  return <ReportViewer open={open} title={`Workflow Mail · ${baseName}`} loading={loading} error={error} emptyMessage="Select a workflow request to print." viewerOptions={{ initialZoomMode: 'Automatic Zoom', direction: 'ltr' }} onClose={onClose} onReload={() => void Promise.all([details.refetch(), reportCompany.refetch()])} onPrint={print} onExport={exportReport}>{report}</ReportViewer>;
 }

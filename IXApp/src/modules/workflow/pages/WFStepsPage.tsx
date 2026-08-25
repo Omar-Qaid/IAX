@@ -108,6 +108,7 @@ export function WFStepsPage(): React.ReactElement {
   );
 
   const config: EnterpriseListDetailsConfig<WfStepRecord> = {
+    recordTableName: 'WfStep',
     dataSource: {
       type: 'remote',
       key: scopedProcessId ? `workflow-steps-process-${scopedProcessId}` : 'workflow-steps',
