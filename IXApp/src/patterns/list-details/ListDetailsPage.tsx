@@ -23,6 +23,7 @@ import { PageHeader } from '@shared/components/page/PageHeader';
 import { ActionPane } from '@shared/components/action-pane/ActionPane';
 import { ActionPaneButton } from '@shared/components/action-pane/ActionPaneButton';
 import { ActionPaneGroup } from '@shared/components/action-pane/ActionPaneGroup';
+import { ActionPaneMenu } from '@shared/components/action-pane/ActionPaneMenu';
 import { EnterpriseCrudActions } from '@shared/components/action-pane/EnterpriseCrudActions';
 import { EnterpriseCommandUtilities } from '@shared/components/action-pane/EnterpriseCommandUtilities';
 import { RightUtilityRail } from '@shared/components/page/RightUtilityRail';
@@ -137,6 +138,8 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
         onRecordChange: record ? state.changeRecord : () => undefined,
       })
       : config.sections;
+  const standaloneCommands = config.commands?.filter((command) => !command.menuLabel) ?? [];
+  const commandMenus = [...new Set((config.commands ?? []).map((command) => command.menuLabel).filter((label): label is string => Boolean(label)))];
   if (!canView) return <AccessDeniedState />;
   const listPane =
     config.presentation?.mode === 'grid' && config.presentation.columns ? (
@@ -273,7 +276,7 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
           />
         )}
         <ActionPaneGroup>
-          {config.commands?.map((command) => (
+          {standaloneCommands.map((command) => (
             <ActionPaneButton
               key={command.id}
               label={command.label}
@@ -281,6 +284,19 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
                 state.editing || command.disabled || (command.requiresSelection && !state.selected)
               }
               onClick={() => command.onClick?.(state.selected)}
+            />
+          ))}
+          {commandMenus.map((menuLabel) => (
+            <ActionPaneMenu
+              key={menuLabel}
+              label={menuLabel}
+              disabled={state.editing}
+              actions={(config.commands ?? []).filter((command) => command.menuLabel === menuLabel).map((command) => ({
+                id: command.id,
+                label: command.label,
+                disabled: command.disabled || (command.requiresSelection && !state.selected),
+                onClick: command.onClick ? () => command.onClick?.(state.selected) : undefined,
+              }))}
             />
           ))}
           <IconButton disabled={state.editing} size="small" sx={{ color: 'primary.main' }}>

@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
-import { Chip } from '@mui/material';
+import { Alert, Box, Button, Chip, Stack, Typography } from '@mui/material';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
 import { TabularDetailPanel } from '@patterns/list-details/TabularDetailPanel';
@@ -82,6 +82,8 @@ export function LegalEntityPage(): React.ReactElement {
           { id: 'calendar', fields: [{ name: 'calendar', label: 'Fiscal calendar', type: 'number' }] },
         ],
       },
+      { id: 'dashboard-image', title: 'Dashboard image', visualVariant: 'legalEntity', defaultExpanded: true, content: <CompanyImagePanel key={`dashboard-image-${record.id}`} label="Dashboard company image" value={record.logo} mode="banner" editing={editing} onChange={(logo) => onRecordChange({ ...record, logo })} /> },
+      { id: 'report-logo', title: 'Report company logo image', visualVariant: 'legalEntity', defaultExpanded: true, content: <CompanyImagePanel key={`report-logo-${record.id}`} label="Report company logo" value={record.reportLogo} mode="logo" editing={editing} onChange={(reportLogo) => onRecordChange({ ...record, reportLogo })} /> },
     ],
     presentation: { mode: 'list', listWidth: 281, listWidthStorageKey: 'organization.legal-entities.reference-v1', headerMaxWidth: 520 },
     permissions: { view: 'legalEntity.view', create: 'legalEntity.manage', edit: 'legalEntity.manage', delete: 'legalEntity.manage' },
@@ -110,6 +112,60 @@ export function LegalEntityPage(): React.ReactElement {
 }
 
 interface CollectionPanelProps { record: LegalEntityRecord; editing: boolean; onChange: (record: LegalEntityRecord) => void }
+
+interface CompanyImagePanelProps {
+  label: string;
+  value: string | null;
+  mode: 'banner' | 'logo';
+  editing: boolean;
+  onChange: (value: string | null) => void;
+}
+
+const imageSource = (value: string | null): string | null => {
+  const image = value?.trim();
+  if (!image) return null;
+  if (image.startsWith('data:image/')) return image;
+  if (image.startsWith('/9j/')) return `data:image/jpeg;base64,${image}`;
+  if (image.startsWith('R0lGOD')) return `data:image/gif;base64,${image}`;
+  if (image.startsWith('UklGR')) return `data:image/webp;base64,${image}`;
+  return `data:image/png;base64,${image}`;
+};
+
+function CompanyImagePanel({ label, value, mode, editing, onChange }: CompanyImagePanelProps): React.ReactElement {
+  const [error, setError] = useState<string | null>(null);
+  const source = imageSource(value);
+  const loadImage = (file: File | undefined) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { setError('Select a valid image file.'); return; }
+    if (file.size > 2 * 1024 * 1024) { setError('The image must be 2 MB or smaller.'); return; }
+    const reader = new FileReader();
+    reader.onerror = () => setError('Unable to read the selected image.');
+    reader.onload = () => {
+      const result = typeof reader.result === 'string' ? reader.result : '';
+      const base64 = result.match(/^data:image\/[^;]+;base64,(.+)$/)?.[1];
+      if (!base64) { setError('The selected image could not be encoded.'); return; }
+      setError(null);
+      onChange(base64);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  return <Box sx={{ px: 1.25, py: 1.1, minHeight: mode === 'banner' ? 150 : 145 }}>
+    <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Stack direction="row" spacing={1.5} sx={{ mb: 1 }}>
+          <Button component="label" size="small" disabled={!editing} sx={{ minWidth: 0, p: 0, fontSize: 12, textTransform: 'none' }}>Change<input hidden type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={(event) => { loadImage(event.target.files?.[0]); event.currentTarget.value = ''; }} /></Button>
+          <Button size="small" disabled={!editing || !value} onClick={() => { setError(null); onChange(null); }} sx={{ minWidth: 0, p: 0, color: 'text.secondary', fontSize: 12, textTransform: 'none' }}>Remove</Button>
+        </Stack>
+        {error ? <Alert severity="error" sx={{ mb: 1, py: 0 }}>{error}</Alert> : null}
+        <Box sx={{ width: mode === 'banner' ? { xs: '100%', sm: 470 } : 112, height: mode === 'banner' ? 105 : 112, display: 'grid', placeItems: 'center', overflow: 'hidden', border: source && mode === 'logo' ? '1px solid #315efb' : '1px solid transparent', borderRadius: 0.5, bgcolor: '#fff' }}>
+          {source ? <Box component="img" src={source} alt={label} sx={{ display: 'block', maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} /> : <Typography color="text.secondary" sx={{ fontSize: 11 }}>No image</Typography>}
+        </Box>
+      </Box>
+      {mode === 'banner' ? <Box sx={{ width: 260, pt: 2.5, display: { xs: 'none', md: 'block' } }}><Typography sx={{ mb: 1, fontSize: 12, color: 'text.secondary' }}>Dashboard company image type</Typography><Typography sx={{ width: 152, pb: 0.5, borderBottom: '1px solid #777', fontSize: 12 }}>Banner</Typography></Box> : null}
+    </Stack>
+  </Box>;
+}
 
 function AddressPanel({ record, editing, onChange }: CollectionPanelProps): React.ReactElement {
   const [selected, setSelected] = useState<(string | number)[]>(record.addresses[0]?.id ? [record.addresses[0].id] : []);

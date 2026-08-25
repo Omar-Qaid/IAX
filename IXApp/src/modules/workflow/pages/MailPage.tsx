@@ -25,12 +25,12 @@ import { documentTableIds } from '@shared/components/documents/recordTableIds';
 import { wfProcessApi } from '../api/wfProcessApi';
 import {
   wfRequestApi,
-  type MailRequestFieldDto,
   type MailTrackingEntryDto,
   type WfRequestRecord,
 } from '../api/wfRequestApi';
 import { normalizeDynamicControlType } from '../components/DynamicControlRenderer';
-import { SignatureControl } from '../components/DynamicSpecialControls';
+import { MailFieldValue } from '../components/MailFieldValue';
+import { WorkflowMailPrintoutViewer } from './WorkflowMailPrintoutPage';
 
 type MailFolder = 'all' | 'inbox' | 'sent' | 'important';
 
@@ -466,20 +466,6 @@ export function TrackingTimeline({ entries }: TrackingTimelineProps): React.Reac
   );
 }
 
-const dynamicFieldValue = (field: MailRequestFieldDto): React.ReactNode => {
-  if (normalizeDynamicControlType(field.controlType) === 'signature') {
-    return (
-      <SignatureControl
-        control={{ label: field.labelAr || field.label, hideLabel: true, controlType: 'signature', readOnly: true }}
-        value={field.value}
-        onChange={() => undefined}
-        preview
-      />
-    );
-  }
-  return field.value || '—';
-};
-
 function MailDetails({ request }: { request: MailRecord }) {
   const mailDetails = useQuery({
     queryKey: ['workflow', 'mail', 'request-details', request.recId],
@@ -613,7 +599,7 @@ function MailDetails({ request }: { request: MailRecord }) {
                   <LabelValue
                     compact
                     label={field.labelAr || field.label}
-                    value={<Box dir={field.labelAr ? 'rtl' : 'ltr'}>{dynamicFieldValue(field)}</Box>}
+                    value={<Box dir={field.labelAr ? 'rtl' : 'ltr'}><MailFieldValue field={field} /></Box>}
                   />
                 </Box>;
               })}
@@ -697,6 +683,7 @@ const folderMatches = (request: MailRecord, folder: MailFolder): boolean => {
 
 export function MailPage(): React.ReactElement {
   const [folder, setFolder] = React.useState<MailFolder>('all');
+  const [printRequest, setPrintRequest] = React.useState<MailRecord | null>(null);
   const requests = useQuery({
     queryKey: ['workflow', 'mail', 'requests'],
     queryFn: ({ signal }) => wfRequestApi.list(signal),
@@ -803,6 +790,29 @@ export function MailPage(): React.ReactElement {
         content: <MailDetails key={record.id} request={record} />,
       },
     ],
+    commands: [
+      {
+        id: 'record-audit',
+        label: 'Record Audit',
+        menuLabel: 'Record',
+        requiresSelection: true,
+        disabled: true,
+      },
+      {
+        id: 'record-info',
+        label: 'Record Info',
+        menuLabel: 'Record',
+        requiresSelection: true,
+        disabled: true,
+      },
+      {
+        id: 'printout',
+        label: 'Printout',
+        menuLabel: 'Record',
+        requiresSelection: true,
+        onClick: (request) => setPrintRequest(request),
+      },
+    ],
     filterLabel: 'Filter',
     showAttachmentAction: false,
     presentation: {
@@ -900,7 +910,15 @@ export function MailPage(): React.ReactElement {
 
   return (
     <Box dir="ltr" sx={{ height: '100%' }}>
-      <ListDetailsPage variant="enterprise" title="Mail" config={config} />
+      {printRequest ? (
+        <WorkflowMailPrintoutViewer
+          open
+          request={printRequest}
+          onClose={() => setPrintRequest(null)}
+        />
+      ) : (
+        <ListDetailsPage variant="enterprise" title="Mail" config={config} />
+      )}
     </Box>
   );
 }

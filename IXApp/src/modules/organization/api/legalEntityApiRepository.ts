@@ -12,6 +12,12 @@ const toRecord = (entity: LegalEntity): LegalEntityRecord => ({
   ...entity,
   id: String(entity.recId),
 });
+const normalizeImageBase64 = (value: string | null): string | null => {
+  const normalized = value?.trim();
+  if (!normalized) return null;
+  const payload = normalized.match(/^data:image\/[^;]+;base64,(.+)$/i)?.[1] ?? normalized;
+  return payload.replace(/\s+/g, '');
+};
 const toDto = ({
   id: _id,
   inHierarchy: _inHierarchy,
@@ -19,7 +25,11 @@ const toDto = ({
   useForFinancialElimination: _useForFinancialElimination,
   fullName: _fullName,
   ...entity
-}: LegalEntityRecord): LegalEntity => entity;
+}: LegalEntityRecord): LegalEntity => ({
+  ...entity,
+  logo: normalizeImageBase64(entity.logo),
+  reportLogo: normalizeImageBase64(entity.reportLogo),
+});
 const requireData = <T>(response: ApiResponse<T>): T => {
   if (!response.success || response.data == null)
     throw new ApiError(response.message || 'The legal-entity response did not contain data.', 500);

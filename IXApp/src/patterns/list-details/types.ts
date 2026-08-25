@@ -61,6 +61,7 @@ export interface ListDetailRecord {
 export interface ListDetailsCommand<T extends ListDetailRecord = ListDetailRecord> {
   id: string;
   label: string;
+  menuLabel?: string;
   disabled?: boolean;
   requiresSelection?: boolean;
   onClick?: (record: T | null) => void;
