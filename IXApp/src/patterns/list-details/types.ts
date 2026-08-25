@@ -131,6 +131,7 @@ export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
     listWidthStorageKey?: string;
     headerContent?: ReactNode;
     headerMaxWidth?: number;
+    recordHeaderMinHeight?: number;
     masterRowHeight?: number;
     masterHeaderHeight?: number;
     fullscreenCanvas?: boolean;

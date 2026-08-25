@@ -153,7 +153,7 @@ describe('representative enterprise pages', () => {
 
     render(<ApplicationSettingsPage />);
     expect(await screen.findByText('Current client configuration')).toBeDefined();
-    expect(screen.getByRole('tab', { name: 'Global settings' })).toBeDefined();
+    expect(screen.getByRole('navigation', { name: 'Setup sections' })).toBeDefined();
     expect(screen.getByRole('textbox', { name: /Application name/ })).toBeDefined();
   });
 

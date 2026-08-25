@@ -2,6 +2,7 @@ import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { AppProviders } from '@app/providers/AppProviders';
 import { queryClient } from '@core/api/queryClient';
 import { settingsMockRepository } from '@modules/administration/adapters/settingsMockRepository';
@@ -13,9 +14,11 @@ import {
 
 const renderPage = () =>
   render(
-    <AppProviders>
-      <ApplicationSettingsPage />
-    </AppProviders>
+    <MemoryRouter>
+      <AppProviders>
+        <ApplicationSettingsPage />
+      </AppProviders>
+    </MemoryRouter>
   );
 
 beforeEach(() => {
@@ -45,7 +48,6 @@ describe('ApplicationSettingsPage', () => {
     const update = vi.spyOn(settingsMockRepository, 'updateUser');
     renderPage();
 
-    await user.click(await screen.findByRole('tab', { name: 'My preferences' }));
     const theme = await screen.findByRole('textbox', { name: /Theme/ });
     await user.clear(theme);
     await user.type(theme, 'dark');

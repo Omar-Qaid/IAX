@@ -365,6 +365,7 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
                   )}
                   editing={displayedEditing}
                   maxWidth={config.presentation?.headerMaxWidth}
+                  minHeight={config.presentation?.recordHeaderMinHeight}
                   compact={config.presentation?.compactRecordHeader}
                   onChange={record ? state.changeHeader : () => undefined}
                 />
@@ -604,6 +605,7 @@ function RecordHeader<T>({
   fields,
   editing,
   maxWidth,
+  minHeight = 104,
   compact = false,
   onChange,
 }: {
@@ -614,6 +616,7 @@ function RecordHeader<T>({
   fields: ListDetailsHeaderField<T>[];
   editing: boolean;
   maxWidth?: number;
+  minHeight?: number;
   compact?: boolean;
   onChange: (id: string, value: DetailValue) => void;
 }) {
@@ -632,7 +635,7 @@ function RecordHeader<T>({
     </Box>
   );
   return (
-    <Box sx={{ px: 0, pt: '3px', pb: '3px', minHeight: 130, boxSizing: 'border-box' }}>
+    <Box sx={{ px: 0, pt: '3px', pb: '3px', minHeight, boxSizing: 'border-box' }}>
       <Typography
         component="h1"
         sx={{

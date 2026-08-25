@@ -616,10 +616,6 @@ export function SysNumberSequencePage(): React.ReactElement {
       matches: (record, value) =>
         record.numberSequence.toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()),
     },
-    commands: [
-      { id: 'number-sequence', label: t('pages.sysNumberSequences.command') },
-      { id: 'options', label: t('customerCommands.options') },
-    ],
   };
 
   return (
