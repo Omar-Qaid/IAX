@@ -53,6 +53,7 @@ export function SetupPage({ title, navigationItems, sections, initialValues, sav
   const [savedValues, setSavedValues] = useState(initialValues);
   const [saving, setSaving] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [activeId, setActiveId] = useState(navigationItems[0]?.id ?? sections[0]?.id ?? '');
   const dirty = useMemo(() => !deepEqual(values, savedValues), [savedValues, values]);
   const { t } = useAppTranslation();
@@ -64,7 +65,16 @@ export function SetupPage({ title, navigationItems, sections, initialValues, sav
   };
   const save = async () => {
     setSaving(true);
-    try { await onSave?.(values); setSavedValues(values); setShowSaved(true); } finally { setSaving(false); }
+    setSaveError(null);
+    try {
+      await onSave?.(values);
+      setSavedValues(values);
+      setShowSaved(true);
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : t('errors.generic', 'Unable to save.'));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -106,6 +116,7 @@ export function SetupPage({ title, navigationItems, sections, initialValues, sav
         </Box>
       </Box>
       <Snackbar open={showSaved} autoHideDuration={2500} onClose={() => setShowSaved(false)}><Alert severity="success" variant="filled">{savedMessage ?? saveLabel}</Alert></Snackbar>
+      <Snackbar open={Boolean(saveError)} autoHideDuration={5000} onClose={() => setSaveError(null)}><Alert severity="error" variant="filled">{saveError}</Alert></Snackbar>
     </Box>
   );
 }
