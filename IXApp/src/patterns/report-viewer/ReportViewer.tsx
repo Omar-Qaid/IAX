@@ -5,6 +5,7 @@ import { ReportThumbnailPanel } from './ReportThumbnailPanel';
 import { ReportToolbar } from './ReportToolbar';
 import { PrintoutPaginationProvider } from '@shared/components/printout/PrintoutPaginationContext';
 import { REPORT_EXPORT_FORMATS, type ReportExportFormat, type ReportViewerProps, type ReportZoomMode } from './types';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 
 export { REPORT_EXPORT_FORMATS } from './types';
 export type { ReportDirection, ReportExportFormat, ReportPageRequest, ReportPageResult, ReportPagedDataSource, ReportViewerOptions, ReportViewerPagination, ReportViewerProps, ReportZoomMode } from './types';
@@ -16,6 +17,7 @@ export const calculateReportPageCount = (documentHeight: number, pageHeight: num
 };
 
 export function ReportViewer({ open, title, variant = 'embedded', children, loading = false, error = null, emptyMessage = 'No report is available.', exportFormats = REPORT_EXPORT_FORMATS, pageHeight: legacyPageHeight, viewerOptions, pagination, onClose, onReload, onPrint, onExport }: ReportViewerProps): React.ReactElement {
+  const { t, isRtl } = useAppTranslation();
   const theme = useTheme();
   const compact = useMediaQuery(theme.breakpoints.down('md'));
   const viewerRef = React.useRef<HTMLDivElement | null>(null);
@@ -26,6 +28,8 @@ export function ReportViewer({ open, title, variant = 'embedded', children, load
   const minZoom = viewerOptions?.minZoom ?? 40;
   const maxZoom = viewerOptions?.maxZoom ?? 180;
   const zoomStep = viewerOptions?.zoomStep ?? 10;
+  const direction = viewerOptions?.direction ?? (isRtl ? 'rtl' : 'ltr');
+  const resolvedEmptyMessage = emptyMessage === 'No report is available.' ? t('reportViewer.empty') : emptyMessage;
   const [thumbnailsOpen, setThumbnailsOpen] = React.useState(viewerOptions?.initialThumbnailsOpen ?? !compact);
   const [localPage, setLocalPage] = React.useState(1);
   const [localTotalPages, setLocalTotalPages] = React.useState(1);
@@ -90,12 +94,12 @@ export function ReportViewer({ open, title, variant = 'embedded', children, load
     setLocalPage((current) => current === next ? current : next);
   }, [pageHeight, pagination, totalPages, zoom]);
 
-  const viewer = <Box ref={viewerRef} role="region" aria-label={title} dir={viewerOptions?.direction ?? 'ltr'} sx={{ height: variant === 'dialog' ? '100dvh' : '100%', minHeight: 0, display: 'grid', gridTemplateRows: '42px 38px minmax(0, 1fr)', overflow: 'hidden', bgcolor: '#e5e7eb' }}>
+  const viewer = <Box ref={viewerRef} role="region" aria-label={title} dir={direction} sx={{ height: variant === 'dialog' ? '100dvh' : '100%', minHeight: 0, display: 'grid', gridTemplateRows: '42px 38px minmax(0, 1fr)', overflow: 'hidden', bgcolor: '#e5e7eb' }}>
     <ReportToolbar compact={compact} currentPage={currentPage} totalPages={totalPages} thumbnailsOpen={thumbnailsOpen} zoom={zoom} zoomMode={zoomMode} exportFormats={exportFormats} onClose={onClose} onReload={onReload} onPrint={onPrint} onExport={(format: ReportExportFormat) => onExport(format)} onFullscreen={fullscreen} onToggleThumbnails={() => setThumbnailsOpen((value) => !value)} onPageChange={goToPage} onZoomChange={(requestedZoom) => changeZoom(zoom + Math.sign(requestedZoom - zoom) * zoomStep)} onZoomModeChange={changeZoomMode} onSearch={findInReport} />
     <Box sx={{ minHeight: 0, display: 'grid', gridTemplateColumns: thumbnailsOpen ? { xs: '112px minmax(0, 1fr)', md: '188px minmax(0, 1fr)' } : '0 minmax(0, 1fr)', overflow: 'hidden' }}>
       <ReportThumbnailPanel open={thumbnailsOpen} currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} renderThumbnail={pagination?.renderThumbnail} />
       <PrintoutPaginationProvider value={{ currentPage, totalPages }}>
-        <ReportPreviewArea loading={loading || pagination?.loading === true} error={error} emptyMessage={emptyMessage} zoom={zoom} zoomMode={zoomMode} direction={viewerOptions?.direction ?? 'ltr'} reportRef={reportRef} scrollRef={scrollRef} onCalculatedZoom={calculateZoom} onScroll={trackVisiblePage}>{children}</ReportPreviewArea>
+        <ReportPreviewArea loading={loading || pagination?.loading === true} error={error} emptyMessage={resolvedEmptyMessage} zoom={zoom} zoomMode={zoomMode} direction={direction} reportRef={reportRef} scrollRef={scrollRef} onCalculatedZoom={calculateZoom} onScroll={trackVisiblePage}>{children}</ReportPreviewArea>
       </PrintoutPaginationProvider>
     </Box>
   </Box>;

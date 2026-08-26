@@ -182,7 +182,7 @@ export function HeaderMenu<T>({
         onClose={() => setPinMenuAnchor(null)}
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-        slotProps={{ paper: { sx: { width: 140, ml: 0.5 } } }}
+        slotProps={{ paper: { sx: { width: 140, marginInlineStart: 0.5 } } }}
       >
         {(
           [

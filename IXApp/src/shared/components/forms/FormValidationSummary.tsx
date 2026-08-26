@@ -17,7 +17,7 @@ export function FormValidationSummary<T extends FieldValues = FieldValues>({
   return (
     <Alert severity="error" sx={{ mb: 2, borderRadius: 1 }}>
       <AlertTitle sx={{ fontWeight: 700 }}>{title}</AlertTitle>
-      <Box component="ul" sx={{ pl: 2, m: 0 }}>
+      <Box component="ul" sx={{ paddingInlineStart: 2, m: 0 }}>
         {errorKeys.map((key) => {
           const err = errors[key as keyof T];
           return (

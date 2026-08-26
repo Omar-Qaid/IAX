@@ -1,3 +1,5 @@
+import { APP_FONT_FAMILY } from '@shared/constants/fontFamilies';
+
 export const navigationTokens = {
   expandedWidth: 249,
   collapsedWidth: 48,
@@ -7,7 +9,7 @@ export const navigationTokens = {
   chevronSize: 15,
   horizontalPadding: 14,
   iconTextGap: 12,
-  fontFamily: '"Segoe UI", "Segoe UI Web (West European)", Arial, sans-serif',
+  fontFamily: APP_FONT_FAMILY,
   fontSize: 13,
   fontWeight: 400,
   background: '#f7f7f7',

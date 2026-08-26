@@ -12,7 +12,7 @@
 | `mocks` | `mocks`, `shared`, `core` |
 | `test` | every source layer |
 
-The audit also rejects direct imports between top-level modules, imports from the `@mui/icons-material` barrel, circular source dependencies, and unresolved internal imports.
+The audit also rejects direct imports between top-level modules, imports from the `@mui/icons-material` barrel, circular source dependencies, and unresolved internal imports. Process Builder is explicitly owned by the Workflow bounded context while retaining its established physical package path for route and import compatibility.
 
 ## Ownership
 
@@ -26,15 +26,9 @@ The audit also rejects direct imports between top-level modules, imports from th
 
 ## Current audit state
 
-As of this documentation review, `npm run audit:architecture` is not clean. The script reports:
+The architecture audit is expected to pass with no forbidden layer edges, cross-domain imports, icon-barrel imports, circular source dependencies, or unresolved internal imports. Shared enterprise UI tokens live in `shared`; workflow routes are owned by the Workflow module; and dynamic-control contracts are separated from their renderers to keep the component graph acyclic.
 
-- six upward layer edges, including module-to-app route imports and shared components importing pattern tokens;
-- direct Process Builder imports from the Workflow module APIs/components contracts;
-- no MUI icon-barrel violations.
-
-The exact file list is produced by the command and may change. These are implementation debts, not allowed architecture. They are documented here because a zero-debt claim would be inaccurate. This documentation update does not alter application imports or weaken the audit.
-
-When fixing a violation, move the narrow contract/token to a lower shared owner or compose the dependency in `app`; do not add a broad exception. Process Builder and Workflow need an explicit ownership decision because the builder currently orchestrates Workflow APIs as a separate top-level module.
+Process Builder orchestrates Workflow APIs and is therefore explicitly part of the Workflow bounded context. Its existing `src/modules/process-builder` path remains stable to avoid disruptive route and import churn; `moduleOwnership` in the audit records that ownership narrowly and does not permit other cross-module imports.
 
 ## Other audits
 

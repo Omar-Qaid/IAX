@@ -25,7 +25,7 @@ export function ProcessBuilderTree({ nodes, selectedId, onSelect, depth = 0 }: {
         role="treeitem"
         aria-selected={node.id === selectedId}
         onClick={() => onSelect(node.id)}
-        sx={{ width: '100%', justifyContent: 'flex-start', gap: 1, minHeight: 34, px: 1, pl: 1 + depth * 2.5, borderLeft: '3px solid', borderLeftColor: node.id === selectedId ? 'primary.main' : 'transparent', bgcolor: node.id === selectedId ? 'action.selected' : 'transparent', '&:hover': { bgcolor: 'action.hover' } }}
+        sx={{ width: '100%', justifyContent: 'flex-start', gap: 1, minHeight: 34, px: 1, paddingInlineStart: 1 + depth * 2.5, borderInlineStart: '3px solid', borderInlineStartColor: node.id === selectedId ? 'primary.main' : 'transparent', bgcolor: node.id === selectedId ? 'action.selected' : 'transparent', '&:hover': { bgcolor: 'action.hover' } }}
       >
         <Box sx={{ display: 'flex', color: node.id === selectedId ? 'primary.main' : 'text.secondary' }}>{icons[node.kind]}</Box>
         <Box sx={{ minWidth: 0, textAlign: 'start' }}>

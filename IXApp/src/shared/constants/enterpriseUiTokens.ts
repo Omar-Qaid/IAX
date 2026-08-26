@@ -1,5 +1,12 @@
-export const d365 = {
-  fontFamily: '"Segoe UI", "Segoe UI Web (West European)", Arial, sans-serif',
+import { APP_FONT_FAMILY } from './fontFamilies';
+
+/**
+ * Shared enterprise UI measurements and colors used by route-agnostic primitives
+ * and page patterns. Business modules should consume these through shared UI
+ * components rather than depending on the token object directly.
+ */
+export const enterpriseUiTokens = {
+  fontFamily: APP_FONT_FAMILY,
   fontSize: 12,
   labelFontSize: 10,
   titleFontSize: 20,
@@ -25,3 +32,6 @@ export const d365 = {
   sectionGap: 4,
   fieldGap: 8,
 } as const;
+
+/** Compatibility alias used throughout existing enterprise page patterns. */
+export const d365 = enterpriseUiTokens;

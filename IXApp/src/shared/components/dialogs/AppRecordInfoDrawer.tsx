@@ -4,6 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { RecordValueDisplay } from './RecordValueDisplay';
+import { useLogicalDrawerAnchor } from '@shared/hooks/useLogicalDrawerAnchor';
 
 export interface AppRecordInfoDrawerProps {
   open: boolean;
@@ -25,6 +26,7 @@ export function AppRecordInfoDrawer({
   title,
 }: AppRecordInfoDrawerProps): React.ReactElement {
   const { t } = useAppTranslation();
+  const drawerAnchor = useLogicalDrawerAnchor('end');
   const fields = useMemo(
     () =>
       record && typeof record === 'object' && !Array.isArray(record)
@@ -35,10 +37,10 @@ export function AppRecordInfoDrawer({
 
   return (
     <Drawer
-      anchor="right"
+      anchor={drawerAnchor}
       open={open}
       onClose={onClose}
-      slotProps={{ paper: { sx: { width: { xs: '100%', sm: 420 } } } }}
+      slotProps={{ paper: { sx: { width: { xs: '100vw', sm: 420 }, maxWidth: '100vw', borderInlineStart: 1, borderInlineStartColor: 'divider', borderInlineEnd: 0 } } }}
       sx={{ zIndex: (theme) => theme.zIndex.drawer + 2 }}
     >
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -58,7 +60,7 @@ export function AppRecordInfoDrawer({
             <InfoOutlinedIcon color="primary" />
             <Box>
               <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                {t('common.recordInfo', 'Record Info')}
+                {t('common.recordInfo')}
               </Typography>
               {title && (
                 <Typography variant="caption" color="text.secondary">

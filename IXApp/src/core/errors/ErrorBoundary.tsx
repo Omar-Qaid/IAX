@@ -61,7 +61,7 @@ export class ErrorBoundary extends Component<Props, State> {
           >
             <WarningAmberOutlinedIcon color="error" sx={{ fontSize: 48, mb: 1 }} />
             <Typography variant="h6" color="error" sx={{ mb: 1, fontWeight: 700 }}>
-              {i18n.t('errors.boundaryTitle', 'Application error')}
+              {i18n.t('errors.boundaryTitle')}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
               {this.state.error?.message || i18n.t('errors.generic')}

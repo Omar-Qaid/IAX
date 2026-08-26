@@ -6,6 +6,7 @@ import type { LegalEntity } from '@modules/organization/types/legalEntityTypes';
 import type { MailRequestDetailsDto, WfRequestRecord } from '@modules/workflow/api/wfRequestApi';
 import { WorkflowMailPrintoutBody, toPrintoutCompany } from '@modules/workflow/components/WorkflowMailPrintout';
 import { PrintoutDocument } from '@shared/components/printout/PrintoutDocument';
+import i18n from '@core/localization/i18n';
 
 const company: LegalEntity = {
   recId: 1,
@@ -96,5 +97,35 @@ describe('Workflow mail printout', () => {
     expect(screen.getByText('Shared page content')).toBeInTheDocument();
     expect(screen.getByText('Custom report footer')).toBeInTheDocument();
     expect(screen.queryByText('Confidential / Internal Use Only')).not.toBeInTheDocument();
+  });
+
+  it('renders the printed document and localized request data in RTL Arabic', async () => {
+    await i18n.changeLanguage('ar');
+    const arabicDetails: MailRequestDetailsDto = {
+      ...details,
+      fields: [{ ...details.fields[0]!, labelAr: 'السبب', valueAr: 'رحلة عائلية' }],
+    };
+    const { container } = render(
+      <PrintoutDocument
+        company={toPrintoutCompany(company, 'HBMC')}
+        title={i18n.t('mail.print.title')}
+        reference="REQ-42"
+        reportDate={details.requestDate}
+        status={details.status}
+        pageSettings={{ direction: 'rtl' }}
+      >
+        <WorkflowMailPrintoutBody request={request} details={arabicDetails} />
+      </PrintoutDocument>
+    );
+
+    expect(container.querySelector('.printout-document')).toHaveAttribute('dir', 'rtl');
+    expect(screen.getByText('معلومات الطلب')).toBeInTheDocument();
+    expect(screen.getByText('بيانات الطلب')).toBeInTheDocument();
+    expect(screen.getByText('السبب')).toBeInTheDocument();
+    expect(screen.getByText('رحلة عائلية')).toBeInTheDocument();
+    expect(screen.getByText('رقم التقرير:')).toBeInTheDocument();
+    expect(screen.getByText('قيد التنفيذ')).toBeInTheDocument();
+    expect(screen.getByText('شركة الحياة')).toBeInTheDocument();
+    await i18n.changeLanguage('en');
   });
 });

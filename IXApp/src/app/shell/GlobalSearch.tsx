@@ -25,9 +25,9 @@ export const GlobalSearch: React.FC = () => {
         },
       }}
     >
-      <SearchIcon fontSize="small" sx={{ color: 'text.secondary', mr: 1 }} />
+      <SearchIcon fontSize="small" sx={{ color: 'text.secondary', marginInlineEnd: 1 }} />
       <InputBase
-        sx={{ ml: 0.5, flex: 1, fontSize: '0.8125rem' }}
+        sx={{ marginInlineStart: 0.5, flex: 1, minWidth: 0, fontSize: '0.8125rem' }}
         placeholder={t('actions.search') || 'Search pages & actions...'}
         value={query}
         onChange={(e) => setQuery(e.target.value)}

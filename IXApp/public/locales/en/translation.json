@@ -1,5 +1,5 @@
 {
-  "accessibility": { "skipToContent": "Skip to main content" },
+  "accessibility": { "skipToContent": "Skip to main content", "setupSections": "Setup sections", "resizeRecordList": "Resize record list", "loadingMoreRecords": "Loading more records" },
   "app": { "name": "IXApp", "tagline": "Enterprise Resource Planning Solution" },
   "nav": {
     "app_title": "IXApp Enterprise",
@@ -44,10 +44,27 @@
     "favorites": "Favorites",
     "recent": "Recent",
     "modules": "Modules",
-    "search_page": "Search pages"
+    "search_page": "Search pages",
+    "toggle_navigation": "Toggle navigation",
+    "toggle_pin": "Toggle navigation pin",
+    "workspaces": "Workspaces",
+    "application_navigation": "Application navigation",
+    "finance_operations": "Finance and Operations",
+    "app_launcher": "App launcher",
+    "global_search": "Search for a page"
   },
   "pages": {
     "login": { "title": "Sign in", "subtitle": "Enter your account name to continue." },
+    "requestSubmission": {
+      "title": "Request Submission",
+      "category": "Category",
+      "categoryCode": "Category code",
+      "requestDate": "Request date",
+      "chooseType": "Choose a request type",
+      "loadingTypes": "Loading request types",
+      "noActiveTypes": "No active request types are available in this category.",
+      "unnamedCategory": "Unnamed category"
+    },
     "dashboard": {
       "title": "Dashboard",
       "subtitle": "Operational overview from the current development dataset",
@@ -56,10 +73,18 @@
       "customers": "Customers",
       "customerAccounts": "Customer accounts",
       "openOrders": "Open sales orders",
+      "totalOrders_zero": "{{count}} total orders",
       "totalOrders_one": "{{count}} total order",
+      "totalOrders_two": "{{count}} total orders",
+      "totalOrders_few": "{{count}} total orders",
+      "totalOrders_many": "{{count}} total orders",
       "totalOrders_other": "{{count}} total orders",
       "orderValue": "Order value",
+      "configuredCurrencies_zero": "{{count}} configured currencies",
       "configuredCurrencies_one": "{{count}} configured currency",
+      "configuredCurrencies_two": "{{count}} configured currencies",
+      "configuredCurrencies_few": "{{count}} configured currencies",
+      "configuredCurrencies_many": "{{count}} configured currencies",
       "configuredCurrencies_other": "{{count}} configured currencies"
     },
     "customers": {
@@ -122,6 +147,7 @@
   },
   "fields": {
     "username": "Username",
+    "password": "Password",
     "code": "Code",
     "name": "Name",
     "currencyName": "Currency name",
@@ -190,9 +216,15 @@
     "add": "Add",
     "remove": "Remove",
     "apply": "Apply",
-    "reset": "Reset"
+    "reset": "Reset",
+    "back": "Back",
+    "toggleList": "Toggle record list",
+    "download": "Download",
+    "archive": "Archive",
+    "change": "Change"
   },
   "common": {
+    "general": "General",
     "company": "Company",
     "language": "Language",
     "theme": "Theme",
@@ -217,6 +249,7 @@
     "loadingMore": "Loading more…",
     "noData": "No records found",
     "noResults": "No results",
+    "no_results_found": "No results for \"{{query}}\"",
     "notProvided": "Not provided",
     "readOnly": "Read only",
     "accessDenied": "Access denied",
@@ -243,7 +276,17 @@
     "no_history": "No history",
     "no_history_msg": "No audit trail was found for this record.",
     "by": "By",
+    "options": "Options",
+    "recordInfo": "Record Info",
+    "recordAudit": "Record Audit",
+    "error_occurred": "An error occurred",
+    "retry": "Retry",
+    "refresh": "Refresh",
+    "total_activities_zero": "Total activities: {{count}}",
     "total_activities_one": "Total activities: {{count}}",
+    "total_activities_two": "Total activities: {{count}}",
+    "total_activities_few": "Total activities: {{count}}",
+    "total_activities_many": "Total activities: {{count}}",
     "total_activities_other": "Total activities: {{count}}",
     "importing": "Importing…"
   },
@@ -259,7 +302,11 @@
     "loadingDetails": "Loading details…",
     "selectRecord": "Select a record",
     "selectRecordHelp": "Choose an item from the list to inspect its details.",
-    "unsavedChanges": "You have unsaved changes. Are you sure you want to leave?"
+    "unsavedChanges": "You have unsaved changes. Are you sure you want to leave?",
+    "saving": "Saving…",
+    "loadingSettings": "Loading settings…",
+    "deletedSuccessfully": "Deleted successfully",
+    "savedSuccessfully": "Saved successfully"
   },
   "lookups": {
     "selectOption": "Select option",
@@ -271,7 +318,9 @@
   "errors": {
     "generic": "An unexpected error occurred.",
     "loadFailed": "Failed to load data",
-    "no_permission": "You do not have permission to view the source data."
+    "no_permission": "You do not have permission to view the source data.",
+    "boundaryTitle": "Application error",
+    "deleteFailed": "Delete failed"
   },
   "validation": {
     "required": "{{field}} is required.",
@@ -285,8 +334,19 @@
     "invalidNumber": "Enter a valid number.",
     "invalidDate": "Enter a valid date."
   },
+  "dialogs": {
+    "confirmAction": "Confirm Action",
+    "confirmDeletion": "Confirm Deletion",
+    "confirmDeleteTitle": "Confirm deletion",
+    "confirmDeleteOne": "Delete the selected record?",
+    "confirmDeleteMessage": "Delete {{count}} selected record(s)?"
+  },
   "grid": {
+    "rows_count_zero": "{{count}} rows",
     "rows_count_one": "{{count}} row",
+    "rows_count_two": "{{count}} rows",
+    "rows_count_few": "{{count}} rows",
+    "rows_count_many": "{{count}} rows",
     "rows_count_other": "{{count}} rows",
     "rows_loaded": "{{loaded}} of {{total}} rows loaded",
     "rows_filtered": "{{filtered}} of {{total}} rows",
@@ -298,6 +358,19 @@
     "add_row": "Add row",
     "add_row_disabled": "Save or cancel the current row first",
     "filter_placeholder": "Filter value",
+    "select_row": "Select row {{id}}", "totalRows": "Total: {{count}} rows", "selectedRows": "{{count}} selected", "resetSizing": "Reset sizing",
+    "open_column_filter": "Open filter for {{column}}",
+    "sort_ascending": "Sort ascending",
+    "sort_descending": "Sort descending",
+    "press_enter_to_add": "Press Enter to add",
+    "sort_asc": "Sort ascending",
+    "sort_desc": "Sort descending",
+    "pin_column": "Pin column",
+    "autosize_this": "Autosize this column",
+    "reset_columns": "Reset columns",
+    "no_pin": "No pin",
+    "pin_left": "Pin left",
+    "pin_right": "Pin right",
     "filters": "Filters",
     "features": "Features",
     "choose_columns": "Choose columns",
@@ -340,11 +413,38 @@
       "greater_than": "Greater than",
       "less_than": "Less than",
       "is_one_of": "Is one of",
-      "matches_regex": "Matches pattern"
+      "matches_regex": "Matches pattern",
+      "is_empty": "Is empty",
+      "is_not_empty": "Is not empty",
+      "after": "After",
+      "before": "Before",
+      "matches": "Matches"
     }
   },
   "settings": {
     "title": "Settings",
+    "saved": "Settings saved.",
+    "userSaved": "User settings saved.",
+    "globalReadOnly": "Global settings are read-only for your account.",
+    "application": "Application defaults",
+    "applicationHelp": "Defaults applied across the application.",
+    "appName": "Application name",
+    "defaultLanguage": "Default language",
+    "timeZone": "Time zone",
+    "currency": "Currency",
+    "dateFormat": "Date format",
+    "decimalPlaces": "Decimal places",
+    "system": "System behavior",
+    "paginationSize": "Default page size",
+    "maxUploadSize": "Maximum upload size (bytes)",
+    "enableAuditLog": "Enable audit logging",
+    "preferences": "Personal preferences",
+    "preferencesHelp": "Settings associated with your authenticated user.",
+    "theme": "Theme",
+    "language": "Language",
+    "pageSize": "Page size",
+    "dashboardLayout": "Dashboard layout",
+    "notificationEnabled": "Enable notifications",
     "reset": "Reset",
     "mode": "Dark mode",
     "contrast": "Contrast",
@@ -358,10 +458,36 @@
     "presets": "Presets",
     "font": "Typography",
     "family": "Font family",
+    "fontFamilies": {
+      "segoeUi": "Segoe UI",
+      "inter": "Inter",
+      "roboto": "Roboto",
+      "outfit": "Outfit",
+      "plusJakartaSans": "Plus Jakarta Sans",
+      "fsAlbertArabic": "FS Albert Arabic",
+      "saudi": "Saudi",
+      "tajawal": "Tajawal",
+      "cairo": "Cairo",
+      "ibmPlexSansArabic": "IBM Plex Sans Arabic",
+      "notoKufiArabic": "Noto Kufi Arabic"
+    },
     "size": "Font size",
     "zoom": "Desktop zoom"
   },
   "notifications": {
+    "center": "Notifications Center",
+    "salesOrderConfirmed": "New Sales Order Confirmed",
+    "salesOrderConfirmedBy": "{{order}} confirmed by user",
+    "creditLimitExceeded": "Customer Credit Limit Exceeded",
+    "customerExceededCredit": "{{customer}} exceeded its credit limit",
+    "systemAdmin": "System Admin",
+    "security": "Security",
+    "exportCompleted": "Your data export has completed successfully.",
+    "failedLogins": "Multiple failed login attempts detected.",
+    "categorySystem": "System",
+    "categoryAlert": "Alert",
+    "viewFile": "View File",
+    "priority": { "Critical": "Critical", "High": "High", "Medium": "Medium", "Low": "Low" },
     "mark_all_read": "Mark all as read",
     "all": "All",
     "unread": "Unread",
@@ -385,6 +511,90 @@
     "newAddress": "New address"
   },
   "workflow": { "builder": "Builder" },
+  "mail": {
+    "folders": { "all": "All", "inbox": "Inbox", "sent": "Sent", "important": "Important" },
+    "fields": {
+      "request": "Request",
+      "process": "Process",
+      "status": "Status",
+      "requestDate": "Request date",
+      "requestedBy": "Requested by"
+    },
+    "requestName": "Request name: {{name}}",
+    "requestedBySummary": "Requested by: {{name}} · Request date: {{date}}",
+    "requestFallback": "Request {{id}}",
+    "processFallback": "Process {{id}}",
+    "requestDetails": "Request details",
+    "transactionDetails": "Transaction details",
+    "trackingLog": "Tracking log",
+    "requestStatus": "Request status",
+    "currentStage": "Current stage: Step {{step}}",
+    "decisionDate": "Decision date: {{date}}",
+    "elapsedTime": "Elapsed time: {{time}}",
+    "hoursMinutes": "{{hours}} hours {{minutes}} minutes",
+    "notAvailable": "Not available",
+    "statuses": {
+      "stopped": "Stopped",
+      "completed": "Completed",
+      "inProgress": "In progress",
+      "processing": "Processing"
+    },
+    "attachments": {
+      "title": "Attachments",
+      "none": "No attachments",
+      "loadError": "Unable to load attachments.",
+      "openError": "Unable to open this attachment."
+    },
+    "errors": {
+      "tracking": "Unable to load workflow tracking history.",
+      "details": "Unable to load request details."
+    },
+    "timeline": { "responsible": "Responsible:", "action": "Action:", "notes": "Notes:" },
+    "printout": "Printout",
+    "view": "View",
+    "filter": "Filter",
+    "information": "Mail information",
+    "requestId": "Request ID",
+    "processId": "Process ID",
+    "scrollableData": "Scrollable request data",
+    "print": {
+      "title": "Workflow Mail",
+      "viewerTitle": "Workflow Mail · {{name}}",
+      "selectRequest": "Select a workflow request to print.",
+      "loadError": "Unable to load the workflow mail printout.",
+      "requestInformation": "Request information",
+      "requestData": "Request data",
+      "employeeName": "Employee name",
+      "employeeNumber": "Employee number",
+      "transactionType": "Transaction type",
+      "responsibleEmployee": "Responsible employee",
+      "transactionTime": "Transaction time",
+      "transactionEndTime": "Transaction end time",
+      "notes": "Notes"
+    }
+  },
+  "reportViewer": {
+    "actions": {
+      "back": "Back", "export": "Export", "reload": "Reload", "options": "Options",
+      "readingMode": "Reading mode", "openPresentation": "Open presentation",
+      "toggleThumbnails": "Toggle thumbnails", "searchReport": "Search report", "search": "Search",
+      "previousPage": "Previous page", "nextPage": "Next page", "currentPage": "Current page",
+      "zoomOut": "Zoom out", "zoomIn": "Zoom in", "presentationMode": "Presentation mode",
+      "print": "Print", "download": "Download", "additionalActions": "Additional actions",
+      "presentation": "Presentation", "downloadSave": "Download / Save"
+    },
+    "zoom": { "automatic": "Automatic Zoom", "pageWidth": "Page Width", "wholePage": "Whole Page", "actualSize": "100%" },
+    "pageOf": "of {{total}}",
+    "thumbnails": { "pages": "Page thumbnails", "outline": "Report outline", "attachments": "Report attachments", "layers": "Report layers" },
+    "empty": "No report is available."
+  },
+  "printout": {
+    "company": "Company", "reportNo": "Report No", "date": "Date", "status": "Status",
+    "generatedBy": "Generated by", "period": "Period", "criteria": "Criteria",
+    "pageOf": "Page {{page}} of {{total}}", "page": "Page", "of": "of",
+    "confidential": "Confidential / Internal Use Only", "generated": "Generated", "printedBy": "Printed by",
+    "logoAlt": "{{company}} logo"
+  },
   "wfProcess": {
     "commands": { "processBuilder": "Process builder", "variables": "Variables", "steps": "Steps" },
     "sections": { "configuration": "Process configuration" },
@@ -562,7 +772,147 @@
     "openPage": "Open management page",
     "selectNode": "Select an item to view its properties.",
     "designerHelp": "Review the process flow and select an item from the structure to inspect its properties.",
-    "invalidProcess": "A valid workflow process is required."
+    "invalidProcess": "A valid workflow process is required.",
+    "title": "Process Builder",
+    "navigation": { "label": "Process Builder navigation", "tree": "Tree", "palette": "Palette" },
+    "tabsExtended": {
+      "requestForm": "Request form",
+      "activityForm": "Activity form",
+      "transitions": "Transitions",
+      "diagram": "Diagram"
+    },
+    "status": {
+      "active": "Active", "inactive": "Inactive", "loading": "Loading from server…",
+      "localChanges": "Local changes", "unsaved": "Unsaved", "unsavedChanges": "Unsaved changes",
+      "draftSaved": "Draft auto-saved {{time}}", "newRecord": "New record", "pending": "Pending"
+    },
+    "actions": {
+      "collapseNavigation": "Collapse navigation", "expandNavigation": "Expand navigation",
+      "collapseSettings": "Collapse settings", "expandSettings": "Expand settings",
+      "openStructure": "Open process structure", "openSettings": "Open settings",
+      "closeStructure": "Close process structure", "closeSettings": "Close settings",
+      "reset": "Reset", "create": "Create", "save": "Save", "saving": "Saving…",
+      "export": "Export", "copyJson": "Copy JSON", "download": "Download", "close": "Close",
+      "add": "Add", "addStep": "Add Step", "addStepShort": "Add step", "addVariable": "Add variable",
+      "openRequestForm": "Open Request Form", "configure": "Configure",
+      "dragItem": "Drag {{name}}", "moveItemUp": "Move {{name}} up", "moveItemDown": "Move {{name}} down",
+      "deleteItem": "Delete {{name}}", "deleteStepConfirm": "Delete {{name}} and its {{count}} activities?",
+      "saveVariables": "Save Variables", "saveSteps": "Save Steps", "saveActivities": "Save Activities",
+      "saveTransitions": "Save Transitions", "newTransition": "New transition"
+    },
+    "statistics": { "tooltip": "Steps / Activities / Controls / Transitions", "label": "Process statistics" },
+    "structure": {
+      "title": "Process structure", "drawer": "Process structure and palette", "workspaces": "Process Builder workspaces",
+      "variables": "Variables", "requestControls": "Request controls", "steps": "Steps",
+      "untitled": "Untitled process", "draft": "Draft", "stepCount": "{{count}} steps",
+      "activityCount": "{{count}} activities", "controlCount": "{{count}} controls",
+      "newVariable": "New variable", "newActivity": "New activity", "defaultStep": "Step {{number}}",
+      "expandItem": "Expand {{name}}", "collapseItem": "Collapse {{name}}"
+    },
+    "settings": {
+      "title": "Settings", "drawer": "Process Builder settings", "processInformation": "Process Information",
+      "selectPriority": "Select priority", "selectProcessType": "Select process type",
+      "managedCode": "Managed by number sequence", "generatedCode": "Generated on save", "enterCode": "Enter code",
+      "fields": {
+        "code": "Code", "name": "Name", "description": "Description", "variableName": "Variable name", "dataType": "Data type",
+        "order": "Order", "stepName": "Step name", "activityName": "Activity Name", "activityType": "Activity Type",
+        "performer": "Performer", "score": "Score", "autoPassingHours": "Auto passing hours", "mandatory": "Mandatory",
+        "required": "Required", "system": "System", "visible": "Visible", "sortOrder": "Sort order",
+        "transitionName": "Transition name", "triggerSource": "Trigger source", "requestControl": "Request control",
+        "activity": "Activity", "variable": "Variable", "operator": "Operator", "targetStep": "Target step", "label": "Label",
+        "action": "Action", "nextStep": "Next step"
+      },
+      "workspaceTitles": { "variables": "Variables Settings", "requestForm": "Request Form Settings", "steps": "Steps Settings", "activities": "Activities Settings", "activityForm": "Activity Form Settings", "transitions": "Transitions Settings", "diagram": "Diagram Settings" },
+      "workspaceHelp": {
+        "variables": "Add or select a variable to edit its settings.", "requestForm": "Add or select a request field to edit its settings.",
+        "steps": "Add or select a step to edit its settings.", "activities": "Add or select an activity to edit its settings.",
+        "activityForm": "Add or select an activity field to edit its settings.", "transitions": "Add or select a transition to edit its settings.",
+        "diagram": "Select a process item in the diagram to edit its settings.", "default": "Select an item to edit its settings."
+      },
+      "variable": "Variable", "stepSettings": "Step Settings", "stepCondition": "Step Condition", "deleteVariable": "Delete variable",
+      "validationRules": "Validation Rules", "validationType": "Validation Type", "severity": "Severity",
+      "minimumValue": "Minimum value", "maximumValue": "Maximum value", "value": "Value",
+      "validationExpression": "Validation expression", "inputMask": "Input mask", "errorMessage": "Error message",
+      "deleteValidation": "Delete validation", "noValidationRules": "No validation rules yet.",
+      "transitionsCount": "Transitions ({{count}})", "deleteTransition": "Delete transition", "noTransitions": "No transitions yet.",
+      "autoPassEnabled": "Auto pass enabled", "mandatoryDocuments": "Mandatory documents", "method": "Method",
+      "validationControl": "Validation control", "requireFileUpload": "Require File Upload",
+      "sendAlertMessage": "Send Alert Message", "showOtherControls": "Show Other Controls",
+      "alertMessage": "Alert message", "performers": "Performers", "searchPerformers": "Search performers",
+      "width": "Width", "noteColor": "Note color", "controlType": "Control type", "comparisonValue": "Comparison value",
+      "columns": { "one": "1 column", "two": "2 columns", "full": "Full row" },
+      "severityValues": { "Error": "Error", "Warning": "Warning", "Information": "Information" }
+      ,"validationTypes": { "required": "Required", "minLength": "Minimum length", "maxLength": "Maximum length", "exactLength": "Exact length", "length": "Length", "minValue": "Minimum value", "maxValue": "Maximum value", "range": "Range", "regex": "Regular expression", "pattern": "Pattern", "startsWith": "Starts with", "endsWith": "Ends with", "contains": "Contains", "email": "Email", "url": "URL", "phone": "Phone", "saudiMobile": "Saudi mobile", "saudiNationalId": "Saudi National ID", "saudiIban": "Saudi IBAN", "taxNumber": "Tax number", "passport": "Passport number", "fileExtensions": "Allowed file extensions", "fileSize": "File size", "maxFiles": "Maximum number of files", "minSelected": "Minimum selected items", "maxSelected": "Maximum selected items", "compare": "Compare", "comparison": "Comparison", "expression": "Expression", "custom": "Custom expression", "crossField": "Cross-field validation", "mask": "Mask", "inputMask": "Input mask" }
+      ,"activitySettings": "Activity Settings", "activityName": "Activity name", "notificationEmails": "Notification emails",
+      "apiAction": "API Action", "apiUrl": "API URL", "unnamedControl": "Unnamed control", "unassignedStep": "Unassigned step"
+      ,"optionsCount": "Options ({{count}})", "validationCount": "Validation ({{count}})", "options": "Options",
+      "addOption": "Add option", "addOptionTo": "Add option to {{name}}", "optionNumber": "Option {{number}}",
+      "optionFor": "Option {{number}} for {{name}}", "reorderOption": "Reorder option {{number}}", "reorderOptionFor": "Reorder option {{number}} for {{name}}",
+      "removeOption": "Remove option {{number}}", "removeOptionFrom": "Remove option {{number}} from {{name}}", "dragToReorder": "Drag to reorder",
+      "addSelectableOption": "Add at least one selectable option.", "actionsTitle": "Actions", "endProcess": "End process",
+      "hidden": "Hidden", "requestControl": "Request Control", "requestControlOptions": "Request Control Options ({{count}})",
+      "requestControlValidation": "Request Control Validation ({{count}})", "requestControlTransitions": "Request Control Transitions ({{count}})",
+      "controlSettings": "Control Settings", "controlValidation": "Control Validation ({{count}})",
+      "controlTransitions": "Control Transitions ({{count}})", "transitionSettings": "Transition Settings",
+      "controlCode": "Control code", "arabicLabel": "Arabic label", "defaultValue": "Default value",
+      "commaSeparatedOptions": "Options (comma separated)", "featureConfiguration": "Feature Configuration",
+      "noOptions": "No options", "showLess": "Show less", "showMore": "Show {{count}} more",
+      "createRequestControl": "Create Request Control", "createControl": "Create Control",
+      "selectItemToEdit": "Select an item to edit its properties.", "noteColorAria": "Note color"
+      ,"selectValue": "Select value", "yes": "Yes", "no": "No", "condition": "Condition",
+      "noCondition": "No condition", "addCondition": "Add condition", "clearCondition": "Clear condition"
+    },
+    "exportDialog": { "title": "Export process" },
+    "confirmReset": "Discard this local Process Builder draft? Persisted server records will not be deleted.",
+    "messages": {
+      "loadFailed": "Failed to load process builder.", "processSaved": "Process saved successfully.",
+      "processSaveFailed": "Failed to save process.", "variablesSaved": "Variables saved successfully.",
+      "variablesSaveFailed": "Failed to save variables.", "activitiesSaved": "Activities saved successfully.",
+      "activitiesSaveFailed": "Failed to save activities.", "controlsSaved": "Request controls saved successfully.",
+      "controlsSaveFailed": "Failed to save request controls.", "transitionsSaved": "Transitions saved successfully.",
+      "transitionsSaveFailed": "Failed to save transitions.", "stepsSaved": "Steps saved successfully.",
+      "stepsSaveFailed": "Failed to save steps."
+    },
+    "palette": {
+      "controls": "Controls", "requestForm": "Request Form (process-level)", "activityForm": "Activity Form",
+      "requestHelp": "Adds as a process-level Request Control. Select an activity to add there instead.",
+      "activityHelp": "Adds a control to the selected activity form.",
+      "selectActivity": "Select an activity from the Tree or Activities workspace to enable activity-form controls."
+    },
+    "controlTypes": {
+      "digits": "Digits", "text": "Text", "longtext": "Long text", "date": "Date", "time": "Time", "url": "URL",
+      "dropdownDb": "Drop Down List (Fill From DataBase)", "dropdownManual": "Drop Down List (Fill Manually)",
+      "checkbox": "Check box", "checkboxlist": "Check Box List", "radiobuttonlist": "Radio Button List",
+      "table": "Table", "label": "Label", "employeesearch": "EmployeeSearch", "employeeid": "Employee ID",
+      "file": "File", "showroom": "Showroom", "signature": "Signature", "location": "Location", "advertiser": "Advertiser"
+    },
+    "designer": { "title": "Workflow Designer", "summary": "{{steps}} steps · {{activities}} activities · build and reorder the process" },
+    "workspace": {
+      "requestForm": "Request Form (Process-level controls)", "processControls": "{{count}} process-level controls",
+      "saveRequestControls": "Save Request Controls", "saveProcessFirst": "Save the Process first to enable request controls (ProcessId required).",
+      "addControl": "Add control", "activityForm": "Activity Form", "activityFormNamed": "Activity Form · {{name}}",
+      "selectActivitySummary": "Select an activity to design its controls and actions",
+      "activityEmptyState": "Activity form empty state",
+      "selectActivityTitle": "Select an activity to design its form",
+      "selectActivityHelp": "Add an activity first, or choose an existing activity from the process tree.",
+      "openActivities": "Open Activities", "saveActivityControls": "Save Activity Controls", "activity": "Activity",
+      "variablesTitle": "Variables", "variablesSummary": "{{total}} variables · {{active}} active",
+      "saveVariablesFirst": "Save the Process first to enable variable creation (ProcessId required).",
+      "workflowSteps": "Workflow Steps", "stepsSummary": "{{steps}} steps · {{active}} active · {{activities}} activities",
+      "saveStepsFirst": "Save the Process first to enable steps (ProcessId required).",
+      "controls": "{{count}} controls", "noActivities": "No activities", "requestFlow": "Request flow",
+      "processPath": "Process path", "conditionalTransition": "Conditional transition",
+      "diagramSummary": "{{steps}} steps · {{transitions}} transitions · visual process flow",
+      "transitionsTitle": "Conditional Transitions", "transitionsSummary": "{{count}} transitions · route the process using configured conditions"
+      ,"noSteps": "No steps. Add the first step to begin the workflow.", "activitiesForStep": "Activities · {{name}}",
+      "selectStep": "Select step", "addActivity": "Add Activity", "editForm": "Edit Form",
+      "addActivityHelp": "Add an activity using the options above."
+    },
+    "defaults": { "newVariable": "New variable", "newField": "New field", "step": "Step {{number}}", "newActivity": "New activity" },
+    "dataTypes": { "text": "text", "number": "number", "boolean": "boolean", "date": "date", "object": "object" },
+    "triggerSources": { "none": "None", "requestControl": "Request control", "activity": "Activity" },
+    "actionTypes": { "approve": "Approve", "reject": "Reject", "return": "Return", "escalate": "Escalate" }
+    ,"activityTypes": { "approval": "Approval", "review": "Review", "dataEntry": "Data Entry", "api": "API Action", "notification": "Notification" }
   },
   "workflowSetup": {
     "fields": {
@@ -789,13 +1139,16 @@
       "general": "General",
       "salesOrders": "Sales orders",
       "purchaseOrders": "Purchase orders",
-      "prices": "Prices"
+      "prices": "Prices",
+      "lineAmount": "Line amount"
     },
-    "options": { "normal": "Normal", "masculine": "Masculine" },
+    "options": { "normal": "Normal", "masculine": "Masculine", "roundDown": "Round down", "roundUp": "Round up" },
     "fields": {
       "code": "Currency code",
       "name": "Name",
       "symbol": "Symbol",
+      "isoCode": "ISO code",
+      "euroCurrency": "Euro currency",
       "arabicName": "Arabic name",
       "referenceCurrency": "Reference currency for triangulation",
       "conversion": "Conversion",
@@ -860,6 +1213,71 @@
       "saudiArabia": "Saudi Arabia"
     }
   },
+  "workflowControls": {
+    "files": {
+      "allowedTypes": "Allowed file types: {{types}}.", "exceedsSize": "{{name}} exceeds the maximum size of {{size}}.",
+      "maxFiles_zero": "No files can be uploaded.", "maxFiles_one": "You can upload up to one file.", "maxFiles_two": "You can upload up to {{count}} files.", "maxFiles_few": "You can upload up to {{count}} files.", "maxFiles_many": "You can upload up to {{count}} files.", "maxFiles_other": "You can upload up to {{count}} files.",
+      "upload": "Upload Files", "uploadMore": "Upload More Files", "removeAll": "Remove All Files", "uploadNamed": "Upload {{name}}",
+      "attach": "Attach", "attachNamed": "Attach {{name}}", "dropMultiple": "Drop documents here or", "dropSingle": "Drop a document here or", "browse": "Browse",
+      "maximum": "Maximum {{size}}", "previewNamed": "Preview {{name}}", "removeNamed": "Remove {{name}}", "addAnother": "Add another file",
+      "thumbnailNamed": "Thumbnail of {{name}}", "closePreview": "Close file preview", "previewOf": "Preview of {{name}}", "previewUnavailable": "A visual preview is unavailable for this saved file."
+    },
+    "signature": {
+      "drawingArea": "Signature drawing area", "named": "{{name}} signature", "previewNamed": "{{name}} signature preview", "saved": "Saved signature",
+      "none": "No signature", "sign": "Sign", "savedActions": "Saved signature actions", "actions": "Signature actions",
+      "clickEdit": "Click to edit signature", "clickAdd": "Click to add signature", "edit": "Edit Signature", "remove": "Remove Signature",
+      "clear": "Clear Signature", "cancel": "Cancel Signature", "save": "Save Signature"
+    },
+    "location": {
+      "selectedPreview": "Selected location map preview", "map": "Location map", "zoomIn": "Zoom in", "zoomOut": "Zoom out",
+      "searchFailed": "Location search failed.", "noResults": "No locations were found for this address.", "deviceUnavailable": "Device location is not available.",
+      "permissionBlocked": "Location access is blocked for this site. Change the browser permission or select a point manually on the map.", "accessFailed": "Unable to access device location.",
+      "select": "Select Location", "previewNamed": "{{name}} location preview", "selected": "Selected location", "actions": "Location actions",
+      "edit": "Edit Location", "remove": "Remove Location", "clickAdd": "Click to add location", "noneSelected": "No location selected",
+      "openMap": "Open Map", "choose": "Choose", "closeDialog": "Close location dialog", "searchPlaceholder": "Search for an address",
+      "useCurrent": "Use current location", "selectedAddress": "Selected address", "selectPoint": "Select a point on the map",
+      "latitude": "Latitude", "longitude": "Longitude", "loading": "Loading Location…", "save": "Save Location"
+    }
+  },
+  "workflowRequest": {
+    "fileRequired": "{{field}} file upload is required.", "attachmentNote": "Workflow request attachment",
+    "controlAttachmentNote": "Request control {{id}}", "optionAttachmentNote": "Request option {{id}}",
+    "submitted": "Request {{request}} submitted successfully. Score: {{score}}.",
+    "uploadsFailed_zero": "The request was saved; no attachments failed to upload.",
+    "uploadsFailed_one": "The request was saved, but {{count}} attachment could not be uploaded.",
+    "uploadsFailed_two": "The request was saved, but {{count}} attachments could not be uploaded.",
+    "uploadsFailed_few": "The request was saved, but {{count}} attachments could not be uploaded.",
+    "uploadsFailed_many": "The request was saved, but {{count}} attachments could not be uploaded.",
+    "uploadsFailed_other": "The request was saved, but {{count}} attachments could not be uploaded.",
+    "loadingForm": "Loading request form", "loadFailed": "Unable to load the request form.", "noDefinition": "No form definition is available.",
+    "additionalFields": "{{option}} additional fields", "optionDetails": "{{option}} details", "supportingDocument": "Supporting document",
+    "noActiveControls": "This process has no active request controls.", "submitting": "Submitting…", "submit": "Submit Request",
+    "requestScore": "Request Score: {{score}}", "scoreHelp": "Updates from selected options.",
+    "sendsNotification": "Sends a notification", "attachmentRequired": "Attachment required", "showsAdditionalFields": "Shows additional fields", "tableData": "Table data",
+    "unnamedProcess": "Unnamed process", "score": "Score: {{score}}", "attachmentsQueued": "Request attachments queued for save", "attachFiles": "Attach files to this request", "requestAttachments": "Request attachments", "request": "Request", "requestForm": "Request Form", "process": "Process"
+  },
+  "documents": {
+    "attachments": "Attachments", "closeAttachments": "Close attachments", "recordAttachments": "Record attachments", "selectSavedRecord": "Select a saved record",
+    "noDocuments": "No documents are attached to this record.", "newAttachment": "New attachment", "editAttachment": "Edit attachment",
+    "chooseFile": "Choose file", "preview": "Preview", "editRename": "Edit / rename",
+    "openNamed": "Open {{name}}", "previewNamed": "Preview {{name}}", "downloadNamed": "Download {{name}}",
+    "editNamed": "Edit {{name}}", "deleteNamed": "Delete {{name}}", "confirmDelete": "Delete {{name}}?",
+    "fields": { "type": "Type", "name": "Name", "descriptionNotes": "Description / notes", "size": "Size", "createdBy": "Created by", "createdDate": "Created date", "actions": "Actions", "documentType": "Document type", "subject": "Subject", "url": "URL", "note": "Note", "description": "Description" },
+    "messages": { "attached": "Document attached.", "attachFailed": "Unable to attach document.", "updated": "Document updated.", "updateFailed": "Unable to update document.", "deleted": "Document deleted.", "deleteFailed": "Unable to delete document.", "openFailed": "Unable to open document.", "loadFailed": "Unable to load attachments." },
+    "attachmentPreview": "Attachment preview", "attachmentsCount": "ATTACHMENTS ({{count}})", "openUrl": "Open URL",
+    "openNewTab": "Open in new tab", "openNamedNewTab": "Open {{name}} in new tab", "closePreview": "Close attachment preview",
+    "noAttachments": "No attachments are available.", "previousAttachment": "Previous attachment", "nextAttachment": "Next attachment",
+    "previewMessages": { "emptyWorkbook": "The workbook does not contain visible data.", "rowLimit": "Preview is limited to the first 500 rows.", "legacyOffice": "This legacy Office format cannot be rendered in the browser.", "renderFailed": "Unable to render this document.", "useOriginal": "Use Open or Download to view the original file.", "noNote": "No note content.", "noUrl": "No URL is available.", "loadFailed": "Unable to load this attachment preview.", "unavailable": "Preview is not available for this file type. Use Open or Download to view it." },
+    "docuView": {
+      "fileInformation": "FILE INFORMATION", "fileName": "File name", "chooseFiles": "Choose files",
+      "filesSelected_zero": "{{count}} files selected", "filesSelected_one": "{{count}} file selected", "filesSelected_two": "{{count}} files selected", "filesSelected_few": "{{count}} files selected", "filesSelected_many": "{{count}} files selected", "filesSelected_other": "{{count}} files selected",
+      "filesCount_zero": "{{count}} files", "filesCount_one": "{{count}} file", "filesCount_two": "{{count}} files", "filesCount_few": "{{count}} files", "filesCount_many": "{{count}} files", "filesCount_other": "{{count}} files",
+      "removeNamed": "Remove {{name}}", "fileDetails": "FILE DETAILS", "fileType": "File type", "originalFileName": "Original file name", "fileLocation": "File location", "managedStorage": "Managed document storage", "openPreview": "Open preview", "previewUnavailable": "Preview is not available.", "openNamedGallery": "Open {{name}} gallery", "openGallery": "Open gallery", "openPreviewGallery": "Open preview gallery",
+      "recordSummary": "{{type}} · Record {{record}}", "attached": "Attached", "details": "DETAILS", "notes": "Notes", "create": "CREATE", "createdDateTime": "Created date and time", "restriction": "Restriction", "internal": "Internal", "external": "External", "attachment": "Attachment", "moreDetails": "More details", "identification": "IDENTIFICATION", "companyAccount": "Company account", "viewHistory": "View history", "deletedAttachments": "Deleted attachments", "references": "References",
+      "validation": { "subjectNote": "Subject and note are required.", "validUrl": "A valid URL is required.", "chooseFile": "Choose at least one file." },
+      "invalidReference": "A valid RefTableId and RefRecId are required to open DocuView.", "title": "Attachments for record {{table}} - {{record}}"
+    }
+  },
   "legalEntities": {
     "sections": {
       "general": "General",
@@ -872,6 +1290,7 @@
       "name": "Name",
       "company": "Company",
       "memo": "Memo",
+      "arabicName": "Arabic name",
       "hierarchy": "In hierarchy",
       "consolidation": "Use for financial consolidation process",
       "elimination": "Use for financial elimination process",
@@ -879,6 +1298,11 @@
       "localizedRegion": "Localized functionality region",
       "language": "Language",
       "timeZone": "Time zone",
+      "taxRegistration": "Tax registration number",
+      "crNumber": "Commercial registration number",
+      "currency": "Currency",
+      "bankAccount": "Bank account",
+      "fiscalCalendar": "Fiscal calendar",
       "branch": "Branch/Subsidiary",
       "dunsNumber": "DUNS number",
       "naics": "NAICS",
@@ -888,9 +1312,22 @@
       "description": "Name or description",
       "address": "Address",
       "purpose": "Purpose",
-      "primary": "Primary"
+      "primary": "Primary",
+      "editAddress": "Edit address"
     },
     "contacts": { "type": "Type", "contact": "Contact number/address" },
+    "languages": { "english": "English", "arabic": "Arabic" },
+    "timeZones": { "riyadh": "(GMT+03:00) Kuwait, Riyadh" },
+    "images": {
+      "dashboardTitle": "Dashboard image",
+      "dashboardLabel": "Dashboard company image",
+      "reportTitle": "Report company logo image",
+      "reportLabel": "Report company logo",
+      "noImage": "No image",
+      "type": "Dashboard company image type",
+      "banner": "Banner",
+      "errors": { "invalid": "Select a valid image file.", "tooLarge": "The image must be 2 MB or smaller.", "readFailed": "Unable to read the selected image.", "encodeFailed": "The selected image could not be encoded." }
+    },
     "actions": { "map": "Map", "moreOptions": "More options", "advanced": "Advanced" },
     "commands": {
       "hierarchy": "View in hierarchy",

@@ -36,7 +36,7 @@ export function GlobalSettingsForm({
     try {
       const updated = await updateSettings.mutateAsync(values);
       reset(updated);
-      notifySuccess(t('settings.saved', 'Global settings saved.'));
+      notifySuccess(t('settings.saved'));
     } catch (error) {
       notifyError(error instanceof Error ? error.message : t('errors.generic'));
     }
@@ -47,7 +47,7 @@ export function GlobalSettingsForm({
       <UnsavedChangesGuard isDirty={formState.isDirty} />
       {!canUpdate && (
         <Alert severity="info" sx={{ mb: 2 }}>
-          {t('settings.globalReadOnly', 'Global settings are read-only for your account.')}
+          {t('settings.globalReadOnly')}
         </Alert>
       )}
       {updateSettings.error && (
@@ -56,73 +56,73 @@ export function GlobalSettingsForm({
         </Alert>
       )}
       <PageSection
-        title={t('settings.application', 'Application defaults')}
-        description={t('settings.applicationHelp', 'Defaults applied across the application.')}
+        title={t('settings.application')}
+        description={t('settings.applicationHelp')}
       >
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
           <AppTextField
             name="appName"
-            label={t('settings.appName', 'Application name')}
+            label={t('settings.appName')}
             control={control}
             disabled={!canUpdate}
             required
           />
           <AppTextField
             name="defaultLanguage"
-            label={t('settings.defaultLanguage', 'Default language')}
+            label={t('settings.defaultLanguage')}
             control={control}
             disabled={!canUpdate}
             required
           />
           <AppTextField
             name="timeZone"
-            label={t('settings.timeZone', 'Time zone')}
+            label={t('settings.timeZone')}
             control={control}
             disabled={!canUpdate}
             required
           />
           <AppTextField
             name="currency"
-            label={t('settings.currency', 'Currency')}
+            label={t('settings.currency')}
             control={control}
             disabled={!canUpdate}
             required
           />
           <AppTextField
             name="dateFormat"
-            label={t('settings.dateFormat', 'Date format')}
+            label={t('settings.dateFormat')}
             control={control}
             disabled={!canUpdate}
             required
           />
           <AppNumberField
             name="decimalPlaces"
-            label={t('settings.decimalPlaces', 'Decimal places')}
+            label={t('settings.decimalPlaces')}
             control={control}
             disabled={!canUpdate}
             required
           />
         </Box>
       </PageSection>
-      <PageSection title={t('settings.system', 'System behavior')}>
+      <PageSection title={t('settings.system')}>
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
           <AppNumberField
             name="paginationSize"
-            label={t('settings.paginationSize', 'Default page size')}
+            label={t('settings.paginationSize')}
             control={control}
             disabled={!canUpdate}
             required
           />
           <AppNumberField
             name="maxUploadSize"
-            label={t('settings.maxUploadSize', 'Maximum upload size (bytes)')}
+            label={t('settings.maxUploadSize')}
             control={control}
             disabled={!canUpdate}
             required
           />
           <AppBooleanField
             name="enableAuditLog"
-            label={t('settings.enableAuditLog', 'Enable audit logging')}
+            label={t('settings.enableAuditLog')}
             control={control}
             disabled={!canUpdate}
           />
@@ -141,7 +141,7 @@ export function GlobalSettingsForm({
           variant="contained"
           disabled={!canUpdate || !formState.isDirty || updateSettings.isPending}
         >
-          {updateSettings.isPending ? t('messages.saving', 'Saving…') : t('actions.save')}
+          {updateSettings.isPending ? t('messages.saving') : t('actions.save')}
         </Button>
       </Stack>
     </Box>

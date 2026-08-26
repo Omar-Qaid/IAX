@@ -1,5 +1,5 @@
 import type { SxProps, Theme } from '@mui/material/styles';
-import { d365 } from '@patterns/list-details/d365Tokens';
+import { d365 } from '@shared/constants/enterpriseUiTokens';
 
 export const actionPaneControlSx: SxProps<Theme> = {
   minWidth: 0,
@@ -20,14 +20,14 @@ export const actionPaneControlSx: SxProps<Theme> = {
     borderColor: 'divider',
   },
   '& .MuiButton-startIcon': {
-    marginLeft: 0,
-    marginRight: '6px',
+    marginInlineStart: 0,
+    marginInlineEnd: '6px',
     color: 'primary.main',
     '& .MuiSvgIcon-root': { fontSize: 17 },
   },
   '& .MuiButton-endIcon': {
-    marginLeft: '6px',
-    marginRight: 0,
+    marginInlineStart: '6px',
+    marginInlineEnd: 0,
     color: 'primary.main',
     '& .MuiSvgIcon-root': { fontSize: 17 },
   },

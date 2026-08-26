@@ -28,7 +28,7 @@ export function UserSettingsForm({ settings }: { settings: UserSettings }): Reac
     try {
       const updated = await updateSettings.mutateAsync(values);
       reset(updated);
-      notifySuccess(t('settings.userSaved', 'User settings saved.'));
+      notifySuccess(t('settings.userSaved'));
     } catch (error) {
       notifyError(error instanceof Error ? error.message : t('errors.generic'));
     }
@@ -43,39 +43,36 @@ export function UserSettingsForm({ settings }: { settings: UserSettings }): Reac
         </Alert>
       )}
       <PageSection
-        title={t('settings.preferences', 'Personal preferences')}
-        description={t(
-          'settings.preferencesHelp',
-          'Settings associated with your authenticated user.'
-        )}
+        title={t('settings.preferences')}
+        description={t('settings.preferencesHelp')}
       >
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
           <AppTextField
             name="theme"
-            label={t('settings.theme', 'Theme')}
+            label={t('settings.theme')}
             control={control}
             required
           />
           <AppTextField
             name="language"
-            label={t('settings.language', 'Language')}
+            label={t('settings.language')}
             control={control}
             required
           />
           <AppNumberField
             name="pageSize"
-            label={t('settings.pageSize', 'Page size')}
+            label={t('settings.pageSize')}
             control={control}
             required
           />
           <AppTextField
             name="dashboardLayout"
-            label={t('settings.dashboardLayout', 'Dashboard layout')}
+            label={t('settings.dashboardLayout')}
             control={control}
           />
           <AppBooleanField
             name="notificationEnabled"
-            label={t('settings.notificationEnabled', 'Enable notifications')}
+            label={t('settings.notificationEnabled')}
             control={control}
           />
         </Box>
@@ -93,7 +90,7 @@ export function UserSettingsForm({ settings }: { settings: UserSettings }): Reac
           variant="contained"
           disabled={!formState.isDirty || updateSettings.isPending}
         >
-          {updateSettings.isPending ? t('messages.saving', 'Saving…') : t('actions.save')}
+          {updateSettings.isPending ? t('messages.saving') : t('actions.save')}
         </Button>
       </Stack>
     </Box>

@@ -14,6 +14,7 @@ import {
 } from '../api/dynamicRequestFormApi';
 import { DynamicControlRenderer, readMultiValue } from './DynamicControlRenderer';
 import { readFileMetadata } from './DynamicSpecialControls';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 
 type Values = Record<number, string>;
 type Errors = Record<number, string>;
@@ -123,6 +124,7 @@ const initialValues = (controls: DynamicRequestControl[]): Values => Object.from
 export interface DynamicFormHandle { submit: () => void }
 export interface DynamicFormStatus { score: number; saving: boolean; canSubmit: boolean; requestId: number | null }
 export const DynamicForm = React.forwardRef<DynamicFormHandle, { processId: number; requestFiles?: File[]; showActions?: boolean; onStatusChange?: (status: DynamicFormStatus) => void }>(function DynamicForm({ processId, requestFiles = [], showActions = true, onStatusChange }, ref): React.ReactElement {
+  const { t } = useAppTranslation();
   const { notifyError, notifySuccess } = useNotifications();
   const definition = useQuery({
     queryKey: ['workflow', 'dynamic-request-form', processId],
@@ -218,12 +220,12 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, { processId: numb
     const next: Errors = {};
     for (const control of inputControls) {
       const value = values[control.requestControlId] ?? '';
-      if (control.required && empty(value)) next[control.requestControlId] = `${control.label} is required.`;
+      if (control.required && empty(value)) next[control.requestControlId] = t('validation.required', { field: control.label });
       const missingFeatureFile = selectedOptions(control, values).find((option) =>
         option.featureConfiguration?.requireFileUpload &&
         empty(optionFeatureValues[`${control.requestControlId}:${option.optionId}:files`] ?? '')
       );
-      if (missingFeatureFile) next[control.requestControlId] = `${missingFeatureFile.label} file upload is required.`;
+      if (missingFeatureFile) next[control.requestControlId] = t('workflowRequest.fileRequired', { field: missingFeatureFile.label });
       const failed = control.validations.find((rule) =>
         rule.severity.toLocaleLowerCase() === 'error' &&
         !ruleValid(rule, value, definition.data?.controls ?? [], values));
@@ -250,14 +252,14 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, { processId: numb
       const uploads: Promise<unknown>[] = [];
       const attachmentOwners = result.attachmentOwners ?? [];
       for (const file of requestFiles) uploads.push(documentApi.create(documentTableIds.wfRequest, result.requestId, {
-        typeId: 'File', name: file.name, notes: 'Workflow request attachment', url: '', file,
+        typeId: 'File', name: file.name, notes: t('workflowRequest.attachmentNote'), url: '', file,
       }));
       for (const [requestControlIdText, files] of Object.entries(controlFiles)) {
         const requestControlId = Number(requestControlIdText);
         const owner = attachmentOwners.find((item) => item.requestControlId === requestControlId && item.optionId == null);
         if (!owner) continue;
         for (const file of files) uploads.push(documentApi.create(documentTableIds.wfRequestDetail, owner.detailRecId, {
-          typeId: 'File', name: file.name, notes: `Request control ${requestControlId}`, url: '', file,
+          typeId: 'File', name: file.name, notes: t('workflowRequest.controlAttachmentNote', { id: requestControlId }), url: '', file,
         }));
       }
       for (const [key, files] of Object.entries(optionFiles)) {
@@ -265,14 +267,14 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, { processId: numb
         const owner = attachmentOwners.find((item) => item.requestControlId === requestControlId && item.optionId === optionId);
         if (!owner) continue;
         for (const file of files) uploads.push(documentApi.create(documentTableIds.wfRequestDetail, owner.detailRecId, {
-          typeId: 'File', name: file.name, notes: `Request option ${optionId}`, url: '', file,
+          typeId: 'File', name: file.name, notes: t('workflowRequest.optionAttachmentNote', { id: optionId }), url: '', file,
         }));
       }
       const uploadResults = await Promise.allSettled(uploads);
       const failedUploads = uploadResults.filter((item) => item.status === 'rejected').length;
       setSavedRequestId(result.requestId);
-      notifySuccess(`Request ${result.code ?? result.requestId} submitted successfully. Score: ${result.score}.`);
-      if (failedUploads > 0) notifyError(`The request was saved, but ${failedUploads} attachment${failedUploads === 1 ? '' : 's'} could not be uploaded.`);
+      notifySuccess(t('workflowRequest.submitted', { request: result.code ?? result.requestId, score: result.score }));
+      if (failedUploads > 0) notifyError(t('workflowRequest.uploadsFailed', { count: failedUploads }));
     } catch (reason) {
       const message = reason instanceof Error ? reason.message : String(reason);
       setFormError(message); notifyError(message);
@@ -285,9 +287,9 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, { processId: numb
     onStatusChange?.({ score, saving, canSubmit: inputControls.length > 0 && savedRequestId == null, requestId: savedRequestId });
   }, [inputControls.length, onStatusChange, savedRequestId, saving, score]);
 
-  if (definition.isLoading) return <Box sx={{ py: 6, display: 'grid', placeItems: 'center' }}><CircularProgress aria-label="Loading request form" /></Box>;
-  if (definition.isError) return <Alert severity="error">{definition.error instanceof Error ? definition.error.message : 'Unable to load the request form.'}</Alert>;
-  if (!definition.data) return <Alert severity="warning">No form definition is available.</Alert>;
+  if (definition.isLoading) return <Box sx={{ py: 6, display: 'grid', placeItems: 'center' }}><CircularProgress aria-label={t('workflowRequest.loadingForm')} /></Box>;
+  if (definition.isError) return <Alert severity="error">{definition.error instanceof Error ? definition.error.message : t('workflowRequest.loadFailed')}</Alert>;
+  if (!definition.data) return <Alert severity="warning">{t('workflowRequest.noDefinition')}</Alert>;
   const childControlsFor = (option: DynamicRequestOption) => option.featureConfiguration?.showOtherControls
     ? option.featureConfiguration.visibleControlIds
       .map((id) => visibleControls.find((item) => item.requestControlId === id))
@@ -303,14 +305,14 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, { processId: numb
     const featureKey = `${control.requestControlId}:${option.optionId}`;
     const childControls = childControlsFor(option);
     if (!features.sendAlertMessage && !features.requireFileUpload && childControls.length === 0) return null;
-    return <Stack key={featureKey} role="group" aria-label={`${option.label} additional fields`} spacing={0.7} sx={{ mt: fullRow ? 0.75 : 0.65, ml: fullRow ? 0 : { xs: 0.25, sm: 0.75 }, p: fullRow ? 1 : 0.65, borderLeft: '3px solid', borderColor: 'primary.light', borderRadius: 0.6, bgcolor: 'rgba(0, 91, 161, .035)' }}>
-      {fullRow && <Typography sx={{ fontSize: 12.5, fontWeight: 750 }}>{option.label} details</Typography>}
+    return <Stack key={featureKey} role="group" aria-label={t('workflowRequest.additionalFields', { option: option.label })} spacing={0.7} sx={{ mt: fullRow ? 0.75 : 0.65, marginInlineStart: fullRow ? 0 : { xs: 0.25, sm: 0.75 }, p: fullRow ? 1 : 0.65, borderInlineStart: '3px solid', borderColor: 'primary.light', borderRadius: 0.6, bgcolor: 'rgba(0, 91, 161, .035)' }}>
+      {fullRow && <Typography sx={{ fontSize: 12.5, fontWeight: 750 }}>{t('workflowRequest.optionDetails', { option: option.label })}</Typography>}
       {features.sendAlertMessage && features.alertMessage && <Alert severity="warning" sx={{ py: 0, '& .MuiAlert-icon': { py: 0.35 }, '& .MuiAlert-message': { py: 0.35, fontSize: 11.5 } }}>{features.alertMessage}</Alert>}
       {childControls.length > 0 && <Box sx={{ display: 'grid', gridTemplateColumns: fullRow ? { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))' } : '1fr', gap: 0.8, alignItems: 'start' }}>
         {childControls.map((child) => <Box key={child.requestControlId} sx={{ minWidth: 0 }}>{renderControl(child, ancestors, false)}</Box>)}
       </Box>}
       {features.requireFileUpload && <DynamicControlRenderer
-        control={{ label: 'Supporting document', hideLabel: true, compact: true, required: true, controlType: 'file' }}
+        control={{ label: t('workflowRequest.supportingDocument'), hideLabel: true, compact: true, required: true, controlType: 'file' }}
         value={optionFeatureValues[`${featureKey}:files`] ?? ''}
         onChange={(value) => setOptionFeatureValues((current) => ({ ...current, [`${featureKey}:files`]: value }))}
         onFilesChange={(files) => setOptionFiles((current) => ({ ...current, [featureKey]: files }))}
@@ -344,7 +346,7 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, { processId: numb
   };
   return (
     <Box sx={{ width: '100%', minWidth: 0, minHeight: 0, height: 'auto', flex: '0 0 auto', alignSelf: 'flex-start', display: 'flex', flexDirection: 'column', gap: 1.15 }}>
-      {visibleControls.length === 0 ? <Alert severity="info">This process has no active request controls.</Alert> : <Stack spacing={1.25} sx={{ width: '100%', maxWidth: 'none', minWidth: 0, minHeight: 0, height: 'auto', flex: '0 0 auto', alignSelf: 'flex-start' }}>
+      {visibleControls.length === 0 ? <Alert severity="info">{t('workflowRequest.noActiveControls')}</Alert> : <Stack spacing={1.25} sx={{ width: '100%', maxWidth: 'none', minWidth: 0, minHeight: 0, height: 'auto', flex: '0 0 auto', alignSelf: 'flex-start' }}>
         <Paper variant="outlined" sx={{ width: '100%', minWidth: 0, minHeight: 0, height: 'auto', alignSelf: 'flex-start', p: { xs: 1.1, sm: 1.35 }, borderColor: '#d5d7dc', borderRadius: 1, boxShadow: '0 2px 7px rgba(32,42,64,.10)' }}>
           <Box data-testid="dynamic-form-grid" sx={{ display: 'grid', gap: 1.35 }}>
             {controlRows.map((row, rowIndex) => <Box key={rowIndex} data-testid="dynamic-form-row" sx={{ minWidth: 0 }}>
@@ -361,9 +363,9 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, { processId: numb
       {formError && <Alert severity="error">{formError}</Alert>}
       {showActions && <Paper square variant="outlined" sx={{ position: 'sticky', bottom: 0, zIndex: 5, mt: 'auto', px: { xs: 1.25, sm: 2.5 }, py: 0.8, mx: { xs: -0.25, sm: -0.5 }, bgcolor: 'rgba(255,255,255,.98)', backdropFilter: 'blur(8px)', boxShadow: '0 -2px 8px rgba(32,42,64,.12)' }}>
         <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center', justifyContent: { xs: 'flex-start', sm: 'flex-end' } }}>
-          <Button variant="contained" disabled={saving || inputControls.length === 0} onClick={() => void submit()} sx={{ minWidth: { xs: 128, sm: 190 }, height: { xs: 38, sm: 46 }, whiteSpace: 'nowrap', borderRadius: { xs: 1, sm: 0.5 }, fontSize: { xs: 12, sm: 15 } }}>{saving ? 'Submitting…' : 'Submit Request'}</Button>
+          <Button variant="contained" disabled={saving || inputControls.length === 0} onClick={() => void submit()} sx={{ minWidth: { xs: 128, sm: 190 }, height: { xs: 38, sm: 46 }, whiteSpace: 'nowrap', borderRadius: { xs: 1, sm: 0.5 }, fontSize: { xs: 12, sm: 15 } }}>{saving ? t('workflowRequest.submitting') : t('workflowRequest.submit')}</Button>
           <Box sx={{ width: 54, height: 54, flexShrink: 0, borderRadius: '50%', bgcolor: 'primary.main', color: 'primary.contrastText', display: { xs: 'grid', sm: 'none' }, placeItems: 'center', boxShadow: '0 2px 7px rgba(0,91,161,.30)' }}><Stack spacing={0} sx={{ alignItems: 'center' }}><Typography sx={{ fontSize: 18, lineHeight: 1, fontWeight: 800 }}>{score}</Typography><AssignmentOutlined sx={{ fontSize: 13, mt: 0.25 }} /></Stack></Box>
-          <Box sx={{ minWidth: 0, px: { sm: 1.25 }, py: { sm: 0.7 }, border: { sm: '1px solid' }, borderColor: { sm: 'divider' }, borderRadius: { sm: 1 }, bgcolor: { sm: '#f8f8f8' } }}><Typography sx={{ fontSize: { xs: 11.5, sm: 13 }, lineHeight: 1.15, fontWeight: 750 }}>Request Score: {score}</Typography><Typography color="text.secondary" sx={{ fontSize: { xs: 10.5, sm: 11.5 }, lineHeight: 1.1 }}>Updates from selected options.</Typography></Box>
+          <Box sx={{ minWidth: 0, px: { sm: 1.25 }, py: { sm: 0.7 }, border: { sm: '1px solid' }, borderColor: { sm: 'divider' }, borderRadius: { sm: 1 }, bgcolor: { sm: '#f8f8f8' } }}><Typography sx={{ fontSize: { xs: 11.5, sm: 13 }, lineHeight: 1.15, fontWeight: 750 }}>{t('workflowRequest.requestScore', { score })}</Typography><Typography color="text.secondary" sx={{ fontSize: { xs: 10.5, sm: 11.5 }, lineHeight: 1.1 }}>{t('workflowRequest.scoreHelp')}</Typography></Box>
         </Stack>
       </Paper>}
     </Box>

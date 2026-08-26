@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { GridCell } from './GridCell';
 import type { ColumnDef } from '../types';
 import { GRID_SELECTION_COLUMN_WIDTH } from '../constants';
-import { d365 } from '@patterns/list-details/d365Tokens';
+import { d365 } from '@shared/constants/enterpriseUiTokens';
 
 interface GridRowProps<T> {
   row: T;
@@ -151,7 +151,7 @@ export const GridRow = memo(function GridRowInner<T>({
           position="left"
           renderCell={() => (
             <Checkbox
-              aria-label={t('grid.select_row', { id: rowId, defaultValue: `Select row ${rowId}` })}
+              aria-label={t('grid.select_row', { id: rowId })}
               size="small"
               checked={isSelected}
               onChange={() => onToggleRow(rowId)}
@@ -232,7 +232,7 @@ export const GridRow = memo(function GridRowInner<T>({
         <Box
           sx={{
             position: 'sticky',
-            right: 0,
+            insetInlineEnd: 0,
             display: 'flex',
             alignItems: 'center',
             gap: 0.25,
@@ -240,7 +240,7 @@ export const GridRow = memo(function GridRowInner<T>({
             height: rowHeight,
             bgcolor: editingBg,
             borderBottom: `1px solid ${theme.palette.divider}`,
-            borderLeft: `1px solid ${theme.palette.warning.main}`,
+            borderInlineStart: `1px solid ${theme.palette.warning.main}`,
             zIndex: 2,
             flexShrink: 0,
           }}

@@ -32,19 +32,19 @@ export function OptionsMenu<T>({
   return (
     <>
       <ActionPaneMenu
-        label={t('common.options', 'Options')}
+        label={t('common.options')}
         icon={<SettingsOutlinedIcon sx={{ fontSize: 17 }} />}
         disabled={disabled || !record}
         actions={[
           {
             id: 'record-info',
-            label: t('common.recordInfo', 'Record Info'),
+            label: t('common.recordInfo'),
             icon: <InfoOutlinedIcon fontSize="small" />,
             onClick: () => setInfoOpen(true),
           },
           {
             id: 'record-audit',
-            label: t('common.recordAudit', 'Record Audit'),
+            label: t('common.recordAudit'),
             icon: <HistoryIcon fontSize="small" />,
             onClick: () => setAuditOpen(true),
           },

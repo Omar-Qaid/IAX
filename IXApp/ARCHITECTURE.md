@@ -19,7 +19,7 @@ Read [Application bootstrap](docs/app.md), [Routing and layouts](docs/routing-an
 | `core` | API/auth/error/localization/permission infrastructure and generic contracts |
 | `mocks` | Shared mock datasets used by the adapters that support mock mode |
 
-The precise allowed dependency matrix is in [Architecture boundaries](docs/ARCHITECTURE-BOUNDARIES.md). The architecture audit currently reports a small set of upward-layer and cross-module imports. Those imports are implementation debt, not approved exceptions; documentation must not claim the audit is clean until the code is changed.
+The precise allowed dependency matrix is in [Architecture boundaries](docs/ARCHITECTURE-BOUNDARIES.md). The architecture audit enforces layer direction, bounded-context ownership, acyclic source imports, resolved internal imports, and direct MUI icon imports.
 
 ## Technology and implementation choices
 

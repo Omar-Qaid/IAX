@@ -1,5 +1,6 @@
 import type { Components, Theme } from '@mui/material/styles';
 import { uiDensity } from '@shared/constants/uiDensity';
+import { APP_FONT_FAMILY_CSS_VARIABLE } from '@shared/constants/fontFamilies';
 
 export const getComponentOverrides = (theme: Theme): Components => ({
   MuiButton: {
@@ -31,7 +32,18 @@ export const getComponentOverrides = (theme: Theme): Components => ({
   },
   MuiCssBaseline: {
     styleOverrides: {
+      'html, body, #root': {
+        width: '100%',
+        minWidth: 0,
+        minHeight: '100%',
+        [APP_FONT_FAMILY_CSS_VARIABLE]: theme.typography.fontFamily,
+      },
+      'html, body': {
+        margin: 0,
+        overflowX: 'hidden',
+      },
       '*': {
+        boxSizing: 'border-box',
         scrollbarWidth: 'thin',
         scrollbarColor: `${theme.palette.mode === 'light' ? '#a8a8a8' : '#667085'} transparent`,
       },
@@ -90,17 +102,17 @@ export const getComponentOverrides = (theme: Theme): Components => ({
     styleOverrides: {
       root: {
         minHeight: `${uiDensity.toolbarHeight}px !important`,
-        paddingLeft: '12px !important',
-        paddingRight: '12px !important',
+        paddingInline: '12px !important',
       },
     },
   },
   MuiDrawer: {
     styleOverrides: {
-      paper: {
+      paper: ({ ownerState }) => ({
         borderRadius: 0,
-        borderRight: `1px solid ${theme.palette.divider}`,
-      },
+        borderLeft: ownerState.anchor === 'right' ? `1px solid ${theme.palette.divider}` : 0,
+        borderRight: ownerState.anchor === 'left' ? `1px solid ${theme.palette.divider}` : 0,
+      }),
     },
   },
   MuiAccordion: {
@@ -165,17 +177,28 @@ export const getComponentOverrides = (theme: Theme): Components => ({
       paper: {
         borderRadius: 4,
         boxShadow: theme.shadows[8],
+        margin: theme.spacing(1),
+        maxWidth: 'calc(100vw - 16px)',
+        maxHeight: 'calc(100dvh - 16px)',
+        overflowX: 'hidden',
+        direction: theme.direction,
+        textAlign: 'start',
+        [theme.breakpoints.up('sm')]: {
+          margin: theme.spacing(2),
+          maxWidth: 'calc(100vw - 32px)',
+          maxHeight: 'calc(100dvh - 32px)',
+        },
       },
     },
   },
   MuiDialogTitle: {
-    styleOverrides: { root: { padding: `${uiDensity.dialogPadding}px`, fontSize: '0.9375rem' } },
+    styleOverrides: { root: { padding: `${uiDensity.dialogPadding}px`, fontSize: '0.9375rem', textAlign: 'start' } },
   },
   MuiDialogContent: {
-    styleOverrides: { root: { padding: `${uiDensity.dialogPadding}px` } },
+    styleOverrides: { root: { padding: `${uiDensity.dialogPadding}px`, textAlign: 'start' } },
   },
   MuiDialogActions: {
-    styleOverrides: { root: { padding: '8px 12px', gap: 4 } },
+    styleOverrides: { root: { padding: '8px 12px', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end' } },
   },
   MuiCardContent: {
     styleOverrides: {
@@ -196,7 +219,7 @@ export const getComponentOverrides = (theme: Theme): Components => ({
   },
   MuiChip: {
     defaultProps: { size: 'small' },
-    styleOverrides: { root: { height: 22 }, label: { paddingLeft: 7, paddingRight: 7 } },
+    styleOverrides: { root: { height: 22 }, label: { paddingInline: 7 } },
   },
   MuiAlert: {
     styleOverrides: { root: { padding: '4px 8px' }, message: { padding: '3px 0' } },
@@ -204,7 +227,7 @@ export const getComponentOverrides = (theme: Theme): Components => ({
   MuiCheckbox: { styleOverrides: { root: { padding: 4 } } },
   MuiRadio: { styleOverrides: { root: { padding: 4 } } },
   MuiFormControlLabel: {
-    styleOverrides: { root: { marginLeft: -4, marginRight: 8, minHeight: 30 } },
+    styleOverrides: { root: { marginInlineStart: -4, marginInlineEnd: 8, minHeight: 30 } },
   },
   MuiPaginationItem: {
     styleOverrides: { root: { minWidth: 28, height: 28, margin: '0 1px' } },

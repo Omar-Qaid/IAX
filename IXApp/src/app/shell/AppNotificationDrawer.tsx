@@ -20,6 +20,7 @@ import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import { useTranslation } from 'react-i18next';
 import { useNavigationStore } from '@app/store/useNavigationStore';
 import { LAYOUT } from '@app/configuration/constants';
+import { useLogicalDrawerAnchor } from '@shared/hooks/useLogicalDrawerAnchor';
 
 const DRAWER_WIDTH = 380;
 
@@ -43,31 +44,31 @@ export interface AppDrawerNotification {
 const MOCK_NOTIFICATIONS: AppDrawerNotification[] = [
     {
         id: '1',
-        sender: 'System Admin',
-        message: 'Your data export has completed successfully.',
+        sender: 'notifications.systemAdmin',
+        message: 'notifications.exportCompleted',
         createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
         read: false,
         archived: false,
         priority: 'Medium',
-        category: 'System',
-        actions: [{ label: 'View File', variant: 'contained' }],
+        category: 'notifications.categorySystem',
+        actions: [{ label: 'notifications.viewFile', variant: 'contained' }],
         attachment: { name: 'export_data.csv', size: '2.4 MB' }
     },
     {
         id: '2',
-        sender: 'Security',
-        message: 'Multiple failed login attempts detected.',
+        sender: 'notifications.security',
+        message: 'notifications.failedLogins',
         createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
         read: false,
         archived: false,
         priority: 'Critical',
-        category: 'Alert'
+        category: 'notifications.categoryAlert'
     }
 ];
 
 // ─── Utilities ───────────────────────────────────────────────────────────────
 
-function timeAgo(dateStr: string): string {
+function timeAgo(dateStr: string, language: string): string {
     const now = Date.now();
     const diff = now - new Date(dateStr).getTime();
     const seconds = Math.floor(diff / 1000);
@@ -75,10 +76,11 @@ function timeAgo(dateStr: string): string {
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
 
-    if (seconds < 60) return 'a few seconds';
-    if (minutes < 60) return `${minutes} min`;
-    if (hours < 24) return hours === 1 ? '1 hour' : `${hours} hours`;
-    return days === 1 ? '1 day' : `${days} days`;
+    const relative = new Intl.RelativeTimeFormat(language, { numeric: 'auto' });
+    if (seconds < 60) return relative.format(-Math.max(1, seconds), 'second');
+    if (minutes < 60) return relative.format(-minutes, 'minute');
+    if (hours < 24) return relative.format(-hours, 'hour');
+    return relative.format(-days, 'day');
 }
 
 // ─── Notification Item ───────────────────────────────────────────────────────
@@ -89,6 +91,7 @@ const NotificationItem: React.FC<{
     onArchive: (id: string) => void;
     onDelete: (id: string) => void;
 }> = ({ notification, onMarkRead, onArchive, onDelete }) => {
+    const { t, i18n } = useTranslation();
     const n = notification;
 
     const getPriorityColor = (priority?: string) => {
@@ -118,7 +121,7 @@ const NotificationItem: React.FC<{
             }}
         >
             <Box sx={{
-                position: 'absolute', left: 0, top: 0, bottom: 0, width: 3,
+                position: 'absolute', insetInlineStart: 0, top: 0, bottom: 0, width: 3,
                 bgcolor: getPriorityColor(n.priority),
             }} />
 
@@ -126,14 +129,14 @@ const NotificationItem: React.FC<{
                 {n.sender?.[0] || '?'}
             </Avatar>
 
-            <Box sx={{ flex: 1, minWidth: 0, pr: 4 }}>
+            <Box sx={{ flex: 1, minWidth: 0, paddingInlineEnd: 4 }}>
                 <Typography sx={{ fontSize: '0.8125rem', color: 'text.primary', lineHeight: 1.5 }}>
-                    <strong>{n.sender}</strong> {n.message}
+                    <strong>{n.sender ? t(n.sender) : ''}</strong> {t(n.message)}
                 </Typography>
                 <Typography sx={{ fontSize: '0.75rem', color: 'text.secondary', mt: 0.25 }}>
-                    {timeAgo(n.createdAt)}
-                    {n.category && ` \u00B7 ${n.category}`}
-                    {n.priority && ` \u00B7 ${n.priority}`}
+                    {timeAgo(n.createdAt, i18n.resolvedLanguage ?? i18n.language)}
+                    {n.category && ` \u00B7 ${t(n.category)}`}
+                    {n.priority && ` \u00B7 ${t(`notifications.priority.${n.priority}`)}`}
                 </Typography>
 
                 {n.actions && n.actions.length > 0 && (
@@ -153,7 +156,7 @@ const NotificationItem: React.FC<{
                                     minHeight: 28,
                                 }}
                             >
-                                {action.label}
+                                {t(action.label)}
                             </Button>
                         ))}
                     </Box>
@@ -186,7 +189,7 @@ const NotificationItem: React.FC<{
                                 borderRadius: '2px', minHeight: 28, px: 1.5, flexShrink: 0,
                             }}
                         >
-                            Download
+                            {t('actions.download')}
                         </Button>
                     </Box>
                 )}
@@ -202,20 +205,20 @@ const NotificationItem: React.FC<{
                 className="hover-actions"
                 onClick={(e) => e.stopPropagation()}
                 sx={{
-                    position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5,
+                    position: 'absolute', top: 8, insetInlineEnd: 8, display: 'flex', gap: 0.5,
                     opacity: 0, transition: 'opacity 0.15s', bgcolor: 'background.paper',
                     borderRadius: 1, p: 0.25, boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
                 }}
             >
                 {!n.archived && (
-                    <Tooltip title="Archive">
-                        <IconButton size="small" onClick={() => onArchive(n.id)} sx={{ p: 0.5 }}>
+                    <Tooltip title={t('actions.archive')}>
+                        <IconButton size="small" aria-label={t('actions.archive')} onClick={() => onArchive(n.id)} sx={{ p: 0.5 }}>
                             <ArchiveIcon sx={{ fontSize: 16 }} />
                         </IconButton>
                     </Tooltip>
                 )}
-                <Tooltip title="Delete">
-                    <IconButton size="small" onClick={() => onDelete(n.id)} sx={{ p: 0.5 }}>
+                <Tooltip title={t('actions.delete')}>
+                    <IconButton size="small" aria-label={t('actions.delete')} onClick={() => onDelete(n.id)} sx={{ p: 0.5 }}>
                         <DeleteIcon sx={{ fontSize: 16 }} />
                     </IconButton>
                 </Tooltip>
@@ -243,6 +246,7 @@ export const AppNotificationDrawer: React.FC = () => {
     const unreadCount = unreadNotifications.length;
 
     const handleClose = () => setNotificationDrawerOpen(false);
+    const drawerAnchor = useLogicalDrawerAnchor('end');
 
     const markRead = (id: string) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
     const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })));
@@ -251,7 +255,7 @@ export const AppNotificationDrawer: React.FC = () => {
 
     return (
         <Drawer
-            anchor="right"
+            anchor={drawerAnchor}
             open={notificationDrawerOpen}
             onClose={handleClose}
             slotProps={{
@@ -266,6 +270,9 @@ export const AppNotificationDrawer: React.FC = () => {
                         height: `calc(100% - ${LAYOUT.TOPBARHEIGHT}px)`,
                         borderRadius: 0,
                         boxShadow: '-4px 0 24px rgba(0,0,0,0.08)',
+                        borderInlineStart: '1px solid',
+                        borderInlineStartColor: 'divider',
+                        borderInlineEnd: 0,
                         overflow: 'hidden',
                     },
                 },
@@ -307,7 +314,7 @@ export const AppNotificationDrawer: React.FC = () => {
                         '& .MuiTabs-indicator': { display: 'none' },
                         '& .MuiTab-root': {
                             textTransform: 'none', minHeight: 32, fontSize: '0.8125rem', fontWeight: 600,
-                            color: 'text.secondary', px: 1.5, py: 0.5, mr: 0.5, minWidth: 'auto',
+                            color: 'text.secondary', px: 1.5, py: 0.5, marginInlineEnd: 0.5, minWidth: 'auto',
                             '&.Mui-selected': { color: 'text.primary' },
                         },
                     }}

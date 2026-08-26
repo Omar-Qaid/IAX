@@ -23,6 +23,11 @@ import { useTranslation } from 'react-i18next';
 import { useNavigationStore } from '@app/store/useNavigationStore';
 import { usePreferenceStore } from '@app/store/usePreferenceStore';
 import { LAYOUT } from '@app/configuration/constants';
+import {
+    ARABIC_UI_FONT_FAMILIES,
+    DEFAULT_UI_FONT_FAMILY,
+} from '@shared/constants/fontFamilies';
+import { useLogicalDrawerAnchor } from '@shared/hooks/useLogicalDrawerAnchor';
 
 const COLOR_PRESETS: Record<string, { primary: { main: string } }> = {
     default: { primary: { main: '#005a9e' } },
@@ -33,12 +38,21 @@ const COLOR_PRESETS: Record<string, { primary: { main: string } }> = {
     violet: { primary: { main: '#5c2d91' } }
 };
 
-const FONT_OPTIONS = [
-    { label: 'Segoe UI', value: '"Segoe UI", "Segoe UI Web (West European)", Arial, sans-serif' },
-    { label: 'Inter', value: 'Inter, sans-serif' },
-    { label: 'Roboto', value: 'Roboto, sans-serif' },
-    { label: 'Outfit', value: 'Outfit, sans-serif' },
-    { label: 'Plus Jakarta Sans', value: '"Plus Jakarta Sans", sans-serif' },
+const ENGLISH_FONT_OPTIONS = [
+    { labelKey: 'settings.fontFamilies.segoeUi', value: DEFAULT_UI_FONT_FAMILY },
+    { labelKey: 'settings.fontFamilies.inter', value: 'Inter, sans-serif' },
+    { labelKey: 'settings.fontFamilies.roboto', value: 'Roboto, sans-serif' },
+    { labelKey: 'settings.fontFamilies.outfit', value: 'Outfit, sans-serif' },
+    { labelKey: 'settings.fontFamilies.plusJakartaSans', value: '"Plus Jakarta Sans", sans-serif' },
+];
+
+const ARABIC_FONT_OPTIONS = [
+    { labelKey: 'settings.fontFamilies.saudi', value: ARABIC_UI_FONT_FAMILIES.saudi },
+    { labelKey: 'settings.fontFamilies.tajawal', value: ARABIC_UI_FONT_FAMILIES.tajawal },
+    { labelKey: 'settings.fontFamilies.cairo', value: ARABIC_UI_FONT_FAMILIES.cairo },
+    { labelKey: 'settings.fontFamilies.ibmPlexSansArabic', value: ARABIC_UI_FONT_FAMILIES.ibmPlexSansArabic },
+    { labelKey: 'settings.fontFamilies.notoKufiArabic', value: ARABIC_UI_FONT_FAMILIES.notoKufiArabic },
+    { labelKey: 'settings.fontFamilies.fsAlbertArabic', value: ARABIC_UI_FONT_FAMILIES.fsAlbertArabic },
 ];
 
 const DRAWER_WIDTH = 340;
@@ -73,6 +87,7 @@ const ToggleCard: React.FC<{
             <Switch
                 checked={checked}
                 size="small"
+                slotProps={{ input: { 'aria-label': label } }}
                 onClick={(e) => e.stopPropagation()}
                 onChange={(_, v) => onChange(v)}
                 sx={{
@@ -203,9 +218,10 @@ const PresetCircle: React.FC<{
 const FontCard: React.FC<{
     label: string;
     fontFamily: string;
+    preview: string;
     selected: boolean;
     onClick: () => void;
-}> = ({ label, fontFamily, selected, onClick }) => (
+}> = ({ label, fontFamily, preview, selected, onClick }) => (
     <Box
         onClick={onClick}
         sx={{
@@ -225,7 +241,7 @@ const FontCard: React.FC<{
         }}
     >
         <Typography sx={{ fontSize: '1.25rem', fontFamily, fontWeight: 600, color: '#475569' }}>
-            Aa
+            {preview}
         </Typography>
         <Typography sx={{ fontSize: '0.6875rem', color: '#94a3b8', fontWeight: 500 }}>
             {label}
@@ -235,7 +251,10 @@ const FontCard: React.FC<{
 
 // ─── Settings Panel ───────────────────────────────────────────────────────
 export const AppSettingsDrawer: React.FC = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const isRtl = i18n.dir() === 'rtl';
+    const availableFontOptions = isRtl ? ARABIC_FONT_OPTIONS : ENGLISH_FONT_OPTIONS;
+    const drawerAnchor = useLogicalDrawerAnchor('end');
     const settingsPanelOpen = useNavigationStore((s) => s.settingsPanelOpen);
     const setSettingsPanelOpen = useNavigationStore((s) => s.setSettingsPanelOpen);
     
@@ -243,7 +262,6 @@ export const AppSettingsDrawer: React.FC = () => {
     const toggleThemeMode = usePreferenceStore((s) => s.toggleThemeMode);
     const contrast = usePreferenceStore((s) => s.contrast);
     const setContrast = usePreferenceStore((s) => s.setContrast);
-    const rtl = usePreferenceStore((s) => s.rtl);
     const setRtl = usePreferenceStore((s) => s.setRtl);
     const density = usePreferenceStore((s) => s.density);
     const setDensity = usePreferenceStore((s) => s.setDensity);
@@ -256,6 +274,10 @@ export const AppSettingsDrawer: React.FC = () => {
     const setColorPreset = usePreferenceStore((s) => s.setColorPreset);
     const fontFamily = usePreferenceStore((s) => s.fontFamily);
     const setFontFamily = usePreferenceStore((s) => s.setFontFamily);
+    const arabicFontFamily = usePreferenceStore((s) => s.arabicFontFamily);
+    const setArabicFontFamily = usePreferenceStore((s) => s.setArabicFontFamily);
+    const activeFontFamily = isRtl ? arabicFontFamily : fontFamily;
+    const setActiveFontFamily = isRtl ? setArabicFontFamily : setFontFamily;
     const fontSize = usePreferenceStore((s) => s.fontSize);
     const setFontSize = usePreferenceStore((s) => s.setFontSize);
     const zoom = usePreferenceStore((s) => s.zoom);
@@ -263,10 +285,14 @@ export const AppSettingsDrawer: React.FC = () => {
     const resetSettings = usePreferenceStore((s) => s.resetSettings);
 
     const handleClose = () => setSettingsPanelOpen(false);
+    const handleDirectionChange = (isRtl: boolean) => {
+        setRtl(isRtl);
+        void i18n.changeLanguage(isRtl ? 'ar' : 'en');
+    };
 
     return (
         <Drawer
-            anchor="right"
+            anchor={drawerAnchor}
             open={settingsPanelOpen}
             onClose={handleClose}
             slotProps={{
@@ -274,6 +300,7 @@ export const AppSettingsDrawer: React.FC = () => {
                     sx: { top: `${LAYOUT.TOPBARHEIGHT}px` },
                 },
                 paper: {
+                    ...({ 'data-drawer-anchor': drawerAnchor } as const),
                     sx: {
                         width: { xs: '100vw', sm: DRAWER_WIDTH },
                         maxWidth: '100vw',
@@ -281,6 +308,9 @@ export const AppSettingsDrawer: React.FC = () => {
                         height: `calc(100% - ${LAYOUT.TOPBARHEIGHT}px)`,
                         borderRadius: 0,
                         boxShadow: '-4px 0 24px rgba(0,0,0,0.08)',
+                        borderInlineStart: '1px solid',
+                        borderInlineStartColor: 'divider',
+                        borderInlineEnd: 0,
                         bgcolor: 'background.paper',
                         overflow: 'hidden',
                     },
@@ -349,8 +379,8 @@ export const AppSettingsDrawer: React.FC = () => {
                     <ToggleCard
                         icon={<FormatTextdirectionRToLIcon sx={{ fontSize: 20 }} />}
                         label={t('settings.rtl', 'RTL Direction')}
-                        checked={rtl}
-                        onChange={setRtl}
+                        checked={(i18n.resolvedLanguage ?? i18n.language).startsWith('ar')}
+                        onChange={handleDirectionChange}
                     />
                     <ToggleCard
                         icon={<CompressIcon sx={{ fontSize: 20 }} />}
@@ -424,13 +454,14 @@ export const AppSettingsDrawer: React.FC = () => {
 
                 <Typography sx={{ fontSize: '0.75rem', color: 'text.secondary', mb: 1 }}>{t('settings.family', 'Font Family')}</Typography>
                 <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mb: 2.5 }}>
-                    {FONT_OPTIONS.map((f) => (
+                    {availableFontOptions.map((f) => (
                         <FontCard
-                            key={f.label}
-                            label={f.label}
+                            key={f.labelKey}
+                            label={t(f.labelKey)}
                             fontFamily={f.value}
-                            selected={fontFamily === f.value}
-                            onClick={() => setFontFamily(f.value)}
+                            preview={isRtl ? 'أب' : 'Aa'}
+                            selected={activeFontFamily === f.value}
+                            onClick={() => setActiveFontFamily(f.value)}
                         />
                     ))}
                 </Box>

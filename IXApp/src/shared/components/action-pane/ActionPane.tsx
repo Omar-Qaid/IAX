@@ -1,6 +1,6 @@
 import React from 'react';
 import { Paper, Box } from '@mui/material';
-import { d365 } from '@patterns/list-details/d365Tokens';
+import { d365 } from '@shared/constants/enterpriseUiTokens';
 
 export interface ActionPaneProps {
   children: React.ReactNode;
@@ -26,11 +26,14 @@ export const ActionPane: React.FC<ActionPaneProps> = ({ children, variant = 'def
         display: 'flex',
         alignItems: 'center',
         overflowX: 'auto',
+        overflowY: 'hidden',
+        maxWidth: '100%',
+        WebkitOverflowScrolling: 'touch',
         whiteSpace: 'nowrap',
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>{children}</Box>
-      {endActions && <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, ml: 'auto', pl: 1.5, position: 'sticky', right: 0, bgcolor: 'inherit' }}>{endActions}</Box>}
+      <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 'max-content', flexShrink: 0 }}>{children}</Box>
+      {endActions && <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, marginInlineStart: 'auto', paddingInlineStart: 1.5, position: 'sticky', insetInlineEnd: 0, flexShrink: 0, bgcolor: 'inherit' }}>{endActions}</Box>}
     </Paper>
   );
 };

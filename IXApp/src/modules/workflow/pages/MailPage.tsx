@@ -30,6 +30,9 @@ import {
 import { normalizeDynamicControlType } from '../components/DynamicControlRenderer';
 import { MailFieldValue } from '../components/MailFieldValue';
 import { WorkflowMailPrintoutViewer } from './WorkflowMailPrintoutPage';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
+import type { TFunction } from 'i18next';
+import { APP_FONT_FAMILY } from '@shared/constants/fontFamilies';
 
 type MailFolder = 'all' | 'inbox' | 'sent' | 'important';
 
@@ -65,38 +68,35 @@ const emptyMailRecord = (): MailRecord => ({
   stepNumber: 1,
 });
 
-const formatDateTime = (value: string | null): string => {
+const formatDateTime = (value: string | null, locale?: string): string => {
   if (!value) return '—';
   const date = new Date(value);
   return Number.isNaN(date.getTime())
     ? value
-    : new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+    : new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(date);
 };
 
-const formatTimelineDate = (value: string): string => {
+const formatTimelineDate = (value: string, locale?: string): string => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hour = date.getHours() % 12 || 12;
-  const minute = String(date.getMinutes()).padStart(2, '0');
-  return `${month}/${day}/${year} ${hour}:${minute} ${date.getHours() >= 12 ? 'PM' : 'AM'}`;
+  return new Intl.DateTimeFormat(locale, {
+    year: 'numeric', month: '2-digit', day: '2-digit', hour: 'numeric', minute: '2-digit',
+  }).format(date);
 };
 
-const getStatus = (request: WfRequestRecord): string => {
-  if (request.isStopped) return 'Stopped';
-  if (request.isFinished) return 'Completed';
-  return 'In progress';
+const getStatus = (request: WfRequestRecord, t: TFunction): string => {
+  if (request.isStopped) return t('mail.statuses.stopped');
+  if (request.isFinished) return t('mail.statuses.completed');
+  return t('mail.statuses.inProgress');
 };
 
-const formatElapsed = (request: WfRequestRecord): string => {
+const formatElapsed = (request: WfRequestRecord, t: TFunction): string => {
   const started = new Date(request.requestDate).getTime();
   const endedValue = request.finishedDate || request.stoppedDate;
   const ended = endedValue ? new Date(endedValue).getTime() : Date.now();
-  if (!Number.isFinite(started) || !Number.isFinite(ended)) return 'Not available';
+  if (!Number.isFinite(started) || !Number.isFinite(ended)) return t('mail.notAvailable');
   const minutes = Math.max(0, Math.floor((ended - started) / 60_000));
-  return `${Math.floor(minutes / 60)} hours ${minutes % 60} minutes`;
+  return t('mail.hoursMinutes', { hours: Math.floor(minutes / 60), minutes: minutes % 60 });
 };
 
 function LabelValue({ label, value, compact = false }: { label: string; value: React.ReactNode; compact?: boolean }) {
@@ -116,6 +116,7 @@ function LabelValue({ label, value, compact = false }: { label: string; value: R
           color: '#111',
           fontSize: 12,
           fontWeight: 600,
+          textAlign: 'start',
         }}
       >
         {label}
@@ -129,6 +130,7 @@ function LabelValue({ label, value, compact = false }: { label: string; value: R
           fontWeight: 400,
           minWidth: 0,
           overflowWrap: 'anywhere',
+          textAlign: 'start',
         }}
       >
         {value}
@@ -144,6 +146,7 @@ const formatFileSize = (bytes: number | null): string => {
 };
 
 function MailAttachments({ requestId, detailIds }: { requestId: number; detailIds: number[] }) {
+  const { t } = useAppTranslation();
   const [previewError, setPreviewError] = React.useState(false);
   const attachments = useQuery({
     queryKey: ['documents', documentTableIds.wfRequest, requestId],
@@ -175,7 +178,7 @@ function MailAttachments({ requestId, detailIds }: { requestId: number; detailId
         sx={{ alignItems: 'center', px: 1.25, minHeight: 36, borderBottom: '1px solid #e2e2e2' }}
       >
         <AttachFileOutlined sx={{ fontSize: 16 }} />
-        <Typography sx={{ flex: 1, fontSize: 12.5, fontWeight: 700 }}>Attachments</Typography>
+        <Typography sx={{ flex: 1, fontSize: 12.5, fontWeight: 700 }}>{t('mail.attachments.title')}</Typography>
         <Typography color="text.secondary" sx={{ fontSize: 11 }}>
           ({items.length})
         </Typography>
@@ -187,12 +190,12 @@ function MailAttachments({ requestId, detailIds }: { requestId: number; detailId
       )}
       {failed && (
         <Alert severity="error" sx={{ borderRadius: 0 }}>
-          Unable to load attachments.
+          {t('mail.attachments.loadError')}
         </Alert>
       )}
       {previewError && (
         <Alert severity="error" onClose={() => setPreviewError(false)} sx={{ borderRadius: 0 }}>
-          Unable to open this attachment.
+          {t('mail.attachments.openError')}
         </Alert>
       )}
       {!loading && !failed && items.length === 0 && (
@@ -200,7 +203,7 @@ function MailAttachments({ requestId, detailIds }: { requestId: number; detailId
           color="text.secondary"
           sx={{ py: 2.5, px: 1.5, textAlign: 'center', fontSize: 11.5 }}
         >
-          No attachments
+          {t('mail.attachments.none')}
         </Typography>
       )}
       {items.map((item) => (
@@ -225,7 +228,7 @@ function MailAttachments({ requestId, detailIds }: { requestId: number; detailId
           }}
         >
           <AttachFileOutlined color="error" sx={{ fontSize: 18 }} />
-          <Box sx={{ minWidth: 0 }}>
+          <Box dir="auto" sx={{ minWidth: 0, textAlign: 'start' }}>
             <Typography noWrap sx={{ fontSize: 11.5, fontWeight: 600 }}>
               {item.name || item.fileName}
             </Typography>
@@ -247,9 +250,9 @@ interface TrackingTimelineProps {
 }
 
 export function TrackingTimeline({ entries }: TrackingTimelineProps): React.ReactElement {
+  const { t, currentLanguage } = useAppTranslation();
   return (
     <Box
-      dir="ltr"
       sx={{
         minWidth: 0,
         width: '100%',
@@ -259,17 +262,15 @@ export function TrackingTimeline({ entries }: TrackingTimelineProps): React.Reac
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
-        direction: 'ltr',
         color: '#171717',
-        fontFamily: 'Inter, Roboto, "Segoe UI", sans-serif',
-        textAlign: 'left',
+        fontFamily: APP_FONT_FAMILY,
+        textAlign: 'start',
       }}
     >
       <Stack
         direction="row"
         spacing={0.55}
         sx={{
-          direction: 'ltr',
           alignItems: 'center',
           justifyContent: 'flex-start',
           mb: 1.5,
@@ -278,7 +279,7 @@ export function TrackingTimeline({ entries }: TrackingTimelineProps): React.Reac
       >
         <HistoryOutlined sx={{ fontSize: 17 }} />
         <Typography sx={{ fontSize: 13, lineHeight: 1.35, fontWeight: 600 }}>
-          Tracking Log
+          {t('mail.trackingLog')}
         </Typography>
       </Stack>
       <Box
@@ -286,7 +287,6 @@ export function TrackingTimeline({ entries }: TrackingTimelineProps): React.Reac
           position: 'relative',
           flex: 1,
           minHeight: 0,
-          direction: 'ltr',
           overflowY: 'auto',
           overflowX: 'hidden',
           px: 0.5,
@@ -316,8 +316,7 @@ export function TrackingTimeline({ entries }: TrackingTimelineProps): React.Reac
               gridTemplateColumns: '20px minmax(0, 1fr)',
               columnGap: '10px',
               width: '100%',
-              direction: 'ltr',
-              textAlign: 'left',
+              textAlign: 'start',
               mb: 3.25,
             }}
           >
@@ -383,7 +382,7 @@ export function TrackingTimeline({ entries }: TrackingTimelineProps): React.Reac
                 direction="row"
                 sx={{ justifyContent: 'space-between', alignItems: 'flex-start', gap: 1.25 }}
               >
-                <Box sx={{ minWidth: 0 }}>
+                <Box dir="auto" sx={{ minWidth: 0, textAlign: 'start' }}>
                   <Typography
                     sx={{
                       color: entry.isCurrent ? '#171717' : '#444',
@@ -413,7 +412,7 @@ export function TrackingTimeline({ entries }: TrackingTimelineProps): React.Reac
                     lineHeight: 1.6,
                   }}
                 >
-                  {formatTimelineDate(entry.date)}
+                  {formatTimelineDate(entry.date, currentLanguage.code)}
                 </Typography>
               </Stack>
               <Box sx={{ display: 'flex', mt: 0.65, justifyContent: 'flex-start' }}>
@@ -429,7 +428,7 @@ export function TrackingTimeline({ entries }: TrackingTimelineProps): React.Reac
                     fontWeight: 600,
                   }}
                 >
-                  {entry.isCurrent ? 'Processing' : 'Completed'}
+                  {entry.isCurrent ? t('mail.statuses.processing') : t('mail.statuses.completed')}
                 </Box>
               </Box>
               <Box
@@ -445,17 +444,17 @@ export function TrackingTimeline({ entries }: TrackingTimelineProps): React.Reac
                 }}
               >
                 <Box component="span" sx={{ color: '#555' }}>
-                  Responsible:
+                  {t('mail.timeline.responsible')}
                 </Box>
-                <Box component="span">{entry.responsible}</Box>
+                <Box component="span" dir="auto">{entry.responsible}</Box>
                 <Box component="span" sx={{ color: '#555' }}>
-                  Action:
+                  {t('mail.timeline.action')}
                 </Box>
-                <Box component="span">{entry.action}</Box>
+                <Box component="span" dir="auto">{entry.action}</Box>
                 <Box component="span" sx={{ color: '#555' }}>
-                  Notes:
+                  {t('mail.timeline.notes')}
                 </Box>
-                <Box component="span" sx={{ overflowWrap: 'anywhere' }}>
+                <Box component="span" dir="auto" sx={{ overflowWrap: 'anywhere' }}>
                   {entry.notes}
                 </Box>
               </Box>
@@ -468,6 +467,7 @@ export function TrackingTimeline({ entries }: TrackingTimelineProps): React.Reac
 }
 
 function MailDetails({ request }: { request: MailRecord }) {
+  const { t, currentLanguage } = useAppTranslation();
   const mailDetails = useQuery({
     queryKey: ['workflow', 'mail', 'request-details', request.recId],
     queryFn: ({ signal }) => wfRequestApi.mailDetails(request.recId, signal),
@@ -480,7 +480,6 @@ function MailDetails({ request }: { request: MailRecord }) {
   return (
     <Box
       sx={{
-        direction: 'ltr',
         height: { xs: 'auto', lg: 'calc(100dvh - 188px)' },
         minHeight: 0,
         overflow: 'hidden',
@@ -495,7 +494,6 @@ function MailDetails({ request }: { request: MailRecord }) {
     >
       <Box
         sx={{
-          direction: 'ltr',
           height: '100%',
           minHeight: 0,
           overflow: 'hidden',
@@ -505,7 +503,7 @@ function MailDetails({ request }: { request: MailRecord }) {
         {mailDetails.isLoading ? (
           <Box sx={{ display: 'grid', placeItems: 'center', height: '100%' }}><CircularProgress size={22} /></Box>
         ) : mailDetails.isError ? (
-          <Alert severity="error">Unable to load workflow tracking history.</Alert>
+          <Alert severity="error">{t('mail.errors.tracking')}</Alert>
         ) : (
           <TrackingTimeline entries={details?.history ?? []} />
         )}
@@ -513,7 +511,6 @@ function MailDetails({ request }: { request: MailRecord }) {
       <Stack
         spacing={1.5}
         sx={{
-          direction: 'ltr',
           minWidth: 0,
           height: '100%',
           overflowX: 'hidden',
@@ -543,12 +540,12 @@ function MailDetails({ request }: { request: MailRecord }) {
             }}
           >
             <AssignmentTurnedInOutlined sx={{ fontSize: 17 }} />
-            <Typography sx={{ fontSize: 13, lineHeight: 1.35, fontWeight: 600 }}>Transaction details</Typography>
+            <Typography sx={{ fontSize: 13, lineHeight: 1.35, fontWeight: 600 }}>{t('mail.transactionDetails')}</Typography>
           </Stack>
           <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <Box
               role="region"
-              aria-label="Scrollable request data"
+              aria-label={t('mail.scrollableData')}
               tabIndex={0}
               sx={{
                 flex: 1,
@@ -579,8 +576,8 @@ function MailDetails({ request }: { request: MailRecord }) {
                       return <Box key={`${field.detailId}-${field.controlDataId ?? field.controlId ?? field.controlOrder}`} sx={{ minWidth: 0, gridColumn: { xs: '1', lg: fullWidth ? '1 / -1' : 'auto' } }}>
                         <LabelValue
                           compact
-                          label={field.labelAr || field.label}
-                          value={<Box dir={field.labelAr ? 'rtl' : 'ltr'}><MailFieldValue field={field} /></Box>}
+                          label={currentLanguage.code === 'ar' ? (field.labelAr || field.label) : (field.label || field.labelAr)}
+                          value={<Box dir="auto"><MailFieldValue field={field} /></Box>}
                         />
                       </Box>;
                     })}
@@ -588,7 +585,7 @@ function MailDetails({ request }: { request: MailRecord }) {
                 </Paper>
               )}
               {mailDetails.isLoading && <Box sx={{ display: 'grid', placeItems: 'center', minHeight: 72 }}><CircularProgress size={20} /></Box>}
-              {mailDetails.isError && <Alert severity="error" sx={{ borderRadius: 0 }}>Unable to load request details.</Alert>}
+              {mailDetails.isError && <Alert severity="error" sx={{ borderRadius: 0 }}>{t('mail.errors.details')}</Alert>}
             </Box>
           </Box>
         </Box>
@@ -606,7 +603,7 @@ function MailDetails({ request }: { request: MailRecord }) {
             variant="outlined"
             sx={{ p: 1.25, borderRadius: 1.25, boxShadow: '0 1px 3px rgba(0,0,0,.07)' }}
           >
-            <Typography sx={{ mb: 1, fontSize: 12.5, fontWeight: 750 }}>Request status</Typography>
+            <Typography sx={{ mb: 1, fontSize: 12.5, fontWeight: 750 }}>{t('mail.requestStatus')}</Typography>
             <Stack direction="row" spacing={1.1} sx={{ alignItems: 'center' }}>
               <Box sx={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
                 <CircularProgress
@@ -623,7 +620,7 @@ function MailDetails({ request }: { request: MailRecord }) {
                   thickness={3.5}
                   sx={{
                     position: 'absolute',
-                    left: 0,
+                    insetInlineStart: 0,
                     color: statusColor === 'error' ? 'error.main' : 'primary.main',
                   }}
                 />
@@ -633,22 +630,22 @@ function MailDetails({ request }: { request: MailRecord }) {
               </Box>
               <Box sx={{ minWidth: 0 }}>
                 <Typography sx={{ fontSize: 11.5, fontWeight: 750 }}>
-                  {getStatus(request)}
+                  {getStatus(request, t)}
                 </Typography>
                 <Typography color="text.secondary" sx={{ mt: 0.3, fontSize: 8.8 }}>
-                  Current stage: Step {request.stepNumber}
+                  {t('mail.currentStage', { step: request.stepNumber })}
                 </Typography>
               </Box>
             </Stack>
             <Divider sx={{ my: 1 }} />
             <Typography color="text.secondary" sx={{ fontSize: 8.8 }}>
-              Decision date: {formatDateTime(request.requestDate)}
+              {t('mail.decisionDate', { date: formatDateTime(request.requestDate, currentLanguage.code) })}
             </Typography>
             <Typography sx={{ mt: 0.65, color: 'error.main', fontSize: 9.5, fontWeight: 650 }}>
-              Elapsed time: {formatElapsed(request)}
+              {t('mail.elapsedTime', { time: formatElapsed(request, t) })}
             </Typography>
             {request.isStopped && (
-              <Chip size="small" color="error" label="Stopped" sx={{ mt: 0.75 }} />
+              <Chip size="small" color="error" label={t('mail.statuses.stopped')} sx={{ mt: 0.75 }} />
             )}
           </Paper>
           <MailAttachments requestId={request.recId} detailIds={details?.fields.map((field) => field.detailId) ?? []} />
@@ -668,6 +665,7 @@ function RequestedByHeaderValue({ requestId }: { requestId: number }) {
   return (
     <Typography
       component="span"
+      dir="auto"
       noWrap
       title={mailDetails.data?.employeeName || undefined}
       sx={{ fontSize: 12, lineHeight: 1.35, color: 'text.primary' }}
@@ -685,6 +683,7 @@ const folderMatches = (request: MailRecord, folder: MailFolder): boolean => {
 };
 
 export function MailPage(): React.ReactElement {
+  const { t, currentLanguage } = useAppTranslation();
   const [folder, setFolder] = React.useState<MailFolder>('all');
   const [printRequest, setPrintRequest] = React.useState<MailRecord | null>(null);
   const requests = useQuery({
@@ -707,7 +706,7 @@ export function MailPage(): React.ReactElement {
     const processNames = new Map(
       (processes.data ?? []).map((process) => [
         process.recId,
-        process.name || process.code || `Process ${process.recId}`,
+        process.name || process.code || t('mail.processFallback', { id: process.recId }),
       ])
     );
     const requesterNames = new Map(
@@ -723,18 +722,18 @@ export function MailPage(): React.ReactElement {
       )
       .map((request, index): MailRecord => ({
         ...request,
-        processName: processNames.get(request.processId) || `Process ${request.processId}`,
+        processName: processNames.get(request.processId) || t('mail.processFallback', { id: request.processId }),
         requestedBy: requesterNames.get(request.recId) || '—',
         stepNumber: index + 1,
       }))
       .filter((request) => folderMatches(request, folder));
-  }, [folder, processes.data, requesterDetails, requests.data]);
+  }, [folder, processes.data, requesterDetails, requests.data, t]);
 
   const folderButtons: Array<{ id: MailFolder; label: string }> = [
-    { id: 'all', label: 'All' },
-    { id: 'inbox', label: 'Inbox' },
-    { id: 'sent', label: 'Sent' },
-    { id: 'important', label: 'Important' },
+    { id: 'all', label: t('mail.folders.all') },
+    { id: 'inbox', label: t('mail.folders.inbox') },
+    { id: 'sent', label: t('mail.folders.sent') },
+    { id: 'important', label: t('mail.folders.important') },
   ];
 
   const config: EnterpriseListDetailsConfig<MailRecord> = {
@@ -757,9 +756,9 @@ export function MailPage(): React.ReactElement {
     },
     createRecord: emptyMailRecord,
     getPrimaryText: (request) =>
-      `Request name: ${request.name || request.code || `Request ${request.recId}`}`,
+      t('mail.requestName', { name: request.name || request.code || t('mail.requestFallback', { id: request.recId }) }),
     getSecondaryText: (request) =>
-      `Requested by: ${request.requestedBy} · Request date: ${formatDateTime(request.requestDate)}`,
+      t('mail.requestedBySummary', { name: request.requestedBy, date: formatDateTime(request.requestDate, currentLanguage.code) }),
     matchesSearch: (request, query) =>
       `${request.code ?? ''} ${request.name ?? ''} ${request.description ?? ''} ${request.processName}`
         .toLocaleLowerCase()
@@ -769,7 +768,7 @@ export function MailPage(): React.ReactElement {
     headerFields: [
       {
         id: 'request',
-        label: 'Request',
+        label: t('mail.fields.request'),
         type: 'display',
         disabled: true,
         getValue: (request) => request.code || `#${request.recId}`,
@@ -777,7 +776,7 @@ export function MailPage(): React.ReactElement {
       },
       {
         id: 'process',
-        label: 'Process',
+        label: t('mail.fields.process'),
         type: 'display',
         disabled: true,
         getValue: (request) => request.processName,
@@ -785,23 +784,23 @@ export function MailPage(): React.ReactElement {
       },
       {
         id: 'status',
-        label: 'Status',
+        label: t('mail.fields.status'),
         type: 'display',
         disabled: true,
-        getValue: getStatus,
+        getValue: (request) => getStatus(request, t),
         setValue: (request) => request,
       },
       {
         id: 'date',
-        label: 'Request date',
+        label: t('mail.fields.requestDate'),
         type: 'display',
         disabled: true,
-        getValue: (request) => formatDateTime(request.requestDate),
+        getValue: (request) => formatDateTime(request.requestDate, currentLanguage.code),
         setValue: (request) => request,
       },
       {
         id: 'requestedBy',
-        label: 'Requested by',
+        label: t('mail.fields.requestedBy'),
         type: 'display',
         disabled: true,
         getValue: (request) => request.recId,
@@ -812,7 +811,7 @@ export function MailPage(): React.ReactElement {
     sections: ({ record }): DetailSectionConfig[] => [
       {
         id: 'mail-details',
-        title: 'Request details',
+        title: t('mail.requestDetails'),
         hideHeader: true,
         defaultExpanded: true,
         content: <MailDetails key={record.id} request={record} />,
@@ -821,13 +820,13 @@ export function MailPage(): React.ReactElement {
     commands: [
       {
         id: 'printout',
-        label: 'Printout',
-        menuLabel: 'View',
+        label: t('mail.printout'),
+        menuLabel: t('mail.view'),
         requiresSelection: true,
         onClick: (request) => setPrintRequest(request),
       },
     ],
-    filterLabel: 'Filter',
+    filterLabel: t('mail.filter'),
     showAttachmentAction: false,
     presentation: {
       mode: 'list',
@@ -840,7 +839,6 @@ export function MailPage(): React.ReactElement {
       headerContent: (
         <Box
           sx={{
-            direction: 'ltr',
             display: 'grid',
             gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
             alignItems: 'center',
@@ -886,7 +884,7 @@ export function MailPage(): React.ReactElement {
       getRefRecId: (request) => request.recId,
     },
     advancedFilter: {
-      fieldLabel: 'Request',
+      fieldLabel: t('mail.fields.request'),
       getValue: (request) => request.name || request.code,
       matches: (request, value) =>
         `${request.code ?? ''} ${request.name ?? ''}`
@@ -895,26 +893,26 @@ export function MailPage(): React.ReactElement {
       fields: [
         {
           id: 'request',
-          label: 'Request',
+          label: t('mail.fields.request'),
           getValue: (request) => request.name || request.code || '',
         },
-        { id: 'process', label: 'Process', getValue: (request) => request.processName },
-        { id: 'status', label: 'Status', getValue: getStatus },
+        { id: 'process', label: t('mail.fields.process'), getValue: (request) => request.processName },
+        { id: 'status', label: t('mail.fields.status'), getValue: (request) => getStatus(request, t) },
       ],
     },
     relatedInformation: {
-      title: 'Mail information',
+      title: t('mail.information'),
       sections: (request) =>
         request
           ? [
               {
                 id: 'request',
-                label: 'Request',
+                label: t('mail.fields.request'),
                 items: [
-                  { label: 'Request ID', value: request.recId },
-                  { label: 'Process ID', value: request.processId },
-                  { label: 'Company', value: request.dataAreaId },
-                  { label: 'Active', value: request.isActive ? 'Yes' : 'No' },
+                  { label: t('mail.requestId'), value: request.recId },
+                  { label: t('mail.processId'), value: request.processId },
+                  { label: t('common.company'), value: request.dataAreaId },
+                  { label: t('common.active'), value: request.isActive ? t('common.yes') : t('common.no') },
                 ],
               },
             ]
@@ -923,7 +921,7 @@ export function MailPage(): React.ReactElement {
   };
 
   return (
-    <Box dir="ltr" sx={{ height: '100%' }}>
+    <Box sx={{ height: '100%' }}>
       {printRequest ? (
         <WorkflowMailPrintoutViewer
           open
@@ -931,7 +929,7 @@ export function MailPage(): React.ReactElement {
           onClose={() => setPrintRequest(null)}
         />
       ) : (
-        <ListDetailsPage variant="enterprise" title="Mail" config={config} />
+        <ListDetailsPage variant="enterprise" title={t('nav.mail')} config={config} />
       )}
     </Box>
   );

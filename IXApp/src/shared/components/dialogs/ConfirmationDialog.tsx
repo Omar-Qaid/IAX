@@ -2,6 +2,7 @@ import React from 'react';
 import { Button, Typography, Box } from '@mui/material';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import { AppDialog } from './AppDialog';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 
 export interface ConfirmationDialogProps {
   open: boolean;
@@ -19,23 +20,27 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   open,
   onClose,
   onConfirm,
-  title = 'Confirm Action',
+  title,
   message,
-  confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
+  confirmLabel,
+  cancelLabel,
   severity = 'warning',
   loading = false,
 }) => {
+  const { t } = useAppTranslation();
+  const resolvedTitle = title ?? t('dialogs.confirmAction');
+  const resolvedConfirmLabel = confirmLabel ?? t('actions.confirm');
+  const resolvedCancelLabel = cancelLabel ?? t('actions.cancel');
   return (
     <AppDialog
       open={open}
       onClose={onClose}
-      title={title}
+      title={resolvedTitle}
       maxWidth="xs"
       actions={
         <>
           <Button onClick={onClose} disabled={loading} size="small">
-            {cancelLabel}
+            {resolvedCancelLabel}
           </Button>
           <Button
             onClick={onConfirm}
@@ -44,7 +49,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
             disabled={loading}
             size="small"
           >
-            {confirmLabel}
+            {resolvedConfirmLabel}
           </Button>
         </>
       }
@@ -58,10 +63,11 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
 };
 
 export const DeleteConfirmationDialog: React.FC<Omit<ConfirmationDialogProps, 'severity'>> = (props) => {
+  const { t } = useAppTranslation();
   return (
     <ConfirmationDialog
-      title="Confirm Deletion"
-      confirmLabel="Delete"
+      title={t('dialogs.confirmDeletion')}
+      confirmLabel={t('actions.delete')}
       severity="error"
       {...props}
     />

@@ -234,12 +234,9 @@ export function DataGridMobileBodyInternal<T>({
               >
                 {/* Selection Checkbox */}
                 {selectionMode !== 'none' && (
-                  <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 2 }}>
+                  <Box sx={{ position: 'absolute', top: 8, insetInlineEnd: 8, zIndex: 2 }}>
                     <Checkbox
-                      aria-label={t('grid.select_row', {
-                        id: rowId,
-                        defaultValue: `Select row ${rowId}`,
-                      })}
+                      aria-label={t('grid.select_row', { id: rowId })}
                       checked={isSelected}
                       onClick={(e) => onToggleRow(rowId, e)}
                       size="small"
@@ -254,7 +251,7 @@ export function DataGridMobileBodyInternal<T>({
                     justifyContent: 'space-between',
                     alignItems: 'flex-start',
                     mb: 2,
-                    pr: selectionMode !== 'none' ? 4 : 0,
+                    paddingInlineEnd: selectionMode !== 'none' ? 4 : 0,
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
@@ -283,7 +280,7 @@ export function DataGridMobileBodyInternal<T>({
                     )}
                   </Box>
                   {statusCol && (
-                    <Box sx={{ ml: 2, flexShrink: 0 }}>
+                    <Box sx={{ marginInlineStart: 2, flexShrink: 0 }}>
                       {renderCell(row, statusCol, virtualRow.index)}
                     </Box>
                   )}

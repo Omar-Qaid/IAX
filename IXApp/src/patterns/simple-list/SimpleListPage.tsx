@@ -3,7 +3,7 @@ import { Box, type SxProps, type Theme } from '@mui/material';
 import { PageContainer } from '@shared/components/page/PageContainer';
 import { PageHeader } from '@shared/components/page/PageHeader';
 import { EnterpriseListHeader } from '@shared/components/page/EnterpriseListHeader';
-import { RightUtilityRail } from '@shared/components/page/RightUtilityRail';
+import { RIGHT_UTILITY_RAIL_WIDTH, RightUtilityRail } from '@shared/components/page/RightUtilityRail';
 import { RelatedInformationPanel, type RelatedInformationSection } from '@shared/components/page/RelatedInformationPanel';
 import { ActionPane } from '@shared/components/action-pane/ActionPane';
 import { ActionPaneGroup } from '@shared/components/action-pane/ActionPaneGroup';
@@ -141,7 +141,10 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
   const sourceState = useSimpleListDataSource(props.dataSource);
   const rows = sourceState.rows;
   const columns = props.columns;
-  const getRowId = dataGridProps.getRowId ?? ((row: T) => row.id);
+  const getRowId = React.useMemo(
+    () => dataGridProps.getRowId ?? ((row: T) => row.id),
+    [dataGridProps.getRowId]
+  );
   const initialRow = enterpriseConfig?.initialSelection === 'none' ? null : (rows[0] ?? null);
   const [selectedIds, setSelectedIds] = useState<(string | number)[]>(initialRow ? [getRowId(initialRow)] : []);
   const [selectedRow, setSelectedRow] = useState<T | null>(initialRow);
@@ -243,7 +246,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
       hideInlineEditActions: dataGridProps.hideInlineEditActions ?? true,
     } : { ...dataGridProps, rows, columns };
     const generatedActionPane = config && <>
-      {config.backCommand && <ActionPaneGroup><ActionPaneButton label={config.backCommand.label} icon={<ArrowBackIcon />} onClick={config.backCommand.onClick} /></ActionPaneGroup>}
+      {config.backCommand && <ActionPaneGroup><ActionPaneButton label={config.backCommand.label} icon={<ArrowBackIcon sx={{ transform: (theme) => theme.direction === 'rtl' ? 'scaleX(-1)' : 'none' }} />} onClick={config.backCommand.onClick} /></ActionPaneGroup>}
       <EnterpriseCrudActions
         editLabel={config.crud.editLabel}
         newLabel={config.crud.newLabel}
@@ -269,7 +272,15 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
       ? (config?.attachments?.getRefRecId?.(selectedRow) ?? Number(getRowId(selectedRow)))
       : null;
     const attachmentRecId = selectedAttachmentRecId != null && Number.isSafeInteger(selectedAttachmentRecId) && selectedAttachmentRecId > 0 ? selectedAttachmentRecId : null;
-    const generatedUtilities = config && <EnterpriseCommandUtilities {...config.utilities} attachmentAction={<RecordAttachmentsButton refTableId={config.attachments?.refTableId ?? recordTableId(title)} refRecId={attachmentRecId} disabled={isEditing} />} onRefresh={reset} disabled={isEditing} />;
+    const generatedUtilities = config && <EnterpriseCommandUtilities
+      {...config.utilities}
+      attachmentAction={<RecordAttachmentsButton refTableId={config.attachments?.refTableId ?? recordTableId(title)} refRecId={attachmentRecId} disabled={isEditing} />}
+      onRefresh={reset}
+      disabled={isEditing}
+      showPersonalize={false}
+      showGuide={false}
+      showNotifications={false}
+    />;
     const generatedFilterBar = config && quickFilterVisible && (config.searchMode === 'field'
       ? <EnterpriseListFilterBar filterLabel={config.filterLabel} searchByLabel={config.searchByLabel ?? config.filterLabel} query={query} field={searchField} options={config.searchFields.map(({ field, label }) => ({ value: field, label }))} onQueryChange={setQuery} onFieldChange={setSearchField} />
       : <EnterpriseQuickFilter label={config.filterLabel} value={query} onChange={setQuery} />);
@@ -291,7 +302,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
     />;
 
     return (
-      <PageContainer sx={[{ gap: 0.5, minHeight: { xs: contentMinHeight, lg: 0 }, height: { xs: 'auto', lg: '100%' }, maxHeight: { lg: '100%' }, overflow: { lg: 'hidden' }, position: 'relative', pr: { lg: '60px' } }, ...(Array.isArray(containerSx) ? containerSx : [containerSx])]}>
+      <PageContainer sx={[{ gap: 0.5, minHeight: { xs: contentMinHeight, lg: 0 }, height: { xs: 'auto', lg: '100%' }, maxHeight: { lg: '100%' }, overflow: { lg: 'hidden' }, position: 'relative', paddingInlineEnd: { lg: `${RIGHT_UTILITY_RAIL_WIDTH}px` } }, ...(Array.isArray(containerSx) ? containerSx : [containerSx])]}>
         {(generatedActionPane ?? props.actionPane) && <ActionPane variant="flat" endActions={generatedUtilities ?? props.actionPaneEndActions}>{generatedActionPane ?? props.actionPane}</ActionPane>}
         <Box sx={[{ display: 'flex', flex: 1, height: '100%', minHeight: { xs: contentMinHeight, lg: 0 }, gap: 1, px: 0, pb: 0.5, overflow: 'hidden', position: 'relative', alignItems: 'stretch' }, ...(Array.isArray(contentSx) ? contentSx : [contentSx])]}>
           <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
@@ -308,8 +319,8 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
           onClose={() => setPendingDelete([])}
           onConfirm={() => { config?.crud.onDelete?.(pendingDelete); setPendingDelete([]); }}
           severity="error"
-          title={t('dialogs.confirmDeleteTitle', 'Confirm deletion')}
-          message={t('dialogs.confirmDeleteMessage', { count: pendingDelete.length, defaultValue: `Delete ${pendingDelete.length} selected record(s)?` })}
+          title={t('dialogs.confirmDeleteTitle')}
+          message={t('dialogs.confirmDeleteMessage', { count: pendingDelete.length })}
           confirmLabel={t('actions.delete')}
           cancelLabel={t('actions.cancel')}
         />

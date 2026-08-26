@@ -18,32 +18,13 @@ import AttachFileOutlined from '@mui/icons-material/AttachFileOutlined';
 import NotificationsNoneOutlined from '@mui/icons-material/NotificationsNoneOutlined';
 import SubdirectoryArrowRightOutlined from '@mui/icons-material/SubdirectoryArrowRightOutlined';
 import { FileDropControl, LocationControl, SignatureControl } from './DynamicSpecialControls';
-
-export interface RenderableOption {
-  value: string;
-  label: string;
-  sendsNotification?: boolean;
-  requiresAttachment?: boolean;
-  revealsControls?: boolean;
-}
-export interface RenderableValidation {
-  type: string;
-  expression?: string | null;
-  value?: string | null;
-  errorMessage?: string;
-}
-export interface RenderableControl {
-  label: string;
-  hideLabel?: boolean;
-  compact?: boolean;
-  controlType: string;
-  labelColor?: string | null;
-  required?: boolean;
-  readOnly?: boolean;
-  defaultValue?: string | null;
-  options?: RenderableOption[];
-  validations?: RenderableValidation[];
-}
+import { useAppTranslation } from '@core/localization/useAppTranslation';
+import type { RenderableControl, RenderableOption } from './dynamicControlTypes';
+export type {
+  RenderableControl,
+  RenderableOption,
+  RenderableValidation,
+} from './dynamicControlTypes';
 
 export const normalizeDynamicControlType = (value: string): string =>
   value.replace(/[^a-z0-9]/gi, '').toLocaleLowerCase();
@@ -57,11 +38,12 @@ export const readMultiValue = (value: string): string[] => {
 };
 
 function OptionLabel({ option }: { option: RenderableOption }) {
+  const { t } = useAppTranslation();
   return <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.45, minWidth: 0 }}>
     <Box component="span" sx={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{option.label}</Box>
-    {option.sendsNotification && <Tooltip title="Sends a notification" arrow><NotificationsNoneOutlined color="action" sx={{ fontSize: 15 }} /></Tooltip>}
-    {option.requiresAttachment && <Tooltip title="Attachment required" arrow><AttachFileOutlined color="action" sx={{ fontSize: 15 }} /></Tooltip>}
-    {option.revealsControls && <Tooltip title="Shows additional fields" arrow><SubdirectoryArrowRightOutlined color="action" sx={{ fontSize: 15 }} /></Tooltip>}
+    {option.sendsNotification && <Tooltip title={t('workflowRequest.sendsNotification')} arrow><NotificationsNoneOutlined color="action" sx={{ fontSize: 15 }} /></Tooltip>}
+    {option.requiresAttachment && <Tooltip title={t('workflowRequest.attachmentRequired')} arrow><AttachFileOutlined color="action" sx={{ fontSize: 15 }} /></Tooltip>}
+    {option.revealsControls && <Tooltip title={t('workflowRequest.showsAdditionalFields')} arrow><SubdirectoryArrowRightOutlined color="action" sx={{ fontSize: 15 }} /></Tooltip>}
   </Box>;
 }
 
@@ -82,12 +64,13 @@ export function DynamicControlRenderer({
   preview?: boolean;
   onFilesChange?: (files: File[]) => void;
 }): React.ReactElement {
+  const { t } = useAppTranslation();
   const type = normalizeDynamicControlType(control.controlType);
   const options = control.options ?? [];
   const disabled = Boolean(control.readOnly || preview);
   if (type === 'label') {
     const noteColor = control.labelColor || '#7a4b00';
-    return <Box role="note" sx={{ px: 1.25, py: 1, borderLeft: '4px solid', borderColor: noteColor, bgcolor: 'rgba(245, 158, 11, .08)', borderRadius: 0.75 }}>
+    return <Box role="note" sx={{ px: 1.25, py: 1, borderInlineStart: '4px solid', borderColor: noteColor, bgcolor: 'rgba(245, 158, 11, .08)', borderRadius: 0.75 }}>
       <Typography sx={{ color: noteColor, fontSize: 13, lineHeight: 1.45, fontWeight: 800 }}>{control.label}</Typography>
     </Box>;
   }
@@ -132,7 +115,7 @@ export function DynamicControlRenderer({
   if (type === 'table') return (
     <Box>
       <Typography variant="body2" sx={{ mb: 0.5, fontWeight: 700 }}>{control.label}</Typography>
-      <Box sx={{ minHeight: 72, maxHeight: 240, overflow: 'auto', border: '1px dashed', borderColor: error ? 'error.main' : 'divider', display: 'grid', placeItems: 'center', color: 'text.secondary' }}>Table data</Box>
+      <Box sx={{ minHeight: 72, maxHeight: 240, overflow: 'auto', border: '1px dashed', borderColor: error ? 'error.main' : 'divider', display: 'grid', placeItems: 'center', color: 'text.secondary' }}>{t('workflowRequest.tableData')}</Box>
       {helperText && <FormHelperText error={error}>{helperText}</FormHelperText>}
     </Box>
   );

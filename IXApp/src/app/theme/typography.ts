@@ -1,11 +1,7 @@
+import { DEFAULT_UI_FONT_FAMILY } from '@shared/constants/fontFamilies';
+
 export const typography = {
-  fontFamily: [
-    '"Segoe UI"',
-    'Roboto',
-    '"Helvetica Neue"',
-    'Arial',
-    'sans-serif',
-  ].join(','),
+  fontFamily: DEFAULT_UI_FONT_FAMILY,
   fontSize: 13,
   h1: {
     fontSize: '1.75rem',

@@ -22,7 +22,7 @@ import { ROUTE_PATHS } from '@app/routes/routePaths';
 
 export const UserMenu: React.FC = () => {
   const { user, logout } = useAuth();
-  const { themeMode, toggleThemeMode } = usePreferenceStore();
+  const { themeMode, toggleThemeMode, setRtl } = usePreferenceStore();
   const { currentLanguage, changeLanguage, t } = useAppTranslation();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -31,7 +31,10 @@ export const UserMenu: React.FC = () => {
   const handleClose = () => setAnchorEl(null);
 
   const handleToggleLang = () => {
-    changeLanguage(currentLanguage.code === 'en' ? 'ar' : 'en');
+    const nextLanguage = currentLanguage.code === 'en' ? 'ar' : 'en';
+    setRtl(nextLanguage === 'ar');
+    void changeLanguage(nextLanguage);
+    handleClose();
   };
 
   const handleOpenSettings = () => {
@@ -106,7 +109,7 @@ export const UserMenu: React.FC = () => {
           <ListItemIcon>
             <LogoutIcon fontSize="small" color="error" />
           </ListItemIcon>
-          <ListItemText sx={{ color: 'error.main' }}>Sign Out</ListItemText>
+          <ListItemText sx={{ color: 'error.main' }}>{t('common.logout')}</ListItemText>
         </MenuItem>
       </Menu>
     </>

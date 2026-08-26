@@ -1,6 +1,6 @@
 # Process Builder
 
-The feature under `src/modules/process-builder` is the workflow document designer. It is separate from the generic `src/patterns/process-builder` presentation component and directly integrates with workflow APIs.
+The Workflow-owned feature under `src/modules/process-builder` is the workflow document designer. Its established package path remains stable for compatibility. It is separate from the generic `src/patterns/process-builder` presentation component and directly integrates with Workflow APIs as part of the same bounded context.
 
 ## Composition
 

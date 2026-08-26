@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { STORAGE_KEYS } from '@core/constants/storageKeys';
+import {
+  DEFAULT_ARABIC_UI_FONT_FAMILY,
+  DEFAULT_UI_FONT_FAMILY,
+} from '@shared/constants/fontFamilies';
 
 export type ThemeMode = 'light' | 'dark';
 export type AppDensity = 'compact' | 'comfortable';
@@ -14,6 +18,7 @@ interface PreferenceState {
   navColor: 'integrate' | 'apparent';
   colorPreset: string;
   fontFamily: string;
+  arabicFontFamily: string;
   fontSize: number;
   zoom: number;
   
@@ -26,6 +31,7 @@ interface PreferenceState {
   setNavColor: (color: 'integrate' | 'apparent') => void;
   setColorPreset: (preset: string) => void;
   setFontFamily: (family: string) => void;
+  setArabicFontFamily: (family: string) => void;
   setFontSize: (size: number) => void;
   setZoom: (zoom: number) => void;
   resetSettings: () => void;
@@ -44,7 +50,8 @@ const defaultPreferences = {
   navLayout: 'vertical' as const,
   navColor: 'integrate' as const,
   colorPreset: 'default',
-  fontFamily: '"Segoe UI", "Segoe UI Web (West European)", Arial, sans-serif',
+  fontFamily: DEFAULT_UI_FONT_FAMILY,
+  arabicFontFamily: DEFAULT_ARABIC_UI_FONT_FAMILY,
   fontSize: 13,
   zoom: 100,
 };
@@ -74,6 +81,7 @@ export const usePreferenceStore = create<PreferenceState>()(persist((set) => ({
   setNavColor: (navColor) => set({ navColor }),
   setColorPreset: (colorPreset) => set({ colorPreset }),
   setFontFamily: (fontFamily) => set({ fontFamily }),
+  setArabicFontFamily: (arabicFontFamily) => set({ arabicFontFamily }),
   setFontSize: (fontSize) => set({ fontSize }),
   setZoom: (zoom) => set({ zoom }),
   resetSettings: () => {
@@ -82,7 +90,7 @@ export const usePreferenceStore = create<PreferenceState>()(persist((set) => ({
   },
 }), {
   name: STORAGE_KEYS.PREFERENCES,
-  partialize: ({ themeMode, density, contrast, rtl, navLayout, navColor, colorPreset, fontFamily, fontSize, zoom }) => ({
-    themeMode, density, contrast, rtl, navLayout, navColor, colorPreset, fontFamily, fontSize, zoom,
+  partialize: ({ themeMode, density, contrast, rtl, navLayout, navColor, colorPreset, fontFamily, arabicFontFamily, fontSize, zoom }) => ({
+    themeMode, density, contrast, rtl, navLayout, navColor, colorPreset, fontFamily, arabicFontFamily, fontSize, zoom,
   }),
 }));

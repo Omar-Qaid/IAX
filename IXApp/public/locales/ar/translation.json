@@ -1,11 +1,11 @@
 {
-  "accessibility": { "skipToContent": "الانتقال إلى المحتوى الرئيسي" },
+  "accessibility": { "skipToContent": "الانتقال إلى المحتوى الرئيسي", "setupSections": "أقسام الإعداد", "resizeRecordList": "تغيير عرض قائمة السجلات", "loadingMoreRecords": "جارٍ تحميل المزيد من السجلات" },
   "app": { "name": "IXApp", "tagline": "نظام تخطيط موارد المؤسسة" },
   "nav": {
     "app_title": "نظام IXApp المؤسسي",
     "app_title_short": "IXApp",
-    "requestSubmission": "Request Submission",
-    "requests": "Requests",
+    "requestSubmission": "تقديم الطلبات",
+    "requests": "الطلبات",
     "home": "الرئيسية",
     "dashboard": "لوحة المعلومات",
     "accountsReceivable": "الحسابات المدينة",
@@ -44,10 +44,27 @@
     "favorites": "المفضلة",
     "recent": "الأخيرة",
     "modules": "الوحدات",
-    "search_page": "البحث في الصفحات"
+    "search_page": "البحث في الصفحات",
+    "toggle_navigation": "تبديل قائمة التنقل",
+    "toggle_pin": "تثبيت قائمة التنقل أو إلغاء تثبيتها",
+    "workspaces": "مساحات العمل",
+    "application_navigation": "التنقل في التطبيق",
+    "finance_operations": "المالية والعمليات",
+    "app_launcher": "مشغّل التطبيقات",
+    "global_search": "البحث عن صفحة"
   },
   "pages": {
     "login": { "title": "تسجيل الدخول", "subtitle": "أدخل اسم حسابك للمتابعة." },
+    "requestSubmission": {
+      "title": "تقديم الطلبات",
+      "category": "الفئة",
+      "categoryCode": "رمز الفئة",
+      "requestDate": "تاريخ الطلب",
+      "chooseType": "اختر نوع الطلب",
+      "loadingTypes": "جارٍ تحميل أنواع الطلبات",
+      "noActiveTypes": "لا توجد أنواع طلبات نشطة متاحة في هذه الفئة.",
+      "unnamedCategory": "فئة بلا اسم"
+    },
     "dashboard": {
       "title": "لوحة المعلومات",
       "subtitle": "نظرة تشغيلية عامة من بيانات التطوير الحالية",
@@ -124,6 +141,7 @@
   },
   "fields": {
     "username": "اسم المستخدم",
+    "password": "كلمة المرور",
     "code": "الرمز",
     "name": "الاسم",
     "currencyName": "اسم العملة",
@@ -192,9 +210,15 @@
     "add": "إضافة",
     "remove": "إزالة",
     "apply": "تطبيق",
-    "reset": "إعادة ضبط"
+    "reset": "إعادة ضبط",
+    "back": "رجوع",
+    "toggleList": "إظهار قائمة السجلات أو إخفاؤها",
+    "download": "تنزيل",
+    "archive": "أرشفة",
+    "change": "تغيير"
   },
   "common": {
+    "general": "عام",
     "company": "الشركة",
     "language": "اللغة",
     "theme": "المظهر",
@@ -219,6 +243,7 @@
     "loadingMore": "جارٍ تحميل المزيد…",
     "noData": "لا توجد سجلات",
     "noResults": "لا توجد نتائج",
+    "no_results_found": "لا توجد نتائج لـ \"{{query}}\"",
     "notProvided": "غير متوفر",
     "readOnly": "للقراءة فقط",
     "accessDenied": "الوصول مرفوض",
@@ -245,6 +270,12 @@
     "no_history": "لا يوجد سجل",
     "no_history_msg": "لم يتم العثور على سجل تدقيق لهذا السجل.",
     "by": "بواسطة",
+    "options": "خيارات",
+    "recordInfo": "معلومات السجل",
+    "recordAudit": "تدقيق السجل",
+    "error_occurred": "حدث خطأ",
+    "retry": "إعادة المحاولة",
+    "refresh": "تحديث",
     "total_activities_zero": "لا توجد أنشطة",
     "total_activities_one": "إجمالي الأنشطة: نشاط واحد",
     "total_activities_two": "إجمالي الأنشطة: نشاطان",
@@ -265,7 +296,11 @@
     "loadingDetails": "جارٍ تحميل التفاصيل…",
     "selectRecord": "اختر سجلاً",
     "selectRecordHelp": "اختر عنصراً من القائمة لعرض تفاصيله.",
-    "unsavedChanges": "لديك تغييرات غير محفوظة. هل أنت متأكد من رغبتك في المغادرة؟"
+    "unsavedChanges": "لديك تغييرات غير محفوظة. هل أنت متأكد من رغبتك في المغادرة؟",
+    "saving": "جارٍ الحفظ…",
+    "loadingSettings": "جارٍ تحميل الإعدادات…",
+    "deletedSuccessfully": "تم الحذف بنجاح",
+    "savedSuccessfully": "تم الحفظ بنجاح"
   },
   "lookups": {
     "selectOption": "اختر خياراً",
@@ -277,7 +312,9 @@
   "errors": {
     "generic": "حدث خطأ غير متوقع.",
     "loadFailed": "تعذر تحميل البيانات",
-    "no_permission": "ليس لديك إذن لعرض بيانات المصدر."
+    "no_permission": "ليس لديك إذن لعرض بيانات المصدر.",
+    "boundaryTitle": "خطأ في التطبيق",
+    "deleteFailed": "تعذر الحذف"
   },
   "validation": {
     "required": "حقل {{field}} مطلوب.",
@@ -290,6 +327,13 @@
     "maxValue": "يجب ألا تتجاوز قيمة {{field}} {{max}}.",
     "invalidNumber": "أدخل رقماً صالحاً.",
     "invalidDate": "أدخل تاريخاً صالحاً."
+  },
+  "dialogs": {
+    "confirmAction": "تأكيد الإجراء",
+    "confirmDeletion": "تأكيد الحذف",
+    "confirmDeleteTitle": "تأكيد الحذف",
+    "confirmDeleteOne": "هل تريد حذف السجل المحدد؟",
+    "confirmDeleteMessage": "هل تريد حذف {{count}} من السجلات المحددة؟"
   },
   "grid": {
     "rows_count_zero": "لا توجد صفوف",
@@ -308,6 +352,19 @@
     "add_row": "إضافة صف",
     "add_row_disabled": "احفظ الصف الحالي أو ألغِه أولاً",
     "filter_placeholder": "قيمة التصفية",
+    "select_row": "تحديد الصف {{id}}", "totalRows": "الإجمالي: {{count}} صف", "selectedRows": "تم تحديد {{count}}", "resetSizing": "إعادة ضبط الحجم",
+    "open_column_filter": "فتح عامل تصفية العمود {{column}}",
+    "sort_ascending": "ترتيب تصاعدي",
+    "sort_descending": "ترتيب تنازلي",
+    "press_enter_to_add": "اضغط Enter للإضافة",
+    "sort_asc": "ترتيب تصاعدي",
+    "sort_desc": "ترتيب تنازلي",
+    "pin_column": "تثبيت العمود",
+    "autosize_this": "ضبط حجم هذا العمود تلقائياً",
+    "reset_columns": "إعادة ضبط الأعمدة",
+    "no_pin": "بلا تثبيت",
+    "pin_left": "تثبيت إلى اليسار",
+    "pin_right": "تثبيت إلى اليمين",
     "filters": "عوامل التصفية",
     "features": "الميزات",
     "choose_columns": "اختيار الأعمدة",
@@ -350,11 +407,38 @@
       "greater_than": "أكبر من",
       "less_than": "أقل من",
       "is_one_of": "إحدى القيم",
-      "matches_regex": "يطابق النمط"
+      "matches_regex": "يطابق النمط",
+      "is_empty": "فارغ",
+      "is_not_empty": "غير فارغ",
+      "after": "بعد",
+      "before": "قبل",
+      "matches": "يطابق"
     }
   },
   "settings": {
     "title": "الإعدادات",
+    "saved": "تم حفظ الإعدادات.",
+    "userSaved": "تم حفظ إعدادات المستخدم.",
+    "globalReadOnly": "الإعدادات العامة للقراءة فقط في حسابك.",
+    "application": "إعدادات التطبيق الافتراضية",
+    "applicationHelp": "الإعدادات الافتراضية المطبقة في التطبيق.",
+    "appName": "اسم التطبيق",
+    "defaultLanguage": "اللغة الافتراضية",
+    "timeZone": "المنطقة الزمنية",
+    "currency": "العملة",
+    "dateFormat": "تنسيق التاريخ",
+    "decimalPlaces": "المنازل العشرية",
+    "system": "سلوك النظام",
+    "paginationSize": "حجم الصفحة الافتراضي",
+    "maxUploadSize": "الحد الأقصى لحجم الرفع (بايت)",
+    "enableAuditLog": "تمكين سجل التدقيق",
+    "preferences": "التفضيلات الشخصية",
+    "preferencesHelp": "الإعدادات المرتبطة بالمستخدم المسجل دخوله.",
+    "theme": "المظهر",
+    "language": "اللغة",
+    "pageSize": "حجم الصفحة",
+    "dashboardLayout": "تخطيط لوحة المعلومات",
+    "notificationEnabled": "تمكين الإشعارات",
     "reset": "إعادة ضبط",
     "mode": "الوضع الداكن",
     "contrast": "التباين",
@@ -368,10 +452,36 @@
     "presets": "الإعدادات المسبقة",
     "font": "الخطوط",
     "family": "نوع الخط",
+    "fontFamilies": {
+      "segoeUi": "سيغو يو آي",
+      "inter": "إنتر",
+      "roboto": "روبوتو",
+      "outfit": "أوتفت",
+      "plusJakartaSans": "بلس جاكرتا سانس",
+      "fsAlbertArabic": "إف إس ألبرت عربي",
+      "saudi": "الخط السعودي",
+      "tajawal": "تجوال",
+      "cairo": "القاهرة",
+      "ibmPlexSansArabic": "آي بي إم بلكس عربي",
+      "notoKufiArabic": "نوتو كوفي عربي"
+    },
     "size": "حجم الخط",
     "zoom": "تكبير سطح المكتب"
   },
   "notifications": {
+    "center": "مركز الإشعارات",
+    "salesOrderConfirmed": "تم تأكيد أمر مبيعات جديد",
+    "salesOrderConfirmedBy": "تم تأكيد {{order}} بواسطة المستخدم",
+    "creditLimitExceeded": "تم تجاوز الحد الائتماني للعميل",
+    "customerExceededCredit": "تجاوز العميل {{customer}} حده الائتماني",
+    "systemAdmin": "مسؤول النظام",
+    "security": "الأمان",
+    "exportCompleted": "اكتمل تصدير بياناتك بنجاح.",
+    "failedLogins": "تم اكتشاف عدة محاولات تسجيل دخول فاشلة.",
+    "categorySystem": "النظام",
+    "categoryAlert": "تنبيه",
+    "viewFile": "عرض الملف",
+    "priority": { "Critical": "حرج", "High": "عالٍ", "Medium": "متوسط", "Low": "منخفض" },
     "mark_all_read": "تعيين الكل كمقروء",
     "all": "الكل",
     "unread": "غير المقروء",
@@ -395,6 +505,90 @@
     "newAddress": "عنوان جديد"
   },
   "workflow": { "builder": "المصمم" },
+  "mail": {
+    "folders": { "all": "الكل", "inbox": "الوارد", "sent": "المرسل", "important": "المهم" },
+    "fields": {
+      "request": "الطلب",
+      "process": "العملية",
+      "status": "الحالة",
+      "requestDate": "تاريخ الطلب",
+      "requestedBy": "مقدم الطلب"
+    },
+    "requestName": "اسم الطلب: {{name}}",
+    "requestedBySummary": "مقدم الطلب: {{name}} · تاريخ الطلب: {{date}}",
+    "requestFallback": "الطلب {{id}}",
+    "processFallback": "العملية {{id}}",
+    "requestDetails": "تفاصيل الطلب",
+    "transactionDetails": "تفاصيل المعاملة",
+    "trackingLog": "سجل التتبع",
+    "requestStatus": "حالة الطلب",
+    "currentStage": "المرحلة الحالية: الخطوة {{step}}",
+    "decisionDate": "تاريخ القرار: {{date}}",
+    "elapsedTime": "الوقت المنقضي: {{time}}",
+    "hoursMinutes": "{{hours}} ساعة و{{minutes}} دقيقة",
+    "notAvailable": "غير متاح",
+    "statuses": {
+      "stopped": "متوقف",
+      "completed": "مكتمل",
+      "inProgress": "قيد التنفيذ",
+      "processing": "قيد المعالجة"
+    },
+    "attachments": {
+      "title": "المرفقات",
+      "none": "لا توجد مرفقات",
+      "loadError": "تعذر تحميل المرفقات.",
+      "openError": "تعذر فتح هذا المرفق."
+    },
+    "errors": {
+      "tracking": "تعذر تحميل سجل تتبع سير العمل.",
+      "details": "تعذر تحميل تفاصيل الطلب."
+    },
+    "timeline": { "responsible": "المسؤول:", "action": "الإجراء:", "notes": "الملاحظات:" },
+    "printout": "نسخة الطباعة",
+    "view": "عرض",
+    "filter": "تصفية",
+    "information": "معلومات البريد",
+    "requestId": "معرّف الطلب",
+    "processId": "معرّف العملية",
+    "scrollableData": "بيانات الطلب القابلة للتمرير",
+    "print": {
+      "title": "بريد سير العمل",
+      "viewerTitle": "بريد سير العمل · {{name}}",
+      "selectRequest": "اختر طلب سير عمل لطباعته.",
+      "loadError": "تعذر تحميل نسخة طباعة بريد سير العمل.",
+      "requestInformation": "معلومات الطلب",
+      "requestData": "بيانات الطلب",
+      "employeeName": "اسم الموظف",
+      "employeeNumber": "رقم الموظف",
+      "transactionType": "نوع المعاملة",
+      "responsibleEmployee": "الموظف المسؤول",
+      "transactionTime": "وقت المعاملة",
+      "transactionEndTime": "وقت انتهاء المعاملة",
+      "notes": "الملاحظات"
+    }
+  },
+  "reportViewer": {
+    "actions": {
+      "back": "رجوع", "export": "تصدير", "reload": "إعادة تحميل", "options": "خيارات",
+      "readingMode": "وضع القراءة", "openPresentation": "فتح العرض التقديمي",
+      "toggleThumbnails": "إظهار أو إخفاء الصور المصغرة", "searchReport": "البحث في التقرير", "search": "بحث",
+      "previousPage": "الصفحة السابقة", "nextPage": "الصفحة التالية", "currentPage": "الصفحة الحالية",
+      "zoomOut": "تصغير", "zoomIn": "تكبير", "presentationMode": "وضع العرض التقديمي",
+      "print": "طباعة", "download": "تنزيل", "additionalActions": "إجراءات إضافية",
+      "presentation": "عرض تقديمي", "downloadSave": "تنزيل / حفظ"
+    },
+    "zoom": { "automatic": "تكبير تلقائي", "pageWidth": "عرض الصفحة", "wholePage": "الصفحة كاملة", "actualSize": "100%" },
+    "pageOf": "من {{total}}",
+    "thumbnails": { "pages": "الصور المصغرة للصفحات", "outline": "مخطط التقرير", "attachments": "مرفقات التقرير", "layers": "طبقات التقرير" },
+    "empty": "لا يوجد تقرير متاح."
+  },
+  "printout": {
+    "company": "الشركة", "reportNo": "رقم التقرير", "date": "التاريخ", "status": "الحالة",
+    "generatedBy": "أنشئ بواسطة", "period": "الفترة", "criteria": "المعايير",
+    "pageOf": "الصفحة {{page}} من {{total}}", "page": "الصفحة", "of": "من",
+    "confidential": "سري / للاستخدام الداخلي فقط", "generated": "تاريخ الإنشاء", "printedBy": "طبع بواسطة",
+    "logoAlt": "شعار {{company}}"
+  },
   "wfProcess": {
     "commands": { "processBuilder": "مصمم العمليات", "variables": "المتغيرات", "steps": "الخطوات" },
     "sections": { "configuration": "إعداد العملية" },
@@ -564,7 +758,147 @@
     "openPage": "فتح صفحة الإدارة",
     "selectNode": "اختر عنصراً لعرض خصائصه.",
     "designerHelp": "راجع مسار العملية واختر عنصراً من الهيكل لعرض خصائصه.",
-    "invalidProcess": "يجب تحديد عملية سير عمل صالحة."
+    "invalidProcess": "يجب تحديد عملية سير عمل صالحة.",
+    "title": "مصمم العمليات",
+    "navigation": { "label": "التنقل في مصمم العمليات", "tree": "الشجرة", "palette": "لوحة العناصر" },
+    "tabsExtended": {
+      "requestForm": "نموذج الطلب",
+      "activityForm": "نموذج النشاط",
+      "transitions": "الانتقالات",
+      "diagram": "المخطط"
+    },
+    "status": {
+      "active": "نشط", "inactive": "غير نشط", "loading": "جارٍ التحميل من الخادم…",
+      "localChanges": "تغييرات محلية", "unsaved": "غير محفوظ", "unsavedChanges": "تغييرات غير محفوظة",
+      "draftSaved": "تم حفظ المسودة تلقائياً في {{time}}", "newRecord": "سجل جديد", "pending": "قيد الانتظار"
+    },
+    "actions": {
+      "collapseNavigation": "طي التنقل", "expandNavigation": "توسيع التنقل",
+      "collapseSettings": "طي الإعدادات", "expandSettings": "توسيع الإعدادات",
+      "openStructure": "فتح هيكل العملية", "openSettings": "فتح الإعدادات",
+      "closeStructure": "إغلاق هيكل العملية", "closeSettings": "إغلاق الإعدادات",
+      "reset": "إعادة ضبط", "create": "إنشاء", "save": "حفظ", "saving": "جارٍ الحفظ…",
+      "export": "تصدير", "copyJson": "نسخ JSON", "download": "تنزيل", "close": "إغلاق",
+      "add": "إضافة", "addStep": "إضافة خطوة", "addStepShort": "إضافة خطوة", "addVariable": "إضافة متغير",
+      "openRequestForm": "فتح نموذج الطلب", "configure": "إعداد",
+      "dragItem": "سحب {{name}}", "moveItemUp": "نقل {{name}} لأعلى", "moveItemDown": "نقل {{name}} لأسفل",
+      "deleteItem": "حذف {{name}}", "deleteStepConfirm": "هل تريد حذف {{name}} وأنشطته البالغ عددها {{count}}؟",
+      "saveVariables": "حفظ المتغيرات", "saveSteps": "حفظ الخطوات", "saveActivities": "حفظ الأنشطة",
+      "saveTransitions": "حفظ الانتقالات", "newTransition": "انتقال جديد"
+    },
+    "statistics": { "tooltip": "الخطوات / الأنشطة / عناصر التحكم / الانتقالات", "label": "إحصاءات العملية" },
+    "structure": {
+      "title": "هيكل العملية", "drawer": "هيكل العملية ولوحة العناصر", "workspaces": "مساحات عمل مصمم العمليات",
+      "variables": "المتغيرات", "requestControls": "عناصر تحكم الطلب", "steps": "الخطوات",
+      "untitled": "عملية بلا عنوان", "draft": "مسودة", "stepCount": "{{count}} خطوة",
+      "activityCount": "{{count}} نشاط", "controlCount": "{{count}} عنصر تحكم",
+      "newVariable": "متغير جديد", "newActivity": "نشاط جديد", "defaultStep": "الخطوة {{number}}",
+      "expandItem": "توسيع {{name}}", "collapseItem": "طي {{name}}"
+    },
+    "settings": {
+      "title": "الإعدادات", "drawer": "إعدادات مصمم العمليات", "processInformation": "معلومات العملية",
+      "selectPriority": "اختر الأولوية", "selectProcessType": "اختر نوع العملية",
+      "managedCode": "تتم إدارته بواسطة التسلسل الرقمي", "generatedCode": "يُنشأ عند الحفظ", "enterCode": "أدخل الرمز",
+      "fields": {
+        "code": "الرمز", "name": "الاسم", "description": "الوصف", "variableName": "اسم المتغير", "dataType": "نوع البيانات",
+        "order": "الترتيب", "stepName": "اسم الخطوة", "activityName": "اسم النشاط", "activityType": "نوع النشاط",
+        "performer": "المنفذ", "score": "الدرجة", "autoPassingHours": "ساعات التجاوز التلقائي", "mandatory": "إلزامي",
+        "required": "مطلوب", "system": "النظام", "visible": "مرئي", "sortOrder": "ترتيب الفرز",
+        "transitionName": "اسم الانتقال", "triggerSource": "مصدر التشغيل", "requestControl": "عنصر تحكم الطلب",
+        "activity": "النشاط", "variable": "المتغير", "operator": "المعامل", "targetStep": "الخطوة المستهدفة", "label": "التسمية",
+        "action": "الإجراء", "nextStep": "الخطوة التالية"
+      },
+      "workspaceTitles": { "variables": "إعدادات المتغيرات", "requestForm": "إعدادات نموذج الطلب", "steps": "إعدادات الخطوات", "activities": "إعدادات الأنشطة", "activityForm": "إعدادات نموذج النشاط", "transitions": "إعدادات الانتقالات", "diagram": "إعدادات المخطط" },
+      "workspaceHelp": {
+        "variables": "أضف متغيراً أو حدده لتحرير إعداداته.", "requestForm": "أضف حقل طلب أو حدده لتحرير إعداداته.",
+        "steps": "أضف خطوة أو حددها لتحرير إعداداتها.", "activities": "أضف نشاطاً أو حدده لتحرير إعداداته.",
+        "activityForm": "أضف حقل نشاط أو حدده لتحرير إعداداته.", "transitions": "أضف انتقالاً أو حدده لتحرير إعداداته.",
+        "diagram": "حدد عنصر عملية في المخطط لتحرير إعداداته.", "default": "حدد عنصراً لتحرير إعداداته."
+      },
+      "variable": "المتغير", "stepSettings": "إعدادات الخطوة", "stepCondition": "شرط الخطوة", "deleteVariable": "حذف المتغير",
+      "validationRules": "قواعد التحقق", "validationType": "نوع التحقق", "severity": "مستوى الخطورة",
+      "minimumValue": "القيمة الدنيا", "maximumValue": "القيمة القصوى", "value": "القيمة",
+      "validationExpression": "تعبير التحقق", "inputMask": "قناع الإدخال", "errorMessage": "رسالة الخطأ",
+      "deleteValidation": "حذف قاعدة التحقق", "noValidationRules": "لا توجد قواعد تحقق بعد.",
+      "transitionsCount": "الانتقالات ({{count}})", "deleteTransition": "حذف الانتقال", "noTransitions": "لا توجد انتقالات بعد.",
+      "autoPassEnabled": "تمكين التجاوز التلقائي", "mandatoryDocuments": "المستندات الإلزامية", "method": "الطريقة",
+      "validationControl": "عنصر تحكم التحقق", "requireFileUpload": "طلب رفع ملف",
+      "sendAlertMessage": "إرسال رسالة تنبيه", "showOtherControls": "إظهار عناصر تحكم أخرى",
+      "alertMessage": "رسالة التنبيه", "performers": "المنفذون", "searchPerformers": "البحث عن منفذين",
+      "width": "العرض", "noteColor": "لون الملاحظة", "controlType": "نوع عنصر التحكم", "comparisonValue": "قيمة المقارنة",
+      "columns": { "one": "عمود واحد", "two": "عمودان", "full": "صف كامل" },
+      "severityValues": { "Error": "خطأ", "Warning": "تحذير", "Information": "معلومة" }
+      ,"validationTypes": { "required": "مطلوب", "minLength": "الحد الأدنى للطول", "maxLength": "الحد الأقصى للطول", "exactLength": "الطول المحدد", "length": "الطول", "minValue": "القيمة الدنيا", "maxValue": "القيمة القصوى", "range": "النطاق", "regex": "تعبير نمطي", "pattern": "النمط", "startsWith": "يبدأ بـ", "endsWith": "ينتهي بـ", "contains": "يحتوي على", "email": "البريد الإلكتروني", "url": "الرابط", "phone": "الهاتف", "saudiMobile": "جوال سعودي", "saudiNationalId": "الهوية الوطنية السعودية", "saudiIban": "آيبان سعودي", "taxNumber": "الرقم الضريبي", "passport": "رقم جواز السفر", "fileExtensions": "امتدادات الملفات المسموحة", "fileSize": "حجم الملف", "maxFiles": "الحد الأقصى لعدد الملفات", "minSelected": "الحد الأدنى للعناصر المحددة", "maxSelected": "الحد الأقصى للعناصر المحددة", "compare": "مقارنة", "comparison": "المقارنة", "expression": "تعبير", "custom": "تعبير مخصص", "crossField": "تحقق عبر الحقول", "mask": "قناع", "inputMask": "قناع الإدخال" }
+      ,"activitySettings": "إعدادات النشاط", "activityName": "اسم النشاط", "notificationEmails": "رسائل البريد للإشعارات",
+      "apiAction": "إجراء API", "apiUrl": "رابط API", "unnamedControl": "عنصر تحكم بلا اسم", "unassignedStep": "خطوة غير معينة"
+      ,"optionsCount": "الخيارات ({{count}})", "validationCount": "التحقق ({{count}})", "options": "الخيارات",
+      "addOption": "إضافة خيار", "addOptionTo": "إضافة خيار إلى {{name}}", "optionNumber": "الخيار {{number}}",
+      "optionFor": "الخيار {{number}} للحقل {{name}}", "reorderOption": "إعادة ترتيب الخيار {{number}}", "reorderOptionFor": "إعادة ترتيب الخيار {{number}} للحقل {{name}}",
+      "removeOption": "إزالة الخيار {{number}}", "removeOptionFrom": "إزالة الخيار {{number}} من الحقل {{name}}", "dragToReorder": "اسحب لإعادة الترتيب",
+      "addSelectableOption": "أضف خياراً واحداً قابلاً للتحديد على الأقل.", "actionsTitle": "الإجراءات", "endProcess": "إنهاء العملية",
+      "hidden": "مخفي", "requestControl": "عنصر تحكم الطلب", "requestControlOptions": "خيارات عنصر تحكم الطلب ({{count}})",
+      "requestControlValidation": "تحقق عنصر تحكم الطلب ({{count}})", "requestControlTransitions": "انتقالات عنصر تحكم الطلب ({{count}})",
+      "controlSettings": "إعدادات عنصر التحكم", "controlValidation": "تحقق عنصر التحكم ({{count}})",
+      "controlTransitions": "انتقالات عنصر التحكم ({{count}})", "transitionSettings": "إعدادات الانتقال",
+      "controlCode": "رمز عنصر التحكم", "arabicLabel": "التسمية العربية", "defaultValue": "القيمة الافتراضية",
+      "commaSeparatedOptions": "الخيارات (مفصولة بفواصل)", "featureConfiguration": "إعداد الميزات",
+      "noOptions": "لا توجد خيارات", "showLess": "عرض أقل", "showMore": "عرض {{count}} إضافي",
+      "createRequestControl": "إنشاء عنصر تحكم للطلب", "createControl": "إنشاء عنصر تحكم",
+      "selectItemToEdit": "حدد عنصراً لتعديل خصائصه.", "noteColorAria": "لون الملاحظة"
+      ,"selectValue": "اختر قيمة", "yes": "نعم", "no": "لا", "condition": "الشرط",
+      "noCondition": "بلا شرط", "addCondition": "إضافة شرط", "clearCondition": "مسح الشرط"
+    },
+    "exportDialog": { "title": "تصدير العملية" },
+    "confirmReset": "هل تريد تجاهل مسودة مصمم العمليات المحلية؟ لن تُحذف السجلات المحفوظة على الخادم.",
+    "messages": {
+      "loadFailed": "تعذر تحميل مصمم العمليات.", "processSaved": "تم حفظ العملية بنجاح.",
+      "processSaveFailed": "تعذر حفظ العملية.", "variablesSaved": "تم حفظ المتغيرات بنجاح.",
+      "variablesSaveFailed": "تعذر حفظ المتغيرات.", "activitiesSaved": "تم حفظ الأنشطة بنجاح.",
+      "activitiesSaveFailed": "تعذر حفظ الأنشطة.", "controlsSaved": "تم حفظ عناصر تحكم الطلب بنجاح.",
+      "controlsSaveFailed": "تعذر حفظ عناصر تحكم الطلب.", "transitionsSaved": "تم حفظ الانتقالات بنجاح.",
+      "transitionsSaveFailed": "تعذر حفظ الانتقالات.", "stepsSaved": "تم حفظ الخطوات بنجاح.",
+      "stepsSaveFailed": "تعذر حفظ الخطوات."
+    },
+    "palette": {
+      "controls": "عناصر التحكم", "requestForm": "نموذج الطلب (على مستوى العملية)", "activityForm": "نموذج النشاط",
+      "requestHelp": "يضيف عنصر تحكم طلب على مستوى العملية. اختر نشاطاً للإضافة إلى نموذجه بدلاً من ذلك.",
+      "activityHelp": "يضيف عنصر تحكم إلى نموذج النشاط المحدد.",
+      "selectActivity": "اختر نشاطاً من الشجرة أو مساحة عمل الأنشطة لتمكين عناصر تحكم نموذج النشاط."
+    },
+    "controlTypes": {
+      "digits": "أرقام", "text": "نص", "longtext": "نص طويل", "date": "تاريخ", "time": "وقت", "url": "رابط",
+      "dropdownDb": "قائمة منسدلة (من قاعدة البيانات)", "dropdownManual": "قائمة منسدلة (إدخال يدوي)",
+      "checkbox": "مربع اختيار", "checkboxlist": "قائمة مربعات اختيار", "radiobuttonlist": "قائمة أزرار اختيار",
+      "table": "جدول", "label": "تسمية", "employeesearch": "بحث عن موظف", "employeeid": "معرّف الموظف",
+      "file": "ملف", "showroom": "صالة العرض", "signature": "توقيع", "location": "الموقع", "advertiser": "المعلن"
+    },
+    "designer": { "title": "مصمم سير العمل", "summary": "{{steps}} خطوة · {{activities}} نشاط · إنشاء العملية وإعادة ترتيبها" },
+    "workspace": {
+      "requestForm": "نموذج الطلب (عناصر تحكم على مستوى العملية)", "processControls": "{{count}} عنصر تحكم على مستوى العملية",
+      "saveRequestControls": "حفظ عناصر تحكم الطلب", "saveProcessFirst": "احفظ العملية أولاً لتمكين عناصر تحكم الطلب (معرّف العملية مطلوب).",
+      "addControl": "إضافة عنصر تحكم", "activityForm": "نموذج النشاط", "activityFormNamed": "نموذج النشاط · {{name}}",
+      "selectActivitySummary": "اختر نشاطاً لتصميم عناصر التحكم والإجراءات الخاصة به",
+      "activityEmptyState": "حالة نموذج النشاط الفارغ",
+      "selectActivityTitle": "اختر نشاطاً لتصميم نموذجه",
+      "selectActivityHelp": "أضف نشاطاً أولاً أو اختر نشاطاً موجوداً من شجرة العملية.",
+      "openActivities": "فتح الأنشطة", "saveActivityControls": "حفظ عناصر تحكم النشاط", "activity": "النشاط",
+      "variablesTitle": "المتغيرات", "variablesSummary": "{{total}} متغير · {{active}} نشط",
+      "saveVariablesFirst": "احفظ العملية أولاً لتمكين إنشاء المتغيرات (معرّف العملية مطلوب).",
+      "workflowSteps": "خطوات سير العمل", "stepsSummary": "{{steps}} خطوة · {{active}} نشطة · {{activities}} نشاط",
+      "saveStepsFirst": "احفظ العملية أولاً لتمكين الخطوات (معرّف العملية مطلوب).",
+      "controls": "{{count}} عنصر تحكم", "noActivities": "لا توجد أنشطة", "requestFlow": "مسار الطلب",
+      "processPath": "مسار العملية", "conditionalTransition": "انتقال شرطي",
+      "diagramSummary": "{{steps}} خطوة · {{transitions}} انتقال · التدفق المرئي للعملية",
+      "transitionsTitle": "الانتقالات الشرطية", "transitionsSummary": "{{count}} انتقال · توجيه العملية باستخدام الشروط المعدة"
+      ,"noSteps": "لا توجد خطوات. أضف الخطوة الأولى لبدء سير العمل.", "activitiesForStep": "الأنشطة · {{name}}",
+      "selectStep": "اختر خطوة", "addActivity": "إضافة نشاط", "editForm": "تحرير النموذج",
+      "addActivityHelp": "أضف نشاطاً باستخدام الخيارات أعلاه."
+    },
+    "defaults": { "newVariable": "متغير جديد", "newField": "حقل جديد", "step": "الخطوة {{number}}", "newActivity": "نشاط جديد" },
+    "dataTypes": { "text": "نص", "number": "رقم", "boolean": "منطقي", "date": "تاريخ", "object": "كائن" },
+    "triggerSources": { "none": "بلا", "requestControl": "عنصر تحكم الطلب", "activity": "النشاط" },
+    "actionTypes": { "approve": "موافقة", "reject": "رفض", "return": "إرجاع", "escalate": "تصعيد" }
+    ,"activityTypes": { "approval": "موافقة", "review": "مراجعة", "dataEntry": "إدخال بيانات", "api": "إجراء API", "notification": "إشعار" }
   },
   "workflowSetup": {
     "fields": {
@@ -796,13 +1130,16 @@
       "general": "عام",
       "salesOrders": "أوامر البيع",
       "purchaseOrders": "أوامر الشراء",
-      "prices": "الأسعار"
+      "prices": "الأسعار",
+      "lineAmount": "مبلغ السطر"
     },
-    "options": { "normal": "عادي", "masculine": "مذكر" },
+    "options": { "normal": "عادي", "masculine": "مذكر", "roundDown": "تقريب لأسفل", "roundUp": "تقريب لأعلى" },
     "fields": {
       "code": "رمز العملة",
       "name": "الاسم",
       "symbol": "الرمز",
+      "isoCode": "رمز ISO",
+      "euroCurrency": "عملة اليورو",
       "arabicName": "الاسم بالعربية",
       "referenceCurrency": "العملة المرجعية للتثليث",
       "conversion": "التحويل",
@@ -867,6 +1204,68 @@
       "saudiArabia": "المملكة العربية السعودية"
     }
   },
+  "workflowControls": {
+    "files": {
+      "allowedTypes": "أنواع الملفات المسموح بها: {{types}}.", "exceedsSize": "يتجاوز الملف {{name}} الحد الأقصى للحجم وهو {{size}}.",
+      "maxFiles_zero": "لا يمكن رفع ملفات.", "maxFiles_one": "يمكنك رفع ملف واحد كحد أقصى.", "maxFiles_two": "يمكنك رفع ملفين كحد أقصى.", "maxFiles_few": "يمكنك رفع {{count}} ملفات كحد أقصى.", "maxFiles_many": "يمكنك رفع {{count}} ملفاً كحد أقصى.", "maxFiles_other": "يمكنك رفع {{count}} ملف كحد أقصى.",
+      "upload": "رفع الملفات", "uploadMore": "رفع مزيد من الملفات", "removeAll": "إزالة جميع الملفات", "uploadNamed": "رفع {{name}}",
+      "attach": "إرفاق", "attachNamed": "إرفاق {{name}}", "dropMultiple": "أفلت المستندات هنا أو", "dropSingle": "أفلت مستنداً هنا أو", "browse": "استعراض",
+      "maximum": "الحد الأقصى {{size}}", "previewNamed": "معاينة {{name}}", "removeNamed": "إزالة {{name}}", "addAnother": "إضافة ملف آخر",
+      "thumbnailNamed": "صورة مصغرة للملف {{name}}", "closePreview": "إغلاق معاينة الملف", "previewOf": "معاينة {{name}}", "previewUnavailable": "لا تتوفر معاينة مرئية لهذا الملف المحفوظ."
+    },
+    "signature": {
+      "drawingArea": "منطقة رسم التوقيع", "named": "توقيع {{name}}", "previewNamed": "معاينة توقيع {{name}}", "saved": "التوقيع المحفوظ",
+      "none": "لا يوجد توقيع", "sign": "توقيع", "savedActions": "إجراءات التوقيع المحفوظ", "actions": "إجراءات التوقيع",
+      "clickEdit": "انقر لتعديل التوقيع", "clickAdd": "انقر لإضافة توقيع", "edit": "تعديل التوقيع", "remove": "إزالة التوقيع",
+      "clear": "مسح التوقيع", "cancel": "إلغاء التوقيع", "save": "حفظ التوقيع"
+    },
+    "location": {
+      "selectedPreview": "معاينة خريطة الموقع المحدد", "map": "خريطة الموقع", "zoomIn": "تكبير", "zoomOut": "تصغير",
+      "searchFailed": "فشل البحث عن الموقع.", "noResults": "لم يتم العثور على مواقع لهذا العنوان.", "deviceUnavailable": "موقع الجهاز غير متاح.",
+      "permissionBlocked": "الوصول إلى الموقع محظور لهذا الموقع. غيّر إذن المتصفح أو حدد نقطة يدوياً على الخريطة.", "accessFailed": "تعذر الوصول إلى موقع الجهاز.",
+      "select": "تحديد الموقع", "previewNamed": "معاينة موقع {{name}}", "selected": "الموقع المحدد", "actions": "إجراءات الموقع",
+      "edit": "تعديل الموقع", "remove": "إزالة الموقع", "clickAdd": "انقر لإضافة موقع", "noneSelected": "لم يتم تحديد موقع",
+      "openMap": "فتح الخريطة", "choose": "اختيار", "closeDialog": "إغلاق نافذة الموقع", "searchPlaceholder": "البحث عن عنوان",
+      "useCurrent": "استخدام الموقع الحالي", "selectedAddress": "العنوان المحدد", "selectPoint": "حدد نقطة على الخريطة",
+      "latitude": "خط العرض", "longitude": "خط الطول", "loading": "جارٍ تحميل الموقع…", "save": "حفظ الموقع"
+    }
+  },
+  "workflowRequest": {
+    "fileRequired": "يلزم رفع ملف للحقل {{field}}.", "attachmentNote": "مرفق طلب سير العمل",
+    "controlAttachmentNote": "عنصر تحكم الطلب {{id}}", "optionAttachmentNote": "خيار الطلب {{id}}",
+    "submitted": "تم تقديم الطلب {{request}} بنجاح. الدرجة: {{score}}.",
+    "uploadsFailed_zero": "تم حفظ الطلب ولم تتعذر أي مرفقات.", "uploadsFailed_one": "تم حفظ الطلب، ولكن تعذر رفع مرفق واحد.",
+    "uploadsFailed_two": "تم حفظ الطلب، ولكن تعذر رفع مرفقين.", "uploadsFailed_few": "تم حفظ الطلب، ولكن تعذر رفع {{count}} مرفقات.",
+    "uploadsFailed_many": "تم حفظ الطلب، ولكن تعذر رفع {{count}} مرفقاً.", "uploadsFailed_other": "تم حفظ الطلب، ولكن تعذر رفع {{count}} مرفق.",
+    "loadingForm": "جارٍ تحميل نموذج الطلب", "loadFailed": "تعذر تحميل نموذج الطلب.", "noDefinition": "لا يتوفر تعريف للنموذج.",
+    "additionalFields": "حقول إضافية للخيار {{option}}", "optionDetails": "تفاصيل {{option}}", "supportingDocument": "المستند الداعم",
+    "noActiveControls": "لا تحتوي هذه العملية على عناصر تحكم طلب نشطة.", "submitting": "جارٍ التقديم…", "submit": "تقديم الطلب",
+    "requestScore": "درجة الطلب: {{score}}", "scoreHelp": "تتحدث وفق الخيارات المحددة.",
+    "sendsNotification": "يرسل إشعاراً", "attachmentRequired": "المرفق مطلوب", "showsAdditionalFields": "يعرض حقولاً إضافية", "tableData": "بيانات الجدول",
+    "unnamedProcess": "عملية بلا اسم", "score": "الدرجة: {{score}}", "attachmentsQueued": "مرفقات الطلب في انتظار الحفظ", "attachFiles": "إرفاق ملفات بهذا الطلب", "requestAttachments": "مرفقات الطلب", "request": "طلب", "requestForm": "نموذج الطلب", "process": "العملية"
+  },
+  "documents": {
+    "attachments": "المرفقات", "closeAttachments": "إغلاق المرفقات", "recordAttachments": "مرفقات السجل", "selectSavedRecord": "حدد سجلاً محفوظاً",
+    "noDocuments": "لا توجد مستندات مرفقة بهذا السجل.", "newAttachment": "مرفق جديد", "editAttachment": "تعديل المرفق",
+    "chooseFile": "اختيار ملف", "preview": "معاينة", "editRename": "تعديل / إعادة تسمية",
+    "openNamed": "فتح {{name}}", "previewNamed": "معاينة {{name}}", "downloadNamed": "تنزيل {{name}}",
+    "editNamed": "تعديل {{name}}", "deleteNamed": "حذف {{name}}", "confirmDelete": "هل تريد حذف {{name}}؟",
+    "fields": { "type": "النوع", "name": "الاسم", "descriptionNotes": "الوصف / الملاحظات", "size": "الحجم", "createdBy": "أنشأه", "createdDate": "تاريخ الإنشاء", "actions": "الإجراءات", "documentType": "نوع المستند", "subject": "الموضوع", "url": "الرابط", "note": "ملاحظة", "description": "الوصف" },
+    "messages": { "attached": "تم إرفاق المستند.", "attachFailed": "تعذر إرفاق المستند.", "updated": "تم تحديث المستند.", "updateFailed": "تعذر تحديث المستند.", "deleted": "تم حذف المستند.", "deleteFailed": "تعذر حذف المستند.", "openFailed": "تعذر فتح المستند.", "loadFailed": "تعذر تحميل المرفقات." },
+    "attachmentPreview": "معاينة المرفق", "attachmentsCount": "المرفقات ({{count}})", "openUrl": "فتح الرابط",
+    "openNewTab": "فتح في علامة تبويب جديدة", "openNamedNewTab": "فتح {{name}} في علامة تبويب جديدة", "closePreview": "إغلاق معاينة المرفق",
+    "noAttachments": "لا توجد مرفقات متاحة.", "previousAttachment": "المرفق السابق", "nextAttachment": "المرفق التالي",
+    "previewMessages": { "emptyWorkbook": "لا يحتوي المصنف على بيانات ظاهرة.", "rowLimit": "تقتصر المعاينة على أول 500 صف.", "legacyOffice": "لا يمكن عرض تنسيق Office القديم هذا في المتصفح.", "renderFailed": "تعذر عرض هذا المستند.", "useOriginal": "استخدم فتح أو تنزيل لعرض الملف الأصلي.", "noNote": "لا يوجد محتوى للملاحظة.", "noUrl": "لا يوجد رابط متاح.", "loadFailed": "تعذر تحميل معاينة هذا المرفق.", "unavailable": "المعاينة غير متاحة لهذا النوع من الملفات. استخدم فتح أو تنزيل لعرضه." },
+    "docuView": {
+      "fileInformation": "معلومات الملف", "fileName": "اسم الملف", "chooseFiles": "اختيار الملفات",
+      "filesSelected_zero": "تم تحديد {{count}} ملف", "filesSelected_one": "تم تحديد ملف واحد", "filesSelected_two": "تم تحديد ملفين", "filesSelected_few": "تم تحديد {{count}} ملفات", "filesSelected_many": "تم تحديد {{count}} ملفاً", "filesSelected_other": "تم تحديد {{count}} ملف",
+      "filesCount_zero": "{{count}} ملف", "filesCount_one": "ملف واحد", "filesCount_two": "ملفان", "filesCount_few": "{{count}} ملفات", "filesCount_many": "{{count}} ملفاً", "filesCount_other": "{{count}} ملف",
+      "removeNamed": "إزالة {{name}}", "fileDetails": "تفاصيل الملف", "fileType": "نوع الملف", "originalFileName": "اسم الملف الأصلي", "fileLocation": "موقع الملف", "managedStorage": "تخزين المستندات المُدار", "openPreview": "فتح المعاينة", "previewUnavailable": "المعاينة غير متاحة.", "openNamedGallery": "فتح معرض {{name}}", "openGallery": "فتح المعرض", "openPreviewGallery": "فتح معرض المعاينة",
+      "recordSummary": "{{type}} · السجل {{record}}", "attached": "مرفق", "details": "التفاصيل", "notes": "ملاحظات", "create": "الإنشاء", "createdDateTime": "تاريخ ووقت الإنشاء", "restriction": "التقييد", "internal": "داخلي", "external": "خارجي", "attachment": "المرفق", "moreDetails": "مزيد من التفاصيل", "identification": "التعريف", "companyAccount": "حساب الشركة", "viewHistory": "عرض السجل", "deletedAttachments": "المرفقات المحذوفة", "references": "المراجع",
+      "validation": { "subjectNote": "الموضوع والملاحظة مطلوبان.", "validUrl": "يلزم إدخال رابط صالح.", "chooseFile": "اختر ملفاً واحداً على الأقل." },
+      "invalidReference": "يلزم RefTableId وRefRecId صالحان لفتح عرض المستندات.", "title": "مرفقات السجل {{table}} - {{record}}"
+    }
+  },
   "legalEntities": {
     "sections": {
       "general": "عام",
@@ -879,6 +1278,7 @@
       "name": "الاسم",
       "company": "الشركة",
       "memo": "مذكرة",
+      "arabicName": "الاسم بالعربية",
       "hierarchy": "ضمن التسلسل الهرمي",
       "consolidation": "استخدام لعملية التوحيد المالي",
       "elimination": "استخدام لعملية الاستبعاد المالي",
@@ -886,6 +1286,11 @@
       "localizedRegion": "منطقة الوظائف المحلية",
       "language": "اللغة",
       "timeZone": "المنطقة الزمنية",
+      "taxRegistration": "رقم التسجيل الضريبي",
+      "crNumber": "رقم السجل التجاري",
+      "currency": "العملة",
+      "bankAccount": "الحساب البنكي",
+      "fiscalCalendar": "التقويم المالي",
       "branch": "فرع/شركة تابعة",
       "dunsNumber": "رقم DUNS",
       "naics": "NAICS",
@@ -895,9 +1300,22 @@
       "description": "الاسم أو الوصف",
       "address": "العنوان",
       "purpose": "الغرض",
-      "primary": "رئيسي"
+      "primary": "رئيسي",
+      "editAddress": "تعديل العنوان"
     },
     "contacts": { "type": "النوع", "contact": "رقم/عنوان الاتصال" },
+    "languages": { "english": "الإنجليزية", "arabic": "العربية" },
+    "timeZones": { "riyadh": "(GMT+03:00) الكويت، الرياض" },
+    "images": {
+      "dashboardTitle": "صورة لوحة المعلومات",
+      "dashboardLabel": "صورة الشركة في لوحة المعلومات",
+      "reportTitle": "صورة شعار الشركة في التقارير",
+      "reportLabel": "شعار الشركة في التقارير",
+      "noImage": "لا توجد صورة",
+      "type": "نوع صورة الشركة في لوحة المعلومات",
+      "banner": "لافتة",
+      "errors": { "invalid": "حدد ملف صورة صالحاً.", "tooLarge": "يجب ألا يزيد حجم الصورة على 2 ميجابايت.", "readFailed": "تعذرت قراءة الصورة المحددة.", "encodeFailed": "تعذر ترميز الصورة المحددة." }
+    },
     "actions": { "map": "الخريطة", "moreOptions": "خيارات إضافية", "advanced": "متقدم" },
     "commands": {
       "hierarchy": "عرض في التسلسل الهرمي",

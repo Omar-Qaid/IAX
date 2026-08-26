@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Accordion, AccordionSummary, AccordionDetails, Typography, Box, Chip } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ErrorIcon from '@mui/icons-material/Error';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 
 export interface FastTabProps {
   id: string;
@@ -21,12 +22,13 @@ export const FastTab: React.FC<FastTabProps> = ({
   required = false,
   children,
 }) => {
+  const { t } = useAppTranslation();
   const [expanded, setExpanded] = useState(defaultExpanded);
 
   return (
     <Accordion expanded={expanded} onChange={() => setExpanded(!expanded)} disableGutters>
       <AccordionSummary expandIcon={<ExpandMoreIcon fontSize="small" />}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', pr: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingInlineEnd: 2 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant="subtitle2" color={hasError ? 'error.main' : 'text.primary'} sx={{ fontWeight: 700 }}>
               {title} {required && <Box component="span" color="error.main">*</Box>}
@@ -34,7 +36,7 @@ export const FastTab: React.FC<FastTabProps> = ({
             {hasError && (
               <Chip
                 icon={<ErrorIcon fontSize="small" />}
-                label="Error"
+                label={t('common.error_occurred')}
                 size="small"
                 color="error"
                 sx={{ height: 20, fontSize: '0.65rem' }}

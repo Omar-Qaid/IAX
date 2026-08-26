@@ -191,7 +191,7 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
       { field: 'code', label: t('workflowSetup.fields.code') },
       { field: 'name', label: t('workflowSetup.fields.name') },
     ],
-    backCommand: { label: t('actions.back', 'Back'), onClick: () => navigate(-1) },
+    backCommand: { label: t('actions.back'), onClick: () => navigate(-1) },
     showSearchCommand: true,
     recordTableName: numberSequenceKey,
     getAuditRecordId: (record) => record.recId,
@@ -206,10 +206,10 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
         try {
           await Promise.all(rows.map((row) => api.delete(row)));
           await refresh();
-          notifySuccess(t('messages.deletedSuccessfully', 'Deleted successfully'));
+          notifySuccess(t('messages.deletedSuccessfully'));
         } catch (error) {
           notifyError(
-            error instanceof Error ? error.message : t('errors.deleteFailed', 'Delete failed')
+            error instanceof Error ? error.message : t('errors.deleteFailed')
           );
         }
       },
@@ -293,7 +293,7 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
           else await api.update(record);
           await sequenceQuery.refetch();
           await refresh();
-          notifySuccess(t('messages.savedSuccessfully', 'Saved successfully'));
+          notifySuccess(t('messages.savedSuccessfully'));
         },
       }}
     />

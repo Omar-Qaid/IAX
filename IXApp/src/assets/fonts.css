@@ -1,0 +1,86 @@
+/**
+ * Saudi Font © Ministry of Culture, Kingdom of Saudi Arabia.
+ * Usage is subject to the Ministry's Saudi Font EULA:
+ * https://engage.moc.gov.sa/e/fonts/saudi-font/?lang=ar
+ */
+@font-face {
+  font-family: 'Saudi';
+  src: url('./SaudiWeb-Regular.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+/** Open Arabic UI fonts. See OPEN-FONT-NOTICE.md for attribution and licensing. */
+@font-face {
+  font-family: 'Tajawal';
+  src: url('./Tajawal-Regular-Arabic.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('./Tajawal-Bold-Arabic.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Cairo';
+  src: url('./Cairo-Arabic.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 200 1000;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  src: url('./IBMPlexSansArabic-Regular.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IBM Plex Sans Arabic';
+  src: url('./IBMPlexSansArabic-Bold.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+/** User-supplied FS Albert Arabic Web file. See FS-ALBERT-FONT-NOTICE.md. */
+@font-face {
+  font-family: 'FS Albert Arabic Web';
+  src: url('./FS-Albert-Arabic-Web.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'FS Albert Arabic Web';
+  src: url('./FS-Albert-Arabic-Web.ttf') format('truetype');
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Noto Kufi Arabic';
+  src: url('./NotoKufiArabic-Arabic.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Saudi';
+  src: url('./SaudiWeb-Bold.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}

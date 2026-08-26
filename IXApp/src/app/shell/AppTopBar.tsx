@@ -28,6 +28,7 @@ import HelpIcon from '@mui/icons-material/HelpOutlined';
 import AccountIcon from '@mui/icons-material/AccountCircle';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import LogoutIcon from '@mui/icons-material/Logout';
+import TranslateIcon from '@mui/icons-material/Translate';
 import { useTranslation } from 'react-i18next';
 import { useNavigationStore } from '@app/store/useNavigationStore';
 import { usePreferenceStore } from '@app/store/usePreferenceStore';
@@ -43,6 +44,7 @@ import { useNotificationStore } from '@shared/services/notificationStore';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { legalEntityApiRepository } from '@modules/organization/api/legalEntityApiRepository';
 import { getRouteBreadcrumbs } from '@app/routes/routeMetadata';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 
 // Static sx objects - moved outside render to prevent re-creation
 const appBarSx = {
@@ -77,7 +79,7 @@ const titleSx = {
   color: 'common.white',
   fontWeight: 700,
   fontSize: { xs: '0.8125rem', sm: '0.875rem' },
-  mr: { xs: 0.5, sm: 2 },
+  marginInlineEnd: { xs: 0.5, sm: 2 },
   letterSpacing: '0.02em',
   flexShrink: 0,
   display: { xs: 'none', sm: 'block' },
@@ -106,10 +108,13 @@ const badgeSx = {
 
 export const AppTopBar: React.FC = memo(() => {
   const theme = useTheme();
+  const inlineStart = theme.direction === 'rtl' ? 'right' : 'left';
+  const inlineEnd = theme.direction === 'rtl' ? 'left' : 'right';
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
+  const { currentLanguage, changeLanguage } = useAppTranslation();
   const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -119,6 +124,7 @@ export const AppTopBar: React.FC = memo(() => {
   const setNotificationDrawerOpen = useNavigationStore((s) => s.setNotificationDrawerOpen);
   const setSidebarOpen = useNavigationStore((s) => s.setSidebarOpen);
   const navLayout = usePreferenceStore((s) => s.navLayout);
+  const setRtl = usePreferenceStore((s) => s.setRtl);
   const currentCompany = useAppStore((s) => s.currentCompany);
   const setCompany = useAppStore((s) => s.setCompany);
   const notificationCount = useNotificationStore((s) => s.notifications.length);
@@ -156,6 +162,12 @@ export const AppTopBar: React.FC = memo(() => {
     void logout();
   }, [logout, handleMenuClose]);
 
+  const handleToggleLanguage = useCallback(() => {
+    const nextLanguage = currentLanguage.code === 'en' ? 'ar' : 'en';
+    setRtl(nextLanguage === 'ar');
+    void changeLanguage(nextLanguage);
+  }, [changeLanguage, currentLanguage.code, setRtl]);
+
   const handleCompanyChange = useCallback((companyCode: string) => {
     setCompany(companyCode);
     setCompanyAnchorEl(null);
@@ -189,7 +201,7 @@ export const AppTopBar: React.FC = memo(() => {
 
   const titleText = isTablet
     ? t('nav.app_title_short', 'Finance and Operations')
-    : t('nav.finance_operations', 'Finance and Operations');
+    : t('nav.finance_operations');
   const userTooltip = userName || t('common.account', 'Account');
   const userInitials = (userName || 'User')
     .split(/\s+/)
@@ -218,7 +230,7 @@ export const AppTopBar: React.FC = memo(() => {
           <IconButton size="small" onClick={openSidebar} sx={hamburgerSx}>
             <MenuIcon sx={{ fontSize: topBar.iconSize }} />
           </IconButton>
-          <IconButton size="small" onClick={openSidebar} sx={waffleSx} aria-label={t('nav.app_launcher', 'App launcher')}>
+          <IconButton size="small" onClick={openSidebar} sx={waffleSx} aria-label={t('nav.app_launcher')}>
             <WaffleIcon sx={{ fontSize: 24 }} />
           </IconButton>
         </Box>
@@ -252,7 +264,7 @@ export const AppTopBar: React.FC = memo(() => {
 
         {/* Horizontal navigation tabs */}
         {isHorizontal && !isMobile && (
-          <Box sx={{ display: 'flex', gap: 0.5, ml: 2, alignItems: 'center', height: '100%' }}>
+          <Box sx={{ display: 'flex', gap: 0.5, marginInlineStart: 2, alignItems: 'center', height: '100%' }}>
             <Button
               size="small"
               onClick={() => navigate('/dashboard')}
@@ -323,10 +335,10 @@ export const AppTopBar: React.FC = memo(() => {
           <Button
             onClick={openCommandPalette}
             startIcon={<SearchIcon sx={{ fontSize: 18 }} />}
-            aria-label={t('nav.global_search', 'Search for a page')}
-            sx={{ display: { xs: 'none', md: 'flex' }, width: 'min(100%, 510px)', height: 30, justifyContent: 'flex-start', px: 1.5, color: '#fff', bgcolor: topBar.searchBackground, borderRadius: '3px', textTransform: 'none', fontFamily: topBar.fontFamily, fontSize: 13, fontWeight: 400, '&:hover': { bgcolor: '#36557f' }, '& .MuiButton-startIcon': { mr: 1, color: '#fff' } }}
+            aria-label={t('nav.global_search')}
+            sx={{ display: { xs: 'none', md: 'flex' }, width: 'min(100%, 510px)', height: 30, justifyContent: 'flex-start', px: 1.5, color: '#fff', bgcolor: topBar.searchBackground, borderRadius: '3px', textTransform: 'none', fontFamily: topBar.fontFamily, fontSize: 13, fontWeight: 400, '&:hover': { bgcolor: '#36557f' }, '& .MuiButton-startIcon': { marginInlineEnd: 1, marginInlineStart: 0, color: '#fff' } }}
           >
-            {t('nav.global_search', 'Search for a page')}
+            {t('nav.global_search')}
           </Button>
         </Box>
 
@@ -364,8 +376,8 @@ export const AppTopBar: React.FC = memo(() => {
             anchorEl={companyAnchorEl}
             open={Boolean(companyAnchorEl)}
             onClose={() => setCompanyAnchorEl(null)}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-            transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+            anchorOrigin={{ vertical: 'bottom', horizontal: inlineStart }}
+            transformOrigin={{ vertical: 'top', horizontal: inlineStart }}
             slotProps={{ paper: { sx: { mt: 0.25, minWidth: 380, maxHeight: 360, borderRadius: 0, border: 1, borderColor: 'divider' } } }}
           >
             {legalEntities.isLoading && <MenuItem disabled>{t('common.loading', 'Loading...')}</MenuItem>}
@@ -416,6 +428,7 @@ export const AppTopBar: React.FC = memo(() => {
                 '&:hover': { bgcolor: topBar.hover },
               }}
               onClick={handleProfileMenuOpen}
+              aria-label={t('common.account', 'Account')}
               aria-controls={isMenuOpen ? 'account-menu' : undefined}
               aria-haspopup="true"
               aria-expanded={isMenuOpen ? 'true' : undefined}
@@ -447,15 +460,15 @@ export const AppTopBar: React.FC = memo(() => {
                   '& .MuiAvatar-root': {
                     width: 32,
                     height: 32,
-                    ml: -0.5,
-                    mr: 1,
+                    marginInlineStart: -0.5,
+                    marginInlineEnd: 1,
                   },
                   '&:before': {
                     content: '""',
                     display: 'block',
                     position: 'absolute',
                     top: 0,
-                    right: 14,
+                    [inlineEnd]: 14,
                     width: 10,
                     height: 10,
                     bgcolor: 'background.paper',
@@ -465,8 +478,8 @@ export const AppTopBar: React.FC = memo(() => {
                 },
               },
             }}
-            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+            transformOrigin={{ horizontal: inlineEnd, vertical: 'top' }}
+            anchorOrigin={{ horizontal: inlineEnd, vertical: 'bottom' }}
           >
             <MenuItem onClick={handleMenuClose}>
               <ListItemIcon>
@@ -475,6 +488,15 @@ export const AppTopBar: React.FC = memo(() => {
               <ListItemText primary={userTooltip} />
             </MenuItem>
             <Divider />
+            <MenuItem onClick={handleToggleLanguage}>
+              <ListItemIcon>
+                <TranslateIcon fontSize="small" color="primary" />
+              </ListItemIcon>
+              <ListItemText
+                primary={currentLanguage.code === 'en' ? 'العربية' : 'English'}
+                secondary={t('common.language', 'Language')}
+              />
+            </MenuItem>
             <MenuItem onClick={handleLogout}>
               <ListItemIcon>
                 <LogoutIcon fontSize="small" color="error" />
@@ -493,11 +515,11 @@ export const AppTopBar: React.FC = memo(() => {
           onClose={handleNavClose}
           anchorOrigin={{
             vertical: 'bottom',
-            horizontal: 'left',
+            horizontal: inlineStart,
           }}
           transformOrigin={{
             vertical: 'top',
-            horizontal: 'left',
+            horizontal: inlineStart,
           }}
           slotProps={{
             paper: {

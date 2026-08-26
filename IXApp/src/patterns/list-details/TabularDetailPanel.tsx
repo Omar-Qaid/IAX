@@ -4,7 +4,7 @@ import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { DataGrid } from '@shared/components/data-grid/DataGrid';
 import type { ColumnDef } from '@shared/components/data-grid/types';
-import { d365 } from './d365Tokens';
+import { d365 } from '@shared/constants/enterpriseUiTokens';
 
 export interface TabularDetailAction { id: string; label: string; ariaLabel?: string; onClick?: () => void; disabled?: boolean; icon?: React.ReactNode }
 
@@ -37,4 +37,4 @@ export function TabularDetailPanel<T extends { id: string }>({ rows, columns, ad
   </Box>;
 }
 
-const actionSx = { minWidth: 0, px: '7px', py: 0, height: 25, borderRadius: 0, color: d365.primary, fontFamily: d365.fontFamily, fontWeight: 400, fontSize: d365.fontSize, '& .MuiButton-startIcon': { mr: '4px' } };
+const actionSx = { minWidth: 0, px: '7px', py: 0, height: 25, borderRadius: 0, color: d365.primary, fontFamily: d365.fontFamily, fontWeight: 400, fontSize: d365.fontSize, '& .MuiButton-startIcon': { marginInlineEnd: '4px', marginInlineStart: 0 } };

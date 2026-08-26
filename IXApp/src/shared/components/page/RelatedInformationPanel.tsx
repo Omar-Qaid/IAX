@@ -31,7 +31,7 @@ export const RelatedInformationPanel: React.FC<RelatedInformationPanelProps> = (
         return (
           <Box key={section.id} sx={{ borderBottom: (theme) => `1px solid ${theme.palette.divider}` }}>
             <Stack direction="row" sx={{ minHeight: 40, alignItems: 'center', justifyContent: 'space-between' }}>
-              <Typography sx={{ pl: 0.25, fontSize: '0.8125rem', fontWeight: open ? 600 : 500 }}>{section.label}</Typography>
+              <Typography sx={{ paddingInlineStart: 0.25, fontSize: '0.8125rem', fontWeight: open ? 600 : 500 }}>{section.label}</Typography>
               <IconButton size="small" aria-label={section.label} aria-expanded={open} onClick={() => toggle(section.id)} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 0.5, p: 0.25 }}>
                 {open ? <KeyboardArrowUpIcon sx={{ fontSize: 17 }} /> : <KeyboardArrowDownIcon sx={{ fontSize: 17 }} />}
               </IconButton>

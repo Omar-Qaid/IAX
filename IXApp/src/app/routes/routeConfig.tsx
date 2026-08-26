@@ -49,7 +49,7 @@ const RouteErrorPage = () => {
   const { t } = useAppTranslation();
   const routeError = useRouteError();
   const message = routeError instanceof Error ? routeError.message : t('errors.generic');
-  return <ErrorState title={t('errors.boundaryTitle', 'Application error')} message={message} />;
+  return <ErrorState title={t('errors.boundaryTitle')} message={message} />;
 };
 
 const load = (element: React.ReactNode) => (

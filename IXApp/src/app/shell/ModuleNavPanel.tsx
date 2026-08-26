@@ -27,8 +27,7 @@ import { moduleNavTokens as nav } from './moduleNavTokens';
 const mobileOverlaySx = {
   position: 'absolute',
   top: 0,
-  left: 0,
-  right: 0,
+  insetInline: 0,
   bottom: 0,
   zIndex: 10,
   bgcolor: 'background.paper',
@@ -37,7 +36,7 @@ const mobileOverlaySx = {
 const desktopPanelBaseSx = {
   position: 'fixed',
   top: LAYOUT.TOPBARHEIGHT,
-  borderRight: `1px solid ${COLORS.border}`,
+  borderInlineEnd: `1px solid ${COLORS.border}`,
   bottom: 0,
   width: `min(${nav.desktopWidth}px, calc(100vw - 40px))`,
   bgcolor: nav.background,
@@ -75,7 +74,7 @@ const mobileHeaderLeftSx = {
 
 const mobileHeaderBackBtnSx = {
   color: 'white',
-  mr: 1,
+  marginInlineEnd: 1,
   transition: 'all 0.2s',
 } as const;
 
@@ -206,7 +205,7 @@ const getScrollableAreaSx = (isMobileView: boolean) => ({
 const getLinkContainerSx = (isMobileView: boolean) => ({
   px: 0,
   py: 0,
-  pl: isMobileView ? 5 : `${nav.linkIndent}px`,
+  paddingInlineStart: isMobileView ? 5 : `${nav.linkIndent}px`,
   bgcolor: nav.background,
 });
 
@@ -476,7 +475,7 @@ const ModuleNavPanel: React.FC<ModuleNavPanelProps> = ({
     <Box
       ref={panelRef}
       data-module-nav-panel="true"
-      sx={{ ...desktopPanelBaseSx, left: leftOffset }}
+      sx={{ ...desktopPanelBaseSx, insetInlineStart: leftOffset }}
     >
       {renderContent()}
     </Box>

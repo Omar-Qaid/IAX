@@ -33,7 +33,7 @@ function SetupField({ field, value, yesLabel, noLabel, onChange }: {
       <Typography title={field.label} noWrap sx={{ mb: 0.25, color: 'text.secondary', fontSize: '0.6875rem', lineHeight: 1.3 }}>{field.label}</Typography>
       {field.type === 'boolean' ? (
         <Box sx={{ display: 'flex', alignItems: 'center', minHeight: 29 }}>
-          <Switch checked={Boolean(value)} disabled={field.disabled} onChange={(_, checked) => onChange(checked)} size="small" slotProps={{ input: { 'aria-label': field.label } }} sx={{ ml: -0.75, mr: 0.25, '& .MuiSwitch-switchBase': { p: '5px' }, '& .MuiSwitch-thumb': { width: 13, height: 13 }, '& .MuiSwitch-track': { border: '1px solid', borderColor: 'text.secondary', bgcolor: 'transparent', opacity: 1 }, '& .Mui-checked + .MuiSwitch-track': { borderColor: 'primary.main', bgcolor: 'primary.main', opacity: 1 } }} />
+          <Switch checked={Boolean(value)} disabled={field.disabled} onChange={(_, checked) => onChange(checked)} size="small" slotProps={{ input: { 'aria-label': field.label } }} sx={{ marginInlineStart: -0.75, marginInlineEnd: 0.25, '& .MuiSwitch-switchBase': { p: '5px' }, '& .MuiSwitch-thumb': { width: 13, height: 13 }, '& .MuiSwitch-track': { border: '1px solid', borderColor: 'text.secondary', bgcolor: 'transparent', opacity: 1 }, '& .Mui-checked + .MuiSwitch-track': { borderColor: 'primary.main', bgcolor: 'primary.main', opacity: 1 } }} />
           <Typography sx={{ fontSize: '0.75rem' }}>{value ? yesLabel : noLabel}</Typography>
         </Box>
       ) : field.type === 'select' ? (
@@ -81,7 +81,7 @@ export function SetupPage({ title, navigationItems, sections, initialValues, sav
     <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', bgcolor: '#faf9f8', p: 0.75 }}>
       <ActionPane variant="flat" endActions={<EnterpriseCommandUtilities personalizeLabel={t('utilities.personalize')} guideLabel={t('utilities.guide')} notificationsLabel={t('common.notifications')} refreshLabel={t('actions.refresh')} openWindowLabel={t('utilities.openWindow')} />}>
         <ActionPaneGroup>
-          <ActionPaneButton label={t('actions.back', 'Back')} icon={<ArrowBackIcon />} onClick={() => navigate(-1)} />
+          <ActionPaneButton label={t('actions.back')} icon={<ArrowBackIcon sx={{ transform: (theme) => theme.direction === 'rtl' ? 'scaleX(-1)' : 'none' }} />} onClick={() => navigate(-1)} />
         </ActionPaneGroup>
         <ActionPaneGroup>
           <ActionPaneButton label={saveLabel} icon={<SaveOutlinedIcon />} disabled={!dirty || saving} onClick={save} />

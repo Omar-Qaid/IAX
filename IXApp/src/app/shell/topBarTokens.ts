@@ -1,3 +1,5 @@
+import { APP_FONT_FAMILY } from '@shared/constants/fontFamilies';
+
 export const topBarTokens = {
   height: 48,
   background: '#001b3f',
@@ -8,7 +10,7 @@ export const topBarTokens = {
   text: '#ffffff',
   mutedText: '#f3f2f1',
   hover: 'rgba(255,255,255,0.1)',
-  fontFamily: '"Segoe UI", "Segoe UI Web (West European)", Arial, sans-serif',
+  fontFamily: APP_FONT_FAMILY,
   fontSize: 16,
   productFontSize: 16,
   iconSize: 18,

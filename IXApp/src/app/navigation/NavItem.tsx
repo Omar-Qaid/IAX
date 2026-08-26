@@ -56,7 +56,12 @@ export const NavItem = React.memo<NavItemProps>(
         sx={{
           minHeight: indent ? 36 : nav.itemHeight,
           height: indent ? 36 : nav.itemHeight,
-          px: collapsed ? 0 : indent ? 5.75 : `${nav.horizontalPadding}px`,
+          px: collapsed ? 0 : `${nav.horizontalPadding}px`,
+          paddingInlineStart: collapsed
+            ? 0
+            : indent
+              ? `${nav.horizontalPadding + nav.iconSize + nav.iconTextGap}px`
+              : `${nav.horizontalPadding}px`,
           justifyContent: collapsed ? 'center' : 'initial',
           bgcolor: activeBgColor,
           color: itemColor,
@@ -76,7 +81,7 @@ export const NavItem = React.memo<NavItemProps>(
             <ListItemIcon
               sx={{
                 minWidth: 0,
-                mr: collapsed ? 0 : `${nav.iconTextGap}px`,
+                marginInlineEnd: collapsed ? 0 : `${nav.iconTextGap}px`,
                 justifyContent: 'center',
                 color: iconColor,
                 '& svg': { fontSize: nav.iconSize },
@@ -96,6 +101,7 @@ export const NavItem = React.memo<NavItemProps>(
           <>
             <ListItemText
               primary={label}
+              sx={{ minWidth: 0, flex: '1 1 auto', textAlign: 'start' }}
               slotProps={{
                 primary: {
                   className: 'item-label',
@@ -105,11 +111,15 @@ export const NavItem = React.memo<NavItemProps>(
                     lineHeight: '20px',
                     fontWeight: nav.fontWeight,
                     color: 'inherit',
+                    textAlign: 'start',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
                   },
                 },
               }}
             />
-            {badge && !icon && <Badge badgeContent={badge} color="error" sx={{ mr: 2 }} />}
+            {badge && !icon && <Badge badgeContent={badge} color="error" sx={{ marginInlineEnd: 2 }} />}
             {showFavorite && onToggleFavorite && (
               <Box
                 className="fav-btn"
@@ -117,6 +127,8 @@ export const NavItem = React.memo<NavItemProps>(
                 sx={{
                   opacity: isFavorite ? 1 : 0,
                   transition: 'opacity 0.2s',
+                  flexShrink: 0,
+                  marginInlineStart: `${nav.iconTextGap}px`,
                   color: isFavorite
                     ? 'warning.main'
                     : 'text.disabled',

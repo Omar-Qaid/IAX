@@ -6,10 +6,9 @@ export const ROUTE_PATHS = {
   LOGIN: '/login',
   DASHBOARD: '/dashboard',
   DOCU_VIEW: '/documents/docu-view',
-  PROCESS_BUILDER: '/process-builder/:builderId',
-  PROCESS_BUILDER_NEW: '/process-builder/new',
-  processBuilder: (builderId: string | number) =>
-    `/process-builder/${encodeURIComponent(String(builderId))}`,
+  PROCESS_BUILDER: WORKFLOW_ROUTE_PATHS.PROCESS_BUILDER,
+  PROCESS_BUILDER_NEW: WORKFLOW_ROUTE_PATHS.PROCESS_BUILDER_NEW,
+  processBuilder: WORKFLOW_ROUTE_PATHS.processBuilder,
 
   ACCOUNTS_RECEIVABLE: {
     ROOT: '/accounts-receivable',

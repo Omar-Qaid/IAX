@@ -198,14 +198,14 @@ export const APP_CONFIG = {
 
 /** Centralized grid filter operators for UI display and internal logic. */
 export const GRID_FILTER_OPERATORS = [
-    { label: 'is exactly', value: 'equals' },
-    { label: 'is not', value: 'notEquals' },
-    { label: 'contains', value: 'contains' },
-    { label: 'does not contain', value: 'doesNotContain' },
-    { label: 'begins with', value: 'startsWith' },
-    { label: 'ends with', value: 'endsWith' },
-    { label: 'is one of', value: 'in' },
-    { label: 'after', value: 'gt' },
-    { label: 'before', value: 'lt' },
-    { label: 'matches', value: 'matches' },
+    { labelKey: 'grid.operators.equals', value: 'equals' },
+    { labelKey: 'grid.operators.not_equals', value: 'notEquals' },
+    { labelKey: 'grid.operators.contains', value: 'contains' },
+    { labelKey: 'grid.operators.does_not_contain', value: 'doesNotContain' },
+    { labelKey: 'grid.operators.starts_with', value: 'startsWith' },
+    { labelKey: 'grid.operators.ends_with', value: 'endsWith' },
+    { labelKey: 'grid.operators.is_one_of', value: 'in' },
+    { labelKey: 'grid.operators.after', value: 'gt' },
+    { labelKey: 'grid.operators.before', value: 'lt' },
+    { labelKey: 'grid.operators.matches', value: 'matches' },
 ] as const;

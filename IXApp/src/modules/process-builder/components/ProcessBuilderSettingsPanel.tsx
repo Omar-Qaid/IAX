@@ -22,7 +22,7 @@ import { closestCenter, DndContext, PointerSensor, useSensor, useSensors } from 
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useProcessBuilderStore } from '../store/useProcessBuilderStore';
 import { ConditionBuilder } from './ConditionBuilder';
-import { controlPalette } from './ProcessBuilderPalette';
+import { controlPalette, getControlTypeLabel } from './ProcessBuilderPalette';
 import { normalizeTransitionValue, TransitionValueField } from './TransitionValueField';
 import type {
   BuilderStep,
@@ -46,6 +46,7 @@ import { wfPerformerApi } from '@modules/workflow/api/wfPerformerApi';
 import { AppLookupGridField } from '@shared/components/fields/AppLookupGridField';
 import { AppLookupField } from '@shared/components/fields/AppLookupField';
 import { SortableBuilderItem } from './SortableBuilderItem';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 
 const categoryLookupColumns = [
   { field: 'code', header: 'Code', width: 110 },
@@ -122,7 +123,9 @@ const SettingsTitle = ({
   title: string;
   dirty?: boolean;
   isNew?: boolean;
-}) => (
+}) => {
+  const { t } = useAppTranslation();
+  return (
   <Stack
     direction="row"
     spacing={1}
@@ -143,16 +146,17 @@ const SettingsTitle = ({
     >
       {title}
     </Typography>
-    {isNew && <Chip size="small" label="New record" sx={{ height: 20, bgcolor: '#eeeeee' }} />}
+    {isNew && <Chip size="small" label={t('wfProcessBuilder.status.newRecord')} sx={{ height: 20, bgcolor: '#eeeeee' }} />}
     {dirty && (
       <Chip
         size="small"
-        label="Unsaved changes"
+        label={t('wfProcessBuilder.status.unsavedChanges')}
         sx={{ bgcolor: '#fff3cd', color: '#7a4b00', border: '1px solid #f0c36d', height: 20 }}
       />
     )}
   </Stack>
-);
+  );
+};
 
 const settingsGroupSx = {
   display: 'grid',
@@ -185,7 +189,7 @@ const settingsSwitchGridSx = {
   gap: '6px 10px',
   '& .MuiFormControlLabel-root': { m: 0, minWidth: 0 },
   '& .MuiFormControlLabel-label': { fontSize: tokens.fontSize.secondary },
-  '& .MuiSwitch-root': { width: 24, height: 14, p: 0, mr: '4px' },
+  '& .MuiSwitch-root': { width: 24, height: 14, p: 0, marginInlineEnd: '4px' },
   '& .MuiSwitch-switchBase': {
     p: '2px',
     '&.Mui-checked': { transform: 'translateX(10px)' },
@@ -233,6 +237,7 @@ function ValidationRules({
   onChange: (values: BuilderValidation[]) => void;
   disabled?: boolean;
 }) {
+  const { t } = useAppTranslation();
   type ConditionalValidationField = 'value' | 'secondaryValue' | 'operator' | 'expression' | 'mask';
   const fieldsByType: Record<BuilderValidationType, readonly ConditionalValidationField[]> = {
     required: [],
@@ -276,41 +281,13 @@ function ValidationRules({
   }));
   const update = (id: string, patch: Partial<BuilderValidation>) =>
     onChange(normalizeRules(values.map((rule) => (rule.id === id ? { ...rule, ...patch } : rule))));
-  const validationTypes: ReadonlyArray<{ value: BuilderValidationType; label: string }> = [
-    ['required', 'Required'],
-    ['minLength', 'Minimum length'],
-    ['maxLength', 'Maximum length'],
-    ['exactLength', 'Exact length'],
-    ['length', 'Length'],
-    ['minValue', 'Minimum value'],
-    ['maxValue', 'Maximum value'],
-    ['range', 'Range'],
-    ['regex', 'Regular expression'],
-    ['pattern', 'Pattern'],
-    ['startsWith', 'Starts with'],
-    ['endsWith', 'Ends with'],
-    ['contains', 'Contains'],
-    ['email', 'Email'],
-    ['url', 'URL'],
-    ['phone', 'Phone'],
-    ['saudiMobile', 'Saudi mobile'],
-    ['saudiNationalId', 'Saudi National ID'],
-    ['saudiIban', 'Saudi IBAN'],
-    ['taxNumber', 'Tax number'],
-    ['passport', 'Passport number'],
-    ['fileExtensions', 'Allowed file extensions'],
-    ['fileSize', 'File size'],
-    ['maxFiles', 'Maximum number of files'],
-    ['minSelected', 'Minimum selected items'],
-    ['maxSelected', 'Maximum selected items'],
-    ['compare', 'Compare'],
-    ['comparison', 'Comparison'],
-    ['expression', 'Expression'],
-    ['custom', 'Custom expression'],
-    ['crossField', 'Cross-field validation'],
-    ['mask', 'Mask'],
-    ['inputMask', 'Input mask'],
-  ].map(([value, label]) => ({ value: value as BuilderValidationType, label }));
+  const validationTypes: readonly BuilderValidationType[] = [
+    'required', 'minLength', 'maxLength', 'exactLength', 'length', 'minValue', 'maxValue',
+    'range', 'regex', 'pattern', 'startsWith', 'endsWith', 'contains', 'email', 'url', 'phone',
+    'saudiMobile', 'saudiNationalId', 'saudiIban', 'taxNumber', 'passport', 'fileExtensions',
+    'fileSize', 'maxFiles', 'minSelected', 'maxSelected', 'compare', 'comparison', 'expression',
+    'custom', 'crossField', 'mask', 'inputMask',
+  ];
   const changeType = (id: string, type: BuilderValidationType) => {
     const current = values.find((rule) => rule.id === id);
     if (!current) return;
@@ -353,10 +330,10 @@ function ValidationRules({
     <Box sx={{ pt: 1.5, borderTop: '1px solid #e5e7eb' }}>
       <Stack direction="row" sx={{ alignItems: 'center' }}>
         <Typography sx={{ flex: 1, fontSize: tokens.fontSize.body, fontWeight: 600 }}>
-          Validation Rules
+          {t('wfProcessBuilder.settings.validationRules')}
         </Typography>
         <Button size="small" disabled={disabled} onClick={add}>
-          + Add
+          + {t('wfProcessBuilder.actions.add')}
         </Button>
       </Stack>
       <Stack spacing={1.25} sx={{ mt: 1 }}>
@@ -377,22 +354,22 @@ function ValidationRules({
               <TextField
                 select
                 size="small"
-                label="Validation Type"
+                label={t('wfProcessBuilder.settings.validationType')}
                 value={rule.type}
                 onChange={(event) =>
                   changeType(rule.id, event.target.value as BuilderValidationType)
                 }
               >
                 {validationTypes.map((type) => (
-                  <MenuItem key={type.value} value={type.value}>
-                    {type.label}
+                  <MenuItem key={type} value={type}>
+                    {t(`wfProcessBuilder.settings.validationTypes.${type}`)}
                   </MenuItem>
                 ))}
               </TextField>
               <TextField
                 select
                 size="small"
-                label="Severity"
+                label={t('wfProcessBuilder.settings.severity')}
                 value={rule.severity}
                 onChange={(event) =>
                   update(rule.id, { severity: event.target.value as BuilderValidation['severity'] })
@@ -400,14 +377,14 @@ function ValidationRules({
               >
                 {['Error', 'Warning', 'Information'].map((severity) => (
                   <MenuItem key={severity} value={severity}>
-                    {severity}
+                    {t(`wfProcessBuilder.settings.severityValues.${severity}`)}
                   </MenuItem>
                 ))}
               </TextField>
               {visible.has('value') && (
                 <TextField
                   size="small"
-                  label={rule.type === 'range' ? 'Minimum value' : 'Value'}
+                  label={rule.type === 'range' ? t('wfProcessBuilder.settings.minimumValue') : t('wfProcessBuilder.settings.value')}
                   value={rule.value}
                   onChange={(event) => update(rule.id, { value: event.target.value })}
                 />
@@ -415,7 +392,7 @@ function ValidationRules({
               {visible.has('secondaryValue') && (
                 <TextField
                   size="small"
-                  label="Maximum value"
+                  label={t('wfProcessBuilder.settings.maximumValue')}
                   value={rule.secondaryValue}
                   onChange={(event) => update(rule.id, { secondaryValue: event.target.value })}
                 />
@@ -423,7 +400,7 @@ function ValidationRules({
               {visible.has('operator') && (
                 <TextField
                   size="small"
-                  label="Operator"
+                  label={t('wfProcessBuilder.settings.fields.operator')}
                   value={rule.operator}
                   onChange={(event) => update(rule.id, { operator: event.target.value })}
                 />
@@ -431,7 +408,7 @@ function ValidationRules({
               {visible.has('expression') && (
                 <TextField
                   size="small"
-                  label="Validation expression"
+                  label={t('wfProcessBuilder.settings.validationExpression')}
                   value={rule.secondaryValue}
                   onChange={(event) => update(rule.id, { secondaryValue: event.target.value })}
                   sx={{ gridColumn: '1 / -1' }}
@@ -440,7 +417,7 @@ function ValidationRules({
               {visible.has('mask') && (
                 <TextField
                   size="small"
-                  label="Input mask"
+                  label={t('wfProcessBuilder.settings.inputMask')}
                   value={rule.mask}
                   onChange={(event) => update(rule.id, { mask: event.target.value })}
                   sx={{ gridColumn: '1 / -1' }}
@@ -449,7 +426,7 @@ function ValidationRules({
               {validationUsesCustomMessage(rule.type) && <TextField
                 required
                 size="small"
-                label="Error message"
+                label={t('wfProcessBuilder.settings.errorMessage')}
                 value={rule.message}
                 onChange={(event) => update(rule.id, { message: event.target.value })}
                 sx={{ gridColumn: '1 / -1' }}
@@ -464,12 +441,12 @@ function ValidationRules({
                       onChange={(_, active) => update(rule.id, { active })}
                     />
                   }
-                  label="Active"
+                  label={t('common.active')}
                 />
                 <IconButton
                   color="error"
                   size="small"
-                  aria-label="Delete validation"
+                  aria-label={t('wfProcessBuilder.settings.deleteValidation')}
                   onClick={() => onChange(normalizeRules(values.filter((item) => item.id !== rule.id)))}
                 >
                   <Delete fontSize="small" />
@@ -483,7 +460,7 @@ function ValidationRules({
             color="text.secondary"
             sx={{ py: 2, textAlign: 'center', fontSize: tokens.fontSize.caption }}
           >
-            No validation rules yet.
+            {t('wfProcessBuilder.settings.noValidationRules')}
           </Typography>
         )}
       </Stack>
@@ -506,14 +483,15 @@ function TransitionRules({
   onUpdate: (id: string, values: Partial<BuilderTransition>) => void;
   onRemove: (id: string) => void;
 }) {
+  const { t } = useAppTranslation();
   return (
     <Box sx={{ pt: '12px', borderTop: `1px solid ${tokens.border}` }}>
       <Stack direction="row" sx={{ alignItems: 'center' }}>
         <Typography sx={{ flex: 1, fontSize: tokens.fontSize.body, fontWeight: 600 }}>
-          Transitions ({values.length})
+          {t('wfProcessBuilder.settings.transitionsCount', { count: values.length })}
         </Typography>
         <Button size="small" onClick={onAdd}>
-          + Add
+          + {t('wfProcessBuilder.actions.add')}
         </Button>
       </Stack>
       <Stack spacing="10px" sx={{ mt: '8px' }}>
@@ -528,7 +506,7 @@ function TransitionRules({
                 <TextField
                   select
                   size="small"
-                  label="Variable"
+                  label={t('wfProcessBuilder.settings.fields.variable')}
                   value={transition.variableId}
                   onChange={(event) => {
                     const variableId = event.target.value;
@@ -539,7 +517,7 @@ function TransitionRules({
                     });
                   }}
                 >
-                  <MenuItem value="">Variable</MenuItem>
+                  <MenuItem value="">{t('wfProcessBuilder.settings.fields.variable')}</MenuItem>
                   {variables.map((variable) => (
                     <MenuItem key={variable.id} value={variable.id}>
                       {variable.name}
@@ -549,7 +527,7 @@ function TransitionRules({
                 <TextField
                   select
                   size="small"
-                  label="Operator"
+                  label={t('wfProcessBuilder.settings.fields.operator')}
                   value={transition.operator}
                   onChange={(event) =>
                     onUpdate(transition.id, {
@@ -564,7 +542,7 @@ function TransitionRules({
                   ))}
                 </TextField>
                 <TransitionValueField
-                  label="Value"
+                  label={t('wfProcessBuilder.settings.value')}
                   dataType={variable?.dataType}
                   value={transition.value}
                   disabled={transition.operator === 'isEmpty'}
@@ -573,13 +551,13 @@ function TransitionRules({
                 <TextField
                   select
                   size="small"
-                  label="Target Step"
+                  label={t('wfProcessBuilder.settings.fields.targetStep')}
                   value={transition.targetStepId}
                   onChange={(event) =>
                     onUpdate(transition.id, { targetStepId: event.target.value })
                   }
                 >
-                  <MenuItem value="">Target Step</MenuItem>
+                  <MenuItem value="">{t('wfProcessBuilder.settings.fields.targetStep')}</MenuItem>
                   {steps.map((step) => (
                     <MenuItem key={step.id} value={step.id}>
                       {step.name}
@@ -597,13 +575,13 @@ function TransitionRules({
                       onChange={(_, active) => onUpdate(transition.id, { active })}
                     />
                   }
-                  label="Active"
+                  label={t('common.active')}
                 />
                 <Box sx={{ flex: 1 }} />
                 <IconButton
                   size="small"
                   color="error"
-                  aria-label="Delete transition"
+                  aria-label={t('wfProcessBuilder.settings.deleteTransition')}
                   onClick={() => onRemove(transition.id)}
                 >
                   <Delete />
@@ -617,7 +595,7 @@ function TransitionRules({
             color="text.secondary"
             sx={{ py: '12px', textAlign: 'center', fontSize: tokens.fontSize.caption }}
           >
-            No transitions yet.
+            {t('wfProcessBuilder.settings.noTransitions')}
           </Typography>
         )}
       </Stack>
@@ -626,6 +604,7 @@ function TransitionRules({
 }
 
 export function ProcessBuilderSettingsPanel() {
+  const { t } = useAppTranslation();
   const s = useProcessBuilderStore();
   const d = s.document;
   const selected = s.selected;
@@ -671,32 +650,32 @@ export function ProcessBuilderSettingsPanel() {
   );
   if (selected.kind === 'workspace') {
     const workspaceSettings: Record<number, { title: string; message: string }> = {
-      1: { title: 'Variables Settings', message: 'Add or select a variable to edit its settings.' },
+      1: { title: t('wfProcessBuilder.settings.workspaceTitles.variables'), message: t('wfProcessBuilder.settings.workspaceHelp.variables') },
       2: {
-        title: 'Request Form Settings',
-        message: 'Add or select a request field to edit its settings.',
+        title: t('wfProcessBuilder.settings.workspaceTitles.requestForm'),
+        message: t('wfProcessBuilder.settings.workspaceHelp.requestForm'),
       },
-      3: { title: 'Steps Settings', message: 'Add or select a step to edit its settings.' },
+      3: { title: t('wfProcessBuilder.settings.workspaceTitles.steps'), message: t('wfProcessBuilder.settings.workspaceHelp.steps') },
       4: {
-        title: 'Activities Settings',
-        message: 'Add or select an activity to edit its settings.',
+        title: t('wfProcessBuilder.settings.workspaceTitles.activities'),
+        message: t('wfProcessBuilder.settings.workspaceHelp.activities'),
       },
       5: {
-        title: 'Activity Form Settings',
-        message: 'Add or select an activity field to edit its settings.',
+        title: t('wfProcessBuilder.settings.workspaceTitles.activityForm'),
+        message: t('wfProcessBuilder.settings.workspaceHelp.activityForm'),
       },
       6: {
-        title: 'Transitions Settings',
-        message: 'Add or select a transition to edit its settings.',
+        title: t('wfProcessBuilder.settings.workspaceTitles.transitions'),
+        message: t('wfProcessBuilder.settings.workspaceHelp.transitions'),
       },
       7: {
-        title: 'Diagram Settings',
-        message: 'Select a process item in the diagram to edit its settings.',
+        title: t('wfProcessBuilder.settings.workspaceTitles.diagram'),
+        message: t('wfProcessBuilder.settings.workspaceHelp.diagram'),
       },
     };
     const content = workspaceSettings[selected.tab] ?? {
-      title: 'Settings',
-      message: 'Select an item to edit its settings.',
+      title: t('wfProcessBuilder.settings.title'),
+      message: t('wfProcessBuilder.settings.workspaceHelp.default'),
     };
     return (
       <Stack spacing="8px" sx={{ p: '10px' }}>
@@ -710,21 +689,21 @@ export function ProcessBuilderSettingsPanel() {
   if (selected.kind === 'process')
     return (
       <Stack spacing="8px" sx={{ p: '10px', minHeight: '100%' }}>
-        <SettingsTitle title="Process Information" isNew />
-        <TextField fullWidth size="small" label="Code" value={d.code} disabled />
-        {text('Name', d.name, (name) => s.updateProcess({ name }))}
+        <SettingsTitle title={t('wfProcessBuilder.settings.processInformation')} isNew />
+        <TextField fullWidth size="small" label={t('wfProcess.fields.code')} value={d.code} disabled />
+        {text(t('wfProcess.fields.name'), d.name, (name) => s.updateProcess({ name }))}
         <TextField
           fullWidth
           multiline
           minRows={3}
           size="small"
-          label="Description"
+          label={t('wfProcess.fields.description')}
           value={d.description}
           onChange={(event) => s.updateProcess({ description: event.target.value })}
         />
         <AppLookupGridField<WfCategoryRecord>
           name="categoryId"
-          label="Category"
+          label={t('wfProcess.fields.category')}
           value={Number(d.categoryId) || null}
           onChange={(categoryId) =>
             s.updateProcess({ categoryId: categoryId == null ? '' : String(categoryId) })
@@ -743,11 +722,11 @@ export function ProcessBuilderSettingsPanel() {
         <TextField
           select
           size="small"
-          label="Priority"
+          label={t('wfProcess.fields.priority')}
           value={d.priorityId ?? ''}
           onChange={(event) => s.updateProcess({ priorityId: event.target.value })}
         >
-          <MenuItem value="">Select priority</MenuItem>
+          <MenuItem value="">{t('wfProcessBuilder.settings.selectPriority')}</MenuItem>
           {(priorities.data ?? []).map((priority) => (
             <MenuItem key={priority.recId} value={String(priority.recId)}>
               {priority.code} - {priority.name}
@@ -757,11 +736,11 @@ export function ProcessBuilderSettingsPanel() {
         <TextField
           select
           size="small"
-          label="Process Type"
+          label={t('wfProcess.fields.processType')}
           value={d.processType ?? ''}
           onChange={(event) => s.updateProcess({ processType: event.target.value })}
         >
-          <MenuItem value="">Select process type</MenuItem>
+          <MenuItem value="">{t('wfProcessBuilder.settings.selectProcessType')}</MenuItem>
           {(processTypes.data ?? []).map((processType) => (
             <MenuItem key={processType.recId} value={String(processType.recId)}>
               {processType.code} - {processType.name}
@@ -769,7 +748,7 @@ export function ProcessBuilderSettingsPanel() {
           ))}
         </TextField>
         {text(
-          'Score',
+          t('wfProcess.fields.score'),
           d.score ?? 100,
           (value) => s.updateProcess({ score: Number(value) }),
           'number'
@@ -783,7 +762,7 @@ export function ProcessBuilderSettingsPanel() {
                 onChange={(_, active) => s.updateProcess({ active })}
               />
             }
-            label="Active"
+            label={t('common.active')}
           />
           <FormControlLabel
             control={
@@ -793,7 +772,7 @@ export function ProcessBuilderSettingsPanel() {
                 onChange={(_, canRepeat) => s.updateProcess({ canRepeat })}
               />
             }
-            label="Can Repeat"
+            label={t('wfProcess.fields.canRepeat')}
           />
           <FormControlLabel
             control={
@@ -803,21 +782,21 @@ export function ProcessBuilderSettingsPanel() {
                 onChange={(_, mandatoryDocs) => s.updateProcess({ mandatoryDocs })}
               />
             }
-            label="Mandatory Docs"
+            label={t('wfProcess.fields.mandatoryDocs')}
           />
         </Box>
         <Box sx={{ pt: '12px', borderTop: `1px solid ${tokens.border}` }}>
           <Stack direction="row" sx={{ alignItems: 'center', minHeight: 28 }}>
             <Typography sx={{ flex: 1, fontSize: tokens.fontSize.body, fontWeight: 600 }}>
-              Variables
+              {t('wfProcessBuilder.tabs.variables')}
             </Typography>
             {s.dirty && (
               <Chip
                 size="small"
                 variant="outlined"
-                label="Unsaved"
+                label={t('wfProcessBuilder.status.unsaved')}
                 sx={{
-                  mr: 1,
+                  marginInlineEnd: 1,
                   height: 22,
                   color: '#7a4b00',
                   bgcolor: '#fff3cd',
@@ -826,12 +805,12 @@ export function ProcessBuilderSettingsPanel() {
               />
             )}
             <Button size="small" onClick={s.addVariable}>
-              + Add
+              + {t('wfProcessBuilder.actions.add')}
             </Button>
           </Stack>
           {d.id === 'new' && (
             <Typography sx={{ py: '8px', color: '#9a4f00', fontSize: tokens.fontSize.caption }}>
-              Save the Process first to enable variable creation (ProcessId required).
+              {t('wfProcessBuilder.workspace.saveVariablesFirst')}
             </Typography>
           )}
           <Stack spacing="8px">
@@ -849,14 +828,14 @@ export function ProcessBuilderSettingsPanel() {
                 >
                   <TextField
                     size="small"
-                    label="Code"
+                    label={t('wfProcessBuilder.settings.fields.code')}
                     value={variable.code}
-                    placeholder="Managed by number sequence"
+                    placeholder={t('wfProcessBuilder.settings.managedCode')}
                     disabled
                   />
                   <TextField
                     size="small"
-                    value={variable.name}
+                    value={variable.name === 'New variable' ? t('wfProcessBuilder.structure.newVariable') : variable.name}
                     onChange={(event) =>
                       s.updateVariable(variable.id, { name: event.target.value })
                     }
@@ -864,7 +843,7 @@ export function ProcessBuilderSettingsPanel() {
                   <IconButton
                     color="error"
                     size="small"
-                    aria-label="Delete variable"
+                    aria-label={t('wfProcessBuilder.settings.deleteVariable')}
                     onClick={() => s.removeVariable(variable.id)}
                   >
                     <Delete />
@@ -882,7 +861,7 @@ export function ProcessBuilderSettingsPanel() {
                   <TextField
                     select
                     size="small"
-                    label="Data Type"
+                    label={t('wfProcessBuilder.settings.fields.dataType')}
                     value={variable.dataType}
                     onChange={(event) =>
                       s.updateVariable(variable.id, {
@@ -892,7 +871,7 @@ export function ProcessBuilderSettingsPanel() {
                   >
                     {['text', 'number', 'boolean', 'date', 'object'].map((value) => (
                       <MenuItem key={value} value={value}>
-                        {value}
+                        {t(`wfProcessBuilder.dataTypes.${value}`)}
                       </MenuItem>
                     ))}
                   </TextField>
@@ -916,7 +895,7 @@ export function ProcessBuilderSettingsPanel() {
                         onChange={(_, active) => s.updateVariable(variable.id, { active })}
                       />
                     }
-                    label="Active"
+                    label={t('common.active')}
                   />
                 </Box>
               </Box>
@@ -930,22 +909,22 @@ export function ProcessBuilderSettingsPanel() {
     if (!x) return null;
     return (
       <Stack spacing="8px" sx={{ p: '10px' }}>
-        <SettingsTitle title="Variable" dirty={s.dirty} isNew />
+        <SettingsTitle title={t('wfProcessBuilder.settings.variable')} dirty={s.dirty} isNew />
         <TextField
           size="small"
-          label="Code"
+          label={t('wfProcessBuilder.settings.fields.code')}
           value={x.code}
-          placeholder="Managed by number sequence"
+          placeholder={t('wfProcessBuilder.settings.managedCode')}
           disabled
         />
-        {text('Name', x.name, (name) => s.updateVariable(x.id, { name }))}
-        {text('Description', x.description, (description) =>
+        {text(t('wfProcessBuilder.settings.fields.name'), x.name === 'New variable' ? t('wfProcessBuilder.structure.newVariable') : x.name, (name) => s.updateVariable(x.id, { name }))}
+        {text(t('wfProcessBuilder.settings.fields.description'), x.description, (description) =>
           s.updateVariable(x.id, { description })
         )}
         <TextField
           select
           size="small"
-          label="Data type"
+          label={t('wfProcessBuilder.settings.fields.dataType')}
           value={x.dataType}
           onChange={(e) =>
             s.updateVariable(x.id, { dataType: e.target.value as typeof x.dataType })
@@ -953,14 +932,14 @@ export function ProcessBuilderSettingsPanel() {
         >
           {['text', 'number', 'boolean', 'date', 'object'].map((v) => (
             <MenuItem key={v} value={v}>
-              {v}
+              {t(`wfProcessBuilder.dataTypes.${v}`)}
             </MenuItem>
           ))}
         </TextField>
         <TextField
           size="small"
           type="number"
-          label="Sort order"
+          label={t('wfProcessBuilder.settings.fields.sortOrder')}
           value={x.sortOrder}
           slotProps={{ htmlInput: { min: 0, max: 255, step: 1 } }}
           onChange={(event) => s.updateVariable(x.id, { sortOrder: Number(event.target.value) })}
@@ -975,7 +954,7 @@ export function ProcessBuilderSettingsPanel() {
                 onChange={(_, active) => s.updateVariable(x.id, { active })}
               />
             }
-            label="Active"
+            label={t('common.active')}
           />
         </Box>
       </Stack>
@@ -986,30 +965,30 @@ export function ProcessBuilderSettingsPanel() {
     if (!x) return null;
     return (
       <Stack spacing="8px" sx={{ p: '10px', minHeight: '100%' }}>
-        <SettingsTitle title="Step Settings" dirty={s.dirty} />
+        <SettingsTitle title={t('wfProcessBuilder.settings.stepSettings')} dirty={s.dirty} />
         <TextField
           size="small"
-          label="Step Code"
+          label={t('wfProcessBuilder.settings.fields.code')}
           value={x.code}
-          placeholder="Generated on save"
+          placeholder={t('wfProcessBuilder.settings.generatedCode')}
           disabled
         />
-        {text('Step Name *', x.name, (name) => s.updateStep(x.id, { name }))}
+        {text(`${t('wfProcessBuilder.settings.fields.stepName')} *`, x.name, (name) => s.updateStep(x.id, { name }))}
         <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 1 }}>
           {text(
-            'Order',
+            t('wfProcessBuilder.settings.fields.order'),
             x.order,
             (value) => s.updateStep(x.id, { order: Number(value) }),
             'number'
           )}
           {text(
-            'Auto passing hours',
+            t('wfProcessBuilder.settings.fields.autoPassingHours'),
             x.autoPassingHours,
             (value) => s.updateStep(x.id, { autoPassingHours: Number(value) }),
             'number'
           )}
         </Box>
-        {text('Score', x.score, (value) => s.updateStep(x.id, { score: Number(value) }), 'number')}
+        {text(t('wfProcessBuilder.settings.fields.score'), x.score, (value) => s.updateStep(x.id, { score: Number(value) }), 'number')}
         <Box sx={settingsSwitchGridSx}>
           <FormControlLabel
             sx={switchRowSx}
@@ -1020,7 +999,7 @@ export function ProcessBuilderSettingsPanel() {
                 onChange={(_, allMandatory) => s.updateStep(x.id, { allMandatory })}
               />
             }
-            label="All Mandatory"
+            label={t('wfProcessBuilder.settings.fields.mandatory')}
           />
           <FormControlLabel
             sx={switchRowSx}
@@ -1031,7 +1010,7 @@ export function ProcessBuilderSettingsPanel() {
                 onChange={(_, active) => s.updateStep(x.id, { active })}
               />
             }
-            label="Active Step"
+            label={t('common.active')}
           />
           <FormControlLabel
             sx={switchRowSx}
@@ -1042,10 +1021,10 @@ export function ProcessBuilderSettingsPanel() {
                 onChange={(_, systemField) => s.updateStep(x.id, { systemField })}
               />
             }
-            label="System Field"
+            label={t('wfProcessBuilder.settings.fields.system')}
           />
         </Box>
-        <Section title="Step Condition">
+        <Section title={t('wfProcessBuilder.settings.stepCondition')}>
           <ConditionBuilder
             value={x.condition}
             variables={d.variables}
@@ -1053,7 +1032,7 @@ export function ProcessBuilderSettingsPanel() {
           />
         </Section>
         <Button variant="contained" disabled sx={{ alignSelf: 'stretch', mt: 'auto' }}>
-          Save Steps to DB
+          {t('wfProcessBuilder.actions.saveSteps')}
         </Button>
       </Stack>
     );
@@ -1070,19 +1049,19 @@ export function ProcessBuilderSettingsPanel() {
     );
     return (
       <Stack spacing="8px" sx={{ p: '10px' }}>
-        <SettingsTitle title="Activity Settings" dirty={s.dirty} isNew={!/^\d+$/.test(x.id)} />
+        <SettingsTitle title={t('wfProcessBuilder.settings.activitySettings')} dirty={s.dirty} isNew={!/^\d+$/.test(x.id)} />
         <TextField
           size="small"
-          label="Activity code"
+          label={t('wfProcessBuilder.settings.fields.code')}
           value={x.code}
-          placeholder="Managed by number sequence"
+          placeholder={t('wfProcessBuilder.settings.managedCode')}
           disabled
         />
-        {text('Activity name', x.name, (name) => s.updateActivity(selected.stepId, x.id, { name }))}
+        {text(t('wfProcessBuilder.settings.activityName'), x.name === 'New activity' ? t('wfProcessBuilder.structure.newActivity') : x.name, (name) => s.updateActivity(selected.stepId, x.id, { name }))}
         <Stack spacing={1}>
           <AppLookupField
             name={`settings-performerId-${x.id}`}
-            label="Performer"
+            label={t('wfProcessBuilder.settings.fields.performer')}
             value={Number(x.performer) || undefined}
             options={(performers.data ?? []).map((item) => ({
               id: item.recId,
@@ -1101,7 +1080,7 @@ export function ProcessBuilderSettingsPanel() {
         <Stack spacing={1.25}>
           <AppLookupField
             name={`settings-activityTypeId-${x.id}`}
-            label="Activity Type"
+            label={t('wfProcessBuilder.settings.fields.activityType')}
             value={Number(x.activityTypeId) || undefined}
             options={(activityTypes.data ?? []).map((item) => ({
               id: item.recId,
@@ -1122,7 +1101,7 @@ export function ProcessBuilderSettingsPanel() {
           <TextField
             size="small"
             type="number"
-            label="Score"
+            label={t('wfProcessBuilder.settings.fields.score')}
             value={x.score}
             onChange={(event) =>
               s.updateActivity(selected.stepId, x.id, { score: Number(event.target.value) })
@@ -1131,7 +1110,7 @@ export function ProcessBuilderSettingsPanel() {
           <TextField
             size="small"
             type="number"
-            label="Auto passing hours"
+            label={t('wfProcessBuilder.settings.fields.autoPassingHours')}
             value={x.autoPassingHours}
             disabled={!x.autoPassEnabled}
             onChange={(event) =>
@@ -1141,7 +1120,7 @@ export function ProcessBuilderSettingsPanel() {
             }
           />
         </Box>
-        {text('Notification emails', x.config.notifyEmails, (notifyEmails) =>
+        {text(t('wfProcessBuilder.settings.notificationEmails'), x.config.notifyEmails, (notifyEmails) =>
           s.updateActivity(selected.stepId, x.id, { config: { ...x.config, notifyEmails } })
         )}
         <Box sx={settingsSwitchGridSx}>
@@ -1153,7 +1132,7 @@ export function ProcessBuilderSettingsPanel() {
                 onChange={(_, active) => s.updateActivity(selected.stepId, x.id, { active })}
               />
             }
-            label="Active"
+            label={t('common.active')}
           />
           <FormControlLabel
             control={
@@ -1163,7 +1142,7 @@ export function ProcessBuilderSettingsPanel() {
                 onChange={(_, required) => s.updateActivity(selected.stepId, x.id, { required })}
               />
             }
-            label="Required"
+            label={t('wfProcessBuilder.settings.fields.required')}
           />
           <FormControlLabel
             control={
@@ -1175,7 +1154,7 @@ export function ProcessBuilderSettingsPanel() {
                 }
               />
             }
-            label="Auto pass enabled"
+            label={t('wfProcessBuilder.settings.autoPassEnabled')}
           />
           <FormControlLabel
             control={
@@ -1187,16 +1166,16 @@ export function ProcessBuilderSettingsPanel() {
                 }
               />
             }
-            label="Mandatory documents"
+            label={t('wfProcessBuilder.settings.mandatoryDocuments')}
           />
         </Box>
         {x.type === 'api' && (
-          <Section title="API Action">
+          <Section title={t('wfProcessBuilder.settings.apiAction')}>
             <Stack spacing={1}>
               <TextField
                 select
                 size="small"
-                label="Method"
+                label={t('wfProcessBuilder.settings.method')}
                 value={x.config.apiMethod}
                 onChange={(e) =>
                   s.updateActivity(selected.stepId, x.id, {
@@ -1210,7 +1189,7 @@ export function ProcessBuilderSettingsPanel() {
                   </MenuItem>
                 ))}
               </TextField>
-              {text('API URL', x.config.apiUrl, (apiUrl) =>
+              {text(t('wfProcessBuilder.settings.apiUrl'), x.config.apiUrl, (apiUrl) =>
                 s.updateActivity(selected.stepId, x.id, { config: { ...x.config, apiUrl } })
               )}
             </Stack>
@@ -1220,13 +1199,13 @@ export function ProcessBuilderSettingsPanel() {
           <TextField
             select
             size="small"
-            label="Validation control"
+            label={t('wfProcessBuilder.settings.validationControl')}
             value={validationControl?.id ?? ''}
             onChange={(event) => setActivityValidationControlId(event.target.value)}
           >
             {x.controls.map((control) => (
               <MenuItem key={control.id} value={control.id}>
-                {control.label || control.code || 'Unnamed control'}
+                {control.label || control.code || t('wfProcessBuilder.settings.unnamedControl')}
               </MenuItem>
             ))}
           </TextField>
@@ -1260,15 +1239,17 @@ export function ProcessBuilderSettingsPanel() {
         transition.triggerSource === 'requestControl' && transition.triggerId === control.id
     );
     const validationSummary = control.validations.map((rule) =>
-      rule.type.replace(/([A-Z])/g, ' $1').toLocaleLowerCase()
+      t(`wfProcessBuilder.settings.validationTypes.${rule.type}`, {
+        defaultValue: rule.type.replace(/([A-Z])/g, ' $1').toLocaleLowerCase(),
+      })
     );
     const transitionSummary = controlTransitions.map((transition) => {
       const variable = d.variables.find((item) => item.id === transition.variableId);
       const target = d.steps.find((step) => step.id === transition.targetStepId);
-      const condition = `${variable?.name || 'Variable'} ${transition.operator}${
+      const condition = `${variable?.name || t('wfProcessBuilder.settings.fields.variable')} ${transition.operator}${
         transition.operator === 'isEmpty' ? '' : ` ${transition.value || '…'}`
       }`;
-      return `${condition} → ${target?.name || 'Unassigned step'}`;
+      return `${condition} → ${target?.name || t('wfProcessBuilder.settings.unassignedStep')}`;
     });
     const optionFeaturesAt = (index: number) => ({
       ...emptyOptionFeatures(),
@@ -1285,17 +1266,17 @@ export function ProcessBuilderSettingsPanel() {
     if (s.controlSettingsPane === 'options' && requestOptionControlTypes.has(control.type)) {
       return (
         <Stack spacing="8px" sx={{ p: '10px' }}>
-          <SettingsTitle title={`Request Control Options (${control.options.length})`} dirty={s.dirty} />
+          <SettingsTitle title={t('wfProcessBuilder.settings.requestControlOptions', { count: control.options.length })} dirty={s.dirty} />
           <Stack spacing="6px" sx={settingsGroupSx}>
             <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
               <Typography sx={{ fontSize: tokens.fontSize.body, fontWeight: 600 }}>
-                Options
+                {t('wfProcessBuilder.settings.options')}
               </Typography>
               <Button
                 size="small"
                 onClick={() =>
                   update({
-                    options: [...control.options, `Option ${control.options.length + 1}`],
+                    options: [...control.options, t('wfProcessBuilder.settings.optionNumber', { number: control.options.length + 1 })],
                     optionScores: [...(control.optionScores ?? []), 0],
                     optionFeatureConfigurations: [
                       ...(control.optionFeatureConfigurations ?? control.options.map(() => emptyOptionFeatures())),
@@ -1304,12 +1285,12 @@ export function ProcessBuilderSettingsPanel() {
                   })
                 }
               >
-                + Add option
+                + {t('wfProcessBuilder.settings.addOption')}
               </Button>
             </Stack>
             {control.options.length === 0 && (
               <Typography color="text.secondary" sx={{ fontSize: tokens.fontSize.caption }}>
-                Add at least one selectable option.
+                {t('wfProcessBuilder.settings.addSelectableOption')}
               </Typography>
             )}
             <DndContext
@@ -1333,7 +1314,7 @@ export function ProcessBuilderSettingsPanel() {
                             <Box
                               {...attributes}
                               {...listeners}
-                              aria-label={`Reorder option ${index + 1}`}
+                              aria-label={t('wfProcessBuilder.settings.reorderOption', { number: index + 1 })}
                               sx={{ display: 'flex', color: tokens.textMuted, cursor: 'grab', touchAction: 'none' }}
                             >
                               <DragIndicator fontSize="small" />
@@ -1341,7 +1322,7 @@ export function ProcessBuilderSettingsPanel() {
                             <TextField
                               fullWidth
                               size="small"
-                              label={`Option ${index + 1}`}
+                              label={t('wfProcessBuilder.settings.optionNumber', { number: index + 1 })}
                               value={option}
                               onChange={(event) =>
                                 update({
@@ -1354,7 +1335,7 @@ export function ProcessBuilderSettingsPanel() {
                             <IconButton
                               size="small"
                               color="error"
-                              aria-label={`Remove option ${index + 1}`}
+                              aria-label={t('wfProcessBuilder.settings.removeOption', { number: index + 1 })}
                               onClick={() =>
                                 update({
                                   options: control.options.filter((_, itemIndex) => itemIndex !== index),
@@ -1368,12 +1349,12 @@ export function ProcessBuilderSettingsPanel() {
                               <Delete fontSize="small" />
                             </IconButton>
                           </Stack>
-                          <Stack direction="row" spacing="4px" sx={{ ml: '28px', mr: '32px' }}>
+                          <Stack direction="row" spacing="4px" sx={{ marginInlineStart: '28px', marginInlineEnd: '32px' }}>
                             <TextField
                               fullWidth
                               size="small"
                               type="number"
-                              label="Score"
+                              label={t('wfProcessBuilder.settings.fields.score')}
                               value={control.optionScores?.[index] ?? 0}
                               onChange={(event) =>
                                 update({
@@ -1389,15 +1370,15 @@ export function ProcessBuilderSettingsPanel() {
                               fullWidth
                               size="small"
                               type="number"
-                              label="Sort order"
+                              label={t('wfProcessBuilder.settings.fields.sortOrder')}
                               value={index + 1}
                               slotProps={{ input: { readOnly: true } }}
                             />
                           </Stack>
-                          <Accordion sx={{ ...sectionSx, ml: '28px', mr: '32px' }}>
+                          <Accordion sx={{ ...sectionSx, marginInlineStart: '28px', marginInlineEnd: '32px' }}>
                             <AccordionSummary expandIcon={<ExpandMore fontSize="small" />}>
                               <Typography sx={{ fontSize: tokens.fontSize.secondary, fontWeight: 700 }}>
-                                Feature Configuration
+                                {t('wfProcessBuilder.settings.featureConfiguration')}
                               </Typography>
                             </AccordionSummary>
                             <AccordionDetails>
@@ -1411,7 +1392,7 @@ export function ProcessBuilderSettingsPanel() {
                                         onChange={(_, requireFileUpload) => updateOptionFeatures(index, { requireFileUpload })}
                                       />
                                     }
-                                    label="Require File Upload"
+                                    label={t('wfProcessBuilder.settings.requireFileUpload')}
                                   />
                                   <FormControlLabel
                                     control={
@@ -1424,7 +1405,7 @@ export function ProcessBuilderSettingsPanel() {
                                         })}
                                       />
                                     }
-                                    label="Send Alert Message"
+                                    label={t('wfProcessBuilder.settings.sendAlertMessage')}
                                   />
                                   <FormControlLabel
                                     control={
@@ -1437,7 +1418,7 @@ export function ProcessBuilderSettingsPanel() {
                                         })}
                                       />
                                     }
-                                    label="Show Other Controls"
+                                    label={t('wfProcessBuilder.settings.showOtherControls')}
                                   />
                                 </Box>
                                 {optionFeaturesAt(index).sendAlertMessage && (
@@ -1445,7 +1426,7 @@ export function ProcessBuilderSettingsPanel() {
                                     <TextField
                                       fullWidth
                                       size="small"
-                                      label="Alert message"
+                                      label={t('wfProcessBuilder.settings.alertMessage')}
                                       value={optionFeaturesAt(index).alertMessage}
                                       onChange={(event) => updateOptionFeatures(index, { alertMessage: event.target.value })}
                                     />
@@ -1462,7 +1443,7 @@ export function ProcessBuilderSettingsPanel() {
                                         performerIds: selectedPerformers.map((item) => String(item.recId)),
                                       })}
                                       renderInput={(params) => (
-                                        <TextField {...params} label="Performers" placeholder="Search performers" />
+                                        <TextField {...params} label={t('wfProcessBuilder.settings.performers')} placeholder={t('wfProcessBuilder.settings.searchPerformers')} />
                                       )}
                                     />
                                   </Stack>
@@ -1471,7 +1452,7 @@ export function ProcessBuilderSettingsPanel() {
                                   fullWidth
                                   select
                                   size="small"
-                                  label="Show Other Controls"
+                                  label={t('wfProcessBuilder.settings.showOtherControls')}
                                   value={optionFeaturesAt(index).visibleControlIds}
                                   slotProps={{ select: { multiple: true } }}
                                   onChange={(event) => {
@@ -1485,7 +1466,7 @@ export function ProcessBuilderSettingsPanel() {
                                 >
                                   {d.requestControls.filter((item) => item.id !== control.id).map((item) => (
                                     <MenuItem key={item.id} value={item.id}>
-                                      {item.label || item.code || 'Unnamed control'}
+                                      {item.label || item.code || t('wfProcessBuilder.settings.unnamedControl')}
                                     </MenuItem>
                                   ))}
                                 </TextField>}
@@ -1506,7 +1487,7 @@ export function ProcessBuilderSettingsPanel() {
     if (s.controlSettingsPane === 'validation') {
       return (
         <Stack spacing="8px" sx={{ p: '10px' }}>
-          <SettingsTitle title={`Request Control Validation (${control.validations.length})`} dirty={s.dirty} />
+          <SettingsTitle title={t('wfProcessBuilder.settings.requestControlValidation', { count: control.validations.length })} dirty={s.dirty} />
           <ValidationRules
             values={control.validations}
             onChange={(validations) => update({ validations })}
@@ -1517,7 +1498,7 @@ export function ProcessBuilderSettingsPanel() {
     if (s.controlSettingsPane === 'transitions') {
       return (
         <Stack spacing="8px" sx={{ p: '10px' }}>
-          <SettingsTitle title={`Request Control Transitions (${controlTransitions.length})`} dirty={s.dirty} />
+          <SettingsTitle title={t('wfProcessBuilder.settings.requestControlTransitions', { count: controlTransitions.length })} dirty={s.dirty} />
           <TransitionRules
             values={controlTransitions}
             variables={d.variables}
@@ -1531,19 +1512,19 @@ export function ProcessBuilderSettingsPanel() {
     }
     return (
       <Stack spacing="8px" sx={{ p: '10px' }}>
-        <SettingsTitle title="Request Control" dirty={s.dirty} isNew />
+        <SettingsTitle title={t('wfProcessBuilder.settings.requestControl')} dirty={s.dirty} isNew />
         {text(
-          'Control code',
+          t('wfProcessBuilder.settings.controlCode'),
           `RCTL-${String(d.requestControls.indexOf(control) + 1).padStart(4, '0')}`,
           () => undefined
         )}
-        {text('Label', control.label, (label) => update({ label }))}
+        {text(t('wfProcessBuilder.settings.fields.label'), control.label, (label) => update({ label }))}
         <Stack direction="row" spacing="8px">
           <TextField
             fullWidth
             size="small"
             type="number"
-            label="Score"
+            label={t('wfProcessBuilder.settings.fields.score')}
             value={control.score}
             onChange={(event) => update({ score: Number(event.target.value) || 0 })}
           />
@@ -1551,7 +1532,7 @@ export function ProcessBuilderSettingsPanel() {
             fullWidth
             size="small"
             type="number"
-            label="Sort order"
+            label={t('wfProcessBuilder.settings.fields.sortOrder')}
             value={control.sortOrder}
             slotProps={{ input: { readOnly: true } }}
           />
@@ -1559,20 +1540,20 @@ export function ProcessBuilderSettingsPanel() {
             fullWidth
             select
             size="small"
-            label="Width"
+            label={t('wfProcessBuilder.settings.width')}
             value={control.columnSpan ?? 1}
             onChange={(event) => update({ columnSpan: Number(event.target.value) as 1 | 2 | 3 })}
           >
-            <MenuItem value={1}>1 column</MenuItem>
-            <MenuItem value={2}>2 columns</MenuItem>
-            <MenuItem value={3}>Full row</MenuItem>
+            <MenuItem value={1}>{t('wfProcessBuilder.settings.columns.one')}</MenuItem>
+            <MenuItem value={2}>{t('wfProcessBuilder.settings.columns.two')}</MenuItem>
+            <MenuItem value={3}>{t('wfProcessBuilder.settings.columns.full')}</MenuItem>
           </TextField>
         </Stack>
         {control.type === 'label' && <TextField
-          size="small" type="color" label="Note color"
+          size="small" type="color" label={t('wfProcessBuilder.settings.noteColor')}
           value={control.labelColor || '#7a4b00'}
           onChange={(event) => update({ labelColor: event.target.value })}
-          slotProps={{ inputLabel: { shrink: true }, htmlInput: { 'aria-label': 'Note color' } }}
+          slotProps={{ inputLabel: { shrink: true }, htmlInput: { 'aria-label': t('wfProcessBuilder.settings.noteColorAria') } }}
           sx={{ '& input': { minHeight: 30, p: 0.5, cursor: 'pointer' } }}
         />}
         <Box sx={{ ...settingsGroupSx, display: 'flex', alignItems: 'center', py: 0.5 }}>
@@ -1586,7 +1567,7 @@ export function ProcessBuilderSettingsPanel() {
                 onChange={(_, visible) => update({ visible })}
               />
             }
-            label="Visible"
+            label={t('wfProcessBuilder.settings.fields.visible')}
           />
         </Box>
         <Stack spacing="6px">
@@ -1598,7 +1579,7 @@ export function ProcessBuilderSettingsPanel() {
                 sx={{ justifyContent: 'flex-start', textTransform: 'none', px: 1, py: 0.5 }}
               >
                 <Typography sx={{ fontSize: tokens.fontSize.body, fontWeight: 700 }}>
-                  Options ({control.options.length})
+                  {t('wfProcessBuilder.settings.optionsCount', { count: control.options.length })}
                 </Typography>
               </Button>
               <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.5, px: 1, pb: 0.75 }}>
@@ -1607,14 +1588,14 @@ export function ProcessBuilderSettingsPanel() {
                     key={`${option}-${index}`}
                     size="small"
                     variant="outlined"
-                    label={option || `Option ${index + 1}`}
-                    title={option || `Option ${index + 1}`}
+                    label={option || t('wfProcessBuilder.settings.optionNumber', { number: index + 1 })}
+                    title={option || t('wfProcessBuilder.settings.optionNumber', { number: index + 1 })}
                     sx={{ height: 22 }}
                   />
                 ))}
                 {control.options.length === 0 && (
                   <Typography sx={{ color: tokens.textMuted, fontSize: tokens.fontSize.caption }}>
-                    No options
+                    {t('wfProcessBuilder.settings.noOptions')}
                   </Typography>
                 )}
                 {control.options.length > 4 && (
@@ -1622,7 +1603,7 @@ export function ProcessBuilderSettingsPanel() {
                     size="small"
                     variant="outlined"
                     clickable
-                    label={showAllRequestOptions ? 'Show less' : `Show ${control.options.length - 4} more`}
+                    label={showAllRequestOptions ? t('wfProcessBuilder.settings.showLess') : t('wfProcessBuilder.settings.showMore', { count: control.options.length - 4 })}
                     onClick={() => setShowAllRequestOptions((value) => !value)}
                     sx={{ height: 22 }}
                   />
@@ -1637,7 +1618,7 @@ export function ProcessBuilderSettingsPanel() {
               sx={{ justifyContent: 'flex-start', textTransform: 'none', px: 1, py: 0.5 }}
             >
               <Typography sx={{ fontSize: tokens.fontSize.body, fontWeight: 700 }}>
-                Validation ({control.validations.length})
+                {t('wfProcessBuilder.settings.validationCount', { count: control.validations.length })}
               </Typography>
             </Button>
             <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.5, px: 1, pb: 0.75 }}>
@@ -1653,7 +1634,7 @@ export function ProcessBuilderSettingsPanel() {
               ))}
               {validationSummary.length === 0 && (
                 <Typography sx={{ color: tokens.textMuted, fontSize: tokens.fontSize.caption }}>
-                  No validation rules
+                  {t('wfProcessBuilder.settings.noValidationRules')}
                 </Typography>
               )}
               {validationSummary.length > 4 && (
@@ -1661,7 +1642,7 @@ export function ProcessBuilderSettingsPanel() {
                   size="small"
                   variant="outlined"
                   clickable
-                  label={showAllRequestValidations ? 'Show less' : `Show ${validationSummary.length - 4} more`}
+                  label={showAllRequestValidations ? t('wfProcessBuilder.settings.showLess') : t('wfProcessBuilder.settings.showMore', { count: validationSummary.length - 4 })}
                   onClick={() => setShowAllRequestValidations((value) => !value)}
                   sx={{ height: 22, color: '#7a4b00', bgcolor: '#fff3cd', borderColor: '#f0c36d' }}
                 />
@@ -1675,7 +1656,7 @@ export function ProcessBuilderSettingsPanel() {
               sx={{ justifyContent: 'flex-start', textTransform: 'none', px: 1, py: 0.5 }}
             >
               <Typography sx={{ fontSize: tokens.fontSize.body, fontWeight: 700 }}>
-                Transitions ({controlTransitions.length})
+                {t('wfProcessBuilder.settings.transitionsCount', { count: controlTransitions.length })}
               </Typography>
             </Button>
             <Stack spacing="2px" sx={{ px: 1, pb: 0.75 }}>
@@ -1690,7 +1671,7 @@ export function ProcessBuilderSettingsPanel() {
               ))}
               {transitionSummary.length === 0 && (
                 <Typography sx={{ color: tokens.textMuted, fontSize: tokens.fontSize.caption }}>
-                  No transitions
+                  {t('wfProcessBuilder.settings.noTransitions')}
                 </Typography>
               )}
               {transitionSummary.length > 4 && (
@@ -1699,14 +1680,14 @@ export function ProcessBuilderSettingsPanel() {
                   onClick={() => setShowAllRequestTransitions((value) => !value)}
                   sx={{ alignSelf: 'flex-start', minWidth: 0, p: 0, textTransform: 'none' }}
                 >
-                  {showAllRequestTransitions ? 'Show less' : `Show ${transitionSummary.length - 4} more`}
+                  {showAllRequestTransitions ? t('wfProcessBuilder.settings.showLess') : t('wfProcessBuilder.settings.showMore', { count: transitionSummary.length - 4 })}
                 </Button>
               )}
             </Stack>
           </Box>
         </Stack>
         <Button variant="contained" disabled sx={{ alignSelf: 'stretch' }}>
-          Create Request Control
+          {t('wfProcessBuilder.settings.createRequestControl')}
         </Button>
       </Stack>
     );
@@ -1728,7 +1709,7 @@ export function ProcessBuilderSettingsPanel() {
     if (s.controlSettingsPane === 'validation') {
       return (
         <Stack spacing="8px" sx={{ p: '10px' }}>
-          <SettingsTitle title={`Control Validation (${control.validations.length})`} dirty={s.dirty} />
+          <SettingsTitle title={t('wfProcessBuilder.settings.controlValidation', { count: control.validations.length })} dirty={s.dirty} />
           <ValidationRules
             values={control.validations}
             onChange={(validations) => update({ validations })}
@@ -1739,7 +1720,7 @@ export function ProcessBuilderSettingsPanel() {
     if (s.controlSettingsPane === 'transitions') {
       return (
         <Stack spacing="8px" sx={{ p: '10px' }}>
-          <SettingsTitle title={`Control Transitions (${controlTransitions.length})`} dirty={s.dirty} />
+          <SettingsTitle title={t('wfProcessBuilder.settings.controlTransitions', { count: controlTransitions.length })} dirty={s.dirty} />
           <TransitionRules
             values={controlTransitions}
             variables={d.variables}
@@ -1755,34 +1736,34 @@ export function ProcessBuilderSettingsPanel() {
     }
     return (
       <Stack spacing="8px" sx={{ p: '10px' }}>
-        <SettingsTitle title="Control Settings" dirty={s.dirty} isNew />
-        {text('Code', control.code, (code) => update({ code }))}
-        {text('Label', control.label, (label) => update({ label }))}
-        {text('Arabic label', control.labelAR, (labelAR) => update({ labelAR }))}
+        <SettingsTitle title={t('wfProcessBuilder.settings.controlSettings')} dirty={s.dirty} isNew />
+        {text(t('wfProcessBuilder.settings.fields.code'), control.code, (code) => update({ code }))}
+        {text(t('wfProcessBuilder.settings.fields.label'), control.label, (label) => update({ label }))}
+        {text(t('wfProcessBuilder.settings.arabicLabel'), control.labelAR, (labelAR) => update({ labelAR }))}
         {control.type === 'label' && <TextField
-          size="small" type="color" label="Note color"
+          size="small" type="color" label={t('wfProcessBuilder.settings.noteColor')}
           value={control.labelColor || '#7a4b00'}
           onChange={(event) => update({ labelColor: event.target.value })}
-          slotProps={{ inputLabel: { shrink: true }, htmlInput: { 'aria-label': 'Note color' } }}
+          slotProps={{ inputLabel: { shrink: true }, htmlInput: { 'aria-label': t('wfProcessBuilder.settings.noteColorAria') } }}
           sx={{ '& input': { minHeight: 30, p: 0.5, cursor: 'pointer' } }}
         />}
         <TextField
           select
           size="small"
-          label="Control type"
+          label={t('wfProcessBuilder.settings.controlType')}
           value={control.type}
           onChange={(e) => update({ type: e.target.value as typeof control.type })}
         >
           {controlPalette.map((item) => (
             <MenuItem key={item.type} value={item.type}>
-              {item.label}
+              {getControlTypeLabel(t, item.type)}
             </MenuItem>
           ))}
         </TextField>
         {['dropdown-db', 'dropdown-manual', 'checkboxlist', 'radiobuttonlist'].includes(
           control.type
         ) &&
-          text('Options (comma separated)', control.options.join(', '), (value) =>
+          text(t('wfProcessBuilder.settings.commaSeparatedOptions'), control.options.join(', '), (value) =>
             update({
               options: value
                 .split(',')
@@ -1790,7 +1771,7 @@ export function ProcessBuilderSettingsPanel() {
                 .filter(Boolean),
             })
           )}
-        {text('Default value', control.defaultValue, (defaultValue) => update({ defaultValue }))}
+        {text(t('wfProcessBuilder.settings.defaultValue'), control.defaultValue, (defaultValue) => update({ defaultValue }))}
         <Box sx={settingsSwitchGridSx}>
           <FormControlLabel
             control={
@@ -1800,11 +1781,11 @@ export function ProcessBuilderSettingsPanel() {
                 onChange={(_, visible) => update({ visible })}
               />
             }
-            label="Visible"
+            label={t('wfProcessBuilder.settings.fields.visible')}
           />
         </Box>
         <Button variant="contained" disabled sx={{ alignSelf: 'stretch' }}>
-          Create Control
+          {t('wfProcessBuilder.settings.createControl')}
         </Button>
       </Stack>
     );
@@ -1818,15 +1799,15 @@ export function ProcessBuilderSettingsPanel() {
     );
     return (
       <Stack spacing="8px" sx={{ p: '10px' }}>
-        <SettingsTitle title="Transition Settings" dirty={s.dirty} />
+        <SettingsTitle title={t('wfProcessBuilder.settings.transitionSettings')} dirty={s.dirty} />
         <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
           <Box sx={{ flex: 1 }}>
-            {text('Transition name', x.name, (name) => s.updateTransition(x.id, { name }))}
+            {text(t('wfProcessBuilder.settings.fields.transitionName'), x.name, (name) => s.updateTransition(x.id, { name }))}
           </Box>
           <IconButton
             size="small"
             color="error"
-            aria-label="Delete transition"
+            aria-label={t('wfProcessBuilder.settings.deleteTransition')}
             onClick={() => s.removeTransition(x.id)}
           >
             <Delete />
@@ -1837,7 +1818,7 @@ export function ProcessBuilderSettingsPanel() {
           select
           fullWidth
           size="small"
-          label="Trigger source"
+          label={t('wfProcessBuilder.settings.fields.triggerSource')}
           value={x.triggerSource}
           onChange={(event) =>
             s.updateTransition(x.id, {
@@ -1846,16 +1827,16 @@ export function ProcessBuilderSettingsPanel() {
             })
           }
         >
-          <MenuItem value="none">None</MenuItem>
-          <MenuItem value="requestControl">Request control</MenuItem>
-          <MenuItem value="activity">Activity</MenuItem>
+          <MenuItem value="none">{t('wfProcessBuilder.triggerSources.none')}</MenuItem>
+          <MenuItem value="requestControl">{t('wfProcessBuilder.triggerSources.requestControl')}</MenuItem>
+          <MenuItem value="activity">{t('wfProcessBuilder.triggerSources.activity')}</MenuItem>
         </TextField>
         {x.triggerSource === 'requestControl' && (
           <TextField
             select
             fullWidth
             size="small"
-            label="Request control"
+            label={t('wfProcessBuilder.settings.fields.requestControl')}
             value={x.triggerId}
             onChange={(event) => s.updateTransition(x.id, { triggerId: event.target.value })}
           >
@@ -1871,7 +1852,7 @@ export function ProcessBuilderSettingsPanel() {
             select
             fullWidth
             size="small"
-            label="Activity"
+            label={t('wfProcessBuilder.settings.fields.activity')}
             value={x.triggerId}
             onChange={(event) => s.updateTransition(x.id, { triggerId: event.target.value })}
           >
@@ -1886,7 +1867,7 @@ export function ProcessBuilderSettingsPanel() {
           select
           fullWidth
           size="small"
-          label="Variable"
+          label={t('wfProcessBuilder.settings.fields.variable')}
           value={x.variableId}
           onChange={(event) => {
             const variableId = event.target.value;
@@ -1906,7 +1887,7 @@ export function ProcessBuilderSettingsPanel() {
         <Stack spacing={1.25}>
           <AppLookupField
             name={`settings-operatorId-${x.id}`}
-            label="Operator"
+            label={t('wfProcessBuilder.settings.fields.operator')}
             value={Number(x.operatorId) || undefined}
             options={(operators.data ?? []).map((item) => ({
               id: item.recId,
@@ -1927,7 +1908,7 @@ export function ProcessBuilderSettingsPanel() {
           />
         </Stack>
         <TransitionValueField
-          label="Comparison value"
+          label={t('wfProcessBuilder.settings.comparisonValue')}
           dataType={variable?.dataType}
           value={x.value}
           disabled={x.operator === 'isEmpty'}
@@ -1938,7 +1919,7 @@ export function ProcessBuilderSettingsPanel() {
             select
             fullWidth
             size="small"
-            label="Target step"
+            label={t('wfProcessBuilder.settings.fields.targetStep')}
             value={x.targetStepId}
             onChange={(event) => s.updateTransition(x.id, { targetStepId: event.target.value })}
           >
@@ -1952,7 +1933,7 @@ export function ProcessBuilderSettingsPanel() {
             fullWidth
             size="small"
             type="number"
-            label="Sort order"
+            label={t('wfProcessBuilder.settings.fields.sortOrder')}
             value={x.sortOrder}
             slotProps={{ htmlInput: { min: 0, max: 255 } }}
             onChange={(event) =>
@@ -1970,7 +1951,7 @@ export function ProcessBuilderSettingsPanel() {
                 onChange={(_, active) => s.updateTransition(x.id, { active })}
               />
             }
-            label="Active"
+            label={t('common.active')}
           />
         </Box>
       </Stack>
@@ -1978,7 +1959,7 @@ export function ProcessBuilderSettingsPanel() {
   }
   return (
     <Typography color="text.secondary" sx={{ p: '10px', fontSize: tokens.fontSize.secondary }}>
-      Select an item to edit its properties.
+      {t('wfProcessBuilder.settings.selectItemToEdit')}
     </Typography>
   );
 }

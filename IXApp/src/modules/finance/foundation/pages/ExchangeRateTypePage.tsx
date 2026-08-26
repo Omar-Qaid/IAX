@@ -24,7 +24,7 @@ export function ExchangeRateTypePage(): React.ReactElement {
     filterLabel: t('actions.filter'), informationLabel: t('common.information'), searchMode: 'quick',
     searchFields: [{ field: 'type', label: t('exchangeRateTypes.fields.type') }, { field: 'name', label: t('fields.name') }],
     locale: currentLanguage.code,
-    backCommand: { label: t('actions.back', 'Back'), onClick: () => navigate(-1) },
+    backCommand: { label: t('actions.back'), onClick: () => navigate(-1) },
     showSearchCommand: true,
     recordTableName: 'ExchangeRateType',
     getAuditRecordId: (record) => record.recId,
@@ -35,9 +35,9 @@ export function ExchangeRateTypePage(): React.ReactElement {
         try {
           await Promise.all(rows.map((row) => exchangeRateTypeApi.delete(row)));
           await refresh();
-          notifySuccess(t('messages.deletedSuccessfully', 'Deleted successfully'));
+          notifySuccess(t('messages.deletedSuccessfully'));
         } catch (error) {
-          notifyError(error instanceof Error ? error.message : t('errors.deleteFailed', 'Delete failed'));
+          notifyError(error instanceof Error ? error.message : t('errors.deleteFailed'));
         }
       },
     },
@@ -56,7 +56,7 @@ export function ExchangeRateTypePage(): React.ReactElement {
       if (isNew || record.recId === 0) await exchangeRateTypeApi.create(record);
       else await exchangeRateTypeApi.update(record);
       await refresh();
-      notifySuccess(t('messages.savedSuccessfully', 'Saved successfully'));
+      notifySuccess(t('messages.savedSuccessfully'));
     },
   }} />;
 }

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { BuilderActivity, BuilderActivityAction, BuilderControl, BuilderNode, BuilderStep, BuilderTransition, BuilderVariable, ProcessBuilderDocument } from '../types/processBuilderTypes';
+import i18n from '@core/localization/i18n';
 
 const id = () => crypto.randomUUID();
 const sequenceControls = (controls: BuilderControl[]): BuilderControl[] =>
@@ -350,7 +351,7 @@ export const useProcessBuilderStore = create<State>((set) => {
         transition.triggerSource === 'requestControl' && Boolean(controlIds[transition.triggerId])
       ),
     })),
-    addVariable: () => change((d) => ({ ...d, variables: [...d.variables, { id: id(), code: '', name: 'New variable', description: '', dataType: 'text', sortOrder: (d.variables.length + 1) * 10, required: false, active: true, scope: 'process', defaultValue: '' }] })),
+    addVariable: () => change((d) => ({ ...d, variables: [...d.variables, { id: id(), code: '', name: i18n.t('wfProcessBuilder.defaults.newVariable'), description: '', dataType: 'text', sortOrder: (d.variables.length + 1) * 10, required: false, active: true, scope: 'process', defaultValue: '' }] })),
     updateVariable: (key, values) => change((d) => ({ ...d, variables: d.variables.map((x) => x.id === key ? { ...x, ...values } : x) })),
     removeVariable: (key) => set((state) => {
       const document = {
@@ -363,7 +364,7 @@ export const useProcessBuilderStore = create<State>((set) => {
       return { document, selected: selectionForTab(document, state.selected, state.selectedStepId, state.centerTab), dirty: true };
     }),
     reorderVariables: (activeId, overId) => change((d) => { const variables = [...d.variables]; const from = variables.findIndex((x) => x.id === activeId); const to = variables.findIndex((x) => x.id === overId); if (from < 0 || to < 0 || from === to) return d; const [moved] = variables.splice(from, 1); variables.splice(to, 0, moved); return { ...d, variables: variables.map((variable, index) => ({ ...variable, sortOrder: (index + 1) * 10 })) }; }),
-    addRequestControl: (type = 'text') => change((d) => ({ ...d, requestControls: sequenceControls([...d.requestControls, { id: id(), code: '', label: 'New field', labelAR: 'حقل جديد', labelColor: '#7a4b00', type, controlId: '', sortOrder: d.requestControls.length + 1, score: 0, required: false, readOnly: false, visible: true, uniqueKey: false, usedAsCriteria: false, defaultValue: '', options: [], optionScores: [], optionFeatureConfigurations: [], validations: [], visibilityCondition: null }]) })),
+    addRequestControl: (type = 'text') => change((d) => ({ ...d, requestControls: sequenceControls([...d.requestControls, { id: id(), code: '', label: i18n.t('wfProcessBuilder.defaults.newField', { lng: 'en' }), labelAR: i18n.t('wfProcessBuilder.defaults.newField', { lng: 'ar' }), labelColor: '#7a4b00', type, controlId: '', sortOrder: d.requestControls.length + 1, score: 0, required: false, readOnly: false, visible: true, uniqueKey: false, usedAsCriteria: false, defaultValue: '', options: [], optionScores: [], optionFeatureConfigurations: [], validations: [], visibilityCondition: null }]) })),
     updateRequestControl: (key, values) => change((d) => ({ ...d, requestControls: d.requestControls.map((x) => x.id === key ? { ...x, ...values } : x) })),
     removeRequestControl: (key) => set((state) => {
       const document = {
@@ -419,7 +420,7 @@ export const useProcessBuilderStore = create<State>((set) => {
         }),
       }),
     })),
-    addStep: () => change((d) => ({ ...d, steps: [...d.steps, { id: id(), code: '', name: `Step ${d.steps.length + 1}`, order: d.steps.length + 1, score: 0, autoPassingHours: 0, allMandatory: false, active: true, systemField: false, condition: null, activities: [] }] })),
+    addStep: () => change((d) => ({ ...d, steps: [...d.steps, { id: id(), code: '', name: i18n.t('wfProcessBuilder.defaults.step', { number: d.steps.length + 1 }), order: d.steps.length + 1, score: 0, autoPassingHours: 0, allMandatory: false, active: true, systemField: false, condition: null, activities: [] }] })),
     updateStep: (key, values) => change((d) => ({ ...d, steps: d.steps.map((x) => x.id === key ? { ...x, ...values } : x) })),
     removeStep: (key) => set((state) => {
       const removedActivityIds = new Set(
@@ -443,7 +444,7 @@ export const useProcessBuilderStore = create<State>((set) => {
       const selectedStepId = state.selectedStepId === key ? steps[0]?.id ?? null : state.selectedStepId;
       return { document, selectedStepId, selected: selectionForTab(document, state.selected, selectedStepId, state.centerTab), dirty: true };
     }),
-    addActivity: (stepId, type = 'approval') => change((d) => ({ ...d, steps: d.steps.map((s) => s.id === stepId ? { ...s, activities: [...s.activities, { id: id(), code: '', name: 'New activity', type, activityTypeId: '', performer: '', score: 0, sortOrder: (s.activities.length + 1) * 10, assignmentMode: 'any', active: true, required: true, mandatoryDocs: false, autoPassEnabled: false, autoPassingHours: 0, controls: [], actions: [], validations: [], condition: null, config: { apiMethod: 'GET', apiUrl: '', notifyEmails: '' } }] } : s) })),
+    addActivity: (stepId, type = 'approval') => change((d) => ({ ...d, steps: d.steps.map((s) => s.id === stepId ? { ...s, activities: [...s.activities, { id: id(), code: '', name: i18n.t('wfProcessBuilder.defaults.newActivity'), type, activityTypeId: '', performer: '', score: 0, sortOrder: (s.activities.length + 1) * 10, assignmentMode: 'any', active: true, required: true, mandatoryDocs: false, autoPassEnabled: false, autoPassingHours: 0, controls: [], actions: [], validations: [], condition: null, config: { apiMethod: 'GET', apiUrl: '', notifyEmails: '' } }] } : s) })),
     updateActivity: (stepId, key, values) => change((d) => ({ ...d, steps: d.steps.map((s) => s.id === stepId ? { ...s, activities: s.activities.map((a) => a.id === key ? { ...a, ...values } : a) } : s) })),
     removeActivity: (stepId, key) => set((state) => {
       const document = {
@@ -459,7 +460,7 @@ export const useProcessBuilderStore = create<State>((set) => {
       };
       return { document, selected: selectionForTab(document, state.selected, state.selectedStepId, state.centerTab), dirty: true };
     }),
-    addActivityControl: (stepId, activityId, type = 'text') => change((d) => ({ ...d, steps: d.steps.map((s) => s.id === stepId ? { ...s, activities: s.activities.map((a) => a.id === activityId ? { ...a, controls: sequenceControls([...a.controls, { id: id(), code: '', label: 'New field', labelAR: 'حقل جديد', labelColor: '#7a4b00', type, controlId: '', sortOrder: a.controls.length + 1, score: 0, required: false, readOnly: false, visible: true, uniqueKey: false, usedAsCriteria: false, defaultValue: '', options: [], validations: [], visibilityCondition: null }]) } : a) } : s) })),
+    addActivityControl: (stepId, activityId, type = 'text') => change((d) => ({ ...d, steps: d.steps.map((s) => s.id === stepId ? { ...s, activities: s.activities.map((a) => a.id === activityId ? { ...a, controls: sequenceControls([...a.controls, { id: id(), code: '', label: i18n.t('wfProcessBuilder.defaults.newField', { lng: 'en' }), labelAR: i18n.t('wfProcessBuilder.defaults.newField', { lng: 'ar' }), labelColor: '#7a4b00', type, controlId: '', sortOrder: a.controls.length + 1, score: 0, required: false, readOnly: false, visible: true, uniqueKey: false, usedAsCriteria: false, defaultValue: '', options: [], validations: [], visibilityCondition: null }]) } : a) } : s) })),
     updateActivityControl: (stepId, activityId, key, values) => change((d) => ({ ...d, steps: d.steps.map((s) => s.id === stepId ? { ...s, activities: s.activities.map((a) => a.id === activityId ? { ...a, controls: a.controls.map((c) => c.id === key ? { ...c, ...values } : c) } : a) } : s) })),
     removeActivityControl: (stepId, activityId, key) => set((state) => {
       const document = {
@@ -472,7 +473,7 @@ export const useProcessBuilderStore = create<State>((set) => {
       };
       return { document, selected: selectionForTab(document, state.selected, state.selectedStepId, state.centerTab), dirty: true };
     }),
-    addActivityAction: (stepId, activityId, type = 'approve') => change((d) => ({ ...d, steps: d.steps.map((step) => step.id !== stepId ? step : { ...step, activities: step.activities.map((activity) => activity.id !== activityId ? activity : { ...activity, actions: [...activity.actions, { id: id(), type, label: type[0].toUpperCase() + type.slice(1), nextStepId: '', condition: null }] }) }) })),
+    addActivityAction: (stepId, activityId, type = 'approve') => change((d) => ({ ...d, steps: d.steps.map((step) => step.id !== stepId ? step : { ...step, activities: step.activities.map((activity) => activity.id !== activityId ? activity : { ...activity, actions: [...activity.actions, { id: id(), type, label: i18n.t(`wfProcessBuilder.actionTypes.${type}`), nextStepId: '', condition: null }] }) }) })),
     updateActivityAction: (stepId, activityId, key, values) => change((d) => ({ ...d, steps: d.steps.map((step) => step.id !== stepId ? step : { ...step, activities: step.activities.map((activity) => activity.id !== activityId ? activity : { ...activity, actions: activity.actions.map((action) => action.id === key ? { ...action, ...values } : action) }) }) })),
     removeActivityAction: (stepId, activityId, key) => change((d) => ({ ...d, steps: d.steps.map((step) => step.id !== stepId ? step : { ...step, activities: step.activities.map((activity) => activity.id !== activityId ? activity : { ...activity, actions: activity.actions.filter((action) => action.id !== key) }) }) })),
     moveStep: (key, direction) => change((d) => { const steps = [...d.steps]; const index = steps.findIndex((x) => x.id === key); const target = index + direction; if (index < 0 || target < 0 || target >= steps.length) return d; [steps[index], steps[target]] = [steps[target], steps[index]]; return { ...d, steps: steps.map((x, i) => ({ ...x, order: i + 1 })) }; }),

@@ -2,7 +2,7 @@
 
 ## Visual system
 
-The UI uses Material UI 9 with a theme created by `app/theme/createAppTheme.ts`. `usePreferenceStore` controls light/dark mode, compact/comfortable density, contrast, color preset, font family, font size, zoom, RTL override, and navigation layout. Prefer theme palette and spacing values; established enterprise pattern tokens such as `d365Tokens`, `uiDensity`, and Process Builder tokens are also valid within their owning systems.
+The UI uses Material UI 9 with a theme created by `app/theme/createAppTheme.ts`. `usePreferenceStore` controls light/dark mode, compact/comfortable density, contrast, color preset, font family, font size, zoom, RTL override, and navigation layout. Prefer theme palette and spacing values; shared enterprise tokens from `shared/constants/enterpriseUiTokens`, `uiDensity`, and Process Builder tokens are also valid within their owning systems.
 
 The default experience is deliberately dense: small controls, compact grid rows, restrained borders, and low-elevation surfaces. Reuse `PageContainer`, `PageHeader`, `ActionPane`, `PageContent`, patterns, and shared fields before creating a custom layout.
 

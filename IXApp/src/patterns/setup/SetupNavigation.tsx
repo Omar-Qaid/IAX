@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Button } from '@mui/material';
 import type { SetupNavigationItem } from './types';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 
 interface SetupNavigationProps {
   items: SetupNavigationItem[];
@@ -9,8 +10,9 @@ interface SetupNavigationProps {
 }
 
 export function SetupNavigation({ items, activeId, onSelect }: SetupNavigationProps): React.ReactElement {
+  const { t } = useAppTranslation();
   return (
-    <Box component="nav" aria-label="Setup sections" sx={{ width: { xs: '100%', md: 238 }, flexShrink: 0, bgcolor: '#f5f4f3', overflowY: 'auto', py: 0.5 }}>
+    <Box component="nav" aria-label={t('accessibility.setupSections')} sx={{ width: { xs: '100%', md: 238 }, flexShrink: 0, bgcolor: '#f5f4f3', overflowY: 'auto', py: 0.5 }}>
       {items.map((item) => (
         <Button
           key={item.id}

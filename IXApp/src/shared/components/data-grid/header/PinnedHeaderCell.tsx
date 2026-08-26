@@ -5,6 +5,7 @@ import MoreVert from '@mui/icons-material/MoreVert';
 import FilterIcon from '@mui/icons-material/FilterList';
 import type { ColumnDef, FilterModel } from '../types';
 import { FilterInput } from './FilterInput';
+import { APP_FONT_FAMILY } from '@shared/constants/fontFamilies';
 
 interface PinnedHeaderCellProps<T> {
   column: ColumnDef<T>;
@@ -74,7 +75,7 @@ export function PinnedHeaderCell<T>({
           sx={{
             flexGrow: 1,
             fontWeight: 600,
-            fontFamily: '"Segoe UI", Arial, sans-serif',
+            fontFamily: APP_FONT_FAMILY,
             fontSize: 12,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -87,7 +88,7 @@ export function PinnedHeaderCell<T>({
         {!hideColumnMenu && (
           <IconButton
             size="small"
-            sx={{ p: 0.25, ml: 0.25 }}
+            sx={{ p: 0.25, marginInlineStart: 0.25 }}
             onClick={(e) => onMenuOpen(e, column)}
           >
             <MoreVert sx={{ fontSize: 14 }} />

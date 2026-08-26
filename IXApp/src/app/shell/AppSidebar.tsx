@@ -24,6 +24,7 @@ import {
 } from '@app/configuration/navigation';
 import { useAuth } from '@core/auth/useAuth';
 import { findPageDefinitionForPath } from '@app/routes/pageRegistry';
+import { getLogicalDrawerAnchor } from '@shared/hooks/useLogicalDrawerAnchor';
 
 const SIDEBAR_ICON_MAP: Record<string, React.ElementType> = {
   receipt: ReceiptIcon,
@@ -154,7 +155,7 @@ const SidebarContent = React.memo(
     const isDark = theme.palette.mode === 'dark';
     const apparent = navColor === 'apparent';
     const sidebarBg = apparent ? '#061735' : isDark ? '#201f1e' : nav.background;
-    const borderRightColor = apparent ? '#31415c' : isDark ? '#323130' : nav.border;
+    const borderEndColor = apparent ? '#31415c' : isDark ? '#323130' : nav.border;
 
     return (
       <Box
@@ -163,8 +164,8 @@ const SidebarContent = React.memo(
           display: 'flex',
           flexDirection: 'column',
           bgcolor: sidebarBg,
-          borderRight: '1px solid',
-          borderColor: borderRightColor,
+          borderInlineEnd: '1px solid',
+          borderColor: borderEndColor,
           colorScheme: apparent ? 'dark' : undefined,
         }}
       >
@@ -181,7 +182,7 @@ const SidebarContent = React.memo(
           <IconButton
             size="small"
             onClick={onToggle}
-            aria-label={t('nav.toggle_navigation', 'Toggle navigation')}
+            aria-label={t('nav.toggle_navigation')}
             sx={{ width: 34, height: 34, color: isDark ? '#f3f2f1' : nav.icon, '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,.08)' : nav.hover } }}
           >
             <MenuIcon sx={{ fontSize: nav.iconSize }} />
@@ -190,7 +191,7 @@ const SidebarContent = React.memo(
             <IconButton
               size="small"
               onClick={onTogglePin}
-              aria-label={t('nav.toggle_pin', 'Toggle navigation pin')}
+              aria-label={t('nav.toggle_pin')}
               sx={{
                 width: 28,
                 height: 28,
@@ -277,7 +278,7 @@ const SidebarContent = React.memo(
           </NavSection>
 
           <NavSection
-            label={t('nav.workspaces', 'Workspaces')}
+            label={t('nav.workspaces')}
             icon={<WorkspacesIcon />}
             collapsed={collapsed}
             expanded={!!expanded.workspaces}
@@ -355,7 +356,7 @@ export const AppSidebar = () => {
     return (
       <>
         <SwipeableDrawer
-          anchor={theme.direction === 'rtl' ? 'right' : 'left'}
+          anchor={getLogicalDrawerAnchor('start')}
           open={sidebarOpen}
           onOpen={() => setSidebarOpen(true)}
           onClose={() => setSidebarOpen(false)}
@@ -400,7 +401,7 @@ export const AppSidebar = () => {
   return (
     <Box
       component="nav"
-      aria-label={t('nav.application_navigation', 'Application navigation')}
+      aria-label={t('nav.application_navigation')}
       ref={navRef}
       sx={{
         width: finalSidebarWidth,

@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { apiClient } from '@core/api/apiClient';
 import type { ApiResponse } from '@core/api/apiResponse';
 import { isWorkflowXmlValue, RecordValueDisplay } from './RecordValueDisplay';
+import { useLogicalDrawerAnchor } from '@shared/hooks/useLogicalDrawerAnchor';
 
 interface RecordAuditDto {
   recId: number;
@@ -216,6 +217,7 @@ export function AppRecordAuditDrawer({
   recordId,
 }: AppRecordAuditDrawerProps): React.ReactElement {
   const { t } = useTranslation();
+  const drawerAnchor = useLogicalDrawerAnchor('end');
   const audit = useQuery({
     queryKey: ['record-audit', tableName, recordId],
     enabled: open && Boolean(tableName) && recordId != null,
@@ -257,10 +259,10 @@ export function AppRecordAuditDrawer({
   const loading = audit.isLoading || audit.isFetching;
   return (
     <Drawer
-      anchor="right"
+      anchor={drawerAnchor}
       open={open}
       onClose={onClose}
-      slotProps={{ paper: { sx: { width: { xs: '100%', sm: 400 }, borderLeft: 'none' } } }}
+      slotProps={{ paper: { sx: { width: { xs: '100vw', sm: 400 }, maxWidth: '100vw', borderInlineStart: 1, borderInlineStartColor: 'divider', borderInlineEnd: 0 } } }}
       sx={{ zIndex: (theme) => theme.zIndex.drawer + 2 }}
     >
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -278,7 +280,7 @@ export function AppRecordAuditDrawer({
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <HistoryIcon color="primary" />
             <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-              {t('common.recordAudit', 'Record Audit')}
+              {t('common.recordAudit')}
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>

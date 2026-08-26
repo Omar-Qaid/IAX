@@ -4,6 +4,7 @@ import { typography } from './typography';
 import { spacing } from './spacing';
 import { getComponentOverrides } from './componentOverrides';
 import type { ThemeMode } from '@app/store/usePreferenceStore';
+import { resolveUiFontFamily } from '@shared/constants/fontFamilies';
 
 export interface AppThemePreferences {
   contrast?: boolean;
@@ -32,7 +33,7 @@ export function createAppTheme(mode: ThemeMode, direction: 'ltr' | 'rtl' = 'ltr'
     palette: paletteOptions,
     typography: {
       ...typography,
-      fontFamily: preferences.fontFamily || typography.fontFamily,
+      fontFamily: resolveUiFontFamily(direction, preferences.fontFamily || typography.fontFamily),
       fontSize: preferences.fontSize ?? typography.fontSize,
     },
     spacing: preferences.density === 'comfortable' ? 5 : spacing,

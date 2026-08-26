@@ -33,6 +33,10 @@ describe('WFCategoryPage', () => {
     expect(await screen.findByText('Procurement')).toBeDefined();
     expect(screen.getByText('WFC-0002')).toBeDefined();
     expect(screen.getByRole('button', { name: 'Back' })).toBeDefined();
+    expect(screen.queryByRole('button', { name: 'Personalize' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Page guide' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Notifications' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Refresh' })).toBeDefined();
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
     expect(screen.getByRole('button', { name: 'Save' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDefined();

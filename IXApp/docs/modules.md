@@ -13,7 +13,7 @@ Modules own domain pages, DTOs/view models, APIs or repository adapters, queries
 | `administration` | API/mock repository settings forms with TanStack Query; API-backed number-sequence list-details page. |
 | `organization` | Legal-entity list-details page using a repository interface selected between API and mock adapters, plus logistics drawers. |
 | `workflow` | API-backed process/category/type/control/priority/variable/step/activity setup pages and reusable workflow APIs. |
-| `process-builder` | Multi-workspace workflow designer integrating process, activity, request-control, option, validation, and transition APIs. See [Process Builder](process-builder.md). |
+| `process-builder` | Workflow-owned multi-workspace designer package integrating process, activity, request-control, option, validation, and transition APIs. Its established physical path is retained for route/import compatibility. See [Process Builder](process-builder.md). |
 
 ## Observed implementation styles
 

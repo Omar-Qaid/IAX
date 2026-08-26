@@ -93,10 +93,7 @@ export function FilterInput<T>({
         input: {
           endAdornment: onFilterIconClick ? (
             <IconButton
-              aria-label={t('grid.open_column_filter', {
-                column: column.headerName,
-                defaultValue: `Filter ${column.headerName}`,
-              })}
+              aria-label={t('grid.open_column_filter', { column: column.headerName })}
               size="small"
               sx={{ p: 0 }}
               onClick={(e) => onFilterIconClick(e, column)}

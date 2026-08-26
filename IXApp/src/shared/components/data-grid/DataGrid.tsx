@@ -21,6 +21,7 @@ import {
 import { computeFlexWidths, generateCSV, downloadFile } from './DataGridUtils';
 import { useNotifications } from '@shared/hooks/useNotifications';
 import { uiDensity } from '@shared/constants/uiDensity';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 function DataGridInternal<T>({
     rows,
     columns: rawInitialColumns,
@@ -69,6 +70,7 @@ function DataGridInternal<T>({
     hideSidebar = false,
     hideFooter = false,
 }: DataGridProps<T>, ref: React.Ref<DataGridHandle>) {
+    const { t } = useAppTranslation();
     const { notifyError } = useNotifications();
     const searchInputRef = useRef<HTMLInputElement | null>(null);
     const gridRootRef = useRef<HTMLDivElement | null>(null);
@@ -661,7 +663,7 @@ function DataGridInternal<T>({
                                 bgcolor: theme.palette.mode === 'light' ? '#ffffff' : theme.palette.action.hover,
                                 flexShrink: 0,
                                 borderBottom: `1px solid ${theme.palette.divider}`,
-                                pr: `${scrollbarWidth || 0}px`,
+                                paddingInlineEnd: `${scrollbarWidth || 0}px`,
                             }}
                         >
                             <DataGridHeader
@@ -809,17 +811,17 @@ function DataGridInternal<T>({
                     <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
                         {serverSide
                             ? (rows.length < (totalRowCount || rows.length)
-                                ? `Loaded ${rows.length} of ${totalRowCount}`
-                                : `Total: ${rows.length} rows`)
+                                ? t('grid.rows_loaded', { loaded: rows.length, total: totalRowCount })
+                                : t('grid.totalRows', { count: rows.length }))
                             : (processedRows.length < rows.length
-                                ? `Filtered ${processedRows.length} of ${rows.length} rows`
-                                : `Total: ${rows.length} rows`)
+                                ? t('grid.rows_filtered', { filtered: processedRows.length, total: rows.length })
+                                : t('grid.totalRows', { count: rows.length }))
                         }
                     </Typography>
 
                     {selectedIds.length > 0 && (
-                        <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 600, ml: 3 }}>
-                            {selectedIds.length} selected
+                        <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 600, marginInlineStart: 3 }}>
+                            {t('grid.selectedRows', { count: selectedIds.length })}
                         </Typography>
                     )}
                 </Box>

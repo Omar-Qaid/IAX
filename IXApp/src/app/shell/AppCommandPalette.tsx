@@ -232,7 +232,7 @@ export const AppCommandPalette: React.FC = () => {
       <DialogContent sx={{ p: 2.5, pt: 2 }}>
         {Object.keys(groupedPages).length === 0 ? (
           <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-            {t('common.no_results_found', { query, defaultValue: `No results for "${query}"` })}
+            {t('common.no_results_found', { query })}
           </Typography>
         ) : (
           Object.entries(groupedPages).map(([category, pages]) => (

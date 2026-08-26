@@ -106,7 +106,7 @@ export const DataGridToolbar = memo(function DataGridToolbar({
             slotProps={{
               input: {
                 startAdornment: (
-                  <InputAdornment position="start" sx={{ mr: 0.5 }}>
+                  <InputAdornment position="start" sx={{ marginInlineEnd: 0.5 }}>
                     <SearchIcon 
                       sx={{ 
                         fontSize: 18, 

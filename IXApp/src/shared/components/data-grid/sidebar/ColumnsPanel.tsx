@@ -42,9 +42,9 @@ export function ColumnsPanel<T>({
         <AppBooleanField
           value={pivotMode}
           onChange={(v) => setPivotMode(v)}
-          sx={{ '& .MuiSwitch-root': { mr: 1 } }}
+          sx={{ '& .MuiSwitch-root': { marginInlineEnd: 1 } }}
         />
-        <Typography variant="body2" sx={{ ml: 1, fontSize: '0.8rem', color: 'text.secondary' }}>
+        <Typography variant="body2" sx={{ marginInlineStart: 1, fontSize: '0.8rem', color: 'text.secondary' }}>
           {t('grid.pivot_mode')}
         </Typography>
       </Box>
@@ -73,14 +73,14 @@ export function ColumnsPanel<T>({
           <Box key={col.field as string} sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
             <DragHandleIcon
               fontSize="small"
-              sx={{ color: 'action.disabled', mr: 0.5, cursor: 'grab', fontSize: 16 }}
+              sx={{ color: 'action.disabled', marginInlineEnd: 0.5, cursor: 'grab', fontSize: 16 }}
             />
             <AppBooleanField
               value={!col.hidden}
               onChange={() => handleToggleColumn(col.field as string)}
               sx={{ p: 0.5, '& .MuiSvgIcon-root': { fontSize: 18 } }}
             />
-            <Typography variant="body2" sx={{ fontSize: '0.8rem', ml: 0.5 }}>
+            <Typography variant="body2" sx={{ fontSize: '0.8rem', marginInlineStart: 0.5 }}>
               {t(col.headerName)}
             </Typography>
           </Box>
@@ -89,7 +89,7 @@ export function ColumnsPanel<T>({
 
       <Box sx={{ p: 1, borderTop: '1px solid #e0e0e0', bgcolor: '#fafafa' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <TableRowsIcon fontSize="small" sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
+          <TableRowsIcon fontSize="small" sx={{ fontSize: 16, marginInlineEnd: 1, color: 'text.secondary' }} />
           <Typography variant="caption" sx={{ fontWeight: 600 }}>
             {t('grid.row_groups')}
           </Typography>
@@ -110,7 +110,7 @@ export function ColumnsPanel<T>({
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <FunctionsIcon fontSize="small" sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
+          <FunctionsIcon fontSize="small" sx={{ fontSize: 16, marginInlineEnd: 1, color: 'text.secondary' }} />
           <Typography variant="caption" sx={{ fontWeight: 600 }}>
             {t('grid.values')}
           </Typography>

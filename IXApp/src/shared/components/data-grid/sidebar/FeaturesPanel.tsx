@@ -81,14 +81,14 @@ export function FeaturesPanel<T>({
     <Box sx={{ flexGrow: 1, minHeight: 0, overflow: 'auto', p: 1.5 }}>
       <Box sx={{ mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-          <PaletteIcon sx={{ fontSize: 18, mr: 1, color: 'primary.main' }} />
+          <PaletteIcon sx={{ fontSize: 18, marginInlineEnd: 1, color: 'primary.main' }} />
           <Typography variant="subtitle2" sx={{ fontSize: '0.85rem', fontWeight: 600 }}>
             {t('grid.themes')}
           </Typography>
         </Box>
 
         <Box sx={{ mb: 2 }}>
-          <Box sx={{ pl: 3.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Box sx={{ paddingInlineStart: 3.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
             {[
               {
                 label: t('grid.compact_density'),
@@ -136,12 +136,12 @@ export function FeaturesPanel<T>({
           </Box>
         </Box>
 
-        <Box sx={{ pl: 3.5 }}>
+        <Box sx={{ paddingInlineStart: 3.5 }}>
           <Box
             sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <BorderVerticalIcon sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
+              <BorderVerticalIcon sx={{ fontSize: 16, marginInlineEnd: 1, color: 'text.secondary' }} />
               <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
                 {t('grid.show_column_borders')}
               </Typography>
@@ -150,7 +150,7 @@ export function FeaturesPanel<T>({
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <BorderAllIcon sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
+              <BorderAllIcon sx={{ fontSize: 16, marginInlineEnd: 1, color: 'text.secondary' }} />
               <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
                 {t('grid.show_cell_borders')}
               </Typography>
@@ -164,12 +164,12 @@ export function FeaturesPanel<T>({
 
       <Box sx={{ mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-          <CheckCircleIcon sx={{ fontSize: 18, mr: 1, color: 'primary.main' }} />
+          <CheckCircleIcon sx={{ fontSize: 18, marginInlineEnd: 1, color: 'primary.main' }} />
           <Typography variant="subtitle2" sx={{ fontSize: '0.85rem', fontWeight: 600 }}>
             {t('grid.row_selection')}
           </Typography>
         </Box>
-        <Box sx={{ pl: 3.5, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+        <Box sx={{ paddingInlineStart: 3.5, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
           {(['single', 'multiple'] as SelectionMode[]).map((mode) => (
             <Box
               key={mode}
@@ -238,12 +238,12 @@ export function FeaturesPanel<T>({
 
       <Box sx={{ mb: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
-          <ResizeIcon sx={{ fontSize: 18, mr: 1, color: 'primary.main' }} />
+          <ResizeIcon sx={{ fontSize: 18, marginInlineEnd: 1, color: 'primary.main' }} />
           <Typography variant="subtitle2" sx={{ fontSize: '0.85rem', fontWeight: 600 }}>
             {t('grid.column_sizing')}
           </Typography>
         </Box>
-        <Box sx={{ pl: 3.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Box sx={{ paddingInlineStart: 3.5, display: 'flex', flexDirection: 'column', gap: 1 }}>
           <Button
             size="small"
             variant={isAutosized ? 'contained' : 'outlined'}
@@ -268,7 +268,7 @@ export function FeaturesPanel<T>({
           >
             {t('grid.individual_columns')}:
           </Typography>
-          <Box sx={{ maxHeight: 200, overflow: 'auto', pr: 0.5 }}>
+          <Box sx={{ maxHeight: 200, overflow: 'auto', paddingInlineEnd: 0.5 }}>
             {columns
               .filter((c) => !c.hidden)
               .map((col) => (
@@ -298,7 +298,8 @@ export function FeaturesPanel<T>({
                   <Box sx={{ display: 'flex', gap: 0.5 }}>
                     <IconButton
                       size="small"
-                      title="Autosize"
+                      title={t('grid.autosize_this')}
+                      aria-label={t('grid.autosize_this')}
                       onClick={() => onAutosizeColumn(col.field as string)}
                       sx={{ p: 0.25, color: 'primary.main' }}
                     >
@@ -306,7 +307,8 @@ export function FeaturesPanel<T>({
                     </IconButton>
                     <IconButton
                       size="small"
-                      title="Reset Sizing"
+                      title={t('grid.resetSizing')}
+                      aria-label={t('grid.resetSizing')}
                       onClick={() => onUnAutosizeColumn(col.field as string)}
                       sx={{ p: 0.25, color: 'text.secondary' }}
                     >

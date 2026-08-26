@@ -12,6 +12,8 @@ import { Box, Button, Chip, Stack, Typography } from '@mui/material';
 import { useProcessBuilderStore } from '../store/useProcessBuilderStore';
 import type { BuilderActivityType, BuilderControlType } from '../types/processBuilderTypes';
 import { processBuilderTokens as tokens } from './processBuilderTokens';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
+import type { TFunction } from 'i18next';
 
 // Kept as a compatibility export for already-loaded Vite modules. Activity types are
 // configured in Activity Settings and are no longer rendered in the Palette.
@@ -50,7 +52,20 @@ export const controlPalette: ReadonlyArray<{ type: BuilderControlType; label: st
   { type: 'advertiser', label: 'Advertiser', icon: <Search fontSize="small" /> },
 ];
 
+const controlTypeTranslationKeys: Record<BuilderControlType, string> = {
+  digits: 'wfProcessBuilder.controlTypes.digits', text: 'wfProcessBuilder.controlTypes.text', longtext: 'wfProcessBuilder.controlTypes.longtext',
+  date: 'wfProcessBuilder.controlTypes.date', time: 'wfProcessBuilder.controlTypes.time', url: 'wfProcessBuilder.controlTypes.url',
+  'dropdown-db': 'wfProcessBuilder.controlTypes.dropdownDb', 'dropdown-manual': 'wfProcessBuilder.controlTypes.dropdownManual',
+  checkbox: 'wfProcessBuilder.controlTypes.checkbox', checkboxlist: 'wfProcessBuilder.controlTypes.checkboxlist', radiobuttonlist: 'wfProcessBuilder.controlTypes.radiobuttonlist',
+  table: 'wfProcessBuilder.controlTypes.table', label: 'wfProcessBuilder.controlTypes.label', employeesearch: 'wfProcessBuilder.controlTypes.employeesearch',
+  employeeid: 'wfProcessBuilder.controlTypes.employeeid', file: 'wfProcessBuilder.controlTypes.file', showroom: 'wfProcessBuilder.controlTypes.showroom',
+  signature: 'wfProcessBuilder.controlTypes.signature', location: 'wfProcessBuilder.controlTypes.location', advertiser: 'wfProcessBuilder.controlTypes.advertiser',
+};
+
+export const getControlTypeLabel = (t: TFunction, type: BuilderControlType): string => t(controlTypeTranslationKeys[type]);
+
 export function ProcessBuilderPalette() {
+  const { t } = useAppTranslation();
   const store = useProcessBuilderStore();
   const selectedActivity = store.selected.kind === 'activity' ? store.selected : null;
   const activityControlMode = store.centerTab === 5 && selectedActivity;
@@ -63,34 +78,34 @@ export function ProcessBuilderPalette() {
     bgcolor: '#fff',
     boxShadow: '0 1px 2px rgb(15 23 42 / 6%)',
     color: '#1f2937 !important',
-    '& .MuiButton-startIcon': { color: '#111827', mr: '10px' },
+    '& .MuiButton-startIcon': { color: '#111827', marginInlineEnd: '10px', marginInlineStart: 0 },
     '&:hover': { bgcolor: tokens.accentSoft, borderColor: `${tokens.accentLight} !important` },
     '&:focus-visible': { boxShadow: tokens.focusRing },
   };
   const addLabel = (
-    <Typography component="span" sx={{ ml: 'auto', pl: 1, fontSize: tokens.fontSize.caption, color: tokens.accent }}>
-      Add
+    <Typography component="span" sx={{ marginInlineStart: 'auto', paddingInlineStart: 1, fontSize: tokens.fontSize.caption, color: tokens.accent }}>
+      {t('wfProcessBuilder.actions.add')}
     </Typography>
   );
   return (
     <Stack spacing="8px" sx={{ p: '8px', pb: '20px' }}>
       <Stack direction="row" sx={{ alignItems: 'center', minHeight: 24 }}>
-        <Typography sx={{ ...titleSx, flex: 1 }}>CONTROLS</Typography>
+        <Typography sx={{ ...titleSx, flex: 1 }}>{t('wfProcessBuilder.palette.controls')}</Typography>
         <Chip
           variant="outlined"
           size="small"
-          label={activityControlMode ? 'Activity Form' : 'Request Form (process-level)'}
+          label={activityControlMode ? t('wfProcessBuilder.palette.activityForm') : t('wfProcessBuilder.palette.requestForm')}
           sx={{ height: 24, maxWidth: 190, fontSize: tokens.fontSize.caption, bgcolor: '#fff' }}
         />
       </Stack>
       <Box role="status" sx={{ color: tokens.textMuted, fontSize: tokens.fontSize.caption, lineHeight: 1.55, pb: '2px' }}>
         {activityControlMode
-          ? 'Adds a control to the selected activity form.'
-          : 'Adds as a process-level Request Control. Select an activity to add there instead.'}
+          ? t('wfProcessBuilder.palette.activityHelp')
+          : t('wfProcessBuilder.palette.requestHelp')}
       </Box>
       {store.centerTab === 5 && !selectedActivity && (
         <Box sx={{ p: '8px', color: '#9a6700', bgcolor: '#fff7db', border: '1px solid #f4d06f', fontSize: tokens.fontSize.caption }}>
-          Select an activity from the Tree or Activities workspace to enable activity-form controls.
+          {t('wfProcessBuilder.palette.selectActivity')}
         </Box>
       )}
       {controlPalette.map((item) => (
@@ -108,7 +123,7 @@ export function ProcessBuilderPalette() {
           }}
           sx={paletteButtonSx}
         >
-          {item.label}
+          {getControlTypeLabel(t, item.type)}
           {addLabel}
         </Button>
       ))}

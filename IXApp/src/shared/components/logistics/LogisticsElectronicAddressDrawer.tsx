@@ -14,6 +14,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import { useTranslation } from 'react-i18next';
 import type { LogisticsElectronicAddress, ElectronicAddressType } from '@shared/types/logistics';
+import { useLogicalDrawerAnchor } from '@shared/hooks/useLogicalDrawerAnchor';
 
 export interface LogisticsElectronicAddressDrawerProps {
   open: boolean;
@@ -39,8 +40,8 @@ export function LogisticsElectronicAddressDrawer({
   initialData,
   addressTypes = DEFAULT_ADDRESS_TYPES,
 }: LogisticsElectronicAddressDrawerProps) {
-  const { t, i18n } = useTranslation();
-  const isRtl = i18n.language === 'ar';
+  const { t } = useTranslation();
+  const drawerAnchor = useLogicalDrawerAnchor('end');
 
   const [formData, setFormData] = useState<LogisticsElectronicAddress>(() => ({
     id: initialData?.id ?? null,
@@ -93,13 +94,14 @@ export function LogisticsElectronicAddressDrawer({
 
   return (
     <Drawer
-      anchor={isRtl ? 'left' : 'right'}
+      anchor={drawerAnchor}
       open={open}
       onClose={onClose}
       slotProps={{
         paper: {
           sx: {
-            width: { xs: '100%', sm: 400 },
+            width: { xs: '100vw', sm: 400 },
+            maxWidth: '100vw',
             display: 'flex',
             flexDirection: 'column',
           },

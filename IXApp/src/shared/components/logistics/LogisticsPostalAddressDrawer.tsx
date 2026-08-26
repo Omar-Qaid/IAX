@@ -16,6 +16,7 @@ import IconButton from '@mui/material/IconButton';
 import { useTranslation } from 'react-i18next';
 import { useCountryRegions, useStates, useCities, useCounties } from '@shared/hooks/useLogisticsAddress';
 import type { LogisticsPostalAddress } from '@shared/types/logistics';
+import { useLogicalDrawerAnchor } from '@shared/hooks/useLogicalDrawerAnchor';
 
 export interface LogisticsPostalAddressDrawerProps {
   open: boolean;
@@ -30,8 +31,8 @@ export function LogisticsPostalAddressDrawer({
   onSave,
   initialData,
 }: LogisticsPostalAddressDrawerProps) {
-  const { t, i18n } = useTranslation();
-  const isRtl = i18n.language === 'ar';
+  const { t } = useTranslation();
+  const drawerAnchor = useLogicalDrawerAnchor('end');
 
   const defaultValidFrom = new Date().toISOString().split('T')[0];
   const defaultValidTo = '2154-12-31';
@@ -112,13 +113,14 @@ export function LogisticsPostalAddressDrawer({
 
   return (
     <Drawer
-      anchor={isRtl ? 'left' : 'right'}
+      anchor={drawerAnchor}
       open={open}
       onClose={onClose}
       slotProps={{
         paper: {
           sx: {
-            width: { xs: '100%', sm: 420 },
+            width: { xs: '100vw', sm: 420 },
+            maxWidth: '100vw',
             display: 'flex',
             flexDirection: 'column',
           },

@@ -30,7 +30,7 @@ export const PageBreadcrumbs: React.FC = () => {
           to={ROUTE_PATHS.DASHBOARD}
           sx={{ display: 'flex', alignItems: 'center' }}
         >
-          <HomeOutlinedIcon sx={{ fontSize: '0.9rem', mr: 0.5 }} />
+          <HomeOutlinedIcon sx={{ fontSize: '0.9rem', marginInlineEnd: 0.5 }} />
           {t('nav.home')}
         </Link>
         {breadcrumbs.slice(1).map((item, index) => {

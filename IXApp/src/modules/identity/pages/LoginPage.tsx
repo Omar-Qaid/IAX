@@ -48,7 +48,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps): React.ReactElemen
         autoFocus
       />
       <TextField
-        label={t('fields.password', 'Password')}
+        label={t('fields.password')}
         type="password"
         value={password}
         onChange={(event) => setPassword(event.target.value)}

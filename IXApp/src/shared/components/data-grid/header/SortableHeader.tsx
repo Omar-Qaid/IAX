@@ -9,6 +9,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { ColumnDef, SortModel, FilterModel } from '../types';
 import { FilterInput } from './FilterInput';
+import { APP_FONT_FAMILY } from '@shared/constants/fontFamilies';
 
 interface SortableHeaderProps<T> {
   column: ColumnDef<T>;
@@ -58,7 +59,7 @@ export function SortableHeader<T>({
         flexDirection: 'column',
         boxSizing: 'border-box',
         backgroundColor: '#ffffff',
-        borderRight: showColumnBorders ? `1px solid ${theme.palette.divider}` : 'none',
+        borderInlineEnd: showColumnBorders ? `1px solid ${theme.palette.divider}` : 'none',
         width: column.width || 150,
         minWidth: column.width || 150,
         maxWidth: column.width || 150,
@@ -104,7 +105,7 @@ export function SortableHeader<T>({
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
-            fontFamily: '"Segoe UI", Arial, sans-serif',
+            fontFamily: APP_FONT_FAMILY,
             fontSize: 12,
             letterSpacing: 0,
           }}
@@ -112,15 +113,15 @@ export function SortableHeader<T>({
           {t(column.headerName || '')}
         </Typography>
         {sort?.sort === 'asc' && (
-          <ArrowUpward sx={{ fontSize: 12, ml: 0.25, color: 'primary.main' }} />
+          <ArrowUpward sx={{ fontSize: 12, marginInlineStart: 0.25, color: 'primary.main' }} />
         )}
         {sort?.sort === 'desc' && (
-          <ArrowDownward sx={{ fontSize: 12, ml: 0.25, color: 'primary.main' }} />
+          <ArrowDownward sx={{ fontSize: 12, marginInlineStart: 0.25, color: 'primary.main' }} />
         )}
         {!hideColumnMenu && (
           <IconButton
             size="small"
-            sx={{ p: 0.25, ml: 0.25 }}
+            sx={{ p: 0.25, marginInlineStart: 0.25 }}
             onClick={(e) => {
               e.stopPropagation();
               onMenuOpen(e, column);
@@ -166,7 +167,7 @@ export function SortableHeader<T>({
           width: 6,
           cursor: 'col-resize',
           zIndex: 10,
-          ...(theme.direction === 'rtl' ? { left: 0 } : { right: 0 }),
+          insetInlineEnd: 0,
           '&:hover': { bgcolor: 'primary.main', opacity: 0.65 },
         }}
       />

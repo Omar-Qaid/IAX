@@ -1,7 +1,9 @@
+import { APP_FONT_FAMILY } from '@shared/constants/fontFamilies';
+
 export const moduleNavTokens = {
   desktopWidth: 760,
   background: '#ffffff',
-  fontFamily: '"Segoe UI", "Segoe UI Web (West European)", Arial, sans-serif',
+  fontFamily: APP_FONT_FAMILY,
   fontSize: 16,
   toolbarHeight: 68,
   toolbarGap: 24,

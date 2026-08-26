@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { WORKFLOW_ROUTE_PATHS } from '../routes/workflowRoutePaths';
-import { ROUTE_PATHS } from '@app/routes/routePaths';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { AppLookupGridField } from '@shared/components/fields/AppLookupGridField';
 import { AppLookupField } from '@shared/components/fields/AppLookupField';
@@ -299,7 +298,7 @@ export function WFProcessPage(): React.ReactElement {
         label: t('wfProcess.commands.processBuilder'),
         requiresSelection: true,
         onClick: (process) => {
-          if (process) navigate(ROUTE_PATHS.processBuilder(process.recId));
+          if (process) navigate(WORKFLOW_ROUTE_PATHS.processBuilder(process.recId));
         },
       },
       {

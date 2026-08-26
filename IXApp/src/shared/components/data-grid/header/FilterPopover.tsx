@@ -102,7 +102,7 @@ export function FilterPopover<T>({
               <ArrowUpward fontSize="small" />
             </ListItemIcon>
             <ListItemText
-              primary={t('grid.sort_ascending', 'Sort ascending')}
+              primary={t('grid.sort_ascending')}
               slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }}
             />
           </MenuItem>
@@ -117,7 +117,7 @@ export function FilterPopover<T>({
               <ArrowDownward fontSize="small" />
             </ListItemIcon>
             <ListItemText
-              primary={t('grid.sort_descending', 'Sort descending')}
+              primary={t('grid.sort_descending')}
               slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }}
             />
           </MenuItem>
@@ -152,7 +152,7 @@ export function FilterPopover<T>({
           fullWidth
           placeholder={
             localFilter.operator === 'in'
-              ? t('grid.press_enter_to_add', 'Press Enter to add')
+              ? t('grid.press_enter_to_add')
               : t('grid.filter_placeholder')
           }
           value={localFilter.operator === 'in' ? tempValue : localFilter.value || ''}
@@ -239,7 +239,7 @@ export function FilterPopover<T>({
         open={Boolean(operatorAnchor)}
         onClose={() => setOperatorAnchor(null)}
       >
-        {GRID_FILTER_OPERATORS.map((op: { value: string; label: string }) => (
+        {GRID_FILTER_OPERATORS.map((op) => (
           <MenuItem
             key={op.value}
             onClick={() => {
@@ -258,20 +258,12 @@ export function FilterPopover<T>({
   );
 }
 
-const operatorTranslationKeys: Record<string, string> = {
-  contains: 'grid.operators.contains',
-  equals: 'grid.operators.equals',
-  startsWith: 'grid.operators.starts_with',
-  endsWith: 'grid.operators.ends_with',
-  isEmpty: 'grid.operators.is_empty',
-  isNotEmpty: 'grid.operators.is_not_empty',
-  in: 'grid.operators.is_one_of',
-};
 const getOperatorLabel = (
   operator: string,
   t: (key: string, options: { defaultValue: string }) => string
 ) => {
-  const fallback =
-    GRID_FILTER_OPERATORS.find((candidate) => candidate.value === operator)?.label ?? operator;
-  return t(operatorTranslationKeys[operator] ?? operator, { defaultValue: fallback });
+  const translationKey = GRID_FILTER_OPERATORS.find(
+    (candidate) => candidate.value === operator
+  )?.labelKey;
+  return translationKey ? t(translationKey, { defaultValue: operator }) : operator;
 };

@@ -6,6 +6,7 @@ import { ProcessBuilderPage } from '@modules/process-builder/pages/ProcessBuilde
 import { useProcessBuilderStore } from '@modules/process-builder/store/useProcessBuilderStore';
 import { createProcessBuilderDocument } from '@modules/process-builder/store/useProcessBuilderStore';
 import { normalizeTransitionValue, TransitionValueField } from '@modules/process-builder/components/TransitionValueField';
+import i18n from '@core/localization/i18n';
 
 beforeEach(() => {
   localStorage.clear();
@@ -14,6 +15,26 @@ beforeEach(() => {
 });
 
 describe('standalone ProcessBuilderPage', () => {
+  it('renders the initial Process Builder surface in Arabic RTL without English shell labels', async () => {
+    await i18n.changeLanguage('ar');
+    const user = userEvent.setup();
+    const view = render(<ProcessBuilderPage />);
+
+    expect(document.documentElement).toHaveAttribute('dir', 'rtl');
+    expect(screen.getByRole('heading', { name: 'مصمم العمليات' })).toBeDefined();
+    expect(screen.getByRole('tab', { name: 'المصمم' })).toBeDefined();
+    expect(screen.getAllByRole('button', { name: 'إضافة خطوة' }).length).toBeGreaterThan(0);
+    expect(screen.getByText('معلومات العملية')).toBeDefined();
+    await user.click(screen.getAllByRole('button', { name: 'إضافة متغير' })[0]!);
+    expect(screen.getAllByText('متغير جديد').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Workflow Designer')).toBeNull();
+    expect(screen.queryByText('Process Information')).toBeNull();
+    expect(screen.queryByText('New variable')).toBeNull();
+
+    view.unmount();
+    await i18n.changeLanguage('en');
+  });
+
   it('uses the selected variable data type for transition comparison values', () => {
     expect(normalizeTransitionValue('not-a-number', 'number')).toBe('');
     expect(normalizeTransitionValue('42.5', 'number')).toBe('42.5');

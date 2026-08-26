@@ -35,7 +35,7 @@ const GridCellInternal = <T,>({
         p: col.field === '_selection' ? 0 : '0 12px',
         height: rowHeight,
         borderBottom: showCellBorders ? `1px solid ${theme.palette.divider}` : 'none',
-        borderRight: showColumnBorders ? `1px solid ${theme.palette.divider}` : 'none',
+        borderInlineEnd: showColumnBorders ? `1px solid ${theme.palette.divider}` : 'none',
         width: col.width || 150,
         minWidth: col.width || 150,
         maxWidth: col.width || 150,

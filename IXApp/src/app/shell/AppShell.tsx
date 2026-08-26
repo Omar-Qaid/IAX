@@ -24,7 +24,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
   const finalSidebarWidth = isHorizontal ? 0 : (isMini ? SIDEBARCOLLAPSEDWIDTH : (isDrawerOpen ? SIDEBARWIDTH : SIDEBARCOLLAPSEDWIDTH));
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', bgcolor: 'background.default' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100vh', minHeight: 0, overflow: 'hidden', bgcolor: 'background.default', '@supports (height: 100dvh)': { height: '100dvh' } }}>
       <Box
         component="a"
         href="#main-content"
@@ -42,7 +42,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           sx={{
             flexGrow: 1,
             minHeight: 0,
-            p: '10px',
+            p: { xs: '4px', sm: '6px', md: '10px' },
             paddingInlineEnd: 0,
             overflow: 'hidden',
             display: 'flex',

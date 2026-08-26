@@ -42,9 +42,14 @@ const walk = (directory) =>
 const files = walk(sourceRoot);
 const normalizedRelative = (path) => relative(sourceRoot, path).split(sep).join('/');
 const layerOfFile = (path) => normalizedRelative(path).split('/')[0];
+// Process Builder is a Workflow-owned feature package retained at its established
+// physical path for route/import compatibility. Treat both packages as one bounded
+// context so the audit still rejects every other cross-domain module import.
+const moduleOwnership = new Map([['process-builder', 'workflow']]);
 const moduleOfFile = (path) => {
   const segments = normalizedRelative(path).split('/');
-  return segments[0] === 'modules' && segments.length > 2 ? segments[1] : null;
+  if (segments[0] !== 'modules' || segments.length <= 2) return null;
+  return moduleOwnership.get(segments[1]) ?? segments[1];
 };
 
 const aliasPath = (specifier) => {

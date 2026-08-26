@@ -4,11 +4,22 @@ export { toPrintoutCompany } from '@shared/components/printout/reportCompany';
 import type { MailRequestDetailsDto, WfRequestRecord } from '../api/wfRequestApi';
 import { normalizeDynamicControlType } from './DynamicControlRenderer';
 import { MailFieldValue } from './MailFieldValue';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
+import type { TFunction } from 'i18next';
 
-const formatDateTime = (value: string | null): string => {
+export const getLocalizedMailStatus = (t: TFunction, status: string): string => {
+  const normalized = status.trim().toLowerCase().replace(/[\s_-]+/g, '');
+  if (normalized === 'completed') return t('mail.statuses.completed');
+  if (normalized === 'inprogress') return t('mail.statuses.inProgress');
+  if (normalized === 'processing') return t('mail.statuses.processing');
+  if (normalized === 'stopped') return t('mail.statuses.stopped');
+  return status;
+};
+
+const formatDateTime = (value: string | null, locale: string): string => {
   if (!value) return '—';
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+  return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(date);
 };
 
 function Field({ label, value, fullWidth = false }: { label: string; value: React.ReactNode; fullWidth?: boolean }): React.ReactElement {
@@ -25,32 +36,35 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 export function WorkflowMailPrintoutBody({ request, details, showNotes = true }: { request: WfRequestRecord; details: MailRequestDetailsDto; showNotes?: boolean }): React.ReactElement {
+  const { t, currentLanguage, isRtl } = useAppTranslation();
+  const direction = isRtl ? 'rtl' : 'ltr';
   return (
-    <>
-      <Section title="Request information">
+    <Box dir={direction} sx={{ display: 'grid', gap: 1.5, textAlign: 'start' }}>
+      <Section title={t('mail.print.requestInformation')}>
         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1 }}>
-          <Field label="Request" value={request.code || `#${request.recId}`} />
-          <Field label="Process" value={details.processName} />
-          <Field label="Status" value={details.status} />
-          <Field label="Request date" value={formatDateTime(details.requestDate)} />
-          <Field label="Employee name" value={details.employeeName} />
-          <Field label="Employee number" value={details.employeeNumber} />
-          <Field label="Transaction type" value={details.transactionType} />
-          <Field label="Responsible employee" value={details.responsibleEmployee || '—'} />
-          <Field label="Transaction time" value={formatDateTime(details.transactionTime)} />
-          <Field label="Transaction end time" value={formatDateTime(details.transactionEndTime)} />
+          <Field label={t('mail.fields.request')} value={request.code || `#${request.recId}`} />
+          <Field label={t('mail.fields.process')} value={details.processName} />
+          <Field label={t('mail.fields.status')} value={getLocalizedMailStatus(t, details.status)} />
+          <Field label={t('mail.fields.requestDate')} value={formatDateTime(details.requestDate, currentLanguage.code)} />
+          <Field label={t('mail.print.employeeName')} value={details.employeeName} />
+          <Field label={t('mail.print.employeeNumber')} value={details.employeeNumber} />
+          <Field label={t('mail.print.transactionType')} value={details.transactionType} />
+          <Field label={t('mail.print.responsibleEmployee')} value={details.responsibleEmployee || '—'} />
+          <Field label={t('mail.print.transactionTime')} value={formatDateTime(details.transactionTime, currentLanguage.code)} />
+          <Field label={t('mail.print.transactionEndTime')} value={formatDateTime(details.transactionEndTime, currentLanguage.code)} />
         </Box>
       </Section>
-      <Section title="Request data">
+      <Section title={t('mail.print.requestData')}>
         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1 }}>
           {[...details.fields].sort((left, right) => left.controlOrder - right.controlOrder).map((field) => {
             const type = normalizeDynamicControlType(field.controlType);
             const fullWidth = ['signature', 'longtext', 'file', 'table', 'label'].includes(type);
-            return <Field key={`${field.detailId}-${field.controlDataId ?? field.controlId ?? field.controlOrder}`} label={field.labelAr || field.label} fullWidth={fullWidth} value={<Box dir={field.labelAr ? 'rtl' : 'ltr'}><MailFieldValue field={field} /></Box>} />;
+            const label = isRtl ? field.labelAr || field.label : field.label || field.labelAr;
+            return <Field key={`${field.detailId}-${field.controlDataId ?? field.controlId ?? field.controlOrder}`} label={label} fullWidth={fullWidth} value={<Box dir="auto"><MailFieldValue field={field} /></Box>} />;
           })}
         </Box>
       </Section>
-      {showNotes && request.notes ? <Section title="Notes"><Typography sx={{ px: 1, whiteSpace: 'pre-wrap', fontSize: 10.5 }}>{request.notes}</Typography></Section> : null}
-    </>
+      {showNotes && request.notes ? <Section title={t('mail.print.notes')}><Typography sx={{ px: 1, whiteSpace: 'pre-wrap', fontSize: 10.5 }}>{request.notes}</Typography></Section> : null}
+    </Box>
   );
 }

@@ -432,11 +432,9 @@ export function LookupGrid<T extends object>({
             <Paper
               ref={popupRef}
               elevation={8}
+              style={{ top: pos.top, left: pos.left, width: pos.width }}
               sx={{
                 position: 'fixed',
-                top: pos.top,
-                left: pos.left,
-                width: pos.width,
                 maxHeight: pos.maxHeight,
                 zIndex: 1500,
                 overflow: 'hidden',
@@ -518,7 +516,7 @@ export function LookupGrid<T extends object>({
                         sx={{
                           ...columnStyle(col),
                           px: 1,
-                          textAlign: col.align ?? 'left',
+                          textAlign: col.align ?? 'start',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
@@ -581,15 +579,15 @@ export function LookupGrid<T extends object>({
                                   ? 'action.hover'
                                   : 'transparent',
                               color: selected ? 'primary.main' : 'inherit',
-                              borderLeft: '3px solid',
-                              borderLeftColor: selected ? 'primary.main' : 'transparent',
+                              borderInlineStart: '3px solid',
+                              borderInlineStartColor: selected ? 'primary.main' : 'transparent',
                               fontWeight: selected ? 600 : 400,
                             }}
                           >
                             {isLoaderRow ? (
                               <Box sx={{ flex: 1, textAlign: 'center', color: 'text.disabled' }}>
                                 <CircularProgress size={14} sx={{ mr: 1 }} />
-                                {t('common.loadingMore') || 'Loading more...'}
+                                {t('common.loadingMore')}
                               </Box>
                             ) : (
                               columns.map((col) => (
@@ -598,7 +596,7 @@ export function LookupGrid<T extends object>({
                                   sx={{
                                     ...columnStyle(col),
                                     px: 1,
-                                    textAlign: col.align ?? 'left',
+                                    textAlign: col.align ?? 'start',
                                     overflow: 'hidden',
                                     textOverflow: 'ellipsis',
                                     whiteSpace: 'nowrap',
@@ -636,7 +634,7 @@ export function LookupGrid<T extends object>({
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 0.5 }}>
                   <Button size="small" onClick={() => refetch()} disabled={isFetching}>
-                    {t('common.refresh') || 'Refresh'}
+                    {t('common.refresh')}
                   </Button>
                   {actions?.map((a) => (
                     <Button

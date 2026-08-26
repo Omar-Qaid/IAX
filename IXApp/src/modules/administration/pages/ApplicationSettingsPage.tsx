@@ -27,9 +27,9 @@ export function ApplicationSettingsPage(): React.ReactElement {
 
   const navigationItems = useMemo<SetupNavigationItem[]>(
     () => [
-      { id: 'application', label: t('settings.application', 'Application defaults') },
-      { id: 'system', label: t('settings.system', 'System behavior') },
-      { id: 'preferences', label: t('settings.preferences', 'Personal preferences') },
+      { id: 'application', label: t('settings.application') },
+      { id: 'system', label: t('settings.system') },
+      { id: 'preferences', label: t('settings.preferences') },
     ],
     [t]
   );
@@ -38,34 +38,34 @@ export function ApplicationSettingsPage(): React.ReactElement {
     () => [
       {
         id: 'application',
-        title: t('settings.application', 'Application defaults'),
+        title: t('settings.application'),
         fields: [
-          { name: 'appName', label: t('settings.appName', 'Application name'), type: 'text', disabled: !canUpdateGlobal },
-          { name: 'defaultLanguage', label: t('settings.defaultLanguage', 'Default language'), type: 'text', disabled: !canUpdateGlobal },
-          { name: 'timeZone', label: t('settings.timeZone', 'Time zone'), type: 'text', disabled: !canUpdateGlobal },
-          { name: 'currency', label: t('settings.currency', 'Currency'), type: 'text', disabled: !canUpdateGlobal },
-          { name: 'dateFormat', label: t('settings.dateFormat', 'Date format'), type: 'text', disabled: !canUpdateGlobal },
-          { name: 'decimalPlaces', label: t('settings.decimalPlaces', 'Decimal places'), type: 'number', min: 0, disabled: !canUpdateGlobal },
+          { name: 'appName', label: t('settings.appName'), type: 'text', disabled: !canUpdateGlobal },
+          { name: 'defaultLanguage', label: t('settings.defaultLanguage'), type: 'text', disabled: !canUpdateGlobal },
+          { name: 'timeZone', label: t('settings.timeZone'), type: 'text', disabled: !canUpdateGlobal },
+          { name: 'currency', label: t('settings.currency'), type: 'text', disabled: !canUpdateGlobal },
+          { name: 'dateFormat', label: t('settings.dateFormat'), type: 'text', disabled: !canUpdateGlobal },
+          { name: 'decimalPlaces', label: t('settings.decimalPlaces'), type: 'number', min: 0, disabled: !canUpdateGlobal },
         ],
       },
       {
         id: 'system',
-        title: t('settings.system', 'System behavior'),
+        title: t('settings.system'),
         fields: [
-          { name: 'paginationSize', label: t('settings.paginationSize', 'Default page size'), type: 'number', min: 1, max: 100, disabled: !canUpdateGlobal },
-          { name: 'maxUploadSize', label: t('settings.maxUploadSize', 'Maximum upload size (bytes)'), type: 'number', min: 1, disabled: !canUpdateGlobal },
-          { name: 'enableAuditLog', label: t('settings.enableAuditLog', 'Enable audit logging'), type: 'boolean', disabled: !canUpdateGlobal },
+          { name: 'paginationSize', label: t('settings.paginationSize'), type: 'number', min: 1, max: 100, disabled: !canUpdateGlobal },
+          { name: 'maxUploadSize', label: t('settings.maxUploadSize'), type: 'number', min: 1, disabled: !canUpdateGlobal },
+          { name: 'enableAuditLog', label: t('settings.enableAuditLog'), type: 'boolean', disabled: !canUpdateGlobal },
         ],
       },
       {
         id: 'preferences',
-        title: t('settings.preferences', 'Personal preferences'),
+        title: t('settings.preferences'),
         fields: [
-          { name: 'theme', label: t('settings.theme', 'Theme'), type: 'text' },
-          { name: 'language', label: t('settings.language', 'Language'), type: 'text' },
-          { name: 'pageSize', label: t('settings.pageSize', 'Page size'), type: 'number', min: 1, max: 100 },
-          { name: 'dashboardLayout', label: t('settings.dashboardLayout', 'Dashboard layout'), type: 'text' },
-          { name: 'notificationEnabled', label: t('settings.notificationEnabled', 'Enable notifications'), type: 'boolean' },
+          { name: 'theme', label: t('settings.theme'), type: 'text' },
+          { name: 'language', label: t('settings.language'), type: 'text' },
+          { name: 'pageSize', label: t('settings.pageSize'), type: 'number', min: 1, max: 100 },
+          { name: 'dashboardLayout', label: t('settings.dashboardLayout'), type: 'text' },
+          { name: 'notificationEnabled', label: t('settings.notificationEnabled'), type: 'boolean' },
         ],
       },
     ],
@@ -77,7 +77,7 @@ export function ApplicationSettingsPage(): React.ReactElement {
   };
 
   if (globalSettings.isLoading || userSettings.isLoading) {
-    return <LoadingState message={t('messages.loadingSettings', 'Loading settings…')} />;
+    return <LoadingState message={t('messages.loadingSettings')} />;
   }
 
   if (globalSettings.error || userSettings.error || !globalSettings.data || !userSettings.data) {
@@ -139,10 +139,10 @@ export function ApplicationSettingsPage(): React.ReactElement {
       sections={sections}
       initialValues={initialValues}
       saveLabel={t('actions.save')}
-      optionsLabel={t('common.options', 'Options')}
+      optionsLabel={t('common.options')}
       yesLabel={t('common.yes', 'Yes')}
       noLabel={t('common.no', 'No')}
-      savedMessage={t('settings.saved', 'Settings saved.')}
+      savedMessage={t('settings.saved')}
       onSave={save}
       headerContent={
         <>
@@ -151,7 +151,7 @@ export function ApplicationSettingsPage(): React.ReactElement {
           </Typography>
           {!canUpdateGlobal && (
             <Alert severity="info" sx={{ mt: 1, py: 0 }}>
-              {t('settings.globalReadOnly', 'Global settings are read-only for your account.')}
+              {t('settings.globalReadOnly')}
             </Alert>
           )}
         </>

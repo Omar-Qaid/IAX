@@ -181,8 +181,8 @@ export function DataGridHeaderInternal<T>({
           boxSizing: 'border-box',
           bgcolor: '#ffffff',
           width: GRID_SELECTION_COLUMN_WIDTH, minWidth: GRID_SELECTION_COLUMN_WIDTH, maxWidth: GRID_SELECTION_COLUMN_WIDTH,
-          position: 'sticky', left: 0, zIndex: 6,
-          borderRight: `1px solid ${theme.palette.divider}`,
+          position: 'sticky', insetInlineStart: 0, zIndex: 6,
+          borderInlineEnd: `1px solid ${theme.palette.divider}`,
           flexShrink: 0,
           flex: 'none'
         }}>

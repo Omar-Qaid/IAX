@@ -9,6 +9,7 @@ import {
   Box,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 
 export interface AppDialogProps {
   open: boolean;
@@ -29,13 +30,14 @@ export const AppDialog: React.FC<AppDialogProps> = ({
   maxWidth = 'sm',
   fullWidth = true,
 }) => {
+  const { t } = useAppTranslation();
   return (
     <Dialog open={open} onClose={onClose} maxWidth={maxWidth} fullWidth={fullWidth}>
       <DialogTitle sx={{ m: 0, p: 1, px: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Typography component="span" variant="h6" sx={{ fontWeight: 700 }}>
           {title}
         </Typography>
-        <IconButton size="small" aria-label="Close" onClick={onClose}>
+        <IconButton size="small" aria-label={t('actions.close')} onClick={onClose}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>

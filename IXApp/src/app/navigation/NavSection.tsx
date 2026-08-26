@@ -51,9 +51,10 @@ export const NavSection = React.memo<NavSectionProps>(
         <Box
           onClick={onToggle}
           sx={{
-            display: 'flex',
+            display: 'grid',
+            gridTemplateColumns: icon ? 'auto minmax(0, 1fr) auto' : 'minmax(0, 1fr) auto',
             alignItems: 'center',
-            justifyContent: 'space-between',
+            columnGap: `${nav.iconTextGap}px`,
             height: nav.itemHeight,
             px: `${nav.horizontalPadding}px`,
             py: 0,
@@ -64,18 +65,27 @@ export const NavSection = React.memo<NavSectionProps>(
             '&:hover': onToggle ? { bgcolor: headerHoverBg } : {},
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: `${nav.iconTextGap}px` }}>
-            {icon && (
-              <Box sx={{ color: iconColor, display: 'flex', '& svg': { fontSize: nav.iconSize } }}>
-                {icon}
-              </Box>
-            )}
-            <Typography sx={{ fontFamily: nav.fontFamily, fontSize: nav.fontSize, lineHeight: '20px', fontWeight: nav.fontWeight, color: headerColor }}>
-              {label}
-            </Typography>
-          </Box>
+          {icon && (
+            <Box sx={{ color: iconColor, display: 'flex', '& svg': { fontSize: nav.iconSize } }}>
+              {icon}
+            </Box>
+          )}
+          <Typography
+            noWrap
+            sx={{
+              minWidth: 0,
+              fontFamily: nav.fontFamily,
+              fontSize: nav.fontSize,
+              lineHeight: '20px',
+              fontWeight: nav.fontWeight,
+              color: headerColor,
+              textAlign: 'start',
+            }}
+          >
+            {label}
+          </Typography>
           {onToggle && (
-            <Box sx={{ display: 'flex', color: iconColor, mr: '-7px' }}>
+            <Box sx={{ display: 'flex', color: iconColor, marginInlineEnd: '-7px' }}>
               {expanded ? (
                 <ExpandLess sx={{ fontSize: nav.chevronSize }} />
               ) : (

@@ -50,7 +50,7 @@ import type {
   ListDetailRecord,
   ListDetailsHeaderField,
 } from './types';
-import { d365 } from './d365Tokens';
+import { d365 } from '@shared/constants/enterpriseUiTokens';
 
 interface LegacyListDetailsProps<T extends ListDetailRecord> {
   variant?: 'standard';
@@ -209,13 +209,13 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
       sx={{
         gap: 0,
         minHeight: { xs: 520, lg: 0 },
-        height: fullscreen ? 'calc(100vh - 5px)' : { xs: 'auto', lg: '100%' },
-        maxHeight: fullscreen ? 'calc(100vh - 5px)' : { lg: '100%' },
+        height: fullscreen ? 'calc(100dvh - 5px)' : { xs: '100%', lg: '100%' },
+        maxHeight: fullscreen ? 'calc(100dvh - 5px)' : { lg: '100%' },
         overflow: 'hidden',
         position: fullscreen ? 'fixed' : 'relative',
         inset: fullscreen ? '5px 0 0 5px' : undefined,
         zIndex: fullscreen ? 1300 : undefined,
-        pr: { lg: `${d365.utilityRailWidth}px` },
+        paddingInlineEnd: { lg: `${d365.utilityRailWidth}px` },
         bgcolor: d365.canvas,
         fontFamily: d365.fontFamily,
         color: d365.text,
@@ -240,14 +240,14 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
       >
         <ActionPaneGroup>
           <ActionPaneButton
-            label={t('actions.back', 'Back')}
-            icon={<ArrowBackIcon />}
+            label={t('actions.back')}
+            icon={<ArrowBackIcon sx={{ transform: (theme) => theme.direction === 'rtl' ? 'scaleX(-1)' : 'none' }} />}
             onClick={() => navigate(-1)}
           />
         </ActionPaneGroup>
         <IconButton
           size="small"
-          aria-label={t('actions.toggleList', 'Toggle record list')}
+          aria-label={t('actions.toggleList')}
           aria-pressed={listPaneVisible}
           onClick={() => setListPaneVisible((visible) => !visible)}
           sx={{
@@ -323,7 +323,7 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
           height: '100%',
           minHeight: 0,
           gap: '23px',
-          ml: '1px',
+          marginInlineStart: '1px',
           overflow: 'hidden',
           position: 'relative',
           alignItems: 'stretch',
@@ -439,8 +439,8 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
           void state.remove();
         }}
         severity="error"
-        title={t('dialogs.confirmDeleteTitle', 'Confirm deletion')}
-        message={t('dialogs.confirmDeleteOne', 'Delete the selected record?')}
+        title={t('dialogs.confirmDeleteTitle')}
+        message={t('dialogs.confirmDeleteOne')}
         confirmLabel={t('actions.delete')}
         cancelLabel={t('actions.cancel')}
         loading={state.saving}
@@ -478,6 +478,7 @@ export function RecordList<T extends ListDetailRecord>({
   onQueryChange: (value: string) => void;
   onSelect: (record: T) => void;
 }) {
+  const { t } = useAppTranslation();
   const safeBatchSize = Math.max(1, Math.floor(batchSize));
   const [visibleCount, setVisibleCount] = React.useState(safeBatchSize);
   const loadMoreRef = React.useRef<HTMLDivElement | null>(null);
@@ -558,6 +559,7 @@ export function RecordList<T extends ListDetailRecord>({
             >
               <Typography
                 noWrap
+                dir="auto"
                 sx={{
                   fontSize: 15,
                   lineHeight: 1.3,
@@ -569,6 +571,7 @@ export function RecordList<T extends ListDetailRecord>({
               </Typography>
               {getSecondaryText && (
                 <Typography
+                  dir="auto"
                   sx={{
                     mt: '6px',
                     fontSize: 10,
@@ -586,7 +589,7 @@ export function RecordList<T extends ListDetailRecord>({
           <Box
             ref={loadMoreRef}
             role="status"
-            aria-label="Loading more records"
+            aria-label={t('accessibility.loadingMoreRecords')}
             sx={{ height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
             <CircularProgress size={18} />
@@ -627,8 +630,8 @@ function RecordHeader<T>({
           const value = field.getValue(record);
           const custom = field.render?.({ value, editing: false, disabled: true, onChange: (next) => onChange(field.id, next) });
           return <Box key={field.id} sx={{ display: 'flex', alignItems: 'baseline', minWidth: 0, '&:not(:last-of-type)::after': { content: { xs: 'none', sm: '"|"' }, mx: { sm: 1.25 }, color: 'text.disabled', fontWeight: 400 } }}>
-            {!field.renderOwnLabel && <Typography component="span" sx={{ mr: 0.5, fontSize: 12, lineHeight: 1.35, fontWeight: 700 }}>{field.label}:</Typography>}
-            {custom ?? <Typography component="span" noWrap title={String(value)} sx={{ fontSize: 12, lineHeight: 1.35, color: index === 0 ? 'primary.main' : 'text.primary' }}>{String(value)}</Typography>}
+            {!field.renderOwnLabel && <Typography component="span" sx={{ marginInlineEnd: 0.5, fontSize: 12, lineHeight: 1.35, fontWeight: 700 }}>{field.label}:</Typography>}
+            {custom ?? <Typography component="span" dir="auto" noWrap title={String(value)} sx={{ fontSize: 12, lineHeight: 1.35, color: index === 0 ? 'primary.main' : 'text.primary', textAlign: 'start' }}>{String(value)}</Typography>}
           </Box>;
         })}
       </Box>
@@ -640,8 +643,8 @@ function RecordHeader<T>({
         component="h1"
         sx={{
           mt: 0,
-          mb: '21px',
-          fontSize: d365.titleFontSize,
+          mb: { xs: 1.25, sm: '21px' },
+          fontSize: { xs: 21, sm: d365.titleFontSize },
           lineHeight: 1.2,
           fontWeight: 600,
         }}
@@ -655,7 +658,8 @@ function RecordHeader<T>({
           width: '100%',
           maxWidth,
           gridTemplateColumns: {
-            xs: '1fr 1fr',
+            xs: '1fr',
+            sm: 'repeat(2, minmax(0, 1fr))',
             lg: fields.some((field) => field.width)
               ? fields
                   .map((field) =>
@@ -790,7 +794,7 @@ function LegacyListDetailsPage<T extends ListDetailRecord>({
 
 const filterSx = {
   '& .MuiInputBase-root': { height: 34, borderRadius: d365.radius, fontSize: d365.fontSize },
-  '& .MuiInputAdornment-root': { mr: 0.25 },
+  '& .MuiInputAdornment-root': { marginInlineEnd: 0.25 },
 };
 function HeaderViewField({
   value,
