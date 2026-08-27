@@ -2,6 +2,8 @@ using IAX.IXApi.Modules.Workflow.Requests;
 using IAX.IXApi.Modules.Workflow.Controls;
 using IAX.IXApi.Modules.Workflow.Processes;
 using IAX.IXApi.Modules.Workflow.Activities;
+using IAX.IXApi.Modules.Workflow.PrintTemplates;
+using IAX.IXApi.Modules.Workflow.Steps;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -20,6 +22,10 @@ public interface IWorkflowDataContext
     DbSet<WfRequest> WfRequests { get; }
     DbSet<WfControl> WfControls { get; }
     DbSet<WfProcess> WfProcesses { get; }
+    DbSet<WfStep> WfSteps { get; }
+    DbSet<WfPrintTemplate> WfPrintTemplates { get; }
+    DbSet<WfPrintTemplateVersion> WfPrintTemplateVersions { get; }
+    DbSet<WfRequestPrintVersion> WfRequestPrintVersions { get; }
     DbSet<TEntity> Set<TEntity>() where TEntity : class;
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

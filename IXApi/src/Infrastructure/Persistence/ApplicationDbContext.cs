@@ -42,6 +42,7 @@ using IAX.IXApi.Modules.Workflow.Requests;
 using IAX.IXApi.Modules.Workflow.Transitions;
 using IAX.IXApi.Modules.Workflow.Performers;
 using IAX.IXApi.Modules.Workflow.Execution;
+using IAX.IXApi.Modules.Workflow.PrintTemplates;
 using IAX.IXApi.Modules.Organization.Announcements;
 using IAX.IXApi.Modules.Organization.DocumentManagement.Entities;
 using IAX.IXApi.Modules.Organization.EmployeeManagers;
@@ -198,6 +199,9 @@ namespace IAX.IXApi.Infrastructure.Persistence
         public DbSet<WfRequestMappingVariable> WfRequestMappingVariables => Set<WfRequestMappingVariable>();
         public DbSet<WfRequestVariable> WfRequestVariables => Set<WfRequestVariable>();
         public DbSet<WfAssignment> WfAssignments => Set<WfAssignment>();
+        public DbSet<WfPrintTemplate> WfPrintTemplates => Set<WfPrintTemplate>();
+        public DbSet<WfPrintTemplateVersion> WfPrintTemplateVersions => Set<WfPrintTemplateVersion>();
+        public DbSet<WfRequestPrintVersion> WfRequestPrintVersions => Set<WfRequestPrintVersion>();
         #endregion
 
         #region Organization

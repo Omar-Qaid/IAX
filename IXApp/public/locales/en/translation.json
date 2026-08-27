@@ -34,6 +34,7 @@
     "wfVariables": "Workflow variables",
     "wfSteps": "Workflow steps",
     "wfActivities": "Workflow activities",
+    "printTemplates": "Print templates",
     "setup": "Setup",
     "organizationAdministration": "Organization administration",
     "legalEntities": "Legal entities",
@@ -143,6 +144,44 @@
     "notFound": {
       "title": "Page not found",
       "message": "The requested page does not exist or is not available."
+    }
+  },
+  "printTemplates": {
+    "title": "Print templates",
+    "subtitle": "Manage process-specific official print forms and immutable published versions.",
+    "fields": {
+      "process": "Workflow process",
+      "code": "Template code",
+      "name": "Template name",
+      "description": "Description",
+      "status": "Status",
+      "version": "Version",
+      "default": "Default template",
+      "language": "Template language",
+      "orientation": "Orientation"
+    },
+    "languages": { "english": "English", "arabic": "Arabic" },
+    "orientation": { "portrait": "Portrait", "landscape": "Landscape" },
+    "status": { "draft": "Draft", "published": "Published", "archived": "Archived" },
+    "actions": { "publish": "Publish", "archive": "Archive", "delete": "Delete" },
+    "editor": {
+      "createTitle": "Create print template",
+      "editTitle": "Edit print template draft",
+      "designerPhaseNotice": "The structured A4 designer will extend this draft in Phase 2. Template metadata and versioning are already active."
+    },
+    "confirm": {
+      "publish": { "title": "Publish template", "message": "Publish the current draft of {{name}} as an immutable version?" },
+      "archive": { "title": "Archive template", "message": "Archive {{name}}? Existing pinned requests will keep their published version." },
+      "delete": { "title": "Delete draft template", "message": "Delete the unpublished template {{name}}?" }
+    },
+    "messages": {
+      "saved": "Print template draft saved.",
+      "loadFailed": "Failed to load print templates.",
+      "saveFailed": "Failed to save the print template.",
+      "actionFailed": "The print-template action failed.",
+      "publishSuccess": "Print template published.",
+      "archiveSuccess": "Print template archived.",
+      "deleteSuccess": "Draft print template deleted."
     }
   },
   "fields": {
@@ -360,6 +399,7 @@
     "filter_placeholder": "Filter value",
     "select_row": "Select row {{id}}", "totalRows": "Total: {{count}} rows", "selectedRows": "{{count}} selected", "resetSizing": "Reset sizing",
     "open_column_filter": "Open filter for {{column}}",
+    "column_menu": "Open column menu for {{column}}",
     "sort_ascending": "Sort ascending",
     "sort_descending": "Sort descending",
     "press_enter_to_add": "Press Enter to add",
@@ -371,6 +411,8 @@
     "no_pin": "No pin",
     "pin_left": "Pin left",
     "pin_right": "Pin right",
+    "pin_start": "Pin as first column",
+    "pin_end": "Pin as last column",
     "filters": "Filters",
     "features": "Features",
     "choose_columns": "Choose columns",

@@ -15,7 +15,7 @@ interface PinnedHeaderCellProps<T> {
   onFilterChange: (field: string, value: string) => void;
   onFilterIconClick: (event: React.MouseEvent<HTMLElement>, column: ColumnDef<T>) => void;
   onMenuOpen: (event: React.MouseEvent<HTMLElement>, column: ColumnDef<T>) => void;
-  onResizeStart: (event: React.MouseEvent, field: string) => void;
+  onResizeStart: (event: React.MouseEvent, field: string, edge?: 'inline-start' | 'inline-end') => void;
   showColumnBorders?: boolean;
   hideFilterRow?: boolean;
   hideColumnMenu?: boolean;
@@ -51,8 +51,8 @@ export function PinnedHeaderCell<T>({
         flexShrink: 0,
         flexGrow: 0,
         ...(side === 'left'
-          ? { left: offset, borderRight: (theme) => showColumnBorders ? `1px solid ${theme.palette.divider}` : 'none' }
-          : { right: offset, borderLeft: (theme) => showColumnBorders ? `1px solid ${theme.palette.divider}` : 'none' }),
+          ? { insetInlineStart: offset, borderInlineEnd: (theme) => showColumnBorders ? `1px solid ${theme.palette.divider}` : 'none' }
+          : { insetInlineEnd: offset, borderInlineStart: (theme) => showColumnBorders ? `1px solid ${theme.palette.divider}` : 'none' }),
       }}
     >
       {/* Name row */}
@@ -81,6 +81,7 @@ export function PinnedHeaderCell<T>({
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
             letterSpacing: 0,
+            textAlign: column.headerAlign ?? 'start',
           }}
         >
           {t(column.headerName || '')}
@@ -88,6 +89,7 @@ export function PinnedHeaderCell<T>({
         {!hideColumnMenu && (
           <IconButton
             size="small"
+            aria-label={t('grid.column_menu', { column: t(column.headerName || '') })}
             sx={{ p: 0.25, marginInlineStart: 0.25 }}
             onClick={(e) => onMenuOpen(e, column)}
           >
@@ -121,7 +123,8 @@ export function PinnedHeaderCell<T>({
       )}
       {/* Resize handle */}
       <Box
-        onMouseDown={(e) => onResizeStart(e, column.field as string)}
+        data-grid-resize-handle={String(column.field)}
+        onMouseDown={(e) => onResizeStart(e, column.field as string, side === 'left' ? 'inline-end' : 'inline-start')}
         sx={{
           position: 'absolute',
           top: 0,
@@ -129,7 +132,7 @@ export function PinnedHeaderCell<T>({
           width: 6,
           cursor: 'col-resize',
           zIndex: 10,
-          ...(side === 'left' ? { right: 0 } : { left: 0 }),
+          ...(side === 'left' ? { insetInlineEnd: 0 } : { insetInlineStart: 0 }),
           '&:hover': { bgcolor: 'primary.main', opacity: 0.5 },
         }}
       />

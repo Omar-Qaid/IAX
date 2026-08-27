@@ -149,6 +149,15 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'workflow-print-templates',
+    path: ROUTE_PATHS.WORKFLOW.PRINT_TEMPLATES,
+    permission: PERMISSIONS.WF_PRINT_TEMPLATE_VIEW,
+    component: lazyPage(
+      () => import('@modules/workflow/print-templates/pages/PrintTemplatesPage'),
+      (module) => module.PrintTemplatesPage
+    ),
+  },
+  {
     id: 'process-builder',
     path: ROUTE_PATHS.PROCESS_BUILDER,
     component: lazyPage(

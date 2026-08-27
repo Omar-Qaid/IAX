@@ -16,4 +16,6 @@
 
 At widths below the Material UI `md` breakpoint, `DataGridMobileBody` replaces the desktop table body. Features supply stable row IDs, columns, data/mutations, and controlled behavior where required.
 
+Column pinning and resize handles use logical inline-start/inline-end edges. In RTL, a `pinned: 'left'` column is the leading column on the right and dragging its inner handle outward increases its width. Desktop cell text follows the language direction; mobile cards center labels, values, and actions.
+
 [Complete DataGrid guide](../../../../docs/shared/data-grid.md) · [Responsive standards](../../../../docs/ui-ux-and-responsive.md)

@@ -115,7 +115,7 @@ export const GridRow = memo(function GridRowInner<T>({
       sx={{
         position: 'absolute',
         top: 0,
-        left: 0,
+        insetInlineStart: 0,
         width: 'max-content',
         minWidth: '100%',
         height: `${virtualRow.size}px`,

@@ -682,6 +682,8 @@ function DataGridInternal<T>({
                                 showColumnBorders={showColumnBorders}
                                 hideFilterRow={hideFilterRow}
                                 hideColumnMenu={hideColumnMenu}
+                                onAutosizeColumn={handleAutosizeColumn}
+                                onAutosizeAll={handleAutosizeAll}
                             />
                         </Box>
                     )}

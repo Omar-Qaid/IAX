@@ -18,4 +18,5 @@ export const WORKFLOW_ROUTE_PATHS = {
   VARIABLES: '/workflow/variables',
   STEPS: '/workflow/steps',
   ACTIVITIES: '/workflow/activities',
+  PRINT_TEMPLATES: '/workflow/print-templates',
 } as const;

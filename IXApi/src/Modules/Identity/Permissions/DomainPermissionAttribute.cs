@@ -22,11 +22,13 @@ namespace IAX.IXApi.Modules.Identity.Permissions
     {
         private readonly string _module;
         private readonly string _resource;
+        private readonly string? _action;
 
-        public DomainPermissionAttribute(string module, string resource)
+        public DomainPermissionAttribute(string module, string resource, string? action = null)
         {
             _module = module;
             _resource = resource;
+            _action = action;
         }
 
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
@@ -44,7 +46,7 @@ namespace IAX.IXApi.Modules.Identity.Permissions
                 return;
 
             var method = context.HttpContext.Request.Method.ToUpperInvariant();
-            var action = method switch
+            var action = _action ?? method switch
             {
                 "GET" => "View",
                 "POST" => "Create",

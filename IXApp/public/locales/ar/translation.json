@@ -34,6 +34,7 @@
     "wfVariables": "متغيرات سير العمل",
     "wfSteps": "خطوات سير العمل",
     "wfActivities": "أنشطة سير العمل",
+    "printTemplates": "قوالب الطباعة",
     "setup": "الإعداد",
     "organizationAdministration": "إدارة المؤسسة",
     "legalEntities": "الكيانات القانونية",
@@ -137,6 +138,44 @@
     "notFound": {
       "title": "الصفحة غير موجودة",
       "message": "الصفحة المطلوبة غير موجودة أو غير متاحة."
+    }
+  },
+  "printTemplates": {
+    "title": "قوالب الطباعة",
+    "subtitle": "إدارة نماذج الطباعة الرسمية الخاصة بالعمليات وإصداراتها المنشورة غير القابلة للتعديل.",
+    "fields": {
+      "process": "عملية سير العمل",
+      "code": "رمز القالب",
+      "name": "اسم القالب",
+      "description": "الوصف",
+      "status": "الحالة",
+      "version": "الإصدار",
+      "default": "القالب الافتراضي",
+      "language": "لغة القالب",
+      "orientation": "اتجاه الصفحة"
+    },
+    "languages": { "english": "الإنجليزية", "arabic": "العربية" },
+    "orientation": { "portrait": "عمودي", "landscape": "أفقي" },
+    "status": { "draft": "مسودة", "published": "منشور", "archived": "مؤرشف" },
+    "actions": { "publish": "نشر", "archive": "أرشفة", "delete": "حذف" },
+    "editor": {
+      "createTitle": "إنشاء قالب طباعة",
+      "editTitle": "تعديل مسودة قالب الطباعة",
+      "designerPhaseNotice": "سيتم توسيع هذه المسودة بمصمم A4 المنظم في المرحلة الثانية. بيانات القالب وإدارة الإصدارات مفعّلة الآن."
+    },
+    "confirm": {
+      "publish": { "title": "نشر القالب", "message": "هل تريد نشر المسودة الحالية للقالب {{name}} كإصدار غير قابل للتعديل؟" },
+      "archive": { "title": "أرشفة القالب", "message": "هل تريد أرشفة {{name}}؟ ستحتفظ الطلبات المرتبطة بإصدارها المنشور." },
+      "delete": { "title": "حذف مسودة القالب", "message": "هل تريد حذف القالب غير المنشور {{name}}؟" }
+    },
+    "messages": {
+      "saved": "تم حفظ مسودة قالب الطباعة.",
+      "loadFailed": "تعذر تحميل قوالب الطباعة.",
+      "saveFailed": "تعذر حفظ قالب الطباعة.",
+      "actionFailed": "تعذر تنفيذ إجراء قالب الطباعة.",
+      "publishSuccess": "تم نشر قالب الطباعة.",
+      "archiveSuccess": "تمت أرشفة قالب الطباعة.",
+      "deleteSuccess": "تم حذف مسودة قالب الطباعة."
     }
   },
   "fields": {
@@ -354,6 +393,7 @@
     "filter_placeholder": "قيمة التصفية",
     "select_row": "تحديد الصف {{id}}", "totalRows": "الإجمالي: {{count}} صف", "selectedRows": "تم تحديد {{count}}", "resetSizing": "إعادة ضبط الحجم",
     "open_column_filter": "فتح عامل تصفية العمود {{column}}",
+    "column_menu": "فتح قائمة العمود {{column}}",
     "sort_ascending": "ترتيب تصاعدي",
     "sort_descending": "ترتيب تنازلي",
     "press_enter_to_add": "اضغط Enter للإضافة",
@@ -365,6 +405,8 @@
     "no_pin": "بلا تثبيت",
     "pin_left": "تثبيت إلى اليسار",
     "pin_right": "تثبيت إلى اليمين",
+    "pin_start": "تثبيت كأول عمود",
+    "pin_end": "تثبيت كآخر عمود",
     "filters": "عوامل التصفية",
     "features": "الميزات",
     "choose_columns": "اختيار الأعمدة",

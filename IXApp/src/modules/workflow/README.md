@@ -2,11 +2,13 @@
 
 ## Purpose
 
-Owns workflow setup pages and typed API wrappers for categories, processes, steps, variables, activities, performers, controls/options/validations, transitions, request controls, and master/setup data.
+Owns workflow setup pages and typed API wrappers for categories, processes, steps, variables, activities, performers, controls/options/validations, transitions, request controls, print templates, and master/setup data.
 
 ## Pages
 
 `WFCategoryPage`, `WFProcessPage`, `WFStepsPage`, `WFVariablesPage`, `WfActivitiesPage`, `WfControlsPage`, `WfActivityTypesPage`, `WfDataTypesPage`, and `WfPrioritiesPage` are registered by the app page registry. Repeated setup lists use `components/WorkflowSetupListPage.tsx`. `lookups/processLookup.ts` provides process lookup configuration, and `routes/workflowRoutePaths.ts` holds workflow-specific path constants.
+
+`print-templates` owns the process-scoped template administration UI, API contract, and strongly typed versioned document schema. Keep designer, preview, and field-catalog additions inside this feature folder; do not duplicate print-template state in Process Builder.
 
 ## API and data flow
 

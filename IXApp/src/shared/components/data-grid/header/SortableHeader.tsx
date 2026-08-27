@@ -19,7 +19,7 @@ interface SortableHeaderProps<T> {
   onFilterChange: (field: string, value: string) => void;
   onFilterIconClick: (event: React.MouseEvent<HTMLElement>, column: ColumnDef<T>) => void;
   onMenuOpen: (event: React.MouseEvent<HTMLElement>, column: ColumnDef<T>) => void;
-  onResizeStart: (event: React.MouseEvent, field: string) => void;
+  onResizeStart: (event: React.MouseEvent, field: string, edge?: 'inline-start' | 'inline-end') => void;
   showColumnBorders?: boolean;
   hideFilterRow?: boolean;
   hideColumnMenu?: boolean;
@@ -108,6 +108,7 @@ export function SortableHeader<T>({
             fontFamily: APP_FONT_FAMILY,
             fontSize: 12,
             letterSpacing: 0,
+            textAlign: column.headerAlign ?? 'start',
           }}
         >
           {t(column.headerName || '')}
@@ -121,6 +122,7 @@ export function SortableHeader<T>({
         {!hideColumnMenu && (
           <IconButton
             size="small"
+            aria-label={t('grid.column_menu', { column: t(column.headerName || '') })}
             sx={{ p: 0.25, marginInlineStart: 0.25 }}
             onClick={(e) => {
               e.stopPropagation();
@@ -159,7 +161,8 @@ export function SortableHeader<T>({
 
       {/* Resize handle */}
       <Box
-        onMouseDown={(e) => onResizeStart(e, column.field as string)}
+        data-grid-resize-handle={String(column.field)}
+        onMouseDown={(e) => onResizeStart(e, column.field as string, 'inline-end')}
         sx={{
           position: 'absolute',
           top: 0,

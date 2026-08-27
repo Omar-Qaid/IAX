@@ -79,6 +79,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             ("Workflow", "Categories"),
             ("Workflow", "Priorities"),
             ("Workflow", "ProcessTypes"),
+            ("Workflow", "PrintTemplates"),
 
             // ── System ──────────────────────────────────────────────────────
             ("System", "AuditLog"),
@@ -189,6 +190,20 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                             Description = $"{action} {resource} in {module}",
                         });
                     }
+                }
+            }
+
+            foreach (var action in new[] { "Publish", "Archive" })
+            {
+                if (!existing.Any(item => item.Module == "Workflow" && item.Resource == "PrintTemplates" && item.Action == action))
+                {
+                    toAdd.Add(new AppPermission
+                    {
+                        Module = "Workflow",
+                        Resource = "PrintTemplates",
+                        Action = action,
+                        Description = $"{action} PrintTemplates in Workflow",
+                    });
                 }
             }
 

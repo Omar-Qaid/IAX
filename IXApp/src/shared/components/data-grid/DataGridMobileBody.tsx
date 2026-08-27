@@ -111,7 +111,7 @@ export function DataGridMobileBodyInternal<T>({
     return (
       <Typography
         variant="body2"
-        sx={{ color: 'text.primary', fontWeight: 500, wordBreak: 'break-word' }}
+        sx={{ width: '100%', color: 'text.primary', fontWeight: 500, wordBreak: 'break-word', textAlign: 'center' }}
       >
         {val != null ? String(val) : '-'}
       </Typography>
@@ -209,7 +209,7 @@ export function DataGridMobileBodyInternal<T>({
               style={{
                 position: 'absolute',
                 top: 0,
-                left: 0,
+                insetInlineStart: 0,
                 width: '100%',
                 transform: `translateY(${virtualRow.start}px)`,
                 padding: '8px 12px',
@@ -230,6 +230,7 @@ export function DataGridMobileBodyInternal<T>({
                   cursor: onRowClick ? 'pointer' : 'default',
                   transition: 'all 0.2s',
                   position: 'relative',
+                  textAlign: 'center',
                 }}
               >
                 {/* Selection Checkbox */}
@@ -248,24 +249,25 @@ export function DataGridMobileBodyInternal<T>({
                 <Box
                   sx={{
                     display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
+                    justifyContent: 'center',
+                    alignItems: 'center',
                     mb: 2,
                     paddingInlineEnd: selectionMode !== 'none' ? 4 : 0,
                   }}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, flexWrap: 'wrap', width: '100%' }}>
                     {titleCol && (
                       <>
                         <Typography
                           sx={{ fontWeight: 700, color: 'primary.main', fontSize: '0.95rem' }}
                         >
-                          {titleCol.headerName}:
+                          {t(titleCol.headerName)}:
                         </Typography>
                         <Box
                           sx={{
                             display: 'flex',
                             alignItems: 'center',
+                            justifyContent: 'center',
                             '& .MuiTypography-root': {
                               fontWeight: 600,
                               color: 'text.primary',
@@ -287,21 +289,23 @@ export function DataGridMobileBodyInternal<T>({
                 </Box>
 
                 {/* Details */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, mb: 2 }}>
                   {detailCols.map((col) => (
                     <Box
                       key={col.field as string}
-                      sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}
+                      sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0.25, width: '100%' }}
                     >
                       <Typography
                         variant="body2"
                         sx={{ color: 'text.secondary', minWidth: '80px', flexShrink: 0, pt: '1px' }}
                       >
-                        {col.headerName}:
+                        {t(col.headerName)}:
                       </Typography>
                       <Box
                         sx={{
                           flexGrow: 1,
+                          width: '100%',
+                          textAlign: 'center',
                           '& .MuiTypography-root': { color: 'text.primary', fontWeight: 500 },
                         }}
                       >
@@ -315,7 +319,7 @@ export function DataGridMobileBodyInternal<T>({
                 {(onEdit || onDelete || onViewHistory) && (
                   <>
                     <Divider sx={{ mx: -2, mb: 1 }} />
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 0.5 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
                       {onViewHistory && (
                         <IconButton
                           aria-label={t('common.view_history')}

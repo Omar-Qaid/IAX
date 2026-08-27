@@ -44,14 +44,20 @@ const GridCellInternal = <T,>({
         flexGrow: 0,
         overflow: 'hidden',
         bgcolor: 'inherit',
-        justifyContent: col.field === '_selection' ? 'center' : col.align === 'center' ? 'center' : col.align === 'right' ? 'flex-end' : 'flex-start',
+        justifyContent: col.field === '_selection' || col.align === 'center'
+          ? 'center'
+          : col.align === 'left'
+            ? theme.direction === 'rtl' ? 'flex-end' : 'flex-start'
+            : col.align === 'right'
+              ? theme.direction === 'rtl' ? 'flex-start' : 'flex-end'
+              : 'flex-start',
         ...(isPinned && {
           position: 'sticky',
           zIndex: 2,
           bgcolor: 'inherit',
           ...(position === 'left'
-            ? { left: offset, boxShadow: showColumnBorders ? `1px 0 0 ${theme.palette.divider}` : 'none' }
-            : { right: offset, boxShadow: showColumnBorders ? `-1px 0 0 ${theme.palette.divider}` : 'none' }),
+            ? { insetInlineStart: offset, borderInlineEnd: showColumnBorders ? `1px solid ${theme.palette.divider}` : undefined }
+            : { insetInlineEnd: offset, borderInlineStart: showColumnBorders ? `1px solid ${theme.palette.divider}` : undefined }),
         }),
         '&:focus': {
           outline: `1px solid ${theme.palette.primary.main}`,

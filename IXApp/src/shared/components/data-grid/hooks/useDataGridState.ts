@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ColumnDef, SelectionMode } from '../types';
 import type { GridInitialState } from './useGridPersistence';
 
@@ -42,43 +42,47 @@ export function useDataGridState<T>(options: UIStateOptions<T>) {
     initialState.showCellBorders ?? initialShowCellBorders ?? true
   );
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeSidebarTab, setActiveSidebarTab] = useState<'columns' | 'filters' | 'features' | null>(null);
-  
-  const [focusedCell, setFocusedCell] = useState<{ rowIndex: number; colIndex: number } | null>(null);
+  const [activeSidebarTab, setActiveSidebarTab] = useState<
+    'columns' | 'filters' | 'features' | null
+  >(null);
+  const [focusedCell, setFocusedCell] = useState<{
+    rowIndex: number;
+    colIndex: number;
+  } | null>(null);
 
-  const [prevInitialSelectionMode, setPrevInitialSelectionMode] = useState(initialSelectionMode);
-  if (initialSelectionMode !== prevInitialSelectionMode) {
-    setPrevInitialSelectionMode(initialSelectionMode);
-    if (initialSelectionMode) {
-      setSelectionMode(initialSelectionMode);
-    }
-  }
+  const prevInitialSelectionMode = useRef(initialSelectionMode);
+  useEffect(() => {
+    if (initialSelectionMode === prevInitialSelectionMode.current) return;
+    prevInitialSelectionMode.current = initialSelectionMode;
+    if (initialSelectionMode) setSelectionMode(initialSelectionMode);
+  }, [initialSelectionMode]);
 
-  const [prevInitialStateColumns, setPrevInitialStateColumns] = useState(initialState.columns);
-  if (initialState.columns !== prevInitialStateColumns) {
-    setPrevInitialStateColumns(initialState.columns);
-    const isEqual = areColumnsStructurallyEqual(initialState.columns, prevInitialStateColumns);
-    if (!isEqual) {
+  const prevInitialStateColumns = useRef(initialState.columns);
+  useEffect(() => {
+    if (initialState.columns === prevInitialStateColumns.current) return;
+    const previousColumns = prevInitialStateColumns.current;
+    prevInitialStateColumns.current = initialState.columns;
+
+    if (!areColumnsStructurallyEqual(initialState.columns, previousColumns)) {
       setColumns(initialState.columns);
-    } else {
-      setColumns(current => {
-        const currentByField = new Map(current.map(c => [String(c.field), c]));
-        return initialState.columns.map(col => {
-          const active = currentByField.get(String(col.field));
-          if (active) {
-            return {
-              ...col,
-              width: active.width,
-              flex: active.flex,
-              hidden: active.hidden,
-              pinned: active.pinned,
-            };
-          }
-          return col;
-        });
-      });
+      return;
     }
-  }
+
+    setColumns((current) => {
+      const currentByField = new Map(current.map((column) => [String(column.field), column]));
+      return initialState.columns.map((column) => {
+        const active = currentByField.get(String(column.field));
+        if (!active) return column;
+        return {
+          ...column,
+          width: active.width,
+          flex: active.flex,
+          hidden: active.hidden,
+          pinned: active.pinned,
+        };
+      });
+    });
+  }, [initialState.columns]);
 
   return {
     columns,

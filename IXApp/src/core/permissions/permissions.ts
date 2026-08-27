@@ -58,6 +58,13 @@ export const PERMISSIONS = {
   WF_ACTIVITY_EDIT: 'Workflow.Activities.Edit',
   WF_ACTIVITY_DELETE: 'Workflow.Activities.Delete',
 
+  WF_PRINT_TEMPLATE_VIEW: 'Workflow.PrintTemplates.View',
+  WF_PRINT_TEMPLATE_CREATE: 'Workflow.PrintTemplates.Create',
+  WF_PRINT_TEMPLATE_EDIT: 'Workflow.PrintTemplates.Edit',
+  WF_PRINT_TEMPLATE_DELETE: 'Workflow.PrintTemplates.Delete',
+  WF_PRINT_TEMPLATE_PUBLISH: 'Workflow.PrintTemplates.Publish',
+  WF_PRINT_TEMPLATE_ARCHIVE: 'Workflow.PrintTemplates.Archive',
+
   LEGAL_ENTITY_VIEW: 'legalEntity.view',
   LEGAL_ENTITY_MANAGE: 'legalEntity.manage',
 

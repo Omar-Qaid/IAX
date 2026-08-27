@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, MenuItem, ListItemIcon, ListItemText, Divider, Box } from '@mui/material';
+import { Menu, MenuItem, ListItemIcon, ListItemText, Divider, Box, useTheme } from '@mui/material';
 import ArrowUpward from '@mui/icons-material/ArrowUpward';
 import ArrowDownward from '@mui/icons-material/ArrowDownward';
 import PushPinIcon from '@mui/icons-material/PushPin';
@@ -13,24 +13,27 @@ interface HeaderMenuProps<T> {
   anchorEl: HTMLElement | null;
   onClose: () => void;
   activeColumn: ColumnDef<T> | null;
-  initialColumns: ColumnDef<T>[];
   setColumns: React.Dispatch<React.SetStateAction<ColumnDef<T>[]>>;
   onSort: (field: string, direction?: 'asc' | 'desc') => void;
   onResetColumns: () => void;
   onOpenChooseColumns: () => void;
+  onAutosizeColumn: (field: string) => void;
+  onAutosizeAll: () => void;
 }
 
 export function HeaderMenu<T>({
   anchorEl,
   onClose,
   activeColumn,
-  initialColumns,
   setColumns,
   onSort,
   onResetColumns,
   onOpenChooseColumns,
+  onAutosizeColumn,
+  onAutosizeAll,
 }: HeaderMenuProps<T>) {
   const { t } = useTranslation();
+  const theme = useTheme();
   const [pinMenuAnchor, setPinMenuAnchor] = useState<HTMLElement | null>(null);
 
   const handlePin = (position: 'left' | 'right' | null) => {
@@ -44,21 +47,8 @@ export function HeaderMenu<T>({
   };
 
   const handleAutosize = (all: boolean) => {
-    if (all) {
-      setColumns((prev) =>
-        prev.map((c) => {
-          const initial = initialColumns.find((i) => i.field === c.field);
-          return { ...c, width: initial?.width, flex: initial?.flex };
-        })
-      );
-    } else if (activeColumn) {
-      const initial = initialColumns.find((c) => c.field === activeColumn.field);
-      setColumns((prev) =>
-        prev.map((c) =>
-          c.field === activeColumn.field ? { ...c, width: initial?.width, flex: initial?.flex } : c
-        )
-      );
-    }
+    if (all) onAutosizeAll();
+    else if (activeColumn) onAutosizeColumn(String(activeColumn.field));
     onClose();
   };
 
@@ -71,7 +61,9 @@ export function HeaderMenu<T>({
           onClose();
           setPinMenuAnchor(null);
         }}
-        slotProps={{ paper: { sx: { width: 240, p: 0 } } }}
+        anchorOrigin={{ vertical: 'bottom', horizontal: theme.direction === 'rtl' ? 'left' : 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: theme.direction === 'rtl' ? 'right' : 'left' }}
+        slotProps={{ paper: { sx: { width: 240, maxWidth: 'calc(100vw - 16px)', p: 0, direction: theme.direction, textAlign: 'start' } } }}
       >
         {activeColumn?.sortable !== false && (
           <MenuItem
@@ -125,7 +117,7 @@ export function HeaderMenu<T>({
               slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }}
             />
           </Box>
-          <ChevronRightIcon fontSize="small" />
+          <ChevronRightIcon fontSize="small" sx={{ transform: theme.direction === 'rtl' ? 'scaleX(-1)' : 'none' }} />
         </MenuItem>
 
         <Divider />
@@ -180,15 +172,15 @@ export function HeaderMenu<T>({
         anchorEl={pinMenuAnchor}
         open={Boolean(pinMenuAnchor)}
         onClose={() => setPinMenuAnchor(null)}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-        slotProps={{ paper: { sx: { width: 140, marginInlineStart: 0.5 } } }}
+        anchorOrigin={{ vertical: 'top', horizontal: theme.direction === 'rtl' ? 'left' : 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: theme.direction === 'rtl' ? 'right' : 'left' }}
+        slotProps={{ paper: { sx: { width: 170, maxWidth: 'calc(100vw - 16px)', direction: theme.direction, textAlign: 'start' } } }}
       >
         {(
           [
             { label: t('grid.no_pin'), value: null },
-            { label: t('grid.pin_left'), value: 'left' },
-            { label: t('grid.pin_right'), value: 'right' },
+            { label: t('grid.pin_start'), value: 'left' },
+            { label: t('grid.pin_end'), value: 'right' },
           ] as const
         ).map(({ label, value }) => (
           <MenuItem key={value || 'none'} onClick={() => handlePin(value)}>

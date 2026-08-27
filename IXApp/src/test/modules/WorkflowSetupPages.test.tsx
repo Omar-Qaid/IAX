@@ -1,6 +1,6 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@test/testUtils';
+import { fireEvent, render, screen, waitFor } from '@test/testUtils';
 import { queryClient } from '@core/api/queryClient';
 import type { WorkflowMasterRecord } from '@modules/workflow/api/workflowMasterApi';
 import {
@@ -60,5 +60,18 @@ describe('workflow setup pages', () => {
 
     expect(screen.getByText('Workflow controls')).toBeDefined();
     expect(await screen.findByText('TextBox')).toBeDefined();
+  });
+
+  it('allows an existing activity type to be edited when number-sequence metadata is unavailable', async () => {
+    const activityType = record('Approval activity');
+    vi.spyOn(wfActivityTypeApi, 'list').mockResolvedValue([activityType]);
+    const update = vi.spyOn(wfActivityTypeApi, 'update').mockResolvedValue(activityType);
+    render(<WfActivityTypesPage />);
+
+    expect(await screen.findByText('Approval activity')).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(update).toHaveBeenCalledOnce());
   });
 });

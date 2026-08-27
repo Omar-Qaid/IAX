@@ -272,9 +272,9 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
         }),
         onRowSave: async (values, isNew) => {
           const record = values as WorkflowMasterRecord<TDto>;
-          if (!sequence?.available)
+          if (isNew && !sequence?.available)
             throw new Error(sequence?.message || 'Number sequence is unavailable.');
-          if (sequence.manual && !String(record.code ?? '').trim())
+          if (isNew && sequence?.manual && !String(record.code ?? '').trim())
             throw new Error(t('validation.required', { field: t('workflowSetup.fields.code') }));
           const missingCoreField = requiredCoreFields.find(
             (field) => !String(record[field] ?? '').trim()
@@ -288,10 +288,12 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
           );
           if (missingExtra)
             throw new Error(t('validation.required', { field: t(missingExtra.labelKey) }));
-          if (isNew || record.recId === 0)
-            await api.create(sequence.manual ? record : { ...record, code: null });
-          else await api.update(record);
-          await sequenceQuery.refetch();
+          if (isNew || record.recId === 0) {
+            await api.create(sequence?.manual ? record : { ...record, code: null });
+            await sequenceQuery.refetch();
+          } else {
+            await api.update(record);
+          }
           await refresh();
           notifySuccess(t('messages.savedSuccessfully'));
         },

@@ -39,6 +39,8 @@ interface GridHeaderProps<T> {
   showColumnBorders?: boolean;
   hideFilterRow?: boolean;
   hideColumnMenu?: boolean;
+  onAutosizeColumn: (field: string) => void;
+  onAutosizeAll: () => void;
 }
 
 export function DataGridHeaderInternal<T>({
@@ -46,6 +48,7 @@ export function DataGridHeaderInternal<T>({
   filters, setFilters, onResetColumns, headerHeight,
   selectionMode = 'single', onSelectAll, allSelected,
   showColumnBorders = false, hideFilterRow = false, hideColumnMenu = false,
+  onAutosizeColumn, onAutosizeAll,
 }: GridHeaderProps<T>) {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -57,7 +60,12 @@ export function DataGridHeaderInternal<T>({
   const [filterColumn, setFilterColumn] = useState<ColumnDef<T> | null>(null);
   
   // --- Functional State ---
-  const [resizing, setResizing] = useState<{ field: string; startX: number; startWidth: number } | null>(null);
+  const [resizing, setResizing] = useState<{
+    field: string;
+    startX: number;
+    startWidth: number;
+    edge: 'inline-start' | 'inline-end';
+  } | null>(null);
   const [isChooseColumnsOpen, setIsChooseColumnsOpen] = useState(false);
 
   // --- DND Sensors ---
@@ -74,14 +82,9 @@ export function DataGridHeaderInternal<T>({
         const col = prev.find(c => c.field === resizing.field);
         if (!col) return prev;
 
-        let delta = e.clientX - resizing.startX;
-        if (col.pinned === 'right') {
-          delta = -delta;
-        } else if (!col.pinned) {
-          if (theme.direction === 'rtl') {
-            delta = -delta;
-          }
-        }
+        const pointerDelta = e.clientX - resizing.startX;
+        const directionDelta = theme.direction === 'rtl' ? -pointerDelta : pointerDelta;
+        const delta = resizing.edge === 'inline-end' ? directionDelta : -directionDelta;
 
         const newWidth = Math.max(50, resizing.startWidth + delta);
         return prev.map(c =>
@@ -104,11 +107,15 @@ export function DataGridHeaderInternal<T>({
     setActiveColumn(column);
   };
 
-  const handleResizeStart = (e: React.MouseEvent, field: string) => {
+  const handleResizeStart = (
+    e: React.MouseEvent,
+    field: string,
+    edge: 'inline-start' | 'inline-end' = 'inline-end',
+  ) => {
     e.preventDefault();
     e.stopPropagation();
     const col = columns.find(c => c.field === field);
-    if (col) setResizing({ field, startX: e.clientX, startWidth: col.width || 150 });
+    if (col) setResizing({ field, startX: e.clientX, startWidth: col.width || 150, edge });
   };
 
   const handleFilterChange = (field: string, value: string) => {
@@ -271,11 +278,12 @@ export function DataGridHeaderInternal<T>({
         anchorEl={menuAnchor}
         onClose={() => setMenuAnchor(null)}
         activeColumn={activeColumn}
-        initialColumns={initialColumns}
         setColumns={setColumns}
         onSort={onSort}
         onResetColumns={onResetColumns}
         onOpenChooseColumns={() => setIsChooseColumnsOpen(true)}
+        onAutosizeColumn={onAutosizeColumn}
+        onAutosizeAll={onAutosizeAll}
       />
 
       <FilterPopover

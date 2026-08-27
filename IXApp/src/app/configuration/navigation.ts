@@ -184,6 +184,11 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
             path: ROUTE_PATHS.WORKFLOW.PROCESSES,
             permission: PERMISSIONS.WF_PROCESS_VIEW,
           },
+          {
+            label: 'nav.printTemplates',
+            path: ROUTE_PATHS.WORKFLOW.PRINT_TEMPLATES,
+            permission: PERMISSIONS.WF_PRINT_TEMPLATE_VIEW,
+          },
         ],
       },
     ],
