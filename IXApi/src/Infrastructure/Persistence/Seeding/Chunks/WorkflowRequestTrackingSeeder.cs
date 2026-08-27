@@ -26,7 +26,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks;
 
-/// <summary>Legacy process 662 plus the complete workflow-only execution for request 94037.</summary>
+/// <summary>
+/// Seeds the complete legacy execution for request 94037 and guarantees that every
+/// workflow process has a representative request and a published print template.
+/// </summary>
 public sealed class WorkflowRequestTrackingSeeder : ISeeder
 {
     private const long ProcessId = 662;
@@ -92,7 +95,9 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
         var createdBy = (await users.FindByNameAsync("sys"))?.Id ?? "sys";
  
         await SeedExecutionAsync(db, createdBy, ct);
+        await SeedRequestForEveryProcessAsync(db, createdBy, ct);
         await SeedPrintTemplateAsync(db, createdBy, ct);
+        await SeedPrintTemplateForEveryProcessAsync(db, createdBy, ct);
     }
 
    
@@ -252,6 +257,171 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
         }
     }
 
+    private static async System.Threading.Tasks.Task SeedRequestForEveryProcessAsync(
+        ApplicationDbContext db,
+        string by,
+        CancellationToken ct)
+    {
+        var processes = await db.WfProcesses
+            .IgnoreQueryFilters()
+            .Where(process => process.IsActive && !process.IsDeleted)
+            .OrderBy(process => process.RecId)
+            .Select(process => new { process.RecId, process.Name })
+            .ToListAsync(ct);
+
+        var processIdsWithRequests = await db.WfRequests
+            .IgnoreQueryFilters()
+            .Where(request => !request.IsDeleted)
+            .Select(request => request.ProcessId)
+            .Distinct()
+            .ToListAsync(ct);
+        var existingProcessIds = processIdsWithRequests.ToHashSet();
+        var seededAt = new DateTime(2026, 1, 1, 8, 0, 0, DateTimeKind.Utc);
+
+        foreach (var process in processes.Where(process => !existingProcessIds.Contains(process.RecId)))
+        {
+            var requestDate = seededAt.AddMinutes(process.RecId % 1440);
+            var processName = string.IsNullOrWhiteSpace(process.Name)
+                ? $"Process {process.RecId}"
+                : process.Name;
+            db.WfRequests.Add(new WfRequest
+            {
+                Code = $"SEED-{process.RecId}",
+                Name = $"{processName} sample request",
+                ProcessId = process.RecId,
+                EmployeeId = null,
+                RequestDate = requestDate,
+                RequestDetails = new XElement("Details").ToString(SaveOptions.DisableFormatting),
+                IsFinished = false,
+                Progress = 0,
+                IsActive = true,
+                CreatedAt = requestDate,
+                CreatedBy = by,
+                OwnerAccountId = by,
+            });
+        }
+
+        await db.SaveChangesAsync(ct);
+    }
+
+    private static async System.Threading.Tasks.Task SeedPrintTemplateForEveryProcessAsync(
+        ApplicationDbContext db,
+        string by,
+        CancellationToken ct)
+    {
+        var processes = await db.WfProcesses
+            .IgnoreQueryFilters()
+            .Where(process => process.IsActive && !process.IsDeleted && process.RecId != ProcessId)
+            .OrderBy(process => process.RecId)
+            .Select(process => new { process.RecId, process.Name })
+            .ToListAsync(ct);
+
+        foreach (var process in processes)
+        {
+            var processName = string.IsNullOrWhiteSpace(process.Name)
+                ? $"Process {process.RecId}"
+                : process.Name;
+            var templateCode = $"PROCESS_{process.RecId}_PRINTOUT";
+            var template = await db.WfPrintTemplates
+                .IgnoreQueryFilters()
+                .SingleOrDefaultAsync(
+                    row => row.ProcessId == process.RecId && row.Code == templateCode,
+                    ct);
+
+            if (template is null)
+            {
+                var processHasDefaultTemplate = await db.WfPrintTemplates
+                    .IgnoreQueryFilters()
+                    .AnyAsync(
+                        row => row.ProcessId == process.RecId
+                            && row.IsDefault
+                            && row.IsActive
+                            && !row.IsDeleted,
+                        ct);
+
+                template = new WfPrintTemplate
+                {
+                    ProcessId = process.RecId,
+                    Code = templateCode,
+                    Name = $"{processName} printout",
+                    Description = $"Seeded A4 printout for the {processName} workflow.",
+                    PageSize = "A4",
+                    Orientation = "portrait",
+                    Language = "en",
+                    IsDefault = !processHasDefaultTemplate,
+                    Status = WfPrintTemplateStatus.Published,
+                    IsActive = true,
+                    CreatedBy = by,
+                    OwnerAccountId = by,
+                };
+                db.WfPrintTemplates.Add(template);
+                await db.SaveChangesAsync(ct);
+            }
+
+            var version = await db.WfPrintTemplateVersions
+                .IgnoreQueryFilters()
+                .SingleOrDefaultAsync(
+                    row => row.TemplateId == template.RecId && row.VersionNo == 1,
+                    ct);
+
+            if (version is null)
+            {
+                version = new WfPrintTemplateVersion
+                {
+                    TemplateId = template.RecId,
+                    VersionNo = 1,
+                    TemplateJson = BuildGenericPrintTemplateJson(processName),
+                    IsPublished = true,
+                    PublishedBy = by,
+                    PublishedAt = DateTime.UtcNow,
+                    CreatedBy = by,
+                    OwnerAccountId = by,
+                };
+                db.WfPrintTemplateVersions.Add(version);
+                await db.SaveChangesAsync(ct);
+            }
+
+            if (template.CurrentVersionId != version.RecId
+                || template.Status != WfPrintTemplateStatus.Published)
+            {
+                template.CurrentVersionId = version.RecId;
+                template.Status = WfPrintTemplateStatus.Published;
+                await db.SaveChangesAsync(ct);
+            }
+
+            var requestId = await db.WfRequests
+                .IgnoreQueryFilters()
+                .Where(request => request.ProcessId == process.RecId && !request.IsDeleted)
+                .OrderBy(request => request.RecId)
+                .Select(request => (long?)request.RecId)
+                .FirstOrDefaultAsync(ct);
+
+            if (requestId is null)
+                continue;
+
+            var requestVersionExists = await db.WfRequestPrintVersions
+                .IgnoreQueryFilters()
+                .AnyAsync(
+                    row => row.RequestId == requestId.Value && row.TemplateId == template.RecId,
+                    ct);
+
+            if (!requestVersionExists)
+            {
+                db.WfRequestPrintVersions.Add(new WfRequestPrintVersion
+                {
+                    RequestId = requestId.Value,
+                    TemplateId = template.RecId,
+                    TemplateVersionId = version.RecId,
+                    SelectedAt = DateTime.UtcNow,
+                    SelectedBy = by,
+                    CreatedBy = by,
+                    OwnerAccountId = by,
+                });
+                await db.SaveChangesAsync(ct);
+            }
+        }
+    }
+
     private static string BuildPrintTemplateJson()
     {
         var document = new PrintTemplateDocument
@@ -327,6 +497,82 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                             Label = "Closing date",
                             Binding = new PrintFieldBinding { SourceType = "requestControl", RequestControlId = 21162 },
                             Format = new PrintValueFormat { Type = "date", Pattern = "yyyy-MM-dd" },
+                        },
+                    ],
+                },
+            ],
+            Footer =
+            [
+                new PrintDateElement { Id = "print-date" },
+                new PrintPageNumberElement { Id = "page-number" },
+            ],
+            MissingFieldBehavior = "empty",
+        };
+
+        return JsonSerializer.Serialize(document, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+    }
+
+    private static string BuildGenericPrintTemplateJson(string processName)
+    {
+        var document = new PrintTemplateDocument
+        {
+            SchemaVersion = 1,
+            Language = "en",
+            Direction = "ltr",
+            Page = new PrintTemplatePage
+            {
+                Size = "A4",
+                Orientation = "portrait",
+                Margins = new PrintTemplateMargins { Top = 15, Right = 15, Bottom = 15, Left = 15 },
+            },
+            Header =
+            [
+                new PrintImageElement
+                {
+                    Id = "company-logo",
+                    SourceType = "companyLogo",
+                    AltText = "Company logo",
+                },
+                new PrintTextElement
+                {
+                    Id = "document-title",
+                    Value = processName,
+                    Style = new PrintElementStyle { FontSize = 18, FontWeight = 700, Alignment = "center" },
+                },
+            ],
+            Sections =
+            [
+                new PrintSectionElement
+                {
+                    Id = "request-information",
+                    Title = "Request information",
+                    Columns = 2,
+                    Elements =
+                    [
+                        new PrintFieldElement
+                        {
+                            Id = "request-number",
+                            Label = "Request",
+                            Binding = new PrintFieldBinding { SourceType = "system", Source = "requestNumber" },
+                        },
+                        new PrintFieldElement
+                        {
+                            Id = "request-date",
+                            Label = "Request date",
+                            Binding = new PrintFieldBinding { SourceType = "system", Source = "requestDate" },
+                            Format = new PrintValueFormat { Type = "date", Pattern = "yyyy-MM-dd" },
+                        },
+                        new PrintFieldElement
+                        {
+                            Id = "request-status",
+                            Label = "Status",
+                            Binding = new PrintFieldBinding { SourceType = "system", Source = "requestStatus" },
+                        },
+                        new PrintFieldElement
+                        {
+                            Id = "requested-by",
+                            Label = "Requested by",
+                            Binding = new PrintFieldBinding { SourceType = "system", Source = "submittedBy" },
                         },
                     ],
                 },
