@@ -66,33 +66,36 @@ public sealed class PrintTemplateService : IPrintTemplateService
             errors.Add($"Template code '{input.Code}' already exists for this process.");
         ThrowIfInvalid(errors);
 
-        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
-        if (input.IsDefault) await ClearOtherDefaultsAsync(input.ProcessId, null, cancellationToken);
-
-        var template = new WfPrintTemplate
+        long templateId = 0;
+        await ExecuteInTransactionAsync(async () =>
         {
-            ProcessId = input.ProcessId,
-            Code = input.Code.Trim(),
-            Name = input.Name.Trim(),
-            Description = input.Description?.Trim(),
-            PageSize = input.Document.Page.Size,
-            Orientation = input.Document.Page.Orientation,
-            Language = input.Document.Language,
-            IsDefault = input.IsDefault,
-            Status = WfPrintTemplateStatus.Draft
-        };
-        _context.WfPrintTemplates.Add(template);
-        await _context.SaveChangesAsync(cancellationToken);
+            if (input.IsDefault) await ClearOtherDefaultsAsync(input.ProcessId, null, cancellationToken);
 
-        _context.WfPrintTemplateVersions.Add(new WfPrintTemplateVersion
-        {
-            TemplateId = template.RecId,
-            VersionNo = 1,
-            TemplateJson = Serialize(input.Document)
-        });
-        await _context.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
-        return (await GetAsync(template.RecId, cancellationToken))!;
+            var template = new WfPrintTemplate
+            {
+                ProcessId = input.ProcessId,
+                Code = input.Code.Trim(),
+                Name = input.Name.Trim(),
+                Description = input.Description?.Trim(),
+                PageSize = input.Document.Page.Size,
+                Orientation = input.Document.Page.Orientation,
+                Language = input.Document.Language,
+                IsDefault = input.IsDefault,
+                Status = WfPrintTemplateStatus.Draft
+            };
+            _context.WfPrintTemplates.Add(template);
+            await _context.SaveChangesAsync(cancellationToken);
+            templateId = template.RecId;
+
+            _context.WfPrintTemplateVersions.Add(new WfPrintTemplateVersion
+            {
+                TemplateId = template.RecId,
+                VersionNo = 1,
+                TemplateJson = Serialize(input.Document)
+            });
+            await _context.SaveChangesAsync(cancellationToken);
+        }, cancellationToken);
+        return (await GetAsync(templateId, cancellationToken))!;
     }
 
     public async Task<PrintTemplateDto?> UpdateAsync(long templateId, UpdatePrintTemplateDto input, CancellationToken cancellationToken = default)
@@ -108,37 +111,38 @@ public sealed class PrintTemplateService : IPrintTemplateService
             errors.Add($"Template code '{input.Code}' already exists for this process.");
         ThrowIfInvalid(errors);
 
-        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
-        if (input.IsDefault && !template.IsDefault)
+        await ExecuteInTransactionAsync(async () =>
         {
-            await ClearOtherDefaultsAsync(template.ProcessId, template.RecId, cancellationToken);
-            template.IsDefault = true;
-        }
-        else if (!input.IsDefault)
-        {
-            template.IsDefault = false;
-        }
-
-        template.Code = input.Code.Trim();
-        template.Name = input.Name.Trim();
-        template.Description = input.Description?.Trim();
-        template.PageSize = input.Document.Page.Size;
-        template.Orientation = input.Document.Page.Orientation;
-        template.Language = input.Document.Language;
-
-        var draft = template.Versions.OrderByDescending(item => item.VersionNo).FirstOrDefault(item => !item.IsPublished);
-        if (draft == null)
-        {
-            draft = new WfPrintTemplateVersion
+            if (input.IsDefault && !template.IsDefault)
             {
-                TemplateId = template.RecId,
-                VersionNo = template.Versions.Select(item => item.VersionNo).DefaultIfEmpty().Max() + 1
-            };
-            _context.WfPrintTemplateVersions.Add(draft);
-        }
-        draft.TemplateJson = Serialize(input.Document);
-        await _context.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+                await ClearOtherDefaultsAsync(template.ProcessId, template.RecId, cancellationToken);
+                template.IsDefault = true;
+            }
+            else if (!input.IsDefault)
+            {
+                template.IsDefault = false;
+            }
+
+            template.Code = input.Code.Trim();
+            template.Name = input.Name.Trim();
+            template.Description = input.Description?.Trim();
+            template.PageSize = input.Document.Page.Size;
+            template.Orientation = input.Document.Page.Orientation;
+            template.Language = input.Document.Language;
+
+            var draft = template.Versions.OrderByDescending(item => item.VersionNo).FirstOrDefault(item => !item.IsPublished);
+            if (draft == null)
+            {
+                draft = new WfPrintTemplateVersion
+                {
+                    TemplateId = template.RecId,
+                    VersionNo = template.Versions.Select(item => item.VersionNo).DefaultIfEmpty().Max() + 1
+                };
+                _context.WfPrintTemplateVersions.Add(draft);
+            }
+            draft.TemplateJson = Serialize(input.Document);
+            await _context.SaveChangesAsync(cancellationToken);
+        }, cancellationToken);
         return await GetAsync(templateId, cancellationToken);
     }
 
@@ -160,14 +164,12 @@ public sealed class PrintTemplateService : IPrintTemplateService
         var errors = (await ValidateDocumentForProcessAsync(template.ProcessId, document, cancellationToken)).ToList();
         ThrowIfInvalid(errors);
 
-        await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
         version.IsPublished = true;
         version.PublishedBy = _currentUser.GetCurrentUserId();
         version.PublishedAt = DateTime.UtcNow;
         template.CurrentVersionId = version.RecId;
         template.Status = WfPrintTemplateStatus.Published;
         await _context.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
         return await GetAsync(templateId, cancellationToken);
     }
 
@@ -250,7 +252,17 @@ public sealed class PrintTemplateService : IPrintTemplateService
             .Where(item => item.ProcessId == processId && item.IsDefault && (!exceptId.HasValue || item.RecId != exceptId.Value))
             .ToListAsync(cancellationToken);
         foreach (var item in defaults) item.IsDefault = false;
-        if (defaults.Count > 0) await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    private async Task ExecuteInTransactionAsync(Func<Task> operation, CancellationToken cancellationToken)
+    {
+        var strategy = _context.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
+        {
+            await using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+            await operation();
+            await transaction.CommitAsync(cancellationToken);
+        });
     }
 
     private static WfPrintTemplateVersion EditableVersion(WfPrintTemplate template) =>

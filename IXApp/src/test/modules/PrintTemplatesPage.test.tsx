@@ -54,6 +54,7 @@ beforeEach(() => {
   queryClient.clear();
   vi.restoreAllMocks();
   vi.spyOn(wfProcessApi, 'list').mockResolvedValue([process]);
+  vi.spyOn(wfProcessApi, 'getById').mockResolvedValue(process);
   vi.spyOn(printTemplateApi, 'listByProcess').mockResolvedValue([template]);
 });
 
@@ -64,6 +65,8 @@ describe('PrintTemplatesPage', () => {
     expect(screen.getByText('Print templates')).toBeDefined();
     expect(await screen.findByText('Request report', {}, { timeout: 10_000 })).toBeDefined();
     expect(screen.getByText('REQ-A4')).toBeDefined();
+    expect(await screen.findByDisplayValue('Request an inventory')).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Open' })).toBeDefined();
     expect(printTemplateApi.listByProcess).toHaveBeenCalledWith(589, expect.any(AbortSignal));
   });
 

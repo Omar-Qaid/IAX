@@ -217,7 +217,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
       ...dataGridProps,
       rows: processedRows,
       columns,
-      selectionMode: dataGridProps.selectionMode ?? 'multiple',
+      selectionMode: dataGridProps.selectionMode ?? 'single',
       selectedIds,
       onSelectionChange: (ids) => {
         if (isEditing) return;
@@ -238,11 +238,12 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(props:
       rowHeight: dataGridProps.rowHeight ?? 31,
       headerHeight: dataGridProps.headerHeight ?? 36,
       hideAddRowButton: dataGridProps.hideAddRowButton ?? true,
-      hideToolbar: dataGridProps.hideToolbar ?? true,
-      hideFilterRow: dataGridProps.hideFilterRow ?? true,
-      hideFooter: dataGridProps.hideFooter ?? true,
-      showCellBorders: dataGridProps.showCellBorders ?? false,
-      showColumnBorders: dataGridProps.showColumnBorders ?? false,
+      hideToolbar: dataGridProps.hideToolbar ?? false,
+      hideFilterRow: dataGridProps.hideFilterRow ?? false,
+      hideFooter: dataGridProps.hideFooter ?? false,
+      hideSidebar: dataGridProps.hideSidebar ?? false,
+      showCellBorders: dataGridProps.showCellBorders ?? true,
+      showColumnBorders: dataGridProps.showColumnBorders ?? true,
       hideInlineEditActions: dataGridProps.hideInlineEditActions ?? true,
     } : { ...dataGridProps, rows, columns };
     const generatedActionPane = config && <>

@@ -33,23 +33,24 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding
         public async Task SeedAsync(CancellationToken ct = default)
         {
             var seeders = new List<ISeeder>
-            {
-                new IdentitySeeder(),
-                new DocumentManagementSeeder(),
-                new OrganizationSeeder(),
-                new WorkflowRequestTrackingSeeder(),
-                new ErpSeeder(),
-                new VendSeeder(),
-                new TaxSeeder(),
-                new PostingProfileSeeder(),
-                new DimensionSeeder(),
-                new NumberSequenceSeeder(),
+            {        
                 new SettingsSeeder(),
-                new CustLedgerSeeder(),
-                new MainAccountSeeder(),
-                new CustPaymModeSeeder(),
-                new SalesPoolSeeder(),
-                new MarkupTableSeeder(),
+                new NumberSequenceSeeder(),
+                new IdentitySeeder(),
+                new LegacyOrganizationEmployeeSeeder(),
+                new LegacyWorkflowMasterDataSeeder(),
+                new WorkflowRequestTrackingSeeder(),
+             
+                //new ErpSeeder(),
+                //new VendSeeder(),
+                //new TaxSeeder(),
+                //new PostingProfileSeeder(),
+                //new DimensionSeeder(),
+                //new CustLedgerSeeder(),
+                //new MainAccountSeeder(),
+                //new CustPaymModeSeeder(),
+                //new SalesPoolSeeder(),
+                //new MarkupTableSeeder(),
             };
 
             foreach (var seeder in seeders)
