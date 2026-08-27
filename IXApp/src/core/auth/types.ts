@@ -5,6 +5,7 @@ export interface UserProfile {
   displayName: string;
   roles: string[];
   permissions: string[];
+  allowedCompanies?: string[];
   avatarUrl?: string;
   defaultCompany?: string;
 }

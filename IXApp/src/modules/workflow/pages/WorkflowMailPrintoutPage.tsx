@@ -36,7 +36,7 @@ export function WorkflowMailPrintoutViewer({ open, request, onClose }: WorkflowM
     if (open && requestId > 0) setGeneratedAt(new Date());
   }, [open, requestId]);
   const details = useQuery({ queryKey: ['workflow', 'mail', 'printout-details', requestId], queryFn: ({ signal }) => wfRequestApi.mailDetails(requestId, signal), enabled: open && requestId > 0 });
-  const companyCode = currentCompany || request?.dataAreaId || '';
+  const companyCode = request?.dataAreaId || currentCompany || '';
   const reportCompany = useQuery({ queryKey: ['report-company', companyCode], queryFn: ({ signal }) => fetchPrintoutCompany(companyCode, signal), staleTime: 60_000, enabled: open && Boolean(companyCode) });
   const company = reportCompany.data ?? toPrintoutCompany(undefined, companyCode);
   const baseName = request?.code || `workflow-request-${requestId}`;

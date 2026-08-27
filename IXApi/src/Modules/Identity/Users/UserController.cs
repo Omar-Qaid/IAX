@@ -28,7 +28,7 @@ namespace IAX.IXApi.Modules.Identity.Users
         }
 
         // Include the linked employee so list rows can show EmployeeName.
-        protected override string[]? GetDefaultIncludes() => ["OrgEntity"];
+        protected override string[]? GetDefaultIncludes() => ["OrganizationEntity"];
 
         /// <summary>
         /// Users active within the last <paramref name="minutes"/> (by LastLoginDate). Paged.
@@ -44,7 +44,7 @@ namespace IAX.IXApi.Modules.Identity.Users
 
             var query = _db.Users
                 .AsNoTracking()
-                .Include(u => u.OrgEntity)
+                .Include(u => u.OrganizationEntity)
                 .Where(u => u.LastLoginDate >= threshold)
                 .OrderByDescending(u => u.LastLoginDate);
 
@@ -113,7 +113,7 @@ namespace IAX.IXApi.Modules.Identity.Users
             user.Email = dto.Email;
             user.NormalizedEmail = dto.Email?.ToUpperInvariant();
             user.PhoneNumber = dto.PhoneNumber;
-            user.OrgEntityId = (dto.EmployeeId == null || dto.EmployeeId <= 0) ? null : dto.EmployeeId;
+            user.OrganizationEntityId = (dto.EmployeeId == null || dto.EmployeeId <= 0) ? null : dto.EmployeeId;
 
             // Enabled toggle ↔ lockout. Disabled = locked out far in the future.
             user.LockoutEnabled = true;

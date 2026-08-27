@@ -9,20 +9,20 @@ namespace IAX.IXApi.Modules.Organization
     {
         public static IServiceCollection AddOrganizationModule(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddScoped<Announcements.IOrgAnnouncementService, Announcements.OrgAnnouncementService>();
+            services.AddScoped<Announcements.IAnnouncementService, Announcements.AnnouncementService>();
             services.Configure<DocumentStorageOptions>(configuration.GetSection("DocumentStorage"));
             services.AddSingleton<IFileStorageProvider, FileStorageService>();
             services.AddScoped<IDocumentService, DocumentService>();
-            services.AddScoped<Departments.IOrgDepartmentService, Departments.OrgDepartmentService>();
-            services.AddScoped<Features.OrgEmployeeCategory.IOrgEmployeeCategoryService, Features.OrgEmployeeCategory.OrgEmployeeCategoryService>();
-            services.AddScoped<Features.OrgEmployeeGroup.IOrgEmployeeGroupService, Features.OrgEmployeeGroup.OrgEmployeeGroupService>();
-            services.AddScoped<EmployeeManagers.IOrgEmployeeManagerService, EmployeeManagers.OrgEmployeeManagerService>();
+            services.AddScoped<Departments.IDepartmentService, Departments.DepartmentService>();
+            services.AddScoped<Features.HcmWorkerCategory.IHcmWorkerCategoryService, Features.HcmWorkerCategory.HcmWorkerCategoryService>();
+            services.AddScoped<Features.HcmWorkerGroup.IHcmWorkerGroupService, Features.HcmWorkerGroup.HcmWorkerGroupService>();
+            services.AddScoped<HcmWorkerManagers.IHcmWorkerManagerService, HcmWorkerManagers.HcmWorkerManagerService>();
             services.AddScoped<Employees.IHcmWorkerService, Employees.HcmWorkerService>();
-            services.AddScoped<Genders.IOrgGenderService, Genders.OrgGenderService>();
-            services.AddScoped<ManagementLevels.IOrgManagementLevelService, ManagementLevels.OrgManagementLevelService>();
-            services.AddScoped<Nationalities.IOrgNationalityService, Nationalities.OrgNationalityService>();
-            services.AddScoped<Occupations.IOrgOccupationService, Occupations.OrgOccupationService>();
-            services.AddScoped<Showrooms.IOrgShowroomService, Showrooms.OrgShowroomService>();
+            services.AddScoped<Genders.IGenderService, Genders.GenderService>();
+            services.AddScoped<ManagementLevels.IManagementLevelService, ManagementLevels.ManagementLevelService>();
+            services.AddScoped<Nationalities.INationalityService, Nationalities.NationalityService>();
+            services.AddScoped<Occupations.IOccupationService, Occupations.OccupationService>();
+            services.AddScoped<Showrooms.IShowroomService, Showrooms.ShowroomService>();
             return services;
         }
     }

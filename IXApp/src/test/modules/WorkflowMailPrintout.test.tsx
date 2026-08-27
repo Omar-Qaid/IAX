@@ -4,7 +4,10 @@ import { screen } from '@testing-library/react';
 import { render } from '@test/testUtils';
 import type { LegalEntity } from '@modules/organization/types/legalEntityTypes';
 import type { MailRequestDetailsDto, WfRequestRecord } from '@modules/workflow/api/wfRequestApi';
-import { WorkflowMailPrintoutBody, toPrintoutCompany } from '@modules/workflow/components/WorkflowMailPrintout';
+import {
+  WorkflowMailPrintoutBody,
+  toPrintoutCompany,
+} from '@modules/workflow/components/WorkflowMailPrintout';
 import { PrintoutDocument } from '@shared/components/printout/PrintoutDocument';
 import i18n from '@core/localization/i18n';
 
@@ -25,26 +28,101 @@ const company: LegalEntity = {
   localizedRegion: null,
   logo: 'iVBOR-logo',
   reportLogo: 'iVBOR-report-logo',
-  addresses: [{ id: '1', location: 1, locationId: 'HQ', description: 'Head office', address: 'Riyadh', primary: true, street: 'King Road', city: 'Riyadh', state: '', zipCode: '12345', county: '', countryRegionId: 'SA', districtName: '', validFrom: null, validTo: null, roles: [] }],
-  contacts: [{ id: '1', location: 1, locationId: 'HQ', description: 'Phone', type: 'Phone', number: '+966500000000', extension: '', primary: true, roles: [] }],
+  addresses: [
+    {
+      id: '1',
+      location: 1,
+      locationId: 'HQ',
+      description: 'Head office',
+      address: 'Riyadh',
+      primary: true,
+      street: 'King Road',
+      city: 'Riyadh',
+      state: '',
+      zipCode: '12345',
+      county: '',
+      countryRegionId: 'SA',
+      districtName: '',
+      validFrom: null,
+      validTo: null,
+      roles: [],
+    },
+  ],
+  contacts: [
+    {
+      id: '1',
+      location: 1,
+      locationId: 'HQ',
+      description: 'Phone',
+      type: 'Phone',
+      number: '+966500000000',
+      extension: '',
+      primary: true,
+      roles: [],
+    },
+  ],
 };
 
 const request: WfRequestRecord = {
-  id: '42', recId: 42, code: 'REQ-42', name: 'Leave request', description: null,
-  requestDate: '2026-08-25T08:00:00Z', processId: 7, employeeId: 9,
-  requestDetails: null, isFinished: false, finishedDate: null, isStopped: false,
-  stoppedDate: null, score: 0, progress: 50, notes: 'Manager review required',
-  isActive: true, rowVersion: null, recVersion: 1, dataAreaId: 'HBMC',
+  id: '42',
+  recId: 42,
+  code: 'REQ-42',
+  name: 'Leave request',
+  description: null,
+  requestDate: '2026-08-25T08:00:00Z',
+  processId: 7,
+  employeeId: 9,
+  requestDetails: null,
+  isFinished: false,
+  finishedDate: null,
+  isStopped: false,
+  stoppedDate: null,
+  score: 0,
+  progress: 50,
+  notes: 'Manager review required',
+  isActive: true,
+  rowVersion: null,
+  recVersion: 1,
+  dataAreaId: 'HBMC',
 };
 
 const details: MailRequestDetailsDto = {
-  requestId: 42, processName: 'Annual Leave', status: 'In progress',
-  requestDate: '2026-08-25T08:00:00Z', employeeName: 'Omar Qaid', employeeNumber: 'E-9',
-  transactionType: 'Review', transactionTime: '2026-08-25T08:00:00Z',
-  transactionEndTime: null, responsibleEmployee: 'Line manager', history: [],
+  requestId: 42,
+  processName: 'Annual Leave',
+  status: 'In progress',
+  requestDate: '2026-08-25T08:00:00Z',
+  employeeName: 'Omar Qaid',
+  employeeNumber: 'E-9',
+  transactionType: 'Review',
+  transactionTime: '2026-08-25T08:00:00Z',
+  transactionEndTime: null,
+  responsibleEmployee: 'Line manager',
+  history: [],
   fields: [
-    { detailId: 2, controlId: 2, controlDataId: 2, label: 'Reason', labelAr: '', value: 'Family trip', valueAr: '', valueEn: 'Family trip', controlType: 'longtext', controlOrder: 2 },
-    { detailId: 1, controlId: 1, controlDataId: 1, label: 'Days', labelAr: '', value: '5', valueAr: '', valueEn: '5', controlType: 'number', controlOrder: 1 },
+    {
+      detailId: 2,
+      controlId: 2,
+      controlDataId: 2,
+      label: 'Reason',
+      labelAr: '',
+      value: 'Family trip',
+      valueAr: '',
+      valueEn: 'Family trip',
+      controlType: 'longtext',
+      controlOrder: 2,
+    },
+    {
+      detailId: 1,
+      controlId: 1,
+      controlDataId: 1,
+      label: 'Days',
+      labelAr: '',
+      value: '5',
+      valueAr: '',
+      valueEn: '5',
+      controlType: 'number',
+      controlOrder: 1,
+    },
   ],
 };
 
@@ -59,13 +137,23 @@ describe('Workflow mail printout', () => {
   });
 
   it('uses the managed report-logo attachment ahead of legacy CompanyInfo images', () => {
-    expect(toPrintoutCompany(company, 'HBMC', 'blob:managed-report-logo').logoSource).toBe('blob:managed-report-logo');
+    expect(toPrintoutCompany(company, 'HBMC', 'blob:managed-report-logo').logoSource).toBe(
+      'blob:managed-report-logo'
+    );
   });
 
   it('renders company, request metadata, dynamic fields, and footer reference', () => {
     const printCompany = toPrintoutCompany(company, 'HBMC');
     render(
-      <PrintoutDocument company={printCompany} title="Workflow Mail" reference="REQ-42" reportDate="2026-08-25T08:00:00Z" status="In progress" generatedBy="Omar" generatedAt="2026-08-25T20:52:00Z">
+      <PrintoutDocument
+        company={printCompany}
+        title="Workflow Mail"
+        reference="REQ-42"
+        reportDate="2026-08-25T08:00:00Z"
+        status="In progress"
+        generatedBy="Omar"
+        generatedAt="2026-08-25T20:52:00Z"
+      >
         <WorkflowMailPrintoutBody request={request} details={details} />
       </PrintoutDocument>
     );
@@ -80,19 +168,40 @@ describe('Workflow mail printout', () => {
   });
 
   it('falls back to the regular logo and a company-code-only header', () => {
-    expect(toPrintoutCompany({ ...company, reportLogo: null }, 'HBMC').logoSource).toContain('iVBOR-logo');
+    expect(toPrintoutCompany({ ...company, reportLogo: null }, 'HBMC').logoSource).toContain(
+      'iVBOR-logo'
+    );
     expect(toPrintoutCompany(undefined, 'DAT')).toMatchObject({ name: 'DAT', companyCode: 'DAT' });
   });
 
   it('can independently hide the header, body, and footer', () => {
-    render(<PrintoutDocument company={toPrintoutCompany(company, 'HBMC')} title="Workflow Mail" showHeader={false} showBody={false} showFooter={false}><span>Hidden body</span></PrintoutDocument>);
+    render(
+      <PrintoutDocument
+        company={toPrintoutCompany(company, 'HBMC')}
+        title="Workflow Mail"
+        showHeader={false}
+        showBody={false}
+        showFooter={false}
+      >
+        <span>Hidden body</span>
+      </PrintoutDocument>
+    );
     expect(screen.queryByText('Workflow Mail')).not.toBeInTheDocument();
     expect(screen.queryByText('Hidden body')).not.toBeInTheDocument();
     expect(screen.queryByText('Workflow mail printout')).not.toBeInTheDocument();
   });
 
   it('supports report-specific header and footer overrides without replacing the page shell', () => {
-    render(<PrintoutDocument company={toPrintoutCompany(company, 'HBMC')} title="Workflow Mail" header={<div>Custom report header</div>} footer={<div>Custom report footer</div>}><span>Shared page content</span></PrintoutDocument>);
+    render(
+      <PrintoutDocument
+        company={toPrintoutCompany(company, 'HBMC')}
+        title="Workflow Mail"
+        header={<div>Custom report header</div>}
+        footer={<div>Custom report footer</div>}
+      >
+        <span>Shared page content</span>
+      </PrintoutDocument>
+    );
     expect(screen.getByText('Custom report header')).toBeInTheDocument();
     expect(screen.getByText('Shared page content')).toBeInTheDocument();
     expect(screen.getByText('Custom report footer')).toBeInTheDocument();

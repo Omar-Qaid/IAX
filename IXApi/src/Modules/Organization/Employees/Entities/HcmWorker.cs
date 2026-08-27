@@ -6,7 +6,7 @@ using IAX.IXApi.Modules.Organization.Occupations;
 using IAX.IXApi.Modules.Organization.Genders;
 using IAX.IXApi.Modules.Organization.Nationalities;
 using IAX.IXApi.Modules.Organization.Showrooms;
-using IAX.IXApi.Modules.Organization.EmployeeManagers;
+using IAX.IXApi.Modules.Organization.HcmWorkerManagers;
 using IAX.IXApi.Modules.Identity.Users;
 
 namespace IAX.IXApi.Modules.Organization.Employees.Entities
@@ -34,20 +34,20 @@ namespace IAX.IXApi.Modules.Organization.Employees.Entities
         #region Navigation Properties Row
 
         [ForeignKey(nameof(DepartmentId))]
-        public virtual OrgDepartment Department { get; set; } = null!;
+        public virtual Department Department { get; set; } = null!;
         [ForeignKey(nameof(OccupationId))]
-        public virtual OrgOccupation Occupation { get; set; } = null!;
+        public virtual Occupation Occupation { get; set; } = null!;
         [ForeignKey(nameof(GenderId))]
-        public virtual OrgGender Gender { get; set; } = null!;
+        public virtual Gender Gender { get; set; } = null!;
         [ForeignKey(nameof(NationalityId))]
-        public virtual OrgNationality Nationality { get; set; } = null!;
+        public virtual Nationality Nationality { get; set; } = null!;
         [ForeignKey(nameof(ShowroomId))]
-        public virtual OrgShowroom? Showroom { get; set; }
+        public virtual Showroom? Showroom { get; set; }
         
         [ForeignKey(nameof(User))]
         public string? UserId { get; set; }
         public virtual AspNetUser? User { get; set; }
-        public virtual ICollection<OrgEmployeeManager> Managers { get; set; } = new List<OrgEmployeeManager>();
+        public virtual ICollection<HcmWorkerManager> Managers { get; set; } = new List<HcmWorkerManager>();
 
         #endregion
     }

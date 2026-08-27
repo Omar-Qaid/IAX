@@ -58,18 +58,18 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 ("InventTrans",         "Inv Transaction Sequence",  "ITRX-######","{PREFIX}-{YYYY}{MM}-{SEQ}", 1),
 
                 // ─── Organization ────────────────────────────────────────────────
-                ("OrgEmployee",         "Employee Sequence",         "EMP-######", "{PREFIX}-{SEQ}",       0),
-                ("OrgDepartment",       "Department Sequence",       "DPT-######", "{PREFIX}-{SEQ}",       0),
-                ("OrgOccupation",       "Occupation Sequence",       "OCC-######", "{PREFIX}-{SEQ}",       0),
-                ("OrgNationality",      "Nationality Sequence",      "NAT-######", "{PREFIX}-{SEQ}",       0),
-                ("OrgGender",           "Gender Sequence",           "GEN-######", "{PREFIX}-{SEQ}",       0),
-                ("OrgCompany",          "Company Sequence",          "COMP-######","{PREFIX}-{SEQ}",       0),
-                ("OrgAnnouncement",     "Announcement Sequence",     "ANN-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
-                ("OrgJob",              "Job Sequence",              "JOB-######", "{PREFIX}-{SEQ}",       0),
+                ("HcmWorker",         "HcmWorker Sequence",         "EMP-######", "{PREFIX}-{SEQ}",       0),
+                ("Department",       "Department Sequence",       "DPT-######", "{PREFIX}-{SEQ}",       0),
+                ("Occupation",       "Occupation Sequence",       "OCC-######", "{PREFIX}-{SEQ}",       0),
+                ("Nationality",      "Nationality Sequence",      "NAT-######", "{PREFIX}-{SEQ}",       0),
+                ("Gender",           "Gender Sequence",           "GEN-######", "{PREFIX}-{SEQ}",       0),
+                ("CompanyInfo",         "Company Sequence",          "COMP-######","{PREFIX}-{SEQ}",       0),
+                ("DirPartyTable",       "Global Address Book Party", "PTY-######", "{PREFIX}-{SEQ}",       0),
+                ("Announcement",     "Announcement Sequence",     "ANN-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
 
                 // ─── Identity / Users ────────────────────────────────────────────
-                ("OrgEmployeeGroup",    "User Group Sequence",       "UGRP-######","{PREFIX}-{SEQ}",       0),
-                ("OrgEmployeeCategory", "User Category Sequence",    "UCAT-######","{PREFIX}-{SEQ}",       0),
+                ("HcmWorkerGroup",    "User Group Sequence",       "UGRP-######","{PREFIX}-{SEQ}",       0),
+                ("HcmWorkerCategory", "User Category Sequence",    "UCAT-######","{PREFIX}-{SEQ}",       0),
 
                 // ─── Workflow ────────────────────────────────────────────────────
                 ("WfCategory",          "Wf Category Sequence",      "WCT-######", "{PREFIX}-{SEQ}",       0),

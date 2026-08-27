@@ -1,7 +1,7 @@
 import { ApiError } from '@core/api/apiError';
 import { apiClient } from '@core/api/apiClient';
 import type { ApiResponse } from '@core/api/apiResponse';
-import type { PrintTemplate, PrintTemplateSummary, SavePrintTemplateInput } from '../types/printTemplate.types';
+import type { PrintTemplate, PrintTemplateSummary, PublishedPrintTemplate, SavePrintTemplateInput } from '../types/printTemplate.types';
 
 const endpoint = '/v1/print-templates';
 
@@ -13,6 +13,14 @@ const requireData = <T>(response: ApiResponse<T>): T => {
 export const printTemplateApi = {
   async listByProcess(processId: number, signal?: AbortSignal): Promise<PrintTemplateSummary[]> {
     const response = await apiClient.get<ApiResponse<PrintTemplateSummary[]>>(`${endpoint}/process/${processId}`, { signal });
+    return requireData(response.data);
+  },
+  async listPublishedByProcess(processId: number, signal?: AbortSignal): Promise<PrintTemplateSummary[]> {
+    const response = await apiClient.get<ApiResponse<PrintTemplateSummary[]>>(`${endpoint}/process/${processId}/published`, { signal });
+    return requireData(response.data);
+  },
+  async getPublishedForRequest(requestId: number, templateId: number, signal?: AbortSignal): Promise<PublishedPrintTemplate> {
+    const response = await apiClient.get<ApiResponse<PublishedPrintTemplate>>(`${endpoint}/request/${requestId}/template/${templateId}`, { signal });
     return requireData(response.data);
   },
   async get(templateId: number, signal?: AbortSignal): Promise<PrintTemplate> {

@@ -2,7 +2,7 @@ using IAX.IXApi.Shared.Application.Attributes;
 using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Infrastructure.Identity;
-using IAX.IXApi.Modules.Organization.EmployeeManagers;
+using IAX.IXApi.Modules.Organization.HcmWorkerManagers;
 using IAX.IXApi.Modules.Organization.Employees.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -88,7 +88,7 @@ namespace IAX.IXApi.Modules.Organization.Employees
             if (ids.Count == 0)
                 return;
 
-            var linkRepo = _unitOfWork.Repository<OrgEmployeeManager>();
+            var linkRepo = _unitOfWork.Repository<HcmWorkerManager>();
             var links = await linkRepo.GetQueryable()
                 .Where(x => ids.Contains(x.EmployeeId) || ids.Contains(x.ManagerId))
                 .ToListAsync(cancellationToken);

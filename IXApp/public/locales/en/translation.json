@@ -216,7 +216,6 @@
         "requestControl": "Request dynamic fields"
       },
       "imageSources": { "companyLogo": "Company logo", "url": "Image URL" },
-      "requestControlPhaseNotice": "The process field selector will replace manual IDs in Phase 3.",
       "systemFields": {
         "requestNumber": "Request number",
         "requestDate": "Request date",
@@ -685,6 +684,9 @@
     "print": {
       "title": "Workflow Mail",
       "viewerTitle": "Workflow Mail · {{name}}",
+      "defaultTemplate": "Default",
+      "defaultPrint": "Full Transaction Details",
+      "officialViewerTitle": "Official Form · {{name}}",
       "selectRequest": "Select a workflow request to print.",
       "loadError": "Unable to load the workflow mail printout.",
       "requestInformation": "Request information",

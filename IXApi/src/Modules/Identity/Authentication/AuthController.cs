@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using IAX.IXApi.Shared.Application.Identity;
 
 namespace IAX.IXApi.Modules.Identity.Authentication
 {
@@ -122,6 +123,20 @@ namespace IAX.IXApi.Modules.Identity.Authentication
             var dto = user.Adapt<AspNetUserDto>();
             dto.Roles = roles.ToList();
             dto.Permissions = permissions;
+            dto.AllowedCompanies = User.Claims
+                .Where(claim => claim.Type.Equals(CompanyContextDefaults.ClaimType, StringComparison.OrdinalIgnoreCase)
+                    || claim.Type.Equals("Company", StringComparison.OrdinalIgnoreCase)
+                    || claim.Type.Equals("DataAreaId", StringComparison.OrdinalIgnoreCase))
+                .Select(claim => claim.Value.Trim())
+                .Where(company => !string.IsNullOrWhiteSpace(company))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            if (dto.AllowedCompanies.Count == 0)
+                dto.AllowedCompanies.Add(CompanyContextDefaults.DataAreaId);
+            dto.DefaultCompany = dto.AllowedCompanies[0];
+            if (roles.Any(role => role.Equals("SystemAdmin", StringComparison.OrdinalIgnoreCase)
+                || role.Equals("Admin", StringComparison.OrdinalIgnoreCase)))
+                dto.AllowedCompanies = ["*"];
 
             return Ok(APIResponse<AspNetUserDto>.Ok(dto));
         }

@@ -12,8 +12,8 @@ namespace IAX.IXApi.Modules.Workflow.Processes
         public short? OccupationId { get; set; }
         public long? EmployeeId { get; set; }
 
-        public OrgDepartmentDto? Department { get; set; }
-        public OrgOccupationDto? Occupation { get; set; }
+        public DepartmentDto? Department { get; set; }
+        public OccupationDto? Occupation { get; set; }
         public HcmWorkerDto? Employee { get; set; }
     }
 }

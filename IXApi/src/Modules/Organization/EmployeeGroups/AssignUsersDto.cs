@@ -1,4 +1,4 @@
-﻿namespace IAX.IXApi.Modules.Organization.Features.OrgEmployeeGroup
+namespace IAX.IXApi.Modules.Organization.Features.HcmWorkerGroup
 {
     public class AssignUsersDto
     {

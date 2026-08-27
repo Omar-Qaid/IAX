@@ -9,6 +9,7 @@ using IAX.IXApi.Modules.Workflow.Execution;
 using IAX.IXApi.Modules.Workflow.Performers;
 using IAX.IXApi.Modules.Workflow.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Mapster;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -33,6 +34,41 @@ namespace IAX.IXApi.Modules.Workflow.Requests
         protected override async Task OnBeforeAddAsync(WfRequest entity, CancellationToken cancellationToken)
         {
             await _sequences.EnsureCodeAsync(entity, entityName: "WfRequest", cancellationToken: cancellationToken);
+        }
+
+        public async Task<IReadOnlyList<WfRequestDto>> GetRequestListAsync(CancellationToken cancellationToken = default)
+        {
+            var requests = (await GetAllAsync(cancellationToken: cancellationToken)).ToList();
+            var employeeIds = requests
+                .Where(item => item.EmployeeId.HasValue)
+                .Select(item => item.EmployeeId!.Value)
+                .Distinct()
+                .ToList();
+
+            var workers = employeeIds.Count == 0
+                ? []
+                : await _context.Set<HcmWorker>().AsNoTracking()
+                    .Where(item => employeeIds.Contains(item.RecId))
+                    .ToListAsync(cancellationToken);
+            var partyIds = workers.Select(item => item.Person).Distinct().ToList();
+            var parties = partyIds.Count == 0
+                ? new Dictionary<long, MailPartyLookup>()
+                : await _context.Database.SqlQueryRaw<MailPartyLookup>(
+                        "SELECT RECID AS PartyId, COALESCE(NULLIF(RFullName, ''), NULLIF(Name, ''), PartyNumber) AS DisplayName FROM dbo.DirPartyTable")
+                    .Where(item => partyIds.Contains(item.PartyId))
+                    .ToDictionaryAsync(item => item.PartyId, cancellationToken);
+            var workersById = workers.ToDictionary(item => item.RecId);
+
+            return requests.Select(request =>
+            {
+                var dto = request.Adapt<WfRequestDto>();
+                if (request.EmployeeId.HasValue && workersById.TryGetValue(request.EmployeeId.Value, out var worker))
+                {
+                    parties.TryGetValue(worker.Person, out var party);
+                    dto.RequesterName = FirstText(party?.DisplayName, worker.PersonnelNumber);
+                }
+                return dto;
+            }).ToList();
         }
 
         public async Task<DynamicRequestFormDto?> GetFormDefinitionAsync(long processId, CancellationToken cancellationToken = default)
@@ -207,6 +243,11 @@ namespace IAX.IXApi.Modules.Workflow.Requests
             {
                 RequestId = request.RecId,
                 ProcessName = FirstText(request.Process.Name, request.Process.Code, $"Process {request.ProcessId}"),
+                ProcessCode = request.Process.Code ?? string.Empty,
+                CreatedBy = request.CreatedBy ?? string.Empty,
+                CreatedDate = request.CreatedAt,
+                SubmittedBy = EmployeeDisplay(request.EmployeeId),
+                SubmissionDate = request.RequestDate,
                 Status = request.IsStopped ? "Stopped" : request.IsFinished ? "Completed" : "In progress",
                 RequestDate = request.RequestDate,
                 EmployeeName = EmployeeDisplay(request.EmployeeId),

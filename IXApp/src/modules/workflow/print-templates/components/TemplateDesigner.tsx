@@ -27,6 +27,8 @@ import DeleteOutline from '@mui/icons-material/DeleteOutlined';
 import ArrowUpwardOutlined from '@mui/icons-material/ArrowUpwardOutlined';
 import ArrowDownwardOutlined from '@mui/icons-material/ArrowDownwardOutlined';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import { AppLookupGridField } from '@shared/components/fields/AppLookupGridField';
+import { dynamicRequestFormApi } from '../../api/dynamicRequestFormApi';
 import { TemplateElementPreview } from './TemplateElementPreview';
 import {
   useTemplateDesigner,
@@ -40,9 +42,40 @@ import type {
 } from '../types/printTemplate.types';
 
 interface Props {
+  processId: number;
   document: PrintTemplateDocument;
   onChange: (document: PrintTemplateDocument) => void;
 }
+
+interface RequestControlLookupRow {
+  requestControlId: number;
+  code: string;
+  name: string;
+  nameAr: string;
+  displayName: string;
+  displayNameAr: string;
+}
+
+const requestControlLookupColumns = [
+  { field: 'code', header: 'printTemplates.fields.code', width: 120 },
+  { field: 'name', header: 'printTemplates.fields.name', flex: 1, showInLtr: true },
+  { field: 'nameAr', header: 'printTemplates.fields.name', flex: 1, showInRtl: true },
+] as const;
+
+const loadRequestControls = async (processId: number, signal?: AbortSignal) => {
+  const definition = await dynamicRequestFormApi.getDefinition(processId, signal);
+  return definition.controls.map((control): RequestControlLookupRow => {
+    const nameAr = control.labelAr || control.label;
+    return {
+      requestControlId: control.requestControlId,
+      code: control.code,
+      name: control.label,
+      nameAr,
+      displayName: `${control.code} - ${control.label}`,
+      displayNameAr: `${control.code} - ${nameAr}`,
+    };
+  });
+};
 
 const palette: Array<{ type: PhaseTwoElementType; icon: React.ReactElement }> = [
   { type: 'text', icon: <TextFieldsOutlined /> },
@@ -71,9 +104,11 @@ const systemFields = [
 function ElementProperties({
   element,
   update,
+  processId,
 }: {
   element: PrintTemplateElement | null;
   update: (transform: (element: PrintTemplateElement) => PrintTemplateElement) => void;
+  processId: number;
 }): React.ReactElement {
   const { t } = useAppTranslation();
   if (!element) {
@@ -108,7 +143,9 @@ function ElementProperties({
           }
         />
       ) : null}
-      {element.type === 'field' ? <FieldProperties element={element} update={update} /> : null}
+      {element.type === 'field' ? (
+        <FieldProperties element={element} update={update} processId={processId} />
+      ) : null}
       {element.type === 'section' ? (
         <>
           <TextField
@@ -239,9 +276,11 @@ function ElementProperties({
 function FieldProperties({
   element,
   update,
+  processId,
 }: {
   element: PrintFieldElement;
   update: (transform: (element: PrintTemplateElement) => PrintTemplateElement) => void;
+  processId: number;
 }) {
   const { t } = useAppTranslation();
   const setField = (transform: (field: PrintFieldElement) => PrintFieldElement) =>
@@ -324,25 +363,52 @@ function FieldProperties({
         </TextField>
       ) : null}
       {element.binding.sourceType === 'requestControl' ? (
-        <TextField
-          size="small"
-          type="number"
+        <AppLookupGridField<RequestControlLookupRow>
+          name="requestControlId"
           label={t('printTemplates.designer.properties.requestControlId')}
           value={element.binding.requestControlId ?? ''}
-          onChange={(event) =>
+          onChange={(value) =>
             setField((field) => ({
               ...field,
-              binding: { ...field.binding, requestControlId: Number(event.target.value) || null },
+              binding: { ...field.binding, requestControlId: Number(value) || null },
             }))
           }
-          helperText={t('printTemplates.designer.requestControlPhaseNotice')}
+          disabled={processId <= 0}
+          columns={[...requestControlLookupColumns]}
+          queryKey={['workflow', 'print-template-request-controls', processId]}
+          fetchPage={async ({ pageNumber, pageSize, search, signal }) => {
+            const controls = await loadRequestControls(processId, signal);
+            const query = search.trim().toLocaleLowerCase();
+            const filtered = query
+              ? controls.filter((control) =>
+                  `${control.code} ${control.name} ${control.nameAr}`
+                    .toLocaleLowerCase()
+                    .includes(query)
+                )
+              : controls;
+            const start = (pageNumber - 1) * pageSize;
+            return {
+              data: filtered.slice(start, start + pageSize),
+              pageNumber,
+              totalPages: Math.max(1, Math.ceil(filtered.length / pageSize)),
+              totalRecords: filtered.length,
+            };
+          }}
+          fetchById={async (value) => {
+            const controls = await loadRequestControls(processId);
+            return controls.find((control) => control.requestControlId === Number(value)) ?? null;
+          }}
+          valueField="requestControlId"
+          labelField="displayName"
+          labelFieldAr="displayNameAr"
+          pageSize={25}
         />
       ) : null}
     </>
   );
 }
 
-export function TemplateDesigner({ document, onChange }: Props): React.ReactElement {
+export function TemplateDesigner({ processId, document, onChange }: Props): React.ReactElement {
   const { t } = useAppTranslation();
   const designer = useTemplateDesigner(document, onChange);
   const pageWidth = document.page.orientation === 'portrait' ? 595 : 842;
@@ -536,7 +602,11 @@ export function TemplateDesigner({ document, onChange }: Props): React.ReactElem
               {t('printTemplates.designer.regions.footer')}
             </ToggleButton>
           </ToggleButtonGroup>
-          <ElementProperties element={designer.selectedElement} update={designer.updateSelected} />
+          <ElementProperties
+            element={designer.selectedElement}
+            update={designer.updateSelected}
+            processId={processId}
+          />
         </Paper>
       </Box>
     </Box>

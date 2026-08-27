@@ -40,8 +40,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding
                 new LegacyOrganizationEmployeeSeeder(),
                 new LegacyWorkflowMasterDataSeeder(),
                 new WorkflowRequestTrackingSeeder(),
-             
-                //new ErpSeeder(),
+                new ErpSeeder(),
                 //new VendSeeder(),
                 //new TaxSeeder(),
                 //new PostingProfileSeeder(),

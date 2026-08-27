@@ -34,6 +34,7 @@ namespace IAX.IXApi.Bootstrap.Extensions
                 options.UseSqlServer(configuration.GetConnectionString("DbConnString"), sqlOptions =>
                 {
                     sqlOptions.EnableRetryOnFailure();
+                    sqlOptions.MigrationsAssembly("IAX.IXApi.Infrastructure");
                 });
                 options.AddInterceptors(sp.GetRequiredService<AuditInterceptor>());
                 options.ConfigureWarnings(warnings => warnings.Ignore(

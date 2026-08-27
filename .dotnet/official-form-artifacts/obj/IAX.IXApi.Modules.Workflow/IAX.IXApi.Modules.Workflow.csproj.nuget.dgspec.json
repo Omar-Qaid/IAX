@@ -1,0 +1,560 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Workflow\\IAX.IXApi.Modules.Workflow.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Administration\\IAX.IXApi.Modules.Administration.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Administration\\IAX.IXApi.Modules.Administration.csproj",
+        "projectName": "IAX.IXApi.Modules.Administration",
+        "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Administration\\IAX.IXApi.Modules.Administration.csproj",
+        "packagesPath": ".nuget\\packages\\",
+        "outputPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\.dotnet\\official-form-artifacts\\obj\\IAX.IXApi.Modules.Administration\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files\\DevExpress 23.2\\Components\\Offline Packages",
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\NuGet.Config",
+          "C:\\Users\\Omar.Qaid\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\DevExpress 23.2.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "C:\\Program Files\\dotnet\\library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {
+              "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Identity\\IAX.IXApi.Modules.Identity.csproj": {
+                "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Identity\\IAX.IXApi.Modules.Identity.csproj"
+              },
+              "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Shared\\IAX.IXApi.Shared.csproj": {
+                "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Shared\\IAX.IXApi.Shared.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.200"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "ClosedXML": {
+              "target": "Package",
+              "version": "[0.105.0, )"
+            },
+            "DocumentFormat.OpenXml": {
+              "target": "Package",
+              "version": "[3.1.1, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.202/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Communication\\IAX.IXApi.Modules.Communication.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Communication\\IAX.IXApi.Modules.Communication.csproj",
+        "projectName": "IAX.IXApi.Modules.Communication",
+        "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Communication\\IAX.IXApi.Modules.Communication.csproj",
+        "packagesPath": ".nuget\\packages\\",
+        "outputPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\.dotnet\\official-form-artifacts\\obj\\IAX.IXApi.Modules.Communication\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files\\DevExpress 23.2\\Components\\Offline Packages",
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\NuGet.Config",
+          "C:\\Users\\Omar.Qaid\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\DevExpress 23.2.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "C:\\Program Files\\dotnet\\library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {
+              "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Administration\\IAX.IXApi.Modules.Administration.csproj": {
+                "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Administration\\IAX.IXApi.Modules.Administration.csproj"
+              },
+              "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Identity\\IAX.IXApi.Modules.Identity.csproj": {
+                "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Identity\\IAX.IXApi.Modules.Identity.csproj"
+              },
+              "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Organization\\IAX.IXApi.Modules.Organization.csproj": {
+                "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Organization\\IAX.IXApi.Modules.Organization.csproj"
+              },
+              "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Shared\\IAX.IXApi.Shared.csproj": {
+                "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Shared\\IAX.IXApi.Shared.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.200"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "Microsoft.EntityFrameworkCore.Relational": {
+              "target": "Package",
+              "version": "[9.0.9, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.202/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Identity\\IAX.IXApi.Modules.Identity.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Identity\\IAX.IXApi.Modules.Identity.csproj",
+        "projectName": "IAX.IXApi.Modules.Identity",
+        "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Identity\\IAX.IXApi.Modules.Identity.csproj",
+        "packagesPath": ".nuget\\packages\\",
+        "outputPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\.dotnet\\official-form-artifacts\\obj\\IAX.IXApi.Modules.Identity\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files\\DevExpress 23.2\\Components\\Offline Packages",
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\NuGet.Config",
+          "C:\\Users\\Omar.Qaid\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\DevExpress 23.2.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "C:\\Program Files\\dotnet\\library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {
+              "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Shared\\IAX.IXApi.Shared.csproj": {
+                "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Shared\\IAX.IXApi.Shared.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.200"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[9.0.9, )"
+            },
+            "Microsoft.EntityFrameworkCore.Relational": {
+              "target": "Package",
+              "version": "[9.0.9, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.202/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Organization\\IAX.IXApi.Modules.Organization.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Organization\\IAX.IXApi.Modules.Organization.csproj",
+        "projectName": "IAX.IXApi.Modules.Organization",
+        "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Organization\\IAX.IXApi.Modules.Organization.csproj",
+        "packagesPath": ".nuget\\packages\\",
+        "outputPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\.dotnet\\official-form-artifacts\\obj\\IAX.IXApi.Modules.Organization\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files\\DevExpress 23.2\\Components\\Offline Packages",
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\NuGet.Config",
+          "C:\\Users\\Omar.Qaid\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\DevExpress 23.2.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "C:\\Program Files\\dotnet\\library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {
+              "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Administration\\IAX.IXApi.Modules.Administration.csproj": {
+                "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Administration\\IAX.IXApi.Modules.Administration.csproj"
+              },
+              "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Identity\\IAX.IXApi.Modules.Identity.csproj": {
+                "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Identity\\IAX.IXApi.Modules.Identity.csproj"
+              },
+              "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Shared\\IAX.IXApi.Shared.csproj": {
+                "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Shared\\IAX.IXApi.Shared.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.200"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "FluentValidation": {
+              "target": "Package",
+              "version": "[11.11.0, )"
+            },
+            "Mapster": {
+              "target": "Package",
+              "version": "[7.4.0, )"
+            },
+            "Microsoft.EntityFrameworkCore.Relational": {
+              "target": "Package",
+              "version": "[9.0.9, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.202/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Workflow\\IAX.IXApi.Modules.Workflow.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Workflow\\IAX.IXApi.Modules.Workflow.csproj",
+        "projectName": "IAX.IXApi.Modules.Workflow",
+        "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Workflow\\IAX.IXApi.Modules.Workflow.csproj",
+        "packagesPath": ".nuget\\packages\\",
+        "outputPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\.dotnet\\official-form-artifacts\\obj\\IAX.IXApi.Modules.Workflow\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files\\DevExpress 23.2\\Components\\Offline Packages",
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\NuGet.Config",
+          "C:\\Users\\Omar.Qaid\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\DevExpress 23.2.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "C:\\Program Files\\dotnet\\library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {
+              "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Administration\\IAX.IXApi.Modules.Administration.csproj": {
+                "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Administration\\IAX.IXApi.Modules.Administration.csproj"
+              },
+              "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Communication\\IAX.IXApi.Modules.Communication.csproj": {
+                "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Communication\\IAX.IXApi.Modules.Communication.csproj"
+              },
+              "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Identity\\IAX.IXApi.Modules.Identity.csproj": {
+                "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Identity\\IAX.IXApi.Modules.Identity.csproj"
+              },
+              "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Organization\\IAX.IXApi.Modules.Organization.csproj": {
+                "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Organization\\IAX.IXApi.Modules.Organization.csproj"
+              },
+              "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Shared\\IAX.IXApi.Shared.csproj": {
+                "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Shared\\IAX.IXApi.Shared.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.200"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "ClosedXML": {
+              "target": "Package",
+              "version": "[0.105.0, )"
+            },
+            "FluentValidation": {
+              "target": "Package",
+              "version": "[11.11.0, )"
+            },
+            "Mapster": {
+              "target": "Package",
+              "version": "[7.4.0, )"
+            },
+            "Microsoft.EntityFrameworkCore.Relational": {
+              "target": "Package",
+              "version": "[9.0.9, )"
+            },
+            "Microsoft.EntityFrameworkCore.SqlServer": {
+              "target": "Package",
+              "version": "[9.0.9, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.202/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Shared\\IAX.IXApi.Shared.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Shared\\IAX.IXApi.Shared.csproj",
+        "projectName": "IAX.IXApi.Shared",
+        "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Shared\\IAX.IXApi.Shared.csproj",
+        "packagesPath": ".nuget\\packages\\",
+        "outputPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\.dotnet\\official-form-artifacts\\obj\\IAX.IXApi.Shared\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files\\DevExpress 23.2\\Components\\Offline Packages",
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\NuGet.Config",
+          "C:\\Users\\Omar.Qaid\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\DevExpress 23.2.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "C:\\Program Files\\dotnet\\library-packs": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "targetAlias": "net9.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "9.0.200"
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "dependencies": {
+            "FluentValidation": {
+              "target": "Package",
+              "version": "[11.11.0, )"
+            },
+            "Mapster": {
+              "target": "Package",
+              "version": "[7.4.0, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[9.0.9, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.202/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

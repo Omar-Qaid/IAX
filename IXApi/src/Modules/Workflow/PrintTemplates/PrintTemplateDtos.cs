@@ -30,6 +30,13 @@ public sealed class PrintTemplateDto : PrintTemplateSummaryDto
     public List<PrintTemplateVersionDto> Versions { get; set; } = [];
 }
 
+public sealed class PublishedPrintTemplateDto : PrintTemplateSummaryDto
+{
+    public long TemplateVersionId { get; set; }
+    public int VersionNo { get; set; }
+    public PrintTemplateDocument Document { get; set; } = new();
+}
+
 public sealed class PrintTemplateVersionDto
 {
     public long TemplateVersionId { get; set; }

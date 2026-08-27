@@ -210,7 +210,6 @@
         "requestControl": "حقول الطلب الديناميكية"
       },
       "imageSources": { "companyLogo": "شعار الشركة", "url": "رابط صورة" },
-      "requestControlPhaseNotice": "سيحل محدد حقول العملية محل إدخال المعرف يدوياً في المرحلة الثالثة.",
       "systemFields": {
         "requestNumber": "رقم الطلب",
         "requestDate": "تاريخ الطلب",
@@ -679,6 +678,9 @@
     "print": {
       "title": "بريد سير العمل",
       "viewerTitle": "بريد سير العمل · {{name}}",
+      "defaultTemplate": "افتراضي",
+      "defaultPrint": "تفاصيل المعاملة الكاملة",
+      "officialViewerTitle": "النموذج الرسمي · {{name}}",
       "selectRequest": "اختر طلب سير عمل لطباعته.",
       "loadError": "تعذر تحميل نسخة طباعة بريد سير العمل.",
       "requestInformation": "معلومات الطلب",

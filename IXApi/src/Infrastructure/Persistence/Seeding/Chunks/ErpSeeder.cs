@@ -16,6 +16,7 @@ using IAX.IXApi.Infrastructure.Persistence.Seeding.Entities;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Shared.Application.Identity;
 using System.Security.Claims;
+using System;
 
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
@@ -26,7 +27,8 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
         {
             var sysUser = await users.FindByNameAsync("sys");
             var createdBy = sysUser?.Id ?? "sys";
-
+            
+            
             #region Customer & Vendor Groups (AX CustGroup / VendGroup)
             var custGroupSeeds = new[]
             {
@@ -102,7 +104,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             #endregion
 
             /* 
-#region UnitOfMeasureBaseUnit — Base unit per UOM class
+               #region UnitOfMeasureBaseUnit — Base unit per UOM class
             // UnitOfMeasureClass: 0=None 1=Quantity 2=Weight 3=Volume 4=Length 5=Area 6=Time
             var uomIdByCodeForBase = await db.UnitOfMeasures.IgnoreQueryFilters()
                 .ToDictionaryAsync(u => u.Code!, u => u.Id, ct);
@@ -220,7 +222,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             #endregion
 
             */ 
-#region InventItemGroups — Standard Item Groups
+            #region InventItemGroups — Standard Item Groups
             // InventItemGroup no longer carries a business code/name — it is keyed by RecId only.
             // Seed a fixed number of groups (idempotent by count) and map the legacy seed codes to
             // them by creation order so the rest of the seeder can still look groups up by code.
@@ -834,7 +836,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 await db.Set<DirPartyLocation>().AddAsync(datPartyLoc, ct);
                 await db.SaveChangesAsync(ct);
             }
-            
+
             var hbmcPartyLoc = await db.Set<DirPartyLocation>().IgnoreQueryFilters().FirstOrDefaultAsync(pl => pl.Party == hbmcParty.RecId && pl.Location == locHbmc.RecId, ct);
             if (hbmcPartyLoc == null)
             {
@@ -844,7 +846,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             }
 
             #endregion
-
             #region Modes of Delivery (DlvMode)
             var existingDlvModes = await db.Set<DlvMode>().IgnoreQueryFilters().Select(x => x.Code).ToListAsync(ct);
             var dlvModeSeeds = new[]

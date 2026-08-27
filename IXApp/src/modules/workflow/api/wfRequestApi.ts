@@ -10,6 +10,7 @@ export interface WfRequestDto {
   requestDate: string;
   processId: number;
   employeeId: number | null;
+  requesterName?: string | null;
   requestDetails: string | null;
   isFinished: boolean;
   finishedDate: string | null;
@@ -56,6 +57,11 @@ export interface MailTrackingEntryDto {
 export interface MailRequestDetailsDto {
   requestId: number;
   processName: string;
+  processCode?: string;
+  createdBy?: string;
+  createdDate?: string | null;
+  submittedBy?: string;
+  submissionDate?: string;
   status: string;
   requestDate: string;
   employeeName: string;

@@ -11,6 +11,7 @@ using IAX.IXApi.Modules.Organization.Nationalities;
 using IAX.IXApi.Modules.Organization.Occupations;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using OrganizationGender = IAX.IXApi.Modules.Organization.Genders.Gender;
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks;
 
@@ -34,25 +35,25 @@ public sealed class LegacyOrganizationEmployeeSeeder : ISeeder
     private static async Task UpsertDepartmentsAsync(ApplicationDbContext db,LookupShort[] rows,string owner,CancellationToken ct)
     {
         var existing=await db.Departments.IgnoreQueryFilters().ToDictionaryAsync(x=>x.RecId,ct);
-        foreach(var row in rows){if(existing.TryGetValue(row.Id,out var value)){Apply(value,row.Name,row.Description,row.Active);}else db.Departments.Add(new OrgDepartment{RecId=row.Id,Code=$"DEP{row.Id}",Name=Text(row.Name,255),Description=Text(row.Description,1000),IsActive=row.Active,CreatedBy=owner,OwnerAccountId=owner});}
-        await SaveWithOptionalIdentityAsync(db,"OrgDepartments",ct);
+        foreach(var row in rows){if(existing.TryGetValue(row.Id,out var value)){Apply(value,row.Name,row.Description,row.Active);}else db.Departments.Add(new Department{RecId=row.Id,Code=$"DEP{row.Id}",Name=Text(row.Name,255),Description=Text(row.Description,1000),IsActive=row.Active,CreatedBy=owner,OwnerAccountId=owner});}
+        await SaveWithOptionalIdentityAsync(db,"Departments",ct);
     }
     private static async Task UpsertOccupationsAsync(ApplicationDbContext db,LookupShort[] rows,string owner,CancellationToken ct)
     {
         var existing=await db.Occupations.IgnoreQueryFilters().ToDictionaryAsync(x=>x.RecId,ct);
-        foreach(var row in rows){if(existing.TryGetValue(row.Id,out var value)){Apply(value,row.Name,row.Description,row.Active);}else db.Occupations.Add(new OrgOccupation{RecId=row.Id,Code=$"OCC{row.Id}",Name=Text(row.Name,255),Description=Text(row.Description,1000),IsActive=row.Active,CreatedBy=owner,OwnerAccountId=owner});}
-        await SaveWithOptionalIdentityAsync(db,"OrgOccupations",ct);
+        foreach(var row in rows){if(existing.TryGetValue(row.Id,out var value)){Apply(value,row.Name,row.Description,row.Active);}else db.Occupations.Add(new Occupation{RecId=row.Id,Code=$"OCC{row.Id}",Name=Text(row.Name,255),Description=Text(row.Description,1000),IsActive=row.Active,CreatedBy=owner,OwnerAccountId=owner});}
+        await SaveWithOptionalIdentityAsync(db,"Occupations",ct);
     }
     private static async Task UpsertGendersAsync(ApplicationDbContext db,LookupByte[] rows,string owner,CancellationToken ct)
     {
         var existing=await db.Genders.IgnoreQueryFilters().ToDictionaryAsync(x=>x.RecId,ct);
-        foreach(var row in rows){if(existing.TryGetValue(row.Id,out var value)){Apply(value,row.Name,row.Description,true);}else db.Genders.Add(new OrgGender{RecId=row.Id,Code=$"GEN{row.Id}",Name=Text(row.Name,255),Description=Text(row.Description,1000),IsActive=true,CreatedBy=owner,OwnerAccountId=owner});}
-        await SaveWithOptionalIdentityAsync(db,"OrgGenders",ct);
+        foreach(var row in rows){if(existing.TryGetValue(row.Id,out var value)){Apply(value,row.Name,row.Description,true);}else db.Genders.Add(new OrganizationGender{RecId=row.Id,Code=$"GEN{row.Id}",Name=Text(row.Name,255),Description=Text(row.Description,1000),IsActive=true,CreatedBy=owner,OwnerAccountId=owner});}
+        await SaveWithOptionalIdentityAsync(db,"Genders",ct);
     }
     private static async Task UpsertNationalitiesAsync(ApplicationDbContext db,LookupShort[] rows,string owner,CancellationToken ct)
     {
         var existing=await db.Nationalities.IgnoreQueryFilters().ToDictionaryAsync(x=>x.RecId,ct);
-        foreach(var row in rows){if(existing.TryGetValue(row.Id,out var value)){Apply(value,row.Name,row.Description,row.Active);}else db.Nationalities.Add(new OrgNationality{RecId=row.Id,Code=$"NAT{row.Id}",Name=Text(row.Name,255),Description=Text(row.Description,1000),IsActive=row.Active,CreatedBy=owner,OwnerAccountId=owner});}
+        foreach(var row in rows){if(existing.TryGetValue(row.Id,out var value)){Apply(value,row.Name,row.Description,row.Active);}else db.Nationalities.Add(new Nationality{RecId=row.Id,Code=$"NAT{row.Id}",Name=Text(row.Name,255),Description=Text(row.Description,1000),IsActive=row.Active,CreatedBy=owner,OwnerAccountId=owner});}
         await SaveWithOptionalIdentityAsync(db,"OrgNationalities",ct);
     }
 

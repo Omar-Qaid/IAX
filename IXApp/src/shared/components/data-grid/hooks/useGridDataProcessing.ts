@@ -1,4 +1,4 @@
-﻿import { useMemo } from 'react';
+import { useMemo } from 'react';
 import type { ColumnDef, FilterModel, SortModel } from '../types';
 import { getNestedValue } from '../DataGridUtils';
 

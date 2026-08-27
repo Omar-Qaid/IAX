@@ -14,11 +14,11 @@ namespace IAX.IXApi.Modules.Workflow.Processes
 
         public short? DepartmentId { get; set; }
         [ForeignKey(nameof(DepartmentId))]
-        public virtual OrgDepartment? Department { get; set; }
+        public virtual Department? Department { get; set; }
 
         public short? OccupationId { get; set; }
         [ForeignKey(nameof(OccupationId))]
-        public virtual OrgOccupation? Occupation { get; set; }
+        public virtual Occupation? Occupation { get; set; }
 
         public long? EmployeeId { get; set; }
         [ForeignKey(nameof(EmployeeId))]

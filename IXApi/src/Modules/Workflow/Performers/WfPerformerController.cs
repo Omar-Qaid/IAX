@@ -75,7 +75,7 @@ namespace IAX.IXApi.Modules.Workflow.Performers
             var schema = new Dictionary<string, string[]>
             {
                 ["OrgEmployees"] = new[] { "EmployeeId", "EmployeeName", "EmployeeNameAR", "DepartmentId", "JobId", "Activated" },
-                ["OrgDepartments"] = new[] { "DepartmentId", "DepartmentName", "DepartmentNameAR", "ParentId" },
+                ["Departments"] = new[] { "DepartmentId", "DepartmentName", "DepartmentNameAR", "ParentId" },
                 ["OrgJobs"] = new[] { "JobId", "JobName", "JobNameAR" },
                 ["OrgCompanies"] = new[] { "CompanyId", "CompanyName", "CompanyNameAR" },
                 ["WfPerformers"] = new[] { "PerformerId", "PerformerName", "PerformerType" },

@@ -18,6 +18,8 @@ interface ApiUserDto {
   photoUrl?: string | null;
   roles: string[];
   permissions: string[];
+  allowedCompanies?: string[];
+  defaultCompany?: string | null;
 }
 
 const AUTH_ENDPOINTS = {
@@ -72,6 +74,8 @@ const mapUser = (user: ApiUserDto): UserProfile => ({
   displayName: user.employeeName?.trim() || user.userName,
   roles: user.roles ?? [],
   permissions: user.permissions ?? [],
+  allowedCompanies: user.allowedCompanies?.filter(Boolean) ?? ['dat'],
+  defaultCompany: user.defaultCompany?.trim() || 'dat',
   ...(user.photoUrl ? { avatarUrl: user.photoUrl } : {}),
 });
 

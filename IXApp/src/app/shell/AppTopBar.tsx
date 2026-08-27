@@ -132,8 +132,8 @@ export const AppTopBar: React.FC = memo(() => {
   // Auth & Permissions
   const { user, logout, hasPermission } = useAuth();
   const userName = user?.displayName || user?.username || user?.email;
-  const isAdmin = user?.roles.includes('SystemAdmin') ?? false;
-
+  const isAdmin =
+    user?.roles.some((role) => role === 'Admin' || role === 'SystemAdmin') ?? false;
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const isMenuOpen = Boolean(anchorEl);
   const [companyAnchorEl, setCompanyAnchorEl] = useState<null | HTMLElement>(null);
@@ -142,7 +142,8 @@ export const AppTopBar: React.FC = memo(() => {
     queryFn: ({ signal }) => legalEntityApiRepository.list(signal),
     staleTime: 60_000,
   });
-  const selectedLegalEntity = legalEntities.data?.find(
+  const availableLegalEntities = legalEntities.data ?? [];
+  const selectedLegalEntity = availableLegalEntities.find(
     (entity) => entity.dataArea.toLocaleUpperCase() === currentCompany.toLocaleUpperCase()
   );
 
@@ -382,14 +383,14 @@ export const AppTopBar: React.FC = memo(() => {
           >
             {legalEntities.isLoading && <MenuItem disabled>{t('common.loading', 'Loading...')}</MenuItem>}
             {legalEntities.isError && <MenuItem disabled>{t('errors.generic', 'Unable to load legal entities.')}</MenuItem>}
-            {(legalEntities.data ?? []).map((entity) => {
+            {availableLegalEntities.map((entity) => {
               const selected = entity.dataArea.toLocaleUpperCase() === currentCompany.toLocaleUpperCase();
               return <MenuItem key={entity.recId} selected={selected} onClick={() => handleCompanyChange(entity.dataArea)} sx={{ display: 'grid', gridTemplateColumns: '88px minmax(210px, 1fr)', gap: 1.5, borderInlineStart: selected ? 3 : 0, borderInlineStartColor: 'primary.main', '&.Mui-selected': { bgcolor: '#d4e0f7' } }}>
                 <Typography noWrap sx={{ fontSize: 13, color: selected ? 'primary.main' : 'text.primary' }}>{entity.dataArea}</Typography>
                 <Typography noWrap sx={{ fontSize: 13 }}>{entity.name}</Typography>
               </MenuItem>;
             })}
-            {!legalEntities.isLoading && !legalEntities.isError && !legalEntities.data?.length && <MenuItem disabled>{t('common.noData', 'No legal entities found.')}</MenuItem>}
+            {!legalEntities.isLoading && !legalEntities.isError && !availableLegalEntities.length && <MenuItem disabled>{t('common.noData', 'No legal entities found.')}</MenuItem>}
           </Menu>
 
           {/* Notifications */}

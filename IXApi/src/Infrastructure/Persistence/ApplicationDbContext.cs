@@ -45,7 +45,7 @@ using IAX.IXApi.Modules.Workflow.Execution;
 using IAX.IXApi.Modules.Workflow.PrintTemplates;
 using IAX.IXApi.Modules.Organization.Announcements;
 using IAX.IXApi.Modules.Organization.DocumentManagement.Entities;
-using IAX.IXApi.Modules.Organization.EmployeeManagers;
+using IAX.IXApi.Modules.Organization.HcmWorkerManagers;
 using IAX.IXApi.Modules.Organization.ManagementLevels;
 using IAX.IXApi.Modules.Organization.Showrooms;
 using IAX.IXApi.Modules.Identity.Permissions;
@@ -57,8 +57,8 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using IAX.IXApi.Infrastructure.Persistence.ModelBuilding;
 using System.Linq.Expressions;
 using System.Reflection.Metadata;
-using IAX.IXApi.Modules.Organization.Features.OrgEmployeeGroup;
-using IAX.IXApi.Modules.Organization.Features.OrgEmployeeCategory;
+using IAX.IXApi.Modules.Organization.Features.HcmWorkerGroup;
+using IAX.IXApi.Modules.Organization.Features.HcmWorkerCategory;
 using IAX.IXApi.Modules.Finance.Inventory;
 using IAX.IXApi.Modules.Finance.Shared.Features;
 using IAX.IXApi.Modules.Finance.GeneralLedger;
@@ -205,18 +205,18 @@ namespace IAX.IXApi.Infrastructure.Persistence
         #endregion
 
         #region Organization
-        public DbSet<OrgDepartment> Departments => Set<OrgDepartment>();
+        public DbSet<Department> Departments => Set<Department>();
         public DbSet<HcmWorker> HcmWorkers => Set<HcmWorker>();
-        public DbSet<OrgGender> Genders => Set<OrgGender>();
-        public DbSet<OrgNationality> Nationalities => Set<OrgNationality>();
-        public DbSet<OrgOccupation> Occupations => Set<OrgOccupation>();
-        public DbSet<OrgAnnouncement> Announcements => Set<OrgAnnouncement>();
+        public DbSet<Gender> Genders => Set<Gender>();
+        public DbSet<Nationality> Nationalities => Set<Nationality>();
+        public DbSet<Occupation> Occupations => Set<Occupation>();
+        public DbSet<Announcement> Announcements => Set<Announcement>();
         public DbSet<DocuType> DocuTypes => Set<DocuType>();
         public DbSet<DocuValue> DocuValues => Set<DocuValue>();
         public DbSet<DocuRef> DocuRefs => Set<DocuRef>();
-        public DbSet<OrgShowroom> Showrooms => Set<OrgShowroom>();
-        public DbSet<OrgManagementLevel> OrgManagementLevels => Set<OrgManagementLevel>();
-        public DbSet<OrgEmployeeManager> OrgEmployeeManagers => Set<OrgEmployeeManager>();
+        public DbSet<Showroom> Showrooms => Set<Showroom>();
+        public DbSet<ManagementLevel> ManagementLevels => Set<ManagementLevel>();
+        public DbSet<HcmWorkerManager> HcmWorkerManagers => Set<HcmWorkerManager>();
         #endregion
 
         #region RBAC Permissions
@@ -225,10 +225,10 @@ namespace IAX.IXApi.Infrastructure.Persistence
         #endregion
 
         #region Identity Groups & Categories
-        public DbSet<OrgEmployeeGroup> OrgEmployeeGroups => Set<OrgEmployeeGroup>();
-        public DbSet<OrgEmployeeGroupDetail> OrgEmployeeGroupDetails => Set<OrgEmployeeGroupDetail>();
-        public DbSet<OrgEmployeeCategory> OrgEmployeeCategories => Set<OrgEmployeeCategory>();
-        public DbSet<OrgEmployeeCategoryGroup> OrgEmployeeCategoryGroups => Set<OrgEmployeeCategoryGroup>();
+        public DbSet<HcmWorkerGroup> HcmWorkerGroups => Set<HcmWorkerGroup>();
+        public DbSet<HcmWorkerGroupDetail> HcmWorkerGroupDetails => Set<HcmWorkerGroupDetail>();
+        public DbSet<HcmWorkerCategory> HcmWorkerCategories => Set<HcmWorkerCategory>();
+        public DbSet<HcmWorkerCategoryGroup> EmployeeCategoryGroups => Set<HcmWorkerCategoryGroup>();
         #endregion
 
          #region Accounts

@@ -21,6 +21,13 @@ namespace IAX.IXApi.Modules.Workflow.Requests
             _requestService = service;
         }
 
+        [HttpGet]
+        public override async Task<ActionResult<APIResponse<IEnumerable<WfRequestDto>>>> GetAll(CancellationToken cancellationToken = default)
+        {
+            var requests = await _requestService.GetRequestListAsync(cancellationToken);
+            return Ok(APIResponse<IEnumerable<WfRequestDto>>.Ok(requests));
+        }
+
         [HttpGet("form-definition/{processId:long}")]
         public async Task<ActionResult<APIResponse<DynamicRequestFormDto>>> GetFormDefinition(long processId, CancellationToken cancellationToken)
         {

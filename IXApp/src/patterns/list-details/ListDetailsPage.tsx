@@ -94,6 +94,13 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
   );
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = React.useState(false);
   const state = useListDetailsPage(config);
+  const selectionChangeRef = React.useRef(config.onSelectionChange);
+  React.useLayoutEffect(() => {
+    selectionChangeRef.current = config.onSelectionChange;
+  });
+  React.useEffect(() => {
+    selectionChangeRef.current?.(state.selected);
+  }, [state.selected]);
   const [emptyPreviewRecord] = React.useState<T>(() => config.createRecord());
   const { hasPermission: canView } = usePermission(config.permissions?.view);
   const { hasPermission: canCreate } = usePermission(config.permissions?.create);
@@ -104,7 +111,12 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
   const selectedAttachmentRecId = state.selected
     ? (config.attachments?.getRefRecId?.(state.selected) ?? Number(state.selected.id))
     : null;
-  const attachmentRecId = selectedAttachmentRecId != null && Number.isSafeInteger(selectedAttachmentRecId) && selectedAttachmentRecId > 0 ? selectedAttachmentRecId : null;
+  const attachmentRecId =
+    selectedAttachmentRecId != null &&
+    Number.isSafeInteger(selectedAttachmentRecId) &&
+    selectedAttachmentRecId > 0
+      ? selectedAttachmentRecId
+      : null;
   const displayedRecord = record ?? emptyPreviewRecord;
   const displayedEditing = Boolean(record) && state.editing;
   const labels = {
@@ -133,13 +145,23 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
   const sections =
     typeof config.sections === 'function'
       ? config.sections({
-        record: displayedRecord,
-        editing: displayedEditing,
-        onRecordChange: record ? state.changeRecord : () => undefined,
-      })
+          record: displayedRecord,
+          editing: displayedEditing,
+          onRecordChange: record ? state.changeRecord : () => undefined,
+        })
       : config.sections;
-  const standaloneCommands = config.commands?.filter((command) => !command.menuLabel) ?? [];
-  const commandMenus = [...new Set((config.commands ?? []).map((command) => command.menuLabel).filter((label): label is string => Boolean(label)))];
+  const resolvedCommands =
+    typeof config.commands === 'function'
+      ? config.commands(state.selected)
+      : (config.commands ?? []);
+  const standaloneCommands = resolvedCommands.filter((command) => !command.menuLabel);
+  const commandMenus = [
+    ...new Set(
+      resolvedCommands
+        .map((command) => command.menuLabel)
+        .filter((label): label is string => Boolean(label))
+    ),
+  ];
   if (!canView) return <AccessDeniedState />;
   const listPane =
     config.presentation?.mode === 'grid' && config.presentation.columns ? (
@@ -232,7 +254,17 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
             <EnterpriseCommandUtilities
               disabled={state.editing}
               {...utilities}
-              attachmentAction={config.showAttachmentAction === false ? false : <RecordAttachmentsButton refTableId={attachmentTableId} refRecId={attachmentRecId} disabled={state.editing} />}
+              attachmentAction={
+                config.showAttachmentAction === false ? (
+                  false
+                ) : (
+                  <RecordAttachmentsButton
+                    refTableId={attachmentTableId}
+                    refRecId={attachmentRecId}
+                    disabled={state.editing}
+                  />
+                )
+              }
               onRefresh={state.refresh}
             />
           </>
@@ -241,7 +273,11 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
         <ActionPaneGroup>
           <ActionPaneButton
             label={t('actions.back')}
-            icon={<ArrowBackIcon sx={{ transform: (theme) => theme.direction === 'rtl' ? 'scaleX(-1)' : 'none' }} />}
+            icon={
+              <ArrowBackIcon
+                sx={{ transform: (theme) => (theme.direction === 'rtl' ? 'scaleX(-1)' : 'none') }}
+              />
+            }
             onClick={() => navigate(-1)}
           />
         </ActionPaneGroup>
@@ -286,7 +322,9 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
                 key={command.id}
                 label={command.label}
                 disabled={
-                  state.editing || command.disabled || (command.requiresSelection && !state.selected)
+                  state.editing ||
+                  command.disabled ||
+                  (command.requiresSelection && !state.selected)
                 }
                 onClick={() => command.onClick?.(state.selected)}
               />
@@ -296,12 +334,14 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
                 key={menuLabel}
                 label={menuLabel}
                 disabled={state.editing}
-                actions={(config.commands ?? []).filter((command) => command.menuLabel === menuLabel).map((command) => ({
-                  id: command.id,
-                  label: command.label,
-                  disabled: command.disabled || (command.requiresSelection && !state.selected),
-                  onClick: command.onClick ? () => command.onClick?.(state.selected) : undefined,
-                }))}
+                actions={resolvedCommands
+                  .filter((command) => command.menuLabel === menuLabel)
+                  .map((command) => ({
+                    id: command.id,
+                    label: command.label,
+                    disabled: command.disabled || (command.requiresSelection && !state.selected),
+                    onClick: command.onClick ? () => command.onClick?.(state.selected) : undefined,
+                  }))}
               />
             ))}
           </ActionPaneGroup>
@@ -313,7 +353,13 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
             disabled={state.editing}
             onClick={state.toggleFilter}
           />
-          <OptionsMenu record={state.selected} tableName={config.recordTableName ?? title} getRecordId={config.getAuditRecordId} title={title} disabled={state.editing} />
+          <OptionsMenu
+            record={state.selected}
+            tableName={config.recordTableName ?? title}
+            getRecordId={config.getAuditRecordId}
+            title={title}
+            disabled={state.editing}
+          />
         </ActionPaneGroup>
       </ActionPane>
       <Box
@@ -623,20 +669,80 @@ function RecordHeader<T>({
   compact?: boolean;
   onChange: (id: string, value: DetailValue) => void;
 }) {
-  if (compact) return (
-    <Box sx={{ px: { xs: 1, sm: 0 }, py: { xs: 1, sm: 0.75 }, minHeight: 0, borderBottom: '1px solid', borderColor: 'divider', bgcolor: { xs: '#f3f3f7', sm: 'transparent' } }}>
-      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, alignItems: { sm: 'center' }, flexWrap: 'wrap', gap: { xs: 0.25, sm: 0 } }}>
-        {fields.map((field, index) => {
-          const value = field.getValue(record);
-          const custom = field.render?.({ value, editing: false, disabled: true, onChange: (next) => onChange(field.id, next) });
-          return <Box key={field.id} sx={{ display: 'flex', alignItems: 'baseline', minWidth: 0, '&:not(:last-of-type)::after': { content: { xs: 'none', sm: '"|"' }, mx: { sm: 1.25 }, color: 'text.disabled', fontWeight: 400 } }}>
-            {!field.renderOwnLabel && <Typography component="span" sx={{ marginInlineEnd: 0.5, fontSize: 12, lineHeight: 1.35, fontWeight: 700 }}>{field.label}:</Typography>}
-            {custom ?? <Typography component="span" dir="auto" noWrap title={String(value)} sx={{ fontSize: 12, lineHeight: 1.35, color: index === 0 ? 'primary.main' : 'text.primary', textAlign: 'start' }}>{String(value)}</Typography>}
-          </Box>;
-        })}
+  if (compact)
+    return (
+      <Box
+        sx={{
+          px: { xs: 1, sm: 0 },
+          py: { xs: 1, sm: 0.75 },
+          minHeight: 0,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          bgcolor: { xs: '#f3f3f7', sm: 'transparent' },
+        }}
+      >
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: { sm: 'center' },
+            flexWrap: 'wrap',
+            gap: { xs: 0.25, sm: 0 },
+          }}
+        >
+          {fields.map((field, index) => {
+            const value = field.getValue(record);
+            const custom = field.render?.({
+              value,
+              editing: false,
+              disabled: true,
+              onChange: (next) => onChange(field.id, next),
+            });
+            return (
+              <Box
+                key={field.id}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'baseline',
+                  minWidth: 0,
+                  '&:not(:last-of-type)::after': {
+                    content: { xs: 'none', sm: '"|"' },
+                    mx: { sm: 1.25 },
+                    color: 'text.disabled',
+                    fontWeight: 400,
+                  },
+                }}
+              >
+                {!field.renderOwnLabel && (
+                  <Typography
+                    component="span"
+                    sx={{ marginInlineEnd: 0.5, fontSize: 12, lineHeight: 1.35, fontWeight: 700 }}
+                  >
+                    {field.label}:
+                  </Typography>
+                )}
+                {custom ?? (
+                  <Typography
+                    component="span"
+                    dir="auto"
+                    noWrap
+                    title={String(value)}
+                    sx={{
+                      fontSize: 12,
+                      lineHeight: 1.35,
+                      color: index === 0 ? 'primary.main' : 'text.primary',
+                      textAlign: 'start',
+                    }}
+                  >
+                    {String(value)}
+                  </Typography>
+                )}
+              </Box>
+            );
+          })}
+        </Box>
       </Box>
-    </Box>
-  );
+    );
   return (
     <Box sx={{ px: 0, pt: '3px', pb: '3px', minHeight, boxSizing: 'border-box' }}>
       <Typography
@@ -755,7 +861,18 @@ function LegacyListDetailsPage<T extends ListDetailRecord>({
   return (
     <PageContainer>
       <PageHeader title={title} subtitle={subtitle} />
-      <ActionPane endActions={<RecordAttachmentsButton refTableId={recordTableId(title)} refRecId={selectedId && Number.isSafeInteger(Number(selectedId)) ? Number(selectedId) : null} />}>{actionPane}</ActionPane>
+      <ActionPane
+        endActions={
+          <RecordAttachmentsButton
+            refTableId={recordTableId(title)}
+            refRecId={
+              selectedId && Number.isSafeInteger(Number(selectedId)) ? Number(selectedId) : null
+            }
+          />
+        }
+      >
+        {actionPane}
+      </ActionPane>
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: selectedId ? 5 : 12, lg: selectedId ? 4 : 12 }}>
           <Box sx={{ height: 600, width: '100%' }}>
@@ -846,10 +963,10 @@ const sidePanelSx = {
 const getFilterOperatorOptions = (
   t: (key: string, options?: Record<string, unknown>) => string
 ) => [
-    { value: 'contains' as const, label: t('filters.contains') },
-    { value: 'equals' as const, label: t('filters.equals') },
-    { value: 'startsWith' as const, label: t('filters.startsWith') },
-    { value: 'endsWith' as const, label: t('filters.endsWith') },
-    { value: 'notEquals' as const, label: t('filters.notEquals') },
-    { value: 'doesNotContain' as const, label: t('filters.doesNotContain') },
-  ];
+  { value: 'contains' as const, label: t('filters.contains') },
+  { value: 'equals' as const, label: t('filters.equals') },
+  { value: 'startsWith' as const, label: t('filters.startsWith') },
+  { value: 'endsWith' as const, label: t('filters.endsWith') },
+  { value: 'notEquals' as const, label: t('filters.notEquals') },
+  { value: 'doesNotContain' as const, label: t('filters.doesNotContain') },
+];

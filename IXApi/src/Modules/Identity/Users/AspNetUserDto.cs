@@ -25,5 +25,7 @@ namespace IAX.IXApi.Modules.Identity.Users
         // RBAC — populated by AuthController and UserController from Identity + permission tables.
         public List<string> Roles { get; set; } = new();
         public List<string> Permissions { get; set; } = new();
+        public List<string> AllowedCompanies { get; set; } = new();
+        public string DefaultCompany { get; set; } = "dat";
     }
 }

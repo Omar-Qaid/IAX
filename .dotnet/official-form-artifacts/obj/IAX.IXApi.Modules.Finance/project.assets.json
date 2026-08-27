@@ -1,0 +1,131 @@
+{
+  "version": 3,
+  "targets": {
+    "net9.0": {}
+  },
+  "libraries": {},
+  "projectFileDependencyGroups": {
+    "net9.0": [
+      "FluentValidation >= 11.11.0",
+      "Mapster >= 7.4.0",
+      "Microsoft.EntityFrameworkCore.Relational >= 9.0.9"
+    ]
+  },
+  "packageFolders": {
+    ".nuget\\packages\\": {},
+    "C:\\Program Files\\DevExpress 23.2\\Components\\Offline Packages": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Finance\\IAX.IXApi.Modules.Finance.csproj",
+      "projectName": "IAX.IXApi.Modules.Finance",
+      "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Finance\\IAX.IXApi.Modules.Finance.csproj",
+      "packagesPath": ".nuget\\packages\\",
+      "outputPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\.dotnet\\official-form-artifacts\\obj\\IAX.IXApi.Modules.Finance\\",
+      "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files\\DevExpress 23.2\\Components\\Offline Packages",
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
+      "configFilePaths": [
+        "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\NuGet.Config",
+        "C:\\Users\\Omar.Qaid\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\DevExpress 23.2.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+      ],
+      "originalTargetFrameworks": [
+        "net9.0"
+      ],
+      "sources": {
+        "C:\\Program Files\\dotnet\\library-packs": {},
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net9.0": {
+          "targetAlias": "net9.0",
+          "projectReferences": {
+            "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Administration\\IAX.IXApi.Modules.Administration.csproj": {
+              "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Administration\\IAX.IXApi.Modules.Administration.csproj"
+            },
+            "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Identity\\IAX.IXApi.Modules.Identity.csproj": {
+              "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Identity\\IAX.IXApi.Modules.Identity.csproj"
+            },
+            "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Organization\\IAX.IXApi.Modules.Organization.csproj": {
+              "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Modules\\Organization\\IAX.IXApi.Modules.Organization.csproj"
+            },
+            "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Shared\\IAX.IXApi.Shared.csproj": {
+              "projectPath": "C:\\Users\\Omar.Qaid\\Desktop\\IAX\\IXApi\\src\\Shared\\IAX.IXApi.Shared.csproj"
+            }
+          }
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      },
+      "SdkAnalysisLevel": "9.0.200"
+    },
+    "frameworks": {
+      "net9.0": {
+        "targetAlias": "net9.0",
+        "dependencies": {
+          "FluentValidation": {
+            "target": "Package",
+            "version": "[11.11.0, )"
+          },
+          "Mapster": {
+            "target": "Package",
+            "version": "[7.4.0, )"
+          },
+          "Microsoft.EntityFrameworkCore.Relational": {
+            "target": "Package",
+            "version": "[9.0.9, )"
+          }
+        },
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48",
+          "net481"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "frameworkReferences": {
+          "Microsoft.AspNetCore.App": {
+            "privateAssets": "none"
+          },
+          "Microsoft.NETCore.App": {
+            "privateAssets": "all"
+          }
+        },
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.202/PortableRuntimeIdentifierGraph.json"
+      }
+    }
+  },
+  "logs": [
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "Unable to load the service index for source https://api.nuget.org/v3/index.json.\r\n  The SSL connection could not be established, see inner exception.\r\n  Authentication failed, see inner exception.\r\n  No credentials are available in the security package",
+      "libraryId": "Microsoft.EntityFrameworkCore.Relational"
+    },
+    {
+      "code": "NU1301",
+      "level": "Error",
+      "message": "Unable to load the service index for source https://api.nuget.org/v3/index.json.\r\n  The SSL connection could not be established, see inner exception.\r\n  Authentication failed, see inner exception.\r\n  No credentials are available in the security package",
+      "libraryId": "FluentValidation"
+    }
+  ]
+}

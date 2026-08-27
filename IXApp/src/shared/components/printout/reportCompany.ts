@@ -58,7 +58,9 @@ export const toPrintoutCompany = (entity: ReportCompanyInfo | undefined, company
   const addressLines = [address?.address, [address?.street, address?.city, address?.state, address?.zipCode].filter(Boolean).join(', '), address?.countryRegionId].filter((line): line is string => Boolean(line?.trim()));
   const contactLines = contacts.map((contact) => [contact.type, contact.number, contact.extension ? `Ext. ${contact.extension}` : ''].filter(Boolean).join(': '));
   const registrationLines = [entity.taxLicenseNum ? `Tax: ${entity.taxLicenseNum}` : '', entity.federalTaxId ? `Federal ID: ${entity.federalTaxId}` : ''].filter(Boolean);
-  return { name: entity.name || companyCode || 'Company', secondaryName: entity.arabicName, companyCode: entity.dataArea || companyCode, logoSource: reportLogoSource || asImageSource(entity.reportLogo || entity.logo), addressLines, contactLines, registrationLines };
+  const phone = contacts.find((contact) => contact.type.toLowerCase().includes('phone'))?.number ?? contacts[0]?.number ?? null;
+  const email = contacts.find((contact) => contact.type.toLowerCase().includes('mail'))?.number ?? null;
+  return { name: entity.name || companyCode || 'Company', secondaryName: entity.arabicName, companyCode: entity.dataArea || companyCode, logoSource: reportLogoSource || asImageSource(entity.reportLogo || entity.logo), addressLines, contactLines, registrationLines, vatNumber: entity.taxLicenseNum, commercialRegistration: entity.federalTaxId, phone, email };
 };
 
 const blobAsDataUrl = (blob: Blob, signal?: AbortSignal): Promise<string> =>

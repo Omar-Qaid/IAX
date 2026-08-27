@@ -7,6 +7,7 @@ namespace IAX.IXApi.Modules.Workflow.Requests
         public DateTime RequestDate { get; set; }
         public long ProcessId { get; set; }
         public long? EmployeeId { get; set; }
+        public string? RequesterName { get; set; }
         public string? RequestDetails { get; set; }
         public bool IsFinished { get; set; }
         public DateTime? FinishedDate { get; set; }

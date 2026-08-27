@@ -105,7 +105,8 @@ export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
     saveLabel: string;
     cancelLabel: string;
   }>;
-  commands?: ListDetailsCommand<T>[];
+  commands?: ListDetailsCommand<T>[] | ((record: T | null) => ListDetailsCommand<T>[]);
+  onSelectionChange?: (record: T | null) => void;
   recordTableName?: string;
   getAuditRecordId?: (record: T) => string | number;
   actionPaneAfterListContent?: ReactNode;

@@ -16,6 +16,9 @@ public sealed partial class CompanyExecutionContext(IHttpContextAccessor httpCon
         var allowed = GetAllowedCompanies(context.User);
         var requested = GetRequestedCompany(context);
 
+        if (requested is not null && IsValidCompanyId(requested) && HasGlobalCompanyAccess(context.User))
+            return requested;
+
         if (requested is not null && IsValidCompanyId(requested) && allowed.Contains(requested))
             return requested;
 
@@ -30,8 +33,12 @@ public sealed partial class CompanyExecutionContext(IHttpContextAccessor httpCon
 
         var requested = GetRequestedCompany(context);
         return requested is null
-            || IsValidCompanyId(requested) && GetAllowedCompanies(context.User).Contains(requested);
+            || IsValidCompanyId(requested) && (HasGlobalCompanyAccess(context.User)
+                || GetAllowedCompanies(context.User).Contains(requested));
     }
+
+    private static bool HasGlobalCompanyAccess(ClaimsPrincipal user) =>
+        user.IsInRole("SystemAdmin") || user.IsInRole("Admin");
 
     private static HashSet<string> GetAllowedCompanies(ClaimsPrincipal user)
     {

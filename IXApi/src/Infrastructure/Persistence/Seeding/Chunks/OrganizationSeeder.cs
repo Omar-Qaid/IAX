@@ -9,9 +9,9 @@ using IAX.IXApi.Modules.Organization.Nationalities;
 using IAX.IXApi.Modules.Organization.Occupations;
 using IAX.IXApi.Modules.Organization.Employees;
 using IAX.IXApi.Modules.Organization.ManagementLevels;
-using IAX.IXApi.Modules.Organization.EmployeeManagers;
+using IAX.IXApi.Modules.Organization.HcmWorkerManagers;
 using IAX.IXApi.Modules.Organization.Showrooms;
-using IAX.IXApi.Modules.Organization.Features.OrgEmployeeCategory;
+using IAX.IXApi.Modules.Organization.Features.HcmWorkerCategory;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
@@ -65,7 +65,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     (472, "سويدي"),
                 };
 
-                db.Nationalities.AddRange(nationalities.Select(n => new OrgNationality
+                db.Nationalities.AddRange(nationalities.Select(n => new Nationality
                 {
                     RecId = n.Id,
                     Code = "NAT" + n.Id,
@@ -120,7 +120,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     (106, "إدارة التدريب والتطوير"),
                 };
 
-                db.Departments.AddRange(departments.Select(d => new OrgDepartment
+                db.Departments.AddRange(departments.Select(d => new Department
                 {
                     RecId = d.Id,
                     Code = "DEP" + d.Id,
@@ -133,9 +133,9 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 await db.Database.OpenConnectionAsync(ct);
                 try
                 {
-                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT OrgDepartments ON", ct);
+                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT Departments ON", ct);
                     await db.SaveChangesAsync(ct);
-                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT OrgDepartments OFF", ct);
+                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT Departments OFF", ct);
                 }
                 finally
                 {
@@ -299,7 +299,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     (369, "مدقق معاملات"),
                 };
 
-                db.Occupations.AddRange(occupations.Select(o => new OrgOccupation
+                db.Occupations.AddRange(occupations.Select(o => new Occupation
                 {
                     RecId = o.Id,
                     Code = "OCC" + o.Id,
@@ -312,9 +312,9 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 await db.Database.OpenConnectionAsync(ct);
                 try
                 {
-                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT OrgOccupations ON", ct);
+                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT Occupations ON", ct);
                     await db.SaveChangesAsync(ct);
-                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT OrgOccupations OFF", ct);
+                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT Occupations OFF", ct);
                 }
                 finally
                 {
@@ -328,8 +328,8 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             {
                 var genders = new[]
                 {
-                    new OrgGender { RecId = 1, Code = "M", Name = "Male", Description = null, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new OrgGender { RecId = 2, Code = "F", Name = "Female", Description = null, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy }
+                    new Gender { RecId = 1, Code = "M", Name = "Male", Description = null, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new Gender { RecId = 2, Code = "F", Name = "Female", Description = null, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy }
                 };
 
                 await db.Genders.AddRangeAsync(genders, ct);
@@ -337,9 +337,9 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 await db.Database.OpenConnectionAsync(ct);
                 try
                 {
-                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT OrgGenders ON", ct);
+                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT Genders ON", ct);
                     await db.SaveChangesAsync(ct);
-                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT OrgGenders OFF", ct);
+                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT Genders OFF", ct);
                 }
                 finally
                 {
@@ -349,17 +349,17 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             #endregion
 
             #region ManagementLevel
-            if (!await db.OrgManagementLevels.IgnoreQueryFilters().AnyAsync(m => m.RecId == 1, ct))
+            if (!await db.ManagementLevels.IgnoreQueryFilters().AnyAsync(m => m.RecId == 1, ct))
             {
                 var levels = new[]
                 {
-                    new OrgManagementLevel { RecId = 1, Code = "ML1", Name = "Supervisor", Level = 1, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new OrgManagementLevel { RecId = 2, Code = "ML2", Name = "Area Manager", Level = 2, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new OrgManagementLevel { RecId = 3, Code = "ML3", Name = "Region Manager", Level = 3, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new OrgManagementLevel { RecId = 4, Code = "ML4", Name = "General Manager", Level = 4, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy }
+                    new ManagementLevel { RecId = 1, Code = "ML1", Name = "Supervisor", Level = 1, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new ManagementLevel { RecId = 2, Code = "ML2", Name = "Area Manager", Level = 2, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new ManagementLevel { RecId = 3, Code = "ML3", Name = "Region Manager", Level = 3, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new ManagementLevel { RecId = 4, Code = "ML4", Name = "General Manager", Level = 4, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy }
                 };
 
-                await db.OrgManagementLevels.AddRangeAsync(levels, ct);
+                await db.ManagementLevels.AddRangeAsync(levels, ct);
                 await db.SaveChangesAsync(ct);
             }
             #endregion
@@ -427,12 +427,12 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             {
                 var showrooms = new[]
                 {
-                    new OrgShowroom
+                    new Showroom
                     {
                         RecId = 101, Code = "SHR001", Name = "Riyadh Main Showroom", DepartmentId = 1, Location = "Riyadh - King Fahd Rd",
                         IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy
                     },
-                    new OrgShowroom
+                    new Showroom
                     {
                         RecId = 102, Code = "SHR002", Name = "Jeddah Showroom", DepartmentId = 1, Location = "Jeddah - Tahlia St",
                         IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy
@@ -500,30 +500,30 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             }
             #endregion
 
-            #region ManagerHierarchy (dynamic OrgEmployeeManager assignments)
-            if (!await db.OrgEmployeeManagers.IgnoreQueryFilters().AnyAsync(m => m.EmployeeId == 1, ct))
+            #region ManagerHierarchy (dynamic EmployeeManager assignments)
+            if (!await db.HcmWorkerManagers.IgnoreQueryFilters().AnyAsync(m => m.EmployeeId == 1, ct))
             {
                 // Levels seeded above: 1=Supervisor, 2=Area Manager, 3=Region Manager, 4=General Manager.
                 var managerLinks = new[]
                 {
                     // Admin (1) reports up to the General Manager (2).
-                    new OrgEmployeeManager { EmployeeId = 1, ManagementLevelId = 4, ManagerId = 2 },
+                    new HcmWorkerManager { EmployeeId = 1, ManagementLevelId = 4, ManagerId = 2 },
                     // Khalid (3) is supervised by Admin (1) and ultimately the GM (2).
-                    new OrgEmployeeManager { EmployeeId = 3, ManagementLevelId = 1, ManagerId = 1 },
-                    new OrgEmployeeManager { EmployeeId = 3, ManagementLevelId = 4, ManagerId = 2 },
+                    new HcmWorkerManager { EmployeeId = 3, ManagementLevelId = 1, ManagerId = 1 },
+                    new HcmWorkerManager { EmployeeId = 3, ManagementLevelId = 4, ManagerId = 2 },
                     // Sara (4) and Faisal (5) are supervised by Khalid (3).
-                    new OrgEmployeeManager { EmployeeId = 4, ManagementLevelId = 1, ManagerId = 3 },
-                    new OrgEmployeeManager { EmployeeId = 5, ManagementLevelId = 1, ManagerId = 3 }
+                    new HcmWorkerManager { EmployeeId = 4, ManagementLevelId = 1, ManagerId = 3 },
+                    new HcmWorkerManager { EmployeeId = 5, ManagementLevelId = 1, ManagerId = 3 }
                 };
 
-                await db.OrgEmployeeManagers.AddRangeAsync(managerLinks, ct);
+                await db.HcmWorkerManagers.AddRangeAsync(managerLinks, ct);
                 await db.SaveChangesAsync(ct);
             }
             #endregion
 
-            #region OrgEntity user links
+            #region OrganizationEntity user links
             // Link the existing admin accounts to their employee records, and add a showroom account
-            // to demonstrate the polymorphic AspNetUser.OrgEntityId (employee OR showroom).
+            // to demonstrate the polymorphic AspNetUser.OrganizationEntityId (employee OR showroom).
             await LinkUserToHcmWorkerAsync(db, users, "sys", 1, ct);
             await LinkUserToHcmWorkerAsync(db, users, "omar", 2, ct);
 
@@ -536,7 +536,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     UserName = "riyadh.showroom",
                     Email = "riyadh.showroom@example.com",
                     EmailConfirmed = true,
-                    OrgEntityId = 101, // linked to the Riyadh showroom
+                    OrganizationEntityId = 101, // linked to the Riyadh showroom
                 };
                 var res = await users.CreateAsync(showroomUser, "123");
                 if (res.Succeeded)
@@ -547,8 +547,8 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             }
             #endregion
 
-            #region OrgEmployeeCategory
-            if (!await db.OrgEmployeeCategories.IgnoreQueryFilters().AnyAsync(c => c.RecId == 2, ct))
+            #region EmployeeCategory
+            if (!await db.HcmWorkerCategories.IgnoreQueryFilters().AnyAsync(c => c.RecId == 2, ct))
             {
                 var categories = new (long RecId, string Name)[]
                 {
@@ -813,7 +813,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     (262, "مقدمين بلاغات جهات حكومية"),
                 };
 
-                db.OrgEmployeeCategories.AddRange(categories.Select(c => new OrgEmployeeCategory
+                db.HcmWorkerCategories.AddRange(categories.Select(c => new HcmWorkerCategory
                 {
                     RecId = c.RecId,
                     Code = "UC" + c.RecId,
@@ -842,8 +842,8 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             }
             #endregion
 
-            #region OrgEmployeeCategoryGroup
-            if (!await db.OrgEmployeeCategoryGroups.IgnoreQueryFilters().AnyAsync(ct))
+            #region EmployeeCategoryGroup
+            if (!await db.EmployeeCategoryGroups.IgnoreQueryFilters().AnyAsync(ct))
             {
                 // (CategoriesGroupID, UserCategoriesID, DepartmentID, OccupationID, UserGroupID)
                 var links = new (long RecId, long CategoryId, short? DepartmentId, short? OccupationId, long? UserGroupId)[]
@@ -1097,15 +1097,15 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
 
                 var deptIds = (await db.Departments.IgnoreQueryFilters().Select(d => d.RecId).ToListAsync(ct)).ToHashSet();
                 var occIds = (await db.Occupations.IgnoreQueryFilters().Select(o => o.RecId).ToListAsync(ct)).ToHashSet();
-                var catIds = (await db.OrgEmployeeCategories.IgnoreQueryFilters().Select(c => c.RecId).ToListAsync(ct)).ToHashSet();
-                var grpIds = (await db.OrgEmployeeGroups.IgnoreQueryFilters().Select(g => g.RecId).ToListAsync(ct)).ToHashSet();
+                var catIds = (await db.HcmWorkerCategories.IgnoreQueryFilters().Select(c => c.RecId).ToListAsync(ct)).ToHashSet();
+                var grpIds = (await db.HcmWorkerGroups.IgnoreQueryFilters().Select(g => g.RecId).ToListAsync(ct)).ToHashSet();
 
                 var toInsert = links
                     .Where(l => catIds.Contains(l.CategoryId)
                         && (l.DepartmentId == null || deptIds.Contains(l.DepartmentId.Value))
                         && (l.OccupationId == null || occIds.Contains(l.OccupationId.Value))
                         && (l.UserGroupId == null || grpIds.Contains(l.UserGroupId.Value)))
-                    .Select(l => new OrgEmployeeCategoryGroup
+                    .Select(l => new HcmWorkerCategoryGroup
                     {
                         RecId = l.RecId,
                         UserCategoriesID = l.CategoryId,
@@ -1120,14 +1120,14 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
 
                 if (toInsert.Count > 0)
                 {
-                    db.OrgEmployeeCategoryGroups.AddRange(toInsert);
+                    db.EmployeeCategoryGroups.AddRange(toInsert);
 
                     await db.Database.OpenConnectionAsync(ct);
                     try
                     {
-                        await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT OrgEmployeeCategoryGroups ON", ct);
+                        await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT EmployeeCategoryGroups ON", ct);
                         await db.SaveChangesAsync(ct);
-                        await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT OrgEmployeeCategoryGroups OFF", ct);
+                        await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT EmployeeCategoryGroups OFF", ct);
                     }
                     finally
                     {
@@ -1152,13 +1152,13 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             }
         }
 
-        /// <summary>Sets a user's polymorphic OrgEntity link if it is not already assigned.</summary>
-        private static async Task LinkUserToOrgEntityAsync(UserManager<AspNetUser> users, string userName, long orgEntityId, CancellationToken ct)
+        /// <summary>Sets a user's polymorphic OrganizationEntity link if it is not already assigned.</summary>
+        private static async Task LinkUserToOrganizationEntityAsync(UserManager<AspNetUser> users, string userName, long orgEntityId, CancellationToken ct)
         {
             var user = await users.FindByNameAsync(userName);
-            if (user != null && user.OrgEntityId != orgEntityId)
+            if (user != null && user.OrganizationEntityId != orgEntityId)
             {
-                user.OrgEntityId = orgEntityId;
+                user.OrganizationEntityId = orgEntityId;
                 await users.UpdateAsync(user);
             }
         }

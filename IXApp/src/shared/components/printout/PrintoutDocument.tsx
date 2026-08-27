@@ -12,6 +12,10 @@ export interface PrintoutCompany {
   addressLines?: string[];
   contactLines?: string[];
   registrationLines?: string[];
+  vatNumber?: string | null;
+  commercialRegistration?: string | null;
+  phone?: string | null;
+  email?: string | null;
 }
 
 export interface PrintoutMetadataItem {
@@ -41,6 +45,7 @@ export interface PrintoutPageSettings {
   orientation?: 'portrait' | 'landscape';
   margin?: 'normal' | 'narrow' | 'wide';
   direction?: 'ltr' | 'rtl' | 'auto';
+  margins?: { top: number; right: number; bottom: number; left: number };
 }
 
 export interface PrintoutDocumentProps {
@@ -186,13 +191,18 @@ export function PrintoutDocument({ company, title, reference, reportDate, status
   const size = paperSize === 'A4' ? { width: 210, height: 297 } : { width: 216, height: 279 };
   const previewWidth = portrait ? size.width : size.height;
   const previewHeight = portrait ? size.height : size.width;
-  const padding = margin === 'narrow' ? 8 : margin === 'wide' ? 20 : 14;
-  const pageMargin = margin === 'narrow' ? '10mm' : margin === 'wide' ? '22mm' : '16mm';
+  const customMargins = pageSettings?.margins;
+  const padding = customMargins
+    ? `${customMargins.top}mm ${customMargins.right}mm ${customMargins.bottom}mm ${customMargins.left}mm`
+    : `${margin === 'narrow' ? 8 : margin === 'wide' ? 20 : 14}mm`;
+  const pageMargin = customMargins
+    ? `${customMargins.top}mm ${customMargins.right}mm ${customMargins.bottom}mm ${customMargins.left}mm`
+    : margin === 'narrow' ? '10mm' : margin === 'wide' ? '22mm' : '16mm';
   return (
     <>
       <style>{documentStyles}</style>
       <style>{`@page { size: ${paperSize} ${orientation}; margin: ${pageMargin}; }`}</style>
-      <Box className="printout-document printout-color" dir={pageSettings?.direction ?? (isRtl ? 'rtl' : 'ltr')} sx={{ width: `${previewWidth}mm`, minHeight: `${previewHeight}mm`, mx: 'auto', p: `${padding}mm`, boxSizing: 'border-box', bgcolor: '#fff', color: '#102a43', fontFamily: APP_FONT_FAMILY, textAlign: 'start', boxShadow: '0 4px 24px rgba(15,23,42,.16)' }}>
+      <Box className="printout-document printout-color" dir={pageSettings?.direction ?? (isRtl ? 'rtl' : 'ltr')} sx={{ width: `${previewWidth}mm`, minHeight: `${previewHeight}mm`, mx: 'auto', p: padding, boxSizing: 'border-box', bgcolor: '#fff', color: '#102a43', fontFamily: APP_FONT_FAMILY, textAlign: 'start', boxShadow: '0 4px 24px rgba(15,23,42,.16)' }}>
         <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
           {showHeader ? <Box component="thead"><Box component="tr"><Box component="td" sx={{ p: 0 }}>{header ?? <PrintoutHeader company={company} title={title} reference={reference} reportDate={reportDate} status={status} generatedBy={generatedBy} criteria={criteria} config={headerConfig} />}</Box></Box></Box> : null}
           {showBody ? <Box component="tbody"><Box component="tr"><Box component="td" sx={{ p: 0, verticalAlign: 'top' }}><Stack spacing={1.5} sx={{ py: 2 }}>{children}</Stack></Box></Box></Box> : null}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { DetailValue, EnterpriseListDetailsConfig, ListDetailRecord } from './types';
 import { createEnterpriseFilterCondition, matchesEnterpriseFilter, type EnterpriseFilterCondition } from '@shared/components/data-grid/EnterpriseFilterPanel';
@@ -19,6 +19,9 @@ export interface NumberSequenceMetadata {
 
 export function useListDetailsPage<T extends ListDetailRecord>(config: EnterpriseListDetailsConfig<T>) {
   const source = config.dataSource;
+  const controlledRecords = source.type === 'controlled' ? source.records : null;
+  const controlledLoading = source.type === 'controlled' ? Boolean(source.loading) : false;
+  const controlledError = source.type === 'controlled' ? (source.error ?? null) : null;
   const remoteSourceKey = source.type === 'remote' ? source.key : '';
   const [localRecords, setLocalRecords] = useState<T[]>(source.type === 'remote' ? (source.initialRecords ?? []) : source.records);
   const [loading, setLoading] = useState(source.type === 'remote' || (source.type === 'controlled' && Boolean(source.loading)));
@@ -45,7 +48,7 @@ export function useListDetailsPage<T extends ListDetailRecord>(config: Enterpris
     enabled: Boolean(sequenceKey),
     staleTime: 0,
   });
-  const records = source.type === 'controlled' ? source.records : localRecords;
+  const records = controlledRecords ?? localRecords;
   const [selectedId, setSelectedId] = useState<string | null>(records[0]?.id ?? null);
   const [query, setQuery] = useState(config.initialQuery ?? '');
   const [filterVisible, setFilterVisible] = useState(true);
@@ -78,19 +81,20 @@ export function useListDetailsPage<T extends ListDetailRecord>(config: Enterpris
   }, [remoteQuery.data, remoteQuery.error, remoteQuery.isFetching, remoteQuery.isLoading, source.type]);
   useEffect(() => {
     if (source.type !== 'controlled') return;
-    setLoading(Boolean(source.loading));
-    setError(source.error ?? null);
+    setLoading(controlledLoading);
+    setError(controlledError);
     if (editing) return;
     setSelectedId((current) =>
-      source.records.some((record) => record.id === current) ? current : (source.records[0]?.id ?? null)
+      controlledRecords?.some((record) => record.id === current) ? current : (controlledRecords?.[0]?.id ?? null)
     );
     setDraft((current) =>
-      source.records.find((record) => record.id === current?.id) ?? source.records[0] ?? null
+      controlledRecords?.find((record) => record.id === current?.id) ?? controlledRecords?.[0] ?? null
     );
-  }, [editing, source]);
+  }, [controlledError, controlledLoading, controlledRecords, editing, source.type]);
 
+  const deferredQuery = useDeferredValue(query);
   const visibleRecords = useMemo(() => {
-    const normalized = query.trim();
+    const normalized = deferredQuery.trim();
     return records.filter((record) => {
       const matchesQuery = !normalized || (config.matchesSearch ? config.matchesSearch(record, normalized) : config.getPrimaryText(record).toLocaleLowerCase().includes(normalized.toLocaleLowerCase()));
       const matchesAdvanced = !config.advancedFilter || advancedFilters.every((condition) => {
@@ -100,7 +104,7 @@ export function useListDetailsPage<T extends ListDetailRecord>(config: Enterpris
       });
       return matchesQuery && matchesAdvanced;
     });
-  }, [advancedFilters, config, query, records]);
+  }, [advancedFilters, config, deferredQuery, records]);
   const replaceRecords = (next: T[]) => { if (source.type === 'controlled') source.onRecordsChange(next); else setLocalRecords(next); };
   const refresh = useCallback(() => { if (source.type === 'controlled') void source.refresh?.(); else if (source.type === 'remote') void remoteQuery.refetch(); }, [remoteQuery, source]);
   const choose = (record: T) => { if (editing) return; setSelectedId(record.id); setDraft(record); setValidationErrors({}); };

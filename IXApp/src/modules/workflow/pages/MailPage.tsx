@@ -22,14 +22,14 @@ import type {
 import { documentApi } from '@shared/components/documents/documentApi';
 import { documentTableIds } from '@shared/components/documents/recordTableIds';
 import { wfProcessApi } from '../api/wfProcessApi';
-import {
-  wfRequestApi,
-  type MailTrackingEntryDto,
-  type WfRequestRecord,
-} from '../api/wfRequestApi';
+import { wfRequestApi, type MailTrackingEntryDto, type WfRequestRecord } from '../api/wfRequestApi';
 import { normalizeDynamicControlType } from '../components/DynamicControlRenderer';
 import { MailFieldValue } from '../components/MailFieldValue';
 import { WorkflowMailPrintoutViewer } from './WorkflowMailPrintoutPage';
+import { WorkflowOfficialFormViewer } from './WorkflowOfficialFormPage';
+import { printTemplateApi } from '../print-templates/api/printTemplateApi';
+import type { PrintTemplateSummary } from '../print-templates/types/printTemplate.types';
+import { selectPublishedTemplates } from '../print-templates/runtime/publishedTemplateSelection';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import type { TFunction } from 'i18next';
 import { APP_FONT_FAMILY } from '@shared/constants/fontFamilies';
@@ -80,7 +80,11 @@ const formatTimelineDate = (value: string, locale?: string): string => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return new Intl.DateTimeFormat(locale, {
-    year: 'numeric', month: '2-digit', day: '2-digit', hour: 'numeric', minute: '2-digit',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: 'numeric',
+    minute: '2-digit',
   }).format(date);
 };
 
@@ -99,7 +103,15 @@ const formatElapsed = (request: WfRequestRecord, t: TFunction): string => {
   return t('mail.hoursMinutes', { hours: Math.floor(minutes / 60), minutes: minutes % 60 });
 };
 
-function LabelValue({ label, value, compact = false }: { label: string; value: React.ReactNode; compact?: boolean }) {
+function LabelValue({
+  label,
+  value,
+  compact = false,
+}: {
+  label: string;
+  value: React.ReactNode;
+  compact?: boolean;
+}) {
   return (
     <Box
       sx={{
@@ -178,7 +190,9 @@ function MailAttachments({ requestId, detailIds }: { requestId: number; detailId
         sx={{ alignItems: 'center', px: 1.25, minHeight: 36, borderBottom: '1px solid #e2e2e2' }}
       >
         <AttachFileOutlined sx={{ fontSize: 16 }} />
-        <Typography sx={{ flex: 1, fontSize: 12.5, fontWeight: 700 }}>{t('mail.attachments.title')}</Typography>
+        <Typography sx={{ flex: 1, fontSize: 12.5, fontWeight: 700 }}>
+          {t('mail.attachments.title')}
+        </Typography>
         <Typography color="text.secondary" sx={{ fontSize: 11 }}>
           ({items.length})
         </Typography>
@@ -446,11 +460,15 @@ export function TrackingTimeline({ entries }: TrackingTimelineProps): React.Reac
                 <Box component="span" sx={{ color: '#555' }}>
                   {t('mail.timeline.responsible')}
                 </Box>
-                <Box component="span" dir="auto">{entry.responsible}</Box>
+                <Box component="span" dir="auto">
+                  {entry.responsible}
+                </Box>
                 <Box component="span" sx={{ color: '#555' }}>
                   {t('mail.timeline.action')}
                 </Box>
-                <Box component="span" dir="auto">{entry.action}</Box>
+                <Box component="span" dir="auto">
+                  {entry.action}
+                </Box>
                 <Box component="span" sx={{ color: '#555' }}>
                   {t('mail.timeline.notes')}
                 </Box>
@@ -501,7 +519,9 @@ function MailDetails({ request }: { request: MailRecord }) {
         }}
       >
         {mailDetails.isLoading ? (
-          <Box sx={{ display: 'grid', placeItems: 'center', height: '100%' }}><CircularProgress size={22} /></Box>
+          <Box sx={{ display: 'grid', placeItems: 'center', height: '100%' }}>
+            <CircularProgress size={22} />
+          </Box>
         ) : mailDetails.isError ? (
           <Alert severity="error">{t('mail.errors.tracking')}</Alert>
         ) : (
@@ -540,9 +560,19 @@ function MailDetails({ request }: { request: MailRecord }) {
             }}
           >
             <AssignmentTurnedInOutlined sx={{ fontSize: 17 }} />
-            <Typography sx={{ fontSize: 13, lineHeight: 1.35, fontWeight: 600 }}>{t('mail.transactionDetails')}</Typography>
+            <Typography sx={{ fontSize: 13, lineHeight: 1.35, fontWeight: 600 }}>
+              {t('mail.transactionDetails')}
+            </Typography>
           </Stack>
-          <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <Box
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
             <Box
               role="region"
               aria-label={t('mail.scrollableData')}
@@ -568,24 +598,68 @@ function MailDetails({ request }: { request: MailRecord }) {
               }}
             >
               {details && (
-                <Paper variant="outlined" sx={{ overflow: 'hidden', borderRadius: '6px', borderColor: '#e5e7eb', bgcolor: '#fff', boxShadow: '0 1px 2px rgba(0,0,0,.02)' }}>
-                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, minmax(0, 1fr))' } }}>
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    overflow: 'hidden',
+                    borderRadius: '6px',
+                    borderColor: '#e5e7eb',
+                    bgcolor: '#fff',
+                    boxShadow: '0 1px 2px rgba(0,0,0,.02)',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: 'grid',
+                      gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, minmax(0, 1fr))' },
+                    }}
+                  >
                     {details.fields.map((field) => {
                       const controlType = normalizeDynamicControlType(field.controlType);
-                      const fullWidth = ['signature', 'longtext', 'file', 'table', 'label'].includes(controlType);
-                      return <Box key={`${field.detailId}-${field.controlDataId ?? field.controlId ?? field.controlOrder}`} sx={{ minWidth: 0, gridColumn: { xs: '1', lg: fullWidth ? '1 / -1' : 'auto' } }}>
-                        <LabelValue
-                          compact
-                          label={currentLanguage.code === 'ar' ? (field.labelAr || field.label) : (field.label || field.labelAr)}
-                          value={<Box dir="auto"><MailFieldValue field={field} /></Box>}
-                        />
-                      </Box>;
+                      const fullWidth = [
+                        'signature',
+                        'longtext',
+                        'file',
+                        'table',
+                        'label',
+                      ].includes(controlType);
+                      return (
+                        <Box
+                          key={`${field.detailId}-${field.controlDataId ?? field.controlId ?? field.controlOrder}`}
+                          sx={{
+                            minWidth: 0,
+                            gridColumn: { xs: '1', lg: fullWidth ? '1 / -1' : 'auto' },
+                          }}
+                        >
+                          <LabelValue
+                            compact
+                            label={
+                              currentLanguage.code === 'ar'
+                                ? field.labelAr || field.label
+                                : field.label || field.labelAr
+                            }
+                            value={
+                              <Box dir="auto">
+                                <MailFieldValue field={field} />
+                              </Box>
+                            }
+                          />
+                        </Box>
+                      );
                     })}
                   </Box>
                 </Paper>
               )}
-              {mailDetails.isLoading && <Box sx={{ display: 'grid', placeItems: 'center', minHeight: 72 }}><CircularProgress size={20} /></Box>}
-              {mailDetails.isError && <Alert severity="error" sx={{ borderRadius: 0 }}>{t('mail.errors.details')}</Alert>}
+              {mailDetails.isLoading && (
+                <Box sx={{ display: 'grid', placeItems: 'center', minHeight: 72 }}>
+                  <CircularProgress size={20} />
+                </Box>
+              )}
+              {mailDetails.isError && (
+                <Alert severity="error" sx={{ borderRadius: 0 }}>
+                  {t('mail.errors.details')}
+                </Alert>
+              )}
             </Box>
           </Box>
         </Box>
@@ -603,7 +677,9 @@ function MailDetails({ request }: { request: MailRecord }) {
             variant="outlined"
             sx={{ p: 1.25, borderRadius: 1.25, boxShadow: '0 1px 3px rgba(0,0,0,.07)' }}
           >
-            <Typography sx={{ mb: 1, fontSize: 12.5, fontWeight: 750 }}>{t('mail.requestStatus')}</Typography>
+            <Typography sx={{ mb: 1, fontSize: 12.5, fontWeight: 750 }}>
+              {t('mail.requestStatus')}
+            </Typography>
             <Stack direction="row" spacing={1.1} sx={{ alignItems: 'center' }}>
               <Box sx={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
                 <CircularProgress
@@ -639,16 +715,26 @@ function MailDetails({ request }: { request: MailRecord }) {
             </Stack>
             <Divider sx={{ my: 1 }} />
             <Typography color="text.secondary" sx={{ fontSize: 8.8 }}>
-              {t('mail.decisionDate', { date: formatDateTime(request.requestDate, currentLanguage.code) })}
+              {t('mail.decisionDate', {
+                date: formatDateTime(request.requestDate, currentLanguage.code),
+              })}
             </Typography>
             <Typography sx={{ mt: 0.65, color: 'error.main', fontSize: 9.5, fontWeight: 650 }}>
               {t('mail.elapsedTime', { time: formatElapsed(request, t) })}
             </Typography>
             {request.isStopped && (
-              <Chip size="small" color="error" label={t('mail.statuses.stopped')} sx={{ mt: 0.75 }} />
+              <Chip
+                size="small"
+                color="error"
+                label={t('mail.statuses.stopped')}
+                sx={{ mt: 0.75 }}
+              />
             )}
           </Paper>
-          <MailAttachments requestId={request.recId} detailIds={details?.fields.map((field) => field.detailId) ?? []} />
+          <MailAttachments
+            requestId={request.recId}
+            detailIds={details?.fields.map((field) => field.detailId) ?? []}
+          />
         </Box>
       </Stack>
     </Box>
@@ -686,6 +772,11 @@ export function MailPage(): React.ReactElement {
   const { t, currentLanguage } = useAppTranslation();
   const [folder, setFolder] = React.useState<MailFolder>('all');
   const [printRequest, setPrintRequest] = React.useState<MailRecord | null>(null);
+  const [selectedMailRequest, setSelectedMailRequest] = React.useState<MailRecord | null>(null);
+  const [officialFormSelection, setOfficialFormSelection] = React.useState<{
+    request: MailRecord;
+    templateId: number;
+  } | null>(null);
   const requests = useQuery({
     queryKey: ['workflow', 'mail', 'requests'],
     queryFn: ({ signal }) => wfRequestApi.list(signal),
@@ -694,25 +785,17 @@ export function MailPage(): React.ReactElement {
     queryKey: ['workflow', 'mail', 'processes'],
     queryFn: ({ signal }) => wfProcessApi.list(signal),
   });
-  const requesterDetails = useQueries({
-    queries: (requests.data ?? []).map((request) => ({
-      queryKey: ['workflow', 'mail', 'request-details', request.recId],
-      queryFn: ({ signal }) => wfRequestApi.mailDetails(request.recId, signal),
-      enabled: request.recId > 0,
-    })),
+  const selectedProcessTemplates = useQuery({
+    queryKey: ['workflow', 'print-templates', 'mail-menu', selectedMailRequest?.processId ?? 0],
+    queryFn: ({ signal }) =>
+      printTemplateApi.listPublishedByProcess(selectedMailRequest?.processId ?? 0, signal),
+    enabled: (selectedMailRequest?.processId ?? 0) > 0,
   });
-
   const records = React.useMemo(() => {
     const processNames = new Map(
       (processes.data ?? []).map((process) => [
         process.recId,
         process.name || process.code || t('mail.processFallback', { id: process.recId }),
-      ])
-    );
-    const requesterNames = new Map(
-      (requests.data ?? []).map((request, index) => [
-        request.recId,
-        requesterDetails[index]?.data?.employeeName || '—',
       ])
     );
     return [...(requests.data ?? [])]
@@ -722,12 +805,14 @@ export function MailPage(): React.ReactElement {
       )
       .map((request, index): MailRecord => ({
         ...request,
-        processName: processNames.get(request.processId) || t('mail.processFallback', { id: request.processId }),
-        requestedBy: requesterNames.get(request.recId) || '—',
+        processName:
+          processNames.get(request.processId) ||
+          t('mail.processFallback', { id: request.processId }),
+        requestedBy: request.requesterName || '—',
         stepNumber: index + 1,
       }))
       .filter((request) => folderMatches(request, folder));
-  }, [folder, processes.data, requesterDetails, requests.data, t]);
+  }, [folder, processes.data, requests.data, t]);
 
   const folderButtons: Array<{ id: MailFolder; label: string }> = [
     { id: 'all', label: t('mail.folders.all') },
@@ -755,10 +840,16 @@ export function MailPage(): React.ReactElement {
       },
     },
     createRecord: emptyMailRecord,
+    onSelectionChange: setSelectedMailRequest,
     getPrimaryText: (request) =>
-      t('mail.requestName', { name: request.name || request.code || t('mail.requestFallback', { id: request.recId }) }),
+      t('mail.requestName', {
+        name: request.name || request.code || t('mail.requestFallback', { id: request.recId }),
+      }),
     getSecondaryText: (request) =>
-      t('mail.requestedBySummary', { name: request.requestedBy, date: formatDateTime(request.requestDate, currentLanguage.code) }),
+      t('mail.requestedBySummary', {
+        name: request.requestedBy,
+        date: formatDateTime(request.requestDate, currentLanguage.code),
+      }),
     matchesSearch: (request, query) =>
       `${request.code ?? ''} ${request.name ?? ''} ${request.description ?? ''} ${request.processName}`
         .toLocaleLowerCase()
@@ -817,15 +908,35 @@ export function MailPage(): React.ReactElement {
         content: <MailDetails key={record.id} request={record} />,
       },
     ],
-    commands: [
-      {
-        id: 'printout',
-        label: t('mail.printout'),
-        menuLabel: t('mail.view'),
-        requiresSelection: true,
-        onClick: (request) => setPrintRequest(request),
-      },
-    ],
+    commands: (selectedRequest) => {
+      const officialTemplates = selectPublishedTemplates(
+        selectedRequest?.processId === selectedMailRequest?.processId
+          ? selectedProcessTemplates.data
+          : undefined
+      );
+      return [
+        ...officialTemplates.map((template: PrintTemplateSummary) => ({
+          id: `print-template-${template.templateId}`,
+          label: template.isDefault
+            ? `${template.name} (${t('mail.print.defaultTemplate')})`
+            : template.name,
+          menuLabel: t('mail.view'),
+          requiresSelection: true,
+          onClick: (request: MailRecord | null) => {
+            if (request) setOfficialFormSelection({ request, templateId: template.templateId });
+          },
+        })),
+        {
+          id: 'default-printout',
+          label: t('mail.print.defaultPrint'),
+          menuLabel: t('mail.view'),
+          requiresSelection: true,
+          onClick: (request: MailRecord | null) => {
+            if (request) setPrintRequest(request);
+          },
+        },
+      ];
+    },
     filterLabel: t('mail.filter'),
     showAttachmentAction: false,
     presentation: {
@@ -896,8 +1007,16 @@ export function MailPage(): React.ReactElement {
           label: t('mail.fields.request'),
           getValue: (request) => request.name || request.code || '',
         },
-        { id: 'process', label: t('mail.fields.process'), getValue: (request) => request.processName },
-        { id: 'status', label: t('mail.fields.status'), getValue: (request) => getStatus(request, t) },
+        {
+          id: 'process',
+          label: t('mail.fields.process'),
+          getValue: (request) => request.processName,
+        },
+        {
+          id: 'status',
+          label: t('mail.fields.status'),
+          getValue: (request) => getStatus(request, t),
+        },
       ],
     },
     relatedInformation: {
@@ -912,7 +1031,10 @@ export function MailPage(): React.ReactElement {
                   { label: t('mail.requestId'), value: request.recId },
                   { label: t('mail.processId'), value: request.processId },
                   { label: t('common.company'), value: request.dataAreaId },
-                  { label: t('common.active'), value: request.isActive ? t('common.yes') : t('common.no') },
+                  {
+                    label: t('common.active'),
+                    value: request.isActive ? t('common.yes') : t('common.no'),
+                  },
                 ],
               },
             ]
@@ -922,7 +1044,14 @@ export function MailPage(): React.ReactElement {
 
   return (
     <Box sx={{ height: '100%' }}>
-      {printRequest ? (
+      {officialFormSelection ? (
+        <WorkflowOfficialFormViewer
+          open
+          request={officialFormSelection.request}
+          templateId={officialFormSelection.templateId}
+          onClose={() => setOfficialFormSelection(null)}
+        />
+      ) : printRequest ? (
         <WorkflowMailPrintoutViewer
           open
           request={printRequest}

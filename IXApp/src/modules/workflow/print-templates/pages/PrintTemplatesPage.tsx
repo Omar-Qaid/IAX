@@ -314,6 +314,11 @@ export function PrintTemplatesPage(): React.ReactElement {
         }
       >
         <Stack spacing={1.5}>
+          <TemplateDesigner
+            processId={processId}
+            document={draft.document}
+            onChange={(document) => setDraft((value) => ({ ...value, document }))}
+          />
           <TextField
             required
             size="small"
@@ -388,10 +393,6 @@ export function PrintTemplatesPage(): React.ReactElement {
               />
             }
             label={t('printTemplates.fields.default')}
-          />
-          <TemplateDesigner
-            document={draft.document}
-            onChange={(document) => setDraft((value) => ({ ...value, document }))}
           />
         </Stack>
       </AppDialog>

@@ -30,6 +30,20 @@ public sealed class CompanyIsolationTests
         Assert.True(executionContext.IsRequestedCompanyAuthorized());
     }
 
+    [Theory]
+    [InlineData("SystemAdmin")]
+    [InlineData("Admin")]
+    public void Administrator_can_select_any_well_formed_company(string role)
+    {
+        var context = CreateHttpContext("dat");
+        context.User.AddIdentity(new ClaimsIdentity([new Claim(ClaimTypes.Role, role)]));
+        context.Request.Headers["X-Company"] = "HBMC";
+        var executionContext = CreateExecutionContext(context);
+
+        Assert.Equal("HBMC", executionContext.GetDataAreaId());
+        Assert.True(executionContext.IsRequestedCompanyAuthorized());
+    }
+
     [Fact]
     public void Unauthorized_company_header_cannot_change_execution_context()
     {

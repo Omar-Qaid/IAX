@@ -24,17 +24,17 @@ namespace IAX.IXApi.Modules.Identity.Users
         public string ? PhotoUrl { get; set; }
 
     
-        public long? OrgEntityId { get; set; }
+        public long? OrganizationEntityId { get; set; }
 
-        [ForeignKey(nameof(OrgEntityId))]
-        public virtual OrgEntity? OrgEntity { get; set; }
+        [ForeignKey(nameof(OrganizationEntityId))]
+        public virtual OrganizationEntity? OrganizationEntity { get; set; }
     }
 
     /*
-     var entity = user.OrgEntity;   // قد يكون معرضاً أو موظفاً
+     var entity = user.OrganizationEntity;   // قد يكون معرضاً أو موظفاً
 switch (entity)
 {
-    case OrgShowroom showroom:   // حساب معرض
+    case Showroom showroom:   // حساب معرض
         // ... صلاحيات/شاشات المعرض، البائعون: showroom.Sellers
         break;
     case OrgEmployee employee:   // حساب موظف

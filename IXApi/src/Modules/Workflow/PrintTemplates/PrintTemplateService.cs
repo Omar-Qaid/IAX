@@ -50,11 +50,92 @@ public sealed class PrintTemplateService : IPrintTemplateService
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<PrintTemplateSummaryDto>> ListPublishedByProcessAsync(long processId, CancellationToken cancellationToken = default)
+    {
+        return await _context.WfPrintTemplates.AsNoTracking()
+            .Where(item => item.ProcessId == processId
+                && item.IsActive
+                && item.Status == WfPrintTemplateStatus.Published
+                && item.CurrentVersionId != null
+                && item.CurrentVersion != null
+                && item.CurrentVersion.IsPublished)
+            .OrderByDescending(item => item.IsDefault).ThenBy(item => item.Name)
+            .Select(item => new PrintTemplateSummaryDto
+            {
+                TemplateId = item.RecId,
+                ProcessId = item.ProcessId,
+                ProcessName = item.Process.Name ?? item.Process.Code ?? string.Empty,
+                Code = item.Code ?? string.Empty,
+                Name = item.Name ?? string.Empty,
+                Description = item.Description,
+                PageSize = item.PageSize,
+                Orientation = item.Orientation,
+                Language = item.Language,
+                IsDefault = item.IsDefault,
+                Status = item.Status,
+                CurrentVersionId = item.CurrentVersionId,
+                CurrentVersionNo = item.CurrentVersion!.VersionNo,
+                LatestVersionNo = item.CurrentVersion.VersionNo,
+                HasDraft = false,
+                IsActive = item.IsActive,
+                LastModifiedAt = item.LastModifiedAt
+            })
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<PrintTemplateDto?> GetAsync(long templateId, CancellationToken cancellationToken = default)
     {
         var template = await TemplateQuery(asNoTracking: true)
             .SingleOrDefaultAsync(item => item.RecId == templateId, cancellationToken);
         return template == null ? null : Map(template);
+    }
+
+    public async Task<PublishedPrintTemplateDto?> GetPublishedForRequestAsync(
+        long requestId,
+        long templateId,
+        CancellationToken cancellationToken = default)
+    {
+        var requestProcessId = await _context.WfRequests.AsNoTracking()
+            .Where(item => item.RecId == requestId)
+            .Select(item => (long?)item.ProcessId)
+            .SingleOrDefaultAsync(cancellationToken);
+        if (!requestProcessId.HasValue) return null;
+
+        var template = await TemplateQuery(asNoTracking: true)
+            .SingleOrDefaultAsync(item => item.RecId == templateId
+                && item.ProcessId == requestProcessId.Value
+                && item.IsActive
+                && item.Status == WfPrintTemplateStatus.Published
+                && item.CurrentVersionId != null
+                && item.CurrentVersion != null
+                && item.CurrentVersion.IsPublished,
+                cancellationToken);
+        if (template?.CurrentVersion == null) return null;
+
+        var currentVersion = template.CurrentVersion;
+        return new PublishedPrintTemplateDto
+        {
+            TemplateId = template.RecId,
+            ProcessId = template.ProcessId,
+            ProcessName = template.Process.Name ?? template.Process.Code ?? string.Empty,
+            Code = template.Code ?? string.Empty,
+            Name = template.Name ?? string.Empty,
+            Description = template.Description,
+            PageSize = template.PageSize,
+            Orientation = template.Orientation,
+            Language = template.Language,
+            IsDefault = template.IsDefault,
+            Status = template.Status,
+            CurrentVersionId = template.CurrentVersionId,
+            CurrentVersionNo = currentVersion.VersionNo,
+            LatestVersionNo = template.Versions.Max(item => item.VersionNo),
+            HasDraft = template.Versions.Any(item => !item.IsPublished),
+            IsActive = template.IsActive,
+            LastModifiedAt = template.LastModifiedAt,
+            TemplateVersionId = currentVersion.RecId,
+            VersionNo = currentVersion.VersionNo,
+            Document = Deserialize(currentVersion.TemplateJson)
+        };
     }
 
     public async Task<PrintTemplateDto> CreateAsync(CreatePrintTemplateDto input, CancellationToken cancellationToken = default)

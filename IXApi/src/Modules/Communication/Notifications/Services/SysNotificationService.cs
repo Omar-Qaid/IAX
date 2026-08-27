@@ -451,14 +451,14 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
             {
                 var deptUserIds = await _db.HcmWorkers.AsNoTracking()
                     .Where(e => dto.DepartmentIds.Contains((short)e.DepartmentId))
-                    .Join(_db.AspNetUser, e => e.RecId, u => u.OrgEntityId, (e, u) => u.Id)
+                    .Join(_db.AspNetUser, e => e.RecId, u => u.OrganizationEntityId, (e, u) => u.Id)
                     .ToListAsync(ct);
                 foreach (var id in deptUserIds) userIds.Add(id);
             }
 
             if (dto.GroupIds?.Any() == true)
             {
-                var groupUserIds = await _db.OrgEmployeeGroupDetails.AsNoTracking()
+                var groupUserIds = await _db.HcmWorkerGroupDetails.AsNoTracking()
                     .Where(gd => dto.GroupIds.Contains(gd.UserGroupID))
                     .Select(gd => gd.UserID)
                     .ToListAsync(ct);

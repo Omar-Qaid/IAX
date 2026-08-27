@@ -110,6 +110,12 @@ export interface PrintTemplate extends PrintTemplateSummary {
   versions: Array<{ templateVersionId: number; versionNo: number; isPublished: boolean; publishedBy: string | null; publishedAt: string | null; createdAt: string | null }>;
 }
 
+export interface PublishedPrintTemplate extends PrintTemplateSummary {
+  templateVersionId: number;
+  versionNo: number;
+  document: PrintTemplateDocument;
+}
+
 export interface SavePrintTemplateInput {
   processId?: number;
   code: string;

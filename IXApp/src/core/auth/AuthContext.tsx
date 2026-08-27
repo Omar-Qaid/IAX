@@ -4,6 +4,12 @@ import type { UserProfile } from './types';
 import { authService } from './authService';
 import { authEvents } from './authEvents';
 import { userHasPermission } from '@core/permissions/permissionService';
+import { useCompanyStore } from '@core/company/useCompanyStore';
+
+const selectDefaultCompany = (user: UserProfile): void => {
+  const defaultCompany = user.defaultCompany?.trim();
+  if (defaultCompany) useCompanyStore.getState().setCompany(defaultCompany);
+};
 
 export interface AuthContextType {
   isAuthenticated: boolean;
@@ -40,7 +46,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     authService
       .getCurrentUser()
       .then((currentUser) => {
-        if (active) setUser(currentUser);
+        if (active) {
+          selectDefaultCompany(currentUser);
+          setUser(currentUser);
+        }
       })
       .catch(() => {
         if (active) clearSession();
@@ -57,6 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
     try {
       const response = await authService.login(username, password);
+      selectDefaultCompany(response.user);
       setUser(response.user);
     } finally {
       setIsLoading(false);

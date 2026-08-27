@@ -4,6 +4,11 @@ public sealed class MailRequestDetailsDto
 {
     public long RequestId { get; set; }
     public string ProcessName { get; set; } = string.Empty;
+    public string ProcessCode { get; set; } = string.Empty;
+    public string CreatedBy { get; set; } = string.Empty;
+    public DateTime? CreatedDate { get; set; }
+    public string SubmittedBy { get; set; } = string.Empty;
+    public DateTime SubmissionDate { get; set; }
     public string Status { get; set; } = string.Empty;
     public DateTime RequestDate { get; set; }
     public string EmployeeName { get; set; } = string.Empty;
