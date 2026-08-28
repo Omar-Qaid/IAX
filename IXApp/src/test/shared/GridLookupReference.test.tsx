@@ -6,6 +6,7 @@ import { LookupGrid } from '@shared/components/lookups/LookupGrid';
 import { LookupGridField } from '@shared/components/lookups/LookupGridField';
 import type { GridLookupColumn, LookupPage } from '@shared/components/lookups/types';
 import { AuthProvider } from '@core/auth/AuthProvider';
+import { FormProvider, useForm } from 'react-hook-form';
 
 interface TestItem {
   id: string;
@@ -24,7 +25,11 @@ const mockColumns: GridLookupColumn<TestItem>[] = [
   { field: 'name', header: 'Name', flex: 1 },
 ];
 
-const mockFetchPage = async (params: { pageNumber: number; pageSize: number; search: string }): Promise<LookupPage<TestItem>> => {
+const mockFetchPage = async (params: {
+  pageNumber: number;
+  pageSize: number;
+  search: string;
+}): Promise<LookupPage<TestItem>> => {
   const filtered = mockData.filter(
     (item) =>
       item.code.toLowerCase().includes(params.search.toLowerCase()) ||
@@ -46,6 +51,23 @@ const createTestQueryClient = () =>
       },
     },
   });
+
+function ControlledLookupWithinForm({ onChange }: { onChange: ReturnType<typeof vi.fn> }) {
+  const form = useForm({ defaultValues: { customerId: 'form-value' } });
+  return (
+    <FormProvider {...form}>
+      <LookupGridField<TestItem>
+        name="customerId"
+        label="Customer"
+        columns={mockColumns}
+        fetchPage={mockFetchPage}
+        queryKey={['controlled-grid-lookup']}
+        value="1"
+        onChange={onChange}
+      />
+    </FormProvider>
+  );
+}
 
 describe('Grid Lookup Reference Integration', () => {
   it('renders LookupGrid with initial closed state and opens on click', async () => {
@@ -93,5 +115,22 @@ describe('Grid Lookup Reference Integration', () => {
     );
 
     expect(screen.getByLabelText('Customer')).toBeInTheDocument();
+  });
+
+  it('clears an externally controlled value inside an unrelated form context', () => {
+    const queryClient = createTestQueryClient();
+    const handleChange = vi.fn();
+
+    render(
+      <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <ControlledLookupWithinForm onChange={handleChange} />
+        </QueryClientProvider>
+      </AuthProvider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+
+    expect(handleChange).toHaveBeenCalledWith(null, null);
   });
 });

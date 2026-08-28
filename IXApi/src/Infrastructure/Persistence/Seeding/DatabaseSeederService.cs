@@ -37,6 +37,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding
                 new SettingsSeeder(),
                 new NumberSequenceSeeder(),
                 new IdentitySeeder(),
+                new DocumentManagementSeeder(),
                 new LegacyOrganizationEmployeeSeeder(),
                 new LegacyWorkflowMasterDataSeeder(),
                 new WorkflowRequestTrackingSeeder(),

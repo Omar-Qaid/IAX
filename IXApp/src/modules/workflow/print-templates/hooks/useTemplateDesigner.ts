@@ -2,8 +2,31 @@ import React from 'react';
 import type { PrintTemplateDocument, PrintTemplateElement } from '../types/printTemplate.types';
 
 export type TemplateRegion = 'header' | 'sections' | 'footer';
-export type PhaseTwoElementType =
-  'text' | 'field' | 'section' | 'row' | 'column' | 'image' | 'divider';
+export type DesignerComponentType =
+  | 'text'
+  | 'richText'
+  | 'field'
+  | 'labelValue'
+  | 'image'
+  | 'companyLogo'
+  | 'barcode'
+  | 'qrCode'
+  | 'section'
+  | 'row'
+  | 'column'
+  | 'container'
+  | 'spacer'
+  | 'divider'
+  | 'table'
+  | 'dynamicTable'
+  | 'repeatingSection'
+  | 'keyValueTable'
+  | 'checkbox'
+  | 'signature'
+  | 'dateTime'
+  | 'pageNumber'
+  | 'pageNumberOfTotal'
+  | 'pageBreak';
 
 const elementChildren = (element: PrintTemplateElement): PrintTemplateElement[] | null => {
   if (element.type === 'section' || element.type === 'row' || element.type === 'column') {
@@ -63,27 +86,101 @@ const makeId = (): string =>
     ? crypto.randomUUID().replaceAll('-', '')
     : `element${Date.now()}${Math.random().toString(16).slice(2)}`;
 
-export const createDesignerElement = (type: PhaseTwoElementType): PrintTemplateElement => {
+export const createDesignerElement = (type: DesignerComponentType): PrintTemplateElement => {
   const id = makeId();
   switch (type) {
     case 'text':
       return { type, id, value: 'Text', style: { fontSize: 12, alignment: 'start' } };
+    case 'richText':
+      return { type: 'text', id, value: 'Rich text', style: { fontSize: 12, alignment: 'start' } };
     case 'field':
       return {
-        type,
+        type: 'field',
         id,
         label: '',
         binding: { sourceType: 'system', source: 'requestNumber' },
       };
+    case 'labelValue':
+      return {
+        type: 'field',
+        id,
+        label: 'Label',
+        binding: { sourceType: 'system', source: 'requestNumber' },
+      };
+    case 'checkbox':
+      return {
+        type: 'field',
+        id,
+        label: 'Checkbox',
+        binding: { sourceType: 'system', source: 'requestStatus' },
+        format: { type: 'boolean', trueText: '☑', falseText: '☐' },
+      };
     case 'section':
       return { type, id, title: '', columns: 1, elements: [] };
+    case 'repeatingSection':
+      return { type: 'section', id, title: 'Repeating section', columns: 1, elements: [] };
     case 'row':
       return { type, id, elements: [] };
     case 'column':
       return { type, id, span: 1, elements: [] };
+    case 'container':
+      return { type: 'column', id, span: 1, elements: [] };
     case 'image':
-      return { type, id, sourceType: 'companyLogo', altText: 'Company logo' };
+      return { type: 'image', id, sourceType: 'url', altText: 'Image' };
+    case 'companyLogo':
+      return { type: 'image', id, sourceType: 'companyLogo', altText: 'Company logo' };
     case 'divider':
+      return { type, id };
+    case 'spacer':
+      return { type, id, height: 8 };
+    case 'table':
+    case 'dynamicTable':
+      return {
+        type: 'table',
+        id,
+        dataSource: { sourceType: 'repeating', source: 'items' },
+        columns: [{ id: `${id}value`, label: 'Value', field: 'value' }],
+        repeatHeader: true,
+      };
+    case 'keyValueTable':
+      return {
+        type: 'table',
+        id,
+        dataSource: { sourceType: 'repeating', source: 'items' },
+        columns: [
+          { id: `${id}key`, label: 'Key', field: 'key' },
+          { id: `${id}value`, label: 'Value', field: 'value' },
+        ],
+        repeatHeader: true,
+      };
+    case 'barcode':
+      return {
+        type,
+        id,
+        binding: { sourceType: 'system', source: 'requestNumber' },
+        format: 'code128',
+      };
+    case 'qrCode':
+      return { type, id, binding: { sourceType: 'system', source: 'requestNumber' } };
+    case 'signature':
+      return {
+        type,
+        id,
+        label: 'Signature',
+        binding: { sourceType: 'system', source: 'currentUser' },
+      };
+    case 'dateTime':
+      return { type: 'printDate', id };
+    case 'pageNumber':
+      return { type, id };
+    case 'pageNumberOfTotal':
+      return {
+        type: 'field',
+        id,
+        label: '',
+        binding: { sourceType: 'report', source: 'pageNumberOfTotal' },
+      };
+    case 'pageBreak':
       return { type, id };
   }
 };
@@ -111,7 +208,7 @@ export function useTemplateDesigner(
   );
 
   const addElement = React.useCallback(
-    (type: PhaseTwoElementType) => {
+    (type: DesignerComponentType) => {
       const element = createDesignerElement(type);
       if (selectedElement) {
         const children = elementChildren(selectedElement);

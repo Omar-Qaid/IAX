@@ -16,6 +16,7 @@ interface PinnedHeaderCellProps<T> {
   onFilterIconClick: (event: React.MouseEvent<HTMLElement>, column: ColumnDef<T>) => void;
   onMenuOpen: (event: React.MouseEvent<HTMLElement>, column: ColumnDef<T>) => void;
   onResizeStart: (event: React.MouseEvent, field: string, edge?: 'inline-start' | 'inline-end') => void;
+  headerHeight: number;
   showColumnBorders?: boolean;
   hideFilterRow?: boolean;
   hideColumnMenu?: boolean;
@@ -30,6 +31,7 @@ export function PinnedHeaderCell<T>({
   onFilterIconClick,
   onMenuOpen,
   onResizeStart,
+  headerHeight,
   showColumnBorders = false,
   hideFilterRow = false,
   hideColumnMenu = false,
@@ -63,7 +65,9 @@ export function PinnedHeaderCell<T>({
           p: '3px 8px',
           borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
           position: 'relative',
-          height: 32,
+          height: headerHeight,
+          minHeight: headerHeight,
+          boxSizing: 'border-box',
           '&:hover': {
             bgcolor: (theme) =>
               theme.palette.mode === 'light' ? '#e9e8e7' : theme.palette.action.hover,
@@ -106,7 +110,9 @@ export function PinnedHeaderCell<T>({
             bgcolor: (theme) => (theme.palette.mode === 'light' ? '#ffffff' : '#2d3748'),
             display: 'flex',
             alignItems: 'center',
-            height: 32,
+            height: headerHeight,
+            minHeight: headerHeight,
+            boxSizing: 'border-box',
           }}
         >
           {column.filterable === false ? (

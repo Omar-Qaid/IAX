@@ -6,7 +6,9 @@ import type { PrintFieldBinding } from '../types/printTemplate.types';
 export interface RuntimePrintData {
   system: Record<string, unknown>;
   company: Record<string, unknown>;
+  report: Record<string, unknown>;
   requestControls: Record<string, unknown>;
+  repeating: Record<string, unknown>;
 }
 
 export const createRuntimePrintData = (
@@ -54,6 +56,15 @@ export const createRuntimePrintData = (
     phone: company.phone,
     email: company.email,
   },
+  report: {
+    pageNumber: 1,
+    totalPages: 1,
+    pageNumberOfTotal: '1 / 1',
+    currentDate: printedAt.toISOString(),
+    currentTime: printedAt.toISOString(),
+    printedDate: printedAt.toISOString(),
+    printedBy: user?.displayName || user?.username || '',
+  },
   requestControls: Object.fromEntries(
     details.fields.flatMap((field) =>
       [field.controlDataId, field.controlId]
@@ -66,14 +77,34 @@ export const createRuntimePrintData = (
         ])
     )
   ),
+  repeating: {
+    items: details.fields.map((field) => ({
+      key: field.label,
+      label: field.label,
+      labelAr: field.labelAr,
+      value: field.valueEn ?? field.value,
+      valueAr: field.valueAr,
+      controlId: field.controlId,
+      requestControlId: field.controlDataId,
+    })),
+  },
 });
 
-export const resolveRuntimeBinding = (data: RuntimePrintData, binding: PrintFieldBinding): unknown => {
+export const resolveRuntimeBinding = (
+  data: RuntimePrintData,
+  binding: PrintFieldBinding
+): unknown => {
   if (binding.sourceType === 'requestControl') {
     const id = binding.requestControlId ?? binding.controlId;
     return id == null ? undefined : data.requestControls[String(id)];
   }
-  if (binding.sourceType === 'system') return binding.source ? data.system[binding.source] : undefined;
-  if (binding.sourceType === 'company') return binding.source ? data.company[binding.source] : undefined;
+  if (binding.sourceType === 'system')
+    return binding.source ? data.system[binding.source] : undefined;
+  if (binding.sourceType === 'company')
+    return binding.source ? data.company[binding.source] : undefined;
+  if (binding.sourceType === 'report')
+    return binding.source ? data.report[binding.source] : undefined;
+  if (binding.sourceType === 'repeating')
+    return binding.source ? data.repeating[binding.source] : undefined;
   return undefined;
 };

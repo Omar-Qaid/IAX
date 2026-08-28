@@ -20,6 +20,7 @@ interface SortableHeaderProps<T> {
   onFilterIconClick: (event: React.MouseEvent<HTMLElement>, column: ColumnDef<T>) => void;
   onMenuOpen: (event: React.MouseEvent<HTMLElement>, column: ColumnDef<T>) => void;
   onResizeStart: (event: React.MouseEvent, field: string, edge?: 'inline-start' | 'inline-end') => void;
+  headerHeight: number;
   showColumnBorders?: boolean;
   hideFilterRow?: boolean;
   hideColumnMenu?: boolean;
@@ -34,6 +35,7 @@ export function SortableHeader<T>({
   onFilterIconClick,
   onMenuOpen,
   onResizeStart,
+  headerHeight,
   showColumnBorders,
   hideFilterRow = false,
   hideColumnMenu = false,
@@ -90,7 +92,9 @@ export function SortableHeader<T>({
           cursor: column.sortable === false ? 'default' : 'pointer',
           userSelect: 'none',
           position: 'relative',
-          height: 32,
+          height: headerHeight,
+          minHeight: headerHeight,
+          boxSizing: 'border-box',
           '&:hover': {
             bgcolor: theme.palette.mode === 'light' ? '#e9e8e7' : theme.palette.action.hover,
           },
@@ -143,7 +147,9 @@ export function SortableHeader<T>({
             bgcolor: theme.palette.mode === 'light' ? '#ffffff' : '#2d3748',
             display: 'flex',
             alignItems: 'center',
-            height: 32,
+            height: headerHeight,
+            minHeight: headerHeight,
+            boxSizing: 'border-box',
           }}
         >
           {column.filterable === false ? (

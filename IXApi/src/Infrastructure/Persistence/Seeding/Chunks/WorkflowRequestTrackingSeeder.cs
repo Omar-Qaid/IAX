@@ -269,39 +269,229 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
             .Select(process => new { process.RecId, process.Name })
             .ToListAsync(ct);
 
-        var processIdsWithRequests = await db.WfRequests
-            .IgnoreQueryFilters()
-            .Where(request => !request.IsDeleted)
-            .Select(request => request.ProcessId)
-            .Distinct()
-            .ToListAsync(ct);
-        var existingProcessIds = processIdsWithRequests.ToHashSet();
         var seededAt = new DateTime(2026, 1, 1, 8, 0, 0, DateTimeKind.Utc);
 
-        foreach (var process in processes.Where(process => !existingProcessIds.Contains(process.RecId)))
+        foreach (var process in processes)
         {
             var requestDate = seededAt.AddMinutes(process.RecId % 1440);
             var processName = string.IsNullOrWhiteSpace(process.Name)
                 ? $"Process {process.RecId}"
                 : process.Name;
-            db.WfRequests.Add(new WfRequest
-            {
-                Code = $"SEED-{process.RecId}",
-                Name = $"{processName} sample request",
-                ProcessId = process.RecId,
-                EmployeeId = null,
-                RequestDate = requestDate,
-                RequestDetails = new XElement("Details").ToString(SaveOptions.DisableFormatting),
-                IsFinished = false,
-                Progress = 0,
-                IsActive = true,
-                CreatedAt = requestDate,
-                CreatedBy = by,
-                OwnerAccountId = by,
-            });
-        }
 
-        await db.SaveChangesAsync(ct);
+            // Reuse the representative request when this seeder is rerun. Prefer the
+            // deterministic seed request, but repair the oldest existing request for
+            // processes that already had data before this seed was introduced.
+            var request = await db.WfRequests
+                .IgnoreQueryFilters()
+                .Where(row => row.ProcessId == process.RecId && !row.IsDeleted)
+                .OrderByDescending(row => row.Code == $"SEED-{process.RecId}")
+                .ThenBy(row => row.RecId)
+                .FirstOrDefaultAsync(ct);
+
+            if (request is null)
+            {
+                request = new WfRequest
+                {
+                    Code = $"SEED-{process.RecId}",
+                    Name = $"{processName} sample request",
+                    ProcessId = process.RecId,
+                    EmployeeId = null,
+                    RequestDate = requestDate,
+                    RequestDetails = new XElement("Details").ToString(SaveOptions.DisableFormatting),
+                    IsFinished = false,
+                    Progress = 0,
+                    IsActive = true,
+                    CreatedAt = requestDate,
+                    CreatedBy = by,
+                    OwnerAccountId = by,
+                };
+                db.WfRequests.Add(request);
+                await db.SaveChangesAsync(ct);
+            }
+
+            var requestDetails = await db.WfRequestDetails
+                .IgnoreQueryFilters()
+                .Where(row => row.RequestId == request.RecId && !row.IsDeleted)
+                .OrderBy(row => row.SortOrder)
+                .ThenBy(row => row.RecId)
+                .ToListAsync(ct);
+
+            var requestControls = await db.WfRequestControls
+                .IgnoreQueryFilters()
+                .Where(row => row.ProcessId == process.RecId
+                    && row.IsActive
+                    && !row.IsDeleted)
+                .OrderBy(row => row.SortOrder)
+                .ThenBy(row => row.RecId)
+                .Select(row => new
+                {
+                    row.RecId,
+                    row.ControlId,
+                    row.Name,
+                    row.SortOrder,
+                    row.Score,
+                })
+                .ToListAsync(ct);
+
+            var existingControlIds = requestDetails
+                .Where(row => row.ControlDataId.HasValue)
+                .Select(row => row.ControlDataId!.Value)
+                .ToHashSet();
+
+            foreach (var control in requestControls.Where(row => !existingControlIds.Contains(row.RecId)))
+            {
+                requestDetails.Add(new WfRequestDetail
+                {
+                    ProcessId = process.RecId,
+                    RequestId = request.RecId,
+                    ControlId = control.ControlId,
+                    ControlDataId = control.RecId,
+                    ControlLabel = control.Name ?? $"Field {control.RecId}",
+                    ControlLabelAR = control.Name ?? $"الحقل {control.RecId}",
+                    ControlValue = string.Empty,
+                    ControlValueAR = string.Empty,
+                    ControlValueEN = string.Empty,
+                    UsedAsCriteria = false,
+                    SortOrder = control.SortOrder,
+                    Score = control.Score,
+                    CreatedBy = by,
+                    OwnerAccountId = by,
+                });
+            }
+
+            if (requestDetails.Count == 0)
+            {
+                requestDetails.Add(new WfRequestDetail
+                {
+                    ProcessId = process.RecId,
+                    RequestId = request.RecId,
+                    ControlId = null,
+                    ControlDataId = null,
+                    ControlLabel = "Seeded request",
+                    ControlLabelAR = "طلب تجريبي",
+                    ControlValue = string.Empty,
+                    ControlValueAR = string.Empty,
+                    ControlValueEN = string.Empty,
+                    UsedAsCriteria = false,
+                    SortOrder = 0,
+                    CreatedBy = by,
+                    OwnerAccountId = by,
+                });
+            }
+
+            var newRequestDetails = requestDetails
+                .Where(row => row.RecId == 0)
+                .ToList();
+            if (newRequestDetails.Count > 0)
+                db.WfRequestDetails.AddRange(newRequestDetails);
+
+            var serializedRequestDetails = BuildXml(requestDetails);
+            if (newRequestDetails.Count > 0
+                || !string.Equals(request.RequestDetails, serializedRequestDetails, StringComparison.Ordinal))
+            {
+                request.RequestDetails = serializedRequestDetails;
+                await db.SaveChangesAsync(ct);
+            }
+
+            var assignment = await db.WfAssignments
+                .IgnoreQueryFilters()
+                .Where(row => row.RequestId == request.RecId && !row.IsDeleted)
+                .OrderBy(row => row.RecId)
+                .FirstOrDefaultAsync(ct);
+
+            if (assignment is null)
+            {
+                var activity = await db.WfActivities
+                    .IgnoreQueryFilters()
+                    .Where(row => row.Step.ProcessId == process.RecId
+                        && row.IsActive
+                        && !row.IsDeleted)
+                    .OrderBy(row => row.Step.SortOrder)
+                    .ThenBy(row => row.RecId)
+                    .Select(row => new { row.RecId, row.StepId })
+                    .FirstOrDefaultAsync(ct);
+
+                // A request can still represent a process with no configured activity;
+                // the execution chain can only be created when a valid activity exists.
+                if (activity is null)
+                    continue;
+
+                var userId = await db.WfUsersProcesses
+                    .IgnoreQueryFilters()
+                    .Where(userProcess => userProcess.ProcessId == process.RecId
+                        && userProcess.EmployeeId.HasValue)
+                    .OrderBy(userProcess => userProcess.RecId)
+                    .Select(userProcess => userProcess.EmployeeId)
+                    .FirstOrDefaultAsync(ct) ?? 0;
+
+                assignment = new WfAssignment
+                {
+                    RequestId = request.RecId,
+                    ActivityId = activity.RecId,
+                    StepId = activity.StepId,
+                    UserId = userId,
+                    AssignDate = request.RequestDate,
+                    IsFinished = false,
+                    AutoPassing = false,
+                    AutoPassingHrs = 0,
+                    Automatically = false,
+                    CreatedBy = by,
+                    OwnerAccountId = by,
+                };
+                db.WfAssignments.Add(assignment);
+                await db.SaveChangesAsync(ct);
+            }
+
+            var processData = await db.WfProcessData
+                .IgnoreQueryFilters()
+                .Where(row => row.AssignmentID == assignment.RecId && !row.IsDeleted)
+                .OrderBy(row => row.RecId)
+                .FirstOrDefaultAsync(ct);
+
+            if (processData is null)
+            {
+                processData = new WfProcessData
+                {
+                    AssignmentID = assignment.RecId,
+                    FinishDate = assignment.FinishedDate ?? assignment.AssignDate,
+                    ActivityDetails = new XElement("Details").ToString(SaveOptions.DisableFormatting),
+                    CreatedBy = by,
+                    OwnerAccountId = by,
+                };
+                db.WfProcessData.Add(processData);
+                await db.SaveChangesAsync(ct);
+            }
+
+            var activityDetailExists = await db.WfActivityDetails
+                .IgnoreQueryFilters()
+                .AnyAsync(
+                    row => row.ProcessId == processData.RecId
+                        && row.AssignmentID == assignment.RecId
+                        && !row.IsDeleted,
+                    ct);
+
+            if (!activityDetailExists)
+            {
+                var activityDetail = new WfActivityDetail
+                {
+                    ProcessId = processData.RecId,
+                    AssignmentID = assignment.RecId,
+                    ControlId = 0,
+                    ControlDataId = 0,
+                    ControlLabel = "Seeded activity",
+                    ControlLabelAR = "نشاط تجريبي",
+                    ControlValue = string.Empty,
+                    ControlValueAR = string.Empty,
+                    ControlValueEN = string.Empty,
+                    SortOrder = 0,
+                    CreatedBy = by,
+                    OwnerAccountId = by,
+                };
+                db.WfActivityDetails.Add(activityDetail);
+                processData.ActivityDetails = BuildXml([activityDetail]);
+                await db.SaveChangesAsync(ct);
+            }
+        }
     }
 
     private static async System.Threading.Tasks.Task SeedPrintTemplateForEveryProcessAsync(
@@ -380,32 +570,45 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                 db.WfPrintTemplateVersions.Add(version);
                 await db.SaveChangesAsync(ct);
             }
+            else if (!version.IsPublished || version.IsDeleted)
+            {
+                version.IsPublished = true;
+                version.IsDeleted = false;
+                version.PublishedBy = by;
+                version.PublishedAt ??= DateTime.UtcNow;
+                await db.SaveChangesAsync(ct);
+            }
 
             if (template.CurrentVersionId != version.RecId
-                || template.Status != WfPrintTemplateStatus.Published)
+                || template.Status != WfPrintTemplateStatus.Published
+                || !template.IsActive
+                || template.IsDeleted)
             {
                 template.CurrentVersionId = version.RecId;
                 template.Status = WfPrintTemplateStatus.Published;
+                template.IsActive = true;
+                template.IsDeleted = false;
                 await db.SaveChangesAsync(ct);
             }
 
             var requestId = await db.WfRequests
                 .IgnoreQueryFilters()
                 .Where(request => request.ProcessId == process.RecId && !request.IsDeleted)
-                .OrderBy(request => request.RecId)
+                .OrderByDescending(request => request.Code == $"SEED-{process.RecId}")
+                .ThenBy(request => request.RecId)
                 .Select(request => (long?)request.RecId)
                 .FirstOrDefaultAsync(ct);
 
             if (requestId is null)
                 continue;
 
-            var requestVersionExists = await db.WfRequestPrintVersions
+            var requestVersion = await db.WfRequestPrintVersions
                 .IgnoreQueryFilters()
-                .AnyAsync(
+                .SingleOrDefaultAsync(
                     row => row.RequestId == requestId.Value && row.TemplateId == template.RecId,
                     ct);
 
-            if (!requestVersionExists)
+            if (requestVersion is null)
             {
                 db.WfRequestPrintVersions.Add(new WfRequestPrintVersion
                 {
@@ -417,6 +620,14 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                     CreatedBy = by,
                     OwnerAccountId = by,
                 });
+                await db.SaveChangesAsync(ct);
+            }
+            else if (requestVersion.TemplateVersionId != version.RecId || requestVersion.IsDeleted)
+            {
+                requestVersion.TemplateVersionId = version.RecId;
+                requestVersion.IsDeleted = false;
+                requestVersion.SelectedAt = DateTime.UtcNow;
+                requestVersion.SelectedBy = by;
                 await db.SaveChangesAsync(ct);
             }
         }
@@ -588,7 +799,7 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
         return JsonSerializer.Serialize(document, new JsonSerializerOptions(JsonSerializerDefaults.Web));
     }
 
-    private static string BuildXml(IEnumerable<WfRequestDetail> rows) => new XElement("Details",rows.OrderBy(x=>x.SortOrder).Select(x=>new XElement("Control",new XElement("ControlDataId",x.ControlDataId),new XElement("ControlLabel",x.ControlLabel),new XElement("ControlLabelAR",x.ControlLabelAR),new XElement("ControlValue",x.ControlValue),new XElement("ControlId",x.ControlId),new XElement("UsedAsCriteria",x.UsedAsCriteria),new XElement("ControlOrder",x.SortOrder),new XElement("RelatedObjectId",ProcessId),new XElement("ControlValueAR",x.ControlValueAR),new XElement("ControlValueEN",x.ControlValueEN)))).ToString(SaveOptions.DisableFormatting);
+    private static string BuildXml(IEnumerable<WfRequestDetail> rows) => new XElement("Details",rows.OrderBy(x=>x.SortOrder).Select(x=>new XElement("Control",new XElement("ControlDataId",x.ControlDataId),new XElement("ControlLabel",x.ControlLabel),new XElement("ControlLabelAR",x.ControlLabelAR),new XElement("ControlValue",x.ControlValue),new XElement("ControlId",x.ControlId),new XElement("UsedAsCriteria",x.UsedAsCriteria),new XElement("ControlOrder",x.SortOrder),new XElement("RelatedObjectId",x.ProcessId??ProcessId),new XElement("ControlValueAR",x.ControlValueAR),new XElement("ControlValueEN",x.ControlValueEN)))).ToString(SaveOptions.DisableFormatting);
     private static string BuildXml(IEnumerable<WfActivityDetail> rows) => new XElement("Details",rows.OrderBy(x=>x.SortOrder).Select(x=>new XElement("Control",new XElement("ControlDataId",x.ControlDataId),new XElement("ControlLabel",x.ControlLabel),new XElement("ControlLabelAR",x.ControlLabelAR),new XElement("ControlValue",x.ControlValue),new XElement("ControlId",x.ControlId),new XElement("UsedAsCriteria",x.UsedAsCriteria),new XElement("ControlOrder",x.SortOrder),new XElement("RelatedObjectId",0),new XElement("ControlValueAR",x.ControlValueAR),new XElement("ControlValueEN",x.ControlValueEN)))).ToString(SaveOptions.DisableFormatting);
 
     private static async System.Threading.Tasks.Task AddMissingAsync<TEntity>(ApplicationDbContext db,DbSet<TEntity> set,IEnumerable<TEntity> source,CancellationToken ct) where TEntity:class,IBaseEntity

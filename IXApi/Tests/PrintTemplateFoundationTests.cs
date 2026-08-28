@@ -75,7 +75,24 @@ public sealed class PrintTemplateFoundationTests
     {
         var document = new PrintTemplateDocument
         {
-            Header = [new PrintTextElement { Id = "title", Value = "Payment request" }],
+            Header =
+            [
+                new PrintTextElement
+                {
+                    Id = "title",
+                    Value = "Payment request",
+                    Style = new PrintElementStyle
+                    {
+                        Height = 120,
+                        Padding = 6,
+                        MarginBottom = 10,
+                        BorderWidth = 2,
+                        BorderColor = "#174f82",
+                        BorderRadius = 8,
+                        ObjectFit = "cover"
+                    }
+                }
+            ],
             Footer = [new PrintPageNumberElement { Id = "page" }]
         };
         var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
@@ -84,7 +101,56 @@ public sealed class PrintTemplateFoundationTests
         var roundTrip = JsonSerializer.Deserialize<PrintTemplateDocument>(json, options);
 
         Assert.IsType<PrintTextElement>(Assert.Single(roundTrip!.Header));
+        var title = Assert.IsType<PrintTextElement>(Assert.Single(roundTrip.Header));
+        Assert.Equal(120m, title.Style!.Height);
+        Assert.Equal("cover", title.Style.ObjectFit);
         Assert.IsType<PrintPageNumberElement>(Assert.Single(roundTrip.Footer));
         Assert.Contains("\"type\":\"text\"", json);
+    }
+
+    [Fact]
+    public void SupportsReportFieldsAndAdvancedValueFormatting()
+    {
+        var document = new PrintTemplateDocument
+        {
+            Footer =
+            [
+                new PrintFieldElement
+                {
+                    Id = "pageCount",
+                    Binding = new PrintFieldBinding { SourceType = "report", Source = "pageNumberOfTotal" }
+                },
+                new PrintFieldElement
+                {
+                    Id = "amount",
+                    Binding = new PrintFieldBinding { SourceType = "system", Source = "amount" },
+                    Format = new PrintValueFormat
+                    {
+                        Type = "currency",
+                        Currency = "SAR",
+                        DecimalPlaces = 3,
+                        UseGrouping = true,
+                        NegativeFormat = "parentheses"
+                    }
+                },
+                new PrintFieldElement
+                {
+                    Id = "printedDate",
+                    Binding = new PrintFieldBinding { SourceType = "report", Source = "printedDate" },
+                    Format = new PrintValueFormat { Type = "date", Pattern = "yyyy-MM-dd" }
+                }
+            ]
+        };
+
+        Assert.Empty(_validator.Validate(document));
+
+        var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        var json = JsonSerializer.Serialize(document, options);
+        var roundTrip = JsonSerializer.Deserialize<PrintTemplateDocument>(json, options)!;
+        var amount = Assert.IsType<PrintFieldElement>(roundTrip.Footer[1]);
+
+        Assert.Equal(3, amount.Format!.DecimalPlaces);
+        Assert.True(amount.Format.UseGrouping);
+        Assert.Equal("parentheses", amount.Format.NegativeFormat);
     }
 }

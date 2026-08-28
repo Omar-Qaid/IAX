@@ -145,6 +145,19 @@ function LookupGridFieldWrapper<T extends object, TFieldValues extends FieldValu
 
   const errorMessage = typeof error === 'string' ? error : error?.message;
 
+  // A value/onChange pair is controlled by the caller. Do not let an
+  // unrelated parent FormProvider capture selection and clear events.
+  if (!controlProp && props.onChange) {
+    return (
+      <LookupGridFieldInner<T>
+        {...rest}
+        value={props.value}
+        onChange={(value, row) => props.onChange?.(value, row)}
+        errorMessage={errorMessage}
+      />
+    );
+  }
+
   if (!control) {
     return (
       <LookupGridFieldInner<T>
@@ -164,7 +177,10 @@ function LookupGridFieldWrapper<T extends object, TFieldValues extends FieldValu
         <LookupGridFieldInner<T>
           {...rest}
           value={field.value as LookupValue<T> | null | undefined}
-          onChange={(val, _row) => field.onChange(val)}
+          onChange={(val, row) => {
+            field.onChange(val);
+            props.onChange?.(val, row);
+          }}
           errorMessage={fieldState.error?.message || errorMessage}
         />
       )}

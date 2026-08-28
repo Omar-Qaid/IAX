@@ -8,7 +8,10 @@ public sealed class PrintTemplateDocumentValidator
     private static readonly HashSet<string> Orientations = ["portrait", "landscape"];
     private static readonly HashSet<string> MissingBehaviors = ["empty", "na", "placeholder"];
     private static readonly HashSet<string> Operators = ["=", "!=", ">", ">=", "<", "<=", "contains", "notContains", "isEmpty", "isNotEmpty", "in", "notIn"];
-    private static readonly HashSet<string> SourceTypes = ["system", "company", "requestControl", "workflow", "attachment", "repeating"];
+    private static readonly HashSet<string> SourceTypes = ["system", "company", "report", "requestControl", "workflow", "attachment", "repeating"];
+    private static readonly HashSet<string> FormatTypes = ["text", "date", "dateTime", "number", "currency", "percentage", "boolean"];
+    private static readonly HashSet<string> NegativeFormats = ["minus", "parentheses", "trailingMinus"];
+    private static readonly HashSet<string> DatePatterns = ["dd/MM/yyyy", "dd-MM-yyyy", "MM/dd/yyyy", "dd MMM yyyy", "yyyy-MM-dd", "HH:mm"];
 
     public IReadOnlyList<string> Validate(PrintTemplateDocument? document)
     {
@@ -54,6 +57,7 @@ public sealed class PrintTemplateDocumentValidator
                     break;
                 case PrintFieldElement field:
                     ValidateBinding(field.Binding, errors, elementPath);
+                    ValidateFormat(field.Format, errors, elementPath);
                     break;
                 case PrintSectionElement section:
                     if (section.Columns is < 1 or > 12) errors.Add($"{elementPath}: section columns must be between 1 and 12.");
@@ -74,6 +78,8 @@ public sealed class PrintTemplateDocumentValidator
                     if (table.Columns.Count == 0) errors.Add($"{elementPath}: table requires at least one column.");
                     if (table.Columns.Any(column => string.IsNullOrWhiteSpace(column.Id) || string.IsNullOrWhiteSpace(column.Field)))
                         errors.Add($"{elementPath}: every table column requires id and field.");
+                    foreach (var column in table.Columns)
+                        ValidateFormat(column.Format, errors, $"{elementPath}.columns[{column.Id}]");
                     break;
                 case PrintWorkflowApprovalElement approval when approval.StepId <= 0:
                     errors.Add($"{elementPath}: workflow step id is required.");
@@ -115,8 +121,19 @@ public sealed class PrintTemplateDocumentValidator
             errors.Add($"{path}: requestControl binding requires a stable RequestControlId.");
         if (binding.SourceType == "workflow" && binding.StepId is not > 0 && string.IsNullOrWhiteSpace(binding.Source))
             errors.Add($"{path}: workflow binding requires StepId or source.");
-        if (binding.SourceType is "system" or "company" or "repeating" && string.IsNullOrWhiteSpace(binding.Source))
+        if (binding.SourceType is "system" or "company" or "report" or "repeating" && string.IsNullOrWhiteSpace(binding.Source))
             errors.Add($"{path}: {binding.SourceType} binding requires source.");
+    }
+
+    private static void ValidateFormat(PrintValueFormat? format, List<string> errors, string path)
+    {
+        if (format == null) return;
+        if (!FormatTypes.Contains(format.Type)) errors.Add($"{path}: unsupported value format '{format.Type}'.");
+        if (format.DecimalPlaces is < 0 or > 8) errors.Add($"{path}: decimal places must be between 0 and 8.");
+        if (!string.IsNullOrWhiteSpace(format.NegativeFormat) && !NegativeFormats.Contains(format.NegativeFormat))
+            errors.Add($"{path}: unsupported negative format '{format.NegativeFormat}'.");
+        if (!string.IsNullOrWhiteSpace(format.Pattern) && !DatePatterns.Contains(format.Pattern))
+            errors.Add($"{path}: unsupported date pattern '{format.Pattern}'.");
     }
 
     private static IEnumerable<PrintTemplateElement> Elements(PrintTemplateDocument document)

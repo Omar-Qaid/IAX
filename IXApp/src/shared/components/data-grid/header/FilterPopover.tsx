@@ -7,6 +7,7 @@ import {
   Divider,
   Chip,
   MenuItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
   Menu,
@@ -91,7 +92,7 @@ export function FilterPopover<T>({
       >
         {/* Quick sort shortcuts */}
         <Box sx={{ mb: 1.5 }}>
-          <MenuItem
+          <ListItemButton
             onClick={() => {
               onSort(column.field as string, 'asc');
               onClose();
@@ -105,8 +106,8 @@ export function FilterPopover<T>({
               primary={t('grid.sort_ascending')}
               slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }}
             />
-          </MenuItem>
-          <MenuItem
+          </ListItemButton>
+          <ListItemButton
             onClick={() => {
               onSort(column.field as string, 'desc');
               onClose();
@@ -120,7 +121,7 @@ export function FilterPopover<T>({
               primary={t('grid.sort_descending')}
               slotProps={{ primary: { sx: { fontSize: '0.85rem' } } }}
             />
-          </MenuItem>
+          </ListItemButton>
         </Box>
 
         <Divider sx={{ mb: 1.5 }} />

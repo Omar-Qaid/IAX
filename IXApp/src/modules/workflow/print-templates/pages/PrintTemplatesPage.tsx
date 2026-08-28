@@ -14,17 +14,22 @@ import EditOutlined from '@mui/icons-material/EditOutlined';
 import PublishOutlined from '@mui/icons-material/PublishOutlined';
 import ArchiveOutlined from '@mui/icons-material/ArchiveOutlined';
 import DeleteOutline from '@mui/icons-material/DeleteOutlined';
-import RefreshOutlined from '@mui/icons-material/RefreshOutlined';
+import SearchOutlined from '@mui/icons-material/SearchOutlined';
 import { useQuery } from '@tanstack/react-query';
 import { queryClient } from '@core/api/queryClient';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { PERMISSIONS } from '@core/permissions/permissions';
 import { ActionPaneButton } from '@shared/components/action-pane/ActionPaneButton';
+import { EnterpriseCommandUtilities } from '@shared/components/action-pane/EnterpriseCommandUtilities';
+import { OptionsMenu } from '@shared/components/action-pane/OptionsMenu';
+import { RecordAttachmentsButton, recordTableId } from '@shared/components/documents';
 import type { ColumnDef } from '@shared/components/data-grid/types';
 import { AppLookupGridField } from '@shared/components/fields/AppLookupGridField';
+import { RightUtilityRail } from '@shared/components/page/RightUtilityRail';
 import { AppDialog } from '@shared/components/dialogs/AppDialog';
 import { ConfirmationDialog } from '@shared/components/dialogs/ConfirmationDialog';
 import { useNotifications } from '@shared/hooks/useNotifications';
+import { useLocalStorage } from '@shared/hooks/useLocalStorage';
 import { SimpleListPage } from '@patterns/simple-list/SimpleListPage';
 import { wfProcessApi, type WfProcessRecord } from '../../api/wfProcessApi';
 import { fetchProcessPage, processLookupColumns } from '../../lookups/processLookup';
@@ -64,7 +69,10 @@ export function PrintTemplatesPage(): React.ReactElement {
     queryKey: ['workflow', 'processes', 'print-templates'],
     queryFn: ({ signal }) => wfProcessApi.list(signal),
   });
-  const [processId, setProcessId] = React.useState(0);
+  const [processId, setProcessId] = useLocalStorage<number>(
+    'workflow.print-templates.process-id',
+    0
+  );
   const [selectedId, setSelectedId] = React.useState<number | null>(null);
   const [editorOpen, setEditorOpen] = React.useState(false);
   const [editingId, setEditingId] = React.useState<number | null>(null);
@@ -73,10 +81,18 @@ export function PrintTemplatesPage(): React.ReactElement {
   );
   const [saving, setSaving] = React.useState(false);
   const [confirmAction, setConfirmAction] = React.useState<ConfirmAction>(null);
+  const [filterRowVisible, setFilterRowVisible] = React.useState(false);
 
   React.useEffect(() => {
-    if (!processId && processes.data?.length) setProcessId(processes.data[0].recId);
-  }, [processId, processes.data]);
+    if (
+      processId > 0 &&
+      processes.data &&
+      !processes.data.some((process) => process.recId === processId)
+    ) {
+      setProcessId(0);
+      setSelectedId(null);
+    }
+  }, [processId, processes.data, setProcessId]);
 
   const templatesKey = React.useMemo(
     () => ['workflow', 'print-templates', processId] as const,
@@ -260,11 +276,37 @@ export function PrintTemplatesPage(): React.ReactElement {
         disabled={!selected || selected.currentVersionId != null}
       />
       <ActionPaneButton
-        label={t('actions.refresh')}
-        icon={<RefreshOutlined />}
-        onClick={() => void refresh()}
+        label={t('common.search', 'Search')}
+        icon={<SearchOutlined />}
+        onClick={() => setFilterRowVisible((visible) => !visible)}
+      />
+      <OptionsMenu
+        record={selected}
+        tableName="WfPrintTemplates"
+        getRecordId={(record) => record.templateId}
+        title={t('printTemplates.title')}
       />
     </>
+  );
+
+  const actionPaneEndActions = (
+    <EnterpriseCommandUtilities
+      personalizeLabel={t('utilities.personalize')}
+      guideLabel={t('utilities.guide')}
+      notificationsLabel={t('common.notifications')}
+      refreshLabel={t('actions.refresh')}
+      openWindowLabel={t('utilities.openWindow')}
+      attachmentAction={
+        <RecordAttachmentsButton
+          refTableId={recordTableId('WfPrintTemplates')}
+          refRecId={selected?.templateId ?? null}
+        />
+      }
+      onRefresh={() => void refresh()}
+      showPersonalize={false}
+      showGuide={false}
+      showNotifications={false}
+    />
   );
 
   const processFilter = (
@@ -318,6 +360,8 @@ export function PrintTemplatesPage(): React.ReactElement {
             processId={processId}
             document={draft.document}
             onChange={(document) => setDraft((value) => ({ ...value, document }))}
+            isDefault={draft.isDefault}
+            onDefaultChange={(isDefault) => setDraft((value) => ({ ...value, isDefault }))}
           />
           <TextField
             required
@@ -345,55 +389,6 @@ export function PrintTemplatesPage(): React.ReactElement {
               setDraft((value) => ({ ...value, description: event.target.value || null }))
             }
           />
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-            <TextField
-              select
-              fullWidth
-              size="small"
-              label={t('printTemplates.fields.language')}
-              value={draft.document.language}
-              onChange={(event) => {
-                const language = event.target.value as PrintTemplateLanguage;
-                setDraft((value) => ({
-                  ...value,
-                  document: {
-                    ...value.document,
-                    language,
-                    direction: language === 'ar' ? 'rtl' : 'ltr',
-                  },
-                }));
-              }}
-            >
-              <MenuItem value="en">{t('printTemplates.languages.english')}</MenuItem>
-              <MenuItem value="ar">{t('printTemplates.languages.arabic')}</MenuItem>
-            </TextField>
-            <TextField
-              select
-              fullWidth
-              size="small"
-              label={t('printTemplates.fields.orientation')}
-              value={draft.document.page.orientation}
-              onChange={(event) => {
-                const orientation = event.target.value as PrintTemplateOrientation;
-                setDraft((value) => ({
-                  ...value,
-                  document: { ...value.document, page: { ...value.document.page, orientation } },
-                }));
-              }}
-            >
-              <MenuItem value="portrait">{t('printTemplates.orientation.portrait')}</MenuItem>
-              <MenuItem value="landscape">{t('printTemplates.orientation.landscape')}</MenuItem>
-            </TextField>
-          </Stack>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={draft.isDefault}
-                onChange={(_, checked) => setDraft((value) => ({ ...value, isDefault: checked }))}
-              />
-            }
-            label={t('printTemplates.fields.default')}
-          />
         </Stack>
       </AppDialog>
 
@@ -420,6 +415,16 @@ export function PrintTemplatesPage(): React.ReactElement {
       contextLabel={t('printTemplates.title')}
       viewLabel={t('printTemplates.subtitle')}
       actionPane={actionPane}
+      actionPaneEndActions={actionPaneEndActions}
+      utilityRail={
+        <RightUtilityRail
+          filterLabel={t('actions.filter')}
+          informationLabel={t('common.information')}
+          filterActive={filterRowVisible}
+          onFilter={() => setFilterRowVisible((visible) => !visible)}
+          showInformation={false}
+        />
+      }
       filterBar={processFilter}
       dataSource={{
         type: 'controlled',
@@ -445,7 +450,7 @@ export function PrintTemplatesPage(): React.ReactElement {
         },
         storageKey: 'workflow.print-templates',
         hideAddRowButton: true,
-        hideFilterRow: false,
+        hideFilterRow: !filterRowVisible,
       }}
       dialogs={dialogs}
       contentMinHeight={420}

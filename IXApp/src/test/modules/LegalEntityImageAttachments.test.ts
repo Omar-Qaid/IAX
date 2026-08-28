@@ -17,6 +17,29 @@ beforeEach(() => {
 });
 
 describe('legal-entity image attachments', () => {
+  it('keeps the existing report logo when no image document type is configured', async () => {
+    const file = new File(['image'], 'report.png', { type: 'image/png' });
+    vi.spyOn(documentApi, 'list').mockResolvedValue({
+      items: [
+        {
+          id: 42,
+          name: LEGAL_ENTITY_REPORT_LOGO,
+        } as Awaited<ReturnType<typeof documentApi.list>>['items'][number],
+      ],
+      pageNumber: 1,
+      pageSize: 100,
+      totalCount: 1,
+    });
+    const remove = vi.spyOn(documentApi, 'remove').mockResolvedValue();
+    vi.spyOn(documentApi, 'types').mockResolvedValue([]);
+
+    await expect(
+      saveLegalEntityImageAttachments(record({ reportLogoFile: file }), record())
+    ).rejects.toThrow('No image attachment type is configured.');
+
+    expect(remove).not.toHaveBeenCalled();
+  });
+
   it('replaces the report logo through managed document storage', async () => {
     const file = new File(['image'], 'report.png', { type: 'image/png' });
     vi.spyOn(documentApi, 'list').mockResolvedValue({

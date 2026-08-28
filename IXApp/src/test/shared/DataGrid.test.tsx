@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { AppProviders } from '@app/providers/AppProviders';
 import { AppDataGrid } from '@shared/components/data-grid/DataGrid';
@@ -27,11 +27,7 @@ describe('AppDataGrid', () => {
   it('renders data grid columns and rows', () => {
     render(
       <AppProviders>
-        <AppDataGrid<TestRow>
-          columns={testColumns}
-          rows={testRows}
-          getRowId={(row) => row.id}
-        />
+        <AppDataGrid<TestRow> columns={testColumns} rows={testRows} getRowId={(row) => row.id} />
       </AppProviders>
     );
 
@@ -42,6 +38,25 @@ describe('AppDataGrid', () => {
     expect(grid.getAttribute('aria-rowcount')).toBe('2');
     expect(grid.getAttribute('aria-colcount')).toBe('2');
     expect(grid.getAttribute('aria-busy')).toBe('false');
+  });
+
+  it('opens a column filter without rendering MenuItems outside a menu context', () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    render(
+      <AppProviders>
+        <AppDataGrid<TestRow> columns={testColumns} rows={testRows} getRowId={(row) => row.id} />
+      </AppProviders>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open filter for Code' }));
+
+    expect(screen.getByText('Sort ascending')).toBeDefined();
+    expect(screen.getByText('Sort descending')).toBeDefined();
+    expect(
+      consoleError.mock.calls.some((call) => String(call[0]).includes('MenuListContext is missing'))
+    ).toBe(false);
+    consoleError.mockRestore();
   });
 
   it('renders pinned and flexible columns in RTL without crashing', async () => {
@@ -64,7 +79,9 @@ describe('AppDataGrid', () => {
       ));
 
       expect(screen.getByText('CUST-001')).toBeDefined();
-      expect(screen.getByRole('grid').closest('[dir="rtl"]') ?? document.documentElement.dir).toBeTruthy();
+      expect(
+        screen.getByRole('grid').closest('[dir="rtl"]') ?? document.documentElement.dir
+      ).toBeTruthy();
 
       const resizeHandle = document.querySelector<HTMLElement>('[data-grid-resize-handle="code"]');
       expect(resizeHandle).not.toBeNull();

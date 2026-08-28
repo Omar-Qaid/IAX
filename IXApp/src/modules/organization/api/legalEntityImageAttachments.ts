@@ -1,6 +1,9 @@
 import { queryClient } from '@core/api/queryClient';
 import { documentApi, type DocumentDto } from '@shared/components/documents/documentApi';
-import { REPORT_COMPANY_LOGO_ATTACHMENT, REPORT_COMPANY_TABLE_ID } from '@shared/components/printout/reportCompany';
+import {
+  REPORT_COMPANY_LOGO_ATTACHMENT,
+  REPORT_COMPANY_TABLE_ID,
+} from '@shared/components/printout/reportCompany';
 import type { LegalEntityRecord } from '../types/legalEntityTypes';
 
 export const LEGAL_ENTITY_TABLE_ID = REPORT_COMPANY_TABLE_ID;
@@ -17,8 +20,10 @@ async function syncImage(
   documents: DocumentDto[]
 ): Promise<void> {
   const existing = matchingDocuments(documents, name);
-  await Promise.all(existing.map((document) => documentApi.remove(document.id)));
-  if (!file) return;
+  if (!file) {
+    await Promise.all(existing.map((document) => documentApi.remove(document.id)));
+    return;
+  }
 
   const types = await documentApi.types();
   const imageType =
@@ -29,6 +34,9 @@ async function syncImage(
     ) ?? types.find((type) => type.kind === 'Image');
   if (!imageType) throw new Error('No image attachment type is configured.');
 
+  // Validate that an image type is available before removing the current logo.
+  // Otherwise a failed replacement would leave the legal entity without an image.
+  await Promise.all(existing.map((document) => documentApi.remove(document.id)));
   await documentApi.create(LEGAL_ENTITY_TABLE_ID, refRecId, {
     typeId: imageType.typeId,
     name,

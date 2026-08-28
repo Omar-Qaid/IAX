@@ -173,9 +173,9 @@ export function DataGridHeaderInternal<T>({
   }, [columns]);
 
   return (
-    <Box sx={{ 
+    <Box data-testid="data-grid-header" sx={{
       display: 'flex', 
-      height: headerHeight,
+      height: headerHeight * (hideFilterRow ? 1 : 2),
       bgcolor: '#ffffff',
       width: 'max-content',
       minWidth: '100%',
@@ -206,6 +206,16 @@ export function DataGridHeaderInternal<T>({
               sx={{ p: 0.5, m: 0, color: 'text.secondary', '&.Mui-checked': { color: 'primary.main' } }}
             />
           </Box>
+          {!hideFilterRow && (
+            <Box
+              aria-hidden="true"
+              sx={{
+                height: headerHeight,
+                boxSizing: 'border-box',
+                borderBottom: `1px solid ${theme.palette.divider}`,
+              }}
+            />
+          )}
         </Box>
       )}
 
@@ -220,6 +230,7 @@ export function DataGridHeaderInternal<T>({
           onFilterIconClick={handleFilterIconClick}
           onMenuOpen={handleMenuOpen}
           onResizeStart={handleResizeStart}
+          headerHeight={headerHeight}
           showColumnBorders={showColumnBorders}
           hideFilterRow={hideFilterRow}
           hideColumnMenu={hideColumnMenu}
@@ -239,6 +250,7 @@ export function DataGridHeaderInternal<T>({
               onFilterIconClick={handleFilterIconClick}
               onMenuOpen={handleMenuOpen}
               onResizeStart={handleResizeStart}
+              headerHeight={headerHeight}
               showColumnBorders={showColumnBorders}
               hideFilterRow={hideFilterRow}
               hideColumnMenu={hideColumnMenu}
@@ -267,6 +279,7 @@ export function DataGridHeaderInternal<T>({
           onFilterIconClick={handleFilterIconClick}
           onMenuOpen={handleMenuOpen}
           onResizeStart={handleResizeStart}
+          headerHeight={headerHeight}
           showColumnBorders={showColumnBorders}
           hideFilterRow={hideFilterRow}
           hideColumnMenu={hideColumnMenu}

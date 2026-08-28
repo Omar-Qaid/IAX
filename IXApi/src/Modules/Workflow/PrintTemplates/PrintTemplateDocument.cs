@@ -179,15 +179,25 @@ public sealed class PrintValueFormat
     public string? Currency { get; set; }
     public string? TrueText { get; set; }
     public string? FalseText { get; set; }
+    public int? DecimalPlaces { get; set; }
+    public bool? UseGrouping { get; set; }
+    public string? NegativeFormat { get; set; }
 }
 
 public sealed class PrintElementStyle
 {
     public decimal? Width { get; set; }
+    public decimal? Height { get; set; }
     public decimal? FontSize { get; set; }
     public int? FontWeight { get; set; }
     public string? Alignment { get; set; }
     public string? Color { get; set; }
     public string? BackgroundColor { get; set; }
+    public decimal? Padding { get; set; }
+    public decimal? MarginBottom { get; set; }
+    public decimal? BorderWidth { get; set; }
+    public string? BorderColor { get; set; }
+    public decimal? BorderRadius { get; set; }
+    public string? ObjectFit { get; set; }
     public bool KeepTogether { get; set; }
 }
