@@ -178,6 +178,7 @@
       "componentsTitle": "Components",
       "propertiesTitle": "Properties",
       "selectElement": "Select an element on the page to edit its properties.",
+      "selectColor": "Select {{field}}",
       "emptyContainer": "Empty container",
       "containerHint": "Select a section, row, or column before adding a component to place it inside that container.",
       "moveUp": "Move up",
@@ -707,10 +708,12 @@
       "process": "Process",
       "status": "Status",
       "requestDate": "Request date",
-      "requestedBy": "Requested by"
+      "requestedBy": "Requested by",
+      "progress": "Request progress"
     },
+    "requestListTitle": "{{code}} - {{processName}}",
     "requestName": "Request name: {{name}}",
-    "requestedBySummary": "Requested by: {{name}} · Request date: {{date}}",
+    "requestedBySummary": "{{name}} · {{date}}",
     "requestFallback": "Request {{id}}",
     "processFallback": "Process {{id}}",
     "requestDetails": "Request details",

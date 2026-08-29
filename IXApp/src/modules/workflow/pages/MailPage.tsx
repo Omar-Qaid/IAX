@@ -823,6 +823,7 @@ export function MailPage(): React.ReactElement {
 
   const config: EnterpriseListDetailsConfig<MailRecord> = {
     recordTableName: 'WfRequest',
+    filterStorageKey: 'workflow.mail',
     readOnly: true,
     dataSource: {
       type: 'controlled',
@@ -842,14 +843,17 @@ export function MailPage(): React.ReactElement {
     createRecord: emptyMailRecord,
     onSelectionChange: setSelectedMailRequest,
     getPrimaryText: (request) =>
-      t('mail.requestName', {
-        name: request.name || request.code || t('mail.requestFallback', { id: request.recId }),
+      t('mail.requestListTitle', {
+        code: request.code || `#${request.recId}`,
+        processName: request.processName,
       }),
     getSecondaryText: (request) =>
       t('mail.requestedBySummary', {
         name: request.requestedBy,
         date: formatDateTime(request.requestDate, currentLanguage.code),
       }),
+    getProgress: (request) => request.progress,
+    progressLabel: t('mail.fields.progress'),
     matchesSearch: (request, query) =>
       `${request.code ?? ''} ${request.name ?? ''} ${request.description ?? ''} ${request.processName}`
         .toLocaleLowerCase()
@@ -945,7 +949,7 @@ export function MailPage(): React.ReactElement {
       listMinWidth: 240,
       listMaxWidth: 440,
       listResizable: true,
-      masterRowHeight: 64,
+      masterRowHeight: 82,
       compactRecordHeader: true,
       headerContent: (
         <Box

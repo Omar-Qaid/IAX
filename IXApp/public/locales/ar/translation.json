@@ -172,6 +172,7 @@
       "componentsTitle": "المكونات",
       "propertiesTitle": "الخصائص",
       "selectElement": "حدد عنصراً في الصفحة لتعديل خصائصه.",
+      "selectColor": "اختر {{field}}",
       "emptyContainer": "حاوية فارغة",
       "containerHint": "حدد قسماً أو صفاً أو عموداً قبل إضافة مكون لوضعه داخل الحاوية.",
       "moveUp": "نقل لأعلى",
@@ -701,10 +702,12 @@
       "process": "العملية",
       "status": "الحالة",
       "requestDate": "تاريخ الطلب",
-      "requestedBy": "مقدم الطلب"
+      "requestedBy": "مقدم الطلب",
+      "progress": "تقدم الطلب"
     },
+    "requestListTitle": "{{code}} - {{processName}}",
     "requestName": "اسم الطلب: {{name}}",
-    "requestedBySummary": "مقدم الطلب: {{name}} · تاريخ الطلب: {{date}}",
+    "requestedBySummary": "{{name}} · {{date}}",
     "requestFallback": "الطلب {{id}}",
     "processFallback": "العملية {{id}}",
     "requestDetails": "تفاصيل الطلب",

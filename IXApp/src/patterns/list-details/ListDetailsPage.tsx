@@ -9,6 +9,7 @@ import {
   InputAdornment,
   List,
   ListItemButton,
+  LinearProgress,
   MenuItem,
   Paper,
   Switch,
@@ -218,6 +219,8 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
         filterLabel={labels.filter}
         getPrimaryText={config.getPrimaryText}
         getSecondaryText={config.getSecondaryText}
+        getProgress={config.getProgress}
+        progressLabel={config.progressLabel}
         batchSize={config.presentation?.recordListBatchSize}
         headerContent={config.presentation?.headerContent}
         rowHeight={config.presentation?.masterRowHeight}
@@ -504,6 +507,8 @@ export function RecordList<T extends ListDetailRecord>({
   filterLabel,
   getPrimaryText,
   getSecondaryText,
+  getProgress,
+  progressLabel,
   batchSize = 30,
   headerContent,
   rowHeight = 67,
@@ -518,6 +523,8 @@ export function RecordList<T extends ListDetailRecord>({
   filterLabel: string;
   getPrimaryText: (record: T) => string;
   getSecondaryText?: (record: T) => string;
+  getProgress?: (record: T) => number;
+  progressLabel?: string;
   batchSize?: number;
   headerContent?: React.ReactNode;
   rowHeight?: number;
@@ -628,6 +635,35 @@ export function RecordList<T extends ListDetailRecord>({
                   {getSecondaryText(record)}
                 </Typography>
               )}
+              {getProgress ? (
+                <Box
+                  sx={{
+                    mt: 0.75,
+                    display: 'grid',
+                    gridTemplateColumns: 'minmax(0, 1fr) auto',
+                    alignItems: 'center',
+                    gap: 0.75,
+                  }}
+                >
+                  <LinearProgress
+                    variant="determinate"
+                    value={Math.max(0, Math.min(100, getProgress(record)))}
+                    aria-label={progressLabel}
+                    sx={{ height: 4, borderRadius: 2 }}
+                  />
+                  <Typography
+                    sx={{
+                      minWidth: 28,
+                      fontSize: 9.5,
+                      lineHeight: 1,
+                      textAlign: 'end',
+                      color: record.id === selectedId ? '#1746aa' : d365.text,
+                    }}
+                  >
+                    {Math.round(Math.max(0, Math.min(100, getProgress(record))))}%
+                  </Typography>
+                </Box>
+              ) : null}
             </ListItemButton>
           ))}
         </List>

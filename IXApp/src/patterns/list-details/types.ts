@@ -80,8 +80,12 @@ export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
   createRecord: () => T;
   getPrimaryText: (record: T) => string;
   getSecondaryText?: (record: T) => string;
+  getProgress?: (record: T) => number;
+  progressLabel?: string;
   /** Initial value shown in the list Filter input. End users can edit or clear it. */
   initialQuery?: string;
+  /** Stable per-page key used to remember the list search text across navigation and reloads. */
+  filterStorageKey?: string;
   matchesSearch?: (record: T, query: string) => boolean;
   getValues: (record: T) => DetailValues;
   setValues: (record: T, values: DetailValues) => T;

@@ -38,10 +38,31 @@ vi.mock('@modules/workflow/api/dynamicRequestFormApi', () => ({
 
 function DesignerHarness(): React.ReactElement {
   const [document, setDocument] = React.useState(() => createEmptyPrintTemplateDocument('en'));
-  return <TemplateDesigner processId={7} document={document} onChange={setDocument} />;
+  const [isDefault, setIsDefault] = React.useState(false);
+  return (
+    <TemplateDesigner
+      processId={7}
+      document={document}
+      onChange={setDocument}
+      isDefault={isDefault}
+      onDefaultChange={setIsDefault}
+    />
+  );
 }
 
 describe('TemplateDesigner', () => {
+  it('keeps the primary template settings in the designer toolbar', () => {
+    render(<DesignerHarness />);
+
+    const toolbar = screen.getByTestId('template-designer-toolbar');
+    expect(within(toolbar).getByText('Template designer')).toBeInTheDocument();
+    expect(within(toolbar).getByRole('switch', { name: 'Default template' })).toBeInTheDocument();
+    expect(within(toolbar).getByRole('combobox', { name: 'Orientation' })).toBeInTheDocument();
+    expect(
+      within(toolbar).getByRole('combobox', { name: 'Template language' })
+    ).toBeInTheDocument();
+  });
+
   it('adds typed elements to the active document region and selects them', async () => {
     const user = userEvent.setup();
     render(<DesignerHarness />);
@@ -109,6 +130,10 @@ describe('TemplateDesigner', () => {
     await user.click(screen.getByRole('combobox', { name: 'Image fit' }));
     await user.click(screen.getByRole('option', { name: 'Cover' }));
     await user.click(screen.getByRole('button', { name: 'Appearance' }));
+    fireEvent.change(screen.getByLabelText('Select Background color'), {
+      target: { value: '#ddeeff' },
+    });
+    expect(screen.getByRole('textbox', { name: 'Background color' })).toHaveValue('#ddeeff');
     fireEvent.change(screen.getByRole('textbox', { name: 'Background color' }), {
       target: { value: '#eef2f6' },
     });

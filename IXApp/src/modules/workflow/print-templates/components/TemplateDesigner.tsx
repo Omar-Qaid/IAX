@@ -203,7 +203,16 @@ function ColorPropertyField({
         aria-label={pickerLabel}
         value={pickerValue}
         onChange={(event: React.ChangeEvent<HTMLInputElement>) => onChange(event.target.value)}
-        sx={{ width: 42, height: 38, p: 0.25, border: '1px solid', borderColor: 'divider', borderRadius: 1, bgcolor: 'background.paper', cursor: 'pointer' }}
+        sx={{
+          width: 42,
+          height: 38,
+          p: 0.25,
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 1,
+          bgcolor: 'background.paper',
+          cursor: 'pointer',
+        }}
       />
     </Stack>
   );
@@ -904,9 +913,17 @@ export function TemplateDesigner({
       }}
     >
       <Stack
+        data-testid="template-designer-toolbar"
         direction="row"
         spacing={1}
-        sx={{ px: 1, alignItems: 'center', flexWrap: 'nowrap', overflowX: 'auto', borderBottom: '1px solid #d7dce2', bgcolor: '#fff' }}
+        sx={{
+          px: 1,
+          alignItems: 'center',
+          flexWrap: 'nowrap',
+          overflowX: 'auto',
+          borderBottom: '1px solid #d7dce2',
+          bgcolor: '#fff',
+        }}
       >
         <Typography sx={{ fontSize: 12, fontWeight: 700 }}>
           {t('printTemplates.designer.title')}
@@ -929,16 +946,6 @@ export function TemplateDesigner({
             }
           />
         ) : null}
-        <TextField
-          select
-          size="small"
-          value={document.page.size}
-          onChange={(event) => changePage('size', event.target.value)}
-          sx={{ width: 90 }}
-        >
-          <MenuItem value="A4">A4</MenuItem>
-          <MenuItem value="Letter">{t('printTemplates.designer.pageSizes.letter')}</MenuItem>
-        </TextField>
         <TextField
           select
           size="small"
@@ -967,6 +974,16 @@ export function TemplateDesigner({
         >
           <MenuItem value="en">{t('printTemplates.languages.english')}</MenuItem>
           <MenuItem value="ar">{t('printTemplates.languages.arabic')}</MenuItem>
+        </TextField>
+        <TextField
+          select
+          size="small"
+          value={document.page.size}
+          onChange={(event) => changePage('size', event.target.value)}
+          sx={{ width: 90, flexShrink: 0 }}
+        >
+          <MenuItem value="A4">A4</MenuItem>
+          <MenuItem value="Letter">{t('printTemplates.designer.pageSizes.letter')}</MenuItem>
         </TextField>
         <Box sx={{ flex: 1 }} />
         <ButtonGroup size="small">

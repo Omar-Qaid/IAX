@@ -40,4 +40,30 @@ describe('RecordList infinite scrolling', () => {
     expect(screen.getByText('Record 10')).toBeDefined();
     expect(screen.queryByText('Record 11')).toBeNull();
   });
+
+  it('shows an optional record progress indicator and percentage', () => {
+    render(
+      <RecordList
+        records={[{ id: 'request-1', name: 'REQ-001 - Payment', progress: 64 }]}
+        selectedId="request-1"
+        editing={false}
+        query=""
+        filterVisible={false}
+        filterLabel="Filter"
+        getPrimaryText={(record) => record.name}
+        getSecondaryText={() => 'Omar · Aug 28, 2026'}
+        getProgress={(record) => record.progress}
+        progressLabel="Request progress"
+        onQueryChange={vi.fn()}
+        onSelect={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText('REQ-001 - Payment')).toBeInTheDocument();
+    expect(screen.getByText('64%')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar', { name: 'Request progress' })).toHaveAttribute(
+      'aria-valuenow',
+      '64'
+    );
+  });
 });

@@ -1,14 +1,5 @@
 import React from 'react';
-import {
-  Box,
-  Button,
-  Chip,
-  FormControlLabel,
-  MenuItem,
-  Stack,
-  Switch,
-  TextField,
-} from '@mui/material';
+import { Box, Button, Chip, Stack, TextField } from '@mui/material';
 import AddOutlined from '@mui/icons-material/AddOutlined';
 import EditOutlined from '@mui/icons-material/EditOutlined';
 import PublishOutlined from '@mui/icons-material/PublishOutlined';
@@ -38,7 +29,6 @@ import { TemplateDesigner } from '../components/TemplateDesigner';
 import {
   createEmptyPrintTemplateDocument,
   type PrintTemplateLanguage,
-  type PrintTemplateOrientation,
   type PrintTemplateSummary,
   type SavePrintTemplateInput,
 } from '../types/printTemplate.types';
