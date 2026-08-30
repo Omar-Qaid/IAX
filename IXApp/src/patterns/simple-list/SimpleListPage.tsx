@@ -76,6 +76,7 @@ export interface EnterpriseListAdvancedFilter<T> {
 }
 
 export interface EnterpriseListConfig<T> {
+  readOnly?: boolean;
   contextLabel: string;
   viewLabel: string;
   filterLabel: string;
@@ -313,41 +314,43 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
             />
           </ActionPaneGroup>
         )}
-        <EnterpriseCrudActions
-          editLabel={config.crud.editLabel}
-          newLabel={config.crud.newLabel}
-          deleteLabel={config.crud.deleteLabel}
-          canEdit={
-            selectedIds.length === 1 && Boolean(config.crud.onEdit || dataGridProps.masterForm)
-          }
-          canDelete={selectedIds.length > 0 && Boolean(config.crud.onDelete)}
-          onEdit={
-            selectedRow
-              ? () =>
-                  config.crud.onEdit
-                    ? config.crud.onEdit(selectedRow)
-                    : gridRef.current?.startEditRow(getRowId(selectedRow))
-              : undefined
-          }
-          onNew={
-            config.crud.onNew
-              ? config.crud.onNew
-              : dataGridProps.masterForm
-                ? () => gridRef.current?.startAddRow()
+        {!config.readOnly && (
+          <EnterpriseCrudActions
+            editLabel={config.crud.editLabel}
+            newLabel={config.crud.newLabel}
+            deleteLabel={config.crud.deleteLabel}
+            canEdit={
+              selectedIds.length === 1 && Boolean(config.crud.onEdit || dataGridProps.masterForm)
+            }
+            canDelete={selectedIds.length > 0 && Boolean(config.crud.onDelete)}
+            onEdit={
+              selectedRow
+                ? () =>
+                    config.crud.onEdit
+                      ? config.crud.onEdit(selectedRow)
+                      : gridRef.current?.startEditRow(getRowId(selectedRow))
                 : undefined
-          }
-          onDelete={() =>
-            setPendingDelete(rows.filter((row) => selectedIds.includes(getRowId(row))))
-          }
-          editPermission={config.crud.editPermission}
-          newPermission={config.crud.newPermission}
-          deletePermission={config.crud.deletePermission}
-          editing={isEditing}
-          saveLabel={t('actions.save')}
-          cancelLabel={t('actions.cancel')}
-          onSave={() => gridRef.current?.saveEdit()}
-          onCancel={() => gridRef.current?.cancelEdit()}
-        />
+            }
+            onNew={
+              config.crud.onNew
+                ? config.crud.onNew
+                : dataGridProps.masterForm
+                  ? () => gridRef.current?.startAddRow()
+                  : undefined
+            }
+            onDelete={() =>
+              setPendingDelete(rows.filter((row) => selectedIds.includes(getRowId(row))))
+            }
+            editPermission={config.crud.editPermission}
+            newPermission={config.crud.newPermission}
+            deletePermission={config.crud.deletePermission}
+            editing={isEditing}
+            saveLabel={t('actions.save')}
+            cancelLabel={t('actions.cancel')}
+            onSave={() => gridRef.current?.saveEdit()}
+            onCancel={() => gridRef.current?.cancelEdit()}
+          />
+        )}
         {config.commands && (
           <ActionPaneGroup>
             {config.commands.map((command) => (

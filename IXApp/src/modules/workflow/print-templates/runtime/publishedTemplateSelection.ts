@@ -15,3 +15,8 @@ export const selectPublishedTemplates = (
       (left, right) =>
         Number(right.isDefault) - Number(left.isDefault) || left.name.localeCompare(right.name)
     );
+
+export const selectDefaultPublishedTemplate = (
+  templates: readonly PrintTemplateSummary[] | undefined
+): PrintTemplateSummary | undefined =>
+  selectPublishedTemplates(templates).find((template) => template.isDefault);

@@ -29,7 +29,10 @@ import { WorkflowMailPrintoutViewer } from './WorkflowMailPrintoutPage';
 import { WorkflowOfficialFormViewer } from './WorkflowOfficialFormPage';
 import { printTemplateApi } from '../print-templates/api/printTemplateApi';
 import type { PrintTemplateSummary } from '../print-templates/types/printTemplate.types';
-import { selectPublishedTemplates } from '../print-templates/runtime/publishedTemplateSelection';
+import {
+  selectDefaultPublishedTemplate,
+  selectPublishedTemplates,
+} from '../print-templates/runtime/publishedTemplateSelection';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import type { TFunction } from 'i18next';
 import { APP_FONT_FAMILY } from '@shared/constants/fontFamilies';
@@ -936,7 +939,16 @@ export function MailPage(): React.ReactElement {
           menuLabel: t('mail.view'),
           requiresSelection: true,
           onClick: (request: MailRecord | null) => {
-            if (request) setPrintRequest(request);
+            if (!request) return;
+            const defaultTemplate = selectDefaultPublishedTemplate(officialTemplates);
+            if (defaultTemplate) {
+              setOfficialFormSelection({
+                request,
+                templateId: defaultTemplate.templateId,
+              });
+              return;
+            }
+            setPrintRequest(request);
           },
         },
       ];

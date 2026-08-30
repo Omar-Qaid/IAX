@@ -1,5 +1,7 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
+import JsBarcode from 'jsbarcode';
+import { QRCodeSVG } from 'qrcode.react';
 import {
   PrintoutDocument,
   type PrintoutCompany,
@@ -95,6 +97,48 @@ const ReportPageValue = ({ source }: { source?: string | null }): React.ReactEle
   }
   return null;
 };
+
+const normalizeBarcodeFormat = (format: string): string =>
+  format.trim().replaceAll('-', '').toUpperCase() || 'CODE128';
+
+function PrintableBarcode({
+  value,
+  format,
+}: {
+  value: string;
+  format: string;
+}): React.ReactElement {
+  const svgRef = React.useRef<SVGSVGElement | null>(null);
+  const [invalid, setInvalid] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!svgRef.current || !value) return;
+    try {
+      JsBarcode(svgRef.current, value, {
+        format: normalizeBarcodeFormat(format),
+        displayValue: true,
+        fontSize: 12,
+        height: 42,
+        margin: 0,
+      });
+      setInvalid(false);
+    } catch {
+      setInvalid(true);
+    }
+  }, [format, value]);
+
+  if (!value) return <Box aria-label="barcode" />;
+  if (invalid) return <Typography aria-label={`barcode ${value}`}>{value}</Typography>;
+  return (
+    <Box
+      component="svg"
+      ref={svgRef}
+      role="img"
+      aria-label={`barcode ${value}`}
+      sx={{ maxWidth: '100%', height: 'auto' }}
+    />
+  );
+}
 
 const isVisible = (element: PrintTemplateElement, data: RuntimePrintData): boolean => {
   const condition = element.visibleWhen;
@@ -262,7 +306,19 @@ function RuntimeElement({
     const rows = Array.isArray(resolved) ? resolved : [];
     return (
       <Box component="table" sx={{ ...sx, width: '100%', borderCollapse: 'collapse' }}>
-        <Box component="thead" sx={{ display: 'table-header-group' }}>
+        <Box component="colgroup">
+          {element.columns.map((column) => (
+            <Box
+              component="col"
+              key={column.id}
+              sx={{ width: column.width ? `${column.width}%` : undefined }}
+            />
+          ))}
+        </Box>
+        <Box
+          component="thead"
+          style={{ display: element.repeatHeader ? 'table-header-group' : 'table-row-group' }}
+        >
           <Box component="tr">
             {element.columns.map((column) => (
               <Box
@@ -318,16 +374,13 @@ function RuntimeElement({
           p: 1,
         }}
       >
-        <Typography
-          aria-label={element.type}
-          sx={{
-            fontFamily: 'monospace',
-            fontSize: element.type === 'qrCode' ? 12 : 22,
-            letterSpacing: element.type === 'barcode' ? 3 : 0,
-          }}
-        >
-          {element.type === 'barcode' ? `|||| ${value} ||||` : `▦ ${value}`}
-        </Typography>
+        {element.type === 'barcode' ? (
+          <PrintableBarcode value={value} format={element.format} />
+        ) : value ? (
+          <QRCodeSVG value={value} size={84} role="img" aria-label={`qr code ${value}`} />
+        ) : (
+          <Box aria-label="qrCode" />
+        )}
       </Box>
     );
   }

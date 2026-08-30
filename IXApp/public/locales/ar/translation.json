@@ -40,6 +40,8 @@
     "wfSteps": "خطوات سير العمل",
     "wfActivities": "أنشطة سير العمل",
     "printTemplates": "قوالب الطباعة",
+    "reports": "التقارير",
+    "wfGenericReport": "تقرير سير العمل العام",
     "setup": "الإعداد",
     "organizationAdministration": "إدارة المؤسسة",
     "legalEntities": "الكيانات القانونية",

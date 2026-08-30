@@ -9,7 +9,10 @@ import {
   createRuntimePrintData,
   resolveRuntimeBinding,
 } from '@modules/workflow/print-templates/runtime/runtimePrintData';
-import { selectPublishedTemplates } from '@modules/workflow/print-templates/runtime/publishedTemplateSelection';
+import {
+  selectDefaultPublishedTemplate,
+  selectPublishedTemplates,
+} from '@modules/workflow/print-templates/runtime/publishedTemplateSelection';
 import type {
   PrintTemplateDocument,
   PrintTemplateSummary,
@@ -120,6 +123,16 @@ describe('official-form runtime', () => {
       summary({ templateId: 1, name: 'Alpha', isDefault: true }),
     ]);
     expect(result.map((template) => template.templateId)).toEqual([1, 2]);
+  });
+
+  it('selects only an active published default for the main Printout action', () => {
+    expect(
+      selectDefaultPublishedTemplate([
+        summary({ templateId: 2, isDefault: false }),
+        summary({ templateId: 1, isDefault: true }),
+      ])?.templateId
+    ).toBe(1);
+    expect(selectDefaultPublishedTemplate([summary({ isDefault: false })])).toBeUndefined();
   });
 
   it('resolves all designer system/company fields and both request-control identifiers', () => {
@@ -322,5 +335,54 @@ describe('official-form runtime', () => {
       borderColor: '#174f82',
       borderRadius: '8px',
     });
+  });
+
+  it('renders configured tables, QR codes, and barcodes as printable output', () => {
+    const template: PrintTemplateDocument = {
+      schemaVersion: 1,
+      language: 'en',
+      direction: 'ltr',
+      page: {
+        size: 'A4',
+        orientation: 'portrait',
+        margins: { top: 15, right: 15, bottom: 15, left: 15 },
+      },
+      missingFieldBehavior: 'empty',
+      header: [],
+      sections: [
+        {
+          id: 'table',
+          type: 'table',
+          dataSource: { sourceType: 'repeating', source: 'items' },
+          repeatHeader: false,
+          columns: [
+            { id: 'label', label: 'Label', field: 'label', width: 35 },
+            { id: 'value', label: 'Value', field: 'value', width: 65 },
+          ],
+        },
+        {
+          id: 'qr',
+          type: 'qrCode',
+          binding: { sourceType: 'system', source: 'requestNumber' },
+        },
+        {
+          id: 'barcode',
+          type: 'barcode',
+          binding: { sourceType: 'system', source: 'requestNumber' },
+          format: 'code128',
+        },
+      ],
+      footer: [],
+    };
+
+    const { container } = render(
+      <RuntimePrintTemplate template={template} data={runtimeData} company={{ name: 'Company' }} />
+    );
+
+    expect(screen.getByText('Total')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'qr code REQ-42' })).toBeInTheDocument();
+    expect(screen.getByLabelText('barcode REQ-42')).toBeInTheDocument();
+    expect(container.querySelector('thead')).toHaveStyle({ display: 'table-row-group' });
+    expect(container.querySelectorAll('col')[0]).toHaveStyle({ width: '35%' });
   });
 });

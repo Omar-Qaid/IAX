@@ -158,6 +158,14 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'workflow-generic-report',
+    path: ROUTE_PATHS.WORKFLOW.GENERIC_REPORT,
+    component: lazyPage(
+      () => import('@modules/workflow/pages/WfGenericReportPage'),
+      (module) => module.WfGenericReportPage
+    ),
+  },
+  {
     id: 'process-builder',
     path: ROUTE_PATHS.PROCESS_BUILDER,
     component: lazyPage(

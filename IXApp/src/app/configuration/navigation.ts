@@ -136,6 +136,16 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
         ],
       },
       {
+        id: 'reports',
+        title: 'nav.reports',
+        links: [
+          {
+            label: 'nav.wfGenericReport',
+            path: ROUTE_PATHS.WORKFLOW.GENERIC_REPORT,
+          },
+        ],
+      },
+      {
         id: 'setup',
         title: 'nav.setup',
         links: [

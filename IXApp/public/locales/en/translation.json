@@ -40,6 +40,8 @@
     "wfSteps": "Workflow steps",
     "wfActivities": "Workflow activities",
     "printTemplates": "Print templates",
+    "reports": "Reports",
+    "wfGenericReport": "Generic workflow report",
     "setup": "Setup",
     "organizationAdministration": "Organization administration",
     "legalEntities": "Legal entities",
