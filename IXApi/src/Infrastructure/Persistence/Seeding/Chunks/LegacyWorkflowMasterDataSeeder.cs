@@ -20,7 +20,7 @@ using IAX.IXApi.Shared.Domain.Entities;
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks;
 
-/// <summary>Imports the complete legacy workflow definition/master snapshot and all employees.</summary>
+/// <summary>Imports a compact synthetic workflow definition used by local demonstrations and tests.</summary>
 public sealed class LegacyWorkflowMasterDataSeeder : ISeeder
 {
     private const string ResourceSuffix = "Persistence.Seeding.Data.LegacyWorkflowMasterData.json";
@@ -90,7 +90,7 @@ public sealed class LegacyWorkflowMasterDataSeeder : ISeeder
 
     private static async Task AddMissingAsync<TEntity>(ApplicationDbContext db, DbSet<TEntity> set, IEnumerable<TEntity> source, string _, CancellationToken ct) where TEntity:class,IBaseEntity
     {
-        // Legacy ID 0 rows are workflow sentinels, not real master records. The target model
+        // ID 0 rows are workflow sentinels, not real master records. The target model
         // intentionally excludes them (the base WorkflowSeeder also removes them).
         var rows=source.Where(x=>!IsZeroKey(x.RecId)).ToList(); if(rows.Count==0)return;
         var existing=(await set.IgnoreQueryFilters().AsNoTracking().ToListAsync(ct)).Select(x=>x.RecId).ToHashSet();
@@ -107,7 +107,7 @@ public sealed class LegacyWorkflowMasterDataSeeder : ISeeder
         var assembly=typeof(LegacyWorkflowMasterDataSeeder).Assembly;
         var name=assembly.GetManifestResourceNames().Single(x=>x.EndsWith(ResourceSuffix,StringComparison.Ordinal));
         await using var stream=assembly.GetManifestResourceStream(name)??throw new InvalidOperationException($"Missing resource {name}");
-        return await JsonSerializer.DeserializeAsync<SeedData>(stream,new JsonSerializerOptions{PropertyNameCaseInsensitive=true},ct)??throw new InvalidOperationException("Invalid legacy workflow seed resource.");
+        return await JsonSerializer.DeserializeAsync<SeedData>(stream,new JsonSerializerOptions{PropertyNameCaseInsensitive=true},ct)??throw new InvalidOperationException("Invalid synthetic workflow seed resource.");
     }
     private static string? Text(string? value,int max)=>string.IsNullOrWhiteSpace(value)?null:(value.Length<=max?value:value[..max]);
     private static string SqlIdentifier(string value)=>$"[{value.Replace("]","]]",StringComparison.Ordinal)}]";

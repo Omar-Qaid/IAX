@@ -13,9 +13,11 @@ dotnet user-secrets set "ConnectionStrings:DbConnString" "<SQL Server connection
 dotnet user-secrets set "JwtSettings:Secret" "<at least 32 random characters>" --project IXApi.csproj
 ```
 
-The default JWT issuer is `IAX` and audience is `IAX.Client`. Override them through `JwtSettings__Issuer` and `JwtSettings__Audience` when required by the deployment.
+The checked-in non-secret defaults use JWT issuer `IXApi` and audience `IXApp`. Override them through `JwtSettings__Issuer` and `JwtSettings__Audience` when required by the deployment.
 
-Database initialization and seeding run at startup by default. Set `DatabaseInitialization__Enabled=false` only for build-time or infrastructure smoke checks that intentionally run without a database.
+Database initialization and seeding are disabled by default. Enable them only in an explicitly controlled non-production environment with `DatabaseInitialization__Enabled=true`. Production startup rejects this setting.
+
+Database seeding creates roles, permissions, synthetic lookup/workflow data, and no user accounts. Provision the first administrator through an approved operational process; the repository intentionally contains no default administrator password.
 
 The notification worker is enabled by default. A database-free smoke check may set `Notifications__BackgroundServiceEnabled=false`.
 
@@ -34,5 +36,5 @@ Scalar API reference is available in Development at `/scalar/v1`, with the OpenA
 - All endpoints require authentication unless explicitly marked `AllowAnonymous`.
 - Public account registration is disabled; creating accounts requires the `Admin` role.
 - JWT issuer, audience, signature, expiration, and lifetime are validated.
-- Password lockout and strong password requirements are enabled.
+- Password lockout and a 12-character mixed-character password policy are enabled.
 - External authentication accepts local return URLs only and returns tokens in the URL fragment.

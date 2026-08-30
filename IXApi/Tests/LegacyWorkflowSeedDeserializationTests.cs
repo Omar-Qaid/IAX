@@ -13,7 +13,10 @@ public sealed class LegacyWorkflowSeedDeserializationTests
         Assert.NotNull(method);
         var task = Assert.IsAssignableFrom<Task>(method.Invoke(null, [CancellationToken.None]));
         await task;
-        Assert.NotNull(task.GetType().GetProperty("Result")?.GetValue(task));
+        var data = task.GetType().GetProperty("Result")?.GetValue(task);
+        Assert.NotNull(data);
+        Assert.InRange(GetArrayLength(data!, "Performers"), 1, 10);
+        Assert.InRange(GetArrayLength(data!, "Processes"), 1, 10);
     }
 
     [Fact]
@@ -23,6 +26,14 @@ public sealed class LegacyWorkflowSeedDeserializationTests
         Assert.NotNull(method);
         var task = Assert.IsAssignableFrom<Task>(method.Invoke(null, [CancellationToken.None]));
         await task;
-        Assert.NotNull(task.GetType().GetProperty("Result")?.GetValue(task));
+        var data = task.GetType().GetProperty("Result")?.GetValue(task);
+        Assert.NotNull(data);
+        Assert.InRange(GetArrayLength(data!, "Employees"), 1, 10);
+    }
+
+    private static int GetArrayLength(object value, string propertyName)
+    {
+        var property = value.GetType().GetProperty(propertyName);
+        return Assert.IsAssignableFrom<Array>(property?.GetValue(value)).Length;
     }
 }

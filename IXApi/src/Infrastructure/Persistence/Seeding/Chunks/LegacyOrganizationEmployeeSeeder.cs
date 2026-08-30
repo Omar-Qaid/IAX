@@ -15,7 +15,7 @@ using OrganizationGender = IAX.IXApi.Modules.Organization.Genders.Gender;
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks;
 
-/// <summary>All organization lookups and employees extracted from db_a8e163_aljazerasoftfp.</summary>
+/// <summary>Seeds a small synthetic organization dataset for local demonstrations and tests.</summary>
 public sealed class LegacyOrganizationEmployeeSeeder : ISeeder
 {
     private const string ResourceSuffix="Persistence.Seeding.Data.LegacyOrganizationEmployeeData.json";

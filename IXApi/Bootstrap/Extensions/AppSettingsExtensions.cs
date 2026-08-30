@@ -7,6 +7,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Cryptography;
 using System.Security.Claims;
 using System.Text;
 
@@ -33,10 +34,18 @@ namespace IAX.IXApi.Bootstrap.Extensions
             bool isDevelopment)
         {
             JwtSettings? jwtSettings = configuration.GetSection("JwtSettings").Get<JwtSettings>();
+            string[] rejectedSecretHashes =
+            [
+                "428DF5690782696B6D2157FFC1FA8DB0CB6F74E3B39F7AA8D12059E64C41D9BD",
+                "E612DF48F83193A2DDFDE115AE56742352C5648399382CCD6F7082603AA809DC"
+            ];
 
             if (jwtSettings == null ||
                 string.IsNullOrWhiteSpace(jwtSettings.Secret) ||
                 jwtSettings.Secret.Length < 32 ||
+                rejectedSecretHashes.Contains(
+                    Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(jwtSettings.Secret))),
+                    StringComparer.Ordinal) ||
                 string.IsNullOrWhiteSpace(jwtSettings.Issuer) ||
                 string.IsNullOrWhiteSpace(jwtSettings.Audience))
             {

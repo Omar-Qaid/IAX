@@ -124,12 +124,12 @@ namespace IAX.IXApi.Bootstrap.Extensions
         {
             services.AddIdentity<AspNetUser, AspNetRole>(options =>
             {
-                options.Password.RequiredLength = 3;
-                options.Password.RequiredUniqueChars = 3;
-                options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequireUppercase = false;
-                options.Password.RequireLowercase = false;
-                options.Password.RequireDigit = false;
+                options.Password.RequiredLength = 12;
+                options.Password.RequiredUniqueChars = 4;
+                options.Password.RequireNonAlphanumeric = true;
+                options.Password.RequireUppercase = true;
+                options.Password.RequireLowercase = true;
+                options.Password.RequireDigit = true;
                 options.User.RequireUniqueEmail = true;
                 options.Lockout.AllowedForNewUsers = true;
                 options.Lockout.MaxFailedAccessAttempts = 5;

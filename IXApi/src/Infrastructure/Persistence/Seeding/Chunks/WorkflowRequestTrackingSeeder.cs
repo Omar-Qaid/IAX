@@ -27,8 +27,8 @@ using Microsoft.EntityFrameworkCore;
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks;
 
 /// <summary>
-/// Seeds the complete legacy execution for request 94037 and guarantees that every
-/// workflow process has a representative request and a published print template.
+/// Seeds a synthetic execution and guarantees that every workflow process has a
+/// representative request and a published print template.
 /// </summary>
 public sealed class WorkflowRequestTrackingSeeder : ISeeder
 {
@@ -47,7 +47,7 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
 
     private static readonly Request[] Requests =
     [
-        new(94037, new(2025, 12, 15, 0, 3, 58, 290), new(2025, 12, 15, 10, 19, 10, 840), "157424"),
+        new(94037, new(2025, 12, 15, 0, 3, 58, 290), new(2025, 12, 15, 10, 19, 10, 840), "system"),
     ];
 
     private static readonly RequestValue[] Values =
@@ -62,7 +62,7 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
         new(685044, 94037, 1, 21209, "Tabby", "تابي", "195", false, 7),
         new(685045, 94037, 1, 21210, "Tamara", "تمارا", "0", false, 8),
         new(685046, 94037, 4, 21162, "Today's closing date", "تاريخ اقفال اليوم", "2025-12-14", true, 9),
-        new(685047, 94037, 12, 21166, "Locksmith Name Today", "اسم موظف الاقفال اليوم", "157430", true, 10, "فهد مشعل الشمري", "فهد مشعل الشمري"),
+        new(685047, 94037, 12, 21166, "Closing specialist", "مختص الإقفال", "157430", true, 10, "Demo Specialist", "مختص تجريبي"),
         new(685048, 94037, 20, 21167, "signature", "التوقيع", Signature, false, 11),
         new(685049, 94037, 10, 21172, "The following must be attached:", "يجب ارفاق الاتي:-", "", false, 12),
         new(685050, 94037, 10, 21173, "Budget image", "صور واضحة للموازنة", "", false, 13),

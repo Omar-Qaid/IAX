@@ -98,17 +98,15 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             UserManager<AspNetUser> users,
             CancellationToken ct)
         {
-            await SeedRolesAndUsersAsync(db, roles, users, ct);
+            _ = users;
+            await SeedRolesAsync(roles);
             await SeedPermissionsAsync(db, ct);
             await AssignAllPermissionsToAdminAsync(db, roles, ct);
         }
 
-        // ── Roles & users ─────────────────────────────────────────────────────
-        private static async Task SeedRolesAndUsersAsync(
-            ApplicationDbContext db,
-            RoleManager<AspNetRole> roles,
-            UserManager<AspNetUser> users,
-            CancellationToken ct)
+        // Roles are safe to seed. Administrator accounts must be provisioned
+        // explicitly so no deployment receives a predictable credential.
+        private static async Task SeedRolesAsync(RoleManager<AspNetRole> roles)
         {
             string[] roleNames = ["Admin", "User"];
             foreach (var r in roleNames)
@@ -121,30 +119,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                         Name = r,
                         NormalizedName = r.ToUpperInvariant(),
                     });
-            }
-
-            var userDefs = new[]
-            {
-                new { Email = "sys@iax.local",  UserName = "sys",  Password = "123", Role = "Admin" },
-                new { Email = "omar@iax.local", UserName = "omar", Password = "123", Role = "Admin" },
-            };
-
-            foreach (var u in userDefs)
-            {
-                var user = await users.FindByNameAsync(u.UserName);
-                if (user is null)
-                {
-                    user = new AspNetUser
-                    {
-                        Id = u.UserName == "sys" ? "sys" : Guid.NewGuid().ToString(),
-                        UserName = u.UserName,
-                        Email = u.Email,
-                        EmailConfirmed = true,
-                    };
-                    var res = await users.CreateAsync(user, u.Password);
-                    if (res.Succeeded)
-                        await users.AddToRoleAsync(user, u.Role);
-                }
             }
         }
 

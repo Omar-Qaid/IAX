@@ -7,11 +7,9 @@
   },
   "AllowedHosts": "*",
   "ConnectionStrings": {
-    "DbConnString": "YOUR_DB_CONNECTION_STRING"
+    "DbConnString": ""
   },
-  "CorsAllowedOrigins": [
-    // leave this empty
-  ],
+  "CorsAllowedOrigins": ["http://localhost:5173"],
   // Leave empty
   "Uploads": {
     "FileVirtualDirectory": "",
@@ -20,13 +18,10 @@
     "MaxImageHeight": 1000
   },
   "JwtSettings": {
-    "Secret": "YOUR_JWT_SECRET",
-    "Issuer": "YOUR_ISSUER",
-    "Audience": "YOUR_AUDIENCE",
-    // expires in 15 minutes
-    "AccessTokenExpiration": 300,
-    // expires in 24 hours
-    "RefreshTokenExpiration": 86400
+    "Secret": "",
+    "Issuer": "IXApi",
+    "Audience": "IXApp",
+    "Expires": 300
   },
   "OpenAI": {
     "ApiKey": "",
