@@ -208,6 +208,66 @@ describe('official-form runtime', () => {
     expect(container.querySelector('.printout-page-count')).toBeInTheDocument();
   });
 
+  it('does not print controls added after the request snapshot was created', () => {
+    const template: PrintTemplateDocument = {
+      schemaVersion: 1,
+      language: 'en',
+      direction: 'ltr',
+      page: {
+        size: 'A4',
+        orientation: 'portrait',
+        margins: { top: 15, right: 15, bottom: 15, left: 15 },
+      },
+      missingFieldBehavior: 'na',
+      header: [],
+      sections: [
+        {
+          id: 'existing-blank',
+          type: 'field',
+          label: 'Existing blank control',
+          binding: { sourceType: 'requestControl', requestControlId: 2101 },
+        },
+        {
+          id: 'new-field',
+          type: 'field',
+          label: 'New field control',
+          binding: { sourceType: 'requestControl', requestControlId: 9999 },
+        },
+        {
+          id: 'new-table',
+          type: 'table',
+          dataSource: { sourceType: 'requestControl', requestControlId: 9998 },
+          repeatHeader: false,
+          columns: [{ id: 'value', label: 'New table column', field: 'value' }],
+        },
+        {
+          id: 'new-qr',
+          type: 'qrCode',
+          binding: { sourceType: 'requestControl', requestControlId: 9997 },
+        },
+      ],
+      footer: [],
+    };
+    const historicalData = {
+      ...runtimeData,
+      requestControls: { ...runtimeData.requestControls, '2101': '' },
+    };
+
+    render(
+      <RuntimePrintTemplate
+        template={template}
+        data={historicalData}
+        company={{ name: 'Company' }}
+      />
+    );
+
+    expect(screen.getByText('Existing blank control')).toBeInTheDocument();
+    expect(screen.getByText('N/A')).toBeInTheDocument();
+    expect(screen.queryByText('New field control')).not.toBeInTheDocument();
+    expect(screen.queryByText('New table column')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('qrCode')).not.toBeInTheDocument();
+  });
+
   it('renders the published layout with conditions, formatting, RTL, and exact margins', () => {
     const template: PrintTemplateDocument = {
       schemaVersion: 1,

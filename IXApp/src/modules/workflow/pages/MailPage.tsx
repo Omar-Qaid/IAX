@@ -110,23 +110,29 @@ function LabelValue({
   label,
   value,
   compact = false,
+  stacked = false,
 }: {
   label: string;
   value: React.ReactNode;
   compact?: boolean;
+  stacked?: boolean;
 }) {
   return (
     <Box
       sx={{
         display: 'grid',
-        gridTemplateColumns: '34% minmax(0, 66%)',
+        gridTemplateColumns: stacked ? 'minmax(0, 1fr)' : '132px minmax(0, 1fr)',
         minHeight: compact ? 40 : 48,
         borderBottom: '1px solid #e5e5e5',
       }}
     >
       <Typography
         sx={{
-          p: compact ? '6px 10px' : '8px 12px',
+          px: compact ? 1.25 : 1.5,
+          py: stacked ? 0.75 : compact ? 0.75 : 1,
+          minHeight: stacked ? 31 : '100%',
+          display: 'flex',
+          alignItems: stacked ? 'center' : 'flex-start',
           bgcolor: '#f7f7f7',
           color: '#111',
           fontSize: 12,
@@ -138,7 +144,7 @@ function LabelValue({
       </Typography>
       <Box
         sx={{
-          p: compact ? '6px 10px' : '8px 12px',
+          p: stacked ? 0 : compact ? '6px 10px' : '8px 12px',
           bgcolor: '#fff',
           color: '#222',
           fontSize: 12,
@@ -636,6 +642,7 @@ function MailDetails({ request }: { request: MailRecord }) {
                         >
                           <LabelValue
                             compact
+                            stacked={controlType === 'table'}
                             label={
                               currentLanguage.code === 'ar'
                                 ? field.labelAr || field.label

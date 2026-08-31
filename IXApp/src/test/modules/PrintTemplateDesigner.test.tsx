@@ -3,7 +3,10 @@ import { describe, expect, it, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { fireEvent, render, screen } from '@test/testUtils';
 import { within } from '@testing-library/react';
-import { TemplateDesigner } from '@modules/workflow/print-templates/components/TemplateDesigner';
+import {
+  isControlTypeCompatible,
+  TemplateDesigner,
+} from '@modules/workflow/print-templates/components/TemplateDesigner';
 import { createEmptyPrintTemplateDocument } from '@modules/workflow/print-templates/types/printTemplate.types';
 
 vi.mock('@modules/workflow/api/dynamicRequestFormApi', () => ({
@@ -21,6 +24,42 @@ vi.mock('@modules/workflow/api/dynamicRequestFormApi', () => ({
           labelAr: 'إجمالي المبيعات',
           controlType: 'number',
           sortOrder: 1,
+          score: 0,
+          required: false,
+          readOnly: false,
+          uniqueKey: false,
+          usedAsCriteria: false,
+          defaultValue: null,
+          visibilityCondition: null,
+          options: [],
+          validations: [],
+        },
+        {
+          requestControlId: 2102,
+          controlId: 11,
+          code: 'LINES',
+          label: 'Request lines',
+          labelAr: 'سطور الطلب',
+          controlType: 'table',
+          sortOrder: 2,
+          score: 0,
+          required: false,
+          readOnly: false,
+          uniqueKey: false,
+          usedAsCriteria: false,
+          defaultValue: null,
+          visibilityCondition: null,
+          options: [],
+          validations: [],
+        },
+        {
+          requestControlId: 2103,
+          controlId: 12,
+          code: 'CONFIRMED',
+          label: 'Confirmed',
+          labelAr: 'مؤكد',
+          controlType: 'checkbox',
+          sortOrder: 3,
           score: 0,
           required: false,
           readOnly: false,
@@ -51,6 +90,15 @@ function DesignerHarness(): React.ReactElement {
 }
 
 describe('TemplateDesigner', () => {
+  it('classifies process controls by compatible report component type', () => {
+    expect(isControlTypeCompatible('Table', 'table')).toBe(true);
+    expect(isControlTypeCompatible('number', 'table')).toBe(false);
+    expect(isControlTypeCompatible('Check box', 'checkbox')).toBe(true);
+    expect(isControlTypeCompatible('table', 'scalar')).toBe(false);
+    expect(isControlTypeCompatible('signature', 'signature')).toBe(true);
+    expect(isControlTypeCompatible('file', 'image')).toBe(true);
+  });
+
   it('keeps the primary template settings in the designer toolbar', () => {
     render(<DesignerHarness />);
 
@@ -102,14 +150,27 @@ describe('TemplateDesigner', () => {
       'TOTAL_SALES - Total sales'
     );
     expect(
-      within(screen.getByTestId('template-element-field')).getByText('Total sales')
-    ).toBeDefined();
+      within(screen.getByTestId('template-element-field')).getAllByText('Total sales').length
+    ).toBeGreaterThan(0);
 
     await user.click(screen.getByRole('button', { name: 'Text' }));
     await user.click(screen.getByTestId('template-element-field'));
     expect(screen.getByRole('textbox', { name: 'Request control ID' })).toHaveValue(
       'TOTAL_SALES - Total sales'
     );
+  });
+
+  it('offers only table controls when configuring a table data source', async () => {
+    const user = userEvent.setup();
+    render(<DesignerHarness />);
+
+    await user.click(screen.getByRole('button', { name: 'Dynamic table' }));
+    await user.click(screen.getByRole('button', { name: 'Open' }));
+
+    expect(await screen.findByText('LINES')).toBeInTheDocument();
+    expect(screen.getByText('Request lines')).toBeInTheDocument();
+    expect(screen.queryByText('TOTAL_SALES')).not.toBeInTheDocument();
+    expect(screen.queryByText('CONFIRMED')).not.toBeInTheDocument();
   });
 
   it('provides persistent image layout and appearance controls', async () => {

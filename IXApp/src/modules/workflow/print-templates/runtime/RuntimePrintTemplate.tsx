@@ -7,6 +7,7 @@ import {
   type PrintoutCompany,
 } from '@shared/components/printout/PrintoutDocument';
 import type {
+  PrintFieldBinding,
   PrintTemplateDocument,
   PrintTemplateElement,
   PrintValueFormat,
@@ -173,6 +174,32 @@ const isVisible = (element: PrintTemplateElement, data: RuntimePrintData): boole
   }
 };
 
+const bindingExistsForRequest = (
+  binding: PrintFieldBinding | null | undefined,
+  data: RuntimePrintData
+): boolean => {
+  if (!binding || binding.sourceType !== 'requestControl') return true;
+  const id = binding.requestControlId ?? binding.controlId;
+  return id != null && Object.prototype.hasOwnProperty.call(data.requestControls, String(id));
+};
+
+const existsForRequestSnapshot = (
+  element: PrintTemplateElement,
+  data: RuntimePrintData
+): boolean => {
+  if (element.type === 'field') return bindingExistsForRequest(element.binding, data);
+  if (element.type === 'table') return bindingExistsForRequest(element.dataSource, data);
+  if (
+    element.type === 'image' ||
+    element.type === 'signature' ||
+    element.type === 'qrCode' ||
+    element.type === 'barcode' ||
+    element.type === 'attachment'
+  )
+    return bindingExistsForRequest(element.binding, data);
+  return true;
+};
+
 function RuntimeElement({
   element,
   data,
@@ -182,6 +209,11 @@ function RuntimeElement({
   data: RuntimePrintData;
   template: PrintTemplateDocument;
 }): React.ReactElement | null {
+  // Request details are the historical form snapshot. A template may later bind a newly added
+  // process control, but that control must not appear when an older request never contained it.
+  // Presence is checked independently from the value so an existing, intentionally blank field
+  // still follows the template's configured missing-value behavior.
+  if (!existsForRequestSnapshot(element, data)) return null;
   if (!isVisible(element, data)) return null;
   const style = element.style;
   const sx = {
@@ -303,7 +335,15 @@ function RuntimeElement({
   }
   if (element.type === 'table') {
     const resolved = resolveRuntimeBinding(data, element.dataSource);
-    const rows = Array.isArray(resolved) ? resolved : [];
+    let rows: unknown[] = Array.isArray(resolved) ? resolved : [];
+    if (typeof resolved === 'string' && resolved.trim()) {
+      try {
+        const parsed = JSON.parse(resolved) as unknown;
+        rows = Array.isArray(parsed) ? parsed : [];
+      } catch {
+        rows = [];
+      }
+    }
     return (
       <Box component="table" sx={{ ...sx, width: '100%', borderCollapse: 'collapse' }}>
         <Box component="colgroup">

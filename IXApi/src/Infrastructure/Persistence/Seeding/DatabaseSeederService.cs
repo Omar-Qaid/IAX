@@ -40,7 +40,9 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding
                 new DocumentManagementSeeder(),
                 new LegacyOrganizationEmployeeSeeder(),
                 new LegacyWorkflowMasterDataSeeder(),
-                new WorkflowRequestTrackingSeeder(),
+                // Payment Request / طلب الصرف. Enable after assigning performer users and process access.
+                 new WfProcessSeedData(),
+                //new WorkflowRequestTrackingSeeder(),
                 new ErpSeeder(),
                 //new VendSeeder(),
                 //new TaxSeeder(),

@@ -45,6 +45,7 @@ const requestOptionControlTypes = new Set<BuilderControlType>([
   'dropdown-manual',
   'checkboxlist',
   'radiobuttonlist',
+  'table',
 ]);
 
 const compactSwitchSx = {
@@ -128,8 +129,12 @@ function UnsavedStatus({ compact = false }: { compact?: boolean }) {
     <Chip
       size="small"
       variant="outlined"
-      label={compact ? t('wfProcessBuilder.status.unsaved') : t('wfProcessBuilder.status.unsavedChanges')}
-      aria-label={compact ? t('wfProcessBuilder.status.unsaved') : t('wfProcessBuilder.status.unsavedChanges')}
+      label={
+        compact ? t('wfProcessBuilder.status.unsaved') : t('wfProcessBuilder.status.unsavedChanges')
+      }
+      aria-label={
+        compact ? t('wfProcessBuilder.status.unsaved') : t('wfProcessBuilder.status.unsavedChanges')
+      }
       sx={{
         height: compact ? 22 : 24,
         color: '#7a4b00',
@@ -206,7 +211,10 @@ export function DesignerWorkspace() {
     <Stack spacing="14px">
       <WorkspaceHeader
         title={t('wfProcessBuilder.designer.title')}
-        summary={t('wfProcessBuilder.designer.summary', { steps: s.document.steps.length, activities: s.document.steps.reduce((count, step) => count + step.activities.length, 0) })}
+        summary={t('wfProcessBuilder.designer.summary', {
+          steps: s.document.steps.length,
+          activities: s.document.steps.reduce((count, step) => count + step.activities.length, 0),
+        })}
         action={
           <Button variant="outlined" startIcon={<Add />} onClick={s.addStep}>
             {t('wfProcessBuilder.actions.addStep')}
@@ -282,15 +290,23 @@ export function DesignerWorkspace() {
                         size="small"
                         value={step.name}
                         onChange={(event) => s.updateStep(step.id, { name: event.target.value })}
-                        slotProps={{ htmlInput: { 'aria-label': t('wfProcessBuilder.settings.fields.stepName') } }}
+                        slotProps={{
+                          htmlInput: {
+                            'aria-label': t('wfProcessBuilder.settings.fields.stepName'),
+                          },
+                        }}
                         sx={{ flex: '1 1 300px' }}
                       />
-                      <Tooltip title={t('wfProcessBuilder.actions.moveItemUp', { name: step.name })}>
+                      <Tooltip
+                        title={t('wfProcessBuilder.actions.moveItemUp', { name: step.name })}
+                      >
                         <span>
                           <IconButton
                             size="small"
                             disabled={index === 0}
-                            aria-label={t('wfProcessBuilder.actions.moveItemUp', { name: step.name })}
+                            aria-label={t('wfProcessBuilder.actions.moveItemUp', {
+                              name: step.name,
+                            })}
                             onClick={(event) => {
                               event.stopPropagation();
                               s.moveStep(step.id, -1);
@@ -300,12 +316,16 @@ export function DesignerWorkspace() {
                           </IconButton>
                         </span>
                       </Tooltip>
-                      <Tooltip title={t('wfProcessBuilder.actions.moveItemDown', { name: step.name })}>
+                      <Tooltip
+                        title={t('wfProcessBuilder.actions.moveItemDown', { name: step.name })}
+                      >
                         <span>
                           <IconButton
                             size="small"
                             disabled={index === s.document.steps.length - 1}
-                            aria-label={t('wfProcessBuilder.actions.moveItemDown', { name: step.name })}
+                            aria-label={t('wfProcessBuilder.actions.moveItemDown', {
+                              name: step.name,
+                            })}
                             onClick={(event) => {
                               event.stopPropagation();
                               s.moveStep(step.id, 1);
@@ -318,7 +338,9 @@ export function DesignerWorkspace() {
                       <Button size="small" onClick={() => s.select({ kind: 'step', id: step.id })}>
                         {t('wfProcessBuilder.actions.configure')}
                       </Button>
-                      <Tooltip title={t('wfProcessBuilder.actions.deleteItem', { name: step.name })}>
+                      <Tooltip
+                        title={t('wfProcessBuilder.actions.deleteItem', { name: step.name })}
+                      >
                         <IconButton
                           color="error"
                           size="small"
@@ -328,7 +350,10 @@ export function DesignerWorkspace() {
                             if (
                               step.activities.length > 0 &&
                               !window.confirm(
-                                t('wfProcessBuilder.actions.deleteStepConfirm', { name: step.name, count: step.activities.length })
+                                t('wfProcessBuilder.actions.deleteStepConfirm', {
+                                  name: step.name,
+                                  count: step.activities.length,
+                                })
                               )
                             )
                               return;
@@ -375,7 +400,12 @@ export function DesignerWorkspace() {
                           >
                             {t('wfProcessBuilder.actions.configure')}
                           </Button>
-                          <Chip size="small" label={t('wfProcessBuilder.structure.controlCount', { count: activity.controls.length })} />
+                          <Chip
+                            size="small"
+                            label={t('wfProcessBuilder.structure.controlCount', {
+                              count: activity.controls.length,
+                            })}
+                          />
                         </Box>
                       ))}
                     </Stack>
@@ -408,7 +438,10 @@ export function VariablesWorkspace({
     <Stack spacing="16px">
       <WorkspaceHeader
         title={t('wfProcessBuilder.workspace.variablesTitle')}
-        summary={t('wfProcessBuilder.workspace.variablesSummary', { total: s.document.variables.length, active: s.document.variables.filter((variable) => variable.active).length })}
+        summary={t('wfProcessBuilder.workspace.variablesSummary', {
+          total: s.document.variables.length,
+          active: s.document.variables.filter((variable) => variable.active).length,
+        })}
         dirty={s.document.id === 'new' || s.dirty}
         action={
           <Stack direction="row" spacing={1}>
@@ -420,7 +453,9 @@ export function VariablesWorkspace({
               disabled={s.document.id === 'new' || saving || !onSave}
               onClick={onSave}
             >
-              {saving ? t('wfProcessBuilder.actions.saving') : t('wfProcessBuilder.actions.saveVariables')}
+              {saving
+                ? t('wfProcessBuilder.actions.saving')
+                : t('wfProcessBuilder.actions.saveVariables')}
             </Button>
           </Stack>
         }
@@ -474,7 +509,11 @@ export function VariablesWorkspace({
                         size="small"
                         label={t('wfProcessBuilder.settings.fields.code')}
                         value={variable.code}
-                        placeholder={manualCode ? t('wfProcessBuilder.settings.enterCode') : t('wfProcessBuilder.settings.generatedCode')}
+                        placeholder={
+                          manualCode
+                            ? t('wfProcessBuilder.settings.enterCode')
+                            : t('wfProcessBuilder.settings.generatedCode')
+                        }
                         disabled={!manualCode || /^\d+$/.test(variable.id)}
                         required={manualCode && !/^\d+$/.test(variable.id)}
                         onChange={(event) =>
@@ -485,17 +524,25 @@ export function VariablesWorkspace({
                       <TextField
                         size="small"
                         label={t('wfProcessBuilder.settings.fields.variableName')}
-                        value={variable.name === 'New variable' ? t('wfProcessBuilder.structure.newVariable') : variable.name}
+                        value={
+                          variable.name === 'New variable'
+                            ? t('wfProcessBuilder.structure.newVariable')
+                            : variable.name
+                        }
                         onChange={(event) =>
                           s.updateVariable(variable.id, { name: event.target.value })
                         }
                         sx={{ flex: '1 1 240px' }}
                       />
-                      <Tooltip title={t('wfProcessBuilder.actions.deleteItem', { name: variable.name })}>
+                      <Tooltip
+                        title={t('wfProcessBuilder.actions.deleteItem', { name: variable.name })}
+                      >
                         <IconButton
                           color="error"
                           size="small"
-                          aria-label={t('wfProcessBuilder.actions.deleteItem', { name: variable.name })}
+                          aria-label={t('wfProcessBuilder.actions.deleteItem', {
+                            name: variable.name,
+                          })}
                           onClick={(event) => {
                             event.stopPropagation();
                             s.removeVariable(variable.id);
@@ -593,7 +640,11 @@ export function StepsWorkspace({
     <Stack spacing="12px">
       <WorkspaceHeader
         title={t('wfProcessBuilder.workspace.workflowSteps')}
-        summary={t('wfProcessBuilder.workspace.stepsSummary', { steps: s.document.steps.length, active: activeSteps, activities: activityCount })}
+        summary={t('wfProcessBuilder.workspace.stepsSummary', {
+          steps: s.document.steps.length,
+          active: activeSteps,
+          activities: activityCount,
+        })}
         dirty={s.document.id === 'new' || s.dirty}
         action={
           <Stack direction="row" spacing={1}>
@@ -605,7 +656,9 @@ export function StepsWorkspace({
               disabled={s.document.id === 'new' || saving || !onSave}
               onClick={onSave}
             >
-              {saving ? t('wfProcessBuilder.actions.saving') : t('wfProcessBuilder.actions.saveSteps')}
+              {saving
+                ? t('wfProcessBuilder.actions.saving')
+                : t('wfProcessBuilder.actions.saveSteps')}
             </Button>
           </Stack>
         }
@@ -657,7 +710,11 @@ export function StepsWorkspace({
                         size="small"
                         label={t('wfProcessBuilder.settings.fields.code')}
                         value={step.code}
-                        placeholder={manualCode ? t('wfProcessBuilder.settings.enterCode') : t('wfProcessBuilder.settings.generatedCode')}
+                        placeholder={
+                          manualCode
+                            ? t('wfProcessBuilder.settings.enterCode')
+                            : t('wfProcessBuilder.settings.generatedCode')
+                        }
                         disabled={!manualCode || /^\d+$/.test(step.id)}
                         required={manualCode && !/^\d+$/.test(step.id)}
                         onChange={(event) => s.updateStep(step.id, { code: event.target.value })}
@@ -690,7 +747,9 @@ export function StepsWorkspace({
                       >
                         {t('wfProcessBuilder.actions.configure')}
                       </Button>
-                      <Tooltip title={t('wfProcessBuilder.actions.deleteItem', { name: step.name })}>
+                      <Tooltip
+                        title={t('wfProcessBuilder.actions.deleteItem', { name: step.name })}
+                      >
                         <IconButton
                           color="error"
                           size="small"
@@ -824,7 +883,9 @@ export function ActivitiesWorkspace({
           component="h2"
           sx={{ flex: 1, fontSize: tokens.fontSize.heading, fontWeight: 700 }}
         >
-          {t('wfProcessBuilder.workspace.activitiesForStep', { name: step?.name ?? t('wfProcessBuilder.workspace.selectStep') })}
+          {t('wfProcessBuilder.workspace.activitiesForStep', {
+            name: step?.name ?? t('wfProcessBuilder.workspace.selectStep'),
+          })}
         </Typography>
         {s.dirty && <UnsavedStatus />}
         <Button
@@ -842,7 +903,9 @@ export function ActivitiesWorkspace({
           disabled={s.document.id === 'new' || saving || !onSave}
           onClick={onSave}
         >
-          {saving ? t('wfProcessBuilder.actions.saving') : t('wfProcessBuilder.actions.saveActivities')}
+          {saving
+            ? t('wfProcessBuilder.actions.saving')
+            : t('wfProcessBuilder.actions.saveActivities')}
         </Button>
         <TextField
           select
@@ -896,7 +959,11 @@ export function ActivitiesWorkspace({
                         size="small"
                         label={t('wfProcessBuilder.settings.fields.code')}
                         value={activity.code}
-                        placeholder={manualCode ? t('wfProcessBuilder.settings.enterCode') : t('wfProcessBuilder.settings.generatedCode')}
+                        placeholder={
+                          manualCode
+                            ? t('wfProcessBuilder.settings.enterCode')
+                            : t('wfProcessBuilder.settings.generatedCode')
+                        }
                         disabled={!manualCode || /^\d+$/.test(activity.id)}
                         required={manualCode && !/^\d+$/.test(activity.id)}
                         onChange={(event) =>
@@ -906,7 +973,11 @@ export function ActivitiesWorkspace({
                       <TextField
                         size="small"
                         label={t('wfProcessBuilder.settings.fields.activityName')}
-                        value={activity.name === 'New activity' ? t('wfProcessBuilder.structure.newActivity') : activity.name}
+                        value={
+                          activity.name === 'New activity'
+                            ? t('wfProcessBuilder.structure.newActivity')
+                            : activity.name
+                        }
                         onChange={(e) =>
                           s.updateActivity(step.id, activity.id, { name: e.target.value })
                         }
@@ -923,7 +994,12 @@ export function ActivitiesWorkspace({
                         }
                         sx={{ width: 82 }}
                       />
-                      <Chip size="small" label={t('wfProcessBuilder.workspace.controls', { count: activity.controls.length })} />
+                      <Chip
+                        size="small"
+                        label={t('wfProcessBuilder.workspace.controls', {
+                          count: activity.controls.length,
+                        })}
+                      />
                       <Button
                         size="small"
                         onClick={() => {
@@ -1036,7 +1112,9 @@ export function ActivitiesWorkspace({
                         <Button
                           color="error"
                           size="small"
-                          aria-label={t('wfProcessBuilder.actions.deleteItem', { name: activity.name })}
+                          aria-label={t('wfProcessBuilder.actions.deleteItem', {
+                            name: activity.name,
+                          })}
                           onClick={(event) => {
                             event.stopPropagation();
                             s.removeActivity(step.id, activity.id);
@@ -1081,7 +1159,9 @@ export function RequestFormWorkspace({
     <Stack spacing="14px">
       <WorkspaceHeader
         title={t('wfProcessBuilder.workspace.requestForm')}
-        summary={t('wfProcessBuilder.workspace.processControls', { count: s.document.requestControls.length })}
+        summary={t('wfProcessBuilder.workspace.processControls', {
+          count: s.document.requestControls.length,
+        })}
         dirty={s.document.id === 'new' || s.dirty}
         action={
           <Button
@@ -1089,7 +1169,9 @@ export function RequestFormWorkspace({
             disabled={s.document.id === 'new' || saving || !onSave}
             onClick={onSave}
           >
-            {saving ? t('wfProcessBuilder.actions.saving') : t('wfProcessBuilder.workspace.saveRequestControls')}
+            {saving
+              ? t('wfProcessBuilder.actions.saving')
+              : t('wfProcessBuilder.workspace.saveRequestControls')}
           </Button>
         }
       />
@@ -1134,7 +1216,8 @@ export function RequestFormWorkspace({
               const selected = s.selected.kind === 'requestControl' && s.selected.id === control.id;
               const controlTransitions = s.document.transitions.filter(
                 (transition) =>
-                  transition.triggerSource === 'requestControl' && transition.triggerId === control.id
+                  transition.triggerSource === 'requestControl' &&
+                  transition.triggerId === control.id
               );
               const openSettings = (
                 event: React.MouseEvent,
@@ -1170,7 +1253,11 @@ export function RequestFormWorkspace({
                         size="small"
                         label={t('wfProcessBuilder.settings.fields.code')}
                         value={control.code}
-                        placeholder={manualCode ? t('wfProcessBuilder.settings.enterCode') : t('wfProcessBuilder.settings.generatedCode')}
+                        placeholder={
+                          manualCode
+                            ? t('wfProcessBuilder.settings.enterCode')
+                            : t('wfProcessBuilder.settings.generatedCode')
+                        }
                         disabled={!manualCode || /^\d+$/.test(control.id)}
                         required={manualCode && !/^\d+$/.test(control.id)}
                         onChange={(event) =>
@@ -1194,7 +1281,9 @@ export function RequestFormWorkspace({
                       <Button
                         color="error"
                         size="small"
-                        aria-label={t('wfProcessBuilder.actions.deleteItem', { name: control.label })}
+                        aria-label={t('wfProcessBuilder.actions.deleteItem', {
+                          name: control.label,
+                        })}
                         onClick={(event) => {
                           event.stopPropagation();
                           s.removeRequestControl(control.id);
@@ -1227,14 +1316,23 @@ export function RequestFormWorkspace({
                         />
                         {requestOptionControlTypes.has(control.type) && (
                           <Button size="small" onClick={(event) => openSettings(event, 'options')}>
-                            {t('wfProcessBuilder.settings.optionsCount', { count: control.options.length })}
+                            {t('wfProcessBuilder.settings.optionsCount', {
+                              count: control.options.length,
+                            })}
                           </Button>
                         )}
                         <Button size="small" onClick={(event) => openSettings(event, 'validation')}>
-                          {t('wfProcessBuilder.settings.validationCount', { count: control.validations.length })}
+                          {t('wfProcessBuilder.settings.validationCount', {
+                            count: control.validations.length,
+                          })}
                         </Button>
-                        <Button size="small" onClick={(event) => openSettings(event, 'transitions')}>
-                          {t('wfProcessBuilder.settings.transitionsCount', { count: controlTransitions.length })}
+                        <Button
+                          size="small"
+                          onClick={(event) => openSettings(event, 'transitions')}
+                        >
+                          {t('wfProcessBuilder.settings.transitionsCount', {
+                            count: controlTransitions.length,
+                          })}
                         </Button>
                         {s.dirty && <UnsavedStatus compact />}
                       </Box>
@@ -1356,7 +1454,9 @@ export function ActivityFormWorkspace({
           disabled={s.document.id === 'new' || saving || !onSave}
           onClick={onSave}
         >
-          {saving ? t('wfProcessBuilder.actions.saving') : t('wfProcessBuilder.workspace.saveActivityControls')}
+          {saving
+            ? t('wfProcessBuilder.actions.saving')
+            : t('wfProcessBuilder.workspace.saveActivityControls')}
         </Button>
         <TextField
           select
@@ -1421,7 +1521,12 @@ export function ActivityFormWorkspace({
                     <Box {...attributes} {...listeners} sx={{ display: 'flex', cursor: 'grab' }}>
                       <DragIndicator />
                     </Box>
-                    <TextField size="small" label={t('wfProcessBuilder.settings.fields.code')} value={control.code} disabled />
+                    <TextField
+                      size="small"
+                      label={t('wfProcessBuilder.settings.fields.code')}
+                      value={control.code}
+                      disabled
+                    />
                     <TextField
                       size="small"
                       label={t('wfProcessBuilder.settings.fields.label')}
@@ -1468,7 +1573,11 @@ export function ActivityFormWorkspace({
                       <Chip
                         size="small"
                         variant="outlined"
-                        label={control.visible ? t('wfProcessBuilder.settings.fields.visible') : t('wfProcessBuilder.settings.hidden')}
+                        label={
+                          control.visible
+                            ? t('wfProcessBuilder.settings.fields.visible')
+                            : t('wfProcessBuilder.settings.hidden')
+                        }
                       />
                       <Button
                         size="small"
@@ -1480,7 +1589,9 @@ export function ActivityFormWorkspace({
                           );
                         }}
                       >
-                        {t('wfProcessBuilder.settings.validationCount', { count: control.validations.length })}
+                        {t('wfProcessBuilder.settings.validationCount', {
+                          count: control.validations.length,
+                        })}
                       </Button>
                       <Button
                         size="small"
@@ -1492,11 +1603,13 @@ export function ActivityFormWorkspace({
                           );
                         }}
                       >
-                        {t('wfProcessBuilder.settings.transitionsCount', { count: s.document.transitions.filter(
-                          (transition) =>
-                            transition.triggerSource === 'activity' &&
-                            transition.triggerId === activity.id
-                        ).length })}
+                        {t('wfProcessBuilder.settings.transitionsCount', {
+                          count: s.document.transitions.filter(
+                            (transition) =>
+                              transition.triggerSource === 'activity' &&
+                              transition.triggerId === activity.id
+                          ).length,
+                        })}
                       </Button>
                     </Box>
                     {requestOptionControlTypes.has(control.type) && (
@@ -1518,12 +1631,16 @@ export function ActivityFormWorkspace({
                           <Button
                             size="small"
                             startIcon={<Add fontSize="small" />}
-                            aria-label={t('wfProcessBuilder.settings.addOptionTo', { name: control.label })}
+                            aria-label={t('wfProcessBuilder.settings.addOptionTo', {
+                              name: control.label,
+                            })}
                             onClick={() =>
                               s.updateActivityControl(stepId, activity.id, control.id, {
                                 options: [
                                   ...control.options,
-                                  t('wfProcessBuilder.settings.optionNumber', { number: control.options.length + 1 }),
+                                  t('wfProcessBuilder.settings.optionNumber', {
+                                    number: control.options.length + 1,
+                                  }),
                                 ],
                               })
                             }
@@ -1565,11 +1682,16 @@ export function ActivityFormWorkspace({
                                         spacing={1}
                                         sx={{ alignItems: 'center' }}
                                       >
-                                        <Tooltip title={t('wfProcessBuilder.settings.dragToReorder')}>
+                                        <Tooltip
+                                          title={t('wfProcessBuilder.settings.dragToReorder')}
+                                        >
                                           <Box
                                             {...optionAttributes}
                                             {...optionListeners}
-                                            aria-label={t('wfProcessBuilder.settings.reorderOptionFor', { number: optionIndex + 1, name: control.label })}
+                                            aria-label={t(
+                                              'wfProcessBuilder.settings.reorderOptionFor',
+                                              { number: optionIndex + 1, name: control.label }
+                                            )}
                                             sx={{
                                               display: 'flex',
                                               color: tokens.textMuted,
@@ -1583,11 +1705,16 @@ export function ActivityFormWorkspace({
                                         <TextField
                                           fullWidth
                                           size="small"
-                                          label={t('wfProcessBuilder.settings.optionNumber', { number: optionIndex + 1 })}
+                                          label={t('wfProcessBuilder.settings.optionNumber', {
+                                            number: optionIndex + 1,
+                                          })}
                                           value={option}
                                           slotProps={{
                                             htmlInput: {
-                                              'aria-label': t('wfProcessBuilder.settings.optionFor', { number: optionIndex + 1, name: control.label }),
+                                              'aria-label': t(
+                                                'wfProcessBuilder.settings.optionFor',
+                                                { number: optionIndex + 1, name: control.label }
+                                              ),
                                             },
                                           }}
                                           onChange={(event) => {
@@ -1604,7 +1731,10 @@ export function ActivityFormWorkspace({
                                         <IconButton
                                           size="small"
                                           color="error"
-                                          aria-label={t('wfProcessBuilder.settings.removeOptionFrom', { number: optionIndex + 1, name: control.label })}
+                                          aria-label={t(
+                                            'wfProcessBuilder.settings.removeOptionFrom',
+                                            { number: optionIndex + 1, name: control.label }
+                                          )}
                                           onClick={() =>
                                             s.updateActivityControl(
                                               stepId,
@@ -1732,7 +1862,10 @@ export function DiagramWorkspace() {
     <Stack spacing={1.25}>
       <WorkspaceHeader
         title={t('wfProcessBuilder.tabsExtended.diagram')}
-        summary={t('wfProcessBuilder.workspace.diagramSummary', { steps: d.steps.length, transitions: d.transitions.length })}
+        summary={t('wfProcessBuilder.workspace.diagramSummary', {
+          steps: d.steps.length,
+          transitions: d.transitions.length,
+        })}
         dirty={s.dirty}
       />
       <Box
@@ -1780,8 +1913,12 @@ export function DiagramWorkspace() {
               cursor: 'pointer',
             }}
           >
-            <Typography sx={{ fontWeight: 800 }}>{t('wfProcessBuilder.tabsExtended.requestForm')}</Typography>
-            <Typography variant="caption">{t('wfProcessBuilder.workspace.controls', { count: d.requestControls.length })}</Typography>
+            <Typography sx={{ fontWeight: 800 }}>
+              {t('wfProcessBuilder.tabsExtended.requestForm')}
+            </Typography>
+            <Typography variant="caption">
+              {t('wfProcessBuilder.workspace.controls', { count: d.requestControls.length })}
+            </Typography>
           </Box>
           {d.steps.map((step) => (
             <React.Fragment key={step.id}>
@@ -1815,7 +1952,8 @@ export function DiagramWorkspace() {
                   <Typography sx={{ fontWeight: 800 }}>{step.name}</Typography>
                 </Stack>
                 <Typography variant="caption">
-                  {step.activities.map((activity) => activity.name).join(' · ') || t('wfProcessBuilder.workspace.noActivities')}
+                  {step.activities.map((activity) => activity.name).join(' · ') ||
+                    t('wfProcessBuilder.workspace.noActivities')}
                 </Typography>
               </Box>
             </React.Fragment>
@@ -1855,7 +1993,9 @@ export function TransitionsWorkspace({
     <Stack spacing="12px">
       <WorkspaceHeader
         title={t('wfProcessBuilder.workspace.transitionsTitle')}
-        summary={t('wfProcessBuilder.workspace.transitionsSummary', { count: s.document.transitions.length })}
+        summary={t('wfProcessBuilder.workspace.transitionsSummary', {
+          count: s.document.transitions.length,
+        })}
         dirty={s.dirty}
         action={
           <Stack direction="row" spacing={1}>
@@ -1872,7 +2012,9 @@ export function TransitionsWorkspace({
               disabled={s.document.id === 'new' || saving || !onSave}
               onClick={onSave}
             >
-              {saving ? t('wfProcessBuilder.actions.saving') : t('wfProcessBuilder.actions.saveTransitions')}
+              {saving
+                ? t('wfProcessBuilder.actions.saving')
+                : t('wfProcessBuilder.actions.saveTransitions')}
             </Button>
           </Stack>
         }

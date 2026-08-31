@@ -57,6 +57,7 @@ interface Props {
 
 interface RequestControlLookupRow {
   requestControlId: number;
+  controlType: string;
   code: string;
   name: string;
   nameAr: string;
@@ -76,6 +77,7 @@ const loadRequestControls = async (processId: number, signal?: AbortSignal) => {
     const nameAr = control.labelAr || control.label;
     return {
       requestControlId: control.requestControlId,
+      controlType: control.controlType,
       code: control.code,
       name: control.label,
       nameAr,
@@ -84,6 +86,84 @@ const loadRequestControls = async (processId: number, signal?: AbortSignal) => {
     };
   });
 };
+
+const normalizeControlType = (value: string): string =>
+  value.replace(/[^a-z0-9]/gi, '').toLocaleLowerCase();
+
+type ControlCompatibility = 'scalar' | 'checkbox' | 'table' | 'signature' | 'image';
+
+export const isControlTypeCompatible = (
+  controlType: string,
+  compatibility: ControlCompatibility
+): boolean => {
+  const type = normalizeControlType(controlType);
+  if (compatibility === 'table') return type === 'table';
+  if (compatibility === 'checkbox') return type === 'checkbox';
+  if (compatibility === 'signature') return type === 'signature';
+  if (compatibility === 'image') return type === 'file' || type === 'image';
+  return !['table', 'signature', 'file', 'image', 'label'].includes(type);
+};
+
+function RequestControlBindingLookup({
+  processId,
+  value,
+  compatibility,
+  onChange,
+}: {
+  processId: number;
+  value: number | null | undefined;
+  compatibility: ControlCompatibility;
+  onChange: (value: number | null, control: RequestControlLookupRow | null) => void;
+}): React.ReactElement {
+  const { t } = useAppTranslation();
+  const compatibleControls = React.useCallback(
+    async (signal?: AbortSignal) =>
+      (await loadRequestControls(processId, signal)).filter((control) =>
+        isControlTypeCompatible(control.controlType, compatibility)
+      ),
+    [compatibility, processId]
+  );
+  return (
+    <AppLookupGridField<RequestControlLookupRow>
+      name="requestControlId"
+      label={t('printTemplates.designer.properties.requestControlId')}
+      value={value ?? null}
+      onChange={(nextValue, row) =>
+        onChange(nextValue == null ? null : Number(nextValue), row ?? null)
+      }
+      disabled={processId <= 0}
+      columns={[...requestControlLookupColumns]}
+      queryKey={['workflow', 'print-template-request-controls', processId, compatibility]}
+      fetchPage={async ({ pageNumber, pageSize, search, signal }) => {
+        const controls = await compatibleControls(signal);
+        const query = search.trim().toLocaleLowerCase();
+        const filtered = query
+          ? controls.filter((control) =>
+              `${control.code} ${control.name} ${control.nameAr}`
+                .toLocaleLowerCase()
+                .includes(query)
+            )
+          : controls;
+        const start = (pageNumber - 1) * pageSize;
+        return {
+          data: filtered.slice(start, start + pageSize),
+          pageNumber,
+          totalPages: Math.max(1, Math.ceil(filtered.length / pageSize)),
+          totalRecords: filtered.length,
+        };
+      }}
+      fetchById={async (nextValue) =>
+        (await compatibleControls()).find(
+          (control) => control.requestControlId === Number(nextValue)
+        ) ?? null
+      }
+      valueField="requestControlId"
+      labelField="displayName"
+      labelFieldAr="displayNameAr"
+      pageSize={25}
+    />
+  );
+}
 
 const palette: Array<{ type: DesignerComponentType; icon: React.ReactElement }> = [
   { type: 'text', icon: <TextFieldsOutlined /> },
@@ -325,7 +405,27 @@ function ElementProperties({
               {t('printTemplates.designer.imageSources.companyLogo')}
             </MenuItem>
             <MenuItem value="url">{t('printTemplates.designer.imageSources.url')}</MenuItem>
+            <MenuItem value="requestControl">
+              {t('printTemplates.designer.sources.requestControl')}
+            </MenuItem>
           </TextField>
+        ) : null}
+        {element.type === 'image' && element.sourceType === 'requestControl' ? (
+          <RequestControlBindingLookup
+            processId={processId}
+            value={element.binding?.requestControlId}
+            compatibility="image"
+            onChange={(value) =>
+              update((current) =>
+                current.type === 'image'
+                  ? {
+                      ...current,
+                      binding: { sourceType: 'requestControl', requestControlId: value },
+                    }
+                  : current
+              )
+            }
+          />
         ) : null}
         {element.type === 'image' && element.sourceType === 'url' ? (
           <TextField
@@ -371,22 +471,56 @@ function ElementProperties({
           />
         ) : null}
         {element.type === 'table' ? (
-          <FormControlLabel
-            control={
-              <Switch
-                size="small"
-                checked={element.repeatHeader}
-                onChange={(_, checked) =>
-                  update((current) =>
-                    current.type === 'table' ? { ...current, repeatHeader: checked } : current
-                  )
-                }
-              />
-            }
-            label={
-              <Typography sx={{ fontSize: 11 }}>
-                {t('printTemplates.designer.properties.repeatHeader')}
-              </Typography>
+          <>
+            <RequestControlBindingLookup
+              processId={processId}
+              value={element.dataSource.requestControlId}
+              compatibility="table"
+              onChange={(value) =>
+                update((current) =>
+                  current.type === 'table'
+                    ? {
+                        ...current,
+                        dataSource: { sourceType: 'requestControl', requestControlId: value },
+                      }
+                    : current
+                )
+              }
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  size="small"
+                  checked={element.repeatHeader}
+                  onChange={(_, checked) =>
+                    update((current) =>
+                      current.type === 'table' ? { ...current, repeatHeader: checked } : current
+                    )
+                  }
+                />
+              }
+              label={
+                <Typography sx={{ fontSize: 11 }}>
+                  {t('printTemplates.designer.properties.repeatHeader')}
+                </Typography>
+              }
+            />
+          </>
+        ) : null}
+        {element.type === 'qrCode' || element.type === 'barcode' ? (
+          <RequestControlBindingLookup
+            processId={processId}
+            value={element.binding.requestControlId}
+            compatibility="scalar"
+            onChange={(value) =>
+              update((current) =>
+                current.type === 'qrCode' || current.type === 'barcode'
+                  ? {
+                      ...current,
+                      binding: { sourceType: 'requestControl', requestControlId: value },
+                    }
+                  : current
+              )
             }
           />
         ) : null}
@@ -408,16 +542,34 @@ function ElementProperties({
           </TextField>
         ) : null}
         {element.type === 'signature' ? (
-          <TextField
-            size="small"
-            label={t('printTemplates.designer.properties.label')}
-            value={element.label ?? ''}
-            onChange={(event) =>
-              update((current) =>
-                current.type === 'signature' ? { ...current, label: event.target.value } : current
-              )
-            }
-          />
+          <>
+            <RequestControlBindingLookup
+              processId={processId}
+              value={element.binding.requestControlId}
+              compatibility="signature"
+              onChange={(value, control) =>
+                update((current) =>
+                  current.type === 'signature'
+                    ? {
+                        ...current,
+                        label: control?.name ?? current.label,
+                        binding: { sourceType: 'requestControl', requestControlId: value },
+                      }
+                    : current
+                )
+              }
+            />
+            <TextField
+              size="small"
+              label={t('printTemplates.designer.properties.label')}
+              value={element.label ?? ''}
+              onChange={(event) =>
+                update((current) =>
+                  current.type === 'signature' ? { ...current, label: event.target.value } : current
+                )
+              }
+            />
+          </>
         ) : null}
       </PropertyAccordion>
       {element.type === 'field' ? (
@@ -710,45 +862,17 @@ function FieldProperties({
         </TextField>
       ) : null}
       {element.binding.sourceType === 'requestControl' ? (
-        <AppLookupGridField<RequestControlLookupRow>
-          name="requestControlId"
-          label={t('printTemplates.designer.properties.requestControlId')}
-          value={element.binding.requestControlId ?? ''}
-          onChange={(value) =>
+        <RequestControlBindingLookup
+          processId={processId}
+          value={element.binding.requestControlId ?? null}
+          compatibility={element.format?.type === 'boolean' ? 'checkbox' : 'scalar'}
+          onChange={(value, control) =>
             setField((field) => ({
               ...field,
+              label: control?.name ?? field.label,
               binding: { ...field.binding, requestControlId: Number(value) || null },
             }))
           }
-          disabled={processId <= 0}
-          columns={[...requestControlLookupColumns]}
-          queryKey={['workflow', 'print-template-request-controls', processId]}
-          fetchPage={async ({ pageNumber, pageSize, search, signal }) => {
-            const controls = await loadRequestControls(processId, signal);
-            const query = search.trim().toLocaleLowerCase();
-            const filtered = query
-              ? controls.filter((control) =>
-                  `${control.code} ${control.name} ${control.nameAr}`
-                    .toLocaleLowerCase()
-                    .includes(query)
-                )
-              : controls;
-            const start = (pageNumber - 1) * pageSize;
-            return {
-              data: filtered.slice(start, start + pageSize),
-              pageNumber,
-              totalPages: Math.max(1, Math.ceil(filtered.length / pageSize)),
-              totalRecords: filtered.length,
-            };
-          }}
-          fetchById={async (value) => {
-            const controls = await loadRequestControls(processId);
-            return controls.find((control) => control.requestControlId === Number(value)) ?? null;
-          }}
-          valueField="requestControlId"
-          labelField="displayName"
-          labelFieldAr="displayNameAr"
-          pageSize={25}
         />
       ) : null}
     </>
