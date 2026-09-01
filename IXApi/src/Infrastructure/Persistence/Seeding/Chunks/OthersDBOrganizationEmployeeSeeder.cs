@@ -72,8 +72,8 @@ public sealed class OthersDBOrganizationEmployeeSeeder : OthersDBSeedData
         foreach(var row in rows)
         {
             var code=EmployeeCode(row,duplicateCodes);
-            if(parties.TryGetValue(row.Id,out var party)){party.PartyNumber=code;party.Name=Text(row.Name,255)??code;party.NameAlias=code;party.RFullName=Text(row.NameAr,255);party.HcmWorker=row.Id;party.IsActive=row.Active?NoYes.Yes:NoYes.No;}
-            else{party=new DirPartyTable{PartyNumber=code,Name=Text(row.Name,255)??code,NameAlias=code,RFullName=Text(row.NameAr,255),LanguageId="ar-sa",AddressBookNames="",HcmWorker=row.Id,IsActive=row.Active?NoYes.Yes:NoYes.No,CreatedAt=row.CreatedAt,CreatedBy=row.CreatedBy??owner,OwnerAccountId=owner};db.DirPartyTables.Add(party);parties[row.Id]=party;}
+            if(parties.TryGetValue(row.Id,out var party)){party.PartyNumber=code;party.Name=Text(row.Name,255)??code;party.NameAlias=Text(row.NameAr,60)??code;party.RFullName=Text(row.NameAr,255);party.HcmWorker=row.Id;party.IsActive=row.Active?NoYes.Yes:NoYes.No;}
+            else{party=new DirPartyTable{PartyNumber=code,Name=Text(row.Name,255)??code,NameAlias=Text(row.NameAr,60)??code,RFullName=Text(row.NameAr,255),LanguageId="ar-sa",AddressBookNames="",HcmWorker=row.Id,IsActive=row.Active?NoYes.Yes:NoYes.No,CreatedAt=row.CreatedAt,CreatedBy=row.CreatedBy??owner,OwnerAccountId=owner};db.DirPartyTables.Add(party);parties[row.Id]=party;}
         }
         await db.SaveChangesAsync(ct);
 

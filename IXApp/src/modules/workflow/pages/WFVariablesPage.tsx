@@ -15,6 +15,7 @@ import { wfDataTypeApi } from '../api/workflowSetupApis';
 import { wfProcessApi, type WfProcessRecord } from '../api/wfProcessApi';
 import { wfVariableApi, type WfVariableRecord } from '../api/wfVariableApi';
 import { fetchProcessPage, processLookupColumns } from '../lookups/processLookup';
+import { localizedName } from '@shared/utilities/localizedName';
 
 const emptyVariable = (processId = 0): WfVariableRecord => ({
   id: `new-${crypto.randomUUID()}`,
@@ -38,7 +39,7 @@ const numberValue = (value: DetailValue): number => Number(value) || 0;
 const textValue = (value: string | null | undefined): string => value ?? '';
 
 export function WFVariablesPage(): React.ReactElement {
-  const { t } = useAppTranslation();
+  const { t, isRtl } = useAppTranslation();
   const [searchParams] = useSearchParams();
   const requestedProcessId = Number(searchParams.get('processId'));
   const scopedProcessId =
@@ -52,9 +53,9 @@ export function WFVariablesPage(): React.ReactElement {
       (dataTypesQuery.data ?? []).map((dataType) => ({
         id: dataType.recId,
         code: dataType.code ?? '',
-        name: dataType.name ?? '',
+        name: localizedName(dataType, isRtl),
       })),
-    [dataTypesQuery.data]
+    [dataTypesQuery.data, isRtl]
   );
   const sections = useMemo<DetailSectionConfig[]>(
     () => [
@@ -85,6 +86,7 @@ export function WFVariablesPage(): React.ReactElement {
                     }
                     valueField="recId"
                     labelField="name"
+                    labelFieldAr="nameAlias"
                     pageSize={25}
                   />
                 ),
@@ -135,10 +137,10 @@ export function WFVariablesPage(): React.ReactElement {
     },
     createRecord: () => emptyVariable(scopedProcessId ?? 0),
     numberSequence: { key: 'WfVariable', field: 'code' },
-    getPrimaryText: (record) => textValue(record.name) || textValue(record.code),
+    getPrimaryText: (record) => localizedName(record, isRtl) || textValue(record.code),
     getSecondaryText: (record) => record.code || textValue(record.description),
     matchesSearch: (record, query) =>
-      `${record.code ?? ''} ${record.name ?? ''} ${record.description ?? ''}`
+      `${record.code ?? ''} ${record.name ?? ''} ${record.nameAlias ?? ''} ${record.description ?? ''}`
         .toLocaleLowerCase()
         .includes(query.toLocaleLowerCase()),
     getValues: (record): DetailValues => ({
@@ -188,9 +190,11 @@ export function WFVariablesPage(): React.ReactElement {
     },
     advancedFilter: {
       fieldLabel: t('wfVariable.fields.name'),
-      getValue: (record) => record.name,
+      getValue: (record) => localizedName(record, isRtl),
       matches: (record, value) =>
-        textValue(record.name).toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()),
+        localizedName(record, isRtl)
+          .toLocaleLowerCase()
+          .includes(value.trim().toLocaleLowerCase()),
     },
   };
 

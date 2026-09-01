@@ -30,6 +30,7 @@ public sealed partial class WfProcessSeedData
                 await db.SaveChangesAsync(ct);
             }
 
+            await ReconcilePaymentRequestAndPrintTemplateAsync(db, existingProcess, owner, ct);
             return;
         }
 
@@ -256,6 +257,9 @@ public sealed partial class WfProcessSeedData
                 throw;
             }
         });
+
+        var seededProcess = await db.WfProcesses.IgnoreQueryFilters()
+            .SingleAsync(x => x.Code == ProcessCode, ct);
+        await ReconcilePaymentRequestAndPrintTemplateAsync(db, seededProcess, owner, ct);
     }
 }
-

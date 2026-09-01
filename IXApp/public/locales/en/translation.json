@@ -806,7 +806,11 @@
       "attachments": "Report attachments",
       "layers": "Report layers"
     },
-    "empty": "No report is available."
+    "empty": "No report is available.",
+    "export": {
+      "success": "{{format}} export downloaded successfully.",
+      "failed": "The {{format}} export could not be created."
+    }
   },
   "printout": {
     "company": "Company",

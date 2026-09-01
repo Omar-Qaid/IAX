@@ -113,6 +113,34 @@ For each generated process, provide:
 
 The generated configuration must follow the existing database architecture, naming conventions, relationships, and Process Builder rules.
 
+### 7. Mail Printout Behavior
+
+The workflow Mail page has two intentionally separate print modes. Do not combine them:
+
+#### Published Template Printouts
+
+- Every named print option is loaded from the active published templates configured for the selected process.
+- The layout, labels, bindings, page settings, header, footer, tables, and formatting come from the published `WfPrintTemplates` / `WfPrintTemplateVersions` document.
+- Selecting a named template opens the official template viewer and renders that exact published template.
+- Template request-field bindings must use the stable `WfRequestControl` ID. A stable request-control value must take precedence over any legacy control-type ID when numeric IDs collide.
+
+#### Full Transaction Details
+
+- This is the final print option in the Mail page menu.
+- It is a generic printout and must never load or render a published/default print template.
+- It must not capture or print the current page DOM/layout.
+- It must build a clean printable document from the selected request and the Mail details data.
+- It must include the request summary and every transaction/request field displayed in the Mail page, using the same values and localized labels.
+- Dynamic fields must be ordered by their configured control order and use the appropriate renderer for text, dates, numbers, locations, tables, files, signatures, and other supported control types.
+- RTL uses the Arabic label/alias when available; LTR uses the English name/label. RTL falls back to English when the Arabic value is empty.
+- The presence of a default published template must not change this option's behavior.
+
+The required command mapping is:
+
+**Named template option** → **Published template ID** → **Official template viewer** → **Render `WfPrintTemplateVersion.TemplateJson`**
+
+**Full Transaction Details** → **Selected workflow request** → **Mail-details data** → **Generic workflow mail printout** → **No template lookup or template rendering**
+
 ### Important Rule
 
 Do not create or assume database structures before analyzing the existing implementation.

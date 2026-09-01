@@ -13,6 +13,7 @@ import { AppLookupGridField } from '@shared/components/fields/AppLookupGridField
 import { wfProcessApi, type WfProcessRecord } from '../api/wfProcessApi';
 import { wfStepApi, type WfStepRecord } from '../api/wfStepApi';
 import { fetchProcessPage, processLookupColumns } from '../lookups/processLookup';
+import { localizedName } from '@shared/utilities/localizedName';
 
 const numberValue = (value: DetailValue): number => Number(value) || 0;
 const textValue = (value: string | null | undefined): string => value ?? '';
@@ -37,7 +38,7 @@ const emptyStep = (processId = 0): WfStepRecord => ({
 });
 
 export function WFStepsPage(): React.ReactElement {
-  const { t } = useAppTranslation();
+  const { t, isRtl } = useAppTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const requestedProcessId = Number(searchParams.get('processId'));
@@ -72,6 +73,7 @@ export function WFStepsPage(): React.ReactElement {
                     }
                     valueField="recId"
                     labelField="name"
+                    labelFieldAr="nameAlias"
                     pageSize={25}
                   />
                 ),
@@ -125,10 +127,10 @@ export function WFStepsPage(): React.ReactElement {
     },
     createRecord: () => emptyStep(scopedProcessId ?? 0),
     numberSequence: { key: 'WfStep', field: 'code' },
-    getPrimaryText: (record) => textValue(record.name) || textValue(record.code),
+    getPrimaryText: (record) => localizedName(record, isRtl) || textValue(record.code),
     getSecondaryText: (record) => record.code || textValue(record.description),
     matchesSearch: (record, query) =>
-      `${record.code ?? ''} ${record.name ?? ''} ${record.description ?? ''}`
+      `${record.code ?? ''} ${record.name ?? ''} ${record.nameAlias ?? ''} ${record.description ?? ''}`
         .toLocaleLowerCase()
         .includes(query.toLocaleLowerCase()),
     getValues: (record): DetailValues => ({
@@ -184,9 +186,11 @@ export function WFStepsPage(): React.ReactElement {
     },
     advancedFilter: {
       fieldLabel: t('wfStep.fields.name'),
-      getValue: (record) => record.name,
+      getValue: (record) => localizedName(record, isRtl),
       matches: (record, value) =>
-        textValue(record.name).toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()),
+        localizedName(record, isRtl)
+          .toLocaleLowerCase()
+          .includes(value.trim().toLocaleLowerCase()),
     },
     commands: [
       {

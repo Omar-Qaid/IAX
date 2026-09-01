@@ -26,6 +26,7 @@ public sealed partial class WfProcessSeedData
             {
                 Code = definition.Code,
                 Name = definition.Name,
+                NameAlias = definition.NameAlias,
                 Description = definition.Description,
                 CategoryId = definition.CategoryId,
                 PriorityId = definition.PriorityId,
@@ -43,6 +44,7 @@ public sealed partial class WfProcessSeedData
         else
         {
             process.Name = definition.Name;
+            process.NameAlias = definition.NameAlias;
             process.Description = definition.Description;
             process.CategoryId = definition.CategoryId;
             process.PriorityId = definition.PriorityId;
@@ -66,6 +68,7 @@ public sealed partial class WfProcessSeedData
                     controlDefinition.ControlId,
                     controlDefinition.Code,
                     controlDefinition.Name,
+                    controlDefinition.NameAlias,
                     controlDefinition.Description,
                     checked((byte)(controlsByCode.Count + 1)),
                     owner,
@@ -74,37 +77,57 @@ public sealed partial class WfProcessSeedData
                 await db.SaveChangesAsync(ct);
                 controlsByCode.Add(controlDefinition.Code, control);
             }
-            else
-            {
-                control.ControlId = controlDefinition.ControlId;
-                control.Name = controlDefinition.Name;
-                control.Description = controlDefinition.Description;
-                control.ValidationRules = controlDefinition.Required ? RequiredRule : null;
-                control.IsActive = true;
-                control.IsDeleted = false;
-            }
+            control.ControlId = controlDefinition.ControlId;
+            control.Name = controlDefinition.Name;
+            control.NameAlias = controlDefinition.NameAlias;
+            control.Description = controlDefinition.Description;
+            control.ValidationRules = controlDefinition.Required ? RequiredRule : null;
+            control.IsActive = true;
+            control.IsDeleted = false;
 
-            if (controlDefinition.Required && !await db.WfRequestControlsValidations.IgnoreQueryFilters()
-                    .AnyAsync(x => x.RequestControlId == control.RecId && x.ValidationType == "Required", ct))
+            if (controlDefinition.Required)
             {
-                db.WfRequestControlsValidations.Add(RequestValidation(control, control.SortOrder, owner));
+                var validation = await db.WfRequestControlsValidations.IgnoreQueryFilters()
+                    .FirstOrDefaultAsync(
+                        x => x.RequestControlId == control.RecId && x.ValidationType == "Required",
+                        ct);
+                if (validation is null)
+                {
+                    validation = RequestValidation(control, control.SortOrder, owner);
+                    db.WfRequestControlsValidations.Add(validation);
+                }
+                validation.ErrorMessage = $"{controlDefinition.Name} is required.";
+                validation.ErrorMessageAlias = $"حقل {controlDefinition.NameAlias} مطلوب.";
+                validation.IsActive = true;
+                validation.IsDeleted = false;
             }
 
             if (controlDefinition.Options is { Count: > 0 })
             {
-                var existingValues = await db.WfRequestControlsOptions.IgnoreQueryFilters()
+                var existingOptions = await db.WfRequestControlsOptions.IgnoreQueryFilters()
                     .Where(x => x.RequestControlId == control.RecId)
-                    .Select(x => x.Value)
                     .ToListAsync(ct);
-                var missingOptions = controlDefinition.Options
-                    .Where(option => !existingValues.Contains(option.Value, StringComparer.OrdinalIgnoreCase))
-                    .Select((option, index) => RequestOption(
-                        control.RecId,
-                        option.Value,
-                        option.Name,
-                        existingValues.Count + index + 1,
-                        owner));
-                db.WfRequestControlsOptions.AddRange(missingOptions);
+                foreach (var (optionDefinition, optionIndex) in controlDefinition.Options.Select((option, index) => (option, index)))
+                {
+                    var option = existingOptions.FirstOrDefault(item =>
+                        string.Equals(item.Value, optionDefinition.Value, StringComparison.OrdinalIgnoreCase));
+                    if (option is null)
+                    {
+                        option = RequestOption(
+                            control.RecId,
+                            optionDefinition.Value,
+                            optionDefinition.Name,
+                            optionDefinition.NameAlias,
+                            optionIndex + 1,
+                            owner);
+                        db.WfRequestControlsOptions.Add(option);
+                    }
+                    option.Name = optionDefinition.Name;
+                    option.NameAlias = optionDefinition.NameAlias;
+                    option.SortOrder = optionIndex + 1;
+                    option.IsActive = true;
+                    option.IsDeleted = false;
+                }
             }
         }
         await db.SaveChangesAsync(ct);
@@ -136,6 +159,10 @@ public sealed partial class WfProcessSeedData
                 db.WfPerformers.Add(performer);
                 await db.SaveChangesAsync(ct);
             }
+            performer.Name = stepDefinition.PerformerName;
+            performer.PerformerTypeId = performerTypeId;
+            performer.IsActive = true;
+            performer.IsDeleted = false;
 
             var step = await db.WfSteps.IgnoreQueryFilters()
                 .SingleOrDefaultAsync(x => x.ProcessId == process.RecId && x.Code == stepDefinition.Code, ct);
@@ -146,7 +173,8 @@ public sealed partial class WfProcessSeedData
                     ProcessId = process.RecId,
                     Code = stepDefinition.Code,
                     Name = stepDefinition.Name,
-                    Description = stepDefinition.Name,
+                    NameAlias = stepDefinition.NameAlias,
+                    Description = stepDefinition.NameAlias,
                     SortOrder = checked((byte)(index + 1)),
                     IsActive = true,
                     CreatedBy = owner,
@@ -155,6 +183,12 @@ public sealed partial class WfProcessSeedData
                 db.WfSteps.Add(step);
                 await db.SaveChangesAsync(ct);
             }
+            step.Name = stepDefinition.Name;
+            step.NameAlias = stepDefinition.NameAlias;
+            step.Description = stepDefinition.NameAlias;
+            step.SortOrder = checked((byte)(index + 1));
+            step.IsActive = true;
+            step.IsDeleted = false;
 
             var activityCode = $"{stepDefinition.Code}_ACTIVITY";
             var activity = await db.WfActivities.IgnoreQueryFilters()
@@ -167,8 +201,9 @@ public sealed partial class WfProcessSeedData
                     ActivityTypeId = activityTypeId,
                     PerformerId = performer.RecId,
                     Code = activityCode,
-                    Name = stepDefinition.Name,
-                    Description = stepDefinition.Name,
+                    Name = $"Review and approve - {stepDefinition.Name}",
+                    NameAlias = $"مراجعة واعتماد - {stepDefinition.NameAlias}",
+                    Description = stepDefinition.NameAlias,
                     ShowPreviousDocs = true,
                     ShowPreviousSteps = true,
                     AlertingBySystem = true,
@@ -179,23 +214,77 @@ public sealed partial class WfProcessSeedData
                 db.WfActivities.Add(activity);
                 await db.SaveChangesAsync(ct);
             }
+            activity.ActivityTypeId = activityTypeId;
+            activity.PerformerId = performer.RecId;
+            activity.Name = $"Review and approve - {stepDefinition.Name}";
+            activity.NameAlias = $"مراجعة واعتماد - {stepDefinition.NameAlias}";
+            activity.Description = stepDefinition.NameAlias;
+            activity.IsActive = true;
+            activity.IsDeleted = false;
 
             var approvalCode = $"{activityCode}_DECISION";
-            if (!await db.WfActivityControls.IgnoreQueryFilters()
-                    .AnyAsync(x => x.ActivityId == activity.RecId && x.Code == approvalCode, ct))
+            var activityControls = await db.WfActivityControls.IgnoreQueryFilters()
+                .Where(x => x.ActivityId == activity.RecId && x.Code != null)
+                .ToListAsync(ct);
+            var approval = activityControls.FirstOrDefault(x => x.Code == approvalCode);
+            if (approval is null)
             {
-                var approval = ActivityControl(
-                    process.RecId, activity.RecId, 6, approvalCode, "الاعتماد", 1, owner, true);
-                var notes = ActivityControl(
-                    process.RecId, activity.RecId, 3, $"{activityCode}_NOTES", "ملاحظات", 2, owner, false);
-                db.WfActivityControls.AddRange(approval, notes);
-                await db.SaveChangesAsync(ct);
-                db.WfActivityControlsOptions.AddRange(
-                    ActivityOption(approval.RecId, "نعم", "نعم", 1, owner),
-                    ActivityOption(approval.RecId, "لا", "لا", 2, owner));
-                db.WfActivityControlsValidations.Add(ActivityValidation(approval, owner));
+                approval = ActivityControl(
+                    process.RecId, activity.RecId, 6, approvalCode, "Approval", "الاعتماد", 1, owner, true);
+                db.WfActivityControls.Add(approval);
                 await db.SaveChangesAsync(ct);
             }
+            approval.Name = "Approval";
+            approval.NameAlias = "الاعتماد";
+            approval.Description = "Approval decision";
+            approval.IsActive = true;
+            approval.IsDeleted = false;
+
+            var notesCode = $"{activityCode}_NOTES";
+            var notes = activityControls.FirstOrDefault(x => x.Code == notesCode);
+            if (notes is null)
+            {
+                notes = ActivityControl(
+                    process.RecId, activity.RecId, 3, notesCode, "Notes", "ملاحظات", 2, owner, false);
+                db.WfActivityControls.Add(notes);
+            }
+            notes.Name = "Notes";
+            notes.NameAlias = "ملاحظات";
+            notes.Description = "Approval notes";
+            notes.IsActive = true;
+            notes.IsDeleted = false;
+
+            var approvalOptions = await db.WfActivityControlsOptions.IgnoreQueryFilters()
+                .Where(x => x.ActivityControlId == approval.RecId)
+                .ToListAsync(ct);
+            foreach (var optionDefinition in new[] { (Value: "نعم", Name: "Yes", NameAlias: "نعم", Order: 1), (Value: "لا", Name: "No", NameAlias: "لا", Order: 2) })
+            {
+                var option = approvalOptions.FirstOrDefault(x => x.Value == optionDefinition.Value);
+                if (option is null)
+                {
+                    option = ActivityOption(approval.RecId, optionDefinition.Value, optionDefinition.Name,
+                        optionDefinition.NameAlias, optionDefinition.Order, owner);
+                    db.WfActivityControlsOptions.Add(option);
+                }
+                option.Name = optionDefinition.Name;
+                option.NameAlias = optionDefinition.NameAlias;
+                option.SortOrder = optionDefinition.Order;
+                option.IsActive = true;
+                option.IsDeleted = false;
+            }
+
+            var activityValidation = await db.WfActivityControlsValidations.IgnoreQueryFilters()
+                .FirstOrDefaultAsync(x => x.ActivityControlId == approval.RecId && x.ValidationType == "Required", ct);
+            if (activityValidation is null)
+            {
+                activityValidation = ActivityValidation(approval, owner);
+                db.WfActivityControlsValidations.Add(activityValidation);
+            }
+            activityValidation.Name = "Approval required";
+            activityValidation.NameAlias = "الاعتماد مطلوب";
+            activityValidation.IsActive = true;
+            activityValidation.IsDeleted = false;
+            await db.SaveChangesAsync(ct);
         }
 
         await SeedPrintTemplateAsync(db, process, definition, controlsByCode, owner, ct);
@@ -222,6 +311,7 @@ public sealed partial class WfProcessSeedData
                 ProcessId = process.RecId,
                 Code = definition.PrintTemplateCode,
                 Name = definition.Name,
+                NameAlias = definition.NameAlias,
                 Description = definition.Description,
                 PageSize = "A4",
                 Orientation = "portrait",
@@ -235,6 +325,10 @@ public sealed partial class WfProcessSeedData
             db.WfPrintTemplates.Add(template);
             await db.SaveChangesAsync(ct);
         }
+
+        template.Name = definition.Name;
+        template.NameAlias = definition.NameAlias;
+        template.Description = definition.Description;
 
         var version = await db.WfPrintTemplateVersions.IgnoreQueryFilters()
             .SingleOrDefaultAsync(x => x.TemplateId == template.RecId && x.VersionNo == 1, ct);
@@ -270,8 +364,7 @@ public sealed partial class WfProcessSeedData
             template.Status = WfPrintTemplateStatus.Published;
             template.IsActive = true;
             template.IsDeleted = false;
-            await db.SaveChangesAsync(ct);
         }
+        await db.SaveChangesAsync(ct);
     }
 }
-

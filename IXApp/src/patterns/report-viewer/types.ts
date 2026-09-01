@@ -75,5 +75,5 @@ export interface ReportViewerProps {
   onClose: () => void;
   onReload?: () => void | Promise<void>;
   onPrint: () => void;
-  onExport: (format: ReportExportFormat) => void;
+  onExport: (format: ReportExportFormat) => void | Promise<void>;
 }

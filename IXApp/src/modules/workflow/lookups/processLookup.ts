@@ -2,7 +2,8 @@ import { wfProcessApi } from '../api/wfProcessApi';
 
 export const processLookupColumns = [
   { field: 'code', header: 'wfProcess.fields.code', width: 120 },
-  { field: 'name', header: 'wfProcess.fields.name', flex: 1 },
+  { field: 'name', header: 'wfProcess.fields.name', flex: 1, showInRtl: false },
+  { field: 'nameAlias', header: 'workflowSetup.fields.nameAlias', flex: 1, showInLtr: false },
 ] as const;
 
 export const fetchProcessPage = async ({
@@ -20,7 +21,7 @@ export const fetchProcessPage = async ({
   const query = search.trim().toLocaleLowerCase();
   const filtered = query
     ? processes.filter((process) =>
-        `${process.code ?? ''} ${process.name ?? ''}`
+        `${process.code ?? ''} ${process.name ?? ''} ${process.nameAlias ?? ''}`
           .toLocaleLowerCase()
           .includes(query)
       )

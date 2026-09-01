@@ -5,7 +5,8 @@ import CalendarMonthOutlined from '@mui/icons-material/CalendarMonthOutlined';
 import StarBorderOutlined from '@mui/icons-material/StarBorderOutlined';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
+import { localizedName } from '@shared/utilities/localizedName';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
 import type { DetailSectionConfig, EnterpriseListDetailsConfig } from '@patterns/list-details/types';
 import { wfCategoryApi, type WfCategoryRecord } from '../api/wfCategoryApi';
@@ -24,7 +25,7 @@ const processIcon = (index: number) => {
 
 function CategoryRequestForm({ category }: { category: WfCategoryRecord }) {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, isRtl } = useAppTranslation();
   const processes = useQuery({
     queryKey: ['workflow', 'request-submission-processes', category.recId],
     queryFn: async ({ signal }) =>
@@ -50,7 +51,7 @@ function CategoryRequestForm({ category }: { category: WfCategoryRecord }) {
                     '&:hover': { borderColor: 'primary.main', bgcolor: 'rgba(99, 91, 255, 0.08)', color: 'primary.main' } }}
                 >
                   {processIcon(index)}
-                  <Typography dir="auto" sx={{ fontWeight: 700, textAlign: 'center' }}>{process.name || process.code}</Typography>
+                  <Typography dir="auto" sx={{ fontWeight: 700, textAlign: 'center' }}>{localizedName(process, isRtl) || process.code}</Typography>
                   {process.description && <Typography dir="auto" variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>{process.description}</Typography>}
                 </Button>
               );
@@ -66,7 +67,7 @@ function CategoryRequestForm({ category }: { category: WfCategoryRecord }) {
 }
 
 export function RequestSubmissionPage(): React.ReactElement {
-  const { t } = useTranslation();
+  const { t, isRtl } = useAppTranslation();
   const categories = useQuery({
     queryKey: ['workflow', 'request-submission-categories'],
     queryFn: ({ signal }) => wfCategoryApi.list(signal),
@@ -83,21 +84,21 @@ export function RequestSubmissionPage(): React.ReactElement {
       loading: categories.isLoading, error: categories.error instanceof Error ? categories.error.message : null,
       refresh: async () => { await categories.refetch(); } },
     createRecord: emptyCategory,
-    getPrimaryText: (category) => category.name || category.code || t('pages.requestSubmission.unnamedCategory'),
+    getPrimaryText: (category) => localizedName(category, isRtl) || category.code || t('pages.requestSubmission.unnamedCategory'),
     getSecondaryText: (category) => category.description || category.code || '',
-    matchesSearch: (category, query) => `${category.code ?? ''} ${category.name ?? ''} ${category.description ?? ''}`
+    matchesSearch: (category, query) => `${category.code ?? ''} ${category.name ?? ''} ${category.nameAlias ?? ''} ${category.description ?? ''}`
       .toLocaleLowerCase().includes(query.toLocaleLowerCase()),
     getValues: () => ({}),
     setValues: (category) => category,
     headerFields: [
       { id: 'code', label: t('pages.requestSubmission.categoryCode'), disabled: true, getValue: (category) => category.code ?? '', setValue: (category) => category },
-      { id: 'name', label: t('pages.requestSubmission.category'), disabled: true, getValue: (category) => category.name ?? '', setValue: (category) => category },
+      { id: 'name', label: t('pages.requestSubmission.category'), disabled: true, getValue: (category) => localizedName(category, isRtl), setValue: (category) => category },
       { id: 'requestDate', label: t('pages.requestSubmission.requestDate'), disabled: true, getValue: () => requestDate, setValue: (category) => category },
     ],
     sections: ({ record }): DetailSectionConfig[] => [{ id: 'request-submission', title: t('pages.requestSubmission.title'),
       defaultExpanded: true, content: <CategoryRequestForm key={record.id} category={record} /> }],
-    advancedFilter: { fieldLabel: t('pages.requestSubmission.category'), getValue: (category) => category.name,
-      matches: (category, value) => (category.name ?? '').toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()) },
+    advancedFilter: { fieldLabel: t('pages.requestSubmission.category'), getValue: (category) => localizedName(category, isRtl),
+      matches: (category, value) => localizedName(category, isRtl).toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()) },
     showAttachmentAction: false,
   };
   return <ListDetailsPage variant="enterprise" title={t('pages.requestSubmission.title')} config={config} />;

@@ -42,26 +42,26 @@ public sealed class OthersDBWorkflowMasterFromSeeder : OthersDBSeedData
         // partially committed, or previously failed.
         await AddMissingAsync(db, db.WfPriorities, new[]
         {
-            new WfPriority { RecId=1,Code="LOW",Name="Low",Description="Low Priority",SortOrder=1,IsActive=true,CreatedBy=owner,OwnerAccountId=owner },
-            new WfPriority { RecId=2,Code="MED",Name="Medium",Description="Medium Priority",SortOrder=2,IsActive=true,CreatedBy=owner,OwnerAccountId=owner },
-            new WfPriority { RecId=3,Code="HIGH",Name="High",Description="High Priority",SortOrder=3,IsActive=true,CreatedBy=owner,OwnerAccountId=owner }
+            new WfPriority { RecId=1,Code="LOW",Name="Low",NameAlias="منخفض",Description="Low Priority",SortOrder=1,IsActive=true,CreatedBy=owner,OwnerAccountId=owner },
+            new WfPriority { RecId=2,Code="MED",Name="Medium",NameAlias="متوسط",Description="Medium Priority",SortOrder=2,IsActive=true,CreatedBy=owner,OwnerAccountId=owner },
+            new WfPriority { RecId=3,Code="HIGH",Name="High",NameAlias="مرتفع",Description="High Priority",SortOrder=3,IsActive=true,CreatedBy=owner,OwnerAccountId=owner }
         }, "WfPriorities", ct);
         await AddMissingAsync(db, db.WfProcessTypes, new[]
         {
-            new WfProcessType { RecId=1,Code="STD",Name="Standard",IsActive=true,CreatedBy=owner,OwnerAccountId=owner },
-            new WfProcessType { RecId=2,Code="REV",Name="Review",IsActive=true,CreatedBy=owner,OwnerAccountId=owner },
-            new WfProcessType { RecId=3,Code="APP",Name="Approval",IsActive=true,CreatedBy=owner,OwnerAccountId=owner }
+            new WfProcessType { RecId=1,Code="STD",Name="Standard",NameAlias="قياسي",IsActive=true,CreatedBy=owner,OwnerAccountId=owner },
+            new WfProcessType { RecId=2,Code="REV",Name="Review",NameAlias="مراجعة",IsActive=true,CreatedBy=owner,OwnerAccountId=owner },
+            new WfProcessType { RecId=3,Code="APP",Name="Approval",NameAlias="اعتماد",IsActive=true,CreatedBy=owner,OwnerAccountId=owner }
         }, "WfProcessTypes", ct);
         await AddMissingAsync(db, db.WfPerformerTypes, new[]
         {
-            new WfPerformerType { RecId=1,Code="RELATIONAL",Name="Relational",SortOrder=1,IsActive=true,CreatedBy=owner,OwnerAccountId=owner }
+            new WfPerformerType { RecId=1,Code="RELATIONAL",Name="Relational",NameAlias="ارتباطي",SortOrder=1,IsActive=true,CreatedBy=owner,OwnerAccountId=owner }
         }, "WfPerformerType", ct);
 
-        await AddMissingAsync(db, db.WfDataTypes, data.DataTypes.Select(x => new WfDataType { RecId=x.Id,Code=$"DT{x.Id}",Name=Text(x.Name,255),Description=Text(x.Description,1000),SortOrder=x.Id,IsActive=true,CreatedBy=owner,OwnerAccountId=owner }), "WfDataTypes", ct);
-        await AddMissingAsync(db, db.WfControls, data.Controls.Select(x => new WfControl { RecId=x.Id,Code=Text(x.Code,50)??$"CTRL{x.Id}",Name=Text(x.Name,255),Description=Text(x.Description,1000),ControlType=Text(x.ControlType,255)??"TextBox",SortOrder=x.Id,IsActive=true,CreatedBy=owner,OwnerAccountId=owner }), "WfControls", ct);
-        await AddMissingAsync(db, db.WfActivityTypes, data.ActivityTypes.GroupBy(x=>x.Id).Select(g=>g.First()).Select(x => new WfActivityType { RecId=x.Id,Code=$"AT{x.Id}",Name=Text(x.Name,255),Description=Text(x.Description,1000),SortOrder=x.Id,IsActive=true,CreatedBy=owner,OwnerAccountId=owner }), "WfActivityTypes", ct);
-        await AddMissingAsync(db, db.WfOperators, data.Operators.Select(x => new WfOperator { RecId=x.Id,Code=$"OP{x.Id}",Name=Text(x.Name,255),Description=Text(x.Description,1000),SortOrder=x.Id,IsActive=x.Active,CreatedBy=owner,OwnerAccountId=owner }), "WfOperators", ct);
-        await AddMissingAsync(db, db.WfCategories, data.Categories.Select(x => new WfCategory { RecId=x.Id,Code=$"CAT{x.Id}",Name=Text(x.Name,255),Description=Text(x.Description,1000),SortOrder=(byte)Math.Min(x.Id,byte.MaxValue),SysField=x.SysField,IsActive=x.Active,CreatedBy=owner,OwnerAccountId=owner }), "WfCategories", ct);
+        await AddMissingAsync(db, db.WfDataTypes, data.DataTypes.Select(x => new WfDataType { RecId=x.Id,Code=$"DT{x.Id}",Name=Text(x.Name,255),NameAlias=Text(x.NameAlias,255),Description=Text(x.Description,1000),SortOrder=x.Id,IsActive=true,CreatedBy=owner,OwnerAccountId=owner }), "WfDataTypes", ct);
+        await AddMissingAsync(db, db.WfControls, data.Controls.Select(x => new WfControl { RecId=x.Id,Code=Text(x.Code,50)??$"CTRL{x.Id}",Name=Text(x.Name,255),NameAlias=Text(x.NameAlias,255),Description=Text(x.Description,1000),ControlType=Text(x.ControlType,255)??"TextBox",SortOrder=x.Id,IsActive=true,CreatedBy=owner,OwnerAccountId=owner }), "WfControls", ct);
+        await AddMissingAsync(db, db.WfActivityTypes, data.ActivityTypes.GroupBy(x=>x.Id).Select(g=>g.First()).Select(x => new WfActivityType { RecId=x.Id,Code=$"AT{x.Id}",Name=Text(x.Name,255),NameAlias=Text(x.NameAlias,255),Description=Text(x.Description,1000),SortOrder=x.Id,IsActive=true,CreatedBy=owner,OwnerAccountId=owner }), "WfActivityTypes", ct);
+        await AddMissingAsync(db, db.WfOperators, data.Operators.Select(x => new WfOperator { RecId=x.Id,Code=$"OP{x.Id}",Name=Text(x.Name,255),NameAlias=Text(x.NameAlias,255),Description=Text(x.Description,1000),SortOrder=x.Id,IsActive=x.Active,CreatedBy=owner,OwnerAccountId=owner }), "WfOperators", ct);
+        await AddMissingAsync(db, db.WfCategories, data.Categories.Select(x => new WfCategory { RecId=x.Id,Code=$"CAT{x.Id}",Name=Text(x.Name,255),NameAlias=Text(x.NameAlias,255),Description=Text(x.Description,1000),SortOrder=(byte)Math.Min(x.Id,byte.MaxValue),SysField=x.SysField,IsActive=x.Active,CreatedBy=owner,OwnerAccountId=owner }), "WfCategories", ct);
 
         await AddMissingAsync(db, db.WfPerformers, data.Performers.Select(x => new WfPerformer { RecId=x.Id,Code=$"PERF{x.Id}",Name=Text(x.Name,255),PerformerTypeId=1,RelatedField=x.RelatedField,IsEmployee=x.IsEmployee,IsManager1=x.IsManager1,IsManager2=x.IsManager2,IsManager3=x.IsManager3,IsManager4=x.IsManager4,IsActive=x.Active,CreatedBy=owner,OwnerAccountId=owner }), "WfPerformers", ct);
         //await AddMissingAsync(db, db.WfProcesses, data.Processes.Select(x => new WfProcess { RecId=x.Id,Code=$"PROC{x.Id}",Name=Text(x.Name,255),Description=Text(x.Description,1000),CategoryId=x.CategoryId,PriorityId=x.PriorityId,ProcessTypeId=x.ProcessTypeId,CanRepeat=x.CanRepeat,SysField=x.SysField,Score=x.Score,IsActive=x.Active,CreatedBy=owner,OwnerAccountId=owner }), "WfProcesses", ct);
@@ -120,59 +120,59 @@ public sealed class OthersDBWorkflowMasterFromSeeder : OthersDBSeedData
     {
         const string sql = """
             SELECT
-              JSON_QUERY((SELECT DataTypeId AS Id,
-                                  COALESCE(NULLIF(DataTypeNameAR, N''), DataTypeName) AS Name,
+              JSON_QUERY((SELECT DataTypeId AS Id, DataTypeName AS Name,
+                                  NULLIF(DataTypeNameAR, N'') AS NameAlias,
                                   COALESCE(DescriptionAR, Description) AS Description
                            FROM dbo.WfDataTypes FOR JSON PATH)) AS DataTypes,
-              JSON_QUERY((SELECT ControlId AS Id, Code,
-                                  COALESCE(NULLIF(ControlNameAR, N''), ControlName) AS Name,
+              JSON_QUERY((SELECT ControlId AS Id, Code, ControlName AS Name,
+                                  NULLIF(ControlNameAR, N'') AS NameAlias,
                                   Description, ControlType
                            FROM dbo.WfControls FOR JSON PATH)) AS Controls,
-              JSON_QUERY((SELECT ActivityTypeId AS Id,
-                                  COALESCE(NULLIF(ActivityTypeNameAR, N''), ActivityTypeName) AS Name,
+              JSON_QUERY((SELECT ActivityTypeId AS Id, ActivityTypeName AS Name,
+                                  NULLIF(ActivityTypeNameAR, N'') AS NameAlias,
                                   COALESCE(DescriptionAR, Description) AS Description
                            FROM dbo.WfActivityTypes FOR JSON PATH)) AS ActivityTypes,
-              JSON_QUERY((SELECT OperatorId AS Id,
-                                  COALESCE(NULLIF(OperatorNameAR, N''), OperatorName) AS Name,
+              JSON_QUERY((SELECT OperatorId AS Id, OperatorName AS Name,
+                                  NULLIF(OperatorNameAR, N'') AS NameAlias,
                                   COALESCE(DescriptionAR, Description) AS Description,
                                   Activated AS Active
                            FROM dbo.WfOperators FOR JSON PATH)) AS Operators,
-              JSON_QUERY((SELECT CategoryId AS Id,
-                                  COALESCE(NULLIF(CategoryNameAR, N''), CategoryName) AS Name,
+              JSON_QUERY((SELECT CategoryId AS Id, CategoryName AS Name,
+                                  NULLIF(CategoryNameAR, N'') AS NameAlias,
                                   COALESCE(DescriptionAR, Description) AS Description,
                                   Activated AS Active, sysField AS SysField
                            FROM dbo.WfCategories FOR JSON PATH)) AS Categories,
-              JSON_QUERY((SELECT PerformerId AS Id,
-                                  COALESCE(NULLIF(PerformerNameAR, N''), PerformerName) AS Name,
+              JSON_QUERY((SELECT PerformerId AS Id, PerformerName AS Name,
+                                  NULLIF(PerformerNameAR, N'') AS NameAlias,
                                   COALESCE(DescriptionAR, Description) AS Description,
                                   Activated AS Active, RelatedField, IsEmployee,
                                   IsManager1, IsManager2, IsManager3, IsManager4
                            FROM dbo.WfPerformers FOR JSON PATH)) AS Performers,
-              JSON_QUERY((SELECT ProcessId AS Id,
-                                  COALESCE(NULLIF(ProcessNameAR, N''), ProcessName) AS Name,
+              JSON_QUERY((SELECT ProcessId AS Id, ProcessName AS Name,
+                                  NULLIF(ProcessNameAR, N'') AS NameAlias,
                                   COALESCE(DescriptionAR, Description) AS Description,
                                   CategoryId, Activated AS Active, CanRepeat,
                                   sysField AS SysField, COALESCE(PriorityId, 1) AS PriorityId,
                                   CONVERT(decimal(18,2), 0) AS Score,
                                   CONVERT(tinyint, 1) AS ProcessTypeId
                            FROM dbo.WfProcesses FOR JSON PATH)) AS Processes,
-              JSON_QUERY((SELECT StepId AS Id, ProcessId,
-                                  COALESCE(NULLIF(StepNameAR, N''), StepName) AS Name,
+              JSON_QUERY((SELECT StepId AS Id, ProcessId, StepName AS Name,
+                                  NULLIF(StepNameAR, N'') AS NameAlias,
                                   COALESCE(DescriptionAR, Description) AS Description,
                                   StepOrder AS SortOrder, sysField AS SysField,
                                   Activated AS Active, PeriodHrs AS AutoPassingHrs,
                                   CONVERT(bit, 0) AS AllMandatory,
                                   CONVERT(decimal(18,2), 0) AS Score
                            FROM dbo.WfSteps FOR JSON PATH)) AS Steps,
-              JSON_QUERY((SELECT VariableId AS Id, ProcessId,
-                                  COALESCE(NULLIF(VariableNameAR, N''), VariableName) AS Name,
+              JSON_QUERY((SELECT VariableId AS Id, ProcessId, VariableName AS Name,
+                                  NULLIF(VariableNameAR, N'') AS NameAlias,
                                   COALESCE(DescriptionAR, Description) AS Description,
                                   DataTypeId, Activated AS Active,
                                   CONVERT(tinyint, 0) AS SortOrder
                            FROM dbo.WfVariables FOR JSON PATH)) AS Variables,
               JSON_QUERY((SELECT RequestControlId AS Id, RelatedObjectId AS ProcessId,
                                   ControlId,
-                                  COALESCE(NULLIF(ControlLabelAR, N''), ControlLabel) AS Name,
+                                  ControlLabel AS Name, NULLIF(ControlLabelAR, N'') AS NameAlias,
                                   CONVERT(nvarchar(max), NULL) AS Description,
                                   ControlOrder AS SortOrder, Activated AS Active,
                                   IsMandatory AS Mandatory,
@@ -180,7 +180,7 @@ public sealed class OthersDBWorkflowMasterFromSeeder : OthersDBSeedData
                                   CONVERT(decimal(18,2), 0) AS Score
                            FROM dbo.WfRequestControls FOR JSON PATH)) AS RequestControls,
               JSON_QUERY((SELECT a.ActivityId AS Id, a.StepId,
-                                  COALESCE(NULLIF(a.ActivityNameAR, N''), a.ActivityName) AS Name,
+                                  a.ActivityName AS Name, NULLIF(a.ActivityNameAR, N'') AS NameAlias,
                                   COALESCE(a.DescriptionAR, a.Description) AS Description,
                                   a.PerformerId, a.Activated AS Active,
                                   a.RequiredDocs AS MandatoryDocs,
@@ -194,7 +194,7 @@ public sealed class OthersDBWorkflowMasterFromSeeder : OthersDBSeedData
                            FROM dbo.WfActivities a FOR JSON PATH)) AS Activities,
               JSON_QUERY((SELECT ac.ActivityControlID AS Id, s.ProcessId,
                                   ac.ControlID AS ControlId,
-                                  COALESCE(NULLIF(ac.ControlLabelAR, N''), ac.ControlLabel) AS Name,
+                                  ac.ControlLabel AS Name, NULLIF(ac.ControlLabelAR, N'') AS NameAlias,
                                   CONVERT(nvarchar(max), NULL) AS Description,
                                   TRY_CONVERT(tinyint, ac.ControlOrder) AS SortOrder,
                                   ac.Activated AS Active, ac.IsMandatory AS Mandatory,
@@ -263,15 +263,15 @@ public sealed class OthersDBWorkflowMasterFromSeeder : OthersDBSeedData
     }
 
     private sealed class SeedData { public BasicByte[] DataTypes{get;set;}=[];public Control[] Controls{get;set;}=[];public BasicByte[] ActivityTypes{get;set;}=[];public ActiveByte[] Operators{get;set;}=[];public Category[] Categories{get;set;}=[];public Performer[] Performers{get;set;}=[];public Process[] Processes{get;set;}=[];public Step[] Steps{get;set;}=[];public Variable[] Variables{get;set;}=[];public RequestControl[] RequestControls{get;set;}=[];public Activity[] Activities{get;set;}=[];public ActivityControl[] ActivityControls{get;set;}=[];public Mapping[] ActivityMappings{get;set;}=[];public RequestMapping[] RequestMappings{get;set;}=[];public Transition[] Transitions{get;set;}=[];public PerformerUser[] PerformerUsers{get;set;}=[];public UsersProcess[] UsersProcesses{get;set;}=[]; }
-    private class BasicByte {public byte Id{get;set;}public string? Name{get;set;}public string? Description{get;set;}}
+    private class BasicByte {public byte Id{get;set;}public string? Name{get;set;}public string? NameAlias{get;set;}public string? Description{get;set;}}
     private sealed class Control:BasicByte {public string? Code{get;set;}public string? ControlType{get;set;}}
     private sealed class ActiveByte:BasicByte {public bool Active{get;set;}}
-    private sealed class Category {public short Id{get;set;}public string? Name{get;set;}public string? Description{get;set;}public bool Active{get;set;}public bool SysField{get;set;}}
-    private sealed class Performer {public long Id{get;set;}public string? Name{get;set;}public string? Description{get;set;}public bool Active{get;set;}public long? RelatedField{get;set;}public bool IsEmployee{get;set;}public bool IsManager1{get;set;}public bool IsManager2{get;set;}public bool IsManager3{get;set;}public bool IsManager4{get;set;}}
+    private sealed class Category {public short Id{get;set;}public string? Name{get;set;}public string? NameAlias{get;set;}public string? Description{get;set;}public bool Active{get;set;}public bool SysField{get;set;}}
+    private sealed class Performer {public long Id{get;set;}public string? Name{get;set;}public string? NameAlias{get;set;}public string? Description{get;set;}public bool Active{get;set;}public long? RelatedField{get;set;}public bool IsEmployee{get;set;}public bool IsManager1{get;set;}public bool IsManager2{get;set;}public bool IsManager3{get;set;}public bool IsManager4{get;set;}}
     private sealed class Process {public long Id{get;set;}public string? Name{get;set;}public string? Description{get;set;}public short CategoryId{get;set;}public bool Active{get;set;}public bool CanRepeat{get;set;}public bool SysField{get;set;}public byte PriorityId{get;set;}public decimal Score{get;set;}public byte ProcessTypeId{get;set;}}
     private sealed class Step {public long Id{get;set;}public long ProcessId{get;set;}public string? Name{get;set;}public string? Description{get;set;}public byte SortOrder{get;set;}public bool SysField{get;set;}public bool Active{get;set;}public byte AutoPassingHrs{get;set;}public bool AllMandatory{get;set;}public decimal Score{get;set;}}
     private sealed class Variable {public long Id{get;set;}public long ProcessId{get;set;}public string? Name{get;set;}public string? Description{get;set;}public byte DataTypeId{get;set;}public bool Active{get;set;}public byte SortOrder{get;set;}}
-    private class RequestControl {public long Id{get;set;}public long ProcessId{get;set;}public byte ControlId{get;set;}public string? Name{get;set;}public string? Description{get;set;}public byte? SortOrder{get;set;}public bool Active{get;set;}public bool Mandatory{get;set;}public string? ExtendedProperties{get;set;}public decimal Score{get;set;}}
+    private class RequestControl {public long Id{get;set;}public long ProcessId{get;set;}public byte ControlId{get;set;}public string? Name{get;set;}public string? NameAlias{get;set;}public string? Description{get;set;}public byte? SortOrder{get;set;}public bool Active{get;set;}public bool Mandatory{get;set;}public string? ExtendedProperties{get;set;}public decimal Score{get;set;}}
     private sealed class Activity {public long Id{get;set;}public long StepId{get;set;}public string? Name{get;set;}public string? Description{get;set;}public long PerformerId{get;set;}public bool Active{get;set;}public bool MandatoryDocs{get;set;}public bool ShowPreviousDocs{get;set;}public bool ShowPreviousSteps{get;set;}public bool AlertingByEmail{get;set;}public bool AlertingBySms{get;set;}public bool AlertingBySystem{get;set;}public bool AutoPassEnabled{get;set;}public byte AutoPassingHrs{get;set;}public decimal Score{get;set;}public string? ExtendedProperties{get;set;}}
     private sealed class ActivityControl:RequestControl {public long ActivityId{get;set;}}
     private class Mapping {public long Id{get;set;}public long ActivityControlId{get;set;}public long VariableId{get;set;}public bool Active{get;set;}public byte SortOrder{get;set;}}

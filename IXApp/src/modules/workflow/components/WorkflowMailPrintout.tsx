@@ -35,7 +35,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return <Box className="printout-section"><Typography className="printout-color" sx={{ mb: 0.75, px: 1, py: 0.65, bgcolor: '#174f82', color: '#fff', fontSize: 11, fontWeight: 700 }}>{title}</Typography>{children}</Box>;
 }
 
-export function WorkflowMailPrintoutBody({ request, details, showNotes = true }: { request: WfRequestRecord; details: MailRequestDetailsDto; showNotes?: boolean }): React.ReactElement {
+export function WorkflowMailPrintoutBody({ request, details, processName, showNotes = true }: { request: WfRequestRecord; details: MailRequestDetailsDto; processName?: string; showNotes?: boolean }): React.ReactElement {
   const { t, currentLanguage, isRtl } = useAppTranslation();
   const direction = isRtl ? 'rtl' : 'ltr';
   return (
@@ -43,7 +43,7 @@ export function WorkflowMailPrintoutBody({ request, details, showNotes = true }:
       <Section title={t('mail.print.requestInformation')}>
         <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 1 }}>
           <Field label={t('mail.fields.request')} value={request.code || `#${request.recId}`} />
-          <Field label={t('mail.fields.process')} value={details.processName} />
+          <Field label={t('mail.fields.process')} value={processName || details.processName} />
           <Field label={t('mail.fields.status')} value={getLocalizedMailStatus(t, details.status)} />
           <Field label={t('mail.fields.requestDate')} value={formatDateTime(details.requestDate, currentLanguage.code)} />
           <Field label={t('mail.print.employeeName')} value={details.employeeName} />

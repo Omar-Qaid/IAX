@@ -18,11 +18,28 @@ describe('ConfirmationDialog', () => {
       />
     );
 
-    expect(screen.getByText('Delete Record')).toBeDefined();
-    expect(screen.getByText('Are you sure you want to delete this customer?')).toBeDefined();
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveAccessibleName('Delete Record');
+    expect(dialog).toHaveAccessibleDescription('Are you sure you want to delete this customer?');
 
-    const confirmButton = screen.getByText('Confirm');
+    const confirmButton = screen.getByRole('button', { name: 'Confirm' });
     fireEvent.click(confirmButton);
     expect(handleConfirm).toHaveBeenCalledTimes(1);
+  });
+
+  it('locks the dialog and shows progress while the action is running', () => {
+    render(
+      <ConfirmationDialog
+        open
+        message="Publishing template"
+        onConfirm={vi.fn()}
+        onClose={vi.fn()}
+        loading
+      />
+    );
+
+    expect(screen.getByRole('button', { name: 'Confirm' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 });

@@ -22,6 +22,7 @@ import { ConfirmationDialog } from '@shared/components/dialogs/ConfirmationDialo
 import { useNotifications } from '@shared/hooks/useNotifications';
 import { useLocalStorage } from '@shared/hooks/useLocalStorage';
 import { SimpleListPage } from '@patterns/simple-list/SimpleListPage';
+import { localizedName } from '@shared/utilities/localizedName';
 import { wfProcessApi, type WfProcessRecord } from '../../api/wfProcessApi';
 import { fetchProcessPage, processLookupColumns } from '../../lookups/processLookup';
 import { printTemplateApi } from '../api/printTemplateApi';
@@ -54,7 +55,7 @@ const emptyDraft = (language: PrintTemplateLanguage): SavePrintTemplateInput => 
 });
 
 export function PrintTemplatesPage(): React.ReactElement {
-  const { t, currentLanguage } = useAppTranslation();
+  const { t, currentLanguage, isRtl } = useAppTranslation();
   const { notifyError, notifySuccess } = useNotifications();
   const processes = useQuery({
     queryKey: ['workflow', 'processes', 'print-templates'],
@@ -173,7 +174,13 @@ export function PrintTemplatesPage(): React.ReactElement {
   const columns = React.useMemo<ColumnDef<PrintTemplateRow>[]>(
     () => [
       { field: 'code', headerName: 'printTemplates.fields.code', width: 150, pinned: 'left' },
-      { field: 'name', headerName: 'printTemplates.fields.name', minWidth: 220, flex: 1 },
+      {
+        field: 'name',
+        headerName: 'printTemplates.fields.name',
+        minWidth: 220,
+        flex: 1,
+        renderCell: ({ row }) => localizedName(row, isRtl),
+      },
       {
         field: 'status',
         headerName: 'printTemplates.fields.status',
@@ -207,7 +214,7 @@ export function PrintTemplatesPage(): React.ReactElement {
         renderCell: ({ row }) => t(`printTemplates.orientation.${row.orientation}`),
       },
     ],
-    [t]
+    [isRtl, t]
   );
 
   const rows = React.useMemo<PrintTemplateRow[]>(
@@ -220,7 +227,7 @@ export function PrintTemplatesPage(): React.ReactElement {
     ? {
         title: t(`printTemplates.confirm.${confirmAction}.title`),
         message: t(`printTemplates.confirm.${confirmAction}.message`, {
-          name: selected?.name ?? '',
+          name: localizedName(selected, isRtl),
         }),
         confirmLabel: t(`printTemplates.actions.${confirmAction}`),
       }
@@ -318,6 +325,7 @@ export function PrintTemplatesPage(): React.ReactElement {
         fetchById={async (value) => wfProcessApi.getById(Number(value)).catch(() => null)}
         valueField="recId"
         labelField="name"
+        labelFieldAr="nameAlias"
         pageSize={25}
       />
     </Box>

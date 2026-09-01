@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Button, Divider, IconButton, Menu, MenuItem, Paper, Stack, TextField, Tooltip, Typography } from '@mui/material';
+import { Box, Button, CircularProgress, Divider, IconButton, ListItemIcon, Menu, MenuItem, Paper, Stack, TextField, Tooltip, Typography } from '@mui/material';
 import ArrowBack from '@mui/icons-material/ArrowBack';
 import ArrowForward from '@mui/icons-material/ArrowForward';
 import ArrowDropDown from '@mui/icons-material/ArrowDropDown';
@@ -39,7 +39,7 @@ interface ReportToolbarProps {
   onClose: () => void;
   onReload?: () => void | Promise<void>;
   onPrint: () => void;
-  onExport: (format: ReportExportFormat) => void;
+  onExport: (format: ReportExportFormat) => void | Promise<void>;
   onFullscreen: () => void;
   onToggleThumbnails: () => void;
   onPageChange: (page: number) => void;
@@ -55,13 +55,25 @@ export function ReportToolbar(props: ReportToolbarProps): React.ReactElement {
   const [zoomAnchor, setZoomAnchor] = React.useState<HTMLElement | null>(null);
   const [searchOpen, setSearchOpen] = React.useState(false);
   const [search, setSearch] = React.useState('');
+  const [exportingFormat, setExportingFormat] = React.useState<ReportExportFormat | null>(null);
   const { compact, currentPage, totalPages, thumbnailsOpen, zoom, zoomMode, exportFormats } = props;
+  const exportReport = async (format: ReportExportFormat) => {
+    if (exportingFormat) return;
+    setExportAnchor(null);
+    setOverflowAnchor(null);
+    setExportingFormat(format);
+    try {
+      await props.onExport(format);
+    } finally {
+      setExportingFormat(null);
+    }
+  };
 
   return <>
     <Paper square elevation={1} className="printout-screen-only" sx={{ zIndex: 3, display: 'flex', alignItems: 'center', gap: 0.25, px: 0.75, borderBottom: '1px solid #d2d6dc', borderRadius: '9px' }}>
       <Tooltip title={t('reportViewer.actions.back')}><IconButton size="small" aria-label={t('reportViewer.actions.back')} onClick={props.onClose}>{isRtl ? <ArrowForward fontSize="small" /> : <ArrowBack fontSize="small" />}</IconButton></Tooltip>
       <Divider orientation="vertical" flexItem />
-      <Button sx={toolbarButtonSx} endIcon={<ArrowDropDown />} onClick={(event) => setExportAnchor(event.currentTarget)}>{t('reportViewer.actions.export')}</Button>
+      <Button disabled={Boolean(exportingFormat)} sx={toolbarButtonSx} endIcon={exportingFormat ? <CircularProgress size={14} /> : <ArrowDropDown />} onClick={(event) => setExportAnchor(event.currentTarget)}>{exportingFormat ?? t('reportViewer.actions.export')}</Button>
       {!compact && props.onReload ? <Button sx={toolbarButtonSx} onClick={() => void props.onReload?.()}>{t('reportViewer.actions.reload')}</Button> : null}
       {!compact ? <Button sx={toolbarButtonSx} onClick={(event) => setZoomAnchor(event.currentTarget)}>{t('reportViewer.actions.options')}</Button> : null}
       <Box sx={{ flex: 1 }} />
@@ -87,16 +99,16 @@ export function ReportToolbar(props: ReportToolbarProps): React.ReactElement {
         <Button sx={{ ...toolbarButtonSx, minWidth: { xs: 112, sm: 145 }, bgcolor: '#e1e3e6' }} endIcon={<ArrowDropDown />} onClick={(event) => setZoomAnchor(event.currentTarget)}>{t(zoomModeKeys[zoomMode])}</Button>
       </Stack>
       <Stack direction="row" spacing={0.1} sx={{ justifySelf: 'end' }}>
-        {!compact ? <><Tooltip title={t('reportViewer.actions.presentationMode')}><IconButton size="small" aria-label={t('reportViewer.actions.presentationMode')} onClick={props.onFullscreen}><FullscreenOutlined fontSize="small" /></IconButton></Tooltip><Tooltip title={t('reportViewer.actions.print')}><IconButton size="small" aria-label={t('reportViewer.actions.print')} onClick={props.onPrint}><PrintOutlined fontSize="small" /></IconButton></Tooltip><Tooltip title={t('reportViewer.actions.download')}><IconButton size="small" aria-label={t('reportViewer.actions.download')} onClick={() => props.onExport('PDF')}><DownloadOutlined fontSize="small" /></IconButton></Tooltip><Tooltip title={t('reportViewer.actions.additionalActions')}><IconButton size="small" aria-label={t('reportViewer.actions.additionalActions')} onClick={(event) => setOverflowAnchor(event.currentTarget)}><MoreHoriz fontSize="small" /></IconButton></Tooltip></> : null}
+        {!compact ? <><Tooltip title={t('reportViewer.actions.presentationMode')}><IconButton size="small" aria-label={t('reportViewer.actions.presentationMode')} onClick={props.onFullscreen}><FullscreenOutlined fontSize="small" /></IconButton></Tooltip><Tooltip title={t('reportViewer.actions.print')}><IconButton size="small" aria-label={t('reportViewer.actions.print')} onClick={props.onPrint}><PrintOutlined fontSize="small" /></IconButton></Tooltip><Tooltip title={t('reportViewer.actions.download')}><IconButton disabled={Boolean(exportingFormat)} size="small" aria-label={t('reportViewer.actions.download')} onClick={() => void exportReport('PDF')}><DownloadOutlined fontSize="small" /></IconButton></Tooltip><Tooltip title={t('reportViewer.actions.additionalActions')}><IconButton size="small" aria-label={t('reportViewer.actions.additionalActions')} onClick={(event) => setOverflowAnchor(event.currentTarget)}><MoreHoriz fontSize="small" /></IconButton></Tooltip></> : null}
       </Stack>
     </Paper>
-    <Menu anchorEl={exportAnchor} open={Boolean(exportAnchor)} onClose={() => setExportAnchor(null)}>{exportFormats.map((format) => <MenuItem key={format} onClick={() => { setExportAnchor(null); props.onExport(format); }} sx={{ minWidth: 118, fontSize: 12 }}>{format}</MenuItem>)}</Menu>
+    <Menu anchorEl={exportAnchor} open={Boolean(exportAnchor)} onClose={() => setExportAnchor(null)}>{exportFormats.map((format) => <MenuItem key={format} disabled={Boolean(exportingFormat)} onClick={() => void exportReport(format)} sx={{ minWidth: 136, fontSize: 12 }}>{exportingFormat === format ? <ListItemIcon><CircularProgress size={15} /></ListItemIcon> : null}{format}</MenuItem>)}</Menu>
     <Menu anchorEl={zoomAnchor} open={Boolean(zoomAnchor)} onClose={() => setZoomAnchor(null)}>{zoomModes.map((mode) => <MenuItem key={mode} selected={zoomMode === mode} onClick={() => { props.onZoomModeChange(mode); setZoomAnchor(null); }}>{t(zoomModeKeys[mode])}</MenuItem>)}</Menu>
     <Menu anchorEl={overflowAnchor} open={Boolean(overflowAnchor)} onClose={() => setOverflowAnchor(null)}>
       {compact && props.onReload ? <MenuItem onClick={() => { void props.onReload?.(); setOverflowAnchor(null); }}>{t('reportViewer.actions.reload')}</MenuItem> : null}
       <MenuItem onClick={() => { props.onFullscreen(); setOverflowAnchor(null); }}>{t('reportViewer.actions.presentation')}</MenuItem>
       <MenuItem onClick={() => { props.onPrint(); setOverflowAnchor(null); }}>{t('reportViewer.actions.print')}</MenuItem>
-      <MenuItem onClick={() => { props.onExport('PDF'); setOverflowAnchor(null); }}>{t('reportViewer.actions.downloadSave')}</MenuItem>
+      <MenuItem disabled={Boolean(exportingFormat)} onClick={() => void exportReport('PDF')}>{t('reportViewer.actions.downloadSave')}</MenuItem>
     </Menu>
   </>;
 }

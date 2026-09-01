@@ -140,6 +140,7 @@ function ReportParametersDialog({
             fetchById={(value) => wfProcessApi.getById(Number(value)).catch(() => null)}
             valueField="recId"
             labelField="name"
+            labelFieldAr="nameAlias"
             pageSize={25}
           />
         </Box>
@@ -261,19 +262,51 @@ function ProcessingDialog({
   onCancel: () => void;
 }): React.ReactElement {
   return (
-    <Dialog open={open} maxWidth="sm" fullWidth slotProps={{ paper: { sx: { borderRadius: 0 } } }}>
-      <DialogContent sx={{ px: 4.5, py: 4 }}>
-        <Typography sx={{ fontSize: 22, fontWeight: 500 }}>
-          Processing operation - WfGenericReport
+    <Dialog
+      open={open}
+      onClose={onCancel}
+      maxWidth={false}
+      slotProps={{
+        paper: {
+          sx: {
+            width: { xs: 'calc(100vw - 32px)', sm: 440 },
+            maxWidth: 440,
+            m: 2,
+            borderRadius: 2,
+            overflow: 'hidden',
+          },
+        },
+      }}
+    >
+      <DialogTitle
+        sx={{
+          px: 3,
+          py: 2,
+          borderBottom: 1,
+          borderColor: 'divider',
+          fontSize: 17,
+          fontWeight: 650,
+        }}
+      >
+        Processing operation - WfGenericReport
+      </DialogTitle>
+      <DialogContent sx={{ px: 3, py: 2.5 }}>
+        <Typography color="text.secondary" sx={{ fontSize: 12 }}>
+          Please wait while the report is being prepared.
         </Typography>
-        <Typography sx={{ mt: 2, fontSize: 11 }}>Operation elapsed time: 00:00:01</Typography>
-        <LinearProgress sx={{ mt: 1.25, width: 155, height: 5 }} />
-        <Box sx={{ mt: 6, textAlign: 'right' }}>
-          <Button variant="outlined" size="small" onClick={onCancel}>
-            Cancel
-          </Button>
-        </Box>
+        <Typography sx={{ mt: 2.25, mb: 0.75, fontSize: 11, fontWeight: 600 }}>
+          Operation elapsed time: 00:00:01
+        </Typography>
+        <LinearProgress
+          aria-label="Report processing progress"
+          sx={{ width: '100%', height: 6, borderRadius: 3 }}
+        />
       </DialogContent>
+      <DialogActions sx={{ px: 3, py: 1.5, borderTop: 1, borderColor: 'divider' }}>
+        <Button variant="outlined" size="small" onClick={onCancel}>
+          Cancel
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 }

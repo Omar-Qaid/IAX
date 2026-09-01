@@ -5,6 +5,7 @@ using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Communication.Notifications.Services;
 using IAX.IXApi.Modules.Organization.Employees.Entities;
+using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Workflow.Activities;
 using IAX.IXApi.Modules.Workflow.Execution;
 using IAX.IXApi.Modules.Workflow.Performers;
@@ -34,6 +35,17 @@ namespace IAX.IXApi.Modules.Workflow.Requests
 
         protected override async Task OnBeforeAddAsync(WfRequest entity, CancellationToken cancellationToken)
         {
+            if (!entity.EmployeeId.HasValue)
+            {
+                var currentUserId = _currentUser.GetCurrentUserId();
+                if (!string.IsNullOrWhiteSpace(currentUserId) && currentUserId != "sys")
+                {
+                    entity.EmployeeId = await _context.Set<HcmWorker>().AsNoTracking()
+                        .Where(worker => worker.UserId == currentUserId && worker.IsActive && !worker.IsDeleted)
+                        .Select(worker => (long?)worker.RecId)
+                        .FirstOrDefaultAsync(cancellationToken);
+                }
+            }
             await _sequences.EnsureCodeAsync(entity, entityName: "WfRequest", cancellationToken: cancellationToken);
         }
 
@@ -216,8 +228,11 @@ namespace IAX.IXApi.Modules.Workflow.Requests
 
             var employeeIds = assignments.Select(item => item.UserId)
                 .Append(request.EmployeeId ?? 0).Where(item => item > 0).Distinct().ToList();
+            var requesterUserId = request.EmployeeId.HasValue ? null : request.CreatedBy;
             var workers = await _context.Set<HcmWorker>().AsNoTracking()
-                .Where(item => employeeIds.Contains(item.RecId)).ToListAsync(cancellationToken);
+                .Where(item => employeeIds.Contains(item.RecId)
+                    || requesterUserId != null && item.UserId == requesterUserId)
+                .ToListAsync(cancellationToken);
             var partyIds = workers.Select(item => item.Person).Distinct().ToList();
             var parties = await _context.Database.SqlQueryRaw<MailPartyLookup>(
                     "SELECT RECID AS PartyId, COALESCE(NULLIF(RFullName, ''), NULLIF(Name, ''), PartyNumber) AS DisplayName FROM dbo.DirPartyTable")
@@ -254,7 +269,20 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                 };
             }).ToList();
 
-            var employee = workers.FirstOrDefault(item => item.RecId == request.EmployeeId);
+            var employee = request.EmployeeId.HasValue
+                ? workers.FirstOrDefault(item => item.RecId == request.EmployeeId)
+                : workers.FirstOrDefault(item => item.UserId == requesterUserId);
+            var accountDisplayName = employee == null && !string.IsNullOrWhiteSpace(request.CreatedBy)
+                ? await _context.Set<AspNetUser>().AsNoTracking()
+                    .Where(user => user.Id == request.CreatedBy)
+                    .Select(user => user.OrganizationEntity != null
+                        ? user.OrganizationEntity.Name
+                        : user.UserName)
+                    .FirstOrDefaultAsync(cancellationToken)
+                : null;
+            var requesterDisplayName = employee != null
+                ? EmployeeDisplay(employee.RecId)
+                : FirstText(accountDisplayName, "Unknown requester");
             return new MailRequestDetailsDto
             {
                 RequestId = request.RecId,
@@ -262,11 +290,11 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                 ProcessCode = request.Process.Code ?? string.Empty,
                 CreatedBy = request.CreatedBy ?? string.Empty,
                 CreatedDate = request.CreatedAt,
-                SubmittedBy = EmployeeDisplay(request.EmployeeId),
+                SubmittedBy = requesterDisplayName,
                 SubmissionDate = request.RequestDate,
                 Status = request.IsStopped ? "Stopped" : request.IsFinished ? "Completed" : "In progress",
                 RequestDate = request.RequestDate,
-                EmployeeName = EmployeeDisplay(request.EmployeeId),
+                EmployeeName = requesterDisplayName,
                 EmployeeNumber = employee?.PersonnelNumber ?? request.EmployeeId?.ToString(CultureInfo.InvariantCulture) ?? "—",
                 TransactionType = request.IsStopped ? "Request stopped" : request.IsFinished ? "Request completed" : FirstText(latest?.Activity.Name, request.Name, "Workflow request"),
                 TransactionTime = request.RequestDate,

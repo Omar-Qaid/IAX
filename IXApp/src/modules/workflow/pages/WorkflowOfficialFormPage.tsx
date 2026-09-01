@@ -3,8 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@core/auth/useAuth';
 import { useCompanyStore } from '@core/company/useCompanyStore';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
-import { ReportViewer } from '@patterns/report-viewer/ReportViewer';
+import { ReportViewer, type ReportExportFormat } from '@patterns/report-viewer/ReportViewer';
+import { exportReportElement } from '@patterns/report-viewer/exportReport';
 import { fetchPrintoutCompany, toPrintoutCompany } from '@shared/components/printout/reportCompany';
+import { useNotifications } from '@shared/hooks/useNotifications';
+import { localizedName } from '@shared/utilities/localizedName';
 import { printTemplateApi } from '../print-templates/api/printTemplateApi';
 import { RuntimePrintTemplate } from '../print-templates/runtime/RuntimePrintTemplate';
 import { createRuntimePrintData } from '../print-templates/runtime/runtimePrintData';
@@ -19,8 +22,10 @@ interface Props {
 
 export function WorkflowOfficialFormViewer({ open, request, templateId, onClose }: Props): React.ReactElement {
   const { t, isRtl } = useAppTranslation();
+  const { notifyError, notifySuccess } = useNotifications();
   const { user } = useAuth();
   const currentCompany = useCompanyStore((state) => state.currentCompany);
+  const reportContainerRef = React.useRef<HTMLDivElement | null>(null);
   const requestId = request?.recId ?? 0;
   const companyCode = request?.dataAreaId || currentCompany || '';
   const [printedAt, setPrintedAt] = React.useState(() => new Date());
@@ -33,6 +38,7 @@ export function WorkflowOfficialFormViewer({ open, request, templateId, onClose 
   const reportCompany = useQuery({ queryKey: ['report-company', companyCode], queryFn: ({ signal }) => fetchPrintoutCompany(companyCode, signal), staleTime: 60_000, enabled: open && Boolean(companyCode) });
   const company = reportCompany.data ?? toPrintoutCompany(undefined, companyCode);
   const requestName = request?.code || (request ? t('mail.requestFallback', { id: request.recId }) : '');
+  const templateDisplayName = localizedName(publishedTemplate.data, isRtl);
   const templateLanguage = publishedTemplate.data?.document.language;
   const runtimeData = React.useMemo(() => request && details.data ? createRuntimePrintData(request, details.data, company, user, printedAt, templateLanguage) : null, [company, details.data, printedAt, request, templateLanguage, user]);
   const print = () => {
@@ -41,22 +47,41 @@ export function WorkflowOfficialFormViewer({ open, request, templateId, onClose 
     window.print();
     document.title = previousTitle;
   };
-  const report = publishedTemplate.data && runtimeData ? <RuntimePrintTemplate template={publishedTemplate.data.document} data={runtimeData} company={company} /> : undefined;
+  const exportReport = async (format: ReportExportFormat) => {
+    if (!reportContainerRef.current || !publishedTemplate.data) return;
+    try {
+      await exportReportElement({
+        element: reportContainerRef.current,
+        format,
+        fileName: `${requestName}-${publishedTemplate.data.code || 'official-form'}`,
+        title: templateDisplayName,
+        language: publishedTemplate.data.document.language,
+        direction: publishedTemplate.data.document.direction,
+      });
+      notifySuccess(t('reportViewer.export.success', { format }));
+    } catch {
+      notifyError(t('reportViewer.export.failed', { format }));
+    }
+  };
+  const report = publishedTemplate.data && runtimeData ? (
+    <div ref={reportContainerRef}>
+      <RuntimePrintTemplate template={publishedTemplate.data.document} data={runtimeData} company={company} />
+    </div>
+  ) : undefined;
   const loading = publishedTemplate.isLoading || details.isLoading || reportCompany.isLoading;
   const error = publishedTemplate.isError || details.isError || reportCompany.isError ? t('mail.print.loadError') : null;
   return (
     <ReportViewer
       open={open}
-      title={publishedTemplate.data?.name || t('mail.print.officialViewerTitle', { name: requestName })}
+      title={templateDisplayName || t('mail.print.officialViewerTitle', { name: requestName })}
       loading={loading}
       error={error}
       emptyMessage={t('mail.print.selectRequest')}
-      exportFormats={[]}
       viewerOptions={{ initialZoomMode: 'Automatic Zoom', direction: publishedTemplate.data?.document.direction || (isRtl ? 'rtl' : 'ltr') }}
       onClose={onClose}
       onReload={() => void Promise.all([publishedTemplate.refetch(), details.refetch(), reportCompany.refetch()])}
       onPrint={print}
-      onExport={() => undefined}
+      onExport={exportReport}
     >
       {report}
     </ReportViewer>

@@ -17,6 +17,7 @@ import {
 import { RecordAttachmentsButton } from '@shared/components/documents/RecordAttachmentsButton';
 import { documentTableIds } from '@shared/components/documents/recordTableIds';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import { localizedName } from '@shared/utilities/localizedName';
 
 const emptyProcess = (): WfProcessRecord => ({
   id: 'empty-process',
@@ -40,7 +41,7 @@ const emptyProcess = (): WfProcessRecord => ({
 });
 
 export function RequestFromPage(): React.ReactElement {
-  const { t, currentLanguage } = useAppTranslation();
+  const { t, currentLanguage, isRtl } = useAppTranslation();
   const formRef = React.useRef<DynamicFormHandle>(null);
   const requestFileInputRef = React.useRef<HTMLInputElement>(null);
   const [requestFiles, setRequestFiles] = React.useState<File[]>([]);
@@ -111,11 +112,11 @@ export function RequestFromPage(): React.ReactElement {
     },
     createRecord: emptyProcess,
     getPrimaryText: (process) =>
-      process.name || process.code || t('workflowRequest.unnamedProcess'),
+      localizedName(process, isRtl) || process.code || t('workflowRequest.unnamedProcess'),
     getSecondaryText: (process) => process.description || process.code || '',
-    initialQuery: requestedProcess?.name || requestedProcess?.code || '',
+    initialQuery: localizedName(requestedProcess, isRtl) || requestedProcess?.code || '',
     matchesSearch: (process, query) =>
-      `${process.code ?? ''} ${process.name ?? ''} ${process.description ?? ''}`
+      `${process.code ?? ''} ${process.name ?? ''} ${process.nameAlias ?? ''} ${process.description ?? ''}`
         .toLocaleLowerCase()
         .includes(query.toLocaleLowerCase()),
     getValues: () => ({}),
@@ -229,7 +230,7 @@ export function RequestFromPage(): React.ReactElement {
         disabled: true,
         renderOwnLabel: true,
         getValue: (process) =>
-          `${process.name ?? ''}\u001f${process.code ?? ''}\u001f${requestDateLabel}`,
+          `${localizedName(process, isRtl)}\u001f${process.code ?? ''}\u001f${requestDateLabel}`,
         setValue: (process) => process,
         render: ({ value }) => {
           const [name, code, date] = String(value ?? '').split('\u001f');
@@ -330,9 +331,9 @@ export function RequestFromPage(): React.ReactElement {
     presentation: { mode: 'list', compactRecordHeader: true, listInitiallyVisible: false },
     advancedFilter: {
       fieldLabel: t('workflowRequest.process'),
-      getValue: (process) => process.name,
+      getValue: (process) => localizedName(process, isRtl),
       matches: (process, value) =>
-        (process.name ?? '').toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()),
+        localizedName(process, isRtl).toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()),
     },
   };
   return (

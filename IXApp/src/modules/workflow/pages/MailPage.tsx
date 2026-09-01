@@ -29,13 +29,11 @@ import { WorkflowMailPrintoutViewer } from './WorkflowMailPrintoutPage';
 import { WorkflowOfficialFormViewer } from './WorkflowOfficialFormPage';
 import { printTemplateApi } from '../print-templates/api/printTemplateApi';
 import type { PrintTemplateSummary } from '../print-templates/types/printTemplate.types';
-import {
-  selectDefaultPublishedTemplate,
-  selectPublishedTemplates,
-} from '../print-templates/runtime/publishedTemplateSelection';
+import { selectPublishedTemplates } from '../print-templates/runtime/publishedTemplateSelection';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import type { TFunction } from 'i18next';
 import { APP_FONT_FAMILY } from '@shared/constants/fontFamilies';
+import { localizedName } from '@shared/utilities/localizedName';
 
 type MailFolder = 'all' | 'inbox' | 'sent' | 'important';
 
@@ -779,7 +777,7 @@ const folderMatches = (request: MailRecord, folder: MailFolder): boolean => {
 };
 
 export function MailPage(): React.ReactElement {
-  const { t, currentLanguage } = useAppTranslation();
+  const { t, currentLanguage, isRtl } = useAppTranslation();
   const [folder, setFolder] = React.useState<MailFolder>('all');
   const [printRequest, setPrintRequest] = React.useState<MailRecord | null>(null);
   const [selectedMailRequest, setSelectedMailRequest] = React.useState<MailRecord | null>(null);
@@ -805,7 +803,7 @@ export function MailPage(): React.ReactElement {
     const processNames = new Map(
       (processes.data ?? []).map((process) => [
         process.recId,
-        process.name || process.code || t('mail.processFallback', { id: process.recId }),
+        localizedName(process, isRtl) || process.code || t('mail.processFallback', { id: process.recId }),
       ])
     );
     return [...(requests.data ?? [])]
@@ -822,7 +820,7 @@ export function MailPage(): React.ReactElement {
         stepNumber: index + 1,
       }))
       .filter((request) => folderMatches(request, folder));
-  }, [folder, processes.data, requests.data, t]);
+  }, [folder, isRtl, processes.data, requests.data, t]);
 
   const folderButtons: Array<{ id: MailFolder; label: string }> = [
     { id: 'all', label: t('mail.folders.all') },
@@ -932,8 +930,8 @@ export function MailPage(): React.ReactElement {
         ...officialTemplates.map((template: PrintTemplateSummary) => ({
           id: `print-template-${template.templateId}`,
           label: template.isDefault
-            ? `${template.name} (${t('mail.print.defaultTemplate')})`
-            : template.name,
+            ? `${localizedName(template, isRtl)} (${t('mail.print.defaultTemplate')})`
+            : localizedName(template, isRtl),
           menuLabel: t('mail.view'),
           requiresSelection: true,
           onClick: (request: MailRecord | null) => {
@@ -947,14 +945,8 @@ export function MailPage(): React.ReactElement {
           requiresSelection: true,
           onClick: (request: MailRecord | null) => {
             if (!request) return;
-            const defaultTemplate = selectDefaultPublishedTemplate(officialTemplates);
-            if (defaultTemplate) {
-              setOfficialFormSelection({
-                request,
-                templateId: defaultTemplate.templateId,
-              });
-              return;
-            }
+            // This final menu item is the generic mail-page printout. Named items above
+            // are the only commands that render published print templates.
             setPrintRequest(request);
           },
         },

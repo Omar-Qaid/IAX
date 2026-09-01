@@ -14,15 +14,17 @@ import { wfPerformerApi } from '../api/wfPerformerApi';
 import { wfStepApi, type WfStepRecord } from '../api/wfStepApi';
 import { wfActivityTypeApi } from '../api/workflowSetupApis';
 import type { WorkflowMasterRecord } from '../api/workflowMasterApi';
+import { localizedName } from '@shared/utilities/localizedName';
 
 const numberValue = (value: DetailValue | undefined): number => Number(value) || 0;
 const textValue = (value: string | null | undefined): string => value ?? '';
 const lookupColumns = [
   { field: 'code', header: 'workflowSetup.fields.code', width: 120 },
-  { field: 'name', header: 'workflowSetup.fields.name', flex: 1 },
+  { field: 'name', header: 'workflowSetup.fields.name', flex: 1, showInRtl: false },
+  { field: 'nameAlias', header: 'workflowSetup.fields.nameAlias', flex: 1, showInLtr: false },
 ] as const;
 
-const createLookupPage = <T extends { code: string | null; name: string | null; description?: string | null }>(
+const createLookupPage = <T extends { code: string | null; name: string | null; nameAlias?: string | null; description?: string | null }>(
   load: (signal?: AbortSignal) => Promise<T[]>
 ) =>
   async ({ pageNumber, pageSize, search, signal }: { pageNumber: number; pageSize: number; search: string; signal?: AbortSignal }) => {
@@ -30,7 +32,7 @@ const createLookupPage = <T extends { code: string | null; name: string | null; 
     const query = search.trim().toLocaleLowerCase();
     const filtered = query
       ? records.filter((record) =>
-          `${record.code ?? ''} ${record.name ?? ''} ${record.description ?? ''}`
+          `${record.code ?? ''} ${record.name ?? ''} ${record.nameAlias ?? ''} ${record.description ?? ''}`
             .toLocaleLowerCase()
             .includes(query)
         )
@@ -78,7 +80,7 @@ const emptyActivity = (stepId = 0): WfActivityRecord => ({
 });
 
 export function WfActivitiesPage(): React.ReactElement {
-  const { t } = useAppTranslation();
+  const { t, isRtl } = useAppTranslation();
   const [searchParams] = useSearchParams();
   const requestedStepId = Number(searchParams.get('stepId'));
   const scopedStepId =
@@ -113,6 +115,7 @@ export function WfActivitiesPage(): React.ReactElement {
                     }
                     valueField="recId"
                     labelField="name"
+                    labelFieldAr="nameAlias"
                     pageSize={25}
                   />
                 ),
@@ -138,6 +141,7 @@ export function WfActivitiesPage(): React.ReactElement {
                     }
                     valueField="recId"
                     labelField="name"
+                    labelFieldAr="nameAlias"
                     pageSize={25}
                   />
                 ),
@@ -163,6 +167,7 @@ export function WfActivitiesPage(): React.ReactElement {
                     }
                     valueField="recId"
                     labelField="name"
+                    labelFieldAr="nameAlias"
                     pageSize={25}
                   />
                 ),
@@ -216,10 +221,10 @@ export function WfActivitiesPage(): React.ReactElement {
     },
     createRecord: () => emptyActivity(scopedStepId ?? 0),
     numberSequence: { key: 'WfActivity', field: 'code' },
-    getPrimaryText: (record) => textValue(record.name) || textValue(record.code),
+    getPrimaryText: (record) => localizedName(record, isRtl) || textValue(record.code),
     getSecondaryText: (record) => record.code || textValue(record.description),
     matchesSearch: (record, query) =>
-      `${record.code ?? ''} ${record.name ?? ''} ${record.description ?? ''}`
+      `${record.code ?? ''} ${record.name ?? ''} ${record.nameAlias ?? ''} ${record.description ?? ''}`
         .toLocaleLowerCase()
         .includes(query.toLocaleLowerCase()),
     getValues: (record): DetailValues => ({
@@ -277,8 +282,8 @@ export function WfActivitiesPage(): React.ReactElement {
     }),
     advancedFilter: {
       fieldLabel: t('wfActivity.fields.name'),
-      getValue: (record) => record.name,
-      matches: (record, value) => textValue(record.name).toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()),
+      getValue: (record) => localizedName(record, isRtl),
+      matches: (record, value) => localizedName(record, isRtl).toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()),
     },
   };
 

@@ -11,6 +11,7 @@ import type { WorkflowMasterDto, WorkflowMasterRecord } from '../api/workflowMas
 import { apiClient } from '@core/api/apiClient';
 import type { ApiResponse } from '@core/api/apiResponse';
 import type { NumberSequenceMetadata } from '@patterns/list-details/useListDetailsPage';
+import { localizedName } from '@shared/utilities/localizedName';
 
 interface WorkflowSetupApi<TDto extends WorkflowMasterDto> {
   list(signal?: AbortSignal): Promise<WorkflowMasterRecord<TDto>[]>;
@@ -124,7 +125,7 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
   permissions,
   extraFields = [],
 }: WorkflowSetupListPageProps<TDto>): React.ReactElement {
-  const { t, currentLanguage } = useAppTranslation();
+  const { t, currentLanguage, isRtl } = useAppTranslation();
   const { notifyError, notifySuccess } = useNotifications();
   const navigate = useNavigate();
   const queryKey = useMemo(() => ['simple-list', resourceKey] as const, [resourceKey]);
@@ -152,20 +153,39 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
         pinned: 'left',
         editable: sequence?.manual ?? false,
       },
-      {
-        field: 'name',
-        headerName: 'workflowSetup.fields.name',
-        minWidth: 220,
-        flex: 1,
-        editable: true,
-      },
-      {
-        field: 'nameAlias',
-        headerName: 'workflowSetup.fields.nameAlias',
-        minWidth: 220,
-        flex: 1,
-        editable: true,
-      },
+      ...(isRtl
+        ? [
+            {
+              field: 'nameAlias' as const,
+              headerName: 'workflowSetup.fields.nameAlias',
+              minWidth: 220,
+              flex: 1,
+              editable: true,
+            },
+            {
+              field: 'name' as const,
+              headerName: 'workflowSetup.fields.name',
+              minWidth: 220,
+              flex: 1,
+              editable: true,
+            },
+          ]
+        : [
+            {
+              field: 'name' as const,
+              headerName: 'workflowSetup.fields.name',
+              minWidth: 220,
+              flex: 1,
+              editable: true,
+            },
+            {
+              field: 'nameAlias' as const,
+              headerName: 'workflowSetup.fields.nameAlias',
+              minWidth: 220,
+              flex: 1,
+              editable: true,
+            },
+          ]),
       ...extraFields.map<ColumnDef<WorkflowMasterRecord<TDto>>>((field) => ({
         field: field.field,
         headerName: field.labelKey,
@@ -181,7 +201,7 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
         editable: true,
       },
     ],
-    [extraFields, sequence?.manual]
+    [extraFields, isRtl, sequence?.manual]
   );
   const refresh = async () => {
     if (api.listPage) await paging.refresh();
@@ -237,9 +257,9 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
       operatorLabel: t('filters.contains'),
       applyLabel: t('actions.apply'),
       resetLabel: t('actions.reset'),
-      getValue: (record) => record.name,
+      getValue: (record) => localizedName(record, isRtl),
       matches: (record, value) =>
-        (record.name ?? '')
+        localizedName(record, isRtl)
           .toLocaleLowerCase(currentLanguage.code)
           .includes(value.trim().toLocaleLowerCase(currentLanguage.code)),
     },

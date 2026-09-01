@@ -7,6 +7,7 @@ import {
 } from '@modules/workflow/print-templates/runtime/RuntimePrintTemplate';
 import {
   createRuntimePrintData,
+  formatRequestControlValue,
   resolveRuntimeBinding,
 } from '@modules/workflow/print-templates/runtime/runtimePrintData';
 import {
@@ -159,6 +160,48 @@ describe('official-form runtime', () => {
     );
   });
 
+  it('keeps the stable request-control value when a control-type ID has the same number', () => {
+    const collisionData = createRuntimePrintData(
+      request,
+      {
+        ...details,
+        fields: [
+          {
+            ...details.fields[0],
+            controlId: 3,
+            controlDataId: 10,
+            label: 'Employee number',
+            value: '2323',
+            valueAr: '2323',
+            valueEn: '2323',
+          },
+          {
+            ...details.fields[0],
+            detailId: 2,
+            controlId: 10,
+            controlDataId: 20,
+            label: 'Approvals',
+            value: '[{"department":"HR"}]',
+            valueAr: '[{"department":"HR"}]',
+            valueEn: '[{"department":"HR"}]',
+            controlType: 'table',
+          },
+        ],
+      },
+      { name: 'Company' },
+      null,
+      new Date('2026-08-27T10:00:00Z'),
+      'ar'
+    );
+
+    expect(
+      resolveRuntimeBinding(collisionData, {
+        sourceType: 'requestControl',
+        requestControlId: 10,
+      })
+    ).toBe('2323');
+  });
+
   it('formats numeric and date fields using designer options', () => {
     expect(
       formatPrintValue(
@@ -175,6 +218,25 @@ describe('official-form runtime', () => {
     expect(
       formatPrintValue('2026-08-27T10:00:00Z', { type: 'date', pattern: 'yyyy-MM-dd' }, 'en')
     ).toBe('2026-08-27');
+  });
+
+  it('prints a location control as an address instead of serialized JSON', () => {
+    const serializedLocation = JSON.stringify({
+      address: 'Al-Safa, Jeddah, Makkah Region, Saudi Arabia',
+      latitude: 21.595884,
+      longitude: 39.207973,
+    });
+
+    expect(formatRequestControlValue(serializedLocation, 'Location')).toBe(
+      'Al-Safa, Jeddah, Makkah Region, Saudi Arabia'
+    );
+    expect(
+      formatRequestControlValue(
+        JSON.stringify({ latitude: 21.595884, longitude: 39.207973 }),
+        'location'
+      )
+    ).toBe('21.595884, 39.207973');
+    expect(formatRequestControlValue('Jeddah', 'location')).toBe('Jeddah');
   });
 
   it('renders report page fields with printable page counters', () => {
