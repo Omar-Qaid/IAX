@@ -155,7 +155,10 @@ public sealed partial class WfProcessSeedData
                 Elements =
                 [
                     PaymentApprovalCell("payment-requester", "الموظف", "submittedBy"),
-                    PaymentApprovalCell("payment-auditor", steps["PAYMENT_AUDIT_STEP"].NameAlias ?? "مسؤول المتابعة والتدقيق"),
+                    PaymentApprovalCell(
+                        "payment-auditor",
+                        steps["PAYMENT_AUDIT_STEP"].NameAlias ?? "مسؤول المتابعة والتدقيق",
+                        reserveNameSpace: true),
                 ],
             },
             new PrintRowElement
@@ -180,7 +183,7 @@ public sealed partial class WfProcessSeedData
                 Style = new() { KeepTogether = true },
                 Elements =
                 [
-                    PaymentApprovalCell("payment-ceo", $"يعتمد\n{steps["PAYMENT_CEO_STEP"].NameAlias ?? "الرئيس التنفيذي"}"),
+                    PaymentApprovalCell("payment-ceo", $"يعتمد {steps["PAYMENT_CEO_STEP"].NameAlias ?? "الرئيس التنفيذي"}"),
                     PaymentApprovalCell("payment-executive-director", steps["PAYMENT_EXECUTIVE_DIRECTOR_STEP"].NameAlias ?? "المدير التنفيذي للموارد البشرية والخدمات المساندة"),
                 ],
             },
@@ -372,7 +375,11 @@ public sealed partial class WfProcessSeedData
         ],
     };
 
-    private static PrintColumnElement PaymentApprovalCell(string id, string title, string? systemSource = null)
+    private static PrintColumnElement PaymentApprovalCell(
+        string id,
+        string title,
+        string? systemSource = null,
+        bool reserveNameSpace = false)
     {
         List<PrintTemplateElement> elements =
         [
@@ -384,7 +391,28 @@ public sealed partial class WfProcessSeedData
             },
         ];
         if (systemSource is not null)
-            elements.Add(SystemField($"{id}-name", "", systemSource, "text", null));
+        {
+            elements.Add(new PrintFieldElement
+            {
+                Id = $"{id}-name",
+                Label = "",
+                Binding = new PrintFieldBinding { SourceType = "system", Source = systemSource },
+                Format = new PrintValueFormat { Type = "text" },
+                Style = new()
+                {
+                    BorderWidth = 0,
+                    Alignment = "center",
+                    FontSize = 14,
+                    FontWeight = 700,
+                    Padding = 2,
+                },
+            });
+        }
+        else if (reserveNameSpace)
+        {
+            // Keep the signature line aligned with the neighbouring requester-name field.
+            elements.Add(new PrintSpacerElement { Id = $"{id}-name-space", Height = 28 });
+        }
         elements.Add(new PrintDividerElement { Id = $"{id}-line", Style = new() { BorderColor = "#555555" } });
         return new PrintColumnElement
         {

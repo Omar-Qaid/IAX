@@ -1799,6 +1799,12 @@
     "requestAttachments": "Request attachments",
     "request": "Request",
     "requestForm": "Request Form",
+    "displayMode": "Request display mode",
+    "normalDisplay": "Normal Display",
+    "printTemplateDisplay": "Print Template Display",
+    "loadingPrintTemplate": "Loading published print template",
+    "noPublishedPrintTemplate": "No published print template is configured for this process.",
+    "printTemplateLoadFailed": "Unable to load the published print template.",
     "process": "Process"
   },
   "documents": {

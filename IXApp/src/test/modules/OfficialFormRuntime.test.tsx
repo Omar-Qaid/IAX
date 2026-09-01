@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { render, screen } from '@test/testUtils';
 import {
   formatPrintValue,
+  requestControlTemplateBindings,
   RuntimePrintTemplate,
 } from '@modules/workflow/print-templates/runtime/RuntimePrintTemplate';
 import {
@@ -268,6 +269,7 @@ describe('official-form runtime', () => {
 
     expect(container.querySelector('.printout-page-number')).toBeInTheDocument();
     expect(container.querySelector('.printout-page-count')).toBeInTheDocument();
+    expect(container.querySelector('.printout-field')?.children).toHaveLength(1);
   });
 
   it('does not print controls added after the request snapshot was created', () => {
@@ -506,5 +508,56 @@ describe('official-form runtime', () => {
     expect(screen.getByLabelText('barcode REQ-42')).toBeInTheDocument();
     expect(container.querySelector('thead')).toHaveStyle({ display: 'table-row-group' });
     expect(container.querySelectorAll('col')[0]).toHaveStyle({ width: '35%' });
+  });
+
+  it('renders editable request controls in template order without appending unbound controls', () => {
+    const template: PrintTemplateDocument = {
+      schemaVersion: 1,
+      language: 'en',
+      direction: 'ltr',
+      page: { size: 'A4', orientation: 'portrait', margins: { top: 15, right: 15, bottom: 15, left: 15 } },
+      missingFieldBehavior: 'empty',
+      header: [
+        { id: 'heading', type: 'text', value: 'Request heading' },
+        { id: 'company-logo', type: 'image', sourceType: 'companyLogo', altText: 'Company logo' },
+        { id: 'header-control', type: 'field', label: 'Header control', binding: { sourceType: 'requestControl', requestControlId: 9998 } },
+      ],
+      sections: [
+        { id: 'static-copy', type: 'text', value: 'Print-only body copy' },
+        { id: 'company-field', type: 'field', label: 'Company name', binding: { sourceType: 'company', source: 'name' } },
+        { id: 'report-field', type: 'field', label: 'Report field', binding: { sourceType: 'report', source: 'pageNumber' } },
+        { id: 'second', type: 'field', label: 'Second', binding: { sourceType: 'requestControl', requestControlId: 2102 } },
+        { id: 'first', type: 'field', label: 'First', binding: { sourceType: 'requestControl', requestControlId: 2101 } },
+      ],
+      footer: [
+        { id: 'footer-control', type: 'field', label: 'Footer control', binding: { sourceType: 'requestControl', requestControlId: 9997 } },
+      ],
+    };
+    const data = {
+      ...runtimeData,
+      requestControls: { ...runtimeData.requestControls, '2102': '', '9999': '', '9998': '', '9997': '' },
+    };
+    const { container } = render(
+      <RuntimePrintTemplate
+        template={template}
+        data={data}
+        company={{ name: 'Company' }}
+        renderRequestControl={(binding) => <span>{`control-${binding.requestControlId}`}</span>}
+        layoutMode="requestBody"
+      />
+    );
+
+    const content = container.textContent ?? '';
+    expect(content.indexOf('control-9998')).toBeLessThan(content.indexOf('control-2102'));
+    expect(content.indexOf('control-2102')).toBeLessThan(content.indexOf('control-2101'));
+    expect(content.indexOf('control-2101')).toBeLessThan(content.indexOf('control-9997'));
+    expect(content).not.toContain('control-9999');
+    expect(content).toContain('Request heading');
+    expect(content).toContain('Print-only body copy');
+    expect(content).not.toContain('Company name');
+    expect(content).not.toContain('Report field');
+    expect(screen.queryByRole('img', { name: 'Company logo' })).not.toBeInTheDocument();
+    expect(screen.getByTestId('print-template-request-body')).toHaveStyle({ width: '100%' });
+    expect(requestControlTemplateBindings(template).map((binding) => binding.requestControlId)).toEqual([9998, 2102, 2101, 9997]);
   });
 });

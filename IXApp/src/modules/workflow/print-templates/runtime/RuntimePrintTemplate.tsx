@@ -18,7 +18,64 @@ interface Props {
   template: PrintTemplateDocument;
   data: RuntimePrintData;
   company: PrintoutCompany;
+  renderRequestControl?: (
+    binding: PrintFieldBinding,
+    elementType: PrintTemplateElement['type']
+  ) => React.ReactNode;
+  layoutMode?: 'document' | 'requestBody';
 }
+
+const requestBinding = (element: PrintTemplateElement): PrintFieldBinding | null => {
+  if (element.type === 'field' || element.type === 'signature' || element.type === 'qrCode' || element.type === 'barcode')
+    return element.binding.sourceType === 'requestControl' ? element.binding : null;
+  if (element.type === 'table')
+    return element.dataSource.sourceType === 'requestControl' ? element.dataSource : null;
+  if ((element.type === 'image' || element.type === 'attachment') && element.binding?.sourceType === 'requestControl')
+    return element.binding;
+  return null;
+};
+
+const isCompanyOrReportBinding = (binding: PrintFieldBinding | null | undefined): boolean =>
+  binding?.sourceType === 'company' || binding?.sourceType === 'report';
+
+export const requestControlBodyElements = (items: PrintTemplateElement[]): PrintTemplateElement[] =>
+  items.flatMap((element): PrintTemplateElement[] => {
+    if (element.type === 'section' || element.type === 'row' || element.type === 'column') {
+      const elements = requestControlBodyElements(element.elements);
+      return elements.length > 0 ? [{ ...element, elements }] : [];
+    }
+    if (element.type === 'field' || element.type === 'signature' || element.type === 'qrCode' || element.type === 'barcode')
+      return isCompanyOrReportBinding(element.binding) ? [] : [element];
+    if (element.type === 'table')
+      return isCompanyOrReportBinding(element.dataSource) ? [] : [element];
+    if (element.type === 'image' || element.type === 'attachment') {
+      if (element.type === 'image' && element.sourceType === 'companyLogo') return [];
+      return isCompanyOrReportBinding(element.binding) ? [] : [element];
+    }
+    if (element.type === 'printDate' || element.type === 'pageNumber') return [];
+    return [element];
+  });
+
+export const requestControlBodyBindings = (items: PrintTemplateElement[]): PrintFieldBinding[] =>
+  items.flatMap((element): PrintFieldBinding[] => {
+    const binding = requestBinding(element);
+    if (binding) return [binding];
+    if (element.type === 'section' || element.type === 'row' || element.type === 'column')
+      return requestControlBodyBindings(element.elements);
+    return [];
+  });
+
+export const requestControlTemplateElements = (template: PrintTemplateDocument): PrintTemplateElement[] => [
+  ...requestControlBodyElements(template.header),
+  ...requestControlBodyElements(template.sections),
+  ...requestControlBodyElements(template.footer),
+];
+
+export const requestControlTemplateBindings = (template: PrintTemplateDocument): PrintFieldBinding[] => [
+  ...requestControlBodyBindings(template.header),
+  ...requestControlBodyBindings(template.sections),
+  ...requestControlBodyBindings(template.footer),
+];
 
 const empty = (value: unknown) =>
   value == null || value === '' || (Array.isArray(value) && value.length === 0);
@@ -204,10 +261,14 @@ function RuntimeElement({
   element,
   data,
   template,
+  renderRequestControl,
+  layoutMode,
 }: {
   element: PrintTemplateElement;
   data: RuntimePrintData;
   template: PrintTemplateDocument;
+  renderRequestControl?: Props['renderRequestControl'];
+  layoutMode: NonNullable<Props['layoutMode']>;
 }): React.ReactElement | null {
   // Request details are the historical form snapshot. A template may later bind a newly added
   // process control, but that control must not appear when an older request never contained it.
@@ -236,11 +297,16 @@ function RuntimeElement({
   } as const;
   const children = (items: PrintTemplateElement[]) =>
     items.map((child) => (
-      <RuntimeElement key={child.id} element={child} data={data} template={template} />
+      <RuntimeElement key={child.id} element={child} data={data} template={template} renderRequestControl={renderRequestControl} layoutMode={layoutMode} />
     ));
   if (element.type === 'text') return <Typography sx={sx}>{element.value}</Typography>;
   if (element.type === 'field') {
+    const editableControl = element.binding.sourceType === 'requestControl'
+      ? renderRequestControl?.(element.binding, element.type)
+      : null;
     const raw = resolveRuntimeBinding(data, element.binding);
+    if (editableControl && layoutMode === 'requestBody')
+      return <Box sx={{ ...sx, minWidth: 0 }}>{editableControl}</Box>;
     const missing = empty(raw);
     const reportPageValue =
       element.binding.sourceType === 'report' ? (
@@ -256,6 +322,28 @@ function RuntimeElement({
               ? `{{${element.label}}}`
               : '')
         : formatPrintValue(raw, element.format, template.language));
+    if (layoutMode === 'requestBody')
+      return (
+        <Box className="printout-field" sx={{ ...sx, minWidth: 0 }}>
+          {element.label ? (
+            <Typography sx={{ mb: 0.35, fontWeight: 700, textAlign: 'start' }}>
+              {element.label}
+            </Typography>
+          ) : null}
+          <Box
+            dir="auto"
+            sx={{
+              px: 0.75,
+              py: 0.5,
+              minHeight: 28,
+              border: style?.borderWidth === 0 ? 'none' : '1px solid #d9e2ec',
+              boxSizing: 'border-box',
+            }}
+          >
+            {value}
+          </Box>
+        </Box>
+      );
     return (
       <Box
         className="printout-field"
@@ -263,13 +351,15 @@ function RuntimeElement({
           ...sx,
           display: 'grid',
           gridTemplateColumns: element.label ? 'minmax(30mm, .45fr) 1fr' : '1fr',
-          border: '1px solid #d9e2ec',
+          border: style?.borderWidth === 0 ? 'none' : '1px solid #d9e2ec',
           minHeight: 28,
         }}
       >
-        <Box sx={{ px: 0.75, py: 0.5, fontWeight: 700, bgcolor: '#f3f6f9' }}>{element.label}</Box>
+        {element.label ? (
+          <Box sx={{ px: 0.75, py: 0.5, fontWeight: 700, bgcolor: '#f3f6f9' }}>{element.label}</Box>
+        ) : null}
         <Box dir="auto" sx={{ px: 0.75, py: 0.5 }}>
-          {value}
+          {editableControl ?? value}
         </Box>
       </Box>
     );
@@ -334,6 +424,10 @@ function RuntimeElement({
     ) : null;
   }
   if (element.type === 'table') {
+    const editableControl = element.dataSource.sourceType === 'requestControl'
+      ? renderRequestControl?.(element.dataSource, element.type)
+      : null;
+    if (editableControl) return <Box sx={sx}>{editableControl}</Box>;
     const resolved = resolveRuntimeBinding(data, element.dataSource);
     let rows: unknown[] = Array.isArray(resolved) ? resolved : [];
     if (typeof resolved === 'string' && resolved.trim()) {
@@ -463,14 +557,24 @@ function RuntimeElement({
   return null;
 }
 
-export function RuntimePrintTemplate({ template, data, company }: Props): React.ReactElement {
+export function RuntimePrintTemplate({ template, data, company, renderRequestControl, layoutMode = 'document' }: Props): React.ReactElement {
   const render = (items: PrintTemplateElement[]) => (
     <Box sx={{ display: 'grid', gap: 0.75 }}>
       {items.map((element) => (
-        <RuntimeElement key={element.id} element={element} data={data} template={template} />
+        <RuntimeElement key={element.id} element={element} data={data} template={template} renderRequestControl={renderRequestControl} layoutMode={layoutMode} />
       ))}
     </Box>
   );
+  if (layoutMode === 'requestBody')
+    return (
+      <Box
+        data-testid="print-template-request-body"
+        dir={template.direction}
+        sx={{ width: '100%', minWidth: 0, display: 'grid', gap: 0.75, bgcolor: '#fff' }}
+      >
+        {render(requestControlTemplateElements(template))}
+      </Box>
+    );
   return (
     <PrintoutDocument
       company={company}

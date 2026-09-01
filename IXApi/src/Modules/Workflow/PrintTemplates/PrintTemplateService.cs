@@ -103,9 +103,17 @@ public sealed class PrintTemplateService : IPrintTemplateService
             .SingleOrDefaultAsync(cancellationToken);
         if (!requestProcessId.HasValue) return null;
 
+        return await GetPublishedForProcessAsync(requestProcessId.Value, templateId, cancellationToken);
+    }
+
+    public async Task<PublishedPrintTemplateDto?> GetPublishedForProcessAsync(
+        long processId,
+        long templateId,
+        CancellationToken cancellationToken = default)
+    {
         var template = await TemplateQuery(asNoTracking: true)
             .SingleOrDefaultAsync(item => item.RecId == templateId
-                && item.ProcessId == requestProcessId.Value
+                && item.ProcessId == processId
                 && item.IsActive
                 && item.Status == WfPrintTemplateStatus.Published
                 && item.CurrentVersionId != null

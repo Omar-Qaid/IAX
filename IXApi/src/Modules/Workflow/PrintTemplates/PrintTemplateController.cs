@@ -46,6 +46,18 @@ public sealed class PrintTemplateController : ControllerBase
             : Ok(APIResponse<PublishedPrintTemplateDto>.Ok(template));
     }
 
+    [HttpGet("process/{processId:long}/template/{templateId:long}/published")]
+    public async Task<ActionResult<APIResponse<PublishedPrintTemplateDto>>> GetPublishedForProcess(
+        long processId,
+        long templateId,
+        CancellationToken cancellationToken)
+    {
+        var template = await _service.GetPublishedForProcessAsync(processId, templateId, cancellationToken);
+        return template == null
+            ? NotFound(APIResponse<PublishedPrintTemplateDto>.Fail("No active published template was found for this process."))
+            : Ok(APIResponse<PublishedPrintTemplateDto>.Ok(template));
+    }
+
     [HttpGet("{templateId:long}")]
     [DomainPermission("Workflow", "PrintTemplates", "View")]
     public async Task<ActionResult<APIResponse<PrintTemplateDto>>> Get(long templateId, CancellationToken cancellationToken)

@@ -1785,6 +1785,12 @@
     "requestAttachments": "مرفقات الطلب",
     "request": "طلب",
     "requestForm": "نموذج الطلب",
+    "displayMode": "طريقة عرض الطلب",
+    "normalDisplay": "العرض العادي",
+    "printTemplateDisplay": "عرض قالب الطباعة",
+    "loadingPrintTemplate": "جارٍ تحميل قالب الطباعة المنشور",
+    "noPublishedPrintTemplate": "لا يوجد قالب طباعة منشور مهيأ لهذه العملية.",
+    "printTemplateLoadFailed": "تعذر تحميل قالب الطباعة المنشور.",
     "process": "العملية"
   },
   "documents": {

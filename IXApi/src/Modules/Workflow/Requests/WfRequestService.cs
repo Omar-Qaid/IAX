@@ -272,17 +272,16 @@ namespace IAX.IXApi.Modules.Workflow.Requests
             var employee = request.EmployeeId.HasValue
                 ? workers.FirstOrDefault(item => item.RecId == request.EmployeeId)
                 : workers.FirstOrDefault(item => item.UserId == requesterUserId);
-            var accountDisplayName = employee == null && !string.IsNullOrWhiteSpace(request.CreatedBy)
+            var accountDisplayName = !string.IsNullOrWhiteSpace(request.CreatedBy)
                 ? await _context.Set<AspNetUser>().AsNoTracking()
                     .Where(user => user.Id == request.CreatedBy)
-                    .Select(user => user.OrganizationEntity != null
-                        ? user.OrganizationEntity.Name
-                        : user.UserName)
+                    .Select(user => user.UserName)
                     .FirstOrDefaultAsync(cancellationToken)
                 : null;
-            var requesterDisplayName = employee != null
-                ? EmployeeDisplay(employee.RecId)
-                : FirstText(accountDisplayName, "Unknown requester");
+            var requesterDisplayName = FirstText(
+                accountDisplayName,
+                employee == null ? null : EmployeeDisplay(employee.RecId),
+                "Unknown requester");
             return new MailRequestDetailsDto
             {
                 RequestId = request.RecId,

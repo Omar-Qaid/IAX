@@ -307,7 +307,11 @@ export function DynamicControlRenderer({
                       input: { disableUnderline: true },
                       htmlInput: { 'aria-label': `${column.label} ${rowIndex + 1}` },
                     }}
-                    sx={{ px: 1, '& .MuiInputBase-root': { minHeight: 31, fontSize: 12 } }}
+                    sx={{
+                      px: 1,
+                      boxShadow: 'inset 0 0 0 1px #c7c7c7',
+                      '& .MuiInputBase-root': { minHeight: 31, fontSize: 12 },
+                    }}
                   />
                 ))}
                 <IconButton
@@ -315,6 +319,7 @@ export function DynamicControlRenderer({
                   disabled={disabled}
                   aria-label={`${t('actions.delete')} ${rowIndex + 1}`}
                   onClick={() => updateRows(rows.filter((_, index) => index !== rowIndex))}
+                  sx={{ borderRadius: 0, boxShadow: 'inset 0 0 0 1px #c7c7c7' }}
                 >
                   <DeleteOutline sx={{ fontSize: 16 }} />
                 </IconButton>

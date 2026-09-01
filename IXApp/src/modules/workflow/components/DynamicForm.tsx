@@ -15,6 +15,10 @@ import {
 import { DynamicControlRenderer, readMultiValue } from './DynamicControlRenderer';
 import { readFileMetadata } from './DynamicSpecialControls';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import { RuntimePrintTemplate, requestControlTemplateBindings } from '../print-templates/runtime/RuntimePrintTemplate';
+import type { RuntimePrintData } from '../print-templates/runtime/runtimePrintData';
+import type { PrintTemplateDocument, PrintFieldBinding } from '../print-templates/types/printTemplate.types';
+import type { PrintoutCompany } from '@shared/components/printout/PrintoutDocument';
 
 type Values = Record<number, string>;
 type Errors = Record<number, string>;
@@ -123,7 +127,17 @@ const initialValues = (controls: DynamicRequestControl[]): Values => Object.from
 );
 export interface DynamicFormHandle { submit: () => void }
 export interface DynamicFormStatus { score: number; saving: boolean; canSubmit: boolean; requestId: number | null }
-export const DynamicForm = React.forwardRef<DynamicFormHandle, { processId: number; requestFiles?: File[]; showActions?: boolean; onStatusChange?: (status: DynamicFormStatus) => void }>(function DynamicForm({ processId, requestFiles = [], showActions = true, onStatusChange }, ref): React.ReactElement {
+interface DynamicFormProps {
+  processId: number;
+  requestFiles?: File[];
+  showActions?: boolean;
+  onStatusChange?: (status: DynamicFormStatus) => void;
+  displayMode?: 'normal' | 'printTemplate';
+  printTemplate?: PrintTemplateDocument | null;
+  printCompany?: PrintoutCompany;
+  requestDate?: string;
+}
+export const DynamicForm = React.forwardRef<DynamicFormHandle, DynamicFormProps>(function DynamicForm({ processId, requestFiles = [], showActions = true, onStatusChange, displayMode = 'normal', printTemplate, printCompany, requestDate }, ref): React.ReactElement {
   const { t, isRtl } = useAppTranslation();
   const { notifyError, notifySuccess } = useNotifications();
   const definition = useQuery({
@@ -322,7 +336,7 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, { processId: numb
       />}
     </Stack>;
   };
-  const renderControl = (control: DynamicRequestControl, ancestors = new Set<number>(), externalizeFullRows = false): React.ReactNode => {
+  const renderControl = (control: DynamicRequestControl, ancestors = new Set<number>(), externalizeFullRows = false, includeDependencies = true): React.ReactNode => {
     if (ancestors.has(control.requestControlId)) return null;
     const nextAncestors = new Set(ancestors).add(control.requestControlId);
     const activeOptions = selectedOptions(control, values);
@@ -344,25 +358,104 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, { processId: numb
       setErrors((current) => { const next = { ...current }; delete next[control.requestControlId]; return next; });
     }} onFilesChange={(files) => setControlFiles((current) => ({ ...current, [control.requestControlId]: files }))}
       preview={savedRequestId != null} error={Boolean(errors[control.requestControlId])} helperText={errors[control.requestControlId]} />
-    {activeOptions.filter((option) => !externalizeFullRows || !usesFullDependencyRow(option)).map((option) => renderDependency(control, option, nextAncestors, false))}
+    {includeDependencies && activeOptions.filter((option) => !externalizeFullRows || !usesFullDependencyRow(option)).map((option) => renderDependency(control, option, nextAncestors, false))}
   </Box>;
   };
+  const printData: RuntimePrintData = {
+    system: {
+      requestNumber: '', requestDate: requestDate ?? '', processId,
+      processName: definition.data.processName, submittedBy: '',
+    },
+    company: {
+      name: printCompany?.name ?? '', arabicName: printCompany?.secondaryName,
+      secondaryName: printCompany?.secondaryName, code: printCompany?.companyCode,
+      logo: printCompany?.logoSource, logoSource: printCompany?.logoSource,
+      address: printCompany?.addressLines?.join('\n'), contact: printCompany?.contactLines?.join('\n'),
+    },
+    report: { pageNumber: 1, totalPages: 1, pageNumberOfTotal: '1 / 1' },
+    requestControls: {
+      ...Object.fromEntries(definition.data.controls.map((control) => [
+        String(control.controlId), values[control.requestControlId] ?? control.defaultValue ?? '',
+      ])),
+      ...Object.fromEntries(definition.data.controls.map((control) => [
+        String(control.requestControlId), values[control.requestControlId] ?? control.defaultValue ?? '',
+      ])),
+    },
+    repeating: { items: [] },
+  };
+  const renderTemplateControl = (binding: PrintFieldBinding): React.ReactNode => {
+    const control = binding.requestControlId != null
+      ? visibleControls.find((item) => item.requestControlId === binding.requestControlId)
+      : visibleControls.find((item) => item.controlId === binding.controlId);
+    return control ? renderControl(control, new Set<number>(), false, false) : null;
+  };
+  const templateBindings = printTemplate ? requestControlTemplateBindings(printTemplate) : [];
+  const boundTemplateControlIds = new Set(templateBindings.flatMap((binding) => {
+    if (binding.requestControlId != null) return [binding.requestControlId];
+    const control = visibleControls.find((item) => item.controlId === binding.controlId);
+    return control ? [control.requestControlId] : [];
+  }));
+  const unboundTemplateControls = visibleControls.filter(
+    (control) => !boundTemplateControlIds.has(control.requestControlId)
+  );
+  const unboundRows = (() => {
+    const rows: DynamicRequestControl[][] = [];
+    let row: DynamicRequestControl[] = [];
+    let used = 0;
+    for (const control of unboundTemplateControls) {
+      const span = Math.min(3, Math.max(1, control.columnSpan || 1));
+      if (row.length > 0 && used + span > 3) { rows.push(row); row = []; used = 0; }
+      row.push(control); used += span;
+      if (used === 3) { rows.push(row); row = []; used = 0; }
+    }
+    if (row.length > 0) rows.push(row);
+    return rows;
+  })();
+  const formContent = displayMode === 'printTemplate' && printTemplate && printCompany ? (
+    <Box data-testid="dynamic-form-print-template" sx={{ bgcolor: '#fff', width: '100%', minWidth: 0 }}>
+      {unboundRows.length > 0 && (
+        <Box data-testid="print-template-unbound-controls" sx={{ mb: 1.35, display: 'grid', gap: 1.35 }}>
+          {unboundRows.map((row, rowIndex) => (
+            <Box
+              key={rowIndex}
+              sx={{ display: 'grid', gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))' }, columnGap: 1.25, rowGap: 1.35, alignItems: 'start' }}
+            >
+              {row.map((control) => (
+                <Box key={control.requestControlId} data-control-id={control.requestControlId} sx={{ minWidth: 0, gridColumn: { xs: 'span 1', md: `span ${Math.min(2, Math.max(1, control.columnSpan || 1))}`, lg: `span ${Math.min(3, Math.max(1, control.columnSpan || 1))}` } }}>
+                  {renderControl(control, new Set<number>(), false, false)}
+                </Box>
+              ))}
+            </Box>
+          ))}
+        </Box>
+      )}
+      <RuntimePrintTemplate
+        template={printTemplate}
+        data={printData}
+        company={printCompany}
+        renderRequestControl={renderTemplateControl}
+        layoutMode="requestBody"
+      />
+    </Box>
+  ) : (
+    visibleControls.length === 0 ? <Alert severity="info">{t('workflowRequest.noActiveControls')}</Alert> : <Stack spacing={1.25} sx={{ width: '100%', maxWidth: 'none', minWidth: 0, minHeight: 0, height: 'auto', flex: '0 0 auto', alignSelf: 'flex-start' }}>
+      <Paper variant="outlined" sx={{ width: '100%', minWidth: 0, minHeight: 0, height: 'auto', alignSelf: 'flex-start', p: { xs: 1.1, sm: 1.35 }, borderColor: '#d5d7dc', borderRadius: 1, boxShadow: '0 2px 7px rgba(32,42,64,.10)' }}>
+        <Box data-testid="dynamic-form-grid" sx={{ display: 'grid', gap: 1.35 }}>
+          {controlRows.map((row, rowIndex) => <Box key={rowIndex} data-testid="dynamic-form-row" sx={{ minWidth: 0 }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))' }, columnGap: 1.25, rowGap: 1.35, alignItems: 'start' }}>
+              {row.map((control) => <Box key={control.requestControlId} data-control-id={control.requestControlId} sx={{ minWidth: 0, gridColumn: { xs: 'span 1', md: `span ${Math.min(2, Math.max(1, control.columnSpan || 1))}`, lg: `span ${Math.min(3, Math.max(1, control.columnSpan || 1))}` } }}>
+                {renderControl(control, new Set<number>(), true)}
+              </Box>)}
+            </Box>
+            {row.flatMap((control) => selectedOptions(control, values).filter(usesFullDependencyRow).map((option) => renderDependency(control, option, new Set([control.requestControlId]), true)))}
+          </Box>)}
+        </Box>
+      </Paper>
+    </Stack>
+  );
   return (
     <Box sx={{ width: '100%', minWidth: 0, minHeight: 0, height: 'auto', flex: '0 0 auto', alignSelf: 'flex-start', display: 'flex', flexDirection: 'column', gap: 1.15 }}>
-      {visibleControls.length === 0 ? <Alert severity="info">{t('workflowRequest.noActiveControls')}</Alert> : <Stack spacing={1.25} sx={{ width: '100%', maxWidth: 'none', minWidth: 0, minHeight: 0, height: 'auto', flex: '0 0 auto', alignSelf: 'flex-start' }}>
-        <Paper variant="outlined" sx={{ width: '100%', minWidth: 0, minHeight: 0, height: 'auto', alignSelf: 'flex-start', p: { xs: 1.1, sm: 1.35 }, borderColor: '#d5d7dc', borderRadius: 1, boxShadow: '0 2px 7px rgba(32,42,64,.10)' }}>
-          <Box data-testid="dynamic-form-grid" sx={{ display: 'grid', gap: 1.35 }}>
-            {controlRows.map((row, rowIndex) => <Box key={rowIndex} data-testid="dynamic-form-row" sx={{ minWidth: 0 }}>
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(3, minmax(0, 1fr))' }, columnGap: 1.25, rowGap: 1.35, alignItems: 'start' }}>
-                {row.map((control) => <Box key={control.requestControlId} data-control-id={control.requestControlId} sx={{ minWidth: 0, gridColumn: { xs: 'span 1', md: `span ${Math.min(2, Math.max(1, control.columnSpan || 1))}`, lg: `span ${Math.min(3, Math.max(1, control.columnSpan || 1))}` } }}>
-                  {renderControl(control, new Set<number>(), true)}
-                </Box>)}
-              </Box>
-              {row.flatMap((control) => selectedOptions(control, values).filter(usesFullDependencyRow).map((option) => renderDependency(control, option, new Set([control.requestControlId]), true)))}
-            </Box>)}
-          </Box>
-        </Paper>
-      </Stack>}
+      {formContent}
       {formError && <Alert severity="error">{formError}</Alert>}
       {showActions && <Paper square variant="outlined" sx={{ position: 'sticky', bottom: 0, zIndex: 5, mt: 'auto', px: { xs: 1.25, sm: 2.5 }, py: 0.8, mx: { xs: -0.25, sm: -0.5 }, bgcolor: 'rgba(255,255,255,.98)', backdropFilter: 'blur(8px)', boxShadow: '0 -2px 8px rgba(32,42,64,.12)' }}>
         <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center', justifyContent: { xs: 'flex-start', sm: 'flex-end' } }}>

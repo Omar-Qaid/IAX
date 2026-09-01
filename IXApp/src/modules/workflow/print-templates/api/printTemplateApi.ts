@@ -23,6 +23,10 @@ export const printTemplateApi = {
     const response = await apiClient.get<ApiResponse<PublishedPrintTemplate>>(`${endpoint}/request/${requestId}/template/${templateId}`, { signal });
     return requireData(response.data);
   },
+  async getPublishedForProcess(processId: number, templateId: number, signal?: AbortSignal): Promise<PublishedPrintTemplate> {
+    const response = await apiClient.get<ApiResponse<PublishedPrintTemplate>>(`${endpoint}/process/${processId}/template/${templateId}/published`, { signal });
+    return requireData(response.data);
+  },
   async get(templateId: number, signal?: AbortSignal): Promise<PrintTemplate> {
     const response = await apiClient.get<ApiResponse<PrintTemplate>>(`${endpoint}/${templateId}`, { signal });
     return requireData(response.data);

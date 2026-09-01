@@ -1,5 +1,5 @@
 import React from 'react';
-import { Badge, Box, Button, IconButton, Tooltip, Typography } from '@mui/material';
+import { Alert, Badge, Box, Button, CircularProgress, IconButton, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from '@mui/material';
 import AttachFileOutlined from '@mui/icons-material/AttachFileOutlined';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
@@ -18,6 +18,11 @@ import { RecordAttachmentsButton } from '@shared/components/documents/RecordAtta
 import { documentTableIds } from '@shared/components/documents/recordTableIds';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { localizedName } from '@shared/utilities/localizedName';
+import { printTemplateApi } from '../print-templates/api/printTemplateApi';
+import { fetchPrintoutCompany, toPrintoutCompany } from '@shared/components/printout/reportCompany';
+import { useCompanyStore } from '@core/company/useCompanyStore';
+
+type RequestDisplayMode = 'normal' | 'printTemplate';
 
 const emptyProcess = (): WfProcessRecord => ({
   id: 'empty-process',
@@ -44,6 +49,7 @@ export function RequestFromPage(): React.ReactElement {
   const { t, currentLanguage, isRtl } = useAppTranslation();
   const formRef = React.useRef<DynamicFormHandle>(null);
   const requestFileInputRef = React.useRef<HTMLInputElement>(null);
+  const [displayMode, setDisplayMode] = React.useState<RequestDisplayMode>('normal');
   const [requestFiles, setRequestFiles] = React.useState<File[]>([]);
   const [formStatus, setFormStatus] = React.useState<DynamicFormStatus>({
     score: 0,
@@ -66,6 +72,7 @@ export function RequestFromPage(): React.ReactElement {
   const { categoryId: categoryParam, processId: processParam } = useParams();
   const categoryId = Number(categoryParam);
   const requestedProcessId = Number(processParam);
+  const currentCompany = useCompanyStore((state) => state.currentCompany);
   const processes = useQuery({
     queryKey: ['workflow', 'request-from-processes', categoryId, requestedProcessId],
     queryFn: async ({ signal }) =>
@@ -97,6 +104,28 @@ export function RequestFromPage(): React.ReactElement {
       }).format(new Date(`${requestDate}T00:00:00Z`)),
     [currentLanguage.code, requestDate]
   );
+  const publishedTemplates = useQuery({
+    queryKey: ['workflow', 'request-from-published-templates', requestedProcessId],
+    queryFn: ({ signal }) => printTemplateApi.listPublishedByProcess(requestedProcessId, signal),
+    enabled: Number.isSafeInteger(requestedProcessId) && requestedProcessId > 0,
+  });
+  const selectedTemplate = React.useMemo(
+    () => publishedTemplates.data?.find((template) => template.isDefault) ?? publishedTemplates.data?.[0],
+    [publishedTemplates.data]
+  );
+  const publishedTemplate = useQuery({
+    queryKey: ['workflow', 'request-from-published-template', requestedProcessId, selectedTemplate?.templateId],
+    queryFn: ({ signal }) =>
+      printTemplateApi.getPublishedForProcess(requestedProcessId, selectedTemplate!.templateId, signal),
+    enabled: displayMode === 'printTemplate' && requestedProcessId > 0 && Boolean(selectedTemplate),
+  });
+  const reportCompany = useQuery({
+    queryKey: ['report-company', currentCompany],
+    queryFn: ({ signal }) => fetchPrintoutCompany(currentCompany, signal),
+    staleTime: 60_000,
+    enabled: displayMode === 'printTemplate' && Boolean(currentCompany),
+  });
+  const company = reportCompany.data ?? toPrintoutCompany(undefined, currentCompany);
 
   const config: EnterpriseListDetailsConfig<WfProcessRecord> = {
     readOnly: true,
@@ -133,6 +162,17 @@ export function RequestFromPage(): React.ReactElement {
           borderColor: 'divider',
         }}
       >
+        <ToggleButtonGroup
+          exclusive
+          size="small"
+          value={displayMode}
+          onChange={(_, value: RequestDisplayMode | null) => value && setDisplayMode(value)}
+          aria-label={t('workflowRequest.displayMode')}
+          sx={{ marginInlineEnd: 0.75, height: 30, '& .MuiToggleButton-root': { px: 1.25, py: 0, fontSize: 11, textTransform: 'none' } }}
+        >
+          <ToggleButton value="normal">{t('workflowRequest.normalDisplay')}</ToggleButton>
+          <ToggleButton value="printTemplate">{t('workflowRequest.printTemplateDisplay')}</ToggleButton>
+        </ToggleButtonGroup>
         <Button
           size="small"
           variant="contained"
@@ -315,14 +355,35 @@ export function RequestFromPage(): React.ReactElement {
                 '&::-webkit-scrollbar-thumb:hover': { bgcolor: '#707070' },
               }}
             >
-              <DynamicForm
-                ref={formRef}
-                key={record.id}
-                processId={record.recId}
-                requestFiles={requestFiles}
-                showActions={false}
-                onStatusChange={updateFormStatus}
-              />
+              <Box sx={{ display: displayMode === 'normal' || Boolean(publishedTemplate.data) ? 'block' : 'none', p: displayMode === 'printTemplate' ? { xs: 0.5, md: 1.5 } : 0, bgcolor: '#fff', overflow: 'auto' }}>
+                <DynamicForm
+                  ref={formRef}
+                  key={record.id}
+                  processId={record.recId}
+                  requestFiles={requestFiles}
+                  showActions={false}
+                  onStatusChange={updateFormStatus}
+                  displayMode={displayMode}
+                  printTemplate={publishedTemplate.data?.document}
+                  printCompany={company}
+                  requestDate={requestDate}
+                />
+              </Box>
+              {displayMode === 'printTemplate' && !publishedTemplate.data && (
+                <Box sx={{ minHeight: 320, p: { xs: 0.5, md: 1.5 }, bgcolor: '#fff', overflow: 'auto' }}>
+                  {(publishedTemplates.isLoading || publishedTemplate.isLoading || reportCompany.isLoading) && (
+                    <Box sx={{ minHeight: 280, display: 'grid', placeItems: 'center' }}>
+                      <CircularProgress aria-label={t('workflowRequest.loadingPrintTemplate')} />
+                    </Box>
+                  )}
+                  {!publishedTemplates.isLoading && !selectedTemplate && (
+                    <Alert severity="info">{t('workflowRequest.noPublishedPrintTemplate')}</Alert>
+                  )}
+                  {(publishedTemplates.isError || publishedTemplate.isError || reportCompany.isError) && (
+                    <Alert severity="error">{t('workflowRequest.printTemplateLoadFailed')}</Alert>
+                  )}
+                </Box>
+              )}
             </Box>
           </Box>
         ),
