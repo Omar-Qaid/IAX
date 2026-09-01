@@ -35,6 +35,7 @@ public sealed class DynamicRequestOptionDto
     public long OptionId { get; set; }
     public string Value { get; set; } = string.Empty;
     public string Label { get; set; } = string.Empty;
+    public string? LabelAlias { get; set; }
     public decimal Score { get; set; }
     public int SortOrder { get; set; }
     public DynamicRequestOptionFeatureDto FeatureConfiguration { get; set; } = new();
@@ -59,6 +60,7 @@ public sealed class DynamicRequestValidationDto
     public string? Value { get; set; }
     public string? Mask { get; set; }
     public string ErrorMessage { get; set; } = string.Empty;
+    public string? ErrorMessageAlias { get; set; }
     public string Severity { get; set; } = "Error";
     public int SortOrder { get; set; }
 }

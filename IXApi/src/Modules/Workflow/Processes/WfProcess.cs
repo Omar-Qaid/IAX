@@ -8,7 +8,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace IAX.IXApi.Modules.Workflow.Processes
 {
     [DataManagement]
-    public partial class WfProcess : MasterEntity<long>
+public partial class WfProcess : WfMasterEntity<long>
     {
         public short CategoryId { get; set; }
         

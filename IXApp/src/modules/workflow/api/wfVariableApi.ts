@@ -39,6 +39,7 @@ const toDto = ({
   ...record,
   code: record.code?.trim() || null,
   name: record.name?.trim() || null,
+  nameAlias: record.nameAlias?.trim() || null,
   description: record.description?.trim() || null,
   dataType: null,
   process: null,

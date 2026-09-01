@@ -10,7 +10,7 @@ public enum WfPrintTemplateStatus : byte
     Archived = 2
 }
 
-public sealed class WfPrintTemplate : MasterEntity<long>
+public sealed class WfPrintTemplate : WfMasterEntity<long>
 {
     public long ProcessId { get; set; }
     public WfProcess Process { get; set; } = null!;

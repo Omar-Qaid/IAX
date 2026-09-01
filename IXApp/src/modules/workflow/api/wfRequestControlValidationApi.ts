@@ -12,6 +12,7 @@ export interface WfRequestControlValidationRecord {
   value: string | null;
   maskInput: string | null;
   errorMessage: string;
+  errorMessageAlias?: string | null;
   severity: string;
   sortOrder: number;
   isActive: boolean;

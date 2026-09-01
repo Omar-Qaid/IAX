@@ -40,6 +40,7 @@ const toDto = ({ id: _id, ...record }: WfActivityRecord): WfActivityDto => ({
   ...record,
   code: record.code?.trim() || null,
   name: record.name?.trim() || null,
+  nameAlias: record.nameAlias?.trim() || null,
   description: record.description?.trim() || null,
   extendedProperties: record.extendedProperties?.trim() || null,
 });

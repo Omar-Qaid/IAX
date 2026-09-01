@@ -2,7 +2,7 @@ using IAX.IXApi.Shared.Application.Contracts;
 
 namespace IAX.IXApi.Modules.Workflow.Activities
 {
-    public class WfActivityControlDto : MasterEntityDto<long>
+public class WfActivityControlDto : WfMasterEntityDto<long>
     {
         public long ActivityId { get; set; }
         public long ProcessId { get; set; }

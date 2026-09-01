@@ -115,11 +115,7 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                 RequestId = value.Request,
                 ControlId = value.Type,
                 ControlDataId = value.Control,
-                ControlLabel = value.Label,
-                ControlLabelAR = value.LabelAr,
                 ControlValue = value.Value,
-                ControlValueAR = value.ValueAr,
-                ControlValueEN = value.ValueEn,
                 UsedAsCriteria = value.Criteria,
                 SortOrder = value.Order,
                 CreatedBy = by,
@@ -157,7 +153,7 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
         foreach (var a in Assignments.Where(x=>x.Request==requestId))
             if (!await db.WfAssignments.IgnoreQueryFilters().AnyAsync(x=>x.RecId==a.Id,ct)) { db.WfAssignments.Add(new WfAssignment {RecId=a.Id,RequestId=a.Request,ActivityId=a.Activity,UserId=a.User,AssignDate=a.Assigned,IsFinished=true,FinishedDate=a.Finished,AutoPassing=a.AutoPassing,AutoPassingHrs=a.Hours,StepId=a.Step,Automatically=a.Automatically,CreatedBy=by,OwnerAccountId=by}); await SaveIdentityAsync(db,"WfAssignments",ct); }
         var selectedAssignmentIds=Assignments.Where(x=>x.Request==requestId).Select(x=>x.Id).ToHashSet();
-        var activityDetails=ActivityValues.Where(v=>selectedAssignmentIds.Contains(v.Assignment)).Select(v=>new WfActivityDetail {RecId=v.Id,ProcessId=v.Task,AssignmentID=v.Assignment,ControlId=v.Type,ControlDataId=v.Control,ControlLabel=v.Label,ControlLabelAR=v.LabelAr,ControlValue=v.Value,ControlValueAR=v.ValueAr,ControlValueEN=v.ValueEn,SortOrder=v.Order,CreatedBy=by,OwnerAccountId=by}).ToList();
+        var activityDetails=ActivityValues.Where(v=>selectedAssignmentIds.Contains(v.Assignment)).Select(v=>new WfActivityDetail {RecId=v.Id,ProcessId=v.Task,AssignmentID=v.Assignment,ControlId=v.Type,ControlDataId=v.Control,ControlValue=v.Value,SortOrder=v.Order,CreatedBy=by,OwnerAccountId=by}).ToList();
         foreach (var t in Tasks.Where(x=>selectedAssignmentIds.Contains(x.Assignment)))
             if (!await db.WfProcessData.IgnoreQueryFilters().AnyAsync(x=>x.RecId==t.Id,ct)) { db.WfProcessData.Add(new WfProcessData {RecId=t.Id,AssignmentID=t.Assignment,FinishDate=t.Finished,ActivityDetails=BuildXml(activityDetails.Where(x=>x.ProcessId==t.Id)),CreatedBy=by,OwnerAccountId=by}); await SaveIdentityAsync(db,"WfProcessData",ct); }
         foreach (var d in activityDetails)
@@ -346,11 +342,7 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                     RequestId = request.RecId,
                     ControlId = control.ControlId,
                     ControlDataId = control.RecId,
-                    ControlLabel = control.Name ?? $"Field {control.RecId}",
-                    ControlLabelAR = control.Name ?? $"الحقل {control.RecId}",
                     ControlValue = string.Empty,
-                    ControlValueAR = string.Empty,
-                    ControlValueEN = string.Empty,
                     UsedAsCriteria = false,
                     SortOrder = control.SortOrder,
                     Score = control.Score,
@@ -367,11 +359,7 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                     RequestId = request.RecId,
                     ControlId = null,
                     ControlDataId = null,
-                    ControlLabel = "Seeded request",
-                    ControlLabelAR = "طلب تجريبي",
                     ControlValue = string.Empty,
-                    ControlValueAR = string.Empty,
-                    ControlValueEN = string.Empty,
                     UsedAsCriteria = false,
                     SortOrder = 0,
                     CreatedBy = by,
@@ -478,11 +466,7 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                     AssignmentID = assignment.RecId,
                     ControlId = 0,
                     ControlDataId = 0,
-                    ControlLabel = "Seeded activity",
-                    ControlLabelAR = "نشاط تجريبي",
                     ControlValue = string.Empty,
-                    ControlValueAR = string.Empty,
-                    ControlValueEN = string.Empty,
                     SortOrder = 0,
                     CreatedBy = by,
                     OwnerAccountId = by,
@@ -799,8 +783,8 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
         return JsonSerializer.Serialize(document, new JsonSerializerOptions(JsonSerializerDefaults.Web));
     }
 
-    private static string BuildXml(IEnumerable<WfRequestDetail> rows) => new XElement("Details",rows.OrderBy(x=>x.SortOrder).Select(x=>new XElement("Control",new XElement("ControlDataId",x.ControlDataId),new XElement("ControlLabel",x.ControlLabel),new XElement("ControlLabelAR",x.ControlLabelAR),new XElement("ControlValue",x.ControlValue),new XElement("ControlId",x.ControlId),new XElement("UsedAsCriteria",x.UsedAsCriteria),new XElement("ControlOrder",x.SortOrder),new XElement("RelatedObjectId",x.ProcessId??ProcessId),new XElement("ControlValueAR",x.ControlValueAR),new XElement("ControlValueEN",x.ControlValueEN)))).ToString(SaveOptions.DisableFormatting);
-    private static string BuildXml(IEnumerable<WfActivityDetail> rows) => new XElement("Details",rows.OrderBy(x=>x.SortOrder).Select(x=>new XElement("Control",new XElement("ControlDataId",x.ControlDataId),new XElement("ControlLabel",x.ControlLabel),new XElement("ControlLabelAR",x.ControlLabelAR),new XElement("ControlValue",x.ControlValue),new XElement("ControlId",x.ControlId),new XElement("UsedAsCriteria",x.UsedAsCriteria),new XElement("ControlOrder",x.SortOrder),new XElement("RelatedObjectId",0),new XElement("ControlValueAR",x.ControlValueAR),new XElement("ControlValueEN",x.ControlValueEN)))).ToString(SaveOptions.DisableFormatting);
+    private static string BuildXml(IEnumerable<WfRequestDetail> rows) => new XElement("Details",rows.OrderBy(x=>x.SortOrder).Select(x=>new XElement("Control",new XElement("ControlDataId",x.ControlDataId),new XElement("ControlValue",x.ControlValue),new XElement("ControlId",x.ControlId),new XElement("UsedAsCriteria",x.UsedAsCriteria),new XElement("ControlOrder",x.SortOrder),new XElement("RelatedObjectId",x.ProcessId??ProcessId)))).ToString(SaveOptions.DisableFormatting);
+    private static string BuildXml(IEnumerable<WfActivityDetail> rows) => new XElement("Details",rows.OrderBy(x=>x.SortOrder).Select(x=>new XElement("Control",new XElement("ControlDataId",x.ControlDataId),new XElement("ControlValue",x.ControlValue),new XElement("ControlId",x.ControlId),new XElement("UsedAsCriteria",x.UsedAsCriteria),new XElement("ControlOrder",x.SortOrder),new XElement("RelatedObjectId",0)))).ToString(SaveOptions.DisableFormatting);
 
     private static async System.Threading.Tasks.Task AddMissingAsync<TEntity>(ApplicationDbContext db,DbSet<TEntity> set,IEnumerable<TEntity> source,CancellationToken ct) where TEntity:class,IBaseEntity
     {

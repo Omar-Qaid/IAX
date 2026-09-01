@@ -1137,6 +1137,8 @@
       "validationExpression": "تعبير التحقق",
       "inputMask": "قناع الإدخال",
       "errorMessage": "رسالة الخطأ",
+      "errorMessageAlias": "الاسم البديل لرسالة الخطأ",
+      "optionAlias": "الاسم البديل للخيار",
       "deleteValidation": "حذف قاعدة التحقق",
       "noValidationRules": "لا توجد قواعد تحقق بعد.",
       "transitionsCount": "الانتقالات ({{count}})",
@@ -1363,6 +1365,7 @@
     "fields": {
       "code": "الرمز",
       "name": "الاسم الإنجليزي",
+      "nameAlias": "الاسم البديل",
       "nameAR": "الاسم العربي",
       "description": "الوصف الإنجليزي",
       "descriptionAR": "الوصف العربي",

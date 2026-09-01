@@ -124,7 +124,7 @@ const initialValues = (controls: DynamicRequestControl[]): Values => Object.from
 export interface DynamicFormHandle { submit: () => void }
 export interface DynamicFormStatus { score: number; saving: boolean; canSubmit: boolean; requestId: number | null }
 export const DynamicForm = React.forwardRef<DynamicFormHandle, { processId: number; requestFiles?: File[]; showActions?: boolean; onStatusChange?: (status: DynamicFormStatus) => void }>(function DynamicForm({ processId, requestFiles = [], showActions = true, onStatusChange }, ref): React.ReactElement {
-  const { t } = useAppTranslation();
+  const { t, isRtl } = useAppTranslation();
   const { notifyError, notifySuccess } = useNotifications();
   const definition = useQuery({
     queryKey: ['workflow', 'dynamic-request-form', processId],
@@ -229,7 +229,9 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, { processId: numb
       const failed = control.validations.find((rule) =>
         rule.severity.toLocaleLowerCase() === 'error' &&
         !ruleValid(rule, value, definition.data?.controls ?? [], values));
-      if (failed) next[control.requestControlId] = failed.errorMessage;
+      if (failed) next[control.requestControlId] = isRtl
+        ? failed.errorMessageAlias || failed.errorMessage
+        : failed.errorMessage;
     }
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -326,11 +328,12 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, { processId: numb
     const activeOptions = selectedOptions(control, values);
     return <Box key={control.requestControlId} sx={{ minWidth: 0 }}>
     <DynamicControlRenderer control={{
-      label: control.label, labelColor: control.labelColor, controlType: control.controlType, required: control.required,
+      label: isRtl ? control.labelAr || control.label : control.label,
+      labelColor: control.labelColor, controlType: control.controlType, required: control.required,
       readOnly: control.readOnly, defaultValue: control.defaultValue,
       options: control.options.map((option) => ({
         value: option.value,
-        label: option.label,
+        label: isRtl ? option.labelAlias || option.label : option.label,
         sendsNotification: option.featureConfiguration?.sendAlertMessage,
         requiresAttachment: option.featureConfiguration?.requireFileUpload,
         revealsControls: option.featureConfiguration?.showOtherControls && option.featureConfiguration.visibleControlIds.length > 0,

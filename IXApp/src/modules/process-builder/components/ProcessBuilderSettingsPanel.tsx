@@ -365,6 +365,7 @@ function ValidationRules({
           operator: '',
           mask: '',
           message: DEFAULT_VALIDATION_MESSAGES.required,
+          messageAlias: '',
           severity: 'Error',
           sortOrder: (values.length + 1) * 10,
           active: true,
@@ -473,14 +474,23 @@ function ValidationRules({
                 />
               )}
               {validationUsesCustomMessage(rule.type) && (
-                <TextField
-                  required
-                  size="small"
-                  label={t('wfProcessBuilder.settings.errorMessage')}
-                  value={rule.message}
-                  onChange={(event) => update(rule.id, { message: event.target.value })}
-                  sx={{ gridColumn: '1 / -1' }}
-                />
+                <>
+                  <TextField
+                    required
+                    size="small"
+                    label={t('wfProcessBuilder.settings.errorMessage')}
+                    value={rule.message}
+                    onChange={(event) => update(rule.id, { message: event.target.value })}
+                    sx={{ gridColumn: '1 / -1' }}
+                  />
+                  <TextField
+                    size="small"
+                    label={t('wfProcessBuilder.settings.errorMessageAlias')}
+                    value={rule.messageAlias ?? ''}
+                    onChange={(event) => update(rule.id, { messageAlias: event.target.value })}
+                    sx={{ gridColumn: '1 / -1' }}
+                  />
+                </>
               )}
               <Stack
                 direction="row"
@@ -1400,6 +1410,7 @@ export function ProcessBuilderSettingsPanel() {
                         }
                       ),
                     ],
+                    optionAliases: [...(control.optionAliases ?? control.options.map(() => '')), ''],
                     optionScores: [...(control.optionScores ?? []), 0],
                     optionFeatureConfigurations: [
                       ...(control.optionFeatureConfigurations ??
@@ -1482,6 +1493,21 @@ export function ProcessBuilderSettingsPanel() {
                                 })
                               }
                             />
+                            <TextField
+                              fullWidth
+                              size="small"
+                              label={t('wfProcessBuilder.settings.optionAlias')}
+                              value={control.optionAliases?.[index] ?? ''}
+                              onChange={(event) =>
+                                update({
+                                  optionAliases: control.options.map((_, itemIndex) =>
+                                    itemIndex === index
+                                      ? event.target.value
+                                      : (control.optionAliases?.[itemIndex] ?? '')
+                                  ),
+                                })
+                              }
+                            />
                             <IconButton
                               size="small"
                               color="error"
@@ -1491,6 +1517,9 @@ export function ProcessBuilderSettingsPanel() {
                               onClick={() =>
                                 update({
                                   options: control.options.filter(
+                                    (_, itemIndex) => itemIndex !== index
+                                  ),
+                                  optionAliases: (control.optionAliases ?? []).filter(
                                     (_, itemIndex) => itemIndex !== index
                                   ),
                                   optionScores: (control.optionScores ?? []).filter(

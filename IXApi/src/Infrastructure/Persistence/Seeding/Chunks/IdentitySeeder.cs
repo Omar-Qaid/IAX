@@ -98,14 +98,12 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             UserManager<AspNetUser> users,
             CancellationToken ct)
         {
-            _ = users;
             await SeedRolesAsync(roles);
+            await SeedUsersAsync(users);
             await SeedPermissionsAsync(db, ct);
             await AssignAllPermissionsToAdminAsync(db, roles, ct);
         }
 
-        // Roles are safe to seed. Administrator accounts must be provisioned
-        // explicitly so no deployment receives a predictable credential.
         private static async Task SeedRolesAsync(RoleManager<AspNetRole> roles)
         {
             string[] roleNames = ["Admin", "User"];
@@ -119,6 +117,55 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                         Name = r,
                         NormalizedName = r.ToUpperInvariant(),
                     });
+            }
+        }
+
+        private static async Task SeedUsersAsync(UserManager<AspNetUser> users)
+        {
+            var userDefinitions = new[]
+            {
+                new { UserName = "omar", Email = "omar@iax.local", Password = "123", Role = "Admin" },
+                new { UserName = "sys", Email = "sys@iax.local", Password = "123", Role = "User" },
+            };
+
+            foreach (var definition in userDefinitions)
+            {
+                var user = await users.FindByNameAsync(definition.UserName);
+                if (user is null)
+                {
+                    user = new AspNetUser
+                    {
+                        Id = definition.UserName == "sys" ? "sys" : Guid.NewGuid().ToString(),
+                        UserName = definition.UserName,
+                        Email = definition.Email,
+                        EmailConfirmed = true,
+                        SecurityStamp = Guid.NewGuid().ToString(),
+                        CreatedDate = DateTime.UtcNow,
+                    };
+
+                    // These explicit seed credentials intentionally bypass the normal
+                    // password validator. Interactive user creation still uses the
+                    // application's strong password policy.
+                    user.PasswordHash = users.PasswordHasher.HashPassword(user, definition.Password);
+                    var createResult = await users.CreateAsync(user);
+                    if (!createResult.Succeeded)
+                    {
+                        var errors = string.Join("; ", createResult.Errors.Select(error => error.Description));
+                        throw new InvalidOperationException(
+                            $"Failed to seed user '{definition.UserName}': {errors}");
+                    }
+                }
+
+                if (!await users.IsInRoleAsync(user, definition.Role))
+                {
+                    var roleResult = await users.AddToRoleAsync(user, definition.Role);
+                    if (!roleResult.Succeeded)
+                    {
+                        var errors = string.Join("; ", roleResult.Errors.Select(error => error.Description));
+                        throw new InvalidOperationException(
+                            $"Failed to assign role '{definition.Role}' to '{definition.UserName}': {errors}");
+                    }
+                }
             }
         }
 

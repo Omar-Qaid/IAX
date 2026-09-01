@@ -34,6 +34,7 @@ public sealed class PrintTemplateService : IPrintTemplateService
                 ProcessName = item.Process.Name ?? item.Process.Code ?? string.Empty,
                 Code = item.Code ?? string.Empty,
                 Name = item.Name ?? string.Empty,
+                NameAlias = item.NameAlias,
                 Description = item.Description,
                 PageSize = item.PageSize,
                 Orientation = item.Orientation,
@@ -67,6 +68,7 @@ public sealed class PrintTemplateService : IPrintTemplateService
                 ProcessName = item.Process.Name ?? item.Process.Code ?? string.Empty,
                 Code = item.Code ?? string.Empty,
                 Name = item.Name ?? string.Empty,
+                NameAlias = item.NameAlias,
                 Description = item.Description,
                 PageSize = item.PageSize,
                 Orientation = item.Orientation,
@@ -120,6 +122,7 @@ public sealed class PrintTemplateService : IPrintTemplateService
             ProcessName = template.Process.Name ?? template.Process.Code ?? string.Empty,
             Code = template.Code ?? string.Empty,
             Name = template.Name ?? string.Empty,
+            NameAlias = template.NameAlias,
             Description = template.Description,
             PageSize = template.PageSize,
             Orientation = template.Orientation,
@@ -157,6 +160,7 @@ public sealed class PrintTemplateService : IPrintTemplateService
                 ProcessId = input.ProcessId,
                 Code = input.Code.Trim(),
                 Name = input.Name.Trim(),
+                NameAlias = input.NameAlias?.Trim(),
                 Description = input.Description?.Trim(),
                 PageSize = input.Document.Page.Size,
                 Orientation = input.Document.Page.Orientation,
@@ -206,6 +210,7 @@ public sealed class PrintTemplateService : IPrintTemplateService
 
             template.Code = input.Code.Trim();
             template.Name = input.Name.Trim();
+            template.NameAlias = input.NameAlias?.Trim();
             template.Description = input.Description?.Trim();
             template.PageSize = input.Document.Page.Size;
             template.Orientation = input.Document.Page.Orientation;
@@ -359,6 +364,7 @@ public sealed class PrintTemplateService : IPrintTemplateService
             ProcessName = template.Process.Name ?? template.Process.Code ?? string.Empty,
             Code = template.Code ?? string.Empty,
             Name = template.Name ?? string.Empty,
+            NameAlias = template.NameAlias,
             Description = template.Description,
             PageSize = template.PageSize,
             Orientation = template.Orientation,

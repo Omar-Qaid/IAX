@@ -30,6 +30,7 @@ const toDto = ({ id: _id, ...record }: WfActivityControlRecord): WfActivityContr
   ...record,
   code: record.code?.trim() || null,
   name: record.name?.trim() || null,
+  nameAlias: record.nameAlias?.trim() || null,
   description: record.description?.trim() || null,
 });
 

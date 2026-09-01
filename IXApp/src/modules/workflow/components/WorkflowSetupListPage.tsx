@@ -159,6 +159,13 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
         flex: 1,
         editable: true,
       },
+      {
+        field: 'nameAlias',
+        headerName: 'workflowSetup.fields.nameAlias',
+        minWidth: 220,
+        flex: 1,
+        editable: true,
+      },
       ...extraFields.map<ColumnDef<WorkflowMasterRecord<TDto>>>((field) => ({
         field: field.field,
         headerName: field.labelKey,
@@ -190,6 +197,7 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
     searchFields: [
       { field: 'code', label: t('workflowSetup.fields.code') },
       { field: 'name', label: t('workflowSetup.fields.name') },
+      { field: 'nameAlias', label: t('workflowSetup.fields.nameAlias') },
     ],
     backCommand: { label: t('actions.back'), onClick: () => navigate(-1) },
     showSearchCommand: true,

@@ -44,6 +44,10 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                 .HasMaxLength(1000)
                 .IsRequired();
 
+            builder.Property(x => x.ErrorMessageAlias)
+                .HasColumnName("ErrorMessageAlias")
+                .HasMaxLength(1000);
+
             builder.Property(x => x.Severity)
                 .HasColumnName("Severity")
                 .HasMaxLength(50)

@@ -7,6 +7,7 @@ export interface WfCategoryDto {
   recId: number;
   code: string | null;
   name: string | null;
+  nameAlias?: string | null;
   description: string | null;
   sysField: boolean;
   sortOrder: number;
@@ -37,6 +38,7 @@ const toDto = ({ id: _id, ...record }: WfCategoryRecord): WfCategoryDto => ({
   ...record,
   code: record.code?.trim() || null,
   name: record.name?.trim() || null,
+  nameAlias: record.nameAlias?.trim() || null,
   description: record.description?.trim() || null,
 });
 

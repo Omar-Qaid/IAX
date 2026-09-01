@@ -18,7 +18,32 @@ using System.Linq;
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
 {
-    public class OrganizationSeeder : ISeeder
+    /// <summary>
+    /// Seeds the sanitized organization master data and employees imported from
+    /// the supplied organization export.
+    /// </summary>
+    public sealed class OrganizationSeeder : ISeeder
+    {
+        private readonly OthersDBOrganizationEmployeeSeeder _importedDataSeeder;
+
+        public OrganizationSeeder(string? seedDbConnectionString = null)
+        {
+            _importedDataSeeder = new OthersDBOrganizationEmployeeSeeder(seedDbConnectionString);
+        }
+
+        public Task SeedAsync(
+            ApplicationDbContext db,
+            RoleManager<AspNetRole> roles,
+            UserManager<AspNetUser> users,
+            CancellationToken ct) =>
+            _importedDataSeeder.SeedAsync(db, roles, users, ct);
+    }
+
+    /// <summary>
+    /// Retains the original synthetic organization dataset for explicit demo use.
+    /// It is not part of the normal database seed pipeline.
+    /// </summary>
+    public class OrganizationDemoSeeder : ISeeder
     {
         public async Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles, UserManager<AspNetUser> users, CancellationToken ct)
         {

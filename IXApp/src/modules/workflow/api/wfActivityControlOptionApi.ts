@@ -8,6 +8,7 @@ export interface WfActivityControlOptionRecord {
   activityControlId: number;
   value: string;
   name: string;
+  nameAlias?: string | null;
   sortOrder: number;
   isActive: boolean;
   rowVersion: string | null;

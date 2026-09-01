@@ -4,7 +4,7 @@ using IAX.IXApi.Modules.Workflow.Processes;
 
 namespace IAX.IXApi.Modules.Workflow.Requests
 {
-    public class WfRequestControlDto : MasterEntityDto<long>
+public class WfRequestControlDto : WfMasterEntityDto<long>
     {
         public long ProcessId { get; set; }
         public byte ControlId { get; set; }

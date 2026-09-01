@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace IAX.IXApi.Modules.Workflow.Activities
 {
-    public class WfActivityControl : MasterEntity<long>
+public class WfActivityControl : WfMasterEntity<long>
     {
         public long ActivityId { get; set; }
         [System.ComponentModel.DataAnnotations.Schema.ForeignKey(nameof(ActivityId))]

@@ -5,7 +5,7 @@ using IAX.IXApi.Modules.Workflow.Priorities;
 
 namespace IAX.IXApi.Modules.Workflow.Processes
 {
-    public class WfProcessDto : MasterEntityDto<long>
+public class WfProcessDto : WfMasterEntityDto<long>
     {
         public short CategoryId { get; set; }
         public WfCategoryDto? Category { get; set; }

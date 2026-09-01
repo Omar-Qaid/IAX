@@ -7,7 +7,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace IAX.IXApi.Modules.Workflow.Activities
 {
-    public class WfActivity : MasterEntity<long>
+public class WfActivity : WfMasterEntity<long>
     {
         public byte ActivityTypeId { get; set; }
         [System.ComponentModel.DataAnnotations.Schema.ForeignKey(nameof(ActivityTypeId))]

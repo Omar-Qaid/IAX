@@ -5,6 +5,10 @@ namespace IAX.IXApi.Modules.Workflow.PrintTemplates;
 
 public sealed class WfRequestPrintVersion : Entity<long>
 {
+    [System.ComponentModel.DataAnnotations.StringLength(255)]
+    public string? Name { get; set; }
+    [System.ComponentModel.DataAnnotations.StringLength(255)]
+    public string? NameAlias { get; set; }
     public long RequestId { get; set; }
     public WfRequest Request { get; set; } = null!;
     public long TemplateId { get; set; }

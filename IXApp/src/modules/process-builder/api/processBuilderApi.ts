@@ -356,7 +356,9 @@ export async function loadProcessBuilder(processId: number): Promise<ProcessBuil
               id: String(control.recId),
               code: control.code ?? '',
               label: control.name ?? '',
-              labelAR: typeof properties.labelAR === 'string' ? properties.labelAR : '',
+              labelAR:
+                control.nameAlias ??
+                (typeof properties.labelAR === 'string' ? properties.labelAR : ''),
               labelColor:
                 typeof properties.labelColor === 'string' ? properties.labelColor : '#7a4b00',
               type: (() => {
@@ -384,6 +386,10 @@ export async function loadProcessBuilder(processId: number): Promise<ProcessBuil
                 .filter((option) => option.activityControlId === control.recId && option.isActive)
                 .sort((a, b) => a.sortOrder - b.sortOrder)
                 .map((option) => option.name || option.value),
+              optionAliases: activityOptions
+                .filter((option) => option.activityControlId === control.recId && option.isActive)
+                .sort((a, b) => a.sortOrder - b.sortOrder)
+                .map((option) => option.nameAlias ?? ''),
               validations: activityValidations
                 .filter((validation) => validation.activityControlId === control.recId)
                 .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -435,6 +441,7 @@ export async function loadProcessBuilder(processId: number): Promise<ProcessBuil
           operator: validation.operator ?? '',
           mask: validation.maskInput ?? '',
           message: validation.errorMessage,
+          messageAlias: validation.errorMessageAlias ?? '',
           severity: validation.severity as BuilderControl['validations'][number]['severity'],
           sortOrder: validation.sortOrder,
           active: validation.isActive,
@@ -443,7 +450,9 @@ export async function loadProcessBuilder(processId: number): Promise<ProcessBuil
         id: String(control.recId),
         code: control.code ?? '',
         label: control.name ?? '',
-        labelAR: typeof properties.labelAR === 'string' ? properties.labelAR : '',
+        labelAR:
+          control.nameAlias ??
+          (typeof properties.labelAR === 'string' ? properties.labelAR : ''),
         labelColor: typeof properties.labelColor === 'string' ? properties.labelColor : '#7a4b00',
         type: (() => {
           const item = controlTypes.find((candidate) => candidate.recId === control.controlId);
@@ -464,6 +473,7 @@ export async function loadProcessBuilder(processId: number): Promise<ProcessBuil
         usedAsCriteria: Boolean(properties.usedAsCriteria ?? control.usedAsCriteria),
         defaultValue: typeof properties.defaultValue === 'string' ? properties.defaultValue : '',
         options: controlOptions.map((option) => option.name || option.value),
+        optionAliases: controlOptions.map((option) => option.nameAlias ?? ''),
         optionScores: controlOptions.map((option) => option.score ?? 0),
         optionFeatureConfigurations: controlOptions.map((option, index) =>
           normalizeOptionFeatureConfiguration(
@@ -929,6 +939,7 @@ async function syncActivityControls(
         usedInSearch: false,
       }),
       name: control.label.trim(),
+      nameAlias: control.labelAR.trim() || null,
       activityId,
       processId,
       controlId: controlType.recId,
@@ -1033,6 +1044,7 @@ async function syncActivityControls(
         activityControlId,
         value,
         name: value,
+        nameAlias: control.optionAliases?.[index]?.trim() || null,
         sortOrder: (index + 1) * 10,
         isActive: true,
       };
@@ -1223,6 +1235,7 @@ export async function saveProcessRequestControls(
       }),
       code: current?.code ?? (codeMetadata.manual ? control.code.trim() || null : null),
       name: control.label.trim(),
+      nameAlias: control.labelAR.trim() || null,
       processId,
       controlId: controlType.recId,
       score: control.score,
@@ -1286,6 +1299,7 @@ export async function saveProcessRequestControls(
         value: rule.value.trim() || null,
         maskInput: rule.mask.trim() || null,
         errorMessage: resolvedValidationMessage(rule),
+        errorMessageAlias: rule.messageAlias?.trim() || null,
         severity: rule.severity,
         sortOrder: (ruleIndex + 1) * 10,
         isActive: rule.active,
@@ -1315,6 +1329,7 @@ export async function saveProcessRequestControls(
             const resolveControlId = (value: string) => savedControlIds.get(value) ?? Number(value);
             return {
               value: option.trim(),
+              nameAlias: control.optionAliases?.[index]?.trim() || null,
               score: control.optionScores?.[index] ?? 0,
               extendedProperties: JSON.stringify({
                 ...features,
@@ -1343,6 +1358,7 @@ export async function saveProcessRequestControls(
         requestControlId,
         value: entry.value,
         name: entry.value,
+        nameAlias: entry.nameAlias,
         score: entry.score,
         sortOrder: (index + 1) * 10,
         extendedProperties: entry.extendedProperties,

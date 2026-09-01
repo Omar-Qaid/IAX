@@ -7,11 +7,12 @@ namespace IXApi.Tests;
 public sealed class LegacyWorkflowSeedDeserializationTests
 {
     [Fact]
-    public async Task Embedded_snapshot_deserializes()
+    public async Task Missing_source_connection_uses_embedded_snapshot()
     {
-        var method = typeof(LegacyWorkflowMasterDataSeeder).GetMethod("ReadDataAsync", BindingFlags.NonPublic | BindingFlags.Static);
+        var seeder = new OthersDBWorkflowMasterFromSeeder();
+        var method = typeof(OthersDBWorkflowMasterFromSeeder).GetMethod("ReadDataAsync", BindingFlags.NonPublic | BindingFlags.Instance);
         Assert.NotNull(method);
-        var task = Assert.IsAssignableFrom<Task>(method.Invoke(null, [CancellationToken.None]));
+        var task = Assert.IsAssignableFrom<Task>(method.Invoke(seeder, [CancellationToken.None]));
         await task;
         var data = task.GetType().GetProperty("Result")?.GetValue(task);
         Assert.NotNull(data);
@@ -22,13 +23,18 @@ public sealed class LegacyWorkflowSeedDeserializationTests
     [Fact]
     public async Task Embedded_organization_employee_snapshot_deserializes()
     {
-        var method = typeof(LegacyOrganizationEmployeeSeeder).GetMethod("ReadAsync", BindingFlags.NonPublic | BindingFlags.Static);
+        var seeder = new OthersDBOrganizationEmployeeSeeder();
+        var method = typeof(OthersDBOrganizationEmployeeSeeder).GetMethod("ReadAsync", BindingFlags.NonPublic | BindingFlags.Instance);
         Assert.NotNull(method);
-        var task = Assert.IsAssignableFrom<Task>(method.Invoke(null, [CancellationToken.None]));
+        var task = Assert.IsAssignableFrom<Task>(method.Invoke(seeder, [CancellationToken.None]));
         await task;
         var data = task.GetType().GetProperty("Result")?.GetValue(task);
         Assert.NotNull(data);
-        Assert.InRange(GetArrayLength(data!, "Employees"), 1, 10);
+        Assert.Equal(26, GetArrayLength(data!, "Departments"));
+        Assert.Equal(106, GetArrayLength(data!, "Occupations"));
+        Assert.Equal(2, GetArrayLength(data!, "Genders"));
+        Assert.Equal(34, GetArrayLength(data!, "Nationalities"));
+        Assert.Equal(1000, GetArrayLength(data!, "Employees"));
     }
 
     private static int GetArrayLength(object value, string propertyName)

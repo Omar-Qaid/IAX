@@ -1147,6 +1147,8 @@
       "validationExpression": "Validation expression",
       "inputMask": "Input mask",
       "errorMessage": "Error message",
+      "errorMessageAlias": "Error message alias",
+      "optionAlias": "Option alias",
       "deleteValidation": "Delete validation",
       "noValidationRules": "No validation rules yet.",
       "transitionsCount": "Transitions ({{count}})",
@@ -1382,6 +1384,7 @@
     "fields": {
       "code": "Code",
       "name": "English name",
+      "nameAlias": "Name alias",
       "nameAR": "Arabic name",
       "description": "English description",
       "descriptionAR": "Arabic description",

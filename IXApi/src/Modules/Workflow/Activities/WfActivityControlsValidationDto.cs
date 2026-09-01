@@ -4,6 +4,8 @@ namespace IAX.IXApi.Modules.Workflow.Activities
 {
     public class WfActivityControlsValidationDto : EntityDto<long>
     {
+        public string? Name { get; set; }
+        public string? NameAlias { get; set; }
         public long ActivityControlId { get; set; }
         public string ValidationType { get; set; } = null!;
         public string? ValidationExpression { get; set; }

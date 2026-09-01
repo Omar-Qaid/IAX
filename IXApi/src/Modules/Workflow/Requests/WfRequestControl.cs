@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IAX.IXApi.Modules.Workflow.Requests
 {
-    public class WfRequestControl: MasterEntity<long>
+public class WfRequestControl: WfMasterEntity<long>
     {
         public long ProcessId { get; set; }
         [ForeignKey(nameof(ProcessId))]

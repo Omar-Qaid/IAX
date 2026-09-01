@@ -2,7 +2,7 @@ using IAX.IXApi.Shared.Application.Contracts;
 
 namespace IAX.IXApi.Modules.Workflow.Steps
 {
-    public class WfStepDto : MasterEntityDto<long>
+public class WfStepDto : WfMasterEntityDto<long>
     {
         public long ProcessId { get; set; }
         public byte SortOrder { get; set; }

@@ -198,6 +198,7 @@ export interface PrintTemplateSummary {
   processName: string;
   code: string;
   name: string;
+  nameAlias?: string | null;
   description: string | null;
   pageSize: string;
   orientation: PrintTemplateOrientation;
@@ -237,6 +238,7 @@ export interface SavePrintTemplateInput {
   processId?: number;
   code: string;
   name: string;
+  nameAlias: string | null;
   description: string | null;
   isDefault: boolean;
   document: PrintTemplateDocument;

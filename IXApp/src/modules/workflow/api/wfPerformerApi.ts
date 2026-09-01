@@ -1,6 +1,6 @@
-import { createWorkflowMasterApi, type WorkflowMasterDto } from './workflowMasterApi';
+import { createWorkflowMasterApi, type WorkflowBaseDto } from './workflowMasterApi';
 
-export interface WfPerformerDto extends WorkflowMasterDto {
+export interface WfPerformerDto extends WorkflowBaseDto {
   performerTypeId: number;
   relatedField: number | null;
   isApplicant: boolean;

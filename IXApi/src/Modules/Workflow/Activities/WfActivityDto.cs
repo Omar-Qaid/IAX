@@ -3,7 +3,7 @@ using IAX.IXApi.Modules.Communication.Notifications;
 
 namespace IAX.IXApi.Modules.Workflow.Activities
 {
-    public class WfActivityDto : MasterEntityDto<long>
+public class WfActivityDto : WfMasterEntityDto<long>
     {
         public byte ActivityTypeId { get; set; }
         public long StepId { get; set; }

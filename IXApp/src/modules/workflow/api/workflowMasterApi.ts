@@ -2,7 +2,7 @@ import { ApiError } from '@core/api/apiError';
 import { apiClient } from '@core/api/apiClient';
 import type { ApiResponse } from '@core/api/apiResponse';
 
-export interface WorkflowMasterDto {
+export interface WorkflowBaseDto {
   recId: number;
   code: string | null;
   name: string | null;
@@ -14,7 +14,11 @@ export interface WorkflowMasterDto {
   dataAreaId: string;
 }
 
-export type WorkflowMasterRecord<TDto extends WorkflowMasterDto = WorkflowMasterDto> = TDto & {
+export interface WorkflowMasterDto extends WorkflowBaseDto {
+  nameAlias?: string | null;
+}
+
+export type WorkflowMasterRecord<TDto extends WorkflowBaseDto = WorkflowMasterDto> = TDto & {
   id: string;
 };
 
@@ -24,6 +28,7 @@ export const createEmptyWorkflowMaster = <TDto extends WorkflowMasterDto>(
     | 'recId'
     | 'code'
     | 'name'
+    | 'nameAlias'
     | 'description'
     | 'sortOrder'
     | 'isActive'
@@ -37,6 +42,7 @@ export const createEmptyWorkflowMaster = <TDto extends WorkflowMasterDto>(
     recId: 0,
     code: null,
     name: '',
+    nameAlias: null,
     description: null,
     sortOrder: 0,
     isActive: true,
@@ -56,18 +62,24 @@ const requireData = <T>(response: ApiResponse<T>, resourceName: string): T => {
   return response.data;
 };
 
-export const createWorkflowMasterApi = <TDto extends WorkflowMasterDto>(
+export const createWorkflowMasterApi = <TDto extends WorkflowBaseDto>(
   endpoint: string,
   resourceName: string
 ) => {
   const toRecord = (dto: TDto): WorkflowMasterRecord<TDto> => ({ ...dto, id: String(dto.recId) });
-  const toDto = ({ id: _id, ...record }: WorkflowMasterRecord<TDto>): TDto =>
-    ({
+  const toDto = ({ id: _id, ...record }: WorkflowMasterRecord<TDto>): TDto => {
+    const nameAlias =
+      'nameAlias' in record
+        ? { nameAlias: typeof record.nameAlias === 'string' ? record.nameAlias.trim() || null : null }
+        : {};
+    return ({
       ...record,
       code: record.code?.trim() || null,
       name: record.name?.trim() || null,
+      ...nameAlias,
       description: record.description?.trim() || null,
     }) as unknown as TDto;
+  };
 
   return {
     async list(signal?: AbortSignal): Promise<WorkflowMasterRecord<TDto>[]> {

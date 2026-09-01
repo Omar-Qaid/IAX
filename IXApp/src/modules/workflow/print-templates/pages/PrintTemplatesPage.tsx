@@ -47,6 +47,7 @@ const statusKey = (status: PrintTemplateSummary['status']): string => {
 const emptyDraft = (language: PrintTemplateLanguage): SavePrintTemplateInput => ({
   code: '',
   name: '',
+  nameAlias: null,
   description: null,
   isDefault: false,
   document: createEmptyPrintTemplateDocument(language),
@@ -117,6 +118,7 @@ export function PrintTemplatesPage(): React.ReactElement {
       setDraft({
         code: template.code,
         name: template.name,
+        nameAlias: template.nameAlias ?? null,
         description: template.description,
         isDefault: template.isDefault,
         document: template.document,
@@ -368,6 +370,15 @@ export function PrintTemplatesPage(): React.ReactElement {
             value={draft.name}
             onChange={(event) => setDraft((value) => ({ ...value, name: event.target.value }))}
             slotProps={{ htmlInput: { maxLength: 200 } }}
+          />
+          <TextField
+            size="small"
+            label={t('workflowSetup.fields.nameAlias')}
+            value={draft.nameAlias ?? ''}
+            onChange={(event) =>
+              setDraft((value) => ({ ...value, nameAlias: event.target.value || null }))
+            }
+            slotProps={{ htmlInput: { maxLength: 255 } }}
           />
           <TextField
             size="small"

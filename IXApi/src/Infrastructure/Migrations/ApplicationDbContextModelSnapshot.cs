@@ -19879,6 +19879,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("NameAlias")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
 
@@ -19973,6 +19977,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("NameAlias")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
 
@@ -20049,6 +20057,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)")
                         .HasColumnName("Name");
+
+                    b.Property<string>("NameAlias")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
@@ -20133,6 +20145,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("NameAlias")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.Property<string>("Operator")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)")
@@ -20201,27 +20217,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<byte>("ControlId")
                         .HasColumnType("tinyint");
 
-                    b.Property<string>("ControlLabel")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("ControlLabelAR")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
                     b.Property<string>("ControlValue")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("ControlValueAR")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("ControlValueEN")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
@@ -20380,6 +20376,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("NameAlias")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
 
@@ -20444,6 +20444,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("NameAlias")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
@@ -20516,6 +20520,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NameAlias")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
@@ -20667,6 +20675,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NameAlias")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
@@ -20833,6 +20845,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("NameAlias")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
 
@@ -20967,6 +20983,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("NameAlias")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("Orientation")
                         .IsRequired()
@@ -21118,6 +21138,14 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Name")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("NameAlias")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
 
@@ -21202,6 +21230,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("NameAlias")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
 
@@ -21262,6 +21294,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NameAlias")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
@@ -21329,6 +21365,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NameAlias")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
@@ -21695,6 +21735,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("NameAlias")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
 
@@ -21772,6 +21816,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasColumnType("nvarchar(500)")
                         .HasColumnName("Name");
 
+                    b.Property<string>("NameAlias")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
 
@@ -21835,6 +21883,11 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)")
                         .HasColumnName("ErrorMessage");
+
+                    b.Property<string>("ErrorMessageAlias")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)")
+                        .HasColumnName("ErrorMessageAlias");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit")
@@ -21923,27 +21976,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<byte?>("ControlId")
                         .HasColumnType("tinyint");
 
-                    b.Property<string>("ControlLabel")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("ControlLabelAR")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
                     b.Property<string>("ControlValue")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("ControlValueAR")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("ControlValueEN")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
@@ -22175,6 +22208,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("NameAlias")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
 
@@ -22329,6 +22366,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("NameAlias")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
 
@@ -22446,6 +22487,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NameAlias")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");

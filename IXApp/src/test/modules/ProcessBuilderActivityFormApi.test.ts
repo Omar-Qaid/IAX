@@ -147,7 +147,7 @@ const activity = {
 };
 const activityControl = {
   id: '30', recId: 30, activityId: 20, processId: 1, controlId: 2,
-  code: 'FIELD-1', name: 'Decision', description: null, score: 0, sortOrder: 10,
+  code: 'FIELD-1', name: 'Decision', nameAlias: 'القرار', description: null, score: 0, sortOrder: 10,
   mandatory: true, uniqueKey: false, usedAsCriteria: false, usedInSearch: false,
   validationRules: null,
   extendedProperties: JSON.stringify({ required: true, visible: true, defaultValue: '' }),
@@ -207,6 +207,7 @@ describe('Process Builder Activity Form backend integration', () => {
     expect(control).toMatchObject({
       id: '30',
       label: 'Decision',
+      labelAR: 'القرار',
       type: 'dropdown-manual',
       sortOrder: 1,
       required: true,
@@ -215,6 +216,7 @@ describe('Process Builder Activity Form backend integration', () => {
     });
 
     control.label = 'Final decision';
+    control.labelAR = 'القرار النهائي';
     control.options = ['Approve'];
     await saveProcessActivities(document);
 
@@ -223,6 +225,7 @@ describe('Process Builder Activity Form backend integration', () => {
       activityId: 20,
       processId: 1,
       name: 'Final decision',
+      nameAlias: 'القرار النهائي',
       sortOrder: 1,
       validationRules: expect.any(String),
     }));
@@ -257,7 +260,7 @@ describe('Process Builder Activity Form backend integration', () => {
 
   it('loads and saves request controls, selectable options, validations, and transitions', async () => {
     const requestControl = {
-      id: '31', recId: 31, processId: 1, controlId: 4, code: 'REQ-1', name: 'Choices',
+      id: '31', recId: 31, processId: 1, controlId: 4, code: 'REQ-1', name: 'Choices', nameAlias: 'الخيارات',
       description: null, mandatory: true, uniqueKey: false, score: 0, usedAsCriteria: true,
       sortOrder: 10, validationRules: null,
       extendedProperties: JSON.stringify({
@@ -328,9 +331,11 @@ describe('Process Builder Activity Form backend integration', () => {
 
     control.options = ['One'];
     const result = await saveProcessRequestControls(document);
+
+    expect(result.controls[0].labelAR).toBe('الخيارات');
     expect(result.controlIds).toEqual({ '31': '31' });
     expect(mocks.requestControlUpdate).toHaveBeenCalledWith(expect.objectContaining({
-      recId: 31, processId: 1, controlId: 4, name: 'Choices', sortOrder: 1,
+      recId: 31, processId: 1, controlId: 4, name: 'Choices', nameAlias: 'الخيارات', sortOrder: 1,
     }));
     expect(mocks.requestControlUpdate).toHaveBeenLastCalledWith(expect.objectContaining({
       extendedProperties: expect.not.stringContaining('optionFeatureConfigurations'),

@@ -387,18 +387,21 @@ export const useProcessBuilderStore = create<State>((set) => {
           || fromIndex >= control.options.length || toIndex >= control.options.length)
           return control;
         const options = [...control.options];
+        const optionAliases = [...(control.optionAliases ?? control.options.map(() => ''))];
         const optionScores = [...(control.optionScores ?? control.options.map(() => 0))];
         const optionFeatureConfigurations = [...(control.optionFeatureConfigurations ?? control.options.map(() => ({
           requireFileUpload: false, sendAlertMessage: false, alertMessage: '', performerIds: [],
           showOtherControls: false, visibleControlIds: [],
         })))];
         const [moved] = options.splice(fromIndex, 1);
+        const [movedAlias] = optionAliases.splice(fromIndex, 1);
         const [movedScore] = optionScores.splice(fromIndex, 1);
         const [movedFeatures] = optionFeatureConfigurations.splice(fromIndex, 1);
         options.splice(toIndex, 0, moved);
+        optionAliases.splice(toIndex, 0, movedAlias);
         optionScores.splice(toIndex, 0, movedScore);
         optionFeatureConfigurations.splice(toIndex, 0, movedFeatures);
-        return { ...control, options, optionScores, optionFeatureConfigurations };
+        return { ...control, options, optionAliases, optionScores, optionFeatureConfigurations };
       }),
     })),
     reorderActivityControlOptions: (stepId, activityId, controlId, fromIndex, toIndex) => change((d) => ({

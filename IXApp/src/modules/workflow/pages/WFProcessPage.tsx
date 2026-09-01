@@ -55,6 +55,7 @@ const emptyProcess = (): WfProcessRecord => ({
   recId: 0,
   code: null,
   name: '',
+  nameAlias: null,
   categoryId: 0,
   score: 0,
   canRepeat: false,
@@ -71,7 +72,7 @@ const emptyProcess = (): WfProcessRecord => ({
 });
 
 const numberValue = (value: DetailValue): number => Number(value) || 0;
-const textValue = (value: string | null): string => value ?? '';
+const textValue = (value: string | null | undefined): string => value ?? '';
 
 export function WFProcessPage(): React.ReactElement {
   const { t } = useAppTranslation();
@@ -259,6 +260,13 @@ export function WFProcessPage(): React.ReactElement {
         width: 'minmax(320px, 520px)',
         getValue: (record) => textValue(record.name),
         setValue: (record, value) => ({ ...record, name: String(value) }),
+      },
+      {
+        id: 'nameAlias',
+        label: t('workflowSetup.fields.nameAlias'),
+        width: 'minmax(320px, 520px)',
+        getValue: (record) => textValue(record.nameAlias),
+        setValue: (record, value) => ({ ...record, nameAlias: String(value) || null }),
       },
     ],
     sections,

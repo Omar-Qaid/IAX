@@ -3,8 +3,8 @@ import { apiClient } from '@core/api/apiClient';
 import type { ApiResponse } from '@core/api/apiResponse';
 
 export interface DynamicRequestOptionFeature { requireFileUpload: boolean; sendAlertMessage: boolean; alertMessage: string; performerIds: number[]; showOtherControls: boolean; visibleControlIds: number[] }
-export interface DynamicRequestOption { optionId: number; value: string; label: string; score: number; sortOrder: number; featureConfiguration?: DynamicRequestOptionFeature }
-export interface DynamicRequestValidation { validationId: number; type: string; expression: string | null; operator: string | null; value: string | null; mask: string | null; errorMessage: string; severity: string; sortOrder: number }
+export interface DynamicRequestOption { optionId: number; value: string; label: string; labelAlias?: string | null; score: number; sortOrder: number; featureConfiguration?: DynamicRequestOptionFeature }
+export interface DynamicRequestValidation { validationId: number; type: string; expression: string | null; operator: string | null; value: string | null; mask: string | null; errorMessage: string; errorMessageAlias?: string | null; severity: string; sortOrder: number }
 export interface DynamicRequestCondition { sourceControlId: number; operator: string; value: string }
 export interface DynamicRequestControl { requestControlId: number; controlId: number; code: string; label: string; labelAr: string | null; labelColor: string | null; controlType: string; sortOrder: number; columnSpan?: number; score: number; required: boolean; readOnly: boolean; uniqueKey: boolean; usedAsCriteria: boolean; defaultValue: string | null; visibilityCondition: DynamicRequestCondition | null; options: DynamicRequestOption[]; validations: DynamicRequestValidation[] }
 export interface DynamicRequestFormDefinition { processId: number; processName: string; processDescription: string | null; controls: DynamicRequestControl[] }

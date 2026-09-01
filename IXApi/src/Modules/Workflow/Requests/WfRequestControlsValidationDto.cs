@@ -11,6 +11,7 @@ namespace IAX.IXApi.Modules.Workflow.Requests
         public string? Value { get; set; }
         public string? MaskInput { get; set; }
         public string ErrorMessage { get; set; } = null!;
+        public string? ErrorMessageAlias { get; set; }
         public string Severity { get; set; } = null!;
         public int SortOrder { get; set; }
     }

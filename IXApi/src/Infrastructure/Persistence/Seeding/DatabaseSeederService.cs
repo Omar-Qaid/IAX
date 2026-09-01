@@ -11,6 +11,7 @@ using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Identity.Roles;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding
 {
@@ -19,15 +20,18 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding
         private readonly ApplicationDbContext _db;
         private readonly RoleManager<AspNetRole> _roles;
         private readonly UserManager<AspNetUser> _users;
+        private readonly string? _seedDbConnectionString;
 
         public DatabaseSeederService(
             ApplicationDbContext db,
             RoleManager<AspNetRole> roles,
-            UserManager<AspNetUser> users)
+            UserManager<AspNetUser> users,
+            IConfiguration configuration)
         {
             _db = db;
             _roles = roles;
             _users = users;
+            _seedDbConnectionString = configuration.GetConnectionString("SeedDbConnString");
         }
 
         public async Task SeedAsync(CancellationToken ct = default)
@@ -36,23 +40,14 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding
             {        
                 new SettingsSeeder(),
                 new NumberSequenceSeeder(),
-                new IdentitySeeder(),
                 new DocumentManagementSeeder(),
-                new LegacyOrganizationEmployeeSeeder(),
-                new LegacyWorkflowMasterDataSeeder(),
-                // Payment Request / طلب الصرف. Enable after assigning performer users and process access.
-                 new WfProcessSeedData(),
-                //new WorkflowRequestTrackingSeeder(),
+                new IdentitySeeder(),
                 new ErpSeeder(),
-                //new VendSeeder(),
-                //new TaxSeeder(),
-                //new PostingProfileSeeder(),
-                //new DimensionSeeder(),
-                //new CustLedgerSeeder(),
-                //new MainAccountSeeder(),
-                //new CustPaymModeSeeder(),
-                //new SalesPoolSeeder(),
-                //new MarkupTableSeeder(),
+                new OthersDBOrganizationEmployeeSeeder(_seedDbConnectionString),
+                new OthersDBWorkflowMasterFromSeeder(_seedDbConnectionString),
+                new WfProcessSeedData(),
+               
+
             };
 
             foreach (var seeder in seeders)

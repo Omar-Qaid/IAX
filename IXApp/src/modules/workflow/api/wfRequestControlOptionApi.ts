@@ -8,6 +8,7 @@ export interface WfRequestControlOptionRecord {
   requestControlId: number;
   value: string;
   name: string;
+  nameAlias?: string | null;
   score: number;
   sortOrder: number;
   extendedProperties: string | null;

@@ -15,13 +15,14 @@ import { wfStepApi, type WfStepRecord } from '../api/wfStepApi';
 import { fetchProcessPage, processLookupColumns } from '../lookups/processLookup';
 
 const numberValue = (value: DetailValue): number => Number(value) || 0;
-const textValue = (value: string | null): string => value ?? '';
+const textValue = (value: string | null | undefined): string => value ?? '';
 
 const emptyStep = (processId = 0): WfStepRecord => ({
   id: `new-${crypto.randomUUID()}`,
   recId: 0,
   code: null,
   name: '',
+  nameAlias: null,
   description: null,
   processId,
   sortOrder: 0,
@@ -160,6 +161,12 @@ export function WFStepsPage(): React.ReactElement {
         label: t('wfStep.fields.name'),
         getValue: (record) => textValue(record.name),
         setValue: (record, value) => ({ ...record, name: String(value) || null }),
+      },
+      {
+        id: 'nameAlias',
+        label: t('workflowSetup.fields.nameAlias'),
+        getValue: (record) => textValue(record.nameAlias),
+        setValue: (record, value) => ({ ...record, nameAlias: String(value) || null }),
       },
       {
         id: 'description',

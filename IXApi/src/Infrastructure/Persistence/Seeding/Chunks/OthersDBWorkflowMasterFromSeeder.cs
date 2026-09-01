@@ -21,11 +21,16 @@ using IAX.IXApi.Shared.Domain.Entities;
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks;
 
 /// <summary>Imports a compact synthetic workflow definition used by local demonstrations and tests.</summary>
-public sealed class LegacyWorkflowMasterDataSeeder : ISeeder
+public sealed class OthersDBWorkflowMasterFromSeeder : OthersDBSeedData
 {
     private const string ResourceSuffix = "Persistence.Seeding.Data.LegacyWorkflowMasterData.json";
 
-    public async Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles, UserManager<AspNetUser> users, CancellationToken ct)
+    public OthersDBWorkflowMasterFromSeeder(string? seedDbConnectionString = null)
+        : base(seedDbConnectionString)
+    {
+    }
+
+    public override async Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles, UserManager<AspNetUser> users, CancellationToken ct)
     {
         _ = roles;
         var owner = (await users.FindByNameAsync("sys"))?.Id ?? "sys";
@@ -102,9 +107,139 @@ public sealed class LegacyWorkflowMasterDataSeeder : ISeeder
         await set.AddRangeAsync(missing,ct); await SaveIdentityAsync(db,table,ct);
     }
 
-    private static async Task<SeedData> ReadDataAsync(CancellationToken ct)
+    private async Task<SeedData> ReadDataAsync(CancellationToken ct)
     {
-        var assembly=typeof(LegacyWorkflowMasterDataSeeder).Assembly;
+        return SeedDbConnectionString is null
+            ? await ReadEmbeddedDataAsync(ct)
+            : await ReadSeedDatabaseAsync(SeedDbConnectionString, ct);
+    }
+
+    private static async Task<SeedData> ReadSeedDatabaseAsync(
+        string connectionString,
+        CancellationToken ct)
+    {
+        const string sql = """
+            SELECT
+              JSON_QUERY((SELECT DataTypeId AS Id,
+                                  COALESCE(NULLIF(DataTypeNameAR, N''), DataTypeName) AS Name,
+                                  COALESCE(DescriptionAR, Description) AS Description
+                           FROM dbo.WfDataTypes FOR JSON PATH)) AS DataTypes,
+              JSON_QUERY((SELECT ControlId AS Id, Code,
+                                  COALESCE(NULLIF(ControlNameAR, N''), ControlName) AS Name,
+                                  Description, ControlType
+                           FROM dbo.WfControls FOR JSON PATH)) AS Controls,
+              JSON_QUERY((SELECT ActivityTypeId AS Id,
+                                  COALESCE(NULLIF(ActivityTypeNameAR, N''), ActivityTypeName) AS Name,
+                                  COALESCE(DescriptionAR, Description) AS Description
+                           FROM dbo.WfActivityTypes FOR JSON PATH)) AS ActivityTypes,
+              JSON_QUERY((SELECT OperatorId AS Id,
+                                  COALESCE(NULLIF(OperatorNameAR, N''), OperatorName) AS Name,
+                                  COALESCE(DescriptionAR, Description) AS Description,
+                                  Activated AS Active
+                           FROM dbo.WfOperators FOR JSON PATH)) AS Operators,
+              JSON_QUERY((SELECT CategoryId AS Id,
+                                  COALESCE(NULLIF(CategoryNameAR, N''), CategoryName) AS Name,
+                                  COALESCE(DescriptionAR, Description) AS Description,
+                                  Activated AS Active, sysField AS SysField
+                           FROM dbo.WfCategories FOR JSON PATH)) AS Categories,
+              JSON_QUERY((SELECT PerformerId AS Id,
+                                  COALESCE(NULLIF(PerformerNameAR, N''), PerformerName) AS Name,
+                                  COALESCE(DescriptionAR, Description) AS Description,
+                                  Activated AS Active, RelatedField, IsEmployee,
+                                  IsManager1, IsManager2, IsManager3, IsManager4
+                           FROM dbo.WfPerformers FOR JSON PATH)) AS Performers,
+              JSON_QUERY((SELECT ProcessId AS Id,
+                                  COALESCE(NULLIF(ProcessNameAR, N''), ProcessName) AS Name,
+                                  COALESCE(DescriptionAR, Description) AS Description,
+                                  CategoryId, Activated AS Active, CanRepeat,
+                                  sysField AS SysField, COALESCE(PriorityId, 1) AS PriorityId,
+                                  CONVERT(decimal(18,2), 0) AS Score,
+                                  CONVERT(tinyint, 1) AS ProcessTypeId
+                           FROM dbo.WfProcesses FOR JSON PATH)) AS Processes,
+              JSON_QUERY((SELECT StepId AS Id, ProcessId,
+                                  COALESCE(NULLIF(StepNameAR, N''), StepName) AS Name,
+                                  COALESCE(DescriptionAR, Description) AS Description,
+                                  StepOrder AS SortOrder, sysField AS SysField,
+                                  Activated AS Active, PeriodHrs AS AutoPassingHrs,
+                                  CONVERT(bit, 0) AS AllMandatory,
+                                  CONVERT(decimal(18,2), 0) AS Score
+                           FROM dbo.WfSteps FOR JSON PATH)) AS Steps,
+              JSON_QUERY((SELECT VariableId AS Id, ProcessId,
+                                  COALESCE(NULLIF(VariableNameAR, N''), VariableName) AS Name,
+                                  COALESCE(DescriptionAR, Description) AS Description,
+                                  DataTypeId, Activated AS Active,
+                                  CONVERT(tinyint, 0) AS SortOrder
+                           FROM dbo.WfVariables FOR JSON PATH)) AS Variables,
+              JSON_QUERY((SELECT RequestControlId AS Id, RelatedObjectId AS ProcessId,
+                                  ControlId,
+                                  COALESCE(NULLIF(ControlLabelAR, N''), ControlLabel) AS Name,
+                                  CONVERT(nvarchar(max), NULL) AS Description,
+                                  ControlOrder AS SortOrder, Activated AS Active,
+                                  IsMandatory AS Mandatory,
+                                  CONVERT(nvarchar(max), ExtendedProperties) AS ExtendedProperties,
+                                  CONVERT(decimal(18,2), 0) AS Score
+                           FROM dbo.WfRequestControls FOR JSON PATH)) AS RequestControls,
+              JSON_QUERY((SELECT a.ActivityId AS Id, a.StepId,
+                                  COALESCE(NULLIF(a.ActivityNameAR, N''), a.ActivityName) AS Name,
+                                  COALESCE(a.DescriptionAR, a.Description) AS Description,
+                                  a.PerformerId, a.Activated AS Active,
+                                  a.RequiredDocs AS MandatoryDocs,
+                                  a.ShowDocs AS ShowPreviousDocs,
+                                  a.ShowPreviousTasks AS ShowPreviousSteps,
+                                  a.AlertingByEmail, a.AlertingBySMS,
+                                  a.AlertingBySystem, a.AutoPassing AS AutoPassEnabled,
+                                  a.PeriodHrs AS AutoPassingHrs,
+                                  CONVERT(decimal(18,2), 0) AS Score,
+                                  a.ExtendedProperties
+                           FROM dbo.WfActivities a FOR JSON PATH)) AS Activities,
+              JSON_QUERY((SELECT ac.ActivityControlID AS Id, s.ProcessId,
+                                  ac.ControlID AS ControlId,
+                                  COALESCE(NULLIF(ac.ControlLabelAR, N''), ac.ControlLabel) AS Name,
+                                  CONVERT(nvarchar(max), NULL) AS Description,
+                                  TRY_CONVERT(tinyint, ac.ControlOrder) AS SortOrder,
+                                  ac.Activated AS Active, ac.IsMandatory AS Mandatory,
+                                  ac.ExtendedProperties,
+                                  CONVERT(decimal(18,2), 0) AS Score,
+                                  ac.ActivityID AS ActivityId
+                           FROM dbo.WfActivityControls ac
+                           INNER JOIN dbo.WfActivities a ON a.ActivityId = ac.ActivityID
+                           INNER JOIN dbo.WfSteps s ON s.StepId = a.StepId
+                           FOR JSON PATH)) AS ActivityControls,
+              JSON_QUERY((SELECT MappingId AS Id, ActivityControlID AS ActivityControlId,
+                                  VariableID AS VariableId, Activated AS Active,
+                                  CONVERT(tinyint, 0) AS SortOrder
+                           FROM dbo.WfActivityMappingVariables FOR JSON PATH)) AS ActivityMappings,
+              JSON_QUERY((SELECT MappingId AS Id,
+                                  CONVERT(bigint, 0) AS ActivityControlId,
+                                  VariableID AS VariableId, Activated AS Active,
+                                  CONVERT(tinyint, 0) AS SortOrder,
+                                  RequestControlID AS RequestControlId
+                           FROM dbo.WfRequestMappingVariables FOR JSON PATH)) AS RequestMappings,
+              JSON_QUERY((SELECT TransitionId AS Id, ProcessId, ActivityId,
+                                  VariableId, OperatorId, Value, StepId,
+                                  RequestControlId, Activated AS Active,
+                                  CONVERT(tinyint, 0) AS SortOrder
+                           FROM dbo.WfTransitions FOR JSON PATH)) AS Transitions,
+              JSON_QUERY((SELECT UsersPerformerId AS Id, PerformerID AS PerformerId,
+                                  UserID, RelatedField, ExtendedProperties
+                           FROM dbo.WfUsersPerformers FOR JSON PATH)) AS PerformerUsers,
+              JSON_QUERY((SELECT UsersProcessesId AS Id, ProcessId,
+                                  DepartmentID AS DepartmentId,
+                                  OccupationID AS OccupationId, EmployeeId
+                           FROM dbo.WfUsersProcesses FOR JSON PATH)) AS UsersProcesses
+            FOR JSON PATH, WITHOUT_ARRAY_WRAPPER;
+            """;
+
+        var json = await ReadJsonAsync(connectionString, sql, ct);
+        return JsonSerializer.Deserialize<SeedData>(json,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+            ?? throw new InvalidOperationException(
+                "SeedDbConnString returned invalid workflow seed data.");
+    }
+
+    private static async Task<SeedData> ReadEmbeddedDataAsync(CancellationToken ct)
+    {
+        var assembly=typeof(OthersDBWorkflowMasterFromSeeder).Assembly;
         var name=assembly.GetManifestResourceNames().Single(x=>x.EndsWith(ResourceSuffix,StringComparison.Ordinal));
         await using var stream=assembly.GetManifestResourceStream(name)??throw new InvalidOperationException($"Missing resource {name}");
         return await JsonSerializer.DeserializeAsync<SeedData>(stream,new JsonSerializerOptions{PropertyNameCaseInsensitive=true},ct)??throw new InvalidOperationException("Invalid synthetic workflow seed resource.");

@@ -15,12 +15,20 @@ using OrganizationGender = IAX.IXApi.Modules.Organization.Genders.Gender;
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks;
 
-/// <summary>Seeds a small synthetic organization dataset for local demonstrations and tests.</summary>
-public sealed class LegacyOrganizationEmployeeSeeder : ISeeder
+/// <summary>
+/// Imports the sanitized organization export embedded with the application.
+/// Authentication credentials and personal contact/identity fields are intentionally excluded.
+/// </summary>
+public sealed class OthersDBOrganizationEmployeeSeeder : OthersDBSeedData
 {
     private const string ResourceSuffix="Persistence.Seeding.Data.LegacyOrganizationEmployeeData.json";
 
-    public async Task SeedAsync(ApplicationDbContext db,RoleManager<AspNetRole> roles,UserManager<AspNetUser> users,CancellationToken ct)
+    public OthersDBOrganizationEmployeeSeeder(string? seedDbConnectionString = null)
+        : base(seedDbConnectionString)
+    {
+    }
+
+    public override async Task SeedAsync(ApplicationDbContext db,RoleManager<AspNetRole> roles,UserManager<AspNetUser> users,CancellationToken ct)
     {
         _=roles;
         var owner=(await users.FindByNameAsync("sys"))?.Id??"sys";
@@ -92,7 +100,62 @@ public sealed class LegacyOrganizationEmployeeSeeder : ISeeder
         finally{await db.Database.CloseConnectionAsync();}
     }
 
-    private static async Task<Data> ReadAsync(CancellationToken ct){var assembly=typeof(LegacyOrganizationEmployeeSeeder).Assembly;var name=assembly.GetManifestResourceNames().Single(x=>x.EndsWith(ResourceSuffix,StringComparison.Ordinal));await using var stream=assembly.GetManifestResourceStream(name)??throw new InvalidOperationException($"Missing resource {name}");return await JsonSerializer.DeserializeAsync<Data>(stream,new JsonSerializerOptions{PropertyNameCaseInsensitive=true},ct)??throw new InvalidOperationException("Invalid organization employee seed resource.");}
+    private async Task<Data> ReadAsync(CancellationToken ct)
+    {
+        return SeedDbConnectionString is null
+            ? await ReadEmbeddedAsync(ct)
+            : await ReadSeedDatabaseAsync(SeedDbConnectionString, ct);
+    }
+
+    private static async Task<Data> ReadSeedDatabaseAsync(
+        string connectionString,
+        CancellationToken ct)
+    {
+        const string sql = """
+            SELECT
+              JSON_QUERY((SELECT DepartmentId AS Id,
+                                  COALESCE(NULLIF(DepartmentNameAR, N''), DepartmentName) AS Name,
+                                  COALESCE(DescriptionAR, Description) AS Description,
+                                  Activated AS Active
+                           FROM dbo.Departments FOR JSON PATH)) AS Departments,
+              JSON_QUERY((SELECT OccupationId AS Id,
+                                  COALESCE(NULLIF(OccupationNameAR, N''), OccupationName) AS Name,
+                                  COALESCE(DescriptionAR, Description) AS Description,
+                                  Activated AS Active
+                           FROM dbo.Occupations FOR JSON PATH)) AS Occupations,
+              JSON_QUERY((SELECT GenderId AS Id,
+                                  COALESCE(NULLIF(GenderNameAR, N''), GenderName) AS Name,
+                                  COALESCE(DescriptionAR, Description) AS Description
+                           FROM dbo.Genders FOR JSON PATH)) AS Genders,
+              JSON_QUERY((SELECT NationalityId AS Id,
+                                  COALESCE(NULLIF(NationalityNameAR, N''), NationalityName) AS Name,
+                                  COALESCE(DescriptionAR, Description) AS Description,
+                                  Activated AS Active
+                           FROM dbo.Nationalities FOR JSON PATH)) AS Nationalities,
+              JSON_QUERY((SELECT EmployeeId AS Id, EmployeeCode AS Code,
+                                  EmployeeName AS Name, EmployeeNameAR AS NameAr,
+                                  DepartmentId, OccupationId, GenderId, NationalityId,
+                                  CreatedDate AS CreatedAt,
+                                  CONVERT(nvarchar(450), CreatedBy) AS CreatedBy,
+                                  Activated AS Active
+                           FROM dbo.Employees FOR JSON PATH)) AS Employees
+            FOR JSON PATH, WITHOUT_ARRAY_WRAPPER;
+            """;
+
+        var json = await ReadJsonAsync(connectionString, sql, ct);
+        return JsonSerializer.Deserialize<Data>(json,
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+            ?? throw new InvalidOperationException(
+                "SeedDbConnString returned invalid organization seed data.");
+    }
+
+    private static async Task<Data> ReadEmbeddedAsync(CancellationToken ct)
+    {
+        var assembly=typeof(OthersDBOrganizationEmployeeSeeder).Assembly;
+        var name=assembly.GetManifestResourceNames().Single(x=>x.EndsWith(ResourceSuffix,StringComparison.Ordinal));
+        await using var stream=assembly.GetManifestResourceStream(name)??throw new InvalidOperationException($"Missing resource {name}");
+        return await JsonSerializer.DeserializeAsync<Data>(stream,new JsonSerializerOptions{PropertyNameCaseInsensitive=true},ct)??throw new InvalidOperationException("Invalid organization employee seed resource.");
+    }
     private sealed class Data{public LookupShort[] Departments{get;set;}=[];public LookupShort[] Occupations{get;set;}=[];public LookupByte[] Genders{get;set;}=[];public LookupShort[] Nationalities{get;set;}=[];public Employee[] Employees{get;set;}=[];}
     private sealed class LookupShort{public short Id{get;set;}public string? Name{get;set;}public string? Description{get;set;}public bool Active{get;set;}}
     private sealed class LookupByte{public byte Id{get;set;}public string? Name{get;set;}public string? Description{get;set;}}

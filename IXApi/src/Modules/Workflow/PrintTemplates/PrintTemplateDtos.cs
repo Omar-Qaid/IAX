@@ -7,6 +7,7 @@ public class PrintTemplateSummaryDto
     public string ProcessName { get; set; } = string.Empty;
     public string Code { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
+    public string? NameAlias { get; set; }
     public string? Description { get; set; }
     public string PageSize { get; set; } = "A4";
     public string Orientation { get; set; } = "portrait";
@@ -52,6 +53,7 @@ public sealed class CreatePrintTemplateDto
     public long ProcessId { get; set; }
     public string Code { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
+    public string? NameAlias { get; set; }
     public string? Description { get; set; }
     public bool IsDefault { get; set; }
     public PrintTemplateDocument Document { get; set; } = new();
@@ -61,6 +63,7 @@ public sealed class UpdatePrintTemplateDto
 {
     public string Code { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
+    public string? NameAlias { get; set; }
     public string? Description { get; set; }
     public bool IsDefault { get; set; }
     public PrintTemplateDocument Document { get; set; } = new();

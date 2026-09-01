@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace IAX.IXApi.Modules.Workflow.Activities
 {
-    public class WfActivityType : MasterEntity<byte>
+public class WfActivityType : WfMasterEntity<byte>
     {
 
         public byte SortOrder { get; set; }

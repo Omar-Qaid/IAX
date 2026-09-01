@@ -16,7 +16,7 @@ import { wfActivityTypeApi } from '../api/workflowSetupApis';
 import type { WorkflowMasterRecord } from '../api/workflowMasterApi';
 
 const numberValue = (value: DetailValue | undefined): number => Number(value) || 0;
-const textValue = (value: string | null): string => value ?? '';
+const textValue = (value: string | null | undefined): string => value ?? '';
 const lookupColumns = [
   { field: 'code', header: 'workflowSetup.fields.code', width: 120 },
   { field: 'name', header: 'workflowSetup.fields.name', flex: 1 },
@@ -53,6 +53,7 @@ const emptyActivity = (stepId = 0): WfActivityRecord => ({
   recId: 0,
   code: null,
   name: '',
+  nameAlias: null,
   description: null,
   sortOrder: 0,
   activityTypeId: 0,
@@ -259,6 +260,7 @@ export function WfActivitiesPage(): React.ReactElement {
     headerFields: [
       { id: 'code', label: t('wfActivity.fields.code'), disabled: true, getValue: (record) => textValue(record.code), setValue: (record, value) => ({ ...record, code: String(value) || null }) },
       { id: 'name', label: t('wfActivity.fields.name'), getValue: (record) => textValue(record.name), setValue: (record, value) => ({ ...record, name: String(value) || null }) },
+      { id: 'nameAlias', label: t('workflowSetup.fields.nameAlias'), getValue: (record) => textValue(record.nameAlias), setValue: (record, value) => ({ ...record, nameAlias: String(value) || null }) },
       { id: 'description', label: t('wfActivity.fields.description'), getValue: (record) => textValue(record.description), setValue: (record, value) => ({ ...record, description: String(value) || null }) },
     ],
     sections,

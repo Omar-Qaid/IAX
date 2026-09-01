@@ -5,7 +5,7 @@ using System.Diagnostics;
 
 namespace IAX.IXApi.Modules.Workflow.Variables
 {
-    public class WfVariableDto : MasterEntityDto<long>
+public class WfVariableDto : WfMasterEntityDto<long>
     {
         public byte DataTypeId { get; set; }
         public byte SortOrder { get; set; }

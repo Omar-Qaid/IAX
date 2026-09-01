@@ -5,7 +5,7 @@ using IAX.IXApi.Modules.Workflow.Processes;
 namespace IAX.IXApi.Modules.Workflow.Steps
 {
     [DataManagement]
-    public class WfStep : MasterEntity<long>
+public class WfStep : WfMasterEntity<long>
     {
         public long ProcessId { get; set; }
         [System.ComponentModel.DataAnnotations.Schema.ForeignKey(nameof(ProcessId))]

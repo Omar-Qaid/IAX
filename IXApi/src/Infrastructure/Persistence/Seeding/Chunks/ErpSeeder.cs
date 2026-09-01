@@ -103,125 +103,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             }
             #endregion
 
-            /* 
-               #region UnitOfMeasureBaseUnit — Base unit per UOM class
-            // UnitOfMeasureClass: 0=None 1=Quantity 2=Weight 3=Volume 4=Length 5=Area 6=Time
-            var uomIdByCodeForBase = await db.UnitOfMeasures.IgnoreQueryFilters()
-                .ToDictionaryAsync(u => u.Code!, u => u.Id, ct);
 
-            var baseUnitSeeds = new[]
-            {
-                // Class 1 – Quantity  → EA
-                new UnitOfMeasureBaseUnit { UnitOfMeasureId = uomIdByCodeForBase["EA"],  UnitOfMeasureClass = 1 },
-                // Class 2 – Weight    → KG
-                new UnitOfMeasureBaseUnit { UnitOfMeasureId = uomIdByCodeForBase["KG"],  UnitOfMeasureClass = 2 },
-                // Class 3 – Volume    → L
-                new UnitOfMeasureBaseUnit { UnitOfMeasureId = uomIdByCodeForBase["L"],   UnitOfMeasureClass = 3 },
-                // Class 4 – Length    → M
-                new UnitOfMeasureBaseUnit { UnitOfMeasureId = uomIdByCodeForBase["M"],   UnitOfMeasureClass = 4 },
-                // Class 6 – Time      → HR
-                new UnitOfMeasureBaseUnit { UnitOfMeasureId = uomIdByCodeForBase["HR"],  UnitOfMeasureClass = 6 },
-            };
-
-            var existingBaseUnitKeys = await db.UnitOfMeasureBaseUnits.IgnoreQueryFilters()
-                .Select(b => new { b.UnitOfMeasureId, b.UnitOfMeasureClass }).ToListAsync(ct);
-            var baseUnitsToAdd = baseUnitSeeds
-                .Where(b => !existingBaseUnitKeys.Any(e => e.UnitOfMeasureId == b.UnitOfMeasureId && e.UnitOfMeasureClass == b.UnitOfMeasureClass))
-                .ToList();
-            if (baseUnitsToAdd.Any())
-            {
-                await db.UnitOfMeasureBaseUnits.AddRangeAsync(baseUnitsToAdd, ct);
-                await db.SaveChangesAsync(ct);
-            }
-            #endregion
-
-            #region UnitOfMeasureConversion — Standard global conversion factors
-            // Factor: how many base units does 1 FromUOM equal (ToUOM is always the base unit).
-            // Denominator=1, Numerator=1 means use Factor directly.
-            var conversionSeeds = new (string From, string To, decimal Factor)[]
-            {
-                // Weight (base = KG)
-                ("G",   "KG",  0.001m),
-                ("TON", "KG",  1000m),
-                ("LB",  "KG",  0.453592m),
-
-                // Volume (base = L)
-                ("ML",  "L",   0.001m),
-                ("GAL", "L",   3.78541m),
-
-                // Length (base = M)
-                ("CM",  "M",   0.01m),
-                ("MM",  "M",   0.001m),
-                ("FT",  "M",   0.3048m),
-
-                // Quantity (base = EA)
-                ("PCS", "EA",  1m),
-                ("DOZ", "EA",  12m),
-                ("PR",  "EA",  2m),
-            };
-
-            var existingConvKeys = await db.UnitOfMeasureConversions.IgnoreQueryFilters()
-                .Select(c => new { c.FromUnitOfMeasureId, c.ToUnitOfMeasureId }).ToListAsync(ct);
-
-            var conversionsToAdd = conversionSeeds
-                .Where(s => uomIdByCodeForBase.ContainsKey(s.From) && uomIdByCodeForBase.ContainsKey(s.To))
-                .Select(s => new UnitOfMeasureConversion
-                {
-                    FromUnitOfMeasureId = uomIdByCodeForBase[s.From],
-                    ToUnitOfMeasureId   = uomIdByCodeForBase[s.To],
-                    Factor              = s.Factor,
-                    Numerator           = 1,
-                    Denominator         = 1,
-                    InnerOffset         = 0,
-                    OuterOffset         = 0,
-                    Rounding            = 0,
-                })
-                .Where(c => !existingConvKeys.Any(e => e.FromUnitOfMeasureId == c.FromUnitOfMeasureId && e.ToUnitOfMeasureId == c.ToUnitOfMeasureId))
-                .ToList();
-
-            if (conversionsToAdd.Any())
-            {
-                await db.UnitOfMeasureConversions.AddRangeAsync(conversionsToAdd, ct);
-                await db.SaveChangesAsync(ct);
-            }
-            #endregion
-
-            #region UnitOfMeasureTranslation — Arabic (ar) translations
-            var translationSeeds = new (string Code, string Description)[]
-            {
-                ("EA",  "قطعة"),    ("PCS", "حبة"),      ("DOZ", "دزينة"),
-                ("PR",  "زوج"),     ("SET", "طقم"),
-                ("KG",  "كيلوجرام"),("G",   "جرام"),     ("TON", "طن"),       ("LB",  "رطل"),
-                ("L",   "لتر"),     ("ML",  "مليلتر"),   ("GAL", "جالون"),
-                ("M",   "متر"),     ("CM",  "سنتيمتر"),  ("MM",  "مليمتر"),   ("FT",  "قدم"),
-                ("BOX", "صندوق"),   ("CTN", "كرتون"),    ("PCK", "حزمة"),
-                ("PLT", "منصة"),    ("BAG", "كيس"),      ("CAN", "علبة"),
-                ("BTL", "زجاجة"),   ("ROL", "لفة"),
-                ("HR",  "ساعة"),    ("DAY", "يوم"),      ("MON", "شهر"),
-            };
-
-            var existingTranslKeys = await db.UnitOfMeasureTranslations.IgnoreQueryFilters()
-                .Select(t => new { t.UnitOfMeasureId, t.LanguageId }).ToListAsync(ct);
-
-            var translationsToAdd = translationSeeds
-                .Where(s => uomIdByCodeForBase.ContainsKey(s.Code))
-                .Select(s => new UnitOfMeasureTranslation
-                {
-                    UnitOfMeasureId = uomIdByCodeForBase[s.Code],
-                    LanguageId      = "ar",
-                    Description     = s.Description,
-                })
-                .Where(t => !existingTranslKeys.Any(e => e.UnitOfMeasureId == t.UnitOfMeasureId && e.LanguageId == t.LanguageId))
-                .ToList();
-
-            if (translationsToAdd.Any())
-            {
-                await db.UnitOfMeasureTranslations.AddRangeAsync(translationsToAdd, ct);
-                await db.SaveChangesAsync(ct);
-            }
-            #endregion
-
-            */ 
             #region InventItemGroups — Standard Item Groups
             // InventItemGroup no longer carries a business code/name — it is keyed by RecId only.
             // Seed a fixed number of groups (idempotent by count) and map the legacy seed codes to
@@ -930,6 +812,127 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 await db.SaveChangesAsync(ct);
             }
             #endregion
+
+
+            /* 
+   #region UnitOfMeasureBaseUnit — Base unit per UOM class
+// UnitOfMeasureClass: 0=None 1=Quantity 2=Weight 3=Volume 4=Length 5=Area 6=Time
+var uomIdByCodeForBase = await db.UnitOfMeasures.IgnoreQueryFilters()
+    .ToDictionaryAsync(u => u.Code!, u => u.Id, ct);
+
+var baseUnitSeeds = new[]
+{
+    // Class 1 – Quantity  → EA
+    new UnitOfMeasureBaseUnit { UnitOfMeasureId = uomIdByCodeForBase["EA"],  UnitOfMeasureClass = 1 },
+    // Class 2 – Weight    → KG
+    new UnitOfMeasureBaseUnit { UnitOfMeasureId = uomIdByCodeForBase["KG"],  UnitOfMeasureClass = 2 },
+    // Class 3 – Volume    → L
+    new UnitOfMeasureBaseUnit { UnitOfMeasureId = uomIdByCodeForBase["L"],   UnitOfMeasureClass = 3 },
+    // Class 4 – Length    → M
+    new UnitOfMeasureBaseUnit { UnitOfMeasureId = uomIdByCodeForBase["M"],   UnitOfMeasureClass = 4 },
+    // Class 6 – Time      → HR
+    new UnitOfMeasureBaseUnit { UnitOfMeasureId = uomIdByCodeForBase["HR"],  UnitOfMeasureClass = 6 },
+};
+
+var existingBaseUnitKeys = await db.UnitOfMeasureBaseUnits.IgnoreQueryFilters()
+    .Select(b => new { b.UnitOfMeasureId, b.UnitOfMeasureClass }).ToListAsync(ct);
+var baseUnitsToAdd = baseUnitSeeds
+    .Where(b => !existingBaseUnitKeys.Any(e => e.UnitOfMeasureId == b.UnitOfMeasureId && e.UnitOfMeasureClass == b.UnitOfMeasureClass))
+    .ToList();
+if (baseUnitsToAdd.Any())
+{
+    await db.UnitOfMeasureBaseUnits.AddRangeAsync(baseUnitsToAdd, ct);
+    await db.SaveChangesAsync(ct);
+}
+#endregion
+
+#region UnitOfMeasureConversion — Standard global conversion factors
+// Factor: how many base units does 1 FromUOM equal (ToUOM is always the base unit).
+// Denominator=1, Numerator=1 means use Factor directly.
+var conversionSeeds = new (string From, string To, decimal Factor)[]
+{
+    // Weight (base = KG)
+    ("G",   "KG",  0.001m),
+    ("TON", "KG",  1000m),
+    ("LB",  "KG",  0.453592m),
+
+    // Volume (base = L)
+    ("ML",  "L",   0.001m),
+    ("GAL", "L",   3.78541m),
+
+    // Length (base = M)
+    ("CM",  "M",   0.01m),
+    ("MM",  "M",   0.001m),
+    ("FT",  "M",   0.3048m),
+
+    // Quantity (base = EA)
+    ("PCS", "EA",  1m),
+    ("DOZ", "EA",  12m),
+    ("PR",  "EA",  2m),
+};
+
+var existingConvKeys = await db.UnitOfMeasureConversions.IgnoreQueryFilters()
+    .Select(c => new { c.FromUnitOfMeasureId, c.ToUnitOfMeasureId }).ToListAsync(ct);
+
+var conversionsToAdd = conversionSeeds
+    .Where(s => uomIdByCodeForBase.ContainsKey(s.From) && uomIdByCodeForBase.ContainsKey(s.To))
+    .Select(s => new UnitOfMeasureConversion
+    {
+        FromUnitOfMeasureId = uomIdByCodeForBase[s.From],
+        ToUnitOfMeasureId   = uomIdByCodeForBase[s.To],
+        Factor              = s.Factor,
+        Numerator           = 1,
+        Denominator         = 1,
+        InnerOffset         = 0,
+        OuterOffset         = 0,
+        Rounding            = 0,
+    })
+    .Where(c => !existingConvKeys.Any(e => e.FromUnitOfMeasureId == c.FromUnitOfMeasureId && e.ToUnitOfMeasureId == c.ToUnitOfMeasureId))
+    .ToList();
+
+if (conversionsToAdd.Any())
+{
+    await db.UnitOfMeasureConversions.AddRangeAsync(conversionsToAdd, ct);
+    await db.SaveChangesAsync(ct);
+}
+#endregion
+
+#region UnitOfMeasureTranslation — Arabic (ar) translations
+var translationSeeds = new (string Code, string Description)[]
+{
+    ("EA",  "قطعة"),    ("PCS", "حبة"),      ("DOZ", "دزينة"),
+    ("PR",  "زوج"),     ("SET", "طقم"),
+    ("KG",  "كيلوجرام"),("G",   "جرام"),     ("TON", "طن"),       ("LB",  "رطل"),
+    ("L",   "لتر"),     ("ML",  "مليلتر"),   ("GAL", "جالون"),
+    ("M",   "متر"),     ("CM",  "سنتيمتر"),  ("MM",  "مليمتر"),   ("FT",  "قدم"),
+    ("BOX", "صندوق"),   ("CTN", "كرتون"),    ("PCK", "حزمة"),
+    ("PLT", "منصة"),    ("BAG", "كيس"),      ("CAN", "علبة"),
+    ("BTL", "زجاجة"),   ("ROL", "لفة"),
+    ("HR",  "ساعة"),    ("DAY", "يوم"),      ("MON", "شهر"),
+};
+
+var existingTranslKeys = await db.UnitOfMeasureTranslations.IgnoreQueryFilters()
+    .Select(t => new { t.UnitOfMeasureId, t.LanguageId }).ToListAsync(ct);
+
+var translationsToAdd = translationSeeds
+    .Where(s => uomIdByCodeForBase.ContainsKey(s.Code))
+    .Select(s => new UnitOfMeasureTranslation
+    {
+        UnitOfMeasureId = uomIdByCodeForBase[s.Code],
+        LanguageId      = "ar",
+        Description     = s.Description,
+    })
+    .Where(t => !existingTranslKeys.Any(e => e.UnitOfMeasureId == t.UnitOfMeasureId && e.LanguageId == t.LanguageId))
+    .ToList();
+
+if (translationsToAdd.Any())
+{
+    await db.UnitOfMeasureTranslations.AddRangeAsync(translationsToAdd, ct);
+    await db.SaveChangesAsync(ct);
+}
+#endregion
+
+*/
         }
     }
 }

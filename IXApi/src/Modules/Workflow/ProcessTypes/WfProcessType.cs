@@ -4,7 +4,7 @@ using IAX.IXApi.Shared.Domain.Entities;
 namespace IAX.IXApi.Modules.Workflow.ProcessTypes
 {
     [DataManagement]
-    public class WfProcessType : MasterEntity<byte>
+public class WfProcessType : WfMasterEntity<byte>
     {
     }
 }

@@ -21,6 +21,7 @@ const emptyVariable = (processId = 0): WfVariableRecord => ({
   recId: 0,
   code: null,
   name: '',
+  nameAlias: null,
   description: null,
   dataTypeId: 0,
   processId,
@@ -34,7 +35,7 @@ const emptyVariable = (processId = 0): WfVariableRecord => ({
 });
 
 const numberValue = (value: DetailValue): number => Number(value) || 0;
-const textValue = (value: string | null): string => value ?? '';
+const textValue = (value: string | null | undefined): string => value ?? '';
 
 export function WFVariablesPage(): React.ReactElement {
   const { t } = useAppTranslation();
@@ -164,6 +165,12 @@ export function WFVariablesPage(): React.ReactElement {
         label: t('wfVariable.fields.name'),
         getValue: (record) => textValue(record.name),
         setValue: (record, value) => ({ ...record, name: String(value) || null }),
+      },
+      {
+        id: 'nameAlias',
+        label: t('workflowSetup.fields.nameAlias'),
+        getValue: (record) => textValue(record.nameAlias),
+        setValue: (record, value) => ({ ...record, nameAlias: String(value) || null }),
       },
       {
         id: 'description',

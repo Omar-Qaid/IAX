@@ -4,6 +4,8 @@ namespace IAX.IXApi.Modules.Workflow.Activities
 {
     public class WfActivityControlsValidation : LookupEntity<long>
     {
+        [System.ComponentModel.DataAnnotations.StringLength(255)]
+        public string? NameAlias { get; set; }
         public long ActivityControlId { get; set; }
         [System.ComponentModel.DataAnnotations.Schema.ForeignKey(nameof(ActivityControlId))]
         public virtual WfActivityControl ActivityControl { get; set; } = null!;

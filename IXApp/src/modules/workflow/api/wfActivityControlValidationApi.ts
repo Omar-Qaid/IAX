@@ -6,6 +6,8 @@ export interface WfActivityControlValidationRecord {
   id: string;
   recId: number;
   activityControlId: number;
+  name?: string | null;
+  nameAlias?: string | null;
   validationType: string;
   validationExpression: string | null;
   operator: string | null;

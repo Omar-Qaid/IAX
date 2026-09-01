@@ -24,15 +24,22 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks;
 /// The underlying importer is idempotent and imports only records that are
 /// missing from the current database.
 /// </remarks>
-public sealed class WfSeedData : ISeeder
+public sealed class WfValidateSeedData : ISeeder
 {
+    private readonly string? _seedDbConnectionString;
+
+    public WfValidateSeedData(string? seedDbConnectionString = null)
+    {
+        _seedDbConnectionString = seedDbConnectionString;
+    }
+
     public async Task SeedAsync(
         ApplicationDbContext db,
         RoleManager<AspNetRole> roles,
         UserManager<AspNetUser> users,
         CancellationToken ct)
     {
-        await new LegacyWorkflowMasterDataSeeder().SeedAsync(db, roles, users, ct);
+        await new OthersDBWorkflowMasterFromSeeder(_seedDbConnectionString).SeedAsync(db, roles, users, ct);
         await ValidateDefinitionGraphAsync(db, ct);
     }
 

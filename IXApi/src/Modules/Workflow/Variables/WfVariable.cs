@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace IAX.IXApi.Modules.Workflow.Variables
 {
-    public class WfVariable : MasterEntity<long>
+public class WfVariable : WfMasterEntity<long>
     {
         public byte DataTypeId { get; set; }
         [System.ComponentModel.DataAnnotations.Schema.ForeignKey(nameof(DataTypeId))]
