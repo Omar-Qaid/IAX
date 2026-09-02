@@ -1107,7 +1107,14 @@
         "targetStep": "الخطوة المستهدفة",
         "label": "التسمية",
         "action": "الإجراء",
-        "nextStep": "الخطوة التالية"
+        "nextStep": "الخطوة التالية",
+        "referenceType": "نوع المرجع",
+        "fieldRole": "دور الحقل",
+        "reportingDataType": "نوع البيانات",
+        "defaultAggregation": "التجميع الافتراضي",
+        "canFilter": "قابل للتصفية",
+        "canGroup": "قابل للتجميع",
+        "canSort": "قابل للترتيب"
       },
       "workspaceTitles": {
         "variables": "إعدادات المتغيرات",
@@ -1228,6 +1235,7 @@
       "endProcess": "إنهاء العملية",
       "hidden": "مخفي",
       "requestControl": "عنصر تحكم الطلب",
+      "reportingMetadata": "بيانات التقارير الوصفية",
       "requestControlOptions": "خيارات عنصر تحكم الطلب ({{count}})",
       "requestControlValidation": "تحقق عنصر تحكم الطلب ({{count}})",
       "requestControlTransitions": "انتقالات عنصر تحكم الطلب ({{count}})",

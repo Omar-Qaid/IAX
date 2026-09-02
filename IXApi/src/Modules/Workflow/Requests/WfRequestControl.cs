@@ -16,6 +16,13 @@ public class WfRequestControl: WfMasterEntity<long>
         public byte SortOrder { get; set; }
         public string? ValidationRules { get; set; }  // as  xml 
         public string? ExtendedProperties { get; set; }  // as  xml 
+        public bool CanFilter { get; set; } = true;
+        public bool CanGroup { get; set; } = true;
+        public bool CanSort { get; set; } = true;
+        public string? ReferenceType { get; set; }
+        public string FieldRole { get; set; } = "Dimension";
+        public string DataType { get; set; } = "String";
+        public string DefaultAggregation { get; set; } = "NONE";
     }
 }
 

@@ -21700,6 +21700,21 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<string>("Code")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("CanFilter")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("CanGroup")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("CanSort")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
                     b.Property<byte>("ControlId")
                         .HasColumnType("tinyint");
 
@@ -21717,8 +21732,29 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("DataType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("String");
+
+                    b.Property<string>("DefaultAggregation")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("NONE");
+
                     b.Property<string>("ExtendedProperties")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FieldRole")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Dimension");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -21745,6 +21781,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<long>("ProcessId")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("ReferenceType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<int>("RecVersion")
                         .HasColumnType("int");
 
@@ -21770,7 +21810,13 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasIndex("ProcessId");
 
-                    b.ToTable("WfRequestControls", (string)null);
+                    b.ToTable("WfRequestControls", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_WfRequestControls_DataType", "[DataType] IN (N'String',N'Integer',N'Decimal',N'Date',N'DateTime',N'Time',N'Boolean')");
+                            t.HasCheckConstraint("CK_WfRequestControls_DefaultAggregation", "[DefaultAggregation] IN (N'NONE',N'SUM',N'COUNT',N'COUNT_DISTINCT',N'AVG',N'MIN',N'MAX')");
+                            t.HasCheckConstraint("CK_WfRequestControls_FieldRole", "[FieldRole] IN (N'Dimension',N'Measure',N'Both')");
+                            t.HasCheckConstraint("CK_WfRequestControls_ReferenceType", "[ReferenceType] IS NULL OR [ReferenceType] IN (N'Lookup',N'Employee',N'Showroom',N'Branch',N'Company',N'Department',N'BusinessUnit',N'Area',N'City',N'Country',N'Location',N'Customer',N'Vendor',N'Item',N'ItemGroup',N'Category',N'Warehouse',N'PaymentMethod',N'ViolationType',N'Invoice',N'PurchaseOrder',N'SalesOrder',N'Process',N'User')");
+                        });
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Workflow.Requests.WfRequestControlsOption", b =>

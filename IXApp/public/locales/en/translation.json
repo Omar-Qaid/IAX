@@ -1117,7 +1117,14 @@
         "targetStep": "Target step",
         "label": "Label",
         "action": "Action",
-        "nextStep": "Next step"
+        "nextStep": "Next step",
+        "referenceType": "Reference type",
+        "fieldRole": "Field role",
+        "reportingDataType": "Data type",
+        "defaultAggregation": "Default aggregation",
+        "canFilter": "Can filter",
+        "canGroup": "Can group",
+        "canSort": "Can sort"
       },
       "workspaceTitles": {
         "variables": "Variables Settings",
@@ -1238,6 +1245,7 @@
       "endProcess": "End process",
       "hidden": "Hidden",
       "requestControl": "Request Control",
+      "reportingMetadata": "Reporting metadata",
       "requestControlOptions": "Request Control Options ({{count}})",
       "requestControlValidation": "Request Control Validation ({{count}})",
       "requestControlTransitions": "Request Control Transitions ({{count}})",

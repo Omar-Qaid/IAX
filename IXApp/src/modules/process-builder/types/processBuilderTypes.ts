@@ -9,15 +9,96 @@ export type BuilderNode =
   | { kind: 'transition'; id: string };
 
 export type BuilderDataType = 'text' | 'number' | 'boolean' | 'date' | 'object';
-export type BuilderControlType = 'digits' | 'text' | 'longtext' | 'date' | 'time' | 'url' | 'dropdown-db' | 'dropdown-manual' | 'checkbox' | 'checkboxlist' | 'radiobuttonlist' | 'table' | 'label' | 'employeesearch' | 'employeeid' | 'file' | 'showroom' | 'signature' | 'location' | 'advertiser';
+export type BuilderControlType =
+  | 'digits'
+  | 'text'
+  | 'longtext'
+  | 'date'
+  | 'time'
+  | 'url'
+  | 'dropdown-db'
+  | 'dropdown-manual'
+  | 'checkbox'
+  | 'checkboxlist'
+  | 'radiobuttonlist'
+  | 'table'
+  | 'label'
+  | 'employeesearch'
+  | 'employeeid'
+  | 'file'
+  | 'showroom'
+  | 'signature'
+  | 'location'
+  | 'advertiser';
 export type BuilderActivityType = 'approval' | 'review' | 'data-entry' | 'api' | 'notification';
-export type BuilderOperator = '=' | '!=' | '>' | '<' | '>=' | '<=' | 'contains' | 'isEmpty' | 'between';
+export type BuilderOperator =
+  '=' | '!=' | '>' | '<' | '>=' | '<=' | 'contains' | 'isEmpty' | 'between';
 export type BuilderActionType = 'approve' | 'reject' | 'return' | 'escalate';
 
-export interface BuilderVariable { id: string; code: string; name: string; description: string; dataType: BuilderDataType; sortOrder: number; required: boolean; active: boolean; scope: 'process' | 'step' | 'activity' | 'global'; defaultValue: string }
-export type BuilderValidationType = 'required' | 'minLength' | 'maxLength' | 'exactLength' | 'length' | 'minValue' | 'maxValue' | 'range' | 'regex' | 'pattern' | 'startsWith' | 'endsWith' | 'contains' | 'email' | 'url' | 'phone' | 'saudiMobile' | 'saudiNationalId' | 'saudiIban' | 'taxNumber' | 'passport' | 'fileExtensions' | 'fileSize' | 'maxFiles' | 'minSelected' | 'maxSelected' | 'compare' | 'comparison' | 'expression' | 'custom' | 'crossField' | 'mask' | 'inputMask';
-export interface BuilderValidation { id: string; type: BuilderValidationType; value: string; secondaryValue: string; operator: string; mask: string; message: string; messageAlias?: string; severity: 'Error' | 'Warning' | 'Information'; sortOrder: number; active: boolean }
-export interface BuilderCondition { variableId: string; operator: BuilderOperator; value: string }
+export interface BuilderVariable {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  dataType: BuilderDataType;
+  sortOrder: number;
+  required: boolean;
+  active: boolean;
+  scope: 'process' | 'step' | 'activity' | 'global';
+  defaultValue: string;
+}
+export type BuilderValidationType =
+  | 'required'
+  | 'minLength'
+  | 'maxLength'
+  | 'exactLength'
+  | 'length'
+  | 'minValue'
+  | 'maxValue'
+  | 'range'
+  | 'regex'
+  | 'pattern'
+  | 'startsWith'
+  | 'endsWith'
+  | 'contains'
+  | 'email'
+  | 'url'
+  | 'phone'
+  | 'saudiMobile'
+  | 'saudiNationalId'
+  | 'saudiIban'
+  | 'taxNumber'
+  | 'passport'
+  | 'fileExtensions'
+  | 'fileSize'
+  | 'maxFiles'
+  | 'minSelected'
+  | 'maxSelected'
+  | 'compare'
+  | 'comparison'
+  | 'expression'
+  | 'custom'
+  | 'crossField'
+  | 'mask'
+  | 'inputMask';
+export interface BuilderValidation {
+  id: string;
+  type: BuilderValidationType;
+  value: string;
+  secondaryValue: string;
+  operator: string;
+  mask: string;
+  message: string;
+  messageAlias?: string;
+  severity: 'Error' | 'Warning' | 'Information';
+  sortOrder: number;
+  active: boolean;
+}
+export interface BuilderCondition {
+  variableId: string;
+  operator: BuilderOperator;
+  value: string;
+}
 export interface BuilderOptionFeatureConfiguration {
   requireFileUpload: boolean;
   sendAlertMessage: boolean;
@@ -26,11 +107,122 @@ export interface BuilderOptionFeatureConfiguration {
   showOtherControls: boolean;
   visibleControlIds: string[];
 }
-export interface BuilderControl { id: string; code: string; label: string; labelAR: string; labelColor?: string; type: BuilderControlType; controlId: string; sortOrder: number; columnSpan?: 1 | 2 | 3; score: number; required: boolean; readOnly: boolean; visible: boolean; uniqueKey: boolean; usedAsCriteria: boolean; defaultValue: string; options: string[]; optionAliases?: string[]; optionScores?: number[]; optionFeatureConfigurations?: BuilderOptionFeatureConfiguration[]; validations: BuilderValidation[]; visibilityCondition: BuilderCondition | null }
-export interface BuilderActivityAction { id: string; type: BuilderActionType; label: string; nextStepId: string; condition: BuilderCondition | null }
-export interface BuilderActivity { id: string; code: string; name: string; type: BuilderActivityType; activityTypeId: string; performer: string; score: number; sortOrder: number; assignmentMode: 'any' | 'all' | 'round-robin'; active: boolean; required: boolean; mandatoryDocs: boolean; autoPassEnabled: boolean; autoPassingHours: number; controls: BuilderControl[]; actions: BuilderActivityAction[]; validations: BuilderValidation[]; condition: BuilderCondition | null; config: { apiMethod: 'GET' | 'POST' | 'PUT' | 'DELETE'; apiUrl: string; notifyEmails: string } }
-export interface BuilderStep { id: string; code: string; name: string; order: number; score: number; autoPassingHours: number; allMandatory: boolean; active: boolean; systemField: boolean; condition: BuilderCondition | null; activities: BuilderActivity[] }
-export interface BuilderTransition { id: string; name: string; sourceStepId: string; targetStepId: string; variableId: string; operator: BuilderOperator; operatorId: string; value: string; sortOrder: number; active: boolean; triggerSource: 'none' | 'requestControl' | 'activity'; triggerId: string }
+export type BuilderReferenceType =
+  | 'Lookup'
+  | 'Employee'
+  | 'Showroom'
+  | 'Branch'
+  | 'Company'
+  | 'Department'
+  | 'BusinessUnit'
+  | 'Area'
+  | 'City'
+  | 'Country'
+  | 'Location'
+  | 'Customer'
+  | 'Vendor'
+  | 'Item'
+  | 'ItemGroup'
+  | 'Category'
+  | 'Warehouse'
+  | 'PaymentMethod'
+  | 'ViolationType'
+  | 'Invoice'
+  | 'PurchaseOrder'
+  | 'SalesOrder'
+  | 'Process'
+  | 'User';
+export type BuilderFieldRole = 'Dimension' | 'Measure' | 'Both';
+export type BuilderReportingDataType =
+  'String' | 'Integer' | 'Decimal' | 'Date' | 'DateTime' | 'Time' | 'Boolean';
+export type BuilderAggregation =
+  'NONE' | 'SUM' | 'COUNT' | 'COUNT_DISTINCT' | 'AVG' | 'MIN' | 'MAX';
+export interface BuilderControl {
+  id: string;
+  code: string;
+  label: string;
+  labelAR: string;
+  labelColor?: string;
+  type: BuilderControlType;
+  controlId: string;
+  sortOrder: number;
+  columnSpan?: 1 | 2 | 3;
+  score: number;
+  required: boolean;
+  readOnly: boolean;
+  visible: boolean;
+  uniqueKey: boolean;
+  usedAsCriteria: boolean;
+  canFilter: boolean;
+  canGroup: boolean;
+  canSort: boolean;
+  referenceType: BuilderReferenceType | null;
+  fieldRole: BuilderFieldRole;
+  dataType: BuilderReportingDataType;
+  defaultAggregation: BuilderAggregation;
+  defaultValue: string;
+  options: string[];
+  optionAliases?: string[];
+  optionScores?: number[];
+  optionFeatureConfigurations?: BuilderOptionFeatureConfiguration[];
+  validations: BuilderValidation[];
+  visibilityCondition: BuilderCondition | null;
+}
+export interface BuilderActivityAction {
+  id: string;
+  type: BuilderActionType;
+  label: string;
+  nextStepId: string;
+  condition: BuilderCondition | null;
+}
+export interface BuilderActivity {
+  id: string;
+  code: string;
+  name: string;
+  type: BuilderActivityType;
+  activityTypeId: string;
+  performer: string;
+  score: number;
+  sortOrder: number;
+  assignmentMode: 'any' | 'all' | 'round-robin';
+  active: boolean;
+  required: boolean;
+  mandatoryDocs: boolean;
+  autoPassEnabled: boolean;
+  autoPassingHours: number;
+  controls: BuilderControl[];
+  actions: BuilderActivityAction[];
+  validations: BuilderValidation[];
+  condition: BuilderCondition | null;
+  config: { apiMethod: 'GET' | 'POST' | 'PUT' | 'DELETE'; apiUrl: string; notifyEmails: string };
+}
+export interface BuilderStep {
+  id: string;
+  code: string;
+  name: string;
+  order: number;
+  score: number;
+  autoPassingHours: number;
+  allMandatory: boolean;
+  active: boolean;
+  systemField: boolean;
+  condition: BuilderCondition | null;
+  activities: BuilderActivity[];
+}
+export interface BuilderTransition {
+  id: string;
+  name: string;
+  sourceStepId: string;
+  targetStepId: string;
+  variableId: string;
+  operator: BuilderOperator;
+  operatorId: string;
+  value: string;
+  sortOrder: number;
+  active: boolean;
+  triggerSource: 'none' | 'requestControl' | 'activity';
+  triggerId: string;
+}
 export interface ProcessBuilderDocument {
   id: string;
   code: string;

@@ -31,6 +31,10 @@ import type {
   BuilderValidationType,
   BuilderVariable,
   BuilderOptionFeatureConfiguration,
+  BuilderAggregation,
+  BuilderFieldRole,
+  BuilderReferenceType,
+  BuilderReportingDataType,
 } from '../types/processBuilderTypes';
 import { processBuilderTokens as tokens } from './processBuilderTokens';
 import { DEFAULT_VALIDATION_MESSAGES, validationUsesCustomMessage } from '../validationDefaults';
@@ -59,6 +63,10 @@ const requestOptionControlTypes = new Set([
   'radiobuttonlist',
   'table',
 ]);
+const referenceTypes: BuilderReferenceType[] = ['Lookup', 'Employee', 'Showroom', 'Branch', 'Company', 'Department', 'BusinessUnit', 'Area', 'City', 'Country', 'Location', 'Customer', 'Vendor', 'Item', 'ItemGroup', 'Category', 'Warehouse', 'PaymentMethod', 'ViolationType', 'Invoice', 'PurchaseOrder', 'SalesOrder', 'Process', 'User'];
+const fieldRoles: BuilderFieldRole[] = ['Dimension', 'Measure', 'Both'];
+const reportingDataTypes: BuilderReportingDataType[] = ['String', 'Integer', 'Decimal', 'Date', 'DateTime', 'Time', 'Boolean'];
+const aggregations: BuilderAggregation[] = ['NONE', 'SUM', 'COUNT', 'COUNT_DISTINCT', 'AVG', 'MIN', 'MAX'];
 const emptyOptionFeatures = (): BuilderOptionFeatureConfiguration => ({
   requireFileUpload: false,
   sendAlertMessage: false,
@@ -1825,6 +1833,70 @@ export function ProcessBuilderSettingsPanel() {
             }
             label={t('wfProcessBuilder.settings.fields.visible')}
           />
+        </Box>
+        <Box sx={settingsGroupSx}>
+          <Typography sx={{ mb: 1, fontSize: tokens.fontSize.body, fontWeight: 700 }}>
+            {t('wfProcessBuilder.settings.reportingMetadata')}
+          </Typography>
+          <Stack spacing="8px">
+            <TextField
+              fullWidth select size="small"
+              label={t('wfProcessBuilder.settings.fields.referenceType')}
+              value={control.referenceType ?? ''}
+              onChange={(event) => update({
+                referenceType: (event.target.value || null) as BuilderReferenceType | null,
+                ...(event.target.value ? { fieldRole: 'Dimension', defaultAggregation: 'NONE', canFilter: true, canGroup: true, canSort: true } : {}),
+              })}
+            >
+              <MenuItem value="">{t('common.none')}</MenuItem>
+              {referenceTypes.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}
+            </TextField>
+            <Stack direction="row" spacing="8px">
+              <TextField
+                fullWidth select size="small"
+                label={t('wfProcessBuilder.settings.fields.reportingDataType')}
+                value={control.dataType}
+                onChange={(event) => update({ dataType: event.target.value as BuilderReportingDataType })}
+              >
+                {reportingDataTypes.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}
+              </TextField>
+              <TextField
+                fullWidth select size="small"
+                label={t('wfProcessBuilder.settings.fields.fieldRole')}
+                value={control.fieldRole}
+                onChange={(event) => {
+                  const fieldRole = event.target.value as BuilderFieldRole;
+                  update({
+                    fieldRole,
+                    ...(fieldRole === 'Dimension'
+                      ? { defaultAggregation: 'NONE', canGroup: true }
+                      : fieldRole === 'Measure'
+                        ? { defaultAggregation: 'SUM', canGroup: false }
+                        : {}),
+                  });
+                }}
+              >
+                {fieldRoles.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}
+              </TextField>
+              <TextField
+                fullWidth select size="small"
+                label={t('wfProcessBuilder.settings.fields.defaultAggregation')}
+                value={control.defaultAggregation}
+                onChange={(event) => update({ defaultAggregation: event.target.value as BuilderAggregation })}
+              >
+                {aggregations.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}
+              </TextField>
+            </Stack>
+            <Box sx={settingsSwitchGridSx}>
+              {(['canFilter', 'canGroup', 'canSort'] as const).map((field) => (
+                <FormControlLabel
+                  key={field}
+                  control={<Switch size="small" checked={control[field]} onChange={(_, checked) => update({ [field]: checked })} />}
+                  label={t(`wfProcessBuilder.settings.fields.${field}`)}
+                />
+              ))}
+            </Box>
+          </Stack>
         </Box>
         <Stack spacing="6px">
           {requestOptionControlTypes.has(control.type) && (
