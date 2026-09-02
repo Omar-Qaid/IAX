@@ -149,7 +149,7 @@ public interface IAIAgent
 }
 ```
 
-- Put `IAIService`, `IAIProvider`, `IAIAgent`, `IAIAgentRegistry`, `IAIAgentOrchestrator`, `IAITool`, and `IDocumentExtractor` in `Infrastructure/AI/Abstractions`.
+- Put `IAIService`, `IAIProvider`, `IAIAgent`, `IAIAgentRegistry`, `IAIAgentOrchestrator`, `IAITool`, `IAIToolRegistry`, `IAIMemory`, and `IDocumentExtractor` in `Infrastructure/AI/Abstractions`.
 - Put OpenAI/Azure/future provider implementations in Infrastructure.
 - `AIRequest` contains only generic instructions, messages, content/attachments, tool descriptors, response-schema metadata, and execution limits—never Process Builder fields.
 - `GenerateAsync<TResponse>` must not reference or special-case ProcessDefinition, reports, invoices, contracts, or another domain model.
@@ -157,11 +157,46 @@ public interface IAIAgent
 
 The generic platform must support DI-based agent registration and discovery, execution by stable agent name, reusable tool registration, structured output, attachment preprocessing, conversation context, logging/audit metadata, usage tracking, cancellation, and normalized errors. Avoid hardcoded agent-name switch statements.
 
+Each registered agent exposes an `AgentDescriptor` containing a unique stable ID, localized display name/description, accepted input capabilities, output contract/schema identifier, allowed tool names, optional provider/model policy, and authorization requirements. Registry startup must fail on duplicate IDs or invalid tool registrations.
+
+Keep `Agent` and `Tool` distinct: an agent analyzes and coordinates; a tool is a narrow authorized gateway to an application capability. Specialized agents never receive direct database access.
+
 Version 1 first delivers and tests the central generic `AIAgentOrchestrator`, registries, providers, tools, documents, and execution pipeline using domain-neutral test agents. `ProcessBuilderAgent` may then be registered as the first business consumer. Future agents such as `DocumentAnalyzerAgent`, `ReportBuilderAgent`, and `WorkflowAssistantAgent` are independent consumers, not changes to AI Core. Agent-to-agent delegation is deferred.
 
 Durable memory requires an approved retention, privacy, encryption, tenant-isolation, and deletion policy. Generic AI memory must not own workflow blueprints, approvals, or business audit records.
 
+Separate short-lived conversation history from optional long-term agent memory. A conversation contract may contain `ConversationId`, user/tenant scope, agent ID, messages, attachment references, and timestamps, but it must not persist raw provider response objects or confidential content indefinitely. Version 1 may remain transient.
+
+Normalize platform failures into safe codes such as `ProviderUnavailable`, `ModelUnavailable`, `InvalidStructuredResponse`, `AgentNotFound`, `UnauthorizedAgent`, `UnauthorizedTool`, `ToolExecutionFailed`, `AttachmentUnsupported`, `AttachmentTooLarge`, `DocumentExtractionFailed`, `RateLimited`, `ExecutionTimeout`, and `ValidationFailed`. Never expose provider secrets or raw sensitive exceptions to React.
+
+Central configuration must cover default provider/model, timeouts, maximum tool calls, attachment limits/types, structured-output limits, and provider-specific options. Use the existing secret mechanism; never commit API keys.
+
+Providers, agents, tools, document extractors, memory/conversation stores, and business services must be independently replaceable and mockable.
+
+### IAX dependency decision gate
+
+The current verified direction is `Infrastructure → Modules`. If `IAIAgent` physically belongs to the existing Infrastructure project, a business Module cannot implement it by referencing Infrastructure without creating a reversed or circular dependency. Before implementation, inspect the `.csproj` graph and present an explicit resolution for approval. Acceptable options include extracting the contracts to a small dependency-safe AI abstractions project while keeping its source conceptually under `Infrastructure/AI/Abstractions`, or another repository-consistent composition strategy that preserves a generic core. Do not silently add `Modules → Infrastructure`, move business agents into generic Infrastructure, or create a circular reference.
+
+### Production AI controls
+
+- Treat user messages, uploaded/extracted documents, OCR, tool results, database content, search/RAG results, and external responses as untrusted data. Preserve the hierarchy: platform instructions → agent instructions → tool definitions → application context → user input → retrieved content. Lower-trust content cannot enable tools, change permissions/scope, reveal secrets, or bypass approval.
+- Enforce configurable budgets for duration, model calls, total/repeated tool calls, attachment count/size, extracted/context/structured-output sizes, and input/output tokens. Detect loops and return `ExecutionBudgetExceeded`.
+- Add provider-neutral `IAIExecutionPolicy`/`IAIModelResolver`. Agents request capabilities such as vision, structured output, tools, context, latency, and reasoning; they do not hardcode provider model names.
+- Apply user/tenant/agent quotas, rate control, token/usage accounting, and optional estimated cost using provider-neutral metrics.
+- Use controlled resilience: cancellation, timeouts, transient-only retry/backoff, rate-limit handling, and an optional circuit breaker. Never retry authorization/validation/unsafe requests or non-idempotent mutations blindly.
+- Tool descriptors include risk (`READ`, `LOW_RISK_WRITE`, `HIGH_IMPACT_WRITE`), `IsReadOnly`, confirmation requirement, permission, timeout, idempotency expectations, and version. Mutating/high-impact tools require application validation and explicit confirmation; model intent is never authorization.
+- Design execution events for future streaming/background work: started, progress, model chunk where safe, tool started/completed, validation, final result, cancellation, and error. Version 1 may remain synchronous.
+- Version agent ID, agent instructions/prompt, and tool set. Record those versions with provider/model in execution metadata.
+- Add an evaluation harness with representative inputs, required facts, forbidden assumptions, expected tools/clarifications, schema validity, authorization compliance, latency, and usage. Do not promote significant prompt/model changes without regression evaluation.
+- Introduce provider-neutral data classification (`PUBLIC`, `INTERNAL`, `CONFIDENTIAL`, `RESTRICTED`, subject to IAX policy), redaction, and provider/tenant eligibility checks before sending data externally.
+- Validate attachments by size, MIME type, extension, signature where practical, extraction/decompression limits, and existing malware scanning. Extractors cannot read arbitrary paths.
+- Correlate API request, execution, conversation, agent, model, tools, and business actions with safe structured telemetry. Never log chain-of-thought or raw provider reasoning.
+- Cache only safe deterministic descriptors/metadata with correct tenant boundaries. Never cache authorization across users or sensitive prompts by default.
+- Use feature flags/configuration to disable the platform, providers, agents, or tools globally or by authorized tenant/role without deployment.
+
 Do not create empty backend `Modules/ProcessBuilder` or `Modules/Reports` folders merely to match a conceptual tree. They should exist only if those backend modules have approved ownership and project boundaries. The current Process Builder backend aggregate belongs to Workflow; the existing React Process Builder remains under `IXApp/src/modules/process-builder`.
+
+Use the business-agent name `ProcessBuilderAgent`, not `AIProcessBuilder`, `ProcessAI`, or `WorkflowAI`. The platform/module name remains the generic `AI`; business capability names apply only to their specialized agents and views.
 
 ## Actual workflow model
 
@@ -418,6 +453,8 @@ Use separate analyze/validate/create/activate permissions and recheck permission
 
 Extend the existing Process Builder and design system. Reuse MUI, i18next, shared feedback, dynamic-form preview, workflow editor, and print-template designer/runtime.
 
+Provide a generic `/ai` workspace driven by the authorized agent registry. It owns common agent selection, message input, attachments, execution state, cancellation, and generic errors/usage. Each business agent registers an optional specialized result renderer; for example Process Builder renders a process preview, while future document/report agents render their own result types.
+
 Provide conversation/attachments, versioned blueprint preview, request form, workflow graph, steps/activities/transitions, performers/access, print proposal, validation panels, and explicit revise/validate/create-inactive/verify/activate actions. Localize all visible text for Arabic RTL and English LTR.
 
 The preview must display source evidence, classification, confidence, assumptions, warnings, and missing information. Users must be able to correct the definition before approval and then open the created inactive process in the normal Process Builder.
@@ -461,6 +498,14 @@ Add unit, integration, authorization, tenant, rollback, idempotency, validation,
 - retries do not duplicate processes
 - activation requires permission and explicit action
 - manual Process Builder, request submission, mail, and print remain compatible
+- duplicate/unknown agent registration and authorization-filtered discovery behave deterministically
+- unauthorized tools, provider timeout/rate limits, malformed structured output, extraction failure, and cancellation return normalized safe errors
+- agents can be unit-tested with fake `IAIService`/provider responses and tools can be tested independently
+- prompt/tool injection from documents and retrieved content cannot change instructions, permissions, tenant scope, tool allowlists, or approval rules
+- execution budgets stop repeated/circular model and tool calls
+- tool risk, confirmation, idempotency, and retry rules prevent duplicate or unauthorized side effects
+- model routing, quotas, feature flags, data classification, redaction, correlation, and agent/prompt/tool versioning behave deterministically
+- agent evaluation fixtures detect schema, factual, unsupported-assumption, tool-selection, clarification, latency, and usage regressions
 
 ## Reference process 590
 

@@ -65,6 +65,7 @@ WfProcesses
 9. Existing delete behaviors are mixed between cascade and restrict; persistence/update logic must follow EF configuration.
 10. `WfRequestVariable` key configuration and other legacy inconsistencies require characterization tests before reliance.
 11. Source documents may contain forms and sections, but no separate Workflow form/section entities were confirmed. Treat them as canonical layout concepts and compile them only to verified request-control properties or print-template layout; otherwise report a gap instead of adding tables implicitly.
+12. The approved source layout places generic contracts under `Infrastructure/AI/Abstractions`, while the current project direction is `Infrastructure → Modules`. A module-owned business agent cannot reference the existing Infrastructure project without reversing/cycling dependencies. Resolve this before implementation through an approved dependency-safe contracts project or repository-consistent composition approach; do not silently add `Modules → Infrastructure`.
 
 ## Recommended components
 
@@ -149,6 +150,7 @@ Allowed generic contracts include:
 - generic messages, content parts, tool descriptors, tool-call envelopes, and usage results
 - `IDocumentContentExtractor` and technical extracted-content/page/region models
 - `IAIAgentRegistry`, `IAIAgentOrchestrator`, `IAITool`, `IAIToolRegistry`, and `IDocumentExtractor`
+- `IAIMemory` for bounded provider/domain-neutral context, subject to the approved memory policy
 - provider configuration, resilience, timeouts, cancellation, telemetry, token/cost accounting, and generic safety limits
 
 Business adapters live at:
@@ -167,6 +169,16 @@ Modules/Intelligence/ProcessBuilder/
 That adapter translates generic AI output into `WorkflowBlueprintDto` and invokes Workflow-owned validation/building contracts. Prompts named for Process Builder and tools such as workflow metadata lookup must never be placed in Infrastructure.
 
 The platform uses DI-backed agent/tool registries and one central orchestrator. It supports authorization-filtered discovery, stable agent names, generic attachments, bounded conversation context, structured output, logging, usage, cancellation, and normalized failures without hardcoded agent switches. The generic foundation is validated first with domain-neutral test agents; `ProcessBuilderAgent` is then registered as a separate reference consumer. Collaboration/delegation and additional business agents are deferred.
+
+Every agent has an `AgentDescriptor`: unique stable ID, localized name/description, accepted inputs, output schema/renderer key, allowed tools, optional provider/model policy, and authorization requirements. Duplicate IDs and invalid tool mappings fail during startup validation.
+
+Agent and tool responsibilities are separate: agents reason and orchestrate, while tools expose narrow authorized application capabilities. No agent receives a generic database, SQL, command, filesystem, or unrestricted HTTP tool.
+
+Use normalized safe error codes for provider/model availability, invalid structured output, missing/unauthorized agents or tools, tool failure, attachment limits/extraction, validation, rate limiting, timeout, and cancellation. Central options govern provider/model selection, timeouts, tool-call limits, attachment policy, and structured-output bounds; secrets use the established application secret mechanism.
+
+Conversation history and long-term memory are separate replaceable stores. Version 1 may use transient conversation context. Any durable store requires approved retention, encryption, deletion, tenant isolation, and sensitive-content logging rules and must not persist provider-native objects as its primary model.
+
+Production controls also include strict untrusted-content/prompt-injection boundaries; model/tool/context/token budgets and loop detection; provider-neutral model routing; quotas/cost accounting; transient-only retries and circuit breaking where justified; risk-classified tools with confirmation/idempotency metadata; future-compatible streaming events; agent/prompt/tool versioning; regression evaluations; data classification/redaction/provider eligibility; attachment signature/scanning/path safety; end-to-end correlation without chain-of-thought; tenant-safe caching; and feature flags for providers, agents, and tools.
 
 The responsibility split is explicit:
 
@@ -214,7 +226,7 @@ Use a responsive split workspace: input/chat/attachments and clarification on on
 
 ### Phase 0 — decisions and threat model
 
-Decide model provider/deployment, data residency, retention, cost limits, attachment types/sizes/pages/scanning, session storage, performer-creation policy, activation semantics, existing-process update policy, and reference-process visibility.
+Decide the contracts-project dependency resolution, model provider/deployment, data residency/classification, retention, quotas/cost limits, attachment types/sizes/pages/signatures/scanning, session storage, feature-flag ownership, and—only for the later Process Builder workstream—performer policy, activation semantics, update policy, and reference visibility.
 
 Acceptance: approved architecture decision record and threat model.
 
@@ -224,6 +236,8 @@ Acceptance: approved architecture decision record and threat model.
 - Implement DI-backed agent/tool registries, central orchestrator, execution pipeline, normalized results, cancellation, errors, usage, and telemetry.
 - Prove registration and execution with domain-neutral test agents; do not reference Workflow or Process Builder.
 - Add architecture tests preventing domain types and provider SDK types from leaking across the generic contracts.
+- Add startup validation for duplicate agents/tools, invalid descriptors, and missing tool bindings.
+- Add execution policies for budgets/loop protection, model capabilities/routing, tool risks, confirmation, versioning, correlation, feature flags, and authorization.
 
 Acceptance: a test agent can be added through registration without modifying AI Core, and the generic platform builds/tests without Workflow dependencies.
 
@@ -231,6 +245,8 @@ Acceptance: a test agent can be added through registration without modifying AI 
 
 - Confirm/replace OpenAI bootstrap using typed options, health checks, secure secrets, cancellation, and timeouts.
 - Add provider selection and provider-neutral structured-output handling.
+- Add normalized platform errors and centralized bounded configuration without hardcoded secrets.
+- Add quotas/usage, data classification/redaction/provider eligibility, transient-only resilience, and attachment signature/path/scanning safeguards.
 - Add bounded PDF/image/text extraction and safe attachment preprocessing with source/page/region metadata.
 - Use transient bounded conversation context; defer durable memory until its governance is approved.
 
@@ -311,6 +327,7 @@ Acceptance: both languages complete the guarded lifecycle without breaking manua
 - Test permissions, tenant isolation, rollback, idempotency, prompt injection, file limits, cost/rate/time limits, cancellation, and observability.
 - Regression-test manual Process Builder, request submission, mail, and printing.
 - Release behind a feature flag with restricted create/activate permission.
+- Add prompt/tool-injection suites, execution-loop tests, model-routing/quotas, safe retry/idempotency tests, agent/prompt/tool version regression evaluations, and streaming-contract compatibility tests.
 
 Acceptance: security review and regression suite pass; rollback and monitoring are documented.
 
@@ -321,28 +338,6 @@ After the AI path is stable, evaluate migrating manual Process Builder creation,
 ## Initial file proposal
 
 ```text
-IXApi/src/Modules/Workflow/ProcessBuilding/
-  Contracts/
-    IProcessDefinitionValidator.cs
-    IProcessBuilderService.cs
-  Validation/
-  Building/
-  WorkflowBlueprintValidator.cs
-  WorkflowBlueprintCompiler.cs
-  WorkflowBuilderService.cs
-  WorkflowVerificationService.cs
-
-IXApi/src/Modules/Intelligence/
-  ProcessBuilder/
-    Agents/ProcessBuilderAgent.cs
-    Analysis/
-    Generation/IProcessGenerationService.cs
-    Knowledge/IProcessBuilderKnowledgeService.cs
-    Automation/
-    Prompts/
-    Tools/
-    Endpoints/WorkflowAIProcessBuilderController.cs
-
 IXApi/src/Infrastructure/AI/
   Abstractions/
     IAIService.cs
@@ -351,9 +346,15 @@ IXApi/src/Infrastructure/AI/
     IAIAgentRegistry.cs
     IAIAgentOrchestrator.cs
     IAITool.cs
+    IAIToolRegistry.cs
+    IAIMemory.cs
+    IAIExecutionPolicy.cs
+    IAIModelResolver.cs
   Agents/
     AgentRegistry.cs
+    AgentDescriptor.cs
     AgentContext.cs
+    AgentRequest.cs
     AgentResult.cs
     AgentExecutionContext.cs
   Providers/
@@ -362,10 +363,13 @@ IXApi/src/Infrastructure/AI/
     FutureProviders/
   Tools/
     ToolRegistry.cs
-    ToolDefinition.cs
+    ToolDescriptor.cs
+    ToolExecutionContext.cs
+    ToolResult.cs
     ToolExecutionService.cs
   Documents/
     IDocumentExtractor.cs
+    DocumentExtractorFactory.cs
     PdfExtractor.cs
     ImageExtractor.cs
     TextExtractor.cs
@@ -373,21 +377,42 @@ IXApi/src/Infrastructure/AI/
     AIAgentOrchestrator.cs
     AgentSelector.cs
     AgentExecutionPipeline.cs
+    ExecutionBudget.cs
+    AIExecutionEvent.cs
   Models/
     AIRequest.cs
     AIResponse.cs
     AIMessage.cs
     AIAttachment.cs
     AIUsage.cs
+    StructuredAIResponse.cs
   Memory/
     ConversationMemory.cs
     AgentMemory.cs
   Configuration/
     AIOptions.cs
     ProviderOptions.cs
+  Security/
+    AIDataClassificationPolicy.cs
+    UntrustedContentPolicy.cs
+  Evaluation/
+    AIEvaluationCase.cs
+    AIEvaluationRunner.cs
+  Telemetry/
+    AIExecutionTelemetry.cs
+
+IXApp/src/modules/ai/
+  api/ components/ hooks/ store/ types/
+
+# Separate later reference-consumer workstream
+IXApi/src/Modules/Workflow/ProcessBuilding/
+  Contracts/ Validation/ Building/
+
+IXApi/src/Modules/Intelligence/ProcessBuilder/
+  Agents/ Analysis/ Generation/ Knowledge/ Automation/ Prompts/ Tools/ Endpoints/
 
 IXApp/src/modules/process-builder/ai/
-  api/ components/ hooks/ store/ types/
+  specialized Process Builder result renderer/integration
 ```
 
 Likely later modifications: `WorkflowModule.cs`, model-provider bootstrap/options, permission registration/seeding, Process Builder page/workspace, and Arabic/English translation resources.
@@ -407,4 +432,10 @@ Likely later modifications: `WorkflowModule.cs`, model-provider bootstrap/option
 
 ## Definition of done
 
-An authorized user can provide Arabic/English requirements and approved attachments, review a versioned blueprint, receive deterministic validation, atomically create one inactive definition, verify it, and explicitly activate it—with no arbitrary SQL, runtime-row creation, cross-tenant access, partial persistence, or regressions.
+### Generic AI Core V1
+
+The generic platform works with a neutral test agent and no Workflow dependency. At least one replaceable provider, typed structured output, authorized agent discovery, safe read-only tools, validated TXT/PDF/image paths, cancellation, budgets/loop protection, normalized errors, correlation/usage telemetry, feature flags, Arabic/English generic React workspace, mock-provider tests, prompt/tool-injection tests, tenant/security tests, and architecture-boundary tests pass. No API key or secret exists in source control.
+
+### Later Process Builder reference consumer
+
+After separate approval, an authorized user can provide Arabic/English requirements and approved attachments, review a versioned blueprint, receive deterministic validation, atomically create one inactive definition, verify it, and explicitly activate it—with no arbitrary SQL, runtime-row creation, cross-tenant access, partial persistence, or regressions. This is not part of AI Core completion.
