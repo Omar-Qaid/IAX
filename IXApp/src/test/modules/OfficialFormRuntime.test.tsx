@@ -4,21 +4,19 @@ import { render, screen } from '@test/testUtils';
 import {
   formatPrintValue,
   requestControlTemplateBindings,
-  RuntimePrintTemplate,
-} from '@modules/workflow/print-templates/runtime/RuntimePrintTemplate';
-import {
-  createRuntimePrintData,
+  ReportTemplateRenderer as ReportViewer,
   formatRequestControlValue,
   resolveRuntimeBinding,
-} from '@modules/workflow/print-templates/runtime/runtimePrintData';
-import {
   selectDefaultPublishedTemplate,
   selectPublishedTemplates,
-} from '@modules/workflow/print-templates/runtime/publishedTemplateSelection';
+} from '@shared/components/report-viewer';
+import {
+  createruntimeReportData,
+} from '@modules/workflow/report-viewer/utils/runtimeReportData';
 import type {
   PrintTemplateDocument,
-  PrintTemplateSummary,
-} from '@modules/workflow/print-templates/types/printTemplate.types';
+  ReportDesignerSummary,
+} from '@shared/components/report-designer/types';
 import type { MailRequestDetailsDto, WfRequestRecord } from '@modules/workflow/api/wfRequestApi';
 
 const request: WfRequestRecord = {
@@ -77,7 +75,7 @@ const details: MailRequestDetailsDto = {
   ],
 };
 
-const runtimeData = createRuntimePrintData(
+const runtimeData = createruntimeReportData(
   request,
   details,
   {
@@ -95,7 +93,7 @@ const runtimeData = createRuntimePrintData(
   new Date('2026-08-27T10:00:00Z')
 );
 
-const summary = (overrides: Partial<PrintTemplateSummary>): PrintTemplateSummary => ({
+const summary = (overrides: Partial<ReportDesignerSummary>): ReportDesignerSummary => ({
   templateId: 1,
   processId: 7,
   processName: 'Process',
@@ -162,7 +160,7 @@ describe('official-form runtime', () => {
   });
 
   it('keeps the stable request-control value when a control-type ID has the same number', () => {
-    const collisionData = createRuntimePrintData(
+    const collisionData = createruntimeReportData(
       request,
       {
         ...details,
@@ -264,7 +262,7 @@ describe('official-form runtime', () => {
     };
 
     const { container } = render(
-      <RuntimePrintTemplate template={template} data={runtimeData} company={{ name: 'Company' }} />
+      <ReportViewer template={template} data={runtimeData} company={{ name: 'Company' }} />
     );
 
     expect(container.querySelector('.printout-page-number')).toBeInTheDocument();
@@ -318,7 +316,7 @@ describe('official-form runtime', () => {
     };
 
     render(
-      <RuntimePrintTemplate
+      <ReportViewer
         template={template}
         data={historicalData}
         company={{ name: 'Company' }}
@@ -395,7 +393,7 @@ describe('official-form runtime', () => {
       footer: [{ id: 'footer', type: 'text', value: 'Official footer' }],
     };
     const { container } = render(
-      <RuntimePrintTemplate template={template} data={runtimeData} company={{ name: 'Company' }} />
+      <ReportViewer template={template} data={runtimeData} company={{ name: 'Company' }} />
     );
     expect(screen.getByText('Official header')).toBeInTheDocument();
     expect(screen.getByText('Official footer')).toBeInTheDocument();
@@ -444,7 +442,7 @@ describe('official-form runtime', () => {
     };
 
     render(
-      <RuntimePrintTemplate template={template} data={runtimeData} company={{ name: 'Company' }} />
+      <ReportViewer template={template} data={runtimeData} company={{ name: 'Company' }} />
     );
 
     const image = screen.getByRole('img', { name: 'Styled logo' });
@@ -500,7 +498,7 @@ describe('official-form runtime', () => {
     };
 
     const { container } = render(
-      <RuntimePrintTemplate template={template} data={runtimeData} company={{ name: 'Company' }} />
+      <ReportViewer template={template} data={runtimeData} company={{ name: 'Company' }} />
     );
 
     expect(screen.getByText('Total')).toBeInTheDocument();
@@ -538,7 +536,7 @@ describe('official-form runtime', () => {
       requestControls: { ...runtimeData.requestControls, '2102': '', '9999': '', '9998': '', '9997': '' },
     };
     const { container } = render(
-      <RuntimePrintTemplate
+      <ReportViewer
         template={template}
         data={data}
         company={{ name: 'Company' }}

@@ -1,5 +1,6 @@
 import type { AuthAdapter, LoginResponse, UserProfile } from './types';
 import { authStorage } from './authStorage';
+import { PERMISSIONS } from '@core/permissions/permissions';
 
 export const MOCK_USER: UserProfile = {
   id: 'usr-001',
@@ -8,21 +9,21 @@ export const MOCK_USER: UserProfile = {
   displayName: 'Enterprise Administrator',
   roles: ['SystemAdmin', 'Accountant', 'SalesManager'],
   permissions: [
-    'dashboard.view',
-    'customer.view',
-    'customer.create',
-    'customer.update',
-    'customer.delete',
-    'customerGroup.view',
-    'salesOrder.view',
-    'salesOrder.create',
-    'salesOrder.update',
-    'salesOrder.confirm',
-    'salesOrder.post',
-    'currency.view',
-    'currency.manage',
-    'settings.view',
-    'settings.update',
+    PERMISSIONS.DASHBOARD_VIEW,
+    PERMISSIONS.CUSTOMER_VIEW,
+    PERMISSIONS.CUSTOMER_CREATE,
+    PERMISSIONS.CUSTOMER_UPDATE,
+    PERMISSIONS.CUSTOMER_DELETE,
+    PERMISSIONS.CUSTOMER_GROUP_VIEW,
+    PERMISSIONS.SALES_ORDER_VIEW,
+    PERMISSIONS.SALES_ORDER_CREATE,
+    PERMISSIONS.SALES_ORDER_UPDATE,
+    PERMISSIONS.SALES_ORDER_CONFIRM,
+    PERMISSIONS.SALES_ORDER_POST,
+    PERMISSIONS.CURRENCY_VIEW,
+    PERMISSIONS.CURRENCY_MANAGE,
+    PERMISSIONS.SETTINGS_VIEW,
+    PERMISSIONS.SETTINGS_UPDATE,
   ],
   defaultCompany: 'USMF',
 };

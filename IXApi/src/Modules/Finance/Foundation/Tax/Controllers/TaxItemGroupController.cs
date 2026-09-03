@@ -9,6 +9,7 @@ using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Organization.Employees.Entities;
 using IAX.IXApi.Infrastructure.Persistence.Services;
+using IAX.IXApi.Modules.Identity.Permissions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -21,6 +22,7 @@ namespace IAX.IXApi.Modules.Finance.Shared.Features
     [Route("api/TaxItemGroup")]
     [Route("api/v1/ItemSalesTaxGroup")]
     [Route("api/ItemSalesTaxGroup")]
+    [DomainPermission("Tax", "ItemTaxGroups")]
     public class TaxItemGroupController : BaseController<TaxItemGroupHeading, TaxItemGroupDto>
     {
         private readonly IFinanceDataContext _db;

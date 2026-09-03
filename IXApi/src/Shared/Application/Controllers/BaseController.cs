@@ -211,7 +211,7 @@ namespace IAX.IXApi.Api.Controllers
         /// <summary>
         /// Creates a range of entities.
         /// </summary>
-        [HttpPost("range")]
+        [NonAction]
         public virtual async Task<ActionResult<APIResponse<IEnumerable<TDto>>>> CreateRange([FromBody] IEnumerable<TDto> dtos, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("[{EntityName}] - Creating range of records", _entityName);
@@ -236,7 +236,7 @@ namespace IAX.IXApi.Api.Controllers
         /// <summary>
         /// Updates a range of entities.
         /// </summary>
-        [HttpPut("range")]
+        [NonAction]
         public virtual async Task<ActionResult<APIResponse<IEnumerable<TDto>>>> UpdateRange([FromBody] IEnumerable<TDto> dtos, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("[{EntityName}] - Updating range of records", _entityName);
@@ -275,7 +275,7 @@ namespace IAX.IXApi.Api.Controllers
         /// <summary>
         /// Deletes a range of entities by ids.
         /// </summary>
-        [HttpDelete("range")]
+        [NonAction]
         public virtual async Task<ActionResult<APIResponse<bool>>> DeleteRange([FromBody] IEnumerable<string> ids, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("[{EntityName}] - Deleting range of records", _entityName);

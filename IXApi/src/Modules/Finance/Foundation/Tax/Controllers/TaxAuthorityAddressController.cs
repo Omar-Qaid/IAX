@@ -8,6 +8,7 @@ using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Organization.Employees.Entities;
 using IAX.IXApi.Infrastructure.Persistence.Services;
+using IAX.IXApi.Modules.Identity.Permissions;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +21,7 @@ namespace IAX.IXApi.Modules.Finance.Shared.Features
     [Route("api/TaxAuthorityAddress")]
     [Route("api/v1/TaxAuthority")]
     [Route("api/TaxAuthority")]
+    [DomainPermission("Tax", "TaxAuthorities")]
     public class TaxAuthorityAddressController : BaseController<TaxAuthorityAddress, TaxAuthorityAddressDto>
     {
         private readonly IFinanceDataContext _db;

@@ -52,7 +52,11 @@ const createTestQueryClient = () =>
     },
   });
 
-function ControlledLookupWithinForm({ onChange }: { onChange: ReturnType<typeof vi.fn> }) {
+function ControlledLookupWithinForm({
+  onChange,
+}: {
+  onChange: (value: string | null, row?: TestItem | null) => void;
+}) {
   const form = useForm({ defaultValues: { customerId: 'form-value' } });
   return (
     <FormProvider {...form}>

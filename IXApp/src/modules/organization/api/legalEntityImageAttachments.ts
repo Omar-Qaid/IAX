@@ -3,7 +3,7 @@ import { documentApi, type DocumentDto } from '@shared/components/documents/docu
 import {
   REPORT_COMPANY_LOGO_ATTACHMENT,
   REPORT_COMPANY_TABLE_ID,
-} from '@shared/components/printout/reportCompany';
+} from '@shared/components/report-viewer/reportCompany';
 import type { LegalEntityRecord } from '../types/legalEntityTypes';
 
 export const LEGAL_ENTITY_TABLE_ID = REPORT_COMPANY_TABLE_ID;

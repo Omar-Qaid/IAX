@@ -3,7 +3,7 @@ import { Box, Dialog, useMediaQuery, useTheme } from '@mui/material';
 import { ReportPreviewArea } from './ReportPreviewArea';
 import { ReportThumbnailPanel } from './ReportThumbnailPanel';
 import { ReportToolbar } from './ReportToolbar';
-import { PrintoutPaginationProvider } from '@shared/components/printout/PrintoutPaginationContext';
+import { ReportViewerPaginationProvider } from '@shared/components/report-viewer/ReportViewerPaginationContext';
 import { REPORT_EXPORT_FORMATS, type ReportExportFormat, type ReportViewerProps, type ReportZoomMode } from './types';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 
@@ -98,9 +98,9 @@ export function ReportViewer({ open, title, variant = 'embedded', children, load
     <ReportToolbar compact={compact} currentPage={currentPage} totalPages={totalPages} thumbnailsOpen={thumbnailsOpen} zoom={zoom} zoomMode={zoomMode} exportFormats={exportFormats} onClose={onClose} onReload={onReload} onPrint={onPrint} onExport={(format: ReportExportFormat) => onExport(format)} onFullscreen={fullscreen} onToggleThumbnails={() => setThumbnailsOpen((value) => !value)} onPageChange={goToPage} onZoomChange={(requestedZoom) => changeZoom(zoom + Math.sign(requestedZoom - zoom) * zoomStep)} onZoomModeChange={changeZoomMode} onSearch={findInReport} />
     <Box sx={{ minHeight: 0, display: 'grid', gridTemplateColumns: thumbnailsOpen ? { xs: '112px minmax(0, 1fr)', md: '188px minmax(0, 1fr)' } : '0 minmax(0, 1fr)', overflow: 'hidden' }}>
       <ReportThumbnailPanel open={thumbnailsOpen} currentPage={currentPage} totalPages={totalPages} onPageChange={goToPage} renderThumbnail={pagination?.renderThumbnail} />
-      <PrintoutPaginationProvider value={{ currentPage, totalPages }}>
+      <ReportViewerPaginationProvider value={{ currentPage, totalPages }}>
         <ReportPreviewArea loading={loading || pagination?.loading === true} error={error} emptyMessage={resolvedEmptyMessage} zoom={zoom} zoomMode={zoomMode} direction={direction} reportRef={reportRef} scrollRef={scrollRef} onCalculatedZoom={calculateZoom} onScroll={trackVisiblePage}>{children}</ReportPreviewArea>
-      </PrintoutPaginationProvider>
+      </ReportViewerPaginationProvider>
     </Box>
   </Box>;
 

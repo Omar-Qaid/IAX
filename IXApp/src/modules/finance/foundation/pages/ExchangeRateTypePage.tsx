@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
 import type { ColumnDef } from '@shared/components/data-grid/types';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import { PERMISSIONS } from '@core/permissions/permissions';
 import { queryClient } from '@core/api/queryClient';
 import { useNotifications } from '@shared/hooks/useNotifications';
 import { uiDensity } from '@shared/constants/uiDensity';
@@ -30,7 +31,7 @@ export function ExchangeRateTypePage(): React.ReactElement {
     getAuditRecordId: (record) => record.recId,
     crud: {
       editLabel: t('actions.edit'), newLabel: t('actions.new'), deleteLabel: t('actions.delete'),
-      editPermission: 'currency.manage', newPermission: 'currency.manage', deletePermission: 'currency.manage',
+      editPermission: PERMISSIONS.CURRENCY_MANAGE, newPermission: PERMISSIONS.CURRENCY_MANAGE, deletePermission: PERMISSIONS.CURRENCY_MANAGE,
       onDelete: async (rows) => {
         try {
           await Promise.all(rows.map((row) => exchangeRateTypeApi.delete(row)));

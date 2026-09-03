@@ -7,6 +7,7 @@ import type {
   EnterpriseListDetailsConfig,
 } from '@patterns/list-details/types';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import { PERMISSIONS } from '@core/permissions/permissions';
 import { currencyApi, type CurrencyRecord } from '../api/currencyApi';
 
 const emptyCurrency = (): CurrencyRecord => ({
@@ -210,10 +211,10 @@ export function CurrencyPage(): React.ReactElement {
     ],
     sections,
     permissions: {
-      view: 'currency.view',
-      create: 'currency.manage',
-      edit: 'currency.manage',
-      delete: 'currency.manage',
+      view: PERMISSIONS.CURRENCY_VIEW,
+      create: PERMISSIONS.CURRENCY_MANAGE,
+      edit: PERMISSIONS.CURRENCY_MANAGE,
+      delete: PERMISSIONS.CURRENCY_MANAGE,
     },
     validate: (record) => ({
       ...(!record.currencyCode.trim()

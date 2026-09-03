@@ -4,6 +4,7 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import MapOutlinedIcon from '@mui/icons-material/MapOutlined';
 import { Alert, Box, Button, Chip, Stack, Typography } from '@mui/material';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import { PERMISSIONS } from '@core/permissions/permissions';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
 import { TabularDetailPanel } from '@patterns/list-details/TabularDetailPanel';
 import type { DetailValues, EnterpriseListDetailsConfig } from '@patterns/list-details/types';
@@ -302,10 +303,10 @@ export function LegalEntityPage(): React.ReactElement {
         headerMaxWidth: 520,
       },
       permissions: {
-        view: 'legalEntity.view',
-        create: 'legalEntity.manage',
-        edit: 'legalEntity.manage',
-        delete: 'legalEntity.manage',
+        view: PERMISSIONS.LEGAL_ENTITY_VIEW,
+        create: PERMISSIONS.LEGAL_ENTITY_MANAGE,
+        edit: PERMISSIONS.LEGAL_ENTITY_MANAGE,
+        delete: PERMISSIONS.LEGAL_ENTITY_MANAGE,
       },
       validate: (record) => ({
       ...(!record.name.trim() ? { name: t('validation.required', { field: t('legalEntities.fields.name') }) } : {}),

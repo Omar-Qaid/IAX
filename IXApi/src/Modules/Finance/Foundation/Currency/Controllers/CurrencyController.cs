@@ -13,6 +13,7 @@ namespace IAX.IXApi.Modules.Finance.Shared.Features
 {
     [ApiController]
     [Route("api/v1/[controller]")]
+    [DomainPermission("GeneralLedger", "Currencies")]
     public class CurrencyController : BaseController<Currency, CurrencyDto>
     {
         public CurrencyController(ICurrencyService service, ILogger<CurrencyController> logger)

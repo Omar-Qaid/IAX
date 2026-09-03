@@ -1,22 +1,22 @@
 export const PERMISSIONS = {
-  DASHBOARD_VIEW: 'dashboard.view',
+  DASHBOARD_VIEW: 'Application.Dashboard.View',
 
-  CUSTOMER_VIEW: 'customer.view',
-  CUSTOMER_CREATE: 'customer.create',
-  CUSTOMER_UPDATE: 'customer.update',
-  CUSTOMER_DELETE: 'customer.delete',
+  CUSTOMER_VIEW: 'AccountsReceivable.Customers.View',
+  CUSTOMER_CREATE: 'AccountsReceivable.Customers.Create',
+  CUSTOMER_UPDATE: 'AccountsReceivable.Customers.Edit',
+  CUSTOMER_DELETE: 'AccountsReceivable.Customers.Delete',
 
-  CUSTOMER_GROUP_VIEW: 'customerGroup.view',
-  CUSTOMER_GROUP_MANAGE: 'customerGroup.manage',
+  CUSTOMER_GROUP_VIEW: 'AccountsReceivable.CustomerGroups.View',
+  CUSTOMER_GROUP_MANAGE: 'AccountsReceivable.CustomerGroups.Edit',
 
-  SALES_ORDER_VIEW: 'salesOrder.view',
-  SALES_ORDER_CREATE: 'salesOrder.create',
-  SALES_ORDER_UPDATE: 'salesOrder.update',
-  SALES_ORDER_CONFIRM: 'salesOrder.confirm',
-  SALES_ORDER_POST: 'salesOrder.post',
+  SALES_ORDER_VIEW: 'AccountsReceivable.SalesOrders.View',
+  SALES_ORDER_CREATE: 'AccountsReceivable.SalesOrders.Create',
+  SALES_ORDER_UPDATE: 'AccountsReceivable.SalesOrders.Edit',
+  SALES_ORDER_CONFIRM: 'AccountsReceivable.SalesOrders.Confirm',
+  SALES_ORDER_POST: 'AccountsReceivable.SalesOrders.Post',
 
-  CURRENCY_VIEW: 'currency.view',
-  CURRENCY_MANAGE: 'currency.manage',
+  CURRENCY_VIEW: 'GeneralLedger.Currencies.View',
+  CURRENCY_MANAGE: 'GeneralLedger.Currencies.Edit',
 
   WF_PROCESS_VIEW: 'Workflow.Processes.View',
   WF_PROCESS_CREATE: 'Workflow.Processes.Create',
@@ -65,11 +65,11 @@ export const PERMISSIONS = {
   WF_PRINT_TEMPLATE_PUBLISH: 'Workflow.PrintTemplates.Publish',
   WF_PRINT_TEMPLATE_ARCHIVE: 'Workflow.PrintTemplates.Archive',
 
-  LEGAL_ENTITY_VIEW: 'legalEntity.view',
-  LEGAL_ENTITY_MANAGE: 'legalEntity.manage',
+  LEGAL_ENTITY_VIEW: 'Organization.LegalEntities.View',
+  LEGAL_ENTITY_MANAGE: 'Organization.LegalEntities.Edit',
 
-  SETTINGS_VIEW: 'settings.view',
-  SETTINGS_UPDATE: 'settings.update',
+  SETTINGS_VIEW: 'System.Settings.View',
+  SETTINGS_UPDATE: 'System.Settings.Edit',
 
   NUMBER_SEQUENCE_VIEW: 'System.NumberSequences.View',
   NUMBER_SEQUENCE_CREATE: 'System.NumberSequences.Create',

@@ -28,6 +28,47 @@ namespace IAX.IXApi.Modules.Workflow.Requests
             return Ok(APIResponse<IEnumerable<WfRequestDto>>.Ok(requests));
         }
 
+        public override async Task<ActionResult<APIResponse<WfRequestDto>>> GetById(string id, CancellationToken cancellationToken = default)
+        {
+            if (!long.TryParse(id, out var requestId) || !await _requestService.CanAccessRequestAsync(requestId, cancellationToken))
+                return NotFound(APIResponse<WfRequestDto>.Fail("Workflow request not found."));
+            return await base.GetById(id, cancellationToken);
+        }
+
+        public override async Task<ActionResult<APIResponse<WfRequestDto>>> Update(string id, WfRequestDto dto, CancellationToken cancellationToken = default)
+        {
+            if (!long.TryParse(id, out var requestId) || !await _requestService.CanAccessRequestAsync(requestId, cancellationToken))
+                return NotFound(APIResponse<WfRequestDto>.Fail("Workflow request not found."));
+            return await base.Update(id, dto, cancellationToken);
+        }
+
+        public override async Task<ActionResult<APIResponse<bool>>> Delete(string id, CancellationToken cancellationToken = default)
+        {
+            if (!long.TryParse(id, out var requestId) || !await _requestService.CanAccessRequestAsync(requestId, cancellationToken))
+                return NotFound(APIResponse<bool>.Fail("Workflow request not found."));
+            return await base.Delete(id, cancellationToken);
+        }
+
+        [NonAction]
+        public override Task<ActionResult<APIResponse<WfRequestDto>>> Create(WfRequestDto dto, CancellationToken cancellationToken = default) =>
+            base.Create(dto, cancellationToken);
+
+        [NonAction]
+        public override Task<ActionResult<APIResponse<IEnumerable<WfRequestDto>>>> GetPaged(QueryFilterDto paginationParams, CancellationToken cancellationToken = default) =>
+            base.GetPaged(paginationParams, cancellationToken);
+
+        [NonAction]
+        public override Task<ActionResult<APIResponse<IEnumerable<WfRequestDto>>>> CreateRange(IEnumerable<WfRequestDto> dtos, CancellationToken cancellationToken = default) =>
+            base.CreateRange(dtos, cancellationToken);
+
+        [NonAction]
+        public override Task<ActionResult<APIResponse<IEnumerable<WfRequestDto>>>> UpdateRange(IEnumerable<WfRequestDto> dtos, CancellationToken cancellationToken = default) =>
+            base.UpdateRange(dtos, cancellationToken);
+
+        [NonAction]
+        public override Task<ActionResult<APIResponse<bool>>> DeleteRange(IEnumerable<string> ids, CancellationToken cancellationToken = default) =>
+            base.DeleteRange(ids, cancellationToken);
+
         [HttpGet("form-definition/{processId:long}")]
         public async Task<ActionResult<APIResponse<DynamicRequestFormDto>>> GetFormDefinition(long processId, CancellationToken cancellationToken)
         {

@@ -2,15 +2,15 @@
 
 `scripts/audit-architecture.mjs` defines the intended dependency direction for `src`.
 
-| Source layer | Allowed target layers |
-| --- | --- |
-| `app` | `app`, `modules`, `patterns`, `shared`, `core`, `mocks` |
-| `modules` | same module, `patterns`, `shared`, `core`, `mocks` |
-| `patterns` | `patterns`, `shared`, `core` |
-| `shared` | `shared`, `core` |
-| `core` | `core` |
-| `mocks` | `mocks`, `shared`, `core` |
-| `test` | every source layer |
+| Source layer | Allowed target layers                                   |
+| ------------ | ------------------------------------------------------- |
+| `app`        | `app`, `modules`, `patterns`, `shared`, `core`, `mocks` |
+| `modules`    | same module, `patterns`, `shared`, `core`, `mocks`      |
+| `patterns`   | `patterns`, `shared`, `core`                            |
+| `shared`     | `shared`, `core`                                        |
+| `core`       | `core`                                                  |
+| `mocks`      | `mocks`, `shared`, `core`                               |
+| `test`       | every source layer                                      |
 
 The audit also rejects direct imports between top-level modules, imports from the `@mui/icons-material` barrel, circular source dependencies, and unresolved internal imports. Process Builder is explicitly owned by the Workflow bounded context while retaining its established physical package path for route and import compatibility.
 

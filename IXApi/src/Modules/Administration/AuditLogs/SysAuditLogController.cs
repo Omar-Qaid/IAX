@@ -24,6 +24,27 @@ namespace IAX.IXApi.Modules.Administration.AuditLogs
             _db = db;
         }
 
+        // Audit records are append-only infrastructure output. They must never be created,
+        // edited, or deleted through the generic CRUD surface.
+        [NonAction]
+        public override Task<ActionResult<APIResponse<SysAuditLogDto>>> Create(
+            SysAuditLogDto dto,
+            CancellationToken cancellationToken = default) =>
+            base.Create(dto, cancellationToken);
+
+        [NonAction]
+        public override Task<ActionResult<APIResponse<SysAuditLogDto>>> Update(
+            string id,
+            SysAuditLogDto dto,
+            CancellationToken cancellationToken = default) =>
+            base.Update(id, dto, cancellationToken);
+
+        [NonAction]
+        public override Task<ActionResult<APIResponse<bool>>> Delete(
+            string id,
+            CancellationToken cancellationToken = default) =>
+            base.Delete(id, cancellationToken);
+
         /// <summary>
         /// Audit trail for a single record. Accepts either the physical DB table name
         /// or a logical/entity name (e.g. "ARSalesOrder") and resolves it to the actual

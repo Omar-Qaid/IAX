@@ -8,6 +8,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Communication.Notifications
 {
+    [ApiController]
+    [Authorize]
+    [Route("api/v1/[controller]")]
     public class SysNotificationPreferenceController : ControllerBase
     {
         private readonly ICommunicationDataContext _db;

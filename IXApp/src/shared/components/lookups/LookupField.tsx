@@ -50,9 +50,7 @@ export function LookupField<TFieldValues extends FieldValues = FieldValues>({
         fullWidth={fullWidth}
         size="small"
         onChange={(event) => {
-          const option = options.find(
-            (item) => String(item.id) === String(event.target.value)
-          );
+          const option = options.find((item) => String(item.id) === String(event.target.value));
           onChange?.(option?.id ?? null, option);
         }}
       >

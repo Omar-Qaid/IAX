@@ -17,6 +17,19 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
     {
         private static readonly string[] Actions = ["View", "Create", "Edit", "Delete"];
 
+        private static readonly (string Module, string Resource, string Action)[] AdditionalPermissions =
+        [
+            ("AccountsReceivable", "SalesOrders", "Confirm"),
+            ("AccountsReceivable", "SalesOrders", "Post"),
+            ("System", "DataManagement", "Import"),
+            ("System", "DataManagement", "Export"),
+            ("System", "BackgroundJobs", "Run"),
+            ("System", "BackgroundJobs", "Cancel"),
+            ("System", "BackgroundJobs", "Retry"),
+            ("Workflow", "DataManagement", "Import"),
+            ("Workflow", "DataManagement", "Export"),
+        ];
+
         // Full permission catalog: (Module, Resource)
         // Resource maps 1-to-1 with a controller / page in the application.
         private static readonly (string Module, string Resource)[] PermissionDefs =
@@ -46,10 +59,12 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             ("Organization", "Announcements"),
             ("Organization", "PostalAddresses"),
             ("Organization", "ElectronicAddresses"),
+            ("Organization", "LegalEntities"),
+            ("Organization", "Showrooms"),
 
             // ── Inventory ───────────────────────────────────────────────────
-            ("Inventory", " "),
-            ("Inventory", " roups"),
+            ("Inventory", "Items"),
+            ("Inventory", "ItemGroups"),
             ("Inventory", "UOM"),
             ("Inventory", "Transactions"),
 
@@ -80,16 +95,37 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             ("Workflow", "Priorities"),
             ("Workflow", "ProcessTypes"),
             ("Workflow", "PrintTemplates"),
+            ("Workflow", "DataTypes"),
+            ("Workflow", "DataManagement"),
 
             // ── System ──────────────────────────────────────────────────────
             ("System", "AuditLog"),
             ("System", "NumberSequences"),
+            ("System", "NotificationTemplate"),
+            ("System", "Settings"),
+            ("System", "DataManagement"),
+            ("System", "BackgroundJobs"),
+            ("System", "Notifications"),
+            ("System", "Chat"),
 
             // ── General Ledger ──────────────────────────────────────────────
             ("GeneralLedger", "Currencies"),
             ("GeneralLedger", "ExchangeRates"),
             ("GeneralLedger", "ExchangeRateTypes"),
             ("GeneralLedger", "ExchangeRateCurrencyPairs"),
+            ("GeneralLedger", "FiscalCalendars"),
+            ("Finance", "MarkupCodes"),
+            ("Tax", "TaxCodes"),
+            ("Tax", "TaxGroups"),
+            ("Tax", "ItemTaxGroups"),
+            ("Tax", "TaxAuthorities"),
+            ("Tax", "LedgerAccountGroups"),
+            ("Tax", "SettlementPeriods"),
+            ("Tax", "ExemptCodes"),
+            ("AccountsReceivable", "SalesPools"),
+            ("AccountsReceivable", "PostingProfiles"),
+            ("AccountsReceivable", "PaymentMethods"),
+            ("Application", "Dashboard"),
         ];
 
         public async Task SeedAsync(
@@ -174,7 +210,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
         {
             // Remove legacy permissions that used the old 2-part key format (empty Resource)
             var legacy = await db.AspNetPermissions
-                .Where(p => p.Resource == "")
+                .Where(p => p.Resource == "" || p.Resource == " " || p.Resource == " roups")
                 .ToListAsync(ct);
 
             if (legacy.Count > 0)
@@ -224,6 +260,20 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                         Resource = "PrintTemplates",
                         Action = action,
                         Description = $"{action} PrintTemplates in Workflow",
+                    });
+                }
+            }
+
+            foreach (var (module, resource, action) in AdditionalPermissions)
+            {
+                if (!existing.Any(item => item.Module == module && item.Resource == resource && item.Action == action))
+                {
+                    toAdd.Add(new AppPermission
+                    {
+                        Module = module,
+                        Resource = resource,
+                        Action = action,
+                        Description = $"{action} {resource} in {module}",
                     });
                 }
             }

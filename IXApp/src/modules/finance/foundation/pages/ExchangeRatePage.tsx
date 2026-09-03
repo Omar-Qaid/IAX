@@ -5,6 +5,7 @@ import { TabularDetailPanel } from '@patterns/list-details/TabularDetailPanel';
 import type { DetailValues, EnterpriseListDetailsConfig } from '@patterns/list-details/types';
 import type { ColumnDef } from '@shared/components/data-grid/types';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import { PERMISSIONS } from '@core/permissions/permissions';
 
 interface ExchangeRatePair {
   id: string;
@@ -124,7 +125,7 @@ export function ExchangeRatePage(): React.ReactElement {
         </TextField>
       </Box>,
     },
-    permissions: { view: 'currency.view', create: 'currency.manage', edit: 'currency.manage', delete: 'currency.manage' },
+    permissions: { view: PERMISSIONS.CURRENCY_VIEW, create: PERMISSIONS.CURRENCY_MANAGE, edit: PERMISSIONS.CURRENCY_MANAGE, delete: PERMISSIONS.CURRENCY_MANAGE },
     validate: (record) => ({
       ...(!record.fromCurrency.trim() ? { fromCurrency: t('validation.required', { field: t('exchangeRates.fields.fromCurrency') }) } : {}),
       ...(!record.toCurrency.trim() ? { toCurrency: t('validation.required', { field: t('exchangeRates.fields.toCurrency') }) } : {}),

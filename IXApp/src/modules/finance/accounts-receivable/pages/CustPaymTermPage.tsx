@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
 import type { DetailSectionConfig, DetailValues, EnterpriseListDetailsConfig } from '@patterns/list-details/types';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import { PERMISSIONS } from '@core/permissions/permissions';
 
 interface PaymentTerm { id: string; term: string; description: string; values: DetailValues }
 const termDefaults: DetailValues = { paymentMethod: 'net', months: 0, days: 0, paymentSchedule: '', paymentDay: '', cutoffDay: 0, defaultTerms: false, dueDateUpdate: 'noUpdate', cashAccount: '', cashPayment: false, certifiedCompanyCheck: false, paymentType: '', creditCheck: 'normal' };
@@ -38,7 +39,7 @@ export function CustPaymTerm(): React.ReactElement {
     setValues: (record, values) => ({ ...record, values }),
     headerFields: (['term', 'description'] as const).map((id) => ({ id, label: t(`paymentTerms.fields.${id}`), getValue: (record: PaymentTerm) => record[id], setValue: (record: PaymentTerm, value: string | number | boolean) => ({ ...record, [id]: String(value) }) })),
     sections,
-    permissions: { view: 'customer.view', create: 'customer.create', edit: 'customer.update', delete: 'customer.delete' },
+    permissions: { view: PERMISSIONS.CUSTOMER_VIEW, create: PERMISSIONS.CUSTOMER_CREATE, edit: PERMISSIONS.CUSTOMER_UPDATE, delete: PERMISSIONS.CUSTOMER_DELETE },
     validate: (record) => ({ ...(!record.term.trim() ? { term: t('validation.required', { field: t('paymentTerms.fields.term') }) } : {}), ...(!record.description.trim() ? { description: t('validation.required', { field: t('paymentTerms.fields.description') }) } : {}) }),
     advancedFilter: { fieldLabel: t('paymentTerms.fields.term'), getValue: (record) => record.term, matches: (record, value) => record.term.toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()) },
     commands: [{ id: 'translations', label: t('paymentTerms.commands.translations') }],

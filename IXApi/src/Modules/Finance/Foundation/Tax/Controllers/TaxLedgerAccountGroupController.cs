@@ -8,6 +8,7 @@ using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Organization.Employees.Entities;
 using IAX.IXApi.Infrastructure.Persistence.Services;
+using IAX.IXApi.Modules.Identity.Permissions;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,7 @@ namespace IAX.IXApi.Modules.Finance.Shared.Features
     [ApiController]
     [Route("api/v1/TaxLedgerAccountGroup")]
     [Route("api/TaxLedgerAccountGroup")]
+    [DomainPermission("Tax", "LedgerAccountGroups")]
     public class TaxLedgerAccountGroupController : BaseController<TaxLedgerAccountGroup, TaxLedgerAccountGroupDto>
     {
         private readonly IFinanceDataContext _db;

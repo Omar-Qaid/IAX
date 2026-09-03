@@ -119,7 +119,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     id: 'workflow-mail',
     path: ROUTE_PATHS.WORKFLOW.MAIL,
     component: lazyPage(
-      () => import('@modules/workflow/pages/MailPage'),
+      () => import('@modules/workflow/pages/WfMailPage'),
       (module) => module.MailPage
     ),
   },
@@ -127,7 +127,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     id: 'request-submission',
     path: ROUTE_PATHS.WORKFLOW.REQUEST_SUBMISSION,
     component: lazyPage(
-      () => import('@modules/workflow/pages/RequestSubmissionPage'),
+      () => import('@modules/workflow/pages/WfRequestSubmissionPage'),
       (module) => module.RequestSubmissionPage
     ),
   },
@@ -135,7 +135,7 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     id: 'request-from',
     path: ROUTE_PATHS.WORKFLOW.REQUEST_FROM,
     component: lazyPage(
-      () => import('@modules/workflow/pages/RequestFromPage'),
+      () => import('@modules/workflow/pages/WfRequestFromPage'),
       (module) => module.RequestFromPage
     ),
   },
@@ -153,8 +153,8 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.WORKFLOW.PRINT_TEMPLATES,
     permission: PERMISSIONS.WF_PRINT_TEMPLATE_VIEW,
     component: lazyPage(
-      () => import('@modules/workflow/print-templates/pages/PrintTemplatesPage'),
-      (module) => module.PrintTemplatesPage
+      () => import('@modules/workflow/report-designer/pages/ReportDesignerListPage'),
+      (module) => module.ReportDesignerListPage
     ),
   },
   {

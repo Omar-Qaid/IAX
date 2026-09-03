@@ -287,7 +287,9 @@ namespace IAX.IXApi.Modules.Administration.NumberSequences
             var prefix = separatorIndex < 0
                 ? format.TrimEnd('-', '_', ' ')
                 : format[..separatorIndex].TrimEnd('-', '_', ' ');
-            var padding = Math.Max(1, format.Count(character => character == '#'));
+            // Preserve the legacy five-digit default when Format does not declare '#'
+            // placeholders; explicit placeholders may increase the width.
+            var padding = Math.Max(5, format.Count(character => character == '#'));
             var seqStr = value.ToString().PadLeft(padding, '0');
 
             var sb = new StringBuilder(formatPattern);

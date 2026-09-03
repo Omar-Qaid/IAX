@@ -6,7 +6,7 @@ import {
   REPORT_EXPORT_FORMATS,
   ReportViewer,
 } from '@patterns/report-viewer/ReportViewer';
-import { PrintoutDocument } from '@shared/components/printout/PrintoutDocument';
+import { ReportViewerDocument } from '@shared/components/report-viewer/ReportViewerDocument';
 import { calculatePdfPageLayout } from '@patterns/report-viewer/exportReport';
 
 describe('ReportViewer', () => {
@@ -36,9 +36,9 @@ describe('ReportViewer', () => {
         onPrint={vi.fn()}
         onExport={vi.fn()}
       >
-        <PrintoutDocument company={{ name: 'Example company' }} title="Paged report">
+        <ReportViewerDocument company={{ name: 'Example company' }} title="Paged report">
           <div>Only the loaded server page</div>
-        </PrintoutDocument>
+        </ReportViewerDocument>
       </ReportViewer>
     );
 
@@ -59,18 +59,19 @@ describe('ReportViewer', () => {
         onPrint={vi.fn()}
         onExport={onExport}
       >
-        <PrintoutDocument company={{ name: 'Example company' }} title="Exportable report">
+        <ReportViewerDocument company={{ name: 'Example company' }} title="Exportable report">
           <div>Report contents</div>
-        </PrintoutDocument>
+        </ReportViewerDocument>
       </ReportViewer>
     );
 
     for (const format of REPORT_EXPORT_FORMATS) {
-      const exportButton = screen.getByRole('button', { name: 'Export' });
+      const exportButton = await screen.findByRole('button', { name: 'Export' });
       await waitFor(() => expect(exportButton).toBeEnabled());
       fireEvent.click(exportButton);
       fireEvent.click(screen.getByRole('menuitem', { name: format }));
       await waitFor(() => expect(onExport).toHaveBeenLastCalledWith(format));
+      await screen.findByRole('button', { name: 'Export' });
     }
     expect(onExport).toHaveBeenCalledTimes(REPORT_EXPORT_FORMATS.length);
   });

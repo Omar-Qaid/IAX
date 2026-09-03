@@ -2,6 +2,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using IAX.IXApi.Shared.Application.Contracts;
 using IAX.IXApi.Infrastructure.Identity;
+using IAX.IXApi.Modules.Identity.Permissions;
 using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,6 +25,7 @@ namespace IAX.IXApi.Modules.Administration.Settings
 
         /// <summary>Get global system settings.</summary>
         [HttpGet("global")]
+        [DomainPermission("System", "Settings", "View")]
         public async Task<ActionResult<APIResponse<SysSettingsDto>>> GetGlobalSettings(CancellationToken ct)
         {
             var settings = await _SysSettingsService.GetGlobalSettingsAsync(ct);
@@ -33,6 +35,7 @@ namespace IAX.IXApi.Modules.Administration.Settings
 
         /// <summary>Update global system settings.</summary>
         [HttpPut("global")]
+        [DomainPermission("System", "Settings", "Edit")]
         public async Task<ActionResult<APIResponse<SysSettingsDto>>> UpdateGlobalSettings([FromBody] SysSettingsDto dto, CancellationToken ct)
         {
             var entity = dto.Adapt<SysSettings>();

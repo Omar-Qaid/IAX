@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using IAX.IXApi.Api.Controllers;
 using IAX.IXApi.Shared.Application.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.Services;
+using IAX.IXApi.Modules.Identity.Permissions;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -14,6 +15,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
     [ApiController]
     [Route("api/v1/[controller]")]
     [Route("api/[controller]")]
+    [DomainPermission("AccountsReceivable", "PostingProfiles")]
     public class CustLedgerAccountsController : BaseController<CustLedgerAccounts, CustLedgerAccountsDto>
     {
         public CustLedgerAccountsController(IBaseService<CustLedgerAccounts> service, ILogger<CustLedgerAccountsController> logger)

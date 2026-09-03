@@ -4,6 +4,7 @@ using IAX.IXApi.Modules.Administration.DataManagement.Services;
 using IAX.IXApi.Modules.Administration.DataManagement.Contracts;
 using IAX.IXApi.Modules.Workflow.Processes;
 using IAX.IXApi.Modules.Workflow.Activities;
+using IAX.IXApi.Modules.Identity.Permissions;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,6 +26,7 @@ namespace IAX.IXApi.Modules.Workflow.DataExchange
         }
 
         [HttpPost("processes")]
+        [DomainPermission("Workflow", "DataManagement", "Import")]
         public async Task<ActionResult<APIResponse<SysImportResult>>> ImportProcesses(IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -36,6 +38,7 @@ namespace IAX.IXApi.Modules.Workflow.DataExchange
         }
 
         [HttpPost("activities")]
+        [DomainPermission("Workflow", "DataManagement", "Import")]
         public async Task<ActionResult<APIResponse<SysImportResult>>> ImportActivities(IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -47,6 +50,7 @@ namespace IAX.IXApi.Modules.Workflow.DataExchange
         }
 
         [HttpGet("processes/template")]
+        [DomainPermission("Workflow", "DataManagement", "View")]
         public async Task<IActionResult> GetProcessTemplate()
         {
             var fileContent = await _dataManagementService.GenerateTemplateAsync<WfProcess>();
@@ -54,6 +58,7 @@ namespace IAX.IXApi.Modules.Workflow.DataExchange
         }
 
         [HttpGet("activities/template")]
+        [DomainPermission("Workflow", "DataManagement", "View")]
         public async Task<IActionResult> GetActivityTemplate()
         {
             var fileContent = await _dataManagementService.GenerateTemplateAsync<WfActivity>();
@@ -61,6 +66,7 @@ namespace IAX.IXApi.Modules.Workflow.DataExchange
         }
         
         [HttpGet("processes/export")]
+        [DomainPermission("Workflow", "DataManagement", "Export")]
         public async Task<IActionResult> ExportProcesses()
         {
             var fileContent = await _dataManagementService.ExportAsync<WfProcess>();
@@ -68,6 +74,7 @@ namespace IAX.IXApi.Modules.Workflow.DataExchange
         }
 
         [HttpGet("activities/export")]
+        [DomainPermission("Workflow", "DataManagement", "Export")]
         public async Task<IActionResult> ExportActivities()
         {
             var fileContent = await _dataManagementService.ExportAsync<WfActivity>();

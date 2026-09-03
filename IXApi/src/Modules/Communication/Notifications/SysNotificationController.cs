@@ -113,6 +113,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications
         /// Sends a notification (admin/system use).
         /// </summary>
         [HttpPost]
+        [DomainPermission("System", "Notifications", "Create")]
         public async Task<ActionResult<APIResponse<SysNotificationDto>>> Send(
             [FromBody] CreateSysNotificationDto dto,
             CancellationToken ct = default)

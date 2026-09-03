@@ -3,6 +3,7 @@ import { Link } from '@mui/material';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
 import type { DetailSectionConfig, DetailValues, EnterpriseListDetailsConfig } from '@patterns/list-details/types';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import { PERMISSIONS } from '@core/permissions/permissions';
 
 interface PaymentMode { id: string; method: string; period: string; description: string; values: DetailValues }
 const defaults: DetailValues = { gracePeriod: 0, paymentStatus: 'none', paymentType: 'other', zatcaMethod: 10, lastFileNumber: 0, today: 0, date: '', accountType: 'ledger', paymentAccount: '', bridgingPosting: false, bridgingByBank: false, bridgingAccount: '', bankTransactionType: '', requireMandate: false, draftType: 'noDraft', categoryPurpose: '', chargeBearer: '', localInstrument: '', serviceLevel: '', directDebit: false, autoDrawJournal: false, runExportScript: false, exportScriptName: '', genericExport: false, genericImport: false, exportConfig: '', importConfig: '', exportFormat: '', importFormat: '', returnFormat: '', remittanceFormat: '' };
@@ -43,7 +44,7 @@ export function CustPaymMode(): React.ReactElement {
       ...(['gracePeriod', 'paymentStatus', 'paymentType', 'zatcaMethod'] as const).map((id) => ({ id, label: t(`paymentMethods.fields.${id}`), type: id === 'gracePeriod' || id === 'zatcaMethod' ? 'number' as const : 'text' as const, getValue: (record: PaymentMode) => record.values[id], setValue: (record: PaymentMode, value: string | number | boolean) => ({ ...record, values: { ...record.values, [id]: value } }) })),
     ],
     sections,
-    permissions: { view: 'customer.view', create: 'customer.create', edit: 'customer.update', delete: 'customer.delete' },
+    permissions: { view: PERMISSIONS.CUSTOMER_VIEW, create: PERMISSIONS.CUSTOMER_CREATE, edit: PERMISSIONS.CUSTOMER_UPDATE, delete: PERMISSIONS.CUSTOMER_DELETE },
     validate: (record) => ({ ...(!record.method.trim() ? { method: t('validation.required', { field: t('paymentMethods.fields.method') }) } : {}), ...(!record.period.trim() ? { period: t('validation.required', { field: t('paymentMethods.fields.period') }) } : {}) }),
     advancedFilter: { fieldLabel: t('paymentMethods.fields.method'), getValue: (record) => record.method, matches: (record, value) => record.method.toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()) },
     relatedInformation: { sections: (record) => [

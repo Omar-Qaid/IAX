@@ -22,15 +22,15 @@ namespace IAX.IXApi.Modules.Administration.NumberSequences
         [HttpPost("next")]
         public async Task<ActionResult<APIResponse<NextSequenceResultDto>>> Next([FromBody] NextSequenceRequestDto request, CancellationToken ct)
         {
-            var result = await _seqService.NextAsync(request.EntityName, request.TenantId, ct);
+            var result = await _seqService.NextAsync(request.EntityName, cancellationToken: ct);
             return Ok(APIResponse<NextSequenceResultDto>.Ok(result));
         }
 
         /// <summary>Peek at the upcoming code without consuming it.</summary>
         [HttpGet("peek")]
-        public async Task<ActionResult<APIResponse<NextSequenceResultDto>>> Peek([FromQuery] string entityName, [FromQuery] string? tenantId, CancellationToken ct)
+        public async Task<ActionResult<APIResponse<NextSequenceResultDto>>> Peek([FromQuery] string entityName, CancellationToken ct)
         {
-            var result = await _seqService.PeekAsync(entityName, tenantId, ct);
+            var result = await _seqService.PeekAsync(entityName, cancellationToken: ct);
             if (result == null) return NotFound(APIResponse<NextSequenceResultDto>.Fail("Sequence not configured for entity"));
             return Ok(APIResponse<NextSequenceResultDto>.Ok(result));
         }

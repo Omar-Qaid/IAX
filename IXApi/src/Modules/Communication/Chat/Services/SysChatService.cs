@@ -23,8 +23,22 @@ namespace IAX.IXApi.Modules.Communication.Chat.Services
             _hub = hub;
         }
 
+        public bool CanAccessRoom(string? userId, string roomId)
+        {
+            if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(roomId))
+                return false;
+
+            if (string.Equals(roomId, "general", StringComparison.Ordinal))
+                return true;
+
+            return DmParticipants(roomId).Contains(userId, StringComparer.Ordinal);
+        }
+
         public async Task<SysChatMessageDto> SendAsync(string roomId, string senderId, string content, CancellationToken ct = default)
         {
+            if (!CanAccessRoom(senderId, roomId))
+                throw new UnauthorizedAccessException("The user is not a participant in this chat room.");
+
             var entity = new SysChatMessage
             {
                 RoomId = roomId,
@@ -84,14 +98,21 @@ namespace IAX.IXApi.Modules.Communication.Chat.Services
         public async Task<IReadOnlyList<SysChatConversationDto>> GetConversationsAsync(string userId, CancellationToken ct = default)
         {
             // Candidate rooms: DMs containing the user, rooms the user has posted in, plus 'general'.
-            var dmRooms = _db.Set<SysChatMessage>()
-                .Where(m => m.RoomId.StartsWith("dm:") && m.RoomId.Contains(userId))
-                .Select(m => m.RoomId);
+            var dmRoomCandidates = await _db.Set<SysChatMessage>()
+                .Where(m => m.RoomId.StartsWith("dm:"))
+                .Select(m => m.RoomId)
+                .Distinct()
+                .ToListAsync(ct);
+            var dmRooms = dmRoomCandidates.Where(roomId => CanAccessRoom(userId, roomId));
             var mineRooms = _db.Set<SysChatMessage>()
                 .Where(m => m.SenderId == userId)
                 .Select(m => m.RoomId);
 
-            var roomIds = await dmRooms.Concat(mineRooms).Distinct().ToListAsync(ct);
+            var mineRoomIds = await mineRooms.Distinct().ToListAsync(ct);
+            var roomIds = dmRooms.Concat(mineRoomIds)
+                .Where(roomId => CanAccessRoom(userId, roomId))
+                .Distinct(StringComparer.Ordinal)
+                .ToList();
             if (!roomIds.Contains("general")) roomIds.Add("general");
 
             var reads = await _db.Set<SysChatReadState>()
@@ -128,6 +149,9 @@ namespace IAX.IXApi.Modules.Communication.Chat.Services
 
         public async Task MarkReadAsync(string userId, string roomId, CancellationToken ct = default)
         {
+            if (!CanAccessRoom(userId, roomId))
+                throw new UnauthorizedAccessException("The user is not a participant in this chat room.");
+
             var now = DateTime.UtcNow;
 
             // Atomic SQL MERGE â€” a single round-trip that inserts or updates.

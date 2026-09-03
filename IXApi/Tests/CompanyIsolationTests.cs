@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using IAX.IXApi.Api.Middleware;
 using IAX.IXApi.Infrastructure.Identity;
+using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.AspNetCore.Http;
 using Xunit;
@@ -106,6 +107,17 @@ public sealed class CompanyIsolationTests
 
         context.Request.Headers["X-Company"] = "other";
         Assert.False(executionContext.IsRequestedCompanyAuthorized());
+    }
+
+    [Fact]
+    public void Number_sequence_http_contract_does_not_accept_a_company_override()
+    {
+        Assert.Null(typeof(NextSequenceRequestDto).GetProperty("TenantId"));
+
+        var peek = typeof(SysNumberSequenceController).GetMethod(nameof(SysNumberSequenceController.Peek));
+        Assert.NotNull(peek);
+        Assert.DoesNotContain(peek.GetParameters(), parameter =>
+            parameter.Name?.Equals("tenantId", StringComparison.OrdinalIgnoreCase) == true);
     }
 
     private static DefaultHttpContext CreateHttpContext(params string[] companies)

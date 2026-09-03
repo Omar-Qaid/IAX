@@ -10,6 +10,7 @@ using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Organization.Employees.Entities;
 using IAX.IXApi.Infrastructure.Persistence.Services;
+using IAX.IXApi.Modules.Identity.Permissions;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +23,7 @@ namespace IAX.IXApi.Modules.Finance.Shared.Features
     [Route("api/TaxPeriodHead")]
     [Route("api/v1/TaxPeriod")]
     [Route("api/TaxPeriod")]
+    [DomainPermission("Tax", "SettlementPeriods")]
     public class TaxPeriodHeadController : BaseController<TaxPeriodHead, TaxPeriodHeadDto>
     {
         private readonly IFinanceDataContext _db;

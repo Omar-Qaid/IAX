@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { apiClient } from '@core/api/apiClient';
 import { documentApi } from '@shared/components/documents/documentApi';
-import { fetchPrintoutCompany, REPORT_COMPANY_LOGO_ATTACHMENT, type ReportCompanyInfo } from '@shared/components/printout/reportCompany';
+import { fetchreportCompany, REPORT_COMPANY_LOGO_ATTACHMENT, type ReportCompanyInfo } from '@shared/components/report-viewer/reportCompany';
 
 const company: ReportCompanyInfo = {
   recId: 7,
@@ -20,7 +20,7 @@ describe('report company loader', () => {
     vi.spyOn(documentApi, 'list').mockResolvedValue({ items: [{ id: 91, name: REPORT_COMPANY_LOGO_ATTACHMENT }], pageNumber: 1, pageSize: 100, totalCount: 1 } as never);
     vi.spyOn(documentApi, 'previewBlob').mockResolvedValue(new Blob(['logo'], { type: 'image/png' }));
 
-    const result = await fetchPrintoutCompany('hbmc');
+    const result = await fetchreportCompany('hbmc');
 
     expect(result.name).toBe('AlHayat Company');
     expect(result.addressLines).toContain('Riyadh');

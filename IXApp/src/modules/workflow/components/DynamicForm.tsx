@@ -15,10 +15,9 @@ import {
 import { DynamicControlRenderer, readMultiValue } from './DynamicControlRenderer';
 import { readFileMetadata } from './DynamicSpecialControls';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
-import { RuntimePrintTemplate, requestControlTemplateBindings } from '../print-templates/runtime/RuntimePrintTemplate';
-import type { RuntimePrintData } from '../print-templates/runtime/runtimePrintData';
-import type { PrintTemplateDocument, PrintFieldBinding } from '../print-templates/types/printTemplate.types';
-import type { PrintoutCompany } from '@shared/components/printout/PrintoutDocument';
+import { ReportTemplateRenderer, requestControlTemplateBindings, type runtimeReportData } from '@shared/components/report-viewer';
+import type { PrintTemplateDocument, PrintFieldBinding } from '../template/types/reportDesigner.types';
+import type { reportCompany } from '@shared/components/report-viewer/ReportViewerDocument';
 
 type Values = Record<number, string>;
 type Errors = Record<number, string>;
@@ -134,7 +133,7 @@ interface DynamicFormProps {
   onStatusChange?: (status: DynamicFormStatus) => void;
   displayMode?: 'normal' | 'printTemplate';
   printTemplate?: PrintTemplateDocument | null;
-  printCompany?: PrintoutCompany;
+  printCompany?: reportCompany;
   requestDate?: string;
 }
 export const DynamicForm = React.forwardRef<DynamicFormHandle, DynamicFormProps>(function DynamicForm({ processId, requestFiles = [], showActions = true, onStatusChange, displayMode = 'normal', printTemplate, printCompany, requestDate }, ref): React.ReactElement {
@@ -361,7 +360,7 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, DynamicFormProps>
     {includeDependencies && activeOptions.filter((option) => !externalizeFullRows || !usesFullDependencyRow(option)).map((option) => renderDependency(control, option, nextAncestors, false))}
   </Box>;
   };
-  const printData: RuntimePrintData = {
+  const printData: runtimeReportData = {
     system: {
       requestNumber: '', requestDate: requestDate ?? '', processId,
       processName: definition.data.processName, submittedBy: '',
@@ -429,7 +428,7 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, DynamicFormProps>
           ))}
         </Box>
       )}
-      <RuntimePrintTemplate
+      <ReportTemplateRenderer
         template={printTemplate}
         data={printData}
         company={printCompany}

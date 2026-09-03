@@ -3,6 +3,7 @@ using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Administration.AuditLogs.Entities;
 using IAX.IXApi.Modules.Administration.DataManagement.Contracts;
 using IAX.IXApi.Modules.Administration.DataManagement.Services;
+using IAX.IXApi.Modules.Identity.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -34,6 +35,7 @@ namespace IAX.IXApi.Modules.Administration.DataManagement
         }
 
         [HttpPost("{entityName}/import")]
+        [DomainPermission("System", "DataManagement", "Import")]
         public async Task<ActionResult<APIResponse<SysImportResult>>> Import(string entityName, IFormFile file, CancellationToken cancellationToken)
         {
             var entityType = _entityProvider.GetEntityType(entityName);
@@ -57,6 +59,7 @@ namespace IAX.IXApi.Modules.Administration.DataManagement
         }
 
         [HttpGet("{entityName}/export")]
+        [DomainPermission("System", "DataManagement", "Export")]
         public async Task<IActionResult> Export(string entityName, CancellationToken cancellationToken)
         {
             var entityType = _entityProvider.GetEntityType(entityName);
@@ -80,6 +83,7 @@ namespace IAX.IXApi.Modules.Administration.DataManagement
         /// HTTP response â€” no buffering of the full result set in memory.
         /// </summary>
         [HttpPost("{entityName}/export")]
+        [DomainPermission("System", "DataManagement", "Export")]
         public async Task<IActionResult> ExportView(string entityName, [FromBody] SysExportRequest request, CancellationToken cancellationToken)
         {
             var entityType = _entityProvider.GetEntityType(entityName);
@@ -105,6 +109,7 @@ namespace IAX.IXApi.Modules.Administration.DataManagement
         }
 
         [HttpGet("{entityName}/template")]
+        [DomainPermission("System", "DataManagement", "View")]
         public async Task<IActionResult> GetTemplate(string entityName, CancellationToken cancellationToken)
         {
             var entityType = _entityProvider.GetEntityType(entityName);
@@ -123,6 +128,7 @@ namespace IAX.IXApi.Modules.Administration.DataManagement
         }
 
         [HttpGet("allowed-entities")]
+        [DomainPermission("System", "DataManagement", "View")]
         public ActionResult<APIResponse<IEnumerable<string>>> GetAllowedEntities()
         {
             return Ok(APIResponse<IEnumerable<string>>.Ok(_entityProvider.GetAllowedEntities().Keys));
@@ -133,6 +139,7 @@ namespace IAX.IXApi.Modules.Administration.DataManagement
         /// Used by the frontend DataGrid to populate the "Manage Columns" panel.
         /// </summary>
         [HttpGet("{entityName}/fields")]
+        [DomainPermission("System", "DataManagement", "View")]
         public ActionResult<APIResponse<IEnumerable<object>>> GetFields(string entityName)
         {
             var entityType = _entityProvider.GetEntityType(entityName);

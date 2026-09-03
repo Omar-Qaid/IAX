@@ -2,6 +2,9 @@
 {
     public interface ISysChatService
     {
+        /// <summary>Checks whether a user is a participant in a supported chat room.</summary>
+        bool CanAccessRoom(string? userId, string roomId);
+
         /// <summary>Persists a message and broadcasts it to the room. Returns the stored message.</summary>
         Task<SysChatMessageDto> SendAsync(string roomId, string senderId, string content, CancellationToken ct = default);
 

@@ -34,8 +34,9 @@ describe('localization', () => {
 
   it('does not contain empty or undefined translations', () => {
     for (const resource of [en, ar]) {
-      expect(flattenValues(resource).every((entry) => typeof entry === 'string' && entry.trim()))
-        .toBe(true);
+      expect(
+        flattenValues(resource).every((entry) => typeof entry === 'string' && entry.trim())
+      ).toBe(true);
     }
   });
 
