@@ -15,7 +15,6 @@ import {
   WorkflowMailReportViewerBody,
 } from '../components/WorkflowMailReportViewer';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
-import { recordTableId } from '@shared/components/documents';
 import { useNotifications } from '@shared/hooks/useNotifications';
 import { wfProcessApi } from '../../api/wfProcessApi';
 import { localizedName } from '@shared/utilities/localizedName';

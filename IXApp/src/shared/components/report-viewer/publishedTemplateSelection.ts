@@ -5,7 +5,7 @@
  * Used by any module to present a list of available templates to end users.
  */
 
-import type { PrintTemplateLanguage, ReportDesignerSummary } from '../report-designer/types';
+import type { ReportDesignerSummary } from '../report-designer/types';
 
 const isPublished = (status: ReportDesignerSummary['status']): boolean =>
   status === 1 || String(status).toLowerCase() === 'published';

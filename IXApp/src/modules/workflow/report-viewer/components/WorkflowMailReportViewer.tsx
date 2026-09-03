@@ -2,7 +2,6 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 export { toReportCompany } from '@shared/components/report-viewer/reportCompany';
 import type { MailRequestDetailsDto, WfRequestRecord } from '../../api/wfRequestApi';
-import { createruntimeReportData } from '../utils/runtimeReportData';
 import { normalizeDynamicControlType } from '../../components/DynamicControlRenderer';
 import { MailFieldValue } from '../../components/MailFieldValue';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
