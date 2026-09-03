@@ -44,7 +44,4 @@
     <ProjectReference Include="src\Modules\Communication\IAX.IXApi.Modules.Communication.csproj" />
     <ProjectReference Include="src\Modules\Administration\IAX.IXApi.Modules.Administration.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="src\Infrastructure\Migrations\" />
-  </ItemGroup>
 </Project>
