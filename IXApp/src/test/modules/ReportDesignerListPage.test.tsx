@@ -5,7 +5,7 @@ import { queryClient } from '@core/api/queryClient';
 import { documentApi } from '@shared/components/documents';
 import { wfProcessApi, type WfProcessRecord } from '@modules/workflow/api/wfProcessApi';
 import { recordTableId } from '@shared/components/documents';
-import { reportDesignerApi } from '@shared/components/report-designer';
+import { reportDesignerApi } from '@modules/workflow/report-designer/api/reportDesignerApi';
 import { WorkflowReportDesignerListPage as ReportDesignerListPage } from '@modules/workflow/report-designer/pages/ReportDesignerListPage';
 import {
   createEmptyPrintTemplateDocument,
@@ -79,7 +79,11 @@ describe('ReportDesignerListPage', () => {
     expect(screen.getByRole('button', { name: 'Refresh' }).textContent).toBe('');
     expect(screen.getByRole('button', { name: 'Attachments' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Options' })).toBeDisabled();
-    expect(reportDesignerApi.list).toHaveBeenCalledWith(recordTableId('WfProcesses'), 589, expect.any(AbortSignal));
+    expect(reportDesignerApi.list).toHaveBeenCalledWith(
+      recordTableId('WfProcesses'),
+      589,
+      expect.any(AbortSignal)
+    );
   });
 
   it('toggles column filters from Search and enables Options for the selected template', async () => {

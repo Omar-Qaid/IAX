@@ -10,9 +10,7 @@ import {
   selectDefaultPublishedTemplate,
   selectPublishedTemplates,
 } from '@shared/components/report-viewer';
-import {
-  createruntimeReportData,
-} from '@modules/workflow/report-viewer/utils/runtimeReportData';
+import { createruntimeReportData } from '@modules/workflow/report-viewer/utils/runtimeReportData';
 import type {
   PrintTemplateDocument,
   ReportDesignerSummary,
@@ -95,8 +93,8 @@ const runtimeData = createruntimeReportData(
 
 const summary = (overrides: Partial<ReportDesignerSummary>): ReportDesignerSummary => ({
   templateId: 1,
-  processId: 7,
-  processName: 'Process',
+  refTableId: 1001,
+  refRecId: 7,
   code: 'FORM',
   name: 'Form',
   description: null,
@@ -316,11 +314,7 @@ describe('official-form runtime', () => {
     };
 
     render(
-      <ReportViewer
-        template={template}
-        data={historicalData}
-        company={{ name: 'Company' }}
-      />
+      <ReportViewer template={template} data={historicalData} company={{ name: 'Company' }} />
     );
 
     expect(screen.getByText('Existing blank control')).toBeInTheDocument();
@@ -441,9 +435,7 @@ describe('official-form runtime', () => {
       footer: [],
     };
 
-    render(
-      <ReportViewer template={template} data={runtimeData} company={{ name: 'Company' }} />
-    );
+    render(<ReportViewer template={template} data={runtimeData} company={{ name: 'Company' }} />);
 
     const image = screen.getByRole('img', { name: 'Styled logo' });
     expect(image).toHaveStyle({
@@ -513,27 +505,67 @@ describe('official-form runtime', () => {
       schemaVersion: 1,
       language: 'en',
       direction: 'ltr',
-      page: { size: 'A4', orientation: 'portrait', margins: { top: 15, right: 15, bottom: 15, left: 15 } },
+      page: {
+        size: 'A4',
+        orientation: 'portrait',
+        margins: { top: 15, right: 15, bottom: 15, left: 15 },
+      },
       missingFieldBehavior: 'empty',
       header: [
         { id: 'heading', type: 'text', value: 'Request heading' },
         { id: 'company-logo', type: 'image', sourceType: 'companyLogo', altText: 'Company logo' },
-        { id: 'header-control', type: 'field', label: 'Header control', binding: { sourceType: 'requestControl', requestControlId: 9998 } },
+        {
+          id: 'header-control',
+          type: 'field',
+          label: 'Header control',
+          binding: { sourceType: 'requestControl', requestControlId: 9998 },
+        },
       ],
       sections: [
         { id: 'static-copy', type: 'text', value: 'Print-only body copy' },
-        { id: 'company-field', type: 'field', label: 'Company name', binding: { sourceType: 'company', source: 'name' } },
-        { id: 'report-field', type: 'field', label: 'Report field', binding: { sourceType: 'report', source: 'pageNumber' } },
-        { id: 'second', type: 'field', label: 'Second', binding: { sourceType: 'requestControl', requestControlId: 2102 } },
-        { id: 'first', type: 'field', label: 'First', binding: { sourceType: 'requestControl', requestControlId: 2101 } },
+        {
+          id: 'company-field',
+          type: 'field',
+          label: 'Company name',
+          binding: { sourceType: 'company', source: 'name' },
+        },
+        {
+          id: 'report-field',
+          type: 'field',
+          label: 'Report field',
+          binding: { sourceType: 'report', source: 'pageNumber' },
+        },
+        {
+          id: 'second',
+          type: 'field',
+          label: 'Second',
+          binding: { sourceType: 'requestControl', requestControlId: 2102 },
+        },
+        {
+          id: 'first',
+          type: 'field',
+          label: 'First',
+          binding: { sourceType: 'requestControl', requestControlId: 2101 },
+        },
       ],
       footer: [
-        { id: 'footer-control', type: 'field', label: 'Footer control', binding: { sourceType: 'requestControl', requestControlId: 9997 } },
+        {
+          id: 'footer-control',
+          type: 'field',
+          label: 'Footer control',
+          binding: { sourceType: 'requestControl', requestControlId: 9997 },
+        },
       ],
     };
     const data = {
       ...runtimeData,
-      requestControls: { ...runtimeData.requestControls, '2102': '', '9999': '', '9998': '', '9997': '' },
+      requestControls: {
+        ...runtimeData.requestControls,
+        '2102': '',
+        '9999': '',
+        '9998': '',
+        '9997': '',
+      },
     };
     const { container } = render(
       <ReportViewer
@@ -556,6 +588,8 @@ describe('official-form runtime', () => {
     expect(content).not.toContain('Report field');
     expect(screen.queryByRole('img', { name: 'Company logo' })).not.toBeInTheDocument();
     expect(screen.getByTestId('print-template-request-body')).toHaveStyle({ width: '100%' });
-    expect(requestControlTemplateBindings(template).map((binding) => binding.requestControlId)).toEqual([9998, 2102, 2101, 9997]);
+    expect(
+      requestControlTemplateBindings(template).map((binding) => binding.requestControlId)
+    ).toEqual([9998, 2102, 2101, 9997]);
   });
 });

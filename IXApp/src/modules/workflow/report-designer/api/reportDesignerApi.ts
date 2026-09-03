@@ -1,54 +1,100 @@
 import { ApiError } from '@core/api/apiError';
 import { apiClient } from '@core/api/apiClient';
 import type { ApiResponse } from '@core/api/apiResponse';
-import type { PrintTemplate, ReportDesignerSummary, PublishedPrintTemplate, SavePrintTemplateInput } from './types';
+import type {
+  PrintTemplate,
+  ReportDesignerSummary,
+  PublishedPrintTemplate,
+  SavePrintTemplateInput,
+} from '@shared/components/report-designer';
 
 const endpoint = '/v1/report-templates';
 
 const requireData = <T>(response: ApiResponse<T>): T => {
-  if (!response.success || response.data == null) throw new ApiError(response.message || 'Report template response did not contain data.', 500);
+  if (!response.success || response.data == null)
+    throw new ApiError(response.message || 'Report template response did not contain data.', 500);
   return response.data;
 };
 
 export const reportDesignerApi = {
-  async list(refTableId: number, refRecId: number, signal?: AbortSignal): Promise<ReportDesignerSummary[]> {
-    const response = await apiClient.get<ApiResponse<ReportDesignerSummary[]>>(`${endpoint}/record/${refTableId}/${refRecId}`, { signal });
+  async list(
+    refTableId: number,
+    refRecId: number,
+    signal?: AbortSignal
+  ): Promise<ReportDesignerSummary[]> {
+    const response = await apiClient.get<ApiResponse<ReportDesignerSummary[]>>(
+      `${endpoint}/record/${refTableId}/${refRecId}`,
+      { signal }
+    );
     return requireData(response.data);
   },
-  async listPublished(refTableId: number, refRecId: number, signal?: AbortSignal): Promise<ReportDesignerSummary[]> {
-    const response = await apiClient.get<ApiResponse<ReportDesignerSummary[]>>(`${endpoint}/record/${refTableId}/${refRecId}/published`, { signal });
+  async listPublished(
+    refTableId: number,
+    refRecId: number,
+    signal?: AbortSignal
+  ): Promise<ReportDesignerSummary[]> {
+    const response = await apiClient.get<ApiResponse<ReportDesignerSummary[]>>(
+      `${endpoint}/record/${refTableId}/${refRecId}/published`,
+      { signal }
+    );
     return requireData(response.data);
   },
-  async getPublishedForRecord(refTableId: number, refRecId: number, templateId: number, signal?: AbortSignal): Promise<PublishedPrintTemplate> {
-    const response = await apiClient.get<ApiResponse<PublishedPrintTemplate>>(`${endpoint}/record/${refTableId}/${refRecId}/template/${templateId}/published`, { signal });
+  async getPublishedForRecord(
+    refTableId: number,
+    refRecId: number,
+    templateId: number,
+    signal?: AbortSignal
+  ): Promise<PublishedPrintTemplate> {
+    const response = await apiClient.get<ApiResponse<PublishedPrintTemplate>>(
+      `${endpoint}/record/${refTableId}/${refRecId}/template/${templateId}/published`,
+      { signal }
+    );
     return requireData(response.data);
   },
   async get(templateId: number, signal?: AbortSignal): Promise<PrintTemplate> {
-    const response = await apiClient.get<ApiResponse<PrintTemplate>>(`${endpoint}/${templateId}`, { signal });
+    const response = await apiClient.get<ApiResponse<PrintTemplate>>(`${endpoint}/${templateId}`, {
+      signal,
+    });
     return requireData(response.data);
   },
-  async create(input: SavePrintTemplateInput & { refTableId: number; refRecId: number }): Promise<PrintTemplate> {
+  async create(
+    input: SavePrintTemplateInput & { refTableId: number; refRecId: number }
+  ): Promise<PrintTemplate> {
     const response = await apiClient.post<ApiResponse<PrintTemplate>>(endpoint, input);
     return requireData(response.data);
   },
   async update(templateId: number, input: SavePrintTemplateInput): Promise<PrintTemplate> {
-    const response = await apiClient.put<ApiResponse<PrintTemplate>>(`${endpoint}/${templateId}`, input);
+    const response = await apiClient.put<ApiResponse<PrintTemplate>>(
+      `${endpoint}/${templateId}`,
+      input
+    );
     return requireData(response.data);
   },
   async publish(templateId: number, templateVersionId?: number): Promise<PrintTemplate> {
-    const response = await apiClient.post<ApiResponse<PrintTemplate>>(`${endpoint}/${templateId}/publish`, { templateVersionId });
+    const response = await apiClient.post<ApiResponse<PrintTemplate>>(
+      `${endpoint}/${templateId}/publish`,
+      { templateVersionId }
+    );
     return requireData(response.data);
   },
   async archive(templateId: number): Promise<PrintTemplate> {
-    const response = await apiClient.post<ApiResponse<PrintTemplate>>(`${endpoint}/${templateId}/archive`);
+    const response = await apiClient.post<ApiResponse<PrintTemplate>>(
+      `${endpoint}/${templateId}/archive`
+    );
     return requireData(response.data);
   },
   async deleteDraft(templateId: number): Promise<void> {
     const response = await apiClient.delete<ApiResponse<boolean>>(`${endpoint}/${templateId}`);
     requireData(response.data);
   },
-  async validate(templateId: number, signal?: AbortSignal): Promise<{ isValid: boolean; errors: string[] }> {
-    const response = await apiClient.get<ApiResponse<{ isValid: boolean; errors: string[] }>>(`${endpoint}/${templateId}/validation`, { signal });
+  async validate(
+    templateId: number,
+    signal?: AbortSignal
+  ): Promise<{ isValid: boolean; errors: string[] }> {
+    const response = await apiClient.get<ApiResponse<{ isValid: boolean; errors: string[] }>>(
+      `${endpoint}/${templateId}/validation`,
+      { signal }
+    );
     return requireData(response.data);
   },
 };

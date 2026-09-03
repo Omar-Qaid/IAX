@@ -21,13 +21,14 @@ import type {
 } from '@patterns/list-details/types';
 import { documentApi } from '@shared/components/documents/documentApi';
 import { documentTableIds } from '@shared/components/documents/recordTableIds';
+import { recordTableId } from '@shared/components/documents/recordTableIds';
 import { wfProcessApi } from '../api/wfProcessApi';
 import { wfRequestApi, type MailTrackingEntryDto, type WfRequestRecord } from '../api/wfRequestApi';
 import { normalizeDynamicControlType } from '../components/DynamicControlRenderer';
 import { MailFieldValue } from '../components/MailFieldValue';
 import { WorkflowMailReportViewerViewer } from '../report-viewer/pages/WorkflowMailReportViewerPage';
 import { WorkflowOfficialFormViewer } from '../report-viewer/pages/WorkflowOfficialFormViewerPage';
-import { reportDesignerApi } from '@shared/components/report-designer';
+import { reportDesignerApi } from '../report-designer/api/reportDesignerApi';
 import type { ReportDesignerSummary } from '@shared/components/report-designer';
 import { selectPublishedTemplates } from '@shared/components/report-viewer';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
@@ -796,14 +797,20 @@ export function MailPage(): React.ReactElement {
   const selectedProcessTemplates = useQuery({
     queryKey: ['workflow', 'print-templates', 'mail-menu', selectedMailRequest?.processId ?? 0],
     queryFn: ({ signal }) =>
-      reportDesignerApi.listPublishedByProcess(selectedMailRequest?.processId ?? 0, signal),
+      reportDesignerApi.listPublished(
+        recordTableId('WfProcesses'),
+        selectedMailRequest?.processId ?? 0,
+        signal
+      ),
     enabled: (selectedMailRequest?.processId ?? 0) > 0,
   });
   const records = React.useMemo(() => {
     const processNames = new Map(
       (processes.data ?? []).map((process) => [
         process.recId,
-        localizedName(process, isRtl) || process.code || t('mail.processFallback', { id: process.recId }),
+        localizedName(process, isRtl) ||
+          process.code ||
+          t('mail.processFallback', { id: process.recId }),
       ])
     );
     return [...(requests.data ?? [])]

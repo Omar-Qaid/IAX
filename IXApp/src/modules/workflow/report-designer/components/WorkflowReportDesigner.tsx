@@ -35,8 +35,8 @@ import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { AppLookupGridField } from '@shared/components/fields/AppLookupGridField';
 import { ReportDesigner } from '@patterns/report-designer';
 import { dynamicRequestFormApi } from '../../api/dynamicRequestFormApi';
+import { ReportDesignerElementPreview } from './ReportDesignerElementPreview';
 import {
-  ReportDesignerElementPreview,
   useReportDesigner,
   type DesignerComponentType,
   type TemplateRegion,

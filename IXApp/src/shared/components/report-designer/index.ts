@@ -1,17 +1,8 @@
 /**
- * Centralized Generic Print Template & Report Engine
+ * Generic report-designer contracts and state helpers.
  *
- * Public API surface for the shared print engine. Import from this barrel
- * to access types, runtime rendering, designer hook, element preview,
- * and template selection utilities from any module.
- *
- * @example
- * ```ts
- * import {
- *   useReportDesigner,
- *   type PrintTemplateDocument,
- * } from '@shared/components/report-designer';
- * ```
+ * Rendering compositions belong to patterns, while API access and business
+ * mappings remain in their owning module.
  */
 
 // Types
@@ -55,9 +46,3 @@ export { createEmptyPrintTemplateDocument } from './types';
 // Designer hook
 export type { TemplateRegion, DesignerComponentType } from './useReportDesigner';
 export { useReportDesigner, createDesignerElement } from './useReportDesigner';
-
-// Element preview
-export { ReportDesignerElementPreview } from './ReportDesignerElementPreview';
-
-// API
-export { reportDesignerApi } from './api/reportDesignerApi';

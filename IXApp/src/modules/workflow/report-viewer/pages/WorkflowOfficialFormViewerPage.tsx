@@ -5,12 +5,15 @@ import { useCompanyStore } from '@core/company/useCompanyStore';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { ReportViewer, type ReportExportFormat } from '@patterns/report-viewer/ReportViewer';
 import { exportReportElement } from '@patterns/report-viewer/exportReport';
-import { fetchreportCompany, toReportCompany } from '@shared/components/report-viewer/reportCompany';
+import {
+  fetchreportCompany,
+  toReportCompany,
+} from '@shared/components/report-viewer/reportCompany';
 import { recordTableId } from '@shared/components/documents';
 import { useNotifications } from '@shared/hooks/useNotifications';
 import { localizedName } from '@shared/utilities/localizedName';
 import { wfRequestApi, type WfRequestRecord } from '../../api/wfRequestApi';
-import { reportDesignerApi } from '@shared/components/report-designer';
+import { reportDesignerApi } from '../../report-designer/api/reportDesignerApi';
 import { ReportTemplateRenderer as PrintTemplateViewer } from '@shared/components/report-viewer';
 import { createruntimeReportData } from '../utils/runtimeReportData';
 
@@ -21,7 +24,12 @@ interface Props {
   onClose: () => void;
 }
 
-export function WorkflowOfficialFormViewer({ open, request, templateId, onClose }: Props): React.ReactElement {
+export function WorkflowOfficialFormViewer({
+  open,
+  request,
+  templateId,
+  onClose,
+}: Props): React.ReactElement {
   const { t, isRtl } = useAppTranslation();
   const { notifyError, notifySuccess } = useNotifications();
   const { user } = useAuth();
@@ -30,43 +38,56 @@ export function WorkflowOfficialFormViewer({ open, request, templateId, onClose 
   const requestId = request?.recId ?? 0;
   const companyCode = request?.dataAreaId || currentCompany || '';
   const [printedAt, setPrintedAt] = React.useState(() => new Date());
-  
+
   React.useEffect(() => {
     if (open && requestId > 0) setPrintedAt(new Date());
   }, [open, requestId, templateId]);
 
-  const publishedTemplate = useQuery({ 
-    queryKey: ['workflow', 'official-form', requestId, templateId], 
-    queryFn: ({ signal }) => reportDesignerApi.getPublishedForRecord(recordTableId('WfRequests'), requestId, templateId, signal), 
-    enabled: open && requestId > 0 && templateId > 0 
+  const publishedTemplate = useQuery({
+    queryKey: ['workflow', 'official-form', requestId, templateId],
+    queryFn: ({ signal }) =>
+      reportDesignerApi.getPublishedForRecord(
+        recordTableId('WfRequests'),
+        requestId,
+        templateId,
+        signal
+      ),
+    enabled: open && requestId > 0 && templateId > 0,
   });
-  
-  const details = useQuery({ 
-    queryKey: ['workflow', 'mail', 'printout-details', requestId], 
-    queryFn: ({ signal }) => wfRequestApi.mailDetails(requestId, signal), 
-    enabled: open && requestId > 0 
+
+  const details = useQuery({
+    queryKey: ['workflow', 'mail', 'printout-details', requestId],
+    queryFn: ({ signal }) => wfRequestApi.mailDetails(requestId, signal),
+    enabled: open && requestId > 0,
   });
-  
-  const reportCompany = useQuery({ 
-    queryKey: ['report-company', companyCode], 
-    queryFn: ({ signal }) => fetchreportCompany(companyCode, signal), 
-    staleTime: 60_000, 
-    enabled: open && Boolean(companyCode) 
+
+  const reportCompany = useQuery({
+    queryKey: ['report-company', companyCode],
+    queryFn: ({ signal }) => fetchreportCompany(companyCode, signal),
+    staleTime: 60_000,
+    enabled: open && Boolean(companyCode),
   });
-  
+
   const company = reportCompany.data ?? toReportCompany(undefined, companyCode);
-  const requestName = request?.code || (request ? t('mail.requestFallback', { id: request.recId }) : '');
+  const requestName =
+    request?.code || (request ? t('mail.requestFallback', { id: request.recId }) : '');
   const templateDisplayName = localizedName(publishedTemplate.data, isRtl);
   const templateLanguage = publishedTemplate.data?.document.language;
-  const runtimeData = React.useMemo(() => request && details.data ? createruntimeReportData(request, details.data, company, user, printedAt, templateLanguage) : null, [company, details.data, printedAt, request, templateLanguage, user]);
-  
+  const runtimeData = React.useMemo(
+    () =>
+      request && details.data
+        ? createruntimeReportData(request, details.data, company, user, printedAt, templateLanguage)
+        : null,
+    [company, details.data, printedAt, request, templateLanguage, user]
+  );
+
   const print = () => {
     const previousTitle = document.title;
     document.title = `${requestName}-${publishedTemplate.data?.code || 'official-form'}`;
     window.print();
     document.title = previousTitle;
   };
-  
+
   const exportReport = async (format: ReportExportFormat) => {
     if (!reportContainerRef.current || !publishedTemplate.data) return;
     try {
@@ -83,16 +104,24 @@ export function WorkflowOfficialFormViewer({ open, request, templateId, onClose 
       notifyError(t('reportViewer.export.failed', { format }));
     }
   };
-  
-  const report = publishedTemplate.data && runtimeData ? (
-    <div ref={reportContainerRef}>
-      <PrintTemplateViewer template={publishedTemplate.data.document} data={runtimeData} company={company} />
-    </div>
-  ) : undefined;
-  
+
+  const report =
+    publishedTemplate.data && runtimeData ? (
+      <div ref={reportContainerRef}>
+        <PrintTemplateViewer
+          template={publishedTemplate.data.document}
+          data={runtimeData}
+          company={company}
+        />
+      </div>
+    ) : undefined;
+
   const loading = publishedTemplate.isLoading || details.isLoading || reportCompany.isLoading;
-  const error = publishedTemplate.isError || details.isError || reportCompany.isError ? t('mail.print.loadError') : null;
-  
+  const error =
+    publishedTemplate.isError || details.isError || reportCompany.isError
+      ? t('mail.print.loadError')
+      : null;
+
   return (
     <ReportViewer
       open={open}
@@ -100,9 +129,14 @@ export function WorkflowOfficialFormViewer({ open, request, templateId, onClose 
       loading={loading}
       error={error}
       emptyMessage={t('mail.print.selectRequest')}
-      viewerOptions={{ initialZoomMode: 'Automatic Zoom', direction: publishedTemplate.data?.document.direction || (isRtl ? 'rtl' : 'ltr') }}
+      viewerOptions={{
+        initialZoomMode: 'Automatic Zoom',
+        direction: publishedTemplate.data?.document.direction || (isRtl ? 'rtl' : 'ltr'),
+      }}
       onClose={onClose}
-      onReload={() => void Promise.all([publishedTemplate.refetch(), details.refetch(), reportCompany.refetch()])}
+      onReload={() =>
+        void Promise.all([publishedTemplate.refetch(), details.refetch(), reportCompany.refetch()])
+      }
       onPrint={print}
       onExport={exportReport}
     >

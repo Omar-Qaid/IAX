@@ -1,5 +1,16 @@
 import React from 'react';
-import { Alert, Badge, Box, Button, CircularProgress, IconButton, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from '@mui/material';
+import {
+  Alert,
+  Badge,
+  Box,
+  Button,
+  CircularProgress,
+  IconButton,
+  ToggleButton,
+  ToggleButtonGroup,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import AttachFileOutlined from '@mui/icons-material/AttachFileOutlined';
 import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
@@ -16,10 +27,14 @@ import {
 } from '../components/DynamicForm';
 import { RecordAttachmentsButton } from '@shared/components/documents/RecordAttachmentsButton';
 import { documentTableIds } from '@shared/components/documents/recordTableIds';
+import { recordTableId } from '@shared/components/documents/recordTableIds';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { localizedName } from '@shared/utilities/localizedName';
-import { reportDesignerApi } from '../template/api/reportDesignerApi';
-import { fetchreportCompany, toReportCompany } from '@shared/components/report-viewer/reportCompany';
+import { reportDesignerApi } from '../report-designer/api/reportDesignerApi';
+import {
+  fetchreportCompany,
+  toReportCompany,
+} from '@shared/components/report-viewer/reportCompany';
 import { useCompanyStore } from '@core/company/useCompanyStore';
 
 type RequestDisplayMode = 'normal' | 'printTemplate';
@@ -106,17 +121,30 @@ export function RequestFromPage(): React.ReactElement {
   );
   const publishedTemplates = useQuery({
     queryKey: ['workflow', 'request-from-published-templates', requestedProcessId],
-    queryFn: ({ signal }) => reportDesignerApi.listPublishedByProcess(requestedProcessId, signal),
+    queryFn: ({ signal }) =>
+      reportDesignerApi.listPublished(recordTableId('WfProcesses'), requestedProcessId, signal),
     enabled: Number.isSafeInteger(requestedProcessId) && requestedProcessId > 0,
   });
   const selectedTemplate = React.useMemo(
-    () => publishedTemplates.data?.find((template) => template.isDefault) ?? publishedTemplates.data?.[0],
+    () =>
+      publishedTemplates.data?.find((template) => template.isDefault) ??
+      publishedTemplates.data?.[0],
     [publishedTemplates.data]
   );
   const publishedTemplate = useQuery({
-    queryKey: ['workflow', 'request-from-published-template', requestedProcessId, selectedTemplate?.templateId],
+    queryKey: [
+      'workflow',
+      'request-from-published-template',
+      requestedProcessId,
+      selectedTemplate?.templateId,
+    ],
     queryFn: ({ signal }) =>
-      reportDesignerApi.getPublishedForProcess(requestedProcessId, selectedTemplate!.templateId, signal),
+      reportDesignerApi.getPublishedForRecord(
+        recordTableId('WfProcesses'),
+        requestedProcessId,
+        selectedTemplate!.templateId,
+        signal
+      ),
     enabled: displayMode === 'printTemplate' && requestedProcessId > 0 && Boolean(selectedTemplate),
   });
   const reportCompany = useQuery({
@@ -168,10 +196,16 @@ export function RequestFromPage(): React.ReactElement {
           value={displayMode}
           onChange={(_, value: RequestDisplayMode | null) => value && setDisplayMode(value)}
           aria-label={t('workflowRequest.displayMode')}
-          sx={{ marginInlineEnd: 0.75, height: 30, '& .MuiToggleButton-root': { px: 1.25, py: 0, fontSize: 11, textTransform: 'none' } }}
+          sx={{
+            marginInlineEnd: 0.75,
+            height: 30,
+            '& .MuiToggleButton-root': { px: 1.25, py: 0, fontSize: 11, textTransform: 'none' },
+          }}
         >
           <ToggleButton value="normal">{t('workflowRequest.normalDisplay')}</ToggleButton>
-          <ToggleButton value="printTemplate">{t('workflowRequest.printTemplateDisplay')}</ToggleButton>
+          <ToggleButton value="printTemplate">
+            {t('workflowRequest.printTemplateDisplay')}
+          </ToggleButton>
         </ToggleButtonGroup>
         <Button
           size="small"
@@ -355,7 +389,15 @@ export function RequestFromPage(): React.ReactElement {
                 '&::-webkit-scrollbar-thumb:hover': { bgcolor: '#707070' },
               }}
             >
-              <Box sx={{ display: displayMode === 'normal' || Boolean(publishedTemplate.data) ? 'block' : 'none', p: displayMode === 'printTemplate' ? { xs: 0.5, md: 1.5 } : 0, bgcolor: '#fff', overflow: 'auto' }}>
+              <Box
+                sx={{
+                  display:
+                    displayMode === 'normal' || Boolean(publishedTemplate.data) ? 'block' : 'none',
+                  p: displayMode === 'printTemplate' ? { xs: 0.5, md: 1.5 } : 0,
+                  bgcolor: '#fff',
+                  overflow: 'auto',
+                }}
+              >
                 <DynamicForm
                   ref={formRef}
                   key={record.id}
@@ -370,8 +412,17 @@ export function RequestFromPage(): React.ReactElement {
                 />
               </Box>
               {displayMode === 'printTemplate' && !publishedTemplate.data && (
-                <Box sx={{ minHeight: 320, p: { xs: 0.5, md: 1.5 }, bgcolor: '#fff', overflow: 'auto' }}>
-                  {(publishedTemplates.isLoading || publishedTemplate.isLoading || reportCompany.isLoading) && (
+                <Box
+                  sx={{
+                    minHeight: 320,
+                    p: { xs: 0.5, md: 1.5 },
+                    bgcolor: '#fff',
+                    overflow: 'auto',
+                  }}
+                >
+                  {(publishedTemplates.isLoading ||
+                    publishedTemplate.isLoading ||
+                    reportCompany.isLoading) && (
                     <Box sx={{ minHeight: 280, display: 'grid', placeItems: 'center' }}>
                       <CircularProgress aria-label={t('workflowRequest.loadingPrintTemplate')} />
                     </Box>
@@ -379,7 +430,9 @@ export function RequestFromPage(): React.ReactElement {
                   {!publishedTemplates.isLoading && !selectedTemplate && (
                     <Alert severity="info">{t('workflowRequest.noPublishedPrintTemplate')}</Alert>
                   )}
-                  {(publishedTemplates.isError || publishedTemplate.isError || reportCompany.isError) && (
+                  {(publishedTemplates.isError ||
+                    publishedTemplate.isError ||
+                    reportCompany.isError) && (
                     <Alert severity="error">{t('workflowRequest.printTemplateLoadFailed')}</Alert>
                   )}
                 </Box>
@@ -394,7 +447,9 @@ export function RequestFromPage(): React.ReactElement {
       fieldLabel: t('workflowRequest.process'),
       getValue: (process) => localizedName(process, isRtl),
       matches: (process, value) =>
-        localizedName(process, isRtl).toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()),
+        localizedName(process, isRtl)
+          .toLocaleLowerCase()
+          .includes(value.trim().toLocaleLowerCase()),
     },
   };
   return (

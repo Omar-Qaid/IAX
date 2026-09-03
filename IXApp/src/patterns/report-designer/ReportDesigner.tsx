@@ -149,7 +149,7 @@ export function ReportDesigner({
         >
           <CircularProgress size={36} color="primary" />
           {loadingMessage && (
-            <Typography variant="body2" color="text.secondary" fontWeight={500}>
+            <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
               {loadingMessage}
             </Typography>
           )}

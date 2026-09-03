@@ -25,7 +25,7 @@ import { SimpleListPage } from '@patterns/simple-list/SimpleListPage';
 import { localizedName } from '@shared/utilities/localizedName';
 import { wfProcessApi, type WfProcessRecord } from '../../api/wfProcessApi';
 import { fetchProcessPage, processLookupColumns } from '../../lookups/processLookup';
-import { reportDesignerApi } from '@shared/components/report-designer';
+import { reportDesignerApi } from '../api/reportDesignerApi';
 import { WorkflowReportDesigner } from '../components/WorkflowReportDesigner';
 import {
   createEmptyPrintTemplateDocument,
@@ -92,7 +92,8 @@ export function WorkflowReportDesignerListPage(): React.ReactElement {
   );
   const templates = useQuery({
     queryKey: templatesKey,
-    queryFn: ({ signal }) => reportDesignerApi.list(recordTableId('WfProcesses'), processId, signal),
+    queryFn: ({ signal }) =>
+      reportDesignerApi.list(recordTableId('WfProcesses'), processId, signal),
     enabled: processId > 0,
   });
   const selected = templates.data?.find((item) => item.templateId === selectedId) ?? null;
@@ -140,7 +141,12 @@ export function WorkflowReportDesignerListPage(): React.ReactElement {
     setSaving(true);
     try {
       if (editingId) await reportDesignerApi.update(editingId, draft);
-      else await reportDesignerApi.create({ ...draft, refTableId: recordTableId('WfProcesses'), refRecId: processId });
+      else
+        await reportDesignerApi.create({
+          ...draft,
+          refTableId: recordTableId('WfProcesses'),
+          refRecId: processId,
+        });
       setEditorOpen(false);
       await refresh();
       notifySuccess(t('printTemplates.messages.saved'));
@@ -466,3 +472,6 @@ export function WorkflowReportDesignerListPage(): React.ReactElement {
     />
   );
 }
+
+// Compatibility export retained for the existing lazy route registration.
+export const ReportDesignerListPage = WorkflowReportDesignerListPage;

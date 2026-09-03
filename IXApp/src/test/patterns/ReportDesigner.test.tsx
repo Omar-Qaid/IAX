@@ -1,4 +1,5 @@
 import React from 'react';
+import { describe, expect, it } from 'vitest';
 import { render, screen } from '@test/testUtils';
 import { ReportDesigner } from '@patterns/report-designer';
 

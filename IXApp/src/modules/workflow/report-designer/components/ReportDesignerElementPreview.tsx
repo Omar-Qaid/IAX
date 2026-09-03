@@ -10,8 +10,7 @@ import React from 'react';
 import { Box, Divider, Typography } from '@mui/material';
 import ImageOutlined from '@mui/icons-material/ImageOutlined';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
-import type { PrintTemplateElement } from './types';
-import type { TemplateRegion } from './useReportDesigner';
+import type { PrintTemplateElement, TemplateRegion } from '@shared/components/report-designer';
 
 interface Props {
   element: PrintTemplateElement;
