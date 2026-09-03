@@ -85,9 +85,11 @@ export function WorkflowMailReportViewerViewer({
     }
   };
 
-  const loading = details.isLoading || reportCompany.isLoading || process.isLoading;
-  const error =
-    details.isError || reportCompany.isError || process.isError ? t('mail.print.loadError') : null;
+  // Mail details are required to render the report. Process metadata and company
+  // branding are optional enrichments and already have local fallbacks above, so
+  // their failure must not blank an otherwise printable document.
+  const loading = details.isLoading;
+  const error = details.isError ? t('mail.print.loadError') : null;
   const report =
     request && details.data ? (
       <div ref={reportContainerRef}>
