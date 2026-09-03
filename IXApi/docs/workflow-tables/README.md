@@ -56,7 +56,7 @@ The two main sources are `LegacyWorkflowMasterDataSeeder` (definition/master dat
 
 ## Printing
 
-- [WfPrintTemplates](WfPrintTemplates.md), [WfPrintTemplateVersions](WfPrintTemplateVersions.md), [WfRequestPrintVersions](WfRequestPrintVersions.md)
+- [ReportTemplates](ReportTemplates.md), [ReportTemplateVersions](ReportTemplateVersions.md), [ReportEntityVersions](ReportEntityVersions.md)
 
 ## Important boundaries
 

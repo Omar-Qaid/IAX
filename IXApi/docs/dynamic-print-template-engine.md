@@ -51,20 +51,20 @@ Frontend, under `src/modules/workflow/print-templates`:
 
 ## 5. Proposed database changes
 
-`WfPrintTemplates`:
+`ReportTemplates`:
 
-- `RECID` (TemplateId), `ProcessId`, `Code`, `Name`, `Description`, `PageSize`, `Orientation`, `Language`, `IsDefault`, `Status`, `CurrentVersionId` (nullable), plus standard audit, soft-delete, row-version, active, and `DataAreaId` fields.
-- Unique company-scoped indexes for `(DataAreaId, ProcessId, Code)` and one filtered default template per process.
+- `RECID` (TemplateId), `RefTableId`, `RefRecId`, `Code`, `Name`, `Description`, `PageSize`, `Orientation`, `Language`, `IsDefault`, `Status`, `CurrentVersionId` (nullable), plus standard audit, soft-delete, row-version, active, and `DataAreaId` fields.
+- Unique company-scoped indexes for `(DataAreaId, RefTableId, RefRecId, Code)` and one filtered default template per referenced record.
 
-`WfPrintTemplateVersions`:
+`ReportTemplateVersions`:
 
 - `RECID` (TemplateVersionId), `TemplateId`, `VersionNo`, `TemplateJson`, `IsPublished`, `PublishedBy`, `PublishedAt`, plus standard audit/company fields.
 - Unique `(DataAreaId, TemplateId, VersionNo)`. Published version JSON is immutable; edits create/update an unpublished draft or create the next draft after publication.
 
-`WfRequestPrintVersions`:
+`ReportEntityVersions`:
 
-- `RECID`, `RequestId`, `TemplateId`, `TemplateVersionId`, `SelectedAt`, `SelectedBy`, and company/audit fields.
-- Unique `(DataAreaId, RequestId, TemplateId)`. This is the historical pin used for reprints; a finalized request never silently moves to a newer version.
+- `RECID`, `RefTableId`, `RefRecId`, `TemplateId`, `TemplateVersionId`, `SelectedAt`, `SelectedBy`, and company/audit fields.
+- Unique `(DataAreaId, RefTableId, RefRecId, TemplateId)`. This is the historical pin used for reprints; a finalized entity never silently moves to a newer version.
 
 All foreign-key deletes use restrict/no-action to match the repository's no-cascade convention. Templates and versions are company-scoped through existing global filters.
 
@@ -100,7 +100,7 @@ Elements use a required `id` and `type` discriminator. Bindings are explicit uni
 5. `IPrintTemplateValidator` validates schema, bindings, step IDs, data sources, conditions, defaults, and supported elements.
 6. `IPrintTemplateRenderer` consumes only template JSON plus the normalized model and produces deterministic HTML.
 7. A PDF provider renders that HTML with embedded fonts/assets, A4 settings, RTL direction, repeated headers, and page numbering.
-8. Finalization stores `WfRequestPrintVersions`; reprint uses that immutable version.
+8. Finalization stores `ReportEntityVersions`; reprint uses that immutable version.
 
 Controllers remain thin. Publishing, default-template uniqueness, immutability, and version creation belong in the service transaction.
 

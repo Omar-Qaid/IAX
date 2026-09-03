@@ -85,7 +85,7 @@ WfRequests
   -> WfRequestDetails
   -> WfRequestVariables
   -> WfAssignments -> WfActivityDetails
-  -> WfRequestPrintVersions
+  -> ReportEntityVersions
 ```
 
 These additional tables preserve submitted values, completed activity values, mapped request values, and the print-template version associated with a request. They extend the core graph; they do not change the configuration/runtime boundary.
@@ -105,7 +105,7 @@ These additional tables preserve submitted values, completed activity values, ma
 | Activity form | `WfActivityControls`, `WfActivityControlsOptions`, `WfActivityControlsValidations` | Defines inputs completed during an approval/task activity. |
 | Activity mapping | `WfActivityMappingVariables` | Copies an activity-control value into a workflow variable. |
 | Performers/access | `WfPerformers`, `WfPerformerType`, `WfUsersPerformers`, `WfUsersProcesses` | Defines who can submit or perform workflow work. |
-| Printing | `WfPrintTemplates`, `WfPrintTemplateVersions` | Defines versioned print layouts for a process. |
+| Printing | `ReportTemplates`, `ReportTemplateVersions` | Defines versioned print layouts for a process. |
 
 `WfRequestControls` and `WfActivityControls` are not interchangeable. Request controls collect the initial request. Activity controls collect decisions or data while the request is being processed.
 
@@ -120,7 +120,7 @@ These additional tables preserve submitted values, completed activity values, ma
 | `WfAssignments` | Work is assigned to an approver/performer. | The actionable and completed assignment trail. |
 | `WfProcessData` | A request advances through processing. | Runtime step/activity/status information. |
 | `WfActivityDetails` | An activity form is completed. | Normalized activity-control values for the executed activity. |
-| `WfRequestPrintVersions` | A request is associated with a print version. | Pins the intended template version for stable historical output. |
+| `ReportEntityVersions` | A request is associated with a print version. | Pins the intended template version for stable historical output. |
 
 These tables must not be populated merely to define a process.
 
