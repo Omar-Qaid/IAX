@@ -1,11 +1,11 @@
 using IAX.IXApi.Shared.Domain.Entities;
 
-namespace IAX.IXApi.Modules.Workflow.PrintTemplates;
+namespace IAX.IXApi.Shared.Domain.Reporting;
 
-public sealed class WfPrintTemplateVersion : Entity<long>
+public sealed class ReportTemplateVersion : Entity<long>
 {
     public long TemplateId { get; set; }
-    public WfPrintTemplate Template { get; set; } = null!;
+    public ReportTemplate Template { get; set; } = null!;
     public int VersionNo { get; set; }
     public string TemplateJson { get; set; } = string.Empty;
     public bool IsPublished { get; set; }

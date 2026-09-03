@@ -18,6 +18,7 @@ using IAX.IXApi.Modules.Workflow.Priorities;
 using IAX.IXApi.Modules.Workflow.Processes;
 using IAX.IXApi.Modules.Workflow.ProcessTypes;
 using IAX.IXApi.Modules.Workflow.PrintTemplates;
+using IAX.IXApi.Shared.Domain.Reporting;
 using IAX.IXApi.Modules.Workflow.Requests;
 using IAX.IXApi.Modules.Workflow.Steps;
 using IAX.IXApi.Shared.Domain.Entities;
@@ -168,23 +169,24 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
         const long requestId = 94037;
         const string templateCode = "DAILY_FUND_CLOSING";
 
-        var template = await db.WfPrintTemplates
+        var template = await db.ReportTemplates
             .IgnoreQueryFilters()
             .SingleOrDefaultAsync(
-                row => row.ProcessId == ProcessId && row.Code == templateCode,
+                row => row.RefTableId == PrintTemplateService.WorkflowProcessTableId && row.RefRecId == ProcessId && row.Code == templateCode,
                 ct);
 
         if (template is null)
         {
-            var processHasDefaultTemplate = await db.WfPrintTemplates
+            var processHasDefaultTemplate = await db.ReportTemplates
                 .IgnoreQueryFilters()
                 .AnyAsync(
-                    row => row.ProcessId == ProcessId && row.IsDefault && row.IsActive && !row.IsDeleted,
+                    row => row.RefTableId == PrintTemplateService.WorkflowProcessTableId && row.RefRecId == ProcessId && row.IsDefault && row.IsActive && !row.IsDeleted,
                     ct);
 
-            template = new WfPrintTemplate
+            template = new ReportTemplate
             {
-                ProcessId = ProcessId,
+                RefTableId = PrintTemplateService.WorkflowProcessTableId,
+                RefRecId = ProcessId,
                 Code = templateCode,
                 Name = "Daily fund closing printout",
                 Description = "Default A4 printout for the daily fund closing workflow.",
@@ -192,16 +194,16 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                 Orientation = "portrait",
                 Language = "en",
                 IsDefault = !processHasDefaultTemplate,
-                Status = WfPrintTemplateStatus.Published,
+                Status = ReportTemplateStatus.Published,
                 IsActive = true,
                 CreatedBy = by,
                 OwnerAccountId = by,
             };
-            db.WfPrintTemplates.Add(template);
+            db.ReportTemplates.Add(template);
             await db.SaveChangesAsync(ct);
         }
 
-        var version = await db.WfPrintTemplateVersions
+        var version = await db.ReportTemplateVersions
             .IgnoreQueryFilters()
             .SingleOrDefaultAsync(
                 row => row.TemplateId == template.RecId && row.VersionNo == 1,
@@ -209,7 +211,7 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
 
         if (version is null)
         {
-            version = new WfPrintTemplateVersion
+            version = new ReportTemplateVersion
             {
                 TemplateId = template.RecId,
                 VersionNo = 1,
@@ -220,28 +222,29 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                 CreatedBy = by,
                 OwnerAccountId = by,
             };
-            db.WfPrintTemplateVersions.Add(version);
+            db.ReportTemplateVersions.Add(version);
             await db.SaveChangesAsync(ct);
         }
 
         if (template.CurrentVersionId is null)
         {
             template.CurrentVersionId = version.RecId;
-            template.Status = WfPrintTemplateStatus.Published;
+            template.Status = ReportTemplateStatus.Published;
             await db.SaveChangesAsync(ct);
         }
 
-        var requestVersionExists = await db.WfRequestPrintVersions
+        var requestVersionExists = await db.ReportEntityVersions
             .IgnoreQueryFilters()
             .AnyAsync(
-                row => row.RequestId == requestId && row.TemplateId == template.RecId,
+                row => row.RefTableId == PrintTemplateService.WorkflowRequestTableId && row.RefRecId == requestId && row.TemplateId == template.RecId,
                 ct);
 
         if (!requestVersionExists)
         {
-            db.WfRequestPrintVersions.Add(new WfRequestPrintVersion
+            db.ReportEntityVersions.Add(new ReportEntityVersion
             {
-                RequestId = requestId,
+                RefTableId = PrintTemplateService.WorkflowRequestTableId,
+                RefRecId = requestId,
                 TemplateId = template.RecId,
                 TemplateVersionId = version.RecId,
                 SelectedAt = DateTime.UtcNow,
@@ -496,26 +499,28 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                 ? $"Process {process.RecId}"
                 : process.Name;
             var templateCode = $"PROCESS_{process.RecId}_PRINTOUT";
-            var template = await db.WfPrintTemplates
+            var template = await db.ReportTemplates
                 .IgnoreQueryFilters()
                 .SingleOrDefaultAsync(
-                    row => row.ProcessId == process.RecId && row.Code == templateCode,
+                    row => row.RefTableId == PrintTemplateService.WorkflowProcessTableId && row.RefRecId == process.RecId && row.Code == templateCode,
                     ct);
 
             if (template is null)
             {
-                var processHasDefaultTemplate = await db.WfPrintTemplates
+                var processHasDefaultTemplate = await db.ReportTemplates
                     .IgnoreQueryFilters()
                     .AnyAsync(
-                        row => row.ProcessId == process.RecId
+                        row => row.RefTableId == PrintTemplateService.WorkflowProcessTableId
+                            && row.RefRecId == process.RecId
                             && row.IsDefault
                             && row.IsActive
                             && !row.IsDeleted,
                         ct);
 
-                template = new WfPrintTemplate
+                template = new ReportTemplate
                 {
-                    ProcessId = process.RecId,
+                    RefTableId = PrintTemplateService.WorkflowProcessTableId,
+                    RefRecId = process.RecId,
                     Code = templateCode,
                     Name = $"{processName} printout",
                     Description = $"Seeded A4 printout for the {processName} workflow.",
@@ -523,16 +528,16 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                     Orientation = "portrait",
                     Language = "en",
                     IsDefault = !processHasDefaultTemplate,
-                    Status = WfPrintTemplateStatus.Published,
+                    Status = ReportTemplateStatus.Published,
                     IsActive = true,
                     CreatedBy = by,
                     OwnerAccountId = by,
                 };
-                db.WfPrintTemplates.Add(template);
+                db.ReportTemplates.Add(template);
                 await db.SaveChangesAsync(ct);
             }
 
-            var version = await db.WfPrintTemplateVersions
+            var version = await db.ReportTemplateVersions
                 .IgnoreQueryFilters()
                 .SingleOrDefaultAsync(
                     row => row.TemplateId == template.RecId && row.VersionNo == 1,
@@ -540,7 +545,7 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
 
             if (version is null)
             {
-                version = new WfPrintTemplateVersion
+                version = new ReportTemplateVersion
                 {
                     TemplateId = template.RecId,
                     VersionNo = 1,
@@ -551,7 +556,7 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                     CreatedBy = by,
                     OwnerAccountId = by,
                 };
-                db.WfPrintTemplateVersions.Add(version);
+                db.ReportTemplateVersions.Add(version);
                 await db.SaveChangesAsync(ct);
             }
             else if (!version.IsPublished || version.IsDeleted)
@@ -564,12 +569,12 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
             }
 
             if (template.CurrentVersionId != version.RecId
-                || template.Status != WfPrintTemplateStatus.Published
+                || template.Status != ReportTemplateStatus.Published
                 || !template.IsActive
                 || template.IsDeleted)
             {
                 template.CurrentVersionId = version.RecId;
-                template.Status = WfPrintTemplateStatus.Published;
+                template.Status = ReportTemplateStatus.Published;
                 template.IsActive = true;
                 template.IsDeleted = false;
                 await db.SaveChangesAsync(ct);
@@ -586,17 +591,18 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
             if (requestId is null)
                 continue;
 
-            var requestVersion = await db.WfRequestPrintVersions
+            var requestVersion = await db.ReportEntityVersions
                 .IgnoreQueryFilters()
                 .SingleOrDefaultAsync(
-                    row => row.RequestId == requestId.Value && row.TemplateId == template.RecId,
+                    row => row.RefTableId == PrintTemplateService.WorkflowRequestTableId && row.RefRecId == requestId.Value && row.TemplateId == template.RecId,
                     ct);
 
             if (requestVersion is null)
             {
-                db.WfRequestPrintVersions.Add(new WfRequestPrintVersion
+                db.ReportEntityVersions.Add(new ReportEntityVersion
                 {
-                    RequestId = requestId.Value,
+                    RefTableId = PrintTemplateService.WorkflowRequestTableId,
+                    RefRecId = requestId.Value,
                     TemplateId = template.RecId,
                     TemplateVersionId = version.RecId,
                     SelectedAt = DateTime.UtcNow,

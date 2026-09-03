@@ -5,6 +5,7 @@ using IAX.IXApi.Modules.Administration.Settings;
 
 
 using IAX.IXApi.Shared.Domain.Entities;
+using IAX.IXApi.Shared.Domain.Reporting;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Organization.Employees.Entities;
 using IAX.IXApi.Modules.Administration.AuditLogs.Entities;
@@ -199,9 +200,9 @@ namespace IAX.IXApi.Infrastructure.Persistence
         public DbSet<WfRequestMappingVariable> WfRequestMappingVariables => Set<WfRequestMappingVariable>();
         public DbSet<WfRequestVariable> WfRequestVariables => Set<WfRequestVariable>();
         public DbSet<WfAssignment> WfAssignments => Set<WfAssignment>();
-        public DbSet<WfPrintTemplate> WfPrintTemplates => Set<WfPrintTemplate>();
-        public DbSet<WfPrintTemplateVersion> WfPrintTemplateVersions => Set<WfPrintTemplateVersion>();
-        public DbSet<WfRequestPrintVersion> WfRequestPrintVersions => Set<WfRequestPrintVersion>();
+        public DbSet<ReportTemplate> ReportTemplates => Set<ReportTemplate>();
+        public DbSet<ReportTemplateVersion> ReportTemplateVersions => Set<ReportTemplateVersion>();
+        public DbSet<ReportEntityVersion> ReportEntityVersions => Set<ReportEntityVersion>();
         #endregion
 
         #region Organization

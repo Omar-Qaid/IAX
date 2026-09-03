@@ -1,13 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace IAX.IXApi.Modules.Workflow.PrintTemplates;
+using IAX.IXApi.Shared.Domain.Reporting;
 
-public sealed class WfPrintTemplateConfiguration : IEntityTypeConfiguration<WfPrintTemplate>
+namespace IAX.IXApi.Infrastructure.Persistence.Configuration.Reporting;
+
+public sealed class ReportTemplateConfiguration : IEntityTypeConfiguration<ReportTemplate>
 {
-    public void Configure(EntityTypeBuilder<WfPrintTemplate> builder)
+    public void Configure(EntityTypeBuilder<ReportTemplate> builder)
     {
-        builder.ToTable("WfPrintTemplates");
+        builder.ToTable("ReportTemplates");
         builder.Property(item => item.RecId).HasColumnName("TemplateId");
         builder.Property(item => item.Code).HasMaxLength(50).IsRequired();
         builder.Property(item => item.Name).HasMaxLength(200).IsRequired();
@@ -17,15 +19,11 @@ public sealed class WfPrintTemplateConfiguration : IEntityTypeConfiguration<WfPr
         builder.Property(item => item.Language).HasMaxLength(10).IsRequired();
         builder.Property(item => item.Status).HasConversion<byte>();
 
-        builder.HasIndex(item => new { item.DataAreaId, item.ProcessId, item.Code }).IsUnique();
-        builder.HasIndex(item => new { item.DataAreaId, item.ProcessId, item.IsDefault })
+        builder.HasIndex(item => new { item.DataAreaId, item.RefTableId, item.RefRecId, item.Code }).IsUnique();
+        builder.HasIndex(item => new { item.DataAreaId, item.RefTableId, item.RefRecId, item.IsDefault })
             .IsUnique()
             .HasFilter("[IsDefault] = 1 AND [IsDeleted] = 0 AND [IsActive] = 1");
 
-        builder.HasOne(item => item.Process)
-            .WithMany()
-            .HasForeignKey(item => item.ProcessId)
-            .OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(item => item.CurrentVersion)
             .WithMany()
             .HasForeignKey(item => item.CurrentVersionId)

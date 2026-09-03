@@ -1,5 +1,6 @@
 using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Modules.Workflow.Persistence;
+using IAX.IXApi.Shared.Domain.Reporting;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
@@ -7,6 +8,8 @@ namespace IAX.IXApi.Modules.Workflow.PrintTemplates;
 
 public sealed class PrintTemplateService : IPrintTemplateService
 {
+    public const int WorkflowProcessTableId = 476793887;
+    public const int WorkflowRequestTableId = 1001;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private readonly IWorkflowDataContext _context;
     private readonly ICurrentUserService _currentUser;
@@ -22,16 +25,22 @@ public sealed class PrintTemplateService : IPrintTemplateService
         _documentValidator = documentValidator;
     }
 
-    public async Task<IReadOnlyList<PrintTemplateSummaryDto>> ListByProcessAsync(long processId, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<PrintTemplateSummaryDto>> ListByProcessAsync(long processId, CancellationToken cancellationToken = default) =>
+        ListByRecordAsync(WorkflowProcessTableId, processId, cancellationToken);
+
+    public async Task<IReadOnlyList<PrintTemplateSummaryDto>> ListByRecordAsync(int refTableId, long refRecId, CancellationToken cancellationToken = default)
     {
-        return await _context.WfPrintTemplates.AsNoTracking()
-            .Where(item => item.ProcessId == processId)
+        return await _context.ReportTemplates.AsNoTracking()
+            .Where(item => item.RefTableId == refTableId && item.RefRecId == refRecId)
             .OrderByDescending(item => item.IsDefault).ThenBy(item => item.Name)
             .Select(item => new PrintTemplateSummaryDto
             {
                 TemplateId = item.RecId,
-                ProcessId = item.ProcessId,
-                ProcessName = item.Process.Name ?? item.Process.Code ?? string.Empty,
+                RefTableId = item.RefTableId,
+                RefRecId = item.RefRecId,
+                ProcessId = item.RefRecId,
+                ProcessName = _context.WfProcesses.Where(process => process.RecId == item.RefRecId)
+                    .Select(process => process.Name ?? process.Code ?? string.Empty).FirstOrDefault() ?? string.Empty,
                 Code = item.Code ?? string.Empty,
                 Name = item.Name ?? string.Empty,
                 NameAlias = item.NameAlias,
@@ -51,12 +60,15 @@ public sealed class PrintTemplateService : IPrintTemplateService
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<PrintTemplateSummaryDto>> ListPublishedByProcessAsync(long processId, CancellationToken cancellationToken = default)
+    public Task<IReadOnlyList<PrintTemplateSummaryDto>> ListPublishedByProcessAsync(long processId, CancellationToken cancellationToken = default) =>
+        ListPublishedByRecordAsync(WorkflowProcessTableId, processId, cancellationToken);
+
+    public async Task<IReadOnlyList<PrintTemplateSummaryDto>> ListPublishedByRecordAsync(int refTableId, long refRecId, CancellationToken cancellationToken = default)
     {
-        return await _context.WfPrintTemplates.AsNoTracking()
-            .Where(item => item.ProcessId == processId
+        return await _context.ReportTemplates.AsNoTracking()
+            .Where(item => item.RefTableId == refTableId && item.RefRecId == refRecId
                 && item.IsActive
-                && item.Status == WfPrintTemplateStatus.Published
+                && item.Status == ReportTemplateStatus.Published
                 && item.CurrentVersionId != null
                 && item.CurrentVersion != null
                 && item.CurrentVersion.IsPublished)
@@ -64,8 +76,11 @@ public sealed class PrintTemplateService : IPrintTemplateService
             .Select(item => new PrintTemplateSummaryDto
             {
                 TemplateId = item.RecId,
-                ProcessId = item.ProcessId,
-                ProcessName = item.Process.Name ?? item.Process.Code ?? string.Empty,
+                RefTableId = item.RefTableId,
+                RefRecId = item.RefRecId,
+                ProcessId = item.RefRecId,
+                ProcessName = _context.WfProcesses.Where(process => process.RecId == item.RefRecId)
+                    .Select(process => process.Name ?? process.Code ?? string.Empty).FirstOrDefault() ?? string.Empty,
                 Code = item.Code ?? string.Empty,
                 Name = item.Name ?? string.Empty,
                 NameAlias = item.NameAlias,
@@ -89,7 +104,10 @@ public sealed class PrintTemplateService : IPrintTemplateService
     {
         var template = await TemplateQuery(asNoTracking: true)
             .SingleOrDefaultAsync(item => item.RecId == templateId, cancellationToken);
-        return template == null ? null : Map(template);
+        if (template == null) return null;
+        var result = Map(template);
+        result.ProcessName = await ProcessNameAsync(template.RefRecId, cancellationToken);
+        return result;
     }
 
     public async Task<PublishedPrintTemplateDto?> GetPublishedForRequestAsync(
@@ -109,13 +127,21 @@ public sealed class PrintTemplateService : IPrintTemplateService
     public async Task<PublishedPrintTemplateDto?> GetPublishedForProcessAsync(
         long processId,
         long templateId,
+        CancellationToken cancellationToken = default) =>
+        await GetPublishedForRecordAsync(WorkflowProcessTableId, processId, templateId, cancellationToken);
+
+    public async Task<PublishedPrintTemplateDto?> GetPublishedForRecordAsync(
+        int refTableId,
+        long refRecId,
+        long templateId,
         CancellationToken cancellationToken = default)
     {
         var template = await TemplateQuery(asNoTracking: true)
             .SingleOrDefaultAsync(item => item.RecId == templateId
-                && item.ProcessId == processId
+                && item.RefTableId == refTableId
+                && item.RefRecId == refRecId
                 && item.IsActive
-                && item.Status == WfPrintTemplateStatus.Published
+                && item.Status == ReportTemplateStatus.Published
                 && item.CurrentVersionId != null
                 && item.CurrentVersion != null
                 && item.CurrentVersion.IsPublished,
@@ -126,8 +152,10 @@ public sealed class PrintTemplateService : IPrintTemplateService
         return new PublishedPrintTemplateDto
         {
             TemplateId = template.RecId,
-            ProcessId = template.ProcessId,
-            ProcessName = template.Process.Name ?? template.Process.Code ?? string.Empty,
+            RefTableId = template.RefTableId,
+            RefRecId = template.RefRecId,
+            ProcessId = template.RefRecId,
+            ProcessName = await ProcessNameAsync(template.RefRecId, cancellationToken),
             Code = template.Code ?? string.Empty,
             Name = template.Name ?? string.Empty,
             NameAlias = template.NameAlias,
@@ -151,21 +179,26 @@ public sealed class PrintTemplateService : IPrintTemplateService
 
     public async Task<PrintTemplateDto> CreateAsync(CreatePrintTemplateDto input, CancellationToken cancellationToken = default)
     {
+        var processId = input.RefRecId > 0 ? input.RefRecId : input.ProcessId ?? 0;
+        var refTableId = input.RefTableId > 0 ? input.RefTableId : WorkflowProcessTableId;
         var errors = _documentValidator.Validate(input.Document).ToList();
-        if (!await _context.WfProcesses.AsNoTracking().AnyAsync(item => item.RecId == input.ProcessId && item.IsActive, cancellationToken))
+        if (refTableId != WorkflowProcessTableId)
+            errors.Add("The Workflow print-template endpoint only accepts WfProcesses records.");
+        if (!await _context.WfProcesses.AsNoTracking().AnyAsync(item => item.RecId == processId && item.IsActive, cancellationToken))
             errors.Add("The selected workflow process does not exist or is inactive.");
-        if (await CodeExistsAsync(input.ProcessId, input.Code, null, cancellationToken))
+        if (await CodeExistsAsync(refTableId, processId, input.Code, null, cancellationToken))
             errors.Add($"Template code '{input.Code}' already exists for this process.");
         ThrowIfInvalid(errors);
 
         long templateId = 0;
         await ExecuteInTransactionAsync(async () =>
         {
-            if (input.IsDefault) await ClearOtherDefaultsAsync(input.ProcessId, null, cancellationToken);
+            if (input.IsDefault) await ClearOtherDefaultsAsync(refTableId, processId, null, cancellationToken);
 
-            var template = new WfPrintTemplate
+            var template = new ReportTemplate
             {
-                ProcessId = input.ProcessId,
+                RefTableId = refTableId,
+                RefRecId = processId,
                 Code = input.Code.Trim(),
                 Name = input.Name.Trim(),
                 NameAlias = input.NameAlias?.Trim(),
@@ -174,13 +207,13 @@ public sealed class PrintTemplateService : IPrintTemplateService
                 Orientation = input.Document.Page.Orientation,
                 Language = input.Document.Language,
                 IsDefault = input.IsDefault,
-                Status = WfPrintTemplateStatus.Draft
+                Status = ReportTemplateStatus.Draft
             };
-            _context.WfPrintTemplates.Add(template);
+            _context.ReportTemplates.Add(template);
             await _context.SaveChangesAsync(cancellationToken);
             templateId = template.RecId;
 
-            _context.WfPrintTemplateVersions.Add(new WfPrintTemplateVersion
+            _context.ReportTemplateVersions.Add(new ReportTemplateVersion
             {
                 TemplateId = template.RecId,
                 VersionNo = 1,
@@ -196,11 +229,11 @@ public sealed class PrintTemplateService : IPrintTemplateService
         var template = await TemplateQuery(asNoTracking: false)
             .SingleOrDefaultAsync(item => item.RecId == templateId, cancellationToken);
         if (template == null) return null;
-        if (template.Status == WfPrintTemplateStatus.Archived)
+        if (template.Status == ReportTemplateStatus.Archived)
             throw new PrintTemplateValidationException(["Archived templates cannot be edited."]);
 
         var errors = _documentValidator.Validate(input.Document).ToList();
-        if (await CodeExistsAsync(template.ProcessId, input.Code, templateId, cancellationToken))
+        if (await CodeExistsAsync(template.RefTableId, template.RefRecId, input.Code, templateId, cancellationToken))
             errors.Add($"Template code '{input.Code}' already exists for this process.");
         ThrowIfInvalid(errors);
 
@@ -208,7 +241,7 @@ public sealed class PrintTemplateService : IPrintTemplateService
         {
             if (input.IsDefault && !template.IsDefault)
             {
-                await ClearOtherDefaultsAsync(template.ProcessId, template.RecId, cancellationToken);
+                await ClearOtherDefaultsAsync(template.RefTableId, template.RefRecId, template.RecId, cancellationToken);
                 template.IsDefault = true;
             }
             else if (!input.IsDefault)
@@ -227,12 +260,12 @@ public sealed class PrintTemplateService : IPrintTemplateService
             var draft = template.Versions.OrderByDescending(item => item.VersionNo).FirstOrDefault(item => !item.IsPublished);
             if (draft == null)
             {
-                draft = new WfPrintTemplateVersion
+                draft = new ReportTemplateVersion
                 {
                     TemplateId = template.RecId,
                     VersionNo = template.Versions.Select(item => item.VersionNo).DefaultIfEmpty().Max() + 1
                 };
-                _context.WfPrintTemplateVersions.Add(draft);
+                _context.ReportTemplateVersions.Add(draft);
             }
             draft.TemplateJson = Serialize(input.Document);
             await _context.SaveChangesAsync(cancellationToken);
@@ -245,7 +278,7 @@ public sealed class PrintTemplateService : IPrintTemplateService
         var template = await TemplateQuery(asNoTracking: false)
             .SingleOrDefaultAsync(item => item.RecId == templateId, cancellationToken);
         if (template == null) return null;
-        if (template.Status == WfPrintTemplateStatus.Archived)
+        if (template.Status == ReportTemplateStatus.Archived)
             throw new PrintTemplateValidationException(["Archived templates cannot be published."]);
 
         var version = templateVersionId.HasValue
@@ -255,23 +288,23 @@ public sealed class PrintTemplateService : IPrintTemplateService
         if (version.IsPublished) throw new PrintTemplateValidationException(["Published template versions are immutable."]);
 
         var document = Deserialize(version.TemplateJson);
-        var errors = (await ValidateDocumentForProcessAsync(template.ProcessId, document, cancellationToken)).ToList();
+        var errors = (await ValidateDocumentForProcessAsync(template.RefRecId, document, cancellationToken)).ToList();
         ThrowIfInvalid(errors);
 
         version.IsPublished = true;
         version.PublishedBy = _currentUser.GetCurrentUserId();
         version.PublishedAt = DateTime.UtcNow;
         template.CurrentVersionId = version.RecId;
-        template.Status = WfPrintTemplateStatus.Published;
+        template.Status = ReportTemplateStatus.Published;
         await _context.SaveChangesAsync(cancellationToken);
         return await GetAsync(templateId, cancellationToken);
     }
 
     public async Task<PrintTemplateDto?> ArchiveAsync(long templateId, CancellationToken cancellationToken = default)
     {
-        var template = await _context.WfPrintTemplates.SingleOrDefaultAsync(item => item.RecId == templateId, cancellationToken);
+        var template = await _context.ReportTemplates.SingleOrDefaultAsync(item => item.RecId == templateId, cancellationToken);
         if (template == null) return null;
-        template.Status = WfPrintTemplateStatus.Archived;
+        template.Status = ReportTemplateStatus.Archived;
         template.IsDefault = false;
         template.IsActive = false;
         await _context.SaveChangesAsync(cancellationToken);
@@ -285,8 +318,8 @@ public sealed class PrintTemplateService : IPrintTemplateService
         if (template == null) return false;
         if (template.Versions.Any(item => item.IsPublished))
             throw new PrintTemplateValidationException(["A template with published versions cannot be deleted; archive it instead."]);
-        _context.WfPrintTemplateVersions.RemoveRange(template.Versions);
-        _context.WfPrintTemplates.Remove(template);
+        _context.ReportTemplateVersions.RemoveRange(template.Versions);
+        _context.ReportTemplates.Remove(template);
         await _context.SaveChangesAsync(cancellationToken);
         return true;
     }
@@ -300,7 +333,7 @@ public sealed class PrintTemplateService : IPrintTemplateService
         var document = Deserialize(editable.TemplateJson);
         return new PrintTemplateValidationResultDto
         {
-            Errors = (await ValidateDocumentForProcessAsync(template.ProcessId, document, cancellationToken)).ToList()
+            Errors = (await ValidateDocumentForProcessAsync(template.RefRecId, document, cancellationToken)).ToList()
         };
     }
 
@@ -326,24 +359,29 @@ public sealed class PrintTemplateService : IPrintTemplateService
         return errors;
     }
 
-    private IQueryable<WfPrintTemplate> TemplateQuery(bool asNoTracking)
+    private async Task<string> ProcessNameAsync(long processId, CancellationToken cancellationToken) =>
+        await _context.WfProcesses.AsNoTracking()
+            .Where(item => item.RecId == processId)
+            .Select(item => item.Name ?? item.Code ?? string.Empty)
+            .SingleOrDefaultAsync(cancellationToken) ?? string.Empty;
+
+    private IQueryable<ReportTemplate> TemplateQuery(bool asNoTracking)
     {
-        IQueryable<WfPrintTemplate> query = _context.WfPrintTemplates
-            .Include(item => item.Process)
+        IQueryable<ReportTemplate> query = _context.ReportTemplates
             .Include(item => item.CurrentVersion)
             .Include(item => item.Versions);
         return asNoTracking ? query.AsNoTracking() : query;
     }
 
-    private async Task<bool> CodeExistsAsync(long processId, string code, long? exceptId, CancellationToken cancellationToken) =>
-        await _context.WfPrintTemplates.AsNoTracking().AnyAsync(
-            item => item.ProcessId == processId && item.Code == code.Trim() && (!exceptId.HasValue || item.RecId != exceptId.Value),
+    private async Task<bool> CodeExistsAsync(int refTableId, long refRecId, string code, long? exceptId, CancellationToken cancellationToken) =>
+        await _context.ReportTemplates.AsNoTracking().AnyAsync(
+            item => item.RefTableId == refTableId && item.RefRecId == refRecId && item.Code == code.Trim() && (!exceptId.HasValue || item.RecId != exceptId.Value),
             cancellationToken);
 
-    private async Task ClearOtherDefaultsAsync(long processId, long? exceptId, CancellationToken cancellationToken)
+    private async Task ClearOtherDefaultsAsync(int refTableId, long refRecId, long? exceptId, CancellationToken cancellationToken)
     {
-        var defaults = await _context.WfPrintTemplates
-            .Where(item => item.ProcessId == processId && item.IsDefault && (!exceptId.HasValue || item.RecId != exceptId.Value))
+        var defaults = await _context.ReportTemplates
+            .Where(item => item.RefTableId == refTableId && item.RefRecId == refRecId && item.IsDefault && (!exceptId.HasValue || item.RecId != exceptId.Value))
             .ToListAsync(cancellationToken);
         foreach (var item in defaults) item.IsDefault = false;
     }
@@ -359,17 +397,18 @@ public sealed class PrintTemplateService : IPrintTemplateService
         });
     }
 
-    private static WfPrintTemplateVersion EditableVersion(WfPrintTemplate template) =>
+    private static ReportTemplateVersion EditableVersion(ReportTemplate template) =>
         template.Versions.OrderByDescending(item => !item.IsPublished).ThenByDescending(item => item.VersionNo).First();
 
-    private static PrintTemplateDto Map(WfPrintTemplate template)
+    private static PrintTemplateDto Map(ReportTemplate template)
     {
         var editable = EditableVersion(template);
         return new PrintTemplateDto
         {
             TemplateId = template.RecId,
-            ProcessId = template.ProcessId,
-            ProcessName = template.Process.Name ?? template.Process.Code ?? string.Empty,
+            RefTableId = template.RefTableId,
+            RefRecId = template.RefRecId,
+            ProcessId = template.RefRecId,
             Code = template.Code ?? string.Empty,
             Name = template.Name ?? string.Empty,
             NameAlias = template.NameAlias,

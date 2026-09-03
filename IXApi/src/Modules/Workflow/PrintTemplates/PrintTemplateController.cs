@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace IAX.IXApi.Modules.Workflow.PrintTemplates;
 
 [ApiController]
+[Route("api/v1/report-templates")]
 [Route("api/v1/print-templates")]
 public sealed class PrintTemplateController : ControllerBase
 {
@@ -13,6 +14,40 @@ public sealed class PrintTemplateController : ControllerBase
     public PrintTemplateController(IPrintTemplateService service)
     {
         _service = service;
+    }
+
+    [HttpGet("record/{refTableId:int}/{refRecId:long}")]
+    [DomainPermission("Workflow", "PrintTemplates", "View")]
+    public async Task<ActionResult<APIResponse<IReadOnlyList<PrintTemplateSummaryDto>>>> ListByRecord(
+        int refTableId,
+        long refRecId,
+        CancellationToken cancellationToken)
+    {
+        var templates = await _service.ListByRecordAsync(refTableId, refRecId, cancellationToken);
+        return Ok(APIResponse<IReadOnlyList<PrintTemplateSummaryDto>>.Ok(templates));
+    }
+
+    [HttpGet("record/{refTableId:int}/{refRecId:long}/published")]
+    public async Task<ActionResult<APIResponse<IReadOnlyList<PrintTemplateSummaryDto>>>> ListPublishedByRecord(
+        int refTableId,
+        long refRecId,
+        CancellationToken cancellationToken)
+    {
+        var templates = await _service.ListPublishedByRecordAsync(refTableId, refRecId, cancellationToken);
+        return Ok(APIResponse<IReadOnlyList<PrintTemplateSummaryDto>>.Ok(templates));
+    }
+
+    [HttpGet("record/{refTableId:int}/{refRecId:long}/template/{templateId:long}/published")]
+    public async Task<ActionResult<APIResponse<PublishedPrintTemplateDto>>> GetPublishedForRecord(
+        int refTableId,
+        long refRecId,
+        long templateId,
+        CancellationToken cancellationToken)
+    {
+        var template = await _service.GetPublishedForRecordAsync(refTableId, refRecId, templateId, cancellationToken);
+        return template == null
+            ? NotFound(APIResponse<PublishedPrintTemplateDto>.Fail("No active published template was found for this record."))
+            : Ok(APIResponse<PublishedPrintTemplateDto>.Ok(template));
     }
 
     [HttpGet("process/{processId:long}")]

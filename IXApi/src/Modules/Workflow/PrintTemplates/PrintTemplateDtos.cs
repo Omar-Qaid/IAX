@@ -1,8 +1,13 @@
+using IAX.IXApi.Shared.Domain.Reporting;
+
 namespace IAX.IXApi.Modules.Workflow.PrintTemplates;
 
 public class PrintTemplateSummaryDto
 {
     public long TemplateId { get; set; }
+    public int RefTableId { get; set; }
+    public long RefRecId { get; set; }
+    // Compatibility fields retained for existing Workflow clients.
     public long ProcessId { get; set; }
     public string ProcessName { get; set; } = string.Empty;
     public string Code { get; set; } = string.Empty;
@@ -13,7 +18,7 @@ public class PrintTemplateSummaryDto
     public string Orientation { get; set; } = "portrait";
     public string Language { get; set; } = "en";
     public bool IsDefault { get; set; }
-    public WfPrintTemplateStatus Status { get; set; }
+    public ReportTemplateStatus Status { get; set; }
     public long? CurrentVersionId { get; set; }
     public int? CurrentVersionNo { get; set; }
     public int LatestVersionNo { get; set; }
@@ -50,7 +55,9 @@ public sealed class PrintTemplateVersionDto
 
 public sealed class CreatePrintTemplateDto
 {
-    public long ProcessId { get; set; }
+    public int RefTableId { get; set; }
+    public long RefRecId { get; set; }
+    public long? ProcessId { get; set; }
     public string Code { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string? NameAlias { get; set; }

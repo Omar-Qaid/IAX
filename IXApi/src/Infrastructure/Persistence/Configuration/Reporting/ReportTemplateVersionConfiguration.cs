@@ -1,13 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace IAX.IXApi.Modules.Workflow.PrintTemplates;
+using IAX.IXApi.Shared.Domain.Reporting;
 
-public sealed class WfPrintTemplateVersionConfiguration : IEntityTypeConfiguration<WfPrintTemplateVersion>
+namespace IAX.IXApi.Infrastructure.Persistence.Configuration.Reporting;
+
+public sealed class ReportTemplateVersionConfiguration : IEntityTypeConfiguration<ReportTemplateVersion>
 {
-    public void Configure(EntityTypeBuilder<WfPrintTemplateVersion> builder)
+    public void Configure(EntityTypeBuilder<ReportTemplateVersion> builder)
     {
-        builder.ToTable("WfPrintTemplateVersions");
+        builder.ToTable("ReportTemplateVersions");
         builder.Property(item => item.RecId).HasColumnName("TemplateVersionId");
         builder.Property(item => item.TemplateJson).HasColumnType("nvarchar(max)").IsRequired();
         builder.Property(item => item.PublishedBy).HasMaxLength(450);

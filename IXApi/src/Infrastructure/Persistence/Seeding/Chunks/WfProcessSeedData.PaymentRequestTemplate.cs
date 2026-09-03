@@ -3,6 +3,7 @@ using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Modules.Workflow.Activities;
 using IAX.IXApi.Modules.Workflow.Performers;
 using IAX.IXApi.Modules.Workflow.PrintTemplates;
+using IAX.IXApi.Shared.Domain.Reporting;
 using IAX.IXApi.Modules.Workflow.Processes;
 using IAX.IXApi.Modules.Workflow.Requests;
 using IAX.IXApi.Modules.Workflow.Steps;
@@ -272,17 +273,18 @@ public sealed partial class WfProcessSeedData
         string owner,
         CancellationToken ct)
     {
-        var template = await db.WfPrintTemplates.IgnoreQueryFilters()
+        var template = await db.ReportTemplates.IgnoreQueryFilters()
             .SingleOrDefaultAsync(
-                x => x.ProcessId == process.RecId && x.Code == PaymentPrintTemplateCode,
+                x => x.RefTableId == PrintTemplateService.WorkflowProcessTableId && x.RefRecId == process.RecId && x.Code == PaymentPrintTemplateCode,
                 ct);
         if (template is null)
         {
-            var hasDefault = await db.WfPrintTemplates.IgnoreQueryFilters()
-                .AnyAsync(x => x.ProcessId == process.RecId && x.IsDefault && x.IsActive && !x.IsDeleted, ct);
-            template = new WfPrintTemplate
+            var hasDefault = await db.ReportTemplates.IgnoreQueryFilters()
+                .AnyAsync(x => x.RefTableId == PrintTemplateService.WorkflowProcessTableId && x.RefRecId == process.RecId && x.IsDefault && x.IsActive && !x.IsDeleted, ct);
+            template = new ReportTemplate
             {
-                ProcessId = process.RecId,
+                RefTableId = PrintTemplateService.WorkflowProcessTableId,
+                RefRecId = process.RecId,
                 Code = PaymentPrintTemplateCode,
                 Name = "Payment Request Form",
                 NameAlias = "نموذج طلب الصرف",
@@ -291,12 +293,12 @@ public sealed partial class WfProcessSeedData
                 Orientation = "portrait",
                 Language = "ar",
                 IsDefault = !hasDefault,
-                Status = WfPrintTemplateStatus.Published,
+                Status = ReportTemplateStatus.Published,
                 IsActive = true,
                 CreatedBy = owner,
                 OwnerAccountId = owner,
             };
-            db.WfPrintTemplates.Add(template);
+            db.ReportTemplates.Add(template);
             await db.SaveChangesAsync(ct);
         }
 
@@ -306,7 +308,7 @@ public sealed partial class WfProcessSeedData
         template.PageSize = "A4";
         template.Orientation = "portrait";
         template.Language = "ar";
-        template.Status = WfPrintTemplateStatus.Published;
+        template.Status = ReportTemplateStatus.Published;
         template.IsActive = true;
         template.IsDeleted = false;
 
@@ -317,14 +319,14 @@ public sealed partial class WfProcessSeedData
                 $"Invalid print template '{PaymentPrintTemplateCode}': {string.Join("; ", validationErrors)}");
 
         var json = JsonSerializer.Serialize(document, new JsonSerializerOptions(JsonSerializerDefaults.Web));
-        var versions = await db.WfPrintTemplateVersions.IgnoreQueryFilters()
+        var versions = await db.ReportTemplateVersions.IgnoreQueryFilters()
             .Where(x => x.TemplateId == template.RecId)
             .OrderByDescending(x => x.VersionNo)
             .ToListAsync(ct);
         var version = versions.FirstOrDefault(x => x.TemplateJson == json);
         if (version is null)
         {
-            version = new WfPrintTemplateVersion
+            version = new ReportTemplateVersion
             {
                 TemplateId = template.RecId,
                 VersionNo = (versions.FirstOrDefault()?.VersionNo ?? 0) + 1,
@@ -335,7 +337,7 @@ public sealed partial class WfProcessSeedData
                 CreatedBy = owner,
                 OwnerAccountId = owner,
             };
-            db.WfPrintTemplateVersions.Add(version);
+            db.ReportTemplateVersions.Add(version);
             await db.SaveChangesAsync(ct);
         }
 

@@ -1,20 +1,19 @@
-using IAX.IXApi.Modules.Workflow.Requests;
 using IAX.IXApi.Shared.Domain.Entities;
 
-namespace IAX.IXApi.Modules.Workflow.PrintTemplates;
+namespace IAX.IXApi.Shared.Domain.Reporting;
 
-public sealed class WfRequestPrintVersion : Entity<long>
+public sealed class ReportEntityVersion : Entity<long>
 {
     [System.ComponentModel.DataAnnotations.StringLength(255)]
     public string? Name { get; set; }
     [System.ComponentModel.DataAnnotations.StringLength(255)]
     public string? NameAlias { get; set; }
-    public long RequestId { get; set; }
-    public WfRequest Request { get; set; } = null!;
+    public int RefTableId { get; set; }
+    public long RefRecId { get; set; }
     public long TemplateId { get; set; }
-    public WfPrintTemplate Template { get; set; } = null!;
+    public ReportTemplate Template { get; set; } = null!;
     public long TemplateVersionId { get; set; }
-    public WfPrintTemplateVersion TemplateVersion { get; set; } = null!;
+    public ReportTemplateVersion TemplateVersion { get; set; } = null!;
     public DateTime SelectedAt { get; set; }
     public string SelectedBy { get; set; } = string.Empty;
 }

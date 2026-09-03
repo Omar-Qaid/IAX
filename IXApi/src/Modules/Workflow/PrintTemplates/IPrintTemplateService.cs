@@ -2,6 +2,9 @@ namespace IAX.IXApi.Modules.Workflow.PrintTemplates;
 
 public interface IPrintTemplateService
 {
+    Task<IReadOnlyList<PrintTemplateSummaryDto>> ListByRecordAsync(int refTableId, long refRecId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<PrintTemplateSummaryDto>> ListPublishedByRecordAsync(int refTableId, long refRecId, CancellationToken cancellationToken = default);
+    Task<PublishedPrintTemplateDto?> GetPublishedForRecordAsync(int refTableId, long refRecId, long templateId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<PrintTemplateSummaryDto>> ListByProcessAsync(long processId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<PrintTemplateSummaryDto>> ListPublishedByProcessAsync(long processId, CancellationToken cancellationToken = default);
     Task<PrintTemplateDto?> GetAsync(long templateId, CancellationToken cancellationToken = default);

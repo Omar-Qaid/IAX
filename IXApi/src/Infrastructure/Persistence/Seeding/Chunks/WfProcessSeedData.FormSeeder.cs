@@ -3,6 +3,7 @@ using IAX.IXApi.Modules.Workflow.Activities;
 using IAX.IXApi.Modules.Workflow.Performers;
 using IAX.IXApi.Modules.Workflow.Processes;
 using IAX.IXApi.Modules.Workflow.PrintTemplates;
+using IAX.IXApi.Shared.Domain.Reporting;
 using IAX.IXApi.Modules.Workflow.Requests;
 using IAX.IXApi.Modules.Workflow.Steps;
 using Microsoft.EntityFrameworkCore;
@@ -298,17 +299,18 @@ public sealed partial class WfProcessSeedData
         string owner,
         CancellationToken ct)
     {
-        var template = await db.WfPrintTemplates.IgnoreQueryFilters()
+        var template = await db.ReportTemplates.IgnoreQueryFilters()
             .SingleOrDefaultAsync(
-                x => x.ProcessId == process.RecId && x.Code == definition.PrintTemplateCode,
+                x => x.RefTableId == PrintTemplateService.WorkflowProcessTableId && x.RefRecId == process.RecId && x.Code == definition.PrintTemplateCode,
                 ct);
         if (template is null)
         {
-            var hasDefault = await db.WfPrintTemplates.IgnoreQueryFilters()
-                .AnyAsync(x => x.ProcessId == process.RecId && x.IsDefault && x.IsActive && !x.IsDeleted, ct);
-            template = new WfPrintTemplate
+            var hasDefault = await db.ReportTemplates.IgnoreQueryFilters()
+                .AnyAsync(x => x.RefTableId == PrintTemplateService.WorkflowProcessTableId && x.RefRecId == process.RecId && x.IsDefault && x.IsActive && !x.IsDeleted, ct);
+            template = new ReportTemplate
             {
-                ProcessId = process.RecId,
+                RefTableId = PrintTemplateService.WorkflowProcessTableId,
+                RefRecId = process.RecId,
                 Code = definition.PrintTemplateCode,
                 Name = definition.Name,
                 NameAlias = definition.NameAlias,
@@ -317,12 +319,12 @@ public sealed partial class WfProcessSeedData
                 Orientation = "portrait",
                 Language = "ar",
                 IsDefault = !hasDefault,
-                Status = WfPrintTemplateStatus.Published,
+                Status = ReportTemplateStatus.Published,
                 IsActive = true,
                 CreatedBy = owner,
                 OwnerAccountId = owner,
             };
-            db.WfPrintTemplates.Add(template);
+            db.ReportTemplates.Add(template);
             await db.SaveChangesAsync(ct);
         }
 
@@ -330,7 +332,7 @@ public sealed partial class WfProcessSeedData
         template.NameAlias = definition.NameAlias;
         template.Description = definition.Description;
 
-        var version = await db.WfPrintTemplateVersions.IgnoreQueryFilters()
+        var version = await db.ReportTemplateVersions.IgnoreQueryFilters()
             .SingleOrDefaultAsync(x => x.TemplateId == template.RecId && x.VersionNo == 1, ct);
         if (version is null)
         {
@@ -340,7 +342,7 @@ public sealed partial class WfProcessSeedData
                 throw new InvalidOperationException(
                     $"Invalid print template '{definition.PrintTemplateCode}': {string.Join("; ", validationErrors)}");
 
-            version = new WfPrintTemplateVersion
+            version = new ReportTemplateVersion
             {
                 TemplateId = template.RecId,
                 VersionNo = 1,
@@ -351,17 +353,17 @@ public sealed partial class WfProcessSeedData
                 CreatedBy = owner,
                 OwnerAccountId = owner,
             };
-            db.WfPrintTemplateVersions.Add(version);
+            db.ReportTemplateVersions.Add(version);
             await db.SaveChangesAsync(ct);
         }
 
         if (template.CurrentVersionId != version.RecId
-            || template.Status != WfPrintTemplateStatus.Published
+            || template.Status != ReportTemplateStatus.Published
             || !template.IsActive
             || template.IsDeleted)
         {
             template.CurrentVersionId = version.RecId;
-            template.Status = WfPrintTemplateStatus.Published;
+            template.Status = ReportTemplateStatus.Published;
             template.IsActive = true;
             template.IsDeleted = false;
         }
