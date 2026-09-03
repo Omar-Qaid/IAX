@@ -10,7 +10,7 @@ import { WorkflowReportDesignerListPage as ReportDesignerListPage } from '@modul
 import {
   createEmptyPrintTemplateDocument,
   type ReportDesignerSummary,
-} from '@modules/workflow/report-designer/types/reportDesigner.types';
+} from '@shared/components/report-designer';
 
 const process: WfProcessRecord = {
   id: '589',

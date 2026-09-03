@@ -28,7 +28,7 @@ import { MailFieldValue } from '../components/MailFieldValue';
 import { WorkflowMailReportViewerViewer } from '../report-viewer/pages/WorkflowMailReportViewerPage';
 import { WorkflowOfficialFormViewer } from '../report-viewer/pages/WorkflowOfficialFormViewerPage';
 import { reportDesignerApi } from '@shared/components/report-designer';
-import type { ReportDesignerSummary } from '../template/types/reportDesigner.types';
+import type { ReportDesignerSummary } from '@shared/components/report-designer';
 import { selectPublishedTemplates } from '@shared/components/report-viewer';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import type { TFunction } from 'i18next';

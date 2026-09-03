@@ -46,7 +46,7 @@ import type {
   PrintTemplateDocument,
   PrintTemplateElement,
   PrintElementStyle,
-} from '../types/reportDesigner.types';
+} from '@shared/components/report-designer';
 
 interface Props {
   processId: number;

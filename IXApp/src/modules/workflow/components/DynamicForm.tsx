@@ -16,7 +16,7 @@ import { DynamicControlRenderer, readMultiValue } from './DynamicControlRenderer
 import { readFileMetadata } from './DynamicSpecialControls';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { ReportTemplateRenderer, requestControlTemplateBindings, type runtimeReportData } from '@shared/components/report-viewer';
-import type { PrintTemplateDocument, PrintFieldBinding } from '../template/types/reportDesigner.types';
+import type { PrintTemplateDocument, PrintFieldBinding } from '@shared/components/report-designer';
 import type { reportCompany } from '@shared/components/report-viewer/ReportViewerDocument';
 
 type Values = Record<number, string>;

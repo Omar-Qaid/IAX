@@ -7,7 +7,7 @@ import {
   isControlTypeCompatible,
   WorkflowReportDesigner,
 } from '@modules/workflow/report-designer/components/WorkflowReportDesigner';
-import { createEmptyPrintTemplateDocument } from '@modules/workflow/report-designer/types/reportDesigner.types';
+import { createEmptyPrintTemplateDocument } from '@shared/components/report-designer';
 
 vi.mock('@modules/workflow/api/dynamicRequestFormApi', () => ({
   dynamicRequestFormApi: {

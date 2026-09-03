@@ -32,7 +32,7 @@ import {
   type PrintTemplateLanguage,
   type ReportDesignerSummary,
   type SavePrintTemplateInput,
-} from '../types/reportDesigner.types';
+} from '@shared/components/report-designer';
 
 type ConfirmAction = 'publish' | 'archive' | 'delete' | null;
 type PrintTemplateRow = ReportDesignerSummary & { id: string };
