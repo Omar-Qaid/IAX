@@ -4870,11 +4870,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     AssignmentID = table.Column<long>(type: "bigint", nullable: false),
                     ControlId = table.Column<byte>(type: "tinyint", nullable: false),
                     ControlDataId = table.Column<long>(type: "bigint", nullable: false),
-                    ControlLabel = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    ControlLabelAR = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     ControlValue = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    ControlValueAR = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    ControlValueEN = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     UsedAsCriteria = table.Column<bool>(type: "bit", nullable: false),
                     ControlOrder = table.Column<byte>(type: "tinyint", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -4912,7 +4908,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
                     Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NameAlias = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -4939,7 +4936,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
                     Code = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NameAlias = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -4966,7 +4964,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
                     Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NameAlias = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -4992,7 +4991,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
                     Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NameAlias = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -5018,7 +5018,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
                     Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NameAlias = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -5031,6 +5032,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 {
                     RECID = table.Column<short>(type: "smallint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    NameAlias = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     SortOrder = table.Column<byte>(type: "tinyint", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -5069,7 +5071,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
                     Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NameAlias = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -5094,7 +5097,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
                     Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NameAlias = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -5111,11 +5115,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     RequestId = table.Column<long>(type: "bigint", nullable: false),
                     ControlId = table.Column<byte>(type: "tinyint", nullable: true),
                     ControlDataId = table.Column<long>(type: "bigint", nullable: true),
-                    ControlLabel = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    ControlLabelAR = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     ControlValue = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    ControlValueAR = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    ControlValueEN = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     UsedAsCriteria = table.Column<bool>(type: "bit", nullable: false),
                     SortOrder = table.Column<byte>(type: "tinyint", nullable: false),
                     Score = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
@@ -5966,7 +5966,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
                     Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NameAlias = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -6364,6 +6365,13 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     SortOrder = table.Column<byte>(type: "tinyint", nullable: false),
                     ValidationRules = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ExtendedProperties = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CanFilter = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    CanGroup = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    CanSort = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    ReferenceType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    FieldRole = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false, defaultValue: "Dimension"),
+                    DataType = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false, defaultValue: "String"),
+                    DefaultAggregation = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false, defaultValue: "NONE"),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -6376,11 +6384,16 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
                     Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NameAlias = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_WfRequestControls", x => x.RequestControlId);
+                    table.CheckConstraint("CK_WfRequestControls_DataType", "[DataType] IN (N'String',N'Integer',N'Decimal',N'Date',N'DateTime',N'Time',N'Boolean')");
+                    table.CheckConstraint("CK_WfRequestControls_DefaultAggregation", "[DefaultAggregation] IN (N'NONE',N'SUM',N'COUNT',N'COUNT_DISTINCT',N'AVG',N'MIN',N'MAX')");
+                    table.CheckConstraint("CK_WfRequestControls_FieldRole", "[FieldRole] IN (N'Dimension',N'Measure',N'Both')");
+                    table.CheckConstraint("CK_WfRequestControls_ReferenceType", "[ReferenceType] IS NULL OR [ReferenceType] IN (N'Lookup',N'Employee',N'Showroom',N'Branch',N'Company',N'Department',N'BusinessUnit',N'Area',N'City',N'Country',N'Location',N'Customer',N'Vendor',N'Item',N'ItemGroup',N'Category',N'Warehouse',N'PaymentMethod',N'ViolationType',N'Invoice',N'PurchaseOrder',N'SalesOrder',N'Process',N'User')");
                     table.ForeignKey(
                         name: "FK_WfRequestControls_WfControls_ControlId",
                         column: x => x.ControlId,
@@ -6419,7 +6432,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
                     Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NameAlias = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -6453,7 +6467,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
                     Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NameAlias = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -6819,6 +6834,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     RequestControlId = table.Column<long>(type: "bigint", nullable: false),
                     Value = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
                     Name = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    NameAlias = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     Score = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
                     SortOrder = table.Column<int>(type: "int", nullable: false),
                     ExtendedProperties = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -6857,6 +6873,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     Value = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
                     MaskInput = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
                     ErrorMessage = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
+                    ErrorMessageAlias = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
                     Severity = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     SortOrder = table.Column<int>(type: "int", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -6914,7 +6931,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
                     Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NameAlias = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -7163,7 +7181,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
                     Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NameAlias = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -7357,6 +7376,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     ActivityControlId = table.Column<long>(type: "bigint", nullable: false),
                     Value = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
                     Name = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    NameAlias = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     SortOrder = table.Column<int>(type: "int", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -7386,6 +7406,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 {
                     ValidationId = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    NameAlias = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     ActivityControlId = table.Column<long>(type: "bigint", nullable: false),
                     ValidationType = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     ValidationExpression = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
@@ -8211,12 +8232,44 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "WfPrintTemplates",
+                name: "ReportEntityVersions",
+                columns: table => new
+                {
+                    ReportEntityVersionId = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    NameAlias = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    RefTableId = table.Column<int>(type: "int", nullable: false),
+                    RefRecId = table.Column<long>(type: "bigint", nullable: false),
+                    TemplateId = table.Column<long>(type: "bigint", nullable: false),
+                    TemplateVersionId = table.Column<long>(type: "bigint", nullable: false),
+                    SelectedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    SelectedBy = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    RecVersion = table.Column<int>(type: "int", nullable: false),
+                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ReportEntityVersions", x => x.ReportEntityVersionId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ReportTemplates",
                 columns: table => new
                 {
                     TemplateId = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ProcessId = table.Column<long>(type: "bigint", nullable: false),
+                    NameAlias = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    RefTableId = table.Column<int>(type: "int", nullable: false),
+                    RefRecId = table.Column<long>(type: "bigint", nullable: false),
                     PageSize = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     Orientation = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     Language = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
@@ -8239,17 +8292,11 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_WfPrintTemplates", x => x.TemplateId);
-                    table.ForeignKey(
-                        name: "FK_WfPrintTemplates_WfProcesses_ProcessId",
-                        column: x => x.ProcessId,
-                        principalTable: "WfProcesses",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
+                    table.PrimaryKey("PK_ReportTemplates", x => x.TemplateId);
                 });
 
             migrationBuilder.CreateTable(
-                name: "WfPrintTemplateVersions",
+                name: "ReportTemplateVersions",
                 columns: table => new
                 {
                     TemplateVersionId = table.Column<long>(type: "bigint", nullable: false)
@@ -8273,69 +8320,24 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_WfPrintTemplateVersions", x => x.TemplateVersionId);
+                    table.PrimaryKey("PK_ReportTemplateVersions", x => x.TemplateVersionId);
                     table.ForeignKey(
-                        name: "FK_WfPrintTemplateVersions_WfPrintTemplates_TemplateId",
+                        name: "FK_ReportTemplateVersions_ReportTemplates_TemplateId",
                         column: x => x.TemplateId,
-                        principalTable: "WfPrintTemplates",
+                        principalTable: "ReportTemplates",
                         principalColumn: "TemplateId",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "WfRequestPrintVersions",
-                columns: table => new
-                {
-                    RequestPrintVersionId = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    RequestId = table.Column<long>(type: "bigint", nullable: false),
-                    TemplateId = table.Column<long>(type: "bigint", nullable: false),
-                    TemplateVersionId = table.Column<long>(type: "bigint", nullable: false),
-                    SelectedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    SelectedBy = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    RecVersion = table.Column<int>(type: "int", nullable: false),
-                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_WfRequestPrintVersions", x => x.RequestPrintVersionId);
-                    table.ForeignKey(
-                        name: "FK_WfRequestPrintVersions_WfPrintTemplateVersions_TemplateVersionId",
-                        column: x => x.TemplateVersionId,
-                        principalTable: "WfPrintTemplateVersions",
-                        principalColumn: "TemplateVersionId",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_WfRequestPrintVersions_WfPrintTemplates_TemplateId",
-                        column: x => x.TemplateId,
-                        principalTable: "WfPrintTemplates",
-                        principalColumn: "TemplateId",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_WfRequestPrintVersions_WfRequests_RequestId",
-                        column: x => x.RequestId,
-                        principalTable: "WfRequests",
-                        principalColumn: "RECID",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.InsertData(
                 table: "WfDataTypes",
-                columns: new[] { "RECID", "Code", "CreatedAt", "CreatedBy", "DataAreaId", "Description", "IsActive", "IsDeleted", "LastModifiedAt", "LastModifiedBy", "Name", "OwnerAccountId", "RecVersion", "SortOrder" },
+                columns: new[] { "RECID", "Code", "CreatedAt", "CreatedBy", "DataAreaId", "Description", "IsActive", "IsDeleted", "LastModifiedAt", "LastModifiedBy", "Name", "NameAlias", "OwnerAccountId", "RecVersion", "SortOrder" },
                 values: new object[,]
                 {
-                    { (byte)1, "STR", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "dat", null, true, false, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "String", null, 1, (byte)1 },
-                    { (byte)2, "NUM", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "dat", null, true, false, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "Number", null, 1, (byte)2 },
-                    { (byte)3, "BOOL", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "dat", null, true, false, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "Boolean", null, 1, (byte)3 },
-                    { (byte)4, "DATE", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "dat", null, true, false, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "Date", null, 1, (byte)4 }
+                    { (byte)1, "STR", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "dat", null, true, false, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "String", null, null, 1, (byte)1 },
+                    { (byte)2, "NUM", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "dat", null, true, false, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "Number", null, null, 1, (byte)2 },
+                    { (byte)3, "BOOL", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "dat", null, true, false, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "Boolean", null, null, 1, (byte)3 },
+                    { (byte)4, "DATE", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "dat", null, true, false, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), null, "Date", null, null, 1, (byte)4 }
                 });
 
             migrationBuilder.CreateIndex(
@@ -9023,6 +9025,51 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 column: "Name");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ReportEntityVersions_DataAreaId_RefTableId_RefRecId_TemplateId",
+                table: "ReportEntityVersions",
+                columns: new[] { "DataAreaId", "RefTableId", "RefRecId", "TemplateId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ReportEntityVersions_TemplateId",
+                table: "ReportEntityVersions",
+                column: "TemplateId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ReportEntityVersions_TemplateVersionId",
+                table: "ReportEntityVersions",
+                column: "TemplateVersionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ReportTemplates_CurrentVersionId",
+                table: "ReportTemplates",
+                column: "CurrentVersionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ReportTemplates_DataAreaId_RefTableId_RefRecId_Code",
+                table: "ReportTemplates",
+                columns: new[] { "DataAreaId", "RefTableId", "RefRecId", "Code" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ReportTemplates_DataAreaId_RefTableId_RefRecId_IsDefault",
+                table: "ReportTemplates",
+                columns: new[] { "DataAreaId", "RefTableId", "RefRecId", "IsDefault" },
+                unique: true,
+                filter: "[IsDefault] = 1 AND [IsDeleted] = 0 AND [IsActive] = 1");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ReportTemplateVersions_DataAreaId_TemplateId_VersionNo",
+                table: "ReportTemplateVersions",
+                columns: new[] { "DataAreaId", "TemplateId", "VersionNo" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ReportTemplateVersions_TemplateId",
+                table: "ReportTemplateVersions",
+                column: "TemplateId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_SalesPool_DataAreaId_RECID",
                 table: "SalesPool",
                 columns: new[] { "DataAreaId", "RECID" },
@@ -9401,40 +9448,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 column: "PerformerType");
 
             migrationBuilder.CreateIndex(
-                name: "IX_WfPrintTemplates_CurrentVersionId",
-                table: "WfPrintTemplates",
-                column: "CurrentVersionId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_WfPrintTemplates_DataAreaId_ProcessId_Code",
-                table: "WfPrintTemplates",
-                columns: new[] { "DataAreaId", "ProcessId", "Code" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_WfPrintTemplates_DataAreaId_ProcessId_IsDefault",
-                table: "WfPrintTemplates",
-                columns: new[] { "DataAreaId", "ProcessId", "IsDefault" },
-                unique: true,
-                filter: "[IsDefault] = 1 AND [IsDeleted] = 0 AND [IsActive] = 1");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_WfPrintTemplates_ProcessId",
-                table: "WfPrintTemplates",
-                column: "ProcessId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_WfPrintTemplateVersions_DataAreaId_TemplateId_VersionNo",
-                table: "WfPrintTemplateVersions",
-                columns: new[] { "DataAreaId", "TemplateId", "VersionNo" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_WfPrintTemplateVersions_TemplateId",
-                table: "WfPrintTemplateVersions",
-                column: "TemplateId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_WfProcessData_AssignmentID",
                 table: "WfProcessData",
                 column: "AssignmentID");
@@ -9488,27 +9501,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 name: "IX_WfRequestMappingVariables_VariableID",
                 table: "WfRequestMappingVariables",
                 column: "VariableID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_WfRequestPrintVersions_DataAreaId_RequestId_TemplateId",
-                table: "WfRequestPrintVersions",
-                columns: new[] { "DataAreaId", "RequestId", "TemplateId" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_WfRequestPrintVersions_RequestId",
-                table: "WfRequestPrintVersions",
-                column: "RequestId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_WfRequestPrintVersions_TemplateId",
-                table: "WfRequestPrintVersions",
-                column: "TemplateId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_WfRequestPrintVersions_TemplateVersionId",
-                table: "WfRequestPrintVersions",
-                column: "TemplateVersionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_WfRequests_EmployeeId",
@@ -9684,10 +9676,26 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 onDelete: ReferentialAction.Restrict);
 
             migrationBuilder.AddForeignKey(
-                name: "FK_WfPrintTemplates_WfPrintTemplateVersions_CurrentVersionId",
-                table: "WfPrintTemplates",
+                name: "FK_ReportEntityVersions_ReportTemplateVersions_TemplateVersionId",
+                table: "ReportEntityVersions",
+                column: "TemplateVersionId",
+                principalTable: "ReportTemplateVersions",
+                principalColumn: "TemplateVersionId",
+                onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_ReportEntityVersions_ReportTemplates_TemplateId",
+                table: "ReportEntityVersions",
+                column: "TemplateId",
+                principalTable: "ReportTemplates",
+                principalColumn: "TemplateId",
+                onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_ReportTemplates_ReportTemplateVersions_CurrentVersionId",
+                table: "ReportTemplates",
                 column: "CurrentVersionId",
-                principalTable: "WfPrintTemplateVersions",
+                principalTable: "ReportTemplateVersions",
                 principalColumn: "TemplateVersionId",
                 onDelete: ReferentialAction.Restrict);
         }
@@ -9704,8 +9712,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 table: "LogisticsPostalAddress");
 
             migrationBuilder.DropForeignKey(
-                name: "FK_WfPrintTemplates_WfPrintTemplateVersions_CurrentVersionId",
-                table: "WfPrintTemplates");
+                name: "FK_ReportTemplates_ReportTemplateVersions_CurrentVersionId",
+                table: "ReportTemplates");
 
             migrationBuilder.DropTable(
                 name: "Announcements");
@@ -9906,6 +9914,9 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 name: "PaymSchedLine");
 
             migrationBuilder.DropTable(
+                name: "ReportEntityVersions");
+
+            migrationBuilder.DropTable(
                 name: "SalesLine");
 
             migrationBuilder.DropTable(
@@ -10018,9 +10029,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "WfRequestMappingVariables");
-
-            migrationBuilder.DropTable(
-                name: "WfRequestPrintVersions");
 
             migrationBuilder.DropTable(
                 name: "WfRequestVariables");
@@ -10170,6 +10178,9 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 name: "WfPerformerType");
 
             migrationBuilder.DropTable(
+                name: "WfProcesses");
+
+            migrationBuilder.DropTable(
                 name: "AspNetUsers");
 
             migrationBuilder.DropTable(
@@ -10186,6 +10197,12 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "PaymTerm");
+
+            migrationBuilder.DropTable(
+                name: "WfCategories");
+
+            migrationBuilder.DropTable(
+                name: "WfPriorities");
 
             migrationBuilder.DropTable(
                 name: "OrgEntities");
@@ -10224,19 +10241,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 name: "LogisticsAddressCountryRegion");
 
             migrationBuilder.DropTable(
-                name: "WfPrintTemplateVersions");
+                name: "ReportTemplateVersions");
 
             migrationBuilder.DropTable(
-                name: "WfPrintTemplates");
-
-            migrationBuilder.DropTable(
-                name: "WfProcesses");
-
-            migrationBuilder.DropTable(
-                name: "WfCategories");
-
-            migrationBuilder.DropTable(
-                name: "WfPriorities");
+                name: "ReportTemplates");
         }
     }
 }

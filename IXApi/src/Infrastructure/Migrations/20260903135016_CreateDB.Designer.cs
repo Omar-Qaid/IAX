@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace IAX.IXApi.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260901081007_UpdateWorkflowControlNamesAndDetails")]
-    partial class UpdateWorkflowControlNamesAndDetails
+    [Migration("20260903135016_CreateDB")]
+    partial class CreateDB
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -20930,268 +20930,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("WfUsersPerformers", (string)null);
                 });
 
-            modelBuilder.Entity("IAX.IXApi.Modules.Workflow.PrintTemplates.WfPrintTemplate", b =>
-                {
-                    b.Property<long>("RecId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("TemplateId");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<long?>("CurrentVersionId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("DataAreaId")
-                        .IsRequired()
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDefault")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Language")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<DateTime?>("LastModifiedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("LastModifiedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("NameAlias")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("Orientation")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("OwnerAccountId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PageSize")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<long>("ProcessId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("RecVersion")
-                        .HasColumnType("int");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<byte>("Status")
-                        .HasColumnType("tinyint");
-
-                    b.HasKey("RecId");
-
-                    b.HasIndex("CurrentVersionId");
-
-                    b.HasIndex("ProcessId");
-
-                    b.HasIndex("DataAreaId", "ProcessId", "Code")
-                        .IsUnique();
-
-                    b.HasIndex("DataAreaId", "ProcessId", "IsDefault")
-                        .IsUnique()
-                        .HasFilter("[IsDefault] = 1 AND [IsDeleted] = 0 AND [IsActive] = 1");
-
-                    b.ToTable("WfPrintTemplates", (string)null);
-                });
-
-            modelBuilder.Entity("IAX.IXApi.Modules.Workflow.PrintTemplates.WfPrintTemplateVersion", b =>
-                {
-                    b.Property<long>("RecId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("TemplateVersionId");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
-
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DataAreaId")
-                        .IsRequired()
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsPublished")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("LastModifiedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("LastModifiedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("OwnerAccountId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("PublishedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("PublishedBy")
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("RecVersion")
-                        .HasColumnType("int");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<long>("TemplateId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("TemplateJson")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("VersionNo")
-                        .HasColumnType("int");
-
-                    b.HasKey("RecId");
-
-                    b.HasIndex("TemplateId");
-
-                    b.HasIndex("DataAreaId", "TemplateId", "VersionNo")
-                        .IsUnique();
-
-                    b.ToTable("WfPrintTemplateVersions", (string)null);
-                });
-
-            modelBuilder.Entity("IAX.IXApi.Modules.Workflow.PrintTemplates.WfRequestPrintVersion", b =>
-                {
-                    b.Property<long>("RecId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("RequestPrintVersionId");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
-
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DataAreaId")
-                        .IsRequired()
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("LastModifiedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("LastModifiedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("NameAlias")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("OwnerAccountId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("RecVersion")
-                        .HasColumnType("int");
-
-                    b.Property<long>("RequestId")
-                        .HasColumnType("bigint");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<DateTime>("SelectedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("SelectedBy")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<long>("TemplateId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("TemplateVersionId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("RecId");
-
-                    b.HasIndex("RequestId");
-
-                    b.HasIndex("TemplateId");
-
-                    b.HasIndex("TemplateVersionId");
-
-                    b.HasIndex("DataAreaId", "RequestId", "TemplateId")
-                        .IsUnique();
-
-                    b.ToTable("WfRequestPrintVersions", (string)null);
-                });
-
             modelBuilder.Entity("IAX.IXApi.Modules.Workflow.Priorities.WfPriority", b =>
                 {
                     b.Property<byte>("RecId")
@@ -21700,6 +21438,21 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
 
+                    b.Property<bool>("CanFilter")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("CanGroup")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("CanSort")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
                     b.Property<string>("Code")
                         .HasColumnType("nvarchar(max)");
 
@@ -21717,11 +21470,32 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasMaxLength(4)
                         .HasColumnType("nvarchar(4)");
 
+                    b.Property<string>("DataType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("String");
+
+                    b.Property<string>("DefaultAggregation")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("NONE");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ExtendedProperties")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FieldRole")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Dimension");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -21751,6 +21525,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<int>("RecVersion")
                         .HasColumnType("int");
 
+                    b.Property<string>("ReferenceType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .IsRequired()
@@ -21773,7 +21551,16 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasIndex("ProcessId");
 
-                    b.ToTable("WfRequestControls", (string)null);
+                    b.ToTable("WfRequestControls", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_WfRequestControls_DataType", "[DataType] IN (N'String',N'Integer',N'Decimal',N'Date',N'DateTime',N'Time',N'Boolean')");
+
+                            t.HasCheckConstraint("CK_WfRequestControls_DefaultAggregation", "[DefaultAggregation] IN (N'NONE',N'SUM',N'COUNT',N'COUNT_DISTINCT',N'AVG',N'MIN',N'MAX')");
+
+                            t.HasCheckConstraint("CK_WfRequestControls_FieldRole", "[FieldRole] IN (N'Dimension',N'Measure',N'Both')");
+
+                            t.HasCheckConstraint("CK_WfRequestControls_ReferenceType", "[ReferenceType] IS NULL OR [ReferenceType] IN (N'Lookup',N'Employee',N'Showroom',N'Branch',N'Company',N'Department',N'BusinessUnit',N'Area',N'City',N'Country',N'Location',N'Customer',N'Vendor',N'Item',N'ItemGroup',N'Category',N'Warehouse',N'PaymentMethod',N'ViolationType',N'Invoice',N'PurchaseOrder',N'SalesOrder',N'Process',N'User')");
+                        });
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Workflow.Requests.WfRequestControlsOption", b =>
@@ -22593,6 +22380,270 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.HasDiscriminator<string>("PartyType").HasValue("OrganizationEntity");
 
                     b.UseTphMappingStrategy();
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Shared.Domain.Reporting.ReportEntityVersion", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("ReportEntityVersionId");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("NameAlias")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<long>("RefRecId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("RefTableId")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime>("SelectedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SelectedBy")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<long>("TemplateId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("TemplateVersionId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("TemplateId");
+
+                    b.HasIndex("TemplateVersionId");
+
+                    b.HasIndex("DataAreaId", "RefTableId", "RefRecId", "TemplateId")
+                        .IsUnique();
+
+                    b.ToTable("ReportEntityVersions", (string)null);
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Shared.Domain.Reporting.ReportTemplate", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("TemplateId");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long?>("CurrentVersionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("NameAlias")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Orientation")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PageSize")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<long>("RefRecId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("RefTableId")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("CurrentVersionId");
+
+                    b.HasIndex("DataAreaId", "RefTableId", "RefRecId", "Code")
+                        .IsUnique();
+
+                    b.HasIndex("DataAreaId", "RefTableId", "RefRecId", "IsDefault")
+                        .IsUnique()
+                        .HasFilter("[IsDefault] = 1 AND [IsDeleted] = 0 AND [IsActive] = 1");
+
+                    b.ToTable("ReportTemplates", (string)null);
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Shared.Domain.Reporting.ReportTemplateVersion", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("TemplateVersionId");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PublishedBy")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<long>("TemplateId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("TemplateJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("VersionNo")
+                        .HasColumnType("int");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("TemplateId");
+
+                    b.HasIndex("DataAreaId", "TemplateId", "VersionNo")
+                        .IsUnique();
+
+                    b.ToTable("ReportTemplateVersions", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Organization.Showrooms.Showroom", b =>
@@ -23771,62 +23822,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Navigation("Performer");
                 });
 
-            modelBuilder.Entity("IAX.IXApi.Modules.Workflow.PrintTemplates.WfPrintTemplate", b =>
-                {
-                    b.HasOne("IAX.IXApi.Modules.Workflow.PrintTemplates.WfPrintTemplateVersion", "CurrentVersion")
-                        .WithMany()
-                        .HasForeignKey("CurrentVersionId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("IAX.IXApi.Modules.Workflow.Processes.WfProcess", "Process")
-                        .WithMany()
-                        .HasForeignKey("ProcessId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("CurrentVersion");
-
-                    b.Navigation("Process");
-                });
-
-            modelBuilder.Entity("IAX.IXApi.Modules.Workflow.PrintTemplates.WfPrintTemplateVersion", b =>
-                {
-                    b.HasOne("IAX.IXApi.Modules.Workflow.PrintTemplates.WfPrintTemplate", "Template")
-                        .WithMany("Versions")
-                        .HasForeignKey("TemplateId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Template");
-                });
-
-            modelBuilder.Entity("IAX.IXApi.Modules.Workflow.PrintTemplates.WfRequestPrintVersion", b =>
-                {
-                    b.HasOne("IAX.IXApi.Modules.Workflow.Requests.WfRequest", "Request")
-                        .WithMany()
-                        .HasForeignKey("RequestId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("IAX.IXApi.Modules.Workflow.PrintTemplates.WfPrintTemplate", "Template")
-                        .WithMany()
-                        .HasForeignKey("TemplateId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("IAX.IXApi.Modules.Workflow.PrintTemplates.WfPrintTemplateVersion", "TemplateVersion")
-                        .WithMany()
-                        .HasForeignKey("TemplateVersionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Request");
-
-                    b.Navigation("Template");
-
-                    b.Navigation("TemplateVersion");
-                });
-
             modelBuilder.Entity("IAX.IXApi.Modules.Workflow.Processes.WfProcess", b =>
                 {
                     b.HasOne("IAX.IXApi.Modules.Workflow.Categories.WfCategory", "Category")
@@ -24058,6 +24053,46 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Navigation("Process");
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Shared.Domain.Reporting.ReportEntityVersion", b =>
+                {
+                    b.HasOne("IAX.IXApi.Shared.Domain.Reporting.ReportTemplate", "Template")
+                        .WithMany()
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("IAX.IXApi.Shared.Domain.Reporting.ReportTemplateVersion", "TemplateVersion")
+                        .WithMany()
+                        .HasForeignKey("TemplateVersionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Template");
+
+                    b.Navigation("TemplateVersion");
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Shared.Domain.Reporting.ReportTemplate", b =>
+                {
+                    b.HasOne("IAX.IXApi.Shared.Domain.Reporting.ReportTemplateVersion", "CurrentVersion")
+                        .WithMany()
+                        .HasForeignKey("CurrentVersionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CurrentVersion");
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Shared.Domain.Reporting.ReportTemplateVersion", b =>
+                {
+                    b.HasOne("IAX.IXApi.Shared.Domain.Reporting.ReportTemplate", "Template")
+                        .WithMany("Versions")
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Template");
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Organization.Showrooms.Showroom", b =>
                 {
                     b.HasOne("IAX.IXApi.Modules.Organization.Departments.Department", "Department")
@@ -24116,14 +24151,14 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Navigation("HcmWorkerGroupDetails");
                 });
 
-            modelBuilder.Entity("IAX.IXApi.Modules.Workflow.PrintTemplates.WfPrintTemplate", b =>
-                {
-                    b.Navigation("Versions");
-                });
-
             modelBuilder.Entity("IAX.IXApi.Modules.Workflow.Processes.WfProcess", b =>
                 {
                     b.Navigation("UsersProcesses");
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Shared.Domain.Reporting.ReportTemplate", b =>
+                {
+                    b.Navigation("Versions");
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Organization.Showrooms.Showroom", b =>
