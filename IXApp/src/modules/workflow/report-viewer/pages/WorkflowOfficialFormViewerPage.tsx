@@ -9,7 +9,6 @@ import {
   fetchreportCompany,
   toReportCompany,
 } from '@shared/components/report-viewer/reportCompany';
-import { recordTableId } from '@shared/components/documents';
 import { useNotifications } from '@shared/hooks/useNotifications';
 import { localizedName } from '@shared/utilities/localizedName';
 import { wfRequestApi, type WfRequestRecord } from '../../api/wfRequestApi';
@@ -46,12 +45,7 @@ export function WorkflowOfficialFormViewer({
   const publishedTemplate = useQuery({
     queryKey: ['workflow', 'official-form', requestId, templateId],
     queryFn: ({ signal }) =>
-      reportDesignerApi.getPublishedForRecord(
-        recordTableId('WfRequests'),
-        requestId,
-        templateId,
-        signal
-      ),
+      reportDesignerApi.getPublishedForRequest(requestId, templateId, signal),
     enabled: open && requestId > 0 && templateId > 0,
   });
 

@@ -89,16 +89,16 @@ var app = builder.Build();
 app.UseExceptionHandler();
 app.UseInfrastructureMiddleware();
 
-if (app.Environment.IsDevelopment())
+if (builder.Configuration.GetValue<bool>("ApiDocumentation:Enabled"))
 {
     app.MapOpenApi().AllowAnonymous();
     app.UseApiDocumentation();
 }
-else
+
+if (!app.Environment.IsDevelopment())
 {
     app.UseHsts();
 }
-
 app.UseCors(MyAllowSpecificOrigins);
 app.UseWebSockets();
 app.UseAuthentication();

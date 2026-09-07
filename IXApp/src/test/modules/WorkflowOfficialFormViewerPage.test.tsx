@@ -7,7 +7,9 @@ import { WorkflowOfficialFormViewer } from '@modules/workflow/report-viewer/page
 
 import { reportDesignerApi } from '@modules/workflow/report-designer/api/reportDesignerApi';
 
-vi.spyOn(reportDesignerApi, 'getPublishedForRecord').mockResolvedValue({
+const getPublishedForRequest = vi
+  .spyOn(reportDesignerApi, 'getPublishedForRequest')
+  .mockResolvedValue({
   templateId: 17,
   processId: 7,
   code: 'OFFICIAL',
@@ -33,7 +35,7 @@ vi.spyOn(reportDesignerApi, 'getPublishedForRecord').mockResolvedValue({
     footer: [],
     missingFieldBehavior: 'empty',
   },
-} as any);
+  } as any);
 
 vi.mock('@modules/workflow/api/wfRequestApi', () => ({
   wfRequestApi: {
@@ -111,6 +113,7 @@ describe('WorkflowOfficialFormViewer', () => {
       />
     );
     await waitFor(() => expect(screen.getByText('Approved official layout')).toBeInTheDocument());
+    expect(getPublishedForRequest).toHaveBeenCalledWith(42, 17, expect.any(AbortSignal));
     expect(screen.getByText('5239')).toBeInTheDocument();
     expect(screen.getByRole('region', { name: 'Official request form' })).toBeInTheDocument();
   });

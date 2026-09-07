@@ -3,6 +3,7 @@ import type {
   BuilderActivity,
   BuilderActivityAction,
   BuilderControl,
+  BuilderControlType,
   BuilderNode,
   BuilderStep,
   BuilderTransition,
@@ -14,6 +15,61 @@ import i18n from '@core/localization/i18n';
 const id = () => crypto.randomUUID();
 const sequenceControls = (controls: BuilderControl[]): BuilderControl[] =>
   controls.map((control, index) => ({ ...control, sortOrder: index + 1 }));
+
+type BuilderReportingMetadata = Pick<
+  BuilderControl,
+  | 'canFilter'
+  | 'canGroup'
+  | 'canSort'
+  | 'referenceType'
+  | 'fieldRole'
+  | 'dataType'
+  | 'defaultAggregation'
+>;
+
+export const reportingMetadataForControlType = (
+  type: BuilderControlType
+): BuilderReportingMetadata => {
+  const referenceTypes: Partial<Record<BuilderControlType, BuilderControl['referenceType']>> = {
+    'dropdown-db': 'Lookup',
+    'dropdown-manual': 'Lookup',
+    checkboxlist: 'Lookup',
+    radiobuttonlist: 'Lookup',
+    employeesearch: 'Employee',
+    employeeid: 'Employee',
+    showroom: 'Showroom',
+    location: 'Location',
+  };
+
+  if (type === 'digits') {
+    return {
+      dataType: 'Decimal',
+      referenceType: null,
+      fieldRole: 'Measure',
+      defaultAggregation: 'SUM',
+      canFilter: true,
+      canGroup: false,
+      canSort: true,
+    };
+  }
+
+  return {
+    dataType:
+      type === 'checkbox'
+        ? 'Boolean'
+        : type === 'date'
+          ? 'Date'
+          : type === 'time'
+            ? 'Time'
+            : 'String',
+    referenceType: referenceTypes[type] ?? null,
+    fieldRole: 'Dimension',
+    defaultAggregation: 'NONE',
+    canFilter: true,
+    canGroup: true,
+    canSort: true,
+  };
+};
 export const createProcessBuilderDocument = (builderId = 'new'): ProcessBuilderDocument => ({
   id: builderId,
   code: builderId === 'new' ? '' : `PB-${builderId}`,
@@ -572,13 +628,7 @@ export const useProcessBuilderStore = create<State>((set) => {
             visible: true,
             uniqueKey: false,
             usedAsCriteria: false,
-            canFilter: true,
-            canGroup: true,
-            canSort: true,
-            referenceType: null,
-            fieldRole: 'Dimension',
-            dataType: 'String',
-            defaultAggregation: 'NONE',
+            ...reportingMetadataForControlType(type),
             defaultValue: '',
             options: [],
             optionScores: [],
@@ -856,13 +906,7 @@ export const useProcessBuilderStore = create<State>((set) => {
                             visible: true,
                             uniqueKey: false,
                             usedAsCriteria: false,
-                            canFilter: true,
-                            canGroup: true,
-                            canSort: true,
-                            referenceType: null,
-                        fieldRole: 'Dimension',
-                        dataType: 'String',
-                        defaultAggregation: 'NONE',
+                            ...reportingMetadataForControlType(type),
                             defaultValue: '',
                             options: [],
                             validations: [],

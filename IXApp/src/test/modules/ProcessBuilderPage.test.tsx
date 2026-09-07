@@ -5,7 +5,11 @@ import { act, render, screen, waitFor } from '@test/testUtils';
 import { ProcessBuilderPage } from '@modules/process-builder/pages/ProcessBuilderPage';
 import { useProcessBuilderStore } from '@modules/process-builder/store/useProcessBuilderStore';
 import { createProcessBuilderDocument } from '@modules/process-builder/store/useProcessBuilderStore';
-import { normalizeTransitionValue, TransitionValueField } from '@modules/process-builder/components/TransitionValueField';
+import { reportingMetadataForControlType } from '@modules/process-builder/store/useProcessBuilderStore';
+import {
+  normalizeTransitionValue,
+  TransitionValueField,
+} from '@modules/process-builder/components/TransitionValueField';
 import i18n from '@core/localization/i18n';
 
 beforeEach(() => {
@@ -15,6 +19,63 @@ beforeEach(() => {
 });
 
 describe('standalone ProcessBuilderPage', () => {
+  it('derives reporting metadata from the request-control type', () => {
+    expect(reportingMetadataForControlType('checkboxlist')).toMatchObject({
+      dataType: 'String',
+      referenceType: 'Lookup',
+      fieldRole: 'Dimension',
+      defaultAggregation: 'NONE',
+      canFilter: true,
+      canGroup: true,
+      canSort: true,
+    });
+    expect(reportingMetadataForControlType('dropdown-manual').referenceType).toBe('Lookup');
+    expect(reportingMetadataForControlType('radiobuttonlist').referenceType).toBe('Lookup');
+    expect(reportingMetadataForControlType('showroom').referenceType).toBe('Showroom');
+    expect(reportingMetadataForControlType('employeesearch').referenceType).toBe('Employee');
+    expect(reportingMetadataForControlType('date')).toEqual({
+      dataType: 'Date',
+      referenceType: null,
+      fieldRole: 'Dimension',
+      defaultAggregation: 'NONE',
+      canFilter: true,
+      canGroup: true,
+      canSort: true,
+    });
+    expect(reportingMetadataForControlType('checkbox')).toEqual({
+      dataType: 'Boolean',
+      referenceType: null,
+      fieldRole: 'Dimension',
+      defaultAggregation: 'NONE',
+      canFilter: true,
+      canGroup: true,
+      canSort: true,
+    });
+    expect(reportingMetadataForControlType('digits')).toEqual({
+      dataType: 'Decimal',
+      referenceType: null,
+      fieldRole: 'Measure',
+      defaultAggregation: 'SUM',
+      canFilter: true,
+      canGroup: false,
+      canSort: true,
+    });
+
+    const store = useProcessBuilderStore.getState();
+    store.addRequestControl('showroom');
+    store.addRequestControl('digits');
+    expect(useProcessBuilderStore.getState().document.requestControls).toMatchObject([
+      { referenceType: 'Showroom', fieldRole: 'Dimension', dataType: 'String' },
+      {
+        referenceType: null,
+        fieldRole: 'Measure',
+        dataType: 'Decimal',
+        defaultAggregation: 'SUM',
+        canGroup: false,
+      },
+    ]);
+  });
+
   it('renders the initial Process Builder surface in Arabic RTL without English shell labels', async () => {
     await i18n.changeLanguage('ar');
     const user = userEvent.setup();
@@ -43,13 +104,7 @@ describe('standalone ProcessBuilderPage', () => {
     expect(normalizeTransitionValue('true', 'boolean')).toBe('true');
     expect(normalizeTransitionValue('yes', 'boolean')).toBe('');
 
-    render(
-      <TransitionValueField
-        dataType="number"
-        value=""
-        onChange={() => undefined}
-      />
-    );
+    render(<TransitionValueField dataType="number" value="" onChange={() => undefined} />);
     expect(screen.getByRole('spinbutton', { name: 'Comparison value' })).toBeDefined();
   });
 
@@ -61,10 +116,10 @@ describe('standalone ProcessBuilderPage', () => {
     expect(screen.getByRole('tab', { name: 'Transitions' })).toBeDefined();
     expect(
       Array.from(
-        screen.getByRole('tablist', { name: 'Process Builder workspaces' })
+        screen
+          .getByRole('tablist', { name: 'Process Builder workspaces' })
           .querySelectorAll('[role="tab"]')
-      )
-        .map((tab) => tab.textContent)
+      ).map((tab) => tab.textContent)
     ).toEqual([
       'Designer',
       'Variables',
@@ -94,7 +149,9 @@ describe('standalone ProcessBuilderPage', () => {
       label: 'Decision',
       options: ['Approve', 'Reject'],
     });
-    expect(useProcessBuilderStore.getState().document.steps[0].activities[0].controls[0]).toMatchObject({
+    expect(
+      useProcessBuilderStore.getState().document.steps[0].activities[0].controls[0]
+    ).toMatchObject({
       label: 'Decision',
       options: ['Approve', 'Reject'],
     });
@@ -123,7 +180,9 @@ describe('standalone ProcessBuilderPage', () => {
     await user.click(screen.getByRole('button', { name: 'Options (0)' }));
     expect(screen.getByText('Add at least one selectable option.')).toBeDefined();
     await user.click(screen.getByRole('button', { name: '+ Add option' }));
-    expect(useProcessBuilderStore.getState().document.requestControls[0].options).toEqual(['Option 1']);
+    expect(useProcessBuilderStore.getState().document.requestControls[0].options).toEqual([
+      'Option 1',
+    ]);
     expect(screen.getByRole('button', { name: 'Reorder option 1' })).toBeDefined();
     await user.click(screen.getByRole('button', { name: 'Feature Configuration' }));
     await user.click(screen.getByRole('switch', { name: 'Require File Upload' }));
@@ -132,8 +191,13 @@ describe('standalone ProcessBuilderPage', () => {
     expect(screen.queryByRole('combobox', { name: 'Show Other Controls' })).toBeNull();
     await user.click(screen.getByRole('switch', { name: 'Show Other Controls' }));
     expect(screen.getByRole('combobox', { name: 'Show Other Controls' })).toBeDefined();
-    await user.type(screen.getByRole('textbox', { name: 'Alert message' }), 'Upload the signed form.');
-    expect(useProcessBuilderStore.getState().document.requestControls[0].optionFeatureConfigurations?.[0]).toMatchObject({
+    await user.type(
+      screen.getByRole('textbox', { name: 'Alert message' }),
+      'Upload the signed form.'
+    );
+    expect(
+      useProcessBuilderStore.getState().document.requestControls[0].optionFeatureConfigurations?.[0]
+    ).toMatchObject({
       requireFileUpload: true,
       sendAlertMessage: true,
       showOtherControls: true,
@@ -143,7 +207,9 @@ describe('standalone ProcessBuilderPage', () => {
     const optionInput = screen.getByRole('textbox', { name: 'Option 1' });
     await user.clear(optionInput);
     await user.type(optionInput, 'Finance');
-    expect(useProcessBuilderStore.getState().document.requestControls[0].options).toEqual(['Finance']);
+    expect(useProcessBuilderStore.getState().document.requestControls[0].options).toEqual([
+      'Finance',
+    ]);
 
     await user.click(screen.getByRole('button', { name: 'Remove option 1' }));
     expect(useProcessBuilderStore.getState().document.requestControls[0].options).toEqual([]);
@@ -166,12 +232,14 @@ describe('standalone ProcessBuilderPage', () => {
     const optionInput = screen.getByRole('textbox', { name: 'Option 1 for New field' });
     await user.clear(optionInput);
     await user.type(optionInput, 'Manager approval');
-    expect(useProcessBuilderStore.getState().document.steps[0].activities[0].controls[0].options)
-      .toEqual(['Manager approval']);
+    expect(
+      useProcessBuilderStore.getState().document.steps[0].activities[0].controls[0].options
+    ).toEqual(['Manager approval']);
 
     await user.click(screen.getByRole('button', { name: 'Remove option 1 from New field' }));
-    expect(useProcessBuilderStore.getState().document.steps[0].activities[0].controls[0].options)
-      .toEqual([]);
+    expect(
+      useProcessBuilderStore.getState().document.steps[0].activities[0].controls[0].options
+    ).toEqual([]);
   });
 
   it('reorders request-control options and preserves their values', () => {
@@ -184,8 +252,11 @@ describe('standalone ProcessBuilderPage', () => {
 
     useProcessBuilderStore.getState().reorderRequestControlOptions(controlId, 0, 2);
 
-    expect(useProcessBuilderStore.getState().document.requestControls[0].options)
-      .toEqual(['Second', 'Third', 'First']);
+    expect(useProcessBuilderStore.getState().document.requestControls[0].options).toEqual([
+      'Second',
+      'Third',
+      'First',
+    ]);
   });
 
   it('reorders steps without depending on workflow services', () => {
@@ -194,7 +265,10 @@ describe('standalone ProcessBuilderPage', () => {
     useProcessBuilderStore.getState().addStep();
     const [first, second] = useProcessBuilderStore.getState().document.steps;
     useProcessBuilderStore.getState().reorderSteps(first.id, second.id);
-    expect(useProcessBuilderStore.getState().document.steps.map((step) => step.id)).toEqual([second.id, first.id]);
+    expect(useProcessBuilderStore.getState().document.steps.map((step) => step.id)).toEqual([
+      second.id,
+      first.id,
+    ]);
   });
 
   it('updates persisted ordering fields when activities and controls are reordered', () => {
@@ -203,7 +277,8 @@ describe('standalone ProcessBuilderPage', () => {
     const stepId = useProcessBuilderStore.getState().document.steps[0].id;
     store.addActivity(stepId);
     store.addActivity(stepId);
-    const [firstActivity, secondActivity] = useProcessBuilderStore.getState().document.steps[0].activities;
+    const [firstActivity, secondActivity] =
+      useProcessBuilderStore.getState().document.steps[0].activities;
     store.reorderActivities(stepId, firstActivity.id, secondActivity.id);
     const activities = useProcessBuilderStore.getState().document.steps[0].activities;
     expect(activities.map((activity) => [activity.id, activity.sortOrder])).toEqual([
@@ -214,11 +289,13 @@ describe('standalone ProcessBuilderPage', () => {
     const activityId = activities[0].id;
     store.addActivityControl(stepId, activityId);
     store.addActivityControl(stepId, activityId);
-    const [firstControl, secondControl] = useProcessBuilderStore.getState().document.steps[0].activities[0].controls;
+    const [firstControl, secondControl] =
+      useProcessBuilderStore.getState().document.steps[0].activities[0].controls;
     store.reorderControls(stepId, activityId, firstControl.id, secondControl.id);
     expect(
-      useProcessBuilderStore.getState().document.steps[0].activities[0].controls
-        .map((control) => [control.id, control.sortOrder])
+      useProcessBuilderStore
+        .getState()
+        .document.steps[0].activities[0].controls.map((control) => [control.id, control.sortOrder])
     ).toEqual([
       [secondControl.id, 1],
       [firstControl.id, 2],
@@ -226,14 +303,21 @@ describe('standalone ProcessBuilderPage', () => {
 
     store.addRequestControl();
     store.addRequestControl();
-    const [firstRequestControl, secondRequestControl] = useProcessBuilderStore.getState().document.requestControls;
+    const [firstRequestControl, secondRequestControl] =
+      useProcessBuilderStore.getState().document.requestControls;
     store.reorderRequestControls(firstRequestControl.id, secondRequestControl.id);
-    expect(useProcessBuilderStore.getState().document.requestControls.map((control) => [control.id, control.sortOrder])).toEqual([
+    expect(
+      useProcessBuilderStore
+        .getState()
+        .document.requestControls.map((control) => [control.id, control.sortOrder])
+    ).toEqual([
       [secondRequestControl.id, 1],
       [firstRequestControl.id, 2],
     ]);
     store.removeRequestControl(secondRequestControl.id);
-    expect(useProcessBuilderStore.getState().document.requestControls.map((control) => control.sortOrder)).toEqual([1]);
+    expect(
+      useProcessBuilderStore.getState().document.requestControls.map((control) => control.sortOrder)
+    ).toEqual([1]);
   });
 
   it('manages activity actions and keeps them in the local document', () => {
@@ -244,8 +328,12 @@ describe('standalone ProcessBuilderPage', () => {
     const activityId = useProcessBuilderStore.getState().document.steps[0].activities[0].id;
     useProcessBuilderStore.getState().addActivityAction(stepId, activityId, 'approve');
     const action = useProcessBuilderStore.getState().document.steps[0].activities[0].actions[0];
-    useProcessBuilderStore.getState().updateActivityAction(stepId, activityId, action.id, { label: 'Approve request' });
-    expect(useProcessBuilderStore.getState().document.steps[0].activities[0].actions[0].label).toBe('Approve request');
+    useProcessBuilderStore
+      .getState()
+      .updateActivityAction(stepId, activityId, action.id, { label: 'Approve request' });
+    expect(useProcessBuilderStore.getState().document.steps[0].activities[0].actions[0].label).toBe(
+      'Approve request'
+    );
   });
 
   it('reorders variables with stable sort-order increments', () => {
@@ -254,7 +342,14 @@ describe('standalone ProcessBuilderPage', () => {
     useProcessBuilderStore.getState().addVariable();
     const [first, second] = useProcessBuilderStore.getState().document.variables;
     useProcessBuilderStore.getState().reorderVariables(first.id, second.id);
-    expect(useProcessBuilderStore.getState().document.variables.map((variable) => [variable.id, variable.sortOrder])).toEqual([[second.id, 10], [first.id, 20]]);
+    expect(
+      useProcessBuilderStore
+        .getState()
+        .document.variables.map((variable) => [variable.id, variable.sortOrder])
+    ).toEqual([
+      [second.id, 10],
+      [first.id, 20],
+    ]);
   });
 
   it('edits variable sort order from the Variable settings pane', async () => {
@@ -281,10 +376,9 @@ describe('standalone ProcessBuilderPage', () => {
     });
     const persistedControl = { ...control, id: '321' };
 
-    useProcessBuilderStore.getState().setPersistedRequestControls(
-      [persistedControl],
-      { [control.id]: '321' }
-    );
+    useProcessBuilderStore
+      .getState()
+      .setPersistedRequestControls([persistedControl], { [control.id]: '321' });
 
     expect(useProcessBuilderStore.getState().document.transitions[0]).toMatchObject({
       triggerSource: 'requestControl',
@@ -300,10 +394,9 @@ describe('standalone ProcessBuilderPage', () => {
     const variable = useProcessBuilderStore.getState().document.variables[0];
     useProcessBuilderStore.getState().addTransition();
 
-    useProcessBuilderStore.getState().setPersistedVariables(
-      [{ ...variable, id: '501' }],
-      { [variable.id]: '501' }
-    );
+    useProcessBuilderStore
+      .getState()
+      .setPersistedVariables([{ ...variable, id: '501' }], { [variable.id]: '501' });
 
     expect(useProcessBuilderStore.getState().document.transitions[0].variableId).toBe('501');
   });
@@ -319,15 +412,19 @@ describe('standalone ProcessBuilderPage', () => {
     store.updateTransition(transition.id, { sourceStepId: step.id, targetStepId: step.id });
     store.select({ kind: 'activity', stepId: step.id, id: activity.id });
 
-    useProcessBuilderStore.getState().setPersistedSteps(
-      [{ ...step, id: '551', code: 'STEP-000551', activities: [] }],
-      { [step.id]: '551' }
-    );
+    useProcessBuilderStore
+      .getState()
+      .setPersistedSteps([{ ...step, id: '551', code: 'STEP-000551', activities: [] }], {
+        [step.id]: '551',
+      });
 
     const state = useProcessBuilderStore.getState();
     expect(state.document.steps[0]).toMatchObject({ id: '551', code: 'STEP-000551' });
     expect(state.document.steps[0].activities).toEqual([activity]);
-    expect(state.document.transitions[0]).toMatchObject({ sourceStepId: '551', targetStepId: '551' });
+    expect(state.document.transitions[0]).toMatchObject({
+      sourceStepId: '551',
+      targetStepId: '551',
+    });
     expect(state.selected).toEqual({ kind: 'activity', stepId: '551', id: activity.id });
   });
 
@@ -349,24 +446,26 @@ describe('standalone ProcessBuilderPage', () => {
       variables: [],
       requestControls: [],
       transitions: [],
-      steps: [{
-        ...current.steps[0],
-        name: 'Server step name',
-        activities: [{ ...activity, id: '601', name: 'Persisted activity' }],
-      }],
+      steps: [
+        {
+          ...current.steps[0],
+          name: 'Server step name',
+          activities: [{ ...activity, id: '601', name: 'Persisted activity' }],
+        },
+      ],
     };
 
-    useProcessBuilderStore.getState().setPersistedActivities(
-      persisted,
-      { [activity.id]: '601' }
-    );
+    useProcessBuilderStore.getState().setPersistedActivities(persisted, { [activity.id]: '601' });
 
     const document = useProcessBuilderStore.getState().document;
     expect(document.description).toBe('Unsaved process description');
     expect(document.variables).toHaveLength(1);
     expect(document.requestControls).toHaveLength(1);
     expect(document.steps[0].name).toBe(step.name);
-    expect(document.steps[0].activities[0]).toMatchObject({ id: '601', name: 'Persisted activity' });
+    expect(document.steps[0].activities[0]).toMatchObject({
+      id: '601',
+      name: 'Persisted activity',
+    });
     expect(document.transitions[0].triggerId).toBe('601');
   });
 
@@ -378,9 +477,9 @@ describe('standalone ProcessBuilderPage', () => {
     store.addTransition();
     const transition = useProcessBuilderStore.getState().document.transitions[0];
 
-    useProcessBuilderStore.getState().setPersistedTransitions([
-      { ...transition, id: '701', value: 'Approved' },
-    ]);
+    useProcessBuilderStore
+      .getState()
+      .setPersistedTransitions([{ ...transition, id: '701', value: 'Approved' }]);
 
     const document = useProcessBuilderStore.getState().document;
     expect(document.name).toBe('Unsaved process name');
@@ -407,19 +506,26 @@ describe('standalone ProcessBuilderPage', () => {
 
     store.removeActivity(step.id, activity.id);
     expect(useProcessBuilderStore.getState().selected).not.toEqual({
-      kind: 'activity', stepId: step.id, id: activity.id,
+      kind: 'activity',
+      stepId: step.id,
+      id: activity.id,
     });
     expect(useProcessBuilderStore.getState().document.transitions[0]).toMatchObject({
-      triggerSource: 'none', triggerId: '',
+      triggerSource: 'none',
+      triggerId: '',
     });
 
     store.removeVariable(variable.id);
     expect(useProcessBuilderStore.getState().document.transitions[0].variableId).toBe('');
 
-    store.updateTransition(transition.id, { triggerSource: 'requestControl', triggerId: requestControl.id });
+    store.updateTransition(transition.id, {
+      triggerSource: 'requestControl',
+      triggerId: requestControl.id,
+    });
     store.removeRequestControl(requestControl.id);
     expect(useProcessBuilderStore.getState().document.transitions[0]).toMatchObject({
-      triggerSource: 'none', triggerId: '',
+      triggerSource: 'none',
+      triggerId: '',
     });
 
     store.removeStep(step.id);
@@ -478,7 +584,9 @@ describe('standalone ProcessBuilderPage', () => {
     const step = useProcessBuilderStore.getState().document.steps[0];
     useProcessBuilderStore.getState().addActivity(step.id, 'review');
     const activity = useProcessBuilderStore.getState().document.steps[0].activities[0];
-    useProcessBuilderStore.getState().select({ kind: 'activity', stepId: step.id, id: activity.id });
+    useProcessBuilderStore
+      .getState()
+      .select({ kind: 'activity', stepId: step.id, id: activity.id });
     useProcessBuilderStore.getState().setCenterTab(4);
     useProcessBuilderStore.getState().setLeftTab(1);
     const beforeReload = useProcessBuilderStore.getState();
@@ -540,7 +648,9 @@ describe('standalone ProcessBuilderPage', () => {
       useProcessBuilderStore.getState().addActivity(step.id, 'approval');
       const activity = useProcessBuilderStore.getState().document.steps[0].activities[0];
       useProcessBuilderStore.getState().addActivityControl(step.id, activity.id, 'text');
-      useProcessBuilderStore.getState().select({ kind: 'activity', stepId: step.id, id: activity.id });
+      useProcessBuilderStore
+        .getState()
+        .select({ kind: 'activity', stepId: step.id, id: activity.id });
     });
 
     expect(screen.getByRole('heading', { name: 'Activity Settings' })).toBeDefined();
@@ -566,7 +676,9 @@ describe('standalone ProcessBuilderPage', () => {
     expect(screen.getByRole('button', { name: 'Close process structure' })).toBeDefined();
 
     await user.click(screen.getByRole('button', { name: 'Close process structure' }));
-    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Process structure' })).toBeNull());
+    await waitFor(() =>
+      expect(screen.queryByRole('heading', { name: 'Process structure' })).toBeNull()
+    );
     await user.click(screen.getByRole('button', { name: 'Open settings' }));
     expect(screen.getByRole('heading', { name: 'Settings' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'Close settings' })).toBeDefined();
