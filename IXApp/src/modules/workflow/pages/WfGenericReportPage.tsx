@@ -523,10 +523,12 @@ export function WfGenericReportPage(): React.ReactElement {
     timer.current = window.setTimeout(() => {
       setProcessing(false);
       setRows(MOCK_ROWS);
-    }, 1200);
+      timer.current = null;
+    }, 50);
   };
   const cancelProcessing = () => {
     if (timer.current != null) window.clearTimeout(timer.current);
+    timer.current = null;
     setProcessing(false);
     setParametersOpen(true);
   };

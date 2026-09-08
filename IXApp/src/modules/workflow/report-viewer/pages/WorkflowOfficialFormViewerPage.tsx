@@ -129,9 +129,10 @@ export function WorkflowOfficialFormViewer({
       </div>
     ) : undefined;
 
-  const loading = publishedTemplate.isLoading || details.isLoading || reportCompany.isLoading;
+  // Company branding has a local fallback and must not hold the printable document hostage.
+  const loading = publishedTemplate.isLoading || details.isLoading;
   const error =
-    publishedTemplate.isError || details.isError || reportCompany.isError
+    publishedTemplate.isError || details.isError
       ? t('mail.print.loadError')
       : null;
 
