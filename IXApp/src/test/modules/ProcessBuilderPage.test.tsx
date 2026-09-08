@@ -1,5 +1,5 @@
 import React from 'react';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { act, render, screen, waitFor } from '@test/testUtils';
 import { ProcessBuilderPage } from '@modules/process-builder/pages/ProcessBuilderPage';
@@ -19,6 +19,23 @@ beforeEach(() => {
 });
 
 describe('standalone ProcessBuilderPage', () => {
+  it('serializes export JSON only when the export dialog is open', async () => {
+    const user = userEvent.setup();
+    const stringify = vi.spyOn(JSON, 'stringify');
+    try {
+      render(<ProcessBuilderPage />);
+      await user.click(screen.getByRole('button', { name: 'Add Step' }));
+      act(() => useProcessBuilderStore.getState().updateProcess({ name: 'Edited process' }));
+      const exportCalls = () => stringify.mock.calls.filter(([value, , space]) =>
+        space === 2 && value && typeof value === 'object' && 'steps' in value);
+      expect(exportCalls()).toHaveLength(0);
+      await user.click(screen.getByRole('button', { name: 'Export' }));
+      expect(exportCalls().length).toBeGreaterThan(0);
+    } finally {
+      stringify.mockRestore();
+    }
+  });
+
   it('derives reporting metadata from the request-control type', () => {
     expect(reportingMetadataForControlType('checkboxlist')).toMatchObject({
       dataType: 'String',
@@ -665,6 +682,15 @@ describe('standalone ProcessBuilderPage', () => {
     expect(autoPassingHours).toBeDisabled();
     await user.click(screen.getByRole('switch', { name: 'Auto pass enabled' }));
     expect(autoPassingHours).not.toBeDisabled();
+    for (const label of ['System notification', 'Email notification', 'SMS notification', 'WhatsApp notification',
+      'Can view previous steps', 'Can view previous documents']) {
+      await user.click(screen.getByRole('switch', { name: label }));
+    }
+    expect(useProcessBuilderStore.getState().document.steps[0].activities[0]).toMatchObject({
+      isSystemNotificationEnabled: true, isEmailNotificationEnabled: true,
+      isSmsNotificationEnabled: true, isWhatsAppNotificationEnabled: true,
+      canViewPreviousSteps: true, canViewPreviousDocuments: true,
+    });
   });
 
   it('provides responsive structure and settings drawer controls', async () => {

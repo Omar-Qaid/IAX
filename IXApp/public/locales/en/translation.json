@@ -841,6 +841,8 @@
     "sections": { "configuration": "Process configuration" },
     "groups": { "classification": "Classification", "behavior": "Behavior" },
     "fields": {
+      "repeatIntervalHours": "Repeat interval (hours)",
+
       "code": "Process code",
       "name": "English name",
       "nameAR": "Arabic name",
@@ -851,8 +853,8 @@
       "processType": "Process type",
       "score": "Score",
       "sortOrder": "Sort order",
-      "canRepeat": "Can repeat",
-      "mandatoryDocs": "Mandatory documents",
+      "isRepeatable": "Can repeat",
+      "mandatoryDocuments": "Mandatory documents",
       "systemProcess": "System process"
     }
   },
@@ -891,8 +893,7 @@
       "process": "Process",
       "sortOrder": "Sort order",
       "score": "Score",
-      "autoPassingHrs": "Automatic passing hours",
-      "allMandatory": "All mandatory",
+      "mustCompleteAll": "Must complete all activities",
       "systemStep": "System step"
     }
   },
@@ -904,6 +905,8 @@
       "behavior": "Behavior"
     },
     "fields": {
+      "canViewPreviousSteps": "Can view previous steps",
+      "canViewPreviousDocuments": "Can view previous documents",
       "code": "Activity code",
       "name": "English name",
       "nameAR": "Arabic name",
@@ -914,15 +917,13 @@
       "performer": "Performer",
       "score": "Score",
       "notificationTemplate": "Notification template",
-      "alertingBySystem": "System notification",
-      "alertingByEmail": "Email notification",
-      "alertingBySms": "SMS notification",
-      "alertingByWhatsApp": "WhatsApp notification",
-      "showPreviousSteps": "Show previous steps",
-      "showPreviousDocs": "Show previous documents",
-      "mandatoryDocs": "Mandatory documents",
-      "autoPassEnabled": "Enable automatic passing",
-      "autoPassingHrs": "Automatic passing hours",
+      "isSystemNotificationEnabled": "System notification",
+      "isEmailNotificationEnabled": "Email notification",
+      "isSmsNotificationEnabled": "SMS notification",
+      "isWhatsAppNotificationEnabled": "WhatsApp notification",
+      "mandatoryDocuments": "Mandatory documents",
+      "isAutoPassEnabled": "Enable automatic passing",
+      "autoPassAfterHours": "Automatic passing hours",
       "extendedProperties": "Extended properties"
     }
   },

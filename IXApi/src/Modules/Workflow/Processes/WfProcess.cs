@@ -8,7 +8,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace IAX.IXApi.Modules.Workflow.Processes
 {
     [DataManagement]
-public partial class WfProcess : WfMasterEntity<long>
+    public partial class WfProcess : WfMasterEntity<long>
     {
         public short CategoryId { get; set; }
         
@@ -16,16 +16,16 @@ public partial class WfProcess : WfMasterEntity<long>
         public virtual WfCategory Category { get; set; } = null!;
 
         public decimal Score { get; set; }
-        public bool CanRepeat { get; set; }
-        public bool MandatoryDocs { get; set; }
-        
+        public bool IsRepeatable { get; set; }
+        public byte RepeatIntervalHours { get; set; }
+        public bool MandatoryDocuments { get; set; }
         public byte PriorityId { get; set; }
 
         [ForeignKey(nameof(PriorityId))]
         public virtual WfPriority Priority { get; set; } = null!;
 
         public byte ProcessTypeId { get; set; }
-        public bool SysField { get; set; }
+        public bool IsSystemDefined  { get; set; }
         public byte SortOrder { get; set; }
         
         public virtual ICollection<WfUsersProcess> UsersProcesses { get; set; } = new List<WfUsersProcess>();

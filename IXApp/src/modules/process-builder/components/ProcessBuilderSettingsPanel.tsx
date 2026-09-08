@@ -860,7 +860,7 @@ export function ProcessBuilderSettingsPanel() {
                 onChange={(_, canRepeat) => s.updateProcess({ canRepeat })}
               />
             }
-            label={t('wfProcess.fields.canRepeat')}
+            label={t('wfProcess.fields.isRepeatable')}
           />
           <FormControlLabel
             control={
@@ -870,7 +870,16 @@ export function ProcessBuilderSettingsPanel() {
                 onChange={(_, mandatoryDocs) => s.updateProcess({ mandatoryDocs })}
               />
             }
-            label={t('wfProcess.fields.mandatoryDocs')}
+            label={t('wfProcess.fields.mandatoryDocuments')}
+          />
+          <TextField
+            size="small"
+            type="number"
+            label={t('wfProcess.fields.repeatIntervalHours')}
+            value={d.repeatIntervalHours ?? 0}
+            disabled={!d.canRepeat}
+            slotProps={{ htmlInput: { min: 0, max: 255, step: 1 } }}
+            onChange={(event) => s.updateProcess({ repeatIntervalHours: Number(event.target.value) })}
           />
         </Box>
         <Box sx={{ pt: '12px', borderTop: `1px solid ${tokens.border}` }}>
@@ -1079,12 +1088,6 @@ export function ProcessBuilderSettingsPanel() {
             (value) => s.updateStep(x.id, { order: Number(value) }),
             'number'
           )}
-          {text(
-            t('wfProcessBuilder.settings.fields.autoPassingHours'),
-            x.autoPassingHours,
-            (value) => s.updateStep(x.id, { autoPassingHours: Number(value) }),
-            'number'
-          )}
         </Box>
         {text(
           t('wfProcessBuilder.settings.fields.score'),
@@ -1282,6 +1285,26 @@ export function ProcessBuilderSettingsPanel() {
             }
             label={t('wfProcessBuilder.settings.mandatoryDocuments')}
           />
+          {([
+            'isSystemNotificationEnabled',
+            'isEmailNotificationEnabled',
+            'isSmsNotificationEnabled',
+            'isWhatsAppNotificationEnabled',
+            'canViewPreviousSteps',
+            'canViewPreviousDocuments',
+          ] as const).map((field) => (
+            <FormControlLabel
+              key={field}
+              control={
+                <Switch
+                  size="small"
+                  checked={x[field] ?? false}
+                  onChange={(_, checked) => s.updateActivity(selected.stepId, x.id, { [field]: checked })}
+                />
+              }
+              label={t(`wfActivity.fields.${field}`)}
+            />
+          ))}
         </Box>
         {x.type === 'api' && (
           <Section title={t('wfProcessBuilder.settings.apiAction')}>

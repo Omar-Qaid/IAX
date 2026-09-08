@@ -15,9 +15,8 @@ const step: WfStepRecord = {
   processId: 10,
   sortOrder: 1,
   score: 5,
-  autoPassingHrs: 24,
-  allMandatory: true,
-  sysField: false,
+  mustCompleteAll: true,
+  isSystemDefined: false,
   isActive: true,
   rowVersion: null,
   recVersion: 1,
@@ -38,7 +37,8 @@ describe('WFStepsPage', () => {
     expect(await screen.findByRole('heading', { name: 'Workflow steps' })).toBeDefined();
     expect((await screen.findAllByText('Manager approval')).length).toBeGreaterThan(0);
     expect(screen.getByText('Step configuration')).toBeDefined();
-    expect(screen.getByText('Automatic passing hours')).toBeDefined();
+    expect(screen.queryByText('Automatic passing hours')).not.toBeInTheDocument();
+    expect(screen.getByText('Must complete all activities')).toBeDefined();
     expect(screen.getByRole('button', { name: 'Edit' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'New' })).toBeDefined();
     expect(screen.getByRole('button', { name: 'Delete' })).toBeDefined();

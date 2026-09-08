@@ -51,20 +51,26 @@ public sealed partial class WfProcessSeedData
                             new PrintTextElement
                             {
                                 Id = "payment-title",
-                                Value = "طلب الصرف",
+                                Value = "Payment Request",
+                                ValueAlias = "طلب الصرف",
+                                TextAlias = "طلب الصرف",
                                 Style = new() { FontSize = 19, FontWeight = 700, Alignment = "center", MarginBottom = 2 },
                             },
                             new PrintTextElement
                             {
                                 Id = "payment-type-cash",
-                                Value = "☑ العهدة النقدية    ☐ الاتفاقيات والعقود والموردين",
+                                Value = "☑ Cash advance    ☐ Agreements, contracts and vendors",
+                                ValueAlias = "☑ العهدة النقدية    ☐ الاتفاقيات والعقود والموردين",
+                                TextAlias = "☑ العهدة النقدية    ☐ الاتفاقيات والعقود والموردين",
                                 VisibleWhen = RequestValueCondition(controls["PAYMENT_REQUEST_TYPE"], "CashAdvance"),
                                 Style = new() { FontSize = 10, FontWeight = 700, Alignment = "center" },
                             },
                             new PrintTextElement
                             {
                                 Id = "payment-type-contracts",
-                                Value = "☐ العهدة النقدية    ☑ الاتفاقيات والعقود والموردين",
+                                Value = "☐ Cash advance    ☑ Agreements, contracts and vendors",
+                                ValueAlias = "☐ العهدة النقدية    ☑ الاتفاقيات والعقود والموردين",
+                                TextAlias = "☐ العهدة النقدية    ☑ الاتفاقيات والعقود والموردين",
                                 VisibleWhen = RequestValueCondition(controls["PAYMENT_REQUEST_TYPE"], "ContractsVendors"),
                                 Style = new() { FontSize = 10, FontWeight = 700, Alignment = "center" },
                             },
@@ -89,7 +95,9 @@ public sealed partial class WfProcessSeedData
             new PrintTextElement
             {
                 Id = "payment-addressee",
-                Value = "المكرم / مدير الإدارة المالية\nالسلام عليكم ورحمة الله وبركاته، وبعد\nنأمل التكرم بصرف المبلغ حسب البيانات التالية:",
+                Value = "Dear Finance Department Manager,\nPeace be upon you,\nPlease disburse the amount according to the following details:",
+                ValueAlias = "المكرم / مدير الإدارة المالية\nالسلام عليكم ورحمة الله وبركاته، وبعد\nنأمل التكرم بصرف المبلغ حسب البيانات التالية:",
+                TextAlias = "المكرم / مدير الإدارة المالية\nالسلام عليكم ورحمة الله وبركاته، وبعد\nنأمل التكرم بصرف المبلغ حسب البيانات التالية:",
                 Style = new() { FontSize = 10, FontWeight = 600, Alignment = "start", MarginBottom = 5, Padding = 2 },
             },
             new PrintSectionElement
@@ -111,19 +119,20 @@ public sealed partial class WfProcessSeedData
                 Style = new() { MarginBottom = 2, BorderWidth = 1, BorderColor = "#555555", KeepTogether = true, FontSize = 9 },
                 Columns =
                 [
-                    new() { Id = "payment-col-sequence", Label = "م", Field = "sequence", Width = 5 },
-                    new() { Id = "payment-col-beneficiary", Label = "اسم المستفيد", Field = "beneficiary", Width = 20 },
-                    new() { Id = "payment-col-invoice-number", Label = "رقم الفاتورة", Field = "invoice_number", Width = 14 },
-                    new() { Id = "payment-col-invoice-amount", Label = "قيمة الفاتورة", Field = "invoice_amount", Width = 14, Format = MoneyFormat() },
-                    new() { Id = "payment-col-vat", Label = "الضريبة", Field = "vat", Width = 10, Format = MoneyFormat() },
-                    new() { Id = "payment-col-total", Label = "الإجمالي", Field = "total", Width = 14, Format = MoneyFormat() },
-                    new() { Id = "payment-col-statement", Label = "بيان التحويل / الصرف", Field = "payment_statement", Width = 23 },
+                    new() { Id = "payment-col-sequence", Label = "No.", LabelAlias = "م", Field = "sequence", Width = 5 },
+                    new() { Id = "payment-col-beneficiary", Label = "Beneficiary name", LabelAlias = "اسم المستفيد", Field = "beneficiary", Width = 20 },
+                    new() { Id = "payment-col-invoice-number", Label = "Invoice number", LabelAlias = "رقم الفاتورة", Field = "invoice_number", Width = 14 },
+                    new() { Id = "payment-col-invoice-amount", Label = "Invoice amount", LabelAlias = "قيمة الفاتورة", Field = "invoice_amount", Width = 14, Format = MoneyFormat() },
+                    new() { Id = "payment-col-vat", Label = "VAT", LabelAlias = "الضريبة", Field = "vat", Width = 10, Format = MoneyFormat() },
+                    new() { Id = "payment-col-total", Label = "Total", LabelAlias = "الإجمالي", Field = "total", Width = 14, Format = MoneyFormat() },
+                    new() { Id = "payment-col-statement", Label = "Transfer / payment statement", LabelAlias = "بيان التحويل / الصرف", Field = "payment_statement", Width = 23 },
                 ],
             },
             new PrintFieldElement
             {
                 Id = "payment-grand-total",
-                Label = "الإجمالي",
+                Label = "Grand total",
+                LabelAlias = "الإجمالي",
                 Binding = RequestBinding(controls["PAYMENT_GRAND_TOTAL"]),
                 Format = MoneyFormat(),
                 Style = new()
@@ -140,7 +149,9 @@ public sealed partial class WfProcessSeedData
             new PrintTextElement
             {
                 Id = "payment-audit-label",
-                Value = "مسؤول المتابعة والتدقيق",
+                Value = "Follow-up and Audit Officer",
+                ValueAlias = "مسؤول المتابعة والتدقيق",
+                TextAlias = "مسؤول المتابعة والتدقيق",
                 Style = new() { FontSize = 10, FontWeight = 700, Alignment = "start", MarginBottom = 10 },
             },
             new PrintDividerElement
@@ -158,7 +169,7 @@ public sealed partial class WfProcessSeedData
                     PaymentApprovalCell(
                         "payment-auditor",
                         steps["PAYMENT_AUDIT_STEP"].NameAlias ?? "مسؤول المتابعة والتدقيق",
-                        reserveNameSpace: true),
+                        reserveNameSpace: true, titleEnglish: steps["PAYMENT_AUDIT_STEP"].Name),
                 ],
             },
             new PrintRowElement
@@ -167,9 +178,9 @@ public sealed partial class WfProcessSeedData
                 Style = new() { MarginBottom = 14, KeepTogether = true },
                 Elements =
                 [
-                    PaymentApprovalCell("payment-finance-manager", steps["PAYMENT_FINANCE_MANAGER_STEP"].NameAlias ?? "مدير الإدارة المالية"),
-                    PaymentApprovalCell("payment-accounting-review", steps["PAYMENT_ACCOUNTING_REVIEW_STEP"].NameAlias ?? "مدير أول المحاسبة والمراجعة (المكلف)"),
-                    PaymentApprovalCell("payment-accountant", steps["PAYMENT_ACCOUNTANT_STEP"].NameAlias ?? "المحاسب"),
+                    PaymentApprovalCell("payment-finance-manager", steps["PAYMENT_FINANCE_MANAGER_STEP"].NameAlias ?? "مدير الإدارة المالية", titleEnglish: steps["PAYMENT_FINANCE_MANAGER_STEP"].Name),
+                    PaymentApprovalCell("payment-accounting-review", steps["PAYMENT_ACCOUNTING_REVIEW_STEP"].NameAlias ?? "مدير أول المحاسبة والمراجعة (المكلف)", titleEnglish: steps["PAYMENT_ACCOUNTING_REVIEW_STEP"].Name),
+                    PaymentApprovalCell("payment-accountant", steps["PAYMENT_ACCOUNTANT_STEP"].NameAlias ?? "المحاسب", titleEnglish: steps["PAYMENT_ACCOUNTANT_STEP"].Name),
                 ],
             },
             new PrintDividerElement
@@ -183,8 +194,8 @@ public sealed partial class WfProcessSeedData
                 Style = new() { KeepTogether = true },
                 Elements =
                 [
-                    PaymentApprovalCell("payment-ceo", $"يعتمد {steps["PAYMENT_CEO_STEP"].NameAlias ?? "الرئيس التنفيذي"}"),
-                    PaymentApprovalCell("payment-executive-director", steps["PAYMENT_EXECUTIVE_DIRECTOR_STEP"].NameAlias ?? "المدير التنفيذي للموارد البشرية والخدمات المساندة"),
+                    PaymentApprovalCell("payment-ceo", $"يعتمد {steps["PAYMENT_CEO_STEP"].NameAlias ?? "الرئيس التنفيذي"}", titleEnglish: "Approved by " + steps["PAYMENT_CEO_STEP"].Name),
+                    PaymentApprovalCell("payment-executive-director", steps["PAYMENT_EXECUTIVE_DIRECTOR_STEP"].NameAlias ?? "المدير التنفيذي للموارد البشرية والخدمات المساندة", titleEnglish: steps["PAYMENT_EXECUTIVE_DIRECTOR_STEP"].Name),
                 ],
             },
         ],
@@ -201,7 +212,7 @@ public sealed partial class WfProcessSeedData
                         Id = "payment-footer-code-column",
                         Elements =
                         [
-                            new PrintTextElement { Id = "payment-footer-code", Value = "FIN-PAYMENT-REQUEST", Style = new() { FontSize = 7, Alignment = "start" } },
+                            new PrintTextElement { Id = "payment-footer-code", Value = "FIN-PAYMENT-REQUEST", ValueAlias = "FIN-PAYMENT-REQUEST", TextAlias = "FIN-PAYMENT-REQUEST", Style = new() { FontSize = 7, Alignment = "start" } },
                         ],
                     },
                     new PrintColumnElement
@@ -227,7 +238,7 @@ public sealed partial class WfProcessSeedData
         Header =
         [
             new PrintImageElement { Id = "clearance-logo", SourceType = "companyLogo", AltText = "شعار الجهة", Style = new() { Height = 42, ObjectFit = "contain", Alignment = "start" } },
-            new PrintTextElement { Id = "clearance-title", Value = "براءة ذمة", Style = TitleStyle() },
+            new PrintTextElement { Id = "clearance-title", Value = "Clearance", ValueAlias = "براءة ذمة", TextAlias = "براءة ذمة", Style = TitleStyle() },
         ],
         Sections =
         [
@@ -244,7 +255,8 @@ public sealed partial class WfProcessSeedData
             new PrintSectionElement
             {
                 Id = "clearance-employee",
-                Title = "بيانات الموظف",
+                Title = "Employee information",
+                TitleAlias = "بيانات الموظف",
                 Columns = 2,
                 Elements =
                 [
@@ -264,19 +276,19 @@ public sealed partial class WfProcessSeedData
                 Style = new() { MarginBottom = 8, BorderWidth = 1, BorderColor = "#222222", KeepTogether = true },
                 Columns =
                 [
-                    new() { Id = "clearance-col-department", Label = "الإدارة", Field = "department", Width = 28 },
-                    new() { Id = "clearance-col-name", Label = "الاسم", Field = "employeeName", Width = 18 },
-                    new() { Id = "clearance-col-job", Label = "الوظيفة", Field = "jobTitle", Width = 16 },
-                    new() { Id = "clearance-col-signature", Label = "التوقيع", Field = "signature", Width = 14 },
-                    new() { Id = "clearance-col-date", Label = "التاريخ", Field = "date", Width = 12 },
-                    new() { Id = "clearance-col-notes", Label = "ملاحظات", Field = "notes", Width = 12 },
+                    new() { Id = "clearance-col-department", Label = "Department", LabelAlias = "الإدارة", Field = "department", Width = 28 },
+                    new() { Id = "clearance-col-name", Label = "Name", LabelAlias = "الاسم", Field = "employeeName", Width = 18 },
+                    new() { Id = "clearance-col-job", Label = "Job title", LabelAlias = "الوظيفة", Field = "jobTitle", Width = 16 },
+                    new() { Id = "clearance-col-signature", Label = "Signature", LabelAlias = "التوقيع", Field = "signature", Width = 14 },
+                    new() { Id = "clearance-col-date", Label = "Date", LabelAlias = "التاريخ", Field = "date", Width = 12 },
+                    new() { Id = "clearance-col-notes", Label = "Notes", LabelAlias = "ملاحظات", Field = "notes", Width = 12 },
                 ],
             },
         ],
         Footer =
         [
             new PrintDividerElement { Id = "clearance-footer-divider" },
-            new PrintTextElement { Id = "clearance-footer-code", Value = "HR-F-002 - Rev. (01)", Style = new() { FontSize = 8, Alignment = "end" } },
+            new PrintTextElement { Id = "clearance-footer-code", Value = "HR-F-002 - Rev. (01)", ValueAlias = "HR-F-002 - Rev. (01)", TextAlias = "HR-F-002 - Rev. (01)", Style = new() { FontSize = 8, Alignment = "end" } },
         ],
     };
 
@@ -288,7 +300,7 @@ public sealed partial class WfProcessSeedData
         Page = A4Page(),
         Header =
         [
-            new PrintTextElement { Id = "keys-title", Value = "اتفاقية تسليم المفاتيح للمساعدة الإيجارية وتوزيع الشبكات", Style = TitleStyle() },
+            new PrintTextElement { Id = "keys-title", Value = "Key Handover Agreement for Rental Assistance and Network Distribution", ValueAlias = "اتفاقية تسليم المفاتيح للمساعدة الإيجارية وتوزيع الشبكات", TextAlias = "اتفاقية تسليم المفاتيح للمساعدة الإيجارية وتوزيع الشبكات", Style = TitleStyle() },
         ],
         Sections =
         [
@@ -304,11 +316,12 @@ public sealed partial class WfProcessSeedData
                     RequestField("keys-case-number", "رقم الحالة / الفريق", controls["KEY_CASE_NUMBER"]),
                 ],
             },
-            new PrintTextElement { Id = "keys-agreement-copy", Value = "توثق هذه الاتفاقية تسليم المفاتيح للوحدة السكنية المحددة أدناه.", Style = new() { FontSize = 11, Alignment = "center", MarginBottom = 6 } },
+            new PrintTextElement { Id = "keys-agreement-copy", Value = "This agreement records the handover of keys for the housing unit specified below.", ValueAlias = "توثق هذه الاتفاقية تسليم المفاتيح للوحدة السكنية المحددة أدناه.", TextAlias = "توثق هذه الاتفاقية تسليم المفاتيح للوحدة السكنية المحددة أدناه.", Style = new() { FontSize = 11, Alignment = "center", MarginBottom = 6 } },
             new PrintSectionElement
             {
                 Id = "keys-location",
-                Title = "موقع التسليم الأول",
+                Title = "First handover location",
+                TitleAlias = "موقع التسليم الأول",
                 Columns = 3,
                 Elements =
                 [
@@ -337,7 +350,8 @@ public sealed partial class WfProcessSeedData
             new PrintSectionElement
             {
                 Id = "keys-dhs-employee",
-                Title = "في حالة موظف إدارة الدعم",
+                Title = "For support department employees",
+                TitleAlias = "في حالة موظف إدارة الدعم",
                 Columns = 2,
                 Elements =
                 [
@@ -363,13 +377,14 @@ public sealed partial class WfProcessSeedData
         WfRequestControl role) => new()
     {
         Id = id,
-        Title = title,
+        Title = SeedPrintEnglish(title),
+        TitleAlias = title,
         Columns = 2,
         Elements =
         [
             RequestField($"{id}-name", "الاسم (بأحرف واضحة)", name),
             RequestField($"{id}-phone", "رقم الهاتف", phone),
-            new PrintSignatureElement { Id = $"{id}-signature", Label = "التوقيع", Binding = RequestBinding(signature), Style = new() { KeepTogether = true } },
+            new PrintSignatureElement { Id = $"{id}-signature", Label = "Signature", LabelAlias = "التوقيع", Binding = RequestBinding(signature), Style = new() { KeepTogether = true } },
             RequestField($"{id}-date", "التاريخ", date, "date"),
             RequestField($"{id}-role", "الصفة", role),
         ],
@@ -379,14 +394,17 @@ public sealed partial class WfProcessSeedData
         string id,
         string title,
         string? systemSource = null,
-        bool reserveNameSpace = false)
+        bool reserveNameSpace = false,
+        string? titleEnglish = null)
     {
         List<PrintTemplateElement> elements =
         [
             new PrintTextElement
             {
                 Id = $"{id}-title",
-                Value = title,
+                Value = titleEnglish ?? SeedPrintEnglish(title),
+                ValueAlias = title,
+                TextAlias = title,
                 Style = new() { FontSize = 9, FontWeight = 700, Alignment = "center", MarginBottom = 9 },
             },
         ];
@@ -396,6 +414,7 @@ public sealed partial class WfProcessSeedData
             {
                 Id = $"{id}-name",
                 Label = "",
+                LabelAlias = "",
                 Binding = new PrintFieldBinding { SourceType = "system", Source = systemSource },
                 Format = new PrintValueFormat { Type = "text" },
                 Style = new()
@@ -431,7 +450,8 @@ public sealed partial class WfProcessSeedData
         string? color) => new()
     {
         Id = id,
-        Label = label,
+        Label = SeedPrintEnglish(label),
+        LabelAlias = label,
         Binding = new PrintFieldBinding { SourceType = "system", Source = source },
         Format = new PrintValueFormat { Type = format },
         Style = new() { MarginBottom = 4, BorderColor = "#777777", Color = color, KeepTogether = true },
@@ -459,7 +479,8 @@ public sealed partial class WfProcessSeedData
         string format = "text") => new()
     {
         Id = id,
-        Label = label,
+        Label = string.IsNullOrWhiteSpace(control.Name) ? label : control.Name,
+        LabelAlias = label,
         Binding = RequestBinding(control),
         Format = new PrintValueFormat { Type = format },
         Style = new() { MarginBottom = 4, BorderColor = "#777777", KeepTogether = true },
@@ -489,5 +510,13 @@ public sealed partial class WfProcessSeedData
         BorderColor = "#333333",
         Padding = 6,
         KeepTogether = true,
+    };
+    private static string SeedPrintEnglish(string text) => text switch
+    {
+        "الرقم" => "Number",
+        "الموظف" => "Employee",
+        "مقدم بواسطة" => "Provided by",
+        "مقدم إلى" => "Provided to",
+        _ => text,
     };
 }

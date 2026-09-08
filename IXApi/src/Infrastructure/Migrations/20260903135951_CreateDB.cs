@@ -4922,7 +4922,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 {
                     RECID = table.Column<short>(type: "smallint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    SysField = table.Column<bool>(type: "bit", nullable: false),
+                    IsSystemDefined = table.Column<bool>(type: "bit", nullable: false),
                     SortOrder = table.Column<byte>(type: "tinyint", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -5952,7 +5952,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     MandatoryDocs = table.Column<bool>(type: "bit", nullable: false),
                     PriorityId = table.Column<byte>(type: "tinyint", nullable: false),
                     ProcessTypeId = table.Column<byte>(type: "tinyint", nullable: false),
-                    SysField = table.Column<bool>(type: "bit", nullable: false),
+                    IsSystemDefined = table.Column<bool>(type: "bit", nullable: false),
                     SortOrder = table.Column<byte>(type: "tinyint", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -6419,7 +6419,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     Score = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
                     AutoPassingHrs = table.Column<byte>(type: "tinyint", nullable: false),
                     AllMandatory = table.Column<bool>(type: "bit", nullable: false),
-                    SysField = table.Column<bool>(type: "bit", nullable: false),
+                    IsSystemDefined = table.Column<bool>(type: "bit", nullable: false),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),

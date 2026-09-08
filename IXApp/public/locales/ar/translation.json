@@ -835,6 +835,8 @@
     "sections": { "configuration": "إعداد العملية" },
     "groups": { "classification": "التصنيف", "behavior": "السلوك" },
     "fields": {
+      "repeatIntervalHours": "فترة التكرار (بالساعات)",
+
       "code": "رمز العملية",
       "name": "الاسم الإنجليزي",
       "nameAR": "الاسم العربي",
@@ -845,8 +847,8 @@
       "processType": "نوع العملية",
       "score": "الدرجة",
       "sortOrder": "ترتيب الفرز",
-      "canRepeat": "قابل للتكرار",
-      "mandatoryDocs": "المستندات إلزامية",
+      "isRepeatable": "قابل للتكرار",
+      "mandatoryDocuments": "المستندات إلزامية",
       "systemProcess": "عملية نظام"
     }
   },
@@ -885,8 +887,7 @@
       "process": "العملية",
       "sortOrder": "ترتيب الفرز",
       "score": "الدرجة",
-      "autoPassingHrs": "ساعات التجاوز التلقائي",
-      "allMandatory": "الكل إلزامي",
+      "mustCompleteAll": "الكل إلزامي",
       "systemStep": "خطوة نظام"
     }
   },
@@ -894,6 +895,8 @@
     "sections": { "configuration": "إعداد النشاط" },
     "groups": { "assignment": "التعيين", "notifications": "الإشعارات", "behavior": "السلوك" },
     "fields": {
+      "canViewPreviousSteps": "السماح بعرض الخطوات السابقة",
+      "canViewPreviousDocuments": "السماح بعرض المستندات السابقة",
       "code": "رمز النشاط",
       "name": "الاسم بالإنجليزية",
       "nameAR": "الاسم بالعربية",
@@ -904,15 +907,13 @@
       "performer": "المنفذ",
       "score": "الدرجة",
       "notificationTemplate": "قالب الإشعار",
-      "alertingBySystem": "إشعار النظام",
-      "alertingByEmail": "إشعار البريد الإلكتروني",
-      "alertingBySms": "إشعار الرسائل النصية",
-      "alertingByWhatsApp": "إشعار واتساب",
-      "showPreviousSteps": "إظهار الخطوات السابقة",
-      "showPreviousDocs": "إظهار المستندات السابقة",
-      "mandatoryDocs": "المستندات إلزامية",
-      "autoPassEnabled": "تمكين التجاوز التلقائي",
-      "autoPassingHrs": "ساعات التجاوز التلقائي",
+      "isSystemNotificationEnabled": "إشعار النظام",
+      "isEmailNotificationEnabled": "إشعار البريد الإلكتروني",
+      "isSmsNotificationEnabled": "إشعار الرسائل النصية",
+      "isWhatsAppNotificationEnabled": "إشعار واتساب",
+      "mandatoryDocuments": "المستندات إلزامية",
+      "isAutoPassEnabled": "تمكين التجاوز التلقائي",
+      "autoPassAfterHours": "ساعات التجاوز التلقائي",
       "extendedProperties": "الخصائص الإضافية"
     }
   },

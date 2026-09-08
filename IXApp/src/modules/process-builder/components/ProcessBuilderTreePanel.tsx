@@ -43,9 +43,14 @@ export function ProcessBuilderTreePanel() {
     Object.fromEntries(d.steps.map((step) => [step.id, true]))
   );
   React.useEffect(() => {
-    setExpanded((current) => Object.fromEntries(
-      d.steps.map((step) => [step.id, current[step.id] ?? true])
-    ));
+    setExpanded((current) => {
+      // Editing a step does not change which tree nodes are expanded.
+      if (Object.keys(current).length === d.steps.length
+        && d.steps.every((step) => Object.prototype.hasOwnProperty.call(current, step.id))) {
+        return current;
+      }
+      return Object.fromEntries(d.steps.map((step) => [step.id, current[step.id] ?? true]));
+    });
   }, [d.steps]);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const onDragEnd = ({ active: drag, over }: DragEndEvent) => {

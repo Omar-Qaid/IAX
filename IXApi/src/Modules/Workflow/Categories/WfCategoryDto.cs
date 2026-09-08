@@ -4,7 +4,7 @@ namespace IAX.IXApi.Modules.Workflow.Categories
 {
 public class WfCategoryDto : WfMasterEntityDto<short>
     {
-        public bool SysField { get; set; }
+        public bool IsSystemDefined  { get; set; }
         public byte SortOrder { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { loadProcessBuilderDraft } from '@modules/process-builder/hooks/useProcessBuilderDraft';
 
 const mocks = vi.hoisted(() => ({
   processGet: vi.fn(),
@@ -134,16 +135,16 @@ import {
 const process = {
   id: '1', recId: 1, code: 'PROC-1', name: 'Process', description: 'Process description', dataAreaId: 'dat',
   categoryId: 1, priorityId: 1, processTypeId: 1, score: 0,
-  canRepeat: false, mandatoryDocs: false, isActive: true,
+  isRepeatable: false, repeatIntervalHours: 12, mandatoryDocuments: false, isActive: true,
 };
 const step = {
   id: '10', recId: 10, processId: 1, code: 'STEP-1', name: 'Step 1', sortOrder: 1,
-  score: 0, autoPassingHrs: 0, allMandatory: false, sysField: false, isActive: true,
+  score: 0, mustCompleteAll: false, isSystemDefined: false, isActive: true,
 };
 const activity = {
   id: '20', recId: 20, stepId: 10, code: 'ACT-1', name: 'Review', activityTypeId: 1,
-  performerId: 2, score: 0, mandatoryDocs: false, autoPassEnabled: false,
-  autoPassingHrs: 0, sortOrder: 10, isActive: true, dataAreaId: 'dat',
+  performerId: 2, score: 0, mandatoryDocuments: false, isAutoPassEnabled: false,
+  autoPassAfterHours: 0, sortOrder: 10, isActive: true, dataAreaId: 'dat',
 };
 const activityControl = {
   id: '30', recId: 30, activityId: 20, processId: 1, controlId: 2,
@@ -192,6 +193,51 @@ beforeEach(() => {
 });
 
 describe('Process Builder Activity Form backend integration', () => {
+  it('maps renamed workflow settings without sending removed fields', async () => {
+    mocks.activityList.mockResolvedValue([{ ...activity, isAutoPassEnabled: true, autoPassAfterHours: 24,
+      mandatoryDocuments: true, isEmailNotificationEnabled: true, canViewPreviousDocuments: true }]);
+    mocks.stepList.mockResolvedValue([{ ...step, mustCompleteAll: true, isSystemDefined: true }]);
+    const document = await loadProcessBuilder(1);
+    expect(document.repeatIntervalHours).toBe(12);
+    expect(mocks.stepList).toHaveBeenCalledWith(undefined, 1);
+    expect(mocks.activityList).toHaveBeenCalledWith(undefined, 1);
+    expect(mocks.activityOptionList).toHaveBeenCalledWith(undefined, 1);
+    expect(document.steps[0]).toMatchObject({ allMandatory: true, systemField: true });
+    expect(document.steps[0]).not.toHaveProperty('autoPassingHours');
+    expect(document.steps[0].activities[0]).toMatchObject({
+      mandatoryDocs: true, autoPassEnabled: true, autoPassingHours: 24,
+    });
+    document.steps[0].activities[0].autoPassingHours = 48;
+    document.steps[0].activities[0].isEmailNotificationEnabled = false;
+    document.steps[0].activities[0].isWhatsAppNotificationEnabled = true;
+    document.steps[0].activities[0].canViewPreviousSteps = true;
+    await saveProcessActivities(document);
+    const saved = mocks.activityUpdate.mock.calls[0][0];
+    expect(saved).toMatchObject({ mandatoryDocuments: true, isAutoPassEnabled: true,
+      autoPassAfterHours: 48, isEmailNotificationEnabled: false, isWhatsAppNotificationEnabled: true,
+      canViewPreviousSteps: true, canViewPreviousDocuments: true });
+    for (const removed of ['mandatoryDocs', 'autoPassEnabled', 'autoPassingHrs', 'alertingByEmail', 'showPreviousDocs']) {
+      expect(saved).not.toHaveProperty(removed);
+    }
+  });
+
+  it('keeps server notification settings when restoring a draft made before these fields existed', async () => {
+    mocks.activityList.mockResolvedValue([{ ...activity, isEmailNotificationEnabled: true,
+      canViewPreviousDocuments: true }]);
+    const server = await loadProcessBuilder(1);
+    const draft = JSON.parse(JSON.stringify(server));
+    delete draft.steps[0].activities[0].isEmailNotificationEnabled;
+    delete draft.steps[0].activities[0].canViewPreviousDocuments;
+    localStorage.setItem('ixapp.process-builder.1', JSON.stringify(draft));
+    try {
+      expect(loadProcessBuilderDraft('1', server).steps[0].activities[0]).toMatchObject({
+        isEmailNotificationEnabled: true, canViewPreviousDocuments: true,
+      });
+    } finally {
+      localStorage.removeItem('ixapp.process-builder.1');
+    }
+  });
+
   it('loads and saves activity controls, options, and validations', async () => {
     const document = await loadProcessBuilder(1);
     const control = document.steps[0].activities[0].controls[0];

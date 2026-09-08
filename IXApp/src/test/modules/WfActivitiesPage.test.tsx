@@ -8,10 +8,10 @@ import { WfActivitiesPage } from '@modules/workflow/pages/WfActivitiesPage';
 const activity: WfActivityRecord = {
   id: '1', recId: 1, code: 'ACT-001', name: 'Manager review',
   description: null, sortOrder: 0, activityTypeId: 1, stepId: 10,
-  performerId: 2, score: 5, sysNotificationTemplateId: null, alertingBySystem: true,
-  alertingByEmail: false, alertingBySms: false, alertingByWhatsApp: false,
-  showPreviousSteps: true, showPreviousDocs: false, mandatoryDocs: false,
-  autoPassEnabled: false, autoPassingHrs: 0, extendedProperties: null, isActive: true,
+  performerId: 2, score: 5, sysNotificationTemplateId: null, isSystemNotificationEnabled: true,
+  isEmailNotificationEnabled: false, isSmsNotificationEnabled: false, isWhatsAppNotificationEnabled: false,
+  mandatoryDocuments: false, canViewPreviousSteps: true, canViewPreviousDocuments: false,
+  isAutoPassEnabled: false, autoPassAfterHours: 0, extendedProperties: null, isActive: true,
   rowVersion: null, recVersion: 1, dataAreaId: 'dat',
 };
 

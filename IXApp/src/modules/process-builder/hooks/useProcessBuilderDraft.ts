@@ -53,6 +53,8 @@ export const loadProcessBuilderDraft = (id: string, fallback: ProcessBuilderDocu
       })),
       visibilityCondition: control.visibilityCondition ?? null,
     });
+    const serverActivities = new Map(fallback.steps.flatMap((step) =>
+      step.activities.map((activity) => [activity.id, activity] as const)));
     return {
       ...fallback,
       ...parsed,
@@ -82,6 +84,12 @@ export const loadProcessBuilderDraft = (id: string, fallback: ProcessBuilderDocu
           mandatoryDocs: activity.mandatoryDocs ?? false,
           autoPassEnabled: activity.autoPassEnabled ?? false,
           autoPassingHours: activity.autoPassingHours ?? 0,
+          isSystemNotificationEnabled: activity.isSystemNotificationEnabled ?? serverActivities.get(activity.id)?.isSystemNotificationEnabled ?? false,
+          isEmailNotificationEnabled: activity.isEmailNotificationEnabled ?? serverActivities.get(activity.id)?.isEmailNotificationEnabled ?? false,
+          isSmsNotificationEnabled: activity.isSmsNotificationEnabled ?? serverActivities.get(activity.id)?.isSmsNotificationEnabled ?? false,
+          isWhatsAppNotificationEnabled: activity.isWhatsAppNotificationEnabled ?? serverActivities.get(activity.id)?.isWhatsAppNotificationEnabled ?? false,
+          canViewPreviousSteps: activity.canViewPreviousSteps ?? serverActivities.get(activity.id)?.canViewPreviousSteps ?? false,
+          canViewPreviousDocuments: activity.canViewPreviousDocuments ?? serverActivities.get(activity.id)?.canViewPreviousDocuments ?? false,
           actions: activity.actions ?? [],
           validations: activity.validations ?? [],
           config: activity.config ?? { apiMethod: 'GET', apiUrl: '', notifyEmails: '' },

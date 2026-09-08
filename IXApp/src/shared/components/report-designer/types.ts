@@ -124,6 +124,7 @@ export interface PrintTextElement extends PrintElementBase {
   type: 'text';
   value: string;
   valueAlias?: string | null;
+  textAlias?: string | null;
 }
 export interface PrintFieldElement extends PrintElementBase {
   type: 'field';
@@ -136,6 +137,7 @@ export interface PrintFieldElement extends PrintElementBase {
 export interface PrintSectionElement extends PrintElementBase {
   type: 'section';
   title?: string | null;
+  titleAlias?: string | null;
   columns: number;
   elements: PrintTemplateElement[];
 }
@@ -161,6 +163,7 @@ export interface PrintImageElement extends PrintElementBase {
 export interface PrintTableColumn {
   id: string;
   label: string;
+  labelAlias?: string | null;
   field: string;
   format?: PrintValueFormat | null;
   width?: number | null;
@@ -185,6 +188,7 @@ export interface PrintSignatureElement extends PrintElementBase {
   type: 'signature';
   binding: PrintFieldBinding;
   label?: string | null;
+  labelAlias?: string | null;
 }
 export interface PrintQrCodeElement extends PrintElementBase {
   type: 'qrCode';

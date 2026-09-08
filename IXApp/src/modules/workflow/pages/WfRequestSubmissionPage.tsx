@@ -14,7 +14,7 @@ import { wfProcessApi } from '../api/wfProcessApi';
 import { WORKFLOW_ROUTE_PATHS } from '../routes/workflowRoutePaths';
 
 const emptyCategory = (): WfCategoryRecord => ({
-  id: 'empty-category', recId: 0, code: null, name: '', description: null, sysField: false,
+  id: 'empty-category', recId: 0, code: null, name: '', description: null, isSystemDefined: false,
   sortOrder: 0, isActive: true, rowVersion: null, recVersion: 1, dataAreaId: 'dat',
 });
 

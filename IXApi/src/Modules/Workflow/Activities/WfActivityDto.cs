@@ -13,17 +13,18 @@ public class WfActivityDto : WfMasterEntityDto<long>
         public int? SysNotificationTemplateId { get; set; }
         public virtual SysNotificationTemplateDto? SysNotificationTemplate { get; set; }
 
-        public bool AlertingBySystem { get; set; }
-        public bool AlertingByEmail { get; set; }
-        public bool AlertingBySms { get; set; }
-        public bool AlertingByWhatsApp { get; set; }
+        public bool IsSystemNotificationEnabled { get; set; }
+        public bool IsEmailNotificationEnabled { get; set; }
+        public bool IsSmsNotificationEnabled { get; set; }
+        public bool IsWhatsAppNotificationEnabled { get; set; }
 
-        public bool ShowPreviousSteps { get; set; }
-        public bool ShowPreviousDocs { get; set; }
-        public bool MandatoryDocs { get; set; }
+        public bool MandatoryDocuments { get; set; }
 
-        public bool AutoPassEnabled { get; set; }
-        public byte AutoPassingHrs { get; set; }
+        public bool IsAutoPassEnabled { get; set; }
+        public byte AutoPassAfterHours { get; set; }
+
+        public bool CanViewPreviousSteps { get; set; }
+        public bool CanViewPreviousDocuments { get; set; }
 
         public string? ExtendedProperties { get; set; }
     }

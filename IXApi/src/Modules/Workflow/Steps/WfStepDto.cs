@@ -7,8 +7,7 @@ public class WfStepDto : WfMasterEntityDto<long>
         public long ProcessId { get; set; }
         public byte SortOrder { get; set; }
         public decimal Score { get; set; }
-        public byte AutoPassingHrs { get; set; }
-        public bool AllMandatory { get; set; }
-        public bool SysField { get; set; }
+        public bool MustCompleteAll { get; set; }
+        public bool IsSystemDefined  { get; set; }
     }
 }

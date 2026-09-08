@@ -11,7 +11,7 @@ const category: WfCategoryRecord = {
   code: 'WFC-0002',
   name: 'Procurement',
   description: null,
-  sysField: false,
+  isSystemDefined: false,
   sortOrder: 2,
   isActive: true,
   rowVersion: null,
@@ -54,7 +54,7 @@ describe('WFCategoryPage', () => {
     expect(screen.getByRole('menuitem', { name: 'Record Audit' })).toBeDefined();
 
     fireEvent.click(screen.getByRole('menuitem', { name: 'Record Info' }));
-    expect(screen.getByText('Sys Field')).toBeDefined();
+    expect(screen.getByText('Is System Defined')).toBeDefined();
     expect(screen.getByRole('button', { name: 'Close' })).toBeDefined();
   });
 

@@ -310,7 +310,7 @@ function RuntimeElement({
   const localizedText = (primary: string | null | undefined, alias?: string | null) =>
     template.direction === 'rtl' ? alias || primary || '' : primary || alias || '';
   if (element.type === 'text')
-    return <Typography sx={sx}>{localizedText(element.value, element.valueAlias)}</Typography>;
+    return <Typography sx={sx}>{localizedText(element.value, element.valueAlias || element.textAlias)}</Typography>;
   if (element.type === 'field') {
     const label = localizedText(element.label, element.labelAlias);
     const editableControl = element.binding.sourceType === 'requestControl'
@@ -383,7 +383,7 @@ function RuntimeElement({
           <Typography
             sx={{ mb: 0.75, px: 0.75, py: 0.5, bgcolor: '#174f82', color: '#fff', fontWeight: 700 }}
           >
-            {element.title}
+            {localizedText(element.title, element.titleAlias)}
           </Typography>
         ) : null}
         <Box
@@ -478,7 +478,7 @@ function RuntimeElement({
                   textAlign: 'start',
                 }}
               >
-                {column.label}
+                {localizedText(column.label, column.labelAlias)}
               </Box>
             ))}
           </Box>
@@ -536,13 +536,13 @@ function RuntimeElement({
     return (
       <Box sx={{ ...sx, minHeight: 62, borderBottom: '1px solid #172b4d', p: 0.75 }}>
         {element.label ? (
-          <Typography sx={{ fontWeight: 700, fontSize: 11 }}>{element.label}</Typography>
+          <Typography sx={{ fontWeight: 700, fontSize: 11 }}>{localizedText(element.label, element.labelAlias)}</Typography>
         ) : null}
         {image ? (
           <Box
             component="img"
             src={value}
-            alt={element.label || ''}
+            alt={localizedText(element.label, element.labelAlias)}
             sx={{ display: 'block', maxHeight: 48, maxWidth: '100%' }}
           />
         ) : (

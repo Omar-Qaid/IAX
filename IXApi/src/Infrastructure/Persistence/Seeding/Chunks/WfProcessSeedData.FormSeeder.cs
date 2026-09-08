@@ -25,6 +25,10 @@ public sealed partial class WfProcessSeedData
         {
             process = new WfProcess
             {
+                IsRepeatable = false,
+                RepeatIntervalHours = 0,
+                MandatoryDocuments = false,
+                IsSystemDefined = false,
                 Code = definition.Code,
                 Name = definition.Name,
                 NameAlias = definition.NameAlias,
@@ -32,8 +36,6 @@ public sealed partial class WfProcessSeedData
                 CategoryId = definition.CategoryId,
                 PriorityId = definition.PriorityId,
                 ProcessTypeId = definition.ProcessTypeId,
-                CanRepeat = true,
-                MandatoryDocs = false,
                 SortOrder = definition.SortOrder,
                 IsActive = true,
                 CreatedBy = owner,
@@ -171,6 +173,8 @@ public sealed partial class WfProcessSeedData
             {
                 step = new WfStep
                 {
+                    MustCompleteAll = false,
+                    IsSystemDefined = false,
                     ProcessId = process.RecId,
                     Code = stepDefinition.Code,
                     Name = stepDefinition.Name,
@@ -198,6 +202,14 @@ public sealed partial class WfProcessSeedData
             {
                 activity = new WfActivity
                 {
+                    IsEmailNotificationEnabled = false,
+                    IsSmsNotificationEnabled = false,
+                    IsWhatsAppNotificationEnabled = false,
+                    CanViewPreviousSteps = false,
+                    CanViewPreviousDocuments = false,
+                    MandatoryDocuments = false,
+                    IsAutoPassEnabled = false,
+                    AutoPassAfterHours = 0,
                     StepId = step.RecId,
                     ActivityTypeId = activityTypeId,
                     PerformerId = performer.RecId,
@@ -205,9 +217,7 @@ public sealed partial class WfProcessSeedData
                     Name = $"Review and approve - {stepDefinition.Name}",
                     NameAlias = $"مراجعة واعتماد - {stepDefinition.NameAlias}",
                     Description = stepDefinition.NameAlias,
-                    ShowPreviousDocs = true,
-                    ShowPreviousSteps = true,
-                    AlertingBySystem = true,
+                    IsSystemNotificationEnabled = true,
                     IsActive = true,
                     CreatedBy = owner,
                     OwnerAccountId = owner,
@@ -332,21 +342,25 @@ public sealed partial class WfProcessSeedData
         template.NameAlias = definition.NameAlias;
         template.Description = definition.Description;
 
-        var version = await db.ReportTemplateVersions.IgnoreQueryFilters()
-            .SingleOrDefaultAsync(x => x.TemplateId == template.RecId && x.VersionNo == 1, ct);
+        var document = definition.BuildPrintTemplate(controlsByCode);
+        var validationErrors = new PrintTemplateDocumentValidator().Validate(document);
+        if (validationErrors.Count > 0)
+            throw new InvalidOperationException(
+                $"Invalid print template '{definition.PrintTemplateCode}': {string.Join("; ", validationErrors)}");
+
+        var json = JsonSerializer.Serialize(document, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        var versions = await db.ReportTemplateVersions.IgnoreQueryFilters()
+            .Where(x => x.TemplateId == template.RecId)
+            .OrderByDescending(x => x.VersionNo)
+            .ToListAsync(ct);
+        var version = versions.FirstOrDefault(x => x.TemplateJson == json);
         if (version is null)
         {
-            var document = definition.BuildPrintTemplate(controlsByCode);
-            var validationErrors = new PrintTemplateDocumentValidator().Validate(document);
-            if (validationErrors.Count > 0)
-                throw new InvalidOperationException(
-                    $"Invalid print template '{definition.PrintTemplateCode}': {string.Join("; ", validationErrors)}");
-
             version = new ReportTemplateVersion
             {
                 TemplateId = template.RecId,
-                VersionNo = 1,
-                TemplateJson = JsonSerializer.Serialize(document, new JsonSerializerOptions(JsonSerializerDefaults.Web)),
+                VersionNo = (versions.FirstOrDefault()?.VersionNo ?? 0) + 1,
+                TemplateJson = json,
                 IsPublished = true,
                 PublishedBy = owner,
                 PublishedAt = DateTime.UtcNow,

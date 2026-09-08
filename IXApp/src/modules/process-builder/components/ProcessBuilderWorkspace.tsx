@@ -775,16 +775,6 @@ export function StepsWorkspace({
                           }
                           sx={{ width: 75 }}
                         />
-                        <TextField
-                          size="small"
-                          type="number"
-                          label={t('wfProcessBuilder.settings.fields.autoPassingHours')}
-                          value={step.autoPassingHours}
-                          onChange={(event) =>
-                            s.updateStep(step.id, { autoPassingHours: Number(event.target.value) })
-                          }
-                          sx={{ width: 133 }}
-                        />
                         <FormControlLabel
                           control={
                             <Switch

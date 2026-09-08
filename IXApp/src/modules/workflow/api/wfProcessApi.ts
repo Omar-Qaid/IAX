@@ -18,11 +18,12 @@ export interface WfProcessDto {
   description?: string | null;
   categoryId: number;
   score: number;
-  canRepeat: boolean;
-  mandatoryDocs: boolean;
+  isRepeatable: boolean;
+  repeatIntervalHours: number;
+  mandatoryDocuments: boolean;
   priorityId: number;
   processTypeId: number;
-  sysField: boolean;
+  isSystemDefined: boolean;
   sortOrder: number;
   usersProcesses: WfProcessAssignmentDto[];
   isActive: boolean;

@@ -1,6 +1,4 @@
-import { ApiError } from '@core/api/apiError';
-import { apiClient } from '@core/api/apiClient';
-import type { ApiResponse } from '@core/api/apiResponse';
+import { createWorkflowEntityApi } from './createWorkflowEntityApi';
 import type { WorkflowMasterDto } from './workflowMasterApi';
 
 export interface WfActivityDto extends Omit<WorkflowMasterDto, 'recId'> {
@@ -10,15 +8,15 @@ export interface WfActivityDto extends Omit<WorkflowMasterDto, 'recId'> {
   performerId: number;
   score: number;
   sysNotificationTemplateId: number | null;
-  alertingBySystem: boolean;
-  alertingByEmail: boolean;
-  alertingBySms: boolean;
-  alertingByWhatsApp: boolean;
-  showPreviousSteps: boolean;
-  showPreviousDocs: boolean;
-  mandatoryDocs: boolean;
-  autoPassEnabled: boolean;
-  autoPassingHrs: number;
+  isSystemNotificationEnabled: boolean;
+  isEmailNotificationEnabled: boolean;
+  isSmsNotificationEnabled: boolean;
+  isWhatsAppNotificationEnabled: boolean;
+  mandatoryDocuments: boolean;
+  canViewPreviousSteps: boolean;
+  canViewPreviousDocuments: boolean;
+  isAutoPassEnabled: boolean;
+  autoPassAfterHours: number;
   extendedProperties: string | null;
 }
 
@@ -27,13 +25,6 @@ export interface WfActivityRecord extends WfActivityDto {
 }
 
 const endpoint = '/v1/WfActivity';
-
-const requireData = <T>(response: ApiResponse<T>): T => {
-  if (!response.success || response.data == null) {
-    throw new ApiError(response.message || 'The workflow-activity response did not contain data.', 500);
-  }
-  return response.data;
-};
 
 const toRecord = (dto: WfActivityDto): WfActivityRecord => ({ ...dto, id: String(dto.recId) });
 const toDto = ({ id: _id, ...record }: WfActivityRecord): WfActivityDto => ({
@@ -45,24 +36,10 @@ const toDto = ({ id: _id, ...record }: WfActivityRecord): WfActivityDto => ({
   extendedProperties: record.extendedProperties?.trim() || null,
 });
 
-export const wfActivityApi = {
-  async list(signal?: AbortSignal): Promise<WfActivityRecord[]> {
-    const response = await apiClient.get<ApiResponse<WfActivityDto[]>>(endpoint, { signal });
-    return requireData(response.data).map(toRecord);
-  },
-  async create(record: WfActivityRecord): Promise<WfActivityRecord> {
-    const response = await apiClient.post<ApiResponse<WfActivityDto>>(endpoint, toDto(record));
-    return toRecord(requireData(response.data));
-  },
-  async update(record: WfActivityRecord): Promise<WfActivityRecord> {
-    const response = await apiClient.put<ApiResponse<WfActivityDto>>(
-      `${endpoint}/${record.recId}`,
-      toDto(record)
-    );
-    return toRecord(requireData(response.data));
-  },
-  async delete(record: WfActivityRecord): Promise<void> {
-    const response = await apiClient.delete<ApiResponse<boolean>>(`${endpoint}/${record.recId}`);
-    requireData(response.data);
-  },
-};
+export const wfActivityApi = createWorkflowEntityApi({
+  endpoint,
+  resourceName: 'Activity',
+  processField: 'Step.ProcessId',
+  toRecord,
+  toDto,
+});

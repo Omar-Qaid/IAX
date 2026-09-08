@@ -1,6 +1,4 @@
-import { ApiError } from '@core/api/apiError';
-import { apiClient } from '@core/api/apiClient';
-import type { ApiResponse } from '@core/api/apiResponse';
+import { createWorkflowEntityApi } from './createWorkflowEntityApi';
 import type { WorkflowMasterDto } from './workflowMasterApi';
 
 export interface WfStepDto extends Omit<WorkflowMasterDto, 'recId'> {
@@ -8,9 +6,8 @@ export interface WfStepDto extends Omit<WorkflowMasterDto, 'recId'> {
   processId: number;
   sortOrder: number;
   score: number;
-  autoPassingHrs: number;
-  allMandatory: boolean;
-  sysField: boolean;
+  mustCompleteAll: boolean;
+  isSystemDefined: boolean;
 }
 
 export interface WfStepRecord extends WfStepDto {
@@ -18,13 +15,6 @@ export interface WfStepRecord extends WfStepDto {
 }
 
 const endpoint = '/v1/WfStep';
-
-const requireData = <T>(response: ApiResponse<T>): T => {
-  if (!response.success || response.data == null) {
-    throw new ApiError(response.message || 'The workflow-step response did not contain data.', 500);
-  }
-  return response.data;
-};
 
 const toRecord = (dto: WfStepDto): WfStepRecord => ({ ...dto, id: String(dto.recId) });
 const toDto = ({ id: _id, ...record }: WfStepRecord): WfStepDto => ({
@@ -35,24 +25,10 @@ const toDto = ({ id: _id, ...record }: WfStepRecord): WfStepDto => ({
   description: record.description?.trim() || null,
 });
 
-export const wfStepApi = {
-  async list(signal?: AbortSignal): Promise<WfStepRecord[]> {
-    const response = await apiClient.get<ApiResponse<WfStepDto[]>>(endpoint, { signal });
-    return requireData(response.data).map(toRecord);
-  },
-  async create(record: WfStepRecord): Promise<WfStepRecord> {
-    const response = await apiClient.post<ApiResponse<WfStepDto>>(endpoint, toDto(record));
-    return toRecord(requireData(response.data));
-  },
-  async update(record: WfStepRecord): Promise<WfStepRecord> {
-    const response = await apiClient.put<ApiResponse<WfStepDto>>(
-      `${endpoint}/${record.recId}`,
-      toDto(record)
-    );
-    return toRecord(requireData(response.data));
-  },
-  async delete(record: WfStepRecord): Promise<void> {
-    const response = await apiClient.delete<ApiResponse<boolean>>(`${endpoint}/${record.recId}`);
-    requireData(response.data);
-  },
-};
+export const wfStepApi = createWorkflowEntityApi({
+  endpoint,
+  resourceName: 'Step',
+  processField: 'ProcessId',
+  toRecord,
+  toDto,
+});

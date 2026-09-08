@@ -68,14 +68,16 @@ public sealed partial class WfProcessSeedData
             {
             var process = new WfProcess
             {
+                IsRepeatable = false,
+                RepeatIntervalHours = 0,
+                MandatoryDocuments = false,
+                IsSystemDefined = false,
                 Code = ProcessCode,
                 Name = "طلب الصرف",
                 Description = "معاملة طلب صرف ومراجعة واعتماد المبالغ المالية.",
                 CategoryId = category.RecId,
                 PriorityId = priority.RecId,
                 ProcessTypeId = processType.RecId,
-                CanRepeat = true,
-                MandatoryDocs = false,
                 SortOrder = 1,
                 IsActive = true,
                 CreatedBy = owner,
@@ -175,6 +177,8 @@ public sealed partial class WfProcessSeedData
             };
             var steps = stepNames.Select((item, index) => new WfStep
             {
+                MustCompleteAll = false,
+                IsSystemDefined = false,
                 ProcessId = process.RecId,
                 Code = item.Item1,
                 Name = item.Item2,
@@ -189,15 +193,22 @@ public sealed partial class WfProcessSeedData
 
             var activities = steps.Take(6).Select((step, index) => new WfActivity
             {
+                IsEmailNotificationEnabled = false,
+                IsSmsNotificationEnabled = false,
+                IsWhatsAppNotificationEnabled = false,
+                CanViewPreviousSteps = false,
+                CanViewPreviousDocuments = false,
+                MandatoryDocuments = false,
+                IsAutoPassEnabled = false,
+                AutoPassAfterHours = 0,
                 StepId = step.RecId,
                 ActivityTypeId = activityType.RecId,
                 PerformerId = performers[index].RecId,
                 Code = $"{step.Code}_ACTIVITY",
                 Name = index == 5 ? "الاعتماد النهائي للرئيس التنفيذي" : $"مراجعة واعتماد {step.Name}",
                 Description = $"مراجعة طلب الصرف بواسطة {step.Name}",
-                ShowPreviousDocs = true,
-                ShowPreviousSteps = true,
-                AlertingBySystem = true,
+
+                IsSystemNotificationEnabled = true,
                 IsActive = true,
                 CreatedBy = owner,
                 OwnerAccountId = owner,

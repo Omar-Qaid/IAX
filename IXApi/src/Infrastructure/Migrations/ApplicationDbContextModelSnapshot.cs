@@ -20464,7 +20464,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<byte>("SortOrder")
                         .HasColumnType("tinyint");
 
-                    b.Property<bool>("SysField")
+                    b.Property<bool>("IsSystemDefined")
                         .HasColumnType("bit");
 
                     b.HasKey("RecId");
@@ -21133,7 +21133,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<byte>("SortOrder")
                         .HasColumnType("tinyint");
 
-                    b.Property<bool>("SysField")
+                    b.Property<bool>("IsSystemDefined")
                         .HasColumnType("bit");
 
                     b.HasKey("RecId");
@@ -22021,7 +22021,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<byte>("SortOrder")
                         .HasColumnType("tinyint");
 
-                    b.Property<bool>("SysField")
+                    b.Property<bool>("IsSystemDefined")
                         .HasColumnType("bit");
 
                     b.HasKey("RecId");

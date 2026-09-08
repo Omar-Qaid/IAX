@@ -9,7 +9,7 @@ export function WFCategoryPage(): React.ReactElement {
       titleKey="pages.wfCategories.title"
       resourceKey="workflow-categories"
       api={wfCategoryApi}
-      createRecord={() => createEmptyWorkflowMaster<WfCategoryDto>({ sysField: false })}
+      createRecord={() => createEmptyWorkflowMaster<WfCategoryDto>({ isSystemDefined: false })}
       numberSequenceKey="WfCategory"
       requiredCoreFields={['name']}
       permissions={{
@@ -19,7 +19,7 @@ export function WFCategoryPage(): React.ReactElement {
       }}
       extraFields={[
         {
-          field: 'sysField',
+          field: 'isSystemDefined',
           labelKey: 'wfCategory.fields.systemCategory',
           width: 130,
           editable: false,

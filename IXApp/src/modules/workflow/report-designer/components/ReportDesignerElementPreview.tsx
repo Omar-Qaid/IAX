@@ -85,7 +85,7 @@ export function ReportDesignerElementPreview({
             textAlign: style?.alignment ?? 'start',
           }}
         >
-          {(direction === 'rtl' ? element.valueAlias || element.value : element.value) || 'Text'}
+          {(direction === 'rtl' ? element.valueAlias || element.textAlias || element.value : element.value) || 'Text'}
         </Typography>
       ) : null}
       {element.type === 'field' ? (
@@ -147,7 +147,7 @@ export function ReportDesignerElementPreview({
                 fontWeight: 700,
               }}
             >
-              {column.label}
+              {direction === 'rtl' ? column.labelAlias || column.label : column.label}
             </Typography>
           ))}
           {element.columns.map((column) => (
@@ -197,7 +197,7 @@ export function ReportDesignerElementPreview({
           }}
         >
           <Typography sx={{ fontSize: 11 }}>
-            {element.label || t('printTemplates.designer.components.signature')}
+            {(direction === 'rtl' ? element.labelAlias || element.label : element.label) || t('printTemplates.designer.components.signature')}
           </Typography>
         </Box>
       ) : null}
@@ -225,7 +225,7 @@ export function ReportDesignerElementPreview({
       ) : null}
       {element.type === 'section' ? (
         <Typography sx={{ mb: 0.5, fontSize: 12, fontWeight: 700 }}>
-          {element.title || t('printTemplates.designer.components.section')}
+          {(direction === 'rtl' ? element.titleAlias || element.title : element.title) || t('printTemplates.designer.components.section')}
         </Typography>
       ) : null}
       {children.length > 0 ? (

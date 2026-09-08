@@ -57,3 +57,11 @@ The architecture audit rejects the `@mui/icons-material` barrel, forbidden layer
 - Responsive behavior is checked at desktop and mobile widths.
 - Stable row/entity identifiers are used.
 - Destructive actions require confirmation.
+
+## Reusable API adapters
+
+Use `core/api/createEntityApi.ts` for APIs with the shared response envelope and list/create/update/delete routes. Supply `endpoint`, `resourceName`, `toRecord`, and `toDto`. Keep field normalization in the domain adapter: option values, for example, must not be trimmed automatically.
+
+Use `core/api/fetchAllPages.ts` for complete filtered lists from `/paged`. It owns pagination, query serialization, stable ordering, cancellation, and response validation. Domain adapters own the filter fields and business validation.
+
+Workflow APIs use `createWorkflowEntityApi` to add process-scoped loading to the generic transport. Each adapter declares its relationship path (`ProcessId`, `Step.ProcessId`, or the relevant control relationship). The existing `list(signal?, processId?)` contract remains compatible with unfiltered setup lists and filtered process-builder loading. Workflow lookup APIs reuse the same transport through `createWorkflowMasterApi`.

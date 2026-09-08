@@ -9,7 +9,7 @@ namespace IAX.IXApi.Modules.Workflow.Categories
     [DataManagement]
 public class WfCategory : WfMasterEntity<short>
     {
-        public bool SysField { get; set; }
+        public bool IsSystemDefined  { get; set; }
         public byte SortOrder { get; set; }
     }
 }

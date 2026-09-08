@@ -9,7 +9,7 @@ export interface WfCategoryDto {
   name: string | null;
   nameAlias?: string | null;
   description: string | null;
-  sysField: boolean;
+  isSystemDefined: boolean;
   sortOrder: number;
   isActive: boolean;
   rowVersion: string | null;

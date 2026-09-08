@@ -346,11 +346,11 @@ function ElementProperties({
               multiline
               minRows={2}
               label={t('printTemplates.designer.properties.textArabic')}
-              value={element.valueAlias ?? ''}
+              value={element.valueAlias ?? element.textAlias ?? ''}
               onChange={(event) =>
                 update((current) =>
                   current.type === 'text'
-                    ? { ...current, valueAlias: event.target.value || null }
+                    ? { ...current, valueAlias: event.target.value || null, textAlias: event.target.value || null }
                     : current
                 )
               }

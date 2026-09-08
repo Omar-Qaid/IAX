@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Box,
   Button,
@@ -32,10 +32,9 @@ import Tune from '@mui/icons-material/Tune';
 import Save from '@mui/icons-material/Save';
 import { APP_FONT_FAMILY } from '@shared/constants/fontFamilies';
 import { getLogicalDrawerAnchor } from '@shared/hooks/useLogicalDrawerAnchor';
-import { useNavigate, useParams } from 'react-router-dom';
-import { ProcessBuilderPalette } from '../components/ProcessBuilderPalette';
+import { useParams } from 'react-router-dom';
+import { ProcessBuilderNavigationPanel } from '../components/ProcessBuilderNavigationPanel';
 import { ProcessBuilderSettingsPanel } from '../components/ProcessBuilderSettingsPanel';
-import { ProcessBuilderTreePanel } from '../components/ProcessBuilderTreePanel';
 import {
   ActivitiesWorkspace,
   ActivityFormWorkspace,
@@ -51,24 +50,11 @@ import {
   useProcessBuilderStore,
   type ProcessBuilderNavigationState,
 } from '../store/useProcessBuilderStore';
-import { loadProcessBuilderDraft, useProcessBuilderDraft } from '../hooks/useProcessBuilderDraft';
+import { useProcessBuilderDraft } from '../hooks/useProcessBuilderDraft';
 import { processBuilderTokens as tokens } from '../components/processBuilderTokens';
-import {
-  getProcessCodeMetadata,
-  getVariableCodeMetadata,
-  getStepCodeMetadata,
-  getActivityCodeMetadata,
-  getRequestControlCodeMetadata,
-  loadProcessBuilder,
-  saveProcessBuilder,
-  saveProcessVariables,
-  saveProcessSteps,
-  saveProcessActivities,
-  saveProcessRequestControls,
-  saveProcessTransitions,
-} from '../api/processBuilderApi';
-import { WORKFLOW_ROUTE_PATHS } from '@modules/workflow/routes/workflowRoutePaths';
-import { useNotifications } from '@shared/hooks/useNotifications';
+import { useProcessBuilderLoader } from '../hooks/useProcessBuilderLoader';
+import { useProcessBuilderActions } from '../hooks/useProcessBuilderActions';
+import { navigationStorageKey } from '../hooks/processBuilderNavigation';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 
 const slimScrollbarSx = {
@@ -103,120 +89,41 @@ const slimScrollbarSx = {
   },
 } as const;
 
-const navigationStorageKey = (builderId: string) => `ixapp.processBuilder.navigation.${builderId}`;
-const readNavigationState = (builderId: string): ProcessBuilderNavigationState | null => {
-  try {
-    const value = sessionStorage.getItem(navigationStorageKey(builderId));
-    return value ? JSON.parse(value) as ProcessBuilderNavigationState : null;
-  } catch {
-    return null;
-  }
-};
-
-function ProcessBuilderNavigationPanel() {
-  const { t } = useAppTranslation();
-  const s = useProcessBuilderStore();
-  return (
-    <>
-      <Tabs
-        value={s.leftTab}
-        onChange={(_, value: number) => s.setLeftTab(value)}
-        variant="fullWidth"
-        aria-label={t('wfProcessBuilder.navigation.label')}
-        sx={{
-          minHeight: 40,
-          '& .MuiTab-root': {
-            minHeight: 40,
-            fontSize: tokens.fontSize.secondary,
-            fontWeight: 600,
-            color: tokens.textMuted,
-          },
-          '& .Mui-selected': { color: `${tokens.accent} !important` },
-          '& .MuiTabs-indicator': { bgcolor: tokens.accent, height: 2 },
-        }}
-      >
-        <Tab label={t('wfProcessBuilder.navigation.tree')} />
-        <Tab label={t('wfProcessBuilder.navigation.palette')} />
-      </Tabs>
-      {s.leftTab === 0 ? <ProcessBuilderTreePanel /> : <ProcessBuilderPalette />}
-    </>
-  );
-}
-
 export function ProcessBuilderPage() {
   const { t, currentLanguage, isRtl } = useAppTranslation();
   const { builderId = 'new' } = useParams();
-  const navigate = useNavigate();
-  const { notifyError, notifySuccess } = useNotifications();
-  const s = useProcessBuilderStore();
-  const initialize = s.initialize;
-  const restoreNavigation = s.restoreNavigation;
+  const builder = useProcessBuilderStore();
+  const {
+    save,
+    saving,
+    saveVariables,
+    savingVariables,
+    saveActivities,
+    savingActivities,
+    saveRequestControls,
+    savingRequestControls,
+    saveTransitions,
+    savingTransitions,
+    saveSteps,
+    savingSteps,
+  } = useProcessBuilderActions();
   const [exportOpen, setExportOpen] = useState(false);
-  const [leftOpen, setLeftOpen] = useState(() => sessionStorage.getItem('ixapp.processBuilder.leftOpen') !== 'false');
-  const [rightOpen, setRightOpen] = useState(() => sessionStorage.getItem('ixapp.processBuilder.rightOpen') !== 'false');
+  const [leftOpen, setLeftOpen] = useState(
+    () => sessionStorage.getItem('ixapp.processBuilder.leftOpen') !== 'false'
+  );
+  const [rightOpen, setRightOpen] = useState(
+    () => sessionStorage.getItem('ixapp.processBuilder.rightOpen') !== 'false'
+  );
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
   const [mobileSettingsOpen, setMobileSettingsOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [savingVariables, setSavingVariables] = useState(false);
-  const [savingSteps, setSavingSteps] = useState(false);
-  const [manualVariableCode, setManualVariableCode] = useState(false);
-  const [manualStepCode, setManualStepCode] = useState(false);
-  const [manualActivityCode, setManualActivityCode] = useState(false);
-  const [savingActivities, setSavingActivities] = useState(false);
-  const [manualRequestControlCode, setManualRequestControlCode] = useState(false);
-  const [savingRequestControls, setSavingRequestControls] = useState(false);
-  const [savingTransitions, setSavingTransitions] = useState(false);
-  const draft = useProcessBuilderDraft(s.document, s.dirty, s.markDraftSaved);
-  useLayoutEffect(() => {
-    let active = true;
-    const load = async () => {
-      setLoading(true);
-      try {
-        if (builderId === 'new') {
-          const fallback = createProcessBuilderDocument('new');
-          const recovered = loadProcessBuilderDraft(builderId, fallback);
-          if (active) {
-            initialize(recovered);
-            const navigation = readNavigationState(builderId);
-            if (navigation) restoreNavigation(navigation);
-          }
-          const metadata = await getProcessCodeMetadata();
-          if (active && !metadata.manual)
-            useProcessBuilderStore.getState().setGeneratedCode(metadata.previewCode ?? '');
-        } else {
-          const fallback = await loadProcessBuilder(Number(builderId));
-          if (active) {
-            initialize(loadProcessBuilderDraft(builderId, fallback));
-            const navigation = readNavigationState(builderId);
-            if (navigation) restoreNavigation(navigation);
-          }
-        }
-        const [variableMetadata, stepMetadata, activityMetadata, requestControlMetadata] = await Promise.allSettled([
-          getVariableCodeMetadata(),
-          getStepCodeMetadata(),
-          getActivityCodeMetadata(),
-          getRequestControlCodeMetadata(),
-        ]);
-        if (active) {
-          if (variableMetadata.status === 'fulfilled') setManualVariableCode(variableMetadata.value.manual);
-          if (stepMetadata.status === 'fulfilled') setManualStepCode(stepMetadata.value.manual);
-          if (activityMetadata.status === 'fulfilled') setManualActivityCode(activityMetadata.value.manual);
-          if (requestControlMetadata.status === 'fulfilled') setManualRequestControlCode(requestControlMetadata.value.manual);
-        }
-      } catch (error) {
-        if (active) {
-          // A preview failure must not discard edits already made in a new draft.
-          if (builderId !== 'new') initialize(createProcessBuilderDocument(builderId));
-          notifyError(error instanceof Error ? error.message : t('wfProcessBuilder.messages.loadFailed'));
-        }
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
-    void load();
-    return () => { active = false; };
-  }, [builderId, initialize, notifyError, restoreNavigation, t]);
+  const {
+    loading,
+    manualVariableCode,
+    manualStepCode,
+    manualActivityCode,
+    manualRequestControlCode,
+  } = useProcessBuilderLoader(builderId);
+  const draft = useProcessBuilderDraft(builder.document, builder.dirty, builder.markDraftSaved);
   useEffect(() => {
     sessionStorage.setItem('ixapp.processBuilder.leftOpen', String(leftOpen));
   }, [leftOpen]);
@@ -226,154 +133,119 @@ export function ProcessBuilderPage() {
   useEffect(() => {
     if (loading) return;
     const navigation: ProcessBuilderNavigationState = {
-      selected: s.selected,
-      selectedStepId: s.selectedStepId,
-      leftTab: s.leftTab,
-      centerTab: s.centerTab,
+      selected: builder.selected,
+      selectedStepId: builder.selectedStepId,
+      leftTab: builder.leftTab,
+      centerTab: builder.centerTab,
     };
     sessionStorage.setItem(navigationStorageKey(builderId), JSON.stringify(navigation));
-  }, [builderId, loading, s.centerTab, s.leftTab, s.selected, s.selectedStepId]);
-  const activities = s.document.steps.reduce((n, x) => n + x.activities.length, 0);
+  }, [
+    builderId,
+    loading,
+    builder.centerTab,
+    builder.leftTab,
+    builder.selected,
+    builder.selectedStepId,
+  ]);
+  const activities = builder.document.steps.reduce((n, x) => n + x.activities.length, 0);
   const controls =
-    s.document.requestControls.length +
-    s.document.steps.reduce(
+    builder.document.requestControls.length +
+    builder.document.steps.reduce(
       (n, x) => n + x.activities.reduce((m, a) => m + a.controls.length, 0),
       0
     );
-  const tabDefinitions = [
-    { label: t('wfProcessBuilder.tabs.designer'), icon: <Bolt /> },
-    { label: t('wfProcessBuilder.tabs.variables'), icon: <FormatListBulleted /> },
-    { label: t('wfProcessBuilder.tabsExtended.requestForm'), icon: <TextFields /> },
-    { label: t('wfProcessBuilder.tabs.steps'), icon: <ViewWeek /> },
-    { label: t('wfProcessBuilder.tabs.activities'), icon: <Bolt /> },
-    { label: t('wfProcessBuilder.tabsExtended.activityForm'), icon: <Visibility /> },
-    { label: t('wfProcessBuilder.tabsExtended.transitions'), icon: <AltRoute /> },
-    { label: t('wfProcessBuilder.tabsExtended.diagram'), icon: <AccountTree /> },
-  ];
   const reset = () => {
-    if (
-      !window.confirm(
-        t('wfProcessBuilder.confirmReset')
-      )
-    )
-      return;
+    if (!window.confirm(t('wfProcessBuilder.confirmReset'))) return;
     draft.clear();
-    s.initialize(createProcessBuilderDocument(builderId));
+    builder.initialize(createProcessBuilderDocument(builderId));
   };
   const download = () => {
     const url = URL.createObjectURL(
-      new Blob([JSON.stringify(s.document, null, 2)], { type: 'application/json' })
+      new Blob([JSON.stringify(builder.document, null, 2)], { type: 'application/json' })
     );
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${s.document.code || 'process'}.json`;
+    a.download = `${builder.document.code || 'process'}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
-  const save = async () => {
-    setSaving(true);
-    try {
-      const previousId = s.document.id;
-      const persisted = await saveProcessBuilder(s.document);
-      localStorage.removeItem(`ixapp.process-builder.${previousId}`);
-      useProcessBuilderStore.getState().applyPersistedDocument(persisted);
-      notifySuccess(t('wfProcessBuilder.messages.processSaved'));
-      if (previousId === 'new') {
-        const navigation = sessionStorage.getItem(navigationStorageKey(previousId));
-        if (navigation) sessionStorage.setItem(navigationStorageKey(persisted.id), navigation);
-        navigate(WORKFLOW_ROUTE_PATHS.processBuilder(persisted.id), { replace: true });
-      }
-    } catch (error) {
-      notifyError(error instanceof Error ? error.message : t('wfProcessBuilder.messages.processSaveFailed'));
-    } finally {
-      setSaving(false);
-    }
-  };
-  const saveVariables = async () => {
-    setSavingVariables(true);
-    try {
-      const result = await saveProcessVariables(useProcessBuilderStore.getState().document);
-      useProcessBuilderStore.getState().setPersistedVariables(result.variables, result.variableIds);
-      notifySuccess(t('wfProcessBuilder.messages.variablesSaved'));
-    } catch (error) {
-      notifyError(error instanceof Error ? error.message : t('wfProcessBuilder.messages.variablesSaveFailed'));
-    } finally {
-      setSavingVariables(false);
-    }
-  };
-  const saveActivities = async () => {
-    setSavingActivities(true);
-    try {
-      const result = await saveProcessActivities(useProcessBuilderStore.getState().document);
-      useProcessBuilderStore.getState().setPersistedActivities(result.document, result.activityIds);
-      notifySuccess(t('wfProcessBuilder.messages.activitiesSaved'));
-    } catch (error) {
-      notifyError(error instanceof Error ? error.message : t('wfProcessBuilder.messages.activitiesSaveFailed'));
-    } finally {
-      setSavingActivities(false);
-    }
-  };
-  const saveRequestControls = async () => {
-    setSavingRequestControls(true);
-    try {
-      const result = await saveProcessRequestControls(useProcessBuilderStore.getState().document);
-      useProcessBuilderStore.getState().setPersistedRequestControls(result.controls, result.controlIds);
-      notifySuccess(t('wfProcessBuilder.messages.controlsSaved'));
-    } catch (error) {
-      notifyError(error instanceof Error ? error.message : t('wfProcessBuilder.messages.controlsSaveFailed'));
-    } finally {
-      setSavingRequestControls(false);
-    }
-  };
-  const saveTransitions = async () => {
-    setSavingTransitions(true);
-    try {
-      const persisted = await saveProcessTransitions(useProcessBuilderStore.getState().document);
-      useProcessBuilderStore.getState().setPersistedTransitions(persisted.transitions);
-      notifySuccess(t('wfProcessBuilder.messages.transitionsSaved'));
-    } catch (error) {
-      notifyError(error instanceof Error ? error.message : t('wfProcessBuilder.messages.transitionsSaveFailed'));
-    } finally {
-      setSavingTransitions(false);
-    }
-  };
-  const saveSteps = async () => {
-    setSavingSteps(true);
-    try {
-      const result = await saveProcessSteps(useProcessBuilderStore.getState().document);
-      useProcessBuilderStore.getState().setPersistedSteps(result.steps, result.stepIds);
-      notifySuccess(t('wfProcessBuilder.messages.stepsSaved'));
-    } catch (error) {
-      notifyError(error instanceof Error ? error.message : t('wfProcessBuilder.messages.stepsSaveFailed'));
-    } finally {
-      setSavingSteps(false);
-    }
-  };
-  const tabs = [
-    <DesignerWorkspace />,
-    <VariablesWorkspace
-      onSave={() => void saveVariables()}
-      saving={savingVariables}
-      manualCode={manualVariableCode}
-    />,
-    <RequestFormWorkspace
-      onSave={() => void saveRequestControls()}
-      saving={savingRequestControls}
-      manualCode={manualRequestControlCode}
-    />,
-    <StepsWorkspace
-      onSave={() => void saveSteps()}
-      saving={savingSteps}
-      manualCode={manualStepCode}
-    />,
-    <ActivitiesWorkspace
-      onSave={() => void saveActivities()}
-      saving={savingActivities}
-      manualCode={manualActivityCode}
-    />,
-    <ActivityFormWorkspace onSave={() => void saveActivities()} saving={savingActivities} />,
-    <TransitionsWorkspace onSave={() => void saveTransitions()} saving={savingTransitions} />,
-    <DiagramWorkspace />,
+  const workspaces = [
+    {
+      id: 'designer',
+      label: t('wfProcessBuilder.tabs.designer'),
+      icon: <Bolt />,
+      content: <DesignerWorkspace />,
+    },
+    {
+      id: 'variables',
+      label: t('wfProcessBuilder.tabs.variables'),
+      icon: <FormatListBulleted />,
+      content: (
+        <VariablesWorkspace
+          onSave={() => void saveVariables()}
+          saving={savingVariables}
+          manualCode={manualVariableCode}
+        />
+      ),
+    },
+    {
+      id: 'requestForm',
+      label: t('wfProcessBuilder.tabsExtended.requestForm'),
+      icon: <TextFields />,
+      content: (
+        <RequestFormWorkspace
+          onSave={() => void saveRequestControls()}
+          saving={savingRequestControls}
+          manualCode={manualRequestControlCode}
+        />
+      ),
+    },
+    {
+      id: 'steps',
+      label: t('wfProcessBuilder.tabs.steps'),
+      icon: <ViewWeek />,
+      content: (
+        <StepsWorkspace
+          onSave={() => void saveSteps()}
+          saving={savingSteps}
+          manualCode={manualStepCode}
+        />
+      ),
+    },
+    {
+      id: 'activities',
+      label: t('wfProcessBuilder.tabs.activities'),
+      icon: <Bolt />,
+      content: (
+        <ActivitiesWorkspace
+          onSave={() => void saveActivities()}
+          saving={savingActivities}
+          manualCode={manualActivityCode}
+        />
+      ),
+    },
+    {
+      id: 'activityForm',
+      label: t('wfProcessBuilder.tabsExtended.activityForm'),
+      icon: <Visibility />,
+      content: (
+        <ActivityFormWorkspace onSave={() => void saveActivities()} saving={savingActivities} />
+      ),
+    },
+    {
+      id: 'transitions',
+      label: t('wfProcessBuilder.tabsExtended.transitions'),
+      icon: <AltRoute />,
+      content: (
+        <TransitionsWorkspace onSave={() => void saveTransitions()} saving={savingTransitions} />
+      ),
+    },
+    {
+      id: 'diagram',
+      label: t('wfProcessBuilder.tabsExtended.diagram'),
+      icon: <AccountTree />,
+      content: <DiagramWorkspace />,
+    },
   ];
   return (
     <Box
@@ -494,20 +366,44 @@ export function ProcessBuilderPage() {
         </Typography>
         <Chip
           size="small"
-          color={s.document.active ? 'success' : 'default'}
-          label={s.document.active ? t('wfProcessBuilder.status.active') : t('wfProcessBuilder.status.inactive')}
+          color={builder.document.active ? 'success' : 'default'}
+          label={
+            builder.document.active
+              ? t('wfProcessBuilder.status.active')
+              : t('wfProcessBuilder.status.inactive')
+          }
           sx={{
             height: 22,
-            bgcolor: s.document.active ? tokens.success : '#e0e0e0',
-            color: s.document.active ? '#fff' : tokens.textMuted,
+            bgcolor: builder.document.active ? tokens.success : '#e0e0e0',
+            color: builder.document.active ? '#fff' : tokens.textMuted,
           }}
         />
-        <Chip size="small" variant="outlined" label={`#${s.document.id}`} sx={{ display: { xs: 'none', sm: 'flex' }, height: 22 }} />
-        <Chip size="small" variant="outlined" label={s.document.code} sx={{ display: { xs: 'none', sm: 'flex' }, height: 22 }} />
-        <Tooltip title={leftOpen ? t('wfProcessBuilder.actions.collapseNavigation') : t('wfProcessBuilder.actions.expandNavigation')}>
+        <Chip
+          size="small"
+          variant="outlined"
+          label={`#${builder.document.id}`}
+          sx={{ display: { xs: 'none', sm: 'flex' }, height: 22 }}
+        />
+        <Chip
+          size="small"
+          variant="outlined"
+          label={builder.document.code}
+          sx={{ display: { xs: 'none', sm: 'flex' }, height: 22 }}
+        />
+        <Tooltip
+          title={
+            leftOpen
+              ? t('wfProcessBuilder.actions.collapseNavigation')
+              : t('wfProcessBuilder.actions.expandNavigation')
+          }
+        >
           <IconButton
             size="small"
-            aria-label={leftOpen ? t('wfProcessBuilder.actions.collapseNavigation') : t('wfProcessBuilder.actions.expandNavigation')}
+            aria-label={
+              leftOpen
+                ? t('wfProcessBuilder.actions.collapseNavigation')
+                : t('wfProcessBuilder.actions.expandNavigation')
+            }
             onClick={() => setLeftOpen((value) => !value)}
             sx={{
               display: { xs: 'none', lg: 'inline-flex' },
@@ -517,13 +413,33 @@ export function ProcessBuilderPage() {
               '&:hover, &:focus-visible': { color: tokens.accent, bgcolor: tokens.accentSoft },
             }}
           >
-            {leftOpen ? (isRtl ? <ChevronRight /> : <ChevronLeft />) : (isRtl ? <ChevronLeft /> : <ChevronRight />)}
+            {leftOpen ? (
+              isRtl ? (
+                <ChevronRight />
+              ) : (
+                <ChevronLeft />
+              )
+            ) : isRtl ? (
+              <ChevronLeft />
+            ) : (
+              <ChevronRight />
+            )}
           </IconButton>
         </Tooltip>
-        <Tooltip title={rightOpen ? t('wfProcessBuilder.actions.collapseSettings') : t('wfProcessBuilder.actions.expandSettings')}>
+        <Tooltip
+          title={
+            rightOpen
+              ? t('wfProcessBuilder.actions.collapseSettings')
+              : t('wfProcessBuilder.actions.expandSettings')
+          }
+        >
           <IconButton
             size="small"
-            aria-label={rightOpen ? t('wfProcessBuilder.actions.collapseSettings') : t('wfProcessBuilder.actions.expandSettings')}
+            aria-label={
+              rightOpen
+                ? t('wfProcessBuilder.actions.collapseSettings')
+                : t('wfProcessBuilder.actions.expandSettings')
+            }
             onClick={() => setRightOpen((value) => !value)}
             sx={{
               display: { xs: 'none', lg: 'inline-flex' },
@@ -533,7 +449,17 @@ export function ProcessBuilderPage() {
               '&:hover, &:focus-visible': { color: tokens.accent, bgcolor: tokens.accentSoft },
             }}
           >
-            {rightOpen ? (isRtl ? <ChevronLeft /> : <ChevronRight />) : (isRtl ? <ChevronRight /> : <ChevronLeft />)}
+            {rightOpen ? (
+              isRtl ? (
+                <ChevronLeft />
+              ) : (
+                <ChevronRight />
+              )
+            ) : isRtl ? (
+              <ChevronRight />
+            ) : (
+              <ChevronLeft />
+            )}
           </IconButton>
         </Tooltip>
         <Tooltip title={t('wfProcessBuilder.actions.openStructure')}>
@@ -558,15 +484,21 @@ export function ProcessBuilderPage() {
         </Tooltip>
         <Box sx={{ flex: 1, minWidth: 12 }} />
         {loading && <Chip size="small" label={t('wfProcessBuilder.status.loading')} />}
-        {s.dirty ? (
-          <Chip size="small" label={t('wfProcessBuilder.status.localChanges')} sx={{ bgcolor: '#f59e0b' }} />
+        {builder.dirty ? (
+          <Chip
+            size="small"
+            label={t('wfProcessBuilder.status.localChanges')}
+            sx={{ bgcolor: '#f59e0b' }}
+          />
         ) : (
           draft.savedAt && (
             <Typography sx={{ fontSize: tokens.fontSize.secondary, color: tokens.textMuted }}>
               <Box component="span" sx={{ color: '#10b981' }}>
                 ●
               </Box>{' '}
-              {t('wfProcessBuilder.status.draftSaved', { time: draft.savedAt.toLocaleTimeString(currentLanguage.code) })}
+              {t('wfProcessBuilder.status.draftSaved', {
+                time: draft.savedAt.toLocaleTimeString(currentLanguage.code),
+              })}
             </Typography>
           )
         )}
@@ -574,11 +506,21 @@ export function ProcessBuilderPage() {
           <Chip
             size="small"
             aria-label={t('wfProcessBuilder.statistics.label')}
-            label={`${s.document.steps.length}S / ${activities}A / ${controls}C / ${s.document.transitions.length}T`}
-            sx={{ display: { xs: 'none', sm: 'flex' }, height: 24, borderRadius: 12, bgcolor: '#eeeeee' }}
+            label={`${builder.document.steps.length}S / ${activities}A / ${controls}C / ${builder.document.transitions.length}T`}
+            sx={{
+              display: { xs: 'none', sm: 'flex' },
+              height: 24,
+              borderRadius: 12,
+              bgcolor: '#eeeeee',
+            }}
           />
         </Tooltip>
-        <Button size="small" sx={{ display: { xs: 'none', sm: 'inline-flex' }, color: '#d97706' }} startIcon={<RestartAlt />} onClick={reset}>
+        <Button
+          size="small"
+          sx={{ display: { xs: 'none', sm: 'inline-flex' }, color: '#d97706' }}
+          startIcon={<RestartAlt />}
+          onClick={reset}
+        >
           {t('wfProcessBuilder.actions.reset')}
         </Button>
         <Button
@@ -588,7 +530,11 @@ export function ProcessBuilderPage() {
           onClick={() => void save()}
           sx={{ bgcolor: tokens.success, '&:hover': { bgcolor: '#047857' } }}
         >
-          {saving ? t('wfProcessBuilder.actions.saving') : builderId === 'new' ? t('wfProcessBuilder.actions.create') : t('wfProcessBuilder.actions.save')}
+          {saving
+            ? t('wfProcessBuilder.actions.saving')
+            : builderId === 'new'
+              ? t('wfProcessBuilder.actions.create')
+              : t('wfProcessBuilder.actions.save')}
         </Button>
         <Button
           variant="contained"
@@ -628,14 +574,12 @@ export function ProcessBuilderPage() {
             borderInlineEnd: `1px solid ${tokens.dividerStrong}`,
           }}
         >
-          {leftOpen && (
-            <ProcessBuilderNavigationPanel />
-          )}
+          {leftOpen && <ProcessBuilderNavigationPanel />}
         </Paper>
         <Box sx={{ minWidth: 0, overflow: 'auto', bgcolor: tokens.canvas }}>
           <Tabs
-            value={s.centerTab}
-            onChange={(_, v: number) => s.setCenterTab(v)}
+            value={builder.centerTab}
+            onChange={(_, v: number) => builder.setCenterTab(v)}
             aria-label={t('wfProcessBuilder.structure.workspaces')}
             variant="scrollable"
             scrollButtons="auto"
@@ -665,12 +609,21 @@ export function ProcessBuilderPage() {
               },
             }}
           >
-            {tabDefinitions.map((x) => (
-              <Tab key={x.label} label={x.label} icon={x.icon} iconPosition="start" />
+            {workspaces.map((workspace) => (
+              <Tab
+                key={workspace.id}
+                label={workspace.label}
+                icon={workspace.icon}
+                iconPosition="start"
+              />
             ))}
           </Tabs>
-          <Box role="tabpanel" aria-label={tabDefinitions[s.centerTab]?.label} sx={{ p: { xs: '8px', sm: '10px' } }}>
-            {tabs[s.centerTab]}
+          <Box
+            role="tabpanel"
+            aria-label={workspaces[builder.centerTab]?.label}
+            sx={{ p: { xs: '8px', sm: '10px' } }}
+          >
+            {workspaces[builder.centerTab]?.content}
           </Box>
         </Box>
         <Paper
@@ -693,26 +646,84 @@ export function ProcessBuilderPage() {
         open={mobileNavigationOpen}
         onClose={() => setMobileNavigationOpen(false)}
         aria-label={t('wfProcessBuilder.structure.drawer')}
-        slotProps={{ paper: { sx: { ...slimScrollbarSx, top: 58, height: 'calc(100dvh - 58px)', width: 'min(88vw, 340px)' } } }}
+        slotProps={{
+          paper: {
+            sx: {
+              ...slimScrollbarSx,
+              top: 58,
+              height: 'calc(100dvh - 58px)',
+              width: 'min(88vw, 340px)',
+            },
+          },
+        }}
       >
-        <Box sx={{ minHeight: 48, px: '16px', display: 'flex', alignItems: 'center', borderBottom: `1px solid ${tokens.border}` }}>
-          <Typography component="h2" sx={{ flex: 1, fontSize: tokens.fontSize.heading, fontWeight: 700 }}>{t('wfProcessBuilder.structure.title')}</Typography>
-          <IconButton aria-label={t('wfProcessBuilder.actions.closeStructure')} onClick={() => setMobileNavigationOpen(false)}>{isRtl ? <ChevronRight /> : <ChevronLeft />}</IconButton>
+        <Box
+          sx={{
+            minHeight: 48,
+            px: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            borderBottom: `1px solid ${tokens.border}`,
+          }}
+        >
+          <Typography
+            component="h2"
+            sx={{ flex: 1, fontSize: tokens.fontSize.heading, fontWeight: 700 }}
+          >
+            {t('wfProcessBuilder.structure.title')}
+          </Typography>
+          <IconButton
+            aria-label={t('wfProcessBuilder.actions.closeStructure')}
+            onClick={() => setMobileNavigationOpen(false)}
+          >
+            {isRtl ? <ChevronRight /> : <ChevronLeft />}
+          </IconButton>
         </Box>
-        <Box sx={{ overflowY: 'auto' }}><ProcessBuilderNavigationPanel /></Box>
+        <Box sx={{ overflowY: 'auto' }}>
+          <ProcessBuilderNavigationPanel />
+        </Box>
       </Drawer>
       <Drawer
         anchor={getLogicalDrawerAnchor('end')}
         open={mobileSettingsOpen}
         onClose={() => setMobileSettingsOpen(false)}
         aria-label={t('wfProcessBuilder.settings.drawer')}
-        slotProps={{ paper: { sx: { ...slimScrollbarSx, top: 58, height: 'calc(100dvh - 58px)', width: 'min(92vw, 380px)' } } }}
+        slotProps={{
+          paper: {
+            sx: {
+              ...slimScrollbarSx,
+              top: 58,
+              height: 'calc(100dvh - 58px)',
+              width: 'min(92vw, 380px)',
+            },
+          },
+        }}
       >
-        <Box sx={{ minHeight: 48, px: '16px', display: 'flex', alignItems: 'center', borderBottom: `1px solid ${tokens.border}` }}>
-          <Typography component="h2" sx={{ flex: 1, fontSize: tokens.fontSize.heading, fontWeight: 700 }}>{t('wfProcessBuilder.settings.title')}</Typography>
-          <IconButton aria-label={t('wfProcessBuilder.actions.closeSettings')} onClick={() => setMobileSettingsOpen(false)}>{isRtl ? <ChevronLeft /> : <ChevronRight />}</IconButton>
+        <Box
+          sx={{
+            minHeight: 48,
+            px: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            borderBottom: `1px solid ${tokens.border}`,
+          }}
+        >
+          <Typography
+            component="h2"
+            sx={{ flex: 1, fontSize: tokens.fontSize.heading, fontWeight: 700 }}
+          >
+            {t('wfProcessBuilder.settings.title')}
+          </Typography>
+          <IconButton
+            aria-label={t('wfProcessBuilder.actions.closeSettings')}
+            onClick={() => setMobileSettingsOpen(false)}
+          >
+            {isRtl ? <ChevronLeft /> : <ChevronRight />}
+          </IconButton>
         </Box>
-        <Box sx={{ overflowY: 'auto' }}><ProcessBuilderSettingsPanel /></Box>
+        <Box sx={{ overflowY: 'auto' }}>
+          <ProcessBuilderSettingsPanel />
+        </Box>
       </Drawer>
       <Dialog open={exportOpen} onClose={() => setExportOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>{t('wfProcessBuilder.exportDialog.title')}</DialogTitle>
@@ -728,13 +739,15 @@ export function ProcessBuilderPage() {
               fontSize: 11,
             }}
           >
-            {JSON.stringify(s.document, null, 2)}
+            {exportOpen ? JSON.stringify(builder.document, null, 2) : null}
           </Box>
         </DialogContent>
         <DialogActions>
           <Button
             startIcon={<ContentCopy />}
-            onClick={() => void navigator.clipboard.writeText(JSON.stringify(s.document, null, 2))}
+            onClick={() =>
+              void navigator.clipboard.writeText(JSON.stringify(builder.document, null, 2))
+            }
           >
             {t('wfProcessBuilder.actions.copyJson')}
           </Button>

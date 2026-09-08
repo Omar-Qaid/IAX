@@ -58,7 +58,7 @@ public sealed class PaymentRequestPrintTemplateTests
         Assert.Contains(document.Header.SelectMany(Descendants), element =>
             element is PrintImageElement { SourceType: "companyLogo" });
         Assert.Contains(document.Header.SelectMany(Descendants), element =>
-            element is PrintTextElement { Value: "طلب الصرف" });
+            element is PrintTextElement { ValueAlias: "طلب الصرف" });
 
         var elements = document.Sections.SelectMany(Descendants).ToList();
         var table = Assert.Single(elements.OfType<PrintTableElement>());
@@ -72,6 +72,21 @@ public sealed class PaymentRequestPrintTemplateTests
         Assert.Contains(elements, element => element.Id == "payment-finance-approvals-row");
         Assert.Contains(elements, element => element.Id == "payment-final-approvals-row");
         Assert.Empty(new PrintTemplateDocumentValidator().Validate(document));
+        var allElements = document.Header.Concat(document.Sections).Concat(document.Footer)
+            .SelectMany(Descendants).ToList();
+        Assert.All(allElements.OfType<PrintTextElement>(), text =>
+        {
+            Assert.False(string.IsNullOrWhiteSpace(text.ValueAlias));
+            Assert.Equal(text.ValueAlias, text.TextAlias);
+        });
+        Assert.All(elements.OfType<PrintFieldElement>().Where(field => field.Label.Length > 0),
+            field => Assert.False(string.IsNullOrWhiteSpace(field.LabelAlias)));
+        Assert.All(table.Columns, column => Assert.False(string.IsNullOrWhiteSpace(column.LabelAlias)));
+        var json = System.Text.Json.JsonSerializer.Serialize(document,
+            new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web));
+        Assert.Contains("\"textAlias\":", json);
+        Assert.Contains("\"valueAlias\":", json);
+        Assert.Contains("\"labelAlias\":", json);
     }
 
     private static IEnumerable<PrintTemplateElement> Descendants(PrintTemplateElement element)

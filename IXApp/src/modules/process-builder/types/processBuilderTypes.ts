@@ -190,6 +190,13 @@ export interface BuilderActivity {
   mandatoryDocs: boolean;
   autoPassEnabled: boolean;
   autoPassingHours: number;
+  isSystemNotificationEnabled: boolean;
+  isEmailNotificationEnabled: boolean;
+  isSmsNotificationEnabled: boolean;
+  isWhatsAppNotificationEnabled: boolean;
+  canViewPreviousSteps: boolean;
+  canViewPreviousDocuments: boolean;
+
   controls: BuilderControl[];
   actions: BuilderActivityAction[];
   validations: BuilderValidation[];
@@ -202,7 +209,6 @@ export interface BuilderStep {
   name: string;
   order: number;
   score: number;
-  autoPassingHours: number;
   allMandatory: boolean;
   active: boolean;
   systemField: boolean;
@@ -233,6 +239,7 @@ export interface ProcessBuilderDocument {
   processType: string;
   score: number;
   canRepeat: boolean;
+  repeatIntervalHours: number;
   mandatoryDocs: boolean;
   active: boolean;
   variables: BuilderVariable[];

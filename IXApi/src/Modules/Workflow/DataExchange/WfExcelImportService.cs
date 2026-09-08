@@ -36,12 +36,13 @@ namespace IAX.IXApi.Modules.Workflow.DataExchange
                     Description = row.Cell(5).GetValue<string>(),
                     CategoryId = row.Cell(6).GetValue<short>(),
                     Score = row.Cell(7).GetValue<decimal>(),
-                    CanRepeat = row.Cell(8).GetValue<bool>(),
-                    MandatoryDocs = row.Cell(9).GetValue<bool>(),
+                    IsRepeatable = row.Cell(8).GetValue<bool>(),
+                    MandatoryDocuments = row.Cell(9).GetValue<bool>(),
                     PriorityId = row.Cell(10).GetValue<byte>(),
                     ProcessTypeId = row.Cell(11).GetValue<byte>(),
-                    SysField = row.Cell(12).GetValue<bool>(),
+                    IsSystemDefined  = row.Cell(12).GetValue<bool>(),
                     SortOrder = row.Cell(13).GetValue<byte>(),
+                    RepeatIntervalHours = row.Cell(14).IsEmpty() ? (byte)0 : row.Cell(14).GetValue<byte>(),
                     IsActive = true,
                     IsDeleted = false
                     // Set other default or required properties if needed
@@ -75,16 +76,16 @@ namespace IAX.IXApi.Modules.Workflow.DataExchange
                     StepId = row.Cell(5).GetValue<long>(),
                     PerformerId = row.Cell(6).GetValue<long>(),
                     Score = row.Cell(7).GetValue<decimal>(),
-                    AlertingBySystem = row.Cell(8).GetValue<bool>(),
-                    AlertingByEmail = row.Cell(9).GetValue<bool>(),
-                    AlertingBySms = row.Cell(10).GetValue<bool>(),
-                    ShowPreviousSteps = row.Cell(11).GetValue<bool>(),
-                    ShowPreviousDocs = row.Cell(12).GetValue<bool>(),
-                    MandatoryDocs = row.Cell(13).GetValue<bool>(),
-                    AutoPassingHrs = row.Cell(14).GetValue<byte>(),
+                    IsSystemNotificationEnabled = row.Cell(8).GetValue<bool>(),
+                    IsEmailNotificationEnabled = row.Cell(9).GetValue<bool>(),
+                    IsSmsNotificationEnabled = row.Cell(10).GetValue<bool>(),
+                    CanViewPreviousSteps = row.Cell(11).GetValue<bool>(),
+                    CanViewPreviousDocuments = row.Cell(12).GetValue<bool>(),
+                    MandatoryDocuments   = row.Cell(13).GetValue<bool>(),
+                    AutoPassAfterHours = row.Cell(14).GetValue<byte>(),
                     SysNotificationTemplateId = row.Cell(15).IsEmpty() ? null : row.Cell(15).GetValue<int?>(),
-                    AlertingByWhatsApp = !row.Cell(16).IsEmpty() && row.Cell(16).GetValue<bool>(),
-                    AutoPassEnabled = !row.Cell(17).IsEmpty() && row.Cell(17).GetValue<bool>(),
+                    IsWhatsAppNotificationEnabled = !row.Cell(16).IsEmpty() && row.Cell(16).GetValue<bool>(),
+                    IsAutoPassEnabled = !row.Cell(17).IsEmpty() && row.Cell(17).GetValue<bool>(),
                     IsActive = true,
                     IsDeleted = false
                 };
@@ -111,12 +112,13 @@ namespace IAX.IXApi.Modules.Workflow.DataExchange
             worksheet.Cell(1, 5).Value = "Description";
             worksheet.Cell(1, 6).Value = "CategoryId";
             worksheet.Cell(1, 7).Value = "Score";
-            worksheet.Cell(1, 8).Value = "CanRepeat";
-            worksheet.Cell(1, 9).Value = "MandatoryDocs";
+            worksheet.Cell(1, 8).Value = "IsRepeatable";
+            worksheet.Cell(1, 9).Value = "MandatoryDocuments";
             worksheet.Cell(1, 10).Value = "PriorityId";
             worksheet.Cell(1, 11).Value = "ProcessTypeId";
-            worksheet.Cell(1, 12).Value = "SysField";
+            worksheet.Cell(1, 12).Value = "IsSystemDefined";
             worksheet.Cell(1, 13).Value = "SortOrder";
+            worksheet.Cell(1, 14).Value = "RepeatIntervalHours";
             
             // Example Row
             worksheet.Cell(2, 1).Value = "P01";
@@ -152,16 +154,16 @@ namespace IAX.IXApi.Modules.Workflow.DataExchange
             worksheet.Cell(1, 5).Value = "StepId";
             worksheet.Cell(1, 6).Value = "PerformerId";
             worksheet.Cell(1, 7).Value = "Score";
-            worksheet.Cell(1, 8).Value = "AlertingBySystem";
-            worksheet.Cell(1, 9).Value = "AlertingByEmail";
-            worksheet.Cell(1, 10).Value = "AlertingBySms";
-            worksheet.Cell(1, 11).Value = "ShowPreviousSteps";
-            worksheet.Cell(1, 12).Value = "ShowPreviousDocs";
-            worksheet.Cell(1, 13).Value = "MandatoryDocs";
-            worksheet.Cell(1, 14).Value = "AutoPassingHrs";
+            worksheet.Cell(1, 8).Value = "IsSystemNotificationEnabled";
+            worksheet.Cell(1, 9).Value = "IsEmailNotificationEnabled";
+            worksheet.Cell(1, 10).Value = "IsSmsNotificationEnabled";
+            worksheet.Cell(1, 11).Value = "CanViewPreviousSteps";
+            worksheet.Cell(1, 12).Value = "CanViewPreviousDocuments";
+            worksheet.Cell(1, 13).Value = "MandatoryDocuments";
+            worksheet.Cell(1, 14).Value = "AutoPassAfterHours";
             worksheet.Cell(1, 15).Value = "SysNotificationTemplateId";
-            worksheet.Cell(1, 16).Value = "AlertingByWhatsApp";
-            worksheet.Cell(1, 17).Value = "AutoPassEnabled";
+            worksheet.Cell(1, 16).Value = "IsWhatsAppNotificationEnabled";
+            worksheet.Cell(1, 17).Value = "IsAutoPassEnabled";
 
              // Example Row
             worksheet.Cell(2, 1).Value = "A01";

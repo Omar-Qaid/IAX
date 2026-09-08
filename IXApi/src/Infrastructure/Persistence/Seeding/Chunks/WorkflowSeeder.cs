@@ -44,7 +44,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 {
                     await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT WfCategories ON", ct);
                     await db.Database.ExecuteSqlRawAsync(@"
-                        INSERT INTO WfCategories (RecId, Code, Name, Description, IsActive, IsDeleted, SysField, SortOrder, CreatedBy, CreatedAt, OwnerAccountId, LastModifiedBy, LastModifiedAt, RecVersion, DataAreaId)
+                        INSERT INTO WfCategories (RecId, Code, Name, Description, IsActive, IsDeleted, IsSystemDefined, SortOrder, CreatedBy, CreatedAt, OwnerAccountId, LastModifiedBy, LastModifiedAt, RecVersion, DataAreaId)
                         VALUES (5, 'FIN', N'معاملات منتهية', N'معاملات منتهية', 0, 0, 1, 0, 'sys', GETDATE(), 'sys', 'sys', GETDATE(), 1, 'dat')", ct);
                     await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT WfCategories OFF", ct);
                 }
@@ -76,27 +76,27 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             {
                 var categories = new List<WfCategory>
                 {
-                    new WfCategory { RecId = 5, Code = "FIN", Name = "معاملات منتهية", Description = "معاملات منتهية", IsActive = false, IsDeleted = false, SysField = true, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new WfCategory { RecId = 1, Code = "HR", Name = "Human Resources Department", Description = null, IsActive = true, IsDeleted = false, SysField = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new WfCategory { RecId = 2, Code = "SAL", Name = "Sales Department", Description = "Sales Department", IsActive = true, IsDeleted = false, SysField = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new WfCategory { RecId = 3, Code = "REM", Name = "Remote work Department", Description = null, IsActive = true, IsDeleted = false, SysField = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new WfCategory { RecId = 4, Code = "IT", Name = "IT Department", Description = null, IsActive = true, IsDeleted = false, SysField = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new WfCategory { RecId = 6, Code = "FINM", Name = "Financial management transactions", Description = null, IsActive = true, IsDeleted = false, SysField = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new WfCategory { RecId = 7, Code = "QLTY", Name = "Quality Department", Description = null, IsActive = true, IsDeleted = false, SysField = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new WfCategory { RecId = 9, Code = "FRAN", Name = "Franchise management", Description = null, IsActive = true, IsDeleted = false, SysField = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new WfCategory { RecId = 10, Code = "BINV", Name = "Branch inventory Department", Description = null, IsActive = true, IsDeleted = false, SysField = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new WfCategory { RecId = 11, Code = "RENT", Name = "Rental management", Description = null, IsActive = true, IsDeleted = false, SysField = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new WfCategory { RecId = 12, Code = "CNST", Name = "Construction management", Description = null, IsActive = true, IsDeleted = false, SysField = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new WfCategory { RecId = 13, Code = "PUR", Name = "Purchase Department", Description = null, IsActive = true, IsDeleted = false, SysField = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new WfCategory { RecId = 14, Code = "BRCH", Name = "Branch management transactions", Description = null, IsActive = true, IsDeleted = false, SysField = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new WfCategory { RecId = 15, Code = "MKTG", Name = "Marketing management transactions", Description = null, IsActive = true, IsDeleted = false, SysField = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new WfCategory { RecId = 16, Code = "CUST", Name = "Customer Service Transactions", Description = "Customer Service Transactions", IsActive = true, IsDeleted = false, SysField = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new WfCategory { RecId = 17, Code = "LEGL", Name = "Transactions of the Legal Affairs Department", Description = null, IsActive = true, IsDeleted = false, SysField = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new WfCategory { RecId = 18, Code = "OPS", Name = "Operations and Manufacturing Management Transactions", Description = "Operations and Manufacturing Management Transactions", IsActive = true, IsDeleted = false, SysField = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new WfCategory { RecId = 19, Code = "EVIS", Name = "Electronic visits", Description = null, IsActive = true, IsDeleted = false, SysField = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new WfCategory { RecId = 20, Code = "EASS", Name = "Online assessments", Description = null, IsActive = true, IsDeleted = false, SysField = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new WfCategory { RecId = 21, Code = "NICH", Name = "Niche administration transactions", Description = null, IsActive = true, IsDeleted = false, SysField = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new WfCategory { RecId = 22, Code = "SNR", Name = "Senior management", Description = null, IsActive = true, IsDeleted = false, SysField = false, CreatedBy = createdBy, OwnerAccountId = createdBy }
+                    new WfCategory { RecId = 5, Code = "FIN", Name = "معاملات منتهية", Description = "معاملات منتهية", IsActive = false, IsDeleted = false, IsSystemDefined = true, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfCategory { RecId = 1, Code = "HR", Name = "Human Resources Department", Description = null, IsActive = true, IsDeleted = false, IsSystemDefined = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfCategory { RecId = 2, Code = "SAL", Name = "Sales Department", Description = "Sales Department", IsActive = true, IsDeleted = false, IsSystemDefined = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfCategory { RecId = 3, Code = "REM", Name = "Remote work Department", Description = null, IsActive = true, IsDeleted = false, IsSystemDefined = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfCategory { RecId = 4, Code = "IT", Name = "IT Department", Description = null, IsActive = true, IsDeleted = false, IsSystemDefined = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfCategory { RecId = 6, Code = "FINM", Name = "Financial management transactions", Description = null, IsActive = true, IsDeleted = false, IsSystemDefined = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfCategory { RecId = 7, Code = "QLTY", Name = "Quality Department", Description = null, IsActive = true, IsDeleted = false, IsSystemDefined = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfCategory { RecId = 9, Code = "FRAN", Name = "Franchise management", Description = null, IsActive = true, IsDeleted = false, IsSystemDefined = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfCategory { RecId = 10, Code = "BINV", Name = "Branch inventory Department", Description = null, IsActive = true, IsDeleted = false, IsSystemDefined = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfCategory { RecId = 11, Code = "RENT", Name = "Rental management", Description = null, IsActive = true, IsDeleted = false, IsSystemDefined = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfCategory { RecId = 12, Code = "CNST", Name = "Construction management", Description = null, IsActive = true, IsDeleted = false, IsSystemDefined = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfCategory { RecId = 13, Code = "PUR", Name = "Purchase Department", Description = null, IsActive = true, IsDeleted = false, IsSystemDefined = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfCategory { RecId = 14, Code = "BRCH", Name = "Branch management transactions", Description = null, IsActive = true, IsDeleted = false, IsSystemDefined = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfCategory { RecId = 15, Code = "MKTG", Name = "Marketing management transactions", Description = null, IsActive = true, IsDeleted = false, IsSystemDefined = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfCategory { RecId = 16, Code = "CUST", Name = "Customer Service Transactions", Description = "Customer Service Transactions", IsActive = true, IsDeleted = false, IsSystemDefined = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfCategory { RecId = 17, Code = "LEGL", Name = "Transactions of the Legal Affairs Department", Description = null, IsActive = true, IsDeleted = false, IsSystemDefined = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfCategory { RecId = 18, Code = "OPS", Name = "Operations and Manufacturing Management Transactions", Description = "Operations and Manufacturing Management Transactions", IsActive = true, IsDeleted = false, IsSystemDefined = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfCategory { RecId = 19, Code = "EVIS", Name = "Electronic visits", Description = null, IsActive = true, IsDeleted = false, IsSystemDefined = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfCategory { RecId = 20, Code = "EASS", Name = "Online assessments", Description = null, IsActive = true, IsDeleted = false, IsSystemDefined = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfCategory { RecId = 21, Code = "NICH", Name = "Niche administration transactions", Description = null, IsActive = true, IsDeleted = false, IsSystemDefined = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfCategory { RecId = 22, Code = "SNR", Name = "Senior management", Description = null, IsActive = true, IsDeleted = false, IsSystemDefined = false, CreatedBy = createdBy, OwnerAccountId = createdBy }
                 };
 
                 for (int i = 100; i < 400; i++)
@@ -109,7 +109,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                         Description = $"Description for Category {i}",
                         IsActive = true,
                         IsDeleted = false,
-                        SysField = false,
+                        IsSystemDefined = false,
                         CreatedBy = createdBy,
                         OwnerAccountId = createdBy
                     });
@@ -229,11 +229,11 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
 
                 var processes = new[]
                 {
-                    new WfProcess { RecId = 591, Code = "DISC_PROC", Name = "Disciplinary Process", CategoryId = hrCatId, PriorityId = medPriorityId, ProcessTypeId = 1, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new WfProcess { RecId = 592, Code = "ONBOARDING", Name = "Employee Onboarding", CategoryId = hrCatId, PriorityId = medPriorityId, ProcessTypeId = 1, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new WfProcess { RecId = 593, Code = "LEAVE_REQ", Name = "Leave Request", CategoryId = hrCatId, PriorityId = medPriorityId, ProcessTypeId = 1, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new WfProcess { RecId = 594, Code = "PO_APPROV", Name = "Purchase Order Approval", CategoryId = purCatId, PriorityId = medPriorityId, ProcessTypeId = 1, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new WfProcess { RecId = 595, Code = "IT_TICKET", Name = "IT Support Ticket", CategoryId = itCatId, PriorityId = medPriorityId, ProcessTypeId = 1, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy }
+                    new WfProcess { IsRepeatable = false, RepeatIntervalHours = 0, MandatoryDocuments = false, IsSystemDefined = false, RecId = 591, Code = "DISC_PROC", Name = "Disciplinary Process", CategoryId = hrCatId, PriorityId = medPriorityId, ProcessTypeId = 1, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfProcess { IsRepeatable = false, RepeatIntervalHours = 0, MandatoryDocuments = false, IsSystemDefined = false, RecId = 592, Code = "ONBOARDING", Name = "Employee Onboarding", CategoryId = hrCatId, PriorityId = medPriorityId, ProcessTypeId = 1, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfProcess { IsRepeatable = false, RepeatIntervalHours = 0, MandatoryDocuments = false, IsSystemDefined = false, RecId = 593, Code = "LEAVE_REQ", Name = "Leave Request", CategoryId = hrCatId, PriorityId = medPriorityId, ProcessTypeId = 1, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfProcess { IsRepeatable = false, RepeatIntervalHours = 0, MandatoryDocuments = false, IsSystemDefined = false, RecId = 594, Code = "PO_APPROV", Name = "Purchase Order Approval", CategoryId = purCatId, PriorityId = medPriorityId, ProcessTypeId = 1, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfProcess { IsRepeatable = false, RepeatIntervalHours = 0, MandatoryDocuments = false, IsSystemDefined = false, RecId = 595, Code = "IT_TICKET", Name = "IT Support Ticket", CategoryId = itCatId, PriorityId = medPriorityId, ProcessTypeId = 1, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy }
                 };
 
                 var existingIds = await db.WfProcesses.IgnoreQueryFilters().Select(x => x.RecId).ToListAsync(ct);
@@ -256,6 +256,10 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
 
                     var mockProcess = new WfProcess
                     {
+                        IsRepeatable = false,
+                        RepeatIntervalHours = 0,
+                        MandatoryDocuments = false,
+                        IsSystemDefined = false,
                         RecId = 591,
                         Code = "DISC_PROC",
                         Name = "Disciplinary Process",
@@ -527,8 +531,8 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             {
                 var steps = new[]
                 {
-                    new WfStep { RecId = 1, ProcessId = 591, Code = "STEP_1", Name = "Step 1", SortOrder = 1, Score = 0, AutoPassingHrs = 0, AllMandatory = false, SysField = false, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new WfStep { RecId = 2, ProcessId = 591, Code = "STEP_2", Name = "Step 2", SortOrder = 2, Score = 0, AutoPassingHrs = 0, AllMandatory = false, SysField = false, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy }
+                    new WfStep { RecId = 1, ProcessId = 591, Code = "STEP_1", Name = "Step 1", SortOrder = 1, Score = 0,MustCompleteAll = false, IsSystemDefined = false, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new WfStep { RecId = 2, ProcessId = 591, Code = "STEP_2", Name = "Step 2", SortOrder = 2, Score = 0,  MustCompleteAll = false, IsSystemDefined = false, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy }
                 };
 
                 var existingIds = await db.WfSteps.IgnoreQueryFilters().Select(x => x.RecId).ToListAsync(ct);
@@ -629,6 +633,15 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 {
                     new WfActivity
                     {
+                        IsSystemNotificationEnabled = false,
+                        IsEmailNotificationEnabled = false,
+                        IsSmsNotificationEnabled = false,
+                        IsWhatsAppNotificationEnabled = false,
+                        CanViewPreviousSteps = false,
+                        CanViewPreviousDocuments = false,
+                        MandatoryDocuments = false,
+                        IsAutoPassEnabled = false,
+                        AutoPassAfterHours = 0,
                         RecId = 1,
                         Code = "ACT_1",
                         Name = "Activity 1",
@@ -643,6 +656,15 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     },
                     new WfActivity
                     {
+                        IsSystemNotificationEnabled = false,
+                        IsEmailNotificationEnabled = false,
+                        IsSmsNotificationEnabled = false,
+                        IsWhatsAppNotificationEnabled = false,
+                        CanViewPreviousSteps = false,
+                        CanViewPreviousDocuments = false,
+                        MandatoryDocuments = false,
+                        IsAutoPassEnabled = false,
+                        AutoPassAfterHours = 0,
                         RecId = 2,
                         Code = "ACT_2",
                         Name = "Activity 2",

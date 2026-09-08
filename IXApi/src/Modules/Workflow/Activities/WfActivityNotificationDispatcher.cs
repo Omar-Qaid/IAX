@@ -64,10 +64,10 @@ namespace IAX.IXApi.Modules.Workflow.Activities
         private static List<SysNotificationChannel> ResolveChannels(WfActivity activity)
         {
             var channels = new List<SysNotificationChannel>();
-            if (activity.AlertingBySystem) channels.Add(SysNotificationChannel.InApp);
-            if (activity.AlertingByEmail) channels.Add(SysNotificationChannel.Email);
-            if (activity.AlertingBySms) channels.Add(SysNotificationChannel.SMS);
-            if (activity.AlertingByWhatsApp) channels.Add(SysNotificationChannel.WhatsApp);
+            if (activity.IsSystemNotificationEnabled) channels.Add(SysNotificationChannel.InApp);
+            if (activity.IsEmailNotificationEnabled) channels.Add(SysNotificationChannel.Email);
+            if (activity.IsSmsNotificationEnabled) channels.Add(SysNotificationChannel.SMS);
+            if (activity.IsWhatsAppNotificationEnabled) channels.Add(SysNotificationChannel.WhatsApp);
             return channels;
         }
     }

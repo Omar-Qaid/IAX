@@ -59,6 +59,7 @@ public sealed class PrintTextElement : PrintTemplateElement
 {
     public string Value { get; set; } = string.Empty;
     public string? ValueAlias { get; set; }
+    public string? TextAlias { get; set; }
 }
 
 public sealed class PrintFieldElement : PrintTemplateElement
@@ -73,6 +74,7 @@ public sealed class PrintFieldElement : PrintTemplateElement
 public sealed class PrintSectionElement : PrintTemplateElement
 {
     public string? Title { get; set; }
+    public string? TitleAlias { get; set; }
     public int Columns { get; set; } = 1;
     public List<PrintTemplateElement> Elements { get; set; } = [];
 }
@@ -109,6 +111,7 @@ public sealed class PrintTableColumn
 {
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public string Label { get; set; } = string.Empty;
+    public string? LabelAlias { get; set; }
     public string Field { get; set; } = string.Empty;
     public PrintValueFormat? Format { get; set; }
     public decimal? Width { get; set; }
@@ -129,6 +132,7 @@ public sealed class PrintSignatureElement : PrintTemplateElement
 {
     public PrintFieldBinding Binding { get; set; } = new();
     public string? Label { get; set; }
+    public string? LabelAlias { get; set; }
 }
 
 public sealed class PrintQrCodeElement : PrintTemplateElement

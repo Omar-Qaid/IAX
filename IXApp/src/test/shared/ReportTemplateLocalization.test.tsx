@@ -37,6 +37,18 @@ const documentFor = (direction: 'ltr' | 'rtl'): PrintTemplateDocument => ({
 });
 
 describe('ReportTemplateRenderer localization', () => {
+  it('uses textAlias when valueAlias is absent and prefers valueAlias when both exist', () => {
+    const template = documentFor('rtl');
+    template.sections = [
+      { id: 'legacy', type: 'text', value: 'Primary', textAlias: 'Text alias' },
+      { id: 'both', type: 'text', value: 'Primary', textAlias: 'Unused alias', valueAlias: 'Value alias' },
+    ];
+    render(<ReportTemplateRenderer template={template} data={data} company={{ name: '' }} />);
+    expect(screen.getByText('Text alias')).toBeInTheDocument();
+    expect(screen.getByText('Value alias')).toBeInTheDocument();
+    expect(screen.queryByText('Unused alias')).not.toBeInTheDocument();
+  });
+
   it('renders primary text and labels in LTR mode', () => {
     render(
       <ReportTemplateRenderer template={documentFor('ltr')} data={data} company={{ name: '' }} />
