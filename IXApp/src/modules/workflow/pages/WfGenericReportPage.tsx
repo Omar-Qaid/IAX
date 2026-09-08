@@ -10,6 +10,7 @@ import {
   DialogTitle,
   Drawer,
   FormControlLabel,
+  IconButton,
   LinearProgress,
   MenuItem,
   Select,
@@ -18,6 +19,7 @@ import {
   Typography,
 } from '@mui/material';
 import PlayArrowOutlined from '@mui/icons-material/PlayArrowOutlined';
+import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import type { ColumnDef } from '@shared/components/data-grid/types';
 import { AppLookupGridField } from '@shared/components/fields/AppLookupGridField';
 import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
@@ -154,6 +156,7 @@ function ReportParametersDialog({
       open={open}
       onClose={onCancel}
       anchor={isRtl ? 'left' : 'right'}
+      sx={{ zIndex: (theme) => theme.zIndex.modal + 1 }}
       slotProps={{
         paper: {
           dir: direction,
@@ -170,11 +173,40 @@ function ReportParametersDialog({
         },
       }}
     >
+      <DialogTitle
+        dir={direction}
+        sx={{
+          minHeight: 52,
+          px: 2.25,
+          py: 1.25,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 1,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          fontSize: 15,
+          fontWeight: 700,
+          textAlign: 'start',
+        }}
+      >
+        <Box component="span" sx={{ textAlign: 'start' }}>
+          {t('genericReport.builder')}
+        </Box>
+        <IconButton
+          size="small"
+          onClick={onCancel}
+          aria-label={t('actions.close')}
+          sx={{ flexShrink: 0 }}
+        >
+          <CloseOutlined fontSize="small" />
+        </IconButton>
+      </DialogTitle>
       <DialogContent
         dir={direction}
         sx={{
           px: 2.25,
-          pt: 2.5,
+          pt: 1.5,
           pb: 2,
           flex: 1,
           overflowY: 'auto',
@@ -193,12 +225,9 @@ function ReportParametersDialog({
           '& .MuiFormControlLabel-label': { textAlign: 'start' },
         }}
       >
-        <Typography sx={{ fontSize: 16, lineHeight: 1.25, fontWeight: 700 }}>
-          {t('genericReport.builder')}
-        </Typography>
         <Typography
           color="text.secondary"
-          sx={{ mt: 0.5, fontSize: 9, pb: 1.25, borderBottom: '1px solid', borderColor: 'divider' }}
+          sx={{ fontSize: 9, pb: 1.25, borderBottom: '1px solid', borderColor: 'divider' }}
         >
           {t('genericReport.description')}
         </Typography>

@@ -58,11 +58,13 @@ public abstract class PrintTemplateElement
 public sealed class PrintTextElement : PrintTemplateElement
 {
     public string Value { get; set; } = string.Empty;
+    public string? ValueAlias { get; set; }
 }
 
 public sealed class PrintFieldElement : PrintTemplateElement
 {
     public string Label { get; set; } = string.Empty;
+    public string? LabelAlias { get; set; }
     public PrintFieldBinding Binding { get; set; } = new();
     public PrintValueFormat? Format { get; set; }
     public string? Fallback { get; set; }

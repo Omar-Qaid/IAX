@@ -221,6 +221,8 @@
       },
       "properties": {
         "text": "النص",
+        "textEnglish": "النص بالإنجليزية",
+        "textArabic": "النص بالعربية",
         "title": "العنوان",
         "columns": "الأعمدة",
         "span": "امتداد العمود",
@@ -242,6 +244,8 @@
         "borderRadius": "استدارة الزوايا (بكسل)",
         "keepTogether": "إبقاء العنصر معاً عند الطباعة",
         "label": "التسمية",
+        "labelEnglish": "التسمية بالإنجليزية",
+        "labelArabic": "التسمية بالعربية",
         "sourceType": "مصدر البيانات",
         "field": "الحقل",
         "requestControlId": "معرف حقل الطلب",

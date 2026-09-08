@@ -327,18 +327,36 @@ function ElementProperties({
       </Typography>
       <PropertyAccordion title={t('printTemplates.designer.groups.content')} defaultExpanded>
         {element.type === 'text' ? (
-          <TextField
-            size="small"
-            multiline
-            minRows={2}
-            label={t('printTemplates.designer.properties.text')}
-            value={element.value}
-            onChange={(event) =>
-              update((current) =>
-                current.type === 'text' ? { ...current, value: event.target.value } : current
-              )
-            }
-          />
+          <>
+            <TextField
+              size="small"
+              multiline
+              minRows={2}
+              label={t('printTemplates.designer.properties.textEnglish')}
+              value={element.value}
+              onChange={(event) =>
+                update((current) =>
+                  current.type === 'text' ? { ...current, value: event.target.value } : current
+                )
+              }
+              slotProps={{ htmlInput: { dir: 'ltr' } }}
+            />
+            <TextField
+              size="small"
+              multiline
+              minRows={2}
+              label={t('printTemplates.designer.properties.textArabic')}
+              value={element.valueAlias ?? ''}
+              onChange={(event) =>
+                update((current) =>
+                  current.type === 'text'
+                    ? { ...current, valueAlias: event.target.value || null }
+                    : current
+                )
+              }
+              slotProps={{ htmlInput: { dir: 'rtl' } }}
+            />
+          </>
         ) : null}
         {element.type === 'field' ? (
           <FieldProperties element={element} update={update} processId={processId} />
@@ -755,9 +773,19 @@ function FieldProperties({
     <>
       <TextField
         size="small"
-        label={t('printTemplates.designer.properties.label')}
+        label={t('printTemplates.designer.properties.labelEnglish')}
         value={element.label}
         onChange={(event) => setField((field) => ({ ...field, label: event.target.value }))}
+        slotProps={{ htmlInput: { dir: 'ltr' } }}
+      />
+      <TextField
+        size="small"
+        label={t('printTemplates.designer.properties.labelArabic')}
+        value={element.labelAlias ?? ''}
+        onChange={(event) =>
+          setField((field) => ({ ...field, labelAlias: event.target.value || null }))
+        }
+        slotProps={{ htmlInput: { dir: 'rtl' } }}
       />
       <TextField
         select
@@ -1255,6 +1283,7 @@ export function WorkflowReportDesigner({
                   selectedId={designer.selectedId}
                   onSelect={designer.select}
                   requestControlNames={requestControlNames}
+                  direction={document.direction}
                 />
               ))}
             </Box>

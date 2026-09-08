@@ -18,6 +18,7 @@ interface Props {
   selectedId: string | null;
   onSelect: (region: TemplateRegion, id: string) => void;
   requestControlNames?: ReadonlyMap<number, string>;
+  direction: 'ltr' | 'rtl';
 }
 
 const placeholderValue = (
@@ -38,6 +39,7 @@ export function ReportDesignerElementPreview({
   selectedId,
   onSelect,
   requestControlNames,
+  direction,
 }: Props): React.ReactElement {
   const { t } = useAppTranslation();
   const selected = selectedId === element.id;
@@ -83,7 +85,7 @@ export function ReportDesignerElementPreview({
             textAlign: style?.alignment ?? 'start',
           }}
         >
-          {element.value || 'Text'}
+          {(direction === 'rtl' ? element.valueAlias || element.value : element.value) || 'Text'}
         </Typography>
       ) : null}
       {element.type === 'field' ? (
@@ -95,7 +97,8 @@ export function ReportDesignerElementPreview({
           }}
         >
           <Typography sx={{ p: 0.65, bgcolor: '#f6f6f6', fontSize: 11, fontWeight: 600 }}>
-            {element.label || t('printTemplates.designer.components.field')}
+            {(direction === 'rtl' ? element.labelAlias || element.label : element.label) ||
+              t('printTemplates.designer.components.field')}
           </Typography>
           <Typography sx={{ p: 0.65, fontSize: 11, color: 'text.secondary' }}>
             {placeholderValue(element, requestControlNames)}
@@ -246,6 +249,7 @@ export function ReportDesignerElementPreview({
               selectedId={selectedId}
               onSelect={onSelect}
               requestControlNames={requestControlNames}
+              direction={direction}
             />
           ))}
         </Box>

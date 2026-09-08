@@ -201,6 +201,8 @@
       },
       "components": {
         "text": "Text",
+        "textEnglish": "English text",
+        "textArabic": "Arabic text",
         "richText": "Rich text",
         "field": "Dynamic field",
         "labelValue": "Label + value",
@@ -248,6 +250,8 @@
         "borderRadius": "Corner radius (px)",
         "keepTogether": "Keep together when printing",
         "label": "Label",
+        "labelEnglish": "English label",
+        "labelArabic": "Arabic label",
         "sourceType": "Data source",
         "field": "Field",
         "requestControlId": "Request control ID",

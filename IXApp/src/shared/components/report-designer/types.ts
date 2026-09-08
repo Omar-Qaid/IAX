@@ -123,10 +123,12 @@ interface PrintElementBase {
 export interface PrintTextElement extends PrintElementBase {
   type: 'text';
   value: string;
+  valueAlias?: string | null;
 }
 export interface PrintFieldElement extends PrintElementBase {
   type: 'field';
   label: string;
+  labelAlias?: string | null;
   binding: PrintFieldBinding;
   format?: PrintValueFormat | null;
   fallback?: string | null;

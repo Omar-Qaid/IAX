@@ -307,8 +307,12 @@ function RuntimeElement({
     items.map((child) => (
       <RuntimeElement key={child.id} element={child} data={data} template={template} renderRequestControl={renderRequestControl} layoutMode={layoutMode} />
     ));
-  if (element.type === 'text') return <Typography sx={sx}>{element.value}</Typography>;
+  const localizedText = (primary: string | null | undefined, alias?: string | null) =>
+    template.direction === 'rtl' ? alias || primary || '' : primary || alias || '';
+  if (element.type === 'text')
+    return <Typography sx={sx}>{localizedText(element.value, element.valueAlias)}</Typography>;
   if (element.type === 'field') {
+    const label = localizedText(element.label, element.labelAlias);
     const editableControl = element.binding.sourceType === 'requestControl'
       ? renderRequestControl?.(element.binding, element.type)
       : null;
@@ -327,15 +331,15 @@ function RuntimeElement({
           (template.missingFieldBehavior === 'na'
             ? 'N/A'
             : template.missingFieldBehavior === 'placeholder'
-              ? `{{${element.label}}}`
+              ? `{{${label}}}`
               : '')
         : formatPrintValue(raw, element.format, template.language));
     if (layoutMode === 'requestBody')
       return (
         <Box className="printout-field" sx={{ ...sx, minWidth: 0 }}>
-          {element.label ? (
+          {label ? (
             <Typography sx={{ mb: 0.35, fontWeight: 700, textAlign: 'start' }}>
-              {element.label}
+              {label}
             </Typography>
           ) : null}
           <Box
@@ -358,13 +362,13 @@ function RuntimeElement({
         sx={{
           ...sx,
           display: 'grid',
-          gridTemplateColumns: element.label ? 'minmax(30mm, .45fr) 1fr' : '1fr',
+          gridTemplateColumns: label ? 'minmax(30mm, .45fr) 1fr' : '1fr',
           border: style?.borderWidth === 0 ? 'none' : '1px solid #d9e2ec',
           minHeight: 28,
         }}
       >
-        {element.label ? (
-          <Box sx={{ px: 0.75, py: 0.5, fontWeight: 700, bgcolor: '#f3f6f9' }}>{element.label}</Box>
+        {label ? (
+          <Box sx={{ px: 0.75, py: 0.5, fontWeight: 700, bgcolor: '#f3f6f9' }}>{label}</Box>
         ) : null}
         <Box dir="auto" sx={{ px: 0.75, py: 0.5 }}>
           {editableControl ?? value}
