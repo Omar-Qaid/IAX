@@ -362,37 +362,45 @@ export function WorkflowReportDesignerListPage(): React.ReactElement {
         }
       >
         <Stack spacing={1.5}>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', md: 'minmax(180px, .7fr) 1fr 1fr' },
+              gap: 1,
+            }}
+          >
+            <TextField
+              required
+              size="small"
+              label={t('printTemplates.fields.code')}
+              value={draft.code}
+              onChange={(event) => setDraft((value) => ({ ...value, code: event.target.value }))}
+              slotProps={{ htmlInput: { maxLength: 50, dir: 'ltr' } }}
+            />
+            <TextField
+              required
+              size="small"
+              label={t('printTemplates.fields.nameEnglish')}
+              value={draft.name}
+              onChange={(event) => setDraft((value) => ({ ...value, name: event.target.value }))}
+              slotProps={{ htmlInput: { maxLength: 200, dir: 'ltr' } }}
+            />
+            <TextField
+              size="small"
+              label={t('printTemplates.fields.nameArabic')}
+              value={draft.nameAlias ?? ''}
+              onChange={(event) =>
+                setDraft((value) => ({ ...value, nameAlias: event.target.value || null }))
+              }
+              slotProps={{ htmlInput: { maxLength: 255, dir: 'rtl' } }}
+            />
+          </Box>
           <WorkflowReportDesigner
             processId={processId}
             document={draft.document}
             onChange={(document) => setDraft((value) => ({ ...value, document }))}
             isDefault={draft.isDefault}
             onDefaultChange={(isDefault) => setDraft((value) => ({ ...value, isDefault }))}
-          />
-          <TextField
-            required
-            size="small"
-            label={t('printTemplates.fields.code')}
-            value={draft.code}
-            onChange={(event) => setDraft((value) => ({ ...value, code: event.target.value }))}
-            slotProps={{ htmlInput: { maxLength: 50 } }}
-          />
-          <TextField
-            required
-            size="small"
-            label={t('printTemplates.fields.name')}
-            value={draft.name}
-            onChange={(event) => setDraft((value) => ({ ...value, name: event.target.value }))}
-            slotProps={{ htmlInput: { maxLength: 200 } }}
-          />
-          <TextField
-            size="small"
-            label={t('workflowSetup.fields.nameAlias')}
-            value={draft.nameAlias ?? ''}
-            onChange={(event) =>
-              setDraft((value) => ({ ...value, nameAlias: event.target.value || null }))
-            }
-            slotProps={{ htmlInput: { maxLength: 255 } }}
           />
           <TextField
             size="small"

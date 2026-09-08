@@ -44,6 +44,12 @@ import TextSnippetOutlined from '@mui/icons-material/TextSnippetOutlined';
 import VideoFileOutlined from '@mui/icons-material/VideoFileOutlined';
 import type { RenderableControl, RenderableValidation } from './dynamicControlTypes';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import {
+  readFileMetadata,
+  type FileMetadata,
+} from './dynamic-special-controls/fileMetadata';
+
+export { readFileMetadata } from './dynamic-special-controls/fileMetadata';
 
 const normalized = (value: string) => value.replace(/[^a-z0-9]/gi, '').toLocaleLowerCase();
 const ruleOperand = (rule: RenderableValidation) => rule.value ?? rule.expression ?? '';
@@ -60,11 +66,6 @@ const sizeLimitBytes = (value: string): number | null => {
   return amount * ({ b: 1, kb: 1024, mb: 1024 ** 2, gb: 1024 ** 3 }[unit] ?? 1024 ** 2);
 };
 
-interface FileMetadata {
-  name: string;
-  size: number;
-  type: string;
-}
 const fileTypeTile = (
   file: FileMetadata
 ): { color: string; label: string; icon: React.ReactElement } => {
@@ -111,26 +112,6 @@ const fileTypeTile = (
     icon: <InsertDriveFileOutlined />,
   };
 };
-export const readFileMetadata = (value: string): FileMetadata[] => {
-  if (!value) return [];
-  try {
-    const parsed = JSON.parse(value) as unknown;
-    return Array.isArray(parsed)
-      ? parsed.flatMap((item) => {
-          if (!item || typeof item !== 'object') return [];
-          const candidate = item as Partial<FileMetadata> & { n?: string; s?: number; t?: string };
-          const name = candidate.name ?? candidate.n;
-          const size = candidate.size ?? candidate.s;
-          return typeof name === 'string' && typeof size === 'number'
-            ? [{ name, size, type: candidate.type ?? candidate.t ?? '' }]
-            : [];
-        })
-      : [];
-  } catch {
-    return [];
-  }
-};
-
 export function FileDropControl({
   control,
   value,

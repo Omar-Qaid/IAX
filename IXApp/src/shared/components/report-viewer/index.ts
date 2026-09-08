@@ -19,6 +19,9 @@ export {
 export type { runtimeReportData } from './runtimeReportData';
 export { resolveRuntimeBinding, formatRequestControlValue } from './runtimeReportData';
 
+// Direction normalization
+export { resolveReportDirection, type ResolvedReportDirection } from './reportDirection';
+
 // Template selection
 export {
   selectPublishedTemplates,

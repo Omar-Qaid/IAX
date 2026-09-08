@@ -1100,6 +1100,22 @@ export function WorkflowReportDesigner({
           <TextField
             select
             size="small"
+            label={t('printTemplates.fields.direction')}
+            value={document.direction}
+            onChange={(event) =>
+              onChange({
+                ...document,
+                direction: event.target.value as PrintTemplateDocument['direction'],
+              })
+            }
+            sx={{ width: 125, flexShrink: 0 }}
+          >
+            <MenuItem value="ltr">{t('printTemplates.directions.ltr')}</MenuItem>
+            <MenuItem value="rtl">{t('printTemplates.directions.rtl')}</MenuItem>
+          </TextField>
+          <TextField
+            select
+            size="small"
             value={document.page.size}
             onChange={(event) => changePage('size', event.target.value)}
             sx={{ width: 90, flexShrink: 0 }}

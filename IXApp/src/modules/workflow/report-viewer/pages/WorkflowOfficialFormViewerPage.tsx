@@ -13,7 +13,10 @@ import { useNotifications } from '@shared/hooks/useNotifications';
 import { localizedName } from '@shared/utilities/localizedName';
 import { wfRequestApi, type WfRequestRecord } from '../../api/wfRequestApi';
 import { reportDesignerApi } from '../../report-designer/api/reportDesignerApi';
-import { ReportTemplateRenderer as PrintTemplateViewer } from '@shared/components/report-viewer';
+import {
+  ReportTemplateRenderer as PrintTemplateViewer,
+  resolveReportDirection,
+} from '@shared/components/report-viewer';
 import { createruntimeReportData } from '../utils/runtimeReportData';
 
 interface Props {
@@ -29,7 +32,7 @@ export function WorkflowOfficialFormViewer({
   templateId,
   onClose,
 }: Props): React.ReactElement {
-  const { t, isRtl } = useAppTranslation();
+  const { t, currentLanguage, isRtl } = useAppTranslation();
   const { notifyError, notifySuccess } = useNotifications();
   const { user } = useAuth();
   const currentCompany = useCompanyStore((state) => state.currentCompany);
@@ -66,13 +69,29 @@ export function WorkflowOfficialFormViewer({
   const requestName =
     request?.code || (request ? t('mail.requestFallback', { id: request.recId }) : '');
   const templateDisplayName = localizedName(publishedTemplate.data, isRtl);
-  const templateLanguage = publishedTemplate.data?.document.language;
+  const localizedLanguage: 'ar' | 'en' = currentLanguage.code === 'ar' ? 'ar' : 'en';
+  const reportDirection = resolveReportDirection(
+    publishedTemplate.data?.document.direction,
+    localizedLanguage,
+    isRtl ? 'rtl' : 'ltr'
+  );
+  const reportDocument = React.useMemo(
+    () =>
+      publishedTemplate.data
+        ? {
+            ...publishedTemplate.data.document,
+            language: localizedLanguage,
+            direction: reportDirection,
+          }
+        : null,
+    [localizedLanguage, publishedTemplate.data, reportDirection]
+  );
   const runtimeData = React.useMemo(
     () =>
       request && details.data
-        ? createruntimeReportData(request, details.data, company, user, printedAt, templateLanguage)
+        ? createruntimeReportData(request, details.data, company, user, printedAt, localizedLanguage)
         : null,
-    [company, details.data, printedAt, request, templateLanguage, user]
+    [company, details.data, localizedLanguage, printedAt, request, user]
   );
 
   const print = () => {
@@ -90,8 +109,8 @@ export function WorkflowOfficialFormViewer({
         format,
         fileName: `${requestName}-${publishedTemplate.data.code || 'official-form'}`,
         title: templateDisplayName,
-        language: publishedTemplate.data.document.language,
-        direction: publishedTemplate.data.document.direction,
+        language: localizedLanguage,
+        direction: reportDirection,
       });
       notifySuccess(t('reportViewer.export.success', { format }));
     } catch {
@@ -100,10 +119,10 @@ export function WorkflowOfficialFormViewer({
   };
 
   const report =
-    publishedTemplate.data && runtimeData ? (
+    publishedTemplate.data && reportDocument && runtimeData ? (
       <div ref={reportContainerRef}>
         <PrintTemplateViewer
-          template={publishedTemplate.data.document}
+          template={reportDocument}
           data={runtimeData}
           company={company}
         />
@@ -125,7 +144,7 @@ export function WorkflowOfficialFormViewer({
       emptyMessage={t('mail.print.selectRequest')}
       viewerOptions={{
         initialZoomMode: 'Automatic Zoom',
-        direction: publishedTemplate.data?.document.direction || (isRtl ? 'rtl' : 'ltr'),
+        direction: reportDirection,
       }}
       onClose={onClose}
       onReload={() =>

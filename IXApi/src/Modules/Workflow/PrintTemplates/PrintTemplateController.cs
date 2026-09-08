@@ -10,10 +10,12 @@ namespace IAX.IXApi.Modules.Workflow.PrintTemplates;
 public sealed class PrintTemplateController : ControllerBase
 {
     private readonly IPrintTemplateService _service;
+    private readonly IReportResourceAuthorizer _resourceAuthorizer;
 
-    public PrintTemplateController(IPrintTemplateService service)
+    public PrintTemplateController(IPrintTemplateService service, IReportResourceAuthorizer resourceAuthorizer)
     {
         _service = service;
+        _resourceAuthorizer = resourceAuthorizer;
     }
 
     [HttpGet("record/{refTableId:int}/{refRecId:long}")]
@@ -33,6 +35,7 @@ public sealed class PrintTemplateController : ControllerBase
         long refRecId,
         CancellationToken cancellationToken)
     {
+        if (!await _resourceAuthorizer.CanReadAsync(refTableId, refRecId, cancellationToken)) return NotFound();
         var templates = await _service.ListPublishedByRecordAsync(refTableId, refRecId, cancellationToken);
         return Ok(APIResponse<IReadOnlyList<PrintTemplateSummaryDto>>.Ok(templates));
     }
@@ -44,6 +47,7 @@ public sealed class PrintTemplateController : ControllerBase
         long templateId,
         CancellationToken cancellationToken)
     {
+        if (!await _resourceAuthorizer.CanReadAsync(refTableId, refRecId, cancellationToken)) return NotFound();
         var template = await _service.GetPublishedForRecordAsync(refTableId, refRecId, templateId, cancellationToken);
         return template == null
             ? NotFound(APIResponse<PublishedPrintTemplateDto>.Fail("No active published template was found for this record."))
@@ -65,6 +69,7 @@ public sealed class PrintTemplateController : ControllerBase
         long processId,
         CancellationToken cancellationToken)
     {
+        if (!await _resourceAuthorizer.CanReadAsync(WorkflowReportResourceAuthorizer.ProcessTableId, processId, cancellationToken)) return NotFound();
         var templates = await _service.ListPublishedByProcessAsync(processId, cancellationToken);
         return Ok(APIResponse<IReadOnlyList<PrintTemplateSummaryDto>>.Ok(templates));
     }
@@ -75,6 +80,7 @@ public sealed class PrintTemplateController : ControllerBase
         long templateId,
         CancellationToken cancellationToken)
     {
+        if (!await _resourceAuthorizer.CanReadAsync(WorkflowReportResourceAuthorizer.RequestTableId, requestId, cancellationToken)) return NotFound();
         var template = await _service.GetPublishedForRequestAsync(requestId, templateId, cancellationToken);
         return template == null
             ? NotFound(APIResponse<PublishedPrintTemplateDto>.Fail("No active published template was found for this request."))
@@ -87,6 +93,7 @@ public sealed class PrintTemplateController : ControllerBase
         long templateId,
         CancellationToken cancellationToken)
     {
+        if (!await _resourceAuthorizer.CanReadAsync(WorkflowReportResourceAuthorizer.ProcessTableId, processId, cancellationToken)) return NotFound();
         var template = await _service.GetPublishedForProcessAsync(processId, templateId, cancellationToken);
         return template == null
             ? NotFound(APIResponse<PublishedPrintTemplateDto>.Fail("No active published template was found for this process."))

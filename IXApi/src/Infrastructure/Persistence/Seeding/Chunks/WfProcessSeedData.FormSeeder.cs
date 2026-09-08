@@ -301,15 +301,15 @@ public sealed partial class WfProcessSeedData
     {
         var template = await db.ReportTemplates.IgnoreQueryFilters()
             .SingleOrDefaultAsync(
-                x => x.RefTableId == PrintTemplateService.WorkflowProcessTableId && x.RefRecId == process.RecId && x.Code == definition.PrintTemplateCode,
+                x => x.RefTableId == WorkflowReportResourceAuthorizer.ProcessTableId && x.RefRecId == process.RecId && x.Code == definition.PrintTemplateCode,
                 ct);
         if (template is null)
         {
             var hasDefault = await db.ReportTemplates.IgnoreQueryFilters()
-                .AnyAsync(x => x.RefTableId == PrintTemplateService.WorkflowProcessTableId && x.RefRecId == process.RecId && x.IsDefault && x.IsActive && !x.IsDeleted, ct);
+                .AnyAsync(x => x.RefTableId == WorkflowReportResourceAuthorizer.ProcessTableId && x.RefRecId == process.RecId && x.IsDefault && x.IsActive && !x.IsDeleted, ct);
             template = new ReportTemplate
             {
-                RefTableId = PrintTemplateService.WorkflowProcessTableId,
+                RefTableId = WorkflowReportResourceAuthorizer.ProcessTableId,
                 RefRecId = process.RecId,
                 Code = definition.PrintTemplateCode,
                 Name = definition.Name,

@@ -172,7 +172,7 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
         var template = await db.ReportTemplates
             .IgnoreQueryFilters()
             .SingleOrDefaultAsync(
-                row => row.RefTableId == PrintTemplateService.WorkflowProcessTableId && row.RefRecId == ProcessId && row.Code == templateCode,
+                row => row.RefTableId == WorkflowReportResourceAuthorizer.ProcessTableId && row.RefRecId == ProcessId && row.Code == templateCode,
                 ct);
 
         if (template is null)
@@ -180,12 +180,12 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
             var processHasDefaultTemplate = await db.ReportTemplates
                 .IgnoreQueryFilters()
                 .AnyAsync(
-                    row => row.RefTableId == PrintTemplateService.WorkflowProcessTableId && row.RefRecId == ProcessId && row.IsDefault && row.IsActive && !row.IsDeleted,
+                    row => row.RefTableId == WorkflowReportResourceAuthorizer.ProcessTableId && row.RefRecId == ProcessId && row.IsDefault && row.IsActive && !row.IsDeleted,
                     ct);
 
             template = new ReportTemplate
             {
-                RefTableId = PrintTemplateService.WorkflowProcessTableId,
+                RefTableId = WorkflowReportResourceAuthorizer.ProcessTableId,
                 RefRecId = ProcessId,
                 Code = templateCode,
                 Name = "Daily fund closing printout",
@@ -236,14 +236,14 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
         var requestVersionExists = await db.ReportEntityVersions
             .IgnoreQueryFilters()
             .AnyAsync(
-                row => row.RefTableId == PrintTemplateService.WorkflowRequestTableId && row.RefRecId == requestId && row.TemplateId == template.RecId,
+                row => row.RefTableId == WorkflowReportResourceAuthorizer.RequestTableId && row.RefRecId == requestId && row.TemplateId == template.RecId,
                 ct);
 
         if (!requestVersionExists)
         {
             db.ReportEntityVersions.Add(new ReportEntityVersion
             {
-                RefTableId = PrintTemplateService.WorkflowRequestTableId,
+                RefTableId = WorkflowReportResourceAuthorizer.RequestTableId,
                 RefRecId = requestId,
                 TemplateId = template.RecId,
                 TemplateVersionId = version.RecId,
@@ -502,7 +502,7 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
             var template = await db.ReportTemplates
                 .IgnoreQueryFilters()
                 .SingleOrDefaultAsync(
-                    row => row.RefTableId == PrintTemplateService.WorkflowProcessTableId && row.RefRecId == process.RecId && row.Code == templateCode,
+                    row => row.RefTableId == WorkflowReportResourceAuthorizer.ProcessTableId && row.RefRecId == process.RecId && row.Code == templateCode,
                     ct);
 
             if (template is null)
@@ -510,7 +510,7 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                 var processHasDefaultTemplate = await db.ReportTemplates
                     .IgnoreQueryFilters()
                     .AnyAsync(
-                        row => row.RefTableId == PrintTemplateService.WorkflowProcessTableId
+                        row => row.RefTableId == WorkflowReportResourceAuthorizer.ProcessTableId
                             && row.RefRecId == process.RecId
                             && row.IsDefault
                             && row.IsActive
@@ -519,7 +519,7 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
 
                 template = new ReportTemplate
                 {
-                    RefTableId = PrintTemplateService.WorkflowProcessTableId,
+                    RefTableId = WorkflowReportResourceAuthorizer.ProcessTableId,
                     RefRecId = process.RecId,
                     Code = templateCode,
                     Name = $"{processName} printout",
@@ -594,14 +594,14 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
             var requestVersion = await db.ReportEntityVersions
                 .IgnoreQueryFilters()
                 .SingleOrDefaultAsync(
-                    row => row.RefTableId == PrintTemplateService.WorkflowRequestTableId && row.RefRecId == requestId.Value && row.TemplateId == template.RecId,
+                    row => row.RefTableId == WorkflowReportResourceAuthorizer.RequestTableId && row.RefRecId == requestId.Value && row.TemplateId == template.RecId,
                     ct);
 
             if (requestVersion is null)
             {
                 db.ReportEntityVersions.Add(new ReportEntityVersion
                 {
-                    RefTableId = PrintTemplateService.WorkflowRequestTableId,
+                    RefTableId = WorkflowReportResourceAuthorizer.RequestTableId,
                     RefRecId = requestId.Value,
                     TemplateId = template.RecId,
                     TemplateVersionId = version.RecId,

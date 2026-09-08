@@ -8,25 +8,26 @@ namespace IAX.IXApi.Modules.Workflow.PrintTemplates;
 
 public sealed class PrintTemplateService : IPrintTemplateService
 {
-    public const int WorkflowProcessTableId = 476793887;
-    public const int WorkflowRequestTableId = 1001;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private readonly IWorkflowDataContext _context;
     private readonly ICurrentUserService _currentUser;
     private readonly PrintTemplateDocumentValidator _documentValidator;
+    private readonly IReportResourceAuthorizer _resourceAuthorizer;
 
     public PrintTemplateService(
         IWorkflowDataContext context,
         ICurrentUserService currentUser,
-        PrintTemplateDocumentValidator documentValidator)
+        PrintTemplateDocumentValidator documentValidator,
+        IReportResourceAuthorizer resourceAuthorizer)
     {
         _context = context;
         _currentUser = currentUser;
         _documentValidator = documentValidator;
+        _resourceAuthorizer = resourceAuthorizer;
     }
 
     public Task<IReadOnlyList<PrintTemplateSummaryDto>> ListByProcessAsync(long processId, CancellationToken cancellationToken = default) =>
-        ListByRecordAsync(WorkflowProcessTableId, processId, cancellationToken);
+        ListByRecordAsync(WorkflowReportResourceAuthorizer.ProcessTableId, processId, cancellationToken);
 
     public async Task<IReadOnlyList<PrintTemplateSummaryDto>> ListByRecordAsync(int refTableId, long refRecId, CancellationToken cancellationToken = default)
     {
@@ -61,7 +62,7 @@ public sealed class PrintTemplateService : IPrintTemplateService
     }
 
     public Task<IReadOnlyList<PrintTemplateSummaryDto>> ListPublishedByProcessAsync(long processId, CancellationToken cancellationToken = default) =>
-        ListPublishedByRecordAsync(WorkflowProcessTableId, processId, cancellationToken);
+        ListPublishedByRecordAsync(WorkflowReportResourceAuthorizer.ProcessTableId, processId, cancellationToken);
 
     public async Task<IReadOnlyList<PrintTemplateSummaryDto>> ListPublishedByRecordAsync(int refTableId, long refRecId, CancellationToken cancellationToken = default)
     {
@@ -115,20 +116,44 @@ public sealed class PrintTemplateService : IPrintTemplateService
         long templateId,
         CancellationToken cancellationToken = default)
     {
-        var requestProcessId = await _context.WfRequests.AsNoTracking()
+        var request = await _context.WfRequests.AsNoTracking()
             .Where(item => item.RecId == requestId)
-            .Select(item => (long?)item.ProcessId)
+            .Select(item => new { item.ProcessId, item.DataAreaId })
             .SingleOrDefaultAsync(cancellationToken);
-        if (!requestProcessId.HasValue) return null;
+        if (request == null) return null;
 
-        return await GetPublishedForProcessAsync(requestProcessId.Value, templateId, cancellationToken);
+        var pinned = await _context.ReportEntityVersions.AsNoTracking()
+            .Include(item => item.Template)
+                .ThenInclude(template => template.Versions)
+            .Include(item => item.TemplateVersion)
+            .SingleOrDefaultAsync(item => item.RefTableId == WorkflowReportResourceAuthorizer.RequestTableId
+                && item.RefRecId == requestId && item.TemplateId == templateId
+                && item.DataAreaId == request.DataAreaId && !item.IsDeleted, cancellationToken);
+        if (pinned != null)
+            return await MapPublishedAsync(pinned.Template, pinned.TemplateVersion, cancellationToken);
+
+        var current = await GetPublishedForProcessAsync(request.ProcessId, templateId, cancellationToken);
+        if (current == null) return null;
+
+        _context.ReportEntityVersions.Add(new ReportEntityVersion
+        {
+            DataAreaId = request.DataAreaId,
+            RefTableId = WorkflowReportResourceAuthorizer.RequestTableId,
+            RefRecId = requestId,
+            TemplateId = current.TemplateId,
+            TemplateVersionId = current.TemplateVersionId,
+            SelectedAt = DateTime.UtcNow,
+            SelectedBy = _currentUser.GetCurrentUserId() ?? string.Empty
+        });
+        await _context.SaveChangesAsync(cancellationToken);
+        return current;
     }
 
     public async Task<PublishedPrintTemplateDto?> GetPublishedForProcessAsync(
         long processId,
         long templateId,
         CancellationToken cancellationToken = default) =>
-        await GetPublishedForRecordAsync(WorkflowProcessTableId, processId, templateId, cancellationToken);
+        await GetPublishedForRecordAsync(WorkflowReportResourceAuthorizer.ProcessTableId, processId, templateId, cancellationToken);
 
     public async Task<PublishedPrintTemplateDto?> GetPublishedForRecordAsync(
         int refTableId,
@@ -148,14 +173,21 @@ public sealed class PrintTemplateService : IPrintTemplateService
                 cancellationToken);
         if (template?.CurrentVersion == null) return null;
 
-        var currentVersion = template.CurrentVersion;
+        return await MapPublishedAsync(template, template.CurrentVersion, cancellationToken);
+    }
+
+    private async Task<PublishedPrintTemplateDto> MapPublishedAsync(
+        ReportTemplate template,
+        ReportTemplateVersion currentVersion,
+        CancellationToken cancellationToken)
+    {
         return new PublishedPrintTemplateDto
         {
             TemplateId = template.RecId,
             RefTableId = template.RefTableId,
             RefRecId = template.RefRecId,
             ProcessId = template.RefRecId,
-            ProcessName = await ProcessNameAsync(template.RefRecId, cancellationToken),
+            ProcessName = await _resourceAuthorizer.GetDisplayNameAsync(template.RefTableId, template.RefRecId, cancellationToken),
             Code = template.Code ?? string.Empty,
             Name = template.Name ?? string.Empty,
             NameAlias = template.NameAlias,
@@ -165,9 +197,12 @@ public sealed class PrintTemplateService : IPrintTemplateService
             Language = template.Language,
             IsDefault = template.IsDefault,
             Status = template.Status,
-            CurrentVersionId = template.CurrentVersionId,
+            CurrentVersionId = currentVersion.RecId,
             CurrentVersionNo = currentVersion.VersionNo,
-            LatestVersionNo = template.Versions.Max(item => item.VersionNo),
+            LatestVersionNo = template.Versions
+                .Select(item => item.VersionNo)
+                .DefaultIfEmpty(currentVersion.VersionNo)
+                .Max(),
             HasDraft = template.Versions.Any(item => !item.IsPublished),
             IsActive = template.IsActive,
             LastModifiedAt = template.LastModifiedAt,
@@ -180,12 +215,10 @@ public sealed class PrintTemplateService : IPrintTemplateService
     public async Task<PrintTemplateDto> CreateAsync(CreatePrintTemplateDto input, CancellationToken cancellationToken = default)
     {
         var processId = input.RefRecId > 0 ? input.RefRecId : input.ProcessId ?? 0;
-        var refTableId = input.RefTableId > 0 ? input.RefTableId : WorkflowProcessTableId;
+        var refTableId = input.RefTableId > 0 ? input.RefTableId : WorkflowReportResourceAuthorizer.ProcessTableId;
         var errors = _documentValidator.Validate(input.Document).ToList();
-        if (refTableId != WorkflowProcessTableId)
-            errors.Add("The Workflow print-template endpoint only accepts WfProcesses records.");
-        if (!await _context.WfProcesses.AsNoTracking().AnyAsync(item => item.RecId == processId && item.IsActive, cancellationToken))
-            errors.Add("The selected workflow process does not exist or is inactive.");
+        if (!await _resourceAuthorizer.CanDesignAsync(refTableId, processId, cancellationToken))
+            errors.Add("The selected report resource does not exist, is inactive, or cannot be designed here.");
         if (await CodeExistsAsync(refTableId, processId, input.Code, null, cancellationToken))
             errors.Add($"Template code '{input.Code}' already exists for this process.");
         ThrowIfInvalid(errors);
@@ -360,10 +393,7 @@ public sealed class PrintTemplateService : IPrintTemplateService
     }
 
     private async Task<string> ProcessNameAsync(long processId, CancellationToken cancellationToken) =>
-        await _context.WfProcesses.AsNoTracking()
-            .Where(item => item.RecId == processId)
-            .Select(item => item.Name ?? item.Code ?? string.Empty)
-            .SingleOrDefaultAsync(cancellationToken) ?? string.Empty;
+        await _resourceAuthorizer.GetDisplayNameAsync(WorkflowReportResourceAuthorizer.ProcessTableId, processId, cancellationToken);
 
     private IQueryable<ReportTemplate> TemplateQuery(bool asNoTracking)
     {

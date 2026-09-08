@@ -18,6 +18,7 @@ import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { useNotifications } from '@shared/hooks/useNotifications';
 import { wfProcessApi } from '../../api/wfProcessApi';
 import { localizedName } from '@shared/utilities/localizedName';
+import { ApiError } from '@core/api/apiError';
 
 interface WorkflowMailReportViewerViewerProps {
   open: boolean;
@@ -89,7 +90,17 @@ export function WorkflowMailReportViewerViewer({
   // branding are optional enrichments and already have local fallbacks above, so
   // their failure must not blank an otherwise printable document.
   const loading = details.isLoading;
-  const error = details.isError ? t('mail.print.loadError') : null;
+  const error = React.useMemo(() => {
+    if (!details.isError) return null;
+    const message = t('mail.print.loadError');
+    if (!import.meta.env.DEV) return message;
+    const requestError = details.error;
+    if (requestError instanceof ApiError) {
+      const trace = requestError.traceId ? `, trace ${requestError.traceId}` : '';
+      return `${message} (${requestError.status}: ${requestError.message}${trace})`;
+    }
+    return requestError instanceof Error ? `${message} (${requestError.message})` : message;
+  }, [details.error, details.isError, t]);
   const report =
     request && details.data ? (
       <div ref={reportContainerRef}>

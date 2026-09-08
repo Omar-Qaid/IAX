@@ -21,7 +21,7 @@ using System.Xml.Linq;
 
 namespace IAX.IXApi.Modules.Workflow.Requests
 {
-    public class WfRequestService : BaseService<WfRequest>, IWfRequestService
+    public partial class WfRequestService : BaseService<WfRequest>, IWfRequestService
     {
         private readonly ISysNumberSequenceService _sequences;
         private readonly IWorkflowDataContext _context;
@@ -102,34 +102,6 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                 return dto;
             }).ToList();
         }
-
-        public async Task<bool> CanAccessRequestAsync(long requestId, CancellationToken cancellationToken = default)
-        {
-            if (await CanViewAllRequestsAsync(cancellationToken)) return true;
-
-            var userId = _currentUser.GetCurrentUserId();
-            var employeeId = await GetCurrentEmployeeIdAsync(userId, cancellationToken);
-            return await _context.WfRequests.AsNoTracking()
-                .Where(item => item.RecId == requestId)
-                .AnyAsync(item => item.CreatedBy == userId
-                    || employeeId.HasValue && item.EmployeeId == employeeId.Value
-                    || employeeId.HasValue && _context.Set<WfAssignment>()
-                        .Any(assignment => assignment.RequestId == item.RecId && assignment.UserId == employeeId.Value),
-                    cancellationToken);
-        }
-
-        private async Task<bool> CanViewAllRequestsAsync(CancellationToken cancellationToken)
-        {
-            var permissions = await _permissions.GetPermissionKeysByUserAsync(
-                _currentUser.GetCurrentUserId(), cancellationToken);
-            return permissions.Contains("*") || permissions.Contains("Workflow.Requests.View");
-        }
-
-        private Task<long?> GetCurrentEmployeeIdAsync(string userId, CancellationToken cancellationToken) =>
-            _context.Set<HcmWorker>().AsNoTracking()
-                .Where(worker => worker.UserId == userId && worker.IsActive && !worker.IsDeleted)
-                .Select(worker => (long?)worker.RecId)
-                .FirstOrDefaultAsync(cancellationToken);
 
         public async Task<DynamicRequestFormDto?> GetFormDefinitionAsync(long processId, CancellationToken cancellationToken = default)
         {
@@ -214,11 +186,11 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                 .SingleOrDefaultAsync(item => item.RecId == requestId, cancellationToken);
             if (request == null) return null;
 
-            // The visible request has already passed the tenant/soft-delete query filters. Read all of
-            // its non-deleted child rows explicitly so legacy rows with an inconsistent DataAreaId are
-            // not silently omitted from Mail.
+            // Ignore the child soft-delete filter without ever widening the request's tenant boundary.
             var detailRows = await _context.WfRequestDetails.IgnoreQueryFilters().AsNoTracking()
-                .Where(item => item.RequestId == requestId && !item.IsDeleted)
+                .Where(item => item.RequestId == requestId
+                    && item.DataAreaId == request.DataAreaId
+                    && !item.IsDeleted)
                 .OrderBy(item => item.SortOrder).ThenBy(item => item.RecId)
                 .ToListAsync(cancellationToken);
             var detailControlDataIds = detailRows.Where(item => item.ControlDataId.HasValue)
@@ -283,10 +255,12 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                     || requesterUserId != null && item.UserId == requesterUserId)
                 .ToListAsync(cancellationToken);
             var partyIds = workers.Select(item => item.Person).Distinct().ToList();
-            var parties = await _context.Database.SqlQueryRaw<MailPartyLookup>(
-                    "SELECT RECID AS PartyId, COALESCE(NULLIF(RFullName, ''), NULLIF(Name, ''), PartyNumber) AS DisplayName FROM dbo.DirPartyTable")
-                .Where(item => partyIds.Contains(item.PartyId))
-                .ToDictionaryAsync(item => item.PartyId, cancellationToken);
+            var parties = partyIds.Count == 0
+                ? new Dictionary<long, MailPartyLookup>()
+                : await _context.Database.SqlQueryRaw<MailPartyLookup>(
+                        "SELECT RECID AS PartyId, COALESCE(NULLIF(RFullName, ''), NULLIF(Name, ''), PartyNumber) AS DisplayName FROM dbo.DirPartyTable")
+                    .Where(item => partyIds.Contains(item.PartyId))
+                    .ToDictionaryAsync(item => item.PartyId, cancellationToken);
             string EmployeeDisplay(long? id)
             {
                 var worker = workers.FirstOrDefault(item => item.RecId == id);
@@ -307,8 +281,8 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                 return new MailTrackingEntryDto
                 {
                     AssignmentId = item.RecId,
-                    Title = FirstText(item.Activity.Name, item.Activity.Code, "Workflow activity"),
-                    Stage = FirstText(item.Activity.Step.Name, item.Activity.Step.Code, "Workflow stage"),
+                    Title = FirstText(item.Activity?.Name, item.Activity?.Code, "Workflow activity"),
+                    Stage = FirstText(item.Activity?.Step?.Name, item.Activity?.Step?.Code, "Workflow stage"),
                     Responsible = EmployeeDisplay(item.UserId),
                     Action = item.IsFinished ? item.Automatically == true ? "Passed automatically" : "Completed" : "In progress",
                     Date = item.FinishedDate ?? item.AssignDate,
@@ -334,8 +308,8 @@ namespace IAX.IXApi.Modules.Workflow.Requests
             return new MailRequestDetailsDto
             {
                 RequestId = request.RecId,
-                ProcessName = FirstText(request.Process.Name, request.Process.Code, $"Process {request.ProcessId}"),
-                ProcessCode = request.Process.Code ?? string.Empty,
+                ProcessName = FirstText(request.Process?.Name, request.Process?.Code, $"Process {request.ProcessId}"),
+                ProcessCode = request.Process?.Code ?? string.Empty,
                 CreatedBy = request.CreatedBy ?? string.Empty,
                 CreatedDate = request.CreatedAt,
                 SubmittedBy = requesterDisplayName,
@@ -344,7 +318,7 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                 RequestDate = request.RequestDate,
                 EmployeeName = requesterDisplayName,
                 EmployeeNumber = employee?.PersonnelNumber ?? request.EmployeeId?.ToString(CultureInfo.InvariantCulture) ?? "—",
-                TransactionType = request.IsStopped ? "Request stopped" : request.IsFinished ? "Request completed" : FirstText(latest?.Activity.Name, request.Name, "Workflow request"),
+                TransactionType = request.IsStopped ? "Request stopped" : request.IsFinished ? "Request completed" : FirstText(latest?.Activity?.Name, request.Name, "Workflow request"),
                 TransactionTime = request.RequestDate,
                 TransactionEndTime = request.FinishedDate ?? request.StoppedDate,
                 ResponsibleEmployee = latest == null ? null : EmployeeDisplay(latest.UserId),

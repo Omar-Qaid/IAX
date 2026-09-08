@@ -28,6 +28,7 @@ namespace IAX.IXApi.Modules.Workflow
             services.AddScoped<ProcessTypes.IWfProcessTypeService, ProcessTypes.WfProcessTypeService>();
             services.AddScoped<Processes.IWfProcessService, Processes.WfProcessService>();
             services.AddScoped<PrintTemplates.IPrintTemplateService, PrintTemplates.PrintTemplateService>();
+            services.AddScoped<PrintTemplates.IReportResourceAuthorizer, PrintTemplates.WorkflowReportResourceAuthorizer>();
             services.AddSingleton<PrintTemplates.PrintTemplateDocumentValidator>();
             services.AddScoped<Requests.IValidationEngine, Requests.ValidationEngine>();
             services.AddScoped<Requests.IWfRequestControlService, Requests.WfRequestControlService>();
