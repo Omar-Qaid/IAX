@@ -1,0 +1,1775 @@
+using Microsoft.EntityFrameworkCore;
+using HumanResources.Core;
+using HumanResources.Core.Interfaces.Repositories;
+using System.Linq.Expressions;
+using HumanResources.Core.Entities;
+using System.Xml.Linq;
+using HumanResources.Core.Interfaces.Services;
+using System;
+using HumanResources.Core.ViewDTOs;
+using System.Diagnostics;
+using System.Data;
+using Microsoft.Data.SqlClient;
+using HumanResources.Core.Entities.WF;
+using Azure.Core;
+using HumanResources.Core.Entities.WF.Views;
+
+namespace HumanResources.EF.Repositories
+{
+    public class WfRequestRepository : GenericRepository<WfRequest>, IWfRequestRepository
+    {
+        private readonly DataContext _context;
+
+        public WfRequestRepository(DataContext context) : base(context)
+        {
+            _context = context;
+        }
+
+
+        public async Task<IEnumerable<WfRequest>> GetWfRequestListAsync(Expression<Func<WfRequest, bool>> criteria, int Take = 5)
+        {
+            return await _Context.Set<WfRequest>().Where(criteria).OrderByDescending(x => x.RequestId).Take(Take).Include(x => x.Process).ToListAsync();
+        }
+        public async Task<IEnumerable<WfRequest>> GetWfPinRequestListAsync(Expression<Func<WfRequest, bool>> criteria, int Take = 5)
+        {
+            return await _Context.Set<WfRequest>().Where(criteria).OrderByDescending(x => x.PinDate).Take(Take).Include(x => x.Process).Include(x => x.WfAssignments).ThenInclude(x => x.Activity).ToListAsync();
+        }
+
+        public async Task<IEnumerable<WfRequest>> ToListAsync(PaginationDTOs<WfRequest>? pagination,  string[] includes = null)
+        {
+            return await ToListAsync(pagination, null, includes);
+        }
+        public async Task<IEnumerable<WfRequest>> ToListAsync(PaginationDTOs<WfRequest>? pagination, long? employeeId = null, string[] includes = null)
+        {
+            var data = _context.Set<WfRequest>().Include(x => x.Employee).Include(x => x.Process).ThenInclude(x => x.Category).Include(x => x.WfAssignments).ThenInclude(x => x.Employee).Include(x => x.WfAssignments).ThenInclude(x => x.Activity).ThenInclude(x => x.Performer).AsQueryable();
+            if (pagination.Basic != null)
+            {
+                data = data.Where(pagination.Basic);
+            }
+            if (includes != null)
+                foreach (var include in includes)
+                    data = data.Include(include);
+
+            //get total count of data in table
+            pagination.TotalCount = data.Count();
+
+            // search data when search value found
+            if (!string.IsNullOrEmpty(pagination.Search))
+            {
+                pagination.Search = pagination.Search.Trim();
+                data = data.Where(x => x.RequestId.ToString().Contains(pagination.Search) || x.Process.ProcessNameAR.Contains(pagination.Search) || x.Process.ProcessName.Contains(pagination.Search));
+            }
+            if (!string.IsNullOrEmpty(pagination.Search_1))
+            {
+                pagination.Search_1 = pagination.Search_1.Trim();
+                data = data.Where(x => x.RequestId.ToString().Contains(pagination.Search_1));
+            }
+            if (!string.IsNullOrEmpty(pagination.Search_2))
+            {
+                pagination.Search_2 = pagination.Search_2.Trim();
+                data = data.Where(x => x.Process.ProcessNameAR.Contains(pagination.Search_2) || x.Process.ProcessName.Contains(pagination.Search_2));
+            }
+            if (!string.IsNullOrEmpty(pagination.Search_3))
+            {
+                pagination.Search_3 = pagination.Search_3.Trim();
+                data = data.Where(x => x.Employee.EmployeeNameAR.Contains(pagination.Search_3) || x.Employee.EmployeeName.Contains(pagination.Search_3));
+            }
+            if (pagination.Search_4.HasValue && pagination.Search_5.HasValue)
+            {
+                data = data.Where(x => x.RequestDate.Date <= pagination.Search_5.Value.Date && pagination.Search_4.Value.Date <= x.RequestDate.Date);
+            }
+            if (pagination.Search_4.HasValue && !pagination.Search_5.HasValue)
+            {
+                data = data.Where(x => x.RequestDate.Date == pagination.Search_4.Value.Date);
+            }
+            if (pagination.Search_6.HasValue && pagination.Search_6.Value != 0)
+            {
+                data = data.Where(x => x.EmployeeId == pagination.Search_6.Value);
+            }
+            if (pagination.Search_7.HasValue)
+            {
+                if (pagination.Search_7.Value == (byte)Status.Progress)
+                {
+                    data = data.Where(x => x.IsFinished != true);
+                }
+                else if (pagination.Search_7.Value == (byte)Status.Finished)
+                {
+                    data = data.Where(x => x.IsFinished == true && x.IsStopped != true);
+                }
+                else if (pagination.Search_7.Value == (byte)Status.Stopped)
+                {
+                    data = data.Where(x => x.IsStopped == true);
+                }
+            }
+            if (pagination.Search_8.HasValue)
+            {
+                data = data.Where(x => x.ProcessId == pagination.Search_8.Value);
+            }
+            if (pagination.Filter != null)
+            {
+                data = data.Where(pagination.Filter);
+            }
+            // get total count of records after search
+            pagination.FilterCount = data.Count();
+
+            //sort data
+            if (!string.IsNullOrEmpty(pagination.SortColumn) && !string.IsNullOrEmpty(pagination.SortDirection))
+            {
+                if (pagination.SortColumn.ToLower() == "RequestId".ToLower() && pagination.SortDirection.ToLower() == "asc".ToLower())
+                    data = data.OrderBy(x => x.RequestId);
+                else if (pagination.SortColumn.ToLower() == "RequestId".ToLower() && pagination.SortDirection.ToLower() == "desc".ToLower())
+                    data = data.OrderByDescending(x => x.RequestId);
+
+                else if (pagination.SortColumn.ToLower() == "ProcessName".ToLower() && pagination.SortDirection.ToLower() == "asc".ToLower())
+                    data = data.OrderBy(x => x.Process.ProcessName);
+                else if (pagination.SortColumn.ToLower() == "ProcessName".ToLower() && pagination.SortDirection.ToLower() == "desc".ToLower())
+                    data = data.OrderByDescending(x => x.Process.ProcessName);
+
+                else if (pagination.SortColumn.ToLower() == "CategoryName".ToLower() && pagination.SortDirection.ToLower() == "asc".ToLower())
+                    data = data.OrderBy(x => x.Process.Category.CategoryName);
+                else if (pagination.SortColumn.ToLower() == "CategoryName".ToLower() && pagination.SortDirection.ToLower() == "desc".ToLower())
+                    data = data.OrderByDescending(x => x.Process.Category.CategoryName);
+
+                else if (pagination.SortColumn.ToLower() == "RequestDate".ToLower() && pagination.SortDirection.ToLower() == "asc".ToLower())
+                    data = data.OrderBy(x => x.RequestDate);
+                else if (pagination.SortColumn.ToLower() == "RequestDate".ToLower() && pagination.SortDirection.ToLower() == "desc".ToLower())
+                    data = data.OrderByDescending(x => x.RequestDate);
+
+                else if (pagination.SortColumn.ToLower() == "PriorityId".ToLower() && pagination.SortDirection.ToLower() == "asc".ToLower())
+                    data = data.OrderBy(x => x.Process.PriorityId);
+                else if (pagination.SortColumn.ToLower() == "PriorityId".ToLower() && pagination.SortDirection.ToLower() == "desc".ToLower())
+                    data = data.OrderByDescending(x => x.Process.PriorityId);
+
+                else if (pagination.SortColumn.ToLower() == "Finished".ToLower() && pagination.SortDirection.ToLower() == "asc".ToLower())
+                    data = data.OrderBy(x => x.IsFinished);
+                else if (pagination.SortColumn.ToLower() == "Finished".ToLower() && pagination.SortDirection.ToLower() == "desc".ToLower())
+                    data = data.OrderByDescending(x => x.Employee.EmployeeName);
+                else if (pagination.SortColumn.ToLower() == "EmployeeName".ToLower() && pagination.SortDirection.ToLower() == "asc".ToLower())
+                    data = data.OrderBy(x => x.Employee.EmployeeName);
+                else if (pagination.SortColumn.ToLower() == "EmployeeName".ToLower() && pagination.SortDirection.ToLower() == "desc".ToLower())
+                    data = data.OrderByDescending(x => x.IsFinished);
+
+
+            }
+            else
+            {
+                data = data.OrderByDescending(x => x.RequestId).ThenBy(x => x.IsFinished);
+            }
+            // Calculate the total count and total pages
+            pagination.TotalPages = (int)Math.Ceiling((decimal)pagination.FilterCount / pagination.PageSize);
+
+            pagination.PageNumber = pagination.PageNumber ?? 1;
+
+            pagination.PageNumber = pagination.TotalPages < pagination.PageNumber ? 1 : pagination.PageNumber;
+            //pagination
+            return await data.Skip((pagination.PageNumber.Value - 1) * pagination.PageSize).Take(pagination.PageSize).ToListAsync();
+
+        }
+        public async ValueTask<WfRequest?> GetWfRequestIncludeAsync(Expression<Func<WfRequest, bool>> criteria)
+        {
+            IQueryable<WfRequest> query = _Context.Set<WfRequest>();
+            return await query.Include(x => x.Attachment).Include(x => x.Process).ThenInclude(x => x.WfVariables).SingleOrDefaultAsync(criteria);
+        }
+
+        public async ValueTask<bool> WfRequestDetailsAnyAsync(string key, string value)
+        {
+            var sqlQuery = @" 
+                             SELECT Top 1 * 
+                             FROM WfRequests 
+                             WHERE RequestDetails.exist('(/Details/Control/ControlValue[text()=" + value + "])') = 1";
+
+            var res = await _Context.Set<WfRequest>()
+                .FromSqlRaw(sqlQuery)
+                .FirstOrDefaultAsync();
+
+            if (res != null)
+                return true;
+            return false;
+        }
+        public async ValueTask<ProcessModel> GetWfRequestAsync(Expression<Func<WfRequest, bool>> criteria, ILanguageService localizer)
+        {
+            ProcessModel model = new ProcessModel();
+            IQueryable<WfRequest> query = _Context.Set<WfRequest>();
+            model.Request.WfRequest = await query.Include(x => x.Process).Include(x => x.Attachment).ThenInclude(x => x.AttachmentDetails).SingleOrDefaultAsync(criteria);
+            model.Request.Requester = await _context.Employees.Include(x => x.Occupation).Include(x => x.Department).Include(x => x.Gender).FirstOrDefaultAsync(x => x.EmployeeId == model.Request.WfRequest.CreatedBy);
+            XDocument xmlDoc = XDocument.Parse(model.Request.WfRequest.RequestDetails);
+            var xmlControls = xmlDoc.Descendants("Control");
+            foreach (XElement items in xmlControls)
+            {
+                var Control = new WfStructureControl();
+
+                Control.ControlLabel = items.Element(nameof(Control.ControlLabel)).Value;
+                Control.ControlValue = items.Element(nameof(Control.ControlValue)).Value;
+                Control.ControlLabelAR = items.Element("ControlLabelAR") != null ? items.Element(nameof(Control.ControlLabelAR))?.Value : "";
+                Control.ControlValueAR = items.Element("ControlValueAR") != null ? items.Element(nameof(Control.ControlValueAR))?.Value : "";
+                Control.ControlValueEN = items.Element("ControlValueEN") != null ? items.Element(nameof(Control.ControlValueEN))?.Value : "";
+                Control.ControlDataId = items.Element("ControlDataId") == null ? 0 : long.Parse(items.Element(nameof(Control.ControlDataId)).Value);
+                Control.ControlId = byte.Parse(items.Element(nameof(Control.ControlId)).Value);
+                Control.DisplayMember = items.Element(nameof(Control.DisplayMember)).Value;
+                Control.ValueMember = items.Element(nameof(Control.ValueMember)).Value;
+                Control.UsedInSearch = bool.Parse(items.Element(nameof(Control.UsedInSearch)).Value);
+                Control.UsedAsCriteria = bool.Parse(items.Element(nameof(Control.UsedAsCriteria)).Value);
+                Control.ExtendedProperties = items.Element(nameof(Control.ExtendedProperties)).Value;
+
+                if (Control.ControlId == (int)Controls.Table)
+                {
+                    Control.ExtendedProperties = items.Element(nameof(Control.ExtendedProperties)).ToString();
+                    Control.ControlValue = items.Element(nameof(Control.ControlValue)).ToString();
+                }
+                else if (Control.ControlId == (int)Controls.Checkbox)
+                {
+                    if (Control.ControlValue.ToLower() == "false")
+                    {
+                        Control.ControlValue = "False";
+                    }
+                    else
+                    {
+                        Control.ControlValue = "True";
+                    }
+
+                }
+                else if (Control.ControlId == (int)Controls.DropDownListManually || Control.ControlId == (int)Controls.RadioButtonList)
+                {
+                    Control.ExtendedProperties = items.Element(nameof(Control.ExtendedProperties)).ToString();
+                    var options = Helper.SelectionFromXML(Control.ExtendedProperties);
+                    var option = options.FirstOrDefault(x => x.ControlValue == Control.ControlValue);
+                    if (option is not null)
+                        Control.ControlValue = localizer.culture().ToLower() == "ar-sa" ? option.ControlLabelAR : option.ControlLabel;
+
+                }
+                else if ((Control.ControlId == (int)Controls.ShowroomSearch || Control.ControlId == (int)Controls.EmployeeSearch) && !string.IsNullOrEmpty(Control.ControlValue))
+                {
+                    var employee = _Context.Set<Employee>().Find(long.Parse(Control.ControlValue));
+                    if (employee is not null)
+                        Control.ControlValue = localizer.culture().ToLower() == "ar-sa" ? employee.EmployeeNameAR : employee.EmployeeName;
+
+                }
+
+                model.Request.WfRequestDetails.Add(Control);
+            }
+
+            var assignments = _Context.Set<WfAssignment>().Where(x => x.RequestId == model.Request.WfRequest.RequestId && x.Finished).Include(x => x.Activity).ThenInclude(x => x.Step).Include(x => x.WfProcessData).ThenInclude(x => x.Attachment).ThenInclude(x => x.AttachmentDetails);
+            foreach (var assig in assignments)
+            {
+                foreach (var processData in assig.WfProcessData)
+                {
+                    StageModel stage = new StageModel();
+                    stage.WfActivity = assig.Activity;
+
+                    xmlDoc = XDocument.Parse(processData.ActivityDetails);
+                    xmlControls = xmlDoc.Descendants("Control");
+                    foreach (XElement items in xmlControls)
+                    {
+                        var Control = new WfStructureControl();
+                        Control.ControlLabel = items.Element(nameof(Control.ControlLabel)).Value;
+                        Control.ControlValue = items.Element(nameof(Control.ControlValue)).Value;
+                        Control.ControlLabelAR = items.Element("ControlLabelAR") != null ? items.Element(nameof(Control.ControlLabelAR))?.Value : "";
+                        Control.ControlValueAR = items.Element("ControlValueAR") != null ? items.Element(nameof(Control.ControlValueAR))?.Value : "";
+                        Control.ControlValueEN = items.Element("ControlValueEN") != null ? items.Element(nameof(Control.ControlValueEN))?.Value : "";
+                        Control.ControlId = byte.Parse(items.Element(nameof(Control.ControlId)).Value);
+                        Control.DisplayMember = items.Element(nameof(Control.DisplayMember)).Value;
+                        Control.ValueMember = items.Element(nameof(Control.ValueMember)).Value;
+                        Control.UsedInSearch = bool.Parse(items.Element(nameof(Control.UsedInSearch)).Value);
+                        Control.UsedAsCriteria = bool.Parse(items.Element(nameof(Control.UsedAsCriteria)).Value);
+                        Control.ExtendedProperties = items.Element(nameof(Control.ExtendedProperties)).Value;
+
+                        if (Control.ControlId == (int)Controls.Table)
+                        {
+                            Control.ExtendedProperties = items.Element(nameof(Control.ExtendedProperties)).ToString();
+                            Control.ControlValue = items.Element(nameof(Control.ControlValue)).ToString();
+                        }
+                        else if (Control.ControlId == (int)Controls.Checkbox)
+                        {
+                            if (Control.ControlValue.ToLower() == "false")
+                            {
+                                Control.ControlValue = "False";
+                            }
+                            else
+                            {
+                                Control.ControlValue = "True";
+                            }
+                        }
+                        else if (Control.ControlId == (int)Controls.DropDownListManually || Control.ControlId == (int)Controls.RadioButtonList)
+                        {
+                            Control.ExtendedProperties = items.Element(nameof(Control.ExtendedProperties)).ToString();
+                            var options = Helper.SelectionFromXML(Control.ExtendedProperties);
+                            var option = options.FirstOrDefault(x => x.ControlValue == Control.ControlValue);
+                            if (option is not null)
+                                Control.ControlValue = localizer.culture().ToLower() == "ar-sa" ? option.ControlLabelAR : option.ControlLabel;
+
+                        }
+                        else if ((Control.ControlId == (int)Controls.ShowroomSearch || Control.ControlId == (int)Controls.EmployeeSearch) && !string.IsNullOrEmpty(Control.ControlValue))
+                        {
+                            var employee = _Context.Set<Employee>().Find(long.Parse(Control.ControlValue));
+                            if (employee is not null)
+                                Control.ControlValue = employee.EmployeeName;
+                        }
+
+                        stage.WfStageDetails.Add(Control);
+                    }
+                    stage.Attachment = processData.Attachment;
+                    stage.AssignDate = assig.AssignDate;
+                    stage.FinishDate = assig.FinishedDate ?? processData.FinishDate;
+                    stage.Perfomer = await _context.Employees.FirstOrDefaultAsync(x => x.EmployeeId == assig.UserId);
+                    model.Stages.Add(stage);
+                }
+
+            }
+            model.Pending = new List<Pending>();
+            var decisions = await _Context.Set<WfAssignment>().Where(x => x.RequestId == model.Request.WfRequest.RequestId && x.Finished != true).Include(x => x.Activity).Include(x => x.Activity).ThenInclude(x => x.Performer).ToListAsync();
+            foreach (var item in decisions)
+            {
+                Parallel.ForEach(item.Activity.WfActivityControls, item =>
+                {
+                    item.ControlValue = "";
+                });
+                model.Pending.Add(new Pending
+                {
+                    Decision = item.Activity,
+                    AssginDate = item.AssignDate,
+                    Employee = await _Context.Set<Employee>().FindAsync(item.UserId)
+
+                });
+            }
+            return model;
+
+        }
+
+
+        public async Task<(List<TemplateParametersModel>, List<SMSModel>, WfRequest)> WfSendRequestAsync(WfRequest entity, List<WfStructureControl> controls)
+        {
+
+            List<TemplateParametersModel> templateParametersModels = new List<TemplateParametersModel>();
+            List<SMSModel> sMSModels = new List<SMSModel>();
+            using (var transaction = _context.Database.BeginTransaction())
+            {
+
+                try
+                {
+                    var process = await _context.WfProcesses.Include(x => x.Category).FirstOrDefaultAsync(x => x.ProcessId == entity.ProcessId);
+                    var request = (await _context.WfRequests.AddAsync(entity)).Entity;
+                    await _context.SaveChangesAsync();
+
+                    // WfRequestDetails
+                    var WfRequestDetails = await _context.Set<WfRequestsVW>().Where(x => x.RequestId == request.RequestId).Select(x => new WfRequestDetail
+                    {
+                        RequestId = x.RequestId,
+                        RelatedObjectId = x.RelatedObjectId,
+                        ControlDataId = x.ControlDataId,
+                        ControlId = x.ControlId,
+                        ControlLabel = x.ControlLabel,
+                        ControlLabelAR = x.ControlLabelAR,
+                        ControlValue = x.ControlValue,
+                        ControlValueAR = x.ControlValueAR,
+                        ControlValueEN = x.ControlValueEN,
+                        UsedAsCriteria = x.UsedAsCriteria,
+                        ControlOrder = x.ControlOrder
+                    }).ToListAsync();
+                    await _context.Set<WfRequestDetail>().AddRangeAsync(WfRequestDetails);
+                    await _context.SaveChangesAsync();
+
+
+                    List<WfProcessVariable> processVariables = new List<WfProcessVariable>();
+                    var variables = await _context.WfVariables.Where(x => x.ProcessId == entity.ProcessId && x.Activated).OrderBy(x => x.VariableOrder).ToListAsync();
+                    foreach (var kvp in variables)
+                    {
+                        processVariables.Add(new WfProcessVariable { RequestId = request.RequestId, VariableId = kvp.VariableId, VariableOrder = kvp.VariableOrder });
+                    }
+                    await _context.WfProcessVariables.AddRangeAsync(processVariables);
+                    await _context.SaveChangesAsync();
+
+                    bool hasVariable = false;
+                    foreach (var control in controls)
+                    {
+                        var mappingRequestVariable = await _context.WfRequestMappingVariables.Where(x => x.Activated && x.RequestControlId == control.ControlDataId).OrderBy(x => x.VariableOrder).FirstOrDefaultAsync();
+                        if (mappingRequestVariable != null)
+                        {
+                            hasVariable = true;
+                            var processVariable = await _context.WfProcessVariables.Where(x => x.RequestId == request.RequestId && x.VariableId == mappingRequestVariable.VariableId).OrderBy(x => x.VariableOrder).FirstOrDefaultAsync();
+                            processVariable.VariableValue = string.IsNullOrEmpty(control.ControlValue) ? "" : control.ControlValue.Trim();
+                            _context.WfProcessVariables.Update(processVariable);
+                            await _context.SaveChangesAsync();
+                        }
+                    }
+                    long stepId = -1;
+                    if (hasVariable)
+                    {
+                        var transitions = await _context.WfTransitions.Where(x => x.Activated).Include(x => x.Operator).Include(x => x.Variable).Where(x => x.ProcessId == request.ProcessId && x.ActivityId == null).OrderBy(x => x.TransitionOrder).ToListAsync();
+                        foreach (var item in transitions)
+                        {
+                            if (item.Variable.DataTypeId == (byte)DataTypes.Integer)
+                            {
+                                var processVariable = await _context.WfProcessVariables.Where(x => x.RequestId == request.RequestId && x.VariableId == item.VariableId).OrderBy(x => x.VariableOrder).FirstOrDefaultAsync();
+                                if (processVariable != null && !string.IsNullOrEmpty(processVariable.VariableValue))
+                                    if (Helper.ValidateValues(long.Parse(processVariable.VariableValue), long.Parse(item.Value), item.Operator.OperatorName))
+                                    {
+                                        stepId = item.StepId;
+                                        break;
+                                    }
+
+                            }
+                            else if (item.Variable.DataTypeId == (byte)DataTypes.String)
+                            {
+                                var processVariable = await _context.WfProcessVariables.Where(x => x.RequestId == request.RequestId && x.VariableId == item.VariableId).OrderBy(x => x.VariableOrder).FirstOrDefaultAsync();
+                                if (processVariable != null && !string.IsNullOrEmpty(processVariable.VariableValue))
+                                    if (Helper.ValidateValues<string>(processVariable.VariableValue, item.Value, item.Operator.OperatorName))
+                                    {
+                                        stepId = item.StepId;
+                                        break;
+                                    }
+                            }
+                            else if (item.Variable.DataTypeId == (byte)DataTypes.Boolean)
+                            {
+
+                            }
+                            else if (item.Variable.DataTypeId == (byte)DataTypes.DateTime)
+                            {
+
+                            }
+
+                        }
+                    }
+                    WfStep step = null;
+                    if (stepId == 0)
+                    {
+                        request.IsFinished = true;
+                        request.FinishedDate = DateTime.Now;
+                        request.ActualWeight = request.TargetWeight;
+                    }
+                    else if (stepId != -1)
+                    {
+                        step = await _context.WfSteps.Where(x => x.StepId == stepId).Include(x => x.WfActivities.Where(x => x.Activated)).ThenInclude(x => x.Performer).ThenInclude(p => p.WfUsersPerformers).FirstOrDefaultAsync();
+
+                    }
+                    else
+                    {
+                        step = await _context.WfSteps.Where(x => x.Activated && x.ProcessId == entity.ProcessId).Include(x => x.WfActivities.Where(x => x.Activated)).ThenInclude(x => x.Performer).ThenInclude(p => p.WfUsersPerformers).OrderBy(x => x.StepOrder).FirstOrDefaultAsync();
+
+                    }
+                    if (step != null)
+                    {
+                        foreach (var activity in step.WfActivities.Where(x => x.Activated))
+                        {
+                            long? _UserID;
+                            string extendedProperties = "";
+                            if (activity.Performer.PerformerType == (short)PerformerType.Request)
+                            {
+                                _UserID = request.EmployeeId;
+                                if (activity.Performer.IsEmployee)
+                                {
+                                    extendedProperties = $"Select [employeeID] AS [Value] from Employees where EmployeeID={request.EmployeeId}";
+                                    _UserID = request.EmployeeId;
+                                }
+                                if (activity.Performer.IsManager1)
+                                {
+                                    extendedProperties = $"Select [Manager1Id] AS [Value] from Managers where EmployeeID={request.EmployeeId}";
+                                    _UserID = await _context.Database.SqlQueryRaw<long?>($"{extendedProperties.Trim()}").FirstOrDefaultAsync();
+                                }
+                                else if (activity.Performer.IsManager2)
+                                {
+                                    extendedProperties = $"Select [Manager2Id] AS [Value] from Managers where EmployeeID={request.EmployeeId}";
+                                    _UserID = await _context.Database.SqlQueryRaw<long?>($"{extendedProperties.Trim()}").FirstOrDefaultAsync();
+                                }
+                                else if (activity.Performer.IsManager3)
+                                {
+                                    extendedProperties = $"Select [Manager3Id] AS [Value] from Managers where EmployeeID={request.EmployeeId}";
+                                    _UserID = await _context.Database.SqlQueryRaw<long?>($"{extendedProperties.Trim()}").FirstOrDefaultAsync();
+                                }
+                                else if (activity.Performer.IsManager4)
+                                {
+                                    extendedProperties = $"Select [Manager4Id] AS [Value] from Managers where EmployeeID={request.EmployeeId}";
+                                    _UserID = await _context.Database.SqlQueryRaw<long?>($"{extendedProperties.Trim()}").FirstOrDefaultAsync();
+                                }
+
+                                var assignment = await _context.WfAssignments.AddAsync(new WfAssignment
+                                {
+                                    ActivityId = activity.ActivityId,
+                                    RequestId = request.RequestId,
+                                    AssignDate = DateTime.Now,
+                                    UserId = _UserID.Value,
+                                    PeriodHrs = activity.PeriodHrs,
+                                    AutoPassing = activity.AutoPassing,
+                                    StepId = activity.StepId,
+
+                                });
+                                if (activity.AlertingBySystem)
+                                {
+                                    await _context.SaveChangesAsync();
+                                    await _context.Notifications.AddAsync(new Notification
+                                    {
+                                        EmployeeId = _UserID.Value,
+                                        TitleAR = " يوجد لديكم معاملة  " + process.ProcessNameAR + " في صندوق الوارد ",
+                                        MessageAR = "رقم الطلب هو " + request.RequestId + " برجاء اخذ الاجراء المناسب في الوقت المحدد",
+                                        Title = "You have a transaction " + process.ProcessName + " in the inbox",
+                                        Message = "The request number is " + request.RequestId + ". Please take the appropriate action within the specified time.",
+                                        CreatedDate = DateTime.Now,
+                                        CreatedBy = _UserID.Value,
+                                        Option = assignment.Entity.AssignmentId.ToString(),
+                                        RequestId = request.RequestId.ToString(),
+                                        Url = "WfDecision/Index/",
+                                        IsRead = false,
+                                    });
+                                }
+
+                                if (activity.AlertingByEmail || activity.AlertingBySms || activity.SendEmail || activity.SendSms)
+                                {
+                                    var employee = await _context.Employees.FindAsync(_UserID);
+
+
+                                    if (activity.AlertingBySms)
+                                    {
+                                        if (!string.IsNullOrEmpty(employee.Mobile) && Helper.IsValidMobile(employee.Mobile))
+                                        {
+                                            sMSModels.Add(new SMSModel
+                                            {
+                                                Msg = "You have a transaction " + process.ProcessName + " in the inbox" + " The request number is " + request.RequestId + ". Please take the appropriate action within the specified time.",
+                                                MsgAR = " يوجد لديكم معاملة  " + process.ProcessNameAR + " في صندوق الوارد " + "رقم الطلب هو " + request.RequestId + " برجاء اخذ الاجراء المناسب في الوقت المحدد",
+                                                Numbers = employee.Mobile,
+
+                                            });
+                                        }
+                                    }
+                                    if (activity.AlertingByEmail)
+                                    {
+                                        if (!string.IsNullOrEmpty(employee.Email) && Helper.IsValidEmail(employee.Email))
+                                        {
+                                            var requester = await _context.Employees.FindAsync(request.EmployeeId);
+
+                                            templateParametersModels.Add(new TemplateParametersModel
+                                            {
+                                                ProcessName = process.ProcessName,
+                                                ProcessNameAR = process.ProcessNameAR,
+                                                RequestId = request.RequestId.ToString(),
+                                                CategoryName = request.Process.Category.CategoryName,
+                                                CategoryNameAR = request.Process.Category.CategoryNameAR,
+                                                ReceiveEmail = employee.Email,
+                                                ReceiveName = employee.EmployeeName,
+                                                ReceiveNameAR = employee.EmployeeNameAR,
+                                                RequestName = process.ProcessName,
+                                                RequestNameAR = process.ProcessNameAR,
+                                                RequesterName = requester.EmployeeName,
+                                                RequesterNameAR = requester.EmployeeNameAR,
+                                            });
+
+                                        }
+                                    }
+                                    if (activity.SendSms && !string.IsNullOrEmpty(activity.AlertText) && !string.IsNullOrEmpty(activity.AlertTextAR))
+                                    {
+                                        if (!string.IsNullOrEmpty(employee.Mobile) && Helper.IsValidMobile(employee.Mobile))
+                                        {
+                                            sMSModels.Add(new SMSModel
+                                            {
+                                                Msg = activity.AlertText.Trim(),
+                                                MsgAR = activity.AlertTextAR.Trim(),
+                                                Numbers = employee.Mobile,
+                                            });
+                                        }
+                                    }
+                                    if (activity.SendEmail && !string.IsNullOrEmpty(activity.AlertText) && !string.IsNullOrEmpty(activity.AlertTextAR))
+                                    {
+                                        if (!string.IsNullOrEmpty(employee.Email) && Helper.IsValidEmail(employee.Email))
+                                        {
+                                            var requester = await _context.Employees.FindAsync(request.EmployeeId);
+
+                                            templateParametersModels.Add(new TemplateParametersModel
+                                            {
+                                                ProcessName = process.ProcessName,
+                                                ProcessNameAR = process.ProcessNameAR,
+                                                RequestId = request.RequestId.ToString(),
+                                                CategoryName = request.Process.Category.CategoryName,
+                                                CategoryNameAR = request.Process.Category.CategoryNameAR,
+                                                ReceiveEmail = employee.Email,
+                                                ReceiveName = employee.EmployeeName,
+                                                ReceiveNameAR = employee.EmployeeNameAR,
+                                                RequestName = process.ProcessName,
+                                                RequestNameAR = process.ProcessNameAR,
+                                                RequesterName = requester.EmployeeName,
+                                                RequesterNameAR = requester.EmployeeNameAR,
+                                                Message = activity.AlertText.Trim(),
+                                                MessageAR = activity.AlertTextAR.Trim(),
+                                            });
+
+                                        }
+                                    }
+
+                                }
+                            }
+                            else if (activity.Performer.PerformerType == (short)PerformerType.RequestField)
+                            {
+                                //var WfRequestData = await _Context.Set<WfRequest>().FirstOrDefaultAsync(x => x.RequestId == request.RequestId);
+                                //var employeeId = long.Parse(Helper.ParseFromXML(WfRequestData.RequestDetails).FirstOrDefault(x => x.ControlDataId == activity.Performer.RelatedField).ControlValue);
+
+                                var employeeId = long.Parse(controls.FirstOrDefault(x => x.ControlDataId == activity.Performer.RelatedField).ControlValue);
+                                _UserID = employeeId;
+                                if (activity.Performer.IsEmployee)
+                                {
+                                    extendedProperties = $"Select [employeeID] AS [Value] from Employees where EmployeeID={employeeId}";
+                                    _UserID = employeeId;
+                                }
+                                else if (activity.Performer.IsManager1)
+                                {
+                                    extendedProperties = $"Select [Manager1Id] AS [Value] from Managers where EmployeeID={employeeId}";
+                                    _UserID = await _context.Database.SqlQueryRaw<long?>($"{extendedProperties.Trim()}").FirstOrDefaultAsync();
+
+                                }
+                                else if (activity.Performer.IsManager2)
+                                {
+                                    extendedProperties = $"Select [Manager2Id] AS [Value] from Managers where EmployeeID={employeeId}";
+                                    _UserID = await _context.Database.SqlQueryRaw<long?>($"{extendedProperties.Trim()}").FirstOrDefaultAsync();
+
+                                }
+                                else if (activity.Performer.IsManager3)
+                                {
+                                    extendedProperties = $"Select [Manager3Id] AS [Value] from Managers where EmployeeID={employeeId}";
+                                    _UserID = await _context.Database.SqlQueryRaw<long?>($"{extendedProperties.Trim()}").FirstOrDefaultAsync();
+
+                                }
+                                else if (activity.Performer.IsManager4)
+                                {
+                                    extendedProperties = $"Select [Manager4Id] AS [Value] from Managers where EmployeeID={employeeId}";
+                                    _UserID = await _context.Database.SqlQueryRaw<long?>($"{extendedProperties.Trim()}").FirstOrDefaultAsync();
+
+                                }
+
+                                var assignment = await _context.WfAssignments.AddAsync(new WfAssignment
+                                {
+                                    ActivityId = activity.ActivityId,
+                                    RequestId = request.RequestId,
+                                    AssignDate = DateTime.Now,
+                                    UserId = _UserID.Value,
+                                    PeriodHrs = activity.PeriodHrs,
+                                    AutoPassing = activity.AutoPassing,
+                                    StepId = activity.StepId,
+
+                                });
+                                if (activity.AlertingBySystem)
+                                {
+                                    await _context.SaveChangesAsync();
+                                    await _context.Notifications.AddAsync(new Notification
+                                    {
+                                        EmployeeId = _UserID.Value,
+                                        TitleAR = " يوجد لديكم معاملة  " + process.ProcessNameAR + " في صندوق الوارد ",
+                                        MessageAR = "رقم الطلب هو " + request.RequestId + " برجاء اخذ الاجراء المناسب في الوقت المحدد",
+                                        Title = "You have a transaction " + process.ProcessName + " in the inbox",
+                                        Message = "The request number is " + request.RequestId + ". Please take the appropriate action within the specified time.",
+                                        CreatedDate = DateTime.Now,
+                                        CreatedBy = _UserID.Value,
+                                        Option = assignment.Entity.AssignmentId.ToString(),
+                                        RequestId = request.RequestId.ToString(),
+                                        Url = "WfDecision/Index/",
+                                        IsRead = false,
+                                    });
+                                }
+                                if (activity.AlertingByEmail || activity.AlertingBySms || activity.SendEmail || activity.SendSms)
+                                {
+                                    var employee = _context.Employees.Find(_UserID);
+                                    if (activity.AlertingBySms)
+                                    {
+                                        if (!string.IsNullOrEmpty(employee.Mobile) && Helper.IsValidMobile(employee.Mobile))
+                                        {
+                                            sMSModels.Add(new SMSModel
+                                            {
+                                                Msg = "You have a transaction " + process.ProcessName + " in the inbox" + " The request number is " + request.RequestId + ". Please take the appropriate action within the specified time.",
+                                                MsgAR = " يوجد لديكم معاملة  " + process.ProcessNameAR + " في صندوق الوارد " + "رقم الطلب هو " + request.RequestId + " برجاء اخذ الاجراء المناسب في الوقت المحدد",
+                                                Numbers = employee.Mobile,
+                                            });
+                                        }
+                                    }
+                                    if (activity.AlertingByEmail)
+                                    {
+
+                                        if (!string.IsNullOrEmpty(employee.Email) && Helper.IsValidEmail(employee.Email))
+                                        {
+                                            var requester = await _context.Employees.FindAsync(request.EmployeeId);
+                                            templateParametersModels.Add(new TemplateParametersModel
+                                            {
+                                                ProcessName = process.ProcessName,
+                                                ProcessNameAR = process.ProcessNameAR,
+                                                RequestId = request.RequestId.ToString(),
+                                                CategoryName = request.Process.Category.CategoryName,
+                                                CategoryNameAR = request.Process.Category.CategoryNameAR,
+                                                ReceiveEmail = employee.Email,
+                                                ReceiveName = employee.EmployeeName,
+                                                ReceiveNameAR = employee.EmployeeNameAR,
+                                                RequestName = process.ProcessName,
+                                                RequestNameAR = process.ProcessNameAR,
+                                                RequesterName = requester.EmployeeName,
+                                                RequesterNameAR = requester.EmployeeNameAR,
+                                            });
+                                        }
+                                    }
+                                    if (activity.SendSms && !string.IsNullOrEmpty(activity.AlertText) && !string.IsNullOrEmpty(activity.AlertTextAR))
+                                    {
+                                        if (!string.IsNullOrEmpty(employee.Mobile) && Helper.IsValidMobile(employee.Mobile))
+                                        {
+                                            sMSModels.Add(new SMSModel
+                                            {
+                                                Msg = activity.AlertText.Trim(),
+                                                MsgAR = activity.AlertTextAR.Trim(),
+                                                Numbers = employee.Mobile,
+                                            });
+                                        }
+                                    }
+                                    if (activity.SendEmail && !string.IsNullOrEmpty(activity.AlertText) && !string.IsNullOrEmpty(activity.AlertTextAR))
+                                    {
+                                        if (!string.IsNullOrEmpty(employee.Email) && Helper.IsValidEmail(employee.Email))
+                                        {
+                                            var requester = await _context.Employees.FindAsync(request.EmployeeId);
+
+                                            templateParametersModels.Add(new TemplateParametersModel
+                                            {
+                                                ProcessName = process.ProcessName,
+                                                ProcessNameAR = process.ProcessNameAR,
+                                                RequestId = request.RequestId.ToString(),
+                                                CategoryName = request.Process.Category.CategoryName,
+                                                CategoryNameAR = request.Process.Category.CategoryNameAR,
+                                                ReceiveEmail = employee.Email,
+                                                ReceiveName = employee.EmployeeName,
+                                                ReceiveNameAR = employee.EmployeeNameAR,
+                                                RequestName = process.ProcessName,
+                                                RequestNameAR = process.ProcessNameAR,
+                                                RequesterName = requester.EmployeeName,
+                                                RequesterNameAR = requester.EmployeeNameAR,
+                                                Message = activity.AlertText.Trim(),
+                                                MessageAR = activity.AlertTextAR.Trim(),
+                                            });
+
+                                        }
+                                    }
+                                }
+                            }
+                            else if (activity.Performer.PerformerType == (short)PerformerType.Users)
+                            {
+                                foreach (var Performer in activity.Performer.WfUsersPerformers)
+                                {
+                                    if (Performer.UserID > 0)
+                                    {
+                                        var assignment = await _context.WfAssignments.AddAsync(new WfAssignment
+                                        {
+                                            ActivityId = activity.ActivityId,
+                                            RequestId = request.RequestId,
+                                            AssignDate = DateTime.Now,
+                                            UserId = Performer.UserID,
+                                            PeriodHrs = activity.PeriodHrs,
+                                            AutoPassing = activity.AutoPassing,
+                                            StepId = activity.StepId,
+
+                                        });
+                                        if (activity.AlertingBySystem)
+                                        {
+                                            await _context.SaveChangesAsync();
+
+                                            await _context.Notifications.AddAsync(new Notification
+                                            {
+                                                EmployeeId = Performer.UserID,
+                                                TitleAR = " يوجد لديكم معاملة  " + process.ProcessNameAR + " في صندوق الوارد ",
+                                                MessageAR = "رقم الطلب هو " + request.RequestId + " برجاء اخذ الاجراء المناسب في الوقت المحدد",
+                                                Title = "You have a transaction " + process.ProcessName + " in the inbox",
+                                                Message = "The request number is " + request.RequestId + ". Please take the appropriate action within the specified time.",
+                                                CreatedDate = DateTime.Now,
+                                                CreatedBy = Performer.UserID,
+                                                Option = assignment.Entity.AssignmentId.ToString(),
+                                                RequestId = request.RequestId.ToString(),
+                                                Url = "WfDecision/Index/",
+                                                IsRead = false,
+                                            });
+                                        }
+                                        if (activity.AlertingByEmail || activity.AlertingBySms || activity.SendEmail || activity.SendSms)
+                                        {
+                                            var employee = _context.Employees.Find(Performer.UserID);
+                                            if (activity.AlertingBySms)
+                                            {
+                                                if (!string.IsNullOrEmpty(employee.Mobile) && Helper.IsValidMobile(employee.Mobile))
+                                                {
+                                                    sMSModels.Add(new SMSModel
+                                                    {
+                                                        Msg = "You have a transaction " + process.ProcessName + " in the inbox" + " The request number is " + request.RequestId + ". Please take the appropriate action within the specified time.",
+                                                        MsgAR = " يوجد لديكم معاملة  " + process.ProcessNameAR + " في صندوق الوارد " + "رقم الطلب هو " + request.RequestId + " برجاء اخذ الاجراء المناسب في الوقت المحدد",
+                                                        Numbers = employee.Mobile,
+                                                    });
+                                                }
+                                            }
+                                            if (activity.AlertingByEmail)
+                                            {
+
+                                                if (!string.IsNullOrEmpty(employee.Email) && Helper.IsValidEmail(employee.Email))
+                                                {
+                                                    var requester = await _context.Employees.FindAsync(request.EmployeeId);
+                                                    templateParametersModels.Add(new TemplateParametersModel
+                                                    {
+                                                        ProcessName = process.ProcessName,
+                                                        ProcessNameAR = process.ProcessNameAR,
+                                                        RequestId = request.RequestId.ToString(),
+                                                        CategoryName = request.Process.Category.CategoryName,
+                                                        CategoryNameAR = request.Process.Category.CategoryNameAR,
+                                                        ReceiveEmail = employee.Email,
+                                                        ReceiveName = employee.EmployeeName,
+                                                        ReceiveNameAR = employee.EmployeeNameAR,
+                                                        RequestName = process.ProcessName,
+                                                        RequestNameAR = process.ProcessNameAR,
+                                                        RequesterName = requester.EmployeeName,
+                                                        RequesterNameAR = requester.EmployeeNameAR,
+                                                    });
+                                                }
+                                            }
+                                            if (activity.SendSms && !string.IsNullOrEmpty(activity.AlertText) && !string.IsNullOrEmpty(activity.AlertTextAR))
+                                            {
+                                                if (!string.IsNullOrEmpty(employee.Mobile) && Helper.IsValidMobile(employee.Mobile))
+                                                {
+                                                    sMSModels.Add(new SMSModel
+                                                    {
+                                                        Msg = activity.AlertText.Trim(),
+                                                        MsgAR = activity.AlertTextAR.Trim(),
+                                                        Numbers = employee.Mobile,
+                                                    });
+                                                }
+                                            }
+                                            if (activity.SendEmail && !string.IsNullOrEmpty(activity.AlertText) && !string.IsNullOrEmpty(activity.AlertTextAR))
+                                            {
+                                                if (!string.IsNullOrEmpty(employee.Email) && Helper.IsValidEmail(employee.Email))
+                                                {
+                                                    var requester = await _context.Employees.FindAsync(request.EmployeeId);
+
+                                                    templateParametersModels.Add(new TemplateParametersModel
+                                                    {
+                                                        ProcessName = process.ProcessName,
+                                                        ProcessNameAR = process.ProcessNameAR,
+                                                        RequestId = request.RequestId.ToString(),
+                                                        CategoryName = request.Process.Category.CategoryName,
+                                                        CategoryNameAR = request.Process.Category.CategoryNameAR,
+                                                        ReceiveEmail = employee.Email,
+                                                        ReceiveName = employee.EmployeeName,
+                                                        ReceiveNameAR = employee.EmployeeNameAR,
+                                                        RequestName = process.ProcessName,
+                                                        RequestNameAR = process.ProcessNameAR,
+                                                        RequesterName = requester.EmployeeName,
+                                                        RequesterNameAR = requester.EmployeeNameAR,
+                                                        Message = activity.AlertText.Trim(),
+                                                        MessageAR = activity.AlertTextAR.Trim(),
+                                                    });
+
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            else if (activity.Performer.PerformerType == (short)PerformerType.SQL)
+                            {
+
+                            }
+                        }
+                    }
+                    await _context.SaveChangesAsync();
+                    transaction.Commit();
+                    return (templateParametersModels, sMSModels, request);
+                }
+                catch (Exception ex)
+                {
+                    transaction.Rollback();
+                    throw ex;
+                }
+            }
+
+        }
+
+        public async Task AutoSubmitRequest(CancellationToken cancellationToken)
+        {
+            await AutoSubmitMyPermits(cancellationToken);
+            // await Task.Delay(TimeSpan.FromMinutes(2), cancellationToken);
+            await AutoSubmitMyLicenses(cancellationToken);
+
+
+        }
+        public async Task AutoSubmitMyLicenses(CancellationToken cancellationToken)
+        {
+            List<WfStructureControl> Controls = new List<WfStructureControl>();
+            var documents = await _Context.Set<WfDocument>().Include(x => x.Employee).Where(x => x.RenewalDate.Date <= DateTime.Now.Date && x.ProcessId.HasValue && x.Activated).ToListAsync();
+            foreach (var document in documents)
+            {
+                Controls.Clear();
+                Controls.Add(new WfStructureControl
+                {
+                    ControlDataId = 1,
+                    ControlId = 2,
+                    ControlLabel = "Branch Code ?",
+                    ControlLabelAR = "كود الفرع؟",
+                    ControlValue = document.Employee.EmployeeCode,
+                    ControlValueEN = document.Employee.EmployeeCode,
+                    ControlValueAR = document.Employee.EmployeeCode,
+                    ProcessId = document.ProcessId.Value,
+                    RelatedObjectId = document.ProcessId.Value,
+                    UsedAsCriteria = true
+                });
+                Controls.Add(new WfStructureControl
+                {
+                    ControlDataId = 2,
+                    ControlId = 2,
+                    ControlLabel = "Branch Name ?",
+                    ControlLabelAR = "اسم الفرع؟",
+                    ControlValue = document.Employee.EmployeeName,
+                    ControlValueEN = document.Employee.EmployeeName,
+                    ControlValueAR = document.Employee.EmployeeNameAR,
+                    ProcessId = document.ProcessId.Value,
+                    RelatedObjectId = document.ProcessId.Value,
+                    UsedAsCriteria = true
+
+                });
+                Controls.Add(new WfStructureControl
+                {
+                    ControlDataId = 3,
+                    ControlId = 2,
+                    ControlLabel = "Docment Type ?",
+                    ControlLabelAR = "نوع الوثيقة؟",
+                    ControlValue = document.DocumentName,
+                    ControlValueEN = document.DocumentName,
+                    ControlValueAR = document.DocumentNameAR,
+                    ProcessId = document.ProcessId.Value,
+                    RelatedObjectId = document.ProcessId.Value,
+                    UsedAsCriteria = true
+                });
+                Controls.Add(new WfStructureControl
+                {
+                    ControlDataId = 4,
+                    ControlId = 4,
+                    ControlLabel = "Expire Date ?",
+                    ControlLabelAR = "تاريخ الانتهاء؟",
+                    ControlValue = document.ExpiryDate.ToShortDateString(),
+                    ControlValueEN = document.ExpiryDate.ToShortDateString(),
+                    ControlValueAR = document.ExpiryDate.ToShortDateString(),
+                    ProcessId = document.ProcessId.Value,
+                    RelatedObjectId = document.ProcessId.Value,
+                    UsedAsCriteria = true
+                });
+
+                await WfSendRequestAsync2(new WfRequest
+                {
+                    ProcessId = document.ProcessId.Value,
+                    RequestDate = DateTime.Now,
+                    CreatedDate = DateTime.Now,
+                    EmployeeId = document.EmployeeID,
+                    CreatedBy = document.EmployeeID,
+                    AttachmentId = document.AttachmentId,
+                    IsPin = true,
+                    PinDate = DateTime.Now,
+                    Priority = "Hight",
+                    RequestDetails = Helper.ParseToXML(Controls),
+                    RequestType = 1,
+
+                }, Controls);
+
+                document.RenewalDate = document.RenewalDate.AddYears(1);
+                _Context.Set<WfDocument>().Update(document);
+                await _Context.SaveChangesAsync();
+
+            }
+        }
+        public async Task AutoSubmitMyPermits(CancellationToken cancellationToken)
+        {
+            await AutoSubmitIssueMyPermits(cancellationToken);
+            //await Task.Delay(TimeSpan.FromMinutes(2), cancellationToken);
+            await AutoSubmitExpiryMyPermits(cancellationToken);
+        }
+        public async Task AutoSubmitIssueMyPermits(CancellationToken cancellationToken)
+        {
+            List<WfStructureControl> Controls = new List<WfStructureControl>();
+            var documents = await _Context.Set<WfMyPermit>().Include(x => x.Employee).Where(x => x.IssueDate.Date <= DateTime.Now.Date && x.Activated && x.IssueSubmited != true).ToListAsync();
+            foreach (var document in documents)
+            {
+                Controls.Clear();
+                Controls.Add(new WfStructureControl
+                {
+                    ControlDataId = 1,
+                    ControlId = 2,
+                    ControlLabel = "Branch Code ?",
+                    ControlLabelAR = "كود الفرع؟",
+                    ControlValue = document.Employee.EmployeeCode,
+                    ControlValueEN = document.Employee.EmployeeCode,
+                    ControlValueAR = document.Employee.EmployeeCode,
+                    ProcessId = document.IssueProcessId,
+                    RelatedObjectId = document.IssueProcessId,
+                    UsedAsCriteria = true
+                });
+                Controls.Add(new WfStructureControl
+                {
+                    ControlDataId = 2,
+                    ControlId = 2,
+                    ControlLabel = "Branch Name ?",
+                    ControlLabelAR = "اسم الفرع؟",
+                    ControlValue = document.Employee.EmployeeName,
+                    ControlValueEN = document.Employee.EmployeeName,
+                    ControlValueAR = document.Employee.EmployeeNameAR,
+                    ProcessId = document.IssueProcessId,
+                    RelatedObjectId = document.IssueProcessId,
+                    UsedAsCriteria = true
+
+                });
+                Controls.Add(new WfStructureControl
+                {
+                    ControlDataId = 3,
+                    ControlId = 2,
+                    ControlLabel = "Permit Type ?",
+                    ControlLabelAR = "نوع التصريح؟",
+                    ControlValue = document.PermitName,
+                    ControlValueEN = document.PermitName,
+                    ControlValueAR = document.PermitNameAR,
+                    ProcessId = document.IssueProcessId,
+                    RelatedObjectId = document.IssueProcessId,
+                    UsedAsCriteria = true
+                });
+                Controls.Add(new WfStructureControl
+                {
+                    ControlDataId = 3,
+                    ControlId = 2,
+                    ControlLabel = "Permit Type ?",
+                    ControlLabelAR = "نوع التصريح؟",
+                    ControlValue = document.PermitName,
+                    ControlValueEN = document.PermitName,
+                    ControlValueAR = document.PermitNameAR,
+                    ProcessId = document.IssueProcessId,
+                    RelatedObjectId = document.IssueProcessId,
+                    UsedAsCriteria = true
+                });
+                Controls.Add(new WfStructureControl
+                {
+                    ControlDataId = 4,
+                    ControlId = 4,
+                    ControlLabel = "Issue Date ?",
+                    ControlLabelAR = "تاريخ الاصدار؟",
+                    ControlValue = document.IssueDate.ToShortDateString(),
+                    ControlValueEN = document.IssueDate.ToShortDateString(),
+                    ControlValueAR = document.IssueDate.ToShortDateString(),
+                    ProcessId = document.IssueProcessId,
+                    RelatedObjectId = document.IssueProcessId,
+                    UsedAsCriteria = true
+                });
+
+                await WfSendRequestAsync2(new WfRequest
+                {
+                    ProcessId = document.IssueProcessId,
+                    RequestDate = DateTime.Now,
+                    CreatedDate = DateTime.Now,
+                    EmployeeId = document.EmployeeID,
+                    CreatedBy = document.EmployeeID,
+                    AttachmentId = document.AttachmentId,
+                    IsPin = true,
+                    PinDate = DateTime.Now,
+                    Priority = "Hight",
+                    RequestDetails = Helper.ParseToXML(Controls),
+                    RequestType = 1,
+
+                }, Controls);
+
+                document.IssueSubmited = true;
+                _Context.Set<WfMyPermit>().Update(document);
+                await _Context.SaveChangesAsync();
+
+            }
+        }
+        public async Task AutoSubmitExpiryMyPermits(CancellationToken cancellationToken)
+        {
+            List<WfStructureControl> Controls = new List<WfStructureControl>();
+            var documents = await _Context.Set<WfMyPermit>().Include(x => x.Employee).Where(x => x.ExpiryDate.Date <= DateTime.Now.Date && x.Activated && x.ExpirySubmited != true).ToListAsync();
+            foreach (var document in documents)
+            {
+                Controls.Clear();
+                Controls.Add(new WfStructureControl
+                {
+                    ControlDataId = 1,
+                    ControlId = 2,
+                    ControlLabel = "Branch Code ?",
+                    ControlLabelAR = "كود الفرع؟",
+                    ControlValue = document.Employee.EmployeeCode,
+                    ControlValueEN = document.Employee.EmployeeCode,
+                    ControlValueAR = document.Employee.EmployeeCode,
+                    ProcessId = document.ExpiryProcessId,
+                    RelatedObjectId = document.ExpiryProcessId,
+                    UsedAsCriteria = true
+                });
+                Controls.Add(new WfStructureControl
+                {
+                    ControlDataId = 2,
+                    ControlId = 2,
+                    ControlLabel = "Branch Name ?",
+                    ControlLabelAR = "اسم الفرع؟",
+                    ControlValue = document.Employee.EmployeeName,
+                    ControlValueEN = document.Employee.EmployeeName,
+                    ControlValueAR = document.Employee.EmployeeNameAR,
+                    ProcessId = document.ExpiryProcessId,
+                    RelatedObjectId = document.ExpiryProcessId,
+                    UsedAsCriteria = true
+
+                });
+                Controls.Add(new WfStructureControl
+                {
+                    ControlDataId = 3,
+                    ControlId = 2,
+                    ControlLabel = "Permit Type ?",
+                    ControlLabelAR = "نوع التصريح؟",
+                    ControlValue = document.PermitName,
+                    ControlValueEN = document.PermitName,
+                    ControlValueAR = document.PermitNameAR,
+                    ProcessId = document.ExpiryProcessId,
+                    RelatedObjectId = document.ExpiryProcessId,
+                    UsedAsCriteria = true
+                });
+                Controls.Add(new WfStructureControl
+                {
+                    ControlDataId = 3,
+                    ControlId = 2,
+                    ControlLabel = "Permit Type ?",
+                    ControlLabelAR = "نوع التصريح؟",
+                    ControlValue = document.PermitName,
+                    ControlValueEN = document.PermitName,
+                    ControlValueAR = document.PermitNameAR,
+                    ProcessId = document.ExpiryProcessId,
+                    RelatedObjectId = document.ExpiryProcessId,
+                    UsedAsCriteria = true
+                });
+                Controls.Add(new WfStructureControl
+                {
+                    ControlDataId = 4,
+                    ControlId = 4,
+                    ControlLabel = "Expiry Date ?",
+                    ControlLabelAR = "تاريخ الانتهاء؟",
+                    ControlValue = document.ExpiryDate.ToShortDateString(),
+                    ControlValueEN = document.ExpiryDate.ToShortDateString(),
+                    ControlValueAR = document.ExpiryDate.ToShortDateString(),
+                    ProcessId = document.ExpiryProcessId,
+                    RelatedObjectId = document.ExpiryProcessId,
+                    UsedAsCriteria = true
+                });
+
+                await WfSendRequestAsync2(new WfRequest
+                {
+                    ProcessId = document.ExpiryProcessId,
+                    RequestDate = DateTime.Now,
+                    CreatedDate = DateTime.Now,
+                    EmployeeId = document.EmployeeID,
+                    CreatedBy = document.EmployeeID,
+                    AttachmentId = document.AttachmentId,
+                    IsPin = true,
+                    PinDate = DateTime.Now,
+                    Priority = "Hight",
+                    RequestDetails = Helper.ParseToXML(Controls),
+                    RequestType = 1,
+
+                }, Controls);
+
+                document.ExpirySubmited = true;
+                _Context.Set<WfMyPermit>().Update(document);
+                await _Context.SaveChangesAsync();
+
+            }
+        }
+
+
+        //public async Task AutoSubmitRequest(CancellationToken cancellationToken)
+        //{
+        //    List<WfStructureControl> Controls = new List<WfStructureControl>();
+        //    var documents = await _Context.Set<WfDocument>().Include(x => x.Employee).Where(x => x.RenewalDate.Date <= DateTime.Now.Date && x.ProcessId.HasValue && x.Activated).ToListAsync();
+        //    foreach (var document in documents)
+        //    {
+        //        Controls.Clear();
+        //        Controls.Add(new WfStructureControl
+        //        {
+        //            ControlDataId = 1,
+        //            ControlId = 2,
+        //            ControlLabel = "Branch Code ?",
+        //            ControlLabelAR = "كود الفرع؟",
+        //            ControlValue = document.Employee.EmployeeCode,
+        //            ControlValueEN = document.Employee.EmployeeCode,
+        //            ControlValueAR = document.Employee.EmployeeCode,
+        //            ProcessId = document.ProcessId.Value,
+        //            RelatedObjectId = document.ProcessId.Value,
+        //        });
+        //        Controls.Add(new WfStructureControl
+        //        {
+        //            ControlDataId = 2,
+        //            ControlId = 2,
+        //            ControlLabel = "Branch Name ?",
+        //            ControlLabelAR = "اسم الفرع؟",
+        //            ControlValue = document.Employee.EmployeeName,
+        //            ControlValueEN = document.Employee.EmployeeName,
+        //            ControlValueAR = document.Employee.EmployeeNameAR,
+        //            ProcessId = document.ProcessId.Value,
+        //            RelatedObjectId = document.ProcessId.Value,
+
+        //        });
+        //        Controls.Add(new WfStructureControl
+        //        {
+        //            ControlDataId = 3,
+        //            ControlId = 2,
+        //            ControlLabel = "Docment Type ?",
+        //            ControlLabelAR = "نوع الوثيقة؟",
+        //            ControlValue = document.DocumentName,
+        //            ControlValueEN = document.DocumentName,
+        //            ControlValueAR = document.DocumentNameAR,
+        //            ProcessId = document.ProcessId.Value,
+        //            RelatedObjectId = document.ProcessId.Value,
+        //        });
+        //        Controls.Add(new WfStructureControl
+        //        {
+        //            ControlDataId = 4,
+        //            ControlId = 4,
+        //            ControlLabel = "Expire Date ?",
+        //            ControlLabelAR = "تاريخ الانتهاء؟",
+        //            ControlValue = document.ExpiryDate.ToShortDateString(),
+        //            ControlValueEN = document.ExpiryDate.ToShortDateString(),
+        //            ControlValueAR = document.ExpiryDate.ToShortDateString(),
+        //            ProcessId = document.ProcessId.Value,
+        //            RelatedObjectId = document.ProcessId.Value,
+        //        });
+        //        var task1 = await Task.Run(async () =>
+        //        await WfSendRequestAsync2(new WfRequest
+        //        {
+        //            ProcessId = document.ProcessId.Value,
+        //            RequestDate = DateTime.Now,
+        //            CreatedDate = DateTime.Now,
+        //            EmployeeId = document.EmployeeID,
+        //            CreatedBy = document.EmployeeID,
+        //            AttachmentId = document.AttachmentId,
+        //            IsPin = true,
+        //            PinDate = DateTime.Now,
+        //            Priority = "Hight",
+        //            RequestDetails = Helper.ParseToXML(Controls),
+
+        //        }, Controls));
+       
+        //        document.RenewalDate = document.RenewalDate.AddYears(1);
+        //        _Context.Set<WfDocument>().Update(document);
+        //        await _Context.SaveChangesAsync();
+        //        await Task.Delay(TimeSpan.FromSeconds(10), cancellationToken);
+        //    }
+        //}
+        public async Task<(List<TemplateParametersModel>, List<SMSModel>, WfRequest)> WfSendRequestAsync2(WfRequest entity, List<WfStructureControl> controls)
+        {
+            List<TemplateParametersModel> templateParametersModels = new List<TemplateParametersModel>();
+            List<SMSModel> sMSModels = new List<SMSModel>();
+
+            try
+            {
+
+                var process = await _context.WfProcesses.Include(x => x.Category).FirstOrDefaultAsync(x => x.ProcessId == entity.ProcessId);
+                var request = (await _context.WfRequests.AddAsync(entity)).Entity;
+                await _context.SaveChangesAsync();
+
+                // WfRequestDetails
+                var WfRequestDetails = await _context.Set<WfRequestsVW>().Where(x => x.RequestId == request.RequestId).Select(x => new WfRequestDetail
+                {
+                    RequestId = x.RequestId,
+                    RelatedObjectId = x.RelatedObjectId,
+                    ControlDataId = x.ControlDataId,
+                    ControlId = x.ControlId,
+                    ControlLabel = x.ControlLabel,
+                    ControlLabelAR = x.ControlLabelAR,
+                    ControlValue = x.ControlValue,
+                    ControlValueAR = x.ControlValueAR,
+                    ControlValueEN = x.ControlValueEN,
+                    UsedAsCriteria = x.UsedAsCriteria,
+                    ControlOrder = x.ControlOrder
+                }).ToListAsync();
+                await _context.Set<WfRequestDetail>().AddRangeAsync(WfRequestDetails);
+                await _context.SaveChangesAsync();
+
+                List<WfProcessVariable> processVariables = new List<WfProcessVariable>();
+                var variables = await _context.WfVariables.Where(x => x.ProcessId == entity.ProcessId && x.Activated).OrderBy(x => x.VariableOrder).ToListAsync();
+                foreach (var kvp in variables)
+                {
+                    processVariables.Add(new WfProcessVariable { RequestId = request.RequestId, VariableId = kvp.VariableId, VariableOrder = kvp.VariableOrder });
+                }
+                await _context.WfProcessVariables.AddRangeAsync(processVariables);
+                await _context.SaveChangesAsync();
+
+                bool hasVariable = false;
+                foreach (var control in controls)
+                {
+                    var mappingRequestVariable = await _context.WfRequestMappingVariables.Where(x => x.Activated && x.RequestControlId == control.ControlDataId).OrderBy(x => x.VariableOrder).FirstOrDefaultAsync();
+                    if (mappingRequestVariable != null)
+                    {
+                        hasVariable = true;
+                        var processVariable = await _context.WfProcessVariables.Where(x => x.RequestId == request.RequestId && x.VariableId == mappingRequestVariable.VariableId).OrderBy(x => x.VariableOrder).FirstOrDefaultAsync();
+                        processVariable.VariableValue = string.IsNullOrEmpty(control.ControlValue) ? "" : control.ControlValue.Trim();
+                        _context.WfProcessVariables.Update(processVariable);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+                long stepId = -1;
+                if (hasVariable)
+                {
+                    var transitions = await _context.WfTransitions.Where(x => x.Activated).Include(x => x.Operator).Include(x => x.Variable).Where(x => x.ProcessId == request.ProcessId && x.ActivityId == null).OrderBy(x => x.TransitionOrder).ToListAsync();
+                    foreach (var item in transitions)
+                    {
+                        if (item.Variable.DataTypeId == (byte)DataTypes.Integer)
+                        {
+                            var processVariable = await _context.WfProcessVariables.Where(x => x.RequestId == request.RequestId && x.VariableId == item.VariableId).OrderBy(x => x.VariableOrder).FirstOrDefaultAsync();
+                            if (processVariable != null && !string.IsNullOrEmpty(processVariable.VariableValue))
+                                if (Helper.ValidateValues(long.Parse(processVariable.VariableValue), long.Parse(item.Value), item.Operator.OperatorName))
+                                {
+                                    stepId = item.StepId;
+                                    break;
+                                }
+
+                        }
+                        else if (item.Variable.DataTypeId == (byte)DataTypes.String)
+                        {
+                            var processVariable = await _context.WfProcessVariables.Where(x => x.RequestId == request.RequestId && x.VariableId == item.VariableId).OrderBy(x => x.VariableOrder).FirstOrDefaultAsync();
+                            if (processVariable != null && !string.IsNullOrEmpty(processVariable.VariableValue))
+                                if (Helper.ValidateValues<string>(processVariable.VariableValue, item.Value, item.Operator.OperatorName))
+                                {
+                                    stepId = item.StepId;
+                                    break;
+                                }
+                        }
+                        else if (item.Variable.DataTypeId == (byte)DataTypes.Boolean)
+                        {
+
+                        }
+                        else if (item.Variable.DataTypeId == (byte)DataTypes.DateTime)
+                        {
+
+                        }
+
+                    }
+                }
+                WfStep step = null;
+                if (stepId == 0)
+                {
+                    request.IsFinished = true;
+                    request.FinishedDate = DateTime.Now;
+                }
+                else if (stepId != -1)
+                {
+                    step = await _context.WfSteps.Where(x => x.StepId == stepId).Include(x => x.WfActivities.Where(x => x.Activated)).ThenInclude(x => x.Performer).ThenInclude(p => p.WfUsersPerformers).FirstOrDefaultAsync();
+
+                }
+                else
+                {
+                    step = await _context.WfSteps.Where(x => x.Activated && x.ProcessId == entity.ProcessId).Include(x => x.WfActivities.Where(x => x.Activated)).ThenInclude(x => x.Performer).ThenInclude(p => p.WfUsersPerformers).OrderBy(x => x.StepOrder).FirstOrDefaultAsync();
+
+                }
+                if (step != null)
+                {
+                    foreach (var activity in step.WfActivities.Where(x => x.Activated))
+                    {
+                        long? _UserID;
+                        string extendedProperties = "";
+                        if (activity.Performer.PerformerType == (short)PerformerType.Request)
+                        {
+                            _UserID = request.EmployeeId;
+                            if (activity.Performer.IsEmployee)
+                            {
+                                extendedProperties = $"Select [employeeID] AS [Value] from Employees where EmployeeID={request.EmployeeId}";
+                                _UserID = request.EmployeeId;
+                            }
+                            if (activity.Performer.IsManager1)
+                            {
+                                extendedProperties = $"Select [Manager1Id] AS [Value] from Managers where EmployeeID={request.EmployeeId}";
+                                _UserID = await _context.Database.SqlQueryRaw<long?>($"{extendedProperties.Trim()}").FirstOrDefaultAsync();
+                            }
+                            else if (activity.Performer.IsManager2)
+                            {
+                                extendedProperties = $"Select [Manager2Id] AS [Value] from Managers where EmployeeID={request.EmployeeId}";
+                                _UserID = await _context.Database.SqlQueryRaw<long?>($"{extendedProperties.Trim()}").FirstOrDefaultAsync();
+                            }
+                            else if (activity.Performer.IsManager3)
+                            {
+                                extendedProperties = $"Select [Manager3Id] AS [Value] from Managers where EmployeeID={request.EmployeeId}";
+                                _UserID = await _context.Database.SqlQueryRaw<long?>($"{extendedProperties.Trim()}").FirstOrDefaultAsync();
+                            }
+                            else if (activity.Performer.IsManager4)
+                            {
+                                extendedProperties = $"Select [Manager4Id] AS [Value] from Managers where EmployeeID={request.EmployeeId}";
+                                _UserID = await _context.Database.SqlQueryRaw<long?>($"{extendedProperties.Trim()}").FirstOrDefaultAsync();
+                            }
+
+                            var assignment = await _context.WfAssignments.AddAsync(new WfAssignment
+                            {
+                                ActivityId = activity.ActivityId,
+                                RequestId = request.RequestId,
+                                AssignDate = DateTime.Now,
+                                UserId = _UserID.Value,
+                                PeriodHrs = activity.PeriodHrs,
+                                AutoPassing = activity.AutoPassing,
+                                StepId = activity.StepId,
+
+                            });
+                            if (activity.AlertingBySystem)
+                            {
+                                await _context.SaveChangesAsync();
+                                await _context.Notifications.AddAsync(new Notification
+                                {
+                                    EmployeeId = _UserID.Value,
+                                    TitleAR = " يوجد لديكم معاملة  " + process.ProcessNameAR + " في صندوق الوارد ",
+                                    MessageAR = "رقم الطلب هو " + request.RequestId + " برجاء اخذ الاجراء المناسب في الوقت المحدد",
+                                    Title = "You have a transaction " + process.ProcessName + " in the inbox",
+                                    Message = "The request number is " + request.RequestId + ". Please take the appropriate action within the specified time.",
+                                    CreatedDate = DateTime.Now,
+                                    CreatedBy = _UserID.Value,
+                                    Option = assignment.Entity.AssignmentId.ToString(),
+                                    RequestId = request.RequestId.ToString(),
+                                    Url = "WfDecision/Index/",
+                                    IsRead = false,
+                                });
+                            }
+
+                            if (activity.AlertingByEmail || activity.AlertingBySms || activity.SendEmail || activity.SendSms)
+                            {
+                                var employee = await _context.Employees.FindAsync(_UserID);
+
+
+                                if (activity.AlertingBySms)
+                                {
+                                    if (!string.IsNullOrEmpty(employee.Mobile) && Helper.IsValidMobile(employee.Mobile))
+                                    {
+                                        sMSModels.Add(new SMSModel
+                                        {
+                                            Msg = "You have a transaction " + process.ProcessName + " in the inbox" + " The request number is " + request.RequestId + ". Please take the appropriate action within the specified time.",
+                                            MsgAR = " يوجد لديكم معاملة  " + process.ProcessNameAR + " في صندوق الوارد " + "رقم الطلب هو " + request.RequestId + " برجاء اخذ الاجراء المناسب في الوقت المحدد",
+                                            Numbers = employee.Mobile,
+
+                                        });
+                                    }
+                                }
+                                if (activity.AlertingByEmail)
+                                {
+                                    if (!string.IsNullOrEmpty(employee.Email) && Helper.IsValidEmail(employee.Email))
+                                    {
+                                        var requester = await _context.Employees.FindAsync(request.EmployeeId);
+
+                                        templateParametersModels.Add(new TemplateParametersModel
+                                        {
+                                            ProcessName = process.ProcessName,
+                                            ProcessNameAR = process.ProcessNameAR,
+                                            RequestId = request.RequestId.ToString(),
+                                            CategoryName = request.Process.Category.CategoryName,
+                                            CategoryNameAR = request.Process.Category.CategoryNameAR,
+                                            ReceiveEmail = employee.Email,
+                                            ReceiveName = employee.EmployeeName,
+                                            ReceiveNameAR = employee.EmployeeNameAR,
+                                            RequestName = process.ProcessName,
+                                            RequestNameAR = process.ProcessNameAR,
+                                            RequesterName = requester.EmployeeName,
+                                            RequesterNameAR = requester.EmployeeNameAR,
+                                        });
+
+                                    }
+                                }
+                                if (activity.SendSms && !string.IsNullOrEmpty(activity.AlertText) && !string.IsNullOrEmpty(activity.AlertTextAR))
+                                {
+                                    if (!string.IsNullOrEmpty(employee.Mobile) && Helper.IsValidMobile(employee.Mobile))
+                                    {
+                                        sMSModels.Add(new SMSModel
+                                        {
+                                            Msg = activity.AlertText.Trim(),
+                                            MsgAR = activity.AlertTextAR.Trim(),
+                                            Numbers = employee.Mobile,
+                                        });
+                                    }
+                                }
+                                if (activity.SendEmail && !string.IsNullOrEmpty(activity.AlertText) && !string.IsNullOrEmpty(activity.AlertTextAR))
+                                {
+                                    if (!string.IsNullOrEmpty(employee.Email) && Helper.IsValidEmail(employee.Email))
+                                    {
+                                        var requester = await _context.Employees.FindAsync(request.EmployeeId);
+
+                                        templateParametersModels.Add(new TemplateParametersModel
+                                        {
+                                            ProcessName = process.ProcessName,
+                                            ProcessNameAR = process.ProcessNameAR,
+                                            RequestId = request.RequestId.ToString(),
+                                            CategoryName = request.Process.Category.CategoryName,
+                                            CategoryNameAR = request.Process.Category.CategoryNameAR,
+                                            ReceiveEmail = employee.Email,
+                                            ReceiveName = employee.EmployeeName,
+                                            ReceiveNameAR = employee.EmployeeNameAR,
+                                            RequestName = process.ProcessName,
+                                            RequestNameAR = process.ProcessNameAR,
+                                            RequesterName = requester.EmployeeName,
+                                            RequesterNameAR = requester.EmployeeNameAR,
+                                            Message = activity.AlertText.Trim(),
+                                            MessageAR = activity.AlertTextAR.Trim(),
+                                        });
+
+                                    }
+                                }
+
+                            }
+                        }
+                        else if (activity.Performer.PerformerType == (short)PerformerType.RequestField)
+                        {
+                            //var WfRequestData = await _Context.Set<WfRequest>().FirstOrDefaultAsync(x => x.RequestId == request.RequestId);
+                            //var employeeId = long.Parse(Helper.ParseFromXML(WfRequestData.RequestDetails).FirstOrDefault(x => x.ControlDataId == activity.Performer.RelatedField).ControlValue);
+
+                            var employeeId = long.Parse(controls.FirstOrDefault(x => x.ControlDataId == activity.Performer.RelatedField).ControlValue);
+                            _UserID = employeeId;
+                            if (activity.Performer.IsEmployee)
+                            {
+                                extendedProperties = $"Select [employeeID] AS [Value] from Employees where EmployeeID={employeeId}";
+                                _UserID = employeeId;
+                            }
+                            else if (activity.Performer.IsManager1)
+                            {
+                                extendedProperties = $"Select [Manager1Id] AS [Value] from Managers where EmployeeID={employeeId}";
+                                _UserID = await _context.Database.SqlQueryRaw<long?>($"{extendedProperties.Trim()}").FirstOrDefaultAsync();
+
+                            }
+                            else if (activity.Performer.IsManager2)
+                            {
+                                extendedProperties = $"Select [Manager2Id] AS [Value] from Managers where EmployeeID={employeeId}";
+                                _UserID = await _context.Database.SqlQueryRaw<long?>($"{extendedProperties.Trim()}").FirstOrDefaultAsync();
+
+                            }
+                            else if (activity.Performer.IsManager3)
+                            {
+                                extendedProperties = $"Select [Manager3Id] AS [Value] from Managers where EmployeeID={employeeId}";
+                                _UserID = await _context.Database.SqlQueryRaw<long?>($"{extendedProperties.Trim()}").FirstOrDefaultAsync();
+
+                            }
+                            else if (activity.Performer.IsManager4)
+                            {
+                                extendedProperties = $"Select [Manager4Id] AS [Value] from Managers where EmployeeID={employeeId}";
+                                _UserID = await _context.Database.SqlQueryRaw<long?>($"{extendedProperties.Trim()}").FirstOrDefaultAsync();
+
+                            }
+
+                            var assignment = await _context.WfAssignments.AddAsync(new WfAssignment
+                            {
+                                ActivityId = activity.ActivityId,
+                                RequestId = request.RequestId,
+                                AssignDate = DateTime.Now,
+                                UserId = _UserID.Value,
+                                PeriodHrs = activity.PeriodHrs,
+                                AutoPassing = activity.AutoPassing,
+                                StepId = activity.StepId,
+
+                            });
+                            if (activity.AlertingBySystem)
+                            {
+                                await _context.SaveChangesAsync();
+                                await _context.Notifications.AddAsync(new Notification
+                                {
+                                    EmployeeId = _UserID.Value,
+                                    TitleAR = " يوجد لديكم معاملة  " + process.ProcessNameAR + " في صندوق الوارد ",
+                                    MessageAR = "رقم الطلب هو " + request.RequestId + " برجاء اخذ الاجراء المناسب في الوقت المحدد",
+                                    Title = "You have a transaction " + process.ProcessName + " in the inbox",
+                                    Message = "The request number is " + request.RequestId + ". Please take the appropriate action within the specified time.",
+                                    CreatedDate = DateTime.Now,
+                                    CreatedBy = _UserID.Value,
+                                    Option = assignment.Entity.AssignmentId.ToString(),
+                                    RequestId = request.RequestId.ToString(),
+                                    Url = "WfDecision/Index/",
+                                    IsRead = false,
+                                });
+                            }
+                            if (activity.AlertingByEmail || activity.AlertingBySms || activity.SendEmail || activity.SendSms)
+                            {
+                                var employee = _context.Employees.Find(_UserID);
+                                if (activity.AlertingBySms)
+                                {
+                                    if (!string.IsNullOrEmpty(employee.Mobile) && Helper.IsValidMobile(employee.Mobile))
+                                    {
+                                        sMSModels.Add(new SMSModel
+                                        {
+                                            Msg = "You have a transaction " + process.ProcessName + " in the inbox" + " The request number is " + request.RequestId + ". Please take the appropriate action within the specified time.",
+                                            MsgAR = " يوجد لديكم معاملة  " + process.ProcessNameAR + " في صندوق الوارد " + "رقم الطلب هو " + request.RequestId + " برجاء اخذ الاجراء المناسب في الوقت المحدد",
+                                            Numbers = employee.Mobile,
+                                        });
+                                    }
+                                }
+                                if (activity.AlertingByEmail)
+                                {
+
+                                    if (!string.IsNullOrEmpty(employee.Email) && Helper.IsValidEmail(employee.Email))
+                                    {
+                                        var requester = await _context.Employees.FindAsync(request.EmployeeId);
+                                        templateParametersModels.Add(new TemplateParametersModel
+                                        {
+                                            ProcessName = process.ProcessName,
+                                            ProcessNameAR = process.ProcessNameAR,
+                                            RequestId = request.RequestId.ToString(),
+                                            CategoryName = request.Process.Category.CategoryName,
+                                            CategoryNameAR = request.Process.Category.CategoryNameAR,
+                                            ReceiveEmail = employee.Email,
+                                            ReceiveName = employee.EmployeeName,
+                                            ReceiveNameAR = employee.EmployeeNameAR,
+                                            RequestName = process.ProcessName,
+                                            RequestNameAR = process.ProcessNameAR,
+                                            RequesterName = requester.EmployeeName,
+                                            RequesterNameAR = requester.EmployeeNameAR,
+                                        });
+                                    }
+                                }
+                                if (activity.SendSms && !string.IsNullOrEmpty(activity.AlertText) && !string.IsNullOrEmpty(activity.AlertTextAR))
+                                {
+                                    if (!string.IsNullOrEmpty(employee.Mobile) && Helper.IsValidMobile(employee.Mobile))
+                                    {
+                                        sMSModels.Add(new SMSModel
+                                        {
+                                            Msg = activity.AlertText.Trim(),
+                                            MsgAR = activity.AlertTextAR.Trim(),
+                                            Numbers = employee.Mobile,
+                                        });
+                                    }
+                                }
+                                if (activity.SendEmail && !string.IsNullOrEmpty(activity.AlertText) && !string.IsNullOrEmpty(activity.AlertTextAR))
+                                {
+                                    if (!string.IsNullOrEmpty(employee.Email) && Helper.IsValidEmail(employee.Email))
+                                    {
+                                        var requester = await _context.Employees.FindAsync(request.EmployeeId);
+
+                                        templateParametersModels.Add(new TemplateParametersModel
+                                        {
+                                            ProcessName = process.ProcessName,
+                                            ProcessNameAR = process.ProcessNameAR,
+                                            RequestId = request.RequestId.ToString(),
+                                            CategoryName = request.Process.Category.CategoryName,
+                                            CategoryNameAR = request.Process.Category.CategoryNameAR,
+                                            ReceiveEmail = employee.Email,
+                                            ReceiveName = employee.EmployeeName,
+                                            ReceiveNameAR = employee.EmployeeNameAR,
+                                            RequestName = process.ProcessName,
+                                            RequestNameAR = process.ProcessNameAR,
+                                            RequesterName = requester.EmployeeName,
+                                            RequesterNameAR = requester.EmployeeNameAR,
+                                            Message = activity.AlertText.Trim(),
+                                            MessageAR = activity.AlertTextAR.Trim(),
+                                        });
+
+                                    }
+                                }
+                            }
+                        }
+                        else if (activity.Performer.PerformerType == (short)PerformerType.Users)
+                        {
+                            foreach (var Performer in activity.Performer.WfUsersPerformers)
+                            {
+                                if (Performer.UserID > 0)
+                                {
+                                    var assignment = await _context.WfAssignments.AddAsync(new WfAssignment
+                                    {
+                                        ActivityId = activity.ActivityId,
+                                        RequestId = request.RequestId,
+                                        AssignDate = DateTime.Now,
+                                        UserId = Performer.UserID,
+                                        PeriodHrs = activity.PeriodHrs,
+                                        AutoPassing = activity.AutoPassing,
+                                        StepId = activity.StepId,
+
+                                    });
+                                    if (activity.AlertingBySystem)
+                                    {
+                                        await _context.SaveChangesAsync();
+
+                                        await _context.Notifications.AddAsync(new Notification
+                                        {
+                                            EmployeeId = Performer.UserID,
+                                            TitleAR = " يوجد لديكم معاملة  " + process.ProcessNameAR + " في صندوق الوارد ",
+                                            MessageAR = "رقم الطلب هو " + request.RequestId + " برجاء اخذ الاجراء المناسب في الوقت المحدد",
+                                            Title = "You have a transaction " + process.ProcessName + " in the inbox",
+                                            Message = "The request number is " + request.RequestId + ". Please take the appropriate action within the specified time.",
+                                            CreatedDate = DateTime.Now,
+                                            CreatedBy = Performer.UserID,
+                                            Option = assignment.Entity.AssignmentId.ToString(),
+                                            RequestId = request.RequestId.ToString(),
+                                            Url = "WfDecision/Index/",
+                                            IsRead = false,
+                                        });
+                                    }
+                                    if (activity.AlertingByEmail || activity.AlertingBySms || activity.SendEmail || activity.SendSms)
+                                    {
+                                        var employee = _context.Employees.Find(Performer.UserID);
+                                        if (activity.AlertingBySms)
+                                        {
+                                            if (!string.IsNullOrEmpty(employee.Mobile) && Helper.IsValidMobile(employee.Mobile))
+                                            {
+                                                sMSModels.Add(new SMSModel
+                                                {
+                                                    Msg = "You have a transaction " + process.ProcessName + " in the inbox" + " The request number is " + request.RequestId + ". Please take the appropriate action within the specified time.",
+                                                    MsgAR = " يوجد لديكم معاملة  " + process.ProcessNameAR + " في صندوق الوارد " + "رقم الطلب هو " + request.RequestId + " برجاء اخذ الاجراء المناسب في الوقت المحدد",
+                                                    Numbers = employee.Mobile,
+                                                });
+                                            }
+                                        }
+                                        if (activity.AlertingByEmail)
+                                        {
+
+                                            if (!string.IsNullOrEmpty(employee.Email) && Helper.IsValidEmail(employee.Email))
+                                            {
+                                                var requester = await _context.Employees.FindAsync(request.EmployeeId);
+                                                templateParametersModels.Add(new TemplateParametersModel
+                                                {
+                                                    ProcessName = process.ProcessName,
+                                                    ProcessNameAR = process.ProcessNameAR,
+                                                    RequestId = request.RequestId.ToString(),
+                                                    CategoryName = request.Process.Category.CategoryName,
+                                                    CategoryNameAR = request.Process.Category.CategoryNameAR,
+                                                    ReceiveEmail = employee.Email,
+                                                    ReceiveName = employee.EmployeeName,
+                                                    ReceiveNameAR = employee.EmployeeNameAR,
+                                                    RequestName = process.ProcessName,
+                                                    RequestNameAR = process.ProcessNameAR,
+                                                    RequesterName = requester.EmployeeName,
+                                                    RequesterNameAR = requester.EmployeeNameAR,
+                                                });
+                                            }
+                                        }
+                                        if (activity.SendSms && !string.IsNullOrEmpty(activity.AlertText) && !string.IsNullOrEmpty(activity.AlertTextAR))
+                                        {
+                                            if (!string.IsNullOrEmpty(employee.Mobile) && Helper.IsValidMobile(employee.Mobile))
+                                            {
+                                                sMSModels.Add(new SMSModel
+                                                {
+                                                    Msg = activity.AlertText.Trim(),
+                                                    MsgAR = activity.AlertTextAR.Trim(),
+                                                    Numbers = employee.Mobile,
+                                                });
+                                            }
+                                        }
+                                        if (activity.SendEmail && !string.IsNullOrEmpty(activity.AlertText) && !string.IsNullOrEmpty(activity.AlertTextAR))
+                                        {
+                                            if (!string.IsNullOrEmpty(employee.Email) && Helper.IsValidEmail(employee.Email))
+                                            {
+                                                var requester = await _context.Employees.FindAsync(request.EmployeeId);
+
+                                                templateParametersModels.Add(new TemplateParametersModel
+                                                {
+                                                    ProcessName = process.ProcessName,
+                                                    ProcessNameAR = process.ProcessNameAR,
+                                                    RequestId = request.RequestId.ToString(),
+                                                    CategoryName = request.Process.Category.CategoryName,
+                                                    CategoryNameAR = request.Process.Category.CategoryNameAR,
+                                                    ReceiveEmail = employee.Email,
+                                                    ReceiveName = employee.EmployeeName,
+                                                    ReceiveNameAR = employee.EmployeeNameAR,
+                                                    RequestName = process.ProcessName,
+                                                    RequestNameAR = process.ProcessNameAR,
+                                                    RequesterName = requester.EmployeeName,
+                                                    RequesterNameAR = requester.EmployeeNameAR,
+                                                    Message = activity.AlertText.Trim(),
+                                                    MessageAR = activity.AlertTextAR.Trim(),
+                                                });
+
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        else if (activity.Performer.PerformerType == (short)PerformerType.SQL)
+                        {
+
+                        }
+                    }
+                }
+                await _context.SaveChangesAsync();
+                return (templateParametersModels, sMSModels, request);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+    }
+}
