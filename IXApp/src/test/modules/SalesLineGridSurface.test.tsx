@@ -119,3 +119,16 @@ it('copies the focused cell value while preserving native selected-text copy', (
   expect(fireEvent.copy(input, { clipboardData: { setData } })).toBe(true);
   expect(setData).not.toHaveBeenCalled();
 });
+
+it('does not suppress a later click if the previous mouse target unmounted before clicking', async () => {
+  const { focusCell } = setup();
+  const input = screen.getByLabelText('cell-0-0');
+  const next = screen.getByLabelText('cell-1-1');
+  input.focus();
+  fireEvent.mouseDown(next);
+  await waitFor(() => expect(focusCell).toHaveBeenCalledWith(1, 1));
+  // Moving to an editor can replace the mousedown target, dropping its click.
+  next.remove();
+  fireEvent.mouseDown(input);
+  expect(fireEvent.click(input)).toBe(true);
+});

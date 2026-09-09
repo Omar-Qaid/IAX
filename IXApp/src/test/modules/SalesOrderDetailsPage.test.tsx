@@ -1,6 +1,6 @@
 import React from 'react';
 import { expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { queryClient } from '@core/api/queryClient';
 import { AppProviders } from '@app/providers/AppProviders';
@@ -248,6 +248,24 @@ it('keeps invalid cell edits focused and moves to Unit after a successful Tab sa
       expect.objectContaining({ id: '42', quantity: 3 })
     )
   );
-  await waitFor(() => expect(screen.getByRole('combobox', { name: 'Unit' })).toHaveFocus());
+  await waitFor(
+    () =>
+      expect(
+        within(screen.getByRole('grid')).getByRole('combobox', { name: 'Unit' })
+      ).toHaveFocus(),
+    { timeout: 3000 }
+  );
   expect(salesOrderLinesApi.update).toHaveBeenCalledTimes(1);
+});
+
+it('preserves an unfinished new line when switching between Lines and Header', async () => {
+  openOrder('1');
+  await screen.findByText('SO-LIVE-001 : Live customer');
+  fireEvent.click(screen.getByRole('button', { name: 'Add line' }));
+  expect(screen.getByRole('textbox', { name: 'Item number' })).toBeDefined();
+  fireEvent.click(screen.getByRole('tab', { name: 'Header' }));
+  expect(screen.queryByRole('textbox', { name: 'Item number' })).toBeNull();
+  fireEvent.click(screen.getByRole('tab', { name: 'Lines' }));
+  expect(await screen.findByRole('textbox', { name: 'Item number' })).toBeDefined();
+  expect(screen.getByRole('button', { name: 'Add line' })).toBeDisabled();
 });

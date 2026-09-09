@@ -22,10 +22,11 @@ import { computeFlexWidths, generateCSV, downloadFile } from './DataGridUtils';
 import { useNotifications } from '@shared/hooks/useNotifications';
 import { uiDensity } from '@shared/constants/uiDensity';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+const getDefaultRowId = <T,>(row: T) => (row as { id: string | number }).id;
 function DataGridInternal<T>({
     rows,
     columns: rawInitialColumns,
-    getRowId = (row: T) => (row as { id: string | number }).id,
+    getRowId = getDefaultRowId,
     loading = false,
     onRowClick,
     onRowDoubleClick,
@@ -81,6 +82,7 @@ function DataGridInternal<T>({
     const initialColumns = rawInitialColumns;
     const [focusedRowId, setFocusedRowId] = useState<string | null>(null);
     const focusRequestRef = useRef(0);
+    const resolveCellRef = useRef<((address: GridCellAddress) => (() => Promise<void>) | undefined) | null>(null);
 
     // Layout & Scroll
     const {
@@ -215,40 +217,6 @@ function DataGridInternal<T>({
         serverSide,
     });
 
-    useImperativeHandle(ref, () => ({
-        cancelPendingFocus: () => { focusRequestRef.current++; },
-        focusCell: (r: number, c: number) => focusCell(r, c),
-        getCellAddress: (r: number, c: number) => {
-            const row = processedRows[r];
-            const column = navigationColumns[c - (selectionMode === 'multiple' ? 1 : 0)];
-            return row && column ? { rowId: getRowId(row), field: String(column.field) } : undefined;
-        },
-        focusRecordCell: (address: GridCellAddress) => {
-            const r = processedRows.findIndex(row => String(getRowId(row)) === String(address.rowId));
-            const c = navigationColumns.findIndex(column => String(column.field) === address.field);
-            return r >= 0 && c >= 0 ? focusCell(r, c + (selectionMode === 'multiple' ? 1 : 0)) : Promise.resolve();
-        },
-        clearFilters: () => { setFilters([]); setGlobalSearch(''); },
-        focusFilter: () => gridRootRef.current?.querySelector<HTMLElement>('[data-grid-filter-field]')?.focus(),
-        startAddRow: handleAddRow,
-        startEditRow: (id: string | number) => {
-            const rowToEdit = processedRows.find(r => getRowId(r) === id);
-            if (rowToEdit) {
-                startEdit(id, rowToEdit);
-            }
-        },
-        saveEdit: handleSaveEdit,
-        cancelEdit: cancelEdit,
-        toggleSidebar: (tab?: 'columns' | 'filters' | 'features') => {
-            if (tab) {
-                setActiveSidebarTab(tab);
-                setIsSidebarOpen(true);
-            } else {
-                setIsSidebarOpen(prev => !prev);
-            }
-        }
-    }));
-
     const hasActiveFilters = !serverSide && (globalSearch.length > 0 || filters.length > 0);
 
     const { onScroll } = useLoadMore({
@@ -338,21 +306,32 @@ function DataGridInternal<T>({
             const targetsNewRow = isAddingNewRow && targetR === 0;
             const processedRowIndex = isAddingNewRow ? targetR - 1 : targetR;
             if (targetsNewRow) {
-                handleSelectionChange([NEW_ROW_ID]);
+                if (selectedIds.length !== 1 || String(selectedIds[0]) !== String(NEW_ROW_ID)) {
+                    handleSelectionChange([NEW_ROW_ID]);
+                }
             } else if (processedRowIndex >= 0 && processedRowIndex < processedRows.length) {
                 const targetRowId = getRowId(processedRows[processedRowIndex]);
-                handleSelectionChange([targetRowId]);
+                if (selectedIds.length !== 1 || String(selectedIds[0]) !== String(targetRowId)) {
+                    handleSelectionChange([targetRowId]);
+                }
             }
         }
 
         const request = ++focusRequestRef.current;
-        // Wait for the virtual row and any custom editor to mount, without a fixed delay.
+        // Visible cells can receive focus immediately. Only wait when a virtual
+        // row or an editor disabled by a pending save is not ready yet.
         for (let frame = 0; frame < 12; frame++) {
-            await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+            if (frame > 0) await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
             if (request !== focusRequestRef.current || !gridRootRef.current) return;
             const cell = gridRootRef.current.querySelector<HTMLElement>(`[data-row-index="${targetR}"][data-col-index="${targetC}"]`);
-            if (!cell) continue;
+            if (!cell) {
+                // Clearing filters or changing header height can reset the viewport
+                // after the initial scroll, especially when adding the last row.
+                gridBodyRef.current?.scrollToIndex(targetR);
+                continue;
+            }
             const control = cell.querySelector<HTMLElement>('input:not([type="hidden"]), textarea, [role="combobox"], [data-grid-cell-focus]') ?? cell;
+            if (control.matches(':disabled, [aria-disabled="true"]')) continue;
             control.focus({ preventScroll: true });
             const viewport = scrollContainerRef.current;
             if (viewport && getComputedStyle(cell).position !== 'sticky') {
@@ -369,7 +348,56 @@ function DataGridInternal<T>({
             }
             return;
         }
-    }, [processedRows, getColCount, selectionMode, getRowId, handleSelectionChange, editingRowId, masterForm, navigationColumns, scrollContainerRef, headerScrollRef]);
+    }, [processedRows, getColCount, selectionMode, selectedIds, getRowId, handleSelectionChange, editingRowId, masterForm, navigationColumns, scrollContainerRef, headerScrollRef]);
+
+    React.useLayoutEffect(() => {
+        resolveCellRef.current = address => {
+            const r = processedRows.findIndex(row => String(getRowId(row)) === String(address.rowId));
+            const c = navigationColumns.findIndex(column => String(column.field) === address.field);
+            return r >= 0 && c >= 0 ? () => focusCell(r, c + (selectionMode === 'multiple' ? 1 : 0)) : undefined;
+        };
+        return () => { resolveCellRef.current = null; };
+    }, [processedRows, navigationColumns, selectionMode, getRowId, focusCell]);
+
+    useImperativeHandle(ref, () => ({
+        cancelPendingFocus: () => { focusRequestRef.current++; },
+        focusCell: (r: number, c: number) => focusCell(r, c),
+        getCellAddress: (r: number, c: number) => {
+            const row = processedRows[r];
+            const column = navigationColumns[c - (selectionMode === 'multiple' ? 1 : 0)];
+            return row && column ? { rowId: getRowId(row), field: String(column.field) } : undefined;
+        },
+        focusRecordCell: async (address: GridCellAddress) => {
+            const request = ++focusRequestRef.current;
+            // A saved new record can arrive through the query cache after the
+            // mutation resolves. Resolve against the latest committed row IDs.
+            for (let frame = 0; frame < 12; frame++) {
+                if (request !== focusRequestRef.current || !gridRootRef.current) return;
+                const focus = resolveCellRef.current?.(address);
+                if (focus) { await focus(); return; }
+                await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+            }
+        },
+        clearFilters: () => { setFilters([]); setGlobalSearch(''); },
+        focusFilter: () => gridRootRef.current?.querySelector<HTMLElement>('[data-grid-filter-field]')?.focus(),
+        startAddRow: handleAddRow,
+        startEditRow: (id: string | number) => {
+            const rowToEdit = processedRows.find(r => getRowId(r) === id);
+            if (rowToEdit) {
+                startEdit(id, rowToEdit);
+            }
+        },
+        saveEdit: handleSaveEdit,
+        cancelEdit: cancelEdit,
+        toggleSidebar: (tab?: 'columns' | 'filters' | 'features') => {
+            if (tab) {
+                setActiveSidebarTab(tab);
+                setIsSidebarOpen(true);
+            } else {
+                setIsSidebarOpen(prev => !prev);
+            }
+        }
+    }));
 
     // -- Keyboard Shortcuts (Global) ------------------------------------------
     useEffect(() => {

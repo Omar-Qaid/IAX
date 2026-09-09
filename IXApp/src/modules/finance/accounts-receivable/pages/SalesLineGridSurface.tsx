@@ -40,7 +40,6 @@ export function SalesLineGridSurface({
     navigating.current = true;
     try {
       if (await commit()) {
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
         if (!mounted.current) return;
         if (address && gridRef.current?.focusRecordCell) {
           await gridRef.current.focusRecordCell({
@@ -91,6 +90,9 @@ export function SalesLineGridSurface({
         }
       }}
       onMouseDownCapture={(event) => {
+        // The previous target may have unmounted before its click was dispatched.
+        // Only suppress the click belonging to this pointer interaction.
+        pointerClick.current = false;
         const target = event.target as HTMLElement;
         // Lookup menus use portals and must retain their native interaction.
         if (!event.currentTarget.contains(target) || event.button !== 0) return;
@@ -114,7 +116,11 @@ export function SalesLineGridSurface({
         const target = event.target as HTMLElement;
         if (!event.currentTarget.contains(target) || event.nativeEvent.isComposing) return;
         const cell = target.closest<HTMLElement>('[role="gridcell"]');
-        if ((event.ctrlKey || event.metaKey) && !event.shiftKey && event.key.toLowerCase() === 'f') {
+        if (
+          (event.ctrlKey || event.metaKey) &&
+          !event.shiftKey &&
+          event.key.toLowerCase() === 'f'
+        ) {
           event.preventDefault();
           event.stopPropagation();
           onFilter();
@@ -235,12 +241,15 @@ export function SalesLineGridSurface({
           display: 'none',
         },
         '& [role="gridcell"] .MuiOutlinedInput-notchedOutline': { border: 0 },
+        '& [role="gridcell"] .MuiSelect-select:focus': { bgcolor: 'transparent' },
         '& [role="row"][data-row-id]:hover': {
-          bgcolor: (theme) => `color-mix(in srgb, ${theme.palette.primary.main} 2%, ${theme.palette.background.paper})`,
+          bgcolor: (theme) =>
+            `color-mix(in srgb, ${theme.palette.primary.main} 2%, ${theme.palette.background.paper})`,
         },
         '& [data-grid-resize-handle]:hover': { bgcolor: 'primary.main' },
         '& [role="row"][aria-selected="true"], & [role="row"][aria-selected="true"]:hover': {
-          bgcolor: (theme) => `color-mix(in srgb, ${theme.palette.primary.main} 3%, ${theme.palette.background.paper})`,
+          bgcolor: (theme) =>
+            `color-mix(in srgb, ${theme.palette.primary.main} 3%, ${theme.palette.background.paper})`,
           boxShadow: 'none',
         },
       }}

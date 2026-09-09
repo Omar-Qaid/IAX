@@ -16,6 +16,7 @@ import { salesOrderListApi, type SalesOrderHeaderInput } from '../api/salesOrder
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 
 import { SalesOrderLinesGrid } from './SalesOrderLinesGrid';
+import { SalesOrderLinesProvider } from './SalesOrderLineState';
 
 type DetailLine = SalesOrderLineRecord;
 
@@ -422,201 +423,204 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     ),
   ].filter((value): value is DetailSectionConfig => Boolean(value));
   return (
-    <ListDetailsPage
-      key={order.id}
-      variant="enterprise"
-      title={`${order.salesId} : ${order.customerName}`}
-      config={{
-        onSearch: () => {
-          setTab('lines');
-          setLineFilterVisible((visible) => !visible);
-        },
-        readOnly: true,
-        initialSelectedId: order.id,
-        dataSource: {
-          type: 'controlled',
-          records: orders,
-          onRecordsChange: () => undefined,
-          refresh: () => {
-            void orderQuery.refetch();
+    <SalesOrderLinesProvider key={order.id}>
+      <ListDetailsPage
+        key={order.id}
+        variant="enterprise"
+        title={`${order.salesId} : ${order.customerName}`}
+        config={{
+          onSearch: () => {
+            setTab('lines');
+            setLineFilterVisible((visible) => !visible);
           },
-        },
-        createRecord: () => order,
-        getPrimaryText: (record) => record.salesId,
-        getSecondaryText: (record) => `${record.customerAccount} - ${record.customerName}`,
-        matchesSearch: (record, query) =>
-          `${record.salesId} ${record.customerAccount} ${record.customerName}`
-            .toLowerCase()
-            .includes(query.toLowerCase()),
-        getValues: (record) => ({ ...record }),
-        setValues: (record) => record,
-        headerFields: [],
-        advancedFilter: {
-          title: t('filters.title'),
-          addLabel: t('actions.add'),
-          fieldLabel: t('fields.salesOrderNumber'),
-          operatorLabel: t('filters.contains'),
-          applyLabel: t('actions.apply'),
-          resetLabel: t('actions.reset'),
-          fields: [
-            {
-              id: 'salesId',
-              label: t('fields.salesOrderNumber'),
-              getValue: (record) => record.salesId,
+          readOnly: true,
+          initialSelectedId: order.id,
+          dataSource: {
+            type: 'controlled',
+            records: orders,
+            onRecordsChange: () => undefined,
+            refresh: () => {
+              void orderQuery.refetch();
             },
-            {
-              id: 'customerAccount',
-              label: t('fields.customerAccount'),
-              getValue: (record) => record.customerAccount,
-            },
-            {
-              id: 'customerName',
-              label: t('fields.customerName'),
-              getValue: (record) => record.customerName,
-            },
-            {
-              id: 'customerGroup',
-              label: t('fields.customerGroup'),
-              getValue: (record) => record.customerGroup,
-            },
-            {
-              id: 'currencyCode',
-              label: t('fields.currency'),
-              getValue: (record) => record.currencyCode,
-            },
-            {
-              id: 'salesStatus',
-              label: t('common.status'),
-              getValue: (record) => record.salesStatus,
-            },
-          ],
-          getValue: (record) => record.salesId,
-          matches: (record, value) =>
-            record.salesId
-              .toLocaleLowerCase(currentLanguage.code)
-              .includes(value.trim().toLocaleLowerCase(currentLanguage.code)),
-        },
-        relatedInformation: {
-          title: t('relatedInformation.title'),
-          sections: (record) => [
-            {
-              id: 'customer',
-              label: t('fields.customer'),
-              defaultExpanded: true,
-              content: (
-                <Typography variant="body2">
-                  {record ? `${record.customerAccount} - ${record.customerName}` : '-'}
-                </Typography>
-              ),
-            },
-            {
-              id: 'delivery',
-              label: t('fields.delivery', 'Delivery'),
-              content: (
-                <Typography variant="body2">
-                  {record ? `${record.deliveryDate} - ${record.deliveryMode}` : '-'}
-                </Typography>
-              ),
-            },
-            {
-              id: 'payment',
-              label: t('fields.payment', 'Payment'),
-              content: (
-                <Typography variant="body2">
-                  {record ? `${record.paymentTerms} - ${record.currencyCode}` : '-'}
-                </Typography>
-              ),
-            },
-            {
-              id: 'status',
-              label: t('common.status'),
-              content: <Typography variant="body2">{record?.documentStatus || '-'}</Typography>,
-            },
-          ],
-        },
-        sections,
-        recordTableName: 'SalesTable',
-        getAuditRecordId: (record) => record.recId,
-        onSelectionChange: (record) => {
-          if (record && record.id !== order.id && !activeHeader)
-            navigate(ROUTE_PATHS.ACCOUNTS_RECEIVABLE.salesOrder(record.id));
-        },
-        presentation: { mode: 'list', listWidth: 280, listResizable: true, detailEndPadding: 8 },
-        actionPaneAfterListContent: (
-          <EnterpriseCrudActions
-            editLabel={t('actions.edit')}
-            newLabel={t('actions.new')}
-            deleteLabel={t('actions.delete')}
-            saveLabel={t('actions.save')}
-            cancelLabel={t('actions.cancel')}
-            canEdit={Boolean(canEditHeader) && !savingHeader}
-            canNew={false}
-            canDelete={false}
-            editing={Boolean(activeHeader)}
-            saving={savingHeader}
-            onEdit={startHeaderEdit}
-            onSave={() => void saveHeader()}
-            onCancel={() => {
-              if (savingHeader) return;
-              setHeaderDraft(null);
-              setHeaderError('');
-            }}
-          />
-        ),
-        commands: [
-          'Sales order',
-          'Sell',
-          'Manage',
-          'Pick and pack',
-          'Invoice',
-          'Commerce',
-          'General',
-          'Warehouse',
-          'Transportation',
-          'Credit management',
-        ].map((label) => ({ id: label, label, disabled: true })),
-        detailHeader: (
-          <>
-            {headerError && <Alert severity="error">{headerError}</Alert>}
-            <Typography color="primary" variant="body2" sx={{ mb: 1 }}>
-              {t('salesOrder.details', 'Sales order details')} | {t('pages.customers.standardView')}
-            </Typography>
-            <Stack
-              direction="row"
-              sx={{ mb: 1, justifyContent: 'space-between', alignItems: 'center' }}
-            >
-              <Typography variant="h5">{`${order.salesId} : ${order.customerName}`}</Typography>
-              <Typography variant="body2" sx={{ marginInlineEnd: 3, flexShrink: 0 }}>
-                {t(`status.${order.salesStatus.toLowerCase()}`, order.salesStatus)}
-              </Typography>
-            </Stack>
-
-            <Tabs
-              value={tab}
-              onChange={(_, value: string) => setTab(value)}
-              sx={{
-                mb: 3,
-                minHeight: 36,
-                '& .MuiTab-root': { minHeight: 36, minWidth: 48, px: 1, fontSize: 13 },
+          },
+          createRecord: () => order,
+          getPrimaryText: (record) => record.salesId,
+          getSecondaryText: (record) => `${record.customerAccount} - ${record.customerName}`,
+          matchesSearch: (record, query) =>
+            `${record.salesId} ${record.customerAccount} ${record.customerName}`
+              .toLowerCase()
+              .includes(query.toLowerCase()),
+          getValues: (record) => ({ ...record }),
+          setValues: (record) => record,
+          headerFields: [],
+          advancedFilter: {
+            title: t('filters.title'),
+            addLabel: t('actions.add'),
+            fieldLabel: t('fields.salesOrderNumber'),
+            operatorLabel: t('filters.contains'),
+            applyLabel: t('actions.apply'),
+            resetLabel: t('actions.reset'),
+            fields: [
+              {
+                id: 'salesId',
+                label: t('fields.salesOrderNumber'),
+                getValue: (record) => record.salesId,
+              },
+              {
+                id: 'customerAccount',
+                label: t('fields.customerAccount'),
+                getValue: (record) => record.customerAccount,
+              },
+              {
+                id: 'customerName',
+                label: t('fields.customerName'),
+                getValue: (record) => record.customerName,
+              },
+              {
+                id: 'customerGroup',
+                label: t('fields.customerGroup'),
+                getValue: (record) => record.customerGroup,
+              },
+              {
+                id: 'currencyCode',
+                label: t('fields.currency'),
+                getValue: (record) => record.currencyCode,
+              },
+              {
+                id: 'salesStatus',
+                label: t('common.status'),
+                getValue: (record) => record.salesStatus,
+              },
+            ],
+            getValue: (record) => record.salesId,
+            matches: (record, value) =>
+              record.salesId
+                .toLocaleLowerCase(currentLanguage.code)
+                .includes(value.trim().toLocaleLowerCase(currentLanguage.code)),
+          },
+          relatedInformation: {
+            title: t('relatedInformation.title'),
+            sections: (record) => [
+              {
+                id: 'customer',
+                label: t('fields.customer'),
+                defaultExpanded: true,
+                content: (
+                  <Typography variant="body2">
+                    {record ? `${record.customerAccount} - ${record.customerName}` : '-'}
+                  </Typography>
+                ),
+              },
+              {
+                id: 'delivery',
+                label: t('fields.delivery', 'Delivery'),
+                content: (
+                  <Typography variant="body2">
+                    {record ? `${record.deliveryDate} - ${record.deliveryMode}` : '-'}
+                  </Typography>
+                ),
+              },
+              {
+                id: 'payment',
+                label: t('fields.payment', 'Payment'),
+                content: (
+                  <Typography variant="body2">
+                    {record ? `${record.paymentTerms} - ${record.currencyCode}` : '-'}
+                  </Typography>
+                ),
+              },
+              {
+                id: 'status',
+                label: t('common.status'),
+                content: <Typography variant="body2">{record?.documentStatus || '-'}</Typography>,
+              },
+            ],
+          },
+          sections,
+          recordTableName: 'SalesTable',
+          getAuditRecordId: (record) => record.recId,
+          onSelectionChange: (record) => {
+            if (record && record.id !== order.id && !activeHeader)
+              navigate(ROUTE_PATHS.ACCOUNTS_RECEIVABLE.salesOrder(record.id));
+          },
+          presentation: { mode: 'list', listWidth: 280, listResizable: true, detailEndPadding: 8 },
+          actionPaneAfterListContent: (
+            <EnterpriseCrudActions
+              editLabel={t('actions.edit')}
+              newLabel={t('actions.new')}
+              deleteLabel={t('actions.delete')}
+              saveLabel={t('actions.save')}
+              cancelLabel={t('actions.cancel')}
+              canEdit={Boolean(canEditHeader) && !savingHeader}
+              canNew={false}
+              canDelete={false}
+              editing={Boolean(activeHeader)}
+              saving={savingHeader}
+              onEdit={startHeaderEdit}
+              onSave={() => void saveHeader()}
+              onCancel={() => {
+                if (savingHeader) return;
+                setHeaderDraft(null);
+                setHeaderError('');
               }}
-              aria-label={t('pages.salesOrders.title')}
-            >
-              <Tab
-                value="lines"
-                label={t('fields.lines', 'Lines')}
-                id="sales-lines-tab"
-                aria-controls="sales-detail-panel"
-              />
-              <Tab
-                value="header"
-                label={t('fields.header', 'Header')}
-                id="sales-header-tab"
-                aria-controls="sales-detail-panel"
-              />
-            </Tabs>
-          </>
-        ),
-      }}
-    />
+            />
+          ),
+          commands: [
+            'Sales order',
+            'Sell',
+            'Manage',
+            'Pick and pack',
+            'Invoice',
+            'Commerce',
+            'General',
+            'Warehouse',
+            'Transportation',
+            'Credit management',
+          ].map((label) => ({ id: label, label, disabled: true })),
+          detailHeader: (
+            <>
+              {headerError && <Alert severity="error">{headerError}</Alert>}
+              <Typography color="primary" variant="body2" sx={{ mb: 1 }}>
+                {t('salesOrder.details', 'Sales order details')} |{' '}
+                {t('pages.customers.standardView')}
+              </Typography>
+              <Stack
+                direction="row"
+                sx={{ mb: 1, justifyContent: 'space-between', alignItems: 'center' }}
+              >
+                <Typography variant="h5">{`${order.salesId} : ${order.customerName}`}</Typography>
+                <Typography variant="body2" sx={{ marginInlineEnd: 3, flexShrink: 0 }}>
+                  {t(`status.${order.salesStatus.toLowerCase()}`, order.salesStatus)}
+                </Typography>
+              </Stack>
+
+              <Tabs
+                value={tab}
+                onChange={(_, value: string) => setTab(value)}
+                sx={{
+                  mb: 3,
+                  minHeight: 36,
+                  '& .MuiTab-root': { minHeight: 36, minWidth: 48, px: 1, fontSize: 13 },
+                }}
+                aria-label={t('pages.salesOrders.title')}
+              >
+                <Tab
+                  value="lines"
+                  label={t('fields.lines', 'Lines')}
+                  id="sales-lines-tab"
+                  aria-controls="sales-detail-panel"
+                />
+                <Tab
+                  value="header"
+                  label={t('fields.header', 'Header')}
+                  id="sales-header-tab"
+                  aria-controls="sales-detail-panel"
+                />
+              </Tabs>
+            </>
+          ),
+        }}
+      />
+    </SalesOrderLinesProvider>
   );
 }

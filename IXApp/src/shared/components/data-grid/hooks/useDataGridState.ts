@@ -48,22 +48,33 @@ export function useDataGridState<T>(options: UIStateOptions<T>) {
     if (initialSelectionMode) setSelectionMode(initialSelectionMode);
   }, [initialSelectionMode]);
 
-  const prevInitialStateColumns = useRef(initialState.columns);
-  useEffect(() => {
-    if (initialState.columns === prevInitialStateColumns.current) return;
-    prevInitialStateColumns.current = initialState.columns;
+  const [previousDefinitions, setPreviousDefinitions] = useState(initialState.columns);
+  // Apply fresh editor callbacks before rendering children. An effect commits
+  // the old editor first, then renders the entire visible grid a second time.
+  if (initialState.columns !== previousDefinitions) {
+    setPreviousDefinitions(initialState.columns);
     setColumns((current) => {
-      const definitions = new Map(initialState.columns.map((column) => [String(column.field), column]));
+      const definitions = new Map(
+        initialState.columns.map((column) => [String(column.field), column])
+      );
       const next = current.flatMap((active) => {
         const column = definitions.get(String(active.field));
         if (!column) return [];
         definitions.delete(String(active.field));
-        return [{ ...column, width: active.width, flex: active.flex, hidden: active.hidden, pinned: active.pinned }];
+        return [
+          {
+            ...column,
+            width: active.width,
+            flex: active.flex,
+            hidden: active.hidden,
+            pinned: active.pinned,
+          },
+        ];
       });
       // Keep the user's order when editor callbacks, labels, or row values change.
       return [...next, ...definitions.values()];
     });
-  }, [initialState.columns]);
+  }
 
   return {
     columns,

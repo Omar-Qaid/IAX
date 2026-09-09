@@ -1,4 +1,4 @@
-import React, { useRef, useState, useMemo, useEffect } from 'react';
+import React, { useRef, useMemo, useEffect, useCallback } from 'react';
 import {
   Alert,
   Autocomplete,
@@ -22,6 +22,8 @@ import { ErrorState } from '@shared/components/feedback/ErrorState';
 import { LookupGridField } from '@shared/components/lookups/LookupGridField';
 import { SalesLineValueField } from './SalesLineValueField';
 import { SalesLineGridSurface } from './SalesLineGridSurface';
+import { SalesLineCell, SalesLineCellProvider } from './SalesLineCell';
+import { useSalesOrderLineState } from './SalesOrderLineState';
 import {
   salesOrderLinesApi,
   type SalesItem,
@@ -31,6 +33,14 @@ import type { SalesOrderListRecord } from '../api/salesOrderListApi';
 
 type DetailLine = SalesOrderLineRecord;
 const EMPTY_LINES: DetailLine[] = [];
+// Most visible cells are plain text. Avoid running MUI/Emotion style processing
+// for each one whenever the active editor changes.
+const displayCellStyle: React.CSSProperties = {
+  width: '100%',
+  height: '100%',
+  display: 'flex',
+  alignItems: 'center',
+};
 interface Props {
   order: SalesOrderListRecord;
   selectedLineId?: string;
@@ -49,13 +59,33 @@ export function SalesOrderLinesGrid({
 }: Props) {
   const { t, currentLanguage } = useAppTranslation();
   const queryClient = useQueryClient();
-  const savedNewRowId = useRef<string | undefined>(undefined);
-  const pendingSave = useRef<Promise<boolean> | null>(null);
+  const selectedLineIds = useMemo(() => (selectedLineId ? [selectedLineId] : []), [selectedLineId]);
+  const handleSelectionChange = useCallback(
+    (ids: (string | number)[]) => {
+      if (ids[0] != null) setSelectedLineId(String(ids[0]));
+    },
+    [setSelectedLineId]
+  );
+  const {
+    draftLine,
+    setDraftLine,
+    lineBaseline,
+    setLineBaseline,
+    activeField,
+    setActiveField,
+    savingLine,
+    setSavingLine,
+    lineError,
+    setLineError,
+    savedNewRowIdRef,
+    pendingSaveRef,
+    savingLineRef,
+    navigatingCellRef,
+    totalsRefreshTimerRef,
+  } = useSalesOrderLineState();
   const newRowFocusFrame = useRef<number | null>(null);
-  const totalsRefreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(
     () => () => {
-      if (totalsRefreshTimer.current) clearTimeout(totalsRefreshTimer.current);
       if (newRowFocusFrame.current != null) cancelAnimationFrame(newRowFocusFrame.current);
     },
     []
@@ -65,20 +95,33 @@ export function SalesOrderLinesGrid({
       queryKey: ['accounts-receivable', 'sales-orders'],
       refetchType: 'none',
     });
-    if (totalsRefreshTimer.current) clearTimeout(totalsRefreshTimer.current);
-    totalsRefreshTimer.current = setTimeout(() => {
-      totalsRefreshTimer.current = null;
+    if (totalsRefreshTimerRef.current) clearTimeout(totalsRefreshTimerRef.current);
+    totalsRefreshTimerRef.current = setTimeout(() => {
+      totalsRefreshTimerRef.current = null;
       void refreshOrder();
     }, 400);
   };
   const { hasPermission: canEditLines } = usePermission(PERMISSIONS.SALES_ORDER_UPDATE);
-  const [draftLine, setDraftLine] = useState<(DetailLine & { orderId: string }) | null>(null);
   const lineGridRef = useRef<DataGridHandle>(null);
   const addLineButtonRef = useRef<HTMLButtonElement>(null);
   const commitCell = async () => {
+    const focusedControl = document.activeElement as HTMLElement | null;
     navigatingCellRef.current = true;
     try {
-      return await saveLine();
+      const saved = await saveLine();
+      if (!saved && document.activeElement === document.body && focusedControl?.isConnected) {
+        // Disabling an input during a request moves browser focus to the body.
+        // Return to the unsaved value once its editor is enabled for a retry.
+        for (let frame = 0; frame < 12; frame++) {
+          if (document.activeElement !== document.body || !focusedControl.isConnected) break;
+          if (!focusedControl.matches(':disabled, [aria-disabled="true"]')) {
+            focusedControl.focus({ preventScroll: true });
+            break;
+          }
+          await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        }
+      }
+      return saved;
     } finally {
       // The destination editor mounts after the saved row has rendered.
       requestAnimationFrame(() => {
@@ -87,17 +130,15 @@ export function SalesOrderLinesGrid({
     }
   };
   const removeLineButtonRef = useRef<HTMLButtonElement>(null);
-  const navigatingCellRef = useRef(false);
-  const [lineBaseline, setLineBaseline] = useState<DetailLine | null>(null);
-  const [activeField, setActiveField] = useState('itemNumber');
-  const [savingLine, setSavingLine] = useState(false);
-  const savingLineRef = useRef(false);
-  const [lineError, setLineError] = useState('');
   const linesQuery = useQuery({
     queryKey: ['sales-order-lines', order?.id],
     queryFn: ({ signal }) => salesOrderLinesApi.list(order!.id, signal),
     enabled: Boolean(order),
   });
+  const { refetch: refetchLines } = linesQuery;
+  const handleRefreshLines = useCallback(() => {
+    void refetchLines();
+  }, [refetchLines]);
   const unitsQuery = useQuery({
     queryKey: ['sales-order-unit-options'],
     queryFn: async ({ signal }) => {
@@ -179,6 +220,33 @@ export function SalesOrderLinesGrid({
     [t]
   );
   const activeDraft = draftLine?.orderId === order?.id ? draftLine : null;
+  const activeDraftId = activeDraft?.id;
+  const handleRowClick = useCallback(
+    (line: DetailLine) => {
+      if (line.id === activeDraftId) return;
+      if (savingLine || (activeDraftId === 'new-sales-line' && line.id !== activeDraftId))
+        return;
+      setSelectedLineId(line.id);
+      if (canEditLines && order.salesStatus.toLowerCase() === 'backorder') {
+        setLineBaseline(line);
+        setDraftLine({
+          ...line,
+          deliveryDate: line.deliveryDate?.slice(0, 10),
+          orderId: order.id,
+        });
+      }
+    },
+    [
+      activeDraftId,
+      savingLine,
+      setSelectedLineId,
+      canEditLines,
+      order.salesStatus,
+      order.id,
+      setLineBaseline,
+      setDraftLine,
+    ]
+  );
   const newRow = useMemo<DetailLine>(
     () => ({
       id: 'new-sales-line',
@@ -212,252 +280,263 @@ export function SalesOrderLinesGrid({
   const cancelCellEdit = (row: DetailLine) => {
     navigatingCellRef.current = true;
     setLineError('');
-    const original = lineBaseline?.id === row.id ? lineBaseline : lines.find((line) => line.id === row.id);
-    if (original) setDraftLine({ ...original, deliveryDate: original.deliveryDate?.slice(0, 10), orderId: order.id });
+    const original =
+      lineBaseline?.id === row.id ? lineBaseline : lines.find((line) => line.id === row.id);
+    if (original)
+      setDraftLine({
+        ...original,
+        deliveryDate: original.deliveryDate?.slice(0, 10),
+        orderId: order.id,
+      });
     else {
       setDraftLine(null);
       setSelectedLineId(undefined);
     }
-    requestAnimationFrame(() => { navigatingCellRef.current = false; });
+    requestAnimationFrame(() => {
+      navigatingCellRef.current = false;
+    });
   };
-  const gridColumns = columns.map((column): ColumnDef<DetailLine> => ({
-    ...column,
-    minWidth: column.minWidth ?? 85,
-    renderCell: (params) => {
-      const row = params.row.id === activeDraft?.id ? activeDraft : params.row;
-      const value = column.valueGetter
-        ? column.valueGetter({ row })
-        : row[column.field as keyof DetailLine];
-      if (column.field === 'netAmount')
-        return (
-          <>
-            {(row.id === activeDraft?.id
-              ? row.quantity * row.unitPrice
-              : row.lineTotal
-            ).toLocaleString(currentLanguage.code)}
-          </>
-        );
-      if (column.field === 'taxAmount')
-        return (
-          <>{row.taxAmount == null ? '-' : row.taxAmount.toLocaleString(currentLanguage.code)}</>
-        );
-      const editable =
-        editableFields.has(String(column.field)) ||
-        (column.field === 'itemNumber' && !row.itemNumber);
-      if (row.id !== activeDraft?.id || activeField !== column.field)
-        return (
-          <Box
-            data-grid-cell-focus
-            title={String(value ?? '')}
-            aria-label={editable ? t(column.headerName) : undefined}
-            tabIndex={
-              row.id === (selectedLineId ?? lines[0]?.id) && column.field === 'itemNumber' ? 0 : -1
-            }
-            sx={{
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-            onFocus={() => {
-              if (activeDraft?.id === 'new-sales-line' && row.id !== activeDraft.id) return;
-              setSelectedLineId(row.id);
-              if (
-                !editable ||
-                !canEditLines ||
-                (savingLine && row.id !== activeDraft?.id) ||
-                order?.salesStatus.toLowerCase() !== 'backorder'
-              )
-                return;
-              if (activeDraft?.id === 'new-sales-line' && row.id !== activeDraft.id) return;
-              setActiveField(String(column.field));
-              setSelectedLineId(row.id);
-              if (row.id !== activeDraft?.id && order) {
-                setLineBaseline(row);
-                setDraftLine({
-                  ...row,
-                  deliveryDate: row.deliveryDate?.slice(0, 10),
-                  orderId: order.id,
-                });
-              }
-            }}
-            onClick={(event) => {
-              event.stopPropagation();
-              event.currentTarget.focus();
-            }}
-          >
-            {String(value ?? '')}
-          </Box>
-        );
-      if (column.field === 'itemNumber' && !row.itemNumber)
-        return (
-          <LookupGridField<SalesItem>
-            name="itemNumber"
-            label={t('salesOrder.itemNumber', 'Item number')}
-            value={null}
-            valueField="itemNumber"
-            labelField="itemNumber"
-            queryKey={['sales-order-items']}
-            fetchPage={salesOrderLinesApi.items}
-            columns={[
-              { field: 'itemNumber', header: t('salesOrder.itemNumber', 'Item number') },
-              { field: 'name', header: t('fields.name', 'Name') },
-              { field: 'unit', header: t('salesOrder.unit', 'Unit') },
-            ]}
-            onChange={(_, item) => {
-              if (item && activeDraft) {
-                lineGridRef.current?.cancelPendingFocus();
-                if (newRowFocusFrame.current != null) {
-                  cancelAnimationFrame(newRowFocusFrame.current);
-                  newRowFocusFrame.current = null;
-                }
-                const next = {
-                  ...activeDraft,
-                  itemNumber: item.itemNumber,
-                  description: item.name,
-                  itemType: item.itemType,
-                  unit: item.unit ?? '',
-                  unitPrice: item.unitPrice ?? 0,
-                };
-                setDraftLine(next);
-                setActiveField('quantity');
-              }
-            }}
-          />
-        );
-      if (column.field === 'unit')
-        return (
-          <Box sx={{ width: '100%' }}>
-            <Autocomplete
-              autoHighlight
-              disableClearable
-              size="small"
-              options={Array.from(
-                new Set(
-                  [row.unit, ...(unitsQuery.data ?? []).map((unit) => unit.symbol)].filter(Boolean)
-                )
-              )}
-              value={row.unit}
-              disabled={savingLine}
-              loading={unitsQuery.isLoading}
-              onChange={(_, unit) => {
-                const next = { ...activeDraft, unit: unit ?? '' };
-                setDraftLine(next);
-                if (next.itemNumber) void saveLine(next);
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  autoFocus
-                  variant="standard"
-                  error={unitsQuery.isError}
-                  helperText={unitsQuery.isError ? unitsQuery.error.message : undefined}
-                  slotProps={{
-                    ...params.slotProps,
-                    htmlInput: {
-                      ...params.slotProps.htmlInput,
-                      'aria-label': t('salesOrder.unit', 'Unit'),
-                    },
-                  }}
-                />
-              )}
-            />
-          </Box>
-        );
-      if (column.field === 'lineType' || column.field === 'deliveryType') {
-        const options =
-          column.field === 'lineType'
-            ? [
-                'Journal',
-                'Quotation',
-                'Subscription',
-                'Sales',
-                'Return item',
-                'Blanket',
-                'Item requirement',
-                'Prepayment',
-              ]
-            : ['None', 'Pickup', 'Direct delivery'];
-        return (
-          <TextField
-            select
-            autoFocus
-            variant="standard"
-            size="small"
-            fullWidth
-            disabled={savingLine}
-            value={value ?? (column.field === 'lineType' ? 3 : 0)}
-            slotProps={{ select: { 'aria-label': t(column.headerName) } }}
-            onChange={(event) =>
-              setDraftLine((draft) =>
-                draft ? { ...draft, [column.field]: Number(event.target.value) } : draft
-              )
-            }
-            onBlur={handleCellBlur}
-          >
-            {options.map((label, index) => (
-              <MenuItem key={index} value={index}>
-                {label}
-              </MenuItem>
-            ))}
-          </TextField>
-        );
-      }
-      if (!editableFields.has(String(column.field))) return <>{String(value ?? '')}</>;
-      const invalidCell =
-        Boolean(lineError) &&
-        ((column.field === 'quantity' && (!Number.isFinite(row.quantity) || row.quantity <= 0)) ||
-          (column.field === 'unitPrice' && (!Number.isFinite(row.unitPrice) || row.unitPrice < 0)));
+  const handleValueKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      event.stopPropagation();
+      void saveLine();
+    }
+    if (event.key === 'Escape' && activeDraft) {
+      event.preventDefault();
+      event.stopPropagation();
+      cancelCellEdit(activeDraft);
+    }
+  };
+  const handleItemChange = (_: unknown, item?: SalesItem | null) => {
+    if (!item || !activeDraft) return;
+    lineGridRef.current?.cancelPendingFocus();
+    if (newRowFocusFrame.current != null) {
+      cancelAnimationFrame(newRowFocusFrame.current);
+      newRowFocusFrame.current = null;
+    }
+    setDraftLine({
+      ...activeDraft,
+      itemNumber: item.itemNumber,
+      description: item.name,
+      itemType: item.itemType,
+      unit: item.unit ?? '',
+      unitPrice: item.unitPrice ?? 0,
+    });
+    setActiveField('quantity');
+  };
+  const handleUnitChange = (_: unknown, unit: string | null) => {
+    if (!activeDraft) return;
+    const next = { ...activeDraft, unit: unit ?? '' };
+    setDraftLine(next);
+    if (next.itemNumber) void saveLine(next);
+  };
+  const gridColumns = useMemo(
+    () =>
+      columns.map((column): ColumnDef<DetailLine> => ({
+        ...column,
+        minWidth: column.minWidth ?? 85,
+        renderCell: (params) => <SalesLineCell column={column} params={params} />,
+      })),
+    [columns]
+  );
+  const renderLineCell = (
+    column: ColumnDef<DetailLine>,
+    params: Parameters<NonNullable<ColumnDef<DetailLine>['renderCell']>>[0]
+  ) => {
+    const row = params.row.id === activeDraft?.id ? activeDraft : params.row;
+    const value = column.valueGetter
+      ? column.valueGetter({ row })
+      : row[column.field as keyof DetailLine];
+    if (column.field === 'netAmount')
       return (
-        <SalesLineValueField
+        <>
+          {(row.id === activeDraft?.id
+            ? row.quantity * row.unitPrice
+            : row.lineTotal
+          ).toLocaleString(currentLanguage.code)}
+        </>
+      );
+    if (column.field === 'taxAmount')
+      return (
+        <>{row.taxAmount == null ? '-' : row.taxAmount.toLocaleString(currentLanguage.code)}</>
+      );
+    const editable =
+      editableFields.has(String(column.field)) ||
+      (column.field === 'itemNumber' && !row.itemNumber);
+    if (row.id !== activeDraft?.id || activeField !== column.field)
+      return (
+        <div
+          data-grid-cell-focus
+          title={String(value ?? '')}
+          aria-label={editable ? t(column.headerName) : undefined}
+          tabIndex={
+            row.id === (selectedLineId ?? lines[0]?.id) && column.field === 'itemNumber' ? 0 : -1
+          }
+          style={displayCellStyle}
+          onFocus={() => {
+            if (activeDraft?.id === 'new-sales-line' && row.id !== activeDraft.id) return;
+            if (selectedLineId !== row.id) setSelectedLineId(row.id);
+            if (
+              !editable ||
+              !canEditLines ||
+              (savingLine && row.id !== activeDraft?.id) ||
+              order?.salesStatus.toLowerCase() !== 'backorder'
+            )
+              return;
+            setActiveField(String(column.field));
+            if (row.id !== activeDraft?.id && order) {
+              setLineBaseline(row);
+              setDraftLine({
+                ...row,
+                deliveryDate: row.deliveryDate?.slice(0, 10),
+                orderId: order.id,
+              });
+            }
+          }}
+          onClick={(event) => {
+            event.stopPropagation();
+            event.currentTarget.focus();
+          }}
+        >
+          {String(value ?? '')}
+        </div>
+      );
+    if (column.field === 'itemNumber' && !row.itemNumber)
+      return (
+        <LookupGridField<SalesItem>
+          name="itemNumber"
+          label={t('salesOrder.itemNumber', 'Item number')}
+          value={null}
+          valueField="itemNumber"
+          labelField="itemNumber"
+          queryKey={['sales-order-items']}
+          fetchPage={salesOrderLinesApi.items}
+          columns={[
+            { field: 'itemNumber', header: t('salesOrder.itemNumber', 'Item number') },
+            { field: 'name', header: t('fields.name', 'Name') },
+            { field: 'unit', header: t('salesOrder.unit', 'Unit') },
+          ]}
+          onChange={handleItemChange}
+        />
+      );
+    if (column.field === 'unit')
+      return (
+        <Box sx={{ width: '100%' }}>
+          <Autocomplete
+            autoHighlight
+            disableClearable
+            size="small"
+            options={Array.from(
+              new Set(
+                [row.unit, ...(unitsQuery.data ?? []).map((unit) => unit.symbol)].filter(Boolean)
+              )
+            )}
+            value={row.unit}
+            disabled={savingLine}
+            loading={unitsQuery.isLoading}
+            onChange={handleUnitChange}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                autoFocus
+                variant="standard"
+                error={unitsQuery.isError}
+                helperText={unitsQuery.isError ? unitsQuery.error.message : undefined}
+                slotProps={{
+                  ...params.slotProps,
+                  htmlInput: {
+                    ...params.slotProps.htmlInput,
+                    'aria-label': t('salesOrder.unit', 'Unit'),
+                  },
+                }}
+              />
+            )}
+          />
+        </Box>
+      );
+    if (column.field === 'lineType' || column.field === 'deliveryType') {
+      const options =
+        column.field === 'lineType'
+          ? [
+              'Journal',
+              'Quotation',
+              'Subscription',
+              'Sales',
+              'Return item',
+              'Blanket',
+              'Item requirement',
+              'Prepayment',
+            ]
+          : ['None', 'Pickup', 'Direct delivery'];
+      return (
+        <TextField
+          select
           autoFocus
-          error={invalidCell}
           variant="standard"
           size="small"
           fullWidth
           disabled={savingLine}
-          sx={{
-            '& input[type=number]': { MozAppearance: 'textfield' },
-            '& input::-webkit-inner-spin-button, & input::-webkit-outer-spin-button': {
-              WebkitAppearance: 'none',
-              margin: 0,
-            },
-          }}
-          type={column.type === 'number' ? 'number' : column.type === 'date' ? 'date' : 'text'}
-          value={value ?? ''}
-          slotProps={{
-            htmlInput: {
-              'aria-label': t(column.headerName),
-              'aria-describedby': lineError ? 'sales-line-error' : undefined,
-            },
-          }}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') {
-              event.preventDefault();
-              event.stopPropagation();
-              void saveLine();
-            }
-            if (event.key === 'Escape') {
-              event.preventDefault();
-              event.stopPropagation();
-              cancelCellEdit(row);
-            }
-          }}
+          value={value ?? (column.field === 'lineType' ? 3 : 0)}
+          slotProps={{ select: { 'aria-label': t(column.headerName) } }}
+          onChange={(event) =>
+            setDraftLine((draft) =>
+              draft ? { ...draft, [column.field]: Number(event.target.value) } : draft
+            )
+          }
           onBlur={handleCellBlur}
-          onChange={(event) => {
-            const next = column.type === 'number' ? Number(event.target.value) : event.target.value;
-            setDraftLine((draft) => (draft ? { ...draft, [column.field]: next } : draft));
-          }}
-        />
+        >
+          {options.map((label, index) => (
+            <MenuItem key={index} value={index}>
+              {label}
+            </MenuItem>
+          ))}
+        </TextField>
       );
-    },
-  }));
+    }
+    if (!editableFields.has(String(column.field))) return <>{String(value ?? '')}</>;
+    const invalidCell =
+      Boolean(lineError) &&
+      ((column.field === 'quantity' && (!Number.isFinite(row.quantity) || row.quantity <= 0)) ||
+        (column.field === 'unitPrice' && (!Number.isFinite(row.unitPrice) || row.unitPrice < 0)));
+    return (
+      <SalesLineValueField
+        autoFocus
+        error={invalidCell}
+        variant="standard"
+        size="small"
+        fullWidth
+        disabled={savingLine}
+        sx={{
+          '& input[type=number]': { MozAppearance: 'textfield' },
+          '& input::-webkit-inner-spin-button, & input::-webkit-outer-spin-button': {
+            WebkitAppearance: 'none',
+            margin: 0,
+          },
+        }}
+        type={column.type === 'number' ? 'number' : column.type === 'date' ? 'date' : 'text'}
+        value={value ?? ''}
+        slotProps={{
+          htmlInput: {
+            'aria-label': t(column.headerName),
+            'aria-describedby': lineError ? 'sales-line-error' : undefined,
+          },
+        }}
+        onKeyDown={handleValueKeyDown}
+        onBlur={handleCellBlur}
+        onChange={(event) => {
+          const next = column.type === 'number' ? Number(event.target.value) : event.target.value;
+          setDraftLine((draft) => (draft ? { ...draft, [column.field]: next } : draft));
+        }}
+      />
+    );
+  };
   const saveLine = (line = activeDraft): Promise<boolean> => {
-    if (pendingSave.current) return pendingSave.current;
+    if (pendingSaveRef.current) return pendingSaveRef.current;
     const work = persistLine(line);
-    pendingSave.current = work;
+    pendingSaveRef.current = work;
     void work.finally(() => {
-      if (pendingSave.current === work) pendingSave.current = null;
+      if (pendingSaveRef.current === work) pendingSaveRef.current = null;
     });
     return work;
   };
@@ -517,7 +596,7 @@ export function SalesOrderLinesGrid({
               unitPrice: line.unitPrice,
               deliveryDate: line.deliveryDate || undefined,
             });
-      if (line.id === 'new-sales-line') savedNewRowId.current = saved.id;
+      if (line.id === 'new-sales-line') savedNewRowIdRef.current = saved.id;
       setLineBaseline({ ...line, ...saved });
       setDraftLine({
         ...line,
@@ -682,7 +761,7 @@ export function SalesOrderLinesGrid({
       )}
       <SalesLineGridSurface
         gridRef={lineGridRef}
-        resolveRowId={(id) => (id === 'new-sales-line' ? (savedNewRowId.current ?? id) : id)}
+        resolveRowId={(id) => (id === 'new-sales-line' ? (savedNewRowIdRef.current ?? id) : id)}
         onPasteError={() =>
           setLineError(
             t(
@@ -699,47 +778,32 @@ export function SalesOrderLinesGrid({
           requestAnimationFrame(() => lineGridRef.current?.focusFilter());
         }}
       >
-        <DataGrid
-          ref={lineGridRef}
-          key={order.id}
-          rows={gridRows}
-          selectionMode="single"
-          onSelectionChange={(ids) => {
-            if (ids[0] != null) setSelectedLineId(String(ids[0]));
-          }}
-          selectedIds={selectedLineId ? [selectedLineId] : []}
-          onRowClick={(line) => {
-            if (line.id === activeDraft?.id) return;
-            if (savingLine || (activeDraft?.id === 'new-sales-line' && line.id !== activeDraft.id))
-              return;
-            setSelectedLineId(line.id);
-            if (canEditLines && order.salesStatus.toLowerCase() === 'backorder') {
-              setLineBaseline(line);
-              setDraftLine({
-                ...line,
-                deliveryDate: line.deliveryDate?.slice(0, 10),
-                orderId: order.id,
-              });
-            }
-          }}
-          columns={gridColumns}
-          height={232}
-          rowHeight={33}
-          headerHeight={32}
-          hideFooter
-          hideColumnMenu={false}
-          showColumnBorders={false}
-          showCellBorders
-          hideAddRowButton
-          hideToolbar
-          loading={linesQuery.isLoading}
-          hideFilterRow={!lineFilterVisible}
-          hideSidebarTabs
-          onRefresh={() => {
-            void linesQuery.refetch();
-          }}
-          storageKey="accounts-receivable.sales-order-lines.compact"
-        />
+        <SalesLineCellProvider renderCell={renderLineCell}>
+          <DataGrid
+            ref={lineGridRef}
+            key={order.id}
+            rows={gridRows}
+            selectionMode="single"
+            onSelectionChange={handleSelectionChange}
+            selectedIds={selectedLineIds}
+            onRowClick={handleRowClick}
+            columns={gridColumns}
+            height={232}
+            rowHeight={33}
+            headerHeight={32}
+            hideFooter
+            hideColumnMenu={false}
+            showColumnBorders={false}
+            showCellBorders
+            hideAddRowButton
+            hideToolbar
+            loading={linesQuery.isLoading}
+            hideFilterRow={!lineFilterVisible}
+            hideSidebarTabs
+            onRefresh={handleRefreshLines}
+            storageKey="accounts-receivable.sales-order-lines.compact"
+          />
+        </SalesLineCellProvider>
       </SalesLineGridSurface>
     </>
   );
