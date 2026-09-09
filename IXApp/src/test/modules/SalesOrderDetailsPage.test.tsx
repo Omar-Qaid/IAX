@@ -2,6 +2,7 @@ import React from 'react';
 import { expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { queryClient } from '@core/api/queryClient';
 import { AppProviders } from '@app/providers/AppProviders';
 import { salesOrderListApi } from '@modules/finance/accounts-receivable/api/salesOrderListApi';
 import { salesOrderLinesApi } from '@modules/finance/accounts-receivable/api/salesOrderLinesApi';
@@ -212,4 +213,41 @@ it('keeps header changes available after a failed save and supports cancel', asy
   expect(screen.queryByRole('button', { name: 'Save' })).toBeNull();
   expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull();
   expect(screen.queryByRole('textbox', { name: 'Customer reference' })).toBeNull();
+});
+
+it('keeps invalid cell edits focused and moves to Unit after a successful Tab save', async () => {
+  queryClient.removeQueries({ queryKey: ['sales-order-lines'] });
+  vi.mocked(salesOrderLinesApi.update).mockClear();
+  vi.mocked(salesOrderLinesApi.list).mockResolvedValueOnce([
+    {
+      id: '42',
+      lineNumber: 1,
+      itemNumber: 'ITEM-42',
+      description: 'Keyboard item',
+      quantity: 2,
+      unit: 'Pcs',
+      unitPrice: 5,
+      lineTotal: 10,
+      deliveryDate: '2026-09-09',
+    },
+  ]);
+  openOrder('1');
+  await screen.findAllByText('ITEM-42');
+  fireEvent.click(screen.getByLabelText('Quantity'));
+  const quantity = screen.getByRole('spinbutton', { name: 'Quantity' });
+  fireEvent.change(quantity, { target: { value: '0' } });
+  fireEvent.keyDown(quantity, { key: 'Tab' });
+  await waitFor(() => expect(quantity).toHaveAttribute('aria-invalid', 'true'));
+  expect(salesOrderLinesApi.update).not.toHaveBeenCalled();
+  expect(quantity).toHaveFocus();
+  fireEvent.change(quantity, { target: { value: '3' } });
+  fireEvent.keyDown(quantity, { key: 'Tab' });
+  await waitFor(() =>
+    expect(salesOrderLinesApi.update).toHaveBeenCalledWith(
+      '1',
+      expect.objectContaining({ id: '42', quantity: 3 })
+    )
+  );
+  await waitFor(() => expect(screen.getByRole('combobox', { name: 'Unit' })).toHaveFocus());
+  expect(salesOrderLinesApi.update).toHaveBeenCalledTimes(1);
 });

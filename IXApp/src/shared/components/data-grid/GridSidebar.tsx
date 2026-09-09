@@ -11,6 +11,7 @@ import { FiltersPanel } from './sidebar/FiltersPanel';
 import { FeaturesPanel } from './sidebar/FeaturesPanel';
 
 interface GridSidebarProps<T> {
+  hideTabs?: boolean;
   open: boolean;
   onOpen: () => void;
   onClose: () => void;
@@ -39,6 +40,7 @@ interface GridSidebarProps<T> {
 }
 
 export function GridSidebar<T>({
+  hideTabs = false,
   open,
   onOpen,
   onClose,
@@ -109,7 +111,7 @@ export function GridSidebar<T>({
   return (
     <Box
       sx={{
-        display: 'flex',
+        display: hideTabs && !open ? 'none' : 'flex',
         height: '100%',
         minHeight: 0,
         borderInlineStart: (theme) => `1px solid ${theme.palette.divider}`,
@@ -216,7 +218,7 @@ export function GridSidebar<T>({
         sx={{
           width: 38,
           flexShrink: 0,
-          display: 'flex',
+          display: hideTabs ? 'none' : 'flex',
           flexDirection: 'column',
           alignItems: 'stretch',
           py: 0.5,

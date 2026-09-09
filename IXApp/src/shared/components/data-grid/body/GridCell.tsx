@@ -26,6 +26,8 @@ const GridCellInternal = <T,>({
     <Box
       tabIndex={-1}
       role="gridcell"
+      aria-colindex={colIndex + 1}
+      data-field={String(col.field)}
       data-row-index={rowIndex}
       data-col-index={colIndex}
       sx={{

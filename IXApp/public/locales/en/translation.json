@@ -1,4 +1,8 @@
 {
+  "salesOrder": {
+    "gridHelp": "Tab / Enter: next cell | Shift: previous | Up / Down: next row | F2: edit | Insert: add | Alt+Delete: remove | Ctrl+F: filter",
+    "pasteSingleCell": "Paste one cell at a time. Select a value in the lookup for item and unit fields."
+  },
   "accessibility": {
     "skipToContent": "Skip to main content",
     "setupSections": "Setup sections",

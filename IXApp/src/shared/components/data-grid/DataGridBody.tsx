@@ -1,7 +1,7 @@
 import React, { useRef, useState, useMemo, useCallback, memo } from 'react';
 import { Box, Typography } from '@mui/material';
 import { NEW_ROW_ID } from './hooks';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { defaultRangeExtractor, useVirtualizer } from '@tanstack/react-virtual';
 import type { ColumnDef } from './types';
 
 export interface GridBodyHandle {
@@ -27,6 +27,7 @@ interface GridBodyProps<T> {
   headerHeight: number;
   getRowId: (row: T) => string | number;
   scrollContainerRef: React.RefObject<HTMLDivElement | null>;
+  focusedRowId?: string | number | null;
   loading?: boolean;
   hasMore?: boolean;
   hasActiveFilters?: boolean;
@@ -55,7 +56,7 @@ interface GridBodyProps<T> {
 
 export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>({
   rows, columns, rowHeight, headerHeight, getRowId, scrollContainerRef,
-  loading, hasMore, hasActiveFilters, onRowClick, onRowDoubleClick, onEdit, onDelete, onViewHistory, onShowAllFields, onBuild,
+  focusedRowId, loading, hasMore, hasActiveFilters, onRowClick, onRowDoubleClick, onEdit, onDelete, onViewHistory, onShowAllFields, onBuild,
   selectionMode = 'single', selectedIds = [], onSelectionChange,
   showColumnBorders = false, showCellBorders = true,
   masterForm = false, editingRowId, editValues = {}, saving = false,
@@ -93,6 +94,11 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>({
     estimateSize: () => rowHeight,
     overscan: 10,
     scrollMargin: headerHeight,
+    rangeExtractor: (range) => {
+      const visible = defaultRangeExtractor(range);
+      const focusedIndex = focusedRowId == null ? -1 : displayRows.findIndex((row) => String(getRowId(row)) === String(focusedRowId));
+      return focusedIndex >= 0 && !visible.includes(focusedIndex) ? [...visible, focusedIndex].sort((a, b) => a - b) : visible;
+    },
   });
 
   React.useLayoutEffect(() => {
@@ -102,7 +108,7 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>({
   const rawVirtualItems = rowVirtualizer.getVirtualItems();
   const virtualItems = rawVirtualItems.length > 0
     ? rawVirtualItems
-    : displayRows.map((_, i) => ({ index: i, start: i * rowHeight, size: rowHeight, key: i }));
+    : displayRows.slice(0, 30).map((_, i) => ({ index: i, start: i * rowHeight, size: rowHeight, key: i }));
 
   React.useImperativeHandle(ref, () => ({
     scrollToIndex: (index: number) => {
@@ -127,7 +133,7 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>({
     }, [] as number[]).reverse();
 
     const firstEditableField = visible.find(c => c.editable)?.field;
-    return { visibleColumns: visible, pinnedLeftCols: left, unpinnedCols: center, pinnedRightCols: right, pinnedLeftOffsets: leftOffsets, pinnedRightOffsets: rightOffsets, firstEditableField };
+    return { visibleColumns: [...left, ...center, ...right], pinnedLeftCols: left, unpinnedCols: center, pinnedRightCols: right, pinnedLeftOffsets: leftOffsets, pinnedRightOffsets: rightOffsets, firstEditableField };
   }, [columns]);
 
   const handleContextMenu = useCallback((event: React.MouseEvent, row: T) => {
@@ -276,7 +282,7 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>({
 
   return (
     <>
-      <Box sx={{ height: `${rowVirtualizer.getTotalSize()}px`, width: 'max-content', minWidth: '100%', position: 'relative' }}>
+      <Box sx={{ height: `${Math.max(rowVirtualizer.getTotalSize(), displayRows.length * rowHeight)}px`, width: 'max-content', minWidth: '100%', position: 'relative' }}>
         {virtualItems.map(virtualRow => {
           const row = displayRows[virtualRow.index];
           // Guard against a transiently out-of-bounds index (rows can shrink between

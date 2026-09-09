@@ -59,7 +59,7 @@ export function useGridDataProcessing<T>({
                 return {
                     filter,
                     col,
-                    lowerValue: isString ? (filter.value as string).toLowerCase() : '',
+                    lowerValue: filter.value == null ? '' : String(filter.value).toLowerCase(),
                     regex,
                     inSet,
                     isNumber: col?.type === 'number',
@@ -68,7 +68,7 @@ export function useGridDataProcessing<T>({
 
             result = result.filter(row =>
                 compiled.every(({ filter, col, lowerValue, regex, inSet, isNumber }) => {
-                    if (!filter.value) return true;
+                    if (filter.value == null || filter.value === '') return true;
                     if (!col) return true;
                     const val = col.valueGetter ? col.valueGetter({ row }) : getNestedValue(row, col.field as string);
                     if (val == null) return false;
@@ -111,7 +111,7 @@ export function useGridDataProcessing<T>({
                 if (valA === valB) return 0;
                 if (valA == null) return sort === 'asc' ? -1 : 1;
                 if (valB == null) return sort === 'asc' ? 1 : -1;
-                const cmp = valA < valB ? -1 : 1;
+                const cmp = col?.type === 'number' ? Number(valA) - Number(valB) : valA < valB ? -1 : 1;
                 return sort === 'asc' ? cmp : -cmp;
             });
         }

@@ -103,11 +103,11 @@ export function useGridPersistence<T>(
     storageKey: string | undefined,
     initialColumns: ColumnDef<T>[],
 ): UseGridPersistenceReturn<T> {
+    const saved = useMemo(() => storageKey ? readState(storageKey) : {}, [storageKey]);
     const initialState = useMemo<GridInitialState<T>>(() => {
         if (!storageKey) {
             return { columns: initialColumns, sortModel: [], filters: [] };
         }
-        const saved = readState(storageKey);
         return {
             columns:          mergeColumns(initialColumns, saved.columns),
             sortModel:        saved.sortModel        ?? [],
@@ -117,7 +117,7 @@ export function useGridPersistence<T>(
             showCellBorders:  saved.showCellBorders,
             selectionMode:    saved.selectionMode,
         };
-    }, [storageKey, initialColumns]);
+    }, [storageKey, initialColumns, saved]);
 
     const persist = useCallback(
         (state: PersistedGridState) => {

@@ -1,6 +1,6 @@
-import React, { useMemo, useEffect, useCallback, memo, forwardRef, useImperativeHandle, useRef } from 'react';
+import React, { useMemo, useEffect, useCallback, memo, forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { Box, Paper, Typography, useTheme, useMediaQuery } from '@mui/material';
-import type { DataGridProps, DataGridHandle } from './types';
+import type { DataGridProps, DataGridHandle, GridCellAddress } from './types';
 import { DataGridToolbar } from './DataGridToolbar';
 import { DataGridHeader } from './DataGridHeader';
 import { DataGridBody, type GridBodyHandle } from './DataGridBody';
@@ -68,6 +68,7 @@ function DataGridInternal<T>({
     hideToolbar = false,
     selectedIds: controlledSelectedIds,
     hideSidebar = false,
+    hideSidebarTabs = false,
     hideFooter = false,
 }: DataGridProps<T>, ref: React.Ref<DataGridHandle>) {
     const { t } = useAppTranslation();
@@ -77,8 +78,9 @@ function DataGridInternal<T>({
     const gridBodyRef = useRef<GridBodyHandle | null>(null);
     const pendingScrollTopRef = useRef<number | null>(null);
     const focusedCellRef = useRef({ r: 0, c: 0 });
-    const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const initialColumns = rawInitialColumns;
+    const [focusedRowId, setFocusedRowId] = useState<string | null>(null);
+    const focusRequestRef = useRef(0);
 
     // Layout & Scroll
     const {
@@ -214,7 +216,20 @@ function DataGridInternal<T>({
     });
 
     useImperativeHandle(ref, () => ({
+        cancelPendingFocus: () => { focusRequestRef.current++; },
         focusCell: (r: number, c: number) => focusCell(r, c),
+        getCellAddress: (r: number, c: number) => {
+            const row = processedRows[r];
+            const column = navigationColumns[c - (selectionMode === 'multiple' ? 1 : 0)];
+            return row && column ? { rowId: getRowId(row), field: String(column.field) } : undefined;
+        },
+        focusRecordCell: (address: GridCellAddress) => {
+            const r = processedRows.findIndex(row => String(getRowId(row)) === String(address.rowId));
+            const c = navigationColumns.findIndex(column => String(column.field) === address.field);
+            return r >= 0 && c >= 0 ? focusCell(r, c + (selectionMode === 'multiple' ? 1 : 0)) : Promise.resolve();
+        },
+        clearFilters: () => { setFilters([]); setGlobalSearch(''); },
+        focusFilter: () => gridRootRef.current?.querySelector<HTMLElement>('[data-grid-filter-field]')?.focus(),
         startAddRow: handleAddRow,
         startEditRow: (id: string | number) => {
             const rowToEdit = processedRows.find(r => getRowId(r) === id);
@@ -300,7 +315,12 @@ function DataGridInternal<T>({
         return visibleCols + (selectionMode === 'multiple' ? 1 : 0);
     }, [columns, selectionMode]);
 
-    const focusCell = useCallback((r: number, c: number) => {
+    const navigationColumns = useMemo(() => {
+        const visible = columns.filter(column => !column.hidden);
+        return [...visible.filter(column => column.pinned === 'left'), ...visible.filter(column => !column.pinned), ...visible.filter(column => column.pinned === 'right')];
+    }, [columns]);
+
+    const focusCell = useCallback(async (r: number, c: number) => {
         const isAddingNewRow = masterForm && editingRowId === NEW_ROW_ID;
         const totalDisplayRows = processedRows.length + (isAddingNewRow ? 1 : 0);
         if (totalDisplayRows === 0) return;
@@ -325,17 +345,31 @@ function DataGridInternal<T>({
             }
         }
 
-        if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
-        focusTimeoutRef.current = setTimeout(() => {
-            const cell = gridRootRef.current?.querySelector<HTMLElement>(`[data-row-index="${targetR}"][data-col-index="${targetC}"]`);
-            if (cell) {
-                const input = cell.querySelector('input, textarea') as HTMLElement;
-                if (input) input.focus();
-                else (cell.querySelector<HTMLElement>('[data-grid-cell-focus]') ?? cell).focus();
-                cell.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+        const request = ++focusRequestRef.current;
+        // Wait for the virtual row and any custom editor to mount, without a fixed delay.
+        for (let frame = 0; frame < 12; frame++) {
+            await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+            if (request !== focusRequestRef.current || !gridRootRef.current) return;
+            const cell = gridRootRef.current.querySelector<HTMLElement>(`[data-row-index="${targetR}"][data-col-index="${targetC}"]`);
+            if (!cell) continue;
+            const control = cell.querySelector<HTMLElement>('input:not([type="hidden"]), textarea, [role="combobox"], [data-grid-cell-focus]') ?? cell;
+            control.focus({ preventScroll: true });
+            const viewport = scrollContainerRef.current;
+            if (viewport && getComputedStyle(cell).position !== 'sticky') {
+                const bounds = viewport.getBoundingClientRect();
+                const rect = cell.getBoundingClientRect();
+                const rtl = getComputedStyle(viewport).direction === 'rtl';
+                const start = navigationColumns.filter(c => c.pinned === 'left').reduce((sum, c) => sum + (c.width ?? 150), 0);
+                const end = navigationColumns.filter(c => c.pinned === 'right').reduce((sum, c) => sum + (c.width ?? 150), 0);
+                const left = bounds.left + (rtl ? end : start);
+                const right = bounds.right - (rtl ? start : end);
+                if (rect.left < left) viewport.scrollLeft += rect.left - left;
+                else if (rect.right > right) viewport.scrollLeft += rect.right - right;
+                if (headerScrollRef.current) headerScrollRef.current.scrollLeft = viewport.scrollLeft;
             }
-        }, 30);
-    }, [processedRows, getColCount, selectionMode, getRowId, handleSelectionChange, editingRowId, masterForm]);
+            return;
+        }
+    }, [processedRows, getColCount, selectionMode, getRowId, handleSelectionChange, editingRowId, masterForm, navigationColumns, scrollContainerRef, headerScrollRef]);
 
     // -- Keyboard Shortcuts (Global) ------------------------------------------
     useEffect(() => {
@@ -344,6 +378,9 @@ function DataGridInternal<T>({
             if (!activeEl || !gridRootRef.current?.contains(activeEl)) return;
             const isInputActive = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable);
             const isGridCellFocused = activeEl && activeEl.hasAttribute('data-row-index');
+            if (activeEl === gridRootRef.current && ['Enter', 'ArrowDown', 'F2'].includes(e.key)) {
+                e.preventDefault(); void focusCell(0, 0); return;
+            }
 
             // -- Print --------------------------------------------------------
             if (e.ctrlKey && e.key.toLowerCase() === 'p') {
@@ -623,9 +660,14 @@ function DataGridInternal<T>({
         <Paper
           ref={gridRootRef}
           role="grid"
+          onMouseDownCapture={() => { focusRequestRef.current++; }}
+          onFocusCapture={(event) => {
+            const row = (event.target as HTMLElement).closest<HTMLElement>('[data-row-id]');
+            if (row) setFocusedRowId(row.dataset.rowId ?? null);
+          }}
           tabIndex={0}
           aria-rowcount={processedRows.length}
-          aria-colcount={computedColumns.length + (selectionMode === 'multiple' ? 1 : 0)}
+          aria-colcount={computedColumns.filter(c => !c.hidden).length + (selectionMode === 'multiple' ? 1 : 0)}
           aria-busy={loading}
           sx={{
             display: 'flex',
@@ -735,6 +777,7 @@ function DataGridInternal<T>({
                             />
                         ) : (
                             <DataGridBody<T>
+                                focusedRowId={focusedRowId}
                                 rows={processedRows}
                                 columns={computedColumns}
                                 rowHeight={localRowHeight}
@@ -772,6 +815,7 @@ function DataGridInternal<T>({
 
                 {!isMobile && !hideSidebar && (
                     <GridSidebar
+                        hideTabs={hideSidebarTabs}
                         open={isSidebarOpen}
                         onOpen={() => setIsSidebarOpen(true)}
                         onClose={() => setIsSidebarOpen(false)}

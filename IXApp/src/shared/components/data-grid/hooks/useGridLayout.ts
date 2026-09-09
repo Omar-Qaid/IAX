@@ -37,8 +37,8 @@ export function useGridLayout() {
     if (!el) return;
     if (typeof ResizeObserver === 'undefined') return;
     let rafId: number | null = null;
-    const ro = new ResizeObserver(() => {
-      if (rafId !== null) cancelAnimationFrame(rafId);
+    const measure = () => {
+      if (rafId !== null) return;
       rafId = requestAnimationFrame(() => {
         rafId = null;
         const sb = Math.max(el.offsetWidth - el.clientWidth, SCROLLBAR_RESERVE);
@@ -46,14 +46,10 @@ export function useGridLayout() {
         setContainerWidth((prev) => (prev === w ? prev : w));
         setScrollbarWidth((prev) => (prev === sb ? prev : sb));
       });
-    });
+    };
+    const ro = new ResizeObserver(measure);
     ro.observe(el);
-    const mo = new MutationObserver(() => {
-      const sb = Math.max(el.offsetWidth - el.clientWidth, SCROLLBAR_RESERVE);
-      const w = el.offsetWidth - sb;
-      setContainerWidth((prev) => (prev === w ? prev : w));
-      setScrollbarWidth((prev) => (prev === sb ? prev : sb));
-    });
+    const mo = new MutationObserver(measure);
     mo.observe(el, { childList: true, subtree: true });
     return () => {
       if (rafId !== null) cancelAnimationFrame(rafId);

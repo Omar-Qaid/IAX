@@ -90,6 +90,7 @@ export function FilterInput<T>({
       }
       onChange={(val) => onFilterChange(field, String(val ?? ''))}
       slotProps={{
+        htmlInput: { 'aria-label': t('grid.open_column_filter', { column: t(column.headerName) }), 'data-grid-filter-field': field },
         input: {
           endAdornment: onFilterIconClick ? (
             <IconButton

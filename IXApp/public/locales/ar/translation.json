@@ -1,4 +1,8 @@
 {
+  "salesOrder": {
+    "gridHelp": "Tab / Enter: الخلية التالية | Shift: السابقة | أعلى / أسفل: الانتقال بين الصفوف | F2: تحرير | Insert: إضافة | Alt+Delete: حذف | Ctrl+F: تصفية",
+    "pasteSingleCell": "الصق قيمة خلية واحدة في كل مرة. اختر الصنف والوحدة من قائمة البحث."
+  },
   "accessibility": {
     "skipToContent": "الانتقال إلى المحتوى الرئيسي",
     "setupSections": "أقسام الإعداد",

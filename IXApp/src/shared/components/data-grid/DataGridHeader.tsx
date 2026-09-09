@@ -86,7 +86,7 @@ export function DataGridHeaderInternal<T>({
         const directionDelta = theme.direction === 'rtl' ? -pointerDelta : pointerDelta;
         const delta = resizing.edge === 'inline-end' ? directionDelta : -directionDelta;
 
-        const newWidth = Math.max(50, resizing.startWidth + delta);
+        const newWidth = Math.min(col.maxWidth ?? Infinity, Math.max(col.minWidth ?? 50, resizing.startWidth + delta));
         return prev.map(c =>
           c.field === resizing.field ? { ...c, width: newWidth, flex: undefined } : c
         );

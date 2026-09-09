@@ -3,9 +3,11 @@ import type { ColumnDef } from './types';
 export const downloadFile = (content: string, fileName: string, contentType: string) => {
     const a = document.createElement('a');
     const file = new Blob([content], { type: contentType });
-    a.href = URL.createObjectURL(file);
+    const url = URL.createObjectURL(file);
+    a.href = url;
     a.download = fileName;
     a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
 };
 
 export function computeFlexWidths<T>(columns: ColumnDef<T>[], containerWidth: number): ColumnDef<T>[] {

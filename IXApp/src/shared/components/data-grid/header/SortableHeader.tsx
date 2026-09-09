@@ -75,6 +75,13 @@ export function SortableHeader<T>({
       <Box
         {...attributes}
         {...listeners}
+        role="columnheader"
+        aria-sort={sort?.sort === 'asc' ? 'ascending' : sort?.sort === 'desc' ? 'descending' : 'none'}
+        onKeyDown={(event) => {
+          if (event.target === event.currentTarget && event.key === 'Enter' && !isDragging && column.sortable !== false) {
+            event.preventDefault(); event.stopPropagation(); onSort(String(column.field));
+          } else listeners?.onKeyDown?.(event);
+        }}
         onClick={() => {
           if (!isDragging && column.sortable !== false) onSort(column.field as string);
         }}

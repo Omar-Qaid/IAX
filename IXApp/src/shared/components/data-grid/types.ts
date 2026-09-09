@@ -2,8 +2,15 @@ import type React from 'react';
 
 export type SortDirection = 'asc' | 'desc' | null;
 
+export interface GridCellAddress { rowId: string | number; field: string; }
+
 export interface DataGridHandle {
-  focusCell: (rowIndex: number, columnIndex: number) => void;
+  cancelPendingFocus: () => void;
+  focusCell: (rowIndex: number, columnIndex: number) => Promise<void>;
+  getCellAddress: (rowIndex: number, columnIndex: number) => GridCellAddress | undefined;
+  focusRecordCell: (address: GridCellAddress) => Promise<void>;
+  clearFilters: () => void;
+  focusFilter: () => void;
   startAddRow: () => void;
   startEditRow: (id: string | number) => void;
   saveEdit: () => void;
@@ -124,5 +131,7 @@ export interface DataGridProps<T> {
   hideToolbar?: boolean;
   selectedIds?: (string | number)[];
   hideSidebar?: boolean;
+  /** Hide the side buttons while keeping panels accessible from column menus. */
+  hideSidebarTabs?: boolean;
   hideFooter?: boolean;
 }

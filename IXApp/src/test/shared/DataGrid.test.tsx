@@ -115,3 +115,38 @@ describe('AppDataGrid', () => {
     }
   });
 });
+
+it('sorts pinned columns with the mouse and keyboard and respects resize limits', async () => {
+  render(
+    <AppProviders>
+      <AppDataGrid<TestRow>
+        columns={[
+          {
+            field: 'code',
+            headerName: 'Code',
+            width: 120,
+            minWidth: 100,
+            maxWidth: 180,
+            pinned: 'left',
+          },
+        ]}
+        rows={testRows}
+        getRowId={(row) => row.id}
+        hideToolbar
+        hideFilterRow
+      />
+    </AppProviders>
+  );
+  const header = screen.getByRole('columnheader');
+  fireEvent.click(screen.getByText('Code'));
+  expect(header).toHaveAttribute('aria-sort', 'ascending');
+  fireEvent.keyDown(header, { key: 'Enter' });
+  expect(header).toHaveAttribute('aria-sort', 'descending');
+  const cells = screen.getAllByRole('gridcell');
+  expect(cells[0]).toHaveTextContent('CUST-002');
+  const resize = document.querySelector<HTMLElement>('[data-grid-resize-handle="code"]')!;
+  fireEvent.mouseDown(resize, { clientX: 120 });
+  fireEvent.mouseMove(window, { clientX: 0 });
+  fireEvent.mouseUp(window);
+  await waitFor(() => expect(getComputedStyle(resize.parentElement!).width).toBe('100px'));
+});

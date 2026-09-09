@@ -113,7 +113,7 @@ export function PinnedHeaderCell<T>({
             size="small"
             aria-label={t('grid.column_menu', { column: t(column.headerName || '') })}
             sx={{ p: 0.25, marginInlineStart: 0.25 }}
-            onClick={(e) => onMenuOpen(e, column)}
+            onClick={(e) => { e.stopPropagation(); onMenuOpen(e, column); }}
           >
             <MoreVert sx={{ fontSize: 14 }} />
           </IconButton>

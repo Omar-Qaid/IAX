@@ -110,6 +110,8 @@ export const GridRow = memo(function GridRowInner<T>({
           onRowDoubleClick?.(row);
         }
       }}
+      data-row-id={String(rowId)}
+      aria-rowindex={index + 1}
       role="row"
       aria-selected={isSelected}
       sx={{
