@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
-import { FastTabsDrawer } from '@patterns/fast-tabs-drawer';
+import { FastTabsDrawer } from '@patterns/drawer-fast-tabs';
 import type { FastTabSection, FastTabValue } from '@patterns/dialog-fast-tabs/FastTabsDialog';
 import type { Customer } from '@mocks/data/customers';
 import { useAppTranslation } from '@core/localization/useAppTranslation';

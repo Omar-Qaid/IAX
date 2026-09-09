@@ -164,6 +164,26 @@ export function SalesOrderDetailsPage(): React.ReactElement {
               />
             </>
           )}
+        {tab === 'lines' &&
+          selectedLine &&
+          section(
+            t('salesOrder.lineDetails', 'Line details'),
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+                gap: 2,
+              }}
+            >
+              {field(t('fields.item'), selectedLine.itemNumber)}
+              {field(t('fields.quantity'), String(selectedLine.quantity))}
+              {field(t('fields.unit'), selectedLine.unit)}
+              {field(t('salesOrderQuickCreate.site', 'Site'), selectedLine.site)}
+              {field(t('salesOrderQuickCreate.warehouse', 'Warehouse'), selectedLine.warehouse)}
+              {field(t('fields.unitPrice'), amount(selectedLine.unitPrice))}
+              {field(t('fields.requestedDelivery'), selectedLine.deliveryDate)}
+            </Box>
+          )}
         {section(
           t('fields.totals', 'Totals'),
           <Stack direction="row" spacing={4} useFlexGap sx={{ flexWrap: 'wrap' }}>

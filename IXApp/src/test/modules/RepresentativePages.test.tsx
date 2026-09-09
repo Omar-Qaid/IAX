@@ -157,6 +157,17 @@ describe('representative enterprise pages', () => {
     expect(screen.getByRole('textbox', { name: /Application name/ })).toBeDefined();
   });
 
+  it('filters master records and shows the selected sales line details', () => {
+    render(<SalesOrderDetailsPage />);
+    expect(screen.getByText('Line details')).toBeDefined();
+    act(() => fireEvent.click(screen.getByText('High Performance Switch 48-Port')));
+    expect(screen.getAllByText('ITEM-B20').length).toBeGreaterThan(1);
+    act(() => fireEvent.change(screen.getByRole('textbox', { name: 'Filter' }), { target: { value: 'Fabrikam' } }));
+    expect(screen.queryByText('SO-00101')).toBeNull();
+    expect(screen.getByText('SO-00102')).toBeDefined();
+    expect(screen.getByText('Sales order SO-00101')).toBeDefined();
+  });
+
   it('shows an error instead of substituting another order for an invalid route id', () => {
     renderWithoutProviders(
       <MemoryRouter initialEntries={['/accounts-receivable/sales-orders/missing-order']}>

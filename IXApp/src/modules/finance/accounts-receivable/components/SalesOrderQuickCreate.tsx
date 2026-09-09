@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { FastTabsDrawer } from '@patterns/fast-tabs-drawer';
+import { FastTabsDrawer } from '@patterns/drawer-fast-tabs';
 import type { FastTabSection, FastTabValue } from '@patterns/dialog-fast-tabs/FastTabsDialog';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { customerQuickCreateApi } from '../api/customerQuickCreateApi';
