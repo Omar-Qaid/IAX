@@ -45,6 +45,10 @@ export function SalesLineGridSurface({
         event.stopPropagation();
         void move(Number(next.dataset.rowIndex), Number(next.dataset.colIndex));
       }}
+      onKeyDown={(event) => {
+        const target = event.target as HTMLElement;
+        if (target.getAttribute('role') === 'combobox' || target.getAttribute('aria-expanded') === 'true') event.stopPropagation();
+      }}
       onKeyDownCapture={(event) => {
         const target = event.target as HTMLElement;
         if (!event.currentTarget.contains(target) || event.nativeEvent.isComposing) return;
@@ -70,10 +74,7 @@ export function SalesLineGridSurface({
           return;
         }
         // Do not steal arrows, Enter, or Escape from an open lookup/select.
-        if (target.getAttribute('aria-expanded') === 'true') {
-          event.stopPropagation();
-          return;
-        }
+        if (target.getAttribute('aria-expanded') === 'true') return;
         if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
           event.preventDefault();
           event.stopPropagation();
@@ -114,13 +115,7 @@ export function SalesLineGridSurface({
             return;
           }
         } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-          if (
-            target.getAttribute('role') === 'combobox' ||
-            target.getAttribute('type') === 'date'
-          ) {
-            event.stopPropagation();
-            return;
-          }
+          if (target.getAttribute('role') === 'combobox' || target.getAttribute('type') === 'date') return;
           r += event.key === 'ArrowDown' ? 1 : -1;
         } else if (!input && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) {
           const rtl = getComputedStyle(cell).direction === 'rtl';

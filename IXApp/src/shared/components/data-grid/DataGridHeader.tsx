@@ -223,6 +223,8 @@ export function DataGridHeaderInternal<T>({
         <PinnedHeaderCell
           key={col.field as string}
           column={col}
+          sortModel={sortModel}
+          onSort={onSort}
           offset={pinnedLeftOffsets[i] + (selectionMode === 'multiple' ? GRID_SELECTION_COLUMN_WIDTH : 0)}
           side="left"
           filters={filters}
@@ -272,6 +274,8 @@ export function DataGridHeaderInternal<T>({
         <PinnedHeaderCell
           key={col.field as string}
           column={col}
+          sortModel={sortModel}
+          onSort={onSort}
           offset={pinnedRightOffsets[i]}
           side="right"
           filters={filters}

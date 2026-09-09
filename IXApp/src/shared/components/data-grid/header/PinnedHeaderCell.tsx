@@ -2,13 +2,17 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, Typography, IconButton } from '@mui/material';
 import MoreVert from '@mui/icons-material/MoreVert';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import FilterIcon from '@mui/icons-material/FilterList';
-import type { ColumnDef, FilterModel } from '../types';
+import type { ColumnDef, FilterModel, SortModel } from '../types';
 import { FilterInput } from './FilterInput';
 import { APP_FONT_FAMILY } from '@shared/constants/fontFamilies';
 
 interface PinnedHeaderCellProps<T> {
   column: ColumnDef<T>;
+  sortModel?: SortModel[];
+  onSort?: (field: string) => void;
   offset: number;
   side: 'left' | 'right';
   filters: FilterModel[];
@@ -24,6 +28,8 @@ interface PinnedHeaderCellProps<T> {
 
 export function PinnedHeaderCell<T>({
   column,
+  sortModel = [],
+  onSort,
   offset,
   side,
   filters,
@@ -37,6 +43,7 @@ export function PinnedHeaderCell<T>({
   hideColumnMenu = false,
 }: PinnedHeaderCellProps<T>) {
   const { t } = useTranslation();
+  const sort = sortModel.find((entry) => entry.field === column.field)?.sort;
   return (
     <Box
       sx={{
@@ -59,6 +66,15 @@ export function PinnedHeaderCell<T>({
     >
       {/* Name row */}
       <Box
+        role="columnheader"
+        aria-sort={sort === 'asc' ? 'ascending' : sort === 'desc' ? 'descending' : 'none'}
+        tabIndex={column.sortable !== false && onSort ? 0 : -1}
+        onClick={() => { if (column.sortable !== false) onSort?.(String(column.field)); }}
+        onKeyDown={(event) => {
+          if (event.target === event.currentTarget && ['Enter', ' '].includes(event.key) && column.sortable !== false) {
+            event.preventDefault(); onSort?.(String(column.field));
+          }
+        }}
         sx={{
           display: 'flex',
           alignItems: 'center',
@@ -90,6 +106,8 @@ export function PinnedHeaderCell<T>({
         >
           {t(column.headerName || '')}
         </Typography>
+        {sort === 'asc' && <ArrowUpwardIcon sx={{ fontSize: 14 }} />}
+        {sort === 'desc' && <ArrowDownwardIcon sx={{ fontSize: 14 }} />}
         {!hideColumnMenu && (
           <IconButton
             size="small"

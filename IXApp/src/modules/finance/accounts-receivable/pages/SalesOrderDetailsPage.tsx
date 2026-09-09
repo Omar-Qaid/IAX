@@ -340,6 +340,8 @@ export function SalesOrderDetailsPage(): React.ReactElement {
               onChange={(_, unit) => {
                 const next = { ...activeDraft, unit: unit ?? '' };
                 setDraftLine(next);
+                // Save runs from selection events, outside rendering.
+                // eslint-disable-next-line react-hooks/refs
                 if (next.itemNumber) void saveLine(next);
               }}
               renderInput={(params) => (
