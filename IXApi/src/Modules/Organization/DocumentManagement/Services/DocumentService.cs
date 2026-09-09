@@ -33,7 +33,7 @@ public sealed class DocumentService : IDocumentService
         var company = CurrentCompany();
         var query = Query().AsNoTracking().Where(x => x.RefTableId == refTableId && x.RefRecId == refRecId && x.RefCompanyId == company)
             .OrderByDescending(x => x.CreatedAt).ThenByDescending(x => x.RecId);
-        var total = await query.CountAsync(cancellationToken);
+        vsvar total = await query.CountAsync(cancellationToken);
         var values = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
         return new DocumentPageDto(values.Select(ToDto).ToList(), pageNumber, pageSize, total);
     }

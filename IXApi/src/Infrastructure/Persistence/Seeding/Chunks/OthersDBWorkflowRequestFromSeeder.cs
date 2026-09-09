@@ -276,7 +276,6 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
             var processName = string.IsNullOrWhiteSpace(process.Name)
                 ? $"Process {process.RecId}"
                 : process.Name;
-
             // Reuse the representative request when this seeder is rerun. Prefer the
             // deterministic seed request, but repair the oldest existing request for
             // processes that already had data before this seed was introduced.
@@ -490,7 +489,7 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
             .IgnoreQueryFilters()
             .Where(process => process.IsActive && !process.IsDeleted && process.RecId != ProcessId)
             .OrderBy(process => process.RecId)
-            .Select(process => new { process.RecId, process.Name })
+            .Select(process => new { process.RecId, process.Name, process.NameAlias })
             .ToListAsync(ct);
 
         foreach (var process in processes)
@@ -498,6 +497,9 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
             var processName = string.IsNullOrWhiteSpace(process.Name)
                 ? $"Process {process.RecId}"
                 : process.Name;
+            var processNameAlias = string.IsNullOrWhiteSpace(process.NameAlias)
+                ? processName
+                : process.NameAlias;
             var templateCode = $"PROCESS_{process.RecId}_PRINTOUT";
             var template = await db.ReportTemplates
                 .IgnoreQueryFilters()
@@ -523,6 +525,7 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                     RefRecId = process.RecId,
                     Code = templateCode,
                     Name = $"{processName} printout",
+                    NameAlias = $"طباعة {processNameAlias}",
                     Description = $"Seeded A4 printout for the {processName} workflow.",
                     PageSize = "A4",
                     Orientation = "portrait",
@@ -537,19 +540,25 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                 await db.SaveChangesAsync(ct);
             }
 
-            var version = await db.ReportTemplateVersions
+            template.Name = $"{processName} printout";
+            template.NameAlias = $"طباعة {processNameAlias}";
+            template.Description = $"Seeded A4 printout for the {processName} workflow.";
+
+            var templateJson = BuildGenericPrintTemplateJson(processName, processNameAlias);
+            var versions = await db.ReportTemplateVersions
                 .IgnoreQueryFilters()
-                .SingleOrDefaultAsync(
-                    row => row.TemplateId == template.RecId && row.VersionNo == 1,
-                    ct);
+                .Where(row => row.TemplateId == template.RecId)
+                .OrderByDescending(row => row.VersionNo)
+                .ToListAsync(ct);
+            var version = versions.FirstOrDefault(row => row.TemplateJson == templateJson);
 
             if (version is null)
             {
                 version = new ReportTemplateVersion
                 {
                     TemplateId = template.RecId,
-                    VersionNo = 1,
-                    TemplateJson = BuildGenericPrintTemplateJson(processName),
+                    VersionNo = (versions.FirstOrDefault()?.VersionNo ?? 0) + 1,
+                    TemplateJson = templateJson,
                     IsPublished = true,
                     PublishedBy = by,
                     PublishedAt = DateTime.UtcNow,
@@ -612,12 +621,9 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                 });
                 await db.SaveChangesAsync(ct);
             }
-            else if (requestVersion.TemplateVersionId != version.RecId || requestVersion.IsDeleted)
+            else if (requestVersion.IsDeleted)
             {
-                requestVersion.TemplateVersionId = version.RecId;
                 requestVersion.IsDeleted = false;
-                requestVersion.SelectedAt = DateTime.UtcNow;
-                requestVersion.SelectedBy = by;
                 await db.SaveChangesAsync(ct);
             }
         }
@@ -654,12 +660,15 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                 {
                     Id = "company-name",
                     Label = "Company",
+                    LabelAlias = "الشركة",
                     Binding = new PrintFieldBinding { SourceType = "company", Source = "name" },
                 },
                 new PrintTextElement
                 {
                     Id = "document-title",
                     Value = "Daily fund closing",
+                    ValueAlias = "الإقفال اليومي للصندوق",
+                    TextAlias = "الإقفال اليومي للصندوق",
                     Style = new PrintElementStyle { FontSize = 18, FontWeight = 700, Alignment = "center" },
                 },
             ],
@@ -669,6 +678,7 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                 {
                     Id = "request-information",
                     Title = "Request information",
+                    TitleAlias = "بيانات الطلب",
                     Columns = 2,
                     Elements =
                     [
@@ -676,12 +686,14 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                         {
                             Id = "request-number",
                             Label = "Request",
+                            LabelAlias = "الطلب",
                             Binding = new PrintFieldBinding { SourceType = "system", Source = "requestNumber" },
                         },
                         new PrintFieldElement
                         {
                             Id = "request-date",
                             Label = "Request date",
+                            LabelAlias = "تاريخ الطلب",
                             Binding = new PrintFieldBinding { SourceType = "system", Source = "requestDate" },
                             Format = new PrintValueFormat { Type = "date", Pattern = "yyyy-MM-dd" },
                         },
@@ -689,6 +701,7 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                         {
                             Id = "total-sales",
                             Label = "Total sales",
+                            LabelAlias = "إجمالي المبيعات",
                             Binding = new PrintFieldBinding { SourceType = "requestControl", RequestControlId = 21201 },
                             Format = new PrintValueFormat { Type = "number" },
                         },
@@ -696,6 +709,7 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                         {
                             Id = "closing-date",
                             Label = "Closing date",
+                            LabelAlias = "تاريخ الإقفال",
                             Binding = new PrintFieldBinding { SourceType = "requestControl", RequestControlId = 21162 },
                             Format = new PrintValueFormat { Type = "date", Pattern = "yyyy-MM-dd" },
                         },
@@ -713,7 +727,7 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
         return JsonSerializer.Serialize(document, new JsonSerializerOptions(JsonSerializerDefaults.Web));
     }
 
-    private static string BuildGenericPrintTemplateJson(string processName)
+    private static string BuildGenericPrintTemplateJson(string processName, string processNameAlias)
     {
         var document = new PrintTemplateDocument
         {
@@ -738,6 +752,8 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                 {
                     Id = "document-title",
                     Value = processName,
+                    ValueAlias = processNameAlias,
+                    TextAlias = processNameAlias,
                     Style = new PrintElementStyle { FontSize = 18, FontWeight = 700, Alignment = "center" },
                 },
             ],
@@ -747,6 +763,7 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                 {
                     Id = "request-information",
                     Title = "Request information",
+                    TitleAlias = "بيانات الطلب",
                     Columns = 2,
                     Elements =
                     [
@@ -754,12 +771,14 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                         {
                             Id = "request-number",
                             Label = "Request",
+                            LabelAlias = "الطلب",
                             Binding = new PrintFieldBinding { SourceType = "system", Source = "requestNumber" },
                         },
                         new PrintFieldElement
                         {
                             Id = "request-date",
                             Label = "Request date",
+                            LabelAlias = "تاريخ الطلب",
                             Binding = new PrintFieldBinding { SourceType = "system", Source = "requestDate" },
                             Format = new PrintValueFormat { Type = "date", Pattern = "yyyy-MM-dd" },
                         },
@@ -767,12 +786,14 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                         {
                             Id = "request-status",
                             Label = "Status",
+                            LabelAlias = "الحالة",
                             Binding = new PrintFieldBinding { SourceType = "system", Source = "requestStatus" },
                         },
                         new PrintFieldElement
                         {
                             Id = "requested-by",
                             Label = "Requested by",
+                            LabelAlias = "مقدم الطلب",
                             Binding = new PrintFieldBinding { SourceType = "system", Source = "submittedBy" },
                         },
                     ],

@@ -88,8 +88,8 @@ export function LogisticsPostalAddressDrawer({
 
   const { data: countries = [] } = useCountryRegions();
   const { data: states = [] } = useStates(formData.countryRegionId);
-  const { data: cities = [] } = useCities(formData.state);
-  const { data: counties = [] } = useCounties(formData.state);
+  const { data: cities = [] } = useCities(formData.countryRegionId, formData.state);
+  const { data: counties = [] } = useCounties(formData.countryRegionId, formData.state);
 
   const handleSave = () => {
     const newErrors = {
@@ -116,6 +116,8 @@ export function LogisticsPostalAddressDrawer({
       anchor={drawerAnchor}
       open={open}
       onClose={onClose}
+      sx={{ zIndex: (theme) => theme.zIndex.drawer + 2 }}
+      ModalProps={{ keepMounted: false }}
       slotProps={{
         paper: {
           sx: {

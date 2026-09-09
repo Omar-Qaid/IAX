@@ -137,7 +137,7 @@ interface DynamicFormProps {
   requestDate?: string;
 }
 export const DynamicForm = React.forwardRef<DynamicFormHandle, DynamicFormProps>(function DynamicForm({ processId, requestFiles = [], showActions = true, onStatusChange, displayMode = 'normal', printTemplate, printCompany, requestDate }, ref): React.ReactElement {
-  const { t, isRtl } = useAppTranslation();
+  const { t, isRtl, currentLanguage } = useAppTranslation();
   const { notifyError, notifySuccess } = useNotifications();
   const definition = useQuery({
     queryKey: ['workflow', 'dynamic-request-form', processId],
@@ -429,7 +429,11 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, DynamicFormProps>
         </Box>
       )}
       <ReportTemplateRenderer
-        template={printTemplate}
+        template={{
+          ...printTemplate,
+          direction: currentLanguage.dir,
+          language: currentLanguage.code,
+        }}
         data={printData}
         company={printCompany}
         renderRequestControl={renderTemplateControl}

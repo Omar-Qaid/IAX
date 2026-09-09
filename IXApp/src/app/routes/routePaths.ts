@@ -14,6 +14,7 @@ export const ROUTE_PATHS = {
     ROOT: '/accounts-receivable',
     CUSTOMERS: '/accounts-receivable/customers',
     CUSTOMER_DETAILS: '/accounts-receivable/customers/:customerId',
+    customer: (customerId: string) => `/accounts-receivable/customers/${encodeURIComponent(customerId)}`,
     CUSTOMER_GROUPS: '/accounts-receivable/customer-groups',
     CUSTOMER_PARAMETERS: '/accounts-receivable/customer-parameters',
     CUSTOMER_PAYMENT_METHODS: '/accounts-receivable/customer-payment-methods',

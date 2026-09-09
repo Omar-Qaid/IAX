@@ -10,4 +10,4 @@
 
 `DocumentHeader`, `DocumentLines`, and `DocumentTotals` are small reusable wrappers. `patterns/document/useDocumentPage.ts` manages a local document and lines collection; `shared/hooks/useDocumentPage.ts` is a separate legacy async hook.
 
-The routed `SalesOrderPage` uses this presentation with mock sales-order data. Lifecycle mutations are not supplied by the pattern and must be implemented by the module.
+The routed `SalesOrderDetailsPage` uses this presentation with mock sales-order data. Lifecycle mutations are not supplied by the pattern and must be implemented by the module.

@@ -1,7 +1,3 @@
-# Master Detail pattern
+# Master-detail pattern
 
-`MasterDetailLayout.tsx` provides real layout composition, while `MasterDetailPage.tsx`, `types.ts`, and `useMasterDetailPage.ts` remain incomplete scaffolding. Do not treat this folder as a production-ready controller contract.
-
-Use the layout only when its existing API fits. For new behavior, complete and test the page/types/hook together before documenting it as implemented.
-
-[Master-details status](../../../docs/patterns/MASTER_DETAILS_PAGE.md) · [Patterns](../README.md)
+`MasterDetailPage` provides the shared action pane, filterable record navigation, selected-record title and status, and detail content slot. Selection is controlled by the caller, so pages can keep it in route state. Filtering only changes the visible navigation records. Use existing DataGrid and accordion components inside the detail slot for header and line sections. Business data and persistence belong to the consuming page.

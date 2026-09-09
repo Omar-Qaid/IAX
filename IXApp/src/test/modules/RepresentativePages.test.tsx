@@ -7,10 +7,10 @@ import { ExchangeRateTypePage } from '@modules/finance/foundation/pages/Exchange
 import { ExchangeRatePage } from '@modules/finance/foundation/pages/ExchangeRatePage';
 import { LegalEntityPage } from '@modules/organization/pages/LegalEntityPage';
 import { CustomerListPage } from '@modules/finance/accounts-receivable/pages/CustomerListPage';
-import { SalesOrderPage } from '@modules/finance/accounts-receivable/pages/SalesOrderPage';
+import { SalesOrderDetailsPage } from '@modules/finance/accounts-receivable/pages/SalesOrderDetailsPage';
 import { ApplicationSettingsPage } from '@modules/administration/pages/ApplicationSettingsPage';
 import { CustomerGroupListPage } from '@modules/finance/accounts-receivable/pages/CustomerGroupListPage';
-import { SalesOrdersPage } from '@modules/finance/accounts-receivable/pages/SalesOrdersPage';
+import { SalesOrderListPage } from '@modules/finance/accounts-receivable/pages/SalesOrderListPage';
 import { CustPaymMode } from '@modules/finance/accounts-receivable/pages/CustPaymModePage';
 import { CustPaymTerm } from '@modules/finance/accounts-receivable/pages/CustPaymTermPage';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
@@ -123,7 +123,7 @@ describe('representative enterprise pages', () => {
     expect(screen.queryByRole('button', { name: 'Information' })).toBeNull();
     unmount();
 
-    render(<SalesOrdersPage />);
+    render(<SalesOrderListPage />);
     expect(screen.getByText('SO-00101')).toBeDefined();
   }, 60_000);
 
@@ -146,7 +146,7 @@ describe('representative enterprise pages', () => {
   }, 60_000);
 
   it('renders document and setup representatives', async () => {
-    const { unmount } = render(<SalesOrderPage />);
+    const { unmount } = render(<SalesOrderDetailsPage />);
     expect(screen.getByText('Sales order SO-00101')).toBeDefined();
     expect(screen.getByText('Enterprise Server Rack Cabinet 42U')).toBeDefined();
     unmount();
@@ -164,7 +164,7 @@ describe('representative enterprise pages', () => {
           <Routes>
             <Route
               path="/accounts-receivable/sales-orders/:salesOrderId"
-              element={<SalesOrderPage />}
+              element={<SalesOrderDetailsPage />}
             />
           </Routes>
         </AppProviders>

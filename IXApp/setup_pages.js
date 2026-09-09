@@ -7,7 +7,7 @@ const pages = [
   { path: 'accounts-receivable/customers/pages/CustomersPage.tsx', name: 'CustomersPage', isDefault: false },
   { path: 'accounts-receivable/customer-groups/pages/CustomerGroupsPage.tsx', name: 'CustomerGroupsPage', isDefault: false },
   { path: 'accounts-receivable/sales-orders/pages/SalesOrdersPage.tsx', name: 'SalesOrdersPage', isDefault: false },
-  { path: 'accounts-receivable/sales-orders/pages/SalesOrderPage.tsx', name: 'SalesOrderPage', isDefault: false },
+  { path: 'accounts-receivable/sales-orders/pages/SalesOrderDetailsPage.tsx', name: 'SalesOrderDetailsPage', isDefault: false },
   { path: 'foundation/currencies/pages/CurrenciesPage.tsx', name: 'CurrenciesPage', isDefault: false },
   { path: 'system-administration/settings/pages/ApplicationSettingsPage.tsx', name: 'ApplicationSettingsPage', isDefault: false }
 ];

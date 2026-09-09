@@ -40,7 +40,11 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
         [HttpGet("CountryRegions")]
         public async Task<IActionResult> GetCountryRegions()
         {
-            var data = await _unitOfWork.Context.Set<LogisticsAddressCountryRegion>().AsNoTracking().Select(x => new { x.CountryRegionId, x.IsoCode }).ToListAsync();
+            var data = await _unitOfWork.Context.Set<LogisticsAddressCountryRegion>()
+                .AsNoTracking()
+                .OrderBy(x => x.CountryRegionId)
+                .Select(x => new { x.CountryRegionId, x.IsoCode })
+                .ToListAsync();
             return Ok(APIResponse<object>.Ok(data));
         }
 
@@ -50,6 +54,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
             var data = await _unitOfWork.Context.Set<LogisticsAddressState>()
                 .AsNoTracking()
                 .Where(x => x.CountryRegionId == countryRegionId)
+                .OrderBy(x => x.Name)
                 .Select(x => new { x.StateId, x.Name })
                 .ToListAsync();
             return Ok(APIResponse<object>.Ok(data));
@@ -66,6 +71,18 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
             return Ok(APIResponse<object>.Ok(data));
         }
 
+        [HttpGet("Cities/{countryRegionId}/{stateId}")]
+        public async Task<IActionResult> GetCities(string countryRegionId, string stateId)
+        {
+            var data = await _unitOfWork.Context.Set<LogisticsAddressCity>()
+                .AsNoTracking()
+                .Where(x => x.CountryRegionId == countryRegionId && x.StateId == stateId)
+                .OrderBy(x => x.Name)
+                .Select(x => new { x.CityKey, x.Name, x.CountryRegionId, x.StateId })
+                .ToListAsync();
+            return Ok(APIResponse<object>.Ok(data));
+        }
+
         [HttpGet("Counties/{stateId}")]
         public async Task<IActionResult> GetCounties(string stateId)
         {
@@ -73,6 +90,18 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
                 .AsNoTracking()
                 .Where(x => x.StateId == stateId)
                 .Select(x => new { x.CountyId, x.Name })
+                .ToListAsync();
+            return Ok(APIResponse<object>.Ok(data));
+        }
+
+        [HttpGet("Counties/{countryRegionId}/{stateId}")]
+        public async Task<IActionResult> GetCounties(string countryRegionId, string stateId)
+        {
+            var data = await _unitOfWork.Context.Set<LogisticsAddressCounty>()
+                .AsNoTracking()
+                .Where(x => x.CountryRegionId == countryRegionId && x.StateId == stateId)
+                .OrderBy(x => x.Name)
+                .Select(x => new { x.CountyId, x.Name, x.CountryRegionId, x.StateId })
                 .ToListAsync();
             return Ok(APIResponse<object>.Ok(data));
         }

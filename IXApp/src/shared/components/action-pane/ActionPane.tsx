@@ -8,7 +8,7 @@ export interface ActionPaneProps {
   endActions?: React.ReactNode;
 }
 
-export const ActionPane: React.FC<ActionPaneProps> = ({ children, variant = 'default', endActions }) => {
+export const ActionPane: React.FC<ActionPaneProps> = ({ children, variant = 'flat', endActions }) => {
   return (
     <Paper
       elevation={0}

@@ -12,7 +12,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check package.json scripts docs/ARCHITECTURE-BOUNDARIES.md docs/app-shell.md src/app/routes/AppAccessDeniedState.tsx src/core/configuration/environment.ts src/shared/services/notificationStore.ts src/shared/components/lookups/LookupDialog.tsx src/shared/components/lookups/LookupField.tsx src/shared/components/page/UnsavedChangesGuard.tsx src/shared/hooks/useUnsavedChanges.ts src/modules/finance/accounts-receivable/pages/SalesOrderPage.tsx src/test/core/localization.test.ts src/test/modules/RepresentativePages.test.tsx src/test/shared/Lookup.test.tsx public/locales/en/translation.json public/locales/ar/translation.json",
+    "format:check": "prettier --check package.json scripts docs/ARCHITECTURE-BOUNDARIES.md docs/app-shell.md src/app/routes/AppAccessDeniedState.tsx src/core/configuration/environment.ts src/shared/services/notificationStore.ts src/shared/components/lookups/LookupDialog.tsx src/shared/components/lookups/LookupField.tsx src/shared/components/page/UnsavedChangesGuard.tsx src/shared/hooks/useUnsavedChanges.ts src/modules/finance/accounts-receivable/pages/SalesOrderDetailsPage.tsx src/test/core/localization.test.ts src/test/modules/RepresentativePages.test.tsx src/test/shared/Lookup.test.tsx public/locales/en/translation.json public/locales/ar/translation.json",
     "format:check:all": "prettier --check .",
     "audit:architecture": "node scripts/audit-architecture.mjs",
     "audit:encoding": "node scripts/audit-encoding.mjs",

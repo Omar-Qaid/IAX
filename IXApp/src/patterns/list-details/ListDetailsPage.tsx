@@ -16,7 +16,6 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
 import { PageContainer } from '@shared/components/page/PageContainer';
@@ -28,6 +27,7 @@ import { ActionPaneMenu } from '@shared/components/action-pane/ActionPaneMenu';
 import { OptionsMenu } from '@shared/components/action-pane/OptionsMenu';
 import { EnterpriseCrudActions } from '@shared/components/action-pane/EnterpriseCrudActions';
 import { EnterpriseCommandUtilities } from '@shared/components/action-pane/EnterpriseCommandUtilities';
+import { ActionPaneBackButton } from '@shared/components/action-pane/ActionPaneBackButton';
 import { RightUtilityRail } from '@shared/components/page/RightUtilityRail';
 import { RelatedInformationPanel } from '@shared/components/page/RelatedInformationPanel';
 import { EnterpriseFilterPanel } from '@shared/components/data-grid/EnterpriseFilterPanel';
@@ -273,17 +273,11 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
           </>
         }
       >
-        <ActionPaneGroup>
-          <ActionPaneButton
-            label={t('actions.back')}
-            icon={
-              <ArrowBackIcon
-                sx={{ transform: (theme) => (theme.direction === 'rtl' ? 'scaleX(-1)' : 'none') }}
-              />
-            }
-            onClick={() => navigate(-1)}
-          />
-        </ActionPaneGroup>
+        <ActionPaneBackButton
+          label={t('actions.back')}
+          onClick={() => navigate(-1)}
+          disabled={state.editing}
+        />
         <IconButton
           size="small"
           aria-label={t('actions.toggleList')}
@@ -894,6 +888,7 @@ function LegacyListDetailsPage<T extends ListDetailRecord>({
   dialogs,
 }: LegacyListDetailsProps<T>) {
   const { t } = useAppTranslation();
+  const navigate = useNavigate();
   return (
     <PageContainer>
       <PageHeader title={title} subtitle={subtitle} />
@@ -907,6 +902,7 @@ function LegacyListDetailsPage<T extends ListDetailRecord>({
           />
         }
       >
+        <ActionPaneBackButton label={t('actions.back')} onClick={() => navigate(-1)} />
         {actionPane}
       </ActionPane>
       <Grid container spacing={2}>

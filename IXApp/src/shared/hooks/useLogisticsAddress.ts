@@ -1,29 +1,23 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@core/api/apiClient';
-import { environment } from '@core/configuration/environment';
-import {
-  MOCK_COUNTRY_REGIONS,
-  MOCK_STATES,
-  MOCK_CITIES,
-  MOCK_COUNTIES,
-} from '@shared/services/logisticsAddressMockData';
 import type { CountryRegion, State, City, County } from '@shared/types/logistics';
+import type { ApiResponse } from '@core/api/apiResponse';
+import { ApiError } from '@core/api/apiError';
+
+const unwrap = <T,>(response: ApiResponse<T[]>, lookup: string): T[] => {
+  if (!response.success || !Array.isArray(response.data))
+    throw new ApiError(response.message || `The ${lookup} lookup response did not contain data.`, 500);
+  return response.data;
+};
 
 export const useCountryRegions = () => {
   return useQuery({
     queryKey: ['CountryRegions'],
     queryFn: async (): Promise<CountryRegion[]> => {
-      if (environment.enableMockApi) {
-        return MOCK_COUNTRY_REGIONS;
-      }
-      try {
-        const { data } = await apiClient.get<CountryRegion[]>(
-          '/LogisticsPostalAddress/CountryRegions'
-        );
-        return data;
-      } catch {
-        return MOCK_COUNTRY_REGIONS;
-      }
+      const { data } = await apiClient.get<ApiResponse<CountryRegion[]>>(
+        '/v1/LogisticsPostalAddress/CountryRegions'
+      );
+      return unwrap(data, 'country/region');
     },
     staleTime: 1000 * 60 * 10,
   });
@@ -34,61 +28,44 @@ export const useStates = (countryRegionId?: string) => {
     queryKey: ['States', countryRegionId],
     queryFn: async (): Promise<State[]> => {
       if (!countryRegionId) return [];
-      if (environment.enableMockApi) {
-        return MOCK_STATES.filter((s) => s.countryRegionId === countryRegionId);
-      }
-      try {
-        const { data } = await apiClient.get<State[]>(
-          `/LogisticsPostalAddress/States/${countryRegionId}`
-        );
-        return data;
-      } catch {
-        return MOCK_STATES.filter((s) => s.countryRegionId === countryRegionId);
-      }
+      const { data } = await apiClient.get<ApiResponse<State[]>>(
+        `/v1/LogisticsPostalAddress/States/${encodeURIComponent(countryRegionId)}`
+      );
+      return unwrap(data, 'state');
     },
     enabled: !!countryRegionId,
     staleTime: 1000 * 60 * 10,
   });
 };
 
-export const useCities = (stateId?: string) => {
+export const useCities = (countryRegionId?: string, stateId?: string) => {
   return useQuery({
-    queryKey: ['Cities', stateId],
+    queryKey: ['Cities', countryRegionId, stateId],
     queryFn: async (): Promise<City[]> => {
       if (!stateId) return [];
-      if (environment.enableMockApi) {
-        return MOCK_CITIES.filter((c) => c.stateId === stateId);
-      }
-      try {
-        const { data } = await apiClient.get<City[]>(`/LogisticsPostalAddress/Cities/${stateId}`);
-        return data;
-      } catch {
-        return MOCK_CITIES.filter((c) => c.stateId === stateId);
-      }
+      if (!countryRegionId) return [];
+      const { data } = await apiClient.get<ApiResponse<City[]>>(
+        `/v1/LogisticsPostalAddress/Cities/${encodeURIComponent(countryRegionId)}/${encodeURIComponent(stateId)}`
+      );
+      return unwrap(data, 'city');
     },
-    enabled: !!stateId,
+    enabled: !!countryRegionId && !!stateId,
     staleTime: 1000 * 60 * 10,
   });
 };
 
-export const useCounties = (stateId?: string) => {
+export const useCounties = (countryRegionId?: string, stateId?: string) => {
   return useQuery({
-    queryKey: ['Counties', stateId],
+    queryKey: ['Counties', countryRegionId, stateId],
     queryFn: async (): Promise<County[]> => {
       if (!stateId) return [];
-      if (environment.enableMockApi) {
-        return MOCK_COUNTIES.filter((c) => c.stateId === stateId);
-      }
-      try {
-        const { data } = await apiClient.get<County[]>(
-          `/LogisticsPostalAddress/Counties/${stateId}`
-        );
-        return data;
-      } catch {
-        return MOCK_COUNTIES.filter((c) => c.stateId === stateId);
-      }
+      if (!countryRegionId) return [];
+      const { data } = await apiClient.get<ApiResponse<County[]>>(
+        `/v1/LogisticsPostalAddress/Counties/${encodeURIComponent(countryRegionId)}/${encodeURIComponent(stateId)}`
+      );
+      return unwrap(data, 'county');
     },
-    enabled: !!stateId,
+    enabled: !!countryRegionId && !!stateId,
     staleTime: 1000 * 60 * 10,
   });
 };

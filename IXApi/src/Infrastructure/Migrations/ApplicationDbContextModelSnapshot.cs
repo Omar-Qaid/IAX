@@ -19823,23 +19823,14 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<byte>("ActivityTypeId")
                         .HasColumnType("tinyint");
 
-                    b.Property<bool>("AlertingByEmail")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("AlertingBySms")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("AlertingBySystem")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("AlertingByWhatsApp")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("AutoPassEnabled")
-                        .HasColumnType("bit");
-
-                    b.Property<byte>("AutoPassingHrs")
+                    b.Property<byte>("AutoPassAfterHours")
                         .HasColumnType("tinyint");
+
+                    b.Property<bool>("CanViewPreviousDocuments")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanViewPreviousSteps")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Code")
                         .HasColumnType("nvarchar(max)");
@@ -19864,7 +19855,22 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsAutoPassEnabled")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsEmailNotificationEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSmsNotificationEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSystemNotificationEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsWhatsAppNotificationEnabled")
                         .HasColumnType("bit");
 
                     b.Property<DateTime?>("LastModifiedAt")
@@ -19873,7 +19879,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("MandatoryDocs")
+                    b.Property<bool>("MandatoryDocuments")
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
@@ -19901,12 +19907,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<decimal>("Score")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
-
-                    b.Property<bool>("ShowPreviousDocs")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("ShowPreviousSteps")
-                        .HasColumnType("bit");
 
                     b.Property<long>("StepId")
                         .HasColumnType("bigint");
@@ -20434,6 +20434,9 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsSystemDefined")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("LastModifiedAt")
                         .HasColumnType("datetime2");
 
@@ -20463,9 +20466,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<byte>("SortOrder")
                         .HasColumnType("tinyint");
-
-                    b.Property<bool>("IsSystemDefined")
-                        .HasColumnType("bit");
 
                     b.HasKey("RecId");
 
@@ -21063,9 +21063,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
 
-                    b.Property<bool>("CanRepeat")
-                        .HasColumnType("bit");
-
                     b.Property<short>("CategoryId")
                         .HasColumnType("smallint");
 
@@ -21092,13 +21089,19 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsRepeatable")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSystemDefined")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("LastModifiedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("MandatoryDocs")
+                    b.Property<bool>("MandatoryDocuments")
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
@@ -21120,6 +21123,9 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<int>("RecVersion")
                         .HasColumnType("int");
 
+                    b.Property<byte>("RepeatIntervalHours")
+                        .HasColumnType("tinyint");
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .IsRequired()
@@ -21132,9 +21138,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<byte>("SortOrder")
                         .HasColumnType("tinyint");
-
-                    b.Property<bool>("IsSystemDefined")
-                        .HasColumnType("bit");
 
                     b.HasKey("RecId");
 
@@ -21957,12 +21960,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
 
-                    b.Property<bool>("AllMandatory")
-                        .HasColumnType("bit");
-
-                    b.Property<byte>("AutoPassingHrs")
-                        .HasColumnType("tinyint");
-
                     b.Property<string>("Code")
                         .HasColumnType("nvarchar(max)");
 
@@ -21986,11 +21983,17 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsSystemDefined")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("LastModifiedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("MustCompleteAll")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
@@ -22020,9 +22023,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<byte>("SortOrder")
                         .HasColumnType("tinyint");
-
-                    b.Property<bool>("IsSystemDefined")
-                        .HasColumnType("bit");
 
                     b.HasKey("RecId");
 

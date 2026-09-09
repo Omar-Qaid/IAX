@@ -97,6 +97,8 @@ export function LogisticsElectronicAddressDrawer({
       anchor={drawerAnchor}
       open={open}
       onClose={onClose}
+      sx={{ zIndex: (theme) => theme.zIndex.drawer + 2 }}
+      ModalProps={{ keepMounted: false }}
       slotProps={{
         paper: {
           sx: {

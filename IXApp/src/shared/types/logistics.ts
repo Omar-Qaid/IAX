@@ -15,12 +15,14 @@ export interface State {
 export interface City {
   cityKey: string;
   name: string;
+  countryRegionId: string;
   stateId: string;
 }
 
 export interface County {
   countyId: string;
   name: string;
+  countryRegionId: string;
   stateId: string;
 }
 

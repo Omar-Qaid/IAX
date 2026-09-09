@@ -44,6 +44,15 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'customer-details',
+    path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_DETAILS,
+    permission: PERMISSIONS.CUSTOMER_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-receivable/pages/CustTablePage'),
+      (module) => module.CustTablePage
+    ),
+  },
+  {
     id: 'customer-parameters',
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PARAMETERS,
     permission: PERMISSIONS.CUSTOMER_VIEW,
@@ -75,8 +84,8 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDERS,
     permission: PERMISSIONS.SALES_ORDER_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/accounts-receivable/pages/SalesOrdersPage'),
-      (module) => module.SalesOrdersPage
+      () => import('@modules/finance/accounts-receivable/pages/SalesOrderListPage'),
+      (module) => module.SalesOrderListPage
     ),
   },
   {
@@ -84,8 +93,8 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDER_DETAILS,
     permission: PERMISSIONS.SALES_ORDER_VIEW,
     component: lazyPage(
-      () => import('@modules/finance/accounts-receivable/pages/SalesOrderPage'),
-      (module) => module.SalesOrderPage
+      () => import('@modules/finance/accounts-receivable/pages/SalesOrderDetailsPage'),
+      (module) => module.SalesOrderDetailsPage
     ),
   },
   {

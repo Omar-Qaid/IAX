@@ -11,7 +11,7 @@ Implements customer/customer-group lists, receivables parameters, payment modes 
 - `CustParametersPage.tsx`: parameter/setup form.
 - `CustPaymModePage.tsx`, `CustPaymTermPage.tsx`: payment setup lists.
 - `SalesOrdersPage.tsx`: order list.
-- `SalesOrderPage.tsx`: header-and-lines document experience with unsaved-change handling.
+- `SalesOrderDetailsPage.tsx`: header-and-lines document experience with unsaved-change handling.
 - `queries/accountsReceivableQueryKeys.ts`: feature query-key ownership.
 - `index.ts`: public module exports.
 

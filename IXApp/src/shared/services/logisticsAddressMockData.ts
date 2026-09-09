@@ -17,17 +17,17 @@ export const MOCK_STATES: State[] = [
 ];
 
 export const MOCK_CITIES: City[] = [
-  { cityKey: 'LA', name: 'Los Angeles', stateId: 'CA' },
-  { cityKey: 'SF', name: 'San Francisco', stateId: 'CA' },
-  { cityKey: 'NYC', name: 'New York City', stateId: 'NY' },
-  { cityKey: 'HOU', name: 'Houston', stateId: 'TX' },
-  { cityKey: 'RUH', name: 'Riyadh', stateId: 'RIY' },
-  { cityKey: 'JED', name: 'Jeddah', stateId: 'MKH' },
+  { cityKey: 'LA', name: 'Los Angeles', countryRegionId: 'USA', stateId: 'CA' },
+  { cityKey: 'SF', name: 'San Francisco', countryRegionId: 'USA', stateId: 'CA' },
+  { cityKey: 'NYC', name: 'New York City', countryRegionId: 'USA', stateId: 'NY' },
+  { cityKey: 'HOU', name: 'Houston', countryRegionId: 'USA', stateId: 'TX' },
+  { cityKey: 'RUH', name: 'Riyadh', countryRegionId: 'SAU', stateId: 'RIY' },
+  { cityKey: 'JED', name: 'Jeddah', countryRegionId: 'SAU', stateId: 'MKH' },
 ];
 
 export const MOCK_COUNTIES: County[] = [
-  { countyId: 'LAD', name: 'Los Angeles County', stateId: 'CA' },
-  { countyId: 'SFC', name: 'San Francisco County', stateId: 'CA' },
-  { countyId: 'NYC', name: 'New York County', stateId: 'NY' },
-  { countyId: 'RDC', name: 'Riyadh District', stateId: 'RIY' },
+  { countyId: 'LAD', name: 'Los Angeles County', countryRegionId: 'USA', stateId: 'CA' },
+  { countyId: 'SFC', name: 'San Francisco County', countryRegionId: 'USA', stateId: 'CA' },
+  { countyId: 'NYC', name: 'New York County', countryRegionId: 'USA', stateId: 'NY' },
+  { countyId: 'RDC', name: 'Riyadh District', countryRegionId: 'SAU', stateId: 'RIY' },
 ];

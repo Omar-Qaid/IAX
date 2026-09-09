@@ -3,15 +3,26 @@ import { Link, Typography } from '@mui/material';
 import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
 import { StatusBadge } from '@shared/components/status/StatusBadge';
 import type { ColumnDef } from '@shared/components/data-grid/types';
-import { MOCK_CUSTOMERS, type Customer } from '@mocks/data/customers';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { CustomerQuickCreate } from '../components/CustomerQuickCreate';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { customerQuickCreateApi, type CustomerRecord } from '../api/customerQuickCreateApi';
+import { useNavigate } from 'react-router-dom';
+import { ROUTE_PATHS } from '@app/routes/routePaths';
+import { useNotifications } from '@shared/hooks/useNotifications';
 
 export function CustomerListPage(): React.ReactElement {
   const { t, currentLanguage } = useAppTranslation();
-  const [customers, setCustomers] = useState(MOCK_CUSTOMERS);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { notifyError, notifySuccess } = useNotifications();
+  const customerQuery = useQuery({
+    queryKey: ['accounts-receivable', 'customers'],
+    queryFn: ({ signal }) => customerQuickCreateApi.list(signal),
+  });
+  const customers = customerQuery.data ?? [];
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
-  const columns = useMemo<ColumnDef<Customer>[]>(() => [
+  const columns = useMemo<ColumnDef<CustomerRecord>[]>(() => [
     { field: 'accountNumber', headerName: 'fields.account', width: 150, pinned: 'left', renderCell: ({ row }) => <Link component="button" underline="none" sx={{ fontSize: '0.75rem', color: 'primary.main' }}>{row.accountNumber}</Link> },
     { field: 'name', headerName: 'fields.customerName', width: 205 },
     { field: 'nameAr', headerName: 'fields.arabicName', width: 250, align: 'right', headerAlign: 'right' },
@@ -27,13 +38,18 @@ export function CustomerListPage(): React.ReactElement {
   ], []);
 
   const commandIds = ['customer', 'sell', 'invoice', 'collect', 'service', 'market', 'commerce', 'general', 'creditManagement', 'options'] as const;
-  const config: EnterpriseListConfig<Customer> = {
+  const config: EnterpriseListConfig<CustomerRecord> = {
+    backCommand: { label: t('actions.back'), onClick: () => navigate(-1) },
+    showSearchCommand: true,
+    recordTableName: 'CustTable',
+    getAuditRecordId: (customer) => customer.recId,
     contextLabel: t('pages.customers.allCustomers'),
     viewLabel: t('pages.customers.standardView'),
     filterLabel: t('actions.filter'),
     informationLabel: t('common.information'),
     searchByLabel: t('fields.searchBy'),
     searchMode: 'field',
+    showFilterOnLoad: true,
     searchFields: [
       { field: 'phone', label: t('fields.phone') },
       { field: 'accountNumber', label: t('fields.account') },
@@ -42,7 +58,22 @@ export function CustomerListPage(): React.ReactElement {
     ],
     defaultSearchField: 'phone',
     locale: currentLanguage.code,
-    crud: { editLabel: t('actions.edit'), newLabel: t('actions.new'), deleteLabel: t('actions.delete'), onNew: () => setQuickCreateOpen(true) },
+    crud: {
+      editLabel: t('actions.edit'),
+      newLabel: t('actions.new'),
+      deleteLabel: t('actions.delete'),
+      onEdit: (customer) => navigate(ROUTE_PATHS.ACCOUNTS_RECEIVABLE.customer(customer.id)),
+      onNew: () => setQuickCreateOpen(true),
+      onDelete: async (selectedCustomers) => {
+        try {
+          await Promise.all(selectedCustomers.map((customer) => customerQuickCreateApi.remove(customer)));
+          await queryClient.invalidateQueries({ queryKey: ['accounts-receivable', 'customers'] });
+          notifySuccess(t('messages.deletedSuccessfully'));
+        } catch (error) {
+          notifyError(error instanceof Error ? error.message : t('errors.deleteFailed'));
+        }
+      },
+    },
     commands: commandIds.map((id) => ({ id, label: t(`customerCommands.${id}`) })),
     utilities: {
       personalizeLabel: t('utilities.personalize'), guideLabel: t('utilities.guide'), notificationsLabel: t('common.notifications'),
@@ -84,7 +115,10 @@ export function CustomerListPage(): React.ReactElement {
     enterpriseConfig={config}
     dataSource={{ type: 'controlled', rows: customers }}
     columns={columns}
+    loading={customerQuery.isLoading}
+    error={customerQuery.error instanceof Error ? customerQuery.error.message : null}
+    onRetry={() => customerQuery.refetch()}
     dataGridProps={{ storageKey: 'accounts-receivable.customers.reference-view' }}
-    dialogs={<CustomerQuickCreate open={quickCreateOpen} nextAccount={`C-${String(4304 + customers.length - MOCK_CUSTOMERS.length).padStart(7, '0')}`} onClose={() => setQuickCreateOpen(false)} onSave={(customer) => { setCustomers((current) => [...current, customer]); setQuickCreateOpen(false); }} />}
+    dialogs={<CustomerQuickCreate open={quickCreateOpen} nextAccount="—" onClose={() => setQuickCreateOpen(false)} onSave={async () => { await queryClient.invalidateQueries({ queryKey: ['accounts-receivable', 'customers'] }); setQuickCreateOpen(false); }} />}
   />;
 }

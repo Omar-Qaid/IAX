@@ -28,11 +28,12 @@ import type { ColumnDef, DataGridHandle, DataGridProps } from '@shared/component
 import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { ErrorState } from '@shared/components/feedback/ErrorState';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import { useNavigate } from 'react-router-dom';
+import { ActionPaneBackButton } from '@shared/components/action-pane/ActionPaneBackButton';
 import type { SimpleListDataSource } from './types';
 import { useSimpleListDataSource } from './useSimpleListDataSource';
 import { ConfirmationDialog } from '@shared/components/dialogs/ConfirmationDialog';
 import { useUnsavedChanges } from '@shared/hooks/useUnsavedChanges';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SearchIcon from '@mui/icons-material/Search';
 import { RecordAttachmentsButton, recordTableId } from '@shared/components/documents';
 
@@ -160,6 +161,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
     contentSx,
   } = props;
   const { t } = useAppTranslation();
+  const navigate = useNavigate();
   const gridRef = useRef<DataGridHandle>(null);
   const sourceState = useSimpleListDataSource(props.dataSource);
   const rows = sourceState.rows;
@@ -301,19 +303,11 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
       : { ...dataGridProps, rows, columns };
     const generatedActionPane = config && (
       <>
-        {config.backCommand && (
-          <ActionPaneGroup>
-            <ActionPaneButton
-              label={config.backCommand.label}
-              icon={
-                <ArrowBackIcon
-                  sx={{ transform: (theme) => (theme.direction === 'rtl' ? 'scaleX(-1)' : 'none') }}
-                />
-              }
-              onClick={config.backCommand.onClick}
-            />
-          </ActionPaneGroup>
-        )}
+        <ActionPaneBackButton
+          label={config.backCommand?.label ?? t('actions.back')}
+          onClick={config.backCommand?.onClick ?? (() => navigate(-1))}
+          disabled={isEditing}
+        />
         {!config.readOnly && (
           <EnterpriseCrudActions
             editLabel={config.crud.editLabel}
@@ -322,6 +316,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
             canEdit={
               selectedIds.length === 1 && Boolean(config.crud.onEdit || dataGridProps.masterForm)
             }
+            canNew={Boolean(config.crud.onNew || dataGridProps.masterForm)}
             canDelete={selectedIds.length > 0 && Boolean(config.crud.onDelete)}
             onEdit={
               selectedRow
@@ -364,7 +359,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
             ))}
           </ActionPaneGroup>
         )}
-        {config.showSearchCommand && (
+        {config.showSearchCommand !== false && (
           <ActionPaneGroup>
             <ActionPaneButton
               label={t('common.search', 'Search')}
@@ -584,6 +579,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
           </>
         }
       >
+        <ActionPaneBackButton label={t('actions.back')} onClick={() => navigate(-1)} />
         {props.actionPane}
       </ActionPane>
       {feedback ?? (

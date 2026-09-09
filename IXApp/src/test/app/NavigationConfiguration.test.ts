@@ -83,6 +83,9 @@ describe('module navigation configuration', () => {
     expect(findPageDefinitionForPath('/accounts-receivable/sales-orders/SO-1001')?.id).toBe(
       'sales-order-details'
     );
+    expect(findPageDefinitionForPath('/accounts-receivable/customers/2')?.id).toBe(
+      'customer-details'
+    );
     expect(findPageDefinitionForPath('/unsupported')).toBeUndefined();
   });
 

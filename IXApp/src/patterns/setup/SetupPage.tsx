@@ -4,7 +4,6 @@ import {
   Accordion, AccordionDetails, AccordionSummary, Alert, Box, MenuItem,
   Snackbar, Switch, TextField, Typography,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
@@ -13,6 +12,7 @@ import { ActionPaneButton } from '@shared/components/action-pane/ActionPaneButto
 import { ActionPaneGroup } from '@shared/components/action-pane/ActionPaneGroup';
 import { EnterpriseCommandUtilities } from '@shared/components/action-pane/EnterpriseCommandUtilities';
 import { OptionsMenu } from '@shared/components/action-pane/OptionsMenu';
+import { ActionPaneBackButton } from '@shared/components/action-pane/ActionPaneBackButton';
 import { SetupNavigation } from './SetupNavigation';
 import { useUnsavedChanges } from '@shared/hooks/useUnsavedChanges';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
@@ -80,9 +80,7 @@ export function SetupPage({ title, navigationItems, sections, initialValues, sav
   return (
     <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', bgcolor: '#faf9f8', p: 0.75 }}>
       <ActionPane variant="flat" endActions={<EnterpriseCommandUtilities personalizeLabel={t('utilities.personalize')} guideLabel={t('utilities.guide')} notificationsLabel={t('common.notifications')} refreshLabel={t('actions.refresh')} openWindowLabel={t('utilities.openWindow')} />}>
-        <ActionPaneGroup>
-          <ActionPaneButton label={t('actions.back')} icon={<ArrowBackIcon sx={{ transform: (theme) => theme.direction === 'rtl' ? 'scaleX(-1)' : 'none' }} />} onClick={() => navigate(-1)} />
-        </ActionPaneGroup>
+        <ActionPaneBackButton label={t('actions.back')} onClick={() => navigate(-1)} disabled={saving} />
         <ActionPaneGroup>
           <ActionPaneButton label={saveLabel} icon={<SaveOutlinedIcon />} disabled={!dirty || saving} onClick={save} />
         </ActionPaneGroup>

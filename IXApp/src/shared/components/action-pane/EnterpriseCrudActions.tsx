@@ -14,6 +14,7 @@ export interface EnterpriseCrudActionsProps {
   newLabel: string;
   deleteLabel: string;
   canEdit: boolean;
+  canNew?: boolean;
   canDelete: boolean;
   onEdit?: () => void;
   onNew?: () => void;
@@ -28,14 +29,14 @@ export interface EnterpriseCrudActionsProps {
   onCancel?: () => void;
 }
 
-export const EnterpriseCrudActions: React.FC<EnterpriseCrudActionsProps> = ({ editLabel, newLabel, deleteLabel, canEdit, canDelete, onEdit, onNew, onDelete, editPermission, newPermission, deletePermission, editing = false, saveLabel = 'Save', cancelLabel = 'Cancel', onSave, onCancel }) => (
+export const EnterpriseCrudActions: React.FC<EnterpriseCrudActionsProps> = ({ editLabel, newLabel, deleteLabel, canEdit, canNew = true, canDelete, onEdit, onNew, onDelete, editPermission, newPermission, deletePermission, editing = false, saveLabel = 'Save', cancelLabel = 'Cancel', onSave, onCancel }) => (
   <ActionPaneGroup>
     {editing ? <>
       <ActionPaneButton label={saveLabel} icon={<SaveIcon sx={{ fontSize: 16 }} />} onClick={onSave} permission={editPermission} />
       <ActionPaneButton label={cancelLabel} icon={<CancelIcon sx={{ fontSize: 16 }} />} onClick={onCancel} permission={editPermission} />
     </> : <>
       <ActionPaneButton label={editLabel} icon={<EditIcon sx={{ fontSize: 16 }} />} disabled={!canEdit} onClick={onEdit} permission={editPermission} />
-      <ActionPaneButton label={newLabel} icon={<AddIcon sx={{ fontSize: 16 }} />} onClick={onNew} permission={newPermission} />
+      <ActionPaneButton label={newLabel} icon={<AddIcon sx={{ fontSize: 16 }} />} disabled={!canNew} onClick={onNew} permission={newPermission} />
       <ActionPaneButton label={deleteLabel} icon={<DeleteIcon sx={{ fontSize: 16 }} />} disabled={!canDelete} onClick={onDelete} permission={deletePermission} />
     </>}
   </ActionPaneGroup>

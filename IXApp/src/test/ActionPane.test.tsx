@@ -36,4 +36,16 @@ describe('ActionPane Component Suite', () => {
     if (button) fireEvent.click(button);
     expect(handleClick).not.toHaveBeenCalled();
   });
+
+  it('disables actions that do not have an implementation', () => {
+    render(
+      <ActionPane>
+        <ActionPaneGroup label="Maintain">
+          <ActionPaneButton label="Future action" />
+        </ActionPaneGroup>
+      </ActionPane>
+    );
+
+    expect(screen.getByText('Future action').closest('button')).toBeDisabled();
+  });
 });

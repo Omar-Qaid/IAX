@@ -140,7 +140,7 @@ public sealed class OthersDBWorkflowMasterFromSeeder : OthersDBSeedData
               JSON_QUERY((SELECT CategoryId AS Id, CategoryName AS Name,
                                   NULLIF(CategoryNameAR, N'') AS NameAlias,
                                   COALESCE(DescriptionAR, Description) AS Description,
-                                  Activated AS Active, IsSystemDefined AS IsSystemDefined
+                                  Activated AS Active, CONVERT(bit, 0) AS IsSystemDefined
                            FROM dbo.WfCategories FOR JSON PATH)) AS Categories,
               JSON_QUERY((SELECT PerformerId AS Id, PerformerName AS Name,
                                   NULLIF(PerformerNameAR, N'') AS NameAlias,
@@ -154,14 +154,14 @@ public sealed class OthersDBWorkflowMasterFromSeeder : OthersDBSeedData
                                   CategoryId, Activated AS Active, CanRepeat AS IsRepeatable,
                                   CONVERT(tinyint, 0) AS RepeatIntervalHours,
                                   CONVERT(bit, 0) AS MandatoryDocuments,
-                                  IsSystemDefined AS IsSystemDefined, COALESCE(PriorityId, 1) AS PriorityId,
+                                  CONVERT(bit, 0) AS IsSystemDefined, COALESCE(PriorityId, 1) AS PriorityId,
                                   CONVERT(decimal(18,2), 0) AS Score,
                                   CONVERT(tinyint, 1) AS ProcessTypeId
                            FROM dbo.WfProcesses FOR JSON PATH)) AS Processes,
               JSON_QUERY((SELECT StepId AS Id, ProcessId, StepName AS Name,
                                   NULLIF(StepNameAR, N'') AS NameAlias,
                                   COALESCE(DescriptionAR, Description) AS Description,
-                                  StepOrder AS SortOrder, IsSystemDefined AS IsSystemDefined,
+                                  StepOrder AS SortOrder, CONVERT(bit, 0) AS IsSystemDefined,
                                   Activated AS Active,
                                   CONVERT(bit, 0) AS MustCompleteAll,
                                   CONVERT(decimal(18,2), 0) AS Score

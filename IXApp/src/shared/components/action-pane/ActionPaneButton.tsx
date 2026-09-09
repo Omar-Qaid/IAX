@@ -27,7 +27,7 @@ export const ActionPaneButton: React.FC<ActionPaneButtonProps> = ({
       size="small"
       startIcon={loading ? <CircularProgress size={14} color="inherit" /> : icon}
       onClick={onClick}
-      disabled={disabled || loading}
+      disabled={disabled || loading || !onClick}
       sx={actionPaneControlSx}
     >
       {label}
