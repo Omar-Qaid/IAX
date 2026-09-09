@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import type { ColumnDef, FilterModel, SortModel } from '../types';
 import { getNestedValue } from '../DataGridUtils';
 
@@ -23,11 +23,18 @@ export function useGridDataProcessing<T>({
     sortModel,
     serverSide,
 }: UseGridDataProcessingOptions<T>) {
+    // Cell editors replace render callbacks on each keystroke. Only data-related
+    // definitions should invalidate filtering/sorting of the complete dataset.
+    const [dataColumns, setDataColumns] = useState(columns);
+    if (columns.length !== dataColumns.length || columns.some((column, index) => {
+        const previous = dataColumns[index];
+        return column.field !== previous.field || column.type !== previous.type || column.valueGetter !== previous.valueGetter;
+    })) setDataColumns(columns);
     const processedRows = useMemo(() => {
         if (serverSide) return rows;
 
         const colByField = new Map<ColumnDef<T>['field'], ColumnDef<T>>();
-        for (const c of columns) colByField.set(c.field, c);
+        for (const c of dataColumns) colByField.set(c.field, c);
 
         let result: T[] = rows;
 
@@ -35,7 +42,7 @@ export function useGridDataProcessing<T>({
         if (globalSearch) {
             const lower = globalSearch.toLowerCase();
             result = result.filter(row =>
-                columns.some(col => {
+                dataColumns.some(col => {
                     const val = col.valueGetter ? col.valueGetter({ row }) : getNestedValue(row, col.field as string);
                     return val != null && String(val).toLowerCase().includes(lower);
                 }),
@@ -88,8 +95,8 @@ export function useGridDataProcessing<T>({
                             return isNumber
                                 ? Number(val) !== Number(filter.value)
                                 : strVal !== lowerValue;
-                        case 'gt': return val > filter.value;
-                        case 'lt': return val < filter.value;
+                        case 'gt': return isNumber ? Number(val) > Number(filter.value) : val > filter.value;
+                        case 'lt': return isNumber ? Number(val) < Number(filter.value) : val < filter.value;
                         case 'in': return inSet !== null && inSet.has(strVal);
                         case 'matches': return regex ? regex.test(String(val)) : true;
                         default: return true;
@@ -117,7 +124,7 @@ export function useGridDataProcessing<T>({
         }
 
         return result;
-    }, [serverSide, rows, columns, globalSearch, filters, sortModel]);
+    }, [serverSide, rows, dataColumns, globalSearch, filters, sortModel]);
 
     return processedRows;
 }

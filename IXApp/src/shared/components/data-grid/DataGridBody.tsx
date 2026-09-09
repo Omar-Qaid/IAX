@@ -88,6 +88,7 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>({
     return rows;
   }, [rows, masterForm, editingRowId, editValues]);
 
+  const focusedIndex = useMemo(() => focusedRowId == null ? -1 : displayRows.findIndex((row) => String(getRowId(row)) === String(focusedRowId)), [displayRows, getRowId, focusedRowId]);
   const rowVirtualizer = useVirtualizer({
     count: displayRows.length,
     getScrollElement: () => scrollContainerRef.current,
@@ -96,7 +97,6 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>({
     scrollMargin: headerHeight,
     rangeExtractor: (range) => {
       const visible = defaultRangeExtractor(range);
-      const focusedIndex = focusedRowId == null ? -1 : displayRows.findIndex((row) => String(getRowId(row)) === String(focusedRowId));
       return focusedIndex >= 0 && !visible.includes(focusedIndex) ? [...visible, focusedIndex].sort((a, b) => a - b) : visible;
     },
   });
@@ -108,7 +108,7 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>({
   const rawVirtualItems = rowVirtualizer.getVirtualItems();
   const virtualItems = rawVirtualItems.length > 0
     ? rawVirtualItems
-    : displayRows.slice(0, 30).map((_, i) => ({ index: i, start: i * rowHeight, size: rowHeight, key: i }));
+    : displayRows.slice(0, 30).map((_, i) => ({ index: i, start: headerHeight + i * rowHeight, size: rowHeight, key: i }));
 
   React.useImperativeHandle(ref, () => ({
     scrollToIndex: (index: number) => {

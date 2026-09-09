@@ -78,3 +78,18 @@ it('bounds initial DOM work for a large grid before the viewport is measured', (
   expect(screen.getByRole('grid')).toHaveAttribute('aria-rowcount', '10000');
   expect(screen.getAllByRole('gridcell').length).toBeLessThanOrEqual(60);
 });
+
+it('reuses processed rows when only cell rendering and layout change', () => {
+  const getter = vi.fn(({ row }: { row: Row }) => row.amount);
+  const input = columns.map(column => column.field === 'amount' ? { ...column, valueGetter: getter } : column);
+  const rows = [{ id: 'a', amount: 10, active: true }, { id: 'b', amount: 2, active: false }];
+  const sortModel = [{ field: 'amount', sort: 'asc' as const }];
+  const filters: [] = [];
+  const { result, rerender } = renderHook(({ definitions }) => useGridDataProcessing({ rows, columns: definitions, sortModel, filters, serverSide: false, globalSearch: '' }), { initialProps: { definitions: input } });
+  expect(result.current.map(row => row.id)).toEqual(['b', 'a']);
+  const processed = result.current;
+  getter.mockClear();
+  rerender({ definitions: input.map(column => ({ ...column, width: 240, renderCell: () => 'editing' })) });
+  expect(result.current).toBe(processed);
+  expect(getter).not.toHaveBeenCalled();
+});
