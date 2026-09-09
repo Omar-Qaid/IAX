@@ -3,6 +3,7 @@ import type React from 'react';
 export type SortDirection = 'asc' | 'desc' | null;
 
 export interface DataGridHandle {
+  focusCell: (rowIndex: number, columnIndex: number) => void;
   startAddRow: () => void;
   startEditRow: (id: string | number) => void;
   saveEdit: () => void;

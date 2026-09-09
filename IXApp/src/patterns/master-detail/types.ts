@@ -16,5 +16,10 @@ export interface MasterDetailPageProps {
   filterLabel: string;
   emptyLabel: string;
   actionPane: ReactNode;
+  backAction?: ReactNode;
+  endActions?: ReactNode;
+  viewLabel?: string;
+  navigationLabel?: string;
+  tabs?: ReactNode;
   children: ReactNode;
 }

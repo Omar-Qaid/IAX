@@ -19,6 +19,7 @@ import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { getLogicalDrawerAnchor } from '@shared/hooks/useLogicalDrawerAnchor';
 
 export interface ListDetailsLayoutProps {
+  detailEndPadding?: number;
   listPane: React.ReactNode;
   header: React.ReactNode;
   sections: DetailSectionConfig[];
@@ -37,6 +38,7 @@ export interface ListDetailsLayoutProps {
 }
 
 export function ListDetailsLayout({
+  detailEndPadding,
   listPane,
   header,
   sections,
@@ -236,7 +238,8 @@ export function ListDetailsLayout({
             flex: 1,
             overflowY: 'auto',
             overflowX: 'hidden',
-            paddingInlineEnd: { xs: 0, sm: 1, md: '28px' },
+            paddingInlineEnd:
+              detailEndPadding != null ? `${detailEndPadding}px` : { xs: 0, sm: 1, md: '28px' },
             scrollbarWidth: 'thin',
           }}
         >
@@ -298,6 +301,41 @@ export function ListDetailsLayout({
                   >
                     {section.title}
                   </Typography>
+                  {Boolean(section.summaryItems?.length) && (
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        marginInlineStart: 'auto',
+                        paddingInlineStart: 2,
+                        paddingInlineEnd: 1.5,
+                        minWidth: 0,
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {section.summaryItems?.map((item, index) => (
+                        <Typography
+                          component="span"
+                          key={item.id}
+                          title={item.label}
+                          aria-label={item.label}
+                          sx={{
+                            fontSize: 11,
+                            lineHeight: '20px',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            maxWidth: 220,
+                            px: 1.25,
+                            borderInlineStart: index ? '1px solid #c8c6c4' : undefined,
+                            color: item.accent ? 'primary.main' : 'text.primary',
+                          }}
+                        >
+                          {item.value ?? '-'}
+                        </Typography>
+                      ))}
+                    </Box>
+                  )}
                 </AccordionSummary>
                 <AccordionDetails
                   sx={{

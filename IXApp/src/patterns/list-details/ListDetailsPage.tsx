@@ -348,7 +348,7 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
             label={t('common.search', 'Search')}
             icon={<SearchIcon />}
             disabled={state.editing}
-            onClick={state.toggleFilter}
+            onClick={config.onSearch ?? state.toggleFilter}
           />
           <OptionsMenu
             record={state.selected}
@@ -378,6 +378,7 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
           <LoadingState />
         ) : (
           <ListDetailsLayout
+            detailEndPadding={config.presentation?.detailEndPadding}
             editing={displayedEditing}
             values={config.getValues(displayedRecord)}
             yesLabel={labels.yes}
@@ -396,22 +397,24 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
             listPane={listPane}
             header={
               <>
-                <RecordHeader
-                  title={title}
-                  yesLabel={labels.yes}
-                  noLabel={labels.no}
-                  record={displayedRecord}
-                  fields={config.headerFields.map((field) =>
-                    config.numberSequence && field.id === String(config.numberSequence.field)
-                      ? { ...field, disabled: !state.numberSequenceMetadata?.manual }
-                      : field
-                  )}
-                  editing={displayedEditing}
-                  maxWidth={config.presentation?.headerMaxWidth}
-                  minHeight={config.presentation?.recordHeaderMinHeight}
-                  compact={config.presentation?.compactRecordHeader}
-                  onChange={record ? state.changeHeader : () => undefined}
-                />
+                {config.detailHeader ?? (
+                  <RecordHeader
+                    title={title}
+                    yesLabel={labels.yes}
+                    noLabel={labels.no}
+                    record={displayedRecord}
+                    fields={config.headerFields.map((field) =>
+                      config.numberSequence && field.id === String(config.numberSequence.field)
+                        ? { ...field, disabled: !state.numberSequenceMetadata?.manual }
+                        : field
+                    )}
+                    editing={displayedEditing}
+                    maxWidth={config.presentation?.headerMaxWidth}
+                    minHeight={config.presentation?.recordHeaderMinHeight}
+                    compact={config.presentation?.compactRecordHeader}
+                    onChange={record ? state.changeHeader : () => undefined}
+                  />
+                )}
                 {record && Object.keys(state.validationErrors).length > 0 && (
                   <Alert severity="error" sx={{ mb: 1 }}>
                     <Typography sx={{ fontWeight: 600, fontSize: '0.75rem' }}>

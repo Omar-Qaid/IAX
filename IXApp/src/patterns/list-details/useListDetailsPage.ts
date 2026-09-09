@@ -63,7 +63,9 @@ export function useListDetailsPage<T extends ListDetailRecord>(
     staleTime: 0,
   });
   const records = controlledRecords ?? localRecords;
-  const [selectedId, setSelectedId] = useState<string | null>(records[0]?.id ?? null);
+  const [selectedId, setSelectedId] = useState<string | null>(
+    config.initialSelectedId ?? records[0]?.id ?? null
+  );
   const filterStorageId =
     (config.filterStorageKey ??
       config.presentation?.storageKey ??

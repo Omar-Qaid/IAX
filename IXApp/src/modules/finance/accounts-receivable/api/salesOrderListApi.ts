@@ -21,6 +21,16 @@ export interface SalesOrderListRecord {
   paymentTerms: string;
 }
 
+export type SalesOrderHeaderInput = Pick<
+  SalesOrderListRecord,
+  | 'invoiceAccount'
+  | 'currencyCode'
+  | 'customerReference'
+  | 'paymentTerms'
+  | 'deliveryMode'
+  | 'deliveryDate'
+>;
+
 type SalesOrderListDto = Omit<SalesOrderListRecord, 'id'>;
 
 export interface SalesOrderQuickCreateInput {
@@ -56,14 +66,31 @@ const toRecord = (order: SalesOrderListDto): SalesOrderListRecord => ({
 
 export const salesOrderListApi = {
   async list(signal?: AbortSignal): Promise<SalesOrderListRecord[]> {
-    const response = await apiClient.get<ApiResponse<SalesOrderListDto[]>>('/v1/SalesTable/list', { signal });
+    const response = await apiClient.get<ApiResponse<SalesOrderListDto[]>>('/v1/SalesTable/list', {
+      signal,
+    });
     if (!response.data.success || !Array.isArray(response.data.data))
-      throw new ApiError(response.data.message || 'The sales-order list response did not contain data.', 500);
+      throw new ApiError(
+        response.data.message || 'The sales-order list response did not contain data.',
+        500
+      );
     return response.data.data.map(toRecord);
   },
 
+  async updateHeader(id: string, input: SalesOrderHeaderInput): Promise<void> {
+    const response = await apiClient.put<ApiResponse<unknown>>(
+      `/v1/SalesTable/${id}/header`,
+      input
+    );
+    if (!response.data.success)
+      throw new ApiError(response.data.message || 'The sales order could not be saved.', 500);
+  },
+
   async create(input: SalesOrderQuickCreateInput): Promise<SalesOrderListRecord> {
-    const response = await apiClient.post<ApiResponse<SalesOrderListDto>>('/v1/SalesTable/quick-create', input);
+    const response = await apiClient.post<ApiResponse<SalesOrderListDto>>(
+      '/v1/SalesTable/quick-create',
+      input
+    );
     if (!response.data.success || !response.data.data)
       throw new ApiError(response.data.message || 'The sales order could not be created.', 500);
     return toRecord(response.data.data);

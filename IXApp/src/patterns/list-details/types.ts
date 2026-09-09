@@ -52,6 +52,8 @@ export interface DetailSectionConfig {
   detailsPadding?: number | string;
   visualVariant?: 'default' | 'legalEntity';
   hideHeader?: boolean;
+  /** Compact values at the trailing edge of the section heading. */
+  summaryItems?: Array<{ id: string; label: string; value?: ReactNode; accent?: boolean }>;
 }
 
 export interface ListDetailRecord {
@@ -76,6 +78,9 @@ export interface ListDetailsHeaderField<T> extends Omit<DetailFieldConfig, 'name
 export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
   /** Shows records as a selectable reference list without record-level CRUD actions. */
   readOnly?: boolean;
+  initialSelectedId?: string;
+  detailHeader?: ReactNode;
+  onSearch?: () => void;
   dataSource: ListDetailsDataSource<T>;
   createRecord: () => T;
   getPrimaryText: (record: T) => string;
@@ -127,6 +132,7 @@ export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
   }>;
   presentation?: {
     mode: 'list' | 'grid';
+    detailEndPadding?: number;
     columns?: ColumnDef<T>[];
     storageKey?: string;
     listWidth?: number;

@@ -214,6 +214,7 @@ function DataGridInternal<T>({
     });
 
     useImperativeHandle(ref, () => ({
+        focusCell: (r: number, c: number) => focusCell(r, c),
         startAddRow: handleAddRow,
         startEditRow: (id: string | number) => {
             const rowToEdit = processedRows.find(r => getRowId(r) === id);
@@ -330,7 +331,8 @@ function DataGridInternal<T>({
             if (cell) {
                 const input = cell.querySelector('input, textarea') as HTMLElement;
                 if (input) input.focus();
-                else cell.focus();
+                else (cell.querySelector<HTMLElement>('[data-grid-cell-focus]') ?? cell).focus();
+                cell.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
             }
         }, 30);
     }, [processedRows, getColCount, selectionMode, getRowId, handleSelectionChange, editingRowId, masterForm]);
