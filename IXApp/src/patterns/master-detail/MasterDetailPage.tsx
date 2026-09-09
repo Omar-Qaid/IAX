@@ -77,9 +77,31 @@ export function MasterDetailPage({
             )}
           </List>
         </Box>
-        <Box role="separator" tabIndex={0} aria-label={filterLabel} aria-orientation="vertical" aria-valuemin={180} aria-valuemax={420} aria-valuenow={navigationWidth}
-          onKeyDown={(event) => { if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') { event.preventDefault(); setNavigationWidth((width) => Math.max(180, Math.min(420, width + (event.key === 'ArrowRight' ? 20 : -20)))); } }}
-          sx={{ width: 5, flexShrink: 0, bgcolor: 'divider', cursor: 'col-resize', display: { xs: 'none', md: 'block' }, '&:focus': { bgcolor: 'primary.main' } }} />
+        <Box
+          role="separator"
+          tabIndex={0}
+          aria-label={filterLabel}
+          aria-orientation="vertical"
+          aria-valuemin={180}
+          aria-valuemax={420}
+          aria-valuenow={navigationWidth}
+          onKeyDown={(event) => {
+            if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+              event.preventDefault();
+              setNavigationWidth((width) =>
+                Math.max(180, Math.min(420, width + (event.key === 'ArrowRight' ? 20 : -20)))
+              );
+            }
+          }}
+          sx={{
+            width: 5,
+            flexShrink: 0,
+            bgcolor: 'divider',
+            cursor: 'col-resize',
+            display: { xs: 'none', md: 'block' },
+            '&:focus': { bgcolor: 'primary.main' },
+          }}
+        />
         <Box component="main" sx={{ flex: 1, minWidth: 0 }}>
           {subtitle && (
             <Typography variant="body2" color="primary" sx={{ mb: 1 }}>

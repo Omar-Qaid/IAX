@@ -1,15 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import {
-
-
-
-  Box,
-  Button,
-  Stack,
-  Tab,
-  Tabs,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Stack, Tab, Tabs, Typography } from '@mui/material';
 import { MasterDetailSection } from '@patterns/master-detail/MasterDetailSection';
 import { EnterpriseCrudActions } from '@shared/components/action-pane/EnterpriseCrudActions';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -78,8 +68,14 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       {field(t('fields.requestedDelivery'), order.requestedDeliveryDate)}
     </Box>
   );
-  const selectedLine: DetailLine | undefined = order.lines.find((line) => line.id === selectedLineId) ?? order.lines[0];
-  const section = (title: string, content: React.ReactNode, expanded = true) => <MasterDetailSection key={`${tab}-${title}`} title={title} defaultExpanded={expanded}>{content}</MasterDetailSection>;  return (
+  const selectedLine: DetailLine | undefined =
+    order.lines.find((line) => line.id === selectedLineId) ?? order.lines[0];
+  const section = (title: string, content: React.ReactNode, expanded = true) => (
+    <MasterDetailSection key={`${tab}-${title}`} title={title} defaultExpanded={expanded}>
+      {content}
+    </MasterDetailSection>
+  );
+  return (
     <MasterDetailPage
       records={MOCK_SALES_ORDERS.map((record) => ({
         id: record.id,
@@ -97,7 +93,14 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       actionPane={
         <>
           <ActionPaneBackButton label={t('actions.back')} onClick={() => navigate(-1)} />
-          <EnterpriseCrudActions editLabel={t('actions.edit')} newLabel={t('actions.new')} deleteLabel={t('actions.delete')} canEdit={false} canNew={false} canDelete={false} />
+          <EnterpriseCrudActions
+            editLabel={t('actions.edit')}
+            newLabel={t('actions.new')}
+            deleteLabel={t('actions.delete')}
+            canEdit={false}
+            canNew={false}
+            canDelete={false}
+          />
           {[
             'Sales order',
             'Sell',
