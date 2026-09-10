@@ -9,7 +9,10 @@
     "resizeRecordList": "تغيير عرض قائمة السجلات",
     "loadingMoreRecords": "جارٍ تحميل المزيد من السجلات"
   },
-  "app": { "name": "IXApp", "tagline": "نظام تخطيط موارد المؤسسة" },
+  "app": {
+    "name": "IXApp",
+    "tagline": "نظام تخطيط موارد المؤسسة"
+  },
   "nav": {
     "app_title": "نظام IXApp المؤسسي",
     "app_title_short": "IXApp",
@@ -66,7 +69,10 @@
     "global_search": "البحث عن صفحة"
   },
   "pages": {
-    "login": { "title": "تسجيل الدخول", "subtitle": "أدخل اسم حسابك للمتابعة." },
+    "login": {
+      "title": "تسجيل الدخول",
+      "subtitle": "أدخل اسم حسابك للمتابعة."
+    },
     "requestSubmission": {
       "title": "تقديم الطلبات",
       "category": "الفئة",
@@ -114,28 +120,69 @@
       "title": "معلمات الحسابات المدينة",
       "standardView": "طريقة العرض القياسية"
     },
-    "paymentMethods": { "title": "طرق الدفع - العملاء", "standardView": "طريقة العرض القياسية" },
-    "paymentTerms": { "title": "شروط الدفع", "standardView": "طريقة العرض القياسية" },
+    "paymentMethods": {
+      "title": "طرق الدفع - العملاء",
+      "standardView": "طريقة العرض القياسية"
+    },
+    "paymentTerms": {
+      "title": "شروط الدفع",
+      "standardView": "طريقة العرض القياسية"
+    },
     "salesOrders": {
       "title": "أوامر البيع",
       "subtitle": "انقر نقراً مزدوجاً على أمر لفتح تفاصيل المستند"
     },
-    "salesOrder": { "title": "أمر البيع {{number}}", "breadcrumb": "أمر البيع" },
-    "currencies": { "title": "العملات", "subtitle": "إعداد العملات للقراءة فقط" },
-    "wfProcesses": { "title": "عمليات سير العمل" },
-    "wfProcessBuilder": { "title": "مصمم العمليات" },
-    "wfCategories": { "title": "فئات سير العمل" },
-    "wfActivityTypes": { "title": "أنواع أنشطة سير العمل" },
-    "wfDataTypes": { "title": "أنواع بيانات سير العمل" },
-    "wfControls": { "title": "عناصر تحكم سير العمل" },
-    "wfPriorities": { "title": "أولويات سير العمل" },
-    "wfVariables": { "title": "متغيرات سير العمل" },
-    "wfSteps": { "title": "خطوات سير العمل" },
-    "wfActivities": { "title": "أنشطة سير العمل" },
-    "sysNumberSequences": { "title": "التسلسلات الرقمية", "command": "التسلسل الرقمي" },
-    "exchangeRateTypes": { "title": "أنواع أسعار الصرف" },
-    "legalEntities": { "title": "الكيانات القانونية" },
-    "exchangeRates": { "title": "أسعار صرف العملات" },
+    "salesOrder": {
+      "title": "أمر البيع {{number}}",
+      "breadcrumb": "أمر البيع"
+    },
+    "currencies": {
+      "title": "العملات",
+      "subtitle": "إعداد العملات للقراءة فقط"
+    },
+    "wfProcesses": {
+      "title": "عمليات سير العمل"
+    },
+    "wfProcessBuilder": {
+      "title": "مصمم العمليات"
+    },
+    "wfCategories": {
+      "title": "فئات سير العمل"
+    },
+    "wfActivityTypes": {
+      "title": "أنواع أنشطة سير العمل"
+    },
+    "wfDataTypes": {
+      "title": "أنواع بيانات سير العمل"
+    },
+    "wfControls": {
+      "title": "عناصر تحكم سير العمل"
+    },
+    "wfPriorities": {
+      "title": "أولويات سير العمل"
+    },
+    "wfVariables": {
+      "title": "متغيرات سير العمل"
+    },
+    "wfSteps": {
+      "title": "خطوات سير العمل"
+    },
+    "wfActivities": {
+      "title": "أنشطة سير العمل"
+    },
+    "sysNumberSequences": {
+      "title": "التسلسلات الرقمية",
+      "command": "التسلسل الرقمي"
+    },
+    "exchangeRateTypes": {
+      "title": "أنواع أسعار الصرف"
+    },
+    "legalEntities": {
+      "title": "الكيانات القانونية"
+    },
+    "exchangeRates": {
+      "title": "أسعار صرف العملات"
+    },
     "settings": {
       "notificationTemplateLoadError": "???? ????? ????? ?????????. ???? ?? ???????? ????? ??? ????.",
       "title": "إعدادات التطبيق",
@@ -146,7 +193,10 @@
       "api": "تكامل الواجهة البرمجية: ASP.NET Core REST",
       "localization": "اللغات: الإنجليزية والعربية"
     },
-    "accessDenied": { "title": "الوصول مرفوض", "message": "ليس لديك إذن لعرض هذه الصفحة." },
+    "accessDenied": {
+      "title": "الوصول مرفوض",
+      "message": "ليس لديك إذن لعرض هذه الصفحة."
+    },
     "notFound": {
       "title": "الصفحة غير موجودة",
       "message": "الصفحة المطلوبة غير موجودة أو غير متاحة."
@@ -169,11 +219,28 @@
       "direction": "اتجاه النص",
       "orientation": "اتجاه الصفحة"
     },
-    "languages": { "english": "الإنجليزية", "arabic": "العربية" },
-    "directions": { "ltr": "من اليسار إلى اليمين", "rtl": "من اليمين إلى اليسار" },
-    "orientation": { "portrait": "عمودي", "landscape": "أفقي" },
-    "status": { "draft": "مسودة", "published": "منشور", "archived": "مؤرشف" },
-    "actions": { "publish": "نشر", "archive": "أرشفة", "delete": "حذف" },
+    "languages": {
+      "english": "الإنجليزية",
+      "arabic": "العربية"
+    },
+    "directions": {
+      "ltr": "من اليسار إلى اليمين",
+      "rtl": "من اليمين إلى اليسار"
+    },
+    "orientation": {
+      "portrait": "عمودي",
+      "landscape": "أفقي"
+    },
+    "status": {
+      "draft": "مسودة",
+      "published": "منشور",
+      "archived": "مؤرشف"
+    },
+    "actions": {
+      "publish": "نشر",
+      "archive": "أرشفة",
+      "delete": "حذف"
+    },
     "editor": {
       "createTitle": "إنشاء قالب طباعة",
       "editTitle": "تعديل مسودة قالب الطباعة"
@@ -188,8 +255,14 @@
       "containerHint": "حدد قسماً أو صفاً أو عموداً قبل إضافة مكون لوضعه داخل الحاوية.",
       "moveUp": "نقل لأعلى",
       "moveDown": "نقل لأسفل",
-      "regions": { "header": "الرأس", "sections": "المحتوى", "footer": "التذييل" },
-      "pageSizes": { "letter": "رسالة" },
+      "regions": {
+        "header": "الرأس",
+        "sections": "المحتوى",
+        "footer": "التذييل"
+      },
+      "pageSizes": {
+        "letter": "رسالة"
+      },
       "groups": {
         "content": "المحتوى",
         "format": "التنسيق",
@@ -263,9 +336,21 @@
         "repeatHeader": "تكرار رأس الجدول في كل صفحة",
         "barcodeFormat": "تنسيق الباركود"
       },
-      "alignments": { "start": "البداية", "center": "الوسط", "end": "النهاية" },
-      "fontWeights": { "normal": "عادي", "medium": "متوسط", "bold": "عريض" },
-      "imageFits": { "contain": "احتواء", "cover": "تغطية", "fill": "تمديد" },
+      "alignments": {
+        "start": "البداية",
+        "center": "الوسط",
+        "end": "النهاية"
+      },
+      "fontWeights": {
+        "normal": "عادي",
+        "medium": "متوسط",
+        "bold": "عريض"
+      },
+      "imageFits": {
+        "contain": "احتواء",
+        "cover": "تغطية",
+        "fill": "تمديد"
+      },
       "sources": {
         "system": "حقول النظام",
         "company": "حقول الشركة",
@@ -281,7 +366,10 @@
         "dateTime": "تاريخ ووقت",
         "boolean": "نعم / لا"
       },
-      "imageSources": { "companyLogo": "شعار الشركة", "url": "رابط صورة" },
+      "imageSources": {
+        "companyLogo": "شعار الشركة",
+        "url": "رابط صورة"
+      },
       "systemFields": {
         "requestNumber": "رقم الطلب",
         "requestDate": "تاريخ الطلب",
@@ -377,7 +465,6 @@
     "orderTotal": "إجمالي الأمر",
     "line": "السطر",
     "item": "الصنف",
-    "description": "الوصف",
     "quantity": "الكمية",
     "unitPrice": "سعر الوحدة",
     "lineTotal": "إجمالي السطر",
@@ -427,7 +514,7 @@
     "yes": "نعم",
     "no": "لا",
     "none": "لا شيء",
-    "help": "مساعدة",
+    "help": "المساعدة",
     "all": "الكل",
     "standardView": "طريقة العرض القياسية",
     "active": "نشط",
@@ -449,11 +536,9 @@
     "search": "بحث",
     "clear": "مسح",
     "close": "إغلاق",
-    "none": "لا شيء",
     "account": "الحساب",
     "notifications": "الإشعارات",
     "settings": "الإعدادات",
-    "help": "المساعدة",
     "logout": "تسجيل الخروج",
     "expand_all": "توسيع الكل",
     "collapse_all": "طي الكل",
@@ -686,7 +771,12 @@
     "categorySystem": "النظام",
     "categoryAlert": "تنبيه",
     "viewFile": "عرض الملف",
-    "priority": { "Critical": "حرج", "High": "عالٍ", "Medium": "متوسط", "Low": "منخفض" },
+    "priority": {
+      "Critical": "حرج",
+      "High": "عالٍ",
+      "Medium": "متوسط",
+      "Low": "منخفض"
+    },
     "mark_all_read": "تعيين الكل كمقروء",
     "all": "الكل",
     "unread": "غير المقروء",
@@ -709,9 +799,16 @@
     "editAddress": "تعديل العنوان",
     "newAddress": "عنوان جديد"
   },
-  "workflow": { "builder": "المصمم" },
+  "workflow": {
+    "builder": "المصمم"
+  },
   "mail": {
-    "folders": { "all": "الكل", "inbox": "الوارد", "sent": "المرسل", "important": "المهم" },
+    "folders": {
+      "all": "الكل",
+      "inbox": "الوارد",
+      "sent": "المرسل",
+      "important": "المهم"
+    },
     "fields": {
       "request": "الطلب",
       "process": "العملية",
@@ -750,7 +847,11 @@
       "tracking": "تعذر تحميل سجل تتبع سير العمل.",
       "details": "تعذر تحميل تفاصيل الطلب."
     },
-    "timeline": { "responsible": "المسؤول:", "action": "الإجراء:", "notes": "الملاحظات:" },
+    "timeline": {
+      "responsible": "المسؤول:",
+      "action": "الإجراء:",
+      "notes": "الملاحظات:"
+    },
     "printout": "نسخة الطباعة",
     "view": "عرض",
     "filter": "تصفية",
@@ -836,12 +937,20 @@
     "logoAlt": "شعار {{company}}"
   },
   "wfProcess": {
-    "commands": { "processBuilder": "مصمم العمليات", "variables": "المتغيرات", "steps": "الخطوات" },
-    "sections": { "configuration": "إعداد العملية" },
-    "groups": { "classification": "التصنيف", "behavior": "السلوك" },
+    "commands": {
+      "processBuilder": "مصمم العمليات",
+      "variables": "المتغيرات",
+      "steps": "الخطوات"
+    },
+    "sections": {
+      "configuration": "إعداد العملية"
+    },
+    "groups": {
+      "classification": "التصنيف",
+      "behavior": "السلوك"
+    },
     "fields": {
       "repeatIntervalHours": "فترة التكرار (بالساعات)",
-
       "code": "رمز العملية",
       "name": "الاسم الإنجليزي",
       "nameAR": "الاسم العربي",
@@ -867,8 +976,12 @@
     }
   },
   "wfVariable": {
-    "sections": { "configuration": "إعداد المتغير" },
-    "groups": { "assignment": "التعيين" },
+    "sections": {
+      "configuration": "إعداد المتغير"
+    },
+    "groups": {
+      "assignment": "التعيين"
+    },
     "fields": {
       "code": "رمز المتغير",
       "name": "الاسم الإنجليزي",
@@ -881,8 +994,13 @@
     }
   },
   "wfStep": {
-    "sections": { "configuration": "إعداد الخطوة" },
-    "groups": { "assignment": "التعيين", "behavior": "السلوك" },
+    "sections": {
+      "configuration": "إعداد الخطوة"
+    },
+    "groups": {
+      "assignment": "التعيين",
+      "behavior": "السلوك"
+    },
     "fields": {
       "code": "رمز الخطوة",
       "name": "الاسم الإنجليزي",
@@ -897,8 +1015,14 @@
     }
   },
   "wfActivity": {
-    "sections": { "configuration": "إعداد النشاط" },
-    "groups": { "assignment": "التعيين", "notifications": "الإشعارات", "behavior": "السلوك" },
+    "sections": {
+      "configuration": "إعداد النشاط"
+    },
+    "groups": {
+      "assignment": "التعيين",
+      "notifications": "الإشعارات",
+      "behavior": "السلوك"
+    },
     "fields": {
       "canViewPreviousSteps": "السماح بعرض الخطوات السابقة",
       "canViewPreviousDocuments": "السماح بعرض المستندات السابقة",
@@ -923,7 +1047,10 @@
     }
   },
   "sysNumberSequence": {
-    "actions": { "moveUp": "نقل لأعلى", "moveDown": "نقل لأسفل" },
+    "actions": {
+      "moveUp": "نقل لأعلى",
+      "moveDown": "نقل لأسفل"
+    },
     "sections": {
       "identification": "التعريف",
       "scopeParameters": "معلمات النطاق",
@@ -980,7 +1107,11 @@
       "preallocation": "التخصيص المسبق",
       "quantityOfNumbers": "كمية الأرقام"
     },
-    "segmentTypes": { "company": "الشركة", "constant": "ثابت", "alphanumeric": "أبجدي رقمي" },
+    "segmentTypes": {
+      "company": "الشركة",
+      "constant": "ثابت",
+      "alphanumeric": "أبجدي رقمي"
+    },
     "referencesUnavailable": "صفوف المراجع غير متاحة في واجهة SysNumberSequence الحالية.",
     "help": {
       "cleanup": "يعيد التنظيف الكامل دورياً تخصيصات التسلسل المستمر المتوقفة إلى مجموعة الأرقام المتاحة. فعّل التنظيف وحدد الفاصل الذي تستخدمه الواجهة الخلفية.",
@@ -1184,8 +1315,16 @@
       "noteColor": "لون الملاحظة",
       "controlType": "نوع عنصر التحكم",
       "comparisonValue": "قيمة المقارنة",
-      "columns": { "one": "عمود واحد", "two": "عمودان", "full": "صف كامل" },
-      "severityValues": { "Error": "خطأ", "Warning": "تحذير", "Information": "معلومة" },
+      "columns": {
+        "one": "عمود واحد",
+        "two": "عمودان",
+        "full": "صف كامل"
+      },
+      "severityValues": {
+        "Error": "خطأ",
+        "Warning": "تحذير",
+        "Information": "معلومة"
+      },
       "validationTypes": {
         "required": "مطلوب",
         "minLength": "الحد الأدنى للطول",
@@ -1292,7 +1431,7 @@
         "yearly": "سنويًا",
         "startsAt": "تاريخ ووقت البدء",
         "timeZone": "المنطقة الزمنية",
-        "draftHelp": "مسودة جدولة لهذا المتصفح. لم يتم ربط إنشاء الطلبات تلقائيًا بعد.",
+        "draftHelp": "???? ??????? ??????? ?????? ?? ???? ??????? ?????? ????? ??????? ?? ???????. ????? ??????? ??????? ?????? ?? HcmWorker ?Showroom ???.",
         "owner": "مالك الطلب",
         "systemAdmin": "مسؤول النظام",
         "processOwner": "مالك العملية",
@@ -1308,7 +1447,9 @@
         "targetField": "حقل الطلب",
         "sourceField": "الحقل المصدر",
         "unavailableField": "الحقل غير متاح — أعد الاختيار",
-        "addMapping": "إضافة ربط حقل"
+        "addMapping": "إضافة ربط حقل",
+        "executionAccountHelp": "???? ??????? ????? ???????? ???? ???? ???????. ?????? ?????? ?????? ?? ?????? ?????? ?????? ????????.",
+        "saved": "?? ??? ??????? ??? ??????."
       },
       "requestControlOptions": "خيارات عنصر تحكم الطلب ({{count}})",
       "requestControlValidation": "تحقق عنصر تحكم الطلب ({{count}})",
@@ -1337,7 +1478,9 @@
       "addCondition": "إضافة شرط",
       "clearCondition": "مسح الشرط"
     },
-    "exportDialog": { "title": "تصدير العملية" },
+    "exportDialog": {
+      "title": "تصدير العملية"
+    },
     "confirmReset": "هل تريد تجاهل مسودة مصمم العمليات المحلية؟ لن تُحذف السجلات المحفوظة على الخادم.",
     "messages": {
       "loadFailed": "تعذر تحميل مصمم العمليات.",
@@ -1437,8 +1580,17 @@
       "date": "تاريخ",
       "object": "كائن"
     },
-    "triggerSources": { "none": "بلا", "requestControl": "عنصر تحكم الطلب", "activity": "النشاط" },
-    "actionTypes": { "approve": "موافقة", "reject": "رفض", "return": "إرجاع", "escalate": "تصعيد" },
+    "triggerSources": {
+      "none": "بلا",
+      "requestControl": "عنصر تحكم الطلب",
+      "activity": "النشاط"
+    },
+    "actionTypes": {
+      "approve": "موافقة",
+      "reject": "رفض",
+      "return": "إرجاع",
+      "escalate": "تصعيد"
+    },
     "activityTypes": {
       "approval": "موافقة",
       "review": "مراجعة",
@@ -1586,7 +1738,9 @@
   },
   "paymentMethods": {
     "newMethod": "طريقة جديدة",
-    "actions": { "setup": "إعداد" },
+    "actions": {
+      "setup": "إعداد"
+    },
     "commands": {
       "paymentSpecification": "مواصفات الدفع",
       "paymentFeeSetup": "إعداد رسوم الدفع",
@@ -1594,7 +1748,10 @@
       "fileAnalyze": "تحليل الملف",
       "options": "خيارات"
     },
-    "sections": { "general": "عام", "fileFormats": "تنسيقات الملفات" },
+    "sections": {
+      "general": "عام",
+      "fileFormats": "تنسيقات الملفات"
+    },
     "groups": {
       "file": "الملف",
       "posting": "الترحيل",
@@ -1645,9 +1802,19 @@
   },
   "paymentTerms": {
     "newTerm": "شرط جديد",
-    "commands": { "translations": "الترجمات", "options": "خيارات" },
-    "sections": { "setup": "إعداد", "other": "أخرى" },
-    "options": { "net": "صافي", "noUpdate": "لا يوجد تحديث", "normal": "عادي" },
+    "commands": {
+      "translations": "الترجمات",
+      "options": "خيارات"
+    },
+    "sections": {
+      "setup": "إعداد",
+      "other": "أخرى"
+    },
+    "options": {
+      "net": "صافي",
+      "noUpdate": "لا يوجد تحديث",
+      "normal": "عادي"
+    },
     "fields": {
       "term": "شروط الدفع",
       "description": "الوصف",
@@ -1707,12 +1874,22 @@
     }
   },
   "exchangeRateTypes": {
-    "commands": { "exchangeRates": "أسعار الصرف", "options": "خيارات" },
-    "fields": { "type": "نوع سعر الصرف", "calendar": "التقويم" }
+    "commands": {
+      "exchangeRates": "أسعار الصرف",
+      "options": "خيارات"
+    },
+    "fields": {
+      "type": "نوع سعر الصرف",
+      "calendar": "التقويم"
+    }
   },
   "exchangeRates": {
-    "sections": { "addRemove": "إضافة أسعار الصرف أو إزالتها" },
-    "options": { "default": "افتراضي" },
+    "sections": {
+      "addRemove": "إضافة أسعار الصرف أو إزالتها"
+    },
+    "options": {
+      "default": "افتراضي"
+    },
     "fields": {
       "type": "نوع سعر الصرف",
       "fromCurrency": "من عملة",
@@ -1730,7 +1907,10 @@
   "customerQuickCreate": {
     "title": "إنشاء عميل",
     "saveAndOpen": "حفظ وفتح",
-    "sections": { "details": "التفاصيل", "address": "العنوان" },
+    "sections": {
+      "details": "التفاصيل",
+      "address": "العنوان"
+    },
     "fields": {
       "type": "النوع",
       "category": "فئة العميل",
@@ -2032,7 +2212,10 @@
       "contacts": "معلومات الاتصال",
       "statutory": "التقارير النظامية"
     },
-    "groups": { "language": "اللغة", "timeZone": "المنطقة الزمنية" },
+    "groups": {
+      "language": "اللغة",
+      "timeZone": "المنطقة الزمنية"
+    },
     "fields": {
       "name": "الاسم",
       "company": "الشركة",
@@ -2062,9 +2245,17 @@
       "primary": "رئيسي",
       "editAddress": "تعديل العنوان"
     },
-    "contacts": { "type": "النوع", "contact": "رقم/عنوان الاتصال" },
-    "languages": { "english": "الإنجليزية", "arabic": "العربية" },
-    "timeZones": { "riyadh": "(GMT+03:00) الكويت، الرياض" },
+    "contacts": {
+      "type": "النوع",
+      "contact": "رقم/عنوان الاتصال"
+    },
+    "languages": {
+      "english": "الإنجليزية",
+      "arabic": "العربية"
+    },
+    "timeZones": {
+      "riyadh": "(GMT+03:00) الكويت، الرياض"
+    },
     "images": {
       "dashboardTitle": "صورة لوحة المعلومات",
       "dashboardLabel": "صورة الشركة في لوحة المعلومات",
@@ -2080,7 +2271,11 @@
         "encodeFailed": "تعذر ترميز الصورة المحددة."
       }
     },
-    "actions": { "map": "الخريطة", "moreOptions": "خيارات إضافية", "advanced": "متقدم" },
+    "actions": {
+      "map": "الخريطة",
+      "moreOptions": "خيارات إضافية",
+      "advanced": "متقدم"
+    },
     "commands": {
       "hierarchy": "عرض في التسلسل الهرمي",
       "registrationIds": "معرفات التسجيل",

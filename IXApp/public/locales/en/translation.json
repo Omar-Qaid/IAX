@@ -9,7 +9,10 @@
     "resizeRecordList": "Resize record list",
     "loadingMoreRecords": "Loading more records"
   },
-  "app": { "name": "IXApp", "tagline": "Enterprise Resource Planning Solution" },
+  "app": {
+    "name": "IXApp",
+    "tagline": "Enterprise Resource Planning Solution"
+  },
   "nav": {
     "app_title": "IXApp Enterprise",
     "app_title_short": "IXApp",
@@ -66,7 +69,10 @@
     "global_search": "Search for a page"
   },
   "pages": {
-    "login": { "title": "Sign in", "subtitle": "Enter your account name to continue." },
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Enter your account name to continue."
+    },
     "requestSubmission": {
       "title": "Request Submission",
       "category": "Category",
@@ -118,27 +124,65 @@
       "title": "Methods of payment - customers",
       "standardView": "Standard view"
     },
-    "paymentTerms": { "title": "Terms of payment", "standardView": "Standard view" },
+    "paymentTerms": {
+      "title": "Terms of payment",
+      "standardView": "Standard view"
+    },
     "salesOrders": {
       "title": "Sales orders",
       "subtitle": "Double-click an order to open its document details"
     },
-    "salesOrder": { "title": "Sales order {{number}}", "breadcrumb": "Sales order" },
-    "currencies": { "title": "Currencies", "subtitle": "Read-only currency configuration" },
-    "wfProcesses": { "title": "Workflow processes" },
-    "wfProcessBuilder": { "title": "Process builder" },
-    "wfCategories": { "title": "Workflow categories" },
-    "wfActivityTypes": { "title": "Workflow activity types" },
-    "wfDataTypes": { "title": "Workflow data types" },
-    "wfControls": { "title": "Workflow controls" },
-    "wfPriorities": { "title": "Workflow priorities" },
-    "wfVariables": { "title": "Workflow variables" },
-    "wfSteps": { "title": "Workflow steps" },
-    "wfActivities": { "title": "Workflow activities" },
-    "sysNumberSequences": { "title": "Number sequences", "command": "Number sequence" },
-    "exchangeRateTypes": { "title": "Exchange rate types" },
-    "exchangeRates": { "title": "Currency exchange rates" },
-    "legalEntities": { "title": "Legal entities" },
+    "salesOrder": {
+      "title": "Sales order {{number}}",
+      "breadcrumb": "Sales order"
+    },
+    "currencies": {
+      "title": "Currencies",
+      "subtitle": "Read-only currency configuration"
+    },
+    "wfProcesses": {
+      "title": "Workflow processes"
+    },
+    "wfProcessBuilder": {
+      "title": "Process builder"
+    },
+    "wfCategories": {
+      "title": "Workflow categories"
+    },
+    "wfActivityTypes": {
+      "title": "Workflow activity types"
+    },
+    "wfDataTypes": {
+      "title": "Workflow data types"
+    },
+    "wfControls": {
+      "title": "Workflow controls"
+    },
+    "wfPriorities": {
+      "title": "Workflow priorities"
+    },
+    "wfVariables": {
+      "title": "Workflow variables"
+    },
+    "wfSteps": {
+      "title": "Workflow steps"
+    },
+    "wfActivities": {
+      "title": "Workflow activities"
+    },
+    "sysNumberSequences": {
+      "title": "Number sequences",
+      "command": "Number sequence"
+    },
+    "exchangeRateTypes": {
+      "title": "Exchange rate types"
+    },
+    "exchangeRates": {
+      "title": "Currency exchange rates"
+    },
+    "legalEntities": {
+      "title": "Legal entities"
+    },
     "settings": {
       "notificationTemplateLoadError": "Unable to load notification templates. Check your access and try again.",
       "title": "Application settings",
@@ -175,11 +219,28 @@
       "direction": "Direction",
       "orientation": "Orientation"
     },
-    "languages": { "english": "English", "arabic": "Arabic" },
-    "directions": { "ltr": "Left to right", "rtl": "Right to left" },
-    "orientation": { "portrait": "Portrait", "landscape": "Landscape" },
-    "status": { "draft": "Draft", "published": "Published", "archived": "Archived" },
-    "actions": { "publish": "Publish", "archive": "Archive", "delete": "Delete" },
+    "languages": {
+      "english": "English",
+      "arabic": "Arabic"
+    },
+    "directions": {
+      "ltr": "Left to right",
+      "rtl": "Right to left"
+    },
+    "orientation": {
+      "portrait": "Portrait",
+      "landscape": "Landscape"
+    },
+    "status": {
+      "draft": "Draft",
+      "published": "Published",
+      "archived": "Archived"
+    },
+    "actions": {
+      "publish": "Publish",
+      "archive": "Archive",
+      "delete": "Delete"
+    },
     "editor": {
       "createTitle": "Create print template",
       "editTitle": "Edit print template draft"
@@ -194,8 +255,14 @@
       "containerHint": "Select a section, row, or column before adding a component to place it inside that container.",
       "moveUp": "Move up",
       "moveDown": "Move down",
-      "regions": { "header": "Header", "sections": "Body", "footer": "Footer" },
-      "pageSizes": { "letter": "Letter" },
+      "regions": {
+        "header": "Header",
+        "sections": "Body",
+        "footer": "Footer"
+      },
+      "pageSizes": {
+        "letter": "Letter"
+      },
       "groups": {
         "content": "Content",
         "format": "Format",
@@ -269,9 +336,21 @@
         "repeatHeader": "Repeat table header on each page",
         "barcodeFormat": "Barcode format"
       },
-      "alignments": { "start": "Start", "center": "Center", "end": "End" },
-      "fontWeights": { "normal": "Normal", "medium": "Medium", "bold": "Bold" },
-      "imageFits": { "contain": "Contain", "cover": "Cover", "fill": "Stretch" },
+      "alignments": {
+        "start": "Start",
+        "center": "Center",
+        "end": "End"
+      },
+      "fontWeights": {
+        "normal": "Normal",
+        "medium": "Medium",
+        "bold": "Bold"
+      },
+      "imageFits": {
+        "contain": "Contain",
+        "cover": "Cover",
+        "fill": "Stretch"
+      },
       "sources": {
         "system": "System fields",
         "company": "Company fields",
@@ -287,7 +366,10 @@
         "dateTime": "Date and time",
         "boolean": "Yes / No"
       },
-      "imageSources": { "companyLogo": "Company logo", "url": "Image URL" },
+      "imageSources": {
+        "companyLogo": "Company logo",
+        "url": "Image URL"
+      },
       "systemFields": {
         "requestNumber": "Request number",
         "requestDate": "Request date",
@@ -383,7 +465,6 @@
     "orderTotal": "Order total",
     "line": "Line",
     "item": "Item",
-    "description": "Description",
     "quantity": "Quantity",
     "unitPrice": "Unit price",
     "lineTotal": "Line total",
@@ -455,11 +536,9 @@
     "search": "Search",
     "clear": "Clear",
     "close": "Close",
-    "none": "None",
     "account": "Account",
     "notifications": "Notifications",
     "settings": "Settings",
-    "help": "Help",
     "logout": "Log out",
     "expand_all": "Expand all",
     "collapse_all": "Collapse all",
@@ -692,7 +771,12 @@
     "categorySystem": "System",
     "categoryAlert": "Alert",
     "viewFile": "View File",
-    "priority": { "Critical": "Critical", "High": "High", "Medium": "Medium", "Low": "Low" },
+    "priority": {
+      "Critical": "Critical",
+      "High": "High",
+      "Medium": "Medium",
+      "Low": "Low"
+    },
     "mark_all_read": "Mark all as read",
     "all": "All",
     "unread": "Unread",
@@ -715,9 +799,16 @@
     "editAddress": "Edit address",
     "newAddress": "New address"
   },
-  "workflow": { "builder": "Builder" },
+  "workflow": {
+    "builder": "Builder"
+  },
   "mail": {
-    "folders": { "all": "All", "inbox": "Inbox", "sent": "Sent", "important": "Important" },
+    "folders": {
+      "all": "All",
+      "inbox": "Inbox",
+      "sent": "Sent",
+      "important": "Important"
+    },
     "fields": {
       "request": "Request",
       "process": "Process",
@@ -756,7 +847,11 @@
       "tracking": "Unable to load workflow tracking history.",
       "details": "Unable to load request details."
     },
-    "timeline": { "responsible": "Responsible:", "action": "Action:", "notes": "Notes:" },
+    "timeline": {
+      "responsible": "Responsible:",
+      "action": "Action:",
+      "notes": "Notes:"
+    },
     "printout": "Printout",
     "view": "View",
     "filter": "Filter",
@@ -842,12 +937,20 @@
     "logoAlt": "{{company}} logo"
   },
   "wfProcess": {
-    "commands": { "processBuilder": "Process builder", "variables": "Variables", "steps": "Steps" },
-    "sections": { "configuration": "Process configuration" },
-    "groups": { "classification": "Classification", "behavior": "Behavior" },
+    "commands": {
+      "processBuilder": "Process builder",
+      "variables": "Variables",
+      "steps": "Steps"
+    },
+    "sections": {
+      "configuration": "Process configuration"
+    },
+    "groups": {
+      "classification": "Classification",
+      "behavior": "Behavior"
+    },
     "fields": {
       "repeatIntervalHours": "Repeat interval (hours)",
-
       "code": "Process code",
       "name": "English name",
       "nameAR": "Arabic name",
@@ -873,8 +976,12 @@
     }
   },
   "wfVariable": {
-    "sections": { "configuration": "Variable configuration" },
-    "groups": { "assignment": "Assignment" },
+    "sections": {
+      "configuration": "Variable configuration"
+    },
+    "groups": {
+      "assignment": "Assignment"
+    },
     "fields": {
       "code": "Variable code",
       "name": "English name",
@@ -887,8 +994,13 @@
     }
   },
   "wfStep": {
-    "sections": { "configuration": "Step configuration" },
-    "groups": { "assignment": "Assignment", "behavior": "Behavior" },
+    "sections": {
+      "configuration": "Step configuration"
+    },
+    "groups": {
+      "assignment": "Assignment",
+      "behavior": "Behavior"
+    },
     "fields": {
       "code": "Step code",
       "name": "English name",
@@ -903,7 +1015,9 @@
     }
   },
   "wfActivity": {
-    "sections": { "configuration": "Activity configuration" },
+    "sections": {
+      "configuration": "Activity configuration"
+    },
     "groups": {
       "assignment": "Assignment",
       "notifications": "Notifications",
@@ -933,7 +1047,10 @@
     }
   },
   "sysNumberSequence": {
-    "actions": { "moveUp": "Move up", "moveDown": "Move down" },
+    "actions": {
+      "moveUp": "Move up",
+      "moveDown": "Move down"
+    },
     "sections": {
       "identification": "Identification",
       "scopeParameters": "Scope parameters",
@@ -1021,7 +1138,11 @@
     "designerHelp": "Review the process flow and select an item from the structure to inspect its properties.",
     "invalidProcess": "A valid workflow process is required.",
     "title": "Process Builder",
-    "navigation": { "label": "Process Builder navigation", "tree": "Tree", "palette": "Palette" },
+    "navigation": {
+      "label": "Process Builder navigation",
+      "tree": "Tree",
+      "palette": "Palette"
+    },
     "tabsExtended": {
       "requestForm": "Request form",
       "activityForm": "Activity form",
@@ -1194,8 +1315,16 @@
       "noteColor": "Note color",
       "controlType": "Control type",
       "comparisonValue": "Comparison value",
-      "columns": { "one": "1 column", "two": "2 columns", "full": "Full row" },
-      "severityValues": { "Error": "Error", "Warning": "Warning", "Information": "Information" },
+      "columns": {
+        "one": "1 column",
+        "two": "2 columns",
+        "full": "Full row"
+      },
+      "severityValues": {
+        "Error": "Error",
+        "Warning": "Warning",
+        "Information": "Information"
+      },
       "validationTypes": {
         "required": "Required",
         "minLength": "Minimum length",
@@ -1302,7 +1431,7 @@
         "yearly": "Yearly",
         "startsAt": "Start date and time",
         "timeZone": "Time zone",
-        "draftHelp": "Schedule draft for this browser. Automatic request creation is not connected yet.",
+        "draftHelp": "Save the process and its controls first, then save this schedule to activate background request creation. Table sources currently support HcmWorker and Showroom only.",
         "owner": "Request owner",
         "systemAdmin": "System administrator",
         "processOwner": "Process owner",
@@ -1318,7 +1447,9 @@
         "targetField": "Request field",
         "sourceField": "Source field",
         "unavailableField": "Field unavailable — select again",
-        "addMapping": "Add field mapping"
+        "addMapping": "Add field mapping",
+        "executionAccountHelp": "Requests execute as the account that saves this schedule. Employee/showroom data populates mapped form fields.",
+        "saved": "Schedule saved on the server."
       },
       "requestControlOptions": "Request Control Options ({{count}})",
       "requestControlValidation": "Request Control Validation ({{count}})",
@@ -1347,7 +1478,9 @@
       "addCondition": "Add condition",
       "clearCondition": "Clear condition"
     },
-    "exportDialog": { "title": "Export process" },
+    "exportDialog": {
+      "title": "Export process"
+    },
     "confirmReset": "Discard this local Process Builder draft? Persisted server records will not be deleted.",
     "messages": {
       "loadFailed": "Failed to load process builder.",
@@ -1605,7 +1738,9 @@
   },
   "paymentMethods": {
     "newMethod": "New method",
-    "actions": { "setup": "Setup" },
+    "actions": {
+      "setup": "Setup"
+    },
     "commands": {
       "paymentSpecification": "Payment specification",
       "paymentFeeSetup": "Payment fee setup",
@@ -1613,14 +1748,22 @@
       "fileAnalyze": "File analyze",
       "options": "Options"
     },
-    "sections": { "general": "General", "fileFormats": "File formats" },
+    "sections": {
+      "general": "General",
+      "fileFormats": "File formats"
+    },
     "groups": {
       "file": "File",
       "posting": "Posting",
       "invoiceUpdate": "Invoice update",
       "fileFormats": "File formats"
     },
-    "options": { "ledger": "Ledger", "noDraft": "No draft", "none": "None", "other": "Other" },
+    "options": {
+      "ledger": "Ledger",
+      "noDraft": "No draft",
+      "none": "None",
+      "other": "Other"
+    },
     "fields": {
       "method": "Method of payment",
       "period": "Period",
@@ -1659,9 +1802,19 @@
   },
   "paymentTerms": {
     "newTerm": "New term",
-    "commands": { "translations": "Translations", "options": "Options" },
-    "sections": { "setup": "Setup", "other": "Other" },
-    "options": { "net": "Net", "noUpdate": "No update", "normal": "Normal" },
+    "commands": {
+      "translations": "Translations",
+      "options": "Options"
+    },
+    "sections": {
+      "setup": "Setup",
+      "other": "Other"
+    },
+    "options": {
+      "net": "Net",
+      "noUpdate": "No update",
+      "normal": "Normal"
+    },
     "fields": {
       "term": "Terms of payment",
       "description": "Description",
@@ -1721,12 +1874,22 @@
     }
   },
   "exchangeRateTypes": {
-    "commands": { "exchangeRates": "Exchange rates", "options": "Options" },
-    "fields": { "type": "Exchange rate type", "calendar": "Calendar" }
+    "commands": {
+      "exchangeRates": "Exchange rates",
+      "options": "Options"
+    },
+    "fields": {
+      "type": "Exchange rate type",
+      "calendar": "Calendar"
+    }
   },
   "exchangeRates": {
-    "sections": { "addRemove": "Add or remove exchange rates" },
-    "options": { "default": "Default" },
+    "sections": {
+      "addRemove": "Add or remove exchange rates"
+    },
+    "options": {
+      "default": "Default"
+    },
     "fields": {
       "type": "Exchange rate type",
       "fromCurrency": "From currency",
@@ -1744,7 +1907,10 @@
   "customerQuickCreate": {
     "title": "Create customer",
     "saveAndOpen": "Save and open",
-    "sections": { "details": "Details", "address": "Address" },
+    "sections": {
+      "details": "Details",
+      "address": "Address"
+    },
     "fields": {
       "type": "Type",
       "category": "Customer category",
@@ -2046,7 +2212,10 @@
       "contacts": "Contact information",
       "statutory": "Statutory reporting"
     },
-    "groups": { "language": "Language", "timeZone": "Time zone" },
+    "groups": {
+      "language": "Language",
+      "timeZone": "Time zone"
+    },
     "fields": {
       "name": "Name",
       "company": "Company",
@@ -2076,9 +2245,17 @@
       "primary": "Primary",
       "editAddress": "Edit address"
     },
-    "contacts": { "type": "Type", "contact": "Contact number/address" },
-    "languages": { "english": "English", "arabic": "Arabic" },
-    "timeZones": { "riyadh": "(GMT+03:00) Kuwait, Riyadh" },
+    "contacts": {
+      "type": "Type",
+      "contact": "Contact number/address"
+    },
+    "languages": {
+      "english": "English",
+      "arabic": "Arabic"
+    },
+    "timeZones": {
+      "riyadh": "(GMT+03:00) Kuwait, Riyadh"
+    },
     "images": {
       "dashboardTitle": "Dashboard image",
       "dashboardLabel": "Dashboard company image",
@@ -2094,7 +2271,11 @@
         "encodeFailed": "The selected image could not be encoded."
       }
     },
-    "actions": { "map": "Map", "moreOptions": "More options", "advanced": "Advanced" },
+    "actions": {
+      "map": "Map",
+      "moreOptions": "More options",
+      "advanced": "Advanced"
+    },
     "commands": {
       "hierarchy": "View in hierarchy",
       "registrationIds": "Registration IDs",

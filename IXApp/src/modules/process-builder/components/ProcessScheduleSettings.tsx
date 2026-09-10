@@ -1,3 +1,7 @@
+import { useEffect, useState } from 'react';
+import { useCompanyStore } from '@core/company/useCompanyStore';
+import { useAuth } from '@core/auth/useAuth';
+import { processBuilderSchedules } from '../api/processBuilderSchedules';
 import { Box, Button, Chip, FormControlLabel, MenuItem, Stack, Switch, TextField, Typography } from '@mui/material';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { useLocalStorage } from '@shared/hooks/useLocalStorage';
@@ -7,6 +11,7 @@ import type { BuilderControl } from '../types/processBuilderTypes';
 
 const frequencies = ['daily', 'weekly', 'monthly', 'yearly'] as const;
 interface ScheduleDraft {
+  version?: string | null;
   enabled: boolean;
   frequency: typeof frequencies[number];
   startsAt: string;
@@ -29,6 +34,7 @@ const readDraft = (raw: string): ScheduleDraft => {
   const value = JSON.parse(raw) as Partial<ScheduleDraft> | null;
   const defaults = createDraft();
   return {
+    version: typeof value?.version === 'string' ? value.version : null,
     enabled: value?.enabled === true,
     frequency: frequencies.includes(value?.frequency as ScheduleDraft['frequency']) ? value!.frequency! : defaults.frequency,
     startsAt: typeof value?.startsAt === 'string' ? value.startsAt : '',
@@ -42,17 +48,48 @@ const readDraft = (raw: string): ScheduleDraft => {
   };
 };
 
-/** Schedule intent only; request creation needs a server trigger and request template. */
+/** Local edits are activated only after a successful server save. */
 export function ProcessScheduleSettings({ processId, controls = [], onOpen }: { processId: string; controls?: BuilderControl[]; onOpen?: () => void }) {
   const { t } = useAppTranslation();
   const [schedule, setSchedule] = useLocalStorage(processScheduleDraftKey(processId), createDraft, { deserialize: readDraft });
-  const update = (patch: Partial<ScheduleDraft>) => setSchedule((current) => ({ ...current, ...patch }));
+  const update = (patch: Partial<ScheduleDraft>) => { setSaved(false); setSchedule((current) => ({ ...current, ...patch })); };
+  const company = useCompanyStore((state) => state.currentCompany);
+  const { user } = useAuth();
+  const scope = [processId, company, user?.id].join(':');
+  const [loadedScope, setLoadedScope] = useState('');
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const persistedProcess = /^\d+$/.test(processId) && Number(processId) > 0;
+  useEffect(() => {
+    if (!persistedProcess) return;
+    const controller = new AbortController();
+    processBuilderSchedules.load(processId, controller.signal).then((value) => {
+      if (controller.signal.aborted) return;
+      if (value) setSchedule({ ...createDraft(), ...value, startsAt: value.startsAt.startsWith('0001-') ? '' : value.startsAt, ownerType: 'processOwner' });
+      setLoadedScope(scope);
+    }).catch((reason: unknown) => {
+      if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : 'Unable to load the schedule.');
+    });
+    return () => controller.abort();
+  }, [persistedProcess, processId, scope, setSchedule]);
+  const save = async () => {
+    setSaving(true); setError(''); setSaved(false);
+    try {
+      const { enabled, frequency, startsAt, timeZone, sourceType, sourceTable, sourceRecord, mappings, version } = schedule;
+      const result = await processBuilderSchedules.save(processId, { enabled, frequency, startsAt, timeZone, sourceType, sourceTable, sourceRecord, mappings, version });
+      setSchedule((current) => ({ ...current, version: result.version }));
+      setSaved(true);
+    } catch (reason) { setError(reason instanceof Error ? reason.message : 'Unable to save the schedule.'); }
+    finally { setSaving(false); }
+  };
+
   if (onOpen) {
     const summary = [
       t('wfProcessBuilder.settings.schedule.draft'),
       t(`wfProcessBuilder.settings.schedule.${schedule.enabled ? schedule.frequency : 'notEnabled'}`),
       ...(schedule.enabled ? [
-        `${t('wfProcessBuilder.settings.schedule.owner')}: ${t(`wfProcessBuilder.settings.schedule.${schedule.ownerType}`)}`,
+        t('wfProcessBuilder.settings.schedule.executionAccountHelp'),
         `${t('wfProcessBuilder.settings.schedule.source')}: ${t(`wfProcessBuilder.settings.schedule.${schedule.sourceType}`)}`,
       ] : []),
     ];
@@ -68,7 +105,7 @@ export function ProcessScheduleSettings({ processId, controls = [], onOpen }: { 
     );
   }
   return (
-    <Box sx={{ border: `1px solid ${tokens.border}`, p: 1 }}>
+    <Box component="fieldset" disabled={saving || persistedProcess && loadedScope !== scope} sx={{ border: `1px solid ${tokens.border}`, p: 1, m: 0, minWidth: 0 }}>
       <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
         <FormControlLabel
           sx={{ m: 0, '& .MuiFormControlLabel-label': { fontSize: tokens.fontSize.body, fontWeight: 700 } }}
@@ -87,15 +124,7 @@ export function ProcessScheduleSettings({ processId, controls = [], onOpen }: { 
             value={schedule.startsAt} onChange={(event) => update({ startsAt: event.target.value })} slotProps={{ inputLabel: { shrink: true } }} />
           <TextField fullWidth size="small" label={t('wfProcessBuilder.settings.schedule.timeZone')}
             value={schedule.timeZone} onChange={(event) => update({ timeZone: event.target.value })} placeholder="Asia/Riyadh" />
-          <TextField fullWidth select size="small" label={t('wfProcessBuilder.settings.schedule.owner')}
-            value={schedule.ownerType} onChange={(event) => update({ ownerType: event.target.value as ScheduleDraft['ownerType'], ownerReference: '' })}>
-            {(['systemAdmin', 'processOwner', 'employee', 'showroom'] as const).map((type) => <MenuItem key={type} value={type}>{t(`wfProcessBuilder.settings.schedule.${type}`)}</MenuItem>)}
-          </TextField>
-          {(schedule.ownerType === 'employee' || schedule.ownerType === 'showroom') && (
-            <TextField fullWidth size="small" label={t('wfProcessBuilder.settings.schedule.ownerReference')}
-              value={schedule.ownerReference} onChange={(event) => update({ ownerReference: event.target.value })} />
-          )}
-          <Typography sx={{ fontSize: tokens.fontSize.caption, color: tokens.textMuted }}>{t('wfProcessBuilder.settings.schedule.ownerHelp')}</Typography>
+          <Typography sx={{ fontSize: tokens.fontSize.caption }}>{t('wfProcessBuilder.settings.schedule.executionAccountHelp')}</Typography>
           <TextField fullWidth select size="small" label={t('wfProcessBuilder.settings.schedule.source')}
             value={schedule.sourceType} onChange={(event) => update({ sourceType: event.target.value as ScheduleDraft['sourceType'], sourceTable: '', sourceRecord: '', mappings: [] })}>
             {(['employee', 'showroom', 'table'] as const).map((type) => <MenuItem key={type} value={type}>{t(`wfProcessBuilder.settings.schedule.${type}`)}</MenuItem>)}
@@ -124,6 +153,9 @@ export function ProcessScheduleSettings({ processId, controls = [], onOpen }: { 
             onClick={() => update({ mappings: [...schedule.mappings, { targetControlId: '', sourceField: '' }] })}>{t('wfProcessBuilder.settings.schedule.addMapping')}</Button>
         </Stack>
       )}
+      <Button size="small" variant="contained" onClick={() => void save()} disabled={!persistedProcess || loadedScope !== scope || saving} sx={{ mt: 1 }}>{t('common.save')}</Button>
+      {error && <Typography color="error" role="alert">{error}</Typography>}
+      {saved && <Typography role="status">{t('wfProcessBuilder.settings.schedule.saved')}</Typography>}
       <Typography sx={{ mt: 0.75, color: tokens.textMuted, fontSize: tokens.fontSize.caption }}>
         {t('wfProcessBuilder.settings.schedule.draftHelp')}
       </Typography>
