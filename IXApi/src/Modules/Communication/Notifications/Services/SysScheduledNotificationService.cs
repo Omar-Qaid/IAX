@@ -173,20 +173,22 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                             db.Set<SysScheduledNotification>().Add(nextJob);
                     }
                 }
+                catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
                 catch (Exception ex)
                 {
-                    job.Status = SysScheduledJobStatus.Failed;
-                    job.ErrorMessage = ex.Message;
-                    job.RetryCount++;
-
-                    // Auto-retry up to 3 times with exponential backoff
-                    if (job.RetryCount <= 3)
-                    {
-                        job.Status = SysScheduledJobStatus.Pending;
-                        job.SendAt = now.AddMinutes(Math.Pow(2, job.RetryCount)); // 2, 4, 8 min
-                    }
-
-                    _logger.LogError(ex, "[NotificationBgService] Job {RecId} failed (retry {Retry}/3)", job.RecId, job.RetryCount);
+                    // A failed sender may leave tracked notification entities unsaved. Persist retry
+                    // state through a clean scope, guarded by the claim token, rather than saving them.
+                    using var failureScope = _serviceProvider.CreateScope();
+                    var failureDb = failureScope.ServiceProvider.GetRequiredService<ICommunicationDataContext>();
+                    var retries = job.RetryCount + 1;
+                    var status = retries <= 3 ? SysScheduledJobStatus.Pending : SysScheduledJobStatus.Failed;
+                    var retryAt = DateTime.UtcNow.AddMinutes(Math.Pow(2, Math.Min(retries, 3)));
+                    await failureDb.Set<SysScheduledNotification>().Where(j => j.RecId == id && j.ClaimToken == token)
+                        .ExecuteUpdateAsync(setters => setters.SetProperty(j => j.Status, status)
+                            .SetProperty(j => j.RetryCount, retries).SetProperty(j => j.ErrorMessage, ex.Message)
+                            .SetProperty(j => j.SendAt, retryAt), ct);
+                    _logger.LogError(ex, "[NotificationBgService] Job {RecId} failed (retry {Retry}/3)", job.RecId, retries);
+                    continue;
                 }
                 await db.SaveChangesAsync(ct);
             }
