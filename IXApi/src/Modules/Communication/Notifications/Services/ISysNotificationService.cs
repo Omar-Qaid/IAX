@@ -100,7 +100,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
             int pageSize = 20,
             bool? isRead = null,
             string? category = null,
-            CancellationToken ct = default);
+            CancellationToken ct = default, bool isArchived = false);
 
         /// <summary>
         /// Gets the count of unread notifications for a user.

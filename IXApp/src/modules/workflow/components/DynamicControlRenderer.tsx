@@ -1,4 +1,5 @@
 import React from 'react';
+import { dateBoundValid, resolveDateBound } from './dateBounds';
 import {
   Box,
   Button,
@@ -355,6 +356,8 @@ export function DynamicControlRenderer({
   const inputType =
     type === 'digits' || type === 'number' || type === 'employeeid'
       ? 'number'
+      : type === 'datetime' || type === 'datetimelocal'
+        ? 'datetime-local'
       : type === 'date' || type === 'calendar'
         ? 'date'
         : type === 'time'
@@ -365,6 +368,13 @@ export function DynamicControlRenderer({
               ? 'email'
               : 'text';
   const multiline = type === 'longtext' || type === 'textarea';
+  const dateRules = inputType === 'date' || inputType === 'datetime-local'
+    ? (control.validations ?? []).filter((rule) => ['mindate', 'maxdate'].includes(rule.type.toLowerCase()) && (!rule.severity || rule.severity.toLowerCase() === 'error')) : [];
+  const minima = dateRules.filter((rule) => rule.type.toLowerCase() === 'mindate').map((rule) => resolveDateBound(rule.value ?? rule.expression ?? '')).filter((date): date is string => date != null).sort();
+  const maxima = dateRules.filter((rule) => rule.type.toLowerCase() === 'maxdate').map((rule) => resolveDateBound(rule.value ?? rule.expression ?? '')).filter((date): date is string => date != null).sort();
+  const failedDateRule = value ? dateRules.find((rule) => !dateBoundValid(rule.type, value, rule.value ?? rule.expression ?? '')) : undefined;
+  const min = minima.at(-1);
+  const max = maxima[0];
   return (
     <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 0.45 }}>
       <Typography component="label" sx={{ fontSize: 12.5, lineHeight: 1.2, fontWeight: 700 }}>
@@ -383,10 +393,12 @@ export function DynamicControlRenderer({
         disabled={disabled}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        error={error}
-        helperText={helperText}
+        error={error || !!failedDateRule}
+        helperText={helperText || failedDateRule?.errorMessage}
         slotProps={{
-          htmlInput: { 'aria-label': control.label },
+          htmlInput: { 'aria-label': control.label,
+            min: min ? min + (inputType === 'datetime-local' ? 'T00:00' : '') : undefined,
+            max: max ? max + (inputType === 'datetime-local' ? 'T23:59:59.999' : '') : undefined },
           ...(type === 'date' || type === 'calendar' || type === 'time'
             ? { inputLabel: { shrink: true } }
             : {}),

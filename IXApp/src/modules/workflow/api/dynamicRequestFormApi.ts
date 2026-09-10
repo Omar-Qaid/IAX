@@ -10,7 +10,9 @@ export interface DynamicRequestControl { requestControlId: number; controlId: nu
 export interface DynamicRequestFormDefinition { processId: number; processName: string; processDescription: string | null; controls: DynamicRequestControl[] }
 export interface DynamicRequestSubmit { processId: number; values: Array<{ requestControlId: number; value: string }>; optionFeatureValues: Array<{ optionId: number; fileValue: string }> }
 export interface DynamicRequestAttachmentOwner { requestControlId: number; optionId: number | null; detailRecId: number }
-export interface DynamicRequestSubmitResult { requestId: number; code: string | null; score: number; attachmentOwners: DynamicRequestAttachmentOwner[] }
+export interface DynamicRequestSubmitResult { startingStepId?: number; assignmentIds?: number[]; requestId: number; code: string | null; score: number; attachmentOwners: DynamicRequestAttachmentOwner[] }
+export interface DynamicRequestValidationError { requestControlId: number; controlName: string; errorMessage: string; severity: string }
+export interface DynamicRequestValidationResult { success: boolean; errors: DynamicRequestValidationError[] }
 
 const requireData = <T>(response: ApiResponse<T>): T => {
   if (!response.success || response.data == null) throw new ApiError(response.message || 'The dynamic request response did not contain data.', 500);
@@ -18,6 +20,10 @@ const requireData = <T>(response: ApiResponse<T>): T => {
 };
 
 export const dynamicRequestFormApi = {
+  async validate(submission: DynamicRequestSubmit, signal?: AbortSignal): Promise<DynamicRequestValidationResult> {
+    const response = await apiClient.post<DynamicRequestValidationResult>('/v1/WfRequest/validate-submission', submission, { signal });
+    return response.data;
+  },
   async getDefinition(processId: number, signal?: AbortSignal): Promise<DynamicRequestFormDefinition> {
     const response = await apiClient.get<ApiResponse<DynamicRequestFormDefinition>>(`/v1/WfRequest/form-definition/${processId}`, { signal });
     return requireData(response.data);

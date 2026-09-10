@@ -7,6 +7,7 @@ export interface RenderableOption {
 }
 
 export interface RenderableValidation {
+  severity?: string;
   type: string;
   expression?: string | null;
   value?: string | null;

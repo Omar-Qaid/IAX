@@ -109,6 +109,20 @@ namespace IAX.IXApi.Modules.Workflow.Requests
             }
         }
 
+        [HttpPost("validate-submission")]
+        public async Task<IActionResult> ValidateSubmission([FromBody] SubmitDynamicRequestDto submission, CancellationToken cancellationToken)
+        {
+            try
+            {
+                var errors = await _requestService.ValidateSubmissionAsync(submission, cancellationToken);
+                return Ok(new { success = !errors.Any(error => error.Severity.Equals("Error", StringComparison.OrdinalIgnoreCase)), errors });
+            }
+            catch (KeyNotFoundException exception)
+            {
+                return NotFound(APIResponse<object>.Fail(exception.Message));
+            }
+        }
+
         [HttpPost("validate")]
         public async Task<IActionResult> ValidateRequest([FromBody] ValidateRequestParams parameters)
         {

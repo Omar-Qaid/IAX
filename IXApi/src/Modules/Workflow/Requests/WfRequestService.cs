@@ -200,9 +200,9 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                 .ToDictionaryAsync(item => item.RecId, cancellationToken);
             var databaseRows = detailRows.Select(item => new MailFieldSource(
                     item.RecId, item.ControlId, item.ControlDataId,
-                    item.ControlDataId.HasValue && requestControlsById.TryGetValue(item.ControlDataId.Value, out var requestControl)
+                    !string.IsNullOrEmpty(item.ControlLabel) ? item.ControlLabel : item.ControlDataId.HasValue && requestControlsById.TryGetValue(item.ControlDataId.Value, out var requestControl)
                         ? requestControl.Name ?? string.Empty : string.Empty,
-                    item.ControlDataId.HasValue && requestControlsById.TryGetValue(item.ControlDataId.Value, out requestControl)
+                    !string.IsNullOrEmpty(item.ControlLabelAlias) ? item.ControlLabelAlias : item.ControlDataId.HasValue && requestControlsById.TryGetValue(item.ControlDataId.Value, out requestControl)
                         ? requestControl.NameAlias ?? string.Empty : string.Empty,
                     item.ControlValue, item.ControlValue, item.ControlValue, item.SortOrder)).ToList();
             var parsedRows = MergeMailFieldSources(databaseRows, ParseSerializedRequestDetails(request.RequestDetails));
@@ -329,6 +329,166 @@ namespace IAX.IXApi.Modules.Workflow.Requests
 
         public async Task<SubmitDynamicRequestResultDto> SubmitDynamicAsync(SubmitDynamicRequestDto submission, CancellationToken cancellationToken = default)
         {
+            var prepared = await PrepareSubmissionAsync(submission, cancellationToken);
+            if (prepared.Errors.Any(error => error.Severity.Equals("Error", StringComparison.OrdinalIgnoreCase)))
+                throw new DynamicRequestValidationException(prepared.Errors);
+            var (form, values, visible, featureValues, selectedOptionContexts, _) = prepared;
+
+            var scored = visible.Select(control =>
+            {
+                values.TryGetValue(control.RequestControlId, out var value);
+                value ??= control.DefaultValue ?? string.Empty;
+                var selected = SelectedValues(value);
+                var score = control.Options.Count > 0
+                    ? control.Options.Where(option => selected.Contains(option.Value, StringComparer.Ordinal)).Sum(option => option.Score)
+                    : IsEmpty(value) || Normalize(control.ControlType) == "checkbox" && !IsTrue(value) ? 0 : control.Score;
+                return new { Control = control, Value = value, Score = score };
+            }).ToList();
+
+            var strategy = _unitOfWork.Context.Database.CreateExecutionStrategy();
+            return await strategy.ExecuteAsync(async () =>
+            {
+                var request = new WfRequest
+                {
+                    Name = form.ProcessName,
+                    RequestDetails = form.ProcessDescription ?? form.ProcessName,
+                    RequestDate = DateTime.UtcNow, ProcessId = submission.ProcessId,
+                    Score = scored.Sum(item => item.Score), Progress = 0, IsActive = true,
+                    DataAreaId = _currentUser.GetDataAreaId()
+                };
+                request.EmployeeId = await GetCurrentEmployeeIdAsync(_currentUser.GetCurrentUserId(), cancellationToken);
+                var execution = await BuildWorkflowStartPlanAsync(request, prepared, cancellationToken);
+                await _unitOfWork.BeginTransactionAsync(cancellationToken);
+                try
+                {
+                    await OnBeforeAddAsync(request, cancellationToken);
+                    await _unitOfWork.Repository<WfRequest>().AddAsync(request, cancellationToken);
+                    await _unitOfWork.CompleteAsync(cancellationToken);
+                    var controlDetails = scored.Select(item => new
+                    {
+                        item.Control.RequestControlId,
+                        Detail = new WfRequestDetail
+                        {
+                            ProcessId = submission.ProcessId, RequestId = request.RecId,
+                            ControlId = item.Control.ControlId, ControlDataId = item.Control.RequestControlId,
+                            ControlValue = item.Value,
+                            ControlLabel = item.Control.Label,
+                            ControlLabelAlias = item.Control.LabelAr ?? string.Empty,
+                            UsedAsCriteria = item.Control.UsedAsCriteria, SortOrder = item.Control.SortOrder,
+                            Score = item.Score, DataAreaId = request.DataAreaId
+                        }
+                    }).ToList();
+                    var optionDetails = selectedOptionContexts
+                        .Where(item => item.Option.FeatureConfiguration.RequireFileUpload &&
+                            featureValues.TryGetValue(item.Option.OptionId, out var fileValue) && !IsEmpty(fileValue))
+                        .Select(item =>
+                        {
+                            var fileValue = featureValues[item.Option.OptionId];
+                            return new
+                            {
+                                item.Control.RequestControlId,
+                                item.Option.OptionId,
+                                Detail = new WfRequestDetail
+                                {
+                                    ProcessId = submission.ProcessId, RequestId = request.RecId,
+                                    ControlId = item.Control.ControlId, ControlDataId = item.Control.RequestControlId,
+                                    ControlValue = fileValue,
+                                    ControlLabel = item.Control.Label,
+                                    ControlLabelAlias = item.Control.LabelAr ?? string.Empty,
+                                    UsedAsCriteria = false, SortOrder = item.Control.SortOrder,
+                                    Score = 0, DataAreaId = request.DataAreaId
+                                }
+                            };
+                        }).ToList();
+                    var details = controlDetails.Select(item => item.Detail)
+                        .Concat(optionDetails.Select(item => item.Detail)).ToList();
+                    await _unitOfWork.Repository<WfRequestDetail>().AddRangeAsync(details, cancellationToken);
+                    await _unitOfWork.CompleteAsync(cancellationToken);
+                    foreach (var variable in execution.Variables) variable.RequestId = request.RecId;
+                    foreach (var assignment in execution.Assignments) assignment.RequestId = request.RecId;
+                    await _unitOfWork.Repository<IAX.IXApi.Modules.Workflow.Processes.WfProcessVariable>().AddRangeAsync(execution.Variables, cancellationToken);
+                    await _unitOfWork.Repository<WfAssignment>().AddRangeAsync(execution.Assignments, cancellationToken);
+                    await _unitOfWork.CompleteAsync(cancellationToken);
+                    var alertOptions = selectedOptionContexts
+                        .Where(item => item.Option.FeatureConfiguration.SendAlertMessage &&
+                            !string.IsNullOrWhiteSpace(item.Option.FeatureConfiguration.AlertMessage) &&
+                            item.Option.FeatureConfiguration.PerformerIds.Count > 0)
+                        .ToList();
+                    if (alertOptions.Count > 0)
+                    {
+                        var performerIds = alertOptions.SelectMany(item => item.Option.FeatureConfiguration.PerformerIds).Distinct().ToList();
+                        var performerUsers = await _context.Set<WfPerformerUsers>().AsNoTracking()
+                            .Where(item => performerIds.Contains(item.PerformerId))
+                            .Select(item => new { item.PerformerId, item.UserID })
+                            .ToListAsync(cancellationToken);
+                        foreach (var item in alertOptions)
+                        {
+                            var recipients = performerUsers
+                                .Where(user => item.Option.FeatureConfiguration.PerformerIds.Contains(user.PerformerId))
+                                .Select(user => user.UserID.ToString(CultureInfo.InvariantCulture))
+                                .Distinct()
+                                .ToList();
+                            if (recipients.Count == 0) continue;
+                            await _notifications.SendToUsersAsync(
+                                recipients,
+                                $"Workflow request {request.Code ?? request.RecId.ToString(CultureInfo.InvariantCulture)}",
+                                item.Option.FeatureConfiguration.AlertMessage,
+                                category: "Workflow",
+                                entityType: nameof(WfRequest),
+                                entityId: request.RecId.ToString(CultureInfo.InvariantCulture),
+                                ct: cancellationToken);
+                        }
+                    }
+                    await _unitOfWork.CommitTransactionAsync(cancellationToken);
+                    return new SubmitDynamicRequestResultDto
+                    {
+                        RequestId = request.RecId,
+                        Code = request.Code,
+                        Score = request.Score,
+                        StartingStepId = execution.StepId,
+                        AssignmentIds = execution.Assignments.Select(item => item.RecId).ToList(),
+                        AttachmentOwners = controlDetails.Select(item => new DynamicRequestAttachmentOwnerDto
+                        {
+                            RequestControlId = item.RequestControlId,
+                            DetailRecId = item.Detail.RecId
+                        }).Concat(optionDetails.Select(item => new DynamicRequestAttachmentOwnerDto
+                        {
+                            RequestControlId = item.RequestControlId,
+                            OptionId = item.OptionId,
+                            DetailRecId = item.Detail.RecId
+                        })).ToList()
+                    };
+                }
+                catch
+                {
+                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                    throw;
+                }
+            });
+        }
+
+        private sealed record PreparedSubmission(
+            DynamicRequestFormDto Form,
+            Dictionary<long, string> Values,
+            List<DynamicRequestControlDto> Visible,
+            Dictionary<long, string> FeatureValues,
+            List<(DynamicRequestControlDto Control, DynamicRequestOptionDto Option)> SelectedOptions,
+            List<ValidationResult> Errors);
+
+        public async Task<List<ValidationResult>> ValidateSubmissionAsync(SubmitDynamicRequestDto submission, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                return (await PrepareSubmissionAsync(submission, cancellationToken)).Errors;
+            }
+            catch (DynamicRequestValidationException exception)
+            {
+                return exception.Errors;
+            }
+        }
+
+        private async Task<PreparedSubmission> PrepareSubmissionAsync(SubmitDynamicRequestDto submission, CancellationToken cancellationToken)
+        {
             var form = await GetFormDefinitionAsync(submission.ProcessId, cancellationToken)
                 ?? throw new KeyNotFoundException("The workflow process was not found or is inactive.");
             var duplicate = submission.Values.GroupBy(item => item.RequestControlId).FirstOrDefault(group => group.Count() > 1);
@@ -339,9 +499,7 @@ namespace IAX.IXApi.Modules.Workflow.Requests
             if (unknown != null)
                 throw new DynamicRequestValidationException([Error(unknown.RequestControlId, "Request", "A submitted field is not configured for this process.")]);
 
-            var values = submission.Values.ToDictionary(item => item.RequestControlId, item => item.Value?.Trim() ?? string.Empty);
-            foreach (var control in form.Controls.Where(control => control.ReadOnly))
-                values[control.RequestControlId] = control.DefaultValue ?? string.Empty;
+            var values = DynamicRequestValues.Normalize(form.Controls, submission.Values);
             var optionControlledIds = form.Controls.SelectMany(control => control.Options)
                 .Where(option => option.FeatureConfiguration.ShowOtherControls)
                 .SelectMany(option => option.FeatureConfiguration.VisibleControlIds).ToHashSet();
@@ -424,127 +582,8 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                     detail => detail.ControlDataId == control.RequestControlId && detail.ControlValue == value, cancellationToken))
                     errors.Add(Error(control.RequestControlId, control.Label, $"{control.Label} must be unique."));
             }
-            if (errors.Any(error => error.Severity.Equals("Error", StringComparison.OrdinalIgnoreCase)))
-                throw new DynamicRequestValidationException(errors);
+            return new PreparedSubmission(form, values, visible, featureValues, selectedOptionContexts, errors);
 
-            var scored = visible.Select(control =>
-            {
-                values.TryGetValue(control.RequestControlId, out var value);
-                value ??= control.DefaultValue ?? string.Empty;
-                var selected = SelectedValues(value);
-                var score = control.Options.Count > 0
-                    ? control.Options.Where(option => selected.Contains(option.Value, StringComparer.Ordinal)).Sum(option => option.Score)
-                    : IsEmpty(value) || Normalize(control.ControlType) == "checkbox" && !IsTrue(value) ? 0 : control.Score;
-                return new { Control = control, Value = value, Score = score };
-            }).ToList();
-
-            var request = new WfRequest
-            {
-                Name = form.ProcessName,
-                RequestDetails = form.ProcessDescription ?? form.ProcessName,
-                RequestDate = DateTime.UtcNow, ProcessId = submission.ProcessId,
-                Score = scored.Sum(item => item.Score), Progress = 0, IsActive = true,
-                DataAreaId = _currentUser.GetDataAreaId()
-            };
-            var strategy = _unitOfWork.Context.Database.CreateExecutionStrategy();
-            return await strategy.ExecuteAsync(async () =>
-            {
-                await _unitOfWork.BeginTransactionAsync(cancellationToken);
-                try
-                {
-                    await OnBeforeAddAsync(request, cancellationToken);
-                    await _unitOfWork.Repository<WfRequest>().AddAsync(request, cancellationToken);
-                    await _unitOfWork.CompleteAsync(cancellationToken);
-                    var controlDetails = scored.Select(item => new
-                    {
-                        item.Control.RequestControlId,
-                        Detail = new WfRequestDetail
-                        {
-                            ProcessId = submission.ProcessId, RequestId = request.RecId,
-                            ControlId = item.Control.ControlId, ControlDataId = item.Control.RequestControlId,
-                            ControlValue = item.Value,
-                            UsedAsCriteria = item.Control.UsedAsCriteria, SortOrder = item.Control.SortOrder,
-                            Score = item.Score, DataAreaId = request.DataAreaId
-                        }
-                    }).ToList();
-                    var optionDetails = selectedOptionContexts
-                        .Where(item => item.Option.FeatureConfiguration.RequireFileUpload &&
-                            featureValues.TryGetValue(item.Option.OptionId, out var fileValue) && !IsEmpty(fileValue))
-                        .Select(item =>
-                        {
-                            var fileValue = featureValues[item.Option.OptionId];
-                            return new
-                            {
-                                item.Control.RequestControlId,
-                                item.Option.OptionId,
-                                Detail = new WfRequestDetail
-                                {
-                                    ProcessId = submission.ProcessId, RequestId = request.RecId,
-                                    ControlId = item.Control.ControlId, ControlDataId = item.Control.RequestControlId,
-                                    ControlValue = fileValue,
-                                    UsedAsCriteria = false, SortOrder = item.Control.SortOrder,
-                                    Score = 0, DataAreaId = request.DataAreaId
-                                }
-                            };
-                        }).ToList();
-                    var details = controlDetails.Select(item => item.Detail)
-                        .Concat(optionDetails.Select(item => item.Detail)).ToList();
-                    await _unitOfWork.Repository<WfRequestDetail>().AddRangeAsync(details, cancellationToken);
-                    await _unitOfWork.CompleteAsync(cancellationToken);
-                    var alertOptions = selectedOptionContexts
-                        .Where(item => item.Option.FeatureConfiguration.SendAlertMessage &&
-                            !string.IsNullOrWhiteSpace(item.Option.FeatureConfiguration.AlertMessage) &&
-                            item.Option.FeatureConfiguration.PerformerIds.Count > 0)
-                        .ToList();
-                    if (alertOptions.Count > 0)
-                    {
-                        var performerIds = alertOptions.SelectMany(item => item.Option.FeatureConfiguration.PerformerIds).Distinct().ToList();
-                        var performerUsers = await _context.Set<WfPerformerUsers>().AsNoTracking()
-                            .Where(item => performerIds.Contains(item.PerformerId))
-                            .Select(item => new { item.PerformerId, item.UserID })
-                            .ToListAsync(cancellationToken);
-                        foreach (var item in alertOptions)
-                        {
-                            var recipients = performerUsers
-                                .Where(user => item.Option.FeatureConfiguration.PerformerIds.Contains(user.PerformerId))
-                                .Select(user => user.UserID.ToString(CultureInfo.InvariantCulture))
-                                .Distinct()
-                                .ToList();
-                            if (recipients.Count == 0) continue;
-                            await _notifications.SendToUsersAsync(
-                                recipients,
-                                $"Workflow request {request.Code ?? request.RecId.ToString(CultureInfo.InvariantCulture)}",
-                                item.Option.FeatureConfiguration.AlertMessage,
-                                category: "Workflow",
-                                entityType: nameof(WfRequest),
-                                entityId: request.RecId.ToString(CultureInfo.InvariantCulture),
-                                ct: cancellationToken);
-                        }
-                    }
-                    await _unitOfWork.CommitTransactionAsync(cancellationToken);
-                    return new SubmitDynamicRequestResultDto
-                    {
-                        RequestId = request.RecId,
-                        Code = request.Code,
-                        Score = request.Score,
-                        AttachmentOwners = controlDetails.Select(item => new DynamicRequestAttachmentOwnerDto
-                        {
-                            RequestControlId = item.RequestControlId,
-                            DetailRecId = item.Detail.RecId
-                        }).Concat(optionDetails.Select(item => new DynamicRequestAttachmentOwnerDto
-                        {
-                            RequestControlId = item.RequestControlId,
-                            OptionId = item.OptionId,
-                            DetailRecId = item.Detail.RecId
-                        })).ToList()
-                    };
-                }
-                catch
-                {
-                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-                    throw;
-                }
-            });
         }
 
         private static IEnumerable<ValidationResult> ValidateRules(
@@ -565,6 +604,7 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                     "maxlength" => int.TryParse(operand, out var maxLength) && value.Length <= maxLength,
                     "exactlength" or "length" => int.TryParse(operand, out var length) && value.Length == length,
                     "minvalue" => TryDecimal(value, out var minValue) && TryDecimal(operand, out var minimum) && minValue >= minimum,
+                    "mindate" or "maxdate" => DateBoundRule.IsValid(type, value, operand, DateOnly.FromDateTime(DateTime.UtcNow)),
                     "maxvalue" => TryDecimal(value, out var maxValue) && TryDecimal(operand, out var maximum) && maxValue <= maximum,
                     "range" => TryDecimal(value, out var rangeValue) && TryDecimal(rule.Value, out var from) && TryDecimal(rule.Expression, out var to) && rangeValue >= from && rangeValue <= to,
                     "regex" or "pattern" => SafeRegex(value, rule.Expression),
@@ -914,4 +954,3 @@ namespace IAX.IXApi.Modules.Workflow.Requests
         }
     }
 }
-

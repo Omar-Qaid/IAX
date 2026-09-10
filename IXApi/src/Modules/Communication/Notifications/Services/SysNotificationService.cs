@@ -67,7 +67,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                     icon ??= template.Icon;
                     category ??= template.DefaultCategory;
                     priority = dto.Priority != SysNotificationPriority.Medium ? dto.Priority : template.DefaultPriority;
-                    channel = dto.Channel != SysNotificationChannel.InApp ? dto.Channel : template.DefaultChannel;
+                    channel = dto.ResolveChannel(template.DefaultChannel);
                 }
             }
 
@@ -294,12 +294,12 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
         public async Task<(IEnumerable<SysNotificationDto> Items, int TotalCount)> GetUserNotificationsAsync(
             string userId, int pageNumber = 1, int pageSize = 20,
             bool? isRead = null, string? category = null,
-            CancellationToken ct = default)
+            CancellationToken ct = default, bool isArchived = false)
         {
             var query = _db.Set<SysNotificationRecipient>()
                 .AsNoTracking()
                 .Include(r => r.Notification)
-                .Where(r => r.UserId == userId && !r.IsArchived)
+                .Where(r => r.UserId == userId && r.IsArchived == isArchived)
                 .Where(r => !r.Notification.IsDeleted);
 
             query = query.Where(r => r.Notification.ExpiryDate == null || r.Notification.ExpiryDate > DateTime.UtcNow);

@@ -1,4 +1,9 @@
 import React from 'react';
+import { loadBuilderNotificationTemplates } from '../api/processBuilderNotificationTemplates';
+import { validationTypesForControl } from '../validationTypesForControl';
+import { TransitionRuleGroup } from './TransitionRuleGroup';
+import { ProcessScheduleSettings } from './ProcessScheduleSettings';
+import { isSupportedBuilderOperator, resolveBuilderOperator } from '../api/processBuilderOperators';
 import {
   Accordion,
   AccordionDetails,
@@ -86,18 +91,6 @@ const builderTypeFromLabel = (
   return 'approval';
 };
 
-const transitionOperatorFromLabel = (label: string): BuilderTransition['operator'] => {
-  const normalized = label.replace(/\s/g, '').toLocaleLowerCase();
-  if (normalized === '!=' || normalized.includes('notequal')) return '!=';
-  if (normalized === '>=' || normalized.includes('greaterthanorequal')) return '>=';
-  if (normalized === '<=' || normalized.includes('lessthanorequal')) return '<=';
-  if (normalized === '>' || normalized.includes('greaterthan')) return '>';
-  if (normalized === '<' || normalized.includes('lessthan')) return '<';
-  if (normalized.includes('contains')) return 'contains';
-  if (normalized.includes('isempty')) return 'isEmpty';
-  if (normalized.includes('between')) return 'between';
-  return '=';
-};
 
 const fetchCategoryPage = async ({
   pageNumber,
@@ -248,10 +241,12 @@ const Section = ({
 );
 
 function ValidationRules({
+  controlType,
   values,
   onChange,
   disabled = false,
 }: {
+  controlType?: import('../types/processBuilderTypes').BuilderControlType;
   values: BuilderValidation[];
   onChange: (values: BuilderValidation[]) => void;
   disabled?: boolean;
@@ -267,6 +262,8 @@ function ValidationRules({
     exactLength: ['value'],
     length: ['value'],
     minValue: ['value'],
+    minDate: ['value'],
+    maxDate: ['value'],
     maxValue: ['value'],
     range: ['value', 'secondaryValue'],
     compare: ['operator', 'value'],
@@ -301,41 +298,7 @@ function ValidationRules({
     }));
   const update = (id: string, patch: Partial<BuilderValidation>) =>
     onChange(normalizeRules(values.map((rule) => (rule.id === id ? { ...rule, ...patch } : rule))));
-  const validationTypes: readonly BuilderValidationType[] = [
-    'required',
-    'minLength',
-    'maxLength',
-    'exactLength',
-    'length',
-    'minValue',
-    'maxValue',
-    'range',
-    'regex',
-    'pattern',
-    'startsWith',
-    'endsWith',
-    'contains',
-    'email',
-    'url',
-    'phone',
-    'saudiMobile',
-    'saudiNationalId',
-    'saudiIban',
-    'taxNumber',
-    'passport',
-    'fileExtensions',
-    'fileSize',
-    'maxFiles',
-    'minSelected',
-    'maxSelected',
-    'compare',
-    'comparison',
-    'expression',
-    'custom',
-    'crossField',
-    'mask',
-    'inputMask',
-  ];
+  const availableTypes = validationTypesForControl(controlType);
   const changeType = (id: string, type: BuilderValidationType) => {
     const current = values.find((rule) => rule.id === id);
     if (!current) return;
@@ -386,7 +349,7 @@ function ValidationRules({
         <Typography sx={{ flex: 1, fontSize: tokens.fontSize.body, fontWeight: 600 }}>
           {t('wfProcessBuilder.settings.validationRules')}
         </Typography>
-        <Button size="small" disabled={disabled} onClick={add}>
+        <Button size="small" disabled={disabled || availableTypes.length === 0} onClick={add}>
           + {t('wfProcessBuilder.actions.add')}
         </Button>
       </Stack>
@@ -414,7 +377,7 @@ function ValidationRules({
                   changeType(rule.id, event.target.value as BuilderValidationType)
                 }
               >
-                {validationTypes.map((type) => (
+                {[...availableTypes, ...(!availableTypes.includes(rule.type) ? [rule.type] : [])].map((type) => (
                   <MenuItem key={type} value={type}>
                     {t(`wfProcessBuilder.settings.validationTypes.${type}`)}
                   </MenuItem>
@@ -444,6 +407,7 @@ function ValidationRules({
                       : t('wfProcessBuilder.settings.value')
                   }
                   value={rule.value}
+                  helperText={rule.type === 'minDate' || rule.type === 'maxDate' ? t('wfProcessBuilder.settings.dateBoundHelp') : undefined}
                   onChange={(event) => update(rule.id, { value: event.target.value })}
                 />
               )}
@@ -622,6 +586,7 @@ function TransitionRules({
                   disabled={transition.operator === 'isEmpty'}
                   onChange={(value) => onUpdate(transition.id, { value })}
                 />
+                <TransitionRuleGroup transition={transition} variables={variables} onChange={(patch) => onUpdate(transition.id, patch)} />
                 <TextField
                   select
                   size="small"
@@ -709,6 +674,11 @@ export function ProcessBuilderSettingsPanel() {
     queryKey: ['workflow', 'builder-operator-options'],
     queryFn: ({ signal }) => wfOperatorApi.list(signal),
   });
+  const notificationTemplates = useQuery({
+    queryKey: ['communication', 'builder-notification-templates'],
+    queryFn: ({ signal }) => loadBuilderNotificationTemplates(signal),
+    enabled: selected?.kind === 'activity',
+  });
   const text = (
     label: string,
     value: string | number,
@@ -768,6 +738,13 @@ export function ProcessBuilderSettingsPanel() {
       </Stack>
     );
   }
+  if (selected.kind === 'process' && s.controlSettingsPane === 'schedule')
+    return (
+      <Stack spacing="8px" sx={{ p: '10px' }}>
+        <SettingsTitle title={t('wfProcessBuilder.settings.schedule.title')} />
+        <ProcessScheduleSettings key={`schedule-${d.id}`} processId={d.id} controls={d.requestControls} />
+      </Stack>
+    );
   if (selected.kind === 'process')
     return (
       <Stack spacing="8px" sx={{ p: '10px', minHeight: '100%' }}>
@@ -882,6 +859,7 @@ export function ProcessBuilderSettingsPanel() {
             onChange={(event) => s.updateProcess({ repeatIntervalHours: Number(event.target.value) })}
           />
         </Box>
+        <ProcessScheduleSettings key={d.id} processId={d.id} controls={d.requestControls} onOpen={s.openProcessSchedule} />
         <Box sx={{ pt: '12px', borderTop: `1px solid ${tokens.border}` }}>
           <Stack direction="row" sx={{ alignItems: 'center', minHeight: 28 }}>
             <Typography sx={{ flex: 1, fontSize: tokens.fontSize.body, fontWeight: 600 }}>
@@ -1285,6 +1263,15 @@ export function ProcessBuilderSettingsPanel() {
             }
             label={t('wfProcessBuilder.settings.mandatoryDocuments')}
           />
+          <AppLookupField
+            name={`activity-notification-template-${x.id}`}
+            label={t('wfActivity.fields.notificationTemplate')}
+            value={x.sysNotificationTemplateId ?? undefined}
+            options={(notificationTemplates.data ?? []).filter((item) => item.isActive || item.recId === x.sysNotificationTemplateId).map((item) => ({ id: item.recId, code: item.code, name: item.name }))}
+            onChange={(value) => s.updateActivity(selected.stepId, x.id, { sysNotificationTemplateId: value == null ? null : Number(value) })}
+            displayMode="select"
+          />
+          {notificationTemplates.isError && <Typography color="error" sx={{ fontSize: tokens.fontSize.caption }}>{t('wfProcessBuilder.settings.notificationTemplateLoadError')}</Typography>}
           {([
             'isSystemNotificationEnabled',
             'isEmailNotificationEnabled',
@@ -1348,6 +1335,7 @@ export function ProcessBuilderSettingsPanel() {
           </TextField>
         )}
         <ValidationRules
+          controlType={validationControl?.type}
           values={validationControl?.validations ?? []}
           disabled={!validationControl}
           onChange={(validations) => {
@@ -1403,6 +1391,72 @@ export function ProcessBuilderSettingsPanel() {
             : optionFeaturesAt(itemIndex)
         ),
       });
+    if (s.controlSettingsPane === 'reporting') {
+      return (
+        <Stack spacing="8px" sx={{ p: '10px' }}>
+          <SettingsTitle title={t('wfProcessBuilder.settings.reportingMetadata')} dirty={s.dirty} />
+          <Stack spacing="8px">
+            <TextField
+              fullWidth select size="small"
+              label={t('wfProcessBuilder.settings.fields.referenceType')}
+              value={control.referenceType ?? ''}
+              onChange={(event) => update({
+                referenceType: (event.target.value || null) as BuilderReferenceType | null,
+                ...(event.target.value ? { fieldRole: 'Dimension', defaultAggregation: 'NONE', canFilter: true, canGroup: true, canSort: true } : {}),
+              })}
+            >
+              <MenuItem value="">{t('common.none')}</MenuItem>
+              {referenceTypes.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}
+            </TextField>
+            <Stack direction="row" spacing="8px">
+              <TextField
+                fullWidth select size="small"
+                label={t('wfProcessBuilder.settings.fields.reportingDataType')}
+                value={control.dataType}
+                onChange={(event) => update({ dataType: event.target.value as BuilderReportingDataType })}
+              >
+                {reportingDataTypes.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}
+              </TextField>
+              <TextField
+                fullWidth select size="small"
+                label={t('wfProcessBuilder.settings.fields.fieldRole')}
+                value={control.fieldRole}
+                onChange={(event) => {
+                  const fieldRole = event.target.value as BuilderFieldRole;
+                  update({
+                    fieldRole,
+                    ...(fieldRole === 'Dimension'
+                      ? { defaultAggregation: 'NONE', canGroup: true }
+                      : fieldRole === 'Measure'
+                        ? { defaultAggregation: 'SUM', canGroup: false }
+                        : {}),
+                  });
+                }}
+              >
+                {fieldRoles.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}
+              </TextField>
+              <TextField
+                fullWidth select size="small"
+                label={t('wfProcessBuilder.settings.fields.defaultAggregation')}
+                value={control.defaultAggregation}
+                onChange={(event) => update({ defaultAggregation: event.target.value as BuilderAggregation })}
+              >
+                {aggregations.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}
+              </TextField>
+            </Stack>
+            <Box sx={settingsSwitchGridSx}>
+              {(['canFilter', 'canGroup', 'canSort'] as const).map((field) => (
+                <FormControlLabel
+                  key={field}
+                  control={<Switch size="small" checked={control[field]} onChange={(_, checked) => update({ [field]: checked })} />}
+                  label={t(`wfProcessBuilder.settings.fields.${field}`)}
+                />
+              ))}
+            </Box>
+          </Stack>
+        </Stack>
+      );
+    }
     if (s.controlSettingsPane === 'options' && requestOptionControlTypes.has(control.type)) {
       return (
         <Stack spacing="8px" sx={{ p: '10px' }}>
@@ -1756,6 +1810,7 @@ export function ProcessBuilderSettingsPanel() {
             dirty={s.dirty}
           />
           <ValidationRules
+            controlType={control.type}
             values={control.validations}
             onChange={(validations) => update({ validations })}
           />
@@ -1857,69 +1912,33 @@ export function ProcessBuilderSettingsPanel() {
             label={t('wfProcessBuilder.settings.fields.visible')}
           />
         </Box>
-        <Box sx={settingsGroupSx}>
-          <Typography sx={{ mb: 1, fontSize: tokens.fontSize.body, fontWeight: 700 }}>
-            {t('wfProcessBuilder.settings.reportingMetadata')}
-          </Typography>
-          <Stack spacing="8px">
-            <TextField
-              fullWidth select size="small"
-              label={t('wfProcessBuilder.settings.fields.referenceType')}
-              value={control.referenceType ?? ''}
-              onChange={(event) => update({
-                referenceType: (event.target.value || null) as BuilderReferenceType | null,
-                ...(event.target.value ? { fieldRole: 'Dimension', defaultAggregation: 'NONE', canFilter: true, canGroup: true, canSort: true } : {}),
-              })}
-            >
-              <MenuItem value="">{t('common.none')}</MenuItem>
-              {referenceTypes.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}
-            </TextField>
-            <Stack direction="row" spacing="8px">
-              <TextField
-                fullWidth select size="small"
-                label={t('wfProcessBuilder.settings.fields.reportingDataType')}
-                value={control.dataType}
-                onChange={(event) => update({ dataType: event.target.value as BuilderReportingDataType })}
-              >
-                {reportingDataTypes.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}
-              </TextField>
-              <TextField
-                fullWidth select size="small"
-                label={t('wfProcessBuilder.settings.fields.fieldRole')}
-                value={control.fieldRole}
-                onChange={(event) => {
-                  const fieldRole = event.target.value as BuilderFieldRole;
-                  update({
-                    fieldRole,
-                    ...(fieldRole === 'Dimension'
-                      ? { defaultAggregation: 'NONE', canGroup: true }
-                      : fieldRole === 'Measure'
-                        ? { defaultAggregation: 'SUM', canGroup: false }
-                        : {}),
-                  });
-                }}
-              >
-                {fieldRoles.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}
-              </TextField>
-              <TextField
-                fullWidth select size="small"
-                label={t('wfProcessBuilder.settings.fields.defaultAggregation')}
-                value={control.defaultAggregation}
-                onChange={(event) => update({ defaultAggregation: event.target.value as BuilderAggregation })}
-              >
-                {aggregations.map((value) => <MenuItem key={value} value={value}>{value}</MenuItem>)}
-              </TextField>
-            </Stack>
-            <Box sx={settingsSwitchGridSx}>
-              {(['canFilter', 'canGroup', 'canSort'] as const).map((field) => (
-                <FormControlLabel
-                  key={field}
-                  control={<Switch size="small" checked={control[field]} onChange={(_, checked) => update({ [field]: checked })} />}
-                  label={t(`wfProcessBuilder.settings.fields.${field}`)}
-                />
-              ))}
-            </Box>
-          </Stack>
+        <Box sx={{ border: `1px solid ${tokens.border}` }}>
+          <Button
+            fullWidth
+            onClick={() => s.openControlSettings({ kind: 'requestControl', id: control.id }, 'reporting')}
+            sx={{ justifyContent: 'flex-start', textTransform: 'none', px: 1, py: 0.5 }}
+          >
+            <Typography sx={{ fontSize: tokens.fontSize.body, fontWeight: 700 }}>
+              {t('wfProcessBuilder.settings.reportingMetadata')}
+            </Typography>
+          </Button>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, px: 1, pb: 0.75 }}>
+            {[
+              ['referenceType', control.referenceType ?? t('common.none')],
+              ['reportingDataType', control.dataType],
+              ['fieldRole', control.fieldRole],
+              ['defaultAggregation', control.defaultAggregation],
+            ].map(([field, value]) => (
+              <Chip
+                key={field}
+                size="small"
+                variant="outlined"
+                label={`${t(`wfProcessBuilder.settings.fields.${field}`)}: ${value}`}
+                title={`${t(`wfProcessBuilder.settings.fields.${field}`)}: ${value}`}
+                sx={{ height: 22 }}
+              />
+            ))}
+          </Box>
         </Box>
         <Stack spacing="6px">
           {requestOptionControlTypes.has(control.type) && (
@@ -2132,6 +2151,7 @@ export function ProcessBuilderSettingsPanel() {
             dirty={s.dirty}
           />
           <ValidationRules
+            controlType={control.type}
             values={control.validations}
             onChange={(validations) => update({ validations })}
           />
@@ -2339,7 +2359,7 @@ export function ProcessBuilderSettingsPanel() {
             name={`settings-operatorId-${x.id}`}
             label={t('wfProcessBuilder.settings.fields.operator')}
             value={Number(x.operatorId) || undefined}
-            options={(operators.data ?? []).map((item) => ({
+            options={(operators.data ?? []).filter(isSupportedBuilderOperator).map((item) => ({
               id: item.recId,
               code: item.code ?? '',
               name: item.name ?? '',
@@ -2349,7 +2369,7 @@ export function ProcessBuilderSettingsPanel() {
                 operatorId: value == null ? '' : String(value),
                 operator:
                   option && !Array.isArray(option)
-                    ? transitionOperatorFromLabel(option.name || option.code)
+                    ? resolveBuilderOperator({ code: option.code ?? null, name: option.name ?? null })
                     : x.operator,
               })
             }
@@ -2364,6 +2384,7 @@ export function ProcessBuilderSettingsPanel() {
           disabled={x.operator === 'isEmpty'}
           onChange={(value) => s.updateTransition(x.id, { value })}
         />
+        <TransitionRuleGroup transition={x} variables={d.variables} onChange={(patch) => s.updateTransition(x.id, patch)} />
         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
           <TextField
             select

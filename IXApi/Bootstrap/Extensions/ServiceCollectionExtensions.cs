@@ -63,6 +63,7 @@ namespace IAX.IXApi.Bootstrap.Extensions
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped(typeof(IUnitOfWork), typeof(UnitOfWork));
             services.AddHttpContextAccessor();
+            services.AddScoped<BackgroundExecutionIdentity>();
             services.AddScoped<ICompanyExecutionContext, IAX.IXApi.Infrastructure.Identity.CompanyExecutionContext>();
 
             services.AddHttpClient();

@@ -36,10 +36,7 @@ namespace IAX.IXApi.Modules.Workflow.Execution
 
             // Due = open + auto-passing + at least AutoPassingHrs elapsed since assignment.
             var due = await db.Set<WfAssignment>()
-                .Where(a => !a.IsFinished
-                            && a.AutoPassing
-                            && a.AutoPassingHrs > 0
-                            && EF.Functions.DateDiffHour(a.AssignDate, now) >= a.AutoPassingHrs)
+                .Where(WorkflowAutoPassEligibility.At(now))
                 .OrderBy(a => a.AssignDate)
                 .Take(BatchSize)
                 .ToListAsync(cancellationToken);

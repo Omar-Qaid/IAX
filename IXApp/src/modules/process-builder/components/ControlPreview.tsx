@@ -7,6 +7,7 @@ export function ControlPreview({ control }: { control: BuilderControl }) {
     options: (control.options.length ? control.options : ['Option']).map((option) => ({ value: option, label: option })),
     validations: control.validations.filter((validation) => validation.active).map((validation) => ({
       type: validation.type,
+      severity: validation.severity,
       expression: validation.secondaryValue,
       value: validation.value,
       errorMessage: validation.message,

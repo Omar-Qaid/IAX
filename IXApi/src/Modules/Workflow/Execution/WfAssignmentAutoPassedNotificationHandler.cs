@@ -32,9 +32,16 @@ namespace IAX.IXApi.Modules.Workflow.Execution
                 .FirstOrDefaultAsync(a => a.RecId == @event.ActivityId, ct);
             if (activity is null) return;
 
+            var recipientUserId = await _db.Set<IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker>()
+                .AsNoTracking()
+                .Where(worker => worker.RecId == @event.UserId && worker.IsActive && !worker.IsDeleted)
+                .Select(worker => worker.UserId)
+                .SingleOrDefaultAsync(ct);
+            if (string.IsNullOrWhiteSpace(recipientUserId)) return;
+
             await _dispatcher.DispatchActivityAlertAsync(
                 activity,
-                recipientUserId: @event.UserId.ToString(),
+                recipientUserId: recipientUserId,
                 url: $"/workflow/requests/{@event.RequestId}",
                 fallbackTitle: "Task auto-passed",
                 fallbackMessage: $"Assignment {@event.AssignmentId} was automatically passed after {@event.AutoPassingHrs} hour(s).",

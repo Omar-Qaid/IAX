@@ -21766,6 +21766,18 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<byte?>("ControlId")
                         .HasColumnType("tinyint");
 
+                    b.Property<string>("ControlLabel")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("ControlLabelAlias")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("");
+
                     b.Property<string>("ControlValue")
                         .IsRequired()
                         .HasMaxLength(255)

@@ -14,6 +14,7 @@ import {
 } from '../api/processBuilderApi';
 import type { ProcessBuilderDocument } from '../types/processBuilderTypes';
 import { navigationStorageKey } from './processBuilderNavigation';
+import { processScheduleDraftKey } from '../processScheduleDraft';
 
 type SectionSaveOptions<TResult> = {
   persist: (document: ProcessBuilderDocument) => Promise<TResult>;
@@ -51,6 +52,13 @@ export function useProcessBuilderActions() {
       const document = useProcessBuilderStore.getState().document;
       const previousId = document.id;
       const persisted = await saveProcessBuilder(document);
+      if (previousId !== persisted.id) {
+        const scheduleDraft = localStorage.getItem(processScheduleDraftKey(previousId));
+        if (scheduleDraft) {
+          localStorage.setItem(processScheduleDraftKey(persisted.id), scheduleDraft);
+          localStorage.removeItem(processScheduleDraftKey(previousId));
+        }
+      }
       localStorage.removeItem(`ixapp.process-builder.${previousId}`);
       useProcessBuilderStore.getState().applyPersistedDocument(persisted);
       notifySuccess(t('wfProcessBuilder.messages.processSaved'));

@@ -1,3 +1,8 @@
+import { resolveDateBound } from '@modules/workflow/components/dateBounds';
+import { readControlMetadataForSave } from './controlMetadata';
+import { validateRecordOwnership } from './recordOwnership';
+import { validateVisibilityCycles } from './visibilityGraph';
+import { matchStoredOptions } from './processBuilderOptions';
 import { wfProcessApi, type WfProcessRecord } from '@modules/workflow/api/wfProcessApi';
 import { wfStepApi } from '@modules/workflow/api/wfStepApi';
 import { wfVariableApi } from '@modules/workflow/api/wfVariableApi';
@@ -9,6 +14,7 @@ import {
   wfActivityTypeApi,
   wfControlApi,
   wfOperatorApi,
+  wfDataTypeApi,
 } from '@modules/workflow/api/workflowSetupApis';
 import {
   wfRequestControlApi,
@@ -23,20 +29,22 @@ import type {
   BuilderActivity,
   BuilderControl,
   BuilderControlType,
-  BuilderDataType,
   BuilderStep,
   BuilderTransition,
   BuilderVariable,
   ProcessBuilderDocument,
 } from '../types/processBuilderTypes';
 import { resolvedValidationMessage, validationUsesCustomMessage } from '../validationDefaults';
+import { parseBuilderOperator, resolveBuilderOperator, resolveOperatorId } from './processBuilderOperators';
+import { resolveBuilderDataType, resolveVariableDataTypeId } from './processBuilderDataTypes';
 
-const dataType = (id: number): BuilderDataType =>
-  (({ 1: 'text', 2: 'number', 3: 'boolean', 4: 'date', 5: 'object' })[id] as BuilderDataType) ??
-  'text';
-const dataTypeId = (type: BuilderDataType): number =>
-  ({ text: 1, number: 2, boolean: 3, date: 4, object: 1 })[type];
 const numericId = (id: string): number | null => (/^\d+$/.test(id) ? Number(id) : null);
+const validateControlDateRange = (control: BuilderControl) => {
+  const bounds = control.validations.filter((rule) => rule.active && rule.severity === 'Error');
+  const minimum = bounds.filter((rule) => rule.type === 'minDate').map((rule) => resolveDateBound(rule.value)).filter((value): value is string => value != null).sort().at(-1);
+  const maximum = bounds.filter((rule) => rule.type === 'maxDate').map((rule) => resolveDateBound(rule.value)).filter((value): value is string => value != null).sort()[0];
+  if (minimum && maximum && minimum > maximum) throw new Error(`Control '${control.label}': minimum date must not exceed maximum date.`);
+};
 const optionControlTypes = new Set<BuilderControlType>([
   'dropdown-manual',
   'checkboxlist',
@@ -110,6 +118,8 @@ const builderValidationType = (value: string): BuilderControl['validations'][num
     exactlength: 'exactLength',
     length: 'length',
     minvalue: 'minValue',
+    mindate: 'minDate',
+    maxdate: 'maxDate',
     maxvalue: 'maxValue',
     range: 'range',
     compare: 'compare',
@@ -172,19 +182,6 @@ const resolveActivityType = (
     activityTypes.find((item) => item.isActive !== false)
   );
 };
-const builderOperator = (value: string): BuilderTransition['operator'] => {
-  const normalized = value.trim().toLocaleLowerCase();
-  if (normalized === '<>' || normalized === 'neq') return '!=';
-  if (normalized === 'gt') return '>';
-  if (normalized === 'lt') return '<';
-  if (normalized === 'gte') return '>=';
-  if (normalized === 'lte') return '<=';
-  if (normalized === 'between') return 'between';
-  return ['=', '!=', '>', '<', '>=', '<=', 'contains', 'isEmpty', 'between'].includes(value)
-    ? (value as BuilderTransition['operator'])
-    : '=';
-};
-
 const validateVariables = (variables: BuilderVariable[]) => {
   const names = new Set<string>();
   for (const [index, variable] of variables.entries()) {
@@ -235,13 +232,14 @@ const validateTransitionValue = (
 };
 
 const toBuilderVariable = (
-  variable: Awaited<ReturnType<typeof wfVariableApi.list>>[number]
+  variable: Awaited<ReturnType<typeof wfVariableApi.list>>[number],
+  dataTypes: Awaited<ReturnType<typeof wfDataTypeApi.list>>
 ): BuilderVariable => ({
   id: String(variable.recId),
   code: variable.code ?? '',
   name: variable.name ?? '',
   description: variable.description ?? '',
-  dataType: dataType(variable.dataTypeId),
+  dataType: resolveBuilderDataType(variable.dataTypeId, dataTypes),
   sortOrder: variable.sortOrder,
   required: false,
   active: variable.isActive,
@@ -297,6 +295,7 @@ export async function loadProcessBuilder(processId: number, signal?: AbortSignal
     requestOptions,
     transitions,
     operators,
+    dataTypes,
   ] = await Promise.all([
     wfProcessApi.getById(processId, signal),
     wfVariableApi.list(signal, processId),
@@ -312,6 +311,7 @@ export async function loadProcessBuilder(processId: number, signal?: AbortSignal
     wfRequestControlOptionApi.list(signal, processId),
     wfTransitionApi.list(signal, processId),
     wfOperatorApi.list(signal),
+    wfDataTypeApi.list(signal),
   ]);
   const processSteps = steps
     .filter((step) => step.processId === processId)
@@ -346,6 +346,7 @@ export async function loadProcessBuilder(processId: number, signal?: AbortSignal
         mandatoryDocs: activity.mandatoryDocuments,
         autoPassEnabled: activity.isAutoPassEnabled,
         autoPassingHours: activity.autoPassAfterHours,
+        sysNotificationTemplateId: activity.sysNotificationTemplateId ?? null,
         isSystemNotificationEnabled: activity.isSystemNotificationEnabled ?? false,
         isEmailNotificationEnabled: activity.isEmailNotificationEnabled ?? false,
         isSmsNotificationEnabled: activity.isSmsNotificationEnabled ?? false,
@@ -398,10 +399,22 @@ export async function loadProcessBuilder(processId: number, signal?: AbortSignal
                 .filter((option) => option.activityControlId === control.recId && option.isActive)
                 .sort((a, b) => a.sortOrder - b.sortOrder)
                 .map((option) => option.name || option.value),
+              optionIds: activityOptions
+                .filter((option) => option.activityControlId === control.recId && option.isActive)
+                .sort((a, b) => a.sortOrder - b.sortOrder)
+                .map((option) => String(option.recId)),
               optionAliases: activityOptions
                 .filter((option) => option.activityControlId === control.recId && option.isActive)
                 .sort((a, b) => a.sortOrder - b.sortOrder)
                 .map((option) => option.nameAlias ?? ''),
+              optionFeatureConfigurations: activityOptions
+                .filter((option) => option.activityControlId === control.recId && option.isActive)
+                .sort((a, b) => a.sortOrder - b.sortOrder)
+                .map((_, index) => normalizeOptionFeatureConfiguration(
+                  Array.isArray(properties.optionFeatureConfigurations)
+                    ? properties.optionFeatureConfigurations[index]
+                    : undefined
+                )),
               validations: activityValidations
                 .filter((validation) => validation.activityControlId === control.recId)
                 .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -430,7 +443,7 @@ export async function loadProcessBuilder(processId: number, signal?: AbortSignal
   const builderVariables: BuilderVariable[] = variables
     .filter((variable) => variable.processId === processId)
     .sort((a, b) => a.sortOrder - b.sortOrder)
-    .map(toBuilderVariable);
+    .map((variable) => toBuilderVariable(variable, dataTypes));
   const builderRequestControls: BuilderControl[] = requestControls
     .filter((control) => control.processId === processId)
     .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -492,6 +505,7 @@ export async function loadProcessBuilder(processId: number, signal?: AbortSignal
         defaultAggregation: control.defaultAggregation ?? 'NONE',
         defaultValue: typeof properties.defaultValue === 'string' ? properties.defaultValue : '',
         options: controlOptions.map((option) => option.name || option.value),
+        optionIds: controlOptions.map((option) => String(option.recId)),
         optionAliases: controlOptions.map((option) => option.nameAlias ?? ''),
         optionScores: controlOptions.map((option) => option.score ?? 0),
         optionFeatureConfigurations: controlOptions.map((option, index) =>
@@ -510,7 +524,7 @@ export async function loadProcessBuilder(processId: number, signal?: AbortSignal
           return sourceControlId > 0
             ? {
                 variableId: String(sourceControlId),
-                operator: builderOperator(typeof item.operator === 'string' ? item.operator : '='),
+                operator: parseBuilderOperator(typeof item.operator === 'string' ? item.operator : '='),
                 value: typeof item.value === 'string' ? item.value : '',
               }
             : null;
@@ -532,7 +546,7 @@ export async function loadProcessBuilder(processId: number, signal?: AbortSignal
         sourceStepId: triggerActivity ? String(triggerActivity.stepId) : '',
         targetStepId: String(transition.stepId),
         variableId: String(transition.variableId),
-        operator: builderOperator(operator?.name ?? operator?.code ?? ''),
+        operator: operator ? resolveBuilderOperator(operator) : parseBuilderOperator(''),
         operatorId: String(transition.operatorId),
         value: transition.value,
         sortOrder: transition.sortOrder,
@@ -549,6 +563,7 @@ export async function loadProcessBuilder(processId: number, signal?: AbortSignal
 
   return {
     id: String(process.recId),
+    dataTypeCatalogVersion: 1,
     code: process.code ?? '',
     name: process.name ?? '',
     description: process.description ?? '',
@@ -570,13 +585,16 @@ export async function loadProcessBuilder(processId: number, signal?: AbortSignal
 export async function saveProcessBuilder(
   document: ProcessBuilderDocument
 ): Promise<ProcessBuilderDocument> {
+  assertScalarTransitionContract(document);
   const categoryId = Number(document.categoryId);
   const priorityId = Number(document.priorityId);
   const processTypeId = Number(document.processType);
   if (!document.name.trim()) throw new Error('Process name is required.');
-  if (categoryId <= 0) throw new Error('Category is required.');
-  if (priorityId <= 0) throw new Error('Priority is required.');
-  if (processTypeId <= 0) throw new Error('Process type is required.');
+  if (!Number.isSafeInteger(categoryId) || categoryId <= 0) throw new Error('Category is required.');
+  if (!Number.isSafeInteger(priorityId) || priorityId <= 0) throw new Error('Priority is required.');
+  if (!Number.isSafeInteger(processTypeId) || processTypeId <= 0) throw new Error('Process type is required.');
+
+  await validateStoredDocumentOwnership(document);
 
   const existing = document.id !== 'new' ? await wfProcessApi.getById(Number(document.id)) : null;
   const record: WfProcessRecord = {
@@ -690,6 +708,7 @@ export async function saveProcessBuilder(
         mandatoryDocuments: activity.mandatoryDocs,
         isAutoPassEnabled: activity.autoPassEnabled,
         autoPassAfterHours: activity.autoPassingHours,
+        sysNotificationTemplateId: activity.sysNotificationTemplateId === undefined ? current?.sysNotificationTemplateId ?? null : activity.sysNotificationTemplateId,
         isSystemNotificationEnabled: activity.isSystemNotificationEnabled ?? current?.isSystemNotificationEnabled ?? false,
         isEmailNotificationEnabled: activity.isEmailNotificationEnabled ?? current?.isEmailNotificationEnabled ?? false,
         isSmsNotificationEnabled: activity.isSmsNotificationEnabled ?? current?.isSmsNotificationEnabled ?? false,
@@ -742,6 +761,32 @@ export async function saveProcessBuilder(
   return loadProcessBuilder(persisted.recId);
 }
 
+async function validateStoredDocumentOwnership(document: ProcessBuilderDocument): Promise<void> {
+  const processId = document.id === 'new' ? null : numericId(document.id);
+  if (document.id !== 'new' && (!processId || !Number.isSafeInteger(processId)))
+    throw new Error('Process identity is invalid. Reload before saving.');
+  const [variables, steps, activities, requestControls, activityControls, requestValidations, activityValidations, transitions] = await Promise.all([
+    wfVariableApi.list(), wfStepApi.list(), wfActivityApi.list(), wfRequestControlApi.list(),
+    wfActivityControlApi.list(), wfRequestControlValidationApi.list(), wfActivityControlValidationApi.list(), wfTransitionApi.list(),
+  ]);
+  validateRecordOwnership(document.variables, variables.filter((item) => item.processId === processId), 'Variables');
+  validateRecordOwnership(document.steps, steps.filter((item) => item.processId === processId), 'Steps');
+  validateRecordOwnership(document.requestControls, requestControls.filter((item) => item.processId === processId), 'Request controls');
+  validateRecordOwnership(document.transitions, transitions.filter((item) => item.processId === processId), 'Transitions');
+  validateRecordOwnership(document.steps.flatMap((step) => step.activities), activities, 'Activities');
+  validateRecordOwnership(document.steps.flatMap((step) => step.activities.flatMap((activity) => activity.controls)), activityControls, 'Activity controls');
+  for (const control of document.requestControls)
+    validateRecordOwnership(control.validations, requestValidations.filter((item) => item.requestControlId === numericId(control.id)), `Request control '${control.label}' validations`);
+  for (const step of document.steps) {
+    validateRecordOwnership(step.activities, activities.filter((item) => item.stepId === numericId(step.id)), `Step '${step.name}' activities`);
+    for (const activity of step.activities) {
+      validateRecordOwnership(activity.controls, activityControls.filter((item) => item.activityId === numericId(activity.id)), `Activity '${activity.name}' controls`);
+      for (const control of activity.controls)
+        validateRecordOwnership(control.validations, activityValidations.filter((item) => item.activityControlId === numericId(control.id)), `Activity control '${control.label}' validations`);
+    }
+  }
+}
+
 export interface SaveProcessVariablesResult {
   variables: BuilderVariable[];
   variableIds: Record<string, string>;
@@ -755,12 +800,24 @@ export async function saveProcessVariables(
     throw new Error('Save the process before saving variables.');
   validateVariables(document.variables);
 
-  const [process, allVariables, codeMetadata] = await Promise.all([
+  const [process, allVariables, codeMetadata, dataTypes] = await Promise.all([
     wfProcessApi.getById(processId),
     wfVariableApi.list(),
     getVariableCodeMetadata(),
+    wfDataTypeApi.list(),
   ]);
   const serverVariables = allVariables.filter((item) => item.processId === processId);
+  validateRecordOwnership(document.variables, serverVariables, 'Variables');
+  const resolvedTypes = new Map(
+    document.variables.map((variable) => [
+      variable.id,
+      resolveVariableDataTypeId(
+        variable.dataType,
+        dataTypes,
+        serverVariables.find((item) => item.recId === numericId(variable.id))?.dataTypeId
+      ),
+    ])
+  );
   const retainedIds = new Set(
     document.variables
       .map((variable) => numericId(variable.id))
@@ -791,7 +848,7 @@ export async function saveProcessVariables(
       name: variable.name.trim(),
       description: variable.description.trim() || null,
       processId,
-      dataTypeId: dataTypeId(variable.dataType),
+      dataTypeId: resolvedTypes.get(variable.id)!,
       sortOrder: variable.sortOrder,
       isActive: variable.active,
     };
@@ -804,7 +861,7 @@ export async function saveProcessVariables(
   const variables = (await wfVariableApi.list())
     .filter((variable) => variable.processId === processId)
     .sort((a, b) => a.sortOrder - b.sortOrder)
-    .map(toBuilderVariable);
+    .map((variable) => toBuilderVariable(variable, dataTypes));
   return {
     variables,
     variableIds: Object.fromEntries(
@@ -842,6 +899,7 @@ export async function saveProcessSteps(
     getStepCodeMetadata(),
   ]);
   const serverSteps = allSteps.filter((step) => step.processId === processId);
+  validateRecordOwnership(document.steps, serverSteps, 'Steps');
   const retainedIds = new Set(
     document.steps.map((step) => numericId(step.id)).filter((id): id is number => id != null)
   );
@@ -914,10 +972,14 @@ async function syncActivityControls(
   const retainedIds = new Set(
     controls.map(({ control }) => numericId(control.id)).filter((id): id is number => id != null)
   );
+  validateRecordOwnership(controls.map(({ control }) => control), processControls, 'Activity controls');
 
   const resolved = controls.map(({ activity, control }, index) => {
+    validateControlDateRange(control);
     const activityId = activityIds.get(activity.id);
     if (!activityId) throw new Error(`Save activity '${activity.name}' before saving its form.`);
+    validateRecordOwnership([control], processControls.filter((item) => item.activityId === activityId), `Activity '${activity.name}' controls`);
+    validateRecordOwnership(control.validations, serverValidations.filter((item) => item.activityControlId === numericId(control.id)), `Activity control '${control.label}' validations`);
     if (!control.label.trim()) throw new Error(`Activity control ${index + 1}: label is required.`);
     if (!Number.isInteger(control.sortOrder) || control.sortOrder < 0 || control.sortOrder > 255)
       throw new Error(`Activity control '${control.label}': sort order must be from 0 to 255.`);
@@ -932,8 +994,18 @@ async function syncActivityControls(
       const values = control.options.map((option) => option.trim()).filter(Boolean);
       if (new Set(values.map((option) => option.toLocaleLowerCase())).size !== values.length)
         throw new Error(`Activity control '${control.label}': option names must be unique.`);
+      matchStoredOptions(
+        values,
+        serverOptions.filter((option) => option.activityControlId === numericId(control.id)),
+        control.optionIds?.filter((_, optionIndex) => Boolean(control.options[optionIndex]?.trim()))
+      );
     }
+    const storedControl = processControls.find((item) => item.recId === numericId(control.id));
+    readControlMetadataForSave(storedControl?.extendedProperties, `${control.label}: ExtendedProperties`);
+    readControlMetadataForSave(storedControl?.validationRules, `${control.label}: ValidationRules`);
     for (const rule of control.validations) {
+      if ((rule.type === 'minDate' || rule.type === 'maxDate') && !resolveDateBound(rule.value))
+        throw new Error(`Control '${control.label}': invalid date bound. Use yyyy-MM-dd, today, today+1y, today+6m or today-30d (UTC).`);
       if (!rule.type) throw new Error(`Validation type is required for '${control.label}'.`);
       if (validationUsesCustomMessage(rule.type) && !rule.message.trim())
         throw new Error(`Error message is required for '${control.label}'.`);
@@ -974,8 +1046,9 @@ async function syncActivityControls(
       usedAsCriteria: control.usedAsCriteria,
       usedInSearch: false,
       sortOrder: control.sortOrder,
-      validationRules: JSON.stringify({ validations: control.validations }),
+      validationRules: JSON.stringify({ ...readControlMetadataForSave(current?.validationRules, `${control.label}: ValidationRules`), validations: control.validations }),
       extendedProperties: JSON.stringify({
+        ...readControlMetadataForSave(current?.extendedProperties, `${control.label}: ExtendedProperties`),
         labelAR: control.labelAR,
         labelColor: control.labelColor,
         required: control.required,
@@ -985,7 +1058,9 @@ async function syncActivityControls(
         usedAsCriteria: control.usedAsCriteria,
         defaultValue: control.defaultValue,
         columnSpan: control.columnSpan ?? 1,
-        optionFeatureConfigurations: control.optionFeatureConfigurations ?? [],
+        optionFeatureConfigurations: control.options.flatMap((label, index) =>
+          label.trim() ? [normalizeOptionFeatureConfiguration(control.optionFeatureConfigurations?.[index])] : []
+        ),
       }),
       isActive: control.visible,
     };
@@ -1051,13 +1126,19 @@ async function syncActivityControls(
     const existing = (existingOptionsByControl.get(activityControlId) ?? []).sort(
       (a, b) => a.sortOrder - b.sortOrder
     );
-    const values = optionControlTypes.has(control.type)
-      ? control.options.map((option) => option.trim()).filter(Boolean)
+    const entries = optionControlTypes.has(control.type)
+      ? control.options.map((option, index) => ({
+          value: option.trim(),
+          nameAlias: control.optionAliases?.[index]?.trim() || null,
+        })).filter((entry) => Boolean(entry.value))
       : [];
-    for (const stale of existing.slice(values.length))
+    const values = entries.map((entry) => entry.value);
+    const matched = matchStoredOptions(values, existing, values.length === 0 ? [] : control.optionIds?.filter((_, index) => Boolean(control.options[index]?.trim())));
+    const retainedOptionIds = new Set(matched.map((item) => item?.recId));
+    for (const stale of existing.filter((item) => item.isActive !== false && !retainedOptionIds.has(item.recId)))
       await wfActivityControlOptionApi.delete(stale);
     for (const [index, value] of values.entries()) {
-      const current = existing[index];
+      const current = matched[index];
       const record = {
         ...(current ?? {
           id: `new-${crypto.randomUUID()}`,
@@ -1067,9 +1148,9 @@ async function syncActivityControls(
           dataAreaId: process.dataAreaId,
         }),
         activityControlId,
-        value,
+        value: current?.value ?? value,
         name: value,
-        nameAlias: control.optionAliases?.[index]?.trim() || null,
+        nameAlias: entries[index].nameAlias,
         sortOrder: (index + 1) * 10,
         isActive: true,
       };
@@ -1093,16 +1174,21 @@ export async function saveProcessActivities(
   const unsavedStep = document.steps.find((step) => numericId(step.id) == null);
   if (unsavedStep) throw new Error(`Save step '${unsavedStep.name}' before adding its activities.`);
 
-  const [process, serverActivities, serverControls, activityTypes, codeMetadata] =
+  const [process, serverActivities, serverControls, activityTypes, codeMetadata, serverSteps] =
     await Promise.all([
       wfProcessApi.getById(processId),
       wfActivityApi.list(),
       wfActivityControlApi.list(),
       wfActivityTypeApi.list(),
       getActivityCodeMetadata(),
+      wfStepApi.list(),
     ]);
+  validateRecordOwnership(document.steps, serverSteps.filter((step) => step.processId === processId), 'Activity parent steps');
+  for (const step of document.steps)
+    validateRecordOwnership(step.activities, serverActivities.filter((activity) => activity.stepId === Number(step.id)), `Step '${step.name}' activities`);
   const stepIds = new Set(document.steps.map((step) => Number(step.id)));
   const processActivities = serverActivities.filter((activity) => stepIds.has(activity.stepId));
+  validateRecordOwnership(document.steps.flatMap((step) => step.activities), processActivities, 'Activities');
   const retainedIds = new Set(
     document.steps
       .flatMap((step) => step.activities)
@@ -1163,6 +1249,7 @@ export async function saveProcessActivities(
         mandatoryDocuments: activity.mandatoryDocs,
         isAutoPassEnabled: activity.autoPassEnabled,
         autoPassAfterHours: activity.autoPassingHours,
+        sysNotificationTemplateId: activity.sysNotificationTemplateId === undefined ? current?.sysNotificationTemplateId ?? null : activity.sysNotificationTemplateId,
         isSystemNotificationEnabled: activity.isSystemNotificationEnabled ?? current?.isSystemNotificationEnabled ?? false,
         isEmailNotificationEnabled: activity.isEmailNotificationEnabled ?? current?.isEmailNotificationEnabled ?? false,
         isSmsNotificationEnabled: activity.isSmsNotificationEnabled ?? current?.isSmsNotificationEnabled ?? false,
@@ -1209,15 +1296,23 @@ export async function saveProcessRequestControls(
       wfRequestControlOptionApi.list(),
     ]);
   const processControls = serverControls.filter((control) => control.processId === processId);
+  validateRecordOwnership(document.requestControls, processControls, 'Request controls');
   const requestControls = document.requestControls.map((control, index) => ({
     ...control,
     sortOrder: index + 1,
   }));
+  validateVisibilityCycles(requestControls);
   const retainedIds = new Set(
     requestControls.map((control) => numericId(control.id)).filter((id): id is number => id != null)
   );
   const resolved = requestControls.map((control, index) => {
+    validateControlDateRange(control);
+    validateRecordOwnership(control.validations, serverValidations.filter((item) => item.requestControlId === numericId(control.id)), `Request control '${control.label}' validations`);
     if (!control.label.trim()) throw new Error(`Request control ${index + 1}: label is required.`);
+    if (control.visibilityCondition && !requestControls.some(
+      (source) => source.id === control.visibilityCondition?.variableId
+    ))
+      throw new Error(`Request control '${control.label}': visibility source is outside the current request form.`);
     if (!Number.isInteger(control.sortOrder) || control.sortOrder < 0 || control.sortOrder > 255)
       throw new Error(`Request control '${control.label}': sort order must be from 0 to 255.`);
     const controlType =
@@ -1229,13 +1324,33 @@ export async function saveProcessRequestControls(
     if (!controlType) throw new Error(`No backend WfControl matches '${control.type}'.`);
     if (optionControlTypes.has(control.type)) {
       const normalizedOptions = control.options.map((option) => option.trim()).filter(Boolean);
+      for (const [optionIndex, label] of control.options.entries()) {
+        if (!label.trim()) continue;
+        const features = normalizeOptionFeatureConfiguration(control.optionFeatureConfigurations?.[optionIndex]);
+        for (const targetId of features.visibleControlIds) {
+          if (!requestControls.some((target) => target.id === targetId))
+            throw new Error(`Request control '${control.label}', option '${label}': visibility target is outside the current request form.`);
+        }
+      }
       if (
         new Set(normalizedOptions.map((option) => option.toLocaleLowerCase())).size !==
         normalizedOptions.length
       )
         throw new Error(`Request control '${control.label}': option names must be unique.`);
+      const matchedOptions = matchStoredOptions(
+        normalizedOptions,
+        serverOptions.filter((option) => option.requestControlId === numericId(control.id)),
+        control.optionIds?.filter((_, optionIndex) => Boolean(control.options[optionIndex]?.trim()))
+      );
+      for (const option of matchedOptions)
+        readControlMetadataForSave(option?.extendedProperties, `${control.label}: option ExtendedProperties`);
     }
+    const storedControl = processControls.find((item) => item.recId === numericId(control.id));
+    readControlMetadataForSave(storedControl?.extendedProperties, `${control.label}: ExtendedProperties`);
+    readControlMetadataForSave(storedControl?.validationRules, `${control.label}: ValidationRules`);
     for (const rule of control.validations) {
+      if ((rule.type === 'minDate' || rule.type === 'maxDate') && !resolveDateBound(rule.value))
+        throw new Error(`Control '${control.label}': invalid date bound. Use yyyy-MM-dd, today, today+1y, today+6m or today-30d (UTC).`);
       if (!rule.type) throw new Error(`Validation type is required for '${control.label}'.`);
       if (validationUsesCustomMessage(rule.type) && !rule.message.trim())
         throw new Error(`Error message is required for '${control.label}'.`);
@@ -1288,8 +1403,9 @@ export async function saveProcessRequestControls(
       fieldRole: control.fieldRole,
       dataType: control.dataType,
       defaultAggregation: control.defaultAggregation,
-      validationRules: JSON.stringify({ validations: control.validations }),
+      validationRules: JSON.stringify({ ...readControlMetadataForSave(current?.validationRules, `${control.label}: ValidationRules`), validations: control.validations }),
       extendedProperties: JSON.stringify({
+        ...readControlMetadataForSave(current?.extendedProperties, `${control.label}: ExtendedProperties`),
         labelAR: control.labelAR,
         labelColor: control.labelColor,
         required: control.required,
@@ -1387,10 +1503,12 @@ export async function saveProcessRequestControls(
           })
           .filter((entry) => Boolean(entry.value))
       : [];
-    for (const stale of existing.slice(entries.length))
+    const matched = matchStoredOptions(entries.map((entry) => entry.value), existing, entries.length === 0 ? [] : control.optionIds?.filter((_, index) => Boolean(control.options[index]?.trim())));
+    const retainedOptionIds = new Set(matched.map((item) => item?.recId));
+    for (const stale of existing.filter((item) => item.isActive !== false && !retainedOptionIds.has(item.recId)))
       await wfRequestControlOptionApi.delete(stale);
     for (const [index, entry] of entries.entries()) {
-      const current = existing[index];
+      const current = matched[index];
       const record = {
         ...(current ?? {
           id: `new-${crypto.randomUUID()}`,
@@ -1401,12 +1519,17 @@ export async function saveProcessRequestControls(
           extendedProperties: null,
         }),
         requestControlId,
-        value: entry.value,
+        value: current?.value ?? entry.value,
         name: entry.value,
         nameAlias: entry.nameAlias,
         score: entry.score,
         sortOrder: (index + 1) * 10,
-        extendedProperties: entry.extendedProperties,
+        extendedProperties: JSON.stringify({
+          ...readControlMetadataForSave(current?.extendedProperties, `${control.label}: option ExtendedProperties`),
+          allowFileUpload: undefined,
+          sendAlert: undefined,
+          ...readControlMetadataForSave(entry.extendedProperties, `${control.label}: option ExtendedProperties`),
+        }),
         isActive: true,
       };
       if (current) await wfRequestControlOptionApi.update(record);
@@ -1451,6 +1574,7 @@ export async function saveProcessRequestControls(
 export async function saveProcessTransitions(
   document: ProcessBuilderDocument
 ): Promise<ProcessBuilderDocument> {
+  assertScalarTransitionContract(document);
   const processId = Number(document.id);
   if (!Number.isInteger(processId) || processId <= 0)
     throw new Error('Save the process before saving transitions.');
@@ -1462,6 +1586,7 @@ export async function saveProcessTransitions(
   const processTransitions = serverTransitions.filter(
     (transition) => transition.processId === processId
   );
+  validateRecordOwnership(document.transitions, processTransitions, 'Transitions');
   const retainedIds = new Set(
     document.transitions
       .map((transition) => numericId(transition.id))
@@ -1472,6 +1597,8 @@ export async function saveProcessTransitions(
     const stepId = numericId(transition.targetStepId);
     if (!variableId) throw new Error(`Transition ${index + 1}: save and select a variable.`);
     if (!stepId) throw new Error(`Transition ${index + 1}: save and select a target step.`);
+    if (!document.steps.some((step) => step.id === transition.targetStepId))
+      throw new Error(`Transition ${index + 1}: target step is outside the current process document.`);
     const variable = document.variables.find((item) => item.id === transition.variableId);
     if (!variable) throw new Error(`Transition ${index + 1}: selected variable is unavailable.`);
     validateTransitionValue(transition, variable, index);
@@ -1481,19 +1608,17 @@ export async function saveProcessTransitions(
       transition.sortOrder > 255
     )
       throw new Error(`Transition ${index + 1}: sort order must be from 0 to 255.`);
-    const operator =
-      operators.find((item) => item.recId === Number(transition.operatorId)) ??
-      operators.find(
-        (item) => builderOperator(item.name ?? item.code ?? '') === transition.operator
-      );
-    if (!operator)
-      throw new Error(
-        `Transition ${index + 1}: operator '${transition.operator}' is not configured.`
-      );
+    const operatorId = resolveOperatorId(transition.operator, operators, Number(transition.operatorId));
     const triggerId = transition.triggerSource === 'none' ? null : numericId(transition.triggerId);
     if (transition.triggerSource !== 'none' && !triggerId)
       throw new Error(`Transition ${index + 1}: save and select its trigger.`);
-    return { transition, variableId, stepId, operatorId: operator.recId, triggerId };
+    if (transition.triggerSource === 'requestControl' &&
+      !document.requestControls.some((control) => control.id === transition.triggerId))
+      throw new Error(`Transition ${index + 1}: request control is outside the current process document.`);
+    if (transition.triggerSource === 'activity' &&
+      !document.steps.some((step) => step.activities.some((activity) => activity.id === transition.triggerId)))
+      throw new Error(`Transition ${index + 1}: activity is outside the current process document.`);
+    return { transition, variableId, stepId, operatorId, triggerId };
   });
 
   for (const transition of processTransitions) {
@@ -1525,4 +1650,9 @@ export async function saveProcessTransitions(
     else await wfTransitionApi.create(record);
   }
   return loadProcessBuilder(processId);
+}
+
+function assertScalarTransitionContract(document: ProcessBuilderDocument): void {
+  const grouped = document.transitions.find((transition) => transition.additionalConditions?.length);
+  if (grouped) throw new Error(`Transition '${grouped.name || grouped.id}': AND/OR rule groups are draft only. The server cannot save compound conditions yet.`);
 }

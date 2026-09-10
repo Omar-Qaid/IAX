@@ -1,4 +1,6 @@
 import React from 'react';
+import { TransitionRuleGroup } from './TransitionRuleGroup';
+import { isSupportedBuilderOperator, resolveBuilderOperator } from '../api/processBuilderOperators';
 import {
   Box,
   Button,
@@ -97,7 +99,6 @@ const activityLookupPage =
     };
   };
 const fetchPerformerPage = activityLookupPage(wfPerformerApi.list);
-const fetchOperatorPage = activityLookupPage(wfOperatorApi.list);
 const builderTypeFromLabel = (
   label: string
 ): 'approval' | 'review' | 'data-entry' | 'api' | 'notification' => {
@@ -107,20 +108,6 @@ const builderTypeFromLabel = (
   if (normalized.includes('review')) return 'review';
   if (normalized.includes('api')) return 'api';
   return 'approval';
-};
-const transitionOperatorFromLabel = (
-  label: string
-): '=' | '!=' | '>' | '<' | '>=' | '<=' | 'contains' | 'isEmpty' | 'between' => {
-  const value = label.trim().toLocaleLowerCase();
-  if (value === '<>' || value === 'neq') return '!=';
-  if (value === 'gt') return '>';
-  if (value === 'lt') return '<';
-  if (value === 'gte') return '>=';
-  if (value === 'lte') return '<=';
-  if (value === 'between') return 'between';
-  return ['=', '!=', '>', '<', '>=', '<=', 'contains', 'isEmpty', 'between'].includes(label)
-    ? (label as '=' | '!=' | '>' | '<' | '>=' | '<=' | 'contains' | 'isEmpty' | 'between')
-    : '=';
 };
 
 function UnsavedStatus({ compact = false }: { compact?: boolean }) {
@@ -1976,6 +1963,10 @@ export function TransitionsWorkspace({
 }) {
   const { t } = useAppTranslation();
   const s = useProcessBuilderStore();
+  const operators = useQuery({
+    queryKey: ['workflow', 'builder-operator-options'],
+    queryFn: ({ signal }) => wfOperatorApi.list(signal),
+  });
   const activities = s.document.steps.flatMap((step) =>
     step.activities.map((activity) => ({ ...activity, stepName: step.name }))
   );
@@ -2144,28 +2135,25 @@ export function TransitionsWorkspace({
                   </MenuItem>
                 ))}
               </TextField>
-              <AppLookupGridField<WorkflowMasterRecord>
+              <AppLookupField
                 name={`operatorId-${x.id}`}
                 label={t('wfProcessBuilder.settings.fields.operator')}
-                value={Number(x.operatorId) || null}
-                onChange={(value, row) =>
+                value={Number(x.operatorId) || undefined}
+                options={(operators.data ?? []).filter(isSupportedBuilderOperator).map((item) => ({
+                  id: item.recId,
+                  code: item.code ?? '',
+                  name: item.name ?? '',
+                }))}
+                onChange={(value, option) =>
                   s.updateTransition(x.id, {
                     operatorId: value == null ? '' : String(value),
-                    operator: row
-                      ? transitionOperatorFromLabel(row.name ?? row.code ?? '')
+                    operator: option && !Array.isArray(option)
+                      ? resolveBuilderOperator({ code: option.code ?? null, name: option.name ?? null })
                       : x.operator,
                   })
                 }
                 required
-                columns={[...activityLookupColumns]}
-                queryKey={['workflow', 'builder-operator-lookup']}
-                fetchPage={fetchOperatorPage}
-                fetchById={async (value) =>
-                  (await wfOperatorApi.list()).find((item) => item.recId === Number(value)) ?? null
-                }
-                valueField="recId"
-                labelField="name"
-                pageSize={25}
+                displayMode="select"
               />
               <TransitionValueField
                 dataType={variable?.dataType}
@@ -2173,6 +2161,7 @@ export function TransitionsWorkspace({
                 disabled={x.operator === 'isEmpty'}
                 onChange={(value) => s.updateTransition(x.id, { value })}
               />
+              <TransitionRuleGroup transition={x} variables={s.document.variables} onChange={(patch) => s.updateTransition(x.id, patch)} />
               <TextField
                 select
                 size="small"

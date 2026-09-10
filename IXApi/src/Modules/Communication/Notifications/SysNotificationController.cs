@@ -41,14 +41,15 @@ namespace IAX.IXApi.Modules.Communication.Notifications
             [FromQuery] int pageSize = 20,
             [FromQuery] bool? isRead = null,
             [FromQuery] string? category = null,
+            [FromQuery] bool isArchived = false,
             CancellationToken ct = default)
         {
             var userId = _currentUser.GetCurrentUserId();
             var (items, totalCount) = await _notificationService.GetUserNotificationsAsync(
-                userId, pageNumber, pageSize, isRead, category, ct);
+                userId, Math.Max(1, pageNumber), Math.Clamp(pageSize, 1, 100), isRead, category, ct, isArchived);
 
             var response = APIResponse<IEnumerable<SysNotificationDto>>.Ok(items);
-            response.Pagination = new PaginationMetadata(pageNumber, pageSize, totalCount);
+            response.Pagination = new PaginationMetadata(Math.Max(1, pageNumber), Math.Clamp(pageSize, 1, 100), totalCount);
             return Ok(response);
         }
 

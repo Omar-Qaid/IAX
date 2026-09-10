@@ -53,6 +53,7 @@ namespace IAX.IXApi.Modules.Workflow.Activities
                     TemplatePlaceholders = placeholders,
                     UserIds = new List<string> { recipientUserId },
                     Channel = channel,
+                    PreserveChannel = true,
                     Category = "Workflow Notifications",
                     Url = url,
                     EntityType = nameof(WfActivity),

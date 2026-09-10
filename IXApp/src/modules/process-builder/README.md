@@ -15,7 +15,7 @@ Provides the full-screen workflow designer that edits process metadata, variable
 - `api/processBuilderApi.ts`: Process Builder transport helpers.
 - `types/processBuilderTypes.ts`: draft and builder contracts.
 
-The module currently orchestrates Workflow APIs/components directly, which the architecture audit flags as cross-module debt. This README records that implementation; it does not authorize more cross-module imports.
+Process Builder is owned by Workflow and retains its established `src/modules/process-builder` package path. Its Workflow API integration follows the ownership boundary documented in the Process Builder integration guide. The generic `src/patterns/process-builder` remains a separate presentation component.
 
 State flows from the selected process/step/activity into the Zustand draft, editor panels, and save APIs. UI tab, step, and activity selections are persisted so reload can restore context.
 

@@ -4,11 +4,12 @@ using IAX.IXApi.Shared.Application.Identity;
 
 namespace IAX.IXApi.Infrastructure.Identity;
 
-public sealed partial class CompanyExecutionContext(IHttpContextAccessor httpContextAccessor)
+public sealed partial class CompanyExecutionContext(IHttpContextAccessor httpContextAccessor, BackgroundExecutionIdentity? backgroundIdentity = null)
     : ICompanyExecutionContext
 {
     public string GetDataAreaId()
     {
+        if (backgroundIdentity?.DataAreaId is { } company) return company;
         var context = httpContextAccessor.HttpContext;
         if (context?.User.Identity?.IsAuthenticated != true)
             return CompanyContextDefaults.DataAreaId;

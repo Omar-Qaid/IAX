@@ -1,4 +1,5 @@
 import React from 'react';
+import { dateBoundValid } from './dateBounds';
 import { Alert, Box, Button, CircularProgress, Paper, Stack, Typography } from '@mui/material';
 import AssignmentOutlined from '@mui/icons-material/AssignmentOutlined';
 import { useQuery } from '@tanstack/react-query';
@@ -90,6 +91,7 @@ const ruleValid = (rule: DynamicRequestValidation, value: string, controls: Dyna
     case 'maxlength': return value.length <= Number(operand);
     case 'exactlength': case 'length': return value.length === Number(operand);
     case 'minvalue': return Number(value) >= Number(operand);
+    case 'mindate': case 'maxdate': return dateBoundValid(type, value, operand);
     case 'maxvalue': return Number(value) <= Number(operand);
     case 'range': return Number(value) >= Number(rule.value) && Number(value) <= Number(rule.expression);
     case 'regex': case 'pattern': try { return new RegExp(rule.expression ?? '').test(value); } catch { return false; }

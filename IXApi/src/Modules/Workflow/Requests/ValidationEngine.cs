@@ -180,6 +180,7 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                         break;
 
                     case "daterange":
+                    // Legacy daterange expressions retain their existing interpretation.
                         var dateParts = (validation.ValidationExpression ?? "").Split('|');
                         if (dateParts.Length == 2 && DateTime.TryParse(value, out DateTime valDate) &&
                             DateTime.TryParse(dateParts[0], out DateTime dFrom) && DateTime.TryParse(dateParts[1], out DateTime dTo))
@@ -190,6 +191,11 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                         {
                             isValid = false;
                         }
+                        break;
+                    case "mindate":
+                    case "maxdate":
+                        isValid = string.IsNullOrWhiteSpace(value) || DateBoundRule.IsValid(validation.ValidationType, value,
+                            validation.Value ?? validation.ValidationExpression, DateOnly.FromDateTime(DateTime.UtcNow));
                         break;
                 }
 

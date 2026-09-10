@@ -10,17 +10,20 @@ namespace IAX.IXApi.Infrastructure.Identity
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ICompanyExecutionContext _companyContext;
+        private readonly BackgroundExecutionIdentity? _backgroundIdentity;
 
         public CurrentUserService(
             IHttpContextAccessor httpContextAccessor,
-            ICompanyExecutionContext companyContext)
+            ICompanyExecutionContext companyContext, BackgroundExecutionIdentity? backgroundIdentity = null)
         {
             _httpContextAccessor = httpContextAccessor;
             _companyContext = companyContext;
+            _backgroundIdentity = backgroundIdentity;
         }
 
         public string GetCurrentUserId()
         {
+            if (_backgroundIdentity?.UserId is { } userId) return userId;
             var user = _httpContextAccessor.HttpContext?.User;
             if (user == null || !user.Identity?.IsAuthenticated == true)
                 return "sys";
@@ -33,6 +36,7 @@ namespace IAX.IXApi.Infrastructure.Identity
 
         public string GetOwnerAccountId()
         {
+            if (_backgroundIdentity?.OwnerAccountId is { } ownerId) return ownerId;
             var user = _httpContextAccessor.HttpContext?.User;
             if (user == null || !user.Identity?.IsAuthenticated == true)
                 return "sys";

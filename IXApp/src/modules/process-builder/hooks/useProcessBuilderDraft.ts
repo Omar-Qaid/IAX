@@ -58,8 +58,14 @@ export const loadProcessBuilderDraft = (id: string, fallback: ProcessBuilderDocu
     return {
       ...fallback,
       ...parsed,
+      dataTypeCatalogVersion: 1 as const,
       variables: (parsed.variables ?? []).map((variable, index) => ({
         ...variable,
+        // Old drafts used hard-coded IDs. Recover persisted types from the server;
+        // retain new draft variables and all unrelated edits.
+        dataType: parsed.dataTypeCatalogVersion === 1
+          ? variable.dataType
+          : fallback.variables.find((item) => item.id === variable.id)?.dataType ?? variable.dataType,
         description: variable.description ?? '',
         sortOrder: variable.sortOrder ?? (index + 1) * 10,
         active: variable.active ?? true,

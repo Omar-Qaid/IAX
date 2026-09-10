@@ -30,4 +30,18 @@ public class WorkflowRequestFormIntegrationTests
 
         Assert.True(result.IsValid);
     }
+
+    [Theory]
+    [InlineData(0L, null)]
+    [InlineData(null, 0L)]
+    [InlineData(1L, 2L)]
+    public void Transition_validation_rejects_invalid_or_ambiguous_triggers(long? activityId, long? requestControlId)
+    {
+        var result = new WfTransitionDtoValidator().Validate(new WfTransitionDto
+        {
+            ProcessId = 1, VariableId = 1, OperatorId = 1, StepId = 1,
+            Value = string.Empty, ActivityId = activityId, RequestControlId = requestControlId,
+        });
+        Assert.False(result.IsValid);
+    }
 }

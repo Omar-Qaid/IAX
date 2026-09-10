@@ -7,6 +7,8 @@ export const DEFAULT_VALIDATION_MESSAGES: Record<BuilderValidationType, string> 
   exactLength: 'The value does not have the required length.',
   length: 'The value does not have the required length.',
   minValue: 'The value is below the minimum allowed value.',
+  minDate: 'Select a date on or after the minimum allowed date.',
+  maxDate: 'Select a date on or before the maximum allowed date.',
   maxValue: 'The value exceeds the maximum allowed value.',
   range: 'The value is outside the allowed range.',
   regex: 'The value does not match the required pattern.',

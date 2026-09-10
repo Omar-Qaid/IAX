@@ -1,0 +1,21 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "CorsAllowedOrigins": [
+    "https://localhost:7250/",
+    "https://localhost:7169/"
+  ],
+  "Uploads": {
+    "FileVirtualDirectory": "YOUR_FILE_VIRTUAL_DIRECTORY",
+    "FileUploadDirectory": "YOUR_FILE_UPLOAD_DIRECTORY",
+    "MaxImageWidth": 1000,
+    "MaxImageHeight": 1000
+  },
+  "OpenAI": {
+    "ApiKey": "YOUR_OPENAPI_API_KEY"
+  }
+}

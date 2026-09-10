@@ -54,6 +54,8 @@ export type BuilderValidationType =
   | 'exactLength'
   | 'length'
   | 'minValue'
+  | 'minDate'
+  | 'maxDate'
   | 'maxValue'
   | 'range'
   | 'regex'
@@ -162,6 +164,7 @@ export interface BuilderControl {
   defaultAggregation: BuilderAggregation;
   defaultValue: string;
   options: string[];
+  optionIds?: (string | null)[];
   optionAliases?: string[];
   optionScores?: number[];
   optionFeatureConfigurations?: BuilderOptionFeatureConfiguration[];
@@ -191,6 +194,7 @@ export interface BuilderActivity {
   autoPassEnabled: boolean;
   autoPassingHours: number;
   isSystemNotificationEnabled: boolean;
+  sysNotificationTemplateId?: number | null;
   isEmailNotificationEnabled: boolean;
   isSmsNotificationEnabled: boolean;
   isWhatsAppNotificationEnabled: boolean;
@@ -216,6 +220,8 @@ export interface BuilderStep {
   activities: BuilderActivity[];
 }
 export interface BuilderTransition {
+  conditionCombinator?: 'AND' | 'OR';
+  additionalConditions?: BuilderCondition[];
   id: string;
   name: string;
   sourceStepId: string;
@@ -230,6 +236,7 @@ export interface BuilderTransition {
   triggerId: string;
 }
 export interface ProcessBuilderDocument {
+  dataTypeCatalogVersion?: 1;
   id: string;
   code: string;
   name: string;

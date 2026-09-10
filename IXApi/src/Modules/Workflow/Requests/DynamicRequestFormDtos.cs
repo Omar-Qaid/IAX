@@ -93,6 +93,8 @@ public sealed class DynamicRequestOptionFeatureValueDto
 
 public sealed class SubmitDynamicRequestResultDto
 {
+    public long StartingStepId { get; set; }
+    public List<long> AssignmentIds { get; set; } = [];
     public long RequestId { get; set; }
     public string? Code { get; set; }
     public decimal Score { get; set; }

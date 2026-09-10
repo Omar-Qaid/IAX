@@ -111,6 +111,20 @@ Requesters need a reference number, understandable status, latest action, curren
 
 Performers need a “My Tasks” view distinguishing new, overdue, returned, and waiting work, with a reason for priority. Business priority and request age should remain distinct so that every request does not become “urgent.”
 
+### Request Submission Experience
+
+The following are proposed business requirements for easier and faster request submission:
+
+- **Favorite / Frequent Requests:** Show the user's favorite and most frequently used request types for faster access.
+- **Request for Entity:** Allow a request to be submitted for an employee, branch, showroom, customer, supplier, asset, project, contract, or another entity. A request does not have to be for an employee.
+- **Conditional Fields:** Show or hide fields based on the user's previous answers.
+- **Real-Time Validation:** Validate data as the user enters it, rather than only when the user selects Submit.
+- **Save as Draft:** Allow users to save an unfinished request and return to complete it later.
+- **Copy Previous Request:** Allow users to create a new request from a previous request and edit the copied data before submission.
+- **Request Templates:** Allow users to save recurring data as personal templates for requests they submit regularly.
+- **Parent Request:** Allow users to create a child request linked to a parent request.
+- **Form Wizard:** Split large request forms into steps: Basic Information → Details → Documents → Review.
+
 ### Parent and Child Requests
 
 A license request may create an inspection request and a payment request, each following a different process. Business configuration determines which information is passed to the child, which outcomes are returned, and whether the parent waits for a particular child, all required children, or continues independently.

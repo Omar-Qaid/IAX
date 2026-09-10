@@ -26,6 +26,10 @@ namespace IAX.IXApi.Modules.Communication.Notifications
         /// Delivery channel: InApp, Email, SMS, Push, WhatsApp, MicrosoftTeams, Slack.
         /// </summary>
         public SysNotificationChannel Channel { get; set; } = SysNotificationChannel.InApp;
+        /// <summary>Keep an explicitly configured channel instead of the template default.</summary>
+        public bool PreserveChannel { get; set; }
+        public SysNotificationChannel ResolveChannel(SysNotificationChannel templateDefault) =>
+            PreserveChannel || Channel != SysNotificationChannel.InApp ? Channel : templateDefault;
 
         /// <summary>
         /// Link to source entity.

@@ -10,5 +10,6 @@ namespace IAX.IXApi.Modules.Workflow.Requests
         Task<DynamicRequestFormDto?> GetFormDefinitionAsync(long processId, CancellationToken cancellationToken = default);
         Task<MailRequestDetailsDto?> GetMailDetailsAsync(long requestId, CancellationToken cancellationToken = default);
         Task<SubmitDynamicRequestResultDto> SubmitDynamicAsync(SubmitDynamicRequestDto submission, CancellationToken cancellationToken = default);
+        Task<List<ValidationResult>> ValidateSubmissionAsync(SubmitDynamicRequestDto submission, CancellationToken cancellationToken = default);
     }
 }

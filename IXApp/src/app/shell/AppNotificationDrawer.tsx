@@ -1,4 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@core/auth/useAuth';
+import { useCompanyStore } from '@core/company/useCompanyStore';
+import { notificationInboxApi } from './notificationInboxApi';
 import {
     Drawer,
     Box,
@@ -40,37 +44,11 @@ export interface AppDrawerNotification {
     attachment?: { name: string; size: string };
 }
 
-// Mock data to demonstrate the UI structure without a dedicated store
-const MOCK_NOTIFICATIONS: AppDrawerNotification[] = [
-    {
-        id: '1',
-        sender: 'notifications.systemAdmin',
-        message: 'notifications.exportCompleted',
-        createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-        read: false,
-        archived: false,
-        priority: 'Medium',
-        category: 'notifications.categorySystem',
-        actions: [{ label: 'notifications.viewFile', variant: 'contained' }],
-        attachment: { name: 'export_data.csv', size: '2.4 MB' }
-    },
-    {
-        id: '2',
-        sender: 'notifications.security',
-        message: 'notifications.failedLogins',
-        createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-        read: false,
-        archived: false,
-        priority: 'Critical',
-        category: 'notifications.categoryAlert'
-    }
-];
-
-// ─── Utilities ───────────────────────────────────────────────────────────────
-
 function timeAgo(dateStr: string, language: string): string {
     const now = Date.now();
-    const diff = now - new Date(dateStr).getTime();
+    const timestamp = new Date(dateStr).getTime();
+    if (!Number.isFinite(timestamp)) return '';
+    const diff = Math.max(0, now - timestamp);
     const seconds = Math.floor(diff / 1000);
     const minutes = Math.floor(seconds / 60);
     const hours = Math.floor(minutes / 60);
@@ -131,11 +109,11 @@ const NotificationItem: React.FC<{
 
             <Box sx={{ flex: 1, minWidth: 0, paddingInlineEnd: 4 }}>
                 <Typography sx={{ fontSize: '0.8125rem', color: 'text.primary', lineHeight: 1.5 }}>
-                    <strong>{n.sender ? t(n.sender) : ''}</strong> {t(n.message)}
+                    <strong>{n.sender ?? ''}</strong> {n.message}
                 </Typography>
                 <Typography sx={{ fontSize: '0.75rem', color: 'text.secondary', mt: 0.25 }}>
                     {timeAgo(n.createdAt, i18n.resolvedLanguage ?? i18n.language)}
-                    {n.category && ` \u00B7 ${t(n.category)}`}
+                    {n.category && ` \u00B7 ${n.category}`}
                     {n.priority && ` \u00B7 ${t(`notifications.priority.${n.priority}`)}`}
                 </Typography>
 
@@ -212,13 +190,13 @@ const NotificationItem: React.FC<{
             >
                 {!n.archived && (
                     <Tooltip title={t('actions.archive')}>
-                        <IconButton size="small" aria-label={t('actions.archive')} onClick={() => onArchive(n.id)} sx={{ p: 0.5 }}>
+                        <IconButton size="small" aria-label={t('actions.archive')} onClick={(event) => { event.stopPropagation(); onArchive(n.id); }} sx={{ p: 0.5 }}>
                             <ArchiveIcon sx={{ fontSize: 16 }} />
                         </IconButton>
                     </Tooltip>
                 )}
                 <Tooltip title={t('actions.delete')}>
-                    <IconButton size="small" aria-label={t('actions.delete')} onClick={() => onDelete(n.id)} sx={{ p: 0.5 }}>
+                    <IconButton size="small" aria-label={t('actions.delete')} onClick={(event) => { event.stopPropagation(); onDelete(n.id); }} sx={{ p: 0.5 }}>
                         <DeleteIcon sx={{ fontSize: 16 }} />
                     </IconButton>
                 </Tooltip>
@@ -234,24 +212,42 @@ export const AppNotificationDrawer: React.FC = () => {
     const notificationDrawerOpen = useNavigationStore((s) => s.notificationDrawerOpen);
     const setNotificationDrawerOpen = useNavigationStore((s) => s.setNotificationDrawerOpen);
     
-    // For demonstration, use local state rather than breaking existing toast notifications
-    const [notifications, setNotifications] = useState<AppDrawerNotification[]>(MOCK_NOTIFICATIONS);
     const [tab, setTab] = useState(0);
-
-    const allNotifications = useMemo(() => notifications.filter((n) => !n.archived), [notifications]);
-    const unreadNotifications = useMemo(() => notifications.filter((n) => !n.read && !n.archived), [notifications]);
-    const archivedNotifications = useMemo(() => notifications.filter((n) => n.archived), [notifications]);
-
-    const filteredNotifications = tab === 0 ? allNotifications : tab === 1 ? unreadNotifications : archivedNotifications;
-    const unreadCount = unreadNotifications.length;
-
+    const [page, setPage] = useState(1);
+    const { user } = useAuth();
+    const company = useCompanyStore((state) => state.currentCompany);
+    const client = useQueryClient();
+    const key = ['notification-inbox', user?.id, company];
+    const inbox = useQuery({
+        queryKey: [...key, tab, page],
+        queryFn: ({ signal }) => notificationInboxApi.list(page, tab, signal),
+        enabled: notificationDrawerOpen && !!user,
+        refetchInterval: notificationDrawerOpen ? 30000 : false,
+    });
+    const unread = useQuery({
+        queryKey: [...key, 'unread'],
+        queryFn: ({ signal }) => notificationInboxApi.unread(signal),
+        enabled: notificationDrawerOpen && !!user,
+        refetchInterval: notificationDrawerOpen ? 30000 : false,
+    });
+    const mutation = useMutation({
+        mutationFn: ({ action, id }: { action: 'read' | 'archive' | 'delete' | 'read-all'; id?: string }) => notificationInboxApi.update(action, id),
+        onSuccess: () => client.invalidateQueries({ queryKey: key }),
+    });
+    const filteredNotifications: AppDrawerNotification[] = (inbox.data?.items ?? []).map((item) => ({
+        id: String(item.recId), sender: item.title, message: item.message, createdAt: item.createdAt ?? '',
+        read: item.isRead, archived: item.isArchived, priority: item.priority, category: item.category,
+    }));
+    const unreadCount = unread.data ?? 0;
     const handleClose = () => setNotificationDrawerOpen(false);
     const drawerAnchor = useLogicalDrawerAnchor('end');
-
-    const markRead = (id: string) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-    const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    const archiveNotification = (id: string) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, archived: true } : n));
-    const removeNotification = (id: string) => setNotifications(prev => prev.filter(n => n.id !== id));
+    const update = (action: 'read' | 'archive' | 'delete' | 'read-all', id?: string) => {
+        if (!mutation.isPending) mutation.mutate({ action, id });
+    };
+    const markRead = (id: string) => update('read', id);
+    const markAllRead = () => update('read-all');
+    const archiveNotification = (id: string) => update('archive', id);
+    const removeNotification = (id: string) => update('delete', id);
 
     return (
         <Drawer
@@ -308,7 +304,7 @@ export const AppNotificationDrawer: React.FC = () => {
             <Box sx={{ px: 2.5 }}>
                 <Tabs
                     value={tab}
-                    onChange={(_, v) => setTab(v)}
+                    onChange={(_, v) => { setTab(v); setPage(1); }}
                     sx={{
                         minHeight: 36,
                         '& .MuiTabs-indicator': { display: 'none' },
@@ -322,14 +318,7 @@ export const AppNotificationDrawer: React.FC = () => {
                     <Tab label={
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                             {t('notifications.all', 'All')}
-                            <Box sx={{
-                                bgcolor: tab === 0 ? 'text.primary' : 'action.selected',
-                                color: tab === 0 ? 'background.paper' : 'text.secondary',
-                                fontSize: '0.6875rem', fontWeight: 700, borderRadius: '2px',
-                                minWidth: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', px: 0.5,
-                             }}>
-                                {allNotifications.length}
-                            </Box>
+                            
                         </Box>
                     } />
                     <Tab label={
@@ -348,14 +337,7 @@ export const AppNotificationDrawer: React.FC = () => {
                     <Tab label={
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                             {t('notifications.archived', 'Archived')}
-                            <Box sx={{
-                                bgcolor: tab === 2 ? 'text.primary' : 'action.selected',
-                                color: tab === 2 ? 'background.paper' : 'text.secondary',
-                                fontSize: '0.6875rem', fontWeight: 700, borderRadius: '2px',
-                                minWidth: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', px: 0.5,
-                            }}>
-                                {archivedNotifications.length}
-                            </Box>
+                            
                         </Box>
                     } />
                 </Tabs>
@@ -368,6 +350,8 @@ export const AppNotificationDrawer: React.FC = () => {
                 '&::-webkit-scrollbar': { width: '4px' },
                 '&::-webkit-scrollbar-thumb': { bgcolor: 'divider', borderRadius: '2px' },
             }}>
+                {(inbox.isError || mutation.isError) && <Typography color="error" sx={{ p: 2 }}>{t('notifications.loadError', 'Unable to load or update notifications. Please try again.')}</Typography>}
+                {inbox.isLoading && <Typography sx={{ p: 2 }}>{t('common.loading', 'Loading...')}</Typography>}
                 {filteredNotifications.length === 0 ? (
                     <Box sx={{ py: 6, textAlign: 'center' }}>
                         <Typography sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
@@ -391,6 +375,10 @@ export const AppNotificationDrawer: React.FC = () => {
                 )}
             </Box>
 
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 2 }}>
+                <Button disabled={page <= 1 || inbox.isFetching} onClick={() => setPage((value) => value - 1)}>{t('common.previous', 'Previous')}</Button>
+                <Button disabled={page >= (inbox.data?.totalPages ?? 1) || inbox.isFetching} onClick={() => setPage((value) => value + 1)}>{t('common.next', 'Next')}</Button>
+            </Box>
             <Divider />
             <Box sx={{ py: 1.5, textAlign: 'center' }}>
                 <Typography

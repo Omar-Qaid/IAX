@@ -1,3 +1,4 @@
+import { updateControlOptions, moveOptionMetadata } from '../optionIdentity';
 import { create } from 'zustand';
 import type {
   BuilderActivity,
@@ -71,6 +72,7 @@ export const reportingMetadataForControlType = (
   };
 };
 export const createProcessBuilderDocument = (builderId = 'new'): ProcessBuilderDocument => ({
+  dataTypeCatalogVersion: 1,
   id: builderId,
   code: builderId === 'new' ? '' : `PB-${builderId}`,
   name: '',
@@ -254,7 +256,8 @@ const selectionExists = (
 interface State {
   document: ProcessBuilderDocument;
   selected: BuilderNode;
-  controlSettingsPane: 'configure' | 'options' | 'validation' | 'transitions';
+  controlSettingsPane: 'configure' | 'options' | 'validation' | 'transitions' | 'reporting' | 'schedule';
+  openProcessSchedule: () => void;
   selectedStepId: string | null;
   leftTab: number;
   centerTab: number;
@@ -266,7 +269,7 @@ interface State {
   select: (node: BuilderNode) => void;
   openControlSettings: (
     node: Extract<BuilderNode, { kind: 'requestControl' | 'control' }>,
-    pane: 'configure' | 'options' | 'validation' | 'transitions'
+    pane: 'configure' | 'options' | 'validation' | 'transitions' | 'reporting'
   ) => void;
   setLeftTab: (value: number) => void;
   setCenterTab: (value: number) => void;
@@ -420,6 +423,7 @@ export const useProcessBuilderStore = create<State>((set) => {
               ? selected.stepId
               : state.selectedStepId,
       })),
+    openProcessSchedule: () => set({ selected: { kind: 'process' }, controlSettingsPane: 'schedule' }),
     openControlSettings: (selected, controlSettingsPane) =>
       set((state) => ({
         selected,
@@ -440,11 +444,13 @@ export const useProcessBuilderStore = create<State>((set) => {
         document: {
           ...state.document,
           variables,
-          transitions: state.document.transitions.map((transition) =>
-            variableIds[transition.variableId]
-              ? { ...transition, variableId: variableIds[transition.variableId] }
-              : transition
-          ),
+          transitions: state.document.transitions.map((transition) => ({
+            ...transition,
+            variableId: variableIds[transition.variableId] ?? transition.variableId,
+            additionalConditions: transition.additionalConditions?.map((condition) => ({
+              ...condition, variableId: variableIds[condition.variableId] ?? condition.variableId,
+            })),
+          })),
         },
         selected:
           state.selected.kind === 'variable' && variableIds[state.selected.id]
@@ -642,14 +648,21 @@ export const useProcessBuilderStore = create<State>((set) => {
     updateRequestControl: (key, values) =>
       change((d) => ({
         ...d,
-        requestControls: d.requestControls.map((x) => (x.id === key ? { ...x, ...values } : x)),
+        requestControls: d.requestControls.map((x) => (x.id === key ? updateControlOptions(x, values) : x)),
       })),
     removeRequestControl: (key) =>
       set((state) => {
         const document = {
           ...state.document,
           requestControls: sequenceControls(
-            state.document.requestControls.filter((item) => item.id !== key)
+            state.document.requestControls.filter((item) => item.id !== key).map((item) => ({
+              ...item,
+              visibilityCondition: item.visibilityCondition?.variableId === key ? null : item.visibilityCondition,
+              optionFeatureConfigurations: item.optionFeatureConfigurations?.map((feature) => ({
+                ...feature,
+                visibleControlIds: feature.visibleControlIds.filter((targetId) => targetId !== key),
+              })),
+            }))
           ),
           transitions: state.document.transitions.map((transition) =>
             transition.triggerSource === 'requestControl' && transition.triggerId === key
@@ -713,7 +726,7 @@ export const useProcessBuilderStore = create<State>((set) => {
           optionAliases.splice(toIndex, 0, movedAlias);
           optionScores.splice(toIndex, 0, movedScore);
           optionFeatureConfigurations.splice(toIndex, 0, movedFeatures);
-          return { ...control, options, optionAliases, optionScores, optionFeatureConfigurations };
+          return { ...control, options, optionAliases, optionScores, optionFeatureConfigurations, optionIds: moveOptionMetadata(control, fromIndex, toIndex).optionIds };
         }),
       })),
     reorderActivityControlOptions: (stepId, activityId, controlId, fromIndex, toIndex) =>
@@ -742,7 +755,7 @@ export const useProcessBuilderStore = create<State>((set) => {
                           const options = [...control.options];
                           const [moved] = options.splice(fromIndex, 1);
                           options.splice(toIndex, 0, moved);
-                          return { ...control, options };
+                          return { ...control, options, ...moveOptionMetadata(control, fromIndex, toIndex) };
                         }),
                       }
                 ),
@@ -937,7 +950,7 @@ export const useProcessBuilderStore = create<State>((set) => {
                   a.id === activityId
                     ? {
                         ...a,
-                        controls: a.controls.map((c) => (c.id === key ? { ...c, ...values } : c)),
+                        controls: a.controls.map((c) => (c.id === key ? updateControlOptions(c, values) : c)),
                       }
                     : a
                 ),
