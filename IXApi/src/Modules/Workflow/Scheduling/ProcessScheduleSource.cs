@@ -40,7 +40,7 @@ public static class ProcessScheduleSource
                 ?? throw new ArgumentException("The showroom source is unavailable in this company.");
             fields = new(StringComparer.OrdinalIgnoreCase)
             {
-                ["RecId"] = Text(showroom.RecId), ["Name"] = showroom.Name,
+                ["RecId"] = Text(showroom.RecId), ["Name"] = showroom.Name ?? "",
                 ["DepartmentId"] = Text(showroom.DepartmentId), ["Location"] = showroom.Location ?? ""
             };
         }

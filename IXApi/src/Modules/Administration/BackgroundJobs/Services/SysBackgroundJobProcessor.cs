@@ -82,7 +82,11 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
             var db = scope.ServiceProvider.GetRequiredService<IAdministrationDataContext>();
             var now = DateTime.UtcNow;
 
-            var dueJobs = await db.SysBackgroundJobs
+            // Workflow recurrence establishes and validates its own company/account scope.
+            // Other handlers retain the existing default-company execution boundary.
+            var dueJobs = await db.SysBackgroundJobs.IgnoreQueryFilters()
+                .Where(j => j.DataAreaId == IAX.IXApi.Shared.Application.Identity.CompanyContextDefaults.DataAreaId
+                    || j.JobKey == "WFProcessScheduled")
                 .Where(j => !j.IsDeleted
                          && j.Status == SysJobStatus.Active
                          && j.IsEnabled
@@ -174,7 +178,9 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                 var realtime = sp.GetRequiredService<ISysRealtimeManager>();
 
                 var execution = await db.SysBackgroundJobExecutions.FirstOrDefaultAsync(x => x.RecId == executionId, stoppingToken);
-                var job = await db.SysBackgroundJobs.FirstOrDefaultAsync(x => x.RecId == jobId, stoppingToken);
+                var job = await db.SysBackgroundJobs.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.RecId == jobId && !x.IsDeleted
+                    && (x.DataAreaId == IAX.IXApi.Shared.Application.Identity.CompanyContextDefaults.DataAreaId
+                        || x.JobKey == "WFProcessScheduled"), stoppingToken);
                 if (execution is null || job is null) return;
 
                 var handler = _registry.Resolve(job.JobKey, sp);

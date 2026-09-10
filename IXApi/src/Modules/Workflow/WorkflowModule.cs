@@ -43,6 +43,7 @@ namespace IAX.IXApi.Modules.Workflow
             services.AddScoped<ISysEventHandler<WfActivityAlertDispatchedEvent>, WfActivityAlertDispatchedEventHandler>();
             services.AddScoped<ISysEventHandler<WfAssignmentAutoPassedEvent>, WfAssignmentAutoPassedNotificationHandler>();
             services.AddScoped<ISysBackgroundJobHandler, WfActivityAutoPassJobHandler>();
+            services.AddScoped<ISysBackgroundJobHandler, Scheduling.WFProcessScheduledJobHandler>();
             return services;
         }
     }

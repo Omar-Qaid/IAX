@@ -346,7 +346,7 @@ namespace IAX.IXApi.Modules.Workflow.Requests
             }).ToList();
 
             var strategy = _unitOfWork.Context.Database.CreateExecutionStrategy();
-            return await strategy.ExecuteAsync(async () =>
+            async Task<SubmitDynamicRequestResultDto> ExecuteSubmissionAsync()
             {
                 var request = new WfRequest
                 {
@@ -464,7 +464,10 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                     await _unitOfWork.RollbackTransactionAsync(cancellationToken);
                     throw;
                 }
-            });
+            }
+            return _unitOfWork.Context.Database.CurrentTransaction is not null
+                ? await ExecuteSubmissionAsync()
+                : await strategy.ExecuteAsync(ExecuteSubmissionAsync);
         }
 
         private sealed record PreparedSubmission(
