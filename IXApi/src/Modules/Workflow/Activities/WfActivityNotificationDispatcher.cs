@@ -62,7 +62,7 @@ namespace IAX.IXApi.Modules.Workflow.Activities
             }
         }
 
-        private static List<SysNotificationChannel> ResolveChannels(WfActivity activity)
+        internal static List<SysNotificationChannel> ResolveChannels(WfActivity activity)
         {
             var channels = new List<SysNotificationChannel>();
             if (activity.IsSystemNotificationEnabled) channels.Add(SysNotificationChannel.InApp);
