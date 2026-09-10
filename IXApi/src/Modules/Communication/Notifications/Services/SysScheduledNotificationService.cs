@@ -1,3 +1,4 @@
+using IAX.IXApi.Shared.Application.Identity;
 using IAX.IXApi.Modules.Communication.Persistence;
 using IAX.IXApi.Modules.Communication.Notifications;
 using IAX.IXApi.Shared.Domain.Entities;
@@ -59,22 +60,29 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
         /// </summary>
         private async Task ProcessPendingJobsAsync(CancellationToken ct)
         {
-            using var scope = _serviceProvider.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<ICommunicationDataContext>();
-            var notificationService = scope.ServiceProvider.GetRequiredService<ISysNotificationService>();
-
+            using var discoveryScope = _serviceProvider.CreateScope();
+            var discoveryDb = discoveryScope.ServiceProvider.GetRequiredService<ICommunicationDataContext>();
             var now = DateTime.UtcNow;
-
-            var pendingJobs = await db.Set<SysScheduledNotification>()
-                .Where(j => j.Status == SysScheduledJobStatus.Pending && j.SendAt <= now)
-                .OrderBy(j => j.SendAt)
-                .Take(50) // batch size
-                .ToListAsync(ct);
-
-            foreach (var job in pendingJobs)
+            var pendingIds = await discoveryDb.Set<SysScheduledNotification>().AsNoTracking()
+                .Where(j => (j.Status == SysScheduledJobStatus.Pending || j.Status == SysScheduledJobStatus.Processing) && j.SendAt <= now)
+                .OrderBy(j => j.SendAt).Select(j => j.RecId).Take(50).ToListAsync(ct);
+            foreach (var id in pendingIds)
             {
+                using var scope = _serviceProvider.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<ICommunicationDataContext>();
+                var token = Guid.NewGuid();
+                var claimed = await db.Set<SysScheduledNotification>()
+                    .Where(j => j.RecId == id && (j.Status == SysScheduledJobStatus.Pending || j.Status == SysScheduledJobStatus.Processing) && j.SendAt <= now)
+                    .ExecuteUpdateAsync(setters => setters.SetProperty(j => j.Status, SysScheduledJobStatus.Processing)
+                        .SetProperty(j => j.ClaimToken, token).SetProperty(j => j.SendAt, now.AddMinutes(10)), ct);
+                if (claimed == 0) continue;
+                var job = await db.Set<SysScheduledNotification>().SingleAsync(j => j.RecId == id, ct);
+                var notificationService = scope.ServiceProvider.GetRequiredService<ISysNotificationService>();
                 try
                 {
+                    if (!string.IsNullOrWhiteSpace(job.ExecutionUserId) && !string.IsNullOrWhiteSpace(job.DataAreaId))
+                        scope.ServiceProvider.GetRequiredService<BackgroundExecutionIdentity>()
+                            .Initialize(job.ExecutionUserId, job.DataAreaId, job.OwnerAccountId ?? job.ExecutionUserId);
                     // For escalations, check if the original was read
                     if (job.JobType == SysScheduledJobType.Escalation
                         && job.OriginalNotificationId.HasValue
@@ -90,6 +98,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                             job.Status = SysScheduledJobStatus.Cancelled;
                             job.CompletedAt = now;
                             _logger.LogInformation("[NotificationBgService] Escalation {RecId} skipped â€” already read", job.RecId);
+                            await db.SaveChangesAsync(ct);
                             continue;
                         }
                     }
@@ -104,6 +113,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                         Category = job.Category,
                         Priority = job.Priority,
                         Channel = job.Channel,
+                        PreserveChannel = job.PreserveChannel,
                         EntityType = job.EntityType,
                         EntityId = job.EntityId,
                         UserIds = !string.IsNullOrEmpty(job.RecipientUserIds)
@@ -115,7 +125,13 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                             : null,
                     };
 
-                    await notificationService.SendAsync(dto, ct);
+                    using var deliveryTimeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+                    deliveryTimeout.CancelAfter(TimeSpan.FromMinutes(5));
+                    var delivery = await notificationService.SendAsync(dto, deliveryTimeout.Token);
+                    if (delivery.RecId > 0 && job.Channel != SysNotificationChannel.InApp &&
+                        await db.Set<SysNotificationRecipient>().AnyAsync(r => r.NotificationId == delivery.RecId &&
+                            (r.DeliveryStatus == SysDeliveryStatus.Failed || r.DeliveryStatus == SysDeliveryStatus.Pending), ct))
+                        throw new InvalidOperationException("The configured notification channel did not deliver the message.");
 
                     job.Status = SysScheduledJobStatus.Completed;
                     job.CompletedAt = now;
@@ -129,6 +145,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                         var nextJob = new SysScheduledNotification
                         {
                             JobType = SysScheduledJobType.Recurring,
+                            DataAreaId = job.DataAreaId, ExecutionUserId = job.ExecutionUserId, OwnerAccountId = job.OwnerAccountId,
                             Title = job.Title,
                             Message = job.Message,
                             Url = job.Url,
@@ -136,6 +153,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                             Category = job.Category,
                             Priority = job.Priority,
                             Channel = job.Channel,
+                        PreserveChannel = job.PreserveChannel,
                             EntityType = job.EntityType,
                             EntityId = job.EntityId,
                             RecipientUserIds = job.RecipientUserIds,
@@ -169,10 +187,8 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
 
                     _logger.LogError(ex, "[NotificationBgService] Job {RecId} failed (retry {Retry}/3)", job.RecId, job.RetryCount);
                 }
-            }
-
-            if (pendingJobs.Any())
                 await db.SaveChangesAsync(ct);
+            }
         }
 
         /// <summary>
