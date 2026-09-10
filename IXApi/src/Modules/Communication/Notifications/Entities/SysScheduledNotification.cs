@@ -11,6 +11,15 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Entities
     /// </summary>
     public class SysScheduledNotification
     {
+        [MaxLength(10)]
+        public string? DataAreaId { get; set; }
+        [MaxLength(256)]
+        public string? ExecutionUserId { get; set; }
+        [MaxLength(256)]
+        public string? OwnerAccountId { get; set; }
+        public bool PreserveChannel { get; set; }
+        [ConcurrencyCheck]
+        public Guid ClaimToken { get; set; }
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long RecId { get; set; }
@@ -125,7 +134,8 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Entities
         Pending = 0,
         Completed = 1,
         Failed = 2,
-        Cancelled = 3
+        Cancelled = 3,
+        Processing = 4
     }
 }
 
