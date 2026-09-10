@@ -137,3 +137,8 @@ Stored control JSON now receives strict save-time object validation: blank field
 5. Retain unsupported draft state while making persistence limitations visible in the eventual validation panel. Do not invent endpoints for activity-level validation or mark designer modes executable.
 
 No application or database behavior was changed while producing this matrix. C1 remains open for the remaining validation/characterization work; C2 and subsequent feature checkpoints remain planned.
+# Scheduling and notification persistence update
+
+`ProcessScheduleSettings` loads and saves `WFProcessScheduled` through a dedicated GET/PUT endpoint after the process is saved. Activation records the authenticated company and saving account, creates/enables its existing-framework background job, validates source mappings and the request form, and protects updates with a concurrency version. Local edits remain unactivated until saved. Supported dynamic table sources are `HcmWorker` and `Showroom` only.
+
+Activity `sysNotificationTemplateId` round-trips through both full-process and activity-only saves, including explicit clearing. Request option/assignment alerts are staged in the existing `SysScheduledNotifications` queue. See [execution plan](workflow-request-execution-implementation-plan.md) for migration, verification and delivery limits. Earlier audit rows below describe the original inspection where explicitly marked draft-only.

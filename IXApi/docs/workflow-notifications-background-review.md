@@ -1,5 +1,7 @@
 # Workflow, Process Builder, Notifications and Background Execution
 
+Current implementation update (2026-09-10): see [request execution implementation plan](workflow-request-execution-implementation-plan.md), section 5, for implemented behavior and remaining runtime gates. The inspection table below records the earlier baseline. Builder now persists schedules through `WFProcessScheduled`, exposes activity templates, and the drawer uses central notification APIs. Submission stages alerts in the existing scheduled-notification queue; its worker now carries company/account context and uses claim leases. No database migration or external delivery has been performed by this review.
+
 Review date: 2026-09-10. Status: source review and initial corrections; full integration is not complete.
 
 ## Existing connections

@@ -36,5 +36,7 @@ public class WorkflowScheduleFoundationTests
         Assert.Contains(entity.GetIndexes(), index => index.IsUnique
             && index.Properties.Select(x => x.Name).SequenceEqual(new[] { "DataAreaId", "ProcessId" }));
         Assert.False(db.Database.HasPendingModelChanges());
+        var notification = db.Model.FindEntityType(typeof(IAX.IXApi.Modules.Communication.Notifications.Entities.SysScheduledNotification))!;
+        Assert.True(notification.FindProperty("ClaimToken")!.IsConcurrencyToken);
     }
 }

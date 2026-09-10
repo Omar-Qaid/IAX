@@ -125,6 +125,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
             var notification = new SysNotification
             {
                 TenantId = null,
+                DataAreaId = _currentUser.GetDataAreaId(),
                 EntityId = dto.EntityId,
                 EntityType = dto.EntityType,
                 ReferenceNumber = dto.ReferenceNumber,
@@ -173,11 +174,19 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                     _db.SysNotificationAuditLogs.Add(auditLog);
                 }
                 
+                notification.Status = finalRecipients.Any(rec => rec.DeliveryStatus == SysDeliveryStatus.Failed)
+                    ? SysNotificationStatus.Failed : SysNotificationStatus.Sent;
                 await _db.SaveChangesAsync(ct);
             }
             else
             {
                 _logger.LogWarning("[SysNotification] Strategy sender not found for channel {Channel}", channel);
+                if (channel != SysNotificationChannel.InApp)
+                {
+                    notification.Status = SysNotificationStatus.Failed;
+                    foreach (var recipient in finalRecipients) recipient.DeliveryStatus = SysDeliveryStatus.Failed;
+                    await _db.SaveChangesAsync(ct);
+                }
             }
 
             // 5. Update unread counts and real-time alerts

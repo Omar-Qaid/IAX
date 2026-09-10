@@ -64,7 +64,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
             var discoveryDb = discoveryScope.ServiceProvider.GetRequiredService<ICommunicationDataContext>();
             var now = DateTime.UtcNow;
             var pendingIds = await discoveryDb.Set<SysScheduledNotification>().AsNoTracking()
-                .Where(j => (j.Status == SysScheduledJobStatus.Pending || j.Status == SysScheduledJobStatus.Processing) && j.SendAt <= now)
+                .Where(ScheduledNotificationClaims.Due(now))
                 .OrderBy(j => j.SendAt).Select(j => j.RecId).Take(50).ToListAsync(ct);
             foreach (var id in pendingIds)
             {
@@ -73,7 +73,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                 var db = scope.ServiceProvider.GetRequiredService<ICommunicationDataContext>();
                 var token = Guid.NewGuid();
                 var claimed = await db.Set<SysScheduledNotification>()
-                    .Where(j => j.RecId == id && (j.Status == SysScheduledJobStatus.Pending || j.Status == SysScheduledJobStatus.Processing) && j.SendAt <= now)
+                    .Where(j => j.RecId == id).Where(ScheduledNotificationClaims.Due(now))
                     .ExecuteUpdateAsync(setters => setters.SetProperty(j => j.Status, SysScheduledJobStatus.Processing)
                         .SetProperty(j => j.ClaimToken, token).SetProperty(j => j.SendAt, now.AddMinutes(10)), ct);
                 if (claimed == 0) continue;
@@ -129,7 +129,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                     using var deliveryTimeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
                     deliveryTimeout.CancelAfter(TimeSpan.FromMinutes(5));
                     var delivery = await notificationService.SendAsync(dto, deliveryTimeout.Token);
-                    if (delivery.RecId > 0 && job.Channel != SysNotificationChannel.InApp &&
+                    if (delivery.RecId > 0 && delivery.Channel != SysNotificationChannel.InApp &&
                         await db.Set<SysNotificationRecipient>().AnyAsync(r => r.NotificationId == delivery.RecId &&
                             (r.DeliveryStatus == SysDeliveryStatus.Failed || r.DeliveryStatus == SysDeliveryStatus.Pending), ct))
                         throw new InvalidOperationException("The configured notification channel did not deliver the message.");

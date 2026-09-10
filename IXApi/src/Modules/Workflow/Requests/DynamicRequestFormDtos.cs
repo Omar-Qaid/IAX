@@ -109,7 +109,16 @@ public sealed class DynamicRequestAttachmentOwnerDto
 }
 
 public sealed class DynamicRequestValidationException(List<ValidationResult> errors)
-    : Exception("The request contains invalid values.")
+    : Exception(BuildMessage(errors))
 {
     public List<ValidationResult> Errors { get; } = errors;
+
+    private static string BuildMessage(IEnumerable<ValidationResult> errors)
+    {
+        var details = errors.Where(error => !string.IsNullOrWhiteSpace(error.ErrorMessage))
+            .Select(error => string.IsNullOrWhiteSpace(error.ControlName)
+                ? error.ErrorMessage : $"{error.ControlName}: {error.ErrorMessage}");
+        var message = string.Join(" ", details);
+        return string.IsNullOrWhiteSpace(message) ? "The request contains invalid values." : message;
+    }
 }
