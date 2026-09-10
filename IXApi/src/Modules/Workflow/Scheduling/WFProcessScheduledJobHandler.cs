@@ -1,4 +1,5 @@
 using IAX.IXApi.Modules.Administration.BackgroundJobs.Services;
+using IAX.IXApi.Modules.Administration.BackgroundJobs.Entities;
 using IAX.IXApi.Modules.Administration.BackgroundJobs.Services.Handlers;
 using IAX.IXApi.Modules.Identity.Permissions;
 using IAX.IXApi.Modules.Identity.Users;
@@ -35,6 +36,14 @@ public sealed class WFProcessScheduledJobHandler : ISysBackgroundJobHandler
             if (row is null || !row.Enabled || row.NextRunAt is null || row.NextRunAt > now)
             {
                 context.Output = "No workflow occurrence is due.";
+                await transaction.CommitAsync(ct);
+                return;
+            }
+            if (!await db.Set<SysBackgroundJob>().IgnoreQueryFilters().AnyAsync(job =>
+                job.RecId == context.JobId && job.JobKey == JobKey && job.DataAreaId == row.DataAreaId
+                && !job.IsDeleted && job.IsEnabled && job.Status == SysJobStatus.Active, ct))
+            {
+                context.Output = "The workflow background job is disabled or unavailable.";
                 await transaction.CommitAsync(ct);
                 return;
             }
