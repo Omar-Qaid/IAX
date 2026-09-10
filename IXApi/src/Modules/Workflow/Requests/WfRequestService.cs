@@ -421,24 +421,27 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                             .Where(item => performerIds.Contains(item.PerformerId))
                             .Select(item => new { item.PerformerId, item.UserID })
                             .ToListAsync(cancellationToken);
+                        var alertEmployeeIds = performerUsers.Select(x => x.UserID).Distinct().ToList();
+                        var alertAccounts = await _context.Set<HcmWorker>().AsNoTracking()
+                            .Where(x => alertEmployeeIds.Contains(x.RecId) && x.IsActive && !x.IsDeleted && x.UserId != null)
+                            .ToDictionaryAsync(x => x.RecId, x => x.UserId!, cancellationToken);
                         foreach (var item in alertOptions)
                         {
                             var recipients = performerUsers
                                 .Where(user => item.Option.FeatureConfiguration.PerformerIds.Contains(user.PerformerId))
-                                .Select(user => user.UserID.ToString(CultureInfo.InvariantCulture))
+                                .Where(user => alertAccounts.ContainsKey(user.UserID))
+                                .Select(user => alertAccounts[user.UserID])
                                 .Distinct()
                                 .ToList();
                             if (recipients.Count == 0) continue;
-                            await _notifications.SendToUsersAsync(
-                                recipients,
-                                $"Workflow request {request.Code ?? request.RecId.ToString(CultureInfo.InvariantCulture)}",
-                                item.Option.FeatureConfiguration.AlertMessage,
-                                category: "Workflow",
-                                entityType: nameof(WfRequest),
-                                entityId: request.RecId.ToString(CultureInfo.InvariantCulture),
-                                ct: cancellationToken);
+                            foreach (var recipient in recipients)
+                                _context.Set<IAX.IXApi.Modules.Communication.Notifications.Entities.SysScheduledNotification>().Add(
+                                    NotificationIntent(request, recipient, $"Workflow request {request.Code ?? request.RecId.ToString(CultureInfo.InvariantCulture)}",
+                                        item.Option.FeatureConfiguration.AlertMessage));
                         }
                     }
+                    await QueueAssignmentNotificationsAsync(request, execution.Assignments, cancellationToken);
+                    await _unitOfWork.CompleteAsync(cancellationToken);
                     await _unitOfWork.CommitTransactionAsync(cancellationToken);
                     return new SubmitDynamicRequestResultDto
                     {

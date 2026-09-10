@@ -68,6 +68,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                 .OrderBy(j => j.SendAt).Select(j => j.RecId).Take(50).ToListAsync(ct);
             foreach (var id in pendingIds)
             {
+                now = DateTime.UtcNow;
                 using var scope = _serviceProvider.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<ICommunicationDataContext>();
                 var token = Guid.NewGuid();
@@ -153,7 +154,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                             Category = job.Category,
                             Priority = job.Priority,
                             Channel = job.Channel,
-                        PreserveChannel = job.PreserveChannel,
+                            PreserveChannel = job.PreserveChannel,
                             EntityType = job.EntityType,
                             EntityId = job.EntityId,
                             RecipientUserIds = job.RecipientUserIds,
