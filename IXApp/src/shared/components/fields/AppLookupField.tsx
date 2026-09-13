@@ -17,6 +17,7 @@ export function AppLookupField<TFieldValues extends FieldValues = FieldValues>({
   placeholder,
   displayMode = 'dialog',
   onChange: onChangeProp,
+  ...lookupBehavior
 }: LookupFieldProps<TFieldValues>): React.ReactElement {
   const formContext = useFormContext<TFieldValues>();
   const control = controlProp || formContext?.control;
@@ -38,6 +39,7 @@ export function AppLookupField<TFieldValues extends FieldValues = FieldValues>({
         placeholder={placeholder}
         displayMode={displayMode}
         onChange={onChangeProp}
+        {...lookupBehavior}
       />
     );
   }
@@ -57,6 +59,7 @@ export function AppLookupField<TFieldValues extends FieldValues = FieldValues>({
         placeholder={placeholder}
         displayMode={displayMode}
         onChange={onChangeProp}
+        {...lookupBehavior}
       />
     );
   }
@@ -83,6 +86,7 @@ export function AppLookupField<TFieldValues extends FieldValues = FieldValues>({
           fullWidth={fullWidth}
           placeholder={placeholder}
           displayMode={displayMode}
+          {...lookupBehavior}
         />
       )}
     />

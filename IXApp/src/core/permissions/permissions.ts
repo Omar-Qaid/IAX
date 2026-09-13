@@ -8,6 +8,10 @@ export const PERMISSIONS = {
 
   CUSTOMER_GROUP_VIEW: 'AccountsReceivable.CustomerGroups.View',
   CUSTOMER_GROUP_MANAGE: 'AccountsReceivable.CustomerGroups.Edit',
+  CUSTOMER_POSTING_PROFILE_VIEW: 'AccountsReceivable.PostingProfiles.View',
+  CUSTOMER_POSTING_PROFILE_CREATE: 'AccountsReceivable.PostingProfiles.Create',
+  CUSTOMER_POSTING_PROFILE_EDIT: 'AccountsReceivable.PostingProfiles.Edit',
+  CUSTOMER_POSTING_PROFILE_DELETE: 'AccountsReceivable.PostingProfiles.Delete',
 
   SALES_ORDER_VIEW: 'AccountsReceivable.SalesOrders.View',
   SALES_ORDER_CREATE: 'AccountsReceivable.SalesOrders.Create',

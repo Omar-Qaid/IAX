@@ -71,6 +71,11 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
             permission: PERMISSIONS.CUSTOMER_VIEW,
           },
           {
+            label: 'nav.customerPostingProfiles',
+            path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_POSTING_PROFILES,
+            permission: PERMISSIONS.CUSTOMER_POSTING_PROFILE_VIEW,
+          },
+          {
             label: 'nav.customerPaymentMethods',
             path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_METHODS,
             permission: PERMISSIONS.CUSTOMER_VIEW,

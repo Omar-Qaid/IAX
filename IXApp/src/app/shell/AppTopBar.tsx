@@ -170,7 +170,7 @@ export const AppTopBar: React.FC = memo(() => {
   }, [changeLanguage, currentLanguage.code, setRtl]);
 
   const handleCompanyChange = useCallback((companyCode: string) => {
-    setCompany(companyCode);
+    if (!setCompany(companyCode)) return;
     setCompanyAnchorEl(null);
     void queryClient.invalidateQueries();
   }, [queryClient, setCompany]);

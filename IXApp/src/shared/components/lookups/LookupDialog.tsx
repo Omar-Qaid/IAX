@@ -28,12 +28,22 @@ export const LookupDialog: React.FC<LookupDialogProps> = ({
   selectedId,
   onSelect,
   loading = false,
+  loadingMore = false,
+  searchable = true,
+  sideMode = 'client',
+  searchValue,
+  onSearchChange,
+  lazyLoading = false,
+  hasMore = false,
+  onLoadMore,
 }) => {
   const { t } = useAppTranslation();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [localSearchTerm, setLocalSearchTerm] = useState('');
+  const searchTerm = searchValue ?? localSearchTerm;
+  const setSearchTerm = onSearchChange ?? setLocalSearchTerm;
 
   const filteredOptions = useMemo(() => {
-    if (!searchTerm.trim()) return options;
+    if (!searchable || sideMode === 'server' || !searchTerm.trim()) return options;
     const term = searchTerm.toLowerCase();
     return options.filter(
       (opt) =>
@@ -41,7 +51,13 @@ export const LookupDialog: React.FC<LookupDialogProps> = ({
         opt.name.toLowerCase().includes(term) ||
         (opt.description && opt.description.toLowerCase().includes(term))
     );
-  }, [options, searchTerm]);
+  }, [options, searchTerm, searchable, sideMode]);
+
+  const handleListScroll = (event: React.UIEvent<HTMLUListElement>) => {
+    if (!lazyLoading || !hasMore || loading || loadingMore || !onLoadMore) return;
+    const list = event.currentTarget;
+    if (list.scrollHeight - list.scrollTop - list.clientHeight <= 80) onLoadMore();
+  };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -64,24 +80,26 @@ export const LookupDialog: React.FC<LookupDialogProps> = ({
       </DialogTitle>
 
       <DialogContent dividers sx={{ p: 1.25 }}>
-        <TextField
-          autoFocus
-          fullWidth
-          size="small"
-          placeholder={t('lookups.searchOptions')}
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
-                </InputAdornment>
-              ),
-            },
-          }}
-          sx={{ mb: 1 }}
-        />
+        {searchable ? (
+          <TextField
+            autoFocus
+            fullWidth
+            size="small"
+            placeholder={t('lookups.searchOptions')}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+              },
+            }}
+            sx={{ mb: 1 }}
+          />
+        ) : null}
 
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
@@ -94,7 +112,11 @@ export const LookupDialog: React.FC<LookupDialogProps> = ({
             </Typography>
           </Box>
         ) : (
-          <List disablePadding sx={{ maxHeight: 300, overflowY: 'auto' }}>
+          <List
+            disablePadding
+            onScroll={handleListScroll}
+            sx={{ maxHeight: 300, overflowY: 'auto' }}
+          >
             {filteredOptions.map((opt) => (
               <ListItemButton
                 key={opt.id}
@@ -115,6 +137,11 @@ export const LookupDialog: React.FC<LookupDialogProps> = ({
                 />
               </ListItemButton>
             ))}
+            {loadingMore ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 1.5 }}>
+                <CircularProgress size={20} />
+              </Box>
+            ) : null}
           </List>
         )}
       </DialogContent>

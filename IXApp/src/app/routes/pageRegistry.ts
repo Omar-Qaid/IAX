@@ -17,6 +17,15 @@ const lazyPage = <TModule extends object>(
 
 export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
   {
+    id: 'customer-posting-profiles',
+    path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_POSTING_PROFILES,
+    permission: PERMISSIONS.CUSTOMER_POSTING_PROFILE_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-receivable/pages/CustomerPostingProfilesPage'),
+      (module) => module.CustomerPostingProfilesPage
+    ),
+  },
+  {
     id: 'dashboard',
     path: ROUTE_PATHS.DASHBOARD,
     permission: PERMISSIONS.DASHBOARD_VIEW,

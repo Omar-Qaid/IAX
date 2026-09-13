@@ -1,4 +1,36 @@
 {
+  "customerPostingProfiles": {
+    "title": "Customer posting profiles",
+    "setup": "Setup",
+    "restrictions": "Table restrictions",
+    "editAccount": "Edit account",
+    "saveAccount": "Save account",
+    "cancelAccount": "Cancel account changes",
+    "removeAccount": "Remove the selected account rule?",
+    "noAccounts": "No account rules. Select Add to create one.",
+    "saveProfileFirst": "Save the posting profile before adding account rules.",
+    "selectReference": "Select an existing customer for Table or an existing customer group for Group.",
+    "invalidLength": "Account/Group number allows 20 characters; collection letter sequence allows 10.",
+    "invalidIdentifier": "Account and interest identifiers must be non-negative whole numbers.",
+    "maxLength": "{{field}} allows a maximum of {{max}} characters.",
+    "accountCodes": { "0": "Table", "1": "Group", "2": "All" },
+    "fields": {
+      "postingProfile": "Posting profile",
+      "name": "Description",
+      "accountCode": "Account code",
+      "num": "Account/Group number",
+      "summaryLedgerDimension": "Summary account",
+      "clearingLedgerDimension": "Liquidity account for payments",
+      "vatPrepaymentsLedgerDimension": "Sales tax prepayments",
+      "liabilitiesForDiscountLedgerDimension": "Liabilities for discount account",
+      "collectionLetterCourse": "Collection letter sequence",
+      "custInterest": "Interest code",
+      "settlement": "Allow automatic settlement",
+      "interest": "Interest",
+      "collectionLetter": "Collection letter",
+      "close": "Close"
+    }
+  },
   "salesOrder": {
     "gridHelp": "Tab / Enter: next cell | Shift: previous | Up / Down: next row | F2: edit | Insert: add | Alt+Delete: remove | Ctrl+F: filter",
     "pasteSingleCell": "Paste one cell at a time. Select a value in the lookup for item and unit fields."
@@ -14,6 +46,7 @@
     "tagline": "Enterprise Resource Planning Solution"
   },
   "nav": {
+    "customerPostingProfiles": "Customer posting profiles",
     "app_title": "IXApp Enterprise",
     "app_title_short": "IXApp",
     "home": "Home",

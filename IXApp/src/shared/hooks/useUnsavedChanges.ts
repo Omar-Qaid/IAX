@@ -1,9 +1,14 @@
 import { useEffect } from 'react';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import { unsavedChanges } from '@core/navigation/unsavedChanges';
 
 export function useUnsavedChanges(isDirty: boolean, message?: string) {
   const { t } = useAppTranslation();
   const resolvedMessage = message ?? t('messages.unsavedChanges');
+  useEffect(
+    () => (isDirty ? unsavedChanges.register(resolvedMessage) : undefined),
+    [isDirty, resolvedMessage]
+  );
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {

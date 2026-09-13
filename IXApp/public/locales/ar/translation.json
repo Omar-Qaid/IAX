@@ -1,4 +1,36 @@
 {
+  "customerPostingProfiles": {
+    "title": "ملفات تعريف ترحيل العملاء",
+    "setup": "الإعداد",
+    "restrictions": "قيود الجدول",
+    "editAccount": "تحرير الحساب",
+    "saveAccount": "حفظ الحساب",
+    "cancelAccount": "إلغاء تغييرات الحساب",
+    "removeAccount": "هل تريد إزالة قاعدة الحساب المحددة؟",
+    "noAccounts": "لا توجد قواعد حساب. اختر إضافة لإنشاء قاعدة.",
+    "saveProfileFirst": "احفظ ملف تعريف الترحيل قبل إضافة قواعد الحسابات.",
+    "selectReference": "اختر عميلاً موجوداً للجدول أو مجموعة عملاء موجودة للمجموعة.",
+    "invalidLength": "يسمح رقم الحساب/المجموعة بـ 20 حرفاً وتسلسل خطاب التحصيل بـ 10 أحرف.",
+    "invalidIdentifier": "يجب أن تكون معرفات الحساب والفائدة أعداداً صحيحة غير سالبة.",
+    "maxLength": "يسمح الحقل {{field}} بحد أقصى {{max}} حرفاً.",
+    "accountCodes": { "0": "جدول", "1": "مجموعة", "2": "الكل" },
+    "fields": {
+      "postingProfile": "ملف تعريف الترحيل",
+      "name": "الوصف",
+      "accountCode": "رمز الحساب",
+      "num": "رقم الحساب/المجموعة",
+      "summaryLedgerDimension": "حساب الملخص",
+      "clearingLedgerDimension": "حساب السيولة للمدفوعات",
+      "vatPrepaymentsLedgerDimension": "ضريبة المبيعات للدفعات المقدمة",
+      "liabilitiesForDiscountLedgerDimension": "حساب التزامات الخصم",
+      "collectionLetterCourse": "تسلسل خطاب التحصيل",
+      "custInterest": "رمز الفائدة",
+      "settlement": "السماح بالتسوية التلقائية",
+      "interest": "الفائدة",
+      "collectionLetter": "خطاب التحصيل",
+      "close": "إغلاق"
+    }
+  },
   "salesOrder": {
     "gridHelp": "Tab / Enter: الخلية التالية | Shift: السابقة | أعلى / أسفل: الانتقال بين الصفوف | F2: تحرير | Insert: إضافة | Alt+Delete: حذف | Ctrl+F: تصفية",
     "pasteSingleCell": "الصق قيمة خلية واحدة في كل مرة. اختر الصنف والوحدة من قائمة البحث."
@@ -14,6 +46,7 @@
     "tagline": "نظام تخطيط موارد المؤسسة"
   },
   "nav": {
+    "customerPostingProfiles": "ملفات تعريف ترحيل العملاء",
     "app_title": "نظام IXApp المؤسسي",
     "app_title_short": "IXApp",
     "requestSubmission": "تقديم الطلبات",

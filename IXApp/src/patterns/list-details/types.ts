@@ -76,6 +76,8 @@ export interface ListDetailsHeaderField<T> extends Omit<DetailFieldConfig, 'name
 }
 
 export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
+  /** Keep the parent stable while its nested editor has unsaved changes. */
+  interactionLocked?: boolean;
   /** Shows records as a selectable reference list without record-level CRUD actions. */
   readOnly?: boolean;
   initialSelectedId?: string;

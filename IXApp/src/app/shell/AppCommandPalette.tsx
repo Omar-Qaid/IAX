@@ -35,6 +35,11 @@ interface PageItem {
 const iconSx = { fontSize: 24, color: 'text.secondary' };
 
 const PAGE_PRESENTATION: Record<string, Pick<PageItem, 'label' | 'icon' | 'category'>> = {
+  'customer-posting-profiles': {
+    label: 'nav.customerPostingProfiles',
+    icon: <SettingsIcon sx={iconSx} />,
+    category: 'Data',
+  },
   dashboard: {
     label: 'nav.dashboard',
     icon: <DashboardIcon sx={iconSx} />,

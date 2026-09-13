@@ -1,5 +1,5 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { DetailValue, EnterpriseListDetailsConfig, ListDetailRecord } from './types';
 import {
   createEnterpriseFilterCondition,
@@ -26,6 +26,7 @@ export function useListDetailsPage<T extends ListDetailRecord>(
   config: EnterpriseListDetailsConfig<T>
 ) {
   const source = config.dataSource;
+  const queryClient = useQueryClient();
   const controlledRecords = source.type === 'controlled' ? source.records : null;
   const controlledLoading = source.type === 'controlled' ? Boolean(source.loading) : false;
   const controlledError = source.type === 'controlled' ? (source.error ?? null) : null;
@@ -105,7 +106,7 @@ export function useListDetailsPage<T extends ListDetailRecord>(
           ? String(remoteQuery.error)
           : null
     );
-    if (!remoteQuery.data) return;
+    if (!remoteQuery.data || editing || config.interactionLocked) return;
     const loaded = remoteQuery.data;
     setLocalRecords(loaded);
     setSelectedId((current) =>
@@ -117,6 +118,8 @@ export function useListDetailsPage<T extends ListDetailRecord>(
     remoteQuery.error,
     remoteQuery.isFetching,
     remoteQuery.isLoading,
+    editing,
+    config.interactionLocked,
     source.type,
   ]);
   useEffect(() => {
@@ -165,19 +168,25 @@ export function useListDetailsPage<T extends ListDetailRecord>(
   }, [advancedFilters, config, deferredQuery, records]);
   const replaceRecords = (next: T[]) => {
     if (source.type === 'controlled') source.onRecordsChange(next);
-    else setLocalRecords(next);
+    else {
+      setLocalRecords(next);
+      if (source.type === 'remote')
+        queryClient.setQueryData(['list-details', remoteSourceKey], next);
+    }
   };
   const refresh = useCallback(() => {
+    if (editing || config.interactionLocked) return;
     if (source.type === 'controlled') void source.refresh?.();
     else if (source.type === 'remote') void remoteQuery.refetch();
-  }, [remoteQuery, source]);
+  }, [remoteQuery, source, editing, config.interactionLocked]);
   const choose = (record: T) => {
-    if (editing) return;
+    if (editing || config.interactionLocked) return;
     setSelectedId(record.id);
     setDraft(record);
     setValidationErrors({});
   };
   const startEdit = () => {
+    if (config.interactionLocked) return;
     if (!selected) return;
     setDraft(selected);
     setIsNew(false);
@@ -185,6 +194,7 @@ export function useListDetailsPage<T extends ListDetailRecord>(
     setValidationErrors({});
   };
   const startNew = async () => {
+    if (config.interactionLocked) return;
     let record = config.createRecord();
     if (config.numberSequence) {
       setError(null);
@@ -254,6 +264,7 @@ export function useListDetailsPage<T extends ListDetailRecord>(
     setValidationErrors({});
   };
   const remove = async () => {
+    if (config.interactionLocked) return;
     if (!selected) return;
     setSaving(true);
     setError(null);

@@ -300,9 +300,15 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
           <EnterpriseCrudActions
             editing={state.editing}
             {...crud}
-            canEdit={Boolean(state.selected) && canEdit && !state.saving}
-            canDelete={Boolean(state.selected) && canDelete && !state.saving}
-            editPermission={config.permissions?.edit}
+            saving={state.saving}
+            canNew={!config.interactionLocked && !state.saving}
+            canEdit={
+              Boolean(state.selected) && canEdit && !state.saving && !config.interactionLocked
+            }
+            canDelete={
+              Boolean(state.selected) && canDelete && !state.saving && !config.interactionLocked
+            }
+            editPermission={state.isNew ? config.permissions?.create : config.permissions?.edit}
             newPermission={config.permissions?.create}
             deletePermission={config.permissions?.delete}
             onEdit={state.startEdit}
@@ -400,6 +406,7 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
                 {config.detailHeader ?? (
                   <RecordHeader
                     title={title}
+                    viewLabel={config.viewLabel}
                     yesLabel={labels.yes}
                     noLabel={labels.no}
                     record={displayedRecord}
@@ -681,6 +688,7 @@ export function RecordList<T extends ListDetailRecord>({
 
 function RecordHeader<T>({
   title,
+  viewLabel,
   yesLabel,
   noLabel,
   record,
@@ -692,6 +700,7 @@ function RecordHeader<T>({
   onChange,
 }: {
   title: string;
+  viewLabel?: string;
   yesLabel: string;
   noLabel: string;
   record: T;
@@ -778,6 +787,9 @@ function RecordHeader<T>({
     );
   return (
     <Box sx={{ px: 0, pt: '3px', pb: '3px', minHeight, boxSizing: 'border-box' }}>
+      {viewLabel && (
+        <Typography sx={{ height: 20, fontSize: 12, lineHeight: '18px' }}>{viewLabel}</Typography>
+      )}
       <Typography
         component="h1"
         sx={{
@@ -852,6 +864,7 @@ function RecordHeader<T>({
               ) : editable ? (
                 <TextField
                   type={field.type === 'number' ? 'number' : 'text'}
+                  slotProps={{ htmlInput: { 'aria-label': field.label } }}
                   value={value}
                   onChange={(event) =>
                     onChange(

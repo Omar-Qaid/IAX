@@ -144,12 +144,20 @@ export interface LookupFieldProps<TFieldValues extends FieldValues = FieldValues
   ) => void;
   options?: LookupOption[];
   onFetchOptions?: (search: string) => Promise<LookupOption[]>;
+  fetchPage?: FetchPageFn<LookupOption>;
+  queryKey?: QueryKey;
+  searchable?: boolean;
+  sideMode?: 'client' | 'server';
+  lazyLoading?: boolean;
+  pageSize?: number;
+  searchDebounceMs?: number;
   multiple?: boolean;
   disabled?: boolean;
   readOnly?: boolean;
   required?: boolean;
   error?: boolean;
   helperText?: string;
+  loading?: boolean;
   placeholder?: string;
   fullWidth?: boolean;
   control?: Control<TFieldValues>;
@@ -164,5 +172,13 @@ export interface LookupDialogProps {
   selectedId?: string | number | (string | number)[];
   onSelect: (option: LookupOption) => void;
   loading?: boolean;
+  loadingMore?: boolean;
   multiple?: boolean;
+  searchable?: boolean;
+  sideMode?: 'client' | 'server';
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
+  lazyLoading?: boolean;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
 }
