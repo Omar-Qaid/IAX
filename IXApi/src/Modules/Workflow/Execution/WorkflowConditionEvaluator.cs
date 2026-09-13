@@ -12,9 +12,11 @@ public static class WorkflowConditionEvaluator
             throw new InvalidOperationException($"Unsupported workflow data type '{typeCode}'.");
         var op = operatorCode?.Trim().ToUpperInvariant() switch
         {
-            "EQ" or "=" => "=", "NEQ" or "!=" or "<>" => "!=",
-            "GT" or ">" => ">", "LT" or "<" => "<", "GTE" or ">=" => ">=", "LTE" or "<=" => "<=",
-            "CONTAINS" => "contains", "ISEMPTY" => "isEmpty", "BETWEEN" => "between",
+            // Legacy imports use OP{id} codes from the original operator catalog.
+            "EQ" or "=" or "OP5" => "=", "NEQ" or "!=" or "<>" or "OP6" => "!=",
+            "GT" or ">" or "OP1" => ">", "LT" or "<" or "OP2" => "<",
+            "GTE" or ">=" or "OP3" => ">=", "LTE" or "<=" or "OP4" => "<=",
+            "CONTAINS" => "contains", "ISEMPTY" => "isEmpty", "BETWEEN" or "OP7" => "between",
             _ => throw new InvalidOperationException($"Unsupported workflow operator '{operatorCode}'.")
         };
         if (op == "isEmpty") return string.IsNullOrEmpty(actual);

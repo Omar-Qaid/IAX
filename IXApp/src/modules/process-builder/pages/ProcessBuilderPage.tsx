@@ -300,6 +300,7 @@ export function ProcessBuilderPage() {
           paddingInlineEnd: '28px !important',
           py: '4px',
         },
+        // The RTL Emotion cache mirrors these transforms; keep their source values LTR.
         '& .MuiInputLabel-sizeSmall:not(.MuiInputLabel-shrink)': {
           transform: 'translate(14px, 5px) scale(1)',
         },
@@ -308,18 +309,12 @@ export function ProcessBuilderPage() {
         '& .MuiChip-root': { fontSize: tokens.fontSize.caption },
         '& .MuiSvgIcon-root': { fontSize: 16 },
         '& .MuiSwitch-root': { width: 24, height: 14, p: 0, marginInlineEnd: '4px' },
-        '& .MuiSwitch-switchBase': { p: '2px' },
-        '& .MuiSwitch-thumb': { width: 10, height: 10 },
+        '& .MuiSwitch-root .MuiSwitch-switchBase': { p: '2px', borderRadius: '50%' },
+        '& .MuiSwitch-root .MuiSwitch-thumb': { width: 10, height: 10 },
         '& .MuiSwitch-track': { borderRadius: 7, bgcolor: '#a3a3a3' },
-        '& .MuiSwitch-switchBase.Mui-checked': {
+        '& .MuiSwitch-root .MuiSwitch-switchBase.Mui-checked': {
           transform: 'translateX(10px)',
           color: tokens.accent,
-        },
-        'html[dir="rtl"] & .MuiSwitch-switchBase.Mui-checked': {
-          transform: 'translateX(-10px)',
-        },
-        'html[dir="rtl"] & .MuiInputLabel-sizeSmall:not(.MuiInputLabel-shrink)': {
-          transform: 'translate(-14px, 5px) scale(1)',
         },
         '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
           bgcolor: tokens.accentLight,

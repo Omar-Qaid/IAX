@@ -730,7 +730,7 @@ describe('Process Builder Activity Form backend integration', () => {
     }));
   });
 
-  it('loads and saves request controls, selectable options, validations, and transitions', async () => {
+  it.each(['EQ', 'OP5'])('loads and saves request controls, options, validations, and transitions with %s', async (operatorCode) => {
     const requestControl = {
       id: '31', recId: 31, processId: 1, controlId: 4, code: 'REQ-1', name: 'Choices', nameAlias: 'الخيارات',
       description: null, mandatory: true, uniqueKey: false, score: 0, usedAsCriteria: true,
@@ -778,7 +778,7 @@ describe('Process Builder Activity Form backend integration', () => {
       { recId: 2, code: 'DROPDOWN-DB', name: 'Database Dropdown', controlType: 'dropdown-db' },
       { recId: 4, code: 'CHECKLIST', name: 'Check Box List', controlType: 'checkboxlist' },
     ]);
-    mocks.operatorList.mockResolvedValue([{ recId: 3, code: 'EQ', name: '=' }]);
+    mocks.operatorList.mockResolvedValue([{ recId: 3, code: operatorCode, name: '=' }]);
 
     const document = await loadProcessBuilder(1);
     const control = document.requestControls[0];

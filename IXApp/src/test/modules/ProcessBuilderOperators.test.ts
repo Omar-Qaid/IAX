@@ -9,6 +9,14 @@ describe('Process Builder operator catalog', () => {
   it('uses semantic codes instead of display names', () => {
     expect(resolveBuilderOperator(catalog[1])).toBe('>');
   });
+  it.each([
+    ['OP1', '>'], ['OP2', '<'], ['OP3', '>='], ['OP4', '<='],
+    ['OP5', '='], ['OP6', '!='], ['OP7', 'between'],
+  ] as const)('loads and preserves legacy operator %s', (code, operator) => {
+    const legacy = [{ recId: 5, code, name: 'Localized operator' }];
+    expect(resolveBuilderOperator(legacy[0])).toBe(operator);
+    expect(resolveOperatorId(operator, legacy, 5)).toBe(5);
+  });
   it('resolves a changed operator instead of preserving the stale ID', () => {
     expect(resolveOperatorId('>', catalog, 11)).toBe(22);
     expect(resolveOperatorId('=', catalog, 11)).toBe(11);

@@ -7,8 +7,10 @@ interface DataTypeMetadata {
 }
 
 const semanticTypes: Record<string, BuilderDataType> = {
+  NUM: 'number',
   INT: 'number',
   STR: 'text',
+  DATE: 'date',
   DT: 'date',
   BOOL: 'boolean',
 };

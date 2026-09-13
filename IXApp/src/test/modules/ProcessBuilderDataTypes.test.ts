@@ -5,6 +5,16 @@ import {
 } from '@modules/process-builder/api/processBuilderDataTypes';
 
 describe('Process Builder workflow metadata', () => {
+  it.each([[1, 'STR', 'text'], [2, 'NUM', 'number'], [3, 'BOOL', 'boolean'], [4, 'DATE', 'date']] as const)(
+    'round-trips API-seeded type %s (%s)',
+    (recId, code, type) => {
+      const seededCatalog = [{ recId, code, isActive: true }];
+      expect(resolveBuilderDataType(recId, seededCatalog)).toBe(type);
+      expect(resolveVariableDataTypeId(type, seededCatalog)).toBe(recId);
+      expect(resolveVariableDataTypeId(type, seededCatalog, recId)).toBe(recId);
+    }
+  );
+
   const catalog = [
     { recId: 41, code: 'INT', isActive: true },
     { recId: 12, code: 'STR', isActive: true },

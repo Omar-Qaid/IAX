@@ -12,6 +12,8 @@ const operators: Record<string, BuilderOperator> = {
   '>': '>', gt: '>', '<': '<', lt: '<',
   '>=': '>=', gte: '>=', '<=': '<=', lte: '<=',
   contains: 'contains', isempty: 'isEmpty', between: 'between',
+  // Legacy workflow imports generated OP{id} from the original operator catalog.
+  op1: '>', op2: '<', op3: '>=', op4: '<=', op5: '=', op6: '!=', op7: 'between',
 };
 
 export function parseBuilderOperator(value: string): BuilderOperator {

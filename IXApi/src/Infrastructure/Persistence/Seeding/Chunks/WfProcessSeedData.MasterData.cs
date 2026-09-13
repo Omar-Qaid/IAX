@@ -267,7 +267,7 @@ public sealed partial class WfProcessSeedData
         await SaveIdentityRowsAsync(db, "WfProcessTypes", ct);
     }
 
-    private static async Task SaveIdentityRowsAsync(
+    internal static async Task SaveIdentityRowsAsync(
         ApplicationDbContext db,
         string tableName,
         CancellationToken ct)
@@ -275,6 +275,7 @@ public sealed partial class WfProcessSeedData
         var (enableIdentityInsert, disableIdentityInsert) = tableName switch
         {
             "WfCategories" => ("SET IDENTITY_INSERT [WfCategories] ON", "SET IDENTITY_INSERT [WfCategories] OFF"),
+            "WfProcesses" => ("SET IDENTITY_INSERT [WfProcesses] ON", "SET IDENTITY_INSERT [WfProcesses] OFF"),
             "WfPriorities" => ("SET IDENTITY_INSERT [WfPriorities] ON", "SET IDENTITY_INSERT [WfPriorities] OFF"),
             "WfProcessTypes" => ("SET IDENTITY_INSERT [WfProcessTypes] ON", "SET IDENTITY_INSERT [WfProcessTypes] OFF"),
             "WfActivityTypes" => ("SET IDENTITY_INSERT [WfActivityTypes] ON", "SET IDENTITY_INSERT [WfActivityTypes] OFF"),
@@ -299,4 +300,3 @@ public sealed partial class WfProcessSeedData
         }
     }
 }
-

@@ -1,4 +1,6 @@
 using IAX.IXApi.Infrastructure.Persistence;
+using IAX.IXApi.Infrastructure.Persistence.Seeding.Processes.Process590;
+using IAX.IXApi.Infrastructure.Persistence.Seeding.Processes.Process603;
 using IAX.IXApi.Modules.Identity.Roles;
 using IAX.IXApi.Modules.Identity.Users;
 using Microsoft.AspNetCore.Identity;
@@ -26,6 +28,12 @@ public sealed partial class WfProcessSeedData : ISeeder
 
         await SeedMasterDataAsync(db, owner, ct);
         await SeedPaymentRequestExampleAsync(db, owner, ct);
+        await SeedPerformersAsync(db, owner, ct);
+        await SeedPerformerUsersAsync(db, owner, ct);
+
+        await WfProcess590SeedData.SeedAsync(db, owner, ct);
+        await WfProcess603SeedData.SeedAsync(db, owner, ct);
+
         foreach (var form in AdditionalForms())
             await SeedFormAsync(db, form, owner, ct);
     }
