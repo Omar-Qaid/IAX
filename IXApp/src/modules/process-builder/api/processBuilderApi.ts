@@ -23,6 +23,7 @@ import {
 import { wfRequestControlOptionApi } from '@modules/workflow/api/wfRequestControlOptionApi';
 import { wfRequestControlValidationApi } from '@modules/workflow/api/wfRequestControlValidationApi';
 import { wfTransitionApi } from '@modules/workflow/api/wfTransitionApi';
+import { wfActivityMappingVariableApi, wfRequestMappingVariableApi } from '@modules/workflow/api/wfVariableMappingApis';
 import { apiClient } from '@core/api/apiClient';
 import type { ApiResponse } from '@core/api/apiResponse';
 import type {
@@ -296,6 +297,8 @@ export async function loadProcessBuilder(processId: number, signal?: AbortSignal
     transitions,
     operators,
     dataTypes,
+    requestMappings,
+    activityMappings,
   ] = await Promise.all([
     wfProcessApi.getById(processId, signal),
     wfVariableApi.list(signal, processId),
@@ -312,6 +315,8 @@ export async function loadProcessBuilder(processId: number, signal?: AbortSignal
     wfTransitionApi.list(signal, processId),
     wfOperatorApi.list(signal),
     wfDataTypeApi.list(signal),
+    wfRequestMappingVariableApi.list(signal),
+    wfActivityMappingVariableApi.list(signal),
   ]);
   const processSteps = steps
     .filter((step) => step.processId === processId)
@@ -432,6 +437,9 @@ export async function loadProcessBuilder(processId: number, signal?: AbortSignal
                   active: validation.isActive,
                 })),
               visibilityCondition: null,
+              bindVariableId: activityMappings.find(
+                (mapping) => mapping.isActive && mapping.activityControlId === control.recId
+              )?.variableId.toString(),
             };
           }),
         actions: [],
@@ -529,6 +537,9 @@ export async function loadProcessBuilder(processId: number, signal?: AbortSignal
               }
             : null;
         })(),
+        bindVariableId: requestMappings.find(
+          (mapping) => mapping.isActive && mapping.requestControlId === control.recId
+        )?.variableId.toString(),
       };
     });
   const builderTransitions: BuilderTransition[] = transitions
@@ -632,6 +643,7 @@ export async function saveProcessBuilder(
   const requestControlResult = await saveProcessRequestControls({
     ...document,
     id: String(persisted.recId),
+    variables: variableResult.variables,
   });
 
   const stepIds = new Map<string, number>();
@@ -725,7 +737,7 @@ export async function saveProcessBuilder(
   }
 
   await syncActivityControls(
-    { ...document, id: String(persisted.recId) },
+    { ...document, id: String(persisted.recId), variables: variableResult.variables },
     persisted.recId,
     activityIds
   );
@@ -949,13 +961,14 @@ async function syncActivityControls(
   processId: number,
   activityIds: Map<string, number>
 ): Promise<void> {
-  const [process, serverControls, controlTypes, serverValidations, serverOptions] =
+  const [process, serverControls, controlTypes, serverValidations, serverOptions, serverMappings] =
     await Promise.all([
       wfProcessApi.getById(processId),
       wfActivityControlApi.list(),
       wfControlApi.list(),
       wfActivityControlValidationApi.list(),
       wfActivityControlOptionApi.list(),
+      wfActivityMappingVariableApi.list(),
     ]);
   const persistedActivityIds = new Set(activityIds.values());
   const processControls = serverControls.filter((control) =>
@@ -1013,6 +1026,10 @@ async function syncActivityControls(
     return { activityId, control, controlType };
   });
 
+  for (const mapping of serverMappings.filter((item) =>
+    processControls.some((control) => control.recId === item.activityControlId) &&
+    !retainedIds.has(item.activityControlId)))
+    await wfActivityMappingVariableApi.delete(mapping);
   for (const control of processControls) {
     if (!retainedIds.has(control.recId)) await wfActivityControlApi.delete(control);
   }
@@ -1158,6 +1175,30 @@ async function syncActivityControls(
       else await wfActivityControlOptionApi.create(record);
     }
   }
+
+  const processMappings = serverMappings.filter((mapping) => retainedControlIds.has(mapping.activityControlId));
+  for (const { control } of controls) {
+    const activityControlId = savedControlIds.get(control.id);
+    if (!activityControlId) continue;
+    const current = processMappings.find((mapping) => mapping.activityControlId === activityControlId);
+    const variableId = control.bindVariableId ? numericId(control.bindVariableId) : null;
+    if (control.bindVariableId && !variableId)
+      throw new Error(`Activity control '${control.label}': save and select a workflow variable.`);
+    if (!variableId) {
+      if (current) await wfActivityMappingVariableApi.delete(current);
+      continue;
+    }
+    if (current) {
+      if (current.variableId !== variableId || !current.isActive)
+        await wfActivityMappingVariableApi.update({ ...current, variableId, isActive: true });
+    } else {
+      await wfActivityMappingVariableApi.create({
+        id: `new-${crypto.randomUUID()}`, recId: 0, activityControlId, variableId,
+        variableOrder: control.sortOrder, isActive: true, rowVersion: null, recVersion: 1,
+        dataAreaId: process.dataAreaId,
+      });
+    }
+  }
 }
 
 export interface SaveProcessActivitiesResult {
@@ -1286,7 +1327,7 @@ export async function saveProcessRequestControls(
   const processId = Number(document.id);
   if (!Number.isInteger(processId) || processId <= 0)
     throw new Error('Save the process before saving request controls.');
-  const [process, serverControls, controlTypes, codeMetadata, serverValidations, serverOptions] =
+  const [process, serverControls, controlTypes, codeMetadata, serverValidations, serverOptions, serverMappings] =
     await Promise.all([
       wfProcessApi.getById(processId),
       wfRequestControlApi.list(),
@@ -1294,6 +1335,7 @@ export async function saveProcessRequestControls(
       getRequestControlCodeMetadata(),
       wfRequestControlValidationApi.list(),
       wfRequestControlOptionApi.list(),
+      wfRequestMappingVariableApi.list(),
     ]);
   const processControls = serverControls.filter((control) => control.processId === processId);
   validateRecordOwnership(document.requestControls, processControls, 'Request controls');
@@ -1358,6 +1400,10 @@ export async function saveProcessRequestControls(
     return { control, controlType };
   });
 
+  for (const mapping of serverMappings.filter((item) =>
+    processControls.some((control) => control.recId === item.requestControlId) &&
+    !retainedIds.has(item.requestControlId)))
+    await wfRequestMappingVariableApi.delete(mapping);
   for (const control of processControls) {
     if (!retainedIds.has(control.recId)) await wfRequestControlApi.delete(control);
   }
@@ -1561,6 +1607,29 @@ export async function saveProcessRequestControls(
             : null,
       }),
     });
+  }
+  const processMappings = serverMappings.filter((mapping) => retainedControlIds.has(mapping.requestControlId));
+  for (const control of requestControls) {
+    const requestControlId = savedControlIds.get(control.id);
+    if (!requestControlId) continue;
+    const current = processMappings.find((mapping) => mapping.requestControlId === requestControlId);
+    const variableId = control.bindVariableId ? numericId(control.bindVariableId) : null;
+    if (control.bindVariableId && !variableId)
+      throw new Error(`Request control '${control.label}': save and select a workflow variable.`);
+    if (!variableId) {
+      if (current) await wfRequestMappingVariableApi.delete(current);
+      continue;
+    }
+    if (current) {
+      if (current.variableId !== variableId || !current.isActive)
+        await wfRequestMappingVariableApi.update({ ...current, variableId, isActive: true });
+    } else {
+      await wfRequestMappingVariableApi.create({
+        id: `new-${crypto.randomUUID()}`, recId: 0, requestControlId, variableId,
+        sortOrder: control.sortOrder, isActive: true, rowVersion: null, recVersion: 1,
+        dataAreaId: process.dataAreaId,
+      });
+    }
   }
   const reloaded = await loadProcessBuilder(processId);
   return {

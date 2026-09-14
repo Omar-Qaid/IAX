@@ -2,7 +2,6 @@ import React from 'react';
 import { loadBuilderNotificationTemplates } from '../api/processBuilderNotificationTemplates';
 import { validationTypesForControl } from '../validationTypesForControl';
 import { TransitionRuleGroup } from './TransitionRuleGroup';
-import { ProcessScheduleSettings } from './ProcessScheduleSettings';
 import { isSupportedBuilderOperator, resolveBuilderOperator } from '../api/processBuilderOperators';
 import {
   Accordion,
@@ -738,13 +737,6 @@ export function ProcessBuilderSettingsPanel() {
       </Stack>
     );
   }
-  if (selected.kind === 'process' && s.controlSettingsPane === 'schedule')
-    return (
-      <Stack spacing="8px" sx={{ p: '10px' }}>
-        <SettingsTitle title={t('wfProcessBuilder.settings.schedule.title')} />
-        <ProcessScheduleSettings key={`schedule-${d.id}`} processId={d.id} controls={d.requestControls} />
-      </Stack>
-    );
   if (selected.kind === 'process')
     return (
       <Stack spacing="8px" sx={{ p: '10px', minHeight: '100%' }}>
@@ -859,7 +851,6 @@ export function ProcessBuilderSettingsPanel() {
             onChange={(event) => s.updateProcess({ repeatIntervalHours: Number(event.target.value) })}
           />
         </Box>
-        <ProcessScheduleSettings key={d.id} processId={d.id} controls={d.requestControls} onOpen={s.openProcessSchedule} />
         <Box sx={{ pt: '12px', borderTop: `1px solid ${tokens.border}` }}>
           <Stack direction="row" sx={{ alignItems: 'center', minHeight: 28 }}>
             <Typography sx={{ flex: 1, fontSize: tokens.fontSize.body, fontWeight: 600 }}>
@@ -1854,6 +1845,18 @@ export function ProcessBuilderSettingsPanel() {
         {text(t('wfProcessBuilder.settings.fields.label'), control.label, (label) =>
           update({ label })
         )}
+        <TextField
+          select
+          size="small"
+          label={t('wfProcessBuilder.settings.fields.variable')}
+          value={control.bindVariableId ?? ''}
+          onChange={(event) => update({ bindVariableId: event.target.value || undefined })}
+        >
+          <MenuItem value="">{t('common.none')}</MenuItem>
+          {d.variables.filter((variable) => variable.active).map((variable) => (
+            <MenuItem key={variable.id} value={variable.id}>{variable.name}</MenuItem>
+          ))}
+        </TextField>
         <Stack direction="row" spacing="8px">
           <TextField
             fullWidth
@@ -2191,6 +2194,18 @@ export function ProcessBuilderSettingsPanel() {
         {text(t('wfProcessBuilder.settings.fields.label'), control.label, (label) =>
           update({ label })
         )}
+        <TextField
+          select
+          size="small"
+          label={t('wfProcessBuilder.settings.fields.variable')}
+          value={control.bindVariableId ?? ''}
+          onChange={(event) => update({ bindVariableId: event.target.value || undefined })}
+        >
+          <MenuItem value="">{t('common.none')}</MenuItem>
+          {d.variables.filter((variable) => variable.active).map((variable) => (
+            <MenuItem key={variable.id} value={variable.id}>{variable.name}</MenuItem>
+          ))}
+        </TextField>
         {text(t('wfProcessBuilder.settings.arabicLabel'), control.labelAR, (labelAR) =>
           update({ labelAR })
         )}

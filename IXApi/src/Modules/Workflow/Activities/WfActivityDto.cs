@@ -3,7 +3,7 @@ using IAX.IXApi.Modules.Communication.Notifications;
 
 namespace IAX.IXApi.Modules.Workflow.Activities
 {
-public class WfActivityDto : WfMasterEntityDto<long>
+    public class WfActivityDto : WfMasterEntityDto<long>
     {
         public byte ActivityTypeId { get; set; }
         public long StepId { get; set; }
@@ -23,10 +23,13 @@ public class WfActivityDto : WfMasterEntityDto<long>
         public bool IsAutoPassEnabled { get; set; }
         public byte AutoPassAfterHours { get; set; }
 
+        public bool IsRecurringReminderEnabled { get; set; }
+        public byte RecurringReminderIntervalHours { get; set; }
+        public byte MaxReminderOccurrences { get; set; }
+
         public bool CanViewPreviousSteps { get; set; }
         public bool CanViewPreviousDocuments { get; set; }
 
         public string? ExtendedProperties { get; set; }
     }
 }
-

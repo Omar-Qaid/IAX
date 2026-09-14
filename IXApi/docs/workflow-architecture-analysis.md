@@ -108,7 +108,7 @@ The companion inventory lists files by feature. The following describes actual r
 - `WfStepService`, `WfActivityService`, `WfVariableService`, `WfTransitionService` and lookup services: largely generic CRUD with number-sequence hooks. Preserve these for configuration.
 - Request/activity control, option, validation-definition, and mapping services: thin CRUD wrappers over existing generic infrastructure. Their validators validate configuration DTOs; that is distinct from evaluating submitted values.
 - `WfActivityNotificationDispatcher`: selects activity channels, resolves a template, and delegates delivery to Communication. This is an existing reusable integration point.
-- `WfActivityAutoPassJobHandler`: queries up to 200 overdue open assignments, marks them finished, saves, and publishes an event per assignment. It does not create process data, evaluate transitions, or finish/advance the parent request.
+- `WorkflowActivityAutoPassBatchService`: queries up to 200 overdue open assignments, marks them finished, saves, and publishes an event per assignment. It does not create process data, evaluate transitions, or finish/advance the parent request.
 - `WfAssignmentAutoPassedNotificationHandler`: loads the activity and dispatches an alert for the event. Other activity alert events/handlers supply notification-related integration, not a complete execution pipeline.
 - `PrintTemplateService`, document validator, and resource authorizer: template CRUD/versioning/publication and authorized selection for process/request/record reporting. Keep this reporting subsystem separate from workflow execution; its versioning is not workflow-definition versioning.
 - `WfExcelImportService`: imports configuration from fixed spreadsheet columns and exports templates. Writes repositories directly, bypassing normal configuration service hooks; it is not an automatic request-submission engine.
@@ -262,7 +262,7 @@ SQL performers should remain explicitly unsupported until an allowlisted, parame
 - `WfPerformerService` -> remains configuration CRUD; move controller membership sync into it with an atomic configuration save. New resolver handles runtime employee resolution.
 - Inline option alert lookup -> reusable performer resolution plus staged Communication delivery; preserve distinct option-alert and assignment-alert semantics.
 - `WfActivityNotificationDispatcher` -> preserved adapter, connected to deferred delivery rather than synchronous transport inside execution transactions.
-- `WfActivityAutoPassJobHandler` direct updates -> `CompleteAssignmentAsync` with timeout/system actor; retain job scheduling/batching infrastructure.
+- `WorkflowActivityAutoPassBatchService` direct updates -> `CompleteAssignmentAsync` with timeout/system actor; retain job scheduling/batching infrastructure.
 - `GetRequestListAsync` / `GetMailDetailsAsync` -> query service, authorized SQL filtering and structured stage projections.
 - XML parsing/merge methods -> compatibility helper used only by reads/imports until migration is complete.
 - `WfProcessService`, lookup/control CRUD, EF configurations, report/template subsystem, and generic frontend components -> remain, with targeted fixes rather than wholesale replacement.

@@ -297,6 +297,15 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
       (module) => module.SysNumberSequencePage
     ),
   },
+  {
+    id: 'system-background-jobs',
+    path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.BACKGROUND_JOBS,
+    permission: PERMISSIONS.BACKGROUND_JOB_VIEW,
+    component: lazyPage(
+      () => import('@modules/administration/pages/SysBackgroundJobPage'),
+      (module) => module.SysBackgroundJobPage
+    ),
+  },
 ] as const;
 
 export const getPageDefinition = (path: string): AppPageDefinition | undefined =>

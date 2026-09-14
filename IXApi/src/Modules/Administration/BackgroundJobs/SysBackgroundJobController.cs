@@ -86,6 +86,11 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs
             => Ok(APIResponse<IEnumerable<string>>.Ok(_registry.RegisteredKeys.OrderBy(k => k)));
 
         // ── Mutations ─────────────────────────────────────────────────────
+        [HttpGet("services")]
+        [DomainPermission("System", "BackgroundJobs", "View")]
+        public IActionResult GetServices([FromServices] IAX.IXApi.Shared.Application.Batch.IBatchServiceRegistry registry)
+            => Ok(APIResponse<object>.Ok(registry.Services.OrderBy(s => s.Name)));
+
 
         /// <summary>Creates and schedules a new job.</summary>
         [HttpPost]

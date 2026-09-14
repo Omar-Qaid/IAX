@@ -31,19 +31,28 @@ public sealed partial class WfProcess603SeedData
             new { RecId = 16167L, ProcessId = 603L, DepartmentId = (short?)117, OccupationId = (short?)null, EmployeeId = (long?)null },
         };
 
+        var validEmployeeIds = await db.Set<IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker>()
+            .IgnoreQueryFilters()
+            .Select(x => x.RecId)
+            .ToHashSetAsync(ct);
+
         foreach (var item in items)
         {
             if (item.RecId == 0) continue;
 
             if (!existingIds.Contains(item.RecId))
             {
+                var validEmployeeId = item.EmployeeId.HasValue && validEmployeeIds.Contains(item.EmployeeId.Value)
+                    ? item.EmployeeId
+                    : null;
+
                 toAdd.Add(new WfUsersProcess
                 {
                     RecId = item.RecId,
                     ProcessId = item.ProcessId,
                     DepartmentId = item.DepartmentId,
                     OccupationId = item.OccupationId,
-                    EmployeeId = item.EmployeeId,
+                    EmployeeId = validEmployeeId,
                     CreatedBy = owner,
                     OwnerAccountId = owner
                 });

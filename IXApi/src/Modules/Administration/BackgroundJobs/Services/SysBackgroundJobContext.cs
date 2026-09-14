@@ -12,6 +12,8 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
     public sealed class SysBackgroundJobContext
     {
         public long JobId { get; init; }
+        public long TaskId { get; init; }
+        public Guid CorrelationId { get; init; } = Guid.NewGuid();
         public long ExecutionId { get; init; }
         public string JobKey { get; init; } = null!;
         public string JobName { get; init; } = null!;

@@ -6,6 +6,7 @@ using IAX.IXApi.Modules.Workflow.Execution;
 using IAX.IXApi.Modules.Workflow.Operators;
 using IAX.IXApi.Modules.Workflow.Performers;
 using IAX.IXApi.Modules.Workflow.Processes;
+using IAX.IXApi.Modules.Workflow.Steps;
 using IAX.IXApi.Modules.Workflow.Transitions;
 using IAX.IXApi.Modules.Workflow.Variables;
 using Microsoft.EntityFrameworkCore;
@@ -66,11 +67,14 @@ public partial class WfRequestService
             catch (Exception ex) when (ex is FormatException or OverflowException or InvalidOperationException or System.Text.Json.JsonException)
             { throw ConfigurationError($"Transition {route.RecId}: {ex.Message}"); }
         }
-        var routeToStart = matches.FirstOrDefault()
-            ?? throw ConfigurationError("No starting transition matches the submitted values.");
-        var step = await _context.WfSteps.AsNoTracking().SingleOrDefaultAsync(item =>
-            item.RecId == routeToStart.StepId && item.ProcessId == request.ProcessId && item.IsActive && !item.IsDeleted, ct)
-            ?? throw ConfigurationError("The starting transition targets an unavailable step.");
+        var availableSteps = await _context.WfSteps.AsNoTracking()
+            .Where(item => item.ProcessId == request.ProcessId && item.IsActive && !item.IsDeleted)
+            .OrderBy(item => item.SortOrder == 0 ? 1 : 0)
+            .ThenBy(item => item.SortOrder)
+            .ThenBy(item => item.RecId)
+            .ToListAsync(ct);
+        var startingStepId = SelectStartingStepId(matches, availableSteps);
+        var step = availableSteps.Single(item => item.RecId == startingStepId);
         var activities = await _context.Set<WfActivity>().AsNoTracking().Include(item => item.Performer).ThenInclude(item => item.PerformerType)
             .Where(item => item.StepId == step.RecId && item.IsActive && !item.IsDeleted).ToListAsync(ct);
         if (activities.Count == 0) throw ConfigurationError("The starting step has no active activities.");
@@ -84,15 +88,39 @@ public partial class WfRequestService
                     RequestId = request.RecId, StepId = step.RecId, ActivityId = activity.RecId,
                     UserId = employee, AssignDate = request.RequestDate, IsFinished = false,
                     AutoPassing = activity.IsAutoPassEnabled, AutoPassingHrs = activity.AutoPassAfterHours,
+                    Automatically = false, Transferred = false,
                     Score = activity.Score, DataAreaId = request.DataAreaId, IsActive = true
                 });
         }
         var runtimeVariables = variables.Select(variable => new WfProcessVariable
         {
-            RequestId = request.RecId, VariableId = variable.RecId, VariableValue = values[variable.RecId],
+            RequestId = request.RecId, VariableId = variable.RecId,
+            VariableValue = string.IsNullOrEmpty(values[variable.RecId]) ? null : values[variable.RecId],
+            SortOrder = variable.SortOrder,
             DataAreaId = request.DataAreaId
         }).ToList();
         return new WorkflowStartPlan(step.RecId, runtimeVariables, assignments);
+    }
+
+    internal static long SelectStartingStepId(
+        IEnumerable<WfTransition> matchingRoutes,
+        IEnumerable<WfStep> availableSteps)
+    {
+        var steps = availableSteps.ToList();
+        var routedStepId = matchingRoutes.FirstOrDefault()?.StepId;
+        if (routedStepId.HasValue)
+        {
+            if (steps.Any(item => item.RecId == routedStepId.Value)) return routedStepId.Value;
+            throw ConfigurationError("The starting transition targets an unavailable step.");
+        }
+
+        var defaultStep = steps
+            .OrderBy(item => item.SortOrder == 0 ? 1 : 0)
+            .ThenBy(item => item.SortOrder)
+            .ThenBy(item => item.RecId)
+            .FirstOrDefault()
+            ?? throw ConfigurationError("The process has no active starting step.");
+        return defaultStep.RecId;
     }
 
     private static string DefaultOperand(string? code) => code?.Trim().ToUpperInvariant() switch

@@ -8,7 +8,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Configuration
     {
         public void Configure(EntityTypeBuilder<SysBackgroundJob> builder)
         {
-            builder.ToTable("SysBackgroundJobs");
+            builder.ToTable("BatchJobs");
 
             builder.HasIndex(e => e.Name).IsUnique();
             builder.HasIndex(e => e.JobKey);

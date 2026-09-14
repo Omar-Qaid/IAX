@@ -349,6 +349,7 @@ export function DynamicControlRenderer({
     );
   }
   const select =
+    Boolean(control.referenceType && options.length > 0) ||
     type === 'select' ||
     type === 'combobox' ||
     type.includes('dropdown') ||

@@ -34,7 +34,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks;
 public sealed class WorkflowRequestTrackingSeeder : ISeeder
 {
     private const long ProcessId = 662;
- 
+
     private const string Signature = "data:image/svg+xml;base64,PHN2Zy8+";
 
     private sealed record RequestControl(long Id, byte Type, string Code, string Label, string LabelAr, byte Order, bool Mandatory = false, bool Active = true, string? Properties = null);
@@ -94,14 +94,14 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
     {
         _ = roles;
         var createdBy = (await users.FindByNameAsync("sys"))?.Id ?? "sys";
- 
+
         await SeedExecutionAsync(db, createdBy, ct);
         await SeedRequestForEveryProcessAsync(db, createdBy, ct);
         await SeedPrintTemplateAsync(db, createdBy, ct);
         await SeedPrintTemplateForEveryProcessAsync(db, createdBy, ct);
     }
 
-   
+
 
     private static async System.Threading.Tasks.Task SeedExecutionAsync(ApplicationDbContext db, string by, CancellationToken ct)
     {
@@ -117,7 +117,12 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                 ControlId = value.Type,
                 ControlDataId = value.Control,
                 ControlValue = value.Value,
-                UsedAsCriteria = value.Criteria,
+                ValueAlias = value.ValueAr,
+                Value = value.ValueEn,
+                Name = value.Label,
+                NameAlias = value.LabelAr,
+                EarnedScore = 0,
+                Score = 0,
                 SortOrder = value.Order,
                 CreatedBy = by,
                 OwnerAccountId = by,
@@ -150,15 +155,15 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
         }
 
         foreach (var d in details)
-            if (!await db.WfRequestDetails.IgnoreQueryFilters().AnyAsync(x=>x.RecId==d.RecId,ct)) { db.WfRequestDetails.Add(d); await SaveIdentityAsync(db,"WfRequestDetails",ct); }
-        foreach (var a in Assignments.Where(x=>x.Request==requestId))
-            if (!await db.WfAssignments.IgnoreQueryFilters().AnyAsync(x=>x.RecId==a.Id,ct)) { db.WfAssignments.Add(new WfAssignment {RecId=a.Id,RequestId=a.Request,ActivityId=a.Activity,UserId=a.User,AssignDate=a.Assigned,IsFinished=true,FinishedDate=a.Finished,AutoPassing=a.AutoPassing,AutoPassingHrs=a.Hours,StepId=a.Step,Automatically=a.Automatically,CreatedBy=by,OwnerAccountId=by}); await SaveIdentityAsync(db,"WfAssignments",ct); }
-        var selectedAssignmentIds=Assignments.Where(x=>x.Request==requestId).Select(x=>x.Id).ToHashSet();
-        var activityDetails=ActivityValues.Where(v=>selectedAssignmentIds.Contains(v.Assignment)).Select(v=>new WfActivityDetail {RecId=v.Id,ProcessId=v.Task,AssignmentID=v.Assignment,ControlId=v.Type,ControlDataId=v.Control,ControlValue=v.Value,SortOrder=v.Order,CreatedBy=by,OwnerAccountId=by}).ToList();
-        foreach (var t in Tasks.Where(x=>selectedAssignmentIds.Contains(x.Assignment)))
-            if (!await db.WfProcessData.IgnoreQueryFilters().AnyAsync(x=>x.RecId==t.Id,ct)) { db.WfProcessData.Add(new WfProcessData {RecId=t.Id,AssignmentID=t.Assignment,FinishDate=t.Finished,ActivityDetails=BuildXml(activityDetails.Where(x=>x.ProcessId==t.Id)),CreatedBy=by,OwnerAccountId=by}); await SaveIdentityAsync(db,"WfProcessData",ct); }
+            if (!await db.WfRequestDetails.IgnoreQueryFilters().AnyAsync(x => x.RecId == d.RecId, ct)) { db.WfRequestDetails.Add(d); await SaveIdentityAsync(db, "WfRequestDetails", ct); }
+        foreach (var a in Assignments.Where(x => x.Request == requestId))
+            if (!await db.WfAssignments.IgnoreQueryFilters().AnyAsync(x => x.RecId == a.Id, ct)) { db.WfAssignments.Add(new WfAssignment { RecId = a.Id, RequestId = a.Request, ActivityId = a.Activity, UserId = a.User, AssignDate = a.Assigned, IsFinished = true, FinishedDate = a.Finished, AutoPassing = a.AutoPassing, AutoPassingHrs = a.Hours, StepId = a.Step, Automatically = a.Automatically, CreatedBy = by, OwnerAccountId = by }); await SaveIdentityAsync(db, "WfAssignments", ct); }
+        var selectedAssignmentIds = Assignments.Where(x => x.Request == requestId).Select(x => x.Id).ToHashSet();
+        var activityDetails = ActivityValues.Where(v => selectedAssignmentIds.Contains(v.Assignment)).Select(v => new WfActivityDetail { RecId = v.Id, ProcessId = v.Task, AssignmentID = v.Assignment, ControlId = v.Type, ControlDataId = v.Control, ControlValue = v.Value, SortOrder = v.Order, CreatedBy = by, OwnerAccountId = by }).ToList();
+        foreach (var t in Tasks.Where(x => selectedAssignmentIds.Contains(x.Assignment)))
+            if (!await db.WfProcessData.IgnoreQueryFilters().AnyAsync(x => x.RecId == t.Id, ct)) { db.WfProcessData.Add(new WfProcessData { RecId = t.Id, AssignmentID = t.Assignment, FinishDate = t.Finished, ActivityDetails = BuildXml(activityDetails.Where(x => x.ProcessId == t.Id)), CreatedBy = by, OwnerAccountId = by }); await SaveIdentityAsync(db, "WfProcessData", ct); }
         foreach (var d in activityDetails)
-            if (!await db.WfActivityDetails.IgnoreQueryFilters().AnyAsync(x=>x.RecId==d.RecId,ct)) { db.WfActivityDetails.Add(d); await SaveIdentityAsync(db,"WfActivityDetails",ct); }
+            if (!await db.WfActivityDetails.IgnoreQueryFilters().AnyAsync(x => x.RecId == d.RecId, ct)) { db.WfActivityDetails.Add(d); await SaveIdentityAsync(db, "WfActivityDetails", ct); }
     }
 
     private static async System.Threading.Tasks.Task SeedPrintTemplateAsync(
@@ -345,9 +350,15 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                     ControlId = control.ControlId,
                     ControlDataId = control.RecId,
                     ControlValue = string.Empty,
-                    UsedAsCriteria = false,
                     SortOrder = control.SortOrder,
                     Score = control.Score,
+                    // This projection is a request-control definition; earned score belongs
+                    // to the submitted detail and starts at zero for synthesized empty rows.
+                    EarnedScore = 0,
+                    Name = control.Name,
+                    NameAlias = control.Name,
+                    Value = string.Empty,
+                    ValueAlias = string.Empty,
                     CreatedBy = by,
                     OwnerAccountId = by,
                 });
@@ -362,7 +373,7 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                     ControlId = null,
                     ControlDataId = null,
                     ControlValue = string.Empty,
-                    UsedAsCriteria = false,
+
                     SortOrder = 0,
                     CreatedBy = by,
                     OwnerAccountId = by,
@@ -810,29 +821,29 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
         return JsonSerializer.Serialize(document, new JsonSerializerOptions(JsonSerializerDefaults.Web));
     }
 
-    private static string BuildXml(IEnumerable<WfRequestDetail> rows) => new XElement("Details",rows.OrderBy(x=>x.SortOrder).Select(x=>new XElement("Control",new XElement("ControlDataId",x.ControlDataId),new XElement("ControlValue",x.ControlValue),new XElement("ControlId",x.ControlId),new XElement("UsedAsCriteria",x.UsedAsCriteria),new XElement("ControlOrder",x.SortOrder),new XElement("RelatedObjectId",x.ProcessId??ProcessId)))).ToString(SaveOptions.DisableFormatting);
-    private static string BuildXml(IEnumerable<WfActivityDetail> rows) => new XElement("Details",rows.OrderBy(x=>x.SortOrder).Select(x=>new XElement("Control",new XElement("ControlDataId",x.ControlDataId),new XElement("ControlValue",x.ControlValue),new XElement("ControlId",x.ControlId),new XElement("UsedAsCriteria",x.UsedAsCriteria),new XElement("ControlOrder",x.SortOrder),new XElement("RelatedObjectId",0)))).ToString(SaveOptions.DisableFormatting);
+    private static string BuildXml(IEnumerable<WfRequestDetail> rows) => new XElement("Details", rows.OrderBy(x => x.SortOrder).Select(x => new XElement("Control", new XElement("ControlDataId", x.ControlDataId), new XElement("ControlValue", x.ControlValue), new XElement("ControlId", x.ControlId), new XElement("ControlOrder", x.SortOrder), new XElement("RelatedObjectId", x.ProcessId ?? ProcessId)))).ToString(SaveOptions.DisableFormatting);
+    private static string BuildXml(IEnumerable<WfActivityDetail> rows) => new XElement("Details", rows.OrderBy(x => x.SortOrder).Select(x => new XElement("Control", new XElement("ControlDataId", x.ControlDataId), new XElement("ControlValue", x.ControlValue), new XElement("ControlId", x.ControlId),  new XElement("ControlOrder", x.SortOrder), new XElement("RelatedObjectId", 0)))).ToString(SaveOptions.DisableFormatting);
 
-    private static async System.Threading.Tasks.Task AddMissingAsync<TEntity>(ApplicationDbContext db,DbSet<TEntity> set,IEnumerable<TEntity> source,CancellationToken ct) where TEntity:class,IBaseEntity
+    private static async System.Threading.Tasks.Task AddMissingAsync<TEntity>(ApplicationDbContext db, DbSet<TEntity> set, IEnumerable<TEntity> source, CancellationToken ct) where TEntity : class, IBaseEntity
     {
-        var rows=source.ToList();
-        var existing=(await set.IgnoreQueryFilters().AsNoTracking().ToListAsync(ct)).Select(x=>x.RecId).ToHashSet();
-        var missing=rows.Where(x=>!existing.Contains(x.RecId)).ToList();
-        if(missing.Count==0)return;
-        var entityType=db.Model.FindEntityType(typeof(TEntity))??throw new InvalidOperationException($"Missing EF metadata for {typeof(TEntity).Name}.");
-        var tableName=entityType.GetTableName()??throw new InvalidOperationException($"Missing table mapping for {typeof(TEntity).Name}.");
-        var schema=entityType.GetSchema();
-        var table=string.IsNullOrWhiteSpace(schema)?SqlIdentifier(tableName):$"{SqlIdentifier(schema)}.{SqlIdentifier(tableName)}";
-        await set.AddRangeAsync(missing,ct);
-        await SaveIdentityAsync(db,table,ct);
+        var rows = source.ToList();
+        var existing = (await set.IgnoreQueryFilters().AsNoTracking().ToListAsync(ct)).Select(x => x.RecId).ToHashSet();
+        var missing = rows.Where(x => !existing.Contains(x.RecId)).ToList();
+        if (missing.Count == 0) return;
+        var entityType = db.Model.FindEntityType(typeof(TEntity)) ?? throw new InvalidOperationException($"Missing EF metadata for {typeof(TEntity).Name}.");
+        var tableName = entityType.GetTableName() ?? throw new InvalidOperationException($"Missing table mapping for {typeof(TEntity).Name}.");
+        var schema = entityType.GetSchema();
+        var table = string.IsNullOrWhiteSpace(schema) ? SqlIdentifier(tableName) : $"{SqlIdentifier(schema)}.{SqlIdentifier(tableName)}";
+        await set.AddRangeAsync(missing, ct);
+        await SaveIdentityAsync(db, table, ct);
     }
 
-    private static string SqlIdentifier(string value)=>$"[{value.Replace("]","]]",StringComparison.Ordinal)}]";
+    private static string SqlIdentifier(string value) => $"[{value.Replace("]", "]]", StringComparison.Ordinal)}]";
 
     private static async System.Threading.Tasks.Task SaveIdentityAsync(ApplicationDbContext db, string table, CancellationToken ct)
     {
         await db.Database.OpenConnectionAsync(ct);
-        try { await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT "+table+" ON",ct); await db.SaveChangesAsync(ct); await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT "+table+" OFF",ct); }
+        try { await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT " + table + " ON", ct); await db.SaveChangesAsync(ct); await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT " + table + " OFF", ct); }
         finally { await db.Database.CloseConnectionAsync(); }
     }
 }

@@ -5,6 +5,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs
 {
     public class UpdateSysBackgroundJobScheduleDto
     {
+        [MaxLength(200)] public string? Name { get; set; }
         public SysJobScheduleType ScheduleType { get; set; }
         public string? CronExpression { get; set; }
         public int? IntervalSeconds { get; set; }
@@ -13,6 +14,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs
 
         public bool? IsEnabled { get; set; }
         public bool? PreventOverlap { get; set; }
+        [Range(0, 2)] public int? Priority { get; set; }
         public int? MaxRetryCount { get; set; }
         public int? RetryDelaySeconds { get; set; }
         public int? TimeoutSeconds { get; set; }

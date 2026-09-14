@@ -1,0 +1,187 @@
+USE [db_a8e163_aljazerasoftfp];
+GO
+
+------------------------------------------------------------
+-- Parameters
+------------------------------------------------------------
+DECLARE @RequestId        BIGINT = 129252;
+DECLARE @ProcessId        BIGINT = 603;
+
+
+
+------------------------------------------------------------
+-- 1. Request Header
+------------------------------------------------------------
+SELECT
+      [RequestId]
+    , [EmployeeId]
+    , [ProcessId]
+    , [RequestDate]
+    , [RequestDetails]
+    , [IsFinished]
+    , [Hidden]
+    , [CreatedDate]
+    , [CreatedBy]
+    , [AttachmentId]
+    , [IsPin]
+    , [PinDate]
+    , [Priority]
+    , [IsStopped]
+    , [Notes]
+    , [FinishedDate]
+    , [StoppedDate]
+    , [Points]
+    , [Degree]
+    , [TargetWeight]
+    , [ActualWeight]
+    , [RequestType]
+FROM dbo.WfRequests
+WHERE ProcessId = @ProcessId
+  AND RequestId = @RequestId
+ORDER BY RequestId DESC;
+
+
+
+------------------------------------------------------------
+-- 2. Request Variables
+------------------------------------------------------------
+SELECT
+      [RequestId]
+    , [VariableId]
+    , [VariableValue]
+    , [VariableOrder]
+FROM dbo.WfRequestVariables
+WHERE RequestId = @RequestId
+ORDER BY VariableOrder, VariableId;
+
+
+------------------------------------------------------------
+-- 3. Process Variables Values
+------------------------------------------------------------
+SELECT
+      [ProcessVariableId]
+    , [RequestId]
+    , [VariableId]
+    , [VariableValue]
+    , [VariableOrder]
+FROM dbo.WfProcessVariables
+WHERE RequestId = @RequestId
+ORDER BY VariableOrder, ProcessVariableId;
+
+------------------------------------------------------------
+-- 4. Request Control -> Variable Mapping
+------------------------------------------------------------
+SELECT
+      RMV.[MappingId]
+    , RMV.[RequestControlID]
+    , RMV.[VariableID]
+    , RMV.[Activated]
+    , RMV.[VariableOrder]
+FROM dbo.WfRequestMappingVariables RMV
+INNER JOIN dbo.WfVariables V
+    ON V.VariableId = RMV.VariableID
+WHERE V.ProcessId = @ProcessId
+ORDER BY RMV.VariableOrder, RMV.MappingId;
+
+------------------------------------------------------------
+-- 5. Request Details
+------------------------------------------------------------
+SELECT
+      [RequestDetailId]
+    , [RequestId]
+    , [ControlId]
+    , [ControlDataId]
+    , [ControlLabel]
+    , [ControlLabelAR]
+    , [ControlValue]
+    , [UsedAsCriteria]
+    , [ControlOrder]
+    , [RelatedObjectId]
+    , [ControlValueAR]
+    , [ControlValueEN]
+    , [TargetWeight]
+    , [ActualWeight]
+FROM dbo.WfRequestDetails
+WHERE RequestId = @RequestId
+ORDER BY ControlOrder, RequestDetailId;
+
+
+
+------------------------------------------------------------
+-- 6. Workflow Assignments
+------------------------------------------------------------
+SELECT
+      [AssignmentID]
+    , [RequestID]
+    , [ActivityID]
+    , [UserID]
+    , [AssignDate]
+    , [Finished]
+    , [AutoPassing]
+    , [PeriodHrs]
+    , [StepId]
+    , [Automatically]
+    , [FinishedDate]
+    , [Transferred]
+    , [ActualWeight]
+FROM dbo.WfAssignments
+WHERE RequestID = @RequestId
+ORDER BY AssignmentID;
+
+
+------------------------------------------------------------
+-- 7. Workflow Process Data / Tasks
+------------------------------------------------------------
+SELECT
+      PD.[TaskID]
+    , PD.[AssignmentID]
+    , PD.[FinishDate]
+    , PD.[ActivityDetails]
+    , PD.[ExtendedProperties]
+    , PD.[AttachmentId]
+FROM dbo.WfProcessData PD
+INNER JOIN dbo.WfAssignments A
+    ON A.AssignmentID = PD.AssignmentID
+WHERE A.RequestID = @RequestId
+ORDER BY PD.TaskID;
+
+
+------------------------------------------------------------
+-- 8. Activity Details
+------------------------------------------------------------
+SELECT
+      AD.[ActivityDetailID]
+    , AD.[TaskID]
+    , AD.[AssignmentID]
+    , AD.[ControlId]
+    , AD.[ControlDataId]
+    , AD.[ControlLabel]
+    , AD.[ControlLabelAR]
+    , AD.[ControlValue]
+    , AD.[UsedAsCriteria]
+    , AD.[ControlOrder]
+    , AD.[RelatedObjectId]
+    , AD.[ControlValueAR]
+    , AD.[ControlValueEN]
+FROM dbo.WfActivityDetails AD
+INNER JOIN dbo.WfAssignments A
+    ON A.AssignmentID = AD.AssignmentID
+WHERE A.RequestID = @RequestId
+ORDER BY AD.AssignmentID, AD.ControlOrder, AD.ActivityDetailID;
+
+
+------------------------------------------------------------
+-- 9. Activity Control -> Variable Mapping
+------------------------------------------------------------
+SELECT
+      AMV.[MappingId]
+    , AMV.[ActivityControlID]
+    , AMV.[VariableID]
+    , AMV.[Activated]
+    , AMV.[VariableOrder]
+FROM dbo.WfActivityMappingVariables AMV
+INNER JOIN dbo.WfVariables V
+    ON V.VariableId = AMV.VariableID
+WHERE V.ProcessId = @ProcessId
+ORDER BY AMV.VariableOrder, AMV.MappingId;
+

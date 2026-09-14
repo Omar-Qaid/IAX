@@ -13,6 +13,14 @@ public sealed class WfActivityDetailConfiguration : IEntityTypeConfiguration<WfA
             .HasColumnName("ActivityDetailID")
             .ValueGeneratedOnAdd();
         builder.Property(x => x.ProcessId).HasColumnName("TaskID");
+        builder.Property(x => x.Name).HasColumnName("ControlLabel");
+        builder.Property(x => x.NameAlias).HasColumnName("ControlLabelAR");
+        builder.Property(x => x.ValueAlias).HasColumnName("ControlValueAR");
+        builder.Property(x => x.Value).HasColumnName("ControlValueEN");
+        builder.Property(x => x.ControlValue).HasMaxLength(255);
+        // These legacy columns remain required in existing ERM databases.
+        builder.Property<bool>("UsedAsCriteria").HasDefaultValue(false);
+        builder.Property<long>("RelatedObjectId").HasDefaultValue(0L);
         builder.Property(x => x.SortOrder).HasColumnName("ControlOrder");
     }
 }

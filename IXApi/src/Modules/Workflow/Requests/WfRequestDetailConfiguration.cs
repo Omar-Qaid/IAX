@@ -7,7 +7,14 @@ public class WfRequestDetailConfiguration : IEntityTypeConfiguration<WfRequestDe
 {
     public void Configure(EntityTypeBuilder<WfRequestDetail> builder)
     {
-        builder.Property(item => item.ControlLabel).IsRequired().HasDefaultValue(string.Empty);
-        builder.Property(item => item.ControlLabelAlias).IsRequired().HasDefaultValue(string.Empty);
+        builder.Property(item => item.Name)
+            .HasColumnName("ControlLabel")
+            .IsRequired()
+            .HasDefaultValue(string.Empty);
+        builder.Property(item => item.NameAlias)
+            .HasColumnName("ControlLabelAlias")
+            .IsRequired()
+            .HasDefaultValue(string.Empty);
+        builder.Property(item => item.ControlValue).HasMaxLength(255);
     }
 }

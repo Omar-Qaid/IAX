@@ -22,7 +22,7 @@ SELECT  [RequestId]
       ,[TargetWeight]
       ,[ActualWeight]
       ,[RequestType]
-  FROM [db_a8e163_aljazerasoftfp].[dbo].[WfRequests]  where [ProcessId]=603 and  RequestId=129252   order by   [RequestId] desc
+  FROM [db_a8e163_aljazerasoftfp].[dbo].[WfRequests]  where [ProcessId]=590 and  RequestId=127677   order by   [RequestId] desc
 
 SELECT TOP (1000) [RequestDetailId]
       ,[RequestId]
@@ -38,20 +38,20 @@ SELECT TOP (1000) [RequestDetailId]
       ,[ControlValueEN]
       ,[TargetWeight]
       ,[ActualWeight]
-  FROM [db_a8e163_aljazerasoftfp].[dbo].[WfRequestDetails] where  RequestId=129252  
+  FROM [db_a8e163_aljazerasoftfp].[dbo].[WfRequestDetails] where  RequestId=127677  
 
   SELECT TOP (1000) [RequestId]
       ,[VariableId]
       ,[VariableValue]
       ,[VariableOrder]
-  FROM [db_a8e163_aljazerasoftfp].[dbo].[WfRequestVariables] where RequestId=   129252
+  FROM [db_a8e163_aljazerasoftfp].[dbo].[WfRequestVariables] where RequestId=   127677
 
   SELECT TOP (1000) [ProcessVariableId]
       ,[RequestId]
       ,[VariableId]
       ,[VariableValue]
       ,[VariableOrder]
-  FROM [db_a8e163_aljazerasoftfp].[dbo].[WfProcessVariables] where  RequestId=129252
+  FROM [db_a8e163_aljazerasoftfp].[dbo].[WfProcessVariables] where  RequestId=127677
 
 
 
@@ -68,7 +68,7 @@ SELECT TOP (1000) [AssignmentID]
       ,[FinishedDate]
       ,[Transferred]
       ,[ActualWeight]
-  FROM [db_a8e163_aljazerasoftfp].[dbo].[WfAssignments] where  RequestId=129252
+  FROM [db_a8e163_aljazerasoftfp].[dbo].[WfAssignments] where  RequestId=127677
 
 
 SELECT TOP (1000) [TaskID]
@@ -77,7 +77,7 @@ SELECT TOP (1000) [TaskID]
       ,[ActivityDetails]
       ,[ExtendedProperties]
       ,[AttachmentId]
-  FROM [db_a8e163_aljazerasoftfp].[dbo].[WfProcessData] where [AssignmentID] in ( select   [AssignmentID]FROM [db_a8e163_aljazerasoftfp].[dbo].[WfAssignments] where  RequestId=129252)
+  FROM [db_a8e163_aljazerasoftfp].[dbo].[WfProcessData] where [AssignmentID] in ( select   [AssignmentID]FROM [db_a8e163_aljazerasoftfp].[dbo].[WfAssignments] where  RequestId=127677)
 
 
 SELECT TOP (1000) [ActivityDetailID]
@@ -93,7 +93,7 @@ SELECT TOP (1000) [ActivityDetailID]
       ,[RelatedObjectId]
       ,[ControlValueAR]
       ,[ControlValueEN]
-  FROM [db_a8e163_aljazerasoftfp].[dbo].[WfActivityDetails] where [AssignmentID] in ( select   [AssignmentID]FROM [db_a8e163_aljazerasoftfp].[dbo].[WfAssignments] where  RequestId=129252)
+  FROM [db_a8e163_aljazerasoftfp].[dbo].[WfActivityDetails] where [AssignmentID] in ( select   [AssignmentID]FROM [db_a8e163_aljazerasoftfp].[dbo].[WfAssignments] where  RequestId=127677)
 
 
 

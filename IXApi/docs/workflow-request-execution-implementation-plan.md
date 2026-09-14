@@ -89,7 +89,7 @@ Definitions/readers: Communication/Notifications/CreateSysNotificationDto, SysNo
 
 ### Background and Scheduled
 
-Definitions/readers: Administration/BackgroundJobs entities, SysBackgroundJobManager/Processor/Registry/ScheduleCalculator; Communication/Notifications/Services/SysScheduledNotificationService.cs; Workflow/Execution/WfActivityAutoPassJobHandler.cs; IXApp ProcessScheduleSettings.tsx.
+Definitions/readers: Administration/BackgroundJobs entities, SysBackgroundJobManager/Processor/Registry/ScheduleCalculator; Communication/Notifications/Services/SysScheduledNotificationService.cs; Workflow/Jobs/WorkflowActivityAutoPassBatchService.cs; IXApp ProcessScheduleSettings.tsx.
 
 | Settings | Applied behavior | Passed downstream | Gaps/conflicts |
 | --- | --- | --- | --- |
@@ -149,7 +149,7 @@ Plan reviewed against current entity/DTO/adapter/transaction/worker sources befo
 - Process Builder loads persisted configuration and has a separate Save action. Save the process and request controls before activating its schedule. Local edits alone do not activate a job. The historical owner-type draft choices have been replaced with an explanation of the actual execution-account policy.
 - `ProcessScheduleSource` supports employee (`HcmWorker`) and showroom (`Showroom`) records in the schedule company. Table mode accepts these two registered names only. Employee fields: `RecId`, `PersonnelNumber`, `DepartmentId`, `ShowroomId`. Showroom fields: `RecId`, `Name`, `DepartmentId`, `Location`. No arbitrary SQL, reflection or unrestricted table/column access is executed. Mappings must target distinct, active, persisted request controls belonging to the process. Unmapped values follow normal form defaults and validation.
 - `WorkflowRecurrence` calculates calendar occurrences from the original local anchor: daily, weekly, monthly or yearly. Missed occurrences are skipped; short months do not shift later month-end dates. Nonexistent DST wall times are skipped; ambiguous times use standard time. Activation schedules the first occurrence strictly after now.
-- `WFProcessScheduledJobHandler` reuses `SysBackgroundJobProcessor`. The processor discovers this handler's jobs across companies; other handlers retain their existing default-company boundary. The handler validates the persisted account's lockout, expiry, Processes.Edit permission and company access, then establishes `BackgroundExecutionIdentity` in a fresh scope.
+- `WorkflowProcessScheduleBatchService.ProcessAsync` runs through `BatchWorker` and is registered with `managesCompanyScope: true`. The service validates the persisted account's lockout, expiry, Processes.Edit permission and company access, then establishes `BackgroundExecutionIdentity` in a fresh scope. Its stable service key remains `WFProcessScheduled` for saved schedules.
 - The handler locks the schedule row with SQL Server `UPDLOCK`, executes normal submission, and advances the occurrence in the same transaction. Competing runs recheck due time after obtaining the lock. Disabled schedules/jobs are skipped. Existing background execution history records failures and retry attempts. Account/source/configuration errors do not advance the schedule.
 
 ### Verification and remaining boundaries

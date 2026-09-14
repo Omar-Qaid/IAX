@@ -146,6 +146,9 @@ namespace IAX.IXApi.Infrastructure.Persistence
         #endregion
 
         #region Background Jobs
+        public DbSet<BatchSettings> BatchSettings => Set<BatchSettings>();
+        public DbSet<SysBackgroundJobTask> SysBackgroundJobTasks => Set<SysBackgroundJobTask>();
+        public DbSet<SysBackgroundJobTaskExecution> SysBackgroundJobTaskExecutions => Set<SysBackgroundJobTaskExecution>();
         public DbSet<SysBackgroundJob> SysBackgroundJobs => Set<SysBackgroundJob>();
         public DbSet<SysBackgroundJobExecution> SysBackgroundJobExecutions => Set<SysBackgroundJobExecution>();
         #endregion

@@ -75,6 +75,8 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Entities
         /// one for the same job is still running (prevents overlapping runs).
         /// </summary>
         public bool PreventOverlap { get; set; } = true;
+        /// <summary>Higher values are dispatched first among due executions (0 low, 1 normal, 2 high).</summary>
+        public int Priority { get; set; } = 1;
 
         // ── Reliability ──────────────────────────────────────────────────
 

@@ -17,6 +17,7 @@ public sealed class DynamicRequestControlDto
     public string? LabelAr { get; set; }
     public string? LabelColor { get; set; }
     public string ControlType { get; set; } = string.Empty;
+    public string? ReferenceType { get; set; }
     public byte SortOrder { get; set; }
     public byte ColumnSpan { get; set; } = 1;
     public decimal Score { get; set; }

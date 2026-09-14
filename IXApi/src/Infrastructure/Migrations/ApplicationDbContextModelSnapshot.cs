@@ -188,6 +188,22 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("SysExceptionLogs");
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Administration.BackgroundJobs.Entities.BatchSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("PollIntervalSeconds")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BatchSettings");
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Administration.BackgroundJobs.Entities.SysBackgroundJob", b =>
                 {
                     b.Property<long>("RecId")
@@ -268,6 +284,9 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<bool>("PreventOverlap")
                         .HasColumnType("bit");
 
+                    b.Property<int>("Priority")
+                        .HasColumnType("int");
+
                     b.Property<int>("RecVersion")
                         .HasColumnType("int");
 
@@ -312,7 +331,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasIndex("Status", "IsEnabled", "NextRunAt");
 
-                    b.ToTable("SysBackgroundJobs", (string)null);
+                    b.ToTable("BatchJobs", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Administration.BackgroundJobs.Entities.SysBackgroundJobExecution", b =>
@@ -375,7 +394,101 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasIndex("JobId", "CreatedAt");
 
-                    b.ToTable("SysBackgroundJobExecutions", (string)null);
+                    b.ToTable("BatchJobHistory", (string)null);
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Administration.BackgroundJobs.Entities.SysBackgroundJobTask", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<long?>("DependsOnTaskId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("ExecutionOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<long>("JobId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("JobKey")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("ServiceKey");
+
+                    b.Property<int>("MaxRetryCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("PayloadJson")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RetryDelaySeconds")
+                        .HasColumnType("int");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("JobId");
+
+                    b.ToTable("BatchJobTasks");
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Administration.BackgroundJobs.Entities.SysBackgroundJobTaskExecution", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<int>("Attempt")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CorrelationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("ExecutionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Output")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<long>("TaskId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("TaskName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("ExecutionId");
+
+                    b.ToTable("BatchJobTaskHistory");
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Administration.NumberSequences.SysNumberSequence", b =>
@@ -1155,12 +1268,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
             modelBuilder.Entity("IAX.IXApi.Modules.Communication.Notifications.Entities.SysScheduledNotification", b =>
                 {
-                    b.Property<string>("DataAreaId").HasMaxLength(10).HasColumnType("nvarchar(10)");
-                    b.Property<string>("ExecutionUserId").HasMaxLength(256).HasColumnType("nvarchar(256)");
-                    b.Property<string>("OwnerAccountId").HasMaxLength(256).HasColumnType("nvarchar(256)");
-                    b.Property<bool>("PreserveChannel").HasColumnType("bit");
-                    b.Property<Guid>("ClaimToken").IsConcurrencyToken().HasColumnType("uniqueidentifier");
-
                     b.Property<long>("RecId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint");
@@ -1174,6 +1281,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<int>("Channel")
                         .HasColumnType("int");
 
+                    b.Property<Guid>("ClaimToken")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("datetime2");
 
@@ -1182,6 +1293,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<int>("CurrentOccurrence")
                         .HasColumnType("int");
+
+                    b.Property<string>("DataAreaId")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<string>("EntityId")
                         .HasMaxLength(256)
@@ -1195,6 +1310,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("EscalationUserId")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("ExecutionUserId")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
@@ -1214,6 +1333,13 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<long?>("OriginalNotificationId")
                         .HasColumnType("bigint");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("PreserveChannel")
+                        .HasColumnType("bit");
 
                     b.Property<int>("Priority")
                         .HasColumnType("int");
@@ -19864,6 +19990,15 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<bool>("IsAutoPassEnabled")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsRecurringReminderEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<byte>("MaxReminderOccurrences")
+                        .HasColumnType("tinyint");
+
+                    b.Property<byte>("RecurringReminderIntervalHours")
+                        .HasColumnType("tinyint");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -19935,6 +20070,29 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
             modelBuilder.Entity("IAX.IXApi.Modules.Workflow.Activities.WfActivityControl", b =>
                 {
+                    b.Property<bool>("CanFilter")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanGroup")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanSort")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ReferenceType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FieldRole")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DefaultAggregation")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
                     b.Property<long>("RecId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
@@ -20224,7 +20382,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasColumnType("tinyint");
 
                     b.Property<string>("ControlValue")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
@@ -20239,6 +20396,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasMaxLength(4)
                         .HasColumnType("nvarchar(4)");
 
+                    b.Property<decimal>("EarnedScore")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -20251,6 +20412,14 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("ControlLabel");
+
+                    b.Property<string>("NameAlias")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("ControlLabelAR");
+
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
 
@@ -20261,18 +20430,37 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<int>("RecVersion")
                         .HasColumnType("int");
 
+                    b.Property<long>("RelatedObjectId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L);
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<decimal>("Score")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<byte>("SortOrder")
                         .HasColumnType("tinyint")
                         .HasColumnName("ControlOrder");
 
                     b.Property<bool>("UsedAsCriteria")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Value")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("ControlValueEN");
+
+                    b.Property<string>("ValueAlias")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("ControlValueAR");
 
                     b.HasKey("RecId");
 
@@ -21772,20 +21960,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<byte?>("ControlId")
                         .HasColumnType("tinyint");
 
-                    b.Property<string>("ControlLabel")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("nvarchar(max)")
-                        .HasDefaultValue("");
-
-                    b.Property<string>("ControlLabelAlias")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("nvarchar(max)")
-                        .HasDefaultValue("");
-
                     b.Property<string>("ControlValue")
-                        .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
@@ -21800,6 +21975,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasMaxLength(4)
                         .HasColumnType("nvarchar(4)");
 
+                    b.Property<decimal>("EarnedScore")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -21811,6 +21990,20 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("")
+                        .HasColumnName("ControlLabel");
+
+                    b.Property<string>("NameAlias")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("")
+                        .HasColumnName("ControlLabelAlias");
 
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
@@ -21837,8 +22030,11 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<byte>("SortOrder")
                         .HasColumnType("tinyint");
 
-                    b.Property<bool>("UsedAsCriteria")
-                        .HasColumnType("bit");
+                    b.Property<string>("Value")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ValueAlias")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("RecId");
 
@@ -21967,6 +22163,70 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.HasIndex("VariableId");
 
                     b.ToTable("WfRequestVariables", (string)null);
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Workflow.Scheduling.WFProcessScheduled", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<long>("BackgroundJobId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ConfigurationJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ExecutionUserId")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<long?>("LastRequestId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("LastRunAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("NextRunAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("OwnerAccountId")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<long>("ProcessId")
+                        .HasColumnType("bigint");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("BackgroundJobId")
+                        .IsUnique();
+
+                    b.HasIndex("ProcessId");
+
+                    b.HasIndex("DataAreaId", "ProcessId")
+                        .IsUnique();
+
+                    b.ToTable("WFProcessScheduled", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Workflow.Steps.WfStep", b =>
@@ -22682,6 +22942,28 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Job");
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Administration.BackgroundJobs.Entities.SysBackgroundJobTask", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Administration.BackgroundJobs.Entities.SysBackgroundJob", "Job")
+                        .WithMany()
+                        .HasForeignKey("JobId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Job");
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Administration.BackgroundJobs.Entities.SysBackgroundJobTaskExecution", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Administration.BackgroundJobs.Entities.SysBackgroundJobExecution", "Execution")
+                        .WithMany()
+                        .HasForeignKey("ExecutionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Execution");
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Administration.Settings.SysUserSettings", b =>
@@ -24012,6 +24294,23 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Navigation("Variable");
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Workflow.Scheduling.WFProcessScheduled", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Administration.BackgroundJobs.Entities.SysBackgroundJob", "BackgroundJob")
+                        .WithMany()
+                        .HasForeignKey("BackgroundJobId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("IAX.IXApi.Modules.Workflow.Processes.WfProcess", null)
+                        .WithMany()
+                        .HasForeignKey("ProcessId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("BackgroundJob");
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Workflow.Steps.WfStep", b =>
                 {
                     b.HasOne("IAX.IXApi.Modules.Workflow.Processes.WfProcess", "Process")
@@ -24180,34 +24479,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 {
                     b.Navigation("Sellers");
                 });
-
-            modelBuilder.Entity("IAX.IXApi.Modules.Workflow.Scheduling.WFProcessScheduled", b =>
-            {
-                b.Property<long>("RecId").ValueGeneratedOnAdd().HasColumnType("bigint");
-                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
-                b.Property<long>("ProcessId").HasColumnType("bigint");
-                b.Property<string>("DataAreaId").IsRequired().HasMaxLength(10).HasColumnType("nvarchar(10)");
-                b.Property<string>("ExecutionUserId").IsRequired().HasMaxLength(256).HasColumnType("nvarchar(256)");
-                b.Property<string>("OwnerAccountId").IsRequired().HasMaxLength(256).HasColumnType("nvarchar(256)");
-                b.Property<bool>("Enabled").HasColumnType("bit");
-                b.Property<string>("ConfigurationJson").IsRequired().HasColumnType("nvarchar(max)");
-                b.Property<DateTime?>("NextRunAt").HasColumnType("datetime2");
-                b.Property<DateTime?>("LastRunAt").HasColumnType("datetime2");
-                b.Property<long?>("LastRequestId").HasColumnType("bigint");
-                b.Property<long>("BackgroundJobId").HasColumnType("bigint");
-                b.Property<byte[]>("RowVersion").IsRequired().IsConcurrencyToken().ValueGeneratedOnAddOrUpdate().HasColumnType("rowversion");
-                b.HasKey("RecId");
-                b.HasIndex("BackgroundJobId").IsUnique();
-                b.HasIndex("ProcessId");
-                b.HasIndex("DataAreaId", "ProcessId").IsUnique();
-                b.ToTable("WFProcessScheduled");
-                b.HasOne("IAX.IXApi.Modules.Administration.BackgroundJobs.Entities.SysBackgroundJob", "BackgroundJob")
-                    .WithMany().HasForeignKey("BackgroundJobId").OnDelete(DeleteBehavior.Restrict).IsRequired();
-                b.HasOne("IAX.IXApi.Modules.Workflow.Processes.WfProcess", null)
-                    .WithMany().HasForeignKey("ProcessId").OnDelete(DeleteBehavior.Restrict).IsRequired();
-                b.Navigation("BackgroundJob");
-            });
-
 #pragma warning restore 612, 618
         }
     }

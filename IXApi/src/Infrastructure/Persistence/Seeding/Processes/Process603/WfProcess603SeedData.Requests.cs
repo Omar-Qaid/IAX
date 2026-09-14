@@ -2,6 +2,7 @@ using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Modules.Workflow.Requests;
 using IAX.IXApi.Modules.Workflow.Variables;
 using IAX.IXApi.Modules.Workflow.Processes;
+using IAX.IXApi.Modules.Workflow.Activities;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Processes.Process603;
@@ -18,7 +19,8 @@ public sealed partial class WfProcess603SeedData
             .Select(x => x.RecId)
             .FirstOrDefaultAsync(ct);
 
-        if (existingRequestId != 0) return;
+        // Do not return when the request exists: a previous run may have seeded only
+        // the parent request and still need variables, assignments, or process data.
 
         var requestDetailsXml = "<Details><Control><ControlDataId>20627</ControlDataId><ControlLabel>Name of the depository employee</ControlLabel><ControlLabelAR>اسم موظف الايداع</ControlLabelAR><ControlValue>155706</ControlValue><ControlId>12</ControlId><ExtendedProperties /><DisplayMember /><ValueMember /><UsedAsCriteria>True</UsedAsCriteria><UsedInSearch>False</UsedInSearch><ControlOrder>1</ControlOrder><RelatedObjectId>603</RelatedObjectId><ControlValueAR>هيا حمدان سعد الدوسري</ControlValueAR><ControlValueEN>Haya Hamdan Saad Aldawsari</ControlValueEN><Weight>0</Weight><TargetWeight>0.00</TargetWeight></Control><Control><ControlDataId>20628</ControlDataId><ControlLabel>رقم الايداع</ControlLabel><ControlLabelAR>رقم الايداع</ControlLabelAR><ControlValue>1</ControlValue><ControlId>1</ControlId><ExtendedProperties /><DisplayMember /><ValueMember /><UsedAsCriteria>True</UsedAsCriteria><UsedInSearch>False</UsedInSearch><ControlOrder>2</ControlOrder><RelatedObjectId>603</RelatedObjectId><ControlValueAR /><ControlValueEN /><Weight>0</Weight><TargetWeight>0.00</TargetWeight></Control><Control><ControlDataId>20629</ControlDataId><ControlLabel>Amount</ControlLabel><ControlLabelAR>المبلغ</ControlLabelAR><ControlValue>4175</ControlValue><ControlId>1</ControlId><ExtendedProperties /><DisplayMember /><ValueMember /><UsedAsCriteria>True</UsedAsCriteria><UsedInSearch>False</UsedInSearch><ControlOrder>3</ControlOrder><RelatedObjectId>603</RelatedObjectId><ControlValueAR /><ControlValueEN /><Weight>0</Weight><TargetWeight>0.00</TargetWeight></Control><Control><ControlDataId>20654</ControlDataId><ControlLabel>Filing date</ControlLabel><ControlLabelAR>تاريخ الايداع</ControlLabelAR><ControlValue>2026-04-06</ControlValue><ControlId>4</ControlId><ExtendedProperties /><DisplayMember /><ValueMember /><UsedAsCriteria>True</UsedAsCriteria><UsedInSearch>False</UsedInSearch><ControlOrder>4</ControlOrder><RelatedObjectId>603</RelatedObjectId><ControlValueAR /><ControlValueEN /><Weight>0</Weight><TargetWeight>0.00</TargetWeight></Control><Control><ControlDataId>20655</ControlDataId><ControlLabel>Deposit period from</ControlLabel><ControlLabelAR>فترة الايداع من</ControlLabelAR><ControlValue>2026-04-01</ControlValue><ControlId>4</ControlId><ExtendedProperties /><DisplayMember /><ValueMember /><UsedAsCriteria>True</UsedAsCriteria><UsedInSearch>False</UsedInSearch><ControlOrder>5</ControlOrder><RelatedObjectId>603</RelatedObjectId><ControlValueAR /><ControlValueEN /><Weight>0</Weight><TargetWeight>0.00</TargetWeight></Control><Control><ControlDataId>20656</ControlDataId><ControlLabel>Deposit period to</ControlLabel><ControlLabelAR>فترة الايداع الى</ControlLabelAR><ControlValue>2026-04-04</ControlValue><ControlId>4</ControlId><ExtendedProperties /><DisplayMember /><ValueMember /><UsedAsCriteria>True</UsedAsCriteria><UsedInSearch>False</UsedInSearch><ControlOrder>6</ControlOrder><RelatedObjectId>603</RelatedObjectId><ControlValueAR /><ControlValueEN /><Weight>0</Weight><TargetWeight>0.00</TargetWeight></Control><Control><ControlDataId>20634</ControlDataId><ControlLabel>Has the transfer document been attached?</ControlLabel><ControlLabelAR>هل تم ارفاق سند التحويل</ControlLabelAR><ControlValue>نعم</ControlValue><ControlId>6</ControlId><ExtendedProperties><Data><Item><ar>نعم</ar><en>Yes</en><value>نعم</value><weight>0</weight></Item><Item><ar>لا</ar><en>No</en><value>لا</value><weight>0</weight></Item></Data></ExtendedProperties><DisplayMember /><ValueMember /><UsedAsCriteria>False</UsedAsCriteria><UsedInSearch>False</UsedInSearch><ControlOrder>7</ControlOrder><RelatedObjectId>603</RelatedObjectId><ControlValueAR>نعم</ControlValueAR><ControlValueEN>Yes</ControlValueEN><Weight>0.00</Weight><TargetWeight>0.00</TargetWeight></Control><Control><ControlDataId>21962</ControlDataId><ControlLabel>Country</ControlLabel><ControlLabelAR>الدولة</ControlLabelAR><ControlValue>ksa</ControlValue><ControlId>6</ControlId><ExtendedProperties><Data><Item><ar>المملكة العربية السعودية</ar><en>Ksa</en><value>ksa</value><weight>0</weight></Item><Item><ar>الإمارات العربية المتحدة</ar><en>Uae</en><value>uae</value><weight>0</weight></Item><Item><ar>عمان</ar><en>Oman</en><value>om</value><weight>0</weight></Item><Item><ar>قطر</ar><en>Qatar</en><value>qat</value><weight>0</weight></Item><Item><ar>الكويت</ar><en>Kuwait</en><value>kw</value><weight>0</weight></Item><Item><ar>البحرين</ar><en>Bahrain</en><value>bh</value><weight>0</weight></Item><Item><ar>الولايات المتحدة الأمريكية </ar><en>Usa</en><value>usa</value><weight>0</weight></Item><Item><ar>مصر</ar><en>Eygpt</en><value>eg</value><weight>0</weight></Item></Data></ExtendedProperties><DisplayMember /><ValueMember /><UsedAsCriteria>True</UsedAsCriteria><UsedInSearch>False</UsedInSearch><ControlOrder>8</ControlOrder><RelatedObjectId>603</RelatedObjectId><ControlValueAR>المملكة العربية السعودية</ControlValueAR><ControlValueEN>Ksa</ControlValueEN><Weight>0.00</Weight><TargetWeight>0.00</TargetWeight></Control><Control><ControlDataId>20633</ControlDataId><ControlLabel>NOTES</ControlLabel><ControlLabelAR>ملاحظات</ControlLabelAR><ControlValue /><ControlId>3</ControlId><ExtendedProperties /><DisplayMember /><ValueMember /><UsedAsCriteria>False</UsedAsCriteria><UsedInSearch>False</UsedInSearch><ControlOrder>10</ControlOrder><RelatedObjectId>603</RelatedObjectId><ControlValueAR /><ControlValueEN /><Weight>0</Weight><TargetWeight>0.00</TargetWeight></Control></Details>";
 
@@ -40,6 +42,25 @@ public sealed partial class WfProcess603SeedData
             await SaveWithIdentityAsync(db, "WfRequests", ct);
         }
 
+        var requestDetails = new[]
+        {
+            new WfRequestDetail { RecId = 1452066L, RequestId = 129252L, ControlId = 12, ControlDataId = 20627L, Name = "Name of the depository employee", NameAlias = "اسم موظف الايداع", ControlValue = "155706", ProcessId = 603L, SortOrder = 1, Score = 0 },
+            new WfRequestDetail { RecId = 1481995L, RequestId = 129252L, ControlId = 1, ControlDataId = 20628L, Name = "رقم الايداع", NameAlias = "رقم الايداع", ControlValue = "1", ProcessId = 603L, SortOrder = 2, Score = 0 },
+            new WfRequestDetail { RecId = 1445338L, RequestId = 129252L, ControlId = 1, ControlDataId = 20629L, Name = "Amount", NameAlias = "المبلغ", ControlValue = "4175", ProcessId = 603L, SortOrder = 3, Score = 0 },
+            new WfRequestDetail { RecId = 1491271L, RequestId = 129252L, ControlId = 4, ControlDataId = 20654L, Name = "Filing date", NameAlias = "تاريخ الايداع", ControlValue = "2026-04-06", ProcessId = 603L, SortOrder = 4, Score = 0 },
+            new WfRequestDetail { RecId = 1465473L, RequestId = 129252L, ControlId = 4, ControlDataId = 20655L, Name = "Deposit period from", NameAlias = "فترة الايداع من", ControlValue = "2026-04-01", ProcessId = 603L, SortOrder = 5, Score = 0 },
+            new WfRequestDetail { RecId = 1461847L, RequestId = 129252L, ControlId = 4, ControlDataId = 20656L, Name = "Deposit period to", NameAlias = "فترة الايداع الى", ControlValue = "2026-04-04", ProcessId = 603L, SortOrder = 6, Score = 0 },
+            new WfRequestDetail { RecId = 1491272L, RequestId = 129252L, ControlId = 6, ControlDataId = 20634L, Name = "Has the transfer document been attached?", NameAlias = "هل تم ارفاق سند التحويل", ControlValue = "نعم", ProcessId = 603L, SortOrder = 7, Score = 0 },
+            new WfRequestDetail { RecId = 1479314L, RequestId = 129252L, ControlId = 6, ControlDataId = 21962L, Name = "Country", NameAlias = "الدولة", ControlValue = "ksa", ProcessId = 603L, SortOrder = 8, Score = 0 },
+            new WfRequestDetail { RecId = 1484020L, RequestId = 129252L, ControlId = 3, ControlDataId = 20633L, Name = "NOTES", NameAlias = "ملاحظات", ControlValue = null!, ProcessId = 603L, SortOrder = 10, Score = 0 },
+        };
+        foreach (var rd in requestDetails)
+        {
+            if (!await db.Set<WfRequestDetail>().IgnoreQueryFilters().AnyAsync(x => x.RecId == rd.RecId, ct))
+                db.Set<WfRequestDetail>().Add(rd);
+        }
+        await SaveWithIdentityAsync(db, "WfRequestDetails", ct);
+
         var processVariables = new[]
         {
             new WfProcessVariable { RecId = 485825L, RequestId = 129252L, VariableId = 3502L, VariableValue = "نعم", SortOrder = 1 },
@@ -58,6 +79,13 @@ public sealed partial class WfProcess603SeedData
         }
         await SaveWithIdentityAsync(db, "WfProcessVariables", ct);
 
+        var requestVariables = Array.Empty<WfRequestVariable>();
+        foreach (var rv in requestVariables)
+        {
+            if (!await db.Set<WfRequestVariable>().IgnoreQueryFilters().AnyAsync(x => x.RecId == rv.RecId, ct))
+                db.Set<WfRequestVariable>().Add(rv);
+        }
+
         var assignment = new IAX.IXApi.Modules.Workflow.Execution.WfAssignment
         {
             RecId = 437824L,
@@ -73,7 +101,12 @@ public sealed partial class WfProcess603SeedData
             Transferred = false,
             Score = 0
         };
-        if (!await db.Set<IAX.IXApi.Modules.Workflow.Execution.WfAssignment>().IgnoreQueryFilters().AnyAsync(x => x.RecId == assignment.RecId, ct))
+        var assignmentParentsExist = await db.WfActivities.IgnoreQueryFilters()
+            .AnyAsync(x => x.RecId == assignment.ActivityId, ct)
+            && await db.WfSteps.IgnoreQueryFilters()
+                .AnyAsync(x => x.RecId == assignment.StepId, ct);
+        if (assignmentParentsExist
+            && !await db.Set<IAX.IXApi.Modules.Workflow.Execution.WfAssignment>().IgnoreQueryFilters().AnyAsync(x => x.RecId == assignment.RecId, ct))
         {
             db.Set<IAX.IXApi.Modules.Workflow.Execution.WfAssignment>().Add(assignment);
             await SaveWithIdentityAsync(db, "WfAssignments", ct);
@@ -86,10 +119,72 @@ public sealed partial class WfProcess603SeedData
             FinishDate = new DateTime(2026, 4, 8, 18, 44, 12, 3),
             ActivityDetails = "<Details><Control><ControlDataId>37894</ControlDataId><ControlLabel>Do the deposits match</ControlLabel><ControlLabelAR>هل الايداعات مطابقة</ControlLabelAR><ControlValue>نعم</ControlValue><ControlId>6</ControlId><ExtendedProperties><Data><Item><ar>نعم</ar><en>Yes</en><value>نعم</value></Item><Item><ar>لا</ar><en>No</en><value>لا</value></Item><Item><ar>تمرير لمحاسب دول الخليج</ar><en>Pass to the accountant of the Gulf countries</en><value>تمرير لمحاسب دول الخليج</value></Item></Data></ExtendedProperties><DisplayMember /><ValueMember /><UsedAsCriteria>False</UsedAsCriteria><UsedInSearch>False</UsedInSearch><ControlOrder>1</ControlOrder><RelatedObjectId>0</RelatedObjectId><ControlValueAR>نعم</ControlValueAR><ControlValueEN>Yes</ControlValueEN><Weight>0</Weight><TargetWeight>0</TargetWeight></Control><Control><ControlDataId>37895</ControlDataId><ControlLabel>NOTES</ControlLabel><ControlLabelAR>ملاحظات</ControlLabelAR><ControlValue /><ControlId>3</ControlId><ExtendedProperties /><DisplayMember /><ValueMember /><UsedAsCriteria>False</UsedAsCriteria><UsedInSearch>False</UsedInSearch><ControlOrder>2</ControlOrder><RelatedObjectId>0</RelatedObjectId><ControlValueAR /><ControlValueEN /><Weight>0</Weight><TargetWeight>0</TargetWeight></Control></Details>"
         };
-        if (!await db.Set<WfProcessData>().IgnoreQueryFilters().AnyAsync(x => x.RecId == processData.RecId, ct))
+        var assignmentExists = await db.Set<IAX.IXApi.Modules.Workflow.Execution.WfAssignment>()
+            .IgnoreQueryFilters().AnyAsync(x => x.RecId == assignment.RecId, ct);
+        if (assignmentExists
+            && !await db.Set<WfProcessData>().IgnoreQueryFilters().AnyAsync(x => x.RecId == processData.RecId, ct))
         {
             db.Set<WfProcessData>().Add(processData);
             await SaveWithIdentityAsync(db, "WfProcessData", ct);
+        }
+
+        if (assignmentExists)
+        {
+            var activityDetails = new[]
+            {
+                new WfActivityDetail
+                {
+                    RecId = 962086L,
+                    ProcessId = 431692L,
+                    AssignmentID = 437824L,
+                    ControlId = 6,
+                    ControlDataId = 37894L,
+                    Name = "Do the deposits match",
+                    NameAlias = "هل الايداعات مطابقة",
+                    ControlValue = "نعم",
+                    ValueAlias = "نعم",
+                    Value = "Yes",
+                    SortOrder = 1,
+                },
+                new WfActivityDetail
+                {
+                    RecId = 962087L,
+                    ProcessId = 431692L,
+                    AssignmentID = 437824L,
+                    ControlId = 3,
+                    ControlDataId = 37895L,
+                    Name = "NOTES",
+                    NameAlias = "ملاحظات",
+                    ControlValue = null,
+                    ValueAlias = null,
+                    Value = null,
+                    SortOrder = 2,
+                }
+            };
+
+            foreach (var detail in activityDetails)
+            {
+                var existingDetail = await db.WfActivityDetails.IgnoreQueryFilters()
+                    .FirstOrDefaultAsync(x => x.RecId == detail.RecId, ct);
+                if (existingDetail is null)
+                {
+                    db.WfActivityDetails.Add(detail);
+                    continue;
+                }
+
+                existingDetail.ProcessId = detail.ProcessId;
+                existingDetail.AssignmentID = detail.AssignmentID;
+                existingDetail.ControlId = detail.ControlId;
+                existingDetail.ControlDataId = detail.ControlDataId;
+                existingDetail.Name = detail.Name;
+                existingDetail.NameAlias = detail.NameAlias;
+                existingDetail.ControlValue = detail.ControlValue;
+                existingDetail.SortOrder = detail.SortOrder;
+                existingDetail.ValueAlias = detail.ValueAlias;
+                existingDetail.Value = detail.Value;
+            }
+
+            await SaveWithIdentityAsync(db, "WfActivityDetails", ct);
         }
     }
 }

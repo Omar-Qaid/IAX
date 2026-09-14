@@ -7,7 +7,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Entities
 {
     /// <summary>
     /// Database-persisted scheduled notification job.
-    /// Survives app restarts. Processed by SysNotificationBackgroundService.
+    /// Survives app restarts. Processed by registered notification batch services.
     /// </summary>
     public class SysScheduledNotification
     {

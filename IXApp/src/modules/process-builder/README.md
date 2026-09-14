@@ -20,10 +20,10 @@ Process Builder is owned by Workflow and retains its established `src/modules/pr
 State flows from the selected process/step/activity into the Zustand draft, editor panels, and save APIs. UI tab, step, and activity selections are persisted so reload can restore context.
 
 [Process Builder integration](../../../docs/process-builder.md) · [Workflow](../workflow/README.md) · [Architecture boundaries](../../../docs/ARCHITECTURE-BOUNDARIES.md)
-# Persisted process scheduling
+## Batch scheduling
 
-Process Scheduled uses GET/PUT `/v1/WFProcessScheduled/{processId}`. Save the process and its request controls first, then use the schedule's Save button. Browser edits alone do not activate execution. The saving account is the execution account; the backend checks its current permissions and company access on each run.
+The legacy Process Scheduled editor and `/v1/WFProcessScheduled/{processId}` API have been retired. Use Batch Administration at `/system-administration/batch-jobs` to configure registered services, schedules, recurrence and parameters, and inspect execution history.
 
-Daily, weekly, monthly and yearly recurrence supports a local start time and time zone. Source mappings resolve approved fields from employee (`HcmWorker`) or showroom (`Showroom`) records; table mode accepts those two names only. Existing configurations require their server concurrency version when saving. Apply the backend schedule and notification-context migrations before using these APIs.
+The backend retirement migration disables legacy schedules and affected jobs without deleting saved configuration or history. Apply it before starting the updated application. Legacy schedules are not automatically converted into new jobs.
 
-Activity notification templates are persisted with activity settings. Scheduled submissions reuse normal validation, variable binding, routing and assignment creation. Alerts are staged within the request transaction, become eligible after commit, and are delivered by the existing Communication background worker.
+`WorkflowRequestSubmissionBatchService.ProcessAsync` is a scaffold for application-specific submission logic; implement that logic and its authorization checks before enabling request-submission jobs. Registered services execute through the shared generic BatchWorker.

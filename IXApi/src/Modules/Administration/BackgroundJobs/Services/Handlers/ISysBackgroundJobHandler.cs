@@ -13,6 +13,9 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services.Handlers
         /// (e.g. "SendInvoiceReminders"). Must match <c>SysBackgroundJob.JobKey</c>.
         /// </summary>
         string JobKey { get; }
+        /// <summary>True only for handlers that validate and establish their own company/actor scope.</summary>
+        bool ManagesCompanyScope => false;
+        bool SupportsWholeJobRetry => true;
 
         /// <summary>
         /// Executes the job. Throw to signal failure (the engine records the error

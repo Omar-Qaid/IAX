@@ -19,6 +19,7 @@ export interface RenderableControl {
   hideLabel?: boolean;
   compact?: boolean;
   controlType: string;
+  referenceType?: string | null;
   labelColor?: string | null;
   required?: boolean;
   readOnly?: boolean;

@@ -7,6 +7,8 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
     {
         /// <summary>All registered handler keys (for discovery in the UI).</summary>
         IReadOnlyCollection<string> RegisteredKeys { get; }
+        IReadOnlyCollection<string> SelfScopedKeys => Array.Empty<string>();
+        bool SupportsWholeJobRetry(string jobKey) => true;
 
         /// <summary>Returns true if a handler is registered for the given key.</summary>
         bool IsRegistered(string jobKey);

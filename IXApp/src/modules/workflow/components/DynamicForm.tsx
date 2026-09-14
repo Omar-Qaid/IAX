@@ -344,7 +344,8 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, DynamicFormProps>
     return <Box key={control.requestControlId} sx={{ minWidth: 0 }}>
     <DynamicControlRenderer control={{
       label: isRtl ? control.labelAr || control.label : control.label,
-      labelColor: control.labelColor, controlType: control.controlType, required: control.required,
+      labelColor: control.labelColor, controlType: control.controlType, referenceType: control.referenceType,
+      required: control.required,
       readOnly: control.readOnly, defaultValue: control.defaultValue,
       options: control.options.map((option) => ({
         value: option.value,

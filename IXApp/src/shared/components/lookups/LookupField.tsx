@@ -156,7 +156,7 @@ function SelectLookup({
   };
 
   return (
-    <Autocomplete<LookupOption, false, false, false>
+    <Autocomplete<LookupOption, false, boolean, false>
       open={open}
       onOpen={() => setOpen(true)}
       onClose={() => {
@@ -190,7 +190,10 @@ function SelectLookup({
           helperText={helperText}
           placeholder={placeholder}
           size="small"
-          inputProps={{ ...params.inputProps, readOnly: !searchable }}
+          slotProps={{
+            ...params.slotProps,
+            htmlInput: { ...params.slotProps.htmlInput, readOnly: !searchable },
+          }}
         />
       )}
     />

@@ -170,6 +170,8 @@ export interface BuilderControl {
   optionFeatureConfigurations?: BuilderOptionFeatureConfiguration[];
   validations: BuilderValidation[];
   visibilityCondition: BuilderCondition | null;
+  /** Process variable populated from this control when its form is submitted. */
+  bindVariableId?: string;
 }
 export interface BuilderActivityAction {
   id: string;

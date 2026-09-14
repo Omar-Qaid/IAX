@@ -1,9 +1,11 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using IAX.IXApi.Modules.Administration.BackgroundJobs.Services.Handlers;
 using IAX.IXApi.Modules.Workflow.Activities;
-using IAX.IXApi.Modules.Workflow.Execution;
+using IAX.IXApi.Modules.Workflow.Events;
+using IAX.IXApi.Modules.Workflow.Handlers;
+using IAX.IXApi.Modules.Workflow.Jobs;
 using IAX.IXApi.Shared.Domain.Events;
+using IAX.IXApi.Shared.Application.Batch;
 
 namespace IAX.IXApi.Modules.Workflow
 {
@@ -11,6 +13,8 @@ namespace IAX.IXApi.Modules.Workflow
     {
         public static IServiceCollection AddWorkflowModule(this IServiceCollection services, IConfiguration configuration)
         {
+            services.AddBatchService<WorkflowRequestSubmissionBatchService>(
+                WorkflowRequestSubmissionBatchService.ServiceKey, "Workflow process request submission");
             services.AddScoped<Activities.IWfActivityControlService, Activities.WfActivityControlService>();
             services.AddScoped<Activities.IWfActivityControlsOptionService, Activities.WfActivityControlsOptionService>();
             services.AddScoped<Activities.IWfActivityControlsValidationService, Activities.WfActivityControlsValidationService>();
@@ -42,8 +46,8 @@ namespace IAX.IXApi.Modules.Workflow
             services.AddScoped<Variables.IWfVariableService, Variables.WfVariableService>();
             services.AddScoped<ISysEventHandler<WfActivityAlertDispatchedEvent>, WfActivityAlertDispatchedEventHandler>();
             services.AddScoped<ISysEventHandler<WfAssignmentAutoPassedEvent>, WfAssignmentAutoPassedNotificationHandler>();
-            services.AddScoped<ISysBackgroundJobHandler, WfActivityAutoPassJobHandler>();
-            services.AddScoped<ISysBackgroundJobHandler, Scheduling.WFProcessScheduledJobHandler>();
+            services.AddBatchService<WorkflowActivityAutoPassBatchService>(
+                WorkflowActivityAutoPassBatchService.ServiceKey, "Workflow activity auto-pass");
             return services;
         }
     }

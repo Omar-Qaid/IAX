@@ -8,13 +8,15 @@ namespace IAX.IXApi.Modules.Workflow.Requests
         public long RequestId { get; set; }
         public byte? ControlId { get; set; }
         public long? ControlDataId { get; set; }
-        public string ControlLabel { get; set; } = null!;
-        public string ControlLabelAlias { get; set; } = null!;
-        [System.ComponentModel.DataAnnotations.StringLength(255)]
-        public string ControlValue { get; set; } = null!;
-        public bool UsedAsCriteria { get; set; }
+        public string? Name { get; set; }
+        public string? NameAlias { get; set; }
+        public string? ControlValue { get; set; }
         public byte SortOrder { get; set; }
-        public decimal Score { get; set; }
+        public string? ValueAlias { get; set; }
+        public string? Value { get; set; }
+        public decimal Score { get; set; } = 0;
+        public decimal EarnedScore { get; set; } = 0;
+        
     }
 }
 

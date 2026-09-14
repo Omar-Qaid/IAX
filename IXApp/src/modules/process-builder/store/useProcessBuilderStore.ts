@@ -256,8 +256,7 @@ const selectionExists = (
 interface State {
   document: ProcessBuilderDocument;
   selected: BuilderNode;
-  controlSettingsPane: 'configure' | 'options' | 'validation' | 'transitions' | 'reporting' | 'schedule';
-  openProcessSchedule: () => void;
+  controlSettingsPane: 'configure' | 'options' | 'validation' | 'transitions' | 'reporting';
   selectedStepId: string | null;
   leftTab: number;
   centerTab: number;
@@ -423,7 +422,6 @@ export const useProcessBuilderStore = create<State>((set) => {
               ? selected.stepId
               : state.selectedStepId,
       })),
-    openProcessSchedule: () => set({ selected: { kind: 'process' }, controlSettingsPane: 'schedule' }),
     openControlSettings: (selected, controlSettingsPane) =>
       set((state) => ({
         selected,

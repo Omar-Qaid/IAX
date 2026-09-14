@@ -38,7 +38,6 @@ public sealed partial class WfProcess603SeedData
             }
         }
 
-        await db.SaveChangesAsync(ct);
-        await Chunks.WfProcessSeedData.SaveIdentityRowsAsync(db, "WfTransitions", ct);
+        await SaveWithIdentityAsync(db, "WfTransitions", ct);
     }
 }

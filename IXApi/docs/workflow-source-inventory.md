@@ -392,11 +392,11 @@ Namespace: `IAX.IXApi.Modules.Workflow.DataExchange`.
 
 ## Execution
 
-### [Execution/WfActivityAutoPassJobHandler.cs](../src/Modules/Workflow/Execution/WfActivityAutoPassJobHandler.cs)
+### [Jobs/WorkflowActivityAutoPassBatchService.cs](../src/Modules/Workflow/Jobs/WorkflowActivityAutoPassBatchService.cs)
 
-Namespace: `IAX.IXApi.Modules.Workflow.Execution`.
+Namespace: `IAX.IXApi.Modules.Workflow.Jobs`.
 
-- `public class WfActivityAutoPassJobHandler : ISysBackgroundJobHandler`
+- `public sealed class WorkflowActivityAutoPassBatchService : BatchService`
 
 ### [Execution/WfAssignment.cs](../src/Modules/Workflow/Execution/WfAssignment.cs)
 

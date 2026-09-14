@@ -18,6 +18,12 @@ public sealed partial class WfProcess603SeedData
 
         if (existingMapping != 0) return;
 
+        var hasRequestControl = await db.WfRequestControls.IgnoreQueryFilters()
+            .AnyAsync(x => x.RecId == 21962L, ct);
+        var hasVariable = await db.WfVariables.IgnoreQueryFilters()
+            .AnyAsync(x => x.RecId == 3504L, ct);
+        if (!hasRequestControl || !hasVariable) return;
+
         db.Set<WfRequestMappingVariable>().Add(new WfRequestMappingVariable
         {
             RecId = 120L,
@@ -26,6 +32,6 @@ public sealed partial class WfProcess603SeedData
             SortOrder = 3
         });
 
-        await db.SaveChangesAsync(ct);
+        await SaveWithIdentityAsync(db, "WfRequestMappingVariables", ct);
     }
 }

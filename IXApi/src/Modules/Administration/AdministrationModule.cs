@@ -1,4 +1,5 @@
 using System.Reflection;
+using IAX.IXApi.Shared.Application.Batch;
 using IAX.IXApi.Modules.Administration.BackgroundJobs.Services;
 using IAX.IXApi.Modules.Administration.BackgroundJobs.Services.Handlers;
 
@@ -12,10 +13,11 @@ public static class AdministrationModule
         Assembly assembly)
     {
         services.Configure<SysBackgroundJobOptions>(configuration.GetSection("BackgroundJobs"));
-        services.AddHostedService<SysBackgroundJobProcessor>();
+        services.AddBatchFramework();
+        services.AddHostedService<BatchWorker>();
 
         foreach (var handlerType in typeof(AdministrationModule).Assembly.GetTypes().Where(type =>
-                     type is { IsClass: true, IsAbstract: false } &&
+                     type is { IsClass: true, IsAbstract: false, IsPublic: true } &&
                      typeof(ISysBackgroundJobHandler).IsAssignableFrom(type)))
         {
             services.AddScoped(handlerType);

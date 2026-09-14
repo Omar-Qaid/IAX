@@ -40,17 +40,26 @@ public sealed partial class WfProcess590SeedData
             new { RecId = 16064L, ProcessId = 590L, DepartmentId = (short?)120, OccupationId = (short?)null, EmployeeId = (long?)null }
         };
 
+        var validEmployeeIds = await db.Set<IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker>()
+            .IgnoreQueryFilters()
+            .Select(x => x.RecId)
+            .ToHashSetAsync(ct);
+
         foreach (var item in userProcesses)
         {
             if (!existingIds.Contains(item.RecId))
             {
+                var validEmployeeId = item.EmployeeId.HasValue && validEmployeeIds.Contains(item.EmployeeId.Value)
+                    ? item.EmployeeId
+                    : null;
+
                 toAdd.Add(new WfUsersProcess
                 {
                     RecId = item.RecId,
                     ProcessId = item.ProcessId,
                     DepartmentId = item.DepartmentId,
                     OccupationId = item.OccupationId,
-                    EmployeeId = item.EmployeeId,
+                    EmployeeId = validEmployeeId,
                     CreatedBy = owner,
                     OwnerAccountId = owner,
                     IsActive = true

@@ -1,5 +1,4 @@
 using IAX.IXApi.Shared.Domain.Entities;
-using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Communication.Notifications.Entities;
 using IAX.IXApi.Modules.Workflow.Performers;
 using IAX.IXApi.Modules.Workflow.Steps;
@@ -8,7 +7,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IAX.IXApi.Modules.Workflow.Activities
 {
-public class WfActivity : WfMasterEntity<long>
+    public class WfActivity : WfMasterEntity<long>
     {
         public byte ActivityTypeId { get; set; }
         [ForeignKey(nameof(ActivityTypeId))]
@@ -33,13 +32,16 @@ public class WfActivity : WfMasterEntity<long>
         public bool IsSmsNotificationEnabled { get; set; }
         public bool IsWhatsAppNotificationEnabled { get; set; }
         public bool MandatoryDocuments { get; set; }
+
         public bool IsAutoPassEnabled { get; set; }
         public byte AutoPassAfterHours { get; set; }
+
+        public bool IsRecurringReminderEnabled { get; set; }
+        public byte RecurringReminderIntervalHours { get; set; }
+        public byte MaxReminderOccurrences { get; set; }
+
         public bool CanViewPreviousSteps { get; set; }
         public bool CanViewPreviousDocuments { get; set; }
         public string? ExtendedProperties { get; set; }
-
     }
 }
-
-

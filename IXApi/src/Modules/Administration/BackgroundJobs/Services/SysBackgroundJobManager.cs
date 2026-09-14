@@ -34,6 +34,10 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
 
         public async Task<SysBackgroundJobDto> CreateAsync(CreateSysBackgroundJobDto dto, CancellationToken ct = default)
         {
+            if (dto.JobKey == Handlers.BatchTasksJobHandler.Key && (dto.MaxRetryCount != 0 || !dto.PreventOverlap))
+                throw new InvalidOperationException("Batch task jobs require overlap prevention and zero whole-job retries.");
+            if (dto.JobKey == Handlers.BatchTasksJobHandler.Key && dto.IsEnabled)
+                throw new InvalidOperationException("Create batch task jobs disabled, configure their tasks, then enable them.");
             if (!_registry.IsRegistered(dto.JobKey))
                 throw new InvalidOperationException(
                     $"No job handler is registered for key '{dto.JobKey}'. Registered keys: {string.Join(", ", _registry.RegisteredKeys)}.");
@@ -58,6 +62,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                 RunAt = ResolveRunAt(dto.ScheduleType, dto.RunAt, dto.DelaySeconds, now),
                 IsEnabled = dto.IsEnabled,
                 PreventOverlap = dto.PreventOverlap,
+                Priority = dto.Priority,
                 MaxRetryCount = dto.MaxRetryCount,
                 RetryDelaySeconds = dto.RetryDelaySeconds,
                 TimeoutSeconds = dto.TimeoutSeconds,
@@ -84,6 +89,12 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                 ?? throw new KeyNotFoundException($"Job {jobId} not found.");
 
             var effectiveRunAt = dto.RunAt ?? job.RunAt;
+            if (job.JobKey == Handlers.BatchTasksJobHandler.Key && dto.IsEnabled == true &&
+                !await _db.SysBackgroundJobTasks.AnyAsync(t => t.JobId == jobId && t.IsEnabled, ct))
+                throw new InvalidOperationException("Configure at least one enabled task before enabling the batch job.");
+            if (job.JobKey == Handlers.BatchTasksJobHandler.Key &&
+                ((dto.MaxRetryCount ?? job.MaxRetryCount) != 0 || !(dto.PreventOverlap ?? job.PreventOverlap)))
+                throw new InvalidOperationException("Batch task jobs require overlap prevention and zero whole-job retries.");
             var scheduleError = SysJobScheduleCalculator.ValidateSchedule(
                 dto.ScheduleType, dto.CronExpression, dto.IntervalSeconds, effectiveRunAt, dto.DelaySeconds);
             if (scheduleError != null)
@@ -91,12 +102,20 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
 
             var now = DateTime.UtcNow;
             job.ScheduleType = dto.ScheduleType;
+            if (dto.Name != null)
+            {
+                if (string.IsNullOrWhiteSpace(dto.Name)) throw new InvalidOperationException("Job name is required.");
+                if (await _db.SysBackgroundJobs.AnyAsync(j => j.RecId != jobId && !j.IsDeleted && j.Name == dto.Name.Trim(), ct))
+                    throw new InvalidOperationException("A job with this name already exists.");
+                job.Name = dto.Name.Trim();
+            }
             job.CronExpression = dto.CronExpression;
             job.IntervalSeconds = dto.IntervalSeconds;
             job.RunAt = ResolveRunAt(dto.ScheduleType, dto.RunAt ?? job.RunAt, dto.DelaySeconds, now);
 
             if (dto.IsEnabled.HasValue) job.IsEnabled = dto.IsEnabled.Value;
             if (dto.PreventOverlap.HasValue) job.PreventOverlap = dto.PreventOverlap.Value;
+            if (dto.Priority.HasValue) job.Priority = dto.Priority.Value;
             if (dto.MaxRetryCount.HasValue) job.MaxRetryCount = dto.MaxRetryCount.Value;
             if (dto.RetryDelaySeconds.HasValue) job.RetryDelaySeconds = dto.RetryDelaySeconds.Value;
             if (dto.TimeoutSeconds.HasValue) job.TimeoutSeconds = dto.TimeoutSeconds.Value;
@@ -214,8 +233,16 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
 
         public async Task<long> TriggerAsync(long jobId, string? triggeredByUserId = null, CancellationToken ct = default)
         {
+            await using var queueLock = await BatchDatabaseLock.TryAcquireAsync(_db, "Batch:Queue", ct)
+                ?? throw new InvalidOperationException("The batch queue is busy. Retry shortly.");
             var job = await _db.SysBackgroundJobs.FirstOrDefaultAsync(j => j.RecId == jobId && !j.IsDeleted, ct)
                 ?? throw new KeyNotFoundException($"Job {jobId} not found.");
+
+            if (!job.IsEnabled || job.Status != SysJobStatus.Active)
+                throw new InvalidOperationException("Enable and resume the batch job before running it.");
+            if (job.PreventOverlap && await _db.SysBackgroundJobExecutions.AnyAsync(
+                e => e.JobId == jobId && (e.Status == SysJobExecutionStatus.Pending || e.Status == SysJobExecutionStatus.Running), ct))
+                throw new InvalidOperationException("This batch job already has a pending or running execution.");
 
             // Create a pending, manually-triggered execution; the engine picks it up next cycle.
             var execution = new SysBackgroundJobExecution
@@ -240,6 +267,8 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
 
         public async Task ResumeAsync(long jobId, CancellationToken ct = default)
         {
+            if (await _db.SysBackgroundJobExecutions.AnyAsync(e => e.JobId == jobId && e.Status == SysJobExecutionStatus.Running, ct))
+                throw new InvalidOperationException("Wait for running work to stop before resuming the job.");
             var job = await _db.SysBackgroundJobs.FirstOrDefaultAsync(j => j.RecId == jobId && !j.IsDeleted, ct)
                 ?? throw new KeyNotFoundException($"Job {jobId} not found.");
 
@@ -261,6 +290,17 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                 ?? throw new KeyNotFoundException($"Job {jobId} not found.");
 
             job.Status = status;
+            if (status == SysJobStatus.Cancelled)
+            {
+                var pending = await _db.SysBackgroundJobExecutions.Where(e => e.JobId == jobId &&
+                    e.Status == SysJobExecutionStatus.Pending).ToListAsync(ct);
+                foreach (var execution in pending)
+                {
+                    execution.Status = SysJobExecutionStatus.Cancelled;
+                    execution.CompletedAt = DateTime.UtcNow;
+                    execution.ErrorMessage = "Cancelled before execution by the administrator.";
+                }
+            }
             if (clearNextRun) job.NextRunAt = null;
             job.LastModifiedBy = SafeUserId();
             job.LastModifiedAt = DateTime.UtcNow;
@@ -282,6 +322,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
 
         private static SysBackgroundJobDto Map(SysBackgroundJob j) => new()
         {
+            Priority = j.Priority,
             RecId = j.RecId,
             Name = j.Name,
             JobKey = j.JobKey,

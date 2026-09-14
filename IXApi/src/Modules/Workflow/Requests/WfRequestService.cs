@@ -5,6 +5,7 @@ using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Communication.Notifications.Services;
 using IAX.IXApi.Modules.Organization.Employees.Entities;
+using IAX.IXApi.Modules.Organization.Showrooms;
 using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Identity.Permissions;
 using IAX.IXApi.Modules.Workflow.Activities;
@@ -125,6 +126,53 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                 .Where(item => ids.Contains(item.RequestControlId) && item.IsActive)
                 .OrderBy(item => item.SortOrder).ThenBy(item => item.RecId)
                 .ToListAsync(cancellationToken);
+            var referenceTypes = controls.Select(item => item.ReferenceType)
+                .Where(item => !string.IsNullOrWhiteSpace(item))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var referenceOptions = new Dictionary<string, List<DynamicRequestOptionDto>>(StringComparer.OrdinalIgnoreCase);
+            if (referenceTypes.Contains("Showroom"))
+            {
+                referenceOptions["Showroom"] = await _context.Set<Showroom>().AsNoTracking()
+                    .Where(item => item.IsActive && !item.IsDeleted)
+                    .OrderBy(item => item.Name).ThenBy(item => item.Code).ThenBy(item => item.RecId)
+                    .Select(item => new DynamicRequestOptionDto
+                    {
+                        OptionId = item.RecId,
+                        Value = item.RecId.ToString(),
+                        Label = item.Name ?? item.Code ?? item.RecId.ToString(),
+                        LabelAlias = item.Name ?? item.Code,
+                        SortOrder = 0
+                    }).ToListAsync(cancellationToken);
+            }
+            if (referenceTypes.Contains("Employee"))
+            {
+                var employees = await _context.Set<HcmWorker>().AsNoTracking()
+                    .Where(item => item.IsActive && !item.IsDeleted)
+                    .OrderBy(item => item.PersonnelNumber).ThenBy(item => item.RecId)
+                    .Select(item => new { item.RecId, item.Person, item.PersonnelNumber })
+                    .ToListAsync(cancellationToken);
+                var partyIds = employees.Select(item => item.Person).Distinct().ToList();
+                var parties = partyIds.Count == 0
+                    ? new Dictionary<long, string>()
+                    : await _context.Database.SqlQueryRaw<MailPartyLookup>(
+                            "SELECT RECID AS PartyId, COALESCE(NULLIF(RFullName, ''), NULLIF(Name, ''), PartyNumber) AS DisplayName FROM dbo.DirPartyTable")
+                        .Where(item => partyIds.Contains(item.PartyId))
+                        .ToDictionaryAsync(item => item.PartyId, item => item.DisplayName, cancellationToken);
+                referenceOptions["Employee"] = employees.Select((item, index) =>
+                {
+                    parties.TryGetValue(item.Person, out var employeeName);
+                    var label = FirstText(employeeName, item.PersonnelNumber,
+                        item.RecId.ToString(CultureInfo.InvariantCulture));
+                    return new DynamicRequestOptionDto
+                    {
+                        OptionId = item.RecId,
+                        Value = item.RecId.ToString(CultureInfo.InvariantCulture),
+                        Label = label,
+                        LabelAlias = label,
+                        SortOrder = index
+                    };
+                }).ToList();
+            }
 
             return new DynamicRequestFormDto
             {
@@ -134,6 +182,21 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                 Controls = controls.Select(control =>
                 {
                     var properties = ParseProperties(control.ExtendedProperties);
+                    var configuredOptions = options.Where(item => item.RequestControlId == control.RecId)
+                        .Select((item, optionIndex) => new DynamicRequestOptionDto
+                        {
+                            OptionId = item.RecId, Value = item.Value, Label = item.Name,
+                            LabelAlias = item.NameAlias,
+                            Score = item.Score, SortOrder = item.SortOrder,
+                            FeatureConfiguration = ParseOptionFeatures(
+                                item.ExtendedProperties,
+                                properties.OptionFeatureConfigurations.ElementAtOrDefault(optionIndex))
+                        }).ToList();
+                    var runtimeOptions = configuredOptions.Count > 0
+                        ? configuredOptions
+                        : control.ReferenceType != null && referenceOptions.TryGetValue(control.ReferenceType, out var lookupOptions)
+                            ? lookupOptions
+                            : [];
                     return new DynamicRequestControlDto
                     {
                         RequestControlId = control.RecId,
@@ -146,6 +209,7 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                             control.Control.Code,
                             control.Control.Name,
                             control.Control.ControlType),
+                        ReferenceType = control.ReferenceType,
                         SortOrder = control.SortOrder,
                         ColumnSpan = properties.ColumnSpan,
                         Score = control.Score,
@@ -155,15 +219,7 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                         UsedAsCriteria = properties.UsedAsCriteria,
                         DefaultValue = properties.DefaultValue,
                         VisibilityCondition = properties.VisibilityCondition,
-                        Options = options.Where(item => item.RequestControlId == control.RecId).Select((item, optionIndex) => new DynamicRequestOptionDto
-                        {
-                            OptionId = item.RecId, Value = item.Value, Label = item.Name,
-                            LabelAlias = item.NameAlias,
-                            Score = item.Score, SortOrder = item.SortOrder,
-                            FeatureConfiguration = ParseOptionFeatures(
-                                item.ExtendedProperties,
-                                properties.OptionFeatureConfigurations.ElementAtOrDefault(optionIndex))
-                        }).ToList(),
+                        Options = runtimeOptions,
                         Validations = validations.Where(item => item.RequestControlId == control.RecId).Select(item => new DynamicRequestValidationDto
                         {
                             ValidationId = item.RecId, Type = item.ValidationType,
@@ -200,11 +256,11 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                 .ToDictionaryAsync(item => item.RecId, cancellationToken);
             var databaseRows = detailRows.Select(item => new MailFieldSource(
                     item.RecId, item.ControlId, item.ControlDataId,
-                    !string.IsNullOrEmpty(item.ControlLabel) ? item.ControlLabel : item.ControlDataId.HasValue && requestControlsById.TryGetValue(item.ControlDataId.Value, out var requestControl)
+                    !string.IsNullOrEmpty(item.Name) ? item.Name : item.ControlDataId.HasValue && requestControlsById.TryGetValue(item.ControlDataId.Value, out var requestControl)
                         ? requestControl.Name ?? string.Empty : string.Empty,
-                    !string.IsNullOrEmpty(item.ControlLabelAlias) ? item.ControlLabelAlias : item.ControlDataId.HasValue && requestControlsById.TryGetValue(item.ControlDataId.Value, out requestControl)
+                    !string.IsNullOrEmpty(item.NameAlias) ? item.NameAlias : item.ControlDataId.HasValue && requestControlsById.TryGetValue(item.ControlDataId.Value, out requestControl)
                         ? requestControl.NameAlias ?? string.Empty : string.Empty,
-                    item.ControlValue, item.ControlValue, item.ControlValue, item.SortOrder)).ToList();
+                    item.ControlValue ?? string.Empty, item.ValueAlias ?? string.Empty, item.Value ?? string.Empty, item.SortOrder)).ToList();
             var parsedRows = MergeMailFieldSources(databaseRows, ParseSerializedRequestDetails(request.RequestDetails));
 
             var controlIds = parsedRows.Where(item => item.ControlId.HasValue)
@@ -351,7 +407,8 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                 var request = new WfRequest
                 {
                     Name = form.ProcessName,
-                    RequestDetails = form.ProcessDescription ?? form.ProcessName,
+                    RequestDetails = SerializeRequestDetails(submission.ProcessId, scored.Select(item =>
+                        (item.Control, item.Value, item.Score))),
                     RequestDate = DateTime.UtcNow, ProcessId = submission.ProcessId,
                     Score = scored.Sum(item => item.Score), Progress = 0, IsActive = true,
                     DataAreaId = _currentUser.GetDataAreaId()
@@ -372,10 +429,14 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                             ProcessId = submission.ProcessId, RequestId = request.RecId,
                             ControlId = item.Control.ControlId, ControlDataId = item.Control.RequestControlId,
                             ControlValue = item.Value,
-                            ControlLabel = item.Control.Label,
-                            ControlLabelAlias = item.Control.LabelAr ?? string.Empty,
-                            UsedAsCriteria = item.Control.UsedAsCriteria, SortOrder = item.Control.SortOrder,
-                            Score = item.Score, DataAreaId = request.DataAreaId
+                            Name = item.Control.Label,
+                            NameAlias = item.Control.LabelAr ?? string.Empty,
+                            ValueAlias = item.Value,
+                            Value = item.Value,
+                            SortOrder = item.Control.SortOrder,
+                            Score = item.Score,
+                            EarnedScore = item.Score,
+                            DataAreaId = request.DataAreaId
                         }
                     }).ToList();
                     var optionDetails = selectedOptionContexts
@@ -393,10 +454,12 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                                     ProcessId = submission.ProcessId, RequestId = request.RecId,
                                     ControlId = item.Control.ControlId, ControlDataId = item.Control.RequestControlId,
                                     ControlValue = fileValue,
-                                    ControlLabel = item.Control.Label,
-                                    ControlLabelAlias = item.Control.LabelAr ?? string.Empty,
-                                    UsedAsCriteria = false, SortOrder = item.Control.SortOrder,
-                                    Score = 0, DataAreaId = request.DataAreaId
+                                    Name = item.Control.Label,
+                                    NameAlias = item.Control.LabelAr ?? string.Empty,
+                                     SortOrder = item.Control.SortOrder,
+                                    Score = 0,
+                                    EarnedScore = 0,
+                                    DataAreaId = request.DataAreaId
                                 }
                             };
                         }).ToList();
@@ -471,6 +534,58 @@ namespace IAX.IXApi.Modules.Workflow.Requests
             return _unitOfWork.Context.Database.CurrentTransaction is not null
                 ? await ExecuteSubmissionAsync()
                 : await strategy.ExecuteAsync(ExecuteSubmissionAsync);
+        }
+
+        internal static string SerializeRequestDetails(
+            long processId,
+            IEnumerable<(DynamicRequestControlDto Control, string Value, decimal Score)> controls)
+        {
+            var details = new XElement("Details",
+                controls.Select(item =>
+                {
+                    var selected = SelectedValues(item.Value);
+                    var selectedOptions = item.Control.Options
+                        .Where(option => selected.Contains(option.Value, StringComparer.Ordinal))
+                        .ToList();
+                    var valueAr = string.Join(", ", selectedOptions
+                        .Select(option => option.LabelAlias ?? option.Label)
+                        .Where(value => !string.IsNullOrWhiteSpace(value)));
+                    var valueEn = string.Join(", ", selectedOptions
+                        .Select(option => option.Label)
+                        .Where(value => !string.IsNullOrWhiteSpace(value)));
+                    var displayMember = FirstText(valueEn, valueAr);
+                    var extendedProperties = item.Control.Options.Count == 0
+                        ? new XElement("ExtendedProperties")
+                        : new XElement("ExtendedProperties",
+                            new XElement("Data", item.Control.Options
+                                .OrderBy(option => option.SortOrder)
+                                .ThenBy(option => option.OptionId)
+                                .Select(option => new XElement("Item",
+                                    new XElement("ar", option.LabelAlias ?? option.Label),
+                                    new XElement("en", option.Label),
+                                    new XElement("value", option.Value),
+                                    new XElement("weight", option.Score)))));
+
+                    return new XElement("Control",
+                        new XElement("ControlDataId", item.Control.RequestControlId),
+                        new XElement("ControlLabel", item.Control.Label),
+                        new XElement("ControlLabelAR", item.Control.LabelAr ?? string.Empty),
+                        new XElement("ControlValue", item.Value),
+                        new XElement("ControlId", item.Control.ControlId),
+                        extendedProperties,
+                        new XElement("DisplayMember", displayMember),
+                        new XElement("ValueMember", displayMember.Length > 0 ? item.Value : string.Empty),
+                        new XElement("UsedAsCriteria", item.Control.UsedAsCriteria),
+                        new XElement("UsedInSearch", false),
+                        new XElement("ControlOrder", item.Control.SortOrder),
+                        new XElement("RelatedObjectId", processId),
+                        new XElement("ControlValueAR", valueAr),
+                        new XElement("ControlValueEN", valueEn),
+                        new XElement("Weight", item.Score),
+                        new XElement("TargetWeight", 0m));
+                }));
+
+            return details.ToString(SaveOptions.DisableFormatting);
         }
 
         private sealed record PreparedSubmission(

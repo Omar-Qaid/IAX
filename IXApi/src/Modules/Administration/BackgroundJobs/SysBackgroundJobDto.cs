@@ -5,6 +5,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs
 {
     public class SysBackgroundJobDto
     {
+        public int Priority { get; set; }
         public long RecId { get; set; }
         public string Name { get; set; } = null!;
         public string JobKey { get; set; } = null!;

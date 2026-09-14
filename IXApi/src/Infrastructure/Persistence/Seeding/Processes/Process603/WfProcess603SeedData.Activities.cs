@@ -39,7 +39,9 @@ public sealed partial class WfProcess603SeedData
                 {
                     RecId = item.RecId,
                     Code = "ACT" + item.RecId,
-                    ActivityTypeId = item.ActivityTypeId,
+                    // Legacy exports use 0 as the normal activity type sentinel. The current
+                    // schema does not persist zero-key master rows; NORMAL is RecId 2.
+                    ActivityTypeId = item.ActivityTypeId == 0 ? (byte)2 : item.ActivityTypeId,
                     StepId = item.StepId,
                     Name = item.Name,
                     NameAlias = item.NameAlias,

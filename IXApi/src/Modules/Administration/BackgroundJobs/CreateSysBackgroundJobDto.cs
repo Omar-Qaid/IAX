@@ -30,6 +30,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs
 
         public bool IsEnabled { get; set; } = true;
         public bool PreventOverlap { get; set; } = true;
+        [Range(0, 2)] public int Priority { get; set; } = 1;
 
         public int MaxRetryCount { get; set; } = 0;
         public int RetryDelaySeconds { get; set; } = 60;

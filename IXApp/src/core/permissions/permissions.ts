@@ -79,6 +79,11 @@ export const PERMISSIONS = {
   NUMBER_SEQUENCE_CREATE: 'System.NumberSequences.Create',
   NUMBER_SEQUENCE_EDIT: 'System.NumberSequences.Edit',
   NUMBER_SEQUENCE_DELETE: 'System.NumberSequences.Delete',
+
+  BACKGROUND_JOB_VIEW: 'System.BackgroundJobs.View',
+  BACKGROUND_JOB_CREATE: 'System.BackgroundJobs.Create',
+  BACKGROUND_JOB_EDIT: 'System.BackgroundJobs.Edit',
+  BACKGROUND_JOB_DELETE: 'System.BackgroundJobs.Delete',
 } as const;
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

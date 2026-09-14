@@ -19,7 +19,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
 {
-    public class SettingsSeeder : ISeeder
+    public partial class SettingsSeeder : ISeeder
     {
         public async Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles, UserManager<AspNetUser> users, CancellationToken ct)
         {
@@ -151,6 +151,24 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 await db.Set<SysNotificationTemplate>().AddRangeAsync(templates, ct);
                 await db.SaveChangesAsync(ct);
             }
+
+            // The generic worker owns notification delivery; no notification-specific hosted worker runs.
+            foreach (var serviceKey in new[] { "EmailDelivery", "SmsDelivery", "PushNotification", "NotificationDelivery",
+                "WorkflowNotification", "WorkflowReminder", "WorkflowEscalation", "WorkflowCleanup" })
+            {
+                if (await db.Set<SysBackgroundJob>().IgnoreQueryFilters().AnyAsync(j => j.JobKey == serviceKey, ct)) continue;
+                db.Set<SysBackgroundJob>().Add(new SysBackgroundJob
+                {
+                    Name = serviceKey, JobKey = serviceKey,
+                    Description = "Processes the persisted notification delivery queue.",
+                    ScheduleType = SysJobScheduleType.Recurring, IntervalSeconds = 60,
+                    Status = SysJobStatus.Active, IsEnabled = true, PreventOverlap = true,
+                    MaxRetryCount = 0, TimeoutSeconds = 900, NextRunAt = DateTime.UtcNow,
+                });
+            }
+            await db.SaveChangesAsync(ct);
+
+            await SeedBatchExamplesAsync(db, ct);
 
             // Seed the recurring workflow auto-pass sweep job (every 15 minutes).
             var hasAutoPassJob = await db.Set<SysBackgroundJob>()

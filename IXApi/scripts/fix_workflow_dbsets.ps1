@@ -1,9 +1,9 @@
-$handlerPath = "IXApi\src\Modules\Workflow\Execution\WfActivityAutoPassJobHandler.cs"
+$handlerPath = "IXApi\src\Modules\Workflow\Jobs\WorkflowActivityAutoPassBatchService.cs"
 if (Test-Path $handlerPath) {
     $content = [System.IO.File]::ReadAllText($handlerPath, [System.Text.Encoding]::UTF8)
     $content = $content -replace "EF\.Functions\.DateDiffHour\(a\.AssignDate, now\) >= a\.AutoPassingHrs", "a.AssignDate.AddHours(a.AutoPassingHrs) <= now"
     [System.IO.File]::WriteAllText($handlerPath, $content, [System.Text.Encoding]::UTF8)
-    Write-Output "Fixed WfActivityAutoPassJobHandler.cs date translation"
+    Write-Output "Fixed WorkflowActivityAutoPassBatchService.cs date translation"
 }
 
 $enginePath = "IXApi\src\Modules\Workflow\Requests\ValidationEngine.cs"

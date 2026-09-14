@@ -54,12 +54,13 @@ Current endpoints:
 
 1. The user chooses a process and opens its dynamic form.
 2. The application loads active controls, options, validations, and presentation metadata.
+   Controls configured with `Showroom` or `Employee` reference types receive active lookup options whose submitted value is the referenced record ID and whose label is retained for display/reporting.
 3. The user fills visible controls and selects attachments.
 4. The browser validates input and sends JSON control values and option-file metadata.
 5. The server rejects duplicate or unknown controls, applies read-only defaults, determines visibility, validates configured rules, and calculates score.
-6. Within a database transaction, the service generates the request code and saves `WfRequest`.
+6. Within a database transaction, the service generates the request code and saves `WfRequest`, including a legacy-compatible XML snapshot of the visible submitted controls in `RequestDetails`.
 7. It batches and saves `WfRequestDetail` rows, including selected-option file metadata where applicable.
-8. It initializes runtime variables, maps visible control values, evaluates scalar submission transitions, resolves the starting activities and their employees, and stages variables and assignments.
+8. It initializes ordered runtime variables, maps visible control values, evaluates scalar submission transitions, resolves the starting activities and their employees, and stages variables and assignments. A matching submission transition overrides the default; otherwise the first active positive-order step is used (with zero-order steps treated as fallback/terminal configuration).
 9. It sends alerts for selected options configured with alert messages and static performer recipients.
 10. It commits and returns the request ID, code, score, attachment-owner detail IDs, starting step and assignment IDs.
 11. The browser uploads file bytes separately against the saved request/detail records. Failed uploads are reported while the request remains saved.
@@ -83,7 +84,7 @@ flowchart TD
 
 Submission now initializes runtime variables, maps visible control values, evaluates persisted scalar transitions and creates starting-step assignments before commit. The response includes `startingStepId` and `assignmentIds`. This confirms assignment persistence, not external notification delivery or subsequent workflow progression.
 
-New submissions write relational details directly. Legacy XML is supported on read paths; the XML/view conversion in `IXApp/docs/request.txt` is historical reference code, not the current submission path.
+New submissions write relational details directly and also preserve a legacy-compatible XML snapshot in `WfRequest.RequestDetails`. The snapshot contains the submitted control values and the form metadata needed by established read/report paths; relational `WfRequestDetail` rows remain the normalized source for current processing. The XML/view conversion in `IXApp/docs/request.txt` is historical reference code, not the current submission implementation.
 
 ## 3. Configuration and runtime records
 
