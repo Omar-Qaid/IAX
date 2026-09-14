@@ -25,7 +25,8 @@ public sealed partial class WfProcess651SeedData
 
         foreach (var item in items)
         {
-            if (!await db.Set<WfRequestMappingVariable>().IgnoreQueryFilters().AnyAsync(x => x.RecId == item.RecId, ct))
+            var controlExists = await db.WfRequestControls.IgnoreQueryFilters().AnyAsync(x => x.RecId == item.RequestControlId, ct);
+            if (controlExists && !await db.Set<WfRequestMappingVariable>().IgnoreQueryFilters().AnyAsync(x => x.RecId == item.RecId, ct))
             {
                 db.Set<WfRequestMappingVariable>().Add(item);
             }
