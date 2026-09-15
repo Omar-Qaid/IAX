@@ -13,7 +13,7 @@ import {
 import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
 import AssignmentTurnedInOutlined from '@mui/icons-material/AssignmentTurnedInOutlined';
 import AttachFileOutlined from '@mui/icons-material/AttachFileOutlined';
-import { useQueries, useQuery } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
 import type {
   DetailSectionConfig,
@@ -24,7 +24,7 @@ import { documentTableIds } from '@shared/components/documents/recordTableIds';
 import { recordTableId } from '@shared/components/documents/recordTableIds';
 import { wfProcessApi } from '../api/wfProcessApi';
 import { wfRequestApi, type MailTrackingEntryDto, type WfRequestRecord } from '../api/wfRequestApi';
-import { normalizeDynamicControlType } from '../components/DynamicControlRenderer';
+import { DynamicControlRenderer, normalizeDynamicControlType } from '../components/DynamicControlRenderer';
 import { MailFieldValue } from '../components/MailFieldValue';
 import { WorkflowMailReportViewerViewer } from '../report-viewer/pages/WorkflowMailReportViewerPage';
 import { WorkflowOfficialFormViewer } from '../report-viewer/pages/WorkflowOfficialFormViewerPage';
@@ -269,9 +269,112 @@ function MailAttachments({ requestId, detailIds }: { requestId: number; detailId
 
 interface TrackingTimelineProps {
   entries: MailTrackingEntryDto[];
+  requestId: number;
 }
 
-export function TrackingTimeline({ entries }: TrackingTimelineProps): React.ReactElement {
+function CurrentActivityControls({
+  requestId,
+  entry,
+}: {
+  requestId: number;
+  entry: MailTrackingEntryDto;
+}): React.ReactElement {
+  const { currentLanguage } = useAppTranslation();
+  const queryClient = useQueryClient();
+  const controls = React.useMemo(
+    () => [...(entry.controls ?? [])].sort((left, right) => left.sortOrder - right.sortOrder),
+    [entry.controls]
+  );
+  const [values, setValues] = React.useState<Record<number, string>>({});
+  React.useEffect(() => {
+    setValues(Object.fromEntries(controls.map((control) => [control.activityControlId, control.value ?? ''])));
+  }, [controls]);
+  const save = useMutation({
+    mutationFn: () =>
+      wfRequestApi.saveActivityControls(
+        requestId,
+        entry.assignmentId,
+        controls.map((control) => ({
+          activityControlId: control.activityControlId,
+          value: values[control.activityControlId] ?? '',
+        }))
+      ),
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ['workflow', 'mail', 'request-details', requestId],
+      }),
+  });
+
+  return (
+    <Box
+      sx={{
+        mt: 1.25,
+        pt: 1.25,
+        borderTop: '1px solid #e5e7eb',
+        display: 'grid',
+        gap: 1.25,
+      }}
+    >
+      <Typography sx={{ fontSize: 11.5, fontWeight: 700 }}>
+        {currentLanguage.code === 'ar' ? 'حقول النشاط' : 'Activity controls'}
+      </Typography>
+      {controls.length === 0 && (
+        <Alert severity="warning">
+          {currentLanguage.code === 'ar'
+            ? 'لا توجد حقول نشاط محملة لهذا النشاط. أعد تشغيل API وتحقق من تعريف WfActivityControls.'
+            : 'No activity controls were loaded. Restart the API and verify the WfActivityControls configuration.'}
+        </Alert>
+      )}
+      {controls.map((control) => (
+        <DynamicControlRenderer
+          key={control.activityControlId}
+          value={values[control.activityControlId] ?? ''}
+          onChange={(value) =>
+            setValues((current) => ({ ...current, [control.activityControlId]: value }))
+          }
+          control={{
+            label:
+              currentLanguage.code === 'ar'
+                ? control.labelAr || control.label
+                : control.label || control.labelAr,
+            controlType: control.controlType,
+            options: control.options.map((option) => ({
+              value: option.value,
+              label:
+                currentLanguage.code === 'ar'
+                  ? option.labelAr || option.label
+                  : option.label || option.labelAr,
+            })),
+          }}
+        />
+      ))}
+      {save.isError && (
+        <Alert severity="error">
+          {save.error instanceof Error ? save.error.message : String(save.error)}
+        </Alert>
+      )}
+      {save.isSuccess && (
+        <Alert severity="success">
+          {currentLanguage.code === 'ar' ? 'تم حفظ بيانات النشاط.' : 'Activity data saved.'}
+        </Alert>
+      )}
+      {controls.length > 0 && <Box>
+        <Button
+          size="small"
+          variant="contained"
+          disabled={save.isPending}
+          onClick={() => save.mutate()}
+        >
+          {save.isPending
+            ? currentLanguage.code === 'ar' ? 'جارٍ الحفظ…' : 'Saving…'
+            : currentLanguage.code === 'ar' ? 'حفظ' : 'Save'}
+        </Button>
+      </Box>}
+    </Box>
+  );
+}
+
+export function TrackingTimeline({ entries, requestId }: TrackingTimelineProps): React.ReactElement {
   const { t, currentLanguage } = useAppTranslation();
   return (
     <Box
@@ -484,6 +587,9 @@ export function TrackingTimeline({ entries }: TrackingTimelineProps): React.Reac
                   {entry.notes}
                 </Box>
               </Box>
+              {entry.isCurrent && (
+                <CurrentActivityControls requestId={requestId} entry={entry} />
+              )}
             </Paper>
           </Box>
         ))}
@@ -533,7 +639,7 @@ function MailDetails({ request }: { request: MailRecord }) {
         ) : mailDetails.isError ? (
           <Alert severity="error">{t('mail.errors.tracking')}</Alert>
         ) : (
-          <TrackingTimeline entries={details?.history ?? []} />
+          <TrackingTimeline entries={details?.history ?? []} requestId={request.recId} />
         )}
       </Box>
       <Stack

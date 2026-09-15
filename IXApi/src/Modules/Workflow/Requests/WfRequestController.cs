@@ -1,6 +1,7 @@
 ﻿using IAX.IXApi.Modules.Identity.Permissions;
 using IAX.IXApi.Api.Controllers;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -85,6 +86,30 @@ namespace IAX.IXApi.Modules.Workflow.Requests
             return details == null
                 ? NotFound(APIResponse<MailRequestDetailsDto>.Fail("The workflow request was not found."))
                 : Ok(APIResponse<MailRequestDetailsDto>.Ok(details));
+        }
+
+        [HttpPut("{requestId:long}/activity-controls")]
+        public async Task<ActionResult<APIResponse<bool>>> SaveActivityControls(
+            long requestId, [FromBody] SaveMailActivityControlsDto submission,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                await _requestService.SaveMailActivityControlsAsync(requestId, submission, cancellationToken);
+                return Ok(APIResponse<bool>.Ok(true, "Activity controls saved."));
+            }
+            catch (KeyNotFoundException exception)
+            {
+                return NotFound(APIResponse<bool>.Fail(exception.Message));
+            }
+            catch (InvalidOperationException exception)
+            {
+                return BadRequest(APIResponse<bool>.Fail(exception.Message));
+            }
+            catch (UnauthorizedAccessException exception)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, APIResponse<bool>.Fail(exception.Message));
+            }
         }
 
         [HttpPost("submit")]

@@ -46,4 +46,35 @@ public sealed class MailTrackingEntryDto
     public string Notes { get; set; } = string.Empty;
     public bool IsCurrent { get; set; }
     public bool IsCompleted { get; set; }
+    public List<MailActivityControlDto> Controls { get; set; } = [];
+}
+
+public sealed class MailActivityControlDto
+{
+    public long ActivityControlId { get; set; }
+    public string Label { get; set; } = string.Empty;
+    public string LabelAr { get; set; } = string.Empty;
+    public string ControlType { get; set; } = "text";
+    public string Value { get; set; } = string.Empty;
+    public int SortOrder { get; set; }
+    public List<MailActivityControlOptionDto> Options { get; set; } = [];
+}
+
+public sealed class MailActivityControlOptionDto
+{
+    public string Value { get; set; } = string.Empty;
+    public string Label { get; set; } = string.Empty;
+    public string LabelAr { get; set; } = string.Empty;
+}
+
+public sealed class SaveMailActivityControlsDto
+{
+    public long AssignmentId { get; set; }
+    public List<SaveMailActivityControlValueDto> Values { get; set; } = [];
+}
+
+public sealed class SaveMailActivityControlValueDto
+{
+    public long ActivityControlId { get; set; }
+    public string Value { get; set; } = string.Empty;
 }

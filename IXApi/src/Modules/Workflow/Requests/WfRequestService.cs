@@ -302,6 +302,21 @@ namespace IAX.IXApi.Modules.Workflow.Requests
             var activityControlsById = await _context.Set<WfActivityControl>().AsNoTracking()
                 .Where(item => activityControlDataIds.Contains(item.RecId))
                 .ToDictionaryAsync(item => item.RecId, cancellationToken);
+            var activityIds = assignments.Select(item => item.ActivityId).Distinct().ToList();
+            var configuredActivityControls = activityIds.Count == 0
+                ? []
+                : await _context.Set<WfActivityControl>().AsNoTracking()
+                    .Include(item => item.Control)
+                    .Where(item => activityIds.Contains(item.ActivityId) && item.IsActive)
+                    .OrderBy(item => item.SortOrder).ThenBy(item => item.RecId)
+                    .ToListAsync(cancellationToken);
+            var configuredControlIds = configuredActivityControls.Select(item => item.RecId).ToList();
+            var activityControlOptions = configuredControlIds.Count == 0
+                ? []
+                : await _context.Set<WfActivityControlsOption>().AsNoTracking()
+                    .Where(item => configuredControlIds.Contains(item.ActivityControlId) && item.IsActive)
+                    .OrderBy(item => item.SortOrder).ThenBy(item => item.RecId)
+                    .ToListAsync(cancellationToken);
 
             var employeeIds = assignments.Select(item => item.UserId)
                 .Append(request.EmployeeId ?? 0).Where(item => item > 0).Distinct().ToList();
@@ -334,6 +349,9 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                     .Select(detail => (Label: FirstText(detail.Control?.NameAlias, detail.Control?.Name), Value: detail.Detail.ControlValue))
                     .Where(detail => !string.IsNullOrWhiteSpace(detail.Value) && !LooksSerialized(detail.Value))
                     .Select(detail => $"{detail.Label}: {detail.Value}").ToList();
+                var assignmentDetails = activityDetails
+                    .Where(detail => detail.AssignmentID == item.RecId)
+                    .ToList();
                 return new MailTrackingEntryDto
                 {
                     AssignmentId = item.RecId,
@@ -344,7 +362,30 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                     Date = item.FinishedDate ?? item.AssignDate,
                     Notes = notes.Count > 0 ? string.Join(" · ", notes) : "—",
                     IsCurrent = !request.IsFinished && !request.IsStopped && !item.IsFinished && item.RecId == latest?.RecId,
-                    IsCompleted = item.IsFinished
+                    IsCompleted = item.IsFinished,
+                    Controls = configuredActivityControls
+                        .Where(control => control.ActivityId == item.ActivityId)
+                        .Select(control =>
+                        {
+                            var detail = assignmentDetails.FirstOrDefault(value => value.ControlDataId == control.RecId);
+                            return new MailActivityControlDto
+                            {
+                                ActivityControlId = control.RecId,
+                                Label = FirstText(control.Name, control.NameAlias, control.Control?.Name, control.Code),
+                                LabelAr = FirstText(control.NameAlias, control.Name, control.Control?.Name, control.Code),
+                                ControlType = ResolveRuntimeControlType(control.Control?.Code, control.Control?.Name, control.Control?.ControlType),
+                                Value = detail?.ControlValue ?? string.Empty,
+                                SortOrder = control.SortOrder,
+                                Options = activityControlOptions
+                                    .Where(option => option.ActivityControlId == control.RecId)
+                                    .Select(option => new MailActivityControlOptionDto
+                                    {
+                                        Value = option.Value,
+                                        Label = FirstText(option.Name, option.NameAlias, option.Value),
+                                        LabelAr = FirstText(option.NameAlias, option.Name, option.Value)
+                                    }).ToList()
+                            };
+                        }).ToList()
                 };
             }).ToList();
 

@@ -52,6 +52,17 @@ export interface MailTrackingEntryDto {
   notes: string;
   isCurrent: boolean;
   isCompleted: boolean;
+  controls?: MailActivityControlDto[];
+}
+
+export interface MailActivityControlDto {
+  activityControlId: number;
+  label: string;
+  labelAr: string;
+  controlType: string;
+  value: string;
+  sortOrder: number;
+  options: Array<{ value: string; label: string; labelAr: string }>;
 }
 
 export interface MailRequestDetailsDto {
@@ -104,6 +115,17 @@ export const wfRequestApi = {
       { signal }
     );
     return requireData(response.data);
+  },
+  async saveActivityControls(
+    requestId: number,
+    assignmentId: number,
+    values: Array<{ activityControlId: number; value: string }>
+  ): Promise<void> {
+    const response = await apiClient.put<ApiResponse<boolean>>(
+      `${endpoint}/${requestId}/activity-controls`,
+      { assignmentId, values }
+    );
+    requireData(response.data);
   },
   async create(record: WfRequestRecord): Promise<WfRequestRecord> {
     const response = await apiClient.post<ApiResponse<WfRequestDto>>(endpoint, toDto(record));
