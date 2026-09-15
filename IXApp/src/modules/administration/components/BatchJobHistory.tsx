@@ -11,7 +11,7 @@ const formatDateTime = (value: string | null, locale: string) =>
     ? new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(
         new Date(value)
       )
-    : 'â€”';
+    : '—';
 const executionTone = (status: SysJobExecutionStatus | null) =>
   status === 2 ? 'success' : status === 3 ? 'error' : status === 1 ? 'warning' : 'default';
 
@@ -116,7 +116,7 @@ export function BatchJobHistory({ jobId }: { jobId: number }): React.ReactElemen
           field: 'output',
           headerName: 'Output / error',
           width: 350,
-          valueGetter: ({ row }) => row.errorMessage || row.output || 'â€”',
+          valueGetter: ({ row }) => row.errorMessage || row.output || '—',
         },
       ]}
     />

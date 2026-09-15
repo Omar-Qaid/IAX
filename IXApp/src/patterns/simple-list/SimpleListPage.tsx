@@ -212,6 +212,13 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
   );
   const [selectedRow, setSelectedRow] = useState<T | null>(initialRow);
   const initialSelectionApplied = useRef(Boolean(initialRow));
+  useEffect(() => {
+    if (dataGridProps.selectedIds) {
+      setSelectedRow(
+        rows.find((row) => getRowId(row) === dataGridProps.selectedIds?.at(-1)) ?? null
+      );
+    }
+  }, [dataGridProps.selectedIds, rows, getRowId]);
   const [gridFilterVisible, setGridFilterVisible] = useState(
     enterpriseConfig?.showFilterOnLoad ?? false
   );
