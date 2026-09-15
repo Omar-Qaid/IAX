@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { useBatchJobCommands } from '../components/useBatchJobCommands';
-import { BatchJobOverview } from '../components/BatchJobOverview';
 import { BatchJobTasks } from '../components/BatchJobTasks';
 import { AppDateTimeField } from '@shared/components/fields/AppDateTimeField';
+import { AppLookupField } from '@shared/components/fields/AppLookupField';
 import { Alert } from '@mui/material';
 import { usePermission } from '@core/permissions/usePermission';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -13,16 +13,42 @@ import type {
 } from '@patterns/list-details/types';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { sysBackgroundJobApi, type SysBackgroundJobRecord } from '../api/sysBackgroundJobApi';
+import { sysBackgroundJobGroupApi } from '../api/sysBackgroundJobGroupApi';
+import { batchJobActivePeriodApi } from '../api/batchJobActivePeriodApi';
 
 const scheduleLabels = ['One time', 'Delayed', 'Recurring', 'Cron'];
-const jobStatusLabels = ['Ready', 'Withhold', 'Cancelled', 'Completed'];
+const jobStatusLabels = ['Waiting', 'Withhold', 'Canceled', 'Ended'];
 const executionStatusLabels = ['Waiting', 'Executing', 'Completed', 'Failed', 'Cancelled'];
+const monitoringCategoryLabels = [
+  'Undefined', 'Integration', 'Workflow', 'Store Order Synchronizer Job',
+  'Assortment Details Job', 'Assortment Lookup Job', 'Transaction Sales Trans Mark Multi Job',
+  'Statement Calculate Multi Job', 'Sync Orders Scheduler Task',
+  'Internal Org Update Channel Job', 'Sales Form Letter Invoice Task',
+  'Retail kit configure approval job', 'Retail kit prices per company job',
+];
 const formatDateTime = (value: string | null, locale: string) =>
   value
     ? new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(
         new Date(value)
       )
     : '—';
+const recurrenceText = (job: SysBackgroundJobRecord, locale: string) => {
+  if (job.scheduleType === 3) return `CRON (UTC): ${job.recurrenceData ?? '—'}`;
+  if (job.scheduleType === 2) {
+    try {
+      const value = JSON.parse(job.recurrenceData ?? '') as {
+        unit?: string; interval?: number; endAfter?: number; endBy?: string;
+      };
+      const ending = value.endAfter
+        ? ` Ends after ${value.endAfter} occurrences.`
+        : value.endBy ? ` Ends by ${value.endBy}.` : '';
+      return `Occurs every ${value.interval ?? 1} ${value.unit ?? 'intervals'}.${ending}`;
+    } catch {
+      return `Occurs every ${job.recurrenceData ?? '—'} seconds.`;
+    }
+  }
+  return `One run at ${formatDateTime(job.origStartDateTime ?? job.startDateTime, locale)}.`;
+};
 
 const emptyJob = (): SysBackgroundJobRecord => ({
   id: `new-${crypto.randomUUID()}`,
@@ -31,8 +57,9 @@ const emptyJob = (): SysBackgroundJobRecord => ({
   jobKey: '',
   description: null,
   tenantId: null,
+  dataAreaId: '',
   scheduleType: 2,
-  recurrenceData: null,
+  recurrenceData: '3600',
   startDateTime: null,
   startDateTimeTzId: null,
   startDate: null,
@@ -58,6 +85,9 @@ const emptyJob = (): SysBackgroundJobRecord => ({
   activePeriod: null,
   batchGroup: null,
   emitBusinessEvent: 0,
+  hasAlert: false,
+  progress: 0,
+  recurrenceCount: 0,
   maxRetryCount: 0,
   retryDelaySeconds: 60,
   timeoutSeconds: 300,
@@ -77,8 +107,6 @@ export function SysBackgroundJobPage(): React.ReactElement {
   const [busy, setBusy] = React.useState(false);
   const [taskLocked, setTaskLocked] = React.useState(false);
   const canRun = usePermission('System.BackgroundJobs.Run').hasPermission;
-  const canEdit = usePermission('System.BackgroundJobs.Edit').hasPermission;
-  const canCancel = usePermission('System.BackgroundJobs.Cancel').hasPermission;
   const execute = async (action: () => Promise<void>) => {
     setBusy(true);
     setCommandError(null);
@@ -96,6 +124,11 @@ export function SysBackgroundJobPage(): React.ReactElement {
     queryKey: ['background-job-handlers'],
     queryFn: ({ signal }) => sysBackgroundJobApi.handlers(signal),
   });
+  const batchGroups = useQuery({
+    queryKey: ['batch-groups', 'lookup'],
+    queryFn: ({ signal }) => sysBackgroundJobGroupApi.list(signal),
+  });
+  const activePeriods = useQuery({ queryKey: ['batch-job-active-periods', 'lookup'], queryFn: ({ signal }) => batchJobActivePeriodApi.list(signal) });
   const refresh = () =>
     queryClient.invalidateQueries({ queryKey: ['list-details', 'background-jobs'] });
   const sections = useMemo<DetailSectionConfig[]>(
@@ -107,40 +140,56 @@ export function SysBackgroundJobPage(): React.ReactElement {
           {
             id: 'identity',
             title: 'Identification',
-            columns: 3,
+            columns: 5,
             fields: [
-              { name: 'description', label: 'Description', type: 'text', multiline: true },
-              {
-                name: 'jobKey',
-                label: 'Handler',
-                type: 'select',
-                options: (handlers.data ?? []).map((value) => ({ value, label: value })),
-              },
+              { name: 'caption', label: 'Job description', type: 'text' },
+              { name: 'actualStartText', label: 'Actual start date/time', type: 'display', disabled: true },
+              { name: 'executingBy', label: 'Run by', type: 'display', disabled: true },
+              { name: 'hasAlert', label: 'Has alert', type: 'boolean', disabled: true },
+              { name: 'recurrenceCount', label: 'Recurrence count', type: 'number', disabled: true },
               { name: 'statusText', label: 'Status', type: 'display', disabled: true },
               {
-                name: 'scheduleType',
-                label: 'Schedule',
-                type: 'select',
-                options: scheduleLabels.map((label, value) => ({ value: String(value), label })),
-              },
-              {
-                name: 'scheduledStartText',
+                name: 'scheduledStartDateTime',
                 label: 'Scheduled start date/time',
-                type: 'display',
-                disabled: true,
+                renderOwnLabel: true,
+                render: ({ value, editing, disabled, onChange }) => {
+                  const text = String(value ?? '');
+                  const date = text ? new Date(text) : null;
+                  const input = date && !Number.isNaN(date.getTime()) ? date.toISOString().slice(0, 16) : '';
+                  return <AppDateTimeField label="Scheduled start date/time" value={input}
+                    disabled={disabled || !editing}
+                    onChange={(next) => onChange(next ? `${next}${next.length === 16 ? ':00' : ''}Z` : '')} />;
+                },
               },
-              {
-                name: 'endDateTime',
-                label: 'Actual end date/time',
-                type: 'display',
-                disabled: true,
-              },
-              { name: 'batchGroup', label: 'Batch group', type: 'text' },
-              { name: 'activePeriod', label: 'Active period', type: 'text' },
+              { name: 'dataAreaId', label: 'Company', type: 'display', disabled: true },
+              { name: 'progress', label: 'Progress', type: 'number', disabled: true },
+              { name: 'recurrenceText', label: 'Recurrence text', type: 'display', multiline: true, disabled: true },
+              { name: 'endDateTimeText', label: 'End date/time', type: 'display', disabled: true },
+              { name: 'createdBy', label: 'Created by', type: 'display', disabled: true },
+              { name: 'monitoringCategory', label: 'Monitoring category', type: 'select',
+                options: monitoringCategoryLabels.map((label, value) => ({ value: String(value), label })) },
+              { name: 'logLevel', label: 'Save job to history', type: 'select',
+                options: ['Always', 'Errors only', 'Never'].map((label, value) => ({ value: String(value), label })) },
               { name: 'critical', label: 'Critical job', type: 'boolean' },
-              { name: 'monitoringCategory', label: 'Monitoring category', type: 'number' },
-              { name: 'managed', label: 'Managed', type: 'boolean' },
-              { name: 'emitBusinessEvent', label: 'Emit business event', type: 'boolean' },
+              { name: 'activePeriod', label: 'Active period', renderOwnLabel: true,
+                render: ({ value, editing, disabled, onChange }) => (
+                  <AppLookupField name="activePeriod" label="Active period" value={String(value ?? '')}
+                    disabled={disabled || !editing} displayMode="select"
+                    options={(activePeriods.data ?? [])
+                      .filter((period) => period.isActive || period.periodId === value)
+                      .map((period) => ({ id: period.periodId, code: period.periodId,
+                        name: period.periodId, description: period.name ?? undefined }))}
+                    onChange={(next) => onChange(next ?? '')} />
+                ) },
+              { name: 'batchGroup', label: 'Batch group', renderOwnLabel: true,
+                render: ({ value, editing, disabled, onChange }) => (
+                  <AppLookupField name="batchGroup" label="Batch group" value={String(value ?? '')}
+                    disabled={disabled || !editing} displayMode="select"
+                    options={(batchGroups.data ?? []).filter((group) => group.isActive || group.groupCode === value)
+                      .map((group) => ({ id: group.groupCode, code: group.groupCode,
+                        name: group.groupCode, description: group.description ?? undefined }))}
+                    onChange={(next) => onChange(next ?? '')} />
+                ) },
             ],
           },
         ],
@@ -154,24 +203,29 @@ export function SysBackgroundJobPage(): React.ReactElement {
             id: 'dto-details',
             columns: 3,
             fields: [
-              ['recId', 'Batch job ID'],
-              ['tenantId', 'Company accounts'],
-              ['canceledBy', 'Canceled by'],
-              ['dataPartition', 'Data partition'],
-              ['finishing', 'Finishing'],
-              ['logLevel', 'Log level'],
-              ['runtimeJob', 'Runtime job'],
-              ['executingBy', 'Run by'],
-              ['origStartDateTime', 'Original start date/time'],
-              ['origStartDateTimeTzId', 'Original start time zone ID'],
-              ['endDateTimeTzId', 'End time zone ID'],
-              ['schedulingPriorityIsOverridden', 'Scheduling priority is overridden'],
-              ['runCount', 'Execution count'],
-              ['lastStatus', 'Last execution status'],
-              ['lastError', 'Last error'],
-              ['createdAt', 'Created date/time'],
-              ['createdBy', 'Created by'],
-            ].map(([name, label]) => ({ name, label, type: 'display' as const, disabled: true })),
+              { name: 'description', label: 'Description', type: 'text' as const, multiline: true },
+              { name: 'jobKey', label: 'Handler', type: 'select' as const,
+                options: (handlers.data ?? []).map((value) => ({ value, label: value })) },
+              { name: 'scheduleType', label: 'Schedule', type: 'select' as const,
+                options: scheduleLabels.map((label, value) => ({ value: String(value), label })) },
+              { name: 'managed', label: 'Managed', type: 'boolean' as const },
+              { name: 'emitBusinessEvent', label: 'Emit business event', type: 'boolean' as const },
+              ...[
+                ['recId', 'Batch job ID'],
+                ['tenantId', 'Tenant'],
+                ['canceledBy', 'Canceled by'],
+                ['dataPartition', 'Data partition'],
+                ['finishing', 'Finishing'],
+                ['runtimeJob', 'Runtime job'],
+                ['origStartDateTimeTzId', 'Original start time zone ID'],
+                ['endDateTimeTzId', 'End time zone ID'],
+                ['schedulingPriorityIsOverridden', 'Scheduling priority is overridden'],
+                ['runCount', 'Execution count'],
+                ['lastStatus', 'Last execution status'],
+                ['lastError', 'Last error'],
+                ['createdAt', 'Created date/time'],
+              ].map(([name, label]) => ({ name, label, type: 'display' as const, disabled: true })),
+            ],
           },
         ],
       },
@@ -201,27 +255,6 @@ export function SysBackgroundJobPage(): React.ReactElement {
                 ),
               },
               { name: 'startTime', label: 'Start time (seconds)', type: 'number' },
-              {
-                name: 'startDateTime',
-                label: 'Start at (UTC)',
-                renderOwnLabel: true,
-                render: ({ value, editing, disabled, onChange }) => {
-                  const text = String(value ?? '');
-                  const date = text ? new Date(text) : null;
-                  const input =
-                    date && !Number.isNaN(date.getTime()) ? date.toISOString().slice(0, 16) : '';
-                  return (
-                    <AppDateTimeField
-                      label="Start at (UTC)"
-                      value={input}
-                      disabled={disabled || !editing}
-                      onChange={(next) =>
-                        onChange(next ? `${next}${next.length === 16 ? ':00' : ''}Z` : '')
-                      }
-                    />
-                  );
-                },
-              },
               { name: 'isEnabled', label: 'Enabled', type: 'boolean' },
               {
                 name: 'schedulingPriority',
@@ -260,7 +293,7 @@ export function SysBackgroundJobPage(): React.ReactElement {
         ],
       },
     ],
-    [handlers.data]
+    [activePeriods.data, batchGroups.data, handlers.data]
   );
   const config: EnterpriseListDetailsConfig<SysBackgroundJobRecord> = {
     interactionLocked: busy || taskLocked || batchCommands.busy,
@@ -277,6 +310,7 @@ export function SysBackgroundJobPage(): React.ReactElement {
       create: sysBackgroundJobApi.create,
       update: sysBackgroundJobApi.update,
       delete: sysBackgroundJobApi.remove,
+      refreshIntervalMs: 2_000,
     },
     createRecord: emptyJob,
     getPrimaryText: (job) => job.caption,
@@ -287,12 +321,16 @@ export function SysBackgroundJobPage(): React.ReactElement {
         .includes(query.toLocaleLowerCase()),
     getValues: (job) => ({
       ...job,
+      caption: job.caption,
       description: job.description ?? '',
       jobKey: job.jobKey,
       statusText: jobStatusLabels[job.status],
       scheduleType: String(job.scheduleType),
       startDateTime: job.startDateTime ?? '',
-      scheduledStartText: formatDateTime(job.startDateTime, i18n.language),
+      scheduledStartDateTime: job.origStartDateTime ?? job.startDateTime ?? '',
+      actualStartText: formatDateTime(job.startDateTime, i18n.language),
+      endDateTimeText: formatDateTime(job.endDateTime, i18n.language),
+      recurrenceText: recurrenceText(job, i18n.language),
       origStartDateTime: formatDateTime(job.origStartDateTime, i18n.language),
       createdAt: formatDateTime(job.createdAt, i18n.language),
       lastStatus: job.lastStatus == null ? '—' : executionStatusLabels[job.lastStatus],
@@ -310,16 +348,18 @@ export function SysBackgroundJobPage(): React.ReactElement {
       activePeriod: job.activePeriod ?? '',
       critical: Boolean(job.critical),
       monitoringCategory: job.monitoringCategory ?? 0,
+      logLevel: String(job.logLevel ?? 0),
       managed: Boolean(job.managed),
       emitBusinessEvent: Boolean(job.emitBusinessEvent),
     }),
     setValues: (job, values) => ({
       ...job,
+      caption: String(values.caption || ''),
       description: String(values.description || '') || null,
       jobKey: String(values.jobKey || ''),
       scheduleType: Number(values.scheduleType) as SysBackgroundJobRecord['scheduleType'],
       recurrenceData: String(values.recurrenceData || '') || null,
-      startDateTime: String(values.startDateTime || '') || null,
+      startDateTime: String(values.scheduledStartDateTime || values.startDateTime || '') || null,
       isEnabled: Boolean(values.isEnabled),
       preventOverlap: Boolean(values.preventOverlap),
       schedulingPriority: Number(values.schedulingPriority ?? 1),
@@ -331,6 +371,7 @@ export function SysBackgroundJobPage(): React.ReactElement {
       activePeriod: String(values.activePeriod || '') || null,
       critical: values.critical ? 1 : 0,
       monitoringCategory: Number(values.monitoringCategory ?? 0),
+      logLevel: Number(values.logLevel ?? 0),
       startDateTimeTzId:
         values.startDateTimeTzId === '' || values.startDateTimeTzId == null
           ? null
@@ -341,30 +382,17 @@ export function SysBackgroundJobPage(): React.ReactElement {
       managed: values.managed ? 1 : 0,
       emitBusinessEvent: values.emitBusinessEvent ? 1 : 0,
     }),
-    headerFields: [
-      {
-        id: 'caption',
-        label: 'Batch job',
-        width: 330,
-        getValue: (job) => job.caption,
-        setValue: (job, value) => ({ ...job, caption: String(value) }),
-      },
-    ],
+    headerFields: [],
     sections: ({ record, editing }) => [
       ...sections.map((section) => ({
         ...section,
-        ...(section.id === 'identification' && !editing
-          ? { groups: undefined, content: <BatchJobOverview job={record} /> }
-          : {}),
-        groups:
-          section.id === 'identification' && !editing
-            ? undefined
-            : section.groups?.map((group) => ({
-                ...group,
-                fields: group.fields.map((field) =>
-                  field.name === 'jobKey' ? { ...field, disabled: record.recId > 0 } : field
-                ),
-              })),
+        defaultExpanded: section.id === 'identification' ? true : section.defaultExpanded,
+        groups: section.groups?.map((group) => ({
+          ...group,
+          fields: group.fields.map((field) =>
+            field.name === 'jobKey' ? { ...field, disabled: record.recId > 0 } : field
+          ),
+        })),
       })),
       {
         id: 'tasks',
@@ -397,29 +425,6 @@ export function SysBackgroundJobPage(): React.ReactElement {
             void execute(() => sysBackgroundJobApi.trigger(record.recId));
         },
       },
-      {
-        id: 'pause-resume',
-        label: job?.status === 1 ? 'Ready' : 'Withhold',
-        disabled: busy || !canEdit || (job?.status !== 0 && job?.status !== 1),
-        requiresSelection: true,
-        onClick: (record) => {
-          if (record)
-            void execute(() =>
-              record.status === 1
-                ? sysBackgroundJobApi.resume(record.recId)
-                : sysBackgroundJobApi.pause(record.recId)
-            );
-        },
-      },
-      {
-        id: 'cancel',
-        label: 'Cancel job',
-        disabled: busy || !canCancel || job?.status === 2,
-        requiresSelection: true,
-        onClick: (record) => {
-          if (record) void execute(() => sysBackgroundJobApi.cancel(record.recId));
-        },
-      },
     ],
     permissions: {
       view: 'System.BackgroundJobs.View',
@@ -430,6 +435,26 @@ export function SysBackgroundJobPage(): React.ReactElement {
     validate: (job) => ({
       ...(!job.caption.trim() ? { caption: 'Batch job caption is required.' } : {}),
       ...(!job.jobKey.trim() ? { jobKey: 'A registered handler is required.' } : {}),
+      ...(job.scheduleType >= 2 && !job.recurrenceData?.trim()
+        ? { recurrenceData: 'Recurrence data is required.' }
+        : {}),
+      ...(job.scheduleType < 2 && !job.startDateTime
+        ? { scheduledStartDateTime: 'A scheduled start date/time is required.' }
+        : {}),
+      ...(job.maxRetryCount < 0 || job.maxRetryCount > 10
+        ? { maxRetryCount: 'Maximum retries must be between 0 and 10.' }
+        : {}),
+      ...(job.retryDelaySeconds < 1 || job.retryDelaySeconds > 3600
+        ? { retryDelaySeconds: 'Retry delay must be between 1 and 3600 seconds.' }
+        : {}),
+      ...(job.timeoutSeconds < 1 || job.timeoutSeconds > 86400
+        ? { timeoutSeconds: 'Timeout must be between 1 and 86400 seconds.' }
+        : {}),
+      ...(() => {
+        if (!job.payloadJson?.trim()) return {};
+        try { JSON.parse(job.payloadJson); return {}; }
+        catch { return { payloadJson: 'Parameters must contain valid JSON.' }; }
+      })(),
     }),
     presentation: { mode: 'list', listWidth: 300, headerMaxWidth: 760 },
   };

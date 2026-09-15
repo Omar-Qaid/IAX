@@ -307,6 +307,21 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'system-batch-groups',
+    path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.BATCH_GROUPS,
+    permission: PERMISSIONS.BACKGROUND_JOB_VIEW,
+    component: lazyPage(
+      () => import('@modules/administration/pages/SysBackgroundJobGroupPage'),
+      (module) => module.SysBackgroundJobGroupPage
+    ),
+  },
+  {
+    id: 'system-batch-job-active-periods',
+    path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.BATCH_JOB_ACTIVE_PERIODS,
+    permission: PERMISSIONS.BACKGROUND_JOB_VIEW,
+    component: lazyPage(() => import('@modules/administration/pages/BatchJobActivePeriodPage'), (module) => module.BatchJobActivePeriodPage),
+  },
+  {
     id: 'system-background-job-history',
     path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.BACKGROUND_JOB_HISTORY,
     permission: PERMISSIONS.BACKGROUND_JOB_VIEW,

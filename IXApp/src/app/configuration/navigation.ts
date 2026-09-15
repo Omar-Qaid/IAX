@@ -226,6 +226,8 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
             permission: PERMISSIONS.NUMBER_SEQUENCE_VIEW,
           },
           { label: 'Batch jobs', path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.BACKGROUND_JOBS, permission: PERMISSIONS.BACKGROUND_JOB_VIEW },
+          { label: 'Batch groups', path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.BATCH_GROUPS, permission: PERMISSIONS.BACKGROUND_JOB_VIEW },
+          { label: 'Batch job active periods', path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.BATCH_JOB_ACTIVE_PERIODS, permission: PERMISSIONS.BACKGROUND_JOB_VIEW },
         ],
       },
     ],

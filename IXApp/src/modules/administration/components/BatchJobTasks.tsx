@@ -152,7 +152,7 @@ export function BatchJobTasks({
             },
           },
           { field: 'name', headerName: 'Task description', width: 240 },
-          { field: 'serviceKey', headerName: 'Class name', width: 220 },
+          { field: 'serviceKey', headerName: 'Service key', width: 220 },
           {
             field: 'classDescription',
             headerName: 'Class description',
@@ -329,7 +329,12 @@ export function BatchJobTasks({
             Cancel
           </Button>
           <Button
-            disabled={disabled || !draft?.name.trim() || !draft.serviceKey}
+            disabled={
+              disabled || !draft?.name.trim() || !draft.serviceKey ||
+              (draft.executionOrder ?? 0) < 1 ||
+              (draft.maxRetryCount ?? 0) < 0 || (draft.maxRetryCount ?? 0) > 10 ||
+              (draft.retryDelaySeconds ?? 60) < 1 || (draft.retryDelaySeconds ?? 60) > 3600
+            }
             onClick={() => {
               if (!draft) return;
               try {

@@ -62,4 +62,15 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Entities
         /// <summary>An automatic retry after a previous failed attempt.</summary>
         Retry = 2
     }
+
+    public enum BatchMonitoringCategory
+    {
+        Undefined = 0, Integration = 1, Workflow = 2, StoreOrderSynchronizerJob = 3,
+        AssortmentDetailsJob = 4, AssortmentLookupJob = 5, TransactionSalesTransMarkMultiJob = 6,
+        StatementCalculateMultiJob = 7, SyncOrdersSchedulerTask = 8,
+        InternalOrgUpdateChannelJob = 9, SalesFormLetterInvoiceTask = 10,
+        RetailKitConfigureApprovalJob = 11, RetailKitPricesPerCompanyJob = 12
+    }
+
+    public enum BatchHistoryLogLevel { Always = 0, ErrorsOnly = 1, Never = 2 }
 }

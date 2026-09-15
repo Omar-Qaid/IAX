@@ -1,5 +1,7 @@
 using System.Text.Json;
 using IAX.IXApi.Infrastructure.Realtime;
+using IAX.IXApi.Modules.Administration.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
@@ -46,17 +48,36 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
         /// </summary>
         public async Task ReportProgressAsync(int percent, string? message = null, CancellationToken ct = default)
         {
-            var realtime = Services.GetService<ISysRealtimeManager>();
-            if (realtime is null) return;
-
-            await realtime.BroadcastAsync(SysRealtimeMessage.JobProgress(new
+            var normalizedPercent = Math.Clamp(percent, 0, 100);
+            try
             {
-                JobId,
-                ExecutionId,
-                JobName,
-                Percent = Math.Clamp(percent, 0, 100),
-                Message = message,
-            }));
+                // Use a separate scope because a batch handler may be using the execution scope's
+                // DbContext at the same time. ExecuteUpdate persists progress immediately.
+                using var progressScope = Services.CreateScope();
+                var db = progressScope.ServiceProvider.GetRequiredService<IAdministrationDataContext>();
+                await db.SysBackgroundJobs.IgnoreQueryFilters()
+                    .Where(job => job.RecId == JobId && !job.IsDeleted)
+                    .ExecuteUpdateAsync(update => update.SetProperty(job => job.Progress, normalizedPercent), ct);
+
+                var realtime = progressScope.ServiceProvider.GetService<ISysRealtimeManager>();
+                if (realtime is not null)
+                    await realtime.BroadcastAsync(SysRealtimeMessage.JobProgress(new
+                    {
+                        JobId,
+                        ExecutionId,
+                        JobName,
+                        Percent = normalizedPercent,
+                        Message = message,
+                    }));
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch
+            {
+                // Reporting progress must never fail the batch operation itself.
+            }
         }
     }
 }

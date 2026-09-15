@@ -46,6 +46,7 @@ export function useListDetailsPage<T extends ListDetailRecord>(
       source.type === 'remote' ? source.load(signal) : Promise.resolve([] as T[]),
     enabled: source.type === 'remote',
     initialData: source.type === 'remote' ? source.initialRecords : undefined,
+    refetchInterval: source.type === 'remote' ? source.refreshIntervalMs : false,
   });
   const sequenceKey = config.numberSequence?.key ?? '';
   const numberSequenceQuery = useQuery({

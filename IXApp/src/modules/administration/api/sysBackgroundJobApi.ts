@@ -13,6 +13,7 @@ export interface SysBackgroundJobRecord {
   jobKey: string;
   description: string | null;
   tenantId: string | null;
+  dataAreaId: string;
   scheduleType: SysJobScheduleType;
   recurrenceData: string | null;
   startDateTime: string | null;
@@ -40,6 +41,9 @@ export interface SysBackgroundJobRecord {
   activePeriod: string | null;
   batchGroup: string | null;
   emitBusinessEvent: number | null;
+  hasAlert: boolean;
+  progress: number;
+  recurrenceCount: number;
   maxRetryCount: number;
   retryDelaySeconds: number;
   timeoutSeconds: number;
@@ -137,6 +141,7 @@ const toSchedulePayload = (record: SysBackgroundJobRecord) => ({
   batchGroup: record.batchGroup,
   critical: record.critical ?? 0,
   monitoringCategory: record.monitoringCategory ?? 0,
+  logLevel: record.logLevel ?? 0,
   managed: record.managed ?? 0,
   emitBusinessEvent: record.emitBusinessEvent ?? 0,
   maxRetryCount: record.maxRetryCount,

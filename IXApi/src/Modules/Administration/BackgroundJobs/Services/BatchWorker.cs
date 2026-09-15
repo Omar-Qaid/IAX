@@ -236,6 +236,10 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                         SysRealtimeEventType.JobStarted,
                         new { job.RecId, job.Caption, execution.Attempt }));
 
+                    job.ExecutingBy = execution.TriggeredByUserId ?? _serverName;
+                    job.Progress = 0;
+                    await db.SaveChangesAsync(stoppingToken);
+
                     await handler.ExecuteAsync(context, timeoutCts.Token);
                     if (await db.SysBackgroundJobs.IgnoreQueryFilters().AnyAsync(j => j.RecId == jobId &&
                         (j.Status == SysJobStatus.Cancelled || j.IsDeleted), stoppingToken))
@@ -252,9 +256,24 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                     execution.Output = context.Output;
 
                     job.RunCount++;
-                    job.EndDateTime = execution.StartedAt;
+                    job.EndDateTime = execution.CompletedAt;
                     job.LastStatus = SysJobExecutionStatus.Completed;
                     job.LastError = null;
+                    job.Progress = 100;
+                    job.HasAlert = execution.AlertsProcessed > 0;
+                    var recurrence = await db.SysBackgroundJobRecurrenceCounts
+                        .FirstOrDefaultAsync(count => count.BatchJobId == job.RecId, stoppingToken);
+                    if (recurrence == null)
+                    {
+                        recurrence = new SysBackgroundJobRecurrenceCount
+                        {
+                            BatchJobId = job.RecId,
+                            DataAreaId = job.DataAreaId,
+                            RecurrenceCount = 1
+                        };
+                        db.SysBackgroundJobRecurrenceCounts.Add(recurrence);
+                    }
+                    else recurrence.RecurrenceCount++;
                     if (job.ScheduleType is SysJobScheduleType.OneTime or SysJobScheduleType.Delayed)
                         await db.SysBackgroundJobs.IgnoreQueryFilters().Where(j => j.RecId == jobId &&
                             j.Status == SysJobStatus.Active).ExecuteUpdateAsync(setters =>

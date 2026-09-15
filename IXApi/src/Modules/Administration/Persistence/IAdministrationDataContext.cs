@@ -12,6 +12,9 @@ public interface IAdministrationDataContext
     DbSet<BatchSettings> BatchSettings { get; }
     DbSet<SysAuditLog> SysAuditLogs { get; }
     DbSet<SysBackgroundJob> SysBackgroundJobs { get; }
+    DbSet<SysBackgroundJobGroup> SysBackgroundJobGroups { get; }
+    DbSet<SysBackgroundJobRecurrenceCount> SysBackgroundJobRecurrenceCounts { get; }
+    DbSet<SysBackgroundJobActivePeriod> BatchJobActivePeriods { get; }
     DbSet<SysBackgroundJobExecution> SysBackgroundJobExecutions { get; }
     DbSet<SysBackgroundJobTask> SysBackgroundJobTasks { get; }
     DbSet<SysBackgroundJobTaskExecution> SysBackgroundJobTaskExecutions { get; }

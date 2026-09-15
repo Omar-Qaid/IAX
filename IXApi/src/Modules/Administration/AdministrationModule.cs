@@ -2,6 +2,7 @@ using System.Reflection;
 using IAX.IXApi.Shared.Application.Batch;
 using IAX.IXApi.Modules.Administration.BackgroundJobs.Services;
 using IAX.IXApi.Modules.Administration.BackgroundJobs.Services.Handlers;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace IAX.IXApi.Modules.Administration;
 
@@ -14,6 +15,8 @@ public static class AdministrationModule
     {
         services.Configure<SysBackgroundJobOptions>(configuration.GetSection("BackgroundJobs"));
         services.AddBatchFramework();
+        services.TryAddScoped<IAxSyncProcessor, UnconfiguredAxSyncProcessor>();
+        services.AddBatchService<AxSyncBatchService>("AxSync", "Dynamics AX synchronization");
         services.AddHostedService<BatchWorker>();
 
         foreach (var handlerType in typeof(AdministrationModule).Assembly.GetTypes().Where(type =>

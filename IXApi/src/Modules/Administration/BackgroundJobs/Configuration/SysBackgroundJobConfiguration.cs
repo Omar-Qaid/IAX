@@ -21,6 +21,16 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Configuration
                    .WithOne(x => x.Job)
                    .HasForeignKey(x => x.JobId)
                    .OnDelete(DeleteBehavior.Cascade);
+
+            // These D365-compatible fields are persisted as optional codes. There are no
+            // corresponding lookup tables in the batch migration, so they must not be inferred
+            // as relationships to the numeric RecId keys on the compatibility DTO types.
+            builder.Ignore(e => e.GroupNavigation);
+            builder.Ignore(e => e.ActivePeriodNavigation);
+            builder.HasMany(e => e.RecurrenceCounts)
+                .WithOne(count => count.BatchJob)
+                .HasForeignKey(count => count.BatchJobId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

@@ -150,6 +150,9 @@ namespace IAX.IXApi.Infrastructure.Persistence
         public DbSet<SysBackgroundJobTask> SysBackgroundJobTasks => Set<SysBackgroundJobTask>();
         public DbSet<SysBackgroundJobTaskExecution> SysBackgroundJobTaskExecutions => Set<SysBackgroundJobTaskExecution>();
         public DbSet<SysBackgroundJob> SysBackgroundJobs => Set<SysBackgroundJob>();
+        public DbSet<SysBackgroundJobGroup> SysBackgroundJobGroups => Set<SysBackgroundJobGroup>();
+        public DbSet<SysBackgroundJobRecurrenceCount> SysBackgroundJobRecurrenceCounts => Set<SysBackgroundJobRecurrenceCount>();
+        public DbSet<SysBackgroundJobActivePeriod> BatchJobActivePeriods => Set<SysBackgroundJobActivePeriod>();
         public DbSet<SysBackgroundJobExecution> SysBackgroundJobExecutions => Set<SysBackgroundJobExecution>();
         #endregion
 

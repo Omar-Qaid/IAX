@@ -9,7 +9,7 @@ public sealed class WorkflowRequestSubmissionBatchService : BatchService
 
     public override Task<BatchExecutionResult> ProcessAsync(BatchExecutionContext context, CancellationToken cancellationToken)
     {
-        cancellationToken.ThrowIfCancellationRequested();
+       cancellationToken.ThrowIfCancellationRequested();
 
         // TODO: Add your process-request submission logic here.
         // 1. Read your process ID and input values from context.ParametersJson.

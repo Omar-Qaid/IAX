@@ -11,6 +11,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs
         public string JobKey { get; set; } = null!;
         public string? Description { get; set; }
         public string? TenantId { get; set; }
+        public string DataAreaId { get; set; } = string.Empty;
 
         public SysJobScheduleType ScheduleType { get; set; }
         public byte[]? RecurrenceData { get; set; }
@@ -44,6 +45,9 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs
         public string? ActivePeriod { get; set; }
         public string? BatchGroup { get; set; }
         public int EmitBusinessEvent { get; set; }
+        public bool HasAlert { get; set; }
+        public decimal Progress { get; set; }
+        public int RecurrenceCount { get; set; }
 
         public int MaxRetryCount { get; set; }
         public int RetryDelaySeconds { get; set; }

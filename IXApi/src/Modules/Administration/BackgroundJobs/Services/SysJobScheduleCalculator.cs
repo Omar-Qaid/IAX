@@ -8,19 +8,51 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
     /// </summary>
     public static class SysJobScheduleCalculator
     {
-        private static bool TryReadInterval(byte[]? data, out int seconds)
+        private sealed class RecurrenceSpec
         {
-            if (int.TryParse(System.Text.Encoding.UTF8.GetString(data ?? []), out seconds)) return seconds > 0;
-            // Preserve intervals written by the earlier BitConverter-based seeders.
-            seconds = data?.Length == 4 ? System.Buffers.Binary.BinaryPrimitives.ReadInt32LittleEndian(data) : 0;
-            return seconds > 0;
+            public string Unit { get; set; } = "seconds";
+            public int Interval { get; set; } = 1;
+            public int? EndAfter { get; set; }
+            public DateTime? EndBy { get; set; }
         }
+
+        private static bool TryReadSpec(byte[]? data, out RecurrenceSpec spec)
+        {
+            spec = new RecurrenceSpec();
+            var text = System.Text.Encoding.UTF8.GetString(data ?? []);
+            if (int.TryParse(text, out var seconds) && seconds > 0)
+            {
+                spec.Interval = seconds;
+                return true;
+            }
+            if (data?.Length == 4)
+            {
+                seconds = System.Buffers.Binary.BinaryPrimitives.ReadInt32LittleEndian(data);
+                if (seconds > 0) { spec.Interval = seconds; return true; }
+            }
+            try
+            {
+                var parsed = System.Text.Json.JsonSerializer.Deserialize<RecurrenceSpec>(text,
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                if (parsed == null || parsed.Interval <= 0 ||
+                    parsed.Unit is not ("seconds" or "minutes" or "hours" or "days" or "weeks" or "months" or "years") ||
+                    parsed.EndAfter is <= 0)
+                    return false;
+                spec = parsed;
+                return true;
+            }
+            catch (System.Text.Json.JsonException) { return false; }
+        }
+
         /// <summary>
         /// Computes the next run time strictly after <paramref name="fromUtc"/> for the job's
         /// schedule. Returns null when the job has no further runs (e.g. a fired one-time job).
         /// </summary>
         public static DateTime? ComputeNextRun(SysBackgroundJob job, DateTime fromUtc)
         {
+            var firstRun = job.RunCount == 0 && job.StartDateTime > fromUtc
+                ? job.StartDateTime : null;
+
             switch (job.ScheduleType)
             {
                 case SysJobScheduleType.OneTime:
@@ -29,9 +61,23 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                     return job.RunCount > 0 ? null : job.StartDateTime;
 
                 case SysJobScheduleType.Recurring:
-                    return TryReadInterval(job.RecurrenceData, out var seconds)
-                        ? fromUtc.AddSeconds(seconds) : null;
+                    if (!TryReadSpec(job.RecurrenceData, out var recurrence) ||
+                        (recurrence.EndAfter.HasValue && job.RunCount >= recurrence.EndAfter.Value))
+                        return null;
+                    var next = firstRun ?? recurrence.Unit switch
+                    {
+                        "minutes" => fromUtc.AddMinutes(recurrence.Interval),
+                        "hours" => fromUtc.AddHours(recurrence.Interval),
+                        "days" => fromUtc.AddDays(recurrence.Interval),
+                        "weeks" => fromUtc.AddDays(7 * recurrence.Interval),
+                        "months" => fromUtc.AddMonths(recurrence.Interval),
+                        "years" => fromUtc.AddYears(recurrence.Interval),
+                        _ => fromUtc.AddSeconds(recurrence.Interval),
+                    };
+                    return recurrence.EndBy.HasValue && next > recurrence.EndBy.Value.ToUniversalTime()
+                        ? null : next;
                 case SysJobScheduleType.Cron:
+                    if (firstRun.HasValue) return firstRun;
                     return SysCronExpression.TryParse(System.Text.Encoding.UTF8.GetString(job.RecurrenceData ?? []), out var cron)
                         ? cron!.GetNextOccurrence(fromUtc) : null;
 
@@ -48,7 +94,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
         {
             return type switch
             {
-                SysJobScheduleType.Recurring when !TryReadInterval(recurrenceData, out _)
+                SysJobScheduleType.Recurring when !TryReadSpec(recurrenceData, out _)
                     => "RecurrenceData must contain a positive interval in seconds encoded as UTF-8.",
                 SysJobScheduleType.Cron when !SysCronExpression.TryParse(System.Text.Encoding.UTF8.GetString(recurrenceData ?? []), out _)
                     => "RecurrenceData must contain a valid five-field CRON expression encoded as UTF-8.",

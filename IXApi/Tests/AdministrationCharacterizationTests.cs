@@ -11,21 +11,20 @@ namespace IAX.IXApi.Tests;
 public sealed class AdministrationCharacterizationTests
 {
     [Theory]
-    [InlineData(SysJobScheduleType.Cron, null, null, null, null, "CronExpression is required for Cron jobs.")]
-    [InlineData(SysJobScheduleType.Cron, "invalid", null, null, null, "Invalid CRON expression: 'invalid'.")]
-    [InlineData(SysJobScheduleType.Recurring, null, 0, null, null, "IntervalSeconds must be greater than 0 for Recurring jobs.")]
-    [InlineData(SysJobScheduleType.OneTime, null, null, null, null, "RunAt is required for OneTime jobs.")]
-    [InlineData(SysJobScheduleType.Delayed, null, null, null, null, "DelaySeconds (or RunAt) is required for Delayed jobs.")]
+    [InlineData(SysJobScheduleType.Cron, null, null, null, "RecurrenceData must contain a valid five-field CRON expression encoded as UTF-8.")]
+    [InlineData(SysJobScheduleType.Cron, "invalid", null, null, "RecurrenceData must contain a valid five-field CRON expression encoded as UTF-8.")]
+    [InlineData(SysJobScheduleType.Recurring, null, null, null, "RecurrenceData must contain a positive interval in seconds encoded as UTF-8.")]
+    [InlineData(SysJobScheduleType.OneTime, null, null, null, "StartDateTime is required for OneTime jobs.")]
+    [InlineData(SysJobScheduleType.Delayed, null, null, null, "DelaySeconds (or StartDateTime) is required for Delayed jobs.")]
     public void Job_schedule_validation_preserves_existing_errors(
         SysJobScheduleType type,
         string? cron,
-        int? intervalSeconds,
         DateTime? runAt,
         int? delaySeconds,
         string expected)
     {
         var actual = SysJobScheduleCalculator.ValidateSchedule(
-            type, cron, intervalSeconds, runAt, delaySeconds);
+            type, cron == null ? null : System.Text.Encoding.UTF8.GetBytes(cron), runAt, delaySeconds);
 
         Assert.Equal(expected, actual);
     }
@@ -37,7 +36,7 @@ public sealed class AdministrationCharacterizationTests
         var job = new SysBackgroundJob
         {
             ScheduleType = SysJobScheduleType.Recurring,
-            IntervalSeconds = 90
+            RecurrenceData = System.Text.Encoding.UTF8.GetBytes("90")
         };
 
         var next = SysJobScheduleCalculator.ComputeNextRun(job, fromUtc);

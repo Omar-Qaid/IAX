@@ -135,6 +135,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs
                 return Ok(APIResponse<long>.Ok(execId, "Job triggered"));
             }
             catch (KeyNotFoundException ex) { return NotFound(APIResponse<long>.Fail(ex.Message)); }
+            catch (InvalidOperationException ex) { return BadRequest(APIResponse<long>.Fail(ex.Message)); }
         }
 
         /// <summary>Pauses a job (stops scheduling until resumed).</summary>
@@ -144,6 +145,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs
         {
             try { await _jobs.PauseAsync(id, ct); return Ok(APIResponse<bool>.Ok(true, "Paused")); }
             catch (KeyNotFoundException ex) { return NotFound(APIResponse<bool>.Fail(ex.Message)); }
+            catch (InvalidOperationException ex) { return BadRequest(APIResponse<bool>.Fail(ex.Message)); }
         }
 
         /// <summary>Resumes a paused job and recomputes its next run.</summary>
@@ -153,6 +155,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs
         {
             try { await _jobs.ResumeAsync(id, ct); return Ok(APIResponse<bool>.Ok(true, "Resumed")); }
             catch (KeyNotFoundException ex) { return NotFound(APIResponse<bool>.Fail(ex.Message)); }
+            catch (InvalidOperationException ex) { return BadRequest(APIResponse<bool>.Fail(ex.Message)); }
         }
 
         /// <summary>Cancels a job (will not run again).</summary>
@@ -162,6 +165,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs
         {
             try { await _jobs.CancelAsync(id, ct); return Ok(APIResponse<bool>.Ok(true, "Cancelled")); }
             catch (KeyNotFoundException ex) { return NotFound(APIResponse<bool>.Fail(ex.Message)); }
+            catch (InvalidOperationException ex) { return BadRequest(APIResponse<bool>.Fail(ex.Message)); }
         }
 
         /// <summary>Soft-deletes a job.</summary>

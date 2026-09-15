@@ -199,4 +199,6 @@ export type ListDetailsDataSource<T extends ListDetailRecord> =
       update: (record: T) => Promise<T>;
       delete: (record: T) => Promise<void>;
       initialRecords?: T[];
+      /** Optional polling interval for records whose server-calculated values change while open. */
+      refreshIntervalMs?: number;
     };

@@ -23,6 +23,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs
         public int? SchedulingPriority { get; set; }
         public int? Critical { get; set; }
         public int? MonitoringCategory { get; set; }
+        [Range(0, 2)] public int? LogLevel { get; set; }
         public int? Managed { get; set; }
         public int? EmitBusinessEvent { get; set; }
 

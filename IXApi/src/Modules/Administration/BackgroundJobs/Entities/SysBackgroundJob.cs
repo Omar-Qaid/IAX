@@ -58,6 +58,8 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Entities
         [MaxLength(10)]
         public string? BatchGroup { get; set; }
         public int EmitBusinessEvent { get; set; }
+        public bool HasAlert { get; set; }
+        public decimal Progress { get; set; }
 
         // ── Retained Essential Framework Fields ──────────────────────────
 

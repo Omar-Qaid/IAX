@@ -1,4 +1,5 @@
 using IAX.IXApi.Shared.Application.Batch;
+using IAX.IXApi.Modules.Administration.BackgroundJobs.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -6,6 +7,21 @@ namespace IXApi.Tests;
 
 public class BatchServiceRegistryTests
 {
+    [Fact]
+    public async Task AxSyncServicePassesJsonParametersToConnector()
+    {
+        var connector = new RecordingAxSyncProcessor();
+        var service = new AxSyncBatchService(connector);
+
+        await service.ProcessAsync(new BatchExecutionContext
+        {
+            ParametersJson = "{\"entity\":\"CustTable\",\"modifiedSince\":\"2026-09-01T00:00:00Z\"}"
+        }, CancellationToken.None);
+
+        Assert.Equal("CustTable", connector.Parameters?.Entity);
+        Assert.Equal(DateTimeOffset.Parse("2026-09-01T00:00:00Z"), connector.Parameters?.ModifiedSince);
+    }
+
     [Fact]
     public void FrameworkCanStartWithoutModuleServices()
     {
@@ -86,5 +102,16 @@ public class BatchServiceRegistryTests
     {
         public Task<BatchExecutionResult> ProcessAsync(BatchExecutionContext context, CancellationToken cancellationToken) =>
             Task.FromResult(new BatchExecutionResult { ProcessedCount = (int)context.BatchJobTaskId });
+    }
+
+    private sealed class RecordingAxSyncProcessor : IAxSyncProcessor
+    {
+        public AxSyncParameters? Parameters { get; private set; }
+
+        public Task<BatchExecutionResult> ProcessAsync(AxSyncParameters parameters, CancellationToken cancellationToken)
+        {
+            Parameters = parameters;
+            return Task.FromResult(new BatchExecutionResult());
+        }
     }
 }

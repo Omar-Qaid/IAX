@@ -23,6 +23,7 @@ import {
 
 type Action =
   'Batch job history' | 'Recurrence' | 'Change status' | 'Remove recurrence' | 'Copy batch job';
+type StatusAction = 'withhold' | 'cancelled' | 'ready';
 export function useBatchJobCommands() {
   const client = useQueryClient();
   const navigate = useNavigate();
@@ -31,7 +32,7 @@ export function useBatchJobCommands() {
   const cancel = usePermission('System.BackgroundJobs.Cancel').hasPermission;
   const [action, setAction] = useState<Action | null>(null);
   const [job, setJob] = useState<Job | null>(null);
-  const [status, setStatus] = useState('withhold');
+  const [status, setStatus] = useState<StatusAction>('withhold');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const close = () => {
@@ -65,9 +66,21 @@ export function useBatchJobCommands() {
       if (!record) return;
       if (label === 'Batch job history') { navigate(`${ROUTE_PATHS.SYSTEM_ADMINISTRATION.BACKGROUND_JOB_HISTORY}?jobId=${record.recId}`); return; }
       setError('');
-      setStatus(record.status === 1 ? 'ready' : 'withhold');
+      setStatus(record.status === 1 ? 'ready' : record.status === 0 ? 'withhold' : 'cancelled');
+      const currentDateTime = new Date().toISOString();
+      const scheduledStart = record.startDateTime ?? record.origStartDateTime;
+      const recurrenceStart = !scheduledStart || new Date(scheduledStart).getTime() < Date.now()
+        ? currentDateTime
+        : scheduledStart;
       setJob({
         ...record,
+        ...(label === 'Recurrence'
+          ? {
+              startDateTime: recurrenceStart,
+              origStartDateTime: recurrenceStart,
+              startDateTimeTzId: record.startDateTimeTzId ?? 1,
+            }
+          : {}),
         ...(label === 'Copy batch job' ? { caption: `${record.caption} (copy)` } : {}),
       });
       setAction(label);
@@ -78,17 +91,22 @@ export function useBatchJobCommands() {
     setBusy(true);
     setError('');
     try {
+      let jobToSave = job;
       if (action === 'Recurrence') {
-        if (
-          job.scheduleType === 2 &&
-          (!job.recurrenceData || job.recurrenceData.trim() === '')
-        )
-          throw new Error('Enter recurrence data.');
+        // The form visually defaults to one minute. Persist that default even when
+        // the user presses OK without changing the recurrence controls.
+        if (job.scheduleType === 2 && !job.recurrenceData?.trim())
+          jobToSave = { ...job, recurrenceData: '60' };
         if (job.scheduleType === 3 && (!job.recurrenceData || job.recurrenceData.trim() === ''))
           throw new Error('Enter a CRON expression.');
         if (job.scheduleType < 2 && !job.startDateTime) throw new Error('Select a start date/time.');
       }
       if (action === 'Change status') {
+        const validTransition =
+          (status === 'withhold' && job.status === 0) ||
+          (status === 'ready' && job.status === 1) ||
+          (status === 'cancelled' && (job.status === 0 || job.status === 1));
+        if (!validTransition) throw new Error('Select a valid new status for this batch job.');
         if (status === 'ready') await api.resume(job.recId);
         else if (status === 'withhold') await api.pause(job.recId);
         else await api.cancel(job.recId);
@@ -129,10 +147,11 @@ export function useBatchJobCommands() {
           }
         } catch (reason) {
           throw new Error(
-            `Copy ${copy.recId} was created disabled, but task copying failed. Review its tasks before enabling it. ${reason instanceof Error ? reason.message : reason}`
+            `Copy ${copy.recId} was created disabled, but task copying failed. Review its tasks before enabling it. ${reason instanceof Error ? reason.message : reason}`,
+            { cause: reason }
           );
         }
-      } else await api.update(job);
+      } else await api.update(jobToSave);
       await client.invalidateQueries({ queryKey: ['list-details', 'background-jobs'] });
       await client.invalidateQueries({ queryKey: ['background-job-executions'] });
       setAction(null);
@@ -167,7 +186,12 @@ export function useBatchJobCommands() {
             {action !== 'Batch job history' && (
               <Button
                 disabled={
-                  busy || (action === 'Change status' && (status === 'cancelled' ? !cancel : !edit))
+                  busy ||
+                  (action === 'Change status' &&
+                    ((status === 'cancelled' ? !cancel : !edit) ||
+                      !((status === 'withhold' && job?.status === 0) ||
+                        (status === 'ready' && job?.status === 1) ||
+                        (status === 'cancelled' && (job?.status === 0 || job?.status === 1)))))
                 }
                 variant="contained"
                 onClick={() => void save()}
@@ -191,9 +215,9 @@ export function useBatchJobCommands() {
                 Select new status
               </Typography>
               {[
-                { value: 'withhold', label: 'Withhold', allowed: edit },
-                { value: 'cancelled', label: 'Canceling', allowed: cancel },
-                { value: 'ready', label: 'Waiting', allowed: edit },
+                { value: 'withhold' as const, label: 'Withhold', allowed: edit && job?.status === 0 },
+                { value: 'cancelled' as const, label: 'Canceling', allowed: cancel && (job?.status === 0 || job?.status === 1) },
+                { value: 'ready' as const, label: 'Waiting', allowed: edit && job?.status === 1 },
               ].map((option) => (
                 <ListItemButton
                   key={option.value}

@@ -60,9 +60,6 @@ export const EnterpriseCrudActions: React.FC<EnterpriseCrudActionsProps> = ({
   onEdit,
   onNew,
   onDelete,
-  editPermission,
-  newPermission,
-  deletePermission,
   editing = false,
   saving = false,
   saveLabel = 'Save',
@@ -78,14 +75,12 @@ export const EnterpriseCrudActions: React.FC<EnterpriseCrudActionsProps> = ({
           icon={<SaveIcon sx={{ fontSize: 16 }} />}
           disabled={saving}
           onClick={onSave}
-          permission={editPermission}
         />
         <ActionPaneButton
           label={cancelLabel}
           icon={<CancelIcon sx={{ fontSize: 16 }} />}
           disabled={saving}
           onClick={onCancel}
-          permission={editPermission}
         />
       </>
     ) : (
@@ -95,21 +90,18 @@ export const EnterpriseCrudActions: React.FC<EnterpriseCrudActionsProps> = ({
           icon={<EditIcon sx={{ fontSize: 16 }} />}
           disabled={!canEdit}
           onClick={onEdit}
-          permission={editPermission}
         />
         <ActionPaneButton
           label={newLabel}
           icon={<AddIcon sx={{ fontSize: 16 }} />}
           disabled={!canNew}
           onClick={onNew}
-          permission={newPermission}
         />
         <ActionPaneButton
           label={deleteLabel}
           icon={<DeleteIcon sx={{ fontSize: 16 }} />}
           disabled={!canDelete}
           onClick={onDelete}
-          permission={deletePermission}
         />
       </>
     )}

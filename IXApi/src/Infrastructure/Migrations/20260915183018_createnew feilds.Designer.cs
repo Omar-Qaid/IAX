@@ -4,6 +4,7 @@ using IAX.IXApi.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace IAX.IXApi.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260915183018_createnew feilds")]
+    partial class createnewfeilds
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -268,9 +271,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<int>("Finishing")
                         .HasColumnType("int");
 
-                    b.Property<bool>("HasAlert")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -323,10 +323,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<bool>("PreventOverlap")
                         .HasColumnType("bit");
-
-                    b.Property<decimal>("Progress")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
 
                     b.Property<int>("RecVersion")
                         .HasColumnType("int");
@@ -408,8 +404,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)")
-                        .HasColumnName("ID");
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -467,10 +462,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.HasIndex("DataAreaId", "Code")
-                        .IsUnique();
-
-                    b.ToTable("BatchJobActivePeriod", (string)null);
+                    b.ToTable("SysBackgroundJobActivePeriod");
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Administration.BackgroundJobs.Entities.SysBackgroundJobExecution", b =>
@@ -684,10 +676,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.HasIndex("DataAreaId", "GroupCode")
-                        .IsUnique();
-
-                    b.ToTable("SysBackgroundJobGroup", (string)null);
+                    b.ToTable("SysBackgroundJobGroup");
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Administration.BackgroundJobs.Entities.SysBackgroundJobRecurrenceCount", b =>
@@ -744,7 +733,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasIndex("BatchJobId");
 
-                    b.ToTable("SysBackgroundJobRecurrenceCounts");
+                    b.ToTable("SysBackgroundJobRecurrenceCount");
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Administration.BackgroundJobs.Entities.SysBackgroundJobTask", b =>
@@ -23298,7 +23287,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
             modelBuilder.Entity("IAX.IXApi.Modules.Administration.BackgroundJobs.Entities.SysBackgroundJobRecurrenceCount", b =>
                 {
                     b.HasOne("IAX.IXApi.Modules.Administration.BackgroundJobs.Entities.SysBackgroundJob", "BatchJob")
-                        .WithMany("RecurrenceCounts")
+                        .WithMany()
                         .HasForeignKey("BatchJobId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -24783,8 +24772,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
             modelBuilder.Entity("IAX.IXApi.Modules.Administration.BackgroundJobs.Entities.SysBackgroundJob", b =>
                 {
                     b.Navigation("Executions");
-
-                    b.Navigation("RecurrenceCounts");
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Communication.Notifications.Entities.SysNotification", b =>
