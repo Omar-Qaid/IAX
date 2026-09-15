@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, MenuItem, TextField, Typography } from '@mui/material';
+import { listGridControlSx, listGridLabelSx } from './fieldStyles';
 export function ListGridField({
   label,
   value,
@@ -23,7 +24,7 @@ export function ListGridField({
   const editable = editing && !disabled;
   return (
     <Box sx={{ minWidth: 0, maxWidth: underlined ? 153 : 206 }}>
-      <Typography component="label" htmlFor={id} sx={{ display: 'block', fontSize: 11, mb: '4px' }}>
+      <Typography component="label" htmlFor={id} sx={listGridLabelSx}>
         {label}
       </Typography>
       <TextField
@@ -40,10 +41,7 @@ export function ListGridField({
         type={numeric && editable ? 'number' : 'text'}
         onChange={(event) => onChange?.(event.target.value)}
         slotProps={{ input: { readOnly: !editable }, htmlInput: { 'aria-label': label } }}
-        sx={{
-          '& .MuiInputBase-root': { height: 28, fontSize: 12, borderRadius: '3px' },
-          '& .MuiInputBase-input': { px: '6px', py: '4px' },
-        }}
+        sx={listGridControlSx}
       >
         {options?.map((option) => (
           <MenuItem key={option.value} value={option.value}>

@@ -19,10 +19,17 @@ public sealed partial class WfProcess651SeedData
 
         if (!await db.WfRequests.IgnoreQueryFilters().AnyAsync(x => x.RecId == 192663L, ct))
         {
+            const long sourceEmployeeId = 157704L;
+            var employeeId = await db.Set<IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker>()
+                .IgnoreQueryFilters()
+                .AnyAsync(x => x.RecId == sourceEmployeeId, ct)
+                    ? sourceEmployeeId
+                    : (long?)null;
+
             var request = new WfRequest
             {
                 RecId = 192663L,
-                EmployeeId = 157704L,
+                EmployeeId = employeeId,
                 ProcessId = 651L,
                 RequestDate = new DateTime(2026, 9, 13, 18, 35, 41, 307),
                 RequestDetails = requestDetailsXml,

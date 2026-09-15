@@ -1,11 +1,12 @@
 import React from 'react';
-import { Alert, Box, Button, CircularProgress } from '@mui/material';
+import { Alert, Box, Button, CircularProgress, Typography } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { usePermission } from '@core/permissions/usePermission';
 import { PERMISSIONS } from '@core/permissions/permissions';
 import { ListGridDetailsPanel } from '@patterns/list-details-listgrid/ListDetailsListGridPage';
 import { ListGridField } from '@patterns/list-details-listgrid/ListGridField';
+import { listGridControlSx, listGridLabelSx } from '@patterns/list-details-listgrid/fieldStyles';
 import { LookupField } from '@shared/components/lookups/LookupField';
 import { ConfirmationDialog } from '@shared/components/dialogs/ConfirmationDialog';
 import { useUnsavedChanges } from '@shared/hooks/useUnsavedChanges';
@@ -162,23 +163,39 @@ export function CustomerPostingAccountsPanel({
     if (!selected) return null;
     if (name === 'num' && editing)
       return (
-        <Box sx={{ maxWidth: 206, '& .MuiInputBase-root': { minHeight: 28, fontSize: 12 } }}>
-          <LookupField
-            key={code}
-            name="num"
-            label={label('num')}
-            value={code === 2 ? '' : selected.num}
-            options={code === 2 ? [] : (references.data ?? [])}
-            disabled={busy || code === 2}
-            loading={references.isFetching}
-            required={code !== 2}
-            error={code !== 2 && references.isError}
-            helperText={code !== 2 && references.isError ? references.error.message : undefined}
-            displayMode="dialog"
-            onChange={(value) =>
-              setDraft((current) => (current ? { ...current, num: String(value ?? '') } : current))
-            }
-          />
+        <Box sx={{ minWidth: 0, maxWidth: 153 }}>
+          <Typography component="label" sx={listGridLabelSx}>
+            {label('num')}
+            {code !== 2 ? ' *' : ''}
+          </Typography>
+          <Box
+            sx={{
+              ...listGridControlSx,
+              '& .MuiInputLabel-root': { display: 'none' },
+            }}
+          >
+            <LookupField
+              key={code}
+              name="num"
+              label={label('num')}
+              value={code === 2 ? '' : selected.num}
+              options={code === 2 ? [] : (references.data ?? [])}
+              disabled={busy || code === 2}
+              loading={references.isFetching}
+              required={code !== 2}
+              error={code !== 2 && references.isError}
+              helperText={code !== 2 && references.isError ? references.error.message : undefined}
+              displayMode="select"
+              searchable
+              sideMode="client"
+              lazyLoading={false}
+              onChange={(value) =>
+                setDraft((current) =>
+                  current ? { ...current, num: String(value ?? '') } : current
+                )
+              }
+            />
+          </Box>
           {code !== 2 && references.isError && (
             <Button onClick={() => void references.refetch()}>{t('actions.refresh')}</Button>
           )}
