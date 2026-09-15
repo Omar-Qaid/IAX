@@ -26,13 +26,13 @@ export function CustomerListPage(): React.ReactElement {
     { field: 'accountNumber', headerName: 'fields.account', width: 150, pinned: 'left', renderCell: ({ row }) => <Link component="button" underline="none" sx={{ fontSize: '0.75rem', color: 'primary.main' }}>{row.accountNumber}</Link> },
     { field: 'name', headerName: 'fields.customerName', width: 205 },
     { field: 'nameAr', headerName: 'fields.arabicName', width: 250, align: 'right', headerAlign: 'right' },
-    { field: 'invoiceAccount', headerName: 'fields.invoiceAccount', width: 150, sortable: false, filterable: false, valueGetter: () => '—' },
+    { field: 'invoiceAccount', headerName: 'fields.invoiceAccount', width: 150, sortable: false, filterable: false, valueGetter: () => 'â€”' },
     { field: 'customerGroupId', headerName: 'fields.customerGroup', width: 150 },
     { field: 'currencyCode', headerName: 'fields.currency', width: 95 },
     { field: 'phone', headerName: 'fields.phone', width: 165 },
-    { field: 'extension', headerName: 'fields.extension', width: 105, sortable: false, filterable: false, valueGetter: () => '—' },
-    { field: 'salesTaxGroup', headerName: 'fields.salesTaxGroup', width: 140, sortable: false, filterable: false, valueGetter: () => '—' },
-    { field: 'termsOfPayment', headerName: 'fields.termsOfPayment', width: 145, sortable: false, filterable: false, valueGetter: () => '—' },
+    { field: 'extension', headerName: 'fields.extension', width: 105, sortable: false, filterable: false, valueGetter: () => 'â€”' },
+    { field: 'salesTaxGroup', headerName: 'fields.salesTaxGroup', width: 140, sortable: false, filterable: false, valueGetter: () => 'â€”' },
+    { field: 'termsOfPayment', headerName: 'fields.termsOfPayment', width: 145, sortable: false, filterable: false, valueGetter: () => 'â€”' },
     { field: 'email', headerName: 'fields.email', width: 230 },
     { field: 'status', headerName: 'common.status', width: 110, renderCell: ({ row }) => <StatusBadge status={row.status} /> },
   ], []);
@@ -110,7 +110,6 @@ export function CustomerListPage(): React.ReactElement {
   };
 
   return <SimpleListPage
-    variant="enterprise"
     title={t('pages.customers.title')}
     enterpriseConfig={config}
     dataSource={{ type: 'controlled', rows: customers }}
@@ -119,6 +118,6 @@ export function CustomerListPage(): React.ReactElement {
     error={customerQuery.error instanceof Error ? customerQuery.error.message : null}
     onRetry={() => customerQuery.refetch()}
     dataGridProps={{ storageKey: 'accounts-receivable.customers.reference-view' }}
-    dialogs={<CustomerQuickCreate open={quickCreateOpen} nextAccount="—" onClose={() => setQuickCreateOpen(false)} onSave={async () => { await queryClient.invalidateQueries({ queryKey: ['accounts-receivable', 'customers'] }); setQuickCreateOpen(false); }} />}
+    dialogs={<CustomerQuickCreate open={quickCreateOpen} nextAccount="â€”" onClose={() => setQuickCreateOpen(false)} onSave={async () => { await queryClient.invalidateQueries({ queryKey: ['accounts-receivable', 'customers'] }); setQuickCreateOpen(false); }} />}
   />;
 }

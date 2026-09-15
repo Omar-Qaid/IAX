@@ -267,7 +267,6 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
 
   return (
     <SimpleListPage
-      variant="enterprise"
       title={t(titleKey)}
       enterpriseConfig={config}
       dataSource={

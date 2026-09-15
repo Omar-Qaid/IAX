@@ -30,14 +30,14 @@ export function BatchJobRecurrenceForm({
     () =>
       [...units]
         .reverse()
-        .find((item) => job.intervalSeconds && job.intervalSeconds % item.seconds === 0)?.seconds ??
+        .find((item) => job.recurrenceData && !isNaN(Number(job.recurrenceData)) && Number(job.recurrenceData) % item.seconds === 0)?.seconds ??
       60
   );
   const recurring = job.scheduleType === 2;
-  const start = job.runAt ? new Date(job.runAt).toISOString() : '';
+  const start = job.startDateTime ? new Date(job.startDateTime).toISOString() : '';
   const label = (text: string) => <Typography sx={{ fontSize: 11, mb: '3px' }}>{text}</Typography>;
   const changeStart = (date: string, time: string) =>
-    onChange({ ...job, runAt: date && time ? new Date(`${date}T${time}Z`).toISOString() : null });
+    onChange({ ...job, startDateTime: date && time ? new Date(`${date}T${time}Z`).toISOString() : null });
   return (
     <Box
       sx={{
@@ -120,7 +120,7 @@ export function BatchJobRecurrenceForm({
             if (value < 4) onChange({ ...job, scheduleType: value as Job['scheduleType'] });
             else {
               setUnit(value);
-              onChange({ ...job, scheduleType: 2, intervalSeconds: value, cronExpression: null });
+              onChange({ ...job, scheduleType: 2, recurrenceData: String(value) });
             }
           }}
         >
@@ -166,12 +166,12 @@ export function BatchJobRecurrenceForm({
                 <TextField
                   type="number"
                   size="small"
-                  value={(job.intervalSeconds ?? unit) / unit}
+                  value={((job.recurrenceData && !isNaN(Number(job.recurrenceData)) ? Number(job.recurrenceData) : unit) / unit)}
                   disabled={disabled}
                   sx={{ width: 88 }}
                   slotProps={{ htmlInput: { min: 1, step: 1, 'aria-label': 'Recurrence count' } }}
                   onChange={(e) =>
-                    onChange({ ...job, intervalSeconds: Number(e.target.value) * unit })
+                    onChange({ ...job, recurrenceData: String(Number(e.target.value) * unit) })
                   }
                 />
               </Box>
@@ -179,10 +179,10 @@ export function BatchJobRecurrenceForm({
           )}
           {job.scheduleType === 3 && (
             <TextField
-              label="CRON (UTC)"
-              value={job.cronExpression ?? ''}
+              label="Recurrence Data"
+              value={job.recurrenceData ?? ''}
               disabled={disabled}
-              onChange={(e) => onChange({ ...job, cronExpression: e.target.value })}
+              onChange={(e) => onChange({ ...job, recurrenceData: e.target.value })}
             />
           )}
         </Box>

@@ -5,18 +5,13 @@ import EditOutlined from '@mui/icons-material/EditOutlined';
 import PublishOutlined from '@mui/icons-material/PublishOutlined';
 import ArchiveOutlined from '@mui/icons-material/ArchiveOutlined';
 import DeleteOutline from '@mui/icons-material/DeleteOutlined';
-import SearchOutlined from '@mui/icons-material/SearchOutlined';
 import { useQuery } from '@tanstack/react-query';
 import { queryClient } from '@core/api/queryClient';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { PERMISSIONS } from '@core/permissions/permissions';
 import { ActionPaneButton } from '@shared/components/action-pane/ActionPaneButton';
-import { EnterpriseCommandUtilities } from '@shared/components/action-pane/EnterpriseCommandUtilities';
-import { OptionsMenu } from '@shared/components/action-pane/OptionsMenu';
-import { RecordAttachmentsButton, recordTableId } from '@shared/components/documents';
 import type { ColumnDef } from '@shared/components/data-grid/types';
 import { AppLookupGridField } from '@shared/components/fields/AppLookupGridField';
-import { RightUtilityRail } from '@shared/components/page/RightUtilityRail';
 import { AppDialog } from '@shared/components/dialogs/AppDialog';
 import { ConfirmationDialog } from '@shared/components/dialogs/ConfirmationDialog';
 import { useNotifications } from '@shared/hooks/useNotifications';
@@ -73,7 +68,6 @@ export function WorkflowReportDesignerListPage(): React.ReactElement {
   );
   const [saving, setSaving] = React.useState(false);
   const [confirmAction, setConfirmAction] = React.useState<ConfirmAction>(null);
-  const [filterRowVisible, setFilterRowVisible] = React.useState(false);
 
   React.useEffect(() => {
     if (
@@ -280,38 +274,7 @@ export function WorkflowReportDesignerListPage(): React.ReactElement {
         permission={PERMISSIONS.WF_PRINT_TEMPLATE_DELETE}
         disabled={!selected || selected.currentVersionId != null}
       />
-      <ActionPaneButton
-        label={t('common.search', 'Search')}
-        icon={<SearchOutlined />}
-        onClick={() => setFilterRowVisible((visible) => !visible)}
-      />
-      <OptionsMenu
-        record={selected}
-        tableName="ReportTemplates"
-        getRecordId={(record) => record.templateId}
-        title={t('printTemplates.title')}
-      />
     </>
-  );
-
-  const actionPaneEndActions = (
-    <EnterpriseCommandUtilities
-      personalizeLabel={t('utilities.personalize')}
-      guideLabel={t('utilities.guide')}
-      notificationsLabel={t('common.notifications')}
-      refreshLabel={t('actions.refresh')}
-      openWindowLabel={t('utilities.openWindow')}
-      attachmentAction={
-        <RecordAttachmentsButton
-          refTableId={recordTableId('ReportTemplates')}
-          refRecId={selected?.templateId ?? null}
-        />
-      }
-      onRefresh={() => void refresh()}
-      showPersonalize={false}
-      showGuide={false}
-      showNotifications={false}
-    />
   );
 
   const processFilter = (
@@ -432,22 +395,12 @@ export function WorkflowReportDesignerListPage(): React.ReactElement {
 
   return (
     <SimpleListPage<PrintTemplateRow>
-      variant="enterprise"
       title={t('printTemplates.title')}
       subtitle={t('printTemplates.subtitle')}
       contextLabel={t('printTemplates.title')}
       viewLabel={t('printTemplates.subtitle')}
+      recordTableName="ReportTemplates"
       actionPane={actionPane}
-      actionPaneEndActions={actionPaneEndActions}
-      utilityRail={
-        <RightUtilityRail
-          filterLabel={t('actions.filter')}
-          informationLabel={t('common.information')}
-          filterActive={filterRowVisible}
-          onFilter={() => setFilterRowVisible((visible) => !visible)}
-          showInformation={false}
-        />
-      }
       filterBar={processFilter}
       dataSource={{
         type: 'controlled',
@@ -473,7 +426,6 @@ export function WorkflowReportDesignerListPage(): React.ReactElement {
         },
         storageKey: 'workflow.print-templates',
         hideAddRowButton: true,
-        hideFilterRow: !filterRowVisible,
       }}
       dialogs={dialogs}
       contentMinHeight={420}

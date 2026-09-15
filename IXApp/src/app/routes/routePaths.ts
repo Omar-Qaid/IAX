@@ -46,6 +46,7 @@ export const ROUTE_PATHS = {
     SETTINGS: '/system-administration/settings',
     NUMBER_SEQUENCES: '/system-administration/number-sequences',
     BACKGROUND_JOBS: '/system-administration/batch-jobs',
+    BACKGROUND_JOB_HISTORY: '/system-administration/batch-job-history',
   },
 
   ACCESS_DENIED: '/access-denied',

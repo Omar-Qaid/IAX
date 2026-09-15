@@ -90,7 +90,6 @@ export function SalesOrderListPage(): React.ReactElement {
   };
 
   return <SimpleListPage
-    variant="enterprise"
     title={t('pages.salesOrders.title')}
     enterpriseConfig={config}
     dataSource={{ type: 'controlled', rows: orders }}

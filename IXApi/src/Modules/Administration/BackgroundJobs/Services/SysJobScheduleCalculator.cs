@@ -8,6 +8,13 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
     /// </summary>
     public static class SysJobScheduleCalculator
     {
+        private static bool TryReadInterval(byte[]? data, out int seconds)
+        {
+            if (int.TryParse(System.Text.Encoding.UTF8.GetString(data ?? []), out seconds)) return seconds > 0;
+            // Preserve intervals written by the earlier BitConverter-based seeders.
+            seconds = data?.Length == 4 ? System.Buffers.Binary.BinaryPrimitives.ReadInt32LittleEndian(data) : 0;
+            return seconds > 0;
+        }
         /// <summary>
         /// Computes the next run time strictly after <paramref name="fromUtc"/> for the job's
         /// schedule. Returns null when the job has no further runs (e.g. a fired one-time job).
@@ -19,17 +26,14 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                 case SysJobScheduleType.OneTime:
                 case SysJobScheduleType.Delayed:
                     // A one-shot only has a "next run" until it has run once.
-                    return job.RunCount > 0 ? null : job.RunAt;
+                    return job.RunCount > 0 ? null : job.StartDateTime;
 
                 case SysJobScheduleType.Recurring:
-                    if (job.IntervalSeconds is null or <= 0) return null;
-                    return fromUtc.AddSeconds(job.IntervalSeconds.Value);
-
+                    return TryReadInterval(job.RecurrenceData, out var seconds)
+                        ? fromUtc.AddSeconds(seconds) : null;
                 case SysJobScheduleType.Cron:
-                    if (string.IsNullOrWhiteSpace(job.CronExpression)) return null;
-                    return SysCronExpression.TryParse(job.CronExpression, out var cron)
-                        ? cron!.GetNextOccurrence(fromUtc)
-                        : null;
+                    return SysCronExpression.TryParse(System.Text.Encoding.UTF8.GetString(job.RecurrenceData ?? []), out var cron)
+                        ? cron!.GetNextOccurrence(fromUtc) : null;
 
                 default:
                     return null;
@@ -40,20 +44,20 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
         /// Validates a create/update schedule combination, returning an error message or null.
         /// </summary>
         public static string? ValidateSchedule(
-            SysJobScheduleType type, string? cron, int? intervalSeconds, DateTime? runAt, int? delaySeconds)
+            SysJobScheduleType type, byte[]? recurrenceData, DateTime? startDateTime, int? delaySeconds)
         {
             return type switch
             {
-                SysJobScheduleType.Cron when string.IsNullOrWhiteSpace(cron)
-                    => "CronExpression is required for Cron jobs.",
-                SysJobScheduleType.Cron when !SysCronExpression.TryParse(cron!, out _)
-                    => $"Invalid CRON expression: '{cron}'.",
-                SysJobScheduleType.Recurring when intervalSeconds is null or <= 0
-                    => "IntervalSeconds must be greater than 0 for Recurring jobs.",
-                SysJobScheduleType.OneTime when runAt is null
-                    => "RunAt is required for OneTime jobs.",
-                SysJobScheduleType.Delayed when (delaySeconds is null or <= 0) && runAt is null
-                    => "DelaySeconds (or RunAt) is required for Delayed jobs.",
+                SysJobScheduleType.Recurring when !TryReadInterval(recurrenceData, out _)
+                    => "RecurrenceData must contain a positive interval in seconds encoded as UTF-8.",
+                SysJobScheduleType.Cron when !SysCronExpression.TryParse(System.Text.Encoding.UTF8.GetString(recurrenceData ?? []), out _)
+                    => "RecurrenceData must contain a valid five-field CRON expression encoded as UTF-8.",
+                SysJobScheduleType.Cron or SysJobScheduleType.Recurring when recurrenceData == null || recurrenceData.Length == 0
+                    => "RecurrenceData is required for Cron and Recurring jobs.",
+                SysJobScheduleType.OneTime when startDateTime is null
+                    => "StartDateTime is required for OneTime jobs.",
+                SysJobScheduleType.Delayed when (delaySeconds is null or <= 0) && startDateTime is null
+                    => "DelaySeconds (or StartDateTime) is required for Delayed jobs.",
                 _ => null
             };
         }

@@ -12,12 +12,12 @@ export function CustomerGroupListPage(): React.ReactElement {
     { field: 'groupId', headerName: 'fields.customerGroup', width: 145, pinned: 'left', editable: true, renderCell: ({ row }) => <Link component="button" underline="none" sx={{ color: 'primary.main', fontSize: '0.75rem' }}>{row.groupId}</Link> },
     { field: 'name', headerName: 'fields.description', width: 205, editable: true },
     { field: 'paymentTerms', headerName: 'fields.termsOfPayment', width: 205, editable: true },
-    { field: 'invoiceDueInterval', headerName: 'fields.timeBetweenInvoiceDue', width: 210, sortable: false, filterable: false, valueGetter: () => '—' },
-    { field: 'defaultTaxGroup', headerName: 'fields.defaultTaxGroup', width: 150, sortable: false, filterable: false, valueGetter: () => '—' },
-    { field: 'pricesIncludeTax', headerName: 'fields.pricesIncludeTax', width: 130, sortable: false, filterable: false, valueGetter: () => '—' },
-    { field: 'defaultWriteOffReason', headerName: 'fields.defaultWriteOffReason', width: 190, sortable: false, filterable: false, valueGetter: () => '—' },
-    { field: 'accountingCurrencyExchange', headerName: 'fields.accountingCurrencyExchange', width: 190, sortable: false, filterable: false, valueGetter: () => '—' },
-    { field: 'reportingCurrencyExchange', headerName: 'fields.reportingCurrencyExchange', width: 190, sortable: false, filterable: false, valueGetter: () => '—' },
+    { field: 'invoiceDueInterval', headerName: 'fields.timeBetweenInvoiceDue', width: 210, sortable: false, filterable: false, valueGetter: () => 'â€”' },
+    { field: 'defaultTaxGroup', headerName: 'fields.defaultTaxGroup', width: 150, sortable: false, filterable: false, valueGetter: () => 'â€”' },
+    { field: 'pricesIncludeTax', headerName: 'fields.pricesIncludeTax', width: 130, sortable: false, filterable: false, valueGetter: () => 'â€”' },
+    { field: 'defaultWriteOffReason', headerName: 'fields.defaultWriteOffReason', width: 190, sortable: false, filterable: false, valueGetter: () => 'â€”' },
+    { field: 'accountingCurrencyExchange', headerName: 'fields.accountingCurrencyExchange', width: 190, sortable: false, filterable: false, valueGetter: () => 'â€”' },
+    { field: 'reportingCurrencyExchange', headerName: 'fields.reportingCurrencyExchange', width: 190, sortable: false, filterable: false, valueGetter: () => 'â€”' },
   ], []);
 
   const config: EnterpriseListConfig<CustomerGroup> = {
@@ -52,7 +52,6 @@ export function CustomerGroupListPage(): React.ReactElement {
   };
 
   return <SimpleListPage
-    variant="enterprise"
     title={t('pages.customerGroups.title')}
     enterpriseConfig={config}
     dataSource={{ type: 'controlled', rows: customerGroups }}

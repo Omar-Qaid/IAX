@@ -589,7 +589,6 @@ export function WfGenericReportPage(): React.ReactElement {
   };
   return (
     <SimpleListPage<GenericReportRow>
-      variant="enterprise"
       title={t('genericReport.title')}
       subtitle={t('genericReport.subtitle')}
       enterpriseConfig={config}

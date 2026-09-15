@@ -43,26 +43,31 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                     $"No job handler is registered for key '{dto.JobKey}'. Registered keys: {string.Join(", ", _registry.RegisteredKeys)}.");
 
             var scheduleError = SysJobScheduleCalculator.ValidateSchedule(
-                dto.ScheduleType, dto.CronExpression, dto.IntervalSeconds, dto.RunAt, dto.DelaySeconds);
+                dto.ScheduleType, dto.RecurrenceData, dto.StartDateTime, dto.DelaySeconds);
             if (scheduleError != null)
                 throw new InvalidOperationException(scheduleError);
 
-            if (await _db.SysBackgroundJobs.AnyAsync(j => j.Name == dto.Name && !j.IsDeleted, ct))
-                throw new InvalidOperationException($"A job named '{dto.Name}' already exists.");
+            if (await _db.SysBackgroundJobs.AnyAsync(j => j.Caption == dto.Caption && !j.IsDeleted, ct))
+                throw new InvalidOperationException($"A job named '{dto.Caption}' already exists.");
 
             var now = DateTime.UtcNow;
             var job = new SysBackgroundJob
             {
-                Name = dto.Name,
+                Caption = dto.Caption,
                 JobKey = dto.JobKey,
                 Description = dto.Description,
                 ScheduleType = dto.ScheduleType,
-                CronExpression = dto.CronExpression,
-                IntervalSeconds = dto.IntervalSeconds,
-                RunAt = ResolveRunAt(dto.ScheduleType, dto.RunAt, dto.DelaySeconds, now),
+                RecurrenceData = dto.RecurrenceData,
+                StartDateTime = ResolveRunAt(dto.ScheduleType, dto.StartDateTime, dto.DelaySeconds, now),
                 IsEnabled = dto.IsEnabled,
                 PreventOverlap = dto.PreventOverlap,
-                Priority = dto.Priority,
+                SchedulingPriority = dto.SchedulingPriority,
+                ActivePeriod = dto.ActivePeriod,
+                BatchGroup = dto.BatchGroup,
+                Critical = dto.Critical,
+                MonitoringCategory = dto.MonitoringCategory,
+                Managed = dto.Managed,
+                EmitBusinessEvent = dto.EmitBusinessEvent,
                 MaxRetryCount = dto.MaxRetryCount,
                 RetryDelaySeconds = dto.RetryDelaySeconds,
                 TimeoutSeconds = dto.TimeoutSeconds,
@@ -72,13 +77,13 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                 CreatedAt = now,
             };
 
-            job.NextRunAt = job.IsEnabled ? SysJobScheduleCalculator.ComputeNextRun(job, now) : null;
+            job.StartDateTime = job.IsEnabled ? SysJobScheduleCalculator.ComputeNextRun(job, now) : null;
 
             _db.SysBackgroundJobs.Add(job);
             await _db.SaveChangesAsync(ct);
 
-            _logger.LogInformation("[BgJobs] Created job {Id} '{Name}' ({Key}), next run {Next}",
-                job.RecId, job.Name, job.JobKey, job.NextRunAt);
+            _logger.LogInformation("[BgJobs] Created job {Id} '{Caption}' ({Key}), next run {Next}",
+                job.RecId, job.Caption, job.JobKey, job.StartDateTime);
 
             return Map(job);
         }
@@ -88,7 +93,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
             var job = await _db.SysBackgroundJobs.FirstOrDefaultAsync(j => j.RecId == jobId && !j.IsDeleted, ct)
                 ?? throw new KeyNotFoundException($"Job {jobId} not found.");
 
-            var effectiveRunAt = dto.RunAt ?? job.RunAt;
+            var effectiveStartDateTime = dto.StartDateTime ?? job.StartDateTime;
             if (job.JobKey == Handlers.BatchTasksJobHandler.Key && dto.IsEnabled == true &&
                 !await _db.SysBackgroundJobTasks.AnyAsync(t => t.JobId == jobId && t.IsEnabled, ct))
                 throw new InvalidOperationException("Configure at least one enabled task before enabling the batch job.");
@@ -96,26 +101,31 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                 ((dto.MaxRetryCount ?? job.MaxRetryCount) != 0 || !(dto.PreventOverlap ?? job.PreventOverlap)))
                 throw new InvalidOperationException("Batch task jobs require overlap prevention and zero whole-job retries.");
             var scheduleError = SysJobScheduleCalculator.ValidateSchedule(
-                dto.ScheduleType, dto.CronExpression, dto.IntervalSeconds, effectiveRunAt, dto.DelaySeconds);
+                dto.ScheduleType, dto.RecurrenceData ?? job.RecurrenceData, effectiveStartDateTime, dto.DelaySeconds);
             if (scheduleError != null)
                 throw new InvalidOperationException(scheduleError);
 
             var now = DateTime.UtcNow;
             job.ScheduleType = dto.ScheduleType;
-            if (dto.Name != null)
+            if (dto.Caption != null)
             {
-                if (string.IsNullOrWhiteSpace(dto.Name)) throw new InvalidOperationException("Job name is required.");
-                if (await _db.SysBackgroundJobs.AnyAsync(j => j.RecId != jobId && !j.IsDeleted && j.Name == dto.Name.Trim(), ct))
-                    throw new InvalidOperationException("A job with this name already exists.");
-                job.Name = dto.Name.Trim();
+                if (string.IsNullOrWhiteSpace(dto.Caption)) throw new InvalidOperationException("Job caption is required.");
+                if (await _db.SysBackgroundJobs.AnyAsync(j => j.RecId != jobId && !j.IsDeleted && j.Caption == dto.Caption.Trim(), ct))
+                    throw new InvalidOperationException("A job with this caption already exists.");
+                job.Caption = dto.Caption.Trim();
             }
-            job.CronExpression = dto.CronExpression;
-            job.IntervalSeconds = dto.IntervalSeconds;
-            job.RunAt = ResolveRunAt(dto.ScheduleType, dto.RunAt ?? job.RunAt, dto.DelaySeconds, now);
+            if (dto.RecurrenceData != null) job.RecurrenceData = dto.RecurrenceData;
+            job.StartDateTime = ResolveRunAt(dto.ScheduleType, dto.StartDateTime ?? job.StartDateTime, dto.DelaySeconds, now);
 
             if (dto.IsEnabled.HasValue) job.IsEnabled = dto.IsEnabled.Value;
             if (dto.PreventOverlap.HasValue) job.PreventOverlap = dto.PreventOverlap.Value;
-            if (dto.Priority.HasValue) job.Priority = dto.Priority.Value;
+            if (dto.SchedulingPriority.HasValue) job.SchedulingPriority = dto.SchedulingPriority.Value;
+            if (dto.Critical.HasValue) job.Critical = dto.Critical.Value;
+            if (dto.MonitoringCategory.HasValue) job.MonitoringCategory = dto.MonitoringCategory.Value;
+            if (dto.Managed.HasValue) job.Managed = dto.Managed.Value;
+            if (dto.EmitBusinessEvent.HasValue) job.EmitBusinessEvent = dto.EmitBusinessEvent.Value;
+            if (dto.BatchGroup != null) job.BatchGroup = dto.BatchGroup;
+            if (dto.ActivePeriod != null) job.ActivePeriod = dto.ActivePeriod;
             if (dto.MaxRetryCount.HasValue) job.MaxRetryCount = dto.MaxRetryCount.Value;
             if (dto.RetryDelaySeconds.HasValue) job.RetryDelaySeconds = dto.RetryDelaySeconds.Value;
             if (dto.TimeoutSeconds.HasValue) job.TimeoutSeconds = dto.TimeoutSeconds.Value;
@@ -123,7 +133,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
             if (dto.Description != null) job.Description = dto.Description;
 
             // Recompute next run when the job is schedulable.
-            job.NextRunAt = (job.IsEnabled && job.Status == SysJobStatus.Active)
+            job.StartDateTime = (job.IsEnabled && job.Status == SysJobStatus.Active)
                 ? SysJobScheduleCalculator.ComputeNextRun(job, now)
                 : null;
 
@@ -141,7 +151,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
 
             job.IsDeleted = true;
             job.Status = SysJobStatus.Cancelled;
-            job.NextRunAt = null;
+            job.StartDateTime = null;
             job.LastModifiedBy = SafeUserId();
             job.LastModifiedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync(ct);
@@ -163,7 +173,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
             var query = _db.SysBackgroundJobs.AsNoTracking().Where(j => !j.IsDeleted);
 
             if (!string.IsNullOrWhiteSpace(search))
-                query = query.Where(j => j.Name.Contains(search) || j.JobKey.Contains(search));
+                query = query.Where(j => j.Caption.Contains(search) || j.JobKey.Contains(search));
             if (status.HasValue)
                 query = query.Where(j => j.Status == status.Value);
             if (!string.IsNullOrWhiteSpace(jobKey))
@@ -220,8 +230,8 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                 .Select(e => (double?)e.DurationMs!.Value).AverageAsync(ct) ?? 0;
 
             dto.NextDueJobs = (await jobs
-                .Where(j => j.Status == SysJobStatus.Active && j.IsEnabled && j.NextRunAt != null)
-                .OrderBy(j => j.NextRunAt).Take(5).ToListAsync(ct)).Select(Map).ToList();
+                .Where(j => j.Status == SysJobStatus.Active && j.IsEnabled && j.StartDateTime != null)
+                .OrderBy(j => j.StartDateTime).Take(5).ToListAsync(ct)).Select(Map).ToList();
 
             dto.RecentExecutions = (await execs
                 .OrderByDescending(e => e.RecId).Take(10).ToListAsync(ct)).Select(MapExecution).ToList();
@@ -273,7 +283,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                 ?? throw new KeyNotFoundException($"Job {jobId} not found.");
 
             job.Status = SysJobStatus.Active;
-            job.NextRunAt = job.IsEnabled ? SysJobScheduleCalculator.ComputeNextRun(job, DateTime.UtcNow) : null;
+            job.StartDateTime = job.IsEnabled ? SysJobScheduleCalculator.ComputeNextRun(job, DateTime.UtcNow) : null;
             job.LastModifiedBy = SafeUserId();
             job.LastModifiedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync(ct);
@@ -301,7 +311,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                     execution.ErrorMessage = "Cancelled before execution by the administrator.";
                 }
             }
-            if (clearNextRun) job.NextRunAt = null;
+            if (clearNextRun) job.StartDateTime = null;
             job.LastModifiedBy = SafeUserId();
             job.LastModifiedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync(ct);
@@ -322,26 +332,43 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
 
         private static SysBackgroundJobDto Map(SysBackgroundJob j) => new()
         {
-            Priority = j.Priority,
             RecId = j.RecId,
-            Name = j.Name,
+            Caption = j.Caption,
             JobKey = j.JobKey,
             Description = j.Description,
             TenantId = j.TenantId,
             ScheduleType = j.ScheduleType,
-            CronExpression = j.CronExpression,
-            IntervalSeconds = j.IntervalSeconds,
-            RunAt = j.RunAt,
-            NextRunAt = j.NextRunAt,
+            RecurrenceData = j.RecurrenceData,
+            StartDateTime = j.StartDateTime,
+            StartDateTimeTzId = j.StartDateTimeTzId,
+            StartDate = j.StartDate,
+            StartTime = j.StartTime,
+            OrigStartDateTime = j.OrigStartDateTime,
+            OrigStartDateTimeTzId = j.OrigStartDateTimeTzId,
+            EndDateTime = j.EndDateTime,
+            EndDateTimeTzId = j.EndDateTimeTzId,
+            CanceledBy = j.CanceledBy,
+            DataPartition = j.DataPartition,
+            Finishing = j.Finishing,
+            LogLevel = j.LogLevel,
+            RuntimeJob = j.RuntimeJob,
             Status = j.Status,
             IsEnabled = j.IsEnabled,
             PreventOverlap = j.PreventOverlap,
+            SchedulingPriority = j.SchedulingPriority,
+            SchedulingPriorityIsOverridden = j.SchedulingPriorityIsOverridden,
+            Critical = j.Critical,
+            MonitoringCategory = j.MonitoringCategory,
+            Managed = j.Managed,
+            ExecutingBy = j.ExecutingBy,
+            ActivePeriod = j.ActivePeriod,
+            BatchGroup = j.BatchGroup,
+            EmitBusinessEvent = j.EmitBusinessEvent,
             MaxRetryCount = j.MaxRetryCount,
             RetryDelaySeconds = j.RetryDelaySeconds,
             TimeoutSeconds = j.TimeoutSeconds,
             PayloadJson = j.PayloadJson,
             RunCount = j.RunCount,
-            LastRunAt = j.LastRunAt,
             LastStatus = j.LastStatus,
             LastError = j.LastError,
             CreatedAt = j.CreatedAt,
@@ -352,7 +379,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
         {
             RecId = e.RecId,
             JobId = e.JobId,
-            JobName = e.Job?.Name,
+            JobCaption = e.Job?.Caption,
             Attempt = e.Attempt,
             Trigger = e.Trigger,
             TriggeredByUserId = e.TriggeredByUserId,
@@ -363,7 +390,23 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
             Output = e.Output,
             ErrorMessage = e.ErrorMessage,
             ServerName = e.ServerName,
-            CreatedAt = e.CreatedAt,
+            CreatedAt = e.CreatedAt ?? DateTime.UtcNow,
+            AlertsProcessed = e.AlertsProcessed,
+            BatchCreatedBy = e.BatchCreatedBy,
+            CanceledBy = e.CanceledBy,
+            Caption = e.Caption,
+            DataPartition = e.DataPartition,
+            EndDateTimeTzId = e.EndDateTimeTzId,
+            Finishing = e.Finishing,
+            OrigStartDateTime = e.OrigStartDateTime,
+            OrigStartDateTimeTzId = e.OrigStartDateTimeTzId,
+            StartDateTimeTzId = e.StartDateTimeTzId,
+            ExecutedBy = e.ExecutedBy,
+            RuntimeJob = e.RuntimeJob,
+            BatchGroup = e.BatchGroup,
+            GroupSchedulingPriority = e.GroupSchedulingPriority,
+            JobSchedulingPriority = e.JobSchedulingPriority,
+            JobSchedulingPriorityIsOverridden = e.JobSchedulingPriorityIsOverridden,
         };
     }
 }

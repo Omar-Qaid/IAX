@@ -159,11 +159,11 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 if (await db.Set<SysBackgroundJob>().IgnoreQueryFilters().AnyAsync(j => j.JobKey == serviceKey, ct)) continue;
                 db.Set<SysBackgroundJob>().Add(new SysBackgroundJob
                 {
-                    Name = serviceKey, JobKey = serviceKey,
+                    Caption = serviceKey, JobKey = serviceKey,
                     Description = "Processes the persisted notification delivery queue.",
-                    ScheduleType = SysJobScheduleType.Recurring, IntervalSeconds = 60,
+                    ScheduleType = SysJobScheduleType.Recurring, RecurrenceData = System.Text.Encoding.UTF8.GetBytes(60.ToString(System.Globalization.CultureInfo.InvariantCulture)),
                     Status = SysJobStatus.Active, IsEnabled = true, PreventOverlap = true,
-                    MaxRetryCount = 0, TimeoutSeconds = 900, NextRunAt = DateTime.UtcNow,
+                    MaxRetryCount = 0, TimeoutSeconds = 900, StartDateTime = DateTime.UtcNow,
                 });
             }
             await db.SaveChangesAsync(ct);
@@ -177,18 +177,18 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             {
                 await db.Set<SysBackgroundJob>().AddAsync(new SysBackgroundJob
                 {
-                    Name = "Workflow Activity Auto-Pass Sweep",
+                    Caption = "Workflow Activity Auto-Pass Sweep",
                     JobKey = "WfActivityAutoPass",
                     Description = "Auto-finishes workflow assignments whose AutoPassingHrs window has elapsed.",
                     ScheduleType = SysJobScheduleType.Recurring,
-                    IntervalSeconds = 900,
+                    RecurrenceData = System.Text.Encoding.UTF8.GetBytes(900.ToString(System.Globalization.CultureInfo.InvariantCulture)),
                     Status = SysJobStatus.Active,
                     IsEnabled = true,
                     PreventOverlap = true,
                     MaxRetryCount = 1,
                     RetryDelaySeconds = 60,
                     TimeoutSeconds = 300,
-                    NextRunAt = DateTime.UtcNow,
+                    StartDateTime = DateTime.UtcNow,
                 }, ct);
                 await db.SaveChangesAsync(ct);
             }

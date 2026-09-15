@@ -43,15 +43,15 @@ public partial class SettingsSeeder
     {
         var company = IAX.IXApi.Shared.Application.Identity.CompanyContextDefaults.DataAreaId;
         if (await db.Set<SysBackgroundJob>().IgnoreQueryFilters()
-            .AnyAsync(job => job.Name == name && job.DataAreaId == company, ct)) return;
+            .AnyAsync(job => job.Caption == name && job.DataAreaId == company, ct)) return;
 
         var job = new SysBackgroundJob
         {
-            Name = name, Description = description, JobKey = BatchTasksJobHandler.Key,
+            Caption = name, Description = description, JobKey = BatchTasksJobHandler.Key,
             DataAreaId = company, ScheduleType = SysJobScheduleType.Recurring,
-            IntervalSeconds = intervalSeconds, Status = SysJobStatus.Active,
+            RecurrenceData = System.Text.Encoding.UTF8.GetBytes(intervalSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)), Status = SysJobStatus.Active,
             IsEnabled = false, PreventOverlap = true, MaxRetryCount = 0,
-            TimeoutSeconds = 900, NextRunAt = null, PayloadJson = "{}"
+            TimeoutSeconds = 900, StartDateTime = null, PayloadJson = "{}"
         };
         db.Set<SysBackgroundJob>().Add(job);
         for (var index = 0; index < tasks.Length; index++)

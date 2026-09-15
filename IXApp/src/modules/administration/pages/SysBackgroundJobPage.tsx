@@ -3,8 +3,7 @@ import { useBatchJobCommands } from '../components/useBatchJobCommands';
 import { BatchJobOverview } from '../components/BatchJobOverview';
 import { BatchJobTasks } from '../components/BatchJobTasks';
 import { AppDateTimeField } from '@shared/components/fields/AppDateTimeField';
-import { Alert, Chip, Typography } from '@mui/material';
-import { DataGrid } from '@shared/components/data-grid/DataGrid';
+import { Alert } from '@mui/material';
 import { usePermission } from '@core/permissions/usePermission';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
@@ -13,11 +12,7 @@ import type {
   EnterpriseListDetailsConfig,
 } from '@patterns/list-details/types';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
-import {
-  sysBackgroundJobApi,
-  type SysBackgroundJobRecord,
-  type SysJobExecutionStatus,
-} from '../api/sysBackgroundJobApi';
+import { sysBackgroundJobApi, type SysBackgroundJobRecord } from '../api/sysBackgroundJobApi';
 
 const scheduleLabels = ['One time', 'Delayed', 'Recurring', 'Cron'];
 const jobStatusLabels = ['Ready', 'Withhold', 'Cancelled', 'Completed'];
@@ -28,118 +23,56 @@ const formatDateTime = (value: string | null, locale: string) =>
         new Date(value)
       )
     : '—';
-const executionTone = (status: SysJobExecutionStatus | null) =>
-  status === 2 ? 'success' : status === 3 ? 'error' : status === 1 ? 'warning' : 'default';
 
 const emptyJob = (): SysBackgroundJobRecord => ({
   id: `new-${crypto.randomUUID()}`,
   recId: 0,
-  name: '',
+  caption: '',
   jobKey: '',
   description: null,
   tenantId: null,
   scheduleType: 2,
-  cronExpression: null,
-  intervalSeconds: 300,
-  runAt: null,
-  nextRunAt: null,
+  recurrenceData: null,
+  startDateTime: null,
+  startDateTimeTzId: null,
+  startDate: null,
+  startTime: null,
+  origStartDateTime: null,
+  origStartDateTimeTzId: null,
+  endDateTime: null,
+  endDateTimeTzId: null,
+  canceledBy: null,
+  dataPartition: null,
+  finishing: 0,
+  logLevel: 0,
+  runtimeJob: 0,
   status: 0,
   isEnabled: false,
   preventOverlap: true,
-  priority: 1,
+  schedulingPriority: 1,
+  schedulingPriorityIsOverridden: 0,
+  critical: 0,
+  monitoringCategory: 0,
+  managed: 0,
+  executingBy: null,
+  activePeriod: null,
+  batchGroup: null,
+  emitBusinessEvent: 0,
   maxRetryCount: 0,
   retryDelaySeconds: 60,
   timeoutSeconds: 300,
   payloadJson: null,
   runCount: 0,
-  lastRunAt: null,
   lastStatus: null,
   lastError: null,
   createdAt: null,
   createdBy: null,
 });
 
-function ExecutionHistory({ jobId }: { jobId: number }): React.ReactElement {
-  const { i18n } = useAppTranslation();
-  const executions = useQuery({
-    queryKey: ['background-job-executions', jobId],
-    queryFn: ({ signal }) => sysBackgroundJobApi.executions(jobId, signal),
-    enabled: jobId > 0,
-  });
-  if (jobId <= 0)
-    return (
-      <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>
-        Save the batch job to view execution history.
-      </Typography>
-    );
-  if (executions.isLoading)
-    return (
-      <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>
-        Loading execution history…
-      </Typography>
-    );
-  if (executions.isError)
-    return (
-      <Typography color="error" sx={{ fontSize: 12 }}>
-        Execution history could not be loaded.
-      </Typography>
-    );
-  if (!executions.data?.length)
-    return (
-      <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>
-        No executions have been recorded.
-      </Typography>
-    );
-  return (
-    <DataGrid
-      rows={executions.data}
-      getRowId={(row) => row.recId}
-      height={300}
-      hideToolbar
-      hideSidebar
-      columns={[
-        { field: 'recId', headerName: 'Execution ID', width: 110 },
-        { field: 'attempt', headerName: 'Attempt', width: 90 },
-        {
-          field: 'status',
-          headerName: 'Status',
-          width: 130,
-          renderCell: ({ row }) => (
-            <Chip
-              size="small"
-              label={executionStatusLabels[row.status]}
-              color={executionTone(row.status)}
-            />
-          ),
-        },
-        {
-          field: 'startedAt',
-          headerName: 'Started',
-          width: 180,
-          valueGetter: ({ row }) => formatDateTime(row.startedAt, i18n.language),
-        },
-        {
-          field: 'completedAt',
-          headerName: 'Completed',
-          width: 180,
-          valueGetter: ({ row }) => formatDateTime(row.completedAt, i18n.language),
-        },
-        { field: 'durationMs', headerName: 'Duration (ms)', width: 120 },
-        {
-          field: 'output',
-          headerName: 'Output / error',
-          width: 350,
-          valueGetter: ({ row }) => row.errorMessage || row.output || '—',
-        },
-      ]}
-    />
-  );
-}
-
 export function SysBackgroundJobPage(): React.ReactElement {
   const { t, i18n } = useAppTranslation();
   const queryClient = useQueryClient();
-  const batchCommands = useBatchJobCommands((id) => <ExecutionHistory jobId={id} />);
+  const batchCommands = useBatchJobCommands();
   const [commandError, setCommandError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [taskLocked, setTaskLocked] = React.useState(false);
@@ -191,18 +124,54 @@ export function SysBackgroundJobPage(): React.ReactElement {
                 options: scheduleLabels.map((label, value) => ({ value: String(value), label })),
               },
               {
-                name: 'nextRunAt',
+                name: 'scheduledStartText',
                 label: 'Scheduled start date/time',
                 type: 'display',
                 disabled: true,
               },
               {
-                name: 'lastRunAt',
-                label: 'Actual start date/time',
+                name: 'endDateTime',
+                label: 'Actual end date/time',
                 type: 'display',
                 disabled: true,
               },
+              { name: 'batchGroup', label: 'Batch group', type: 'text' },
+              { name: 'activePeriod', label: 'Active period', type: 'text' },
+              { name: 'critical', label: 'Critical job', type: 'boolean' },
+              { name: 'monitoringCategory', label: 'Monitoring category', type: 'number' },
+              { name: 'managed', label: 'Managed', type: 'boolean' },
+              { name: 'emitBusinessEvent', label: 'Emit business event', type: 'boolean' },
             ],
+          },
+        ],
+      },
+      {
+        id: 'administration-details',
+        title: 'Administration and execution details',
+        defaultExpanded: false,
+        groups: [
+          {
+            id: 'dto-details',
+            columns: 3,
+            fields: [
+              ['recId', 'Batch job ID'],
+              ['tenantId', 'Company accounts'],
+              ['canceledBy', 'Canceled by'],
+              ['dataPartition', 'Data partition'],
+              ['finishing', 'Finishing'],
+              ['logLevel', 'Log level'],
+              ['runtimeJob', 'Runtime job'],
+              ['executingBy', 'Run by'],
+              ['origStartDateTime', 'Original start date/time'],
+              ['origStartDateTimeTzId', 'Original start time zone ID'],
+              ['endDateTimeTzId', 'End time zone ID'],
+              ['schedulingPriorityIsOverridden', 'Scheduling priority is overridden'],
+              ['runCount', 'Execution count'],
+              ['lastStatus', 'Last execution status'],
+              ['lastError', 'Last error'],
+              ['createdAt', 'Created date/time'],
+              ['createdBy', 'Created by'],
+            ].map(([name, label]) => ({ name, label, type: 'display' as const, disabled: true })),
           },
         ],
       },
@@ -215,11 +184,26 @@ export function SysBackgroundJobPage(): React.ReactElement {
             id: 'schedule',
             columns: 3,
             fields: [
-              { name: 'intervalSeconds', label: 'Interval (seconds)', type: 'number' },
-              { name: 'cronExpression', label: 'CRON expression', type: 'text' },
+              { name: 'recurrenceData', label: 'Recurrence data', type: 'text' },
+              { name: 'startDateTimeTzId', label: 'Start time zone ID', type: 'number' },
               {
-                name: 'runAt',
-                label: 'Run at (UTC)',
+                name: 'startDate',
+                label: 'Start date (UTC)',
+                renderOwnLabel: true,
+                render: ({ value, editing, disabled, onChange }) => (
+                  <AppDateTimeField
+                    label="Start date (UTC)"
+                    includeTime={false}
+                    value={String(value ?? '').slice(0, 10)}
+                    disabled={disabled || !editing}
+                    onChange={(next) => onChange(next ? `${next}T00:00:00Z` : '')}
+                  />
+                ),
+              },
+              { name: 'startTime', label: 'Start time (seconds)', type: 'number' },
+              {
+                name: 'startDateTime',
+                label: 'Start at (UTC)',
                 renderOwnLabel: true,
                 render: ({ value, editing, disabled, onChange }) => {
                   const text = String(value ?? '');
@@ -228,7 +212,7 @@ export function SysBackgroundJobPage(): React.ReactElement {
                     date && !Number.isNaN(date.getTime()) ? date.toISOString().slice(0, 16) : '';
                   return (
                     <AppDateTimeField
-                      label="Run at (UTC)"
+                      label="Start at (UTC)"
                       value={input}
                       disabled={disabled || !editing}
                       onChange={(next) =>
@@ -240,8 +224,8 @@ export function SysBackgroundJobPage(): React.ReactElement {
               },
               { name: 'isEnabled', label: 'Enabled', type: 'boolean' },
               {
-                name: 'priority',
-                label: 'Priority',
+                name: 'schedulingPriority',
+                label: 'Scheduling Priority',
                 type: 'select',
                 options: ['Low', 'Normal', 'High'].map((label, value) => ({
                   value: String(value),
@@ -295,53 +279,75 @@ export function SysBackgroundJobPage(): React.ReactElement {
       delete: sysBackgroundJobApi.remove,
     },
     createRecord: emptyJob,
-    getPrimaryText: (job) => job.name,
+    getPrimaryText: (job) => job.caption,
     getSecondaryText: (job) => `${job.jobKey} · ${jobStatusLabels[job.status]}`,
     matchesSearch: (job, query) =>
-      `${job.name} ${job.jobKey} ${job.description ?? ''}`
+      `${job.caption} ${job.jobKey} ${job.description ?? ''}`
         .toLocaleLowerCase()
         .includes(query.toLocaleLowerCase()),
     getValues: (job) => ({
+      ...job,
       description: job.description ?? '',
       jobKey: job.jobKey,
       statusText: jobStatusLabels[job.status],
       scheduleType: String(job.scheduleType),
-      nextRunAt: formatDateTime(job.nextRunAt, i18n.language),
-      lastRunAt: formatDateTime(job.lastRunAt, i18n.language),
-      intervalSeconds: job.intervalSeconds ?? '',
-      cronExpression: job.cronExpression ?? '',
-      runAt: job.runAt ?? '',
+      startDateTime: job.startDateTime ?? '',
+      scheduledStartText: formatDateTime(job.startDateTime, i18n.language),
+      origStartDateTime: formatDateTime(job.origStartDateTime, i18n.language),
+      createdAt: formatDateTime(job.createdAt, i18n.language),
+      lastStatus: job.lastStatus == null ? '—' : executionStatusLabels[job.lastStatus],
+      schedulingPriorityIsOverridden: job.schedulingPriorityIsOverridden ? 'Yes' : 'No',
+      endDateTime: formatDateTime(job.endDateTime, i18n.language),
+      recurrenceData: job.recurrenceData ?? '',
       isEnabled: job.isEnabled,
       preventOverlap: job.preventOverlap,
-      priority: String(job.priority ?? 1),
+      schedulingPriority: String(job.schedulingPriority ?? 1),
       maxRetryCount: job.maxRetryCount,
       retryDelaySeconds: job.retryDelaySeconds,
       timeoutSeconds: job.timeoutSeconds,
       payloadJson: job.payloadJson ?? '',
+      batchGroup: job.batchGroup ?? '',
+      activePeriod: job.activePeriod ?? '',
+      critical: Boolean(job.critical),
+      monitoringCategory: job.monitoringCategory ?? 0,
+      managed: Boolean(job.managed),
+      emitBusinessEvent: Boolean(job.emitBusinessEvent),
     }),
     setValues: (job, values) => ({
       ...job,
       description: String(values.description || '') || null,
       jobKey: String(values.jobKey || ''),
       scheduleType: Number(values.scheduleType) as SysBackgroundJobRecord['scheduleType'],
-      intervalSeconds: values.intervalSeconds === '' ? null : Number(values.intervalSeconds),
-      cronExpression: String(values.cronExpression || '') || null,
-      runAt: String(values.runAt || '') || null,
+      recurrenceData: String(values.recurrenceData || '') || null,
+      startDateTime: String(values.startDateTime || '') || null,
       isEnabled: Boolean(values.isEnabled),
       preventOverlap: Boolean(values.preventOverlap),
-      priority: Number(values.priority ?? 1),
+      schedulingPriority: Number(values.schedulingPriority ?? 1),
       maxRetryCount: Number(values.maxRetryCount || 0),
       retryDelaySeconds: Number(values.retryDelaySeconds || 0),
       timeoutSeconds: Number(values.timeoutSeconds || 0),
       payloadJson: String(values.payloadJson || '') || null,
+      batchGroup: String(values.batchGroup || '') || null,
+      activePeriod: String(values.activePeriod || '') || null,
+      critical: values.critical ? 1 : 0,
+      monitoringCategory: Number(values.monitoringCategory ?? 0),
+      startDateTimeTzId:
+        values.startDateTimeTzId === '' || values.startDateTimeTzId == null
+          ? null
+          : Number(values.startDateTimeTzId),
+      startDate: String(values.startDate || '') || null,
+      startTime:
+        values.startTime === '' || values.startTime == null ? null : Number(values.startTime),
+      managed: values.managed ? 1 : 0,
+      emitBusinessEvent: values.emitBusinessEvent ? 1 : 0,
     }),
     headerFields: [
       {
-        id: 'name',
+        id: 'caption',
         label: 'Batch job',
         width: 330,
-        getValue: (job) => job.name,
-        setValue: (job, value) => ({ ...job, name: String(value) }),
+        getValue: (job) => job.caption,
+        setValue: (job, value) => ({ ...job, caption: String(value) }),
       },
     ],
     sections: ({ record, editing }) => [
@@ -371,12 +377,6 @@ export function SysBackgroundJobPage(): React.ReactElement {
             onLockChange={setTaskLocked}
           />
         ),
-      },
-      {
-        id: 'history',
-        title: 'Batch job history',
-        content: <ExecutionHistory jobId={record.recId} />,
-        defaultExpanded: false,
       },
     ],
     commands: (job) => [
@@ -428,7 +428,7 @@ export function SysBackgroundJobPage(): React.ReactElement {
       delete: 'System.BackgroundJobs.Delete',
     },
     validate: (job) => ({
-      ...(!job.name.trim() ? { name: 'Batch job name is required.' } : {}),
+      ...(!job.caption.trim() ? { caption: 'Batch job caption is required.' } : {}),
       ...(!job.jobKey.trim() ? { jobKey: 'A registered handler is required.' } : {}),
     }),
     presentation: { mode: 'list', listWidth: 300, headerMaxWidth: 760 },

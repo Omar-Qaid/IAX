@@ -20,13 +20,12 @@ export function BatchJobOverview({ job }: { job: SysBackgroundJobRecord }) {
       <ListGridField label={label} value={value} underlined />
     </Box>
   );
-  const missing = (label: string) => field(label, 'Not available', true);
   const heading = (text: string) => (
     <Typography sx={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>
       {text}
     </Typography>
   );
-  const priority = ['Low', 'Normal', 'High'][job.priority] ?? 'Normal';
+  const priority = ['Low', 'Normal', 'High'][job.schedulingPriority] ?? 'Normal';
   return (
     <Box
       sx={{
@@ -43,46 +42,50 @@ export function BatchJobOverview({ job }: { job: SysBackgroundJobRecord }) {
     >
       <Box>
         {heading('Identification')}
-        {field('Job description', job.name)}
+        {field('Batch job', job.caption)}
         {field('Status', ['Ready', 'Withhold', 'Cancelled', 'Completed'][job.status])}
         {heading('Dates')}
-        {field('Actual start date/time', date(latest?.startedAt ?? job.lastRunAt))}
+        {field('Actual start date/time', date(latest?.startedAt))}
       </Box>
       <Box>
-        {field('End date/time', date(latest?.completedAt))}
-        {field('Scheduled start date/time', date(job.nextRunAt))}
+        {field('End date/time', date(latest?.completedAt ?? job.endDateTime))}
+        {field('Scheduled start date/time', date(job.startDateTime))}
         {heading('Administration')}
         {field('Created by', job.createdBy ?? '—')}
-        {field('Run by', latest?.triggeredByUserId ?? '—')}
+        {field('Run by', job.executingBy ?? latest?.triggeredByUserId ?? '—')}
       </Box>
       <Box>
         {field('Company accounts', job.tenantId ?? '—')}
-        {missing('Monitoring category')}
-        {missing('Critical job')}
-        {missing('Has alert')}
+        {field('Monitoring category', job.monitoringCategory ?? 0)}
+        {field('Critical job', job.critical ? 'Yes' : 'No')}
+        {field('Emit business event', job.emitBusinessEvent ? 'Yes' : 'No')}
+        {field('Managed', job.managed ? 'Yes' : 'No')}
       </Box>
       <Box>
-        {missing('Progress')}
-        {missing('Batch group')}
-        {missing('Group scheduling priority')}
-        {missing('Scheduling priority is overridden')}
+        {field('Finishing', job.finishing ?? 0)}
+        {field('Batch group', job.batchGroup ?? '—')}
+        {field('Last execution group priority', latest?.groupSchedulingPriority ?? '?')}
+        {field(
+          'Scheduling priority is overridden',
+          job.schedulingPriorityIsOverridden ? 'Yes' : 'No'
+        )}
       </Box>
       <Box>
         {field('Job scheduling priority', priority)}
-        {field('Effective scheduling priority', priority)}
-        {field('Save job to history', 'Always')}
+        {field('Last execution job priority', latest?.jobSchedulingPriority ?? '?')}
+        {field('Log level', job.logLevel ?? 0)}
         {heading('Miscellaneous')}
-        {missing('Active period')}
+        {field('Active period', job.activePeriod ?? '—')}
       </Box>
       <Box>
         {field('Execution count', job.runCount)}
         {field(
           'Recurrence text',
           job.scheduleType === 3
-            ? `CRON (UTC): ${job.cronExpression}`
+            ? `CRON (UTC): ${job.recurrenceData ?? '?'}`
             : job.scheduleType === 2
-              ? `Every ${job.intervalSeconds} seconds`
-              : `One run: ${date(job.runAt)}`
+              ? `Recurrence Data: ${job.recurrenceData}`
+              : `One run: ${date(job.startDateTime)}`
         )}
         {history.isError && (
           <Typography color="error">Execution details could not be loaded.</Typography>

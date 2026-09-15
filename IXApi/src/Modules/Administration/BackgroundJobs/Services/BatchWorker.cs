@@ -101,9 +101,9 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                 .Where(j => !j.IsDeleted
                          && j.Status == SysJobStatus.Active
                          && j.IsEnabled
-                         && j.NextRunAt != null
-                         && j.NextRunAt <= now)
-                .OrderByDescending(j => j.Priority).ThenBy(j => j.NextRunAt)
+                         && j.StartDateTime != null
+                         && j.StartDateTime <= now)
+                .OrderByDescending(j => j.SchedulingPriority).ThenBy(j => j.StartDateTime)
                 .Take(_options.BatchSize)
                 .ToListAsync(ct);
 
@@ -115,14 +115,14 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
 
                 // Advance the schedule first so a long-running/overlapping job doesn't hot-loop.
                 if (job.ScheduleType is SysJobScheduleType.OneTime or SysJobScheduleType.Delayed)
-                    job.NextRunAt = null; // single shot
+                    job.StartDateTime = null; // single shot
                 else
-                    job.NextRunAt = SysJobScheduleCalculator.ComputeNextRun(job, now);
+                    job.StartDateTime = SysJobScheduleCalculator.ComputeNextRun(job, now);
 
                 if (job.PreventOverlap && hasActiveRun)
                 {
-                    _logger.LogWarning("[BgJobs] Skipping schedule for job {Id} '{Name}' — previous run still active",
-                        job.RecId, job.Name);
+                    _logger.LogWarning("[BgJobs] Skipping schedule for job {Id} '{Caption}' — previous run still active",
+                        job.RecId, job.Caption);
                     continue;
                 }
 
@@ -160,7 +160,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                 .Where(e => e.Status == SysJobExecutionStatus.Pending
                          && e.Job != null && !e.Job.IsDeleted && e.Job.IsEnabled && e.Job.Status == SysJobStatus.Active
                          && (e.ScheduledFor == null || e.ScheduledFor <= now))
-                .OrderByDescending(e => e.Job!.Priority).ThenBy(e => e.ScheduledFor).ThenBy(e => e.RecId)
+                .OrderByDescending(e => e.Job!.SchedulingPriority).ThenBy(e => e.ScheduledFor).ThenBy(e => e.RecId)
                 .Take(take)
                 .ToListAsync(ct);
 
@@ -223,7 +223,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                     JobId = job.RecId,
                     ExecutionId = execution.RecId,
                     JobKey = job.JobKey,
-                    JobName = job.Name,
+                    JobName = job.Caption,
                     TenantId = job.TenantId,
                     Attempt = execution.Attempt,
                     PayloadJson = job.PayloadJson,
@@ -234,7 +234,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                 {
                     await realtime.BroadcastAsync(SysRealtimeMessage.Create(
                         SysRealtimeEventType.JobStarted,
-                        new { job.RecId, job.Name, execution.Attempt }));
+                        new { job.RecId, job.Caption, execution.Attempt }));
 
                     await handler.ExecuteAsync(context, timeoutCts.Token);
                     if (await db.SysBackgroundJobs.IgnoreQueryFilters().AnyAsync(j => j.RecId == jobId &&
@@ -252,7 +252,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                     execution.Output = context.Output;
 
                     job.RunCount++;
-                    job.LastRunAt = execution.StartedAt;
+                    job.EndDateTime = execution.StartedAt;
                     job.LastStatus = SysJobExecutionStatus.Completed;
                     job.LastError = null;
                     if (job.ScheduleType is SysJobScheduleType.OneTime or SysJobScheduleType.Delayed)
@@ -264,10 +264,10 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
 
                     await realtime.BroadcastAsync(SysRealtimeMessage.Create(
                         SysRealtimeEventType.JobCompleted,
-                        new { job.RecId, job.Name, execution.DurationMs, execution.Attempt }));
+                        new { job.RecId, job.Caption, execution.DurationMs, execution.Attempt }));
 
-                    _logger.LogInformation("[BgJobs] Job {Id} '{Name}' completed in {Ms}ms (execution {ExecId})",
-                        job.RecId, job.Name, execution.DurationMs, execution.RecId);
+                    _logger.LogInformation("[BgJobs] Job {Id} '{Caption}' completed in {Ms}ms (execution {ExecId})",
+                        job.RecId, job.Caption, execution.DurationMs, execution.RecId);
                 }
                 catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
                 {
@@ -343,7 +343,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
             execution.ErrorDetail = detail;
 
             job.RunCount++;
-            job.LastRunAt = execution.StartedAt;
+            job.EndDateTime = execution.StartedAt;
             job.LastStatus = SysJobExecutionStatus.Failed;
             job.LastError = error;
 
@@ -369,10 +369,10 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
 
             await realtime.BroadcastAsync(SysRealtimeMessage.Create(
                 SysRealtimeEventType.JobFailed,
-                new { job.RecId, job.Name, error, execution.Attempt, willRetry }));
+                new { job.RecId, job.Caption, error, execution.Attempt, willRetry }));
 
-            _logger.LogError("[BgJobs] Job {Id} '{Name}' failed (attempt {Attempt}/{Max}): {Error}{Retry}",
-                job.RecId, job.Name, execution.Attempt, job.MaxRetryCount, error,
+            _logger.LogError("[BgJobs] Job {Id} '{Caption}' failed (attempt {Attempt}/{Max}): {Error}{Retry}",
+                job.RecId, job.Caption, execution.Attempt, job.MaxRetryCount, error,
                 willRetry ? " — will retry" : "");
         }
 

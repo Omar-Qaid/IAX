@@ -1,4 +1,4 @@
-﻿using IAX.IXApi.Modules.Administration.BackgroundJobs.Entities;
+using IAX.IXApi.Modules.Administration.BackgroundJobs.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -10,12 +10,12 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Configuration
         {
             builder.ToTable("BatchJobs");
 
-            builder.HasIndex(e => e.Name).IsUnique();
+            builder.HasIndex(e => e.Caption).IsUnique();
             builder.HasIndex(e => e.JobKey);
             builder.HasIndex(e => e.Status);
             builder.HasIndex(e => e.TenantId);
             // Hot-path index for the scheduler poll: due, active, enabled jobs.
-            builder.HasIndex(e => new { e.Status, e.IsEnabled, e.NextRunAt });
+            builder.HasIndex(e => new { e.Status, e.IsEnabled, e.StartDateTime });
 
             builder.HasMany(e => e.Executions)
                    .WithOne(x => x.Job)

@@ -306,6 +306,15 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
       (module) => module.SysBackgroundJobPage
     ),
   },
+  {
+    id: 'system-background-job-history',
+    path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.BACKGROUND_JOB_HISTORY,
+    permission: PERMISSIONS.BACKGROUND_JOB_VIEW,
+    component: lazyPage(
+      () => import('@modules/administration/pages/BatchJobHistoryPage'),
+      (module) => module.BatchJobHistoryPage
+    ),
+  },
 ] as const;
 
 export const getPageDefinition = (path: string): AppPageDefinition | undefined =>

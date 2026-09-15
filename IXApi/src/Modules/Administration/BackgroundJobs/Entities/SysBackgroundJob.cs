@@ -1,4 +1,7 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+using IAX.IXApi.Shared.Domain.Entities;
 
 namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Entities
 {
@@ -9,107 +12,186 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Entities
     /// </summary>
     public class SysBackgroundJob : Entity<long>
     {
-        /// <summary>
-        /// Unique, human-readable name of the job (e.g. "Nightly Invoice Reminder").
-        /// </summary>
+        // ── Replaced / Requested Fields ──────────────────────────────────
+        
         [MaxLength(200)]
-        public string Name { get; set; } = null!;
+        public string Caption { get; set; } = null!; // Replaces 'Name'
 
-        /// <summary>
-        /// The handler key that resolves to an <c>ISysBackgroundJobHandler</c> implementation
-        /// (e.g. "SendInvoiceReminders"). This is what actually runs.
-        /// </summary>
+        [MaxLength(20)]
+        public string? CanceledBy { get; set; }
+
+        [MaxLength(8)]
+        public string? DataPartition { get; set; }
+
+        public DateTime? EndDateTime { get; set; } // Replaces 'LastRunAt'
+        public int? EndDateTimeTzId { get; set; }
+        
+        public int Finishing { get; set; }
+        public int LogLevel { get; set; }
+
+        public DateTime? OrigStartDateTime { get; set; }
+        public int? OrigStartDateTimeTzId { get; set; }
+
+        public byte[]? RecurrenceData { get; set; } // Replaces 'CronExpression' and 'IntervalSeconds'
+        
+        public int RuntimeJob { get; set; }
+
+        public DateTime? StartDateTime { get; set; } // Replaces 'RunAt' and 'NextRunAt'
+        public int? StartDateTimeTzId { get; set; }
+
+        public DateTime? StartDate { get; set; }
+        public int? StartTime { get; set; }
+
+        public int Critical { get; set; }
+        public int MonitoringCategory { get; set; }
+        public int Managed { get; set; }
+
+        [MaxLength(20)]
+        public string? ExecutingBy { get; set; }
+
+        [MaxLength(10)]
+        public string? ActivePeriod { get; set; }
+
+        public int SchedulingPriority { get; set; } = 1; // Replaces 'Priority'
+        public int SchedulingPriorityIsOverridden { get; set; }
+
+        [MaxLength(10)]
+        public string? BatchGroup { get; set; }
+        public int EmitBusinessEvent { get; set; }
+
+        // ── Retained Essential Framework Fields ──────────────────────────
+
         [MaxLength(200)]
         public string JobKey { get; set; } = null!;
 
-        /// <summary>
-        /// Optional description of what the job does.
-        /// </summary>
         [MaxLength(1000)]
         public string? Description { get; set; }
 
-        /// <summary>
-        /// Tenant identifier for multi-tenant isolation.
-        /// </summary>
         [MaxLength(256)]
         public string? TenantId { get; set; }
 
-        // ── Scheduling ───────────────────────────────────────────────────
-
-        /// <summary>How the job is scheduled.</summary>
         public SysJobScheduleType ScheduleType { get; set; } = SysJobScheduleType.Recurring;
-
-        /// <summary>
-        /// Standard 5-field CRON expression (min hour day month day-of-week).
-        /// Used when <see cref="ScheduleType"/> is <see cref="SysJobScheduleType.Cron"/>.
-        /// </summary>
-        [MaxLength(120)]
-        public string? CronExpression { get; set; }
-
-        /// <summary>
-        /// Interval in seconds between runs for <see cref="SysJobScheduleType.Recurring"/> jobs.
-        /// </summary>
-        public int? IntervalSeconds { get; set; }
-
-        /// <summary>
-        /// Absolute time to run for <see cref="SysJobScheduleType.OneTime"/> /
-        /// <see cref="SysJobScheduleType.Delayed"/> jobs.
-        /// </summary>
-        public DateTime? RunAt { get; set; }
-
-        /// <summary>
-        /// Computed UTC time of the next scheduled run. Null = nothing scheduled.
-        /// </summary>
-        public DateTime? NextRunAt { get; set; }
-
-        // ── State ────────────────────────────────────────────────────────
-
-        /// <summary>Lifecycle status (Active / Paused / Cancelled / Completed).</summary>
         public SysJobStatus Status { get; set; } = SysJobStatus.Active;
-
-        /// <summary>Master enable switch. A disabled job is never scheduled.</summary>
         public bool IsEnabled { get; set; } = true;
-
-        /// <summary>
-        /// When true, the scheduler will not start a new execution while a previous
-        /// one for the same job is still running (prevents overlapping runs).
-        /// </summary>
         public bool PreventOverlap { get; set; } = true;
-        /// <summary>Higher values are dispatched first among due executions (0 low, 1 normal, 2 high).</summary>
-        public int Priority { get; set; } = 1;
-
-        // ── Reliability ──────────────────────────────────────────────────
-
-        /// <summary>Maximum automatic retry attempts after a failure (0 = no retry).</summary>
+        
         public int MaxRetryCount { get; set; } = 0;
-
-        /// <summary>Base delay (seconds) before a retry. Backoff = delay * 2^(attempt-1).</summary>
         public int RetryDelaySeconds { get; set; } = 60;
-
-        /// <summary>Maximum time (seconds) a single execution may run before being cancelled.</summary>
         public int TimeoutSeconds { get; set; } = 300;
-
-        /// <summary>JSON-serialized payload passed to the handler on each run.</summary>
         public string? PayloadJson { get; set; }
-
-        // ── Tracking ─────────────────────────────────────────────────────
-
-        /// <summary>Total number of times this job has been executed.</summary>
+        
         public int RunCount { get; set; }
-
-        /// <summary>UTC time of the most recent run start.</summary>
-        public DateTime? LastRunAt { get; set; }
-
-        /// <summary>Outcome of the most recent execution.</summary>
         public SysJobExecutionStatus? LastStatus { get; set; }
-
-        /// <summary>Error message from the most recent failed execution.</summary>
         public string? LastError { get; set; }
 
-        /// <summary>Soft-delete flag.</summary>
-        /// <summary>Execution history for this job.</summary>
         public virtual ICollection<SysBackgroundJobExecution> Executions { get; set; }
             = new List<SysBackgroundJobExecution>();
+
+        [ForeignKey(nameof(BatchGroup))]
+        public virtual SysBackgroundJobGroup? GroupNavigation { get; set; }
+
+        [ForeignKey(nameof(ActivePeriod))]
+        public virtual SysBackgroundJobActivePeriod? ActivePeriodNavigation { get; set; }
+
+        public virtual ICollection<SysBackgroundJobRecurrenceCount> RecurrenceCounts { get; set; }
+            = new List<SysBackgroundJobRecurrenceCount>();
+
+    }
+
+    public class SysBackgroundJobExecution : BaseEntity<long>
+    {
+        public long JobId { get; set; }
+
+        [ForeignKey(nameof(JobId))]
+        [DeleteBehavior(DeleteBehavior.Cascade)]
+        public virtual SysBackgroundJob? Job { get; set; }
+
+        public int Attempt { get; set; } = 1;
+        public SysJobTrigger Trigger { get; set; } = SysJobTrigger.Schedule;
+
+        [MaxLength(256)]
+        public string? TriggeredByUserId { get; set; }
+
+        public SysJobExecutionStatus Status { get; set; } = SysJobExecutionStatus.Pending;
+        public DateTime? ScheduledFor { get; set; }
+        public DateTime? StartedAt { get; set; }
+        public DateTime? CompletedAt { get; set; }
+        public long? DurationMs { get; set; }
+        public string? Output { get; set; }
+        public string? ErrorMessage { get; set; }
+        public string? ErrorDetail { get; set; }
+
+        [MaxLength(256)]
+        public string? ServerName { get; set; }
+
+        public int AlertsProcessed { get; set; }
+
+        [MaxLength(20)]
+        public string? BatchCreatedBy { get; set; }
+
+        [MaxLength(20)]
+        public string? CanceledBy { get; set; }
+
+        [MaxLength(200)]
+        public string? Caption { get; set; }
+
+        [MaxLength(8)]
+        public string? DataPartition { get; set; }
+
+        public int? EndDateTimeTzId { get; set; }
+        public int Finishing { get; set; }
+        public DateTime? OrigStartDateTime { get; set; }
+        public int? OrigStartDateTimeTzId { get; set; }
+        public int? StartDateTimeTzId { get; set; }
+
+        [MaxLength(20)]
+        public string? ExecutedBy { get; set; }
+
+        public int RuntimeJob { get; set; }
+
+        [MaxLength(10)]
+        public string? BatchGroup { get; set; }
+
+        public int GroupSchedulingPriority { get; set; }
+        public int JobSchedulingPriority { get; set; }
+        public int JobSchedulingPriorityIsOverridden { get; set; }
+    }
+
+    public class SysBackgroundJobActivePeriod : BaseEntity<long>
+    {
+        [MaxLength(10)]
+        public string Code { get; set; } = null!;
+
+        [MaxLength(150)]
+        public string? Name { get; set; }
+
+        public int FromTimeUtc { get; set; }
+        public int ToTimeUtc { get; set; }
+        public int FromTimeLocal { get; set; }
+        public int ToTimeLocal { get; set; }
+        public int TimeZoneFollowed { get; set; }
+    }
+
+    public class SysBackgroundJobGroup : BaseEntity<long>
+    {
+        [MaxLength(10)]
+        public string GroupCode { get; set; } = null!;
+
+        [MaxLength(60)]
+        public string? Description { get; set; }
+
+        public int SchedulingPriority { get; set; }
+        public int MaxConcurrency { get; set; }
+    }
+
+    public class SysBackgroundJobRecurrenceCount : BaseEntity<long>
+    {
+        public long BatchJobId { get; set; }
+
+        [ForeignKey(nameof(BatchJobId))]
+        public virtual SysBackgroundJob? BatchJob { get; set; }
+
+        public int RecurrenceCount { get; set; }
     }
 }
 

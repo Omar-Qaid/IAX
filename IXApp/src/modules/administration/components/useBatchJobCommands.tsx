@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom';
+import { ROUTE_PATHS } from '@app/routes/routePaths';
 import { BatchJobRecurrenceForm } from './BatchJobRecurrenceForm';
 import { AppActionDrawer } from '@shared/components/dialogs/AppActionDrawer';
 import { useState } from 'react';
@@ -21,8 +23,9 @@ import {
 
 type Action =
   'Batch job history' | 'Recurrence' | 'Change status' | 'Remove recurrence' | 'Copy batch job';
-export function useBatchJobCommands(renderHistory: (id: number) => React.ReactNode) {
+export function useBatchJobCommands() {
   const client = useQueryClient();
+  const navigate = useNavigate();
   const edit = usePermission('System.BackgroundJobs.Edit').hasPermission;
   const create = usePermission('System.BackgroundJobs.Create').hasPermission;
   const cancel = usePermission('System.BackgroundJobs.Cancel').hasPermission;
@@ -60,11 +63,12 @@ export function useBatchJobCommands(renderHistory: (id: number) => React.ReactNo
             : !edit),
     onClick: (record) => {
       if (!record) return;
+      if (label === 'Batch job history') { navigate(`${ROUTE_PATHS.SYSTEM_ADMINISTRATION.BACKGROUND_JOB_HISTORY}?jobId=${record.recId}`); return; }
       setError('');
       setStatus(record.status === 1 ? 'ready' : 'withhold');
       setJob({
         ...record,
-        ...(label === 'Copy batch job' ? { name: `${record.name} (copy)` } : {}),
+        ...(label === 'Copy batch job' ? { caption: `${record.caption} (copy)` } : {}),
       });
       setAction(label);
     },
@@ -77,12 +81,12 @@ export function useBatchJobCommands(renderHistory: (id: number) => React.ReactNo
       if (action === 'Recurrence') {
         if (
           job.scheduleType === 2 &&
-          (!Number.isInteger(job.intervalSeconds) || (job.intervalSeconds ?? 0) <= 0)
+          (!job.recurrenceData || job.recurrenceData.trim() === '')
         )
-          throw new Error('Enter a positive whole-number interval.');
-        if (job.scheduleType === 3 && !job.cronExpression?.trim())
+          throw new Error('Enter recurrence data.');
+        if (job.scheduleType === 3 && (!job.recurrenceData || job.recurrenceData.trim() === ''))
           throw new Error('Enter a CRON expression.');
-        if (job.scheduleType < 2 && !job.runAt) throw new Error('Select a start date/time.');
+        if (job.scheduleType < 2 && !job.startDateTime) throw new Error('Select a start date/time.');
       }
       if (action === 'Change status') {
         if (status === 'ready') await api.resume(job.recId);
@@ -92,13 +96,12 @@ export function useBatchJobCommands(renderHistory: (id: number) => React.ReactNo
         await api.update({
           ...job,
           scheduleType: 0,
-          runAt: job.nextRunAt ?? new Date().toISOString(),
-          intervalSeconds: null,
-          cronExpression: null,
+          startDateTime: job.startDateTime ?? new Date().toISOString(),
+          recurrenceData: null,
           isEnabled: false,
         });
       } else if (action === 'Copy batch job') {
-        if (!job.name.trim()) throw new Error('Enter a name for the copy.');
+        if (!job.caption.trim()) throw new Error('Enter a name for the copy.');
         const tasks = job.jobKey === 'BatchTasks' ? await api.tasks(job.recId) : [];
         const copy = await api.create({ ...job, isEnabled: false });
         try {
@@ -177,7 +180,7 @@ export function useBatchJobCommands(renderHistory: (id: number) => React.ReactNo
       >
         <Stack spacing={2} sx={{ pt: 1 }}>
           {error && <Alert severity="error">{error}</Alert>}
-          {action === 'Batch job history' && job && renderHistory(job.recId)}
+          
           {action === 'Change status' && (
             <List
               aria-label="Select new status"
@@ -215,9 +218,9 @@ export function useBatchJobCommands(renderHistory: (id: number) => React.ReactNo
             <>
               <TextField
                 label="Job description"
-                value={job?.name ?? ''}
+                value={job?.caption ?? ''}
                 disabled={busy}
-                onChange={(e) => setJob(job && { ...job, name: e.target.value })}
+                onChange={(e) => setJob(job && { ...job, caption: e.target.value })}
               />
               <Alert severity="info">
                 Copies configuration, tasks, parameters, and dependencies. The new job starts
@@ -239,10 +242,10 @@ export function useBatchJobCommands(renderHistory: (id: number) => React.ReactNo
                   label="Scheduled start date/time (UTC)"
                   type="datetime-local"
                   slotProps={{ inputLabel: { shrink: true } }}
-                  value={job.runAt ? new Date(job.runAt).toISOString().slice(0, 16) : ''}
+                  value={job.startDateTime ? new Date(job.startDateTime).toISOString().slice(0, 16) : ''}
                   disabled={busy}
                   onChange={(e) =>
-                    setJob({ ...job, runAt: e.target.value ? `${e.target.value}:00Z` : null })
+                    setJob({ ...job, startDateTime: e.target.value ? `${e.target.value}:00Z` : null })
                   }
                 />
               )}
@@ -252,9 +255,9 @@ export function useBatchJobCommands(renderHistory: (id: number) => React.ReactNo
                 minRows={4}
                 value={
                   job?.scheduleType === 3
-                    ? (job.cronExpression ?? '')
+                    ? (job.recurrenceData ?? '')
                     : job?.scheduleType === 2
-                      ? `Repeat every ${job.intervalSeconds} seconds`
+                      ? `Recurrence data: ${job.recurrenceData}`
                       : 'One time'
                 }
                 slotProps={{ input: { readOnly: true } }}

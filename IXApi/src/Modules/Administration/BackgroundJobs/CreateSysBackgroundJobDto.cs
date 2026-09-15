@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using IAX.IXApi.Modules.Administration.BackgroundJobs.Entities;
 
 namespace IAX.IXApi.Modules.Administration.BackgroundJobs
@@ -6,7 +6,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs
     public class CreateSysBackgroundJobDto
     {
         [Required, MaxLength(200)]
-        public string Name { get; set; } = null!;
+        public string Caption { get; set; } = null!;
 
         [Required, MaxLength(200)]
         public string JobKey { get; set; } = null!;
@@ -16,21 +16,29 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs
 
         public SysJobScheduleType ScheduleType { get; set; } = SysJobScheduleType.Recurring;
 
-        /// <summary>Required when ScheduleType = Cron.</summary>
-        public string? CronExpression { get; set; }
+        public byte[]? RecurrenceData { get; set; }
 
-        /// <summary>Required when ScheduleType = Recurring.</summary>
-        public int? IntervalSeconds { get; set; }
+        public DateTime? StartDateTime { get; set; }
+        public int? StartDateTimeTzId { get; set; }
+        public DateTime? StartDate { get; set; }
+        public int? StartTime { get; set; }
 
-        /// <summary>For OneTime = absolute time; for Delayed = ignored if DelaySeconds set.</summary>
-        public DateTime? RunAt { get; set; }
-
-        /// <summary>For Delayed jobs: run after this many seconds from creation.</summary>
         public int? DelaySeconds { get; set; }
 
         public bool IsEnabled { get; set; } = true;
         public bool PreventOverlap { get; set; } = true;
-        [Range(0, 2)] public int Priority { get; set; } = 1;
+
+        public int SchedulingPriority { get; set; } = 1;
+        public int Critical { get; set; }
+        public int MonitoringCategory { get; set; }
+        public int Managed { get; set; }
+        public int EmitBusinessEvent { get; set; }
+
+        [MaxLength(10)]
+        public string? BatchGroup { get; set; }
+
+        [MaxLength(10)]
+        public string? ActivePeriod { get; set; }
 
         public int MaxRetryCount { get; set; } = 0;
         public int RetryDelaySeconds { get; set; } = 60;

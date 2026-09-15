@@ -1,0 +1,45 @@
+DECLARE @SQL NVARCHAR(MAX);
+
+SELECT @SQL = STRING_AGG(
+    CAST(
+        N'SELECT '
+        + QUOTENAME(c.name, '''') + N' AS ColumnName, '
+        + QUOTENAME(
+            t.name +
+            CASE
+                WHEN t.name IN ('varchar', 'char', 'varbinary', 'binary')
+                    THEN '(' + CASE WHEN c.max_length = -1 THEN 'MAX'
+                                    ELSE CONVERT(VARCHAR(10), c.max_length) END + ')'
+                WHEN t.name IN ('nvarchar', 'nchar')
+                    THEN '(' + CASE WHEN c.max_length = -1 THEN 'MAX'
+                                    ELSE CONVERT(VARCHAR(10), c.max_length / 2) END + ')'
+                WHEN t.name IN ('decimal', 'numeric')
+                    THEN '(' + CONVERT(VARCHAR(10), c.precision)
+                         + ',' + CONVERT(VARCHAR(10), c.scale) + ')'
+                WHEN t.name IN ('datetime2', 'datetimeoffset', 'time')
+                    THEN '(' + CONVERT(VARCHAR(10), c.scale) + ')'
+                ELSE ''
+            END,
+            ''''
+        ) + N' AS DataType, '
+        + CONVERT(NVARCHAR(10), c.column_id) + N' AS ColumnOrder
+        WHERE EXISTS (
+            SELECT 1
+            FROM dbo.BatchJobUpdateCandidates
+            WHERE ' + QUOTENAME(c.name) + N' IS NOT NULL
+        )'
+    AS NVARCHAR(MAX)),
+    N' UNION ALL '
+)
+FROM sys.columns AS c
+JOIN sys.types AS t
+    ON t.user_type_id = c.user_type_id
+WHERE c.object_id = OBJECT_ID(N'dbo.BatchJobUpdateCandidates');
+
+IF @SQL IS NOT NULL
+BEGIN
+    SET @SQL = N'SELECT ColumnName, DataType FROM ('
+             + @SQL + N') AS ColumnsWithData ORDER BY ColumnOrder;';
+
+    EXEC sys.sp_executesql @SQL;
+END;

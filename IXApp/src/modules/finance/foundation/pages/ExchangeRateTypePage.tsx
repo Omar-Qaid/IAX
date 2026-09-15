@@ -46,7 +46,7 @@ export function ExchangeRateTypePage(): React.ReactElement {
     utilities: { personalizeLabel: t('utilities.personalize'), guideLabel: t('utilities.guide'), notificationsLabel: t('common.notifications'), refreshLabel: t('actions.refresh'), openWindowLabel: t('utilities.openWindow'), notificationCount: 0 },
     advancedFilter: { title: t('filters.title'), addLabel: t('actions.add'), fieldLabel: t('exchangeRateTypes.fields.type'), operatorLabel: t('filters.contains'), applyLabel: t('actions.apply'), resetLabel: t('actions.reset'), getValue: (record) => record.type, matches: (record, value) => record.type.toLocaleLowerCase(currentLanguage.code).includes(value.trim().toLocaleLowerCase(currentLanguage.code)) },
   };
-  return <SimpleListPage variant="enterprise" title={t('pages.exchangeRateTypes.title')} enterpriseConfig={config}
+  return <SimpleListPage title={t('pages.exchangeRateTypes.title')} enterpriseConfig={config}
     dataSource={{ type: 'remote', key: 'foundation-exchange-rate-types', load: (signal) => exchangeRateTypeApi.list(signal) }} columns={columns} dataGridProps={{
     storageKey: 'foundation.exchange-rate-types.reference-view', masterForm: true, hideSidebar: false, rowHeight: uiDensity.gridRowHeight, headerHeight: uiDensity.gridRowHeight,
     onNewRow: () => ({ id: `new-${crypto.randomUUID()}`, recId: 0, type: '', name: '', isActive: true, rowVersion: null, recVersion: 1, dataAreaId: 'dat' }),

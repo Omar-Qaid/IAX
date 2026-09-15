@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, type SxProps, type Theme } from '@mui/material';
 import { PageContainer } from '@shared/components/page/PageContainer';
-import { PageHeader } from '@shared/components/page/PageHeader';
 import { EnterpriseListHeader } from '@shared/components/page/EnterpriseListHeader';
 import {
   RIGHT_UTILITY_RAIL_WIDTH,
@@ -117,6 +116,7 @@ export interface EnterpriseListConfig<T> {
 export interface SimpleListPageProps<T extends { id: string } = { id: string }> {
   title: string;
   subtitle?: string;
+  recordTableName?: string;
   variant?: 'standard' | 'enterprise';
   enterpriseConfig?: EnterpriseListConfig<T>;
   /** Low-level slots retained for exceptional layouts and backward compatibility. */
@@ -147,8 +147,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
   const {
     title,
     subtitle,
-    variant = 'standard',
-    enterpriseConfig,
+    enterpriseConfig: suppliedConfig,
     onViewClick,
     dataGridProps = {},
     loading = false,
@@ -161,6 +160,43 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
     contentSx,
   } = props;
   const { t } = useAppTranslation();
+  const enterpriseConfig = useMemo<EnterpriseListConfig<T> | undefined>(() => {
+    const searchFields = props.columns.map((column) => ({
+      field: column.field as keyof T & string,
+      label: column.headerName,
+    }));
+    const defaults: EnterpriseListConfig<T> = {
+      readOnly: true,
+      recordTableName: props.recordTableName,
+      contextLabel: title,
+      viewLabel: t('common.standardView'),
+      filterLabel: t('actions.filter'),
+      informationLabel: t('common.information'),
+      searchFields,
+      crud: { editLabel: '', newLabel: '', deleteLabel: '' },
+      utilities: {
+        personalizeLabel: t('utilities.personalize'),
+        guideLabel: t('utilities.guide'),
+        notificationsLabel: t('common.notifications'),
+        refreshLabel: t('actions.refresh'),
+        openWindowLabel: t('utilities.openWindow'),
+      },
+      advancedFilter: {
+        title: t('actions.filter'),
+        addLabel: t('actions.add'),
+        fieldLabel: t('filters.field'),
+        operatorLabel: t('filters.operator'),
+        applyLabel: t('actions.apply'),
+        resetLabel: t('actions.reset'),
+        matches: () => true,
+      },
+    };
+    return {
+      ...defaults,
+      ...suppliedConfig,
+      advancedFilter: suppliedConfig?.advancedFilter ?? defaults.advancedFilter,
+    };
+  }, [suppliedConfig, props.columns, props.recordTableName, title, t]);
   const navigate = useNavigate();
   const gridRef = useRef<DataGridHandle>(null);
   const sourceState = useSimpleListDataSource(props.dataSource);
@@ -220,16 +256,21 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
             ...(enterpriseConfig.advancedFilter?.fields ?? []),
             ...enterpriseConfig.searchFields,
           ].find((field) => field.field === condition.field);
-          const value = configuredField
-            ? row[configuredField.field]
-            : enterpriseConfig.advancedFilter?.getValue?.(row);
+          const column = !suppliedConfig?.advancedFilter
+            ? columns.find((item) => item.field === condition.field)
+            : undefined;
+          const value = column?.valueGetter
+            ? column.valueGetter({ row })
+            : configuredField
+              ? row[configuredField.field]
+              : enterpriseConfig.advancedFilter?.getValue?.(row);
           return value !== undefined
             ? matchesEnterpriseFilter(value, condition, enterpriseConfig.locale)
             : enterpriseConfig.advancedFilter!.matches(row, condition.value);
         });
       return matchesAdvanced;
     });
-  }, [advancedFilters, enterpriseConfig, rows]);
+  }, [advancedFilters, enterpriseConfig, rows, suppliedConfig, columns]);
 
   const resolvedError = error ?? sourceState.error;
   const resolvedLoading = loading || sourceState.loading;
@@ -240,15 +281,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
     <LoadingState message={t('messages.loadingRecords')} />
   ) : null;
 
-  const standardSelectedRecId = selectedRow ? Number(getRowId(selectedRow)) : null;
-  const standardAttachmentRecId =
-    standardSelectedRecId != null &&
-    Number.isSafeInteger(standardSelectedRecId) &&
-    standardSelectedRecId > 0
-      ? standardSelectedRecId
-      : null;
-
-  if (variant === 'enterprise') {
+  {
     const config = enterpriseConfig;
     const reset = () => {
       const firstRow = config?.initialSelection === 'none' ? null : (rows[0] ?? null);
@@ -272,7 +305,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
           rows: processedRows,
           columns,
           selectionMode: dataGridProps.selectionMode ?? 'single',
-          selectedIds,
+          selectedIds: dataGridProps.selectedIds ?? selectedIds,
           onSelectionChange: (ids) => {
             if (isEditing) return;
             const normalizedIds = ids as (string | number)[];
@@ -308,6 +341,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
           onClick={config.backCommand?.onClick ?? (() => navigate(-1))}
           disabled={isEditing}
         />
+        {props.actionPane}
         {!config.readOnly && (
           <EnterpriseCrudActions
             editLabel={config.crud.editLabel}
@@ -392,7 +426,9 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
         {...config.utilities}
         attachmentAction={
           <RecordAttachmentsButton
-            refTableId={config.attachments?.refTableId ?? recordTableId(title)}
+            refTableId={
+              config.attachments?.refTableId ?? recordTableId(config.recordTableName ?? title)
+            }
             refRecId={attachmentRecId}
             disabled={isEditing}
           />
@@ -500,7 +536,15 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
         ]}
       >
         {(generatedActionPane ?? props.actionPane) && (
-          <ActionPane variant="flat" endActions={generatedUtilities ?? props.actionPaneEndActions}>
+          <ActionPane
+            variant="flat"
+            endActions={
+              <>
+                {generatedUtilities}
+                {props.actionPaneEndActions}
+              </>
+            }
+          >
             {generatedActionPane ?? props.actionPane}
           </ActionPane>
         )}
@@ -527,6 +571,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
               viewLabel={config?.viewLabel ?? props.viewLabel ?? title}
               onViewClick={onViewClick}
             />
+            {subtitle && <Box sx={{ mx: { xs: 1, sm: 2.5 }, mb: 1 }}>{subtitle}</Box>}
             {props.filterBar ? (
               <Box
                 sx={{ pointerEvents: isEditing ? 'none' : 'auto', opacity: isEditing ? 0.6 : 1 }}
@@ -564,32 +609,6 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
       </PageContainer>
     );
   }
-
-  return (
-    <PageContainer sx={containerSx}>
-      <PageHeader title={title} subtitle={subtitle} />
-      <ActionPane
-        endActions={
-          <>
-            {props.actionPaneEndActions}
-            <RecordAttachmentsButton
-              refTableId={recordTableId(title)}
-              refRecId={standardAttachmentRecId}
-            />
-          </>
-        }
-      >
-        <ActionPaneBackButton label={t('actions.back')} onClick={() => navigate(-1)} />
-        {props.actionPane}
-      </ActionPane>
-      {feedback ?? (
-        <Box sx={{ width: '100%', height: gridHeight ?? 600 }}>
-          <DataGrid {...dataGridProps} rows={rows} columns={columns} />
-        </Box>
-      )}
-      {dialogs}
-    </PageContainer>
-  );
 }
 
 const getFilterOperatorOptions = (
