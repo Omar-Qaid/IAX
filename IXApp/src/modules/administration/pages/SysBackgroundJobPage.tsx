@@ -20,11 +20,19 @@ const scheduleLabels = ['One time', 'Delayed', 'Recurring', 'Cron'];
 const jobStatusLabels = ['Waiting', 'Withhold', 'Canceled', 'Ended'];
 const executionStatusLabels = ['Waiting', 'Executing', 'Completed', 'Failed', 'Cancelled'];
 const monitoringCategoryLabels = [
-  'Undefined', 'Integration', 'Workflow', 'Store Order Synchronizer Job',
-  'Assortment Details Job', 'Assortment Lookup Job', 'Transaction Sales Trans Mark Multi Job',
-  'Statement Calculate Multi Job', 'Sync Orders Scheduler Task',
-  'Internal Org Update Channel Job', 'Sales Form Letter Invoice Task',
-  'Retail kit configure approval job', 'Retail kit prices per company job',
+  'Undefined',
+  'Integration',
+  'Workflow',
+  'Store Order Synchronizer Job',
+  'Assortment Details Job',
+  'Assortment Lookup Job',
+  'Transaction Sales Trans Mark Multi Job',
+  'Statement Calculate Multi Job',
+  'Sync Orders Scheduler Task',
+  'Internal Org Update Channel Job',
+  'Sales Form Letter Invoice Task',
+  'Retail kit configure approval job',
+  'Retail kit prices per company job',
 ];
 const formatDateTime = (value: string | null, locale: string) =>
   value
@@ -37,11 +45,16 @@ const recurrenceText = (job: SysBackgroundJobRecord, locale: string) => {
   if (job.scheduleType === 2) {
     try {
       const value = JSON.parse(job.recurrenceData ?? '') as {
-        unit?: string; interval?: number; endAfter?: number; endBy?: string;
+        unit?: string;
+        interval?: number;
+        endAfter?: number;
+        endBy?: string;
       };
       const ending = value.endAfter
         ? ` Ends after ${value.endAfter} occurrences.`
-        : value.endBy ? ` Ends by ${value.endBy}.` : '';
+        : value.endBy
+          ? ` Ends by ${value.endBy}.`
+          : '';
       return `Occurs every ${value.interval ?? 1} ${value.unit ?? 'intervals'}.${ending}`;
     } catch {
       return `Occurs every ${job.recurrenceData ?? '—'} seconds.`;
@@ -106,6 +119,7 @@ export function SysBackgroundJobPage(): React.ReactElement {
   const [commandError, setCommandError] = React.useState<string | null>(null);
   const [busy, setBusy] = React.useState(false);
   const [taskLocked, setTaskLocked] = React.useState(false);
+  const [taskFilterVisible, setTaskFilterVisible] = React.useState(false);
   const canRun = usePermission('System.BackgroundJobs.Run').hasPermission;
   const execute = async (action: () => Promise<void>) => {
     setBusy(true);
@@ -128,7 +142,10 @@ export function SysBackgroundJobPage(): React.ReactElement {
     queryKey: ['batch-groups', 'lookup'],
     queryFn: ({ signal }) => sysBackgroundJobGroupApi.list(signal),
   });
-  const activePeriods = useQuery({ queryKey: ['batch-job-active-periods', 'lookup'], queryFn: ({ signal }) => batchJobActivePeriodApi.list(signal) });
+  const activePeriods = useQuery({
+    queryKey: ['batch-job-active-periods', 'lookup'],
+    queryFn: ({ signal }) => batchJobActivePeriodApi.list(signal),
+  });
   const refresh = () =>
     queryClient.invalidateQueries({ queryKey: ['list-details', 'background-jobs'] });
   const sections = useMemo<DetailSectionConfig[]>(
@@ -143,10 +160,20 @@ export function SysBackgroundJobPage(): React.ReactElement {
             columns: 5,
             fields: [
               { name: 'caption', label: 'Job description', type: 'text' },
-              { name: 'actualStartText', label: 'Actual start date/time', type: 'display', disabled: true },
+              {
+                name: 'actualStartText',
+                label: 'Actual start date/time',
+                type: 'display',
+                disabled: true,
+              },
               { name: 'executingBy', label: 'Run by', type: 'display', disabled: true },
               { name: 'hasAlert', label: 'Has alert', type: 'boolean', disabled: true },
-              { name: 'recurrenceCount', label: 'Recurrence count', type: 'number', disabled: true },
+              {
+                name: 'recurrenceCount',
+                label: 'Recurrence count',
+                type: 'number',
+                disabled: true,
+              },
               { name: 'statusText', label: 'Status', type: 'display', disabled: true },
               {
                 name: 'scheduledStartDateTime',
@@ -155,41 +182,96 @@ export function SysBackgroundJobPage(): React.ReactElement {
                 render: ({ value, editing, disabled, onChange }) => {
                   const text = String(value ?? '');
                   const date = text ? new Date(text) : null;
-                  const input = date && !Number.isNaN(date.getTime()) ? date.toISOString().slice(0, 16) : '';
-                  return <AppDateTimeField label="Scheduled start date/time" value={input}
-                    disabled={disabled || !editing}
-                    onChange={(next) => onChange(next ? `${next}${next.length === 16 ? ':00' : ''}Z` : '')} />;
+                  const input =
+                    date && !Number.isNaN(date.getTime()) ? date.toISOString().slice(0, 16) : '';
+                  return (
+                    <AppDateTimeField
+                      label="Scheduled start date/time"
+                      value={input}
+                      disabled={disabled || !editing}
+                      onChange={(next) =>
+                        onChange(next ? `${next}${next.length === 16 ? ':00' : ''}Z` : '')
+                      }
+                    />
+                  );
                 },
               },
               { name: 'dataAreaId', label: 'Company', type: 'display', disabled: true },
               { name: 'progress', label: 'Progress', type: 'number', disabled: true },
-              { name: 'recurrenceText', label: 'Recurrence text', type: 'display', multiline: true, disabled: true },
+              {
+                name: 'recurrenceText',
+                label: 'Recurrence text',
+                type: 'display',
+                multiline: true,
+                disabled: true,
+              },
               { name: 'endDateTimeText', label: 'End date/time', type: 'display', disabled: true },
               { name: 'createdBy', label: 'Created by', type: 'display', disabled: true },
-              { name: 'monitoringCategory', label: 'Monitoring category', type: 'select',
-                options: monitoringCategoryLabels.map((label, value) => ({ value: String(value), label })) },
-              { name: 'logLevel', label: 'Save job to history', type: 'select',
-                options: ['Always', 'Errors only', 'Never'].map((label, value) => ({ value: String(value), label })) },
+              {
+                name: 'monitoringCategory',
+                label: 'Monitoring category',
+                type: 'select',
+                options: monitoringCategoryLabels.map((label, value) => ({
+                  value: String(value),
+                  label,
+                })),
+              },
+              {
+                name: 'logLevel',
+                label: 'Save job to history',
+                type: 'select',
+                options: ['Always', 'Errors only', 'Never'].map((label, value) => ({
+                  value: String(value),
+                  label,
+                })),
+              },
               { name: 'critical', label: 'Critical job', type: 'boolean' },
-              { name: 'activePeriod', label: 'Active period', renderOwnLabel: true,
+              {
+                name: 'activePeriod',
+                label: 'Active period',
+                renderOwnLabel: true,
                 render: ({ value, editing, disabled, onChange }) => (
-                  <AppLookupField name="activePeriod" label="Active period" value={String(value ?? '')}
-                    disabled={disabled || !editing} displayMode="select"
+                  <AppLookupField
+                    name="activePeriod"
+                    label="Active period"
+                    value={String(value ?? '')}
+                    disabled={disabled || !editing}
+                    displayMode="select"
                     options={(activePeriods.data ?? [])
                       .filter((period) => period.isActive || period.periodId === value)
-                      .map((period) => ({ id: period.periodId, code: period.periodId,
-                        name: period.periodId, description: period.name ?? undefined }))}
-                    onChange={(next) => onChange(next ?? '')} />
-                ) },
-              { name: 'batchGroup', label: 'Batch group', renderOwnLabel: true,
+                      .map((period) => ({
+                        id: period.periodId,
+                        code: period.periodId,
+                        name: period.periodId,
+                        description: period.name ?? undefined,
+                      }))}
+                    onChange={(next) => onChange(next ?? '')}
+                  />
+                ),
+              },
+              {
+                name: 'batchGroup',
+                label: 'Batch group',
+                renderOwnLabel: true,
                 render: ({ value, editing, disabled, onChange }) => (
-                  <AppLookupField name="batchGroup" label="Batch group" value={String(value ?? '')}
-                    disabled={disabled || !editing} displayMode="select"
-                    options={(batchGroups.data ?? []).filter((group) => group.isActive || group.groupCode === value)
-                      .map((group) => ({ id: group.groupCode, code: group.groupCode,
-                        name: group.groupCode, description: group.description ?? undefined }))}
-                    onChange={(next) => onChange(next ?? '')} />
-                ) },
+                  <AppLookupField
+                    name="batchGroup"
+                    label="Batch group"
+                    value={String(value ?? '')}
+                    disabled={disabled || !editing}
+                    displayMode="select"
+                    options={(batchGroups.data ?? [])
+                      .filter((group) => group.isActive || group.groupCode === value)
+                      .map((group) => ({
+                        id: group.groupCode,
+                        code: group.groupCode,
+                        name: group.groupCode,
+                        description: group.description ?? undefined,
+                      }))}
+                    onChange={(next) => onChange(next ?? '')}
+                  />
+                ),
+              },
             ],
           },
         ],
@@ -204,10 +286,18 @@ export function SysBackgroundJobPage(): React.ReactElement {
             columns: 3,
             fields: [
               { name: 'description', label: 'Description', type: 'text' as const, multiline: true },
-              { name: 'jobKey', label: 'Handler', type: 'select' as const,
-                options: (handlers.data ?? []).map((value) => ({ value, label: value })) },
-              { name: 'scheduleType', label: 'Schedule', type: 'select' as const,
-                options: scheduleLabels.map((label, value) => ({ value: String(value), label })) },
+              {
+                name: 'jobKey',
+                label: 'Handler',
+                type: 'select' as const,
+                options: (handlers.data ?? []).map((value) => ({ value, label: value })),
+              },
+              {
+                name: 'scheduleType',
+                label: 'Schedule',
+                type: 'select' as const,
+                options: scheduleLabels.map((label, value) => ({ value: String(value), label })),
+              },
               { name: 'managed', label: 'Managed', type: 'boolean' as const },
               { name: 'emitBusinessEvent', label: 'Emit business event', type: 'boolean' as const },
               ...[
@@ -403,6 +493,7 @@ export function SysBackgroundJobPage(): React.ReactElement {
             job={record}
             editing={editing}
             onLockChange={setTaskLocked}
+            showFilterRow={taskFilterVisible}
           />
         ),
       },
@@ -426,6 +517,7 @@ export function SysBackgroundJobPage(): React.ReactElement {
         },
       },
     ],
+    onSearch: () => setTaskFilterVisible((visible) => !visible),
     permissions: {
       view: 'System.BackgroundJobs.View',
       create: 'System.BackgroundJobs.Create',
@@ -452,8 +544,12 @@ export function SysBackgroundJobPage(): React.ReactElement {
         : {}),
       ...(() => {
         if (!job.payloadJson?.trim()) return {};
-        try { JSON.parse(job.payloadJson); return {}; }
-        catch { return { payloadJson: 'Parameters must contain valid JSON.' }; }
+        try {
+          JSON.parse(job.payloadJson);
+          return {};
+        } catch {
+          return { payloadJson: 'Parameters must contain valid JSON.' };
+        }
       })(),
     }),
     presentation: { mode: 'list', listWidth: 300, headerMaxWidth: 760 },

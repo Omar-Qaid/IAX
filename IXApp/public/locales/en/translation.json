@@ -13,7 +13,11 @@
     "invalidLength": "Account/Group number allows 20 characters; collection letter sequence allows 10.",
     "invalidIdentifier": "Account and interest identifiers must be non-negative whole numbers.",
     "maxLength": "{{field}} allows a maximum of {{max}} characters.",
-    "accountCodes": { "0": "Table", "1": "Group", "2": "All" },
+    "accountCodes": {
+      "0": "Table",
+      "1": "Group",
+      "2": "All"
+    },
     "fields": {
       "postingProfile": "Posting profile",
       "name": "Description",
@@ -2315,6 +2319,40 @@
       "registrationSearch": "Registration ID search",
       "electronicProperties": "Electronic document properties",
       "options": "Options"
+    }
+  },
+  "organizationUnits": {
+    "title": "Organization units",
+    "code": "Code",
+    "name": "Name",
+    "nameAR": "Arabic name",
+    "type": "Unit type",
+    "newUnit": "New unit",
+    "closeUnit": "Close unit",
+    "asOf": "Effective date",
+    "general": "General",
+    "hierarchy": "Hierarchy",
+    "chooseHierarchy": "Select a hierarchy",
+    "noMembership": "This unit has no membership in this hierarchy on the selected date.",
+    "positions": "Positions",
+    "validFrom": "Valid from",
+    "validTo": "Valid to",
+    "exclusiveEnd": "Valid to (exclusive)",
+    "required": "This field is required.",
+    "codeError": "Enter a code of up to 50 characters.",
+    "nameError": "Enter a name of up to 200 characters.",
+    "dateError": "End date must be later than start date.",
+    "saved": "Saved. The list shows units effective on the selected date.",
+    "types": {
+      "1": "Area",
+      "2": "Region",
+      "3": "Supervisor zone",
+      "4": "Showroom",
+      "5": "Company",
+      "6": "Business unit",
+      "7": "Branch",
+      "8": "Department",
+      "9": "Warehouse"
     }
   }
 }

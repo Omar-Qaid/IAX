@@ -248,6 +248,26 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
             path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.LEGAL_ENTITIES,
             permission: PERMISSIONS.LEGAL_ENTITY_VIEW,
           },
+          {
+            label: 'organizationUnits.title',
+            path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.ORGANIZATION_UNITS,
+            permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
+          },
+          {
+            label: 'Organization units (simple list)',
+            path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.ORGANIZATIONS,
+            permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
+          },
+          {
+            label: 'Organization hierarchies',
+            path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.ORGANIZATION_HIERARCHIES,
+            permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
+          },
+          {
+            label: 'Positions',
+            path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.HCM_POSITIONS,
+            permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
+          },
         ],
       },
     ],

@@ -44,6 +44,8 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding
                 new IdentitySeeder(),
                 new ErpSeeder(),
                 new OthersDBOrganizationEmployeeSeeder(_seedDbConnectionString),
+                new OrganizationUnitSeeder(),
+                new OrganizationStructureSeeder(),
                 new OthersDBWorkflowMasterFromSeeder(_seedDbConnectionString),
                 new WfProcessSeedData(),
                

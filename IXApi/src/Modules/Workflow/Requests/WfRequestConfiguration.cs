@@ -9,6 +9,13 @@ namespace IAX.IXApi.Modules.Workflow.Requests
         public void Configure(EntityTypeBuilder<WfRequest> builder)
         {
             builder.ToTable("WfRequests");
+            builder.Property(x => x.RequestForType).HasColumnType("tinyint");
+            builder.HasOne(x => x.RequestForHcmWorker).WithMany()
+                .HasForeignKey(x => x.RequestForHcmWorkerId).OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne(x => x.OrganizationUnit).WithMany()
+                .HasForeignKey(x => x.OrganizationUnitId).OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne(x => x.HcmWorkerAssignment).WithMany()
+                .HasForeignKey(x => x.HcmWorkerAssignmentId).OnDelete(DeleteBehavior.Restrict);
 
             // Configure relationships
             builder.HasOne(x => x.Process)

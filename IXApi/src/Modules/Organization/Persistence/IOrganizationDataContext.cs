@@ -9,6 +9,14 @@ namespace IAX.IXApi.Modules.Organization.Persistence;
 public interface IOrganizationDataContext
 {
     DatabaseFacade Database { get; }
+    Microsoft.EntityFrameworkCore.ChangeTracking.ChangeTracker ChangeTracker { get; }
+    DbSet<IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker> HcmWorkers { get; }
+    DbSet<IAX.IXApi.Modules.Organization.OrganizationUnits.OrganizationUnit> OrganizationUnits { get; }
+    DbSet<IAX.IXApi.Modules.Organization.WorkerOrganizationAssignments.HcmWorkerOrganizationAssignment> HcmWorkerOrganizationAssignments { get; }
+    DbSet<IAX.IXApi.Modules.Organization.Structure.OrganizationRole> OrganizationRoles { get; }
+    DbSet<IAX.IXApi.Modules.Organization.Structure.OrganizationHierarchy> OrganizationHierarchies { get; }
+    DbSet<IAX.IXApi.Modules.Organization.Structure.OrganizationHierarchyNode> OrganizationHierarchyNodes { get; }
+    DbSet<IAX.IXApi.Modules.Organization.Structure.HcmPosition> HcmPositions { get; }
     DbSet<HcmWorkerGroup> HcmWorkerGroups { get; }
     DbSet<HcmWorkerGroupDetail> HcmWorkerGroupDetails { get; }
     DbSet<AspNetUser> Users { get; }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useUnsavedChanges } from '@shared/hooks/useUnsavedChanges';
 import { DataGrid } from '@shared/components/data-grid/DataGrid';
 import {
@@ -8,14 +8,11 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  MenuItem,
   Stack,
-  Switch,
-  FormControlLabel,
-  TextField,
 } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { TabularDetailPanel } from '@patterns/list-details/TabularDetailPanel';
+import type { DataGridHandle } from '@shared/components/data-grid/types';
 import { usePermission } from '@core/permissions/usePermission';
 import {
   sysBackgroundJobApi,
@@ -27,16 +24,19 @@ export function BatchJobTasks({
   job,
   editing,
   onLockChange,
+  showFilterRow,
 }: {
   job: SysBackgroundJobRecord;
   editing: boolean;
   onLockChange: (locked: boolean) => void;
+  showFilterRow: boolean;
 }) {
   const client = useQueryClient();
   const [selected, setSelected] = useState<(string | number)[]>([]);
-  const [draft, setDraft] = useState<SysBackgroundJobTaskRecord | null>(null);
+  const [taskEditing, setTaskEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showLogs, setShowLogs] = useState(false);
+  const gridRef = useRef<DataGridHandle>(null);
   const history = useQuery({
     queryKey: ['batch-task-history', job.recId],
     queryFn: ({ signal }) => sysBackgroundJobApi.taskHistory(job.recId, signal),
@@ -62,20 +62,20 @@ export function BatchJobTasks({
       sysBackgroundJobApi.saveTasks(job.recId, rows),
     onSuccess: (rows) => {
       client.setQueryData(['batch-tasks', job.recId], rows);
-      setDraft(null);
       setError(null);
     },
     onError: (reason: Error) => setError(reason.message),
   });
   const rows = tasks.data ?? [];
-  useUnsavedChanges(draft !== null);
+  useUnsavedChanges(taskEditing);
   useEffect(() => {
-    onLockChange(draft !== null || save.isPending);
+    onLockChange(taskEditing || save.isPending);
     return () => onLockChange(false);
-  }, [draft, save.isPending, onLockChange]);
+  }, [taskEditing, save.isPending, onLockChange]);
   const current = rows.find((row) => String(row.recId) === String(selected[0]));
   const disabled =
     editing ||
+    taskEditing ||
     job.isEnabled ||
     !permission.hasPermission ||
     save.isPending ||
@@ -133,6 +133,7 @@ export function BatchJobTasks({
       )}
       {(error || tasks.isError) && <Alert severity="error">{error || tasks.error?.message}</Alert>}
       <TabularDetailPanel
+        showFilterRow={showFilterRow}
         rows={rows.map((row) => ({ ...row, id: String(row.recId) }))}
         columns={[
           { field: 'recId', headerName: 'Task ID', width: 100 },
@@ -151,8 +152,20 @@ export function BatchJobTasks({
                   : 'Withhold';
             },
           },
-          { field: 'name', headerName: 'Task description', width: 240 },
-          { field: 'serviceKey', headerName: 'Service key', width: 220 },
+          { field: 'name', headerName: 'Task description', width: 240, editable: true },
+          {
+            field: 'serviceKey',
+            headerName: 'Service key',
+            width: 220,
+            type: 'singleSelect',
+            editable: true,
+            valueOptions: (handlers.data ?? [])
+              .filter((key) => key !== 'BatchTasks')
+              .map((key) => ({
+                value: key,
+                label: services.data?.find((service) => service.serviceKey === key)?.name ?? key,
+              })),
+          },
           {
             field: 'classDescription',
             headerName: 'Class description',
@@ -191,9 +204,51 @@ export function BatchJobTasks({
                 ?.filter((item) => item.taskId === row.recId)
                 .sort((a, b) => b.recId - a.recId)[0]?.completedAt ?? '—',
           },
-          { field: 'executionOrder', headerName: 'Order', width: 90 },
-          { field: 'dependsOnTaskId', headerName: 'Depends on task', width: 130 },
-          { field: 'isEnabled', headerName: 'Enabled', type: 'boolean', width: 90 },
+          {
+            field: 'executionOrder',
+            headerName: 'Order',
+            type: 'number',
+            width: 90,
+            editable: true,
+          },
+          {
+            field: 'dependsOnTaskId',
+            headerName: 'Depends on task',
+            type: 'singleSelect',
+            width: 150,
+            editable: true,
+            valueOptions: [
+              { value: '', label: 'None' },
+              ...rows.map((row) => ({ value: row.recId, label: row.name })),
+            ],
+          },
+          {
+            field: 'maxRetryCount',
+            headerName: 'Task retries',
+            type: 'number',
+            width: 120,
+            editable: true,
+          },
+          {
+            field: 'retryDelaySeconds',
+            headerName: 'Retry delay (seconds)',
+            type: 'number',
+            width: 170,
+            editable: true,
+          },
+          {
+            field: 'payloadJson',
+            headerName: 'Parameters JSON',
+            width: 240,
+            editable: true,
+          },
+          {
+            field: 'isEnabled',
+            headerName: 'Enabled',
+            type: 'boolean',
+            width: 90,
+            editable: true,
+          },
         ]}
         addLabel="New"
         removeLabel="Delete"
@@ -201,17 +256,70 @@ export function BatchJobTasks({
         onSelectionChange={setSelected}
         height={334}
         disabled={disabled}
-        onAdd={() =>
-          setDraft({
-            recId: 0,
-            name: '',
-            serviceKey: '',
-            payloadJson: null,
-            executionOrder: Math.max(0, ...rows.map((row) => row.executionOrder)) + 1,
-            dependsOnTaskId: null,
-            isEnabled: true,
-          })
-        }
+        gridRef={gridRef}
+        masterForm
+        onEditingChange={setTaskEditing}
+        onNewRow={() => ({
+          recId: 0,
+          id: '__new__',
+          name: '',
+          serviceKey: '',
+          payloadJson: null,
+          executionOrder: Math.max(0, ...rows.map((row) => row.executionOrder)) + 1,
+          dependsOnTaskId: null,
+          isEnabled: true,
+          maxRetryCount: 0,
+          retryDelaySeconds: 60,
+        })}
+        onRowSave={async (values, isNew) => {
+          const task = values as Partial<SysBackgroundJobTaskRecord>;
+          const executionOrder = Number(task.executionOrder ?? 0);
+          const maxRetryCount = Number(task.maxRetryCount ?? 0);
+          const retryDelaySeconds = Number(task.retryDelaySeconds ?? 60);
+          const dependency = task.dependsOnTaskId ? Number(task.dependsOnTaskId) : null;
+          const name = String(task.name ?? '').trim();
+          const serviceKey = String(task.serviceKey ?? '');
+          const payloadJson = task.payloadJson ? String(task.payloadJson) : null;
+          if (!name) throw new Error('Task description is required.');
+          if (!serviceKey) throw new Error('Batch service is required.');
+          if (executionOrder < 1) throw new Error('Execution order must be at least 1.');
+          if (maxRetryCount < 0 || maxRetryCount > 10)
+            throw new Error('Task retries must be between 0 and 10.');
+          if (retryDelaySeconds < 1 || retryDelaySeconds > 3600)
+            throw new Error('Retry delay must be between 1 and 3600 seconds.');
+          if (payloadJson) {
+            try {
+              JSON.parse(payloadJson);
+            } catch {
+              throw new Error('Parameters must be valid JSON.');
+            }
+          }
+          const recId = isNew ? 0 : Number(task.recId);
+          const dependencyTask = dependency
+            ? rows.find((row) => row.recId === dependency)
+            : undefined;
+          if (dependency && (!dependencyTask || dependency === recId))
+            throw new Error('Select a valid dependency task.');
+          if (dependencyTask && dependencyTask.executionOrder >= executionOrder)
+            throw new Error('The dependency must have a lower execution order.');
+          const normalized: SysBackgroundJobTaskRecord = {
+            recId,
+            name,
+            serviceKey,
+            payloadJson,
+            executionOrder,
+            dependsOnTaskId: dependency,
+            isEnabled: Boolean(task.isEnabled),
+            maxRetryCount,
+            retryDelaySeconds,
+          };
+          await save.mutateAsync(
+            isNew
+              ? [...rows, normalized]
+              : rows.map((row) => (row.recId === recId ? normalized : row))
+          );
+        }}
+        onAdd={() => gridRef.current?.startAddRow()}
         onRemove={() => {
           if (current) save.mutate(rows.filter((row) => row.recId !== current.recId));
         }}
@@ -221,139 +329,11 @@ export function BatchJobTasks({
             label: 'Parameters / task details',
             disabled: !current,
             onClick: () => {
-              if (current) setDraft({ ...current });
+              if (current) gridRef.current?.startEditRow(current.recId);
             },
           },
         ]}
       />
-      <Dialog
-        open={draft !== null}
-        onClose={() => {
-          if (!save.isPending) setDraft(null);
-        }}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>Batch task details</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ pt: 1 }}>
-            {error && <Alert severity="error">{error}</Alert>}
-            <TextField
-              label="Task description"
-              value={draft?.name ?? ''}
-              onChange={(e) => draft && setDraft({ ...draft, name: e.target.value })}
-            />
-            <TextField
-              select
-              label="Batch service"
-              value={draft?.serviceKey ?? ''}
-              onChange={(e) => draft && setDraft({ ...draft, serviceKey: e.target.value })}
-            >
-              {(handlers.data ?? [])
-                .filter((key) => key !== 'BatchTasks')
-                .map((key) => (
-                  <MenuItem key={key} value={key}>
-                    {services.data?.find((service) => service.serviceKey === key)?.name ?? key} (
-                    {key})
-                  </MenuItem>
-                ))}
-            </TextField>
-            <TextField
-              label="Execution order"
-              type="number"
-              value={draft?.executionOrder ?? 1}
-              onChange={(e) =>
-                draft && setDraft({ ...draft, executionOrder: Number(e.target.value) })
-              }
-            />
-            <TextField
-              label="Task retries (idempotent services only)"
-              type="number"
-              value={draft?.maxRetryCount ?? 0}
-              onChange={(e) =>
-                draft && setDraft({ ...draft, maxRetryCount: Number(e.target.value) })
-              }
-            />
-            <TextField
-              label="Retry delay (seconds)"
-              type="number"
-              value={draft?.retryDelaySeconds ?? 60}
-              onChange={(e) =>
-                draft && setDraft({ ...draft, retryDelaySeconds: Number(e.target.value) })
-              }
-            />
-            <TextField
-              select
-              label="Depends on task"
-              value={draft?.dependsOnTaskId ?? ''}
-              onChange={(e) =>
-                draft &&
-                setDraft({
-                  ...draft,
-                  dependsOnTaskId: e.target.value ? Number(e.target.value) : null,
-                })
-              }
-            >
-              <MenuItem value="">None</MenuItem>
-              {rows
-                .filter(
-                  (row) =>
-                    row.recId !== draft?.recId && row.executionOrder < (draft?.executionOrder ?? 0)
-                )
-                .map((row) => (
-                  <MenuItem key={row.recId} value={row.recId}>
-                    {row.name}
-                  </MenuItem>
-                ))}
-            </TextField>
-            <TextField
-              label="Parameters JSON"
-              multiline
-              minRows={4}
-              value={draft?.payloadJson ?? ''}
-              onChange={(e) => draft && setDraft({ ...draft, payloadJson: e.target.value || null })}
-            />
-            <FormControlLabel
-              label="Enabled"
-              control={
-                <Switch
-                  checked={draft?.isEnabled ?? true}
-                  onChange={(_, checked) => draft && setDraft({ ...draft, isEnabled: checked })}
-                />
-              }
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button disabled={save.isPending} onClick={() => setDraft(null)}>
-            Cancel
-          </Button>
-          <Button
-            disabled={
-              disabled || !draft?.name.trim() || !draft.serviceKey ||
-              (draft.executionOrder ?? 0) < 1 ||
-              (draft.maxRetryCount ?? 0) < 0 || (draft.maxRetryCount ?? 0) > 10 ||
-              (draft.retryDelaySeconds ?? 60) < 1 || (draft.retryDelaySeconds ?? 60) > 3600
-            }
-            onClick={() => {
-              if (!draft) return;
-              try {
-                if (draft.payloadJson) JSON.parse(draft.payloadJson);
-              } catch {
-                setError('Parameters must be valid JSON.');
-                return;
-              }
-              save.mutate(
-                draft.recId
-                  ? rows.map((row) => (row.recId === draft.recId ? draft : row))
-                  : [...rows, draft]
-              );
-            }}
-          >
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Stack>
   );
 }

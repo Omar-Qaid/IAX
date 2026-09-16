@@ -21,6 +21,13 @@ namespace IAX.IXApi.Modules.Workflow.Requests
         public decimal Score { get; set; }
         public decimal Progress { get; set; }
         public string? Notes { get; set; }
+        public byte? RequestForType { get; set; }
+        public long? RequestForHcmWorkerId { get; set; }
+        public long? OrganizationUnitId { get; set; }
+        public long? HcmWorkerAssignmentId { get; set; }
+        public virtual IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker? RequestForHcmWorker { get; set; }
+        public virtual IAX.IXApi.Modules.Organization.OrganizationUnits.OrganizationUnit? OrganizationUnit { get; set; }
+        public virtual IAX.IXApi.Modules.Organization.WorkerOrganizationAssignments.HcmWorkerOrganizationAssignment? HcmWorkerAssignment { get; set; }
         
     }
 }

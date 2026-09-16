@@ -9,6 +9,8 @@ namespace IAX.IXApi.Modules.Organization
     {
         public static IServiceCollection AddOrganizationModule(this IServiceCollection services, IConfiguration configuration)
         {
+            services.AddScoped<Structure.OrganizationStructureService>();
+            services.AddScoped<IAX.IXApi.Shared.Application.Organization.IOrganizationDirectory>(provider => provider.GetRequiredService<Structure.OrganizationStructureService>());
             services.AddScoped<Announcements.IAnnouncementService, Announcements.AnnouncementService>();
             services.Configure<DocumentStorageOptions>(configuration.GetSection("DocumentStorage"));
             services.AddSingleton<IFileStorageProvider, FileStorageService>();

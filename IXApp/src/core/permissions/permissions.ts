@@ -1,4 +1,5 @@
 export const PERMISSIONS = {
+  ORGANIZATION_STRUCTURE_VIEW: 'Organization.Structure.View',
   DASHBOARD_VIEW: 'Application.Dashboard.View',
 
   CUSTOMER_VIEW: 'AccountsReceivable.Customers.View',

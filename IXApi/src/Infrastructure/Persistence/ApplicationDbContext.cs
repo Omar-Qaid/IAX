@@ -20,6 +20,8 @@ using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Identity.Roles;
 using IAX.IXApi.Modules.Identity.Impersonation;
 using IAX.IXApi.Modules.Organization.Departments;
+using IAX.IXApi.Modules.Organization.OrganizationUnits;
+using IAX.IXApi.Modules.Organization.WorkerOrganizationAssignments;
 using IAX.IXApi.Modules.Organization.Employees;
 using IAX.IXApi.Modules.Organization.Genders;
 using IAX.IXApi.Modules.Organization.Nationalities;
@@ -213,6 +215,12 @@ namespace IAX.IXApi.Infrastructure.Persistence
 
         #region Organization
         public DbSet<Department> Departments => Set<Department>();
+        public DbSet<OrganizationUnit> OrganizationUnits => Set<OrganizationUnit>();
+        public DbSet<IAX.IXApi.Modules.Organization.Structure.OrganizationRole> OrganizationRoles => Set<IAX.IXApi.Modules.Organization.Structure.OrganizationRole>();
+        public DbSet<IAX.IXApi.Modules.Organization.Structure.OrganizationHierarchy> OrganizationHierarchies => Set<IAX.IXApi.Modules.Organization.Structure.OrganizationHierarchy>();
+        public DbSet<IAX.IXApi.Modules.Organization.Structure.OrganizationHierarchyNode> OrganizationHierarchyNodes => Set<IAX.IXApi.Modules.Organization.Structure.OrganizationHierarchyNode>();
+        public DbSet<IAX.IXApi.Modules.Organization.Structure.HcmPosition> HcmPositions => Set<IAX.IXApi.Modules.Organization.Structure.HcmPosition>();
+        public DbSet<HcmWorkerOrganizationAssignment> HcmWorkerOrganizationAssignments => Set<HcmWorkerOrganizationAssignment>();
         public DbSet<HcmWorker> HcmWorkers => Set<HcmWorker>();
         public DbSet<Gender> Genders => Set<Gender>();
         public DbSet<Nationality> Nationalities => Set<Nationality>();

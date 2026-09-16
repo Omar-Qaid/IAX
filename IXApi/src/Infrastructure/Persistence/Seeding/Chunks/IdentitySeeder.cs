@@ -53,6 +53,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             ("Organization", "Occupations"),
             ("Organization", "Jobs"),
             ("Organization", "Managers"),
+            ("Organization", "Structure"),
             ("Organization", "Employees"),
             ("Organization", "Nationalities"),
             ("Organization", "Genders"),

@@ -280,6 +280,42 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'organization-units',
+    path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.ORGANIZATION_UNITS,
+    permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
+    component: lazyPage(
+      () => import('@modules/organization/pages/OrganizationUnitsPage'),
+      (module) => module.OrganizationUnitsPage
+    ),
+  },
+  {
+    id: 'organizations',
+    path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.ORGANIZATIONS,
+    permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
+    component: lazyPage(
+      () => import('@modules/organization/pages/OrganizationPage'),
+      (module) => module.OrganizationPage
+    ),
+  },
+  {
+    id: 'organization-hierarchies',
+    path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.ORGANIZATION_HIERARCHIES,
+    permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
+    component: lazyPage(
+      () => import('@modules/organization/pages/OrganizationHierarchyPage'),
+      (module) => module.OrganizationHierarchyPage
+    ),
+  },
+  {
+    id: 'hcm-positions',
+    path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.HCM_POSITIONS,
+    permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
+    component: lazyPage(
+      () => import('@modules/organization/pages/HcmPositionPage'),
+      (module) => module.HcmPositionPage
+    ),
+  },
+  {
     id: 'application-settings',
     path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.SETTINGS,
     permission: PERMISSIONS.SETTINGS_VIEW,

@@ -39,6 +39,10 @@ export const ROUTE_PATHS = {
   ORGANIZATION_ADMINISTRATION: {
     ROOT: '/organization-administration',
     LEGAL_ENTITIES: '/organization-administration/legal-entities',
+    ORGANIZATION_UNITS: '/organization-administration/organization-units',
+    ORGANIZATIONS: '/organization-administration/organizations',
+    ORGANIZATION_HIERARCHIES: '/organization-administration/organization-hierarchies',
+    HCM_POSITIONS: '/organization-administration/positions',
   },
 
   SYSTEM_ADMINISTRATION: {
