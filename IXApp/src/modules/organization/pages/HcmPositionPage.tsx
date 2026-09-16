@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAppStore } from '@app/store/useAppStore';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { AppLookupField } from '@shared/components/fields/AppLookupField';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
 import type {
@@ -52,6 +53,7 @@ export function HcmPositionPage(): React.ReactElement {
 }
 
 function HcmPositionContent({ company }: { company: string }): React.ReactElement {
+  const { t } = useAppTranslation();
   const unitsQuery = useQuery({
     queryKey: ['organization-structure', company, 'units', 'position-lookup'],
     queryFn: ({ signal }) => api.units(today(), signal),
@@ -82,36 +84,37 @@ function HcmPositionContent({ company }: { company: string }): React.ReactElemen
     () => [
       {
         id: 'configuration',
-        title: 'Configuration',
+        title: t('hcmPositions.sections.configuration'),
         groups: [
           {
             id: 'assignment',
-            title: 'Organization assignment',
+            title: t('hcmPositions.groups.organizationAssignment'),
             fields: [
               {
                 name: 'organizationUnitId',
-                label: 'Organization unit',
+                label: t('hcmPositions.fields.organizationUnit'),
                 renderOwnLabel: true,
                 render: ({ value, disabled, onChange }) => (
                   <AppLookupField
                     name="organizationUnitId"
-                    label="Organization unit"
+                    label={t('hcmPositions.fields.organizationUnit')}
                     value={numberValue(value ?? 0)}
                     onChange={(unitId) => onChange(Number(unitId) || 0)}
                     options={unitOptions}
                     required
                     disabled={disabled || unitsQuery.isLoading}
+                    displayMode="select"
                   />
                 ),
               },
               {
                 name: 'roleId',
-                label: 'Role',
+                label: t('hcmPositions.fields.role'),
                 renderOwnLabel: true,
                 render: ({ value, disabled, onChange }) => (
                   <AppLookupField
                     name="roleId"
-                    label="Role"
+                    label={t('hcmPositions.fields.role')}
                     value={numberValue(value ?? 0)}
                     onChange={(roleId) => onChange(Number(roleId) || 0)}
                     options={roleOptions}
@@ -125,16 +128,16 @@ function HcmPositionContent({ company }: { company: string }): React.ReactElemen
           },
           {
             id: 'effectiveDates',
-            title: 'Effective dates',
+            title: t('hcmPositions.groups.effectiveDates'),
             fields: [
-              { name: 'validFrom', label: 'Valid from', type: 'date' },
-              { name: 'validTo', label: 'Valid to (exclusive)', type: 'date' },
+              { name: 'validFrom', label: t('hcmPositions.fields.validFrom'), type: 'date' },
+              { name: 'validTo', label: t('hcmPositions.fields.validTo'), type: 'date' },
             ],
           },
         ],
       },
     ],
-    [roleOptions, rolesQuery.isLoading, unitOptions, unitsQuery.isLoading]
+    [roleOptions, rolesQuery.isLoading, t, unitOptions, unitsQuery.isLoading]
   );
 
   const config: EnterpriseListDetailsConfig<PositionRecord> = {
@@ -181,27 +184,20 @@ function HcmPositionContent({ company }: { company: string }): React.ReactElemen
     headerFields: [
       {
         id: 'code',
-        label: 'Code',
+        label: t('hcmPositions.fields.code'),
         width: 180,
         getValue: (record) => record.code,
         setValue: (record, value) => ({ ...record, code: textValue(value) }),
       },
       {
         id: 'name',
-        label: 'Name',
+        label: t('hcmPositions.fields.name'),
         width: 'minmax(320px, 520px)',
         getValue: (record) => record.name,
         setValue: (record, value) => ({ ...record, name: textValue(value) }),
       },
     ],
     sections,
-    crud: {
-      editLabel: 'Edit',
-      newLabel: 'New',
-      deleteLabel: 'Close',
-      saveLabel: 'Save',
-      cancelLabel: 'Cancel',
-    },
     permissions: {
       view: 'Organization.Structure.View',
       create: 'Organization.Structure.Create',
@@ -209,24 +205,40 @@ function HcmPositionContent({ company }: { company: string }): React.ReactElemen
       delete: 'Organization.Structure.Edit',
     },
     validate: (record) => ({
-      ...(!record.code.trim() ? { code: 'Code is required.' } : {}),
-      ...(!record.name.trim() ? { name: 'Name is required.' } : {}),
-      ...(record.organizationUnitId <= 0
-        ? { organizationUnitId: 'Organization unit is required.' }
+      ...(!record.code.trim()
+        ? { code: t('validation.required', { field: t('hcmPositions.fields.code') }) }
         : {}),
-      ...(record.roleId <= 0 ? { roleId: 'Role is required.' } : {}),
-      ...(!record.validFrom ? { validFrom: 'Valid from is required.' } : {}),
+      ...(!record.name.trim()
+        ? { name: t('validation.required', { field: t('hcmPositions.fields.name') }) }
+        : {}),
+      ...(record.organizationUnitId <= 0
+        ? {
+            organizationUnitId: t('validation.required', {
+              field: t('hcmPositions.fields.organizationUnit'),
+            }),
+          }
+        : {}),
+      ...(record.roleId <= 0
+        ? { roleId: t('validation.required', { field: t('hcmPositions.fields.role') }) }
+        : {}),
+      ...(!record.validFrom
+        ? {
+            validFrom: t('validation.required', {
+              field: t('hcmPositions.fields.validFrom'),
+            }),
+          }
+        : {}),
       ...(record.validTo && record.validTo <= record.validFrom
-        ? { validTo: 'Valid to must be later than Valid from.' }
+        ? { validTo: t('hcmPositions.validation.validToAfterValidFrom') }
         : {}),
     }),
     advancedFilter: {
-      fieldLabel: 'Name',
+      fieldLabel: t('hcmPositions.fields.name'),
       getValue: (record) => record.name,
       matches: (record, value) =>
         record.name.toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()),
     },
   };
 
-  return <ListDetailsPage variant="enterprise" title="Positions" config={config} />;
+  return <ListDetailsPage variant="enterprise" title={t('hcmPositions.title')} config={config} />;
 }

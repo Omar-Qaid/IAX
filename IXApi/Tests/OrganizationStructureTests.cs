@@ -33,10 +33,14 @@ public sealed class OrganizationStructureTests
         Assert.Equal(14, await f.Db.OrganizationHierarchyNodes.CountAsync());
         Assert.Equal(7, await f.Db.HcmPositions.CountAsync());
         Assert.NotEmpty(await f.Db.HcmWorkerOrganizationAssignments.ToListAsync());
+        Assert.DoesNotContain(await f.Db.OrganizationUnits.ToListAsync(), x => string.IsNullOrWhiteSpace(x.NameAlias));
+        Assert.DoesNotContain(await f.Db.OrganizationRoles.ToListAsync(), x => string.IsNullOrWhiteSpace(x.NameAlias));
+        Assert.DoesNotContain(await f.Db.OrganizationHierarchies.ToListAsync(), x => string.IsNullOrWhiteSpace(x.NameAlias));
+        Assert.DoesNotContain(await f.Db.HcmPositions.ToListAsync(), x => string.IsNullOrWhiteSpace(x.NameAlias));
         var hierarchy = await f.Db.OrganizationHierarchies.SingleAsync(x => x.Code == "ORG-OPERATIONS");
         var shop = await f.Db.OrganizationUnits.SingleAsync(x => x.Code == "SH-A");
         Assert.Equal(new[] { "SH-A", "SUP-NJ", "REG-JED", "AREA-W", "ORG-BU", "ORG-COMPANY" },
-            (await f.Service.GetAncestorsAsync(hierarchy.RecId, shop.OrganizationUnitId, Start)).Select(x => x.Code));
+            (await f.Service.GetAncestorsAsync(hierarchy.RecId, shop.RecId, Start)).Select(x => x.Code));
     }
 
     [Fact]
@@ -52,7 +56,7 @@ public sealed class OrganizationStructureTests
         role.IsDeleted = true;
         var hierarchy = await f.Db.OrganizationHierarchies.SingleAsync(x => x.Code == "ORG-OPERATIONS");
         var shop = await f.Db.OrganizationUnits.SingleAsync(x => x.Code == "SH-A");
-        var node = await f.Db.OrganizationHierarchyNodes.SingleAsync(x => x.HierarchyId == hierarchy.RecId && x.OrganizationUnitId == shop.OrganizationUnitId);
+        var node = await f.Db.OrganizationHierarchyNodes.SingleAsync(x => x.HierarchyId == hierarchy.RecId && x.OrganizationUnitId == shop.RecId);
         node.ValidTo = TransferDate;
         await f.Db.SaveChangesAsync();
         f.Company.Code = "ksa";

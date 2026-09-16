@@ -1,6 +1,9 @@
 using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Workflow.Processes;
 using System.ComponentModel.DataAnnotations;
+using IAX.IXApi.Modules.Organization.WorkerOrganizationAssignments;
+using IAX.IXApi.Modules.Organization.OrganizationUnits;
+using IAX.IXApi.Modules.Organization.Employees.Entities;
 
 namespace IAX.IXApi.Modules.Workflow.Requests
 {
@@ -25,9 +28,9 @@ namespace IAX.IXApi.Modules.Workflow.Requests
         public long? RequestForHcmWorkerId { get; set; }
         public long? OrganizationUnitId { get; set; }
         public long? HcmWorkerAssignmentId { get; set; }
-        public virtual IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker? RequestForHcmWorker { get; set; }
-        public virtual IAX.IXApi.Modules.Organization.OrganizationUnits.OrganizationUnit? OrganizationUnit { get; set; }
-        public virtual IAX.IXApi.Modules.Organization.WorkerOrganizationAssignments.HcmWorkerOrganizationAssignment? HcmWorkerAssignment { get; set; }
+        public virtual HcmWorker? RequestForHcmWorker { get; set; }
+        public virtual OrganizationUnit? OrganizationUnit { get; set; }
+        public virtual HcmWorkerOrganizationAssignment? HcmWorkerAssignment { get; set; }
         
     }
 }

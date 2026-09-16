@@ -1,5 +1,9 @@
 export const PERMISSIONS = {
   ORGANIZATION_STRUCTURE_VIEW: 'Organization.Structure.View',
+  HCM_WORKER_VIEW: 'Organization.Employees.View',
+  HCM_WORKER_CREATE: 'Organization.Employees.Create',
+  HCM_WORKER_EDIT: 'Organization.Employees.Edit',
+  HCM_WORKER_DELETE: 'Organization.Employees.Delete',
   DASHBOARD_VIEW: 'Application.Dashboard.View',
 
   CUSTOMER_VIEW: 'AccountsReceivable.Customers.View',

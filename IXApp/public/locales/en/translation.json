@@ -2321,6 +2321,48 @@
       "options": "Options"
     }
   },
+  "hcmWorkers": {
+    "title": "Workers",
+    "sections": { "employment": "Worker details" },
+    "groups": {
+      "organization": "Organization",
+      "personal": "Personal information",
+      "dates": "Employment"
+    },
+    "fields": {
+      "personnelNumber": "Personnel number",
+      "name": "Name",
+      "department": "Department",
+      "occupation": "Occupation",
+      "gender": "Gender",
+      "nationality": "Nationality",
+      "showroom": "Showroom",
+      "hireDate": "Hire date",
+      "birthDate": "Birth date",
+      "active": "Active"
+    }
+  },
+  "hcmPositions": {
+    "title": "Positions",
+    "sections": {
+      "configuration": "Configuration"
+    },
+    "groups": {
+      "organizationAssignment": "Organization assignment",
+      "effectiveDates": "Effective dates"
+    },
+    "fields": {
+      "code": "Code",
+      "name": "Name",
+      "organizationUnit": "Organization unit",
+      "role": "Role",
+      "validFrom": "Valid from",
+      "validTo": "Valid to (exclusive)"
+    },
+    "validation": {
+      "validToAfterValidFrom": "Valid to must be later than Valid from."
+    }
+  },
   "organizationUnits": {
     "title": "Organization units",
     "code": "Code",

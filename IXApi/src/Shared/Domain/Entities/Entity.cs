@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace IAX.IXApi.Shared.Domain.Entities
 {
     /*
@@ -35,6 +37,7 @@ namespace IAX.IXApi.Shared.Domain.Entities
 
     public abstract class MasterEntity<T> : LookupEntity<T>
     {
+        public string? NameAlias { get; set; }
         public string? Description { get; set; }
  
     }

@@ -12,7 +12,7 @@ export interface DetailFieldOption {
 export interface DetailFieldConfig {
   name: string;
   label: string;
-  type?: 'text' | 'number' | 'boolean' | 'select' | 'display';
+  type?: 'text' | 'number' | 'date' | 'boolean' | 'select' | 'display';
   options?: DetailFieldOption[];
   disabled?: boolean;
   width?: number | string;

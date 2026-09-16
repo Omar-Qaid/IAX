@@ -30,7 +30,7 @@ public sealed class OrganizationStructureService(IOrganizationDataContext db, IC
 
     public async Task<IReadOnlyList<OrganizationUnitInfo>> GetUnitsAsync(DateOnly asOf, CancellationToken ct) =>
         await Units.AsNoTracking().Where(x => x.IsActive && x.ValidFrom <= asOf && (x.ValidTo == null || asOf < x.ValidTo))
-            .OrderBy(x => x.Code).Select(x => new OrganizationUnitInfo(x.OrganizationUnitId, x.Code, x.Name, x.OrganizationUnitType)).ToListAsync(ct);
+            .OrderBy(x => x.Code).Select(x => new OrganizationUnitInfo(x.RecId, x.Code, x.Name, x.OrganizationUnitType)).ToListAsync(ct);
 
     public async Task<IReadOnlyList<OrganizationRoleInfo>> GetRolesAsync(CancellationToken ct) =>
         await Roles.AsNoTracking().Where(x => x.IsActive).OrderBy(x => x.Code)
@@ -57,12 +57,12 @@ public sealed class OrganizationStructureService(IOrganizationDataContext db, IC
         Require(Enum.IsDefined(typeof(OrganizationUnitType), request.Type), "Unknown organization unit type.");
         var code = Text(request.Code, 50, "Code");
         Require(!await Units.AnyAsync(x => x.Code == code, ct), "Unit code already exists in this company.");
-        Require(request.NameAR == null || request.NameAR.Length <= 200, "NameAR must not exceed 200 characters.");
-        var unit = new OrganizationUnit { Code = code, Name = Text(request.Name, 200, "Name"), NameAR = request.NameAR?.Trim(),
+        Require(request.NameAlias == null || request.NameAlias.Length <= 200, "NameAlias must not exceed 200 characters.");
+        var unit = new OrganizationUnit { Code = code, Name = Text(request.Name, 200, "Name"), NameAlias = request.NameAlias?.Trim(),
             OrganizationUnitType = request.Type, DataAreaId = Company, ValidFrom = request.ValidFrom, ValidTo = request.ValidTo };
         db.OrganizationUnits.Add(unit);
         await db.SaveChangesAsync(ct);
-        return unit.OrganizationUnitId;
+        return unit.RecId ;
     }, ct);
 
     public Task<long> UpdateUnitAsync(long id, UpdateOrganizationUnit request, CancellationToken ct) => WriteAsync(async () =>
@@ -70,12 +70,12 @@ public sealed class OrganizationStructureService(IOrganizationDataContext db, IC
         Require(Enum.IsDefined(typeof(OrganizationUnitType), request.Type), "Unknown organization unit type.");
         var unit = await RequireUnitAsync(id, ct);
         var code = Text(request.Code, 50, "Code");
-        Require(!await Units.AnyAsync(x => x.OrganizationUnitId != id && x.Code == code, ct), "Unit code already exists in this company.");
+        Require(!await Units.AnyAsync(x => x.RecId != id && x.Code == code, ct), "Unit code already exists in this company.");
         unit.Code = code;
         unit.Name = Text(request.Name, 200, "Name");
         unit.OrganizationUnitType = request.Type;
         await db.SaveChangesAsync(ct);
-        return unit.OrganizationUnitId;
+        return unit.RecId;
     }, ct);
 
     public Task<long> CreateRoleAsync(CreateOrganizationRole request, CancellationToken ct) => WriteAsync(async () =>
@@ -126,12 +126,12 @@ public sealed class OrganizationStructureService(IOrganizationDataContext db, IC
             Require(visited.Add(parentId.Value), "Hierarchy contains a cycle.");
             var parent = await Nodes.SingleOrDefaultAsync(x => x.RecId == parentId && x.HierarchyId == request.HierarchyId && x.IsActive, ct)
                 ?? throw new KeyNotFoundException("Parent node not found in this company and hierarchy.");
-            Require(parent.OrganizationUnitId != unit.OrganizationUnitId, "A unit cannot appear in its own ancestry.");
+            Require(parent.OrganizationUnitId != unit.RecId, "A unit cannot appear in its own ancestry.");
             Require(Contains(parent.ValidFrom, parent.ValidTo, request.ValidFrom, request.ValidTo), "Parent period must contain the entire child period.");
             parentId = parent.ParentNodeId;
         }
         var node = new OrganizationHierarchyNode { DataAreaId = Company, HierarchyId = request.HierarchyId,
-            OrganizationUnitId = unit.OrganizationUnitId, ParentNodeId = request.ParentNodeId, ValidFrom = request.ValidFrom, ValidTo = request.ValidTo };
+            OrganizationUnitId = unit.RecId, ParentNodeId = request.ParentNodeId, ValidFrom = request.ValidFrom, ValidTo = request.ValidTo };
         db.OrganizationHierarchyNodes.Add(node);
         await db.SaveChangesAsync(ct);
         return node.RecId;
@@ -146,7 +146,7 @@ public sealed class OrganizationStructureService(IOrganizationDataContext db, IC
         var code = Text(request.Code, 50, "Code");
         Require(!await Positions.AnyAsync(x => x.Code == code, ct), "Position code already exists in this company.");
         var position = new HcmPosition { Code = code, Name = Text(request.Name, 200, "Name"), DataAreaId = Company,
-            OrganizationUnitId = unit.OrganizationUnitId, RoleId = request.RoleId, ValidFrom = request.ValidFrom, ValidTo = request.ValidTo };
+            OrganizationUnitId = unit.RecId, RoleId = request.RoleId, ValidFrom = request.ValidFrom, ValidTo = request.ValidTo };
         db.HcmPositions.Add(position);
         await db.SaveChangesAsync(ct);
         return position.RecId;
@@ -279,8 +279,8 @@ public sealed class OrganizationStructureService(IOrganizationDataContext db, IC
             Require(byId.ContainsKey(node.ParentNodeId.Value), "Hierarchy parent is not effective on the selected date.");
             node = byId[node.ParentNodeId.Value];
         }
-        var units = await Units.AsNoTracking().Where(x => unitIds.Contains(x.OrganizationUnitId) && x.ValidFrom <= asOf && (x.ValidTo == null || asOf < x.ValidTo))
-            .Select(x => new OrganizationUnitInfo(x.OrganizationUnitId, x.Code, x.Name, x.OrganizationUnitType)).ToDictionaryAsync(x => x.Id, ct);
+        var units = await Units.AsNoTracking().Where(x => unitIds.Contains(x.RecId) && x.ValidFrom <= asOf && (x.ValidTo == null || asOf < x.ValidTo))
+            .Select(x => new OrganizationUnitInfo(x.RecId, x.Code, x.Name, x.OrganizationUnitType)).ToDictionaryAsync(x => x.Id, ct);
         Require(units.Count == unitIds.Count, "Hierarchy contains a unit outside its effective period or company.");
         return unitIds.Select(id => units[id]).ToList();
     }
@@ -301,7 +301,7 @@ public sealed class OrganizationStructureService(IOrganizationDataContext db, IC
             x.PositionId, x.OrganizationUnitId, x.Position == null ? null : x.Position.Role.Code, x.IsPrimary, x.ValidFrom, x.ValidTo));
 
     private async Task<OrganizationUnit> RequireUnitAsync(long id, CancellationToken ct) =>
-        await Units.SingleOrDefaultAsync(x => x.OrganizationUnitId == id && x.IsActive, ct) ?? throw new KeyNotFoundException("Organization unit not found in this company.");
+        await Units.SingleOrDefaultAsync(x => x.RecId == id && x.IsActive, ct) ?? throw new KeyNotFoundException("Organization unit not found in this company.");
     private async Task<OrganizationHierarchy> RequireHierarchyAsync(long id, CancellationToken ct) =>
         await Hierarchies.SingleOrDefaultAsync(x => x.RecId == id && x.IsActive, ct) ?? throw new KeyNotFoundException("Hierarchy not found in this company.");
     private async Task<HcmWorkerOrganizationAssignment> RequireAssignmentAsync(long id, CancellationToken ct) =>

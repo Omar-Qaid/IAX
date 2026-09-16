@@ -1,6 +1,6 @@
 namespace IAX.IXApi.Modules.Organization.Structure;
 
-public sealed record CreateOrganizationUnit(string Code, string Name, byte Type, DateOnly ValidFrom, DateOnly? ValidTo, string? NameAR = null);
+public sealed record CreateOrganizationUnit(string Code, string Name, byte Type, DateOnly ValidFrom, DateOnly? ValidTo, string? NameAlias = null);
 public sealed record UpdateOrganizationUnit(string Code, string Name, byte Type);
 public sealed record CreateOrganizationRole(string Code, string Name);
 public sealed record CreateOrganizationHierarchy(string Code, string Name, string Purpose);

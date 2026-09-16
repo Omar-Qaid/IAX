@@ -2,12 +2,12 @@ using IAX.IXApi.Modules.Organization.OrganizationUnits;
 
 namespace IAX.IXApi.Modules.Organization.Structure;
 
-public sealed class OrganizationRole : WfMasterEntity<long>
+public sealed class OrganizationRole : MasterEntity<long>
 {
     
 }
 
-public sealed class OrganizationHierarchy : WfMasterEntity<long>
+public sealed class OrganizationHierarchy : MasterEntity<long>
 {
     public string Purpose { get; set; } = string.Empty;
 }
@@ -24,7 +24,7 @@ public sealed class OrganizationHierarchyNode : Entity<long>
     public OrganizationHierarchyNode? ParentNode { get; set; }
 }
 
-public sealed class HcmPosition : WfMasterEntity<long>
+public sealed class HcmPosition : MasterEntity<long>
 {
     public long OrganizationUnitId { get; set; }
     public long RoleId { get; set; }

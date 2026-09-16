@@ -5,7 +5,7 @@ namespace IAX.IXApi.Modules.Organization.Features.HcmWorkerCategory
         public long RecId { get; set; }
         public string? Code { get; set; }
         public string Name { get; set; } = null!;
-        public string NameAR { get; set; } = null!;
+        public string NameAlias { get; set; } = null!;
         public string? Description { get; set; }
         public string? DescriptionAR { get; set; }
         public bool IsActive { get; set; }

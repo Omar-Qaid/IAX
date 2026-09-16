@@ -12,13 +12,13 @@ public sealed class OrganizationUnitSeeder : ISeeder
     public async Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles,
         UserManager<AspNetUser> users, CancellationToken ct)
     {
-        var seeds = new (string Code, string Name, byte Type, string? ParentCode)[]
+        var seeds = new (string Code, string Name, string NameAlias, byte Type, string? ParentCode)[]
         {
-            ("AREA-W", "Western Area", 1, null),
-            ("REG-JED", "Jeddah Region", 2, "AREA-W"),
-            ("SUP-NJ", "North Jeddah", 3, "REG-JED"),
-            ("SH-A", "Showroom A", 4, "SUP-NJ"),
-            ("SH-B", "Showroom B", 4, "SUP-NJ")
+            ("AREA-W", "Western Area", "المنطقة الغربية", 1, null),
+            ("REG-JED", "Jeddah Region", "منطقة جدة", 2, "AREA-W"),
+            ("SUP-NJ", "North Jeddah", "شمال جدة", 3, "REG-JED"),
+            ("SH-A", "Showroom A", "معرض أ", 4, "SUP-NJ"),
+            ("SH-B", "Showroom B", "معرض ب", 4, "SUP-NJ")
         };
 
         // Query codes through the database so comparisons follow its collation.
@@ -34,12 +34,18 @@ public sealed class OrganizationUnitSeeder : ISeeder
                     Code = seed.Code,
                     DataAreaId = "dat",
                     Name = seed.Name,
+                    NameAlias = seed.NameAlias,
                     OrganizationUnitType = seed.Type,
                     ParentOrganizationUnitId = seed.ParentCode == null
-                        ? null : units[seed.ParentCode].OrganizationUnitId,
+                        ? null : units[seed.ParentCode].RecId,
                     IsActive = true
                 };
                 db.OrganizationUnits.Add(unit);
+                await db.SaveChangesAsync(ct);
+            }
+            else if (string.IsNullOrWhiteSpace(unit.NameAlias))
+            {
+                unit.NameAlias = seed.NameAlias;
                 await db.SaveChangesAsync(ct);
             }
             // Preserve existing records and their configured hierarchy on subsequent runs.

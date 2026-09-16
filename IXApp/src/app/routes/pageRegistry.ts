@@ -316,6 +316,15 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'hcm-workers',
+    path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.HCM_WORKERS,
+    permission: PERMISSIONS.HCM_WORKER_VIEW,
+    component: lazyPage(
+      () => import('@modules/organization/pages/HcmWorkerPage'),
+      (module) => module.HcmWorkerPage
+    ),
+  },
+  {
     id: 'application-settings',
     path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.SETTINGS,
     permission: PERMISSIONS.SETTINGS_VIEW,
@@ -355,7 +364,10 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     id: 'system-batch-job-active-periods',
     path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.BATCH_JOB_ACTIVE_PERIODS,
     permission: PERMISSIONS.BACKGROUND_JOB_VIEW,
-    component: lazyPage(() => import('@modules/administration/pages/BatchJobActivePeriodPage'), (module) => module.BatchJobActivePeriodPage),
+    component: lazyPage(
+      () => import('@modules/administration/pages/BatchJobActivePeriodPage'),
+      (module) => module.BatchJobActivePeriodPage
+    ),
   },
   {
     id: 'system-background-job-history',

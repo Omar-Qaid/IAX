@@ -6,6 +6,9 @@ namespace IAX.IXApi.Modules.Organization.Employees
 {
     public class HcmWorkerDto : MasterEntityDto<long>
     {
+        public string PersonnelNumber { get; set; } = string.Empty;
+        public long Person { get; set; }
+        public string? UserId { get; set; }
         public short DepartmentId { get; set; }
         public string? DepartmentName { get; set; }
         public short OccupationId { get; set; }

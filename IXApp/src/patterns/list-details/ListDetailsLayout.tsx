@@ -502,7 +502,13 @@ export function ListDetailsLayout({
                                   ) : editable ? (
                                     <TextField
                                       variant={legalEntity ? 'standard' : 'outlined'}
-                                      type={field.type === 'number' ? 'number' : 'text'}
+                                      type={
+                                        field.type === 'number'
+                                          ? 'number'
+                                          : field.type === 'date'
+                                            ? 'date'
+                                            : 'text'
+                                      }
                                       multiline={field.multiline}
                                       rows={field.multiline ? (field.rows ?? 4) : undefined}
                                       value={value ?? ''}

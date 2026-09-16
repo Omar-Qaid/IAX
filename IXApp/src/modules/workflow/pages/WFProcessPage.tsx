@@ -156,6 +156,7 @@ export function WFProcessPage(): React.ReactElement {
                     options={priorityOptions}
                     required
                     disabled={disabled || prioritiesQuery.isLoading}
+                    displayMode="select"
                   />
                 ),
               },
@@ -185,7 +186,11 @@ export function WFProcessPage(): React.ReactElement {
               { name: 'score', label: t('wfProcess.fields.score'), type: 'number' },
               { name: 'sortOrder', label: t('wfProcess.fields.sortOrder'), type: 'number' },
               { name: 'isRepeatable', label: t('wfProcess.fields.isRepeatable'), type: 'boolean' },
-              { name: 'repeatIntervalHours', label: t('wfProcess.fields.repeatIntervalHours'), type: 'number' },
+              {
+                name: 'repeatIntervalHours',
+                label: t('wfProcess.fields.repeatIntervalHours'),
+                type: 'number',
+              },
               {
                 name: 'mandatoryDocuments',
                 label: t('wfProcess.fields.mandatoryDocuments'),
@@ -202,13 +207,7 @@ export function WFProcessPage(): React.ReactElement {
         ],
       },
     ],
-    [
-      prioritiesQuery.isLoading,
-      priorityOptions,
-      processTypeOptions,
-      processTypesQuery.isLoading,
-      t,
-    ]
+    [prioritiesQuery.isLoading, priorityOptions, processTypeOptions, processTypesQuery.isLoading, t]
   );
 
   const config: EnterpriseListDetailsConfig<WfProcessRecord> = {
@@ -305,9 +304,7 @@ export function WFProcessPage(): React.ReactElement {
       fieldLabel: t('wfProcess.fields.name'),
       getValue: (record) => localizedName(record, isRtl),
       matches: (record, value) =>
-        localizedName(record, isRtl)
-          .toLocaleLowerCase()
-          .includes(value.trim().toLocaleLowerCase()),
+        localizedName(record, isRtl).toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()),
     },
     commands: [
       {

@@ -41,7 +41,6 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
   const [asOf, setAsOf] = useState(today);
   const [selected, setSelected] = useState<UnitRecord | null>(null);
   const [hierarchy, setHierarchy] = useState('');
-  const [positionFilterVisible, setPositionFilterVisible] = useState(false);
   const [selectedPositionIds, setSelectedPositionIds] = useState<(string | number)[]>([]);
   const positions = useQuery({
     queryKey: ['organization-structure', company, 'positions', asOf],
@@ -73,7 +72,6 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
   const config: EnterpriseListDetailsConfig<UnitRecord> = {
     recordTableName: 'OrganizationUnit',
     filterStorageKey: 'organization-units',
-    showAttachmentAction: false,
     dataSource: {
       type: 'remote',
       key: `organization-units-${company}-${asOf}`,
@@ -146,7 +144,6 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
       },
     ],
     onSelectionChange: setSelected,
-    onSearch: () => setPositionFilterVisible((visible) => !visible),
     actionPaneEndContent: (
       <TextField
         size="small"
@@ -231,7 +228,7 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
           <Alert severity="error">{positions.error.message}</Alert>
         ) : (
           <TabularDetailPanel
-            showFilterRow={positionFilterVisible}
+            showFilterRow={false}
             rows={(positions.data ?? [])
               .filter((position) => position.organizationUnitId === record.recordId)
               .map((position) => ({ ...position, id: String(position.id) }))}
@@ -252,13 +249,6 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
         ),
       },
     ],
-    crud: {
-      editLabel: t('actions.edit'),
-      newLabel: t('actions.new'),
-      deleteLabel: label('closeUnit'),
-      saveLabel: t('actions.save'),
-      cancelLabel: t('actions.cancel'),
-    },
     permissions: {
       view: 'Organization.Structure.View',
       create: 'Organization.Structure.Create',

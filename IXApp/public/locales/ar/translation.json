@@ -2321,6 +2321,48 @@
       "options": "خيارات"
     }
   },
+  "hcmWorkers": {
+    "title": "العاملون",
+    "sections": { "employment": "بيانات العامل" },
+    "groups": {
+      "organization": "التنظيم",
+      "personal": "المعلومات الشخصية",
+      "dates": "التوظيف"
+    },
+    "fields": {
+      "personnelNumber": "الرقم الوظيفي",
+      "name": "الاسم",
+      "department": "الإدارة",
+      "occupation": "المسمى الوظيفي",
+      "gender": "الجنس",
+      "nationality": "الجنسية",
+      "showroom": "المعرض",
+      "hireDate": "تاريخ التعيين",
+      "birthDate": "تاريخ الميلاد",
+      "active": "نشط"
+    }
+  },
+  "hcmPositions": {
+    "title": "المناصب",
+    "sections": {
+      "configuration": "الإعداد"
+    },
+    "groups": {
+      "organizationAssignment": "التعيين التنظيمي",
+      "effectiveDates": "تواريخ السريان"
+    },
+    "fields": {
+      "code": "الرمز",
+      "name": "الاسم",
+      "organizationUnit": "الوحدة التنظيمية",
+      "role": "الدور",
+      "validFrom": "ساري من",
+      "validTo": "ساري إلى (غير مشمول)"
+    },
+    "validation": {
+      "validToAfterValidFrom": "يجب أن يكون تاريخ الانتهاء بعد تاريخ البدء."
+    }
+  },
   "organizationUnits": {
     "title": "الوحدات التنظيمية",
     "code": "الرمز",

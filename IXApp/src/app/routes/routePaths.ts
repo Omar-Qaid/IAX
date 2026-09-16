@@ -43,6 +43,7 @@ export const ROUTE_PATHS = {
     ORGANIZATIONS: '/organization-administration/organizations',
     ORGANIZATION_HIERARCHIES: '/organization-administration/organization-hierarchies',
     HCM_POSITIONS: '/organization-administration/positions',
+    HCM_WORKERS: '/organization-administration/workers',
   },
 
   SYSTEM_ADMINISTRATION: {

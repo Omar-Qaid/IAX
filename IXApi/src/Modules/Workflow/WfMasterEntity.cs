@@ -8,6 +8,5 @@ namespace IAX.IXApi.Modules.Workflow;
 /// </summary>
 public abstract class WfMasterEntity<T> : MasterEntity<T>
 {
-    [MaxLength(255)]
-    public string? NameAlias { get; set; }
+    
 }

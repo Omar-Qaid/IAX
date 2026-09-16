@@ -20,12 +20,17 @@ public sealed class OrganizationStructureSeeder : ISeeder
 
     public async Task SeedStructureAsync(IOrganizationDataContext db, CancellationToken ct = default)
     {
-        var unitSeeds = new (string Code, string Name, byte Type)[]
+        var unitSeeds = new (string Code, string Name, string NameAlias, byte Type)[]
         {
-            ("ORG-COMPANY", "Example Company", 5), ("ORG-BU", "Trading Business Unit", 6),
-            ("AREA-W", "Western Area", 1), ("REG-JED", "Jeddah Region", 2),
-            ("SUP-NJ", "North Jeddah", 3), ("SH-A", "Showroom A", 4), ("SH-B", "Showroom B", 4),
-            ("ORG-FIN", "Finance Department", 8), ("ORG-WH", "Central Warehouse", 9)
+            ("ORG-COMPANY", "Example Company", "الشركة النموذجية", 5),
+            ("ORG-BU", "Trading Business Unit", "وحدة أعمال التجارة", 6),
+            ("AREA-W", "Western Area", "المنطقة الغربية", 1),
+            ("REG-JED", "Jeddah Region", "منطقة جدة", 2),
+            ("SUP-NJ", "North Jeddah", "شمال جدة", 3),
+            ("SH-A", "Showroom A", "معرض أ", 4),
+            ("SH-B", "Showroom B", "معرض ب", 4),
+            ("ORG-FIN", "Finance Department", "الإدارة المالية", 8),
+            ("ORG-WH", "Central Warehouse", "المستودع المركزي", 9)
         };
         var units = new Dictionary<string, OrganizationUnit>();
         foreach (var seed in unitSeeds)
@@ -35,25 +40,38 @@ public sealed class OrganizationStructureSeeder : ISeeder
             if (unit == null)
             {
                 unit = new OrganizationUnit { DataAreaId = SeedCompany, Code = seed.Code, Name = seed.Name,
-                    OrganizationUnitType = seed.Type, ValidFrom = EffectiveFrom };
+                    NameAlias = seed.NameAlias, OrganizationUnitType = seed.Type, ValidFrom = EffectiveFrom };
                 db.OrganizationUnits.Add(unit);
+                await db.SaveChangesAsync(ct);
+            }
+            else if (string.IsNullOrWhiteSpace(unit.NameAlias))
+            {
+                unit.NameAlias = seed.NameAlias;
                 await db.SaveChangesAsync(ct);
             }
             units[seed.Code] = unit;
         }
 
-        var roleSeeds = new[] { ("AREA_MANAGER", "Area Manager"), ("REGION_MANAGER", "Region Manager"),
-            ("SUPERVISOR", "Supervisor"), ("SELLER", "Seller"), ("FINANCE_MANAGER", "Finance Manager"),
-            ("WAREHOUSE_MANAGER", "Warehouse Manager") };
+        var roleSeeds = new[] { ("AREA_MANAGER", "Area Manager", "مدير المنطقة"),
+            ("REGION_MANAGER", "Region Manager", "مدير الإقليم"),
+            ("SUPERVISOR", "Supervisor", "مشرف"), ("SELLER", "Seller", "بائع"),
+            ("FINANCE_MANAGER", "Finance Manager", "مدير المالية"),
+            ("WAREHOUSE_MANAGER", "Warehouse Manager", "مدير المستودع") };
         var roles = new Dictionary<string, OrganizationRole>();
-        foreach (var (code, name) in roleSeeds)
+        foreach (var (code, name, nameAlias) in roleSeeds)
         {
             var role = await db.OrganizationRoles.IgnoreQueryFilters()
                 .SingleOrDefaultAsync(x => x.DataAreaId == SeedCompany && x.Code == code, ct);
             if (role == null)
             {
-                role = new OrganizationRole { DataAreaId = SeedCompany, Code = code, Name = name };
+                role = new OrganizationRole { DataAreaId = SeedCompany, Code = code, Name = name,
+                    NameAlias = nameAlias };
                 db.OrganizationRoles.Add(role);
+                await db.SaveChangesAsync(ct);
+            }
+            else if (string.IsNullOrWhiteSpace(role.NameAlias))
+            {
+                role.NameAlias = nameAlias;
                 await db.SaveChangesAsync(ct);
             }
             roles[code] = role;
@@ -64,18 +82,21 @@ public sealed class OrganizationStructureSeeder : ISeeder
             ("SH-B", "SUP-NJ"), ("ORG-WH", "ORG-BU") };
         var financial = new (string Unit, string? Parent)[] { ("ORG-COMPANY", null), ("ORG-BU", "ORG-COMPANY"),
             ("ORG-FIN", "ORG-BU"), ("SH-A", "ORG-BU"), ("SH-B", "ORG-BU"), ("ORG-WH", "ORG-BU") };
-        await SeedHierarchyAsync("ORG-OPERATIONS", "Operational Organization", "Operations", operational);
-        await SeedHierarchyAsync("ORG-FINANCE", "Financial Organization", "Financial reporting", financial);
+        await SeedHierarchyAsync("ORG-OPERATIONS", "Operational Organization", "الهيكل التشغيلي",
+            "Operations", operational);
+        await SeedHierarchyAsync("ORG-FINANCE", "Financial Organization", "الهيكل المالي",
+            "Financial reporting", financial);
 
-        var positionSeeds = new[] { ("AREA-W-MGR", "Western Area Manager", "AREA-W", "AREA_MANAGER"),
-            ("REG-JED-MGR", "Jeddah Region Manager", "REG-JED", "REGION_MANAGER"),
-            ("SUP-NJ-SUP", "North Jeddah Supervisor", "SUP-NJ", "SUPERVISOR"),
-            ("SH-A-SELLER-01", "Showroom A Seller", "SH-A", "SELLER"),
-            ("SH-B-SELLER-01", "Showroom B Seller", "SH-B", "SELLER"),
-            ("ORG-FIN-MGR", "Finance Manager", "ORG-FIN", "FINANCE_MANAGER"),
-            ("ORG-WH-MGR", "Warehouse Manager", "ORG-WH", "WAREHOUSE_MANAGER") };
+        var positionSeeds = new[] {
+            ("AREA-W-MGR", "Western Area Manager", "مدير المنطقة الغربية", "AREA-W", "AREA_MANAGER"),
+            ("REG-JED-MGR", "Jeddah Region Manager", "مدير منطقة جدة", "REG-JED", "REGION_MANAGER"),
+            ("SUP-NJ-SUP", "North Jeddah Supervisor", "مشرف شمال جدة", "SUP-NJ", "SUPERVISOR"),
+            ("SH-A-SELLER-01", "Showroom A Seller", "بائع معرض أ", "SH-A", "SELLER"),
+            ("SH-B-SELLER-01", "Showroom B Seller", "بائع معرض ب", "SH-B", "SELLER"),
+            ("ORG-FIN-MGR", "Finance Manager", "مدير المالية", "ORG-FIN", "FINANCE_MANAGER"),
+            ("ORG-WH-MGR", "Warehouse Manager", "مدير المستودع", "ORG-WH", "WAREHOUSE_MANAGER") };
         var positions = new Dictionary<string, HcmPosition>();
-        foreach (var (code, name, unitCode, roleCode) in positionSeeds)
+        foreach (var (code, name, nameAlias, unitCode, roleCode) in positionSeeds)
         {
             var unit = units[unitCode];
             var role = roles[roleCode];
@@ -84,8 +105,14 @@ public sealed class OrganizationStructureSeeder : ISeeder
             if (pos == null)
             {
                 pos = new HcmPosition { DataAreaId = SeedCompany, Code = code, Name = name,
-                    OrganizationUnitId = unit.OrganizationUnitId, RoleId = role.RecId, ValidFrom = EffectiveFrom };
+                    NameAlias = nameAlias,
+                    OrganizationUnitId = unit.RecId, RoleId = role.RecId, ValidFrom = EffectiveFrom };
                 db.HcmPositions.Add(pos);
+                await db.SaveChangesAsync(ct);
+            }
+            else if (string.IsNullOrWhiteSpace(pos.NameAlias))
+            {
+                pos.NameAlias = nameAlias;
                 await db.SaveChangesAsync(ct);
             }
             positions[code] = pos;
@@ -117,14 +144,21 @@ public sealed class OrganizationStructureSeeder : ISeeder
         }
         await db.SaveChangesAsync(ct);
 
-        async Task SeedHierarchyAsync(string code, string name, string purpose, (string Unit, string? Parent)[] seeds)
+        async Task SeedHierarchyAsync(string code, string name, string nameAlias, string purpose,
+            (string Unit, string? Parent)[] seeds)
         {
             var hierarchy = await db.OrganizationHierarchies.IgnoreQueryFilters()
                 .SingleOrDefaultAsync(x => x.DataAreaId == SeedCompany && x.Code == code, ct);
             if (hierarchy == null)
             {
-                hierarchy = new OrganizationHierarchy { DataAreaId = SeedCompany, Code = code, Name = name, Purpose = purpose };
+                hierarchy = new OrganizationHierarchy { DataAreaId = SeedCompany, Code = code, Name = name,
+                    NameAlias = nameAlias, Purpose = purpose };
                 db.OrganizationHierarchies.Add(hierarchy);
+                await db.SaveChangesAsync(ct);
+            }
+            else if (string.IsNullOrWhiteSpace(hierarchy.NameAlias))
+            {
+                hierarchy.NameAlias = nameAlias;
                 await db.SaveChangesAsync(ct);
             }
             if (!hierarchy.IsActive || hierarchy.IsDeleted) return;
@@ -138,13 +172,13 @@ public sealed class OrganizationStructureSeeder : ISeeder
                 // Any existing membership, including closed/deleted versions, is user-owned.
                 // Never recreate or reparent it on startup.
                 var existing = await db.OrganizationHierarchyNodes.IgnoreQueryFilters()
-                    .Where(x => x.DataAreaId == SeedCompany && x.HierarchyId == hierarchy.RecId && x.OrganizationUnitId == unit.OrganizationUnitId)
+                    .Where(x => x.DataAreaId == SeedCompany && x.HierarchyId == hierarchy.RecId && x.OrganizationUnitId == unit.RecId)
                     .OrderBy(x => x.ValidFrom).ToListAsync(ct);
                 var node = existing.FirstOrDefault(x => !x.IsDeleted && x.IsActive && x.ValidFrom <= EffectiveFrom && x.ValidTo == null);
                 if (existing.Count == 0)
                 {
                     node = new OrganizationHierarchyNode { DataAreaId = SeedCompany, HierarchyId = hierarchy.RecId,
-                        OrganizationUnitId = unit.OrganizationUnitId, ParentNodeId = parent?.RecId, ValidFrom = EffectiveFrom };
+                        OrganizationUnitId = unit.RecId, ParentNodeId = parent?.RecId, ValidFrom = EffectiveFrom };
                     db.OrganizationHierarchyNodes.Add(node);
                     await db.SaveChangesAsync(ct);
                 }
