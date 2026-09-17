@@ -31,6 +31,9 @@ namespace IAX.IXApi.Modules.Organization.Employees.Entities
 
         #region Navigation Properties Row
 
+        [ForeignKey(nameof(Person))]
+        public virtual DirPartyTable? DirPartyTable { get; set; }
+
         [ForeignKey(nameof(DepartmentId))]
         public virtual Department Department { get; set; } = null!;
         [ForeignKey(nameof(OccupationId))]
