@@ -39,11 +39,11 @@ public sealed class HostFoundationTests : IClassFixture<WebApplicationFactory<Pr
     }
 
     [Fact]
-    public async Task MCP_HTTP_transport_is_mapped()
+    public async Task MCP_HTTP_transport_requires_authentication()
     {
         using var response = await client.GetAsync("/mcp");
 
-        Assert.NotEqual(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     [Fact]

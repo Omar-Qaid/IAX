@@ -119,6 +119,7 @@ public sealed class McpCatalogCompiler
                 parameter.Location,
                 parameter.Required)).ToArray(),
             contract.AllowedDataFields.ToArray(),
+            operation.DomainPermissions.ToArray(),
             contract.RecordAuthorization,
             contract.RequiredEvidence.ToArray());
     }

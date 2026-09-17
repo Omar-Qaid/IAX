@@ -1,7 +1,7 @@
 # IXMcp: project analysis and implementation plan
 
 Date: 2026-09-16  
-Status: architecture plan; C1 offline discovery, C2 standalone host, and C3 catalog compiler implemented on 2026-09-17. Later checkpoints remain pending.
+Status: C1-C4 implemented; C5-C10 local implementation and evidence boundaries recorded on 2026-09-17. Remote identity, live staging, write selection and production deployment gates remain external acceptance items.
 Planned location: `C:\Users\Omar.Qaid\Desktop\IAX\IXMcp`.  
 Revision: 3, incorporating the seven-gap review and the subsequent consistency and execution review.  
 Authorization: the user requested implementation on 2026-09-17; work begins with the bounded C0/C1 discovery checkpoint. Deployment and writes are not enabled.
@@ -11,6 +11,10 @@ Current checkpoint: [C0/C1 discovery implementation and evidence](IXApi/docs/mcp
 [C2 standalone host evidence](IXApi/docs/mcp-checkpoint-c2.md): the independent `IXMcp` server now has validated configuration, liveness/readiness endpoints, and official Streamable HTTP MCP transport wiring. Its empty catalog deliberately fails readiness and publishes no executable tools.
 
 [C3 catalog compiler evidence](IXApi/docs/mcp-checkpoint-c3.md): IXMcp now validates the complete C1 artifact set and compiles the three pilot candidates into typed input/output schemas and binding plans. All remain non-executable, so readiness continues to fail by design.
+
+[C4 secure HTTP executor evidence](IXApi/docs/mcp-checkpoint-c4.md): a fixed-destination, bounded executor now validates compiled arguments, binds paths and queries, protects credential/company headers, normalizes IXApi outcomes and projects allowlisted output. It is internal; all real candidates remain disabled pending C5 identity and context acceptance.
+
+Continuation evidence: [C5 identity](IXApi/docs/mcp-checkpoint-c5.md), [C6 pilot protocol](IXApi/docs/mcp-checkpoint-c6.md), [C7 refresh](IXApi/docs/mcp-checkpoint-c7.md), [C8 write safety](IXApi/docs/mcp-checkpoint-c8.md), [C9 operations](IXApi/docs/mcp-checkpoint-c9.md), and [C10 classification](IXApi/docs/mcp-checkpoint-c10.md). Each report distinguishes locally verified behavior from staging, identity-provider, approval and deployment evidence that is not available in this workspace.
 
 ## 1. Objective and exact automation promise
 
@@ -497,4 +501,6 @@ Decisions still needed before the dependent checkpoints:
 5. Sensitive fields that agents may receive, audit retention, and operators responsible for exposure profiles.
 6. The first permitted write and who can approve its consequences; this can wait until C8.
 
-Phase completion means evidence, not just compiling: the adapter builds independently, the selected client invokes real authorized reads, denials match IXApi, automatic endpoint/DTO refresh works, unsupported operations are reported, and rollback is demonstrated. Production writes have their additional C8 guarantees. All-module completion means every intended capab
+Phase completion means evidence, not just compiling: the adapter builds independently, the selected client invokes real authorized reads, denials match IXApi, automatic endpoint/DTO refresh works, unsupported operations are reported, and rollback is demonstrated. Production writes have their additional C8 guarantees. All-module completion means every intended capability has an explicit accepted/excluded status and the same generic engine serves each admitted module.
+
+This document does not establish runtime results. The user has authorized starting implementation; C0/C1 progress and its remaining prerequisites are recorded in the linked checkpoint report.

@@ -33,7 +33,8 @@ internal sealed record OperationInventory(
     string Path,
     string? ProposedToolName,
     string Status,
-    bool AllowsAnonymous);
+    bool AllowsAnonymous,
+    IReadOnlyList<string> DomainPermissions);
 
 [JsonSourceGenerationOptions(PropertyNameCaseInsensitive = true)]
 [JsonSerializable(typeof(DiscoveryManifest))]

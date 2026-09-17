@@ -23,6 +23,7 @@ public sealed record CompiledTool(
     JsonObject OutputDataSchema,
     IReadOnlyList<BindingParameter> BindingParameters,
     IReadOnlyList<string> AllowedDataFields,
+    IReadOnlyList<string> RequiredPermissions,
     string RecordAuthorization,
     IReadOnlyList<string> RequiredEvidence);
 

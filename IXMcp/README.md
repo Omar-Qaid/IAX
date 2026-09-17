@@ -4,6 +4,8 @@ Standalone MCP adapter for IXApi. C2 provides the independently buildable host, 
 
 C3 loads the generated IXApi discovery artifacts, verifies their hash and internal consistency, and compiles approved candidates into typed internal tool and binding descriptors. Discovery artifacts cannot enable execution.
 
+C4 provides an internal HTTP executor for admitted GET contracts. It binds only compiled path/query fields, sends requests only to the configured IXApi origin and `/api/` prefix, injects trusted credential/company context, bounds input and response sizes, and projects returned data. The real C1 candidates are still disabled and are not registered as MCP tools.
+
 ## Run
 
 ```powershell

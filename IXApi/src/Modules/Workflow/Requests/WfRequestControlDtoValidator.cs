@@ -31,7 +31,7 @@ namespace IAX.IXApi.Modules.Workflow.Requests
             "Lookup", "Employee", "Branch", "Company", "Department", "BusinessUnit",
             "Area", "City", "Country", "Location", "Customer", "Vendor", "Item", "ItemGroup",
             "Category", "Warehouse", "PaymentMethod", "ViolationType", "Invoice", "PurchaseOrder",
-            "SalesOrder", "Process", "User"
+            "SalesOrder", "Process", "User", "Showroom"
         };
         public static readonly HashSet<string> FieldRoles = new(StringComparer.Ordinal)
             { "Dimension", "Measure", "Both" };
