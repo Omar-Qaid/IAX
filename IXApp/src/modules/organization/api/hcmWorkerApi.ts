@@ -3,7 +3,7 @@ import { apiClient } from '@core/api/apiClient';
 import type { ApiResponse } from '@core/api/apiResponse';
 
 export interface HcmWorkerDto {
-  id: number;
+  recId: number;
   personnelNumber: string;
   person: number;
   name?: string | null;
@@ -15,13 +15,11 @@ export interface HcmWorkerDto {
   nationalityId: number;
   hireDate: string | null;
   birthDate: string | null;
-  showroomId: number | null;
-  showroomName?: string | null;
   userId?: string | null;
   isActive: boolean;
 }
 
-export interface HcmWorkerRecord extends Omit<HcmWorkerDto, 'id'> {
+export interface HcmWorkerRecord extends Omit<HcmWorkerDto, 'recId'> {
   id: string;
   recordId: number;
 }
@@ -39,14 +37,20 @@ const requireData = <T>(response: ApiResponse<T>): T => {
   return response.data;
 };
 
-const toRecord = (dto: HcmWorkerDto): HcmWorkerRecord => ({
-  ...dto,
-  id: String(dto.id),
-  recordId: dto.id,
-});
+const toRecord = ({ recId, ...dto }: HcmWorkerDto): HcmWorkerRecord => {
+  if (!Number.isSafeInteger(recId) || recId <= 0) {
+    throw new ApiError('The worker response contained an invalid record identifier.', 500);
+  }
+
+  return {
+    ...dto,
+    id: String(recId),
+    recordId: recId,
+  };
+};
 const toDto = ({ id: _id, recordId, ...record }: HcmWorkerRecord): HcmWorkerDto => ({
   ...record,
-  id: recordId,
+  recId: recordId,
 });
 
 export const hcmWorkerApi = {

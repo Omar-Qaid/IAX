@@ -44,6 +44,31 @@ public sealed class HostFoundationTests : IClassFixture<WebApplicationFactory<Pr
         using var response = await client.GetAsync("/mcp");
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("Bearer", response.Headers.WwwAuthenticate.Single().Scheme);
+    }
+
+    [Fact]
+    public async Task MCP_HTTP_transport_rejects_unapproved_browser_origin()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/mcp");
+        request.Headers.Add("Origin", "https://attacker.example");
+
+        using var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task MCP_HTTP_transport_rejects_declared_oversized_body_before_authentication()
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/mcp")
+        {
+            Content = new ByteArrayContent(new byte[524289])
+        };
+
+        using var response = await client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.RequestEntityTooLarge, response.StatusCode);
     }
 
     [Fact]

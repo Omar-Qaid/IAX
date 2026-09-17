@@ -5,6 +5,8 @@ using IAX.IXMcp.Execution;
 using IAX.IXMcp.Protocol;
 using IAX.IXMcp.Security;
 using Microsoft.AspNetCore.Http;
+using IAX.IXMcp.Configuration;
+using Microsoft.Extensions.Options;
 using ModelContextProtocol.Protocol;
 
 namespace IAX.IXMcp.Tests;
@@ -65,7 +67,16 @@ public sealed class McpProtocolAdapterTests
     {
         var context = new DefaultHttpContext();
         context.Items[McpAuthenticationMiddleware.ContextItemKey] = session;
-        return new McpProtocolAdapter(state, executor, new HttpContextAccessor { HttpContext = context });
+        return new McpProtocolAdapter(
+            state,
+            executor,
+            new HttpContextAccessor { HttpContext = context },
+            new PerUserConcurrencyLimiter(Options.Create(new IXMcpOptions
+            {
+                ContractDirectory = "unused",
+                IXApiBaseUrl = "https://ixapi.test",
+                MaximumConcurrentCallsPerUser = 4
+            })));
     }
 
     private static McpSessionContext Session(IReadOnlyList<string> permissions) =>
@@ -92,6 +103,7 @@ public sealed class McpProtocolAdapterTests
             ["properties"] = new JsonObject(),
             ["additionalProperties"] = false
         },
+        false,
         [], [], permissions, "test", []);
 
     private sealed class FakeExecutor : IMcpToolExecutor

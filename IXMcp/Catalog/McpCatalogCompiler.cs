@@ -101,7 +101,7 @@ public sealed class McpCatalogCompiler
 
         var parameters = ReadParameters(openApiOperation, contract);
         var inputSchema = BuildInputSchema(parameters);
-        var outputSchema = BuildOutputSchema(openApi, openApiOperation, contract);
+        var (outputSchema, responseDataIsArray) = BuildOutputSchema(openApi, openApiOperation, contract);
 
         return new CompiledTool(
             contract.ToolName,
@@ -114,6 +114,7 @@ public sealed class McpCatalogCompiler
             contract.CompanyScope,
             inputSchema,
             outputSchema,
+            responseDataIsArray,
             parameters.Select(parameter => new BindingParameter(
                 parameter.Name,
                 parameter.Location,
@@ -218,7 +219,7 @@ public sealed class McpCatalogCompiler
         return result;
     }
 
-    private static JsonObject BuildOutputSchema(
+    private static (JsonObject Schema, bool IsArray) BuildOutputSchema(
         JsonNode openApi,
         JsonObject operation,
         PilotContract contract)
@@ -231,7 +232,8 @@ public sealed class McpCatalogCompiler
             ?? throw new ContractCompilationException(
                 $"Tool '{contract.ToolName}' response has no data property.");
         dataSchema = ResolveSchema(openApi, dataSchema, contract.ToolName);
-        if (dataSchema["type"]?.GetValue<string>() == "array")
+        var isArray = dataSchema["type"]?.GetValue<string>() == "array";
+        if (isArray)
         {
             dataSchema = ResolveSchema(openApi, dataSchema["items"]!, contract.ToolName);
         }
@@ -251,12 +253,12 @@ public sealed class McpCatalogCompiler
             projectedFields[field] = fieldSchema.DeepClone();
         }
 
-        return new JsonObject
+        return (new JsonObject
         {
             ["type"] = "object",
             ["properties"] = projectedFields,
             ["additionalProperties"] = false
-        };
+        }, isArray);
     }
 
     private static JsonObject ResolveSchema(JsonNode openApi, JsonNode schema, string toolName)

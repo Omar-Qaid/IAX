@@ -21,6 +21,7 @@ public sealed record CompiledTool(
     string CompanyScope,
     JsonObject InputSchema,
     JsonObject OutputDataSchema,
+    bool ResponseDataIsArray,
     IReadOnlyList<BindingParameter> BindingParameters,
     IReadOnlyList<string> AllowedDataFields,
     IReadOnlyList<string> RequiredPermissions,

@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "IXMcp": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:29890;http://localhost:29891"
+    }
+  }
+}

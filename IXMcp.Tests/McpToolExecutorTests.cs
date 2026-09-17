@@ -323,6 +323,7 @@ public sealed class McpToolExecutorTests
             ["additionalProperties"] = false
         },
         new JsonObject(),
+        false,
         [
             new BindingParameter("id", "path", true),
             new BindingParameter("PageNumber", "query", false),

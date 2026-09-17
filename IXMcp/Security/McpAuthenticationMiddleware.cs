@@ -1,8 +1,12 @@
 using System.Net.Http.Headers;
+using IAX.IXMcp.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace IAX.IXMcp.Security;
 
-public sealed class McpAuthenticationMiddleware(RequestDelegate next)
+public sealed class McpAuthenticationMiddleware(
+    RequestDelegate next,
+    IOptions<IXMcpOptions> options)
 {
     public const string ContextItemKey = "IXMcp.SessionContext";
 
@@ -11,6 +15,18 @@ public sealed class McpAuthenticationMiddleware(RequestDelegate next)
         if (!httpContext.Request.Path.StartsWithSegments("/mcp"))
         {
             await next(httpContext);
+            return;
+        }
+
+        if (httpContext.Request.ContentLength > options.Value.MaximumRequestBodyBytes)
+        {
+            await WriteFailureAsync(httpContext, StatusCodes.Status413PayloadTooLarge, "request_too_large");
+            return;
+        }
+
+        if (!IsAllowedOrigin(httpContext.Request.Headers.Origin.ToString()))
+        {
+            await WriteFailureAsync(httpContext, StatusCodes.Status403Forbidden, "origin_not_allowed");
             return;
         }
 
@@ -35,6 +51,11 @@ public sealed class McpAuthenticationMiddleware(RequestDelegate next)
             await WriteFailureAsync(httpContext, StatusCodes.Status503ServiceUnavailable, "identity_dependency_unavailable");
             return;
         }
+        catch (OperationCanceledException) when (!httpContext.RequestAborted.IsCancellationRequested)
+        {
+            await WriteFailureAsync(httpContext, StatusCodes.Status503ServiceUnavailable, "identity_dependency_timeout");
+            return;
+        }
 
         if (!result.IsValid || result.Context is null)
         {
@@ -49,6 +70,10 @@ public sealed class McpAuthenticationMiddleware(RequestDelegate next)
     private static Task WriteFailureAsync(HttpContext context, int statusCode, string code)
     {
         context.Response.StatusCode = statusCode;
+        if (statusCode == StatusCodes.Status401Unauthorized)
+        {
+            context.Response.Headers.WWWAuthenticate = "Bearer";
+        }
         return context.Response.WriteAsJsonAsync(new
         {
             type = "about:blank",
@@ -56,5 +81,15 @@ public sealed class McpAuthenticationMiddleware(RequestDelegate next)
             status = statusCode,
             code
         }, context.RequestAborted);
+    }
+
+    private bool IsAllowedOrigin(string origin)
+    {
+        if (string.IsNullOrWhiteSpace(origin))
+        {
+            return true;
+        }
+
+        return options.Value.AllowedOrigins.Contains(origin, StringComparer.OrdinalIgnoreCase);
     }
 }

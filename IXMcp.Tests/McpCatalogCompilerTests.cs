@@ -23,6 +23,9 @@ public sealed class McpCatalogCompilerTests
         var workflow = Assert.Single(catalog.Tools, tool => tool.Name == "workflow_requests_get");
         Assert.Equal("string", workflow.InputSchema["properties"]?["path"]?["properties"]?["id"]?["type"]?.GetValue<string>());
         Assert.Equal(workflow.AllowedDataFields.Count, workflow.OutputDataSchema["properties"]?.AsObject().Count);
+        Assert.False(workflow.ResponseDataIsArray);
+        Assert.True(catalog.Tools.Single(tool => tool.Name == "finance_customers_search").ResponseDataIsArray);
+        Assert.True(catalog.Tools.Single(tool => tool.Name == "organization_departments_search").ResponseDataIsArray);
     }
 
     [Fact]

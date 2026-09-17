@@ -28,7 +28,6 @@ const emptyWorker = (): HcmWorkerRecord => ({
   nationalityId: 0,
   hireDate: null,
   birthDate: null,
-  showroomId: null,
   userId: null,
   isActive: true,
 });
@@ -56,10 +55,6 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
     nationalities: useQuery({
       queryKey: ['hcm-workers', company, 'nationalities'],
       queryFn: ({ signal }) => hcmWorkerApi.lookup('Nationality', signal),
-    }),
-    showrooms: useQuery({
-      queryKey: ['hcm-workers', company, 'showrooms'],
-      queryFn: ({ signal }) => hcmWorkerApi.lookup('Showroom', signal),
     }),
   };
 
@@ -121,13 +116,6 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
                 lookups.occupations.data ?? [],
                 lookups.occupations.isLoading
               ),
-              lookupField(
-                'showroomId',
-                t('hcmWorkers.fields.showroom'),
-                lookups.showrooms.data ?? [],
-                lookups.showrooms.isLoading,
-                false
-              ),
             ],
           },
           {
@@ -169,8 +157,6 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
       lookups.nationalities.isLoading,
       lookups.occupations.data,
       lookups.occupations.isLoading,
-      lookups.showrooms.data,
-      lookups.showrooms.isLoading,
       t,
     ]
   );
@@ -198,7 +184,6 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
       occupationId: record.occupationId,
       genderId: record.genderId,
       nationalityId: record.nationalityId,
-      showroomId: record.showroomId ?? 0,
       hireDate: dateValue(record.hireDate),
       birthDate: dateValue(record.birthDate),
       isActive: record.isActive,
@@ -209,7 +194,6 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
       occupationId: numberValue(values.occupationId),
       genderId: numberValue(values.genderId),
       nationalityId: numberValue(values.nationalityId),
-      showroomId: numberValue(values.showroomId) || null,
       hireDate: textValue(values.hireDate) || null,
       birthDate: textValue(values.birthDate) || null,
       isActive: Boolean(values.isActive),

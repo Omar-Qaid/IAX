@@ -4,6 +4,8 @@ using System.Text;
 using System.Text.Json;
 using IAX.IXMcp.Execution;
 using IAX.IXMcp.Security;
+using IAX.IXMcp.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace IAX.IXMcp.Tests;
 
@@ -61,6 +63,31 @@ public sealed class IXApiSessionValidatorTests
     }
 
     [Fact]
+    public async Task Rejects_malformed_identity_response_without_throwing()
+    {
+        var validator = CreateValidator(_ => Json(HttpStatusCode.OK, "{not-json"));
+
+        var result = await validator.ValidateAsync("token", "DAT");
+
+        Assert.False(result.IsValid);
+        Assert.Equal(503, result.StatusCode);
+        Assert.Equal("invalid_identity_response", result.ErrorCode);
+    }
+
+    [Fact]
+    public async Task Rejects_wrong_identity_field_types_without_throwing()
+    {
+        var validator = CreateValidator(_ => Json(HttpStatusCode.OK, """
+            {"success":"true","data":{"id":"user-a","userName":"alice","allowedCompanies":["DAT"]}}
+            """));
+
+        var result = await validator.ValidateAsync("token", "DAT");
+
+        Assert.False(result.IsValid);
+        Assert.Equal("invalid_identity_response", result.ErrorCode);
+    }
+
+    [Fact]
     public async Task Parallel_sessions_keep_user_and_company_isolated()
     {
         var validator = CreateValidator(request =>
@@ -97,7 +124,15 @@ public sealed class IXApiSessionValidatorTests
         {
             BaseAddress = new Uri("https://ixapi.test")
         };
-        return new IXApiSessionValidator(new IXApiHttpClient(client));
+        return new IXApiSessionValidator(
+            new IXApiHttpClient(client),
+            Options.Create(new IXMcpOptions
+            {
+                ContractDirectory = "unused",
+                IXApiBaseUrl = "https://ixapi.test",
+                CallTimeoutSeconds = 5,
+                MaximumResponseBytes = 1024 * 1024
+            }));
     }
 
     private static HttpResponseMessage Json(HttpStatusCode status, string content) => new(status)

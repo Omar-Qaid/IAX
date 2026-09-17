@@ -10,7 +10,8 @@ namespace IAX.IXMcp.Protocol;
 public sealed class McpProtocolAdapter(
     McpCatalogState catalogState,
     IMcpToolExecutor executor,
-    IHttpContextAccessor httpContextAccessor)
+    IHttpContextAccessor httpContextAccessor,
+    PerUserConcurrencyLimiter concurrencyLimiter)
 {
     public ListToolsResult ListTools()
     {
@@ -36,6 +37,12 @@ public sealed class McpProtocolAdapter(
 
         var arguments = JsonSerializer.SerializeToElement(
             request.Arguments ?? new Dictionary<string, JsonElement>());
+        await using var lease = concurrencyLimiter.TryAcquire(session.UserId);
+        if (lease is null)
+        {
+            return Error("too_many_concurrent_calls", "The concurrent call limit for this user has been reached.");
+        }
+
         var result = await executor.ExecuteAsync(
             request.Name,
             arguments,
@@ -76,7 +83,13 @@ public sealed class McpProtocolAdapter(
         ["properties"] = new JsonObject
         {
             ["ok"] = new JsonObject { ["const"] = true },
-            ["data"] = tool.OutputDataSchema.DeepClone(),
+            ["data"] = tool.ResponseDataIsArray
+                ? new JsonObject
+                {
+                    ["type"] = "array",
+                    ["items"] = tool.OutputDataSchema.DeepClone()
+                }
+                : tool.OutputDataSchema.DeepClone(),
             ["pagination"] = new JsonObject
             {
                 ["type"] = "object",

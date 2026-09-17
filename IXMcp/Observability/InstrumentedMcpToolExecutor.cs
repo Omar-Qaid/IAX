@@ -27,9 +27,8 @@ public sealed class InstrumentedMcpToolExecutor(
         }
 
         telemetry.Calls.Add(1, new("tool", toolName), new("outcome", result.Code));
-        telemetry.Duration.Record(
-            Stopwatch.GetElapsedTime(started).TotalMilliseconds,
-            new("tool", toolName));
+        TagList durationTags = new() { { "tool", toolName } };
+        telemetry.Duration.Record(Stopwatch.GetElapsedTime(started).TotalMilliseconds, durationTags);
         return result;
     }
 }

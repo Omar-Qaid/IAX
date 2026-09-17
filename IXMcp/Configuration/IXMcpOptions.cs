@@ -22,6 +22,9 @@ public sealed class IXMcpOptions
     [Range(1024, 4 * 1024 * 1024)]
     public int MaximumInputBytes { get; init; } = 256 * 1024;
 
+    [Range(2048, 8 * 1024 * 1024)]
+    public int MaximumRequestBodyBytes { get; init; } = 512 * 1024;
+
     [Range(1024, 16 * 1024 * 1024)]
     public int MaximumResponseBytes { get; init; } = 1024 * 1024;
 
@@ -32,6 +35,11 @@ public sealed class IXMcpOptions
 
     public string[] EmergencyDeniedTools { get; init; } = [];
 
+    public string[] AllowedOrigins { get; init; } = [];
+
     [Range(5, 3600)]
     public int CatalogRefreshSeconds { get; init; } = 60;
+
+    [Range(1, 32)]
+    public int MaximumConcurrentCallsPerUser { get; init; } = 4;
 }

@@ -83,3 +83,5 @@ Thumbs.db
 .vs/
 .dotnet/
 .artifacts/
+[Bb]in/
+[Oo]bj/

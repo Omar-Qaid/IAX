@@ -9,6 +9,12 @@ using IAX.IXMcp.Observability;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var requestBodyLimit = builder.Configuration
+    .GetSection(IXMcpOptions.SectionName)
+    .GetValue<int?>(nameof(IXMcpOptions.MaximumRequestBodyBytes)) ?? 512 * 1024;
+builder.WebHost.ConfigureKestrel(serverOptions =>
+    serverOptions.Limits.MaxRequestBodySize = requestBodyLimit);
+
 builder.Services
     .AddOptions<IXMcpOptions>()
     .Bind(builder.Configuration.GetSection(IXMcpOptions.SectionName))
@@ -25,6 +31,15 @@ builder.Services
             && !options.ApprovedPathPrefix.Contains('?')
             && !options.ApprovedPathPrefix.Contains('#'),
         "ApprovedPathPrefix must be rooted under /api/ and cannot contain traversal segments.")
+    .Validate(options => options.AllowedOrigins.All(origin =>
+            Uri.TryCreate(origin, UriKind.Absolute, out var uri)
+            && (uri.Scheme == Uri.UriSchemeHttps || uri.IsLoopback)
+            && string.IsNullOrEmpty(uri.UserInfo)
+            && string.IsNullOrEmpty(uri.PathAndQuery.Trim('/'))
+            && string.IsNullOrEmpty(uri.Fragment)),
+        "AllowedOrigins must contain absolute HTTPS origins, except HTTP loopback is allowed for local development.")
+    .Validate(options => options.MaximumRequestBodyBytes > options.MaximumInputBytes,
+        "MaximumRequestBodyBytes must exceed MaximumInputBytes to allow for the MCP JSON-RPC envelope.")
     .ValidateOnStart();
 
 builder.Services.AddSingleton<McpCatalogState>();
@@ -40,6 +55,7 @@ builder.Services.AddScoped<IMcpToolExecutor, InstrumentedMcpToolExecutor>();
 builder.Services.AddScoped<IMcpSessionValidator, IXApiSessionValidator>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<McpProtocolAdapter>();
+builder.Services.AddSingleton<PerUserConcurrencyLimiter>();
 builder.Services
     .AddHttpClient<IXApiHttpClient>((services, client) =>
     {

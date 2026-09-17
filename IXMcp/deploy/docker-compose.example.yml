@@ -1,0 +1,24 @@
+services:
+  ixmcp:
+    build:
+      context: ../..
+      dockerfile: IXMcp/Dockerfile
+    read_only: true
+    tmpfs:
+      - /tmp
+    volumes:
+      - ../../.artifacts/mcp-contract/export:/contracts:ro
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      IXMcp__IXApiBaseUrl: https://ixapi.example.internal
+      IXMcp__AllowedOrigins__0: https://ixapp.example.com
+      AllowedHosts: ixmcp.example.internal
+      IXMcp__EnabledReadTools__0: organization_departments_search
+      IXMcp__EnabledReadTools__1: finance_customers_search
+      IXMcp__EnabledReadTools__2: workflow_requests_get
+    ports:
+      - "127.0.0.1:8080:8080"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
