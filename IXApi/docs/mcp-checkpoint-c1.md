@@ -54,7 +54,7 @@ Generated files are local artifacts, not source-controlled API snapshots. NuGet 
 - Restore succeeded using the repository NuGet configuration and a workspace-local package cache. Restricted restore initially failed with NU1301/SSL; the authorized retry outside the sandbox succeeded.
 - Release build succeeded with 0 errors. The final dependency-rebuilding pass reported 162 warnings in existing areas; the earlier broader pass also included Organization warnings. This is not a warning-free whole-project baseline.
 - Focused tests: **30 passed, 0 failed, 0 skipped** across `McpContractDiscoveryTests`, `AuthorizationPolicyTests`, and `CompanyIsolationTests`.
-- The actual offline CLI export succeeded: **917 route/method operations**, **3 pilot candidates**, no executable tools. Counts include route aliases: 643 same-action groups, of which 120 have multiple routes.
+- The actual offline CLI export succeeded: **908 route/method operations**, **3 pilot candidates**, no executable tools. Counts include route aliases: 634 same-action groups, of which 120 have multiple routes.
 - Generated schemas contain every proposed pilot output field and allowed query parameter. Tests also verify that excluded Workflow CRUD actions are absent, Customer aliases are outside the pilot, and discovery has no database/business-worker registrations.
 - Artifact directory: `../../.artifacts/mcp-contract/export/`. Test result: `../../.artifacts/mcp-contract/test-results/mcp-c1.trx`. These files are generated locally and ignored by Git.
 
@@ -64,7 +64,7 @@ Generated files are local artifacts, not source-controlled API snapshots. NuGet 
 | Communication | 20 |
 | Finance | 506 |
 | Identity | 30 |
-| Organization | 110 |
+| Organization | 101 |
 | Workflow | 200 |
 
 No authenticated live CRUD, server startup/health, model call, MCP client connection or React UI behavior was tested in this checkpoint. The tests prove offline discovery and the selected existing authorization/company test cases, not a live security certification.

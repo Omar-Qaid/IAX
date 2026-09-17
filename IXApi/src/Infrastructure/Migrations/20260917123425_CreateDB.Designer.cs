@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace IAX.IXApi.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260916160210_CreateDB")]
+    [Migration("20260917123425_CreateDB")]
     partial class CreateDB
     {
         /// <inheritdoc />
@@ -18996,9 +18996,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
-                    b.Property<long?>("OrganizationEntityId")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
 
@@ -19030,10 +19027,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
-
-                    b.HasIndex("OrganizationEntityId")
-                        .IsUnique()
-                        .HasFilter("[OrganizationEntityId] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
                 });
@@ -19750,9 +19743,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
-                    b.Property<long?>("ShowroomId")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("UserId")
                         .HasColumnType("nvarchar(256)");
 
@@ -19765,8 +19755,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.HasIndex("NationalityId");
 
                     b.HasIndex("OccupationId");
-
-                    b.HasIndex("ShowroomId");
 
                     b.HasIndex("UserId");
 
@@ -20143,7 +20131,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("EmployeeManagers", (string)null);
                 });
 
-            modelBuilder.Entity("IAX.IXApi.Modules.Organization.ManagementLevels.ManagementLevel", b =>
+            modelBuilder.Entity("IAX.IXApi.Modules.Organization.ManagementLevels.HcmWorkerManagementLevel", b =>
                 {
                     b.Property<byte>("RecId")
                         .HasColumnType("tinyint")
@@ -20201,7 +20189,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("ManagementLevels", (string)null);
+                    b.ToTable("HcmWorkerManagementLevels", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Organization.Nationalities.Nationality", b =>
@@ -22603,7 +22591,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                             t.HasCheckConstraint("CK_WfRequestControls_FieldRole", "[FieldRole] IN (N'Dimension',N'Measure',N'Both')");
 
-                            t.HasCheckConstraint("CK_WfRequestControls_ReferenceType", "[ReferenceType] IS NULL OR [ReferenceType] IN (N'Lookup',N'Employee',N'Showroom',N'Branch',N'Company',N'Department',N'BusinessUnit',N'Area',N'City',N'Country',N'Location',N'Customer',N'Vendor',N'Item',N'ItemGroup',N'Category',N'Warehouse',N'PaymentMethod',N'ViolationType',N'Invoice',N'PurchaseOrder',N'SalesOrder',N'Process',N'User')");
+                            t.HasCheckConstraint("CK_WfRequestControls_ReferenceType", "[ReferenceType] IS NULL OR [ReferenceType] IN (N'Lookup',N'Employee',N'Branch',N'Company',N'Department',N'BusinessUnit',N'Area',N'City',N'Country',N'Location',N'Customer',N'Vendor',N'Item',N'ItemGroup',N'Category',N'Warehouse',N'PaymentMethod',N'ViolationType',N'Invoice',N'PurchaseOrder',N'SalesOrder',N'Process',N'User')");
                         });
                 });
 
@@ -23431,82 +23419,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("WfVariables", (string)null);
                 });
 
-            modelBuilder.Entity("IAX.IXApi.Shared.Domain.Entities.OrganizationEntity", b =>
-                {
-                    b.Property<long>("RecId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("RECID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
-
-                    b.Property<string>("Code")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DataAreaId")
-                        .IsRequired()
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)");
-
-                    b.Property<short>("DepartmentId")
-                        .HasColumnType("smallint");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("LastModifiedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("LastModifiedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NameAlias")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("OwnerAccountId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<long>("PartyId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("PartyType")
-                        .IsRequired()
-                        .HasMaxLength(21)
-                        .HasColumnType("nvarchar(21)");
-
-                    b.Property<int>("RecVersion")
-                        .HasColumnType("int");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.HasKey("RecId");
-
-                    b.ToTable("OrgEntities", (string)null);
-
-                    b.HasDiscriminator<string>("PartyType").HasValue("OrganizationEntity");
-
-                    b.UseTphMappingStrategy();
-                });
-
             modelBuilder.Entity("IAX.IXApi.Shared.Domain.Reporting.ReportEntityVersion", b =>
                 {
                     b.Property<long>("RecId")
@@ -23769,18 +23681,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("ReportTemplateVersions", (string)null);
-                });
-
-            modelBuilder.Entity("IAX.IXApi.Modules.Organization.Showrooms.Showroom", b =>
-                {
-                    b.HasBaseType("IAX.IXApi.Shared.Domain.Entities.OrganizationEntity");
-
-                    b.Property<string>("Location")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasIndex("DepartmentId");
-
-                    b.HasDiscriminator().HasValue("Showroom");
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Administration.BackgroundJobs.Entities.SysBackgroundJobExecution", b =>
@@ -24651,16 +24551,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("IAX.IXApi.Modules.Identity.Users.AspNetUser", b =>
-                {
-                    b.HasOne("IAX.IXApi.Shared.Domain.Entities.OrganizationEntity", "OrganizationEntity")
-                        .WithOne()
-                        .HasForeignKey("IAX.IXApi.Modules.Identity.Users.AspNetUser", "OrganizationEntityId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("OrganizationEntity");
-                });
-
             modelBuilder.Entity("IAX.IXApi.Modules.Identity.Users.AspNetUserClaim", b =>
                 {
                     b.HasOne("IAX.IXApi.Modules.Identity.Users.AspNetUser", null)
@@ -24749,10 +24639,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("IAX.IXApi.Modules.Organization.Showrooms.Showroom", "Showroom")
-                        .WithMany("Sellers")
-                        .HasForeignKey("ShowroomId");
-
                     b.HasOne("IAX.IXApi.Modules.Identity.Users.AspNetUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId");
@@ -24764,8 +24650,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Navigation("Nationality");
 
                     b.Navigation("Occupation");
-
-                    b.Navigation("Showroom");
 
                     b.Navigation("User");
                 });
@@ -24826,7 +24710,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("IAX.IXApi.Modules.Organization.ManagementLevels.ManagementLevel", "ManagementLevel")
+                    b.HasOne("IAX.IXApi.Modules.Organization.ManagementLevels.HcmWorkerManagementLevel", "ManagementLevel")
                         .WithMany()
                         .HasForeignKey("ManagementLevelId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -25370,17 +25254,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Navigation("Template");
                 });
 
-            modelBuilder.Entity("IAX.IXApi.Modules.Organization.Showrooms.Showroom", b =>
-                {
-                    b.HasOne("IAX.IXApi.Modules.Organization.Departments.Department", "Department")
-                        .WithMany()
-                        .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Department");
-                });
-
             modelBuilder.Entity("IAX.IXApi.Modules.Administration.BackgroundJobs.Entities.SysBackgroundJob", b =>
                 {
                     b.Navigation("Executions");
@@ -25443,11 +25316,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
             modelBuilder.Entity("IAX.IXApi.Shared.Domain.Reporting.ReportTemplate", b =>
                 {
                     b.Navigation("Versions");
-                });
-
-            modelBuilder.Entity("IAX.IXApi.Modules.Organization.Showrooms.Showroom", b =>
-                {
-                    b.Navigation("Sellers");
                 });
 #pragma warning restore 612, 618
         }

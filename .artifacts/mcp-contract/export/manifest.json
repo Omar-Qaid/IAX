@@ -2,16 +2,16 @@
   "formatVersion": 1,
   "purpose": "discovery-only",
   "executable": false,
-  "apiAssemblyVersion": "1.0.0\u002Ba696cec9078dfbc18e9404cc2654f3a34b4efaa9",
-  "schemaSha256": "2a40fc8ce8524876dae3fe19154367d8025b5af9e8cbb0b2a2dedab16ee6f88c",
-  "operationCount": 917,
+  "apiAssemblyVersion": "1.0.0\u002Bdece652584ae62e8a63bd6560ddf42da0d427ef6",
+  "schemaSha256": "6e740c70a35ab98220e113580857a3378679ff963db4362329e5b85dcca47dae",
+  "operationCount": 908,
   "pilotCandidateCount": 3,
   "modules": {
     "Administration": 51,
     "Communication": 20,
     "Finance": 506,
     "Identity": 30,
-    "Organization": 110,
+    "Organization": 101,
     "Workflow": 200
   },
   "note": "Not a production compatibility manifest. No operations are admitted for execution."

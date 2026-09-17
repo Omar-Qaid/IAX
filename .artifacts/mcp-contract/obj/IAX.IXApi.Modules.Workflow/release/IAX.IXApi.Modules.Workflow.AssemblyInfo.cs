@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("IAX.IXApi.Modules.Workflow")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a696cec9078dfbc18e9404cc2654f3a34b4efaa9")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+dece652584ae62e8a63bd6560ddf42da0d427ef6")]
 [assembly: System.Reflection.AssemblyProductAttribute("IAX.IXApi.Modules.Workflow")]
 [assembly: System.Reflection.AssemblyTitleAttribute("IAX.IXApi.Modules.Workflow")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

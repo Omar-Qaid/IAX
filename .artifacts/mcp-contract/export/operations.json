@@ -18334,6 +18334,344 @@
     "pilotContract": null
   },
   {
+    "operationId": "Organization_HcmWorkerManagementLevel_GetAll_GET_07f381f1a530606f",
+    "module": "Organization",
+    "controller": "HcmWorkerManagementLevel",
+    "action": "GetAll",
+    "method": "GET",
+    "path": "/api/v1/HcmWorkerManagementLevel",
+    "sameActionGroup": "IAX.IXApi.Modules.Organization.ManagementLevels.HcmWorkerManagementLevelController:System.Threading.Tasks.Task\u00601[Microsoft.AspNetCore.Mvc.ActionResult\u00601[IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[System.Collections.Generic.IEnumerable\u00601[IAX.IXApi.Modules.Organization.ManagementLevels.HcmWorkerManagementLevelDto]]]] GetAll(System.Threading.CancellationToken):GET",
+    "proposedToolName": null,
+    "status": "excluded",
+    "reason": "Not selected for the initial read-only pilot; authorization, scope and data policy require review.",
+    "allowsAnonymous": false,
+    "domainPermissions": [
+      "Organization.Managers.View"
+    ],
+    "authorizationPolicies": [],
+    "roleRequirements": [],
+    "recordAuthorization": "Requires review; permission metadata alone does not describe record authorization",
+    "companyScope": "unclassified",
+    "parameters": [],
+    "responses": [
+      {
+        "status": 200,
+        "type": "IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[[System.Collections.Generic.IEnumerable\u00601[[IAX.IXApi.Modules.Organization.ManagementLevels.HcmWorkerManagementLevelDto, IAX.IXApi.Modules.Organization, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "mediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ]
+      }
+    ],
+    "pilotContract": null
+  },
+  {
+    "operationId": "Organization_HcmWorkerManagementLevel_Create_POST_89e0c57f8cd6a102",
+    "module": "Organization",
+    "controller": "HcmWorkerManagementLevel",
+    "action": "Create",
+    "method": "POST",
+    "path": "/api/v1/HcmWorkerManagementLevel",
+    "sameActionGroup": "IAX.IXApi.Modules.Organization.ManagementLevels.HcmWorkerManagementLevelController:System.Threading.Tasks.Task\u00601[Microsoft.AspNetCore.Mvc.ActionResult\u00601[IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[IAX.IXApi.Modules.Organization.ManagementLevels.HcmWorkerManagementLevelDto]]] Create(IAX.IXApi.Modules.Organization.ManagementLevels.HcmWorkerManagementLevelDto, System.Threading.CancellationToken):POST",
+    "proposedToolName": null,
+    "status": "excluded",
+    "reason": "Not admitted: writes and behavioral read-only POSTs need individual review.",
+    "allowsAnonymous": false,
+    "domainPermissions": [
+      "Organization.Managers.Create"
+    ],
+    "authorizationPolicies": [],
+    "roleRequirements": [],
+    "recordAuthorization": "Requires review; permission metadata alone does not describe record authorization",
+    "companyScope": "unclassified",
+    "parameters": [
+      {
+        "name": "dto",
+        "source": "Body",
+        "required": true,
+        "type": "IAX.IXApi.Modules.Organization.ManagementLevels.HcmWorkerManagementLevelDto"
+      }
+    ],
+    "responses": [
+      {
+        "status": 200,
+        "type": "IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[[IAX.IXApi.Modules.Organization.ManagementLevels.HcmWorkerManagementLevelDto, IAX.IXApi.Modules.Organization, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "mediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ]
+      }
+    ],
+    "pilotContract": null
+  },
+  {
+    "operationId": "Organization_HcmWorkerManagementLevel_GetNumberSequence_GET_c698d2e327a70216",
+    "module": "Organization",
+    "controller": "HcmWorkerManagementLevel",
+    "action": "GetNumberSequence",
+    "method": "GET",
+    "path": "/api/v1/HcmWorkerManagementLevel/number-sequence",
+    "sameActionGroup": "IAX.IXApi.Modules.Organization.ManagementLevels.HcmWorkerManagementLevelController:System.Threading.Tasks.Task\u00601[Microsoft.AspNetCore.Mvc.ActionResult\u00601[IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[IAX.IXApi.Shared.Application.NumberSequences.NumberSequenceMetadataDto]]] GetNumberSequence(System.Threading.CancellationToken):GET",
+    "proposedToolName": null,
+    "status": "excluded",
+    "reason": "Not selected for the initial read-only pilot; authorization, scope and data policy require review.",
+    "allowsAnonymous": false,
+    "domainPermissions": [
+      "Organization.Managers.View"
+    ],
+    "authorizationPolicies": [],
+    "roleRequirements": [],
+    "recordAuthorization": "Requires review; permission metadata alone does not describe record authorization",
+    "companyScope": "unclassified",
+    "parameters": [],
+    "responses": [
+      {
+        "status": 200,
+        "type": "IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[[IAX.IXApi.Shared.Application.NumberSequences.NumberSequenceMetadataDto, IAX.IXApi.Shared, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "mediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ]
+      }
+    ],
+    "pilotContract": null
+  },
+  {
+    "operationId": "Organization_HcmWorkerManagementLevel_GetPaged_GET_5b0fbccd8e0c12fe",
+    "module": "Organization",
+    "controller": "HcmWorkerManagementLevel",
+    "action": "GetPaged",
+    "method": "GET",
+    "path": "/api/v1/HcmWorkerManagementLevel/paged",
+    "sameActionGroup": "IAX.IXApi.Modules.Organization.ManagementLevels.HcmWorkerManagementLevelController:System.Threading.Tasks.Task\u00601[Microsoft.AspNetCore.Mvc.ActionResult\u00601[IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[System.Collections.Generic.IEnumerable\u00601[IAX.IXApi.Modules.Organization.ManagementLevels.HcmWorkerManagementLevelDto]]]] GetPaged(IAX.IXApi.Shared.Application.Contracts.QueryFilterDto, System.Threading.CancellationToken):GET",
+    "proposedToolName": null,
+    "status": "excluded",
+    "reason": "Not selected for the initial read-only pilot; authorization, scope and data policy require review.",
+    "allowsAnonymous": false,
+    "domainPermissions": [
+      "Organization.Managers.View"
+    ],
+    "authorizationPolicies": [],
+    "roleRequirements": [],
+    "recordAuthorization": "Requires review; permission metadata alone does not describe record authorization",
+    "companyScope": "unclassified",
+    "parameters": [
+      {
+        "name": "PageNumber",
+        "source": "Query",
+        "required": false,
+        "type": "System.Int32"
+      },
+      {
+        "name": "PageSize",
+        "source": "Query",
+        "required": false,
+        "type": "System.Int32"
+      },
+      {
+        "name": "SortField",
+        "source": "Query",
+        "required": false,
+        "type": "System.String"
+      },
+      {
+        "name": "SortOrder",
+        "source": "Query",
+        "required": false,
+        "type": "System.String"
+      },
+      {
+        "name": "Descending",
+        "source": "Query",
+        "required": false,
+        "type": "System.Boolean"
+      },
+      {
+        "name": "SearchTerm",
+        "source": "Query",
+        "required": false,
+        "type": "System.String"
+      },
+      {
+        "name": "FromDate",
+        "source": "Query",
+        "required": false,
+        "type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+      },
+      {
+        "name": "ToDate",
+        "source": "Query",
+        "required": false,
+        "type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+      },
+      {
+        "name": "DateFilterField",
+        "source": "Query",
+        "required": false,
+        "type": "System.String"
+      },
+      {
+        "name": "Filters",
+        "source": "Query",
+        "required": false,
+        "type": "System.Collections.Generic.List\u00601[[IAX.IXApi.Shared.Application.Contracts.QueryFilterFieldDto, IAX.IXApi.Shared, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"
+      },
+      {
+        "name": "Includes",
+        "source": "Query",
+        "required": false,
+        "type": "System.Collections.Generic.List\u00601[[System.String, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+      },
+      {
+        "name": "Skip",
+        "source": "Query",
+        "required": false,
+        "type": "System.Int32"
+      }
+    ],
+    "responses": [
+      {
+        "status": 200,
+        "type": "IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[[System.Collections.Generic.IEnumerable\u00601[[IAX.IXApi.Modules.Organization.ManagementLevels.HcmWorkerManagementLevelDto, IAX.IXApi.Modules.Organization, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "mediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ]
+      }
+    ],
+    "pilotContract": null
+  },
+  {
+    "operationId": "Organization_HcmWorkerManagementLevel_Delete_DELETE_5d8e64623529305b",
+    "module": "Organization",
+    "controller": "HcmWorkerManagementLevel",
+    "action": "Delete",
+    "method": "DELETE",
+    "path": "/api/v1/HcmWorkerManagementLevel/{id}",
+    "sameActionGroup": "IAX.IXApi.Modules.Organization.ManagementLevels.HcmWorkerManagementLevelController:System.Threading.Tasks.Task\u00601[Microsoft.AspNetCore.Mvc.ActionResult\u00601[IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[System.Boolean]]] Delete(System.String, System.Threading.CancellationToken):DELETE",
+    "proposedToolName": null,
+    "status": "excluded",
+    "reason": "Not admitted: writes and behavioral read-only POSTs need individual review.",
+    "allowsAnonymous": false,
+    "domainPermissions": [
+      "Organization.Managers.Delete"
+    ],
+    "authorizationPolicies": [],
+    "roleRequirements": [],
+    "recordAuthorization": "Requires review; permission metadata alone does not describe record authorization",
+    "companyScope": "unclassified",
+    "parameters": [
+      {
+        "name": "id",
+        "source": "Path",
+        "required": true,
+        "type": "System.String"
+      }
+    ],
+    "responses": [
+      {
+        "status": 200,
+        "type": "IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[[System.Boolean, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
+        "mediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ]
+      }
+    ],
+    "pilotContract": null
+  },
+  {
+    "operationId": "Organization_HcmWorkerManagementLevel_GetById_GET_f6bbedad79eb4fbf",
+    "module": "Organization",
+    "controller": "HcmWorkerManagementLevel",
+    "action": "GetById",
+    "method": "GET",
+    "path": "/api/v1/HcmWorkerManagementLevel/{id}",
+    "sameActionGroup": "IAX.IXApi.Modules.Organization.ManagementLevels.HcmWorkerManagementLevelController:System.Threading.Tasks.Task\u00601[Microsoft.AspNetCore.Mvc.ActionResult\u00601[IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[IAX.IXApi.Modules.Organization.ManagementLevels.HcmWorkerManagementLevelDto]]] GetById(System.String, System.Threading.CancellationToken):GET",
+    "proposedToolName": null,
+    "status": "excluded",
+    "reason": "Not selected for the initial read-only pilot; authorization, scope and data policy require review.",
+    "allowsAnonymous": false,
+    "domainPermissions": [
+      "Organization.Managers.View"
+    ],
+    "authorizationPolicies": [],
+    "roleRequirements": [],
+    "recordAuthorization": "Requires review; permission metadata alone does not describe record authorization",
+    "companyScope": "unclassified",
+    "parameters": [
+      {
+        "name": "id",
+        "source": "Path",
+        "required": true,
+        "type": "System.String"
+      }
+    ],
+    "responses": [
+      {
+        "status": 200,
+        "type": "IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[[IAX.IXApi.Modules.Organization.ManagementLevels.HcmWorkerManagementLevelDto, IAX.IXApi.Modules.Organization, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "mediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ]
+      }
+    ],
+    "pilotContract": null
+  },
+  {
+    "operationId": "Organization_HcmWorkerManagementLevel_Update_PUT_a107e0d94f0c6cc7",
+    "module": "Organization",
+    "controller": "HcmWorkerManagementLevel",
+    "action": "Update",
+    "method": "PUT",
+    "path": "/api/v1/HcmWorkerManagementLevel/{id}",
+    "sameActionGroup": "IAX.IXApi.Modules.Organization.ManagementLevels.HcmWorkerManagementLevelController:System.Threading.Tasks.Task\u00601[Microsoft.AspNetCore.Mvc.ActionResult\u00601[IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[IAX.IXApi.Modules.Organization.ManagementLevels.HcmWorkerManagementLevelDto]]] Update(System.String, IAX.IXApi.Modules.Organization.ManagementLevels.HcmWorkerManagementLevelDto, System.Threading.CancellationToken):PUT",
+    "proposedToolName": null,
+    "status": "excluded",
+    "reason": "Not admitted: writes and behavioral read-only POSTs need individual review.",
+    "allowsAnonymous": false,
+    "domainPermissions": [
+      "Organization.Managers.Edit"
+    ],
+    "authorizationPolicies": [],
+    "roleRequirements": [],
+    "recordAuthorization": "Requires review; permission metadata alone does not describe record authorization",
+    "companyScope": "unclassified",
+    "parameters": [
+      {
+        "name": "id",
+        "source": "Path",
+        "required": true,
+        "type": "System.String"
+      },
+      {
+        "name": "dto",
+        "source": "Body",
+        "required": true,
+        "type": "IAX.IXApi.Modules.Organization.ManagementLevels.HcmWorkerManagementLevelDto"
+      }
+    ],
+    "responses": [
+      {
+        "status": 200,
+        "type": "IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[[IAX.IXApi.Modules.Organization.ManagementLevels.HcmWorkerManagementLevelDto, IAX.IXApi.Modules.Organization, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "mediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ]
+      }
+    ],
+    "pilotContract": null
+  },
+  {
     "operationId": "Organization_HcmWorkerManager_GetAll_GET_1f73a9181c20732b",
     "module": "Organization",
     "controller": "HcmWorkerManager",
@@ -19765,344 +20103,6 @@
       }
     ],
     "responses": [],
-    "pilotContract": null
-  },
-  {
-    "operationId": "Organization_ManagementLevel_GetAll_GET_b197519ef4131a22",
-    "module": "Organization",
-    "controller": "ManagementLevel",
-    "action": "GetAll",
-    "method": "GET",
-    "path": "/api/v1/ManagementLevel",
-    "sameActionGroup": "IAX.IXApi.Modules.Organization.ManagementLevels.ManagementLevelController:System.Threading.Tasks.Task\u00601[Microsoft.AspNetCore.Mvc.ActionResult\u00601[IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[System.Collections.Generic.IEnumerable\u00601[IAX.IXApi.Modules.Organization.ManagementLevels.ManagementLevelDto]]]] GetAll(System.Threading.CancellationToken):GET",
-    "proposedToolName": null,
-    "status": "excluded",
-    "reason": "Not selected for the initial read-only pilot; authorization, scope and data policy require review.",
-    "allowsAnonymous": false,
-    "domainPermissions": [
-      "Organization.Managers.View"
-    ],
-    "authorizationPolicies": [],
-    "roleRequirements": [],
-    "recordAuthorization": "Requires review; permission metadata alone does not describe record authorization",
-    "companyScope": "unclassified",
-    "parameters": [],
-    "responses": [
-      {
-        "status": 200,
-        "type": "IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[[System.Collections.Generic.IEnumerable\u00601[[IAX.IXApi.Modules.Organization.ManagementLevels.ManagementLevelDto, IAX.IXApi.Modules.Organization, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "mediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ]
-      }
-    ],
-    "pilotContract": null
-  },
-  {
-    "operationId": "Organization_ManagementLevel_Create_POST_711c7b0509fcb19f",
-    "module": "Organization",
-    "controller": "ManagementLevel",
-    "action": "Create",
-    "method": "POST",
-    "path": "/api/v1/ManagementLevel",
-    "sameActionGroup": "IAX.IXApi.Modules.Organization.ManagementLevels.ManagementLevelController:System.Threading.Tasks.Task\u00601[Microsoft.AspNetCore.Mvc.ActionResult\u00601[IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[IAX.IXApi.Modules.Organization.ManagementLevels.ManagementLevelDto]]] Create(IAX.IXApi.Modules.Organization.ManagementLevels.ManagementLevelDto, System.Threading.CancellationToken):POST",
-    "proposedToolName": null,
-    "status": "excluded",
-    "reason": "Not admitted: writes and behavioral read-only POSTs need individual review.",
-    "allowsAnonymous": false,
-    "domainPermissions": [
-      "Organization.Managers.Create"
-    ],
-    "authorizationPolicies": [],
-    "roleRequirements": [],
-    "recordAuthorization": "Requires review; permission metadata alone does not describe record authorization",
-    "companyScope": "unclassified",
-    "parameters": [
-      {
-        "name": "dto",
-        "source": "Body",
-        "required": true,
-        "type": "IAX.IXApi.Modules.Organization.ManagementLevels.ManagementLevelDto"
-      }
-    ],
-    "responses": [
-      {
-        "status": 200,
-        "type": "IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[[IAX.IXApi.Modules.Organization.ManagementLevels.ManagementLevelDto, IAX.IXApi.Modules.Organization, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "mediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ]
-      }
-    ],
-    "pilotContract": null
-  },
-  {
-    "operationId": "Organization_ManagementLevel_GetNumberSequence_GET_9798702e36627dc4",
-    "module": "Organization",
-    "controller": "ManagementLevel",
-    "action": "GetNumberSequence",
-    "method": "GET",
-    "path": "/api/v1/ManagementLevel/number-sequence",
-    "sameActionGroup": "IAX.IXApi.Modules.Organization.ManagementLevels.ManagementLevelController:System.Threading.Tasks.Task\u00601[Microsoft.AspNetCore.Mvc.ActionResult\u00601[IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[IAX.IXApi.Shared.Application.NumberSequences.NumberSequenceMetadataDto]]] GetNumberSequence(System.Threading.CancellationToken):GET",
-    "proposedToolName": null,
-    "status": "excluded",
-    "reason": "Not selected for the initial read-only pilot; authorization, scope and data policy require review.",
-    "allowsAnonymous": false,
-    "domainPermissions": [
-      "Organization.Managers.View"
-    ],
-    "authorizationPolicies": [],
-    "roleRequirements": [],
-    "recordAuthorization": "Requires review; permission metadata alone does not describe record authorization",
-    "companyScope": "unclassified",
-    "parameters": [],
-    "responses": [
-      {
-        "status": 200,
-        "type": "IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[[IAX.IXApi.Shared.Application.NumberSequences.NumberSequenceMetadataDto, IAX.IXApi.Shared, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "mediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ]
-      }
-    ],
-    "pilotContract": null
-  },
-  {
-    "operationId": "Organization_ManagementLevel_GetPaged_GET_28968c812ee8b809",
-    "module": "Organization",
-    "controller": "ManagementLevel",
-    "action": "GetPaged",
-    "method": "GET",
-    "path": "/api/v1/ManagementLevel/paged",
-    "sameActionGroup": "IAX.IXApi.Modules.Organization.ManagementLevels.ManagementLevelController:System.Threading.Tasks.Task\u00601[Microsoft.AspNetCore.Mvc.ActionResult\u00601[IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[System.Collections.Generic.IEnumerable\u00601[IAX.IXApi.Modules.Organization.ManagementLevels.ManagementLevelDto]]]] GetPaged(IAX.IXApi.Shared.Application.Contracts.QueryFilterDto, System.Threading.CancellationToken):GET",
-    "proposedToolName": null,
-    "status": "excluded",
-    "reason": "Not selected for the initial read-only pilot; authorization, scope and data policy require review.",
-    "allowsAnonymous": false,
-    "domainPermissions": [
-      "Organization.Managers.View"
-    ],
-    "authorizationPolicies": [],
-    "roleRequirements": [],
-    "recordAuthorization": "Requires review; permission metadata alone does not describe record authorization",
-    "companyScope": "unclassified",
-    "parameters": [
-      {
-        "name": "PageNumber",
-        "source": "Query",
-        "required": false,
-        "type": "System.Int32"
-      },
-      {
-        "name": "PageSize",
-        "source": "Query",
-        "required": false,
-        "type": "System.Int32"
-      },
-      {
-        "name": "SortField",
-        "source": "Query",
-        "required": false,
-        "type": "System.String"
-      },
-      {
-        "name": "SortOrder",
-        "source": "Query",
-        "required": false,
-        "type": "System.String"
-      },
-      {
-        "name": "Descending",
-        "source": "Query",
-        "required": false,
-        "type": "System.Boolean"
-      },
-      {
-        "name": "SearchTerm",
-        "source": "Query",
-        "required": false,
-        "type": "System.String"
-      },
-      {
-        "name": "FromDate",
-        "source": "Query",
-        "required": false,
-        "type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
-      },
-      {
-        "name": "ToDate",
-        "source": "Query",
-        "required": false,
-        "type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
-      },
-      {
-        "name": "DateFilterField",
-        "source": "Query",
-        "required": false,
-        "type": "System.String"
-      },
-      {
-        "name": "Filters",
-        "source": "Query",
-        "required": false,
-        "type": "System.Collections.Generic.List\u00601[[IAX.IXApi.Shared.Application.Contracts.QueryFilterFieldDto, IAX.IXApi.Shared, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"
-      },
-      {
-        "name": "Includes",
-        "source": "Query",
-        "required": false,
-        "type": "System.Collections.Generic.List\u00601[[System.String, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
-      },
-      {
-        "name": "Skip",
-        "source": "Query",
-        "required": false,
-        "type": "System.Int32"
-      }
-    ],
-    "responses": [
-      {
-        "status": 200,
-        "type": "IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[[System.Collections.Generic.IEnumerable\u00601[[IAX.IXApi.Modules.Organization.ManagementLevels.ManagementLevelDto, IAX.IXApi.Modules.Organization, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "mediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ]
-      }
-    ],
-    "pilotContract": null
-  },
-  {
-    "operationId": "Organization_ManagementLevel_Delete_DELETE_4724e2a37a8bfa9a",
-    "module": "Organization",
-    "controller": "ManagementLevel",
-    "action": "Delete",
-    "method": "DELETE",
-    "path": "/api/v1/ManagementLevel/{id}",
-    "sameActionGroup": "IAX.IXApi.Modules.Organization.ManagementLevels.ManagementLevelController:System.Threading.Tasks.Task\u00601[Microsoft.AspNetCore.Mvc.ActionResult\u00601[IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[System.Boolean]]] Delete(System.String, System.Threading.CancellationToken):DELETE",
-    "proposedToolName": null,
-    "status": "excluded",
-    "reason": "Not admitted: writes and behavioral read-only POSTs need individual review.",
-    "allowsAnonymous": false,
-    "domainPermissions": [
-      "Organization.Managers.Delete"
-    ],
-    "authorizationPolicies": [],
-    "roleRequirements": [],
-    "recordAuthorization": "Requires review; permission metadata alone does not describe record authorization",
-    "companyScope": "unclassified",
-    "parameters": [
-      {
-        "name": "id",
-        "source": "Path",
-        "required": true,
-        "type": "System.String"
-      }
-    ],
-    "responses": [
-      {
-        "status": 200,
-        "type": "IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[[System.Boolean, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "mediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ]
-      }
-    ],
-    "pilotContract": null
-  },
-  {
-    "operationId": "Organization_ManagementLevel_GetById_GET_b83776956d51b240",
-    "module": "Organization",
-    "controller": "ManagementLevel",
-    "action": "GetById",
-    "method": "GET",
-    "path": "/api/v1/ManagementLevel/{id}",
-    "sameActionGroup": "IAX.IXApi.Modules.Organization.ManagementLevels.ManagementLevelController:System.Threading.Tasks.Task\u00601[Microsoft.AspNetCore.Mvc.ActionResult\u00601[IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[IAX.IXApi.Modules.Organization.ManagementLevels.ManagementLevelDto]]] GetById(System.String, System.Threading.CancellationToken):GET",
-    "proposedToolName": null,
-    "status": "excluded",
-    "reason": "Not selected for the initial read-only pilot; authorization, scope and data policy require review.",
-    "allowsAnonymous": false,
-    "domainPermissions": [
-      "Organization.Managers.View"
-    ],
-    "authorizationPolicies": [],
-    "roleRequirements": [],
-    "recordAuthorization": "Requires review; permission metadata alone does not describe record authorization",
-    "companyScope": "unclassified",
-    "parameters": [
-      {
-        "name": "id",
-        "source": "Path",
-        "required": true,
-        "type": "System.String"
-      }
-    ],
-    "responses": [
-      {
-        "status": 200,
-        "type": "IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[[IAX.IXApi.Modules.Organization.ManagementLevels.ManagementLevelDto, IAX.IXApi.Modules.Organization, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "mediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ]
-      }
-    ],
-    "pilotContract": null
-  },
-  {
-    "operationId": "Organization_ManagementLevel_Update_PUT_3d86ad246fcb1505",
-    "module": "Organization",
-    "controller": "ManagementLevel",
-    "action": "Update",
-    "method": "PUT",
-    "path": "/api/v1/ManagementLevel/{id}",
-    "sameActionGroup": "IAX.IXApi.Modules.Organization.ManagementLevels.ManagementLevelController:System.Threading.Tasks.Task\u00601[Microsoft.AspNetCore.Mvc.ActionResult\u00601[IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[IAX.IXApi.Modules.Organization.ManagementLevels.ManagementLevelDto]]] Update(System.String, IAX.IXApi.Modules.Organization.ManagementLevels.ManagementLevelDto, System.Threading.CancellationToken):PUT",
-    "proposedToolName": null,
-    "status": "excluded",
-    "reason": "Not admitted: writes and behavioral read-only POSTs need individual review.",
-    "allowsAnonymous": false,
-    "domainPermissions": [
-      "Organization.Managers.Edit"
-    ],
-    "authorizationPolicies": [],
-    "roleRequirements": [],
-    "recordAuthorization": "Requires review; permission metadata alone does not describe record authorization",
-    "companyScope": "unclassified",
-    "parameters": [
-      {
-        "name": "id",
-        "source": "Path",
-        "required": true,
-        "type": "System.String"
-      },
-      {
-        "name": "dto",
-        "source": "Body",
-        "required": true,
-        "type": "IAX.IXApi.Modules.Organization.ManagementLevels.ManagementLevelDto"
-      }
-    ],
-    "responses": [
-      {
-        "status": 200,
-        "type": "IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[[IAX.IXApi.Modules.Organization.ManagementLevels.ManagementLevelDto, IAX.IXApi.Modules.Organization, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "mediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ]
-      }
-    ],
     "pilotContract": null
   },
   {
@@ -24229,430 +24229,6 @@
       }
     ],
     "responses": [],
-    "pilotContract": null
-  },
-  {
-    "operationId": "Organization_Showroom_GetAll_GET_54b2b2094811f8da",
-    "module": "Organization",
-    "controller": "Showroom",
-    "action": "GetAll",
-    "method": "GET",
-    "path": "/api/v1/Showroom",
-    "sameActionGroup": "IAX.IXApi.Modules.Organization.Showrooms.ShowroomController:System.Threading.Tasks.Task\u00601[Microsoft.AspNetCore.Mvc.ActionResult\u00601[IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[System.Collections.Generic.IEnumerable\u00601[IAX.IXApi.Modules.Organization.Showrooms.ShowroomDto]]]] GetAll(System.Threading.CancellationToken):GET",
-    "proposedToolName": null,
-    "status": "excluded",
-    "reason": "Not selected for the initial read-only pilot; authorization, scope and data policy require review.",
-    "allowsAnonymous": false,
-    "domainPermissions": [
-      "Organization.Showrooms.View"
-    ],
-    "authorizationPolicies": [],
-    "roleRequirements": [],
-    "recordAuthorization": "Requires review; permission metadata alone does not describe record authorization",
-    "companyScope": "unclassified",
-    "parameters": [],
-    "responses": [
-      {
-        "status": 200,
-        "type": "IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[[System.Collections.Generic.IEnumerable\u00601[[IAX.IXApi.Modules.Organization.Showrooms.ShowroomDto, IAX.IXApi.Modules.Organization, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "mediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ]
-      }
-    ],
-    "pilotContract": null
-  },
-  {
-    "operationId": "Organization_Showroom_Create_POST_4ae9c48e09d674ef",
-    "module": "Organization",
-    "controller": "Showroom",
-    "action": "Create",
-    "method": "POST",
-    "path": "/api/v1/Showroom",
-    "sameActionGroup": "IAX.IXApi.Modules.Organization.Showrooms.ShowroomController:System.Threading.Tasks.Task\u00601[Microsoft.AspNetCore.Mvc.ActionResult\u00601[IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[IAX.IXApi.Modules.Organization.Showrooms.ShowroomDto]]] Create(IAX.IXApi.Modules.Organization.Showrooms.ShowroomDto, System.Threading.CancellationToken):POST",
-    "proposedToolName": null,
-    "status": "excluded",
-    "reason": "Not admitted: writes and behavioral read-only POSTs need individual review.",
-    "allowsAnonymous": false,
-    "domainPermissions": [
-      "Organization.Showrooms.Create"
-    ],
-    "authorizationPolicies": [],
-    "roleRequirements": [],
-    "recordAuthorization": "Requires review; permission metadata alone does not describe record authorization",
-    "companyScope": "unclassified",
-    "parameters": [
-      {
-        "name": "dto",
-        "source": "Body",
-        "required": true,
-        "type": "IAX.IXApi.Modules.Organization.Showrooms.ShowroomDto"
-      }
-    ],
-    "responses": [
-      {
-        "status": 200,
-        "type": "IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[[IAX.IXApi.Modules.Organization.Showrooms.ShowroomDto, IAX.IXApi.Modules.Organization, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "mediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ]
-      }
-    ],
-    "pilotContract": null
-  },
-  {
-    "operationId": "Organization_Showroom_GetNumberSequence_GET_578a659a6b259109",
-    "module": "Organization",
-    "controller": "Showroom",
-    "action": "GetNumberSequence",
-    "method": "GET",
-    "path": "/api/v1/Showroom/number-sequence",
-    "sameActionGroup": "IAX.IXApi.Modules.Organization.Showrooms.ShowroomController:System.Threading.Tasks.Task\u00601[Microsoft.AspNetCore.Mvc.ActionResult\u00601[IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[IAX.IXApi.Shared.Application.NumberSequences.NumberSequenceMetadataDto]]] GetNumberSequence(System.Threading.CancellationToken):GET",
-    "proposedToolName": null,
-    "status": "excluded",
-    "reason": "Not selected for the initial read-only pilot; authorization, scope and data policy require review.",
-    "allowsAnonymous": false,
-    "domainPermissions": [
-      "Organization.Showrooms.View"
-    ],
-    "authorizationPolicies": [],
-    "roleRequirements": [],
-    "recordAuthorization": "Requires review; permission metadata alone does not describe record authorization",
-    "companyScope": "unclassified",
-    "parameters": [],
-    "responses": [
-      {
-        "status": 200,
-        "type": "IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[[IAX.IXApi.Shared.Application.NumberSequences.NumberSequenceMetadataDto, IAX.IXApi.Shared, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "mediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ]
-      }
-    ],
-    "pilotContract": null
-  },
-  {
-    "operationId": "Organization_Showroom_GetPaged_GET_8c7ed56f657556da",
-    "module": "Organization",
-    "controller": "Showroom",
-    "action": "GetPaged",
-    "method": "GET",
-    "path": "/api/v1/Showroom/paged",
-    "sameActionGroup": "IAX.IXApi.Modules.Organization.Showrooms.ShowroomController:System.Threading.Tasks.Task\u00601[Microsoft.AspNetCore.Mvc.ActionResult\u00601[IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[System.Collections.Generic.IEnumerable\u00601[IAX.IXApi.Modules.Organization.Showrooms.ShowroomDto]]]] GetPaged(IAX.IXApi.Shared.Application.Contracts.QueryFilterDto, System.Threading.CancellationToken):GET",
-    "proposedToolName": null,
-    "status": "excluded",
-    "reason": "Not selected for the initial read-only pilot; authorization, scope and data policy require review.",
-    "allowsAnonymous": false,
-    "domainPermissions": [
-      "Organization.Showrooms.View"
-    ],
-    "authorizationPolicies": [],
-    "roleRequirements": [],
-    "recordAuthorization": "Requires review; permission metadata alone does not describe record authorization",
-    "companyScope": "unclassified",
-    "parameters": [
-      {
-        "name": "PageNumber",
-        "source": "Query",
-        "required": false,
-        "type": "System.Int32"
-      },
-      {
-        "name": "PageSize",
-        "source": "Query",
-        "required": false,
-        "type": "System.Int32"
-      },
-      {
-        "name": "SortField",
-        "source": "Query",
-        "required": false,
-        "type": "System.String"
-      },
-      {
-        "name": "SortOrder",
-        "source": "Query",
-        "required": false,
-        "type": "System.String"
-      },
-      {
-        "name": "Descending",
-        "source": "Query",
-        "required": false,
-        "type": "System.Boolean"
-      },
-      {
-        "name": "SearchTerm",
-        "source": "Query",
-        "required": false,
-        "type": "System.String"
-      },
-      {
-        "name": "FromDate",
-        "source": "Query",
-        "required": false,
-        "type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
-      },
-      {
-        "name": "ToDate",
-        "source": "Query",
-        "required": false,
-        "type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
-      },
-      {
-        "name": "DateFilterField",
-        "source": "Query",
-        "required": false,
-        "type": "System.String"
-      },
-      {
-        "name": "Filters",
-        "source": "Query",
-        "required": false,
-        "type": "System.Collections.Generic.List\u00601[[IAX.IXApi.Shared.Application.Contracts.QueryFilterFieldDto, IAX.IXApi.Shared, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]"
-      },
-      {
-        "name": "Includes",
-        "source": "Query",
-        "required": false,
-        "type": "System.Collections.Generic.List\u00601[[System.String, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
-      },
-      {
-        "name": "Skip",
-        "source": "Query",
-        "required": false,
-        "type": "System.Int32"
-      }
-    ],
-    "responses": [
-      {
-        "status": 200,
-        "type": "IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[[System.Collections.Generic.IEnumerable\u00601[[IAX.IXApi.Modules.Organization.Showrooms.ShowroomDto, IAX.IXApi.Modules.Organization, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "mediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ]
-      }
-    ],
-    "pilotContract": null
-  },
-  {
-    "operationId": "Organization_Showroom_Delete_DELETE_bcab06722700ce01",
-    "module": "Organization",
-    "controller": "Showroom",
-    "action": "Delete",
-    "method": "DELETE",
-    "path": "/api/v1/Showroom/{id}",
-    "sameActionGroup": "IAX.IXApi.Modules.Organization.Showrooms.ShowroomController:System.Threading.Tasks.Task\u00601[Microsoft.AspNetCore.Mvc.ActionResult\u00601[IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[System.Boolean]]] Delete(System.String, System.Threading.CancellationToken):DELETE",
-    "proposedToolName": null,
-    "status": "excluded",
-    "reason": "Not admitted: writes and behavioral read-only POSTs need individual review.",
-    "allowsAnonymous": false,
-    "domainPermissions": [
-      "Organization.Showrooms.Delete"
-    ],
-    "authorizationPolicies": [],
-    "roleRequirements": [],
-    "recordAuthorization": "Requires review; permission metadata alone does not describe record authorization",
-    "companyScope": "unclassified",
-    "parameters": [
-      {
-        "name": "id",
-        "source": "Path",
-        "required": true,
-        "type": "System.String"
-      }
-    ],
-    "responses": [
-      {
-        "status": 200,
-        "type": "IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[[System.Boolean, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "mediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ]
-      }
-    ],
-    "pilotContract": null
-  },
-  {
-    "operationId": "Organization_Showroom_GetById_GET_0dfa74ad90866aac",
-    "module": "Organization",
-    "controller": "Showroom",
-    "action": "GetById",
-    "method": "GET",
-    "path": "/api/v1/Showroom/{id}",
-    "sameActionGroup": "IAX.IXApi.Modules.Organization.Showrooms.ShowroomController:System.Threading.Tasks.Task\u00601[Microsoft.AspNetCore.Mvc.ActionResult\u00601[IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[IAX.IXApi.Modules.Organization.Showrooms.ShowroomDto]]] GetById(System.String, System.Threading.CancellationToken):GET",
-    "proposedToolName": null,
-    "status": "excluded",
-    "reason": "Not selected for the initial read-only pilot; authorization, scope and data policy require review.",
-    "allowsAnonymous": false,
-    "domainPermissions": [
-      "Organization.Showrooms.View"
-    ],
-    "authorizationPolicies": [],
-    "roleRequirements": [],
-    "recordAuthorization": "Requires review; permission metadata alone does not describe record authorization",
-    "companyScope": "unclassified",
-    "parameters": [
-      {
-        "name": "id",
-        "source": "Path",
-        "required": true,
-        "type": "System.String"
-      }
-    ],
-    "responses": [
-      {
-        "status": 200,
-        "type": "IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[[IAX.IXApi.Modules.Organization.Showrooms.ShowroomDto, IAX.IXApi.Modules.Organization, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "mediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ]
-      }
-    ],
-    "pilotContract": null
-  },
-  {
-    "operationId": "Organization_Showroom_Update_PUT_4dc306ef83664a22",
-    "module": "Organization",
-    "controller": "Showroom",
-    "action": "Update",
-    "method": "PUT",
-    "path": "/api/v1/Showroom/{id}",
-    "sameActionGroup": "IAX.IXApi.Modules.Organization.Showrooms.ShowroomController:System.Threading.Tasks.Task\u00601[Microsoft.AspNetCore.Mvc.ActionResult\u00601[IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[IAX.IXApi.Modules.Organization.Showrooms.ShowroomDto]]] Update(System.String, IAX.IXApi.Modules.Organization.Showrooms.ShowroomDto, System.Threading.CancellationToken):PUT",
-    "proposedToolName": null,
-    "status": "excluded",
-    "reason": "Not admitted: writes and behavioral read-only POSTs need individual review.",
-    "allowsAnonymous": false,
-    "domainPermissions": [
-      "Organization.Showrooms.Edit"
-    ],
-    "authorizationPolicies": [],
-    "roleRequirements": [],
-    "recordAuthorization": "Requires review; permission metadata alone does not describe record authorization",
-    "companyScope": "unclassified",
-    "parameters": [
-      {
-        "name": "id",
-        "source": "Path",
-        "required": true,
-        "type": "System.String"
-      },
-      {
-        "name": "dto",
-        "source": "Body",
-        "required": true,
-        "type": "IAX.IXApi.Modules.Organization.Showrooms.ShowroomDto"
-      }
-    ],
-    "responses": [
-      {
-        "status": 200,
-        "type": "IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[[IAX.IXApi.Modules.Organization.Showrooms.ShowroomDto, IAX.IXApi.Modules.Organization, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
-        "mediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ]
-      }
-    ],
-    "pilotContract": null
-  },
-  {
-    "operationId": "Organization_Showroom_GetSellers_GET_739357a1a9168f7b",
-    "module": "Organization",
-    "controller": "Showroom",
-    "action": "GetSellers",
-    "method": "GET",
-    "path": "/api/v1/Showroom/{id}/sellers",
-    "sameActionGroup": "IAX.IXApi.Modules.Organization.Showrooms.ShowroomController:System.Threading.Tasks.Task\u00601[Microsoft.AspNetCore.Mvc.ActionResult\u00601[IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[System.Collections.Generic.IEnumerable\u00601[IAX.IXApi.Modules.Organization.Showrooms.ShowroomSellerDto]]]] GetSellers(Int64, System.Threading.CancellationToken):GET",
-    "proposedToolName": null,
-    "status": "excluded",
-    "reason": "Not selected for the initial read-only pilot; authorization, scope and data policy require review.",
-    "allowsAnonymous": false,
-    "domainPermissions": [
-      "Organization.Showrooms.View"
-    ],
-    "authorizationPolicies": [],
-    "roleRequirements": [],
-    "recordAuthorization": "Requires review; permission metadata alone does not describe record authorization",
-    "companyScope": "unclassified",
-    "parameters": [
-      {
-        "name": "id",
-        "source": "Path",
-        "required": true,
-        "type": "System.Int64"
-      }
-    ],
-    "responses": [
-      {
-        "status": 200,
-        "type": "IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[[System.Collections.Generic.IEnumerable\u00601[[IAX.IXApi.Modules.Organization.Showrooms.ShowroomSellerDto, IAX.IXApi.Modules.Organization, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "mediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ]
-      }
-    ],
-    "pilotContract": null
-  },
-  {
-    "operationId": "Organization_Showroom_SetSellers_PUT_0c3d752c994ddfe0",
-    "module": "Organization",
-    "controller": "Showroom",
-    "action": "SetSellers",
-    "method": "PUT",
-    "path": "/api/v1/Showroom/{id}/sellers",
-    "sameActionGroup": "IAX.IXApi.Modules.Organization.Showrooms.ShowroomController:System.Threading.Tasks.Task\u00601[Microsoft.AspNetCore.Mvc.ActionResult\u00601[IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[System.Collections.Generic.IEnumerable\u00601[IAX.IXApi.Modules.Organization.Showrooms.ShowroomSellerDto]]]] SetSellers(Int64, System.Collections.Generic.IEnumerable\u00601[System.Int64], System.Threading.CancellationToken):PUT",
-    "proposedToolName": null,
-    "status": "excluded",
-    "reason": "Not admitted: writes and behavioral read-only POSTs need individual review.",
-    "allowsAnonymous": false,
-    "domainPermissions": [
-      "Organization.Showrooms.Edit"
-    ],
-    "authorizationPolicies": [],
-    "roleRequirements": [],
-    "recordAuthorization": "Requires review; permission metadata alone does not describe record authorization",
-    "companyScope": "unclassified",
-    "parameters": [
-      {
-        "name": "id",
-        "source": "Path",
-        "required": true,
-        "type": "System.Int64"
-      },
-      {
-        "name": "employeeIds",
-        "source": "Body",
-        "required": true,
-        "type": "System.Collections.Generic.IEnumerable\u00601[[System.Int64, System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
-      }
-    ],
-    "responses": [
-      {
-        "status": 200,
-        "type": "IAX.IXApi.Shared.Application.Contracts.APIResponse\u00601[[System.Collections.Generic.IEnumerable\u00601[[IAX.IXApi.Modules.Organization.Showrooms.ShowroomSellerDto, IAX.IXApi.Modules.Organization, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=9.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "mediaTypes": [
-          "text/plain",
-          "application/json",
-          "text/json"
-        ]
-      }
-    ],
     "pilotContract": null
   },
   {

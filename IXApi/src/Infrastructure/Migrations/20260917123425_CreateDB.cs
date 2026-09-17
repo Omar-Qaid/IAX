@@ -73,6 +73,36 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AspNetUsers",
+                columns: table => new
+                {
+                    Id = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2(7)", nullable: false),
+                    LastLoginDate = table.Column<DateTime>(type: "datetime2(7)", nullable: false),
+                    LastLockoutDate = table.Column<DateTime>(type: "datetime2(7)", nullable: true),
+                    AccountExpirationDate = table.Column<DateTime>(type: "datetime2(7)", nullable: true),
+                    PhotoUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    NormalizedEmail = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    EmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SecurityStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumberConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    TwoFactorEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    LockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    LockoutEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    AccessFailedCount = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "BankAccountTable",
                 columns: table => new
                 {
@@ -2022,6 +2052,32 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "HcmWorkerManagementLevels",
+                columns: table => new
+                {
+                    RECID = table.Column<byte>(type: "tinyint", nullable: false),
+                    Level = table.Column<byte>(type: "tinyint", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    RecVersion = table.Column<int>(type: "int", nullable: false),
+                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
+                    Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NameAlias = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HcmWorkerManagementLevels", x => x.RECID);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "InventBatch",
                 columns: table => new
                 {
@@ -3487,32 +3543,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_MainAccount", x => x.RECID);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "ManagementLevels",
-                columns: table => new
-                {
-                    RECID = table.Column<byte>(type: "tinyint", nullable: false),
-                    Level = table.Column<byte>(type: "tinyint", nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    RecVersion = table.Column<int>(type: "int", nullable: false),
-                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
-                    Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    NameAlias = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ManagementLevels", x => x.RECID);
                 });
 
             migrationBuilder.CreateTable(
@@ -5383,6 +5413,125 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AspNetUserClaims",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(256)", nullable: false),
+                    ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetUserClaims", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AspNetUserClaims_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AspNetUserLogins",
+                columns: table => new
+                {
+                    LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ProviderKey = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ProviderDisplayName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UserId = table.Column<string>(type: "nvarchar(256)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetUserLogins", x => new { x.LoginProvider, x.ProviderKey });
+                    table.ForeignKey(
+                        name: "FK_AspNetUserLogins_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AspNetUserRoles",
+                columns: table => new
+                {
+                    UserId = table.Column<string>(type: "nvarchar(256)", nullable: false),
+                    RoleId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetUserRoles", x => new { x.UserId, x.RoleId });
+                    table.ForeignKey(
+                        name: "FK_AspNetUserRoles_AspNetRoles_RoleId",
+                        column: x => x.RoleId,
+                        principalTable: "AspNetRoles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_AspNetUserRoles_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AspNetUserTokens",
+                columns: table => new
+                {
+                    UserId = table.Column<string>(type: "nvarchar(256)", nullable: false),
+                    LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Value = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetUserTokens", x => new { x.UserId, x.LoginProvider, x.Name });
+                    table.ForeignKey(
+                        name: "FK_AspNetUserTokens_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SysUserSettings",
+                columns: table => new
+                {
+                    RECID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    Theme = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    Language = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
+                    PageSize = table.Column<int>(type: "int", nullable: false),
+                    NotificationEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    DashboardLayout = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    RecVersion = table.Column<int>(type: "int", nullable: false),
+                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SysUserSettings", x => x.RECID);
+                    table.ForeignKey(
+                        name: "FK_SysUserSettings_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "BatchJobHistory",
                 columns: table => new
                 {
@@ -5534,42 +5683,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         column: x => x.PostingProfile,
                         principalTable: "CustLedger",
                         principalColumn: "PostingProfile");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "OrgEntities",
-                columns: table => new
-                {
-                    RECID = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    DepartmentId = table.Column<short>(type: "smallint", nullable: false),
-                    PartyId = table.Column<long>(type: "bigint", nullable: false),
-                    PartyType = table.Column<string>(type: "nvarchar(21)", maxLength: 21, nullable: false),
-                    Location = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    RecVersion = table.Column<int>(type: "int", nullable: false),
-                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
-                    Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    NameAlias = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_OrgEntities", x => x.RECID);
-                    table.ForeignKey(
-                        name: "FK_OrgEntities_Departments_DepartmentId",
-                        column: x => x.DepartmentId,
-                        principalTable: "Departments",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -5739,6 +5852,46 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         name: "FK_DocuRef_DocuValue_VALUERECID",
                         column: x => x.VALUERECID,
                         principalTable: "DocuValue",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "EmployeeGroupDetails",
+                columns: table => new
+                {
+                    UserGroupID = table.Column<long>(type: "bigint", nullable: false),
+                    UserID = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RECID = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    RecVersion = table.Column<int>(type: "int", nullable: false),
+                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
+                    Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NameAlias = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EmployeeGroupDetails", x => new { x.UserGroupID, x.UserID });
+                    table.ForeignKey(
+                        name: "FK_EmployeeGroupDetails_AspNetUsers_UserID",
+                        column: x => x.UserID,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_EmployeeGroupDetails_EmployeeGroups_UserGroupID",
+                        column: x => x.UserGroupID,
+                        principalTable: "EmployeeGroups",
                         principalColumn: "RECID",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -6061,6 +6214,66 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         name: "FK_EmployeeCategoryGroups_OrgEmployeeCategories_UserCategoriesID",
                         column: x => x.UserCategoriesID,
                         principalTable: "OrgEmployeeCategories",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "HcmWorker",
+                columns: table => new
+                {
+                    RECID = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PersonnelNumber = table.Column<string>(type: "nvarchar(25)", maxLength: 25, nullable: false),
+                    Person = table.Column<long>(type: "bigint", nullable: false),
+                    DepartmentId = table.Column<short>(type: "smallint", nullable: false),
+                    OccupationId = table.Column<short>(type: "smallint", nullable: false),
+                    HireDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    BirthDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    GenderId = table.Column<byte>(type: "tinyint", nullable: false),
+                    NationalityId = table.Column<short>(type: "smallint", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(256)", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    RecVersion = table.Column<int>(type: "int", nullable: false),
+                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HcmWorker", x => x.RECID);
+                    table.ForeignKey(
+                        name: "FK_HcmWorker_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_HcmWorker_Departments_DepartmentId",
+                        column: x => x.DepartmentId,
+                        principalTable: "Departments",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_HcmWorker_Genders_GenderId",
+                        column: x => x.GenderId,
+                        principalTable: "Genders",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_HcmWorker_Occupations_OccupationId",
+                        column: x => x.OccupationId,
+                        principalTable: "Occupations",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_HcmWorker_OrgNationalities_NationalityId",
+                        column: x => x.NationalityId,
+                        principalTable: "OrgNationalities",
                         principalColumn: "RECID",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -6391,43 +6604,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "AspNetUsers",
-                columns: table => new
-                {
-                    Id = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2(7)", nullable: false),
-                    LastLoginDate = table.Column<DateTime>(type: "datetime2(7)", nullable: false),
-                    LastLockoutDate = table.Column<DateTime>(type: "datetime2(7)", nullable: true),
-                    AccountExpirationDate = table.Column<DateTime>(type: "datetime2(7)", nullable: true),
-                    PhotoUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    OrganizationEntityId = table.Column<long>(type: "bigint", nullable: true),
-                    UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    NormalizedEmail = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    EmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
-                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    SecurityStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PhoneNumberConfirmed = table.Column<bool>(type: "bit", nullable: false),
-                    TwoFactorEnabled = table.Column<bool>(type: "bit", nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    LockoutEnabled = table.Column<bool>(type: "bit", nullable: false),
-                    AccessFailedCount = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AspNetUsers", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_AspNetUsers_OrgEntities_OrganizationEntityId",
-                        column: x => x.OrganizationEntityId,
-                        principalTable: "OrgEntities",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.SetNull);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "ExchangeRate",
                 columns: table => new
                 {
@@ -6577,6 +6753,78 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "EmployeeManagers",
+                columns: table => new
+                {
+                    EmployeeId = table.Column<long>(type: "bigint", nullable: false),
+                    ManagementLevelId = table.Column<byte>(type: "tinyint", nullable: false),
+                    ManagerId = table.Column<long>(type: "bigint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EmployeeManagers", x => new { x.EmployeeId, x.ManagementLevelId });
+                    table.ForeignKey(
+                        name: "FK_EmployeeManagers_HcmWorkerManagementLevels_ManagementLevelId",
+                        column: x => x.ManagementLevelId,
+                        principalTable: "HcmWorkerManagementLevels",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_EmployeeManagers_HcmWorker_EmployeeId",
+                        column: x => x.EmployeeId,
+                        principalTable: "HcmWorker",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_EmployeeManagers_HcmWorker_ManagerId",
+                        column: x => x.ManagerId,
+                        principalTable: "HcmWorker",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "HcmWorkerOrganizationAssignments",
+                columns: table => new
+                {
+                    AssignmentId = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
+                    PositionId = table.Column<long>(type: "bigint", nullable: true),
+                    HcmWorkerId = table.Column<long>(type: "bigint", nullable: false),
+                    OrganizationUnitId = table.Column<long>(type: "bigint", nullable: false),
+                    AssignmentRole = table.Column<byte>(type: "tinyint", nullable: false),
+                    ValidFrom = table.Column<DateOnly>(type: "date", nullable: false),
+                    ValidTo = table.Column<DateOnly>(type: "date", nullable: true),
+                    IsPrimary = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "SYSUTCDATETIME()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HcmWorkerOrganizationAssignments", x => x.AssignmentId);
+                    table.CheckConstraint("CK_HcmWorkerOrganizationAssignments_Dates", "[ValidTo] IS NULL OR [ValidTo] > [ValidFrom]");
+                    table.ForeignKey(
+                        name: "FK_HcmWorkerOrganizationAssignments_HcmPositions_PositionId",
+                        column: x => x.PositionId,
+                        principalTable: "HcmPositions",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_HcmWorkerOrganizationAssignments_HcmWorker_HcmWorkerId",
+                        column: x => x.HcmWorkerId,
+                        principalTable: "HcmWorker",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_HcmWorkerOrganizationAssignments_OrganizationUnits_OrganizationUnitId",
+                        column: x => x.OrganizationUnitId,
+                        principalTable: "OrganizationUnits",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "SysNotificationAuditLogs",
                 columns: table => new
                 {
@@ -6595,6 +6843,37 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     table.PrimaryKey("PK_SysNotificationAuditLogs", x => x.RecId);
                     table.ForeignKey(
                         name: "FK_SysNotificationAuditLogs_SysNotifications_NotificationId",
+                        column: x => x.NotificationId,
+                        principalTable: "SysNotifications",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SysNotificationRecipients",
+                columns: table => new
+                {
+                    RecId = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    NotificationId = table.Column<long>(type: "bigint", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    IsRead = table.Column<bool>(type: "bit", nullable: false),
+                    ReadDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DeliveredDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DeliveryStatus = table.Column<int>(type: "int", nullable: false),
+                    IsArchived = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SysNotificationRecipients", x => x.RecId);
+                    table.ForeignKey(
+                        name: "FK_SysNotificationRecipients_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_SysNotificationRecipients_SysNotifications_NotificationId",
                         column: x => x.NotificationId,
                         principalTable: "SysNotifications",
                         principalColumn: "RECID",
@@ -6832,7 +7111,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     table.CheckConstraint("CK_WfRequestControls_DataType", "[DataType] IN (N'String',N'Integer',N'Decimal',N'Date',N'DateTime',N'Time',N'Boolean')");
                     table.CheckConstraint("CK_WfRequestControls_DefaultAggregation", "[DefaultAggregation] IN (N'NONE',N'SUM',N'COUNT',N'COUNT_DISTINCT',N'AVG',N'MIN',N'MAX')");
                     table.CheckConstraint("CK_WfRequestControls_FieldRole", "[FieldRole] IN (N'Dimension',N'Measure',N'Both')");
-                    table.CheckConstraint("CK_WfRequestControls_ReferenceType", "[ReferenceType] IS NULL OR [ReferenceType] IN (N'Lookup',N'Employee',N'Showroom',N'Branch',N'Company',N'Department',N'BusinessUnit',N'Area',N'City',N'Country',N'Location',N'Customer',N'Vendor',N'Item',N'ItemGroup',N'Category',N'Warehouse',N'PaymentMethod',N'ViolationType',N'Invoice',N'PurchaseOrder',N'SalesOrder',N'Process',N'User')");
+                    table.CheckConstraint("CK_WfRequestControls_ReferenceType", "[ReferenceType] IS NULL OR [ReferenceType] IN (N'Lookup',N'Employee',N'Branch',N'Company',N'Department',N'BusinessUnit',N'Area',N'City',N'Country',N'Location',N'Customer',N'Vendor',N'Item',N'ItemGroup',N'Category',N'Warehouse',N'PaymentMethod',N'ViolationType',N'Invoice',N'PurchaseOrder',N'SalesOrder',N'Process',N'User')");
                     table.ForeignKey(
                         name: "FK_WfRequestControls_WfControls_ControlId",
                         column: x => x.ControlId,
@@ -6885,6 +7164,54 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "WfUsersProcesses",
+                columns: table => new
+                {
+                    UsersProcessesId = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ProcessId = table.Column<long>(type: "bigint", nullable: false),
+                    DepartmentId = table.Column<short>(type: "smallint", nullable: true),
+                    OccupationId = table.Column<short>(type: "smallint", nullable: true),
+                    EmployeeId = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    RecVersion = table.Column<int>(type: "int", nullable: false),
+                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WfUsersProcesses", x => x.UsersProcessesId);
+                    table.ForeignKey(
+                        name: "FK_WfUsersProcesses_Departments_DepartmentId",
+                        column: x => x.DepartmentId,
+                        principalTable: "Departments",
+                        principalColumn: "RECID");
+                    table.ForeignKey(
+                        name: "FK_WfUsersProcesses_HcmWorker_EmployeeId",
+                        column: x => x.EmployeeId,
+                        principalTable: "HcmWorker",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_WfUsersProcesses_Occupations_OccupationId",
+                        column: x => x.OccupationId,
+                        principalTable: "Occupations",
+                        principalColumn: "RECID");
+                    table.ForeignKey(
+                        name: "FK_WfUsersProcesses_WfProcesses_ProcessId",
+                        column: x => x.ProcessId,
+                        principalTable: "WfProcesses",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "WfVariables",
                 columns: table => new
                 {
@@ -6922,262 +7249,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         column: x => x.ProcessId,
                         principalTable: "WfProcesses",
                         principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "AspNetUserClaims",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<string>(type: "nvarchar(256)", nullable: false),
-                    ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AspNetUserClaims", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_AspNetUserClaims_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "AspNetUserLogins",
-                columns: table => new
-                {
-                    LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    ProviderKey = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    ProviderDisplayName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UserId = table.Column<string>(type: "nvarchar(256)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AspNetUserLogins", x => new { x.LoginProvider, x.ProviderKey });
-                    table.ForeignKey(
-                        name: "FK_AspNetUserLogins_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "AspNetUserRoles",
-                columns: table => new
-                {
-                    UserId = table.Column<string>(type: "nvarchar(256)", nullable: false),
-                    RoleId = table.Column<string>(type: "nvarchar(450)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AspNetUserRoles", x => new { x.UserId, x.RoleId });
-                    table.ForeignKey(
-                        name: "FK_AspNetUserRoles_AspNetRoles_RoleId",
-                        column: x => x.RoleId,
-                        principalTable: "AspNetRoles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_AspNetUserRoles_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "AspNetUserTokens",
-                columns: table => new
-                {
-                    UserId = table.Column<string>(type: "nvarchar(256)", nullable: false),
-                    LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Value = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AspNetUserTokens", x => new { x.UserId, x.LoginProvider, x.Name });
-                    table.ForeignKey(
-                        name: "FK_AspNetUserTokens_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "EmployeeGroupDetails",
-                columns: table => new
-                {
-                    UserGroupID = table.Column<long>(type: "bigint", nullable: false),
-                    UserID = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    RECID = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    RecVersion = table.Column<int>(type: "int", nullable: false),
-                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
-                    Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    NameAlias = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_EmployeeGroupDetails", x => new { x.UserGroupID, x.UserID });
-                    table.ForeignKey(
-                        name: "FK_EmployeeGroupDetails_AspNetUsers_UserID",
-                        column: x => x.UserID,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_EmployeeGroupDetails_EmployeeGroups_UserGroupID",
-                        column: x => x.UserGroupID,
-                        principalTable: "EmployeeGroups",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "HcmWorker",
-                columns: table => new
-                {
-                    RECID = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    PersonnelNumber = table.Column<string>(type: "nvarchar(25)", maxLength: 25, nullable: false),
-                    Person = table.Column<long>(type: "bigint", nullable: false),
-                    DepartmentId = table.Column<short>(type: "smallint", nullable: false),
-                    OccupationId = table.Column<short>(type: "smallint", nullable: false),
-                    HireDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    BirthDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    GenderId = table.Column<byte>(type: "tinyint", nullable: false),
-                    NationalityId = table.Column<short>(type: "smallint", nullable: false),
-                    ShowroomId = table.Column<long>(type: "bigint", nullable: true),
-                    UserId = table.Column<string>(type: "nvarchar(256)", nullable: true),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    RecVersion = table.Column<int>(type: "int", nullable: false),
-                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_HcmWorker", x => x.RECID);
-                    table.ForeignKey(
-                        name: "FK_HcmWorker_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_HcmWorker_Departments_DepartmentId",
-                        column: x => x.DepartmentId,
-                        principalTable: "Departments",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_HcmWorker_Genders_GenderId",
-                        column: x => x.GenderId,
-                        principalTable: "Genders",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_HcmWorker_Occupations_OccupationId",
-                        column: x => x.OccupationId,
-                        principalTable: "Occupations",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_HcmWorker_OrgEntities_ShowroomId",
-                        column: x => x.ShowroomId,
-                        principalTable: "OrgEntities",
-                        principalColumn: "RECID");
-                    table.ForeignKey(
-                        name: "FK_HcmWorker_OrgNationalities_NationalityId",
-                        column: x => x.NationalityId,
-                        principalTable: "OrgNationalities",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "SysNotificationRecipients",
-                columns: table => new
-                {
-                    RecId = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    NotificationId = table.Column<long>(type: "bigint", nullable: false),
-                    UserId = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
-                    IsRead = table.Column<bool>(type: "bit", nullable: false),
-                    ReadDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    DeliveredDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    DeliveryStatus = table.Column<int>(type: "int", nullable: false),
-                    IsArchived = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_SysNotificationRecipients", x => x.RecId);
-                    table.ForeignKey(
-                        name: "FK_SysNotificationRecipients_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_SysNotificationRecipients_SysNotifications_NotificationId",
-                        column: x => x.NotificationId,
-                        principalTable: "SysNotifications",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "SysUserSettings",
-                columns: table => new
-                {
-                    RECID = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
-                    Theme = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    Language = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
-                    PageSize = table.Column<int>(type: "int", nullable: false),
-                    NotificationEnabled = table.Column<bool>(type: "bit", nullable: false),
-                    DashboardLayout = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    RecVersion = table.Column<int>(type: "int", nullable: false),
-                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_SysUserSettings", x => x.RECID);
-                    table.ForeignKey(
-                        name: "FK_SysUserSettings_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -7262,6 +7333,75 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         columns: x => new { x.CountryRegionId, x.StateId },
                         principalTable: "LogisticsAddressState",
                         principalColumns: new[] { "CountryRegionId", "StateId" });
+                });
+
+            migrationBuilder.CreateTable(
+                name: "WfRequests",
+                columns: table => new
+                {
+                    RECID = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RequestDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ProcessId = table.Column<long>(type: "bigint", nullable: false),
+                    EmployeeId = table.Column<long>(type: "bigint", nullable: true),
+                    RequestDetails = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsFinished = table.Column<bool>(type: "bit", nullable: false),
+                    FinishedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsStopped = table.Column<bool>(type: "bit", nullable: false),
+                    StoppedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Score = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
+                    Progress = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
+                    Notes = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RequestForType = table.Column<byte>(type: "tinyint", nullable: true),
+                    RequestForHcmWorkerId = table.Column<long>(type: "bigint", nullable: true),
+                    OrganizationUnitId = table.Column<long>(type: "bigint", nullable: true),
+                    HcmWorkerAssignmentId = table.Column<long>(type: "bigint", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    RecVersion = table.Column<int>(type: "int", nullable: false),
+                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
+                    Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WfRequests", x => x.RECID);
+                    table.ForeignKey(
+                        name: "FK_WfRequests_HcmWorkerOrganizationAssignments_HcmWorkerAssignmentId",
+                        column: x => x.HcmWorkerAssignmentId,
+                        principalTable: "HcmWorkerOrganizationAssignments",
+                        principalColumn: "AssignmentId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_WfRequests_HcmWorker_EmployeeId",
+                        column: x => x.EmployeeId,
+                        principalTable: "HcmWorker",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_WfRequests_HcmWorker_RequestForHcmWorkerId",
+                        column: x => x.RequestForHcmWorkerId,
+                        principalTable: "HcmWorker",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_WfRequests_OrganizationUnits_OrganizationUnitId",
+                        column: x => x.OrganizationUnitId,
+                        principalTable: "OrganizationUnits",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_WfRequests_WfProcesses_ProcessId",
+                        column: x => x.ProcessId,
+                        principalTable: "WfProcesses",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -7442,126 +7582,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "EmployeeManagers",
-                columns: table => new
-                {
-                    EmployeeId = table.Column<long>(type: "bigint", nullable: false),
-                    ManagementLevelId = table.Column<byte>(type: "tinyint", nullable: false),
-                    ManagerId = table.Column<long>(type: "bigint", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_EmployeeManagers", x => new { x.EmployeeId, x.ManagementLevelId });
-                    table.ForeignKey(
-                        name: "FK_EmployeeManagers_HcmWorker_EmployeeId",
-                        column: x => x.EmployeeId,
-                        principalTable: "HcmWorker",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_EmployeeManagers_HcmWorker_ManagerId",
-                        column: x => x.ManagerId,
-                        principalTable: "HcmWorker",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_EmployeeManagers_ManagementLevels_ManagementLevelId",
-                        column: x => x.ManagementLevelId,
-                        principalTable: "ManagementLevels",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "HcmWorkerOrganizationAssignments",
-                columns: table => new
-                {
-                    AssignmentId = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
-                    PositionId = table.Column<long>(type: "bigint", nullable: true),
-                    HcmWorkerId = table.Column<long>(type: "bigint", nullable: false),
-                    OrganizationUnitId = table.Column<long>(type: "bigint", nullable: false),
-                    AssignmentRole = table.Column<byte>(type: "tinyint", nullable: false),
-                    ValidFrom = table.Column<DateOnly>(type: "date", nullable: false),
-                    ValidTo = table.Column<DateOnly>(type: "date", nullable: true),
-                    IsPrimary = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "SYSUTCDATETIME()")
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_HcmWorkerOrganizationAssignments", x => x.AssignmentId);
-                    table.CheckConstraint("CK_HcmWorkerOrganizationAssignments_Dates", "[ValidTo] IS NULL OR [ValidTo] > [ValidFrom]");
-                    table.ForeignKey(
-                        name: "FK_HcmWorkerOrganizationAssignments_HcmPositions_PositionId",
-                        column: x => x.PositionId,
-                        principalTable: "HcmPositions",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_HcmWorkerOrganizationAssignments_HcmWorker_HcmWorkerId",
-                        column: x => x.HcmWorkerId,
-                        principalTable: "HcmWorker",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_HcmWorkerOrganizationAssignments_OrganizationUnits_OrganizationUnitId",
-                        column: x => x.OrganizationUnitId,
-                        principalTable: "OrganizationUnits",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "WfUsersProcesses",
-                columns: table => new
-                {
-                    UsersProcessesId = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ProcessId = table.Column<long>(type: "bigint", nullable: false),
-                    DepartmentId = table.Column<short>(type: "smallint", nullable: true),
-                    OccupationId = table.Column<short>(type: "smallint", nullable: true),
-                    EmployeeId = table.Column<long>(type: "bigint", nullable: true),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    RecVersion = table.Column<int>(type: "int", nullable: false),
-                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_WfUsersProcesses", x => x.UsersProcessesId);
-                    table.ForeignKey(
-                        name: "FK_WfUsersProcesses_Departments_DepartmentId",
-                        column: x => x.DepartmentId,
-                        principalTable: "Departments",
-                        principalColumn: "RECID");
-                    table.ForeignKey(
-                        name: "FK_WfUsersProcesses_HcmWorker_EmployeeId",
-                        column: x => x.EmployeeId,
-                        principalTable: "HcmWorker",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_WfUsersProcesses_Occupations_OccupationId",
-                        column: x => x.OccupationId,
-                        principalTable: "Occupations",
-                        principalColumn: "RECID");
-                    table.ForeignKey(
-                        name: "FK_WfUsersProcesses_WfProcesses_ProcessId",
-                        column: x => x.ProcessId,
-                        principalTable: "WfProcesses",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "LogisticsAddressDistrict",
                 columns: table => new
                 {
@@ -7590,6 +7610,78 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         column: x => x.City,
                         principalTable: "LogisticsAddressCity",
                         principalColumn: "RECID");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "WfProcessVariables",
+                columns: table => new
+                {
+                    ProcessVariableId = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RequestId = table.Column<long>(type: "bigint", nullable: false),
+                    VariableId = table.Column<long>(type: "bigint", nullable: false),
+                    VariableValue = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    RecVersion = table.Column<int>(type: "int", nullable: false),
+                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WfProcessVariables", x => x.ProcessVariableId);
+                    table.ForeignKey(
+                        name: "FK_WfProcessVariables_WfRequests_RequestId",
+                        column: x => x.RequestId,
+                        principalTable: "WfRequests",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_WfProcessVariables_WfVariables_VariableId",
+                        column: x => x.VariableId,
+                        principalTable: "WfVariables",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "WfRequestVariables",
+                columns: table => new
+                {
+                    RequestId = table.Column<long>(type: "bigint", nullable: false),
+                    VariableId = table.Column<long>(type: "bigint", nullable: false),
+                    VariableValue = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RECID = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    RecVersion = table.Column<int>(type: "int", nullable: false),
+                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WfRequestVariables", x => x.RequestId);
+                    table.ForeignKey(
+                        name: "FK_WfRequestVariables_WfRequests_RequestId",
+                        column: x => x.RequestId,
+                        principalTable: "WfRequests",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_WfRequestVariables_WfVariables_VariableId",
+                        column: x => x.VariableId,
+                        principalTable: "WfVariables",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -7645,6 +7737,52 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "WfAssignments",
+                columns: table => new
+                {
+                    AssignmentID = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RequestId = table.Column<long>(type: "bigint", nullable: false),
+                    ActivityId = table.Column<long>(type: "bigint", nullable: false),
+                    StepId = table.Column<long>(type: "bigint", nullable: false),
+                    UserId = table.Column<long>(type: "bigint", nullable: false),
+                    AssignDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsFinished = table.Column<bool>(type: "bit", nullable: false),
+                    FinishedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    AutoPassing = table.Column<bool>(type: "bit", nullable: false),
+                    AutoPassingHrs = table.Column<byte>(type: "tinyint", nullable: false),
+                    Automatically = table.Column<bool>(type: "bit", nullable: true),
+                    Transferred = table.Column<bool>(type: "bit", nullable: false),
+                    Score = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    RecVersion = table.Column<int>(type: "int", nullable: false),
+                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WfAssignments", x => x.AssignmentID);
+                    table.ForeignKey(
+                        name: "FK_WfAssignments_WfActivities_ActivityId",
+                        column: x => x.ActivityId,
+                        principalTable: "WfActivities",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_WfAssignments_WfRequests_RequestId",
+                        column: x => x.RequestId,
+                        principalTable: "WfRequests",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "WfTransitions",
                 columns: table => new
                 {
@@ -7688,75 +7826,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         name: "FK_WfTransitions_WfVariables_VariableId",
                         column: x => x.VariableId,
                         principalTable: "WfVariables",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "WfRequests",
-                columns: table => new
-                {
-                    RECID = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    RequestDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ProcessId = table.Column<long>(type: "bigint", nullable: false),
-                    EmployeeId = table.Column<long>(type: "bigint", nullable: true),
-                    RequestDetails = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IsFinished = table.Column<bool>(type: "bit", nullable: false),
-                    FinishedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    IsStopped = table.Column<bool>(type: "bit", nullable: false),
-                    StoppedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    Score = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
-                    Progress = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
-                    Notes = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    RequestForType = table.Column<byte>(type: "tinyint", nullable: true),
-                    RequestForHcmWorkerId = table.Column<long>(type: "bigint", nullable: true),
-                    OrganizationUnitId = table.Column<long>(type: "bigint", nullable: true),
-                    HcmWorkerAssignmentId = table.Column<long>(type: "bigint", nullable: true),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    RecVersion = table.Column<int>(type: "int", nullable: false),
-                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
-                    Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_WfRequests", x => x.RECID);
-                    table.ForeignKey(
-                        name: "FK_WfRequests_HcmWorkerOrganizationAssignments_HcmWorkerAssignmentId",
-                        column: x => x.HcmWorkerAssignmentId,
-                        principalTable: "HcmWorkerOrganizationAssignments",
-                        principalColumn: "AssignmentId",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_WfRequests_HcmWorker_EmployeeId",
-                        column: x => x.EmployeeId,
-                        principalTable: "HcmWorker",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_WfRequests_HcmWorker_RequestForHcmWorkerId",
-                        column: x => x.RequestForHcmWorkerId,
-                        principalTable: "HcmWorker",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_WfRequests_OrganizationUnits_OrganizationUnitId",
-                        column: x => x.OrganizationUnitId,
-                        principalTable: "OrganizationUnits",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_WfRequests_WfProcesses_ProcessId",
-                        column: x => x.ProcessId,
-                        principalTable: "WfProcesses",
                         principalColumn: "RECID",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -7865,124 +7934,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     table.ForeignKey(
                         name: "FK_WfActivityMappingVariables_WfVariables_VariableID",
                         column: x => x.VariableID,
-                        principalTable: "WfVariables",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "WfAssignments",
-                columns: table => new
-                {
-                    AssignmentID = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    RequestId = table.Column<long>(type: "bigint", nullable: false),
-                    ActivityId = table.Column<long>(type: "bigint", nullable: false),
-                    StepId = table.Column<long>(type: "bigint", nullable: false),
-                    UserId = table.Column<long>(type: "bigint", nullable: false),
-                    AssignDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsFinished = table.Column<bool>(type: "bit", nullable: false),
-                    FinishedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    AutoPassing = table.Column<bool>(type: "bit", nullable: false),
-                    AutoPassingHrs = table.Column<byte>(type: "tinyint", nullable: false),
-                    Automatically = table.Column<bool>(type: "bit", nullable: true),
-                    Transferred = table.Column<bool>(type: "bit", nullable: false),
-                    Score = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    RecVersion = table.Column<int>(type: "int", nullable: false),
-                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_WfAssignments", x => x.AssignmentID);
-                    table.ForeignKey(
-                        name: "FK_WfAssignments_WfActivities_ActivityId",
-                        column: x => x.ActivityId,
-                        principalTable: "WfActivities",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_WfAssignments_WfRequests_RequestId",
-                        column: x => x.RequestId,
-                        principalTable: "WfRequests",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "WfProcessVariables",
-                columns: table => new
-                {
-                    ProcessVariableId = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    RequestId = table.Column<long>(type: "bigint", nullable: false),
-                    VariableId = table.Column<long>(type: "bigint", nullable: false),
-                    VariableValue = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    RecVersion = table.Column<int>(type: "int", nullable: false),
-                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_WfProcessVariables", x => x.ProcessVariableId);
-                    table.ForeignKey(
-                        name: "FK_WfProcessVariables_WfRequests_RequestId",
-                        column: x => x.RequestId,
-                        principalTable: "WfRequests",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_WfProcessVariables_WfVariables_VariableId",
-                        column: x => x.VariableId,
-                        principalTable: "WfVariables",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "WfRequestVariables",
-                columns: table => new
-                {
-                    RequestId = table.Column<long>(type: "bigint", nullable: false),
-                    VariableId = table.Column<long>(type: "bigint", nullable: false),
-                    VariableValue = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    RECID = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    RecVersion = table.Column<int>(type: "int", nullable: false),
-                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_WfRequestVariables", x => x.RequestId);
-                    table.ForeignKey(
-                        name: "FK_WfRequestVariables_WfRequests_RequestId",
-                        column: x => x.RequestId,
-                        principalTable: "WfRequests",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_WfRequestVariables_WfVariables_VariableId",
-                        column: x => x.VariableId,
                         principalTable: "WfVariables",
                         principalColumn: "RECID",
                         onDelete: ReferentialAction.Restrict);
@@ -8896,13 +8847,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 column: "NormalizedEmail");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AspNetUsers_OrganizationEntityId",
-                table: "AspNetUsers",
-                column: "OrganizationEntityId",
-                unique: true,
-                filter: "[OrganizationEntityId] IS NOT NULL");
-
-            migrationBuilder.CreateIndex(
                 name: "UserNameIndex",
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
@@ -9453,11 +9397,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 column: "OccupationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_HcmWorker_ShowroomId",
-                table: "HcmWorker",
-                column: "ShowroomId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_HcmWorker_UserId",
                 table: "HcmWorker",
                 column: "UserId");
@@ -9660,11 +9599,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 name: "IX_OrganizationUnits_ParentOrganizationUnitId",
                 table: "OrganizationUnits",
                 column: "ParentOrganizationUnitId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_OrgEntities_DepartmentId",
-                table: "OrgEntities",
-                column: "DepartmentId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PaymSched_Name",
@@ -10752,7 +10686,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 name: "EmployeeGroups");
 
             migrationBuilder.DropTable(
-                name: "ManagementLevels");
+                name: "HcmWorkerManagementLevels");
 
             migrationBuilder.DropTable(
                 name: "ExchangeRateCurrencyPair");
@@ -10890,6 +10824,9 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 name: "AspNetUsers");
 
             migrationBuilder.DropTable(
+                name: "Departments");
+
+            migrationBuilder.DropTable(
                 name: "Genders");
 
             migrationBuilder.DropTable(
@@ -10897,12 +10834,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "OrgNationalities");
-
-            migrationBuilder.DropTable(
-                name: "OrgEntities");
-
-            migrationBuilder.DropTable(
-                name: "Departments");
 
             migrationBuilder.DropTable(
                 name: "DirPartyTable");

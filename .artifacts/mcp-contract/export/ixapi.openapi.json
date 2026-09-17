@@ -34528,531 +34528,6 @@
         "x-ix-discovery-reason": "Not selected for the initial read-only pilot; authorization, scope and data policy require review."
       }
     },
-    "/api/v1/Showroom/{id}/sellers": {
-      "get": {
-        "tags": [
-          "Showroom"
-        ],
-        "operationId": "Organization_Showroom_GetSellers_GET_739357a1a9168f7b",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfIEnumerableOfShowroomSellerDto"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfIEnumerableOfShowroomSellerDto"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfIEnumerableOfShowroomSellerDto"
-                }
-              }
-            }
-          }
-        },
-        "x-ix-module": "Organization",
-        "x-ix-mcp-exposure": "disabled",
-        "x-ix-discovery-status": "excluded",
-        "x-ix-discovery-reason": "Not selected for the initial read-only pilot; authorization, scope and data policy require review."
-      },
-      "put": {
-        "tags": [
-          "Showroom"
-        ],
-        "operationId": "Organization_Showroom_SetSellers_PUT_0c3d752c994ddfe0",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "type": "integer",
-                  "format": "int64"
-                }
-              }
-            },
-            "text/json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "type": "integer",
-                  "format": "int64"
-                }
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "type": "integer",
-                  "format": "int64"
-                }
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfIEnumerableOfShowroomSellerDto"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfIEnumerableOfShowroomSellerDto"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfIEnumerableOfShowroomSellerDto"
-                }
-              }
-            }
-          }
-        },
-        "x-ix-module": "Organization",
-        "x-ix-mcp-exposure": "disabled",
-        "x-ix-discovery-status": "excluded",
-        "x-ix-discovery-reason": "Not admitted: writes and behavioral read-only POSTs need individual review."
-      }
-    },
-    "/api/v1/Showroom": {
-      "get": {
-        "tags": [
-          "Showroom"
-        ],
-        "operationId": "Organization_Showroom_GetAll_GET_54b2b2094811f8da",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfIEnumerableOfShowroomDto"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfIEnumerableOfShowroomDto"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfIEnumerableOfShowroomDto"
-                }
-              }
-            }
-          }
-        },
-        "x-ix-module": "Organization",
-        "x-ix-mcp-exposure": "disabled",
-        "x-ix-discovery-status": "excluded",
-        "x-ix-discovery-reason": "Not selected for the initial read-only pilot; authorization, scope and data policy require review."
-      },
-      "post": {
-        "tags": [
-          "Showroom"
-        ],
-        "operationId": "Organization_Showroom_Create_POST_4ae9c48e09d674ef",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ShowroomDto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ShowroomDto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/ShowroomDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfShowroomDto"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfShowroomDto"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfShowroomDto"
-                }
-              }
-            }
-          }
-        },
-        "x-ix-module": "Organization",
-        "x-ix-mcp-exposure": "disabled",
-        "x-ix-discovery-status": "excluded",
-        "x-ix-discovery-reason": "Not admitted: writes and behavioral read-only POSTs need individual review."
-      }
-    },
-    "/api/v1/Showroom/paged": {
-      "get": {
-        "tags": [
-          "Showroom"
-        ],
-        "operationId": "Organization_Showroom_GetPaged_GET_8c7ed56f657556da",
-        "parameters": [
-          {
-            "name": "PageNumber",
-            "in": "query",
-            "schema": {
-              "maximum": 2147483647,
-              "minimum": 1,
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "PageSize",
-            "in": "query",
-            "schema": {
-              "maximum": 100,
-              "minimum": 1,
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "SortField",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "SortOrder",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "Descending",
-            "in": "query",
-            "schema": {
-              "type": "boolean"
-            }
-          },
-          {
-            "name": "SearchTerm",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "FromDate",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "ToDate",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "DateFilterField",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "Filters",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/QueryFilterFieldDto"
-              }
-            }
-          },
-          {
-            "name": "Includes",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          {
-            "name": "Skip",
-            "in": "query",
-            "schema": {
-              "maximum": 100,
-              "minimum": 1,
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfIEnumerableOfShowroomDto"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfIEnumerableOfShowroomDto"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfIEnumerableOfShowroomDto"
-                }
-              }
-            }
-          }
-        },
-        "x-ix-module": "Organization",
-        "x-ix-mcp-exposure": "disabled",
-        "x-ix-discovery-status": "excluded",
-        "x-ix-discovery-reason": "Not selected for the initial read-only pilot; authorization, scope and data policy require review."
-      }
-    },
-    "/api/v1/Showroom/{id}": {
-      "get": {
-        "tags": [
-          "Showroom"
-        ],
-        "operationId": "Organization_Showroom_GetById_GET_0dfa74ad90866aac",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfShowroomDto"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfShowroomDto"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfShowroomDto"
-                }
-              }
-            }
-          }
-        },
-        "x-ix-module": "Organization",
-        "x-ix-mcp-exposure": "disabled",
-        "x-ix-discovery-status": "excluded",
-        "x-ix-discovery-reason": "Not selected for the initial read-only pilot; authorization, scope and data policy require review."
-      },
-      "put": {
-        "tags": [
-          "Showroom"
-        ],
-        "operationId": "Organization_Showroom_Update_PUT_4dc306ef83664a22",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ShowroomDto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ShowroomDto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/ShowroomDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfShowroomDto"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfShowroomDto"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfShowroomDto"
-                }
-              }
-            }
-          }
-        },
-        "x-ix-module": "Organization",
-        "x-ix-mcp-exposure": "disabled",
-        "x-ix-discovery-status": "excluded",
-        "x-ix-discovery-reason": "Not admitted: writes and behavioral read-only POSTs need individual review."
-      },
-      "delete": {
-        "tags": [
-          "Showroom"
-        ],
-        "operationId": "Organization_Showroom_Delete_DELETE_bcab06722700ce01",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfboolean"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfboolean"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfboolean"
-                }
-              }
-            }
-          }
-        },
-        "x-ix-module": "Organization",
-        "x-ix-mcp-exposure": "disabled",
-        "x-ix-discovery-status": "excluded",
-        "x-ix-discovery-reason": "Not admitted: writes and behavioral read-only POSTs need individual review."
-      }
-    },
-    "/api/v1/Showroom/number-sequence": {
-      "get": {
-        "tags": [
-          "Showroom"
-        ],
-        "operationId": "Organization_Showroom_GetNumberSequence_GET_578a659a6b259109",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfNumberSequenceMetadataDto"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfNumberSequenceMetadataDto"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfNumberSequenceMetadataDto"
-                }
-              }
-            }
-          }
-        },
-        "x-ix-module": "Organization",
-        "x-ix-mcp-exposure": "disabled",
-        "x-ix-discovery-status": "excluded",
-        "x-ix-discovery-reason": "Not selected for the initial read-only pilot; authorization, scope and data policy require review."
-      }
-    },
     "/api/v1/Occupation": {
       "get": {
         "tags": [
@@ -35863,29 +35338,29 @@
         "x-ix-discovery-reason": "Not selected for the initial read-only pilot; authorization, scope and data policy require review."
       }
     },
-    "/api/v1/ManagementLevel": {
+    "/api/v1/HcmWorkerManagementLevel": {
       "get": {
         "tags": [
-          "ManagementLevel"
+          "HcmWorkerManagementLevel"
         ],
-        "operationId": "Organization_ManagementLevel_GetAll_GET_b197519ef4131a22",
+        "operationId": "Organization_HcmWorkerManagementLevel_GetAll_GET_07f381f1a530606f",
         "responses": {
           "200": {
             "description": "OK",
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfIEnumerableOfManagementLevelDto"
+                  "$ref": "#/components/schemas/APIResponseOfIEnumerableOfHcmWorkerManagementLevelDto"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfIEnumerableOfManagementLevelDto"
+                  "$ref": "#/components/schemas/APIResponseOfIEnumerableOfHcmWorkerManagementLevelDto"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfIEnumerableOfManagementLevelDto"
+                  "$ref": "#/components/schemas/APIResponseOfIEnumerableOfHcmWorkerManagementLevelDto"
                 }
               }
             }
@@ -35898,24 +35373,24 @@
       },
       "post": {
         "tags": [
-          "ManagementLevel"
+          "HcmWorkerManagementLevel"
         ],
-        "operationId": "Organization_ManagementLevel_Create_POST_711c7b0509fcb19f",
+        "operationId": "Organization_HcmWorkerManagementLevel_Create_POST_89e0c57f8cd6a102",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ManagementLevelDto"
+                "$ref": "#/components/schemas/HcmWorkerManagementLevelDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/ManagementLevelDto"
+                "$ref": "#/components/schemas/HcmWorkerManagementLevelDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/ManagementLevelDto"
+                "$ref": "#/components/schemas/HcmWorkerManagementLevelDto"
               }
             }
           },
@@ -35927,17 +35402,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfManagementLevelDto"
+                  "$ref": "#/components/schemas/APIResponseOfHcmWorkerManagementLevelDto"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfManagementLevelDto"
+                  "$ref": "#/components/schemas/APIResponseOfHcmWorkerManagementLevelDto"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfManagementLevelDto"
+                  "$ref": "#/components/schemas/APIResponseOfHcmWorkerManagementLevelDto"
                 }
               }
             }
@@ -35949,12 +35424,12 @@
         "x-ix-discovery-reason": "Not admitted: writes and behavioral read-only POSTs need individual review."
       }
     },
-    "/api/v1/ManagementLevel/paged": {
+    "/api/v1/HcmWorkerManagementLevel/paged": {
       "get": {
         "tags": [
-          "ManagementLevel"
+          "HcmWorkerManagementLevel"
         ],
-        "operationId": "Organization_ManagementLevel_GetPaged_GET_28968c812ee8b809",
+        "operationId": "Organization_HcmWorkerManagementLevel_GetPaged_GET_5b0fbccd8e0c12fe",
         "parameters": [
           {
             "name": "PageNumber",
@@ -36064,17 +35539,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfIEnumerableOfManagementLevelDto"
+                  "$ref": "#/components/schemas/APIResponseOfIEnumerableOfHcmWorkerManagementLevelDto"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfIEnumerableOfManagementLevelDto"
+                  "$ref": "#/components/schemas/APIResponseOfIEnumerableOfHcmWorkerManagementLevelDto"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfIEnumerableOfManagementLevelDto"
+                  "$ref": "#/components/schemas/APIResponseOfIEnumerableOfHcmWorkerManagementLevelDto"
                 }
               }
             }
@@ -36086,12 +35561,12 @@
         "x-ix-discovery-reason": "Not selected for the initial read-only pilot; authorization, scope and data policy require review."
       }
     },
-    "/api/v1/ManagementLevel/{id}": {
+    "/api/v1/HcmWorkerManagementLevel/{id}": {
       "get": {
         "tags": [
-          "ManagementLevel"
+          "HcmWorkerManagementLevel"
         ],
-        "operationId": "Organization_ManagementLevel_GetById_GET_b83776956d51b240",
+        "operationId": "Organization_HcmWorkerManagementLevel_GetById_GET_f6bbedad79eb4fbf",
         "parameters": [
           {
             "name": "id",
@@ -36108,17 +35583,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfManagementLevelDto"
+                  "$ref": "#/components/schemas/APIResponseOfHcmWorkerManagementLevelDto"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfManagementLevelDto"
+                  "$ref": "#/components/schemas/APIResponseOfHcmWorkerManagementLevelDto"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfManagementLevelDto"
+                  "$ref": "#/components/schemas/APIResponseOfHcmWorkerManagementLevelDto"
                 }
               }
             }
@@ -36131,9 +35606,9 @@
       },
       "put": {
         "tags": [
-          "ManagementLevel"
+          "HcmWorkerManagementLevel"
         ],
-        "operationId": "Organization_ManagementLevel_Update_PUT_3d86ad246fcb1505",
+        "operationId": "Organization_HcmWorkerManagementLevel_Update_PUT_a107e0d94f0c6cc7",
         "parameters": [
           {
             "name": "id",
@@ -36148,17 +35623,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ManagementLevelDto"
+                "$ref": "#/components/schemas/HcmWorkerManagementLevelDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/ManagementLevelDto"
+                "$ref": "#/components/schemas/HcmWorkerManagementLevelDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/ManagementLevelDto"
+                "$ref": "#/components/schemas/HcmWorkerManagementLevelDto"
               }
             }
           },
@@ -36170,17 +35645,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfManagementLevelDto"
+                  "$ref": "#/components/schemas/APIResponseOfHcmWorkerManagementLevelDto"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfManagementLevelDto"
+                  "$ref": "#/components/schemas/APIResponseOfHcmWorkerManagementLevelDto"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/APIResponseOfManagementLevelDto"
+                  "$ref": "#/components/schemas/APIResponseOfHcmWorkerManagementLevelDto"
                 }
               }
             }
@@ -36193,9 +35668,9 @@
       },
       "delete": {
         "tags": [
-          "ManagementLevel"
+          "HcmWorkerManagementLevel"
         ],
-        "operationId": "Organization_ManagementLevel_Delete_DELETE_4724e2a37a8bfa9a",
+        "operationId": "Organization_HcmWorkerManagementLevel_Delete_DELETE_5d8e64623529305b",
         "parameters": [
           {
             "name": "id",
@@ -36234,12 +35709,12 @@
         "x-ix-discovery-reason": "Not admitted: writes and behavioral read-only POSTs need individual review."
       }
     },
-    "/api/v1/ManagementLevel/number-sequence": {
+    "/api/v1/HcmWorkerManagementLevel/number-sequence": {
       "get": {
         "tags": [
-          "ManagementLevel"
+          "HcmWorkerManagementLevel"
         ],
-        "operationId": "Organization_ManagementLevel_GetNumberSequence_GET_9798702e36627dc4",
+        "operationId": "Organization_HcmWorkerManagementLevel_GetNumberSequence_GET_c698d2e327a70216",
         "responses": {
           "200": {
             "description": "OK",
@@ -51547,6 +51022,30 @@
           }
         }
       },
+      "APIResponseOfHcmWorkerManagementLevelDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/HcmWorkerManagementLevelDto2"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationMetadata"
+          }
+        }
+      },
       "APIResponseOfIEnumerableOfAnnouncementDto": {
         "type": "object",
         "properties": {
@@ -52247,6 +51746,34 @@
           }
         }
       },
+      "APIResponseOfIEnumerableOfHcmWorkerManagementLevelDto": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HcmWorkerManagementLevelDto"
+            },
+            "nullable": true
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationMetadata"
+          }
+        }
+      },
       "APIResponseOfIEnumerableOfHcmWorkerManagerDto": {
         "type": "object",
         "properties": {
@@ -52288,34 +51815,6 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/LedgerFiscalCalendarPeriodDto"
-            },
-            "nullable": true
-          },
-          "errors": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "nullable": true
-          },
-          "pagination": {
-            "$ref": "#/components/schemas/PaginationMetadata"
-          }
-        }
-      },
-      "APIResponseOfIEnumerableOfManagementLevelDto": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean"
-          },
-          "message": {
-            "type": "string"
-          },
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ManagementLevelDto"
             },
             "nullable": true
           },
@@ -52565,62 +52064,6 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SalesPoolDto"
-            },
-            "nullable": true
-          },
-          "errors": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "nullable": true
-          },
-          "pagination": {
-            "$ref": "#/components/schemas/PaginationMetadata"
-          }
-        }
-      },
-      "APIResponseOfIEnumerableOfShowroomDto": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean"
-          },
-          "message": {
-            "type": "string"
-          },
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ShowroomDto"
-            },
-            "nullable": true
-          },
-          "errors": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "nullable": true
-          },
-          "pagination": {
-            "$ref": "#/components/schemas/PaginationMetadata"
-          }
-        }
-      },
-      "APIResponseOfIEnumerableOfShowroomSellerDto": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean"
-          },
-          "message": {
-            "type": "string"
-          },
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ShowroomSellerDto"
             },
             "nullable": true
           },
@@ -53994,30 +53437,6 @@
           }
         }
       },
-      "APIResponseOfManagementLevelDto": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean"
-          },
-          "message": {
-            "type": "string"
-          },
-          "data": {
-            "$ref": "#/components/schemas/ManagementLevelDto2"
-          },
-          "errors": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "nullable": true
-          },
-          "pagination": {
-            "$ref": "#/components/schemas/PaginationMetadata"
-          }
-        }
-      },
       "APIResponseOfMarkupTableDto": {
         "type": "object",
         "properties": {
@@ -54363,30 +53782,6 @@
           },
           "data": {
             "$ref": "#/components/schemas/SalesPoolDto2"
-          },
-          "errors": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "nullable": true
-          },
-          "pagination": {
-            "$ref": "#/components/schemas/PaginationMetadata"
-          }
-        }
-      },
-      "APIResponseOfShowroomDto": {
-        "type": "object",
-        "properties": {
-          "success": {
-            "type": "boolean"
-          },
-          "message": {
-            "type": "string"
-          },
-          "data": {
-            "$ref": "#/components/schemas/ShowroomDto2"
           },
           "errors": {
             "type": "array",
@@ -58690,6 +58085,10 @@
             "type": "string",
             "nullable": true
           },
+          "nameAlias": {
+            "type": "string",
+            "nullable": true
+          },
           "description": {
             "type": "string",
             "nullable": true
@@ -58757,6 +58156,10 @@
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -60661,6 +60064,10 @@
             "type": "string",
             "nullable": true
           },
+          "nameAlias": {
+            "type": "string",
+            "nullable": true
+          },
           "description": {
             "type": "string",
             "nullable": true
@@ -60728,6 +60135,10 @@
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -60986,15 +60397,6 @@
             "format": "date-time",
             "nullable": true
           },
-          "showroomId": {
-            "type": "integer",
-            "format": "int64",
-            "nullable": true
-          },
-          "showroomName": {
-            "type": "string",
-            "nullable": true
-          },
           "addresses": {
             "type": "array",
             "items": {
@@ -61014,6 +60416,10 @@
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -61132,15 +60538,6 @@
             "format": "date-time",
             "nullable": true
           },
-          "showroomId": {
-            "type": "integer",
-            "format": "int64",
-            "nullable": true
-          },
-          "showroomName": {
-            "type": "string",
-            "nullable": true
-          },
           "addresses": {
             "type": "array",
             "items": {
@@ -61160,6 +60557,10 @@
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -61280,6 +60681,163 @@
             "nullable": true
           }
         }
+      },
+      "HcmWorkerManagementLevelDto": {
+        "type": "object",
+        "properties": {
+          "level": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "createdBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastModifiedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdByUser": {
+            "$ref": "#/components/schemas/UserDto"
+          },
+          "lastModifiedByUser": {
+            "$ref": "#/components/schemas/UserDto"
+          },
+          "ownerAccount": {
+            "$ref": "#/components/schemas/UserDto"
+          },
+          "ownerAccountId": {
+            "type": "string",
+            "nullable": true
+          },
+          "recId": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "rowVersion": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true
+          },
+          "isDeleted": {
+            "type": "boolean"
+          },
+          "recVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dataAreaId": {
+            "type": "string"
+          }
+        }
+      },
+      "HcmWorkerManagementLevelDto2": {
+        "type": "object",
+        "properties": {
+          "level": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "createdBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastModifiedBy": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastModifiedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "createdByUser": {
+            "$ref": "#/components/schemas/UserDto"
+          },
+          "lastModifiedByUser": {
+            "$ref": "#/components/schemas/UserDto"
+          },
+          "ownerAccount": {
+            "$ref": "#/components/schemas/UserDto"
+          },
+          "ownerAccountId": {
+            "type": "string",
+            "nullable": true
+          },
+          "recId": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "rowVersion": {
+            "type": "string",
+            "format": "byte",
+            "nullable": true
+          },
+          "isDeleted": {
+            "type": "boolean"
+          },
+          "recVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dataAreaId": {
+            "type": "string"
+          }
+        },
+        "nullable": true
       },
       "HcmWorkerManagerDto": {
         "type": "object",
@@ -61712,155 +61270,6 @@
           }
         }
       },
-      "ManagementLevelDto": {
-        "type": "object",
-        "properties": {
-          "level": {
-            "type": "integer",
-            "format": "uint8"
-          },
-          "code": {
-            "type": "string",
-            "nullable": true
-          },
-          "name": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "isActive": {
-            "type": "boolean"
-          },
-          "createdBy": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "lastModifiedBy": {
-            "type": "string",
-            "nullable": true
-          },
-          "lastModifiedAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "createdByUser": {
-            "$ref": "#/components/schemas/UserDto"
-          },
-          "lastModifiedByUser": {
-            "$ref": "#/components/schemas/UserDto"
-          },
-          "ownerAccount": {
-            "$ref": "#/components/schemas/UserDto"
-          },
-          "ownerAccountId": {
-            "type": "string",
-            "nullable": true
-          },
-          "recId": {
-            "type": "integer",
-            "format": "uint8"
-          },
-          "rowVersion": {
-            "type": "string",
-            "format": "byte",
-            "nullable": true
-          },
-          "isDeleted": {
-            "type": "boolean"
-          },
-          "recVersion": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "dataAreaId": {
-            "type": "string"
-          }
-        }
-      },
-      "ManagementLevelDto2": {
-        "type": "object",
-        "properties": {
-          "level": {
-            "type": "integer",
-            "format": "uint8"
-          },
-          "code": {
-            "type": "string",
-            "nullable": true
-          },
-          "name": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "isActive": {
-            "type": "boolean"
-          },
-          "createdBy": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "lastModifiedBy": {
-            "type": "string",
-            "nullable": true
-          },
-          "lastModifiedAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "createdByUser": {
-            "$ref": "#/components/schemas/UserDto"
-          },
-          "lastModifiedByUser": {
-            "$ref": "#/components/schemas/UserDto"
-          },
-          "ownerAccount": {
-            "$ref": "#/components/schemas/UserDto"
-          },
-          "ownerAccountId": {
-            "type": "string",
-            "nullable": true
-          },
-          "recId": {
-            "type": "integer",
-            "format": "uint8"
-          },
-          "rowVersion": {
-            "type": "string",
-            "format": "byte",
-            "nullable": true
-          },
-          "isDeleted": {
-            "type": "boolean"
-          },
-          "recVersion": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "dataAreaId": {
-            "type": "string"
-          }
-        },
-        "nullable": true
-      },
       "MarkupTableDto": {
         "required": [
           "markupCode",
@@ -62156,6 +61565,10 @@
             "type": "string",
             "nullable": true
           },
+          "nameAlias": {
+            "type": "string",
+            "nullable": true
+          },
           "description": {
             "type": "string",
             "nullable": true
@@ -62223,6 +61636,10 @@
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -62369,6 +61786,10 @@
             "type": "string",
             "nullable": true
           },
+          "nameAlias": {
+            "type": "string",
+            "nullable": true
+          },
           "description": {
             "type": "string",
             "nullable": true
@@ -62436,6 +61857,10 @@
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -66484,225 +65909,6 @@
         "properties": {
           "content": {
             "type": "string"
-          }
-        }
-      },
-      "ShowroomDto": {
-        "type": "object",
-        "properties": {
-          "departmentId": {
-            "type": "integer",
-            "format": "int16"
-          },
-          "departmentName": {
-            "type": "string",
-            "nullable": true
-          },
-          "mobile": {
-            "type": "string",
-            "nullable": true
-          },
-          "email": {
-            "type": "string",
-            "nullable": true
-          },
-          "location": {
-            "type": "string",
-            "nullable": true
-          },
-          "sellerCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "code": {
-            "type": "string",
-            "nullable": true
-          },
-          "name": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "isActive": {
-            "type": "boolean"
-          },
-          "createdBy": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "lastModifiedBy": {
-            "type": "string",
-            "nullable": true
-          },
-          "lastModifiedAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "createdByUser": {
-            "$ref": "#/components/schemas/UserDto"
-          },
-          "lastModifiedByUser": {
-            "$ref": "#/components/schemas/UserDto"
-          },
-          "ownerAccount": {
-            "$ref": "#/components/schemas/UserDto"
-          },
-          "ownerAccountId": {
-            "type": "string",
-            "nullable": true
-          },
-          "recId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "rowVersion": {
-            "type": "string",
-            "format": "byte",
-            "nullable": true
-          },
-          "isDeleted": {
-            "type": "boolean"
-          },
-          "recVersion": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "dataAreaId": {
-            "type": "string"
-          }
-        }
-      },
-      "ShowroomDto2": {
-        "type": "object",
-        "properties": {
-          "departmentId": {
-            "type": "integer",
-            "format": "int16"
-          },
-          "departmentName": {
-            "type": "string",
-            "nullable": true
-          },
-          "mobile": {
-            "type": "string",
-            "nullable": true
-          },
-          "email": {
-            "type": "string",
-            "nullable": true
-          },
-          "location": {
-            "type": "string",
-            "nullable": true
-          },
-          "sellerCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "code": {
-            "type": "string",
-            "nullable": true
-          },
-          "name": {
-            "type": "string",
-            "nullable": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true
-          },
-          "isActive": {
-            "type": "boolean"
-          },
-          "createdBy": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "lastModifiedBy": {
-            "type": "string",
-            "nullable": true
-          },
-          "lastModifiedAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "createdByUser": {
-            "$ref": "#/components/schemas/UserDto"
-          },
-          "lastModifiedByUser": {
-            "$ref": "#/components/schemas/UserDto"
-          },
-          "ownerAccount": {
-            "$ref": "#/components/schemas/UserDto"
-          },
-          "ownerAccountId": {
-            "type": "string",
-            "nullable": true
-          },
-          "recId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "rowVersion": {
-            "type": "string",
-            "format": "byte",
-            "nullable": true
-          },
-          "isDeleted": {
-            "type": "boolean"
-          },
-          "recVersion": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "dataAreaId": {
-            "type": "string"
-          }
-        },
-        "nullable": true
-      },
-      "ShowroomSellerDto": {
-        "type": "object",
-        "properties": {
-          "recId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "code": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "occupationName": {
-            "type": "string",
-            "nullable": true
-          },
-          "mobile": {
-            "type": "string",
-            "nullable": true
-          },
-          "email": {
-            "type": "string",
-            "nullable": true
-          },
-          "isActive": {
-            "type": "boolean"
           }
         }
       },
@@ -71277,15 +70483,15 @@
             "type": "string",
             "nullable": true
           },
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -71391,15 +70597,15 @@
             "type": "string",
             "nullable": true
           },
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -71885,15 +71091,15 @@
             "type": "string",
             "nullable": true
           },
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -72026,15 +71232,15 @@
             "type": "string",
             "nullable": true
           },
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -72154,15 +71360,15 @@
             "type": "integer",
             "format": "uint8"
           },
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -72232,15 +71438,15 @@
             "type": "integer",
             "format": "uint8"
           },
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -72314,15 +71520,15 @@
             "type": "integer",
             "format": "uint8"
           },
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -72396,15 +71602,15 @@
             "type": "integer",
             "format": "uint8"
           },
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -72477,15 +71683,15 @@
             "type": "integer",
             "format": "uint8"
           },
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -72559,15 +71765,15 @@
             "type": "integer",
             "format": "uint8"
           },
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -72637,15 +71843,15 @@
             "type": "integer",
             "format": "uint8"
           },
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -72715,15 +71921,15 @@
             "type": "integer",
             "format": "uint8"
           },
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -72794,15 +72000,15 @@
             "type": "integer",
             "format": "uint8"
           },
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -72872,15 +72078,15 @@
             "type": "integer",
             "format": "uint8"
           },
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -73001,6 +72207,10 @@
             "type": "string",
             "nullable": true
           },
+          "nameAlias": {
+            "type": "string",
+            "nullable": true
+          },
           "description": {
             "type": "string",
             "nullable": true
@@ -73115,6 +72325,10 @@
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -73341,15 +72555,15 @@
             "type": "integer",
             "format": "uint8"
           },
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -73420,15 +72634,15 @@
             "type": "integer",
             "format": "uint8"
           },
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -73539,15 +72753,15 @@
               "$ref": "#/components/schemas/WfUsersProcessDto"
             }
           },
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -73659,15 +72873,15 @@
               "$ref": "#/components/schemas/WfUsersProcessDto"
             }
           },
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -73733,15 +72947,15 @@
       "WfProcessTypeDto": {
         "type": "object",
         "properties": {
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -73807,15 +73021,15 @@
       "WfProcessTypeDto2": {
         "type": "object",
         "properties": {
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -73943,15 +73157,15 @@
           "control": {
             "$ref": "#/components/schemas/WfControlDto"
           },
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -74078,15 +73292,15 @@
           "control": {
             "$ref": "#/components/schemas/WfControlDto"
           },
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -74673,6 +73887,10 @@
             "type": "string",
             "nullable": true
           },
+          "nameAlias": {
+            "type": "string",
+            "nullable": true
+          },
           "description": {
             "type": "string",
             "nullable": true
@@ -74789,6 +74007,10 @@
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -74922,15 +74144,15 @@
           "isSystemDefined": {
             "type": "boolean"
           },
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -75014,15 +74236,15 @@
           "isSystemDefined": {
             "type": "boolean"
           },
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -75327,15 +74549,15 @@
           "process": {
             "$ref": "#/components/schemas/WfProcessDto"
           },
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -75419,15 +74641,15 @@
           "process": {
             "$ref": "#/components/schemas/WfProcessDto"
           },
-          "nameAlias": {
-            "type": "string",
-            "nullable": true
-          },
           "code": {
             "type": "string",
             "nullable": true
           },
           "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "nameAlias": {
             "type": "string",
             "nullable": true
           },
@@ -75716,16 +74938,13 @@
       "name": "OrganizationStructure"
     },
     {
-      "name": "Showroom"
-    },
-    {
       "name": "Occupation"
     },
     {
       "name": "Nationality"
     },
     {
-      "name": "ManagementLevel"
+      "name": "HcmWorkerManagementLevel"
     },
     {
       "name": "Gender"
