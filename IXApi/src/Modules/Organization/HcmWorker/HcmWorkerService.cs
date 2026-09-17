@@ -3,14 +3,13 @@ using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Modules.Organization.HcmWorkerManagers;
-using IAX.IXApi.Modules.Organization.Employees.Entities;
 using Microsoft.EntityFrameworkCore;
 
 using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Organization.Persistence;
 
-namespace IAX.IXApi.Modules.Organization.Employees
+namespace IAX.IXApi.Modules.Organization.HcmWorkers
 {
     public class HcmWorkerService : BaseService<HcmWorker>, IHcmWorkerService
     {

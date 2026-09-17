@@ -1,5 +1,5 @@
 using System.Globalization;
-using IAX.IXApi.Modules.Organization.Employees.Entities;
+using IAX.IXApi.Modules.Organization.HcmWorkers;
 using IAX.IXApi.Modules.Organization.HcmWorkerManagers;
 using IAX.IXApi.Modules.Workflow.Activities;
 using IAX.IXApi.Modules.Workflow.Execution;

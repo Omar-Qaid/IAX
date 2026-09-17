@@ -5,6 +5,7 @@ using IAX.IXApi.Modules.Workflow.Variables;
 using IAX.IXApi.Modules.Workflow.Processes;
 using IAX.IXApi.Modules.Workflow.Activities;
 using Microsoft.EntityFrameworkCore;
+using IAX.IXApi.Modules.Organization.HcmWorkers;
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Processes.Process651;
 
@@ -20,7 +21,7 @@ public sealed partial class WfProcess651SeedData
         if (!await db.WfRequests.IgnoreQueryFilters().AnyAsync(x => x.RecId == 192663L, ct))
         {
             const long sourceEmployeeId = 157704L;
-            var employeeId = await db.Set<IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker>()
+            var employeeId = await db.Set<HcmWorker>()
                 .IgnoreQueryFilters()
                 .AnyAsync(x => x.RecId == sourceEmployeeId, ct)
                     ? sourceEmployeeId

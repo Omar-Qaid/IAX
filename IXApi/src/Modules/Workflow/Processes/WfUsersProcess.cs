@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using IAX.IXApi.Modules.Organization.Departments;
 
 using IAX.IXApi.Modules.Organization.Occupations;
+using IAX.IXApi.Modules.Organization.HcmWorkers;
 
 namespace IAX.IXApi.Modules.Workflow.Processes
 {
@@ -22,7 +23,7 @@ namespace IAX.IXApi.Modules.Workflow.Processes
 
         public long? EmployeeId { get; set; }
         [ForeignKey(nameof(EmployeeId))]
-        public virtual IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker? Employee { get; set; }
+        public virtual HcmWorker? Employee { get; set; }
     }
 }
 

@@ -1,7 +1,7 @@
 using FluentValidation;
 using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Organization.DocumentManagement.Entities;
-using IAX.IXApi.Modules.Organization.Employees.Entities;
+using IAX.IXApi.Modules.Organization.HcmWorkers;
 using IAX.IXApi.Modules.Organization.Features.HcmWorkerGroup;
 using IAX.IXApi.Modules.Organization.OrganizationUnits;
 using IAX.IXApi.Modules.Organization.Persistence;
@@ -254,8 +254,7 @@ public sealed class OrganizationStructureTests
             b.Ignore<HcmWorkerGroup>(); b.Ignore<HcmWorkerGroupDetail>(); b.Ignore<AspNetUser>();
             b.Ignore<DocuType>(); b.Ignore<DocuValue>(); b.Ignore<DocuRef>();
             var worker = b.Entity<HcmWorker>();
-            worker.Ignore(x => x.Department); worker.Ignore(x => x.Occupation); worker.Ignore(x => x.Gender);
-            worker.Ignore(x => x.Nationality); worker.Ignore(x => x.User); worker.Ignore(x => x.Managers);
+            worker.Ignore(x => x.Nationality); worker.Ignore(x => x.User);
             b.ApplyConfiguration(new OrganizationUnitConfiguration());
             b.ApplyConfiguration(new OrganizationRoleConfiguration());
             b.ApplyConfiguration(new OrganizationHierarchyConfiguration());

@@ -99,7 +99,7 @@ $replacements = [ordered]@{
     'IAX.IXApi.Modules.Organization.Features.Showroom' = 'IAX.IXApi.Modules.Organization.Showrooms'
     'IAX.IXApi.Modules.Organization.Features.Announcement' = 'IAX.IXApi.Modules.Organization.Announcements'
     'IAX.IXApi.Modules.Organization.Features.Attachment' = 'IAX.IXApi.Modules.Organization.Attachments'
-    'IAX.IXApi.Modules.Organization.Features.Employee' = 'IAX.IXApi.Modules.Organization.Employees'
+    'IAX.IXApi.Modules.Organization.Features.Employee' = 'IAX.IXApi.Modules.Organization.HcmWorker'
 
     'IAX.IXApi.Modules.Workflow.Features.Activity' = 'IAX.IXApi.Modules.Workflow.Activities'
     'IAX.IXApi.Modules.Workflow.Features.Category' = 'IAX.IXApi.Modules.Workflow.Categories'

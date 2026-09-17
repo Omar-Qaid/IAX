@@ -3,6 +3,7 @@ using IAX.IXApi.Modules.Workflow.Events;
 using IAX.IXApi.Shared.Domain.Events;
 using IAX.IXApi.Modules.Workflow.Activities;
 using Microsoft.EntityFrameworkCore;
+using IAX.IXApi.Modules.Organization.HcmWorkers;
 
 namespace IAX.IXApi.Modules.Workflow.Handlers
 {
@@ -33,7 +34,7 @@ namespace IAX.IXApi.Modules.Workflow.Handlers
                 .FirstOrDefaultAsync(a => a.RecId == @event.ActivityId, ct);
             if (activity is null) return;
 
-            var recipientUserId = await _db.Set<IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker>()
+            var recipientUserId = await _db.Set<HcmWorker>()
                 .AsNoTracking()
                 .Where(worker => worker.RecId == @event.UserId && worker.IsActive && !worker.IsDeleted)
                 .Select(worker => worker.UserId)

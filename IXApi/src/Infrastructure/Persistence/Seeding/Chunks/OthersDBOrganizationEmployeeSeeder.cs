@@ -5,7 +5,7 @@ using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Identity.Roles;
 using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Organization.Departments;
-using IAX.IXApi.Modules.Organization.Employees.Entities;
+using IAX.IXApi.Modules.Organization.HcmWorkers;
 using IAX.IXApi.Modules.Organization.Genders;
 using IAX.IXApi.Modules.Organization.Nationalities;
 using IAX.IXApi.Modules.Organization.Occupations;
@@ -46,18 +46,21 @@ public sealed class OthersDBOrganizationEmployeeSeeder : OthersDBSeedData
         foreach(var row in rows){if(existing.TryGetValue(row.Id,out var value)){Apply(value,row.Name,row.Description,row.Active);}else db.Departments.Add(new Department{RecId=row.Id,Code=$"DEP{row.Id}",Name=Text(row.Name,255),Description=Text(row.Description,1000),IsActive=row.Active,CreatedBy=owner,OwnerAccountId=owner});}
         await SaveWithOptionalIdentityAsync(db,"Departments",ct);
     }
+
     private static async Task UpsertOccupationsAsync(ApplicationDbContext db,LookupShort[] rows,string owner,CancellationToken ct)
     {
         var existing=await db.Occupations.IgnoreQueryFilters().ToDictionaryAsync(x=>x.RecId,ct);
         foreach(var row in rows){if(existing.TryGetValue(row.Id,out var value)){Apply(value,row.Name,row.Description,row.Active);}else db.Occupations.Add(new Occupation{RecId=row.Id,Code=$"OCC{row.Id}",Name=Text(row.Name,255),Description=Text(row.Description,1000),IsActive=row.Active,CreatedBy=owner,OwnerAccountId=owner});}
         await SaveWithOptionalIdentityAsync(db,"Occupations",ct);
     }
+
     private static async Task UpsertGendersAsync(ApplicationDbContext db,LookupByte[] rows,string owner,CancellationToken ct)
     {
         var existing=await db.Genders.IgnoreQueryFilters().ToDictionaryAsync(x=>x.RecId,ct);
         foreach(var row in rows){if(existing.TryGetValue(row.Id,out var value)){Apply(value,row.Name,row.Description,true);}else db.Genders.Add(new OrganizationGender{RecId=row.Id,Code=$"GEN{row.Id}",Name=Text(row.Name,255),Description=Text(row.Description,1000),IsActive=true,CreatedBy=owner,OwnerAccountId=owner});}
         await SaveWithOptionalIdentityAsync(db,"Genders",ct);
     }
+
     private static async Task UpsertNationalitiesAsync(ApplicationDbContext db,LookupShort[] rows,string owner,CancellationToken ct)
     {
         var existing=await db.Nationalities.IgnoreQueryFilters().ToDictionaryAsync(x=>x.RecId,ct);
@@ -81,8 +84,8 @@ public sealed class OthersDBOrganizationEmployeeSeeder : OthersDBSeedData
         foreach(var row in rows)
         {
             var code=EmployeeCode(row,duplicateCodes);
-            if(existing.TryGetValue(row.Id,out var worker)){worker.PersonnelNumber=code;worker.Person=parties[row.Id].RecId;worker.DepartmentId=row.DepartmentId;worker.OccupationId=row.OccupationId;worker.GenderId=row.GenderId;worker.NationalityId=row.NationalityId;worker.IsActive=row.Active;worker.IsDeleted=false;}
-            else db.HcmWorkers.Add(new HcmWorker{RecId=row.Id,PersonnelNumber=code,Person=parties[row.Id].RecId,DepartmentId=row.DepartmentId,OccupationId=row.OccupationId,GenderId=row.GenderId,NationalityId=row.NationalityId,IsActive=row.Active,CreatedAt=row.CreatedAt,CreatedBy=row.CreatedBy??owner,OwnerAccountId=owner});
+            if(existing.TryGetValue(row.Id,out var worker)){worker.PersonnelNumber=code;worker.Person=parties[row.Id].RecId;worker.GenderId=row.GenderId;worker.NationalityId=row.NationalityId;worker.IsActive=row.Active;worker.IsDeleted=false;}
+            else db.HcmWorkers.Add(new HcmWorker{RecId=row.Id,PersonnelNumber=code,Person=parties[row.Id].RecId,GenderId=row.GenderId,NationalityId=row.NationalityId,IsActive=row.Active,CreatedAt=row.CreatedAt,CreatedBy=row.CreatedBy??owner,OwnerAccountId=owner});
         }
         await SaveWithOptionalIdentityAsync(db,"HcmWorker",ct);
     }
@@ -156,6 +159,7 @@ public sealed class OthersDBOrganizationEmployeeSeeder : OthersDBSeedData
         await using var stream=assembly.GetManifestResourceStream(name)??throw new InvalidOperationException($"Missing resource {name}");
         return await JsonSerializer.DeserializeAsync<Data>(stream,new JsonSerializerOptions{PropertyNameCaseInsensitive=true},ct)??throw new InvalidOperationException("Invalid organization employee seed resource.");
     }
+
     private sealed class Data{public LookupShort[] Departments{get;set;}=[];public LookupShort[] Occupations{get;set;}=[];public LookupByte[] Genders{get;set;}=[];public LookupShort[] Nationalities{get;set;}=[];public Employee[] Employees{get;set;}=[];}
     private sealed class LookupShort{public short Id{get;set;}public string? Name{get;set;}public string? Description{get;set;}public bool Active{get;set;}}
     private sealed class LookupByte{public byte Id{get;set;}public string? Name{get;set;}public string? Description{get;set;}}

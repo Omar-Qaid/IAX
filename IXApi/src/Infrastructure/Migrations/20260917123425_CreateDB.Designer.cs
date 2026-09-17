@@ -19673,7 +19673,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("DocuValue", (string)null);
                 });
 
-            modelBuilder.Entity("IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker", b =>
+            modelBuilder.Entity("IAX.IXApi.Modules.Organization.HcmWorker.HcmWorker", b =>
                 {
                     b.Property<long>("RecId")
                         .ValueGeneratedOnAdd()
@@ -23831,7 +23831,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker", null)
+                    b.HasOne("IAX.IXApi.Modules.Organization.HcmWorker.HcmWorker", null)
                         .WithMany()
                         .HasForeignKey("MainResponsibleWorker")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -24490,7 +24490,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.VendTable", b =>
                 {
-                    b.HasOne("IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker", "HcmWorkerTable")
+                    b.HasOne("IAX.IXApi.Modules.Organization.HcmWorker.HcmWorker", "HcmWorkerTable")
                         .WithMany()
                         .HasForeignKey("MainContactWorker")
                         .OnDelete(DeleteBehavior.NoAction);
@@ -24613,7 +24613,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Navigation("DocuValue");
                 });
 
-            modelBuilder.Entity("IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker", b =>
+            modelBuilder.Entity("IAX.IXApi.Modules.Organization.HcmWorker.HcmWorker", b =>
                 {
                     b.HasOne("IAX.IXApi.Modules.Organization.Departments.Department", "Department")
                         .WithMany()
@@ -24704,7 +24704,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
             modelBuilder.Entity("IAX.IXApi.Modules.Organization.HcmWorkerManagers.HcmWorkerManager", b =>
                 {
-                    b.HasOne("IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker", "Employee")
+                    b.HasOne("IAX.IXApi.Modules.Organization.HcmWorker.HcmWorker", "Employee")
                         .WithMany("Managers")
                         .HasForeignKey("EmployeeId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -24716,7 +24716,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker", "Manager")
+                    b.HasOne("IAX.IXApi.Modules.Organization.HcmWorker.HcmWorker", "Manager")
                         .WithMany()
                         .HasForeignKey("ManagerId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -24786,7 +24786,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
             modelBuilder.Entity("IAX.IXApi.Modules.Organization.WorkerOrganizationAssignments.HcmWorkerOrganizationAssignment", b =>
                 {
-                    b.HasOne("IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker", "HcmWorker")
+                    b.HasOne("IAX.IXApi.Modules.Organization.HcmWorker.HcmWorker", "HcmWorker")
                         .WithMany()
                         .HasForeignKey("HcmWorkerId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -24999,7 +24999,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("DepartmentId");
 
-                    b.HasOne("IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker", "Employee")
+                    b.HasOne("IAX.IXApi.Modules.Organization.HcmWorker.HcmWorker", "Employee")
                         .WithMany()
                         .HasForeignKey("EmployeeId")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -25025,7 +25025,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
             modelBuilder.Entity("IAX.IXApi.Modules.Workflow.Requests.WfRequest", b =>
                 {
-                    b.HasOne("IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker", "Employee")
+                    b.HasOne("IAX.IXApi.Modules.Organization.HcmWorker.HcmWorker", "Employee")
                         .WithMany()
                         .HasForeignKey("EmployeeId")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -25046,7 +25046,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker", "RequestForHcmWorker")
+                    b.HasOne("IAX.IXApi.Modules.Organization.HcmWorker.HcmWorker", "RequestForHcmWorker")
                         .WithMany()
                         .HasForeignKey("RequestForHcmWorkerId")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -25288,7 +25288,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Navigation("RolePermissions");
                 });
 
-            modelBuilder.Entity("IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker", b =>
+            modelBuilder.Entity("IAX.IXApi.Modules.Organization.HcmWorker.HcmWorker", b =>
                 {
                     b.Navigation("Managers");
                 });

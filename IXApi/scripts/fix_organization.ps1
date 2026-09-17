@@ -29,7 +29,7 @@ foreach ($file in $files) {
 $showroomPath = "$path\Showrooms\OrgShowroom.cs"
 if (Test-Path $showroomPath) {
     $content = [System.IO.File]::ReadAllText($showroomPath, [System.Text.Encoding]::UTF8)
-    $content = $content -replace "using IAX.IXApi.Modules.Organization.Employees.Abstraction;", "using IAX.IXApi.Shared.Domain.Entities;"
+    $content = $content -replace "using IAX.IXApi.Modules.Organization.HcmWorker.Abstraction;", "using IAX.IXApi.Shared.Domain.Entities;"
     [System.IO.File]::WriteAllText($showroomPath, $content, [System.Text.Encoding]::UTF8)
     Write-Output "Updated OrgShowroom.cs"
 }

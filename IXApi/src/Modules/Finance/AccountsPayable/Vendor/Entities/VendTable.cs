@@ -1,10 +1,10 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using IAX.IXApi.Modules.Organization.Employees.Entities;
 using IAX.IXApi.Modules.Finance.Shared.Features;
 using IAX.IXApi.Modules.Finance.Common;
 using System.Net.NetworkInformation;
+using IAX.IXApi.Modules.Organization.HcmWorkers;
 
 namespace IAX.IXApi.Modules.Finance.Entities
 {

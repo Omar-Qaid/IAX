@@ -2,7 +2,7 @@ using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Shared.Features;
 using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Finance.Entities;
-using IAX.IXApi.Modules.Organization.Employees.Entities;
+using IAX.IXApi.Modules.Organization.HcmWorkers;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -145,7 +145,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
 //         public virtual LogisticsPostalAddress? DeliveryAddress { get; set; }
 
 //         [ForeignKey(nameof(WorkerSalesTaker))]
-//         public virtual IAX.IXApi.Modules.Organization.Employees.OrgEmployee? SalesTakerEmployee { get; set; }
+//         public virtual IAX.IXApi.Modules.Organization.HcmWorker.OrgEmployee? SalesTakerEmployee { get; set; }
 
         #endregion
 

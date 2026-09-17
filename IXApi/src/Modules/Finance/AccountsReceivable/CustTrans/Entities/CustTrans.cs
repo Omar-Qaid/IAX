@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using IAX.IXApi.Modules.Finance.Shared.Features;
 using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Finance.Entities;
-using IAX.IXApi.Modules.Organization.Employees.Entities;
+using IAX.IXApi.Modules.Organization.HcmWorkers;
 using IAX.IXApi.Modules.Finance.Common;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable
@@ -238,7 +238,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
 //         public virtual PaymSched? PaymentSchedule { get; set; }
 
 //         [ForeignKey(nameof(Approver))]
-//         public virtual IAX.IXApi.Modules.Organization.Employees.OrgEmployee? ApproverEmployee { get; set; }
+//         public virtual IAX.IXApi.Modules.Organization.HcmWorker.OrgEmployee? ApproverEmployee { get; set; }
 
         #endregion
 

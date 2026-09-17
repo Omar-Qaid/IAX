@@ -459,7 +459,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
             if (dto.DepartmentIds?.Any() == true)
             {
                 var deptUserIds = await _db.HcmWorkers.AsNoTracking()
-                    .Where(e => dto.DepartmentIds.Contains((short)e.DepartmentId) && e.UserId != null)
+                    .Where(e => e.WorkerOrganizationAssignments.Any(a => dto.DepartmentIds.Contains((short)a.OrganizationUnitId)) && e.UserId != null)
                     .Select(e => e.UserId!)
                     .ToListAsync(ct);
                 foreach (var id in deptUserIds) userIds.Add(id);

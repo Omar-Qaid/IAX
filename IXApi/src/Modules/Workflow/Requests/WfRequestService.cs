@@ -4,7 +4,6 @@ using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Communication.Notifications.Services;
-using IAX.IXApi.Modules.Organization.Employees.Entities;
 using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Identity.Permissions;
 using IAX.IXApi.Modules.Workflow.Activities;
@@ -18,6 +17,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
+using IAX.IXApi.Modules.Organization.HcmWorkers;
 
 namespace IAX.IXApi.Modules.Workflow.Requests
 {

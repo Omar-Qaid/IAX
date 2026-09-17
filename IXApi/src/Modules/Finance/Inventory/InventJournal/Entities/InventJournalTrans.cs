@@ -5,7 +5,7 @@ using IAX.IXApi.Modules.Finance.Shared.Features;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Finance.Entities;
-using IAX.IXApi.Modules.Organization.Employees.Entities;
+using IAX.IXApi.Modules.Organization.HcmWorkers;
 
 namespace IAX.IXApi.Modules.Finance.Entities
 {
@@ -202,7 +202,7 @@ namespace IAX.IXApi.Modules.Finance.Entities
 //         public virtual TaxItemGroupHeading? ProjTaxItemGroup { get; set; }
 
 //         [ForeignKey(nameof(Worker))]
-//         public virtual IAX.IXApi.Modules.Organization.Employees.OrgEmployee? Employee { get; set; }
+//         public virtual IAX.IXApi.Modules.Organization.HcmWorker.OrgEmployee? Employee { get; set; }
 
         #endregion
     }

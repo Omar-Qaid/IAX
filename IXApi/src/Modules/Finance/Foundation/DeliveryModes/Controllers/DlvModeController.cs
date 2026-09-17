@@ -2,7 +2,7 @@ using IAX.IXApi.Modules.Identity.Permissions;
 using IAX.IXApi.Api.Controllers;
 using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Finance.Entities;
-using IAX.IXApi.Modules.Organization.Employees.Entities;
+using IAX.IXApi.Modules.Organization.HcmWorkers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 

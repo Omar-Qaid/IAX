@@ -1,4 +1,5 @@
 using IAX.IXApi.Infrastructure.Persistence;
+using IAX.IXApi.Modules.Organization.HcmWorkers;
 using IAX.IXApi.Modules.Workflow.Processes;
 using Microsoft.EntityFrameworkCore;
 
@@ -31,7 +32,7 @@ public sealed partial class WfProcess603SeedData
             new { RecId = 16167L, ProcessId = 603L, DepartmentId = (short?)117, OccupationId = (short?)null, EmployeeId = (long?)null },
         };
 
-        var validEmployeeIds = await db.Set<IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker>()
+        var validEmployeeIds = await db.Set<HcmWorker>()
             .IgnoreQueryFilters()
             .Select(x => x.RecId)
             .ToHashSetAsync(ct);

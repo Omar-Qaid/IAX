@@ -1,6 +1,6 @@
 using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Finance.Entities;
-using IAX.IXApi.Modules.Organization.Employees.Entities;
+using IAX.IXApi.Modules.Organization.HcmWorkers;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IAX.IXApi.Modules.Finance.Inventory.InventTable

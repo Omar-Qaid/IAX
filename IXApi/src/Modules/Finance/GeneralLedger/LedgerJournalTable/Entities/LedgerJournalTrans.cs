@@ -414,7 +414,7 @@ namespace IAX.IXApi.Modules.Finance.Entities
         #region Navigation Properties Row
 
 //         [ForeignKey(nameof(Approver))]
-//         public virtual IAX.IXApi.Modules.Organization.Employees.OrgEmployee? WorkflowApproverWorker { get; set; }
+//         public virtual IAX.IXApi.Modules.Organization.HcmWorker.OrgEmployee? WorkflowApproverWorker { get; set; }
 
 //         [ForeignKey(nameof(TaxCode))]
 //         public virtual TaxTable? CoreTaxCodeSetup { get; set; }

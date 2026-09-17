@@ -1,5 +1,5 @@
 using IAX.IXApi.Infrastructure.Persistence;
-using IAX.IXApi.Modules.Organization.Employees.Entities;
+using IAX.IXApi.Modules.Organization.HcmWorkers;
 using IAX.IXApi.Modules.Organization.OrganizationUnits;
 using IAX.IXApi.Modules.Organization.WorkerOrganizationAssignments;
 using IAX.IXApi.Modules.Workflow.Requests;

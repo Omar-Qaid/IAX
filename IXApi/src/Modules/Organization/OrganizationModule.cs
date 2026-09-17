@@ -24,7 +24,7 @@ namespace IAX.IXApi.Modules.Organization
             services.AddScoped<Features.HcmWorkerCategory.IHcmWorkerCategoryService, Features.HcmWorkerCategory.HcmWorkerCategoryService>();
             services.AddScoped<Features.HcmWorkerGroup.IHcmWorkerGroupService, Features.HcmWorkerGroup.HcmWorkerGroupService>();
             services.AddScoped<HcmWorkerManagers.IHcmWorkerManagerService, HcmWorkerManagers.HcmWorkerManagerService>();
-            services.AddScoped<Employees.IHcmWorkerService, Employees.HcmWorkerService>();
+            services.AddScoped<HcmWorkers.IHcmWorkerService, HcmWorkers.HcmWorkerService>();
             services.AddScoped<Genders.IGenderService, Genders.GenderService>();
             services.AddScoped<ManagementLevels.IHcmWorkerManagementLevelService, ManagementLevels.HcmWorkerManagementLevelService>();
             services.AddScoped<Nationalities.INationalityService, Nationalities.NationalityService>();

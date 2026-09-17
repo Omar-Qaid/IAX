@@ -4,12 +4,13 @@ namespace IAX.IXApi.Modules.Organization.Structure;
 
 public sealed class OrganizationRole : MasterEntity<long>
 {
-    
+    public ICollection<HcmPosition> Positions { get; set; } = new List<HcmPosition>();
 }
 
 public sealed class OrganizationHierarchy : MasterEntity<long>
 {
     public string Purpose { get; set; } = string.Empty;
+    public ICollection<OrganizationHierarchyNode> Nodes { get; set; } = new List<OrganizationHierarchyNode>();
 }
 
 public sealed class OrganizationHierarchyNode : Entity<long>
@@ -22,6 +23,7 @@ public sealed class OrganizationHierarchyNode : Entity<long>
     public OrganizationHierarchy Hierarchy { get; set; } = null!;
     public OrganizationUnit OrganizationUnit { get; set; } = null!;
     public OrganizationHierarchyNode? ParentNode { get; set; }
+    public ICollection<OrganizationHierarchyNode> Children { get; set; } = new List<OrganizationHierarchyNode>();
 }
 
 public sealed class HcmPosition : MasterEntity<long>
@@ -32,4 +34,5 @@ public sealed class HcmPosition : MasterEntity<long>
     public DateOnly? ValidTo { get; set; }
     public OrganizationUnit OrganizationUnit { get; set; } = null!;
     public OrganizationRole Role { get; set; } = null!;
+    public ICollection<IAX.IXApi.Modules.Organization.WorkerOrganizationAssignments.HcmWorkerOrganizationAssignment> WorkerAssignments { get; set; } = new List<IAX.IXApi.Modules.Organization.WorkerOrganizationAssignments.HcmWorkerOrganizationAssignment>();
 }

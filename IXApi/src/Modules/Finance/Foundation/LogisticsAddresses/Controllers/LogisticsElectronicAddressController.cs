@@ -4,7 +4,7 @@ using IAX.IXApi.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Finance.Entities;
-using IAX.IXApi.Modules.Organization.Employees.Entities;
+using IAX.IXApi.Modules.Organization.HcmWorkers;
 using System.Linq;
 using IAX.IXApi.Shared.Application.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;

@@ -7,7 +7,7 @@ using IAX.IXApi.Modules.Organization.Departments;
 using IAX.IXApi.Modules.Organization.Genders;
 using IAX.IXApi.Modules.Organization.Nationalities;
 using IAX.IXApi.Modules.Organization.Occupations;
-using IAX.IXApi.Modules.Organization.Employees;
+using IAX.IXApi.Modules.Organization.HcmWorkers;
 using IAX.IXApi.Modules.Organization.ManagementLevels;
 using IAX.IXApi.Modules.Organization.HcmWorkerManagers;
 using IAX.IXApi.Modules.Organization.Features.HcmWorkerGroup;
@@ -391,13 +391,9 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
 
             #region HcmWorker & Data Integrity
             // Fetch valid reference IDs for data integrity validation
-            var validDeptIds = (await db.Departments.IgnoreQueryFilters().Select(d => d.RecId).ToListAsync(ct)).ToHashSet();
-            var validOccIds = (await db.Occupations.IgnoreQueryFilters().Select(o => o.RecId).ToListAsync(ct)).ToHashSet();
             var validGenderIds = (await db.Genders.IgnoreQueryFilters().Select(g => g.RecId).ToListAsync(ct)).ToHashSet();
             var validNatIds = (await db.Nationalities.IgnoreQueryFilters().Select(n => n.RecId).ToListAsync(ct)).ToHashSet();
 
-            short defaultDeptId = validDeptIds.Contains(4) ? (short)4 : validDeptIds.FirstOrDefault((short)1);
-            short defaultOccId = validOccIds.Contains(121) ? (short)121 : validOccIds.FirstOrDefault((short)1);
             byte defaultGenderId = validGenderIds.Contains(1) ? (byte)1 : validGenderIds.FirstOrDefault((byte)1);
             short defaultNatId = validNatIds.Contains(1) ? (short)1 : validNatIds.FirstOrDefault((short)1);
 
@@ -408,16 +404,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 bool modified = false;
                 foreach (var worker in existingWorkers)
                 {
-                    if (worker.DepartmentId == 0 || !validDeptIds.Contains(worker.DepartmentId))
-                    {
-                        worker.DepartmentId = defaultDeptId;
-                        modified = true;
-                    }
-                    if (worker.OccupationId == 0 || !validOccIds.Contains(worker.OccupationId))
-                    {
-                        worker.OccupationId = defaultOccId;
-                        modified = true;
-                    }
                     if (worker.GenderId == 0 || !validGenderIds.Contains(worker.GenderId))
                     {
                         worker.GenderId = defaultGenderId;
@@ -440,7 +426,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             {
                 var workersToSeed = new[]
                 {
-                    new IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker
+                    new HcmWorker
                     {
                         RecId = 1, PersonnelNumber = "EMP001",
                         DepartmentId = defaultDeptId, OccupationId = defaultOccId,
@@ -448,7 +434,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                         HireDate = DateTime.Parse("2020-01-01"), BirthDate = DateTime.Parse("1990-01-01"),
                         IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy
                     },
-                    new IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker
+                    new HcmWorker
                     {
                         RecId = 2, PersonnelNumber = "EMP002",
                         DepartmentId = validDeptIds.Contains(1) ? (short)1 : defaultDeptId,
@@ -457,7 +443,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                         HireDate = DateTime.Parse("2021-06-01"), BirthDate = DateTime.Parse("1992-05-15"),
                         IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy
                     },
-                    new IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker
+                    new HcmWorker
                     {
                         RecId = 3, PersonnelNumber = "EMP003",
                         DepartmentId = defaultDeptId, OccupationId = defaultOccId,
@@ -465,7 +451,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                         HireDate = DateTime.Parse("2022-02-01"), BirthDate = DateTime.Parse("1995-03-10"),
                         IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy
                     },
-                    new IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker
+                    new HcmWorker
                     {
                         RecId = 4, PersonnelNumber = "EMP004",
                         DepartmentId = defaultDeptId, OccupationId = defaultOccId,
@@ -473,7 +459,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                         HireDate = DateTime.Parse("2022-08-15"), BirthDate = DateTime.Parse("1997-11-22"),
                         IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy
                     },
-                    new IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker
+                    new HcmWorker
                     {
                         RecId = 5, PersonnelNumber = "EMP005",
                         DepartmentId = defaultDeptId, OccupationId = defaultOccId,

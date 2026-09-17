@@ -3,7 +3,7 @@ using IAX.IXApi.Api.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Finance.Entities;
-using IAX.IXApi.Modules.Organization.Employees.Entities;
+using IAX.IXApi.Modules.Organization.HcmWorkers;
 using IAX.IXApi.Shared.Application.Contracts;
 using Mapster;
 

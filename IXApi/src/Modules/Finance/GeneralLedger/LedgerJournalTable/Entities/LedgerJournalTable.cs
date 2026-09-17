@@ -186,7 +186,7 @@ namespace IAX.IXApi.Modules.Finance.Entities
 //         public virtual DimensionAttributeValueCombination? OffsetLedgerAccount { get; set; }
 
 //         [ForeignKey(nameof(Approver))]
-//         public virtual IAX.IXApi.Modules.Organization.Employees.OrgEmployee? ApproverEmployee { get; set; }
+//         public virtual IAX.IXApi.Modules.Organization.HcmWorker.OrgEmployee? ApproverEmployee { get; set; }
 
         #endregion
     }

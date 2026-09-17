@@ -13,12 +13,12 @@ namespace IAX.IXApi.Modules.Organization.HcmWorkerManagers
             builder.HasKey(x => new { x.EmployeeId, x.ManagementLevelId });
 
             builder.HasOne(x => x.Employee)
-                .WithMany(e => e.Managers)
+                .WithMany(x => x.Managers)
                 .HasForeignKey(x => x.EmployeeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(x => x.Manager)
-                .WithMany()
+                .WithMany(x => x.ManagedWorkers)
                 .HasForeignKey(x => x.ManagerId)
                 .OnDelete(DeleteBehavior.Restrict);
 

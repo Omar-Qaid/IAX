@@ -1,6 +1,6 @@
 using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Finance.Entities;
-using IAX.IXApi.Modules.Organization.Employees.Entities;
+using IAX.IXApi.Modules.Organization.HcmWorkers;
 using IAX.IXApi.Modules.Finance.Shared.Features;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
@@ -465,10 +465,10 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
 //         public virtual PaymTerm? PaymTermTable { get; set; }
 
 //         [ForeignKey(nameof(WorkerSalesResponsible))]
-//         public virtual IAX.IXApi.Modules.Organization.Employees.OrgEmployee? SalesResponsibleEmployee { get; set; }
+//         public virtual IAX.IXApi.Modules.Organization.HcmWorker.OrgEmployee? SalesResponsibleEmployee { get; set; }
 
 //         [ForeignKey(nameof(WorkerSalesTaker))]
-//         public virtual IAX.IXApi.Modules.Organization.Employees.OrgEmployee? SalesTakerEmployee { get; set; }
+//         public virtual IAX.IXApi.Modules.Organization.HcmWorker.OrgEmployee? SalesTakerEmployee { get; set; }
 
 //         [ForeignKey(nameof(DeliveryPostalAddress))]
 //         public virtual LogisticsPostalAddress? DeliveryAddress { get; set; }

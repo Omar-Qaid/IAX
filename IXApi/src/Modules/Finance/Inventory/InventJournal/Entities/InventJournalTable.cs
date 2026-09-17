@@ -132,7 +132,7 @@ namespace IAX.IXApi.Modules.Finance.Entities
 //         public virtual InventLocation? InventLocation { get; set; }
 
 //         [ForeignKey(nameof(Worker))]
-//         public virtual IAX.IXApi.Modules.Organization.Employees.OrgEmployee? Employee { get; set; }
+//         public virtual IAX.IXApi.Modules.Organization.HcmWorker.OrgEmployee? Employee { get; set; }
 
         #endregion
     }

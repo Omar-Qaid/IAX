@@ -1,7 +1,7 @@
 using IAX.IXApi.Shared.Application.Contracts;
 using IAX.IXApi.Modules.Organization.Departments;
 using IAX.IXApi.Modules.Organization.Occupations;
-using IAX.IXApi.Modules.Organization.Employees;
+using IAX.IXApi.Modules.Organization.HcmWorkers;
 
 namespace IAX.IXApi.Modules.Workflow.Processes
 {

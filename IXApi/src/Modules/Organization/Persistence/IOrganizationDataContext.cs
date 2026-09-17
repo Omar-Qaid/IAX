@@ -3,6 +3,7 @@ using IAX.IXApi.Modules.Organization.Features.HcmWorkerGroup;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using IAX.IXApi.Modules.Organization.DocumentManagement.Entities;
+using IAX.IXApi.Modules.Organization.HcmWorkers;
 
 namespace IAX.IXApi.Modules.Organization.Persistence;
 
@@ -10,7 +11,7 @@ public interface IOrganizationDataContext
 {
     DatabaseFacade Database { get; }
     Microsoft.EntityFrameworkCore.ChangeTracking.ChangeTracker ChangeTracker { get; }
-    DbSet<IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker> HcmWorkers { get; }
+    DbSet<HcmWorker> HcmWorkers { get; }
     DbSet<IAX.IXApi.Modules.Organization.OrganizationUnits.OrganizationUnit> OrganizationUnits { get; }
     DbSet<IAX.IXApi.Modules.Organization.WorkerOrganizationAssignments.HcmWorkerOrganizationAssignment> HcmWorkerOrganizationAssignments { get; }
     DbSet<IAX.IXApi.Modules.Organization.Structure.OrganizationRole> OrganizationRoles { get; }

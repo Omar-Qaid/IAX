@@ -1,4 +1,4 @@
-using IAX.IXApi.Modules.Organization.Employees;
+using IAX.IXApi.Modules.Organization.HcmWorkers;
 using IAX.IXApi.Modules.Organization.ManagementLevels;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -15,10 +15,10 @@ namespace IAX.IXApi.Modules.Organization.HcmWorkerManagers
         public long ManagerId { get; set; }
 
         [ForeignKey(nameof(EmployeeId))]
-        public virtual IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker Employee { get; set; } = null!;
+        public virtual HcmWorker Employee { get; set; } = null!;
 
         [ForeignKey(nameof(ManagerId))]
-        public virtual IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker Manager { get; set; } = null!;
+        public virtual HcmWorker Manager { get; set; } = null!;
 
         [ForeignKey(nameof(ManagementLevelId))]
         public virtual HcmWorkerManagementLevel ManagementLevel { get; set; } = null!;

@@ -2,7 +2,7 @@ using IAX.IXApi.Shared.Application.Contracts;
 using IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses;
 using System;
 
-namespace IAX.IXApi.Modules.Organization.Employees
+namespace IAX.IXApi.Modules.Organization.HcmWorkers
 {
     public class HcmWorkerDto : MasterEntityDto<long>
     {

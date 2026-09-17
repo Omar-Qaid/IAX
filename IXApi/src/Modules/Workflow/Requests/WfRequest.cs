@@ -3,7 +3,7 @@ using IAX.IXApi.Modules.Workflow.Processes;
 using System.ComponentModel.DataAnnotations;
 using IAX.IXApi.Modules.Organization.WorkerOrganizationAssignments;
 using IAX.IXApi.Modules.Organization.OrganizationUnits;
-using IAX.IXApi.Modules.Organization.Employees.Entities;
+using IAX.IXApi.Modules.Organization.HcmWorkers;
 
 namespace IAX.IXApi.Modules.Workflow.Requests
 {
@@ -15,7 +15,7 @@ namespace IAX.IXApi.Modules.Workflow.Requests
         public virtual WfProcess Process { get; set; } = null!;
         public long? EmployeeId { get; set; }
         [System.ComponentModel.DataAnnotations.Schema.ForeignKey(nameof(EmployeeId))]
-        public virtual IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker? Employee { get; set; }
+        public virtual HcmWorker? Employee { get; set; }
         public string RequestDetails { get; set; } = null!;
         public bool IsFinished { get; set; }
         public DateTime? FinishedDate { get; set; }
