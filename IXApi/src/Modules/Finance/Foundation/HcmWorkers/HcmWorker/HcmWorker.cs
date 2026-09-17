@@ -7,6 +7,7 @@ using IAX.IXApi.Modules.Finance.Foundation.WorkerOrganizationAssignments;
 using IAX.IXApi.Modules.Identity.Users;
 
 using System.ComponentModel.DataAnnotations.Schema;
+using IAX.IXApi.Modules.Finance.Entities;
 
 namespace IAX.IXApi.Modules.Finance.Foundation.HcmWorkers
 {
@@ -24,6 +25,9 @@ namespace IAX.IXApi.Modules.Finance.Foundation.HcmWorkers
         public short NationalityId { get; set; }
 
         #region Navigation Properties Row
+        [ForeignKey(nameof(Person))]
+        public virtual DirPartyTable? DirPartyTable { get; set; }
+
         public virtual Gender Gender { get; set; } = null!;
         public virtual Nationality Nationality { get; set; } = null!;
         

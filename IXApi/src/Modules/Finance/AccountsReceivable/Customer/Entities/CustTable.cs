@@ -293,7 +293,8 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
 
         #region Navigation Properties Row     
         #endregion
-
+        [ForeignKey(nameof(Party))]
+        public virtual DirPartyTable? DirPartyTable { get; set; }
         #region Navigation Properties List
         #endregion
     }
