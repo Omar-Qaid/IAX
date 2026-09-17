@@ -3,7 +3,6 @@ using IAX.IXApi.Modules.Identity.Authentication;
 using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Identity.Roles;
 using IAX.IXApi.Modules.Identity.Impersonation;
-using IAX.IXApi.Modules.Organization.Features.HcmWorkerGroup;
 using IAX.IXApi.Modules.Workflow.Activities;
 using IAX.IXApi.Modules.Workflow.Steps;
 using IAX.IXApi.Modules.Workflow.Categories;
@@ -17,7 +16,6 @@ using IAX.IXApi.Modules.Workflow.Performers;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
-using IAX.IXApi.Modules.Organization.Features.HcmWorkerCategory;
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
 {
@@ -545,86 +543,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             }
             #endregion
 
-            #region UserGroups
-            if (!await db.HcmWorkerGroups.AnyAsync(ct))
-            {
-                var userGroups = new[]
-                {
-                    new HcmWorkerGroup { Code = "ALL",  Name = "جميع المستخدمين",           },
-                    new HcmWorkerGroup { Code = "HR",   Name = "إدارة الموارد البشرية",     },
-                    new HcmWorkerGroup { Code = "IT",   Name = "إدارة تقنية المعلومات",     },
-                    new HcmWorkerGroup { Code = "FIN",  Name = "الإدارة المالية",            },
-                    new HcmWorkerGroup { Code = "MGT",  Name = "الإدارة العليا",             },
-                    new HcmWorkerGroup { Code = "OPS",  Name = "إدارة العمليات",             },
-                    new HcmWorkerGroup { Code = "SALES",Name = "إدارة المبيعات",             },
-                };
-                await db.HcmWorkerGroups.AddRangeAsync(userGroups, ct);
-                await db.SaveChangesAsync(ct);
-            }
-            #endregion
-
-            #region UserCategories
-            if (!await db.HcmWorkerCategories.AnyAsync(ct))
-            {
-                var hrGroup  = await db.HcmWorkerGroups.FirstOrDefaultAsync(g => g.Code == "HR",  ct);
-                var itGroup  = await db.HcmWorkerGroups.FirstOrDefaultAsync(g => g.Code == "IT",  ct);
-                var finGroup = await db.HcmWorkerGroups.FirstOrDefaultAsync(g => g.Code == "FIN", ct);
-                var mgtGroup = await db.HcmWorkerGroups.FirstOrDefaultAsync(g => g.Code == "MGT",  ct);
-
-                var categories = new[]
-                {
-                    new HcmWorkerCategory
-                    {
-                        Name      = "الكل",
-                        ForAll    = true,
-                        Manager1  = false, Manager2 = false, Manager3 = false, Manager4 = false,
-                        IsActive  = true,
-                    },
-                    new HcmWorkerCategory
-                    {
-                        Name      = "موظفو الموارد البشرية",
-                        ForAll    = false,
-                        Manager1  = true, Manager2 = false, Manager3 = false, Manager4 = false,
-                        IsActive  = true,
-                    },
-                    new HcmWorkerCategory
-                    {
-                        Name      = "موظفو تقنية المعلومات",
-                        ForAll    = false,
-                        Manager1  = false, Manager2 = false, Manager3 = false, Manager4 = false,
-                        IsActive  = true,
-                    },
-                    new HcmWorkerCategory
-                    {
-                        Name      = "الإدارة المالية",
-                        ForAll    = false,
-                        Manager1  = true, Manager2 = true, Manager3 = false, Manager4 = false,
-                        IsActive  = true,
-                    },
-                    new HcmWorkerCategory
-                    {
-                        Name      = "الإدارة العليا",
-                        ForAll    = false,
-                        Manager1  = true, Manager2 = true, Manager3 = true, Manager4 = true,
-                        IsActive  = true,
-                    },
-                };
-                await db.HcmWorkerCategories.AddRangeAsync(categories, ct);
-                await db.SaveChangesAsync(ct);
-
-                // Seed EmployeeCategoryGroup linkages (UserGroupID moved from EmployeeCategory to EmployeeCategoryGroup)
-                var groupLinks = new List<HcmWorkerCategoryGroup>();
-                if (hrGroup  != null) groupLinks.Add(new HcmWorkerCategoryGroup { UserCategoriesID = categories[1].RecId, UserGroupID = hrGroup.RecId,  IsActive = true });
-                if (itGroup  != null) groupLinks.Add(new HcmWorkerCategoryGroup { UserCategoriesID = categories[2].RecId, UserGroupID = itGroup.RecId,  IsActive = true });
-                if (finGroup != null) groupLinks.Add(new HcmWorkerCategoryGroup { UserCategoriesID = categories[3].RecId, UserGroupID = finGroup.RecId, IsActive = true });
-                if (mgtGroup != null) groupLinks.Add(new HcmWorkerCategoryGroup { UserCategoriesID = categories[4].RecId, UserGroupID = mgtGroup.RecId, IsActive = true });
-                if (groupLinks.Any())
-                {
-                    await db.EmployeeCategoryGroups.AddRangeAsync(groupLinks, ct);
-                    await db.SaveChangesAsync(ct);
-                }
-            }
-            #endregion
+            
 
             #region WfActivities
             if (!await db.WfActivities.IgnoreQueryFilters().AnyAsync(x => x.RecId == 2, ct))

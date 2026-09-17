@@ -1,6 +1,5 @@
 using System.Globalization;
-using IAX.IXApi.Modules.Organization.HcmWorkers;
-using IAX.IXApi.Modules.Organization.HcmWorkerManagers;
+using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 using IAX.IXApi.Modules.Workflow.Activities;
 using IAX.IXApi.Modules.Workflow.Execution;
 using IAX.IXApi.Modules.Workflow.Operators;
@@ -152,15 +151,7 @@ public partial class WfRequestService
             if (!subject.HasValue) throw ConfigurationError($"Performer {performer.RecId} requires a request employee.");
             if (!await _context.Set<HcmWorker>().AsNoTracking().AnyAsync(item => item.RecId == subject.Value && item.IsActive && !item.IsDeleted, ct))
                 throw ConfigurationError($"Performer {performer.RecId} references an unavailable employee.");
-            if (managerLevels.Any(item => item))
-            {
-                var level = Array.FindIndex(managerLevels, item => item) + 1;
-                var managers = await _context.Set<HcmWorkerManager>().AsNoTracking()
-                    .Where(item => item.EmployeeId == subject.Value && item.ManagementLevel.Level == level && item.ManagementLevel.IsActive && !item.ManagementLevel.IsDeleted)
-                    .Select(item => item.ManagerId).Distinct().ToListAsync(ct);
-                if (managers.Count != 1) throw ConfigurationError($"Performer {performer.RecId} requires exactly one manager at level {level}.");
-                employees.Add(managers[0]);
-            }
+       
             else employees.Add(subject.Value);
         }
         var explicitEmployees = await _context.Set<WfPerformerUsers>().AsNoTracking()

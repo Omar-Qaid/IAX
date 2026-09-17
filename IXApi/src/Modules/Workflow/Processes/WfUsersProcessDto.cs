@@ -1,7 +1,6 @@
 using IAX.IXApi.Shared.Application.Contracts;
-using IAX.IXApi.Modules.Organization.Departments;
-using IAX.IXApi.Modules.Organization.Occupations;
-using IAX.IXApi.Modules.Organization.HcmWorkers;
+using IAX.IXApi.Modules.Finance.Foundation.Occupations;
+using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 
 namespace IAX.IXApi.Modules.Workflow.Processes
 {
@@ -11,8 +10,6 @@ namespace IAX.IXApi.Modules.Workflow.Processes
         public short? DepartmentId { get; set; }
         public short? OccupationId { get; set; }
         public long? EmployeeId { get; set; }
-
-        public DepartmentDto? Department { get; set; }
         public OccupationDto? Occupation { get; set; }
         public HcmWorkerDto? Employee { get; set; }
     }

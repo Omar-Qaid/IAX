@@ -17,7 +17,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
-using IAX.IXApi.Modules.Organization.HcmWorkers;
+using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 
 namespace IAX.IXApi.Modules.Workflow.Requests
 {

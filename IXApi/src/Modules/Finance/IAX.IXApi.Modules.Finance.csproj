@@ -13,7 +13,6 @@
     <ProjectReference Include="..\..\Shared\IAX.IXApi.Shared.csproj" />
     <ProjectReference Include="..\Identity\IAX.IXApi.Modules.Identity.csproj" />
     <ProjectReference Include="..\Administration\IAX.IXApi.Modules.Administration.csproj" />
-    <ProjectReference Include="..\Organization\IAX.IXApi.Modules.Organization.csproj" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 </Project>

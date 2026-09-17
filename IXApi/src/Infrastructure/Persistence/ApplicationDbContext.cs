@@ -1,30 +1,22 @@
-
-
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Administration.Settings;
 
-
-using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Shared.Domain.Reporting;
-using IAX.IXApi.Modules.Finance.Entities;
+
 using IAX.IXApi.Modules.Administration.AuditLogs.Entities;
-using IAX.IXApi.Modules.Administration.DataManagement.Contracts;
+
 using IAX.IXApi.Infrastructure.Persistence.Seeding.Entities;
 using IAX.IXApi.Modules.Communication.Notifications.Entities;
 using IAX.IXApi.Modules.Administration.BackgroundJobs.Entities;
-using IAX.IXApi.Modules.Administration.AuditLogs.Services;
-using IAX.IXApi.Infrastructure.Identity;
-using IAX.IXApi.Modules.Identity.Authentication;
 using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Identity.Roles;
-using IAX.IXApi.Modules.Identity.Impersonation;
-using IAX.IXApi.Modules.Organization.Departments;
-using IAX.IXApi.Modules.Organization.OrganizationUnits;
-using IAX.IXApi.Modules.Organization.WorkerOrganizationAssignments;
-using IAX.IXApi.Modules.Organization.HcmWorkers;
-using IAX.IXApi.Modules.Organization.Genders;
-using IAX.IXApi.Modules.Organization.Nationalities;
-using IAX.IXApi.Modules.Organization.Occupations;
+
+using IAX.IXApi.Modules.Finance.Foundation.OrganizationUnits;
+using IAX.IXApi.Modules.Finance.Foundation.WorkerOrganizationAssignments;
+using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
+using IAX.IXApi.Modules.Finance.Foundation.Genders;
+using IAX.IXApi.Modules.Finance.Foundation.Nationalities;
+
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 
 
@@ -47,9 +39,8 @@ using IAX.IXApi.Modules.Workflow.Execution;
 using IAX.IXApi.Modules.Workflow.PrintTemplates;
 using IAX.IXApi.Modules.Organization.Announcements;
 using IAX.IXApi.Modules.Organization.DocumentManagement.Entities;
-using IAX.IXApi.Modules.Organization.HcmWorkerManagers;
-using IAX.IXApi.Modules.Organization.ManagementLevels;
-using IAX.IXApi.Modules.Organization.Structure;
+
+using IAX.IXApi.Modules.Finance.Foundation.Structure;
 using IAX.IXApi.Modules.Identity.Permissions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -59,12 +50,11 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using IAX.IXApi.Infrastructure.Persistence.ModelBuilding;
 using System.Linq.Expressions;
 using System.Reflection.Metadata;
-using IAX.IXApi.Modules.Organization.Features.HcmWorkerGroup;
-using IAX.IXApi.Modules.Organization.Features.HcmWorkerCategory;
 using IAX.IXApi.Modules.Finance.Inventory;
 using IAX.IXApi.Modules.Finance.Shared.Features;
 using IAX.IXApi.Modules.Finance.GeneralLedger;
 using IAX.IXApi.Shared.Application.Identity;
+using IAX.IXApi.Modules.Finance.Foundation.Occupations;
 
 namespace IAX.IXApi.Infrastructure.Persistence
 {
@@ -213,29 +203,26 @@ namespace IAX.IXApi.Infrastructure.Persistence
         #endregion
 
         #region Organization
-       
-       
+
+        
+
+      
+        public DbSet<Occupation> Occupations => Set<Occupation>();
         public DbSet<Announcement> Announcements => Set<Announcement>();
         public DbSet<DocuType> DocuTypes => Set<DocuType>();
         public DbSet<DocuValue> DocuValues => Set<DocuValue>();
         public DbSet<DocuRef> DocuRefs => Set<DocuRef>();
         public DbSet<Gender> Genders => Set<Gender>();
         public DbSet<Nationality> Nationalities => Set<Nationality>();
-        public DbSet<Occupation> Occupations => Set<Occupation>();
-        public DbSet<Department> Departments => Set<Department>();
         public DbSet<OrganizationUnit> OrganizationUnits => Set<OrganizationUnit>();
         public DbSet<OrganizationRole> OrganizationRoles => Set<OrganizationRole>();
         public DbSet<OrganizationHierarchy> OrganizationHierarchies => Set<OrganizationHierarchy>();
         public DbSet<OrganizationHierarchyNode> OrganizationHierarchyNodes => Set<OrganizationHierarchyNode>();
-        public DbSet<HcmWorkerManagementLevel> HcmWorkerManagementLevels => Set<HcmWorkerManagementLevel>();
-        public DbSet<HcmWorkerManager> HcmWorkerManagers => Set<HcmWorkerManager>();
+
         public DbSet<HcmWorkerOrganizationAssignment> HcmWorkerOrganizationAssignments => Set<HcmWorkerOrganizationAssignment>();
         public DbSet<HcmWorker> HcmWorkers => Set<HcmWorker>();
         public DbSet<HcmPosition> HcmPositions => Set<HcmPosition>();
-        public DbSet<HcmWorkerGroup> HcmWorkerGroups => Set<HcmWorkerGroup>();
-        public DbSet<HcmWorkerGroupDetail> HcmWorkerGroupDetails => Set<HcmWorkerGroupDetail>();
-        public DbSet<HcmWorkerCategory> HcmWorkerCategories => Set<HcmWorkerCategory>();
-        public DbSet<HcmWorkerCategoryGroup> EmployeeCategoryGroups => Set<HcmWorkerCategoryGroup>();
+
         #endregion
 
 

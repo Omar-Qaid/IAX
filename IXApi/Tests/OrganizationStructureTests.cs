@@ -1,12 +1,11 @@
 using FluentValidation;
+using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
+using IAX.IXApi.Modules.Finance.Foundation.OrganizationUnits;
+using IAX.IXApi.Modules.Finance.Foundation.Structure;
+using IAX.IXApi.Modules.Finance.Foundation.WorkerOrganizationAssignments;
 using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Organization.DocumentManagement.Entities;
-using IAX.IXApi.Modules.Organization.HcmWorkers;
-using IAX.IXApi.Modules.Organization.Features.HcmWorkerGroup;
-using IAX.IXApi.Modules.Organization.OrganizationUnits;
 using IAX.IXApi.Modules.Organization.Persistence;
-using IAX.IXApi.Modules.Organization.Structure;
-using IAX.IXApi.Modules.Organization.WorkerOrganizationAssignments;
 using IAX.IXApi.Shared.Application.Identity;
 using IAX.IXApi.Shared.Domain.Entities;
 using Microsoft.Data.Sqlite;
@@ -208,7 +207,7 @@ public sealed class OrganizationStructureTests
             await f.Db.Database.EnsureCreatedAsync();
             f.Db.HcmWorkers.AddRange(new HcmWorker { RecId = 1, PersonnelNumber = "W1", DataAreaId = "dat" }, new HcmWorker { RecId = 2, PersonnelNumber = "W2", DataAreaId = "dat" });
             await f.Db.SaveChangesAsync();
-            f.Service = new OrganizationStructureService(f.Db, f.Company);
+           // f.Service = new OrganizationStructureService(f.Db, f.Company);
             return f;
         }
         public async Task<(long Unit, long Role, long Position)> SeatAsync(string code)
@@ -233,8 +232,6 @@ public sealed class OrganizationStructureTests
         public DbSet<OrganizationHierarchyNode> OrganizationHierarchyNodes => Set<OrganizationHierarchyNode>();
         public DbSet<HcmPosition> HcmPositions => Set<HcmPosition>();
         public DbSet<HcmWorkerOrganizationAssignment> HcmWorkerOrganizationAssignments => Set<HcmWorkerOrganizationAssignment>();
-        public DbSet<HcmWorkerGroup> HcmWorkerGroups => Set<HcmWorkerGroup>();
-        public DbSet<HcmWorkerGroupDetail> HcmWorkerGroupDetails => Set<HcmWorkerGroupDetail>();
         public DbSet<AspNetUser> Users => Set<AspNetUser>();
         public DbSet<DocuType> DocuTypes => Set<DocuType>();
         public DbSet<DocuValue> DocuValues => Set<DocuValue>();
@@ -251,7 +248,7 @@ public sealed class OrganizationStructureTests
         protected override void OnModelCreating(ModelBuilder b)
         {
             // DbSet discovery finds unrelated interface sets; exclude them from this fixture.
-            b.Ignore<HcmWorkerGroup>(); b.Ignore<HcmWorkerGroupDetail>(); b.Ignore<AspNetUser>();
+             b.Ignore<AspNetUser>();
             b.Ignore<DocuType>(); b.Ignore<DocuValue>(); b.Ignore<DocuRef>();
             var worker = b.Entity<HcmWorker>();
             worker.Ignore(x => x.Nationality); worker.Ignore(x => x.User);

@@ -1,17 +1,16 @@
-using System.Reflection;
-using System.Text.Json;
+using DocumentFormat.OpenXml.Spreadsheet;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
+using IAX.IXApi.Modules.Finance.Foundation.Genders;
+using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
+using IAX.IXApi.Modules.Finance.Foundation.Nationalities;
+using IAX.IXApi.Modules.Finance.Foundation.Occupations;
 using IAX.IXApi.Modules.Identity.Roles;
 using IAX.IXApi.Modules.Identity.Users;
-using IAX.IXApi.Modules.Organization.Departments;
-using IAX.IXApi.Modules.Organization.HcmWorkers;
-using IAX.IXApi.Modules.Organization.Genders;
-using IAX.IXApi.Modules.Organization.Nationalities;
-using IAX.IXApi.Modules.Organization.Occupations;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using OrganizationGender = IAX.IXApi.Modules.Organization.Genders.Gender;
+using System.Reflection;
+using System.Text.Json;
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks;
 
@@ -33,19 +32,13 @@ public sealed class OthersDBOrganizationEmployeeSeeder : OthersDBSeedData
         _=roles;
         var owner=(await users.FindByNameAsync("sys"))?.Id??"sys";
         var data=await ReadAsync(ct);
-        await UpsertDepartmentsAsync(db,data.Departments,owner,ct);
         await UpsertOccupationsAsync(db,data.Occupations,owner,ct);
         await UpsertGendersAsync(db,data.Genders,owner,ct);
         await UpsertNationalitiesAsync(db,data.Nationalities,owner,ct);
         await UpsertEmployeesAsync(db,data.Employees,owner,ct);
     }
 
-    private static async Task UpsertDepartmentsAsync(ApplicationDbContext db,LookupShort[] rows,string owner,CancellationToken ct)
-    {
-        var existing=await db.Departments.IgnoreQueryFilters().ToDictionaryAsync(x=>x.RecId,ct);
-        foreach(var row in rows){if(existing.TryGetValue(row.Id,out var value)){Apply(value,row.Name,row.Description,row.Active);}else db.Departments.Add(new Department{RecId=row.Id,Code=$"DEP{row.Id}",Name=Text(row.Name,255),Description=Text(row.Description,1000),IsActive=row.Active,CreatedBy=owner,OwnerAccountId=owner});}
-        await SaveWithOptionalIdentityAsync(db,"Departments",ct);
-    }
+   
 
     private static async Task UpsertOccupationsAsync(ApplicationDbContext db,LookupShort[] rows,string owner,CancellationToken ct)
     {
@@ -57,7 +50,7 @@ public sealed class OthersDBOrganizationEmployeeSeeder : OthersDBSeedData
     private static async Task UpsertGendersAsync(ApplicationDbContext db,LookupByte[] rows,string owner,CancellationToken ct)
     {
         var existing=await db.Genders.IgnoreQueryFilters().ToDictionaryAsync(x=>x.RecId,ct);
-        foreach(var row in rows){if(existing.TryGetValue(row.Id,out var value)){Apply(value,row.Name,row.Description,true);}else db.Genders.Add(new OrganizationGender{RecId=row.Id,Code=$"GEN{row.Id}",Name=Text(row.Name,255),Description=Text(row.Description,1000),IsActive=true,CreatedBy=owner,OwnerAccountId=owner});}
+        foreach(var row in rows){if(existing.TryGetValue(row.Id,out var value)){Apply(value,row.Name,row.Description,true);}else db.Genders.Add(new Modules.Finance.Foundation.Genders.Gender { RecId=row.Id,Code=$"GEN{row.Id}",Name=Text(row.Name,255),Description=Text(row.Description,1000),IsActive=true,CreatedBy=owner,OwnerAccountId=owner});}
         await SaveWithOptionalIdentityAsync(db,"Genders",ct);
     }
 

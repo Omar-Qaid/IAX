@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 using IAX.IXApi.Modules.Communication.Notifications.Entities;
-using IAX.IXApi.Modules.Organization.HcmWorkers;
+using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 using IAX.IXApi.Modules.Workflow.Activities;
 using IAX.IXApi.Modules.Workflow.Execution;
 using Microsoft.EntityFrameworkCore;

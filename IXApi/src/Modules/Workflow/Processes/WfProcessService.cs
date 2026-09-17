@@ -51,7 +51,6 @@ namespace IAX.IXApi.Modules.Workflow.Processes
                 entity.UsersProcesses.Add(new WfUsersProcess
                 {
                     EmployeeId = up.EmployeeId,
-                    DepartmentId = up.DepartmentId,
                     OccupationId = up.OccupationId
                 });
             }
@@ -79,7 +78,6 @@ namespace IAX.IXApi.Modules.Workflow.Processes
                     {
                         ProcessId = existing.RecId,
                         EmployeeId = up.EmployeeId,
-                        DepartmentId = up.DepartmentId,
                         OccupationId = up.OccupationId
                     });
                 }

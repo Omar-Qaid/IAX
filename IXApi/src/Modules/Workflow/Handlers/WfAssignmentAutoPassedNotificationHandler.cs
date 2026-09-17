@@ -3,7 +3,7 @@ using IAX.IXApi.Modules.Workflow.Events;
 using IAX.IXApi.Shared.Domain.Events;
 using IAX.IXApi.Modules.Workflow.Activities;
 using Microsoft.EntityFrameworkCore;
-using IAX.IXApi.Modules.Organization.HcmWorkers;
+using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 
 namespace IAX.IXApi.Modules.Workflow.Handlers
 {

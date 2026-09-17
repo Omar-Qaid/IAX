@@ -1,4 +1,4 @@
-using IAX.IXApi.Modules.Organization.HcmWorkers;
+using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 using IAX.IXApi.Modules.Workflow.Execution;
 using Microsoft.EntityFrameworkCore;
 

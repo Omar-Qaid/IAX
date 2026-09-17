@@ -1,6 +1,6 @@
 using IAX.IXApi.Modules.Identity.Roles;
 using IAX.IXApi.Modules.Identity.Users;
-using IAX.IXApi.Modules.Organization.OrganizationUnits;
+using IAX.IXApi.Modules.Finance.Foundation.OrganizationUnits;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 

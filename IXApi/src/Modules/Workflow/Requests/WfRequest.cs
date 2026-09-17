@@ -1,9 +1,9 @@
 using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Workflow.Processes;
 using System.ComponentModel.DataAnnotations;
-using IAX.IXApi.Modules.Organization.WorkerOrganizationAssignments;
-using IAX.IXApi.Modules.Organization.OrganizationUnits;
-using IAX.IXApi.Modules.Organization.HcmWorkers;
+using IAX.IXApi.Modules.Finance.Foundation.WorkerOrganizationAssignments;
+using IAX.IXApi.Modules.Finance.Foundation.OrganizationUnits;
+using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 
 namespace IAX.IXApi.Modules.Workflow.Requests
 {

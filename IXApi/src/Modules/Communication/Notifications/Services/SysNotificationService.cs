@@ -465,14 +465,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                 foreach (var id in deptUserIds) userIds.Add(id);
             }
 
-            if (dto.GroupIds?.Any() == true)
-            {
-                var groupUserIds = await _db.HcmWorkerGroupDetails.AsNoTracking()
-                    .Where(gd => dto.GroupIds.Contains(gd.UserGroupID))
-                    .Select(gd => gd.UserID)
-                    .ToListAsync(ct);
-                foreach (var id in groupUserIds) userIds.Add(id);
-            }
+         
 
             return userIds.ToList();
         }

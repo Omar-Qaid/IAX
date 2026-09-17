@@ -5,7 +5,7 @@ using IAX.IXApi.Modules.Workflow.Variables;
 using IAX.IXApi.Modules.Workflow.Processes;
 using IAX.IXApi.Modules.Workflow.Activities;
 using Microsoft.EntityFrameworkCore;
-using IAX.IXApi.Modules.Organization.HcmWorkers;
+using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Processes.Process651;
 

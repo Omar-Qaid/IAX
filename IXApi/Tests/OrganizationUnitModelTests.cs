@@ -1,10 +1,11 @@
 using IAX.IXApi.Infrastructure.Persistence;
-using IAX.IXApi.Modules.Organization.HcmWorkers;
-using IAX.IXApi.Modules.Organization.OrganizationUnits;
-using IAX.IXApi.Modules.Organization.WorkerOrganizationAssignments;
+using IAX.IXApi.Modules.Finance.Foundation.OrganizationUnits;
 using IAX.IXApi.Modules.Workflow.Requests;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
+using IAX.IXApi.Modules.Finance.Foundation.Structure;
+using IAX.IXApi.Modules.Finance.Foundation.WorkerOrganizationAssignments;
+using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 
 namespace IXApi.Tests;
 
@@ -16,8 +17,8 @@ public class OrganizationUnitModelTests
         using var db = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseSqlServer("Server=localhost;Database=ModelOnly;Integrated Security=true;TrustServerCertificate=true").Options);
         var types = new[] { typeof(OrganizationUnit), typeof(HcmWorkerOrganizationAssignment),
-            typeof(IAX.IXApi.Modules.Organization.Structure.OrganizationRole), typeof(IAX.IXApi.Modules.Organization.Structure.OrganizationHierarchy),
-            typeof(IAX.IXApi.Modules.Organization.Structure.OrganizationHierarchyNode), typeof(IAX.IXApi.Modules.Organization.Structure.HcmPosition) };
+            typeof(OrganizationRole), typeof(OrganizationHierarchy),
+            typeof(OrganizationHierarchyNode), typeof(HcmPosition) };
         foreach (var type in types)
         {
             var entity = db.Model.FindEntityType(type)!;

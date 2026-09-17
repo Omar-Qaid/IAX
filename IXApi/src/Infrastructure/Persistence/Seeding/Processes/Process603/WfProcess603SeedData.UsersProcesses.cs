@@ -1,5 +1,5 @@
 using IAX.IXApi.Infrastructure.Persistence;
-using IAX.IXApi.Modules.Organization.HcmWorkers;
+using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 using IAX.IXApi.Modules.Workflow.Processes;
 using Microsoft.EntityFrameworkCore;
 
@@ -51,7 +51,6 @@ public sealed partial class WfProcess603SeedData
                 {
                     RecId = item.RecId,
                     ProcessId = item.ProcessId,
-                    DepartmentId = item.DepartmentId,
                     OccupationId = item.OccupationId,
                     EmployeeId = validEmployeeId,
                     CreatedBy = owner,
