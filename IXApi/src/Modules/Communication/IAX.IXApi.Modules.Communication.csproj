@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.9" />
     <ProjectReference Include="..\..\Shared\IAX.IXApi.Shared.csproj" />
+    <ProjectReference Include="..\Finance\IAX.IXApi.Modules.Finance.csproj" />
     <ProjectReference Include="..\Identity\IAX.IXApi.Modules.Identity.csproj" />
     <ProjectReference Include="..\Administration\IAX.IXApi.Modules.Administration.csproj" />
     <ProjectReference Include="..\Organization\IAX.IXApi.Modules.Organization.csproj" />
