@@ -2,6 +2,10 @@ using IAX.IXApi.Shared.Domain.Entities;
 
 namespace IAX.IXApi.Modules.Organization.Features.HcmWorkerGroup
 {
+    /// <summary>
+    /// [Unused / Not Needed] User assignment detail for worker groups.
+    /// Kept for backward compatibility.
+    /// </summary>
     public class HcmWorkerGroupDetail : MasterEntity<long>
     {
         public long UserGroupID { get; set; }

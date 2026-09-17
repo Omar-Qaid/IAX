@@ -28,7 +28,7 @@ namespace IAX.IXApi.Modules.Workflow.Requests
     {
         public static readonly HashSet<string> ReferenceTypes = new(StringComparer.Ordinal)
         {
-            "Lookup", "Employee", "Showroom", "Branch", "Company", "Department", "BusinessUnit",
+            "Lookup", "Employee", "Branch", "Company", "Department", "BusinessUnit",
             "Area", "City", "Country", "Location", "Customer", "Vendor", "Item", "ItemGroup",
             "Category", "Warehouse", "PaymentMethod", "ViolationType", "Invoice", "PurchaseOrder",
             "SalesOrder", "Process", "User"

@@ -1,0 +1,14 @@
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\bin\IAX.IXApi.Modules.Finance\release\IAX.IXApi.Modules.Finance.deps.json
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\bin\IAX.IXApi.Modules.Finance\release\IAX.IXApi.Modules.Finance.dll
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\bin\IAX.IXApi.Modules.Finance\release\IAX.IXApi.Modules.Finance.pdb
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Finance\release\IAX.IXApi.Modules.Finance.csproj.AssemblyReference.cache
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Finance\release\IAX.IXApi.Modules.Finance.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Finance\release\IAX.IXApi.Modules.Finance.AssemblyInfoInputs.cache
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Finance\release\IAX.IXApi.Modules.Finance.AssemblyInfo.cs
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Finance\release\IAX.IXApi.Modules.Finance.csproj.CoreCompileInputs.cache
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Finance\release\IAX.IXApi.Modules.Finance.sourcelink.json
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Finance\release\IAX.IXAp.4D8D2EEA.Up2Date
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Finance\release\IAX.IXApi.Modules.Finance.dll
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Finance\release\refint\IAX.IXApi.Modules.Finance.dll
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Finance\release\IAX.IXApi.Modules.Finance.pdb
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Finance\release\ref\IAX.IXApi.Modules.Finance.dll

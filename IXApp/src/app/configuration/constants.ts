@@ -166,7 +166,7 @@ export const API_ENDPOINTS = {
     ROLES: '/Role',
     JOBS: '/Job',
     SHOWROOMS: '/Showroom',
-    MANAGEMENT_LEVELS: '/ManagementLevel',
+    MANAGEMENT_LEVELS: '/HcmWorkerManagementLevel',
     EMPLOYEE_MANAGERS: '/EmployeeManager',
     USER_GROUPS: '/EmployeeGroup',
     USER_CATEGORIES: '/EmployeeCategory',

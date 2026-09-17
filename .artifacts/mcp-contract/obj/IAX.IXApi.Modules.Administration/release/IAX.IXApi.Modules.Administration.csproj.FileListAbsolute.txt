@@ -1,0 +1,14 @@
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\bin\IAX.IXApi.Modules.Administration\release\IAX.IXApi.Modules.Administration.deps.json
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\bin\IAX.IXApi.Modules.Administration\release\IAX.IXApi.Modules.Administration.dll
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\bin\IAX.IXApi.Modules.Administration\release\IAX.IXApi.Modules.Administration.pdb
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Administration\release\IAX.IXApi.Modules.Administration.csproj.AssemblyReference.cache
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Administration\release\IAX.IXApi.Modules.Administration.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Administration\release\IAX.IXApi.Modules.Administration.AssemblyInfoInputs.cache
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Administration\release\IAX.IXApi.Modules.Administration.AssemblyInfo.cs
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Administration\release\IAX.IXApi.Modules.Administration.csproj.CoreCompileInputs.cache
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Administration\release\IAX.IXApi.Modules.Administration.sourcelink.json
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Administration\release\IAX.IXAp.921B1D50.Up2Date
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Administration\release\IAX.IXApi.Modules.Administration.dll
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Administration\release\refint\IAX.IXApi.Modules.Administration.dll
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Administration\release\IAX.IXApi.Modules.Administration.pdb
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Administration\release\ref\IAX.IXApi.Modules.Administration.dll

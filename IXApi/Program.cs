@@ -16,6 +16,15 @@ using System.Reflection;
 const string MyAllowSpecificOrigins = "CorsPolicy";
 const string RateLimitPolicyTight = "tight";
 
+// Offline contract discovery deliberately bypasses runtime services and database startup.
+if (args.FirstOrDefault() == "--export-mcp-contract")
+{
+    if (args.Length != 2)
+        throw new ArgumentException("Usage: --export-mcp-contract <output-directory>");
+    await IAX.IXApi.Bootstrap.OpenApi.McpContractExporter.ExportAsync(args[1]);
+    return;
+}
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.ClearProviders();

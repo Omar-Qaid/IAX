@@ -11,7 +11,7 @@ namespace IAX.IXApi.Modules.Identity.Users
 {
     [ApiController]
     [Route("api/v1/[controller]")]
-[DomainPermission("SystemAdministration", "Users")]
+    [DomainPermission("SystemAdministration", "Users")]
     public class UserController : BaseController<AspNetUser, AspNetUserDto>
     {
         private readonly IIdentityDataContext _db;
@@ -27,8 +27,7 @@ namespace IAX.IXApi.Modules.Identity.Users
             _userManager = userManager;
         }
 
-        // Include the linked employee so list rows can show EmployeeName.
-        protected override string[]? GetDefaultIncludes() => ["OrganizationEntity"];
+        protected override string[]? GetDefaultIncludes() => null;
 
         /// <summary>
         /// Users active within the last <paramref name="minutes"/> (by LastLoginDate). Paged.
@@ -44,7 +43,6 @@ namespace IAX.IXApi.Modules.Identity.Users
 
             var query = _db.Users
                 .AsNoTracking()
-                .Include(u => u.OrganizationEntity)
                 .Where(u => u.LastLoginDate >= threshold)
                 .OrderByDescending(u => u.LastLoginDate);
 
@@ -101,7 +99,7 @@ namespace IAX.IXApi.Modules.Identity.Users
         }
 
         /// <summary>
-        /// Update only the user-administration fields (email, phone, employee link, enabled state).
+        /// Update only the user-administration fields (email, phone, enabled state).
         /// Avoids a blanket Adapt that could disturb identity columns (password hash, stamps).
         /// </summary>
         [HttpPut("{id}")]
@@ -113,7 +111,6 @@ namespace IAX.IXApi.Modules.Identity.Users
             user.Email = dto.Email;
             user.NormalizedEmail = dto.Email?.ToUpperInvariant();
             user.PhoneNumber = dto.PhoneNumber;
-            user.OrganizationEntityId = (dto.EmployeeId == null || dto.EmployeeId <= 0) ? null : dto.EmployeeId;
 
             // Enabled toggle ↔ lockout. Disabled = locked out far in the future.
             user.LockoutEnabled = true;

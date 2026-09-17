@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "Fus7WrbmlUnb45nqBNuBJa+SG9M7XSYHhJEpwsizrOk=",
+  "Source": "IAX.IXApi",
+  "BasePath": "_content/IAX.IXApi",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}

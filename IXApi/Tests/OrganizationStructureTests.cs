@@ -255,7 +255,7 @@ public sealed class OrganizationStructureTests
             b.Ignore<DocuType>(); b.Ignore<DocuValue>(); b.Ignore<DocuRef>();
             var worker = b.Entity<HcmWorker>();
             worker.Ignore(x => x.Department); worker.Ignore(x => x.Occupation); worker.Ignore(x => x.Gender);
-            worker.Ignore(x => x.Nationality); worker.Ignore(x => x.Showroom); worker.Ignore(x => x.User); worker.Ignore(x => x.Managers);
+            worker.Ignore(x => x.Nationality); worker.Ignore(x => x.User); worker.Ignore(x => x.Managers);
             b.ApplyConfiguration(new OrganizationUnitConfiguration());
             b.ApplyConfiguration(new OrganizationRoleConfiguration());
             b.ApplyConfiguration(new OrganizationHierarchyConfiguration());

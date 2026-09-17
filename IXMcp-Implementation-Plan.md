@@ -1,10 +1,12 @@
 # IXMcp: project analysis and implementation plan
 
 Date: 2026-09-16  
-Status: proposed architecture; analysis and planning only.  
+Status: architecture plan; C1 offline discovery and proposed metadata contract implemented on 2026-09-17. Later checkpoints remain pending.
 Planned location: `C:\Users\Omar.Qaid\Desktop\IAX\IXMcp`.  
 Revision: 3, incorporating the seven-gap review and the subsequent consistency and execution review.  
-Authorization: document revision approved; server implementation and deployment are not authorized by this revision.
+Authorization: the user requested implementation on 2026-09-17; work begins with the bounded C0/C1 discovery checkpoint. Deployment and writes are not enabled.
+
+Current checkpoint: [C0/C1 discovery implementation and evidence](IXApi/docs/mcp-checkpoint-c1.md): 917 generated operations, including 200 Workflow operations, three disabled pilot candidates, and 30 passing focused tests. [Metadata contract v1](IXApi/docs/mcp-metadata-contract.md) defines their proposed identities and field/query restrictions. First client confirmed: **assistant inside IXApp**. The chat UI requires server-side model orchestration acting as an MCP client; provider and delegation choices remain open. The discovery checkpoint does not implement that UI or orchestration.
 
 ## 1. Objective and exact automation promise
 
@@ -377,7 +379,7 @@ This matrix does not introduce new permissions or claim that a missing fine-grai
 | IXApi identity integration | Supported issuer/delegation and user mapping | C5; explicit architectural decision |
 | Selected IXApi write endpoints | Durable idempotency/concurrency if missing | C8 |
 | CI/deployment files | Contract checks from C1, independent build/tests from C2, release gates completed in C9 | C1/C2 onward |
-| IXApp | No pilot change; possible future approval UI or embedded assistant | Separate scope |
+| IXApp and backend orchestration | Confirmed first-client integration: authenticated chat UI plus server-side model/MCP client loop; model provider, hosting and delegation decided in C0 | Client integration workstream before C6 embedded-assistant acceptance |
 
 No business-service extraction is required simply to introduce MCP because execution uses HTTP. No database migration is required for the read-only adapter itself. Delegation, approval storage or idempotency may require persistence later; design those migrations only when the relevant checkpoint is approved.
 
@@ -484,7 +486,7 @@ Rollback: disable writes/profile first, restore a compatible catalog and server 
 
 Decisions still needed before the dependent checkpoints:
 
-1. First AI client and whether access is local, remote, or both. The plan assumes remote-capable architecture; no specific client choice has been confirmed.
+1. First client is confirmed as an assistant inside IXApp. Select the model provider, backend orchestration location, chat request/streaming contract and deployment arrangement. Keep model/delegation credentials server-side and bind each conversation/tool call to its authenticated user.
 2. Identity provider and downstream delegation strategy; no credentials are needed for reviewing this plan.
 3. Deployment platform and staging IXApi address/schema delivery method.
 4. Approval of the three read-only pilot capabilities and test users with two company scopes.
@@ -493,4 +495,4 @@ Decisions still needed before the dependent checkpoints:
 
 Phase completion means evidence, not just compiling: the adapter builds independently, the selected client invokes real authorized reads, denials match IXApi, automatic endpoint/DTO refresh works, unsupported operations are reported, and rollback is demonstrated. Production writes have their additional C8 guarantees. All-module completion means every intended capability has an explicit accepted/excluded status and the same generic engine serves each admitted module.
 
-This planning deliverable does not establish those runtime results. The next implementation checkpoint is C0/C1 after the user authorizes implementation.
+This document does not establish runtime results. The user has authorized starting implementation; C0/C1 progress and its remaining prerequisites are recorded in the linked checkpoint report.

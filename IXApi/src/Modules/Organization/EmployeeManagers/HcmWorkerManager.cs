@@ -5,9 +5,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace IAX.IXApi.Modules.Organization.HcmWorkerManagers
 {
     /// <summary>
-    /// Dynamic management hierarchy link: one row per (employee, management level) pointing at the
-    /// employee who is the manager at that level. Replaces the old fixed Manager1..Manager4 columns.
-    /// Composite key (EmployeeId, ManagementLevelId) => at most one manager per level per employee.
+    /// [Unused / Redundant] Legacy dynamic worker-to-manager link table.
+    /// Kept for backward compatibility; worker-manager reporting structures are managed via OrganizationHierarchyNode.
     /// </summary>
     public class HcmWorkerManager
     {
@@ -22,7 +21,7 @@ namespace IAX.IXApi.Modules.Organization.HcmWorkerManagers
         public virtual IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker Manager { get; set; } = null!;
 
         [ForeignKey(nameof(ManagementLevelId))]
-        public virtual ManagementLevel ManagementLevel { get; set; } = null!;
+        public virtual HcmWorkerManagementLevel ManagementLevel { get; set; } = null!;
     }
 }
 

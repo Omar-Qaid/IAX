@@ -12,8 +12,6 @@ namespace IAX.IXApi.Modules.Finance.Shared.Features
     [ApiController]
     [Route("api/v1/[controller]")]
     [Route("api/[controller]")]
-    [Route("api/v1/MarkupTable")]
-    [Route("api/MarkupTable")]
     [Route("api/v1/ChargesCode")]
     [Route("api/ChargesCode")]
     [DomainPermission("Finance", "MarkupCodes")]

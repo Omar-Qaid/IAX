@@ -1,0 +1,92 @@
+[
+  {
+    "metadataVersion": 1,
+    "toolName": "finance_customers_search",
+    "contractVersion": 1,
+    "method": "GET",
+    "path": "/api/v1/Customer/paged",
+    "executionEnabled": false,
+    "companyScope": "company-required",
+    "allowedQueryParameters": [
+      "PageNumber",
+      "PageSize",
+      "SearchTerm"
+    ],
+    "defaultPageSize": 25,
+    "maximumPageSize": 100,
+    "allowedDataFields": [
+      "recId",
+      "accountNum",
+      "custGroup",
+      "currency",
+      "blocked",
+      "isActive"
+    ],
+    "recordAuthorization": "AccountsReceivable.Customers.View; company-filtered API query",
+    "requiredEvidence": [
+      "adapter-enforces-input-and-output-policy",
+      "authenticated-company-and-record-isolation",
+      "real-client-invocation",
+      "data-owner-review"
+    ]
+  },
+  {
+    "metadataVersion": 1,
+    "toolName": "organization_departments_search",
+    "contractVersion": 1,
+    "method": "GET",
+    "path": "/api/v1/Department/paged",
+    "executionEnabled": false,
+    "companyScope": "company-required",
+    "allowedQueryParameters": [
+      "PageNumber",
+      "PageSize",
+      "SearchTerm"
+    ],
+    "defaultPageSize": 25,
+    "maximumPageSize": 100,
+    "allowedDataFields": [
+      "recId",
+      "code",
+      "name",
+      "description",
+      "isActive"
+    ],
+    "recordAuthorization": "Organization.Departments.View; company-filtered API query",
+    "requiredEvidence": [
+      "adapter-enforces-input-and-output-policy",
+      "authenticated-company-and-record-isolation",
+      "real-client-invocation",
+      "data-owner-review"
+    ]
+  },
+  {
+    "metadataVersion": 1,
+    "toolName": "workflow_requests_get",
+    "contractVersion": 1,
+    "method": "GET",
+    "path": "/api/v1/WfRequest/{id}",
+    "executionEnabled": false,
+    "companyScope": "company-required",
+    "allowedQueryParameters": [],
+    "defaultPageSize": null,
+    "maximumPageSize": null,
+    "allowedDataFields": [
+      "recId",
+      "code",
+      "name",
+      "processId",
+      "requestDate",
+      "isFinished",
+      "isStopped",
+      "progress"
+    ],
+    "recordAuthorization": "CanAccessRequestAsync; creator/employee/assignment or broad view; preserve API 404 concealment",
+    "requiredEvidence": [
+      "adapter-enforces-input-and-output-policy",
+      "authenticated-company-and-record-isolation",
+      "real-client-invocation",
+      "data-owner-review"
+    ]
+  }
+]

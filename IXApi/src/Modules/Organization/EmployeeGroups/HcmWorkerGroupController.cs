@@ -33,7 +33,7 @@ namespace IAX.IXApi.Modules.Organization.Features.HcmWorkerGroup
                 {
                     UserId = d.User.Id,
                     UserName = d.User.UserName!,
-                    DisplayName = d.User.OrganizationEntity != null ? d.User.OrganizationEntity.Name : d.User.UserName
+                    DisplayName = d.User.UserName
                 })
                 .OrderBy(m => m.UserName)
                 .ToListAsync(cancellationToken);
@@ -49,15 +49,12 @@ namespace IAX.IXApi.Modules.Organization.Features.HcmWorkerGroup
 
             var query = _db.Users
                 .AsNoTracking()
-                .Include(u => u.OrganizationEntity)
                 .Where(u => !memberIds.Contains(u.Id));
 
             if (!string.IsNullOrWhiteSpace(search))
             {
                 var term = search.Trim();
-                query = query.Where(u =>
-                    u.UserName != null && u.UserName.Contains(term) ||
-                    u.OrganizationEntity != null && u.OrganizationEntity.Name != null && u.OrganizationEntity.Name.Contains(term));
+                query = query.Where(u => u.UserName != null && u.UserName.Contains(term));
             }
 
             var users = await query
@@ -66,7 +63,7 @@ namespace IAX.IXApi.Modules.Organization.Features.HcmWorkerGroup
                 {
                     UserId = u.Id,
                     UserName = u.UserName!,
-                    DisplayName = u.OrganizationEntity != null ? u.OrganizationEntity.Name : u.UserName
+                    DisplayName = u.UserName
                 })
                 .ToListAsync(cancellationToken);
 

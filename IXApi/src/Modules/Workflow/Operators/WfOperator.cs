@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace IAX.IXApi.Modules.Workflow.Operators
 {
-public class WfOperator : WfMasterEntity<byte>
+public class WfOperator : MasterEntity<byte>
     {
  
         public byte SortOrder { get; set; }

@@ -1,0 +1,14 @@
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\bin\IAX.IXApi.Infrastructure\release\IAX.IXApi.Infrastructure.deps.json
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\bin\IAX.IXApi.Infrastructure\release\IAX.IXApi.Infrastructure.dll
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\bin\IAX.IXApi.Infrastructure\release\IAX.IXApi.Infrastructure.pdb
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Infrastructure\release\IAX.IXApi.Infrastructure.csproj.AssemblyReference.cache
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Infrastructure\release\IAX.IXApi.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Infrastructure\release\IAX.IXApi.Infrastructure.AssemblyInfoInputs.cache
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Infrastructure\release\IAX.IXApi.Infrastructure.AssemblyInfo.cs
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Infrastructure\release\IAX.IXApi.Infrastructure.csproj.CoreCompileInputs.cache
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Infrastructure\release\IAX.IXApi.Infrastructure.sourcelink.json
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Infrastructure\release\IAX.IXAp.A6AE18DE.Up2Date
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Infrastructure\release\IAX.IXApi.Infrastructure.dll
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Infrastructure\release\refint\IAX.IXApi.Infrastructure.dll
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Infrastructure\release\IAX.IXApi.Infrastructure.pdb
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Infrastructure\release\ref\IAX.IXApi.Infrastructure.dll

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace IAX.IXApi.Modules.Workflow.Controls
 {
-public class WfControl : WfMasterEntity<byte>
+public class WfControl : MasterEntity<byte>
     {
         [StringLength(255)]
         public string ControlType { get; set; } = null!;

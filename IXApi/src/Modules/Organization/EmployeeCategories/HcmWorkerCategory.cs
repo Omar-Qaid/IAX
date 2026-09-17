@@ -3,6 +3,10 @@ using IAX.IXApi.Shared.Domain.Entities;
 
 namespace IAX.IXApi.Modules.Organization.Features.HcmWorkerCategory
 {
+    /// <summary>
+    /// [Unused / Not Needed] HR worker category entity.
+    /// Kept for backward compatibility.
+    /// </summary>
     public class HcmWorkerCategory : MasterEntity<long>
     {
         public bool? ForAll { get; set; }

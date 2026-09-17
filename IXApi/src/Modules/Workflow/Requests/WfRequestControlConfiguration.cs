@@ -9,7 +9,7 @@ namespace IAX.IXApi.Modules.Workflow.Requests
         {
             builder.ToTable("WfRequestControls", table =>
             {
-                table.HasCheckConstraint("CK_WfRequestControls_ReferenceType", "[ReferenceType] IS NULL OR [ReferenceType] IN (N'Lookup',N'Employee',N'Showroom',N'Branch',N'Company',N'Department',N'BusinessUnit',N'Area',N'City',N'Country',N'Location',N'Customer',N'Vendor',N'Item',N'ItemGroup',N'Category',N'Warehouse',N'PaymentMethod',N'ViolationType',N'Invoice',N'PurchaseOrder',N'SalesOrder',N'Process',N'User')");
+                table.HasCheckConstraint("CK_WfRequestControls_ReferenceType", "[ReferenceType] IS NULL OR [ReferenceType] IN (N'Lookup',N'Employee',N'Branch',N'Company',N'Department',N'BusinessUnit',N'Area',N'City',N'Country',N'Location',N'Customer',N'Vendor',N'Item',N'ItemGroup',N'Category',N'Warehouse',N'PaymentMethod',N'ViolationType',N'Invoice',N'PurchaseOrder',N'SalesOrder',N'Process',N'User')");
                 table.HasCheckConstraint("CK_WfRequestControls_FieldRole", "[FieldRole] IN (N'Dimension',N'Measure',N'Both')");
                 table.HasCheckConstraint("CK_WfRequestControls_DataType", "[DataType] IN (N'String',N'Integer',N'Decimal',N'Date',N'DateTime',N'Time',N'Boolean')");
                 table.HasCheckConstraint("CK_WfRequestControls_DefaultAggregation", "[DefaultAggregation] IN (N'NONE',N'SUM',N'COUNT',N'COUNT_DISTINCT',N'AVG',N'MIN',N'MAX')");

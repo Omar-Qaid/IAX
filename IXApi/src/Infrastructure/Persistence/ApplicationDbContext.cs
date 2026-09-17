@@ -50,7 +50,7 @@ using IAX.IXApi.Modules.Organization.Announcements;
 using IAX.IXApi.Modules.Organization.DocumentManagement.Entities;
 using IAX.IXApi.Modules.Organization.HcmWorkerManagers;
 using IAX.IXApi.Modules.Organization.ManagementLevels;
-using IAX.IXApi.Modules.Organization.Showrooms;
+using IAX.IXApi.Modules.Organization.Structure;
 using IAX.IXApi.Modules.Identity.Permissions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -214,37 +214,38 @@ namespace IAX.IXApi.Infrastructure.Persistence
         #endregion
 
         #region Organization
-        public DbSet<Department> Departments => Set<Department>();
-        public DbSet<OrganizationUnit> OrganizationUnits => Set<OrganizationUnit>();
-        public DbSet<IAX.IXApi.Modules.Organization.Structure.OrganizationRole> OrganizationRoles => Set<IAX.IXApi.Modules.Organization.Structure.OrganizationRole>();
-        public DbSet<IAX.IXApi.Modules.Organization.Structure.OrganizationHierarchy> OrganizationHierarchies => Set<IAX.IXApi.Modules.Organization.Structure.OrganizationHierarchy>();
-        public DbSet<IAX.IXApi.Modules.Organization.Structure.OrganizationHierarchyNode> OrganizationHierarchyNodes => Set<IAX.IXApi.Modules.Organization.Structure.OrganizationHierarchyNode>();
-        public DbSet<IAX.IXApi.Modules.Organization.Structure.HcmPosition> HcmPositions => Set<IAX.IXApi.Modules.Organization.Structure.HcmPosition>();
-        public DbSet<HcmWorkerOrganizationAssignment> HcmWorkerOrganizationAssignments => Set<HcmWorkerOrganizationAssignment>();
-        public DbSet<HcmWorker> HcmWorkers => Set<HcmWorker>();
-        public DbSet<Gender> Genders => Set<Gender>();
-        public DbSet<Nationality> Nationalities => Set<Nationality>();
-        public DbSet<Occupation> Occupations => Set<Occupation>();
+       
+       
         public DbSet<Announcement> Announcements => Set<Announcement>();
         public DbSet<DocuType> DocuTypes => Set<DocuType>();
         public DbSet<DocuValue> DocuValues => Set<DocuValue>();
         public DbSet<DocuRef> DocuRefs => Set<DocuRef>();
-        public DbSet<Showroom> Showrooms => Set<Showroom>();
-        public DbSet<ManagementLevel> ManagementLevels => Set<ManagementLevel>();
+        public DbSet<Gender> Genders => Set<Gender>();
+        public DbSet<Nationality> Nationalities => Set<Nationality>();
+        public DbSet<Occupation> Occupations => Set<Occupation>();
+        public DbSet<Department> Departments => Set<Department>();
+        public DbSet<OrganizationUnit> OrganizationUnits => Set<OrganizationUnit>();
+        public DbSet<OrganizationRole> OrganizationRoles => Set<OrganizationRole>();
+        public DbSet<OrganizationHierarchy> OrganizationHierarchies => Set<OrganizationHierarchy>();
+        public DbSet<OrganizationHierarchyNode> OrganizationHierarchyNodes => Set<OrganizationHierarchyNode>();
+        public DbSet<HcmWorkerManagementLevel> HcmWorkerManagementLevels => Set<HcmWorkerManagementLevel>();
         public DbSet<HcmWorkerManager> HcmWorkerManagers => Set<HcmWorkerManager>();
+        public DbSet<HcmWorkerOrganizationAssignment> HcmWorkerOrganizationAssignments => Set<HcmWorkerOrganizationAssignment>();
+        public DbSet<HcmWorker> HcmWorkers => Set<HcmWorker>();
+        public DbSet<HcmPosition> HcmPositions => Set<HcmPosition>();
+        public DbSet<HcmWorkerGroup> HcmWorkerGroups => Set<HcmWorkerGroup>();
+        public DbSet<HcmWorkerGroupDetail> HcmWorkerGroupDetails => Set<HcmWorkerGroupDetail>();
+        public DbSet<HcmWorkerCategory> HcmWorkerCategories => Set<HcmWorkerCategory>();
+        public DbSet<HcmWorkerCategoryGroup> EmployeeCategoryGroups => Set<HcmWorkerCategoryGroup>();
         #endregion
+
 
         #region RBAC Permissions
         public DbSet<AppPermission> AspNetPermissions => Set<AppPermission>();
         public DbSet<AppRolePermission> AspNetRolePermissions => Set<AppRolePermission>();
         #endregion
 
-        #region Identity Groups & Categories
-        public DbSet<HcmWorkerGroup> HcmWorkerGroups => Set<HcmWorkerGroup>();
-        public DbSet<HcmWorkerGroupDetail> HcmWorkerGroupDetails => Set<HcmWorkerGroupDetail>();
-        public DbSet<HcmWorkerCategory> HcmWorkerCategories => Set<HcmWorkerCategory>();
-        public DbSet<HcmWorkerCategoryGroup> EmployeeCategoryGroups => Set<HcmWorkerCategoryGroup>();
-        #endregion
+      
 
          #region Accounts
         public DbSet<CustGroup> CustGroups => Set<CustGroup>();

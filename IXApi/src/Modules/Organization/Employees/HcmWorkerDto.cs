@@ -19,8 +19,6 @@ namespace IAX.IXApi.Modules.Organization.Employees
         public string? Email { get; set; }
         public DateTime? HireDate { get; set; }
         public DateTime? BirthDate { get; set; }
-        public long? ShowroomId { get; set; }
-        public string? ShowroomName { get; set; }
 
         public List<AddressInfoDto>? Addresses { get; set; }
         public List<ContactInfoDto>? Contacts { get; set; }

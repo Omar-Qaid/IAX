@@ -4,6 +4,7 @@ namespace IAX.IXApi.Shared.Application.Contracts
     {
         public string? Code { get; set; }
         public string? Name { get; set; }
+        public string? NameAlias { get; set; }
         public string? Description { get; set; }
     }
 }

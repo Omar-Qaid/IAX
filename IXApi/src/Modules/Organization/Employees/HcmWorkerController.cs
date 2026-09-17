@@ -13,7 +13,7 @@ namespace IAX.IXApi.Modules.Organization.Employees
         {
         }
 
-        protected override string[]? GetDefaultIncludes() => new[] { "Department", "Occupation", "Gender", "Nationality", "Showroom" };
+        protected override string[]? GetDefaultIncludes() => new[] { "Department", "Occupation", "Gender", "Nationality" };
     }
 }
 

@@ -1,0 +1,14 @@
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\bin\IAX.IXApi.Modules.Communication\release\IAX.IXApi.Modules.Communication.deps.json
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\bin\IAX.IXApi.Modules.Communication\release\IAX.IXApi.Modules.Communication.dll
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\bin\IAX.IXApi.Modules.Communication\release\IAX.IXApi.Modules.Communication.pdb
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Communication\release\IAX.IXApi.Modules.Communication.csproj.AssemblyReference.cache
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Communication\release\IAX.IXApi.Modules.Communication.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Communication\release\IAX.IXApi.Modules.Communication.AssemblyInfoInputs.cache
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Communication\release\IAX.IXApi.Modules.Communication.AssemblyInfo.cs
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Communication\release\IAX.IXApi.Modules.Communication.csproj.CoreCompileInputs.cache
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Communication\release\IAX.IXApi.Modules.Communication.sourcelink.json
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Communication\release\IAX.IXAp.06FF8910.Up2Date
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Communication\release\IAX.IXApi.Modules.Communication.dll
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Communication\release\refint\IAX.IXApi.Modules.Communication.dll
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Communication\release\IAX.IXApi.Modules.Communication.pdb
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Communication\release\ref\IAX.IXApi.Modules.Communication.dll

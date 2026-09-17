@@ -1,0 +1,14 @@
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Organization\release\IAX.IXApi.Modules.Organization.csproj.AssemblyReference.cache
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Organization\release\IAX.IXApi.Modules.Organization.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Organization\release\IAX.IXApi.Modules.Organization.AssemblyInfoInputs.cache
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Organization\release\IAX.IXApi.Modules.Organization.AssemblyInfo.cs
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Organization\release\IAX.IXApi.Modules.Organization.csproj.CoreCompileInputs.cache
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Organization\release\IAX.IXApi.Modules.Organization.sourcelink.json
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\bin\IAX.IXApi.Modules.Organization\release\IAX.IXApi.Modules.Organization.deps.json
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\bin\IAX.IXApi.Modules.Organization\release\IAX.IXApi.Modules.Organization.dll
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\bin\IAX.IXApi.Modules.Organization\release\IAX.IXApi.Modules.Organization.pdb
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Organization\release\IAX.IXAp.453ED481.Up2Date
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Organization\release\IAX.IXApi.Modules.Organization.dll
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Organization\release\refint\IAX.IXApi.Modules.Organization.dll
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Organization\release\IAX.IXApi.Modules.Organization.pdb
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Organization\release\ref\IAX.IXApi.Modules.Organization.dll

@@ -6,6 +6,10 @@ using UserGroupEntity = IAX.IXApi.Modules.Organization.Features.HcmWorkerGroup.H
 
 namespace IAX.IXApi.Modules.Organization.Features.HcmWorkerCategory
 {
+    /// <summary>
+    /// [Unused / Not Needed] Category mapping entity.
+    /// Kept for backward compatibility.
+    /// </summary>
     public class HcmWorkerCategoryGroup : MasterEntity<long>
     {
         public long UserCategoriesID { get; set; }

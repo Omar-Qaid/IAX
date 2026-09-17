@@ -5,7 +5,6 @@ using IAX.IXApi.Modules.Organization.Departments;
 using IAX.IXApi.Modules.Organization.Occupations;
 using IAX.IXApi.Modules.Organization.Genders;
 using IAX.IXApi.Modules.Organization.Nationalities;
-using IAX.IXApi.Modules.Organization.Showrooms;
 using IAX.IXApi.Modules.Organization.HcmWorkerManagers;
 using IAX.IXApi.Modules.Identity.Users;
 
@@ -29,7 +28,6 @@ namespace IAX.IXApi.Modules.Organization.Employees.Entities
         public DateTime? BirthDate { get; set; }
         public byte GenderId { get; set; }
         public short NationalityId { get; set; }
-        public long? ShowroomId { get; set; }
 
         #region Navigation Properties Row
 
@@ -41,8 +39,6 @@ namespace IAX.IXApi.Modules.Organization.Employees.Entities
         public virtual Gender Gender { get; set; } = null!;
         [ForeignKey(nameof(NationalityId))]
         public virtual Nationality Nationality { get; set; } = null!;
-        [ForeignKey(nameof(ShowroomId))]
-        public virtual Showroom? Showroom { get; set; }
         
         [ForeignKey(nameof(User))]
         public string? UserId { get; set; }

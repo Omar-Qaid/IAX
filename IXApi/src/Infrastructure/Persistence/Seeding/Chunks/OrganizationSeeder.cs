@@ -10,7 +10,7 @@ using IAX.IXApi.Modules.Organization.Occupations;
 using IAX.IXApi.Modules.Organization.Employees;
 using IAX.IXApi.Modules.Organization.ManagementLevels;
 using IAX.IXApi.Modules.Organization.HcmWorkerManagers;
-using IAX.IXApi.Modules.Organization.Showrooms;
+using IAX.IXApi.Modules.Organization.Features.HcmWorkerGroup;
 using IAX.IXApi.Modules.Organization.Features.HcmWorkerCategory;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -374,143 +374,116 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             #endregion
 
             #region ManagementLevel
-            if (!await db.ManagementLevels.IgnoreQueryFilters().AnyAsync(m => m.RecId == 1, ct))
+            if (!await db.HcmWorkerManagementLevels.IgnoreQueryFilters().AnyAsync(m => m.RecId == 1, ct))
             {
                 var levels = new[]
                 {
-                    new ManagementLevel { RecId = 1, Code = "ML1", Name = "Supervisor", Level = 1, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new ManagementLevel { RecId = 2, Code = "ML2", Name = "Area Manager", Level = 2, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new ManagementLevel { RecId = 3, Code = "ML3", Name = "Region Manager", Level = 3, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
-                    new ManagementLevel { RecId = 4, Code = "ML4", Name = "General Manager", Level = 4, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy }
+                    new HcmWorkerManagementLevel { RecId = 1, Code = "ML1", Name = "Supervisor", Level = 1, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new HcmWorkerManagementLevel { RecId = 2, Code = "ML2", Name = "Area Manager", Level = 2, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new HcmWorkerManagementLevel { RecId = 3, Code = "ML3", Name = "Region Manager", Level = 3, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new HcmWorkerManagementLevel { RecId = 4, Code = "ML4", Name = "General Manager", Level = 4, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy }
                 };
 
-                await db.ManagementLevels.AddRangeAsync(levels, ct);
+                await db.HcmWorkerManagementLevels.AddRangeAsync(levels, ct);
                 await db.SaveChangesAsync(ct);
             }
             #endregion
 
+            #region HcmWorker & Data Integrity
+            // Fetch valid reference IDs for data integrity validation
+            var validDeptIds = (await db.Departments.IgnoreQueryFilters().Select(d => d.RecId).ToListAsync(ct)).ToHashSet();
+            var validOccIds = (await db.Occupations.IgnoreQueryFilters().Select(o => o.RecId).ToListAsync(ct)).ToHashSet();
+            var validGenderIds = (await db.Genders.IgnoreQueryFilters().Select(g => g.RecId).ToListAsync(ct)).ToHashSet();
+            var validNatIds = (await db.Nationalities.IgnoreQueryFilters().Select(n => n.RecId).ToListAsync(ct)).ToHashSet();
 
-            #region Employee
+            short defaultDeptId = validDeptIds.Contains(4) ? (short)4 : validDeptIds.FirstOrDefault((short)1);
+            short defaultOccId = validOccIds.Contains(121) ? (short)121 : validOccIds.FirstOrDefault((short)1);
+            byte defaultGenderId = validGenderIds.Contains(1) ? (byte)1 : validGenderIds.FirstOrDefault((byte)1);
+            short defaultNatId = validNatIds.Contains(1) ? (short)1 : validNatIds.FirstOrDefault((short)1);
+
+            // 1. If workers exist, enforce data integrity on existing records
+            var existingWorkers = await db.HcmWorkers.IgnoreQueryFilters().ToListAsync(ct);
+            if (existingWorkers.Count > 0)
+            {
+                bool modified = false;
+                foreach (var worker in existingWorkers)
+                {
+                    if (worker.DepartmentId == 0 || !validDeptIds.Contains(worker.DepartmentId))
+                    {
+                        worker.DepartmentId = defaultDeptId;
+                        modified = true;
+                    }
+                    if (worker.OccupationId == 0 || !validOccIds.Contains(worker.OccupationId))
+                    {
+                        worker.OccupationId = defaultOccId;
+                        modified = true;
+                    }
+                    if (worker.GenderId == 0 || !validGenderIds.Contains(worker.GenderId))
+                    {
+                        worker.GenderId = defaultGenderId;
+                        modified = true;
+                    }
+                    if (worker.NationalityId == 0 || !validNatIds.Contains(worker.NationalityId))
+                    {
+                        worker.NationalityId = defaultNatId;
+                        modified = true;
+                    }
+                }
+                if (modified)
+                {
+                    await db.SaveChangesAsync(ct);
+                }
+            }
+
+            // 2. Seed baseline workers if missing
             if (!await db.HcmWorkers.IgnoreQueryFilters().AnyAsync(x => x.RecId == 1, ct))
             {
-                // FK targets reference the seeded legacy reference data by their explicit IDs:
-                //   Dept 4 = إدارة تقنية المعلومات, Dept 1 = الإدارة العليا
-                //   Occ 121 = مبرمج حاسب آلي, Occ 1 = رئيس مجلس الإدارة
-                //   Gender 1 = ذكر, Nationality 1 = سعودي
-                var employees = new[]
+                var workersToSeed = new[]
                 {
                     new IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker
                     {
-                        RecId = 1,
-                        PersonnelNumber = "EMP001",
-                        DepartmentId = 4,
-                        OccupationId = 121,
-                        GenderId = 1,
-                        NationalityId = 1,
-                        HireDate = DateTime.Parse("2020-01-01"),
-                        BirthDate = DateTime.Parse("1990-01-01"),
-                        IsActive = true,
-                        IsDeleted = false,
-                        CreatedBy = createdBy,
-                        OwnerAccountId = createdBy
+                        RecId = 1, PersonnelNumber = "EMP001",
+                        DepartmentId = defaultDeptId, OccupationId = defaultOccId,
+                        GenderId = defaultGenderId, NationalityId = defaultNatId,
+                        HireDate = DateTime.Parse("2020-01-01"), BirthDate = DateTime.Parse("1990-01-01"),
+                        IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy
                     },
                     new IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker
                     {
-                        RecId = 2,
-                        PersonnelNumber = "EMP002",
-                        DepartmentId = 1,
-                        OccupationId = 1,
-                        GenderId = 1,
-                        NationalityId = 1,
-                        HireDate = DateTime.Parse("2021-06-01"),
-                        BirthDate = DateTime.Parse("1992-05-15"),
-                        IsActive = true,
-                        IsDeleted = false,
-                        CreatedBy = createdBy,
-                        OwnerAccountId = createdBy
-                    }
-                };
-
-                await db.HcmWorkers.AddRangeAsync(employees, ct);
-
-                await db.Database.OpenConnectionAsync(ct);
-                try
-                {
-                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT HcmWorker ON", ct);
-                    await db.SaveChangesAsync(ct);
-                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT HcmWorker OFF", ct);
-                }
-                finally
-                {
-                    await db.Database.CloseConnectionAsync();
-                }
-            }
-            #endregion
-
-            #region Showroom
-            if (!await db.Showrooms.IgnoreQueryFilters().AnyAsync(s => s.RecId == 101, ct))
-            {
-                var showrooms = new[]
-                {
-                    new Showroom
-                    {
-                        RecId = 101, Code = "SHR001", Name = "Riyadh Main Showroom", DepartmentId = 1, Location = "Riyadh - King Fahd Rd",
+                        RecId = 2, PersonnelNumber = "EMP002",
+                        DepartmentId = validDeptIds.Contains(1) ? (short)1 : defaultDeptId,
+                        OccupationId = validOccIds.Contains(1) ? (short)1 : defaultOccId,
+                        GenderId = defaultGenderId, NationalityId = defaultNatId,
+                        HireDate = DateTime.Parse("2021-06-01"), BirthDate = DateTime.Parse("1992-05-15"),
                         IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy
                     },
-                    new Showroom
-                    {
-                        RecId = 102, Code = "SHR002", Name = "Jeddah Showroom", DepartmentId = 1, Location = "Jeddah - Tahlia St",
-                        IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy
-                    }
-                };
-
-                await db.Showrooms.AddRangeAsync(showrooms, ct);
-
-                await db.Database.OpenConnectionAsync(ct);
-                try
-                {
-                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT OrgEntities ON", ct);
-                    await db.SaveChangesAsync(ct);
-                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT OrgEntities OFF", ct);
-                }
-                finally
-                {
-                    await db.Database.CloseConnectionAsync();
-                }
-            }
-            #endregion
-
-            #region Sellers (employees assigned to showrooms)
-            if (!await db.HcmWorkers.IgnoreQueryFilters().AnyAsync(x => x.RecId == 3, ct))
-            {
-                // Sellers belong to one showroom each (Employee.ShowroomId). Showrooms 101/102 seeded above.
-                var sellers = new[]
-                {
                     new IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker
                     {
                         RecId = 3, PersonnelNumber = "EMP003",
-                        DepartmentId = 4, OccupationId = 121, GenderId = 1, NationalityId = 1,
+                        DepartmentId = defaultDeptId, OccupationId = defaultOccId,
+                        GenderId = defaultGenderId, NationalityId = defaultNatId,
                         HireDate = DateTime.Parse("2022-02-01"), BirthDate = DateTime.Parse("1995-03-10"),
-                        ShowroomId = 101, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy
+                        IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy
                     },
                     new IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker
                     {
                         RecId = 4, PersonnelNumber = "EMP004",
-                        DepartmentId = 4, OccupationId = 121, GenderId = 2, NationalityId = 1,
+                        DepartmentId = defaultDeptId, OccupationId = defaultOccId,
+                        GenderId = validGenderIds.Contains(2) ? (byte)2 : defaultGenderId, NationalityId = defaultNatId,
                         HireDate = DateTime.Parse("2022-08-15"), BirthDate = DateTime.Parse("1997-11-22"),
-                        ShowroomId = 101, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy
+                        IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy
                     },
                     new IAX.IXApi.Modules.Organization.Employees.Entities.HcmWorker
                     {
                         RecId = 5, PersonnelNumber = "EMP005",
-                        DepartmentId = 4, OccupationId = 121, GenderId = 1, NationalityId = 1,
+                        DepartmentId = defaultDeptId, OccupationId = defaultOccId,
+                        GenderId = defaultGenderId, NationalityId = defaultNatId,
                         HireDate = DateTime.Parse("2023-01-10"), BirthDate = DateTime.Parse("1996-07-05"),
-                        ShowroomId = 102, IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy
+                        IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy
                     }
                 };
 
-                await db.HcmWorkers.AddRangeAsync(sellers, ct);
-
+                await db.HcmWorkers.AddRangeAsync(workersToSeed, ct);
                 await db.Database.OpenConnectionAsync(ct);
                 try
                 {
@@ -525,51 +498,91 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             }
             #endregion
 
-            #region ManagerHierarchy (dynamic EmployeeManager assignments)
+            #region ManagerHierarchy (HcmWorkerManagers Seeding & Integrity)
             if (!await db.HcmWorkerManagers.IgnoreQueryFilters().AnyAsync(m => m.EmployeeId == 1, ct))
             {
-                // Levels seeded above: 1=Supervisor, 2=Area Manager, 3=Region Manager, 4=General Manager.
+                var validWorkerIds = (await db.HcmWorkers.IgnoreQueryFilters().Select(w => w.RecId).ToListAsync(ct)).ToHashSet();
+                var validLevelIds = (await db.HcmWorkerManagementLevels.IgnoreQueryFilters().Select(l => l.RecId).ToListAsync(ct)).ToHashSet();
+
                 var managerLinks = new[]
                 {
-                    // Admin (1) reports up to the General Manager (2).
                     new HcmWorkerManager { EmployeeId = 1, ManagementLevelId = 4, ManagerId = 2 },
-                    // Khalid (3) is supervised by Admin (1) and ultimately the GM (2).
                     new HcmWorkerManager { EmployeeId = 3, ManagementLevelId = 1, ManagerId = 1 },
                     new HcmWorkerManager { EmployeeId = 3, ManagementLevelId = 4, ManagerId = 2 },
-                    // Sara (4) and Faisal (5) are supervised by Khalid (3).
                     new HcmWorkerManager { EmployeeId = 4, ManagementLevelId = 1, ManagerId = 3 },
                     new HcmWorkerManager { EmployeeId = 5, ManagementLevelId = 1, ManagerId = 3 }
                 };
 
-                await db.HcmWorkerManagers.AddRangeAsync(managerLinks, ct);
-                await db.SaveChangesAsync(ct);
+                var validLinks = managerLinks.Where(l => validWorkerIds.Contains(l.EmployeeId) && validWorkerIds.Contains(l.ManagerId) && validLevelIds.Contains(l.ManagementLevelId)).ToList();
+                if (validLinks.Count > 0)
+                {
+                    await db.HcmWorkerManagers.AddRangeAsync(validLinks, ct);
+                    await db.SaveChangesAsync(ct);
+                }
+            }
+            #endregion
+
+            #region HcmWorkerGroups Seeding & Integrity
+            if (!await db.HcmWorkerGroups.IgnoreQueryFilters().AnyAsync(g => g.Code == "ALL", ct))
+            {
+                var userGroups = new[]
+                {
+                    new HcmWorkerGroup { RecId = 1, Code = "ALL",   Name = "جميع المستخدمين",       IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new HcmWorkerGroup { RecId = 2, Code = "HR",    Name = "إدارة الموارد البشرية", IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new HcmWorkerGroup { RecId = 3, Code = "IT",    Name = "إدارة تقنية المعلومات", IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new HcmWorkerGroup { RecId = 4, Code = "FIN",   Name = "الإدارة المالية",        IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new HcmWorkerGroup { RecId = 5, Code = "MGT",   Name = "الإدارة العليا",         IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new HcmWorkerGroup { RecId = 6, Code = "OPS",   Name = "إدارة العمليات",         IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy },
+                    new HcmWorkerGroup { RecId = 7, Code = "SALES", Name = "إدارة المبيعات",         IsActive = true, IsDeleted = false, CreatedBy = createdBy, OwnerAccountId = createdBy }
+                };
+
+                await db.HcmWorkerGroups.AddRangeAsync(userGroups, ct);
+                await db.Database.OpenConnectionAsync(ct);
+                try
+                {
+                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT HcmWorkerGroups ON", ct);
+                    await db.SaveChangesAsync(ct);
+                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT HcmWorkerGroups OFF", ct);
+                }
+                finally
+                {
+                    await db.Database.CloseConnectionAsync();
+                }
+            }
+            #endregion
+
+            #region HcmWorkerGroupDetails Seeding & Integrity
+            if (!await db.HcmWorkerGroupDetails.IgnoreQueryFilters().AnyAsync(ct))
+            {
+                var allGroup = await db.HcmWorkerGroups.FirstOrDefaultAsync(g => g.Code == "ALL", ct);
+                var itGroup = await db.HcmWorkerGroups.FirstOrDefaultAsync(g => g.Code == "IT", ct);
+                var mgtGroup = await db.HcmWorkerGroups.FirstOrDefaultAsync(g => g.Code == "MGT", ct);
+
+                var omarUser = await users.FindByNameAsync("omar");
+
+                var groupDetails = new List<HcmWorkerGroupDetail>();
+                if (sysUser != null)
+                {
+                    if (allGroup != null) groupDetails.Add(new HcmWorkerGroupDetail { UserGroupID = allGroup.RecId, UserID = sysUser.Id, IsActive = true, CreatedBy = createdBy, OwnerAccountId = createdBy });
+                    if (itGroup != null) groupDetails.Add(new HcmWorkerGroupDetail { UserGroupID = itGroup.RecId, UserID = sysUser.Id, IsActive = true, CreatedBy = createdBy, OwnerAccountId = createdBy });
+                }
+                if (omarUser != null)
+                {
+                    if (allGroup != null) groupDetails.Add(new HcmWorkerGroupDetail { UserGroupID = allGroup.RecId, UserID = omarUser.Id, IsActive = true, CreatedBy = createdBy, OwnerAccountId = createdBy });
+                    if (mgtGroup != null) groupDetails.Add(new HcmWorkerGroupDetail { UserGroupID = mgtGroup.RecId, UserID = omarUser.Id, IsActive = true, CreatedBy = createdBy, OwnerAccountId = createdBy });
+                }
+
+                if (groupDetails.Count > 0)
+                {
+                    await db.HcmWorkerGroupDetails.AddRangeAsync(groupDetails, ct);
+                    await db.SaveChangesAsync(ct);
+                }
             }
             #endregion
 
             #region OrganizationEntity user links
-            // Link the existing admin accounts to their employee records, and add a showroom account
-            // to demonstrate the polymorphic AspNetUser.OrganizationEntityId (employee OR showroom).
             await LinkUserToHcmWorkerAsync(db, users, "sys", 1, ct);
             await LinkUserToHcmWorkerAsync(db, users, "omar", 2, ct);
-
-            var showroomUser = await users.FindByNameAsync("riyadh.showroom");
-            if (showroomUser is null)
-            {
-                showroomUser = new AspNetUser
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    UserName = "riyadh.showroom",
-                    Email = "riyadh.showroom@example.com",
-                    EmailConfirmed = true,
-                    OrganizationEntityId = 101, // linked to the Riyadh showroom
-                };
-                var res = await users.CreateAsync(showroomUser, "123");
-                if (res.Succeeded)
-                {
-                    var role = await roles.FindByNameAsync("Admin");
-                    if (role != null) await users.AddToRoleAsync(showroomUser, "Admin");
-                }
-            }
             #endregion
 
             #region EmployeeCategory
@@ -1174,17 +1187,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     worker.UserId = user.Id;
                     await db.SaveChangesAsync(ct);
                 }
-            }
-        }
-
-        /// <summary>Sets a user's polymorphic OrganizationEntity link if it is not already assigned.</summary>
-        private static async Task LinkUserToOrganizationEntityAsync(UserManager<AspNetUser> users, string userName, long orgEntityId, CancellationToken ct)
-        {
-            var user = await users.FindByNameAsync(userName);
-            if (user != null && user.OrganizationEntityId != orgEntityId)
-            {
-                user.OrganizationEntityId = orgEntityId;
-                await users.UpdateAsync(user);
             }
         }
     }

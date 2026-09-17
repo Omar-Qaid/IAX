@@ -5,7 +5,6 @@ using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Communication.Notifications.Services;
 using IAX.IXApi.Modules.Organization.Employees.Entities;
-using IAX.IXApi.Modules.Organization.Showrooms;
 using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Identity.Permissions;
 using IAX.IXApi.Modules.Workflow.Activities;
@@ -130,20 +129,6 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                 .Where(item => !string.IsNullOrWhiteSpace(item))
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
             var referenceOptions = new Dictionary<string, List<DynamicRequestOptionDto>>(StringComparer.OrdinalIgnoreCase);
-            if (referenceTypes.Contains("Showroom"))
-            {
-                referenceOptions["Showroom"] = await _context.Set<Showroom>().AsNoTracking()
-                    .Where(item => item.IsActive && !item.IsDeleted)
-                    .OrderBy(item => item.Name).ThenBy(item => item.Code).ThenBy(item => item.RecId)
-                    .Select(item => new DynamicRequestOptionDto
-                    {
-                        OptionId = item.RecId,
-                        Value = item.RecId.ToString(),
-                        Label = item.Name ?? item.Code ?? item.RecId.ToString(),
-                        LabelAlias = item.Name ?? item.Code,
-                        SortOrder = 0
-                    }).ToListAsync(cancellationToken);
-            }
             if (referenceTypes.Contains("Employee"))
             {
                 var employees = await _context.Set<HcmWorker>().AsNoTracking()

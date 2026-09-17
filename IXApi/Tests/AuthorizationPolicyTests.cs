@@ -43,7 +43,6 @@ public sealed class AuthorizationPolicyTests
 
         var catalog = definitions.ToHashSet();
         Assert.Contains(("Organization", "LegalEntities"), catalog);
-        Assert.Contains(("Organization", "Showrooms"), catalog);
         Assert.Contains(("System", "NotificationTemplate"), catalog);
         Assert.Contains(("System", "Settings"), catalog);
         Assert.Contains(("System", "DataManagement"), catalog);

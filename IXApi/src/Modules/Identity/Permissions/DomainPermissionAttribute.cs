@@ -31,6 +31,20 @@ namespace IAX.IXApi.Modules.Identity.Permissions
             _action = action;
         }
 
+        // Shared by execution and offline contract discovery; does not authorize a request.
+        public string GetRequiredPermission(string httpMethod)
+        {
+            var action = _action ?? httpMethod.ToUpperInvariant() switch
+            {
+                "GET" => "View",
+                "POST" => "Create",
+                "PUT" or "PATCH" => "Edit",
+                "DELETE" => "Delete",
+                _ => "View"
+            };
+            return $"{_module}.{_resource}.{action}";
+        }
+
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
         {
             var user = context.HttpContext.User;
@@ -45,17 +59,7 @@ namespace IAX.IXApi.Modules.Identity.Permissions
             if (user.IsInRole("Admin"))
                 return;
 
-            var method = context.HttpContext.Request.Method.ToUpperInvariant();
-            var action = _action ?? method switch
-            {
-                "GET" => "View",
-                "POST" => "Create",
-                "PUT" or "PATCH" => "Edit",
-                "DELETE" => "Delete",
-                _ => "View"
-            };
-
-            var requiredKey = $"{_module}.{_resource}.{action}";
+            var requiredKey = GetRequiredPermission(context.HttpContext.Request.Method);
 
             // Resolve user ID from JWT claims
             var userId = user.FindFirst(JwtRegisteredClaimNames.Sub)?.Value

@@ -1,0 +1,14 @@
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\bin\IAX.IXApi.Modules.Workflow\release\IAX.IXApi.Modules.Workflow.deps.json
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\bin\IAX.IXApi.Modules.Workflow\release\IAX.IXApi.Modules.Workflow.dll
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\bin\IAX.IXApi.Modules.Workflow\release\IAX.IXApi.Modules.Workflow.pdb
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Workflow\release\IAX.IXApi.Modules.Workflow.csproj.AssemblyReference.cache
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Workflow\release\IAX.IXApi.Modules.Workflow.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Workflow\release\IAX.IXApi.Modules.Workflow.AssemblyInfoInputs.cache
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Workflow\release\IAX.IXApi.Modules.Workflow.AssemblyInfo.cs
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Workflow\release\IAX.IXApi.Modules.Workflow.csproj.CoreCompileInputs.cache
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Workflow\release\IAX.IXApi.Modules.Workflow.sourcelink.json
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Workflow\release\IAX.IXAp.5989D144.Up2Date
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Workflow\release\IAX.IXApi.Modules.Workflow.dll
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Workflow\release\refint\IAX.IXApi.Modules.Workflow.dll
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Workflow\release\IAX.IXApi.Modules.Workflow.pdb
+C:\Users\Omar.Qaid\Desktop\IAX\.artifacts\mcp-contract\obj\IAX.IXApi.Modules.Workflow\release\ref\IAX.IXApi.Modules.Workflow.dll

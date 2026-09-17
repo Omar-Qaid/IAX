@@ -52,7 +52,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.Activities`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.Activities`.
 
-- `public class WfActivity : WfMasterEntity<long>`
+- `public class WfActivity : MasterEntity<long>`
 
 ### [Activities/WfActivityAlertDispatchedEvent.cs](../src/Modules/Workflow/Activities/WfActivityAlertDispatchedEvent.cs)
 
@@ -76,7 +76,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.Activities`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.Activities`.
 
-- `public class WfActivityControl : WfMasterEntity<long>`
+- `public class WfActivityControl : MasterEntity<long>`
 
 ### [Activities/WfActivityControlConfiguration.cs](../src/Modules/Workflow/Activities/WfActivityControlConfiguration.cs)
 
@@ -94,7 +94,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.Activities`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.Activities`.
 
-- `public class WfActivityControlDto : WfMasterEntityDto<long>`
+- `public class WfActivityControlDto : MasterEntityDto<long>`
 
 ### [Activities/WfActivityController.cs](../src/Modules/Workflow/Activities/WfActivityController.cs)
 
@@ -190,7 +190,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.Activities`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.Activities`.
 
-- `public class WfActivityDto : WfMasterEntityDto<long>`
+- `public class WfActivityDto : MasterEntityDto<long>`
 
 ### [Activities/WfActivityDtoValidator.cs](../src/Modules/Workflow/Activities/WfActivityDtoValidator.cs)
 
@@ -250,7 +250,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.Activities`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.Activities`.
 
-- `public class WfActivityType : WfMasterEntity<byte>`
+- `public class WfActivityType : MasterEntity<byte>`
 
 ### [Activities/WfActivityTypeConfiguration.cs](../src/Modules/Workflow/Activities/WfActivityTypeConfiguration.cs)
 
@@ -268,7 +268,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.Activities`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.Activities`.
 
-- `public class WfActivityTypeDto : WfMasterEntityDto<byte>`
+- `public class WfActivityTypeDto : MasterEntityDto<byte>`
 
 ### [Activities/WfActivityTypeDtoValidator.cs](../src/Modules/Workflow/Activities/WfActivityTypeDtoValidator.cs)
 
@@ -294,7 +294,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.Categories`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.Categories`.
 
-- `public class WfCategory : WfMasterEntity<short>`
+- `public class WfCategory : MasterEntity<short>`
 
 ### [Categories/WfCategoryConfiguration.cs](../src/Modules/Workflow/Categories/WfCategoryConfiguration.cs)
 
@@ -312,7 +312,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.Categories`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.Categories`.
 
-- `public class WfCategoryDto : WfMasterEntityDto<short>`
+- `public class WfCategoryDto : MasterEntityDto<short>`
 
 ### [Categories/WfCategoryDtoValidator.cs](../src/Modules/Workflow/Categories/WfCategoryDtoValidator.cs)
 
@@ -338,7 +338,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.Controls`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.Controls`.
 
-- `public class WfControl : WfMasterEntity<byte>`
+- `public class WfControl : MasterEntity<byte>`
 
 ### [Controls/WfControlConfiguration.cs](../src/Modules/Workflow/Controls/WfControlConfiguration.cs)
 
@@ -356,7 +356,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.Controls`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.Controls`.
 
-- `public class WfControlDto : WfMasterEntityDto<byte>`
+- `public class WfControlDto : MasterEntityDto<byte>`
 
 ### [Controls/WfControlDtoValidator.cs](../src/Modules/Workflow/Controls/WfControlDtoValidator.cs)
 
@@ -450,7 +450,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.Operators`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.Operators`.
 
-- `public class WfOperator : WfMasterEntity<byte>`
+- `public class WfOperator : MasterEntity<byte>`
 
 ### [Operators/WfOperatorConfiguration.cs](../src/Modules/Workflow/Operators/WfOperatorConfiguration.cs)
 
@@ -468,7 +468,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.Operators`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.Operators`.
 
-- `public class WfOperatorDto : WfMasterEntityDto<byte>`
+- `public class WfOperatorDto : MasterEntityDto<byte>`
 
 ### [Operators/WfOperatorDtoValidator.cs](../src/Modules/Workflow/Operators/WfOperatorDtoValidator.cs)
 
@@ -724,7 +724,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.Priorities`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.Priorities`.
 
-- `public class WfPriority : WfMasterEntity<byte>`
+- `public class WfPriority : MasterEntity<byte>`
 
 ### [Priorities/WfPriorityConfiguration.cs](../src/Modules/Workflow/Priorities/WfPriorityConfiguration.cs)
 
@@ -742,7 +742,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.Priorities`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.Priorities`.
 
-- `public class WfPriorityDto : WfMasterEntityDto<byte>`
+- `public class WfPriorityDto : MasterEntityDto<byte>`
 
 ### [Priorities/WfPriorityDtoValidator.cs](../src/Modules/Workflow/Priorities/WfPriorityDtoValidator.cs)
 
@@ -768,7 +768,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.Processes`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.Processes`.
 
-- `public partial class WfProcess : WfMasterEntity<long>`
+- `public partial class WfProcess : MasterEntity<long>`
 
 ### [Processes/WfProcessConfiguration.cs](../src/Modules/Workflow/Processes/WfProcessConfiguration.cs)
 
@@ -798,7 +798,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.Processes`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.Processes`.
 
-- `public class WfProcessDto : WfMasterEntityDto<long>`
+- `public class WfProcessDto : MasterEntityDto<long>`
 
 ### [Processes/WfProcessDtoValidator.cs](../src/Modules/Workflow/Processes/WfProcessDtoValidator.cs)
 
@@ -866,7 +866,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.ProcessTypes`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.ProcessTypes`.
 
-- `public class WfProcessType : WfMasterEntity<byte>`
+- `public class WfProcessType : MasterEntity<byte>`
 
 ### [ProcessTypes/WfProcessTypeConfiguration.cs](../src/Modules/Workflow/ProcessTypes/WfProcessTypeConfiguration.cs)
 
@@ -884,7 +884,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.ProcessTypes`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.ProcessTypes`.
 
-- `public class WfProcessTypeDto : WfMasterEntityDto<byte>`
+- `public class WfProcessTypeDto : MasterEntityDto<byte>`
 
 ### [ProcessTypes/WfProcessTypeDtoValidator.cs](../src/Modules/Workflow/ProcessTypes/WfProcessTypeDtoValidator.cs)
 
@@ -1008,7 +1008,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.Requests`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.Requests`.
 
-- `public class WfRequestControl: WfMasterEntity<long>`
+- `public class WfRequestControl: MasterEntity<long>`
 
 ### [Requests/WfRequestControlConfiguration.cs](../src/Modules/Workflow/Requests/WfRequestControlConfiguration.cs)
 
@@ -1026,7 +1026,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.Requests`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.Requests`.
 
-- `public class WfRequestControlDto : WfMasterEntityDto<long>`
+- `public class WfRequestControlDto : MasterEntityDto<long>`
 
 ### [Requests/WfRequestControlDtoValidator.cs](../src/Modules/Workflow/Requests/WfRequestControlDtoValidator.cs)
 
@@ -1204,7 +1204,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.Steps`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.Steps`.
 
-- `public class WfStep : WfMasterEntity<long>`
+- `public class WfStep : MasterEntity<long>`
 
 ### [Steps/WfStepConfiguration.cs](../src/Modules/Workflow/Steps/WfStepConfiguration.cs)
 
@@ -1222,7 +1222,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.Steps`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.Steps`.
 
-- `public class WfStepDto : WfMasterEntityDto<long>`
+- `public class WfStepDto : MasterEntityDto<long>`
 
 ### [Steps/WfStepDtoValidator.cs](../src/Modules/Workflow/Steps/WfStepDtoValidator.cs)
 
@@ -1304,7 +1304,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.Variables`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.Variables`.
 
-- `public class WfDataType : WfMasterEntity<byte>`
+- `public class WfDataType : MasterEntity<byte>`
 
 ### [Variables/WfDataTypeConfiguration.cs](../src/Modules/Workflow/Variables/WfDataTypeConfiguration.cs)
 
@@ -1322,7 +1322,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.Variables`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.Variables`.
 
-- `public class WfDataTypeDto : WfMasterEntityDto<byte>`
+- `public class WfDataTypeDto : MasterEntityDto<byte>`
 
 ### [Variables/WfDataTypeService.cs](../src/Modules/Workflow/Variables/WfDataTypeService.cs)
 
@@ -1334,7 +1334,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.Variables`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.Variables`.
 
-- `public class WfVariable : WfMasterEntity<long>`
+- `public class WfVariable : MasterEntity<long>`
 
 ### [Variables/WfVariableConfiguration.cs](../src/Modules/Workflow/Variables/WfVariableConfiguration.cs)
 
@@ -1352,7 +1352,7 @@ Namespace: `IAX.IXApi.Modules.Workflow.Variables`.
 
 Namespace: `IAX.IXApi.Modules.Workflow.Variables`.
 
-- `public class WfVariableDto : WfMasterEntityDto<long>`
+- `public class WfVariableDto : MasterEntityDto<long>`
 
 ### [Variables/WfVariableDtoValidator.cs](../src/Modules/Workflow/Variables/WfVariableDtoValidator.cs)
 
@@ -1368,17 +1368,17 @@ Namespace: `IAX.IXApi.Modules.Workflow.Variables`.
 
 ## Module root
 
-### [WfMasterEntity.cs](../src/Modules/Workflow/WfMasterEntity.cs)
+### [MasterEntity.cs](../src/Modules/Workflow/MasterEntity.cs)
 
 Namespace: `IAX.IXApi.Modules.Workflow`.
 
-- `public abstract class WfMasterEntity<T> : MasterEntity<T>`
+- `public abstract class MasterEntity<T> : MasterEntity<T>`
 
-### [WfMasterEntityDto.cs](../src/Modules/Workflow/WfMasterEntityDto.cs)
+### [MasterEntityDto.cs](../src/Modules/Workflow/MasterEntityDto.cs)
 
 Namespace: `IAX.IXApi.Modules.Workflow`.
 
-- `public class WfMasterEntityDto<T> : MasterEntityDto<T>`
+- `public class MasterEntityDto<T> : MasterEntityDto<T>`
 
 ### [WorkflowModule.cs](../src/Modules/Workflow/WorkflowModule.cs)
 
