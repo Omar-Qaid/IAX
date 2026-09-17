@@ -1,9 +1,8 @@
 using IAX.IXApi.Modules.Identity.Users;
-using IAX.IXApi.Modules.Organization.Features.HcmWorkerGroup;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using IAX.IXApi.Modules.Organization.DocumentManagement.Entities;
-using IAX.IXApi.Modules.Organization.HcmWorkers;
+
 
 namespace IAX.IXApi.Modules.Organization.Persistence;
 
@@ -11,15 +10,6 @@ public interface IOrganizationDataContext
 {
     DatabaseFacade Database { get; }
     Microsoft.EntityFrameworkCore.ChangeTracking.ChangeTracker ChangeTracker { get; }
-    DbSet<HcmWorker> HcmWorkers { get; }
-    DbSet<IAX.IXApi.Modules.Organization.OrganizationUnits.OrganizationUnit> OrganizationUnits { get; }
-    DbSet<IAX.IXApi.Modules.Organization.WorkerOrganizationAssignments.HcmWorkerOrganizationAssignment> HcmWorkerOrganizationAssignments { get; }
-    DbSet<IAX.IXApi.Modules.Organization.Structure.OrganizationRole> OrganizationRoles { get; }
-    DbSet<IAX.IXApi.Modules.Organization.Structure.OrganizationHierarchy> OrganizationHierarchies { get; }
-    DbSet<IAX.IXApi.Modules.Organization.Structure.OrganizationHierarchyNode> OrganizationHierarchyNodes { get; }
-    DbSet<IAX.IXApi.Modules.Organization.Structure.HcmPosition> HcmPositions { get; }
-    DbSet<HcmWorkerGroup> HcmWorkerGroups { get; }
-    DbSet<HcmWorkerGroupDetail> HcmWorkerGroupDetails { get; }
     DbSet<AspNetUser> Users { get; }
     DbSet<DocuType> DocuTypes { get; }
     DbSet<DocuValue> DocuValues { get; }
