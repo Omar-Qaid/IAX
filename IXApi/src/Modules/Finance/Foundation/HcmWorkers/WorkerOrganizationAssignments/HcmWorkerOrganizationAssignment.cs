@@ -15,8 +15,6 @@ public class HcmWorkerOrganizationAssignment : Entity<long>
     public DateOnly ValidFrom { get; set; }
     public DateOnly? ValidTo { get; set; }
     public bool IsPrimary { get; set; } = true;
-    public bool IsActive { get; set; } = true;
-    public DateTime CreatedDate { get; set; }
     public virtual HcmWorker HcmWorker { get; set; } = null!;
     public virtual OrganizationUnit OrganizationUnit { get; set; } = null!;
     public virtual HcmPosition? Position { get; set; }
