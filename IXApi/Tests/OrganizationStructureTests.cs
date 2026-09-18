@@ -268,7 +268,7 @@ public sealed class OrganizationStructureTests
                 typeof(OrganizationHierarchyNode), typeof(HcmPosition), typeof(HcmWorkerOrganizationAssignment) };
             foreach (var unrelated in b.Model.GetEntityTypes().Where(x => !allowed.Contains(x.ClrType)).Select(x => x.ClrType).ToList())
                 b.Ignore(unrelated);
-            b.Entity<HcmWorkerOrganizationAssignment>().Property(x => x.CreatedDate).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            b.Entity<HcmWorkerOrganizationAssignment>().Property(x => x.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
             b.Entity<HcmWorker>().HasQueryFilter(x => x.DataAreaId == CompanyCode && !x.IsDeleted);
             b.Entity<OrganizationUnit>().HasQueryFilter(x => x.DataAreaId == CompanyCode);
             b.Entity<OrganizationRole>().HasQueryFilter(x => x.DataAreaId == CompanyCode && !x.IsDeleted);
