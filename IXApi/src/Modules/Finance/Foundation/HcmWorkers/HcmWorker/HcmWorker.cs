@@ -22,12 +22,6 @@ public class HcmWorker : Entity<long>
     public DateTime? BirthDate { get; set; }
     public string? UserId { get; set; }
 
-    [NotMapped]
-    public string Name { get; set; } = string.Empty;
-
-    [NotMapped]
-    public string NameAlias { get; set; } = string.Empty;
-
     public virtual DirPartyTable Party { get; set; } = null!;
     public virtual Occupation Occupation { get; set; } = null!;
     public virtual Gender Gender { get; set; } = null!;
