@@ -8,7 +8,7 @@ public sealed record UpdateOrganizationHierarchy(string Code, string Name, strin
 public sealed record CreateOrganizationNode(long HierarchyId, long OrganizationUnitId, long? ParentNodeId, DateOnly ValidFrom, DateOnly? ValidTo);
 public sealed record CreatePosition(string Code, string Name, long OrganizationUnitId, long RoleId, DateOnly ValidFrom, DateOnly? ValidTo);
 public sealed record UpdatePosition(string Code, string Name, long OrganizationUnitId, long RoleId, DateOnly ValidFrom, DateOnly? ValidTo);
-public sealed record AssignWorker(long WorkerId, long PositionId, DateOnly ValidFrom, DateOnly? ValidTo, bool IsPrimary = true, long? OrganizationHierarchyNodeId = null);
+public sealed record AssignWorker(long WorkerId, long PositionId, DateOnly ValidFrom, DateOnly? ValidTo, bool IsPrimary = true);
 public sealed record TransferWorker(long PositionId, DateOnly EffectiveDate, DateOnly? ValidTo);
 public sealed record CloseOrganizationPeriod(DateOnly ValidTo);
 public sealed record OrganizationRoleInfo(long Id, string Code, string Name);

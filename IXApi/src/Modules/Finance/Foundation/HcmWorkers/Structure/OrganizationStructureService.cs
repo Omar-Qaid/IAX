@@ -190,16 +190,8 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
             (request.ValidTo == null || x.ValidFrom < request.ValidTo) && (x.ValidTo == null || request.ValidFrom < x.ValidTo));
         Require(!await overlaps.AnyAsync(x => x.PositionId == request.PositionId, ct), "Position is already occupied during this period.");
         Require(!request.IsPrimary || !await overlaps.AnyAsync(x => x.HcmWorkerId == request.WorkerId && x.IsPrimary, ct), "Worker already has a primary assignment during this period.");
-        if (request.OrganizationHierarchyNodeId is long nodeId)
-        {
-            var node = await Nodes.SingleOrDefaultAsync(x => x.RecId == nodeId && x.IsActive, ct)
-                ?? throw new KeyNotFoundException("Organization hierarchy node not found in this company.");
-            Require(node.OrganizationUnitId == position.OrganizationUnitId && Contains(node.ValidFrom, node.ValidTo, request.ValidFrom, request.ValidTo),
-                "Assignment hierarchy node must match the position unit and contain the assignment period.");
-        }
         var assignment = new HcmWorkerOrganizationAssignment { DataAreaId = Company, HcmWorkerId = request.WorkerId,
-            PositionId = position.RecId, OrganizationUnitId = position.OrganizationUnitId, OrganizationRoleId = position.RoleId,
-            OrganizationHierarchyNodeId = request.OrganizationHierarchyNodeId, ValidFrom = request.ValidFrom, ValidTo = request.ValidTo,
+            PositionId = position.RecId, OrganizationUnitId = position.OrganizationUnitId, OrganizationRoleId = position.RoleId, ValidFrom = request.ValidFrom, ValidTo = request.ValidTo,
             IsPrimary = request.IsPrimary, CreatedDate = DateTime.UtcNow };
         db.HcmWorkerOrganizationAssignments.Add(assignment);
         await db.SaveChangesAsync(ct);
@@ -306,8 +298,7 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
 
     private static IQueryable<WorkerAssignmentInfo> ProjectAssignments(IQueryable<HcmWorkerOrganizationAssignment> query) =>
         query.AsNoTracking().OrderBy(x => x.AssignmentId).Select(x => new WorkerAssignmentInfo(x.AssignmentId, x.HcmWorkerId,
-            x.PositionId, x.OrganizationUnitId, x.OrganizationRoleId, x.OrganizationHierarchyNodeId,
-            x.OrganizationRole.Code, x.IsPrimary, x.ValidFrom, x.ValidTo));
+            x.PositionId, x.OrganizationUnitId, x.OrganizationRoleId, x.OrganizationRole.Code, x.IsPrimary, x.ValidFrom, x.ValidTo));
 
     private async Task<OrganizationUnit> RequireUnitAsync(long id, CancellationToken ct) =>
         await Units.SingleOrDefaultAsync(x => x.RecId == id && x.IsActive, ct) ?? throw new KeyNotFoundException("Organization unit not found in this company.");

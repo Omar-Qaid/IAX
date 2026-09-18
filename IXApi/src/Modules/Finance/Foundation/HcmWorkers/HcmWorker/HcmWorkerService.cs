@@ -34,10 +34,10 @@ public class HcmWorkerService : BaseService<HcmWorker>, IHcmWorkerService
                 "DirPartyTable",
                 cancellationToken: cancellationToken);
             var partyNumber = partyNumberResult.Code ?? Guid.NewGuid().ToString("N")[..20];
-            var partyName = entity.Name.Trim();
-            var partyAlias = string.IsNullOrWhiteSpace(entity.NameAlias)
+            var partyName = entity.Party?.Name?.Trim() ?? string.Empty;
+            var partyAlias = string.IsNullOrWhiteSpace(entity.Party?.NameAlias)
                 ? partyName
-                : entity.NameAlias.Trim();
+                : entity.Party.NameAlias.Trim();
 
             var party = new DirPartyTable
             {
@@ -94,10 +94,13 @@ public class HcmWorkerService : BaseService<HcmWorker>, IHcmWorkerService
     {
         var party = await _dbContext.Set<DirPartyTable>()
             .SingleAsync(candidate => candidate.RecId == entity.Person, cancellationToken);
-        party.Name = entity.Name.Trim();
-        party.NameAlias = string.IsNullOrWhiteSpace(entity.NameAlias)
-            ? party.Name
-            : entity.NameAlias.Trim();
+        if (entity.Party != null)
+        {
+            party.Name = entity.Party.Name.Trim();
+            party.NameAlias = string.IsNullOrWhiteSpace(entity.Party.NameAlias)
+                ? party.Name
+                : entity.Party.NameAlias.Trim();
+        }
         party.HcmWorker = entity.RecId;
         return await base.UpdateAsync(entity, cancellationToken);
     }
