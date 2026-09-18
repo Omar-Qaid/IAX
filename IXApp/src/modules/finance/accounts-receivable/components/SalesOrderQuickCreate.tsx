@@ -54,15 +54,18 @@ export function SalesOrderQuickCreate({ open, onClose, onSave }: SalesOrderQuick
     enabled: open,
     staleTime: 5 * 60 * 1000,
   });
-  const customers = customersQuery.data ?? [];
+  const customers = React.useMemo(() => customersQuery.data ?? [], [customersQuery.data]);
   const deliveryLookupsQuery = useQuery({
     queryKey: ['accounts-receivable', 'sales-order-quick-create', 'delivery-lookups'],
     queryFn: ({ signal }) => customerQuickCreateApi.lookups(signal),
     enabled: open,
     staleTime: 5 * 60 * 1000,
   });
-  const customerFor = (values: Record<string, FastTabValue>) =>
-    customers.find((customer) => customer.accountNumber === String(values.customerAccount));
+  const customerFor = React.useCallback(
+    (values: Record<string, FastTabValue>) =>
+      customers.find((customer) => customer.accountNumber === String(values.customerAccount)),
+    [customers]
+  );
   const sections = useMemo<FastTabSection[]>(() => [
     {
       id: 'customer',
@@ -116,7 +119,7 @@ export function SalesOrderQuickCreate({ open, onClose, onSave }: SalesOrderQuick
         { name: 'deliveryTerms', label: t('customerQuickCreate.fields.deliveryTerms'), type: 'select', options: deliveryLookupsQuery.data?.deliveryTerms ?? [] },
       ],
     },
-  ], [customers, deliveryLookupsQuery.data, t]);
+  ], [customerFor, customers, deliveryLookupsQuery.data, t]);
 
   return (
     <FastTabsDrawer

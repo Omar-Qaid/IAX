@@ -44,9 +44,9 @@ public sealed class McpContractDiscoveryTests
         Assert.Equal(3, result.Operations.Count(operation => operation.Status == "pilot-candidate"));
         Assert.DoesNotContain(result.Operations, operation => operation.Controller == "WfRequest"
             && operation.Action is "Create" or "GetPaged" or "CreateRange" or "UpdateRange" or "DeleteRange");
-        var department = Assert.Single(result.Operations, operation =>
-            operation.ProposedToolName == "organization_departments_search");
-        Assert.Contains("Organization.Departments.View", department.DomainPermissions);
+        var organizationUnits = Assert.Single(result.Operations, operation =>
+            operation.ProposedToolName == "organization_units_list");
+        Assert.Contains("Organization.Structure.View", organizationUnits.DomainPermissions);
         var customer = Assert.Single(result.Operations, operation =>
             operation.ProposedToolName == "finance_customers_search");
         Assert.Contains(result.Operations, operation => operation.Path == "/api/v1/CustTable/paged"
@@ -75,7 +75,10 @@ public sealed class McpContractDiscoveryTests
             Assert.False(policy.ExecutionEnabled);
             Assert.Equal("company-required", policy.CompanyScope);
             var schema = Resolve(response.GetProperty("application/json").GetProperty("schema"), document.RootElement);
-            var data = Resolve(schema.GetProperty("properties").GetProperty("data"), document.RootElement);
+            var data = schema.TryGetProperty("properties", out var properties)
+                && properties.TryGetProperty("data", out var wrappedData)
+                    ? Resolve(wrappedData, document.RootElement)
+                    : schema;
             if (data.TryGetProperty("items", out var items)) data = Resolve(items, document.RootElement);
             foreach (var field in policy.AllowedDataFields)
                 Assert.Contains(data.GetProperty("properties").EnumerateObject(), property => property.Name == field);

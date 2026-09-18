@@ -8,6 +8,7 @@ import { usePermission } from '@core/permissions/usePermission';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
 import type {
+  DetailValues,
   DetailSectionConfig,
   EnterpriseListDetailsConfig,
 } from '@patterns/list-details/types';
@@ -19,6 +20,12 @@ import { batchJobActivePeriodApi } from '../api/batchJobActivePeriodApi';
 const scheduleLabels = ['One time', 'Delayed', 'Recurring', 'Cron'];
 const jobStatusLabels = ['Waiting', 'Withhold', 'Canceled', 'Ended'];
 const executionStatusLabels = ['Waiting', 'Executing', 'Completed', 'Failed', 'Cancelled'];
+const lookupValue = (value: string | number | (string | number)[] | null) =>
+  Array.isArray(value) ? (value[0] ?? '') : (value ?? '');
+const toDetailValues = (record: SysBackgroundJobRecord): DetailValues =>
+  Object.fromEntries(
+    Object.entries(record).map(([key, value]) => [key, value ?? ''])
+  ) as DetailValues;
 const monitoringCategoryLabels = [
   'Undefined',
   'Integration',
@@ -245,7 +252,7 @@ export function SysBackgroundJobPage(): React.ReactElement {
                         name: period.periodId,
                         description: period.name ?? undefined,
                       }))}
-                    onChange={(next) => onChange(next ?? '')}
+                    onChange={(next) => onChange(lookupValue(next))}
                   />
                 ),
               },
@@ -268,7 +275,7 @@ export function SysBackgroundJobPage(): React.ReactElement {
                         name: group.groupCode,
                         description: group.description ?? undefined,
                       }))}
-                    onChange={(next) => onChange(next ?? '')}
+                    onChange={(next) => onChange(lookupValue(next))}
                   />
                 ),
               },
@@ -410,7 +417,7 @@ export function SysBackgroundJobPage(): React.ReactElement {
         .toLocaleLowerCase()
         .includes(query.toLocaleLowerCase()),
     getValues: (job) => ({
-      ...job,
+      ...toDetailValues(job),
       caption: job.caption,
       description: job.description ?? '',
       jobKey: job.jobKey,
@@ -551,7 +558,7 @@ export function SysBackgroundJobPage(): React.ReactElement {
           return { payloadJson: 'Parameters must contain valid JSON.' };
         }
       })(),
-    }),
+    }) as Record<string, string>,
     presentation: { mode: 'list', listWidth: 300, headerMaxWidth: 760 },
   };
   return (

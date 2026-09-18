@@ -18,6 +18,7 @@ import { useNotifications } from '@shared/hooks/useNotifications';
 import { useLocalStorage } from '@shared/hooks/useLocalStorage';
 import { SimpleListPage } from '@patterns/simple-list/SimpleListPage';
 import { localizedName } from '@shared/utilities/localizedName';
+import { recordTableId } from '@shared/components/documents/recordTableIds';
 import { wfProcessApi, type WfProcessRecord } from '../../api/wfProcessApi';
 import { fetchProcessPage, processLookupColumns } from '../../lookups/processLookup';
 import { reportDesignerApi } from '../api/reportDesignerApi';

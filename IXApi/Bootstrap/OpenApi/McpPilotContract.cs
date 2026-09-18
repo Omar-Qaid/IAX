@@ -9,9 +9,12 @@ public sealed record McpPilotContract(
 {
     public static McpPilotContract? ForOperation(string method, string path) => (method, path) switch
     {
-        ("GET", "/api/v1/Department/paged") => Create("organization_departments_search", path,
-            ["recId", "code", "name", "description", "isActive"], true,
-            "Organization.Departments.View; company-filtered API query"),
+        ("GET", "/api/v1/organization-structure/units") => new(1, "organization_units_list", 1,
+            method, path, false, "company-required", ["asOf"], null, null,
+            ["id", "code", "name", "type"],
+            "Organization.Structure.View; company-filtered API query",
+            ["adapter-enforces-input-and-output-policy", "authenticated-company-and-record-isolation",
+             "real-client-invocation", "data-owner-review"]),
         ("GET", "/api/v1/Customer/paged") => Create("finance_customers_search", path,
             ["recId", "accountNum", "custGroup", "currency", "blocked", "isActive"], true,
             "AccountsReceivable.Customers.View; company-filtered API query"),
