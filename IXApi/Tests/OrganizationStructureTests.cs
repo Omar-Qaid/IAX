@@ -6,6 +6,8 @@ using IAX.IXApi.Modules.Finance.Foundation.WorkerOrganizationAssignments;
 using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Organization.DocumentManagement.Entities;
 using IAX.IXApi.Modules.Organization.Persistence;
+using IAX.IXApi.Modules.Finance.Persistence;
+using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Shared.Application.Identity;
 using IAX.IXApi.Shared.Domain.Entities;
 using Microsoft.Data.Sqlite;
@@ -207,7 +209,7 @@ public sealed class OrganizationStructureTests
             await f.Db.Database.EnsureCreatedAsync();
             f.Db.HcmWorkers.AddRange(new HcmWorker { RecId = 1, PersonnelNumber = "W1", DataAreaId = "dat" }, new HcmWorker { RecId = 2, PersonnelNumber = "W2", DataAreaId = "dat" });
             await f.Db.SaveChangesAsync();
-           // f.Service = new OrganizationStructureService(f.Db, f.Company);
+            f.Service = new OrganizationStructureService(f.Db, f.Company);
             return f;
         }
         public async Task<(long Unit, long Role, long Position)> SeatAsync(string code)
@@ -222,7 +224,7 @@ public sealed class OrganizationStructureTests
 
     // Real relational execution with the production Organization mappings; unrelated modules are
     // excluded. SQL Server-specific defaults/rowversion are adapted only in this SQLite fixture.
-    private sealed class TestContext(DbContextOptions<TestContext> options, TestCompany company) : DbContext(options), IOrganizationDataContext
+    private sealed class TestContext(DbContextOptions<TestContext> options, TestCompany company) : DbContext(options), IOrganizationDataContext, IFinanceDataContext
     {
         public string CompanyCode => company.Code;
         public DbSet<HcmWorker> HcmWorkers => Set<HcmWorker>();
@@ -232,6 +234,10 @@ public sealed class OrganizationStructureTests
         public DbSet<OrganizationHierarchyNode> OrganizationHierarchyNodes => Set<OrganizationHierarchyNode>();
         public DbSet<HcmPosition> HcmPositions => Set<HcmPosition>();
         public DbSet<HcmWorkerOrganizationAssignment> HcmWorkerOrganizationAssignments => Set<HcmWorkerOrganizationAssignment>();
+        public DbSet<TaxData> TaxData => Set<TaxData>();
+        public DbSet<TaxGroupHeading> TaxGroupHeadings => Set<TaxGroupHeading>();
+        public DbSet<TaxGroupData> TaxGroupDatas => Set<TaxGroupData>();
+        public DbSet<TaxOnItem> TaxOnItems => Set<TaxOnItem>();
         public DbSet<AspNetUser> Users => Set<AspNetUser>();
         public DbSet<DocuType> DocuTypes => Set<DocuType>();
         public DbSet<DocuValue> DocuValues => Set<DocuValue>();
