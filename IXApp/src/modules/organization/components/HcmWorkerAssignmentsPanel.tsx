@@ -1,0 +1,19 @@
+import React, { useMemo, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from '@mui/material';
+import { TabularDetailPanel } from '@patterns/list-details/TabularDetailPanel';
+import type { ColumnDef } from '@shared/components/data-grid/types';
+import { organizationStructureApi, type WorkerOrganizationAssignment } from '../api/organizationStructureApi';
+const today = () => new Date().toISOString().slice(0, 10);
+type Row = WorkerOrganizationAssignment & { id: string; positionName: string };
+export function HcmWorkerAssignmentsPanel({ workerId, editing, company }: { workerId: number; editing: boolean; company: string }): React.ReactElement {
+  const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]); const [open, setOpen] = useState(false); const [positionId, setPositionId] = useState(''); const [validFrom, setValidFrom] = useState(today()); const queryClient = useQueryClient();
+  const key = ['hcm-worker-assignments', company, workerId, today()] as const;
+  const assignments = useQuery({ queryKey: key, queryFn: ({ signal }) => organizationStructureApi.workerAssignments(workerId, today(), signal), enabled: workerId > 0 });
+  const positions = useQuery({ queryKey: ['organization-structure', company, 'positions', 'worker-assignment'], queryFn: ({ signal }) => organizationStructureApi.positions(today(), signal), enabled: workerId > 0 });
+  const rows = useMemo<Row[]>(() => (assignments.data ?? []).map(row => ({ ...row, id: String(row.assignmentId), positionName: positions.data?.find(p => p.id === row.positionId)?.name ?? '' })), [assignments.data, positions.data]);
+  const columns = useMemo<ColumnDef<Row>[]>(() => [{ field: 'positionName', headerName: 'Position', minWidth: 190, flex: 1 }, { field: 'roleCode', headerName: 'Role', width: 150 }, { field: 'validFrom', headerName: 'Valid from', width: 125 }, { field: 'validTo', headerName: 'Valid to', width: 125 }, { field: 'isPrimary', headerName: 'Primary', type: 'boolean', width: 95 }], []);
+  const selected = rows.find(row => row.id === String(selectedIds[0])); const refresh = () => queryClient.invalidateQueries({ queryKey: key });
+  const save = async () => { if (!positionId) return; await organizationStructureApi.assignWorker({ workerId, positionId: Number(positionId), validFrom, validTo: null, isPrimary: true }); await refresh(); setOpen(false); };
+  return <><TabularDetailPanel rows={rows} columns={columns} addLabel="Add assignment" removeLabel="Close assignment" selectedIds={selectedIds} onSelectionChange={setSelectedIds} disabled={!editing || workerId <= 0 || assignments.isLoading} onAdd={() => setOpen(true)} onRemove={() => selected && organizationStructureApi.closeAssignment(selected.assignmentId, today()).then(refresh)} storageKey="organization.worker.assignments" height={220} /><Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm"><DialogTitle>Add organization assignment</DialogTitle><DialogContent><Stack spacing={2} sx={{ pt: 1 }}><TextField select label="Position" value={positionId} onChange={event => setPositionId(event.target.value)} required fullWidth>{(positions.data ?? []).map(position => <MenuItem key={position.id} value={String(position.id)}>{position.code} — {position.name}</MenuItem>)}</TextField><TextField type="date" label="Valid from" value={validFrom} onChange={event => setValidFrom(event.target.value)} slotProps={{ inputLabel: { shrink: true } }} required /></Stack></DialogContent><DialogActions><Button onClick={() => setOpen(false)}>Cancel</Button><Button onClick={() => void save()} disabled={!positionId}>Save</Button></DialogActions></Dialog></>;
+}
