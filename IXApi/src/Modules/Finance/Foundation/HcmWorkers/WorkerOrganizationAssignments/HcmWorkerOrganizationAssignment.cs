@@ -7,8 +7,6 @@ namespace IAX.IXApi.Modules.Finance.Foundation.WorkerOrganizationAssignments;
 
 public class HcmWorkerOrganizationAssignment : Entity<long>
 {
-    public long AssignmentId { get; set; }
-    public string DataAreaId { get; set; } = "dat";
     public long HcmWorkerId { get; set; }
     public long OrganizationUnitId { get; set; }
     public long? PositionId { get; set; }
