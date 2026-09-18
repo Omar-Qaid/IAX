@@ -192,7 +192,7 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
         Require(!request.IsPrimary || !await overlaps.AnyAsync(x => x.HcmWorkerId == request.WorkerId && x.IsPrimary, ct), "Worker already has a primary assignment during this period.");
         var assignment = new HcmWorkerOrganizationAssignment { DataAreaId = Company, HcmWorkerId = request.WorkerId,
             PositionId = position.RecId, OrganizationUnitId = position.OrganizationUnitId, OrganizationRoleId = position.RoleId, ValidFrom = request.ValidFrom, ValidTo = request.ValidTo,
-            IsPrimary = request.IsPrimary, CreatedDate = DateTime.UtcNow };
+            IsPrimary = request.IsPrimary, CreatedAt = DateTime.UtcNow };
         db.HcmWorkerOrganizationAssignments.Add(assignment);
         await db.SaveChangesAsync(ct);
         return assignment.RecId;

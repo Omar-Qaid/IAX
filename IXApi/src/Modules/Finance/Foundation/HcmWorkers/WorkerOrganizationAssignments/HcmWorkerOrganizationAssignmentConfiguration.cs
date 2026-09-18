@@ -21,7 +21,7 @@ public class HcmWorkerOrganizationAssignmentConfiguration : IEntityTypeConfigura
         builder.Property(x => x.ValidTo).HasColumnType("date");
         builder.Property(x => x.IsPrimary).HasDefaultValue(true);
         builder.Property(x => x.IsActive).HasDefaultValue(true);
-        builder.Property(x => x.CreatedDate).HasDefaultValueSql("SYSUTCDATETIME()");
+        builder.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
         builder.HasOne(x => x.HcmWorker).WithMany(x => x.WorkerOrganizationAssignments)
             .HasForeignKey(x => x.HcmWorkerId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.OrganizationUnit).WithMany(x => x.WorkerOrganizationAssignments)
