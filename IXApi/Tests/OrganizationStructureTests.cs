@@ -110,7 +110,7 @@ public sealed class OrganizationStructureTests
         await f.Service.AssignWorkerAsync(new(2, second, Start, null), default);
         await Assert.ThrowsAsync<ValidationException>(() => f.Service.TransferAsync(oldId, new(second, TransferDate, null), default));
         Assert.False(f.Db.ChangeTracker.HasChanges());
-        Assert.Null((await f.Db.HcmWorkerOrganizationAssignments.SingleAsync(x => x.AssignmentId == oldId)).ValidTo);
+        Assert.Null((await f.Db.HcmWorkerOrganizationAssignments.SingleAsync(x => x.RecId == oldId)).ValidTo);
         Assert.Equal(oldId, Assert.Single(await f.Service.GetWorkerAssignmentsAsync(1, TransferDate)).AssignmentId);
     }
 
