@@ -12,6 +12,7 @@ import type {
 import { AppLookupField } from '@shared/components/fields/AppLookupField';
 import { hcmWorkerApi, type HcmLookupOption, type HcmWorkerRecord } from '../api/hcmWorkerApi';
 import { PartyPostalAddressPanel, PartyElectronicAddressPanel } from '@shared/components/logistics/PartyLogisticsPanels';
+import { HcmWorkerAssignmentsPanel } from '../components/HcmWorkerAssignmentsPanel';
 
 const numberValue = (value: DetailValue | undefined): number => Number(value) || 0;
 const textValue = (value: DetailValue | undefined): string => String(value ?? '');

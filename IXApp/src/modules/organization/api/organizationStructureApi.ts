@@ -26,6 +26,7 @@ export interface OrganizationRole {
   code: string;
   name: string;
 }
+export interface WorkerOrganizationAssignment { assignmentId: number; workerId: number; positionId: number | null; organizationUnitId: number; organizationRoleId: number; roleCode: string | null; isPrimary: boolean; validFrom: string; validTo: string | null; }
 export interface NewOrganizationUnit {
   code: string;
   name: string;
@@ -51,6 +52,9 @@ export const organizationStructureApi = {
   async roles(signal?: AbortSignal) {
     return (await apiClient.get<OrganizationRole[]>(`${base}/roles`, { signal })).data;
   },
+  async workerAssignments(workerId: number, asOf: string, signal?: AbortSignal) { return (await apiClient.get<WorkerOrganizationAssignment[]>(`${base}/workers/${workerId}/assignments`, { params: { asOf }, signal })).data; },
+  async assignWorker(payload: { workerId: number; positionId: number; validFrom: string; validTo: string | null; isPrimary: boolean; }) { return (await apiClient.post<number>(`${base}/assignments`, payload)).data; },
+  async closeAssignment(id: number, validTo: string) { return (await apiClient.put<number>(`${base}/assignments/${id}/close`, { validTo })).data; },
   async ancestors(hierarchyId: number, unitId: number, asOf: string, signal?: AbortSignal) {
     return (
       await apiClient.get<OrganizationUnit[]>(
