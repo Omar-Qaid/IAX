@@ -18945,6 +18945,9 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<short>("NationalityId")
                         .HasColumnType("smallint");
 
+                    b.Property<short>("OccupationId")
+                        .HasColumnType("smallint");
+
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
 
@@ -18974,9 +18977,14 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasIndex("NationalityId");
 
+                    b.HasIndex("OccupationId");
+
                     b.HasIndex("Person");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("DataAreaId", "PersonnelNumber")
+                        .IsUnique();
 
                     b.ToTable("HcmWorker", (string)null);
                 });
@@ -24095,7 +24103,13 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.DirPartyTable", "DirPartyTable")
+                    b.HasOne("IAX.IXApi.Modules.Finance.Foundation.Occupations.Occupation", "Occupation")
+                        .WithMany()
+                        .HasForeignKey("OccupationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.DirPartyTable", "Party")
                         .WithMany()
                         .HasForeignKey("Person")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -24106,11 +24120,13 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.NoAction);
 
-                    b.Navigation("DirPartyTable");
-
                     b.Navigation("Gender");
 
                     b.Navigation("Nationality");
+
+                    b.Navigation("Occupation");
+
+                    b.Navigation("Party");
 
                     b.Navigation("User");
                 });

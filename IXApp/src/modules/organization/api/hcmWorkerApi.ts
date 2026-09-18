@@ -7,12 +7,13 @@ export interface HcmWorkerDto {
   personnelNumber: string;
   person: number;
   name?: string | null;
-  departmentId: number;
-  departmentName?: string | null;
+  nameAlias?: string | null;
   occupationId: number;
   occupationName?: string | null;
   genderId: number;
+  genderName?: string | null;
   nationalityId: number;
+  nationalityName?: string | null;
   hireDate: string | null;
   birthDate: string | null;
   userId?: string | null;

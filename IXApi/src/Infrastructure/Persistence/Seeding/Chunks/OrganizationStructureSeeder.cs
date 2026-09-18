@@ -1,4 +1,4 @@
-﻿using IAX.IXApi.Modules.Identity.Roles;
+using IAX.IXApi.Modules.Identity.Roles;
 using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Finance.Foundation.OrganizationUnits;
 using IAX.IXApi.Modules.Finance.Persistence;
@@ -137,7 +137,7 @@ public sealed class OrganizationStructureSeeder : ISeeder
             db.HcmWorkerOrganizationAssignments.Add(new HcmWorkerOrganizationAssignment
             {
                 DataAreaId = SeedCompany, HcmWorkerId = targetWorkerId, PositionId = position.RecId,
-                OrganizationUnitId = position.OrganizationUnitId, AssignmentRole = 1, IsPrimary = true,
+                OrganizationUnitId = position.OrganizationUnitId, OrganizationRoleId = position.RoleId, AssignmentRole = 1, IsPrimary = true,
                 IsActive = true, ValidFrom = EffectiveFrom
             });
         }

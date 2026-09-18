@@ -13,7 +13,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.HcmWorkers
         {
         }
 
-        protected override string[]? GetDefaultIncludes() => new[] { "Gender", "Nationality" };
+        protected override string[]? GetDefaultIncludes() => new[] { "Party", "Occupation", "Gender", "Nationality" };
     }
 }
 

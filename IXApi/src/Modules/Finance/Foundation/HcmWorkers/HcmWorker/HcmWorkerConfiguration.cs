@@ -9,7 +9,16 @@ public sealed class HcmWorkerConfiguration : IEntityTypeConfiguration<HcmWorker>
     {
         builder.ToTable("HcmWorker");
         builder.Property(x => x.PersonnelNumber).HasMaxLength(25).IsRequired();
+        builder.HasIndex(x => new { x.DataAreaId, x.PersonnelNumber }).IsUnique();
 
+        builder.HasOne(x => x.Party)
+            .WithMany()
+            .HasForeignKey(x => x.Person)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.Occupation)
+            .WithMany()
+            .HasForeignKey(x => x.OccupationId)
+            .OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.Gender)
             .WithMany()
             .HasForeignKey(x => x.GenderId)

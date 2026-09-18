@@ -11,6 +11,7 @@ import type {
 } from '@patterns/list-details/types';
 import { AppLookupField } from '@shared/components/fields/AppLookupField';
 import { hcmWorkerApi, type HcmLookupOption, type HcmWorkerRecord } from '../api/hcmWorkerApi';
+import { PartyPostalAddressPanel, PartyElectronicAddressPanel } from '@shared/components/logistics/PartyLogisticsPanels';
 
 const numberValue = (value: DetailValue | undefined): number => Number(value) || 0;
 const textValue = (value: DetailValue | undefined): string => String(value ?? '');
@@ -22,7 +23,7 @@ const emptyWorker = (): HcmWorkerRecord => ({
   personnelNumber: '',
   person: 0,
   name: null,
-  departmentId: 0,
+  nameAlias: null,
   occupationId: 0,
   genderId: 0,
   nationalityId: 0,
@@ -40,10 +41,6 @@ export function HcmWorkerPage(): React.ReactElement {
 function HcmWorkerContent({ company }: { company: string }): React.ReactElement {
   const { t } = useAppTranslation();
   const lookups = {
-    departments: useQuery({
-      queryKey: ['hcm-workers', company, 'departments'],
-      queryFn: ({ signal }) => hcmWorkerApi.lookup('Department', signal),
-    }),
     occupations: useQuery({
       queryKey: ['hcm-workers', company, 'occupations'],
       queryFn: ({ signal }) => hcmWorkerApi.lookup('Occupation', signal),
@@ -105,12 +102,6 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
             title: t('hcmWorkers.groups.organization'),
             fields: [
               lookupField(
-                'departmentId',
-                t('hcmWorkers.fields.department'),
-                lookups.departments.data ?? [],
-                lookups.departments.isLoading
-              ),
-              lookupField(
                 'occupationId',
                 t('hcmWorkers.fields.occupation'),
                 lookups.occupations.data ?? [],
@@ -149,8 +140,6 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
       },
     ],
     [
-      lookups.departments.data,
-      lookups.departments.isLoading,
       lookups.genders.data,
       lookups.genders.isLoading,
       lookups.nationalities.data,
@@ -176,11 +165,10 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
     getPrimaryText: (record) => record.name?.trim() || record.personnelNumber,
     getSecondaryText: (record) => record.personnelNumber,
     matchesSearch: (record, query) =>
-      `${record.personnelNumber} ${record.name ?? ''} ${record.departmentName ?? ''} ${record.occupationName ?? ''}`
+      `${record.personnelNumber} ${record.name ?? ''} ${record.nameAlias ?? ''} ${record.occupationName ?? ''}`
         .toLocaleLowerCase()
         .includes(query.toLocaleLowerCase()),
     getValues: (record): DetailValues => ({
-      departmentId: record.departmentId,
       occupationId: record.occupationId,
       genderId: record.genderId,
       nationalityId: record.nationalityId,
@@ -190,7 +178,6 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
     }),
     setValues: (record, values) => ({
       ...record,
-      departmentId: numberValue(values.departmentId),
       occupationId: numberValue(values.occupationId),
       genderId: numberValue(values.genderId),
       nationalityId: numberValue(values.nationalityId),
@@ -211,12 +198,25 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
         id: 'name',
         label: t('hcmWorkers.fields.name'),
         width: 'minmax(320px, 520px)',
-        disabled: true,
         getValue: (record) => record.name ?? '',
         setValue: (record, value) => ({ ...record, name: textValue(value) }),
       },
     ],
-    sections,
+    sections: ({ record, editing }) => [
+      ...sections,
+      {
+        id: 'addresses',
+        title: t('customerDetails.sections.addresses', 'Addresses'),
+        minHeight: 145,
+        content: <PartyPostalAddressPanel partyId={record.person} editing={editing} storageKey="organization.worker.addresses" />,
+      },
+      {
+        id: 'contacts',
+        title: t('customerDetails.sections.contacts', 'Contact information'),
+        minHeight: 145,
+        content: <PartyElectronicAddressPanel partyId={record.person} editing={editing} storageKey="organization.worker.contacts" />,
+      },
+    ],
     permissions: {
       view: 'Organization.Employees.View',
       create: 'Organization.Employees.Create',
@@ -224,9 +224,6 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
       delete: 'Organization.Employees.Delete',
     },
     validate: (record) => ({
-      ...(record.departmentId <= 0
-        ? { departmentId: t('validation.required', { field: t('hcmWorkers.fields.department') }) }
-        : {}),
       ...(record.occupationId <= 0
         ? { occupationId: t('validation.required', { field: t('hcmWorkers.fields.occupation') }) }
         : {}),

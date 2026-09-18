@@ -5,6 +5,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.Structure;
 public sealed class OrganizationRole : MasterEntity<long>
 {
     public ICollection<HcmPosition> Positions { get; set; } = new List<HcmPosition>();
+    public ICollection<IAX.IXApi.Modules.Finance.Foundation.WorkerOrganizationAssignments.HcmWorkerOrganizationAssignment> WorkerAssignments { get; set; } = new List<IAX.IXApi.Modules.Finance.Foundation.WorkerOrganizationAssignments.HcmWorkerOrganizationAssignment>();
 }
 
 public sealed class OrganizationHierarchy : MasterEntity<long>
@@ -24,6 +25,7 @@ public sealed class OrganizationHierarchyNode : Entity<long>
     public OrganizationUnit OrganizationUnit { get; set; } = null!;
     public OrganizationHierarchyNode? ParentNode { get; set; }
     public ICollection<OrganizationHierarchyNode> Children { get; set; } = new List<OrganizationHierarchyNode>();
+    public ICollection<IAX.IXApi.Modules.Finance.Foundation.WorkerOrganizationAssignments.HcmWorkerOrganizationAssignment> WorkerAssignments { get; set; } = new List<IAX.IXApi.Modules.Finance.Foundation.WorkerOrganizationAssignments.HcmWorkerOrganizationAssignment>();
 }
 
 public sealed class HcmPosition : MasterEntity<long>

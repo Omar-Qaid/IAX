@@ -10,8 +10,11 @@ public class HcmWorkerOrganizationAssignmentConfiguration : IEntityTypeConfigura
         builder.ToTable("HcmWorkerOrganizationAssignments", t => t.HasCheckConstraint("CK_HcmWorkerOrganizationAssignments_Dates", "[ValidTo] IS NULL OR [ValidTo] > [ValidFrom]"));
         builder.Property(x => x.DataAreaId).HasMaxLength(4).IsRequired();
         builder.HasOne(x => x.Position).WithMany(x => x.WorkerAssignments).HasForeignKey(x => x.PositionId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.OrganizationRole).WithMany(x => x.WorkerAssignments).HasForeignKey(x => x.OrganizationRoleId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne(x => x.OrganizationHierarchyNode).WithMany(x => x.WorkerAssignments).HasForeignKey(x => x.OrganizationHierarchyNodeId).OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(x => new { x.DataAreaId, x.HcmWorkerId, x.IsPrimary, x.ValidFrom, x.ValidTo });
         builder.HasIndex(x => new { x.DataAreaId, x.PositionId, x.ValidFrom, x.ValidTo });
+        builder.HasIndex(x => new { x.DataAreaId, x.OrganizationRoleId, x.ValidFrom, x.ValidTo });
         builder.HasKey(x => x.AssignmentId);
         builder.Property(x => x.AssignmentId).ValueGeneratedOnAdd();
         builder.Property(x => x.AssignmentRole).HasColumnType("tinyint");

@@ -7648,10 +7648,11 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     PersonnelNumber = table.Column<string>(type: "nvarchar(25)", maxLength: 25, nullable: false),
                     Person = table.Column<long>(type: "bigint", nullable: false),
-                    HireDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    BirthDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    OccupationId = table.Column<short>(type: "smallint", nullable: false),
                     GenderId = table.Column<byte>(type: "tinyint", nullable: false),
                     NationalityId = table.Column<short>(type: "smallint", nullable: false),
+                    HireDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    BirthDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     UserId = table.Column<string>(type: "nvarchar(256)", nullable: true),
                     CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -7682,6 +7683,12 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         name: "FK_HcmWorker_Genders_GenderId",
                         column: x => x.GenderId,
                         principalTable: "Genders",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_HcmWorker_Occupations_OccupationId",
+                        column: x => x.OccupationId,
+                        principalTable: "Occupations",
                         principalColumn: "RECID",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
@@ -9084,6 +9091,12 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_HcmWorker_DataAreaId_PersonnelNumber",
+                table: "HcmWorker",
+                columns: new[] { "DataAreaId", "PersonnelNumber" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_HcmWorker_GenderId",
                 table: "HcmWorker",
                 column: "GenderId");
@@ -9092,6 +9105,11 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 name: "IX_HcmWorker_NationalityId",
                 table: "HcmWorker",
                 column: "NationalityId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HcmWorker_OccupationId",
+                table: "HcmWorker",
+                column: "OccupationId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_HcmWorker_Person",
@@ -10440,9 +10458,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 name: "WfVariables");
 
             migrationBuilder.DropTable(
-                name: "Occupations");
-
-            migrationBuilder.DropTable(
                 name: "BatchJobs");
 
             migrationBuilder.DropTable(
@@ -10531,6 +10546,9 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Genders");
+
+            migrationBuilder.DropTable(
+                name: "Occupations");
 
             migrationBuilder.DropTable(
                 name: "OrgNationalities");

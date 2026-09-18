@@ -64,21 +64,25 @@ public sealed class OthersDBOrganizationEmployeeSeeder : OthersDBSeedData
     private static async Task UpsertEmployeesAsync(ApplicationDbContext db,Employee[] rows,string owner,CancellationToken ct)
     {
         var duplicateCodes=rows.GroupBy(x=>x.Code??"",StringComparer.OrdinalIgnoreCase).Where(x=>x.Count()>1).Select(x=>x.Key).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var parties=(await db.DirPartyTables.IgnoreQueryFilters().Where(x=>x.HcmWorker!=null).ToListAsync(ct)).GroupBy(x=>x.HcmWorker!.Value).ToDictionary(x=>x.Key,x=>x.First());
+        var existingWorkers=await db.HcmWorkers.IgnoreQueryFilters().ToDictionaryAsync(x=>x.RecId,ct);
+        var allParties=await db.DirPartyTables.IgnoreQueryFilters().ToListAsync(ct);
+        var parties=allParties.Where(x=>x.HcmWorker!=null).GroupBy(x=>x.HcmWorker!.Value).ToDictionary(x=>x.Key,x=>x.First());
+        var partiesById=allParties.ToDictionary(x=>x.RecId);
         foreach(var row in rows)
         {
             var code=EmployeeCode(row,duplicateCodes);
-            if(parties.TryGetValue(row.Id,out var party)){party.PartyNumber=code;party.Name=Text(row.Name,255)??code;party.NameAlias=Text(row.NameAr,60)??code;party.RFullName=Text(row.NameAr,255);party.HcmWorker=row.Id;party.IsActive=row.Active?NoYes.Yes:NoYes.No;}
+            var hasParty=parties.TryGetValue(row.Id,out var party);
+            if(!hasParty&&existingWorkers.TryGetValue(row.Id,out var linkedWorker))hasParty=partiesById.TryGetValue(linkedWorker.Person,out party);
+            if(hasParty){party!.PartyNumber=code;party.Name=Text(row.Name,255)??code;party.NameAlias=Text(row.NameAr,60)??code;party.RFullName=Text(row.NameAr,255);party.HcmWorker=row.Id;party.IsActive=row.Active?NoYes.Yes:NoYes.No;}
             else{party=new DirPartyTable{PartyNumber=code,Name=Text(row.Name,255)??code,NameAlias=Text(row.NameAr,60)??code,RFullName=Text(row.NameAr,255),LanguageId="ar-sa",AddressBookNames="",HcmWorker=row.Id,IsActive=row.Active?NoYes.Yes:NoYes.No,CreatedAt=row.CreatedAt,CreatedBy=row.CreatedBy??owner,OwnerAccountId=owner};db.DirPartyTables.Add(party);parties[row.Id]=party;}
         }
         await db.SaveChangesAsync(ct);
 
-        var existing=await db.HcmWorkers.IgnoreQueryFilters().ToDictionaryAsync(x=>x.RecId,ct);
         foreach(var row in rows)
         {
             var code=EmployeeCode(row,duplicateCodes);
-            if(existing.TryGetValue(row.Id,out var worker)){worker.PersonnelNumber=code;worker.Person=parties[row.Id].RecId;worker.GenderId=row.GenderId;worker.NationalityId=row.NationalityId;worker.IsActive=row.Active;worker.IsDeleted=false;}
-            else db.HcmWorkers.Add(new HcmWorker{RecId=row.Id,PersonnelNumber=code,Person=parties[row.Id].RecId,GenderId=row.GenderId,NationalityId=row.NationalityId,IsActive=row.Active,CreatedAt=row.CreatedAt,CreatedBy=row.CreatedBy??owner,OwnerAccountId=owner});
+            if(existingWorkers.TryGetValue(row.Id,out var worker)){worker.PersonnelNumber=code;worker.Person=parties[row.Id].RecId;worker.OccupationId=row.OccupationId;worker.GenderId=row.GenderId;worker.NationalityId=row.NationalityId;worker.IsActive=row.Active;worker.IsDeleted=false;}
+            else db.HcmWorkers.Add(new HcmWorker{RecId=row.Id,PersonnelNumber=code,Person=parties[row.Id].RecId,OccupationId=row.OccupationId,GenderId=row.GenderId,NationalityId=row.NationalityId,IsActive=row.Active,CreatedAt=row.CreatedAt,CreatedBy=row.CreatedBy??owner,OwnerAccountId=owner});
         }
         await SaveWithOptionalIdentityAsync(db,"HcmWorker",ct);
     }
