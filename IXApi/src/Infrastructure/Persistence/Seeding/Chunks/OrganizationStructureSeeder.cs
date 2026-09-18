@@ -30,6 +30,8 @@ public sealed class OrganizationStructureSeeder : ISeeder
         ("SH-A", "Showroom A", "معرض أ", 4),
         ("SH-B", "Showroom B", "معرض ب", 4),
         ("ORG-FIN", "Finance Department", "الإدارة المالية", 8),
+        ("ORG-IT", "IT Department", "إدارة تقنية المعلومات", 8),
+        ("BR-JED", "Jeddah Branch", "فرع جدة", 7),
         ("ORG-WH", "Central Warehouse", "المستودع المركزي", 9)
     };
     var units = new Dictionary<string, OrganizationUnit>();
@@ -56,7 +58,10 @@ public sealed class OrganizationStructureSeeder : ISeeder
         ("REGION_MANAGER", "Region Manager", "مدير الإقليم"),
         ("SUPERVISOR", "Supervisor", "مشرف"), ("SELLER", "Seller", "بائع"),
         ("FINANCE_MANAGER", "Finance Manager", "مدير المالية"),
-        ("WAREHOUSE_MANAGER", "Warehouse Manager", "مدير المستودع") };
+        ("WAREHOUSE_MANAGER", "Warehouse Manager", "مدير المستودع"),
+        ("DIRECT_MANAGER", "Direct Manager", "المدير المباشر"),
+        ("IT_MANAGER", "IT Manager", "مدير تقنية المعلومات"),
+        ("BOSS", "Boss", "الرئيس") };
     var roles = new Dictionary<string, OrganizationRole>();
     foreach (var (code, name, nameAlias) in roleSeeds)
     {
@@ -79,9 +84,9 @@ public sealed class OrganizationStructureSeeder : ISeeder
 
     var operational = new (string Unit, string? Parent)[] { ("ORG-COMPANY", null), ("ORG-BU", "ORG-COMPANY"),
         ("AREA-W", "ORG-BU"), ("REG-JED", "AREA-W"), ("SUP-NJ", "REG-JED"), ("SH-A", "SUP-NJ"),
-        ("SH-B", "SUP-NJ"), ("ORG-WH", "ORG-BU") };
+        ("SH-B", "SUP-NJ"), ("ORG-WH", "ORG-BU"), ("BR-JED", "REG-JED"), ("ORG-IT", "ORG-BU") };
     var financial = new (string Unit, string? Parent)[] { ("ORG-COMPANY", null), ("ORG-BU", "ORG-COMPANY"),
-        ("ORG-FIN", "ORG-BU"), ("SH-A", "ORG-BU"), ("SH-B", "ORG-BU"), ("ORG-WH", "ORG-BU") };
+        ("ORG-FIN", "ORG-BU"), ("SH-A", "ORG-BU"), ("SH-B", "ORG-BU"), ("ORG-WH", "ORG-BU"), ("BR-JED", "REG-JED"), ("ORG-IT", "ORG-BU") };
     await SeedHierarchyAsync("ORG-OPERATIONS", "Operational Organization", "الهيكل التشغيلي",
         "Operations", operational);
     await SeedHierarchyAsync("ORG-FINANCE", "Financial Organization", "الهيكل المالي",
@@ -94,7 +99,10 @@ public sealed class OrganizationStructureSeeder : ISeeder
         ("SH-A-SELLER-01", "Showroom A Seller", "بائع معرض أ", "SH-A", "SELLER"),
         ("SH-B-SELLER-01", "Showroom B Seller", "بائع معرض ب", "SH-B", "SELLER"),
         ("ORG-FIN-MGR", "Finance Manager", "مدير المالية", "ORG-FIN", "FINANCE_MANAGER"),
-        ("ORG-WH-MGR", "Warehouse Manager", "مدير المستودع", "ORG-WH", "WAREHOUSE_MANAGER") };
+        ("ORG-WH-MGR", "Warehouse Manager", "مدير المستودع", "ORG-WH", "WAREHOUSE_MANAGER"),
+        ("BR-JED-BOSS", "Jeddah Branch Boss", "رئيس فرع جدة", "BR-JED", "BOSS"),
+        ("ORG-IT-MGR", "IT Manager", "مدير تقنية المعلومات", "ORG-IT", "IT_MANAGER"),
+        ("SH-A-DIRECT-MGR", "Showroom A Direct Manager", "المدير المباشر لمعرض أ", "SH-A", "DIRECT_MANAGER") };
     var positions = new Dictionary<string, HcmPosition>();
     foreach (var (code, name, nameAlias, unitCode, roleCode) in positionSeeds)
     {

@@ -10,4 +10,4 @@ public interface IOrganizationDirectory
 
 public sealed record OrganizationUnitInfo(long Id, string Code, string Name, byte Type);
 public sealed record WorkerAssignmentInfo(long AssignmentId, long WorkerId, long? PositionId,
-    long OrganizationUnitId, long OrganizationRoleId, string? RoleCode, bool IsPrimary, DateOnly ValidFrom, DateOnly? ValidTo);
+    long OrganizationUnitId, long? OrganizationRoleId, string? RoleCode, bool IsPrimary, DateOnly ValidFrom, DateOnly? ValidTo);

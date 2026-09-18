@@ -19539,7 +19539,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
-                    b.Property<long>("OrganizationRoleId")
+                    b.Property<long?>("OrganizationRoleId")
                         .HasColumnType("bigint");
 
                     b.Property<long>("OrganizationUnitId")
@@ -24204,8 +24204,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.HasOne("IAX.IXApi.Modules.Finance.Foundation.Structure.OrganizationRole", "OrganizationRole")
                         .WithMany("WorkerAssignments")
                         .HasForeignKey("OrganizationRoleId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("IAX.IXApi.Modules.Finance.Foundation.OrganizationUnits.OrganizationUnit", "OrganizationUnit")
                         .WithMany("WorkerOrganizationAssignments")

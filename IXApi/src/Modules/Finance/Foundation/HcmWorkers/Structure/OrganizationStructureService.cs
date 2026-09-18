@@ -186,7 +186,7 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
             ?? throw new KeyNotFoundException("Position not found in this company.");
         var unit = await RequireUnitAsync(position.OrganizationUnitId, ct);
         Require(Contains(position.ValidFrom, position.ValidTo, request.ValidFrom, request.ValidTo) && Contains(unit.ValidFrom, unit.ValidTo, request.ValidFrom, request.ValidTo), "Assignment period must be within the position and unit periods.");
-        var overlaps = Assignments.Where(x => x.AssignmentId != excludedAssignmentId &&
+        var overlaps = Assignments.Where(x => x.RecId != excludedAssignmentId &&
             (request.ValidTo == null || x.ValidFrom < request.ValidTo) && (x.ValidTo == null || request.ValidFrom < x.ValidTo));
         Require(!await overlaps.AnyAsync(x => x.PositionId == request.PositionId, ct), "Position is already occupied during this period.");
         Require(!request.IsPrimary || !await overlaps.AnyAsync(x => x.HcmWorkerId == request.WorkerId && x.IsPrimary, ct), "Worker already has a primary assignment during this period.");
@@ -195,7 +195,7 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
             IsPrimary = request.IsPrimary, CreatedDate = DateTime.UtcNow };
         db.HcmWorkerOrganizationAssignments.Add(assignment);
         await db.SaveChangesAsync(ct);
-        return assignment.AssignmentId;
+        return assignment.RecId;
     }
 
     public Task<long> TransferAsync(long assignmentId, TransferWorker request, CancellationToken ct) => WriteAsync(async () =>
@@ -206,7 +206,7 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
         Require(old.PositionId != request.PositionId, "Transfer must select a different position.");
         old.ValidTo = request.EffectiveDate;
         // Both closing the old row and inserting the replacement are saved in one transaction.
-        return await AssignAsync(new AssignWorker(old.HcmWorkerId, request.PositionId, request.EffectiveDate, request.ValidTo, old.IsPrimary), old.AssignmentId, ct);
+        return await AssignAsync(new AssignWorker(old.HcmWorkerId, request.PositionId, request.EffectiveDate, request.ValidTo, old.IsPrimary), old.RecId, ct);
     }, ct);
 
     public Task<long> CloseAssignmentAsync(long id, DateOnly end, CancellationToken ct) => WriteAsync(async () =>
@@ -297,15 +297,15 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
     }
 
     private static IQueryable<WorkerAssignmentInfo> ProjectAssignments(IQueryable<HcmWorkerOrganizationAssignment> query) =>
-        query.AsNoTracking().OrderBy(x => x.AssignmentId).Select(x => new WorkerAssignmentInfo(x.AssignmentId, x.HcmWorkerId,
-            x.PositionId, x.OrganizationUnitId, x.OrganizationRoleId, x.OrganizationRole.Code, x.IsPrimary, x.ValidFrom, x.ValidTo));
+        query.AsNoTracking().OrderBy(x => x.RecId).Select(x => new WorkerAssignmentInfo(x.RecId, x.HcmWorkerId,
+            x.PositionId, x.OrganizationUnitId, x.OrganizationRoleId, x.OrganizationRole == null ? null : x.OrganizationRole.Code, x.IsPrimary, x.ValidFrom, x.ValidTo));
 
     private async Task<OrganizationUnit> RequireUnitAsync(long id, CancellationToken ct) =>
         await Units.SingleOrDefaultAsync(x => x.RecId == id && x.IsActive, ct) ?? throw new KeyNotFoundException("Organization unit not found in this company.");
     private async Task<OrganizationHierarchy> RequireHierarchyAsync(long id, CancellationToken ct) =>
         await Hierarchies.SingleOrDefaultAsync(x => x.RecId == id && x.IsActive, ct) ?? throw new KeyNotFoundException("Hierarchy not found in this company.");
     private async Task<HcmWorkerOrganizationAssignment> RequireAssignmentAsync(long id, CancellationToken ct) =>
-        await Assignments.SingleOrDefaultAsync(x => x.AssignmentId == id, ct) ?? throw new KeyNotFoundException("Assignment not found in this company.");
+        await Assignments.SingleOrDefaultAsync(x => x.RecId == id, ct) ?? throw new KeyNotFoundException("Assignment not found in this company.");
 
     private async Task<long> WriteAsync(Func<Task<long>> action, CancellationToken ct)
     {

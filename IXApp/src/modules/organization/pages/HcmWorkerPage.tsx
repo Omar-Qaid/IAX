@@ -206,6 +206,12 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
     sections: ({ record, editing }) => [
       ...sections,
       {
+        id: 'organizationAssignments',
+        title: 'Organization assignments',
+        minHeight: 220,
+        content: <HcmWorkerAssignmentsPanel workerId={record.recordId} editing={editing} company={company} />,
+      },
+      {
         id: 'addresses',
         title: t('customerDetails.sections.addresses', 'Addresses'),
         minHeight: 145,

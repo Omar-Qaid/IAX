@@ -14,8 +14,8 @@ public class HcmWorkerOrganizationAssignmentConfiguration : IEntityTypeConfigura
         builder.HasIndex(x => new { x.DataAreaId, x.HcmWorkerId, x.IsPrimary, x.ValidFrom, x.ValidTo });
         builder.HasIndex(x => new { x.DataAreaId, x.PositionId, x.ValidFrom, x.ValidTo });
         builder.HasIndex(x => new { x.DataAreaId, x.OrganizationRoleId, x.ValidFrom, x.ValidTo });
-        builder.HasKey(x => x.AssignmentId);
-        builder.Property(x => x.AssignmentId).ValueGeneratedOnAdd();
+        builder.HasKey(x => x.RecId);
+        builder.Property(x => x.RecId).ValueGeneratedOnAdd();
         builder.Property(x => x.AssignmentRole).HasColumnType("tinyint");
         builder.Property(x => x.ValidFrom).HasColumnType("date");
         builder.Property(x => x.ValidTo).HasColumnType("date");
