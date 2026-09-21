@@ -96,6 +96,33 @@ export function DataGridMobileBodyInternal<T>({
     const val = col.valueGetter
       ? col.valueGetter({ row })
       : getNestedValue(row, col.field as string);
+    if (col.type === 'singleSelect' && col.valueOptions) {
+      const selectedOption = col.valueOptions.find((option) => {
+        const optionValue =
+          typeof option === 'object' && option !== null && 'value' in option
+            ? option.value
+            : option;
+        return String(optionValue) === String(val);
+      });
+      const label: React.ReactNode =
+        typeof selectedOption === 'object' && selectedOption !== null && 'label' in selectedOption
+          ? (selectedOption.label as React.ReactNode)
+          : (selectedOption as React.ReactNode);
+      return (
+        <Typography
+          variant="body2"
+          sx={{
+            width: '100%',
+            color: 'text.primary',
+            fontWeight: 500,
+            wordBreak: 'break-word',
+            textAlign: 'center',
+          }}
+        >
+          {label ?? (val != null ? String(val) : '-')}
+        </Typography>
+      );
+    }
     const isBool =
       col.type === 'boolean' ||
       typeof val === 'boolean' ||
@@ -111,7 +138,13 @@ export function DataGridMobileBodyInternal<T>({
     return (
       <Typography
         variant="body2"
-        sx={{ width: '100%', color: 'text.primary', fontWeight: 500, wordBreak: 'break-word', textAlign: 'center' }}
+        sx={{
+          width: '100%',
+          color: 'text.primary',
+          fontWeight: 500,
+          wordBreak: 'break-word',
+          textAlign: 'center',
+        }}
       >
         {val != null ? String(val) : '-'}
       </Typography>
@@ -255,7 +288,16 @@ export function DataGridMobileBodyInternal<T>({
                     paddingInlineEnd: selectionMode !== 'none' ? 4 : 0,
                   }}
                 >
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, flexWrap: 'wrap', width: '100%' }}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 1,
+                      flexWrap: 'wrap',
+                      width: '100%',
+                    }}
+                  >
                     {titleCol && (
                       <>
                         <Typography
@@ -289,11 +331,26 @@ export function DataGridMobileBodyInternal<T>({
                 </Box>
 
                 {/* Details */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, mb: 2 }}>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 1,
+                    mb: 2,
+                  }}
+                >
                   {detailCols.map((col) => (
                     <Box
                       key={col.field as string}
-                      sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0.25, width: '100%' }}
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 0.25,
+                        width: '100%',
+                      }}
                     >
                       <Typography
                         variant="body2"

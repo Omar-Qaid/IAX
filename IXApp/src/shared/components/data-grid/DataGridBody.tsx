@@ -54,30 +54,65 @@ interface GridBodyProps<T> {
   hideInlineEditActions?: boolean;
 }
 
-export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>({
-  rows, columns, rowHeight, headerHeight, getRowId, scrollContainerRef,
-  focusedRowId, loading, hasMore, hasActiveFilters, onRowClick, onRowDoubleClick, onEdit, onDelete, onViewHistory, onShowAllFields, onBuild,
-  selectionMode = 'single', selectedIds = [], onSelectionChange,
-  showColumnBorders = false, showCellBorders = true,
-  masterForm = false, editingRowId, editValues = {}, saving = false,
-  onFieldChange, onSaveEdit, onCancelEdit, hideInlineEditActions = false,
-}: GridBodyProps<T>, ref: React.Ref<GridBodyHandle>) {
-  const [contextMenu, setContextMenu] = useState<{ mouseX: number; mouseY: number; row: T | null } | null>(null);
+export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>(
+  {
+    rows,
+    columns,
+    rowHeight,
+    headerHeight,
+    getRowId,
+    scrollContainerRef,
+    focusedRowId,
+    loading,
+    hasMore,
+    hasActiveFilters,
+    onRowClick,
+    onRowDoubleClick,
+    onEdit,
+    onDelete,
+    onViewHistory,
+    onShowAllFields,
+    onBuild,
+    selectionMode = 'single',
+    selectedIds = [],
+    onSelectionChange,
+    showColumnBorders = false,
+    showCellBorders = true,
+    masterForm = false,
+    editingRowId,
+    editValues = {},
+    saving = false,
+    onFieldChange,
+    onSaveEdit,
+    onCancelEdit,
+    hideInlineEditActions = false,
+  }: GridBodyProps<T>,
+  ref: React.Ref<GridBodyHandle>
+) {
+  const [contextMenu, setContextMenu] = useState<{
+    mouseX: number;
+    mouseY: number;
+    row: T | null;
+  } | null>(null);
 
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const selectedSetRef = useRef(selectedSet);
   selectedSetRef.current = selectedSet;
 
-  const onToggleRow = useCallback((rowId: string | number) => {
-    const set = selectedSetRef.current;
-    if (selectionMode === 'single') {
-      onSelectionChange?.(set.has(rowId) ? [] : [rowId]);
-    } else if (selectionMode === 'multiple') {
-      const next = new Set(set);
-      if (next.has(rowId)) next.delete(rowId); else next.add(rowId);
-      onSelectionChange?.(Array.from(next));
-    }
-  }, [selectionMode, onSelectionChange]);
+  const onToggleRow = useCallback(
+    (rowId: string | number) => {
+      const set = selectedSetRef.current;
+      if (selectionMode === 'single') {
+        onSelectionChange?.(set.has(rowId) ? [] : [rowId]);
+      } else if (selectionMode === 'multiple') {
+        const next = new Set(set);
+        if (next.has(rowId)) next.delete(rowId);
+        else next.add(rowId);
+        onSelectionChange?.(Array.from(next));
+      }
+    },
+    [selectionMode, onSelectionChange]
+  );
 
   // New master-form records appear first, matching the D365 create workflow.
   const displayRows = useMemo((): T[] => {
@@ -88,7 +123,13 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>({
     return rows;
   }, [rows, masterForm, editingRowId, editValues]);
 
-  const focusedIndex = useMemo(() => focusedRowId == null ? -1 : displayRows.findIndex((row) => String(getRowId(row)) === String(focusedRowId)), [displayRows, getRowId, focusedRowId]);
+  const focusedIndex = useMemo(
+    () =>
+      focusedRowId == null
+        ? -1
+        : displayRows.findIndex((row) => String(getRowId(row)) === String(focusedRowId)),
+    [displayRows, getRowId, focusedRowId]
+  );
   const rowVirtualizer = useVirtualizer({
     count: displayRows.length,
     getScrollElement: () => scrollContainerRef.current,
@@ -97,7 +138,9 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>({
     scrollMargin: headerHeight,
     rangeExtractor: (range) => {
       const visible = defaultRangeExtractor(range);
-      return focusedIndex >= 0 && !visible.includes(focusedIndex) ? [...visible, focusedIndex].sort((a, b) => a - b) : visible;
+      return focusedIndex >= 0 && !visible.includes(focusedIndex)
+        ? [...visible, focusedIndex].sort((a, b) => a - b)
+        : visible;
     },
   });
 
@@ -106,34 +149,63 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>({
   }, [displayRows.length, headerHeight, rowVirtualizer]);
 
   const rawVirtualItems = rowVirtualizer.getVirtualItems();
-  const virtualItems = rawVirtualItems.length > 0
-    ? rawVirtualItems
-    : displayRows.slice(0, 30).map((_, i) => ({ index: i, start: headerHeight + i * rowHeight, size: rowHeight, key: i }));
+  const virtualItems =
+    rawVirtualItems.length > 0
+      ? rawVirtualItems
+      : displayRows.slice(0, 30).map((_, i) => ({
+          index: i,
+          start: headerHeight + i * rowHeight,
+          size: rowHeight,
+          key: i,
+        }));
 
-  React.useImperativeHandle(ref, () => ({
-    scrollToIndex: (index: number) => {
-      rowVirtualizer.scrollToIndex(index);
-    }
-  }), [rowVirtualizer]);
+  React.useImperativeHandle(
+    ref,
+    () => ({
+      scrollToIndex: (index: number) => {
+        rowVirtualizer.scrollToIndex(index);
+      },
+    }),
+    [rowVirtualizer]
+  );
 
-  const { visibleColumns, pinnedLeftCols, unpinnedCols, pinnedRightCols, pinnedLeftOffsets, pinnedRightOffsets, firstEditableField } = useMemo(() => {
-    const visible = columns.filter(c => !c.hidden);
-    const left = visible.filter(c => c.pinned === 'left');
-    const center = visible.filter(c => !c.pinned);
-    const right = visible.filter(c => c.pinned === 'right');
+  const {
+    visibleColumns,
+    pinnedLeftCols,
+    unpinnedCols,
+    pinnedRightCols,
+    pinnedLeftOffsets,
+    pinnedRightOffsets,
+    firstEditableField,
+  } = useMemo(() => {
+    const visible = columns.filter((c) => !c.hidden);
+    const left = visible.filter((c) => c.pinned === 'left');
+    const center = visible.filter((c) => !c.pinned);
+    const right = visible.filter((c) => c.pinned === 'right');
 
     const leftOffsets = left.reduce((acc, _col, i) => {
       acc.push(i === 0 ? 0 : acc[i - 1] + (left[i - 1].width || 150));
       return acc;
     }, [] as number[]);
 
-    const rightOffsets = [...right].reverse().reduce((acc, _col, i) => {
-      acc.push(i === 0 ? 0 : acc[i - 1] + (right[right.length - i].width || 150));
-      return acc;
-    }, [] as number[]).reverse();
+    const rightOffsets = [...right]
+      .reverse()
+      .reduce((acc, _col, i) => {
+        acc.push(i === 0 ? 0 : acc[i - 1] + (right[right.length - i].width || 150));
+        return acc;
+      }, [] as number[])
+      .reverse();
 
-    const firstEditableField = visible.find(c => c.editable)?.field;
-    return { visibleColumns: [...left, ...center, ...right], pinnedLeftCols: left, unpinnedCols: center, pinnedRightCols: right, pinnedLeftOffsets: leftOffsets, pinnedRightOffsets: rightOffsets, firstEditableField };
+    const firstEditableField = visible.find((c) => c.editable)?.field;
+    return {
+      visibleColumns: [...left, ...center, ...right],
+      pinnedLeftCols: left,
+      unpinnedCols: center,
+      pinnedRightCols: right,
+      pinnedLeftOffsets: leftOffsets,
+      pinnedRightOffsets: rightOffsets,
+      firstEditableField,
+    };
   }, [columns]);
 
   const handleContextMenu = useCallback((event: React.MouseEvent, row: T) => {
@@ -141,128 +213,205 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>({
     setContextMenu({ mouseX: event.clientX, mouseY: event.clientY, row });
   }, []);
 
-  const handleCopyRow = useCallback((row: T) => {
-    const vals = visibleColumns.map(col => {
-      const val = col.valueGetter ? col.valueGetter({ row }) : row[col.field as keyof T];
-      return val != null ? String(val) : '';
-    });
-    navigator.clipboard.writeText(vals.join('\t')).catch(() => { });
-  }, [visibleColumns]);
+  const handleCopyRow = useCallback(
+    (row: T) => {
+      const vals = visibleColumns.map((col) => {
+        const val = col.valueGetter ? col.valueGetter({ row }) : row[col.field as keyof T];
+        return val != null ? String(val) : '';
+      });
+      navigator.clipboard.writeText(vals.join('\t')).catch(() => {});
+    },
+    [visibleColumns]
+  );
 
-  const handleExportRow = useCallback((row: T) => {
-    const header = visibleColumns.map(c => `"${c.headerName}"`).join(',');
-    const values = visibleColumns.map(col => {
-      const val = col.valueGetter ? col.valueGetter({ row }) : row[col.field as keyof T];
-      const str = val != null ? String(val) : '';
-      return `"${str.replace(/"/g, '""')}"`;
-    }).join(',');
-    const blob = new Blob([`${header}\n${values}`], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'row.csv'; a.click();
-    URL.revokeObjectURL(url);
-  }, [visibleColumns]);
+  const handleExportRow = useCallback(
+    (row: T) => {
+      const header = visibleColumns.map((c) => `"${c.headerName}"`).join(',');
+      const values = visibleColumns
+        .map((col) => {
+          const val = col.valueGetter ? col.valueGetter({ row }) : row[col.field as keyof T];
+          const str = val != null ? String(val) : '';
+          return `"${str.replace(/"/g, '""')}"`;
+        })
+        .join(',');
+      const blob = new Blob([`${header}\n${values}`], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'row.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    },
+    [visibleColumns]
+  );
 
-  const renderCell = useCallback((row: T, col: ColumnDef<T>, rowIndex: number) => {
-    const rowId = getRowId(row);
-    const isEditingThisRow = masterForm && editingRowId != null && String(rowId) === String(editingRowId);
+  const renderCell = useCallback(
+    (row: T, col: ColumnDef<T>, rowIndex: number) => {
+      const rowId = getRowId(row);
+      const isEditingThisRow =
+        masterForm && editingRowId != null && String(rowId) === String(editingRowId);
 
-    if (isEditingThisRow && col.editable) {
-      const fieldKey = col.field as string;
-      const currentValue = (editValues as Record<string, unknown>)[fieldKey] ?? '';
-      const isBoolCol = col.type === 'boolean';
-      if (isBoolCol) {
-        const boolVal = currentValue === true || String(currentValue) === 'true';
-        return (
-          <Box onClick={(e) => { e.stopPropagation(); onFieldChange?.(fieldKey, !boolVal); }}>
-            <AppBooleanField
-              name={fieldKey}
-              value={boolVal}
-              onChange={(v) => onFieldChange?.(fieldKey, v)}
-              disabled={saving}
-              variant="standard"
-            />
-          </Box>
-        );
-      }
-      let finalValue = String(currentValue);
-      if (col.type === 'date' && currentValue) {
-        finalValue = String(currentValue).split('T')[0];
-      }
+      if (isEditingThisRow && col.editable) {
+        const fieldKey = col.field as string;
+        const currentValue = (editValues as Record<string, unknown>)[fieldKey] ?? '';
+        const isBoolCol = col.type === 'boolean';
+        if (isBoolCol) {
+          const boolVal = currentValue === true || String(currentValue) === 'true';
+          return (
+            <Box
+              onClick={(e) => {
+                e.stopPropagation();
+                onFieldChange?.(fieldKey, !boolVal);
+              }}
+            >
+              <AppBooleanField
+                name={fieldKey}
+                value={boolVal}
+                onChange={(v) => onFieldChange?.(fieldKey, v)}
+                disabled={saving}
+                variant="standard"
+              />
+            </Box>
+          );
+        }
+        let finalValue = String(currentValue);
+        if (col.type === 'date' && currentValue) {
+          finalValue = String(currentValue).split('T')[0];
+        }
 
-      if (col.type === 'singleSelect' && col.valueOptions) {
+        if (col.type === 'singleSelect' && col.valueOptions) {
+          return (
+            <Box onClick={(e) => e.stopPropagation()}>
+              <AppSelectField
+                name={fieldKey}
+                variant="standard"
+                value={finalValue}
+                onChange={(v) => onFieldChange?.(fieldKey, v)}
+                disabled={saving}
+                options={col.valueOptions.map((opt) => {
+                  const isObj = typeof opt === 'object' && opt !== null;
+                  return {
+                    value: String(isObj ? (opt as any).value : opt),
+                    label: String(isObj ? (opt as any).label : opt),
+                  };
+                })}
+              />
+            </Box>
+          );
+        }
+
         return (
           <Box onClick={(e) => e.stopPropagation()}>
-            <AppSelectField
+            <AppTextField
               name={fieldKey}
+              type={col.type === 'date' ? 'date' : col.type === 'number' ? 'number' : 'text'}
               variant="standard"
               value={finalValue}
-              onChange={v => onFieldChange?.(fieldKey, v)}
+              onChange={(v) => onFieldChange?.(fieldKey, v)}
               disabled={saving}
-              options={col.valueOptions.map(opt => {
-                const isObj = typeof opt === 'object' && opt !== null;
-                return {
-                  value: String(isObj ? (opt as any).value : opt),
-                  label: String(isObj ? (opt as any).label : opt),
-                };
-              })}
+              slotProps={{
+                input: { autoFocus: col.field === firstEditableField },
+              }}
             />
           </Box>
         );
       }
 
-      return (
-        <Box onClick={(e) => e.stopPropagation()}>
-          <AppTextField
-            name={fieldKey}
-            type={col.type === 'date' ? 'date' : col.type === 'number' ? 'number' : 'text'}
-            variant="standard"
-            value={finalValue}
-            onChange={v => onFieldChange?.(fieldKey, v)}
-            disabled={saving}
-            slotProps={{
-              input: { autoFocus: col.field === firstEditableField }
-            }}
-          />
-        </Box>
-      );
-    }
+      if (col.renderCell) {
+        const result = col.renderCell({
+          row,
+          value: getNestedValue(row, col.field as string),
+          rowIndex,
+        });
+        if (typeof result === 'string' || typeof result === 'number') {
+          return (
+            <Typography
+              variant="body2"
+              sx={{
+                width: '100%',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                textAlign: col.align ?? 'start',
+                fontFamily: APP_FONT_FAMILY,
+                fontSize: 15,
+                color: '#323130',
+              }}
+            >
+              {result}
+            </Typography>
+          );
+        }
+        return result;
+      }
+      const val = col.valueGetter
+        ? col.valueGetter({ row })
+        : getNestedValue(row, col.field as string);
 
-    if (col.renderCell) {
-      const result = col.renderCell({ row, value: getNestedValue(row, col.field as string), rowIndex });
-      if (typeof result === 'string' || typeof result === 'number') {
+      if (col.type === 'singleSelect' && col.valueOptions) {
+        const selectedOption = col.valueOptions.find((option) => {
+          const optionValue =
+            typeof option === 'object' && option !== null && 'value' in option
+              ? option.value
+              : option;
+          return String(optionValue) === String(val);
+        });
+        const label: React.ReactNode =
+          typeof selectedOption === 'object' && selectedOption !== null && 'label' in selectedOption
+            ? (selectedOption.label as React.ReactNode)
+            : (selectedOption as React.ReactNode);
         return (
-          <Typography variant="body2" sx={{ width: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: col.align ?? 'start', fontFamily: APP_FONT_FAMILY, fontSize: 15, color: '#323130' }}>
-            {result}
+          <Typography
+            variant="body2"
+            sx={{
+              width: '100%',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              textAlign: col.align ?? 'start',
+              fontFamily: APP_FONT_FAMILY,
+              fontSize: 15,
+              color: '#323130',
+            }}
+          >
+            {label ?? (val != null ? String(val) : '')}
           </Typography>
         );
       }
-      return result;
-    }
-    const val = col.valueGetter ? col.valueGetter({ row }) : getNestedValue(row, col.field as string);
 
-    const isBool = col.type === 'boolean' || typeof val === 'boolean' || (typeof val === 'string' && (val === 'true' || val === 'false'));
-    if (isBool) {
-      const boolVal = val === true || String(val) === 'true' || val === 1;
+      const isBool =
+        col.type === 'boolean' ||
+        typeof val === 'boolean' ||
+        (typeof val === 'string' && (val === 'true' || val === 'false'));
+      if (isBool) {
+        const boolVal = val === true || String(val) === 'true' || val === 1;
+        return (
+          <Box sx={{ pointerEvents: 'none' }}>
+            <AppBooleanField name={col.field as string} value={boolVal} readOnly />
+          </Box>
+        );
+      }
+
       return (
-        <Box sx={{ pointerEvents: 'none' }}>
-          <AppBooleanField
-            name={col.field as string}
-            value={boolVal}
-            readOnly
-          />
-        </Box>
+        <Typography
+          variant="body2"
+          sx={{
+            width: '100%',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            textAlign: col.align ?? 'start',
+            fontFamily: APP_FONT_FAMILY,
+            fontSize: 15,
+            color: '#323130',
+          }}
+        >
+          {val != null ? String(val) : ''}
+        </Typography>
       );
-    }
-
-    return (
-      <Typography variant="body2" sx={{ width: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: col.align ?? 'start', fontFamily: APP_FONT_FAMILY, fontSize: 15, color: '#323130' }}>
-        {val != null ? String(val) : ''}
-      </Typography>
-    );
-  }, [masterForm, editingRowId, editValues, saving, onFieldChange, getRowId, firstEditableField]);
-
-
+    },
+    [masterForm, editingRowId, editValues, saving, onFieldChange, getRowId, firstEditableField]
+  );
 
   if (loading && displayRows.length === 0) {
     return (
@@ -282,14 +431,22 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>({
 
   return (
     <>
-      <Box sx={{ height: `${Math.max(rowVirtualizer.getTotalSize(), displayRows.length * rowHeight)}px`, width: 'max-content', minWidth: '100%', position: 'relative' }}>
-        {virtualItems.map(virtualRow => {
+      <Box
+        sx={{
+          height: `${Math.max(rowVirtualizer.getTotalSize(), displayRows.length * rowHeight)}px`,
+          width: 'max-content',
+          minWidth: '100%',
+          position: 'relative',
+        }}
+      >
+        {virtualItems.map((virtualRow) => {
           const row = displayRows[virtualRow.index];
           // Guard against a transiently out-of-bounds index (rows can shrink between
           // the virtualizer measuring and this render), and against rows without an id.
           if (!row) return null;
           const rowId = getRowId(row) ?? virtualRow.index;
-          const isEditingRow = masterForm && editingRowId != null && String(rowId) === String(editingRowId);
+          const isEditingRow =
+            masterForm && editingRowId != null && String(rowId) === String(editingRowId);
           return (
             <GridRow
               key={rowId}
@@ -341,5 +498,5 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>({
 });
 
 export const DataGridBody = memo(GridBodyInternal) as <T>(
-    props: GridBodyProps<T> & { ref?: React.Ref<GridBodyHandle> }
+  props: GridBodyProps<T> & { ref?: React.Ref<GridBodyHandle> }
 ) => React.ReactElement | null;

@@ -310,6 +310,8 @@
       },
       "components": {
         "text": "نص",
+        "textEnglish": "النص الإنجليزي",
+        "textArabic": "النص العربي",
         "richText": "نص منسق",
         "field": "حقل ديناميكي",
         "labelValue": "تسمية + قيمة",
@@ -2324,6 +2326,19 @@
   "hcmWorkers": {
     "title": "العاملون",
     "sections": { "employment": "بيانات العامل" },
+    "assignments": {
+      "title": "التعيينات التنظيمية",
+      "add": "إضافة تعيين",
+      "close": "إنهاء التعيين",
+      "position": "المنصب",
+      "role": "الدور",
+      "validFrom": "ساري من",
+      "validTo": "ساري إلى",
+      "primary": "أساسي",
+      "positionRequired": "المنصب مطلوب.",
+      "validFromRequired": "تاريخ البداية مطلوب.",
+      "validToAfterValidFrom": "يجب أن يكون تاريخ الانتهاء بعد تاريخ البداية."
+    },
     "groups": {
       "organization": "التنظيم",
       "personal": "المعلومات الشخصية",
@@ -2332,6 +2347,7 @@
     "fields": {
       "personnelNumber": "الرقم الوظيفي",
       "name": "الاسم",
+      "nameAlias": "اسم البحث",
       "department": "الإدارة",
       "occupation": "المسمى الوظيفي",
       "gender": "الجنس",

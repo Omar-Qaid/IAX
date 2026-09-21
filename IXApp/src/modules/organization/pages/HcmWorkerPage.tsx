@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
-import { useAppStore } from '@app/store/useAppStore';
+import { useCompanyStore } from '@core/company/useCompanyStore';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
 import type {
   DetailSectionConfig,
@@ -10,8 +10,12 @@ import type {
   EnterpriseListDetailsConfig,
 } from '@patterns/list-details/types';
 import { AppLookupField } from '@shared/components/fields/AppLookupField';
+import { localizedName } from '@shared/utilities/localizedName';
 import { hcmWorkerApi, type HcmLookupOption, type HcmWorkerRecord } from '../api/hcmWorkerApi';
-import { PartyPostalAddressPanel, PartyElectronicAddressPanel } from '@shared/components/logistics/PartyLogisticsPanels';
+import {
+  PartyPostalAddressPanel,
+  PartyElectronicAddressPanel,
+} from '@shared/components/logistics/PartyLogisticsPanels';
 import { HcmWorkerAssignmentsPanel } from '../components/HcmWorkerAssignmentsPanel';
 
 const numberValue = (value: DetailValue | undefined): number => Number(value) || 0;
@@ -35,12 +39,12 @@ const emptyWorker = (): HcmWorkerRecord => ({
 });
 
 export function HcmWorkerPage(): React.ReactElement {
-  const company = useAppStore((state) => state.currentCompany);
+  const company = useCompanyStore((state) => state.currentCompany);
   return <HcmWorkerContent key={company} company={company} />;
 }
 
 function HcmWorkerContent({ company }: { company: string }): React.ReactElement {
-  const { t } = useAppTranslation();
+  const { t, isRtl } = useAppTranslation();
   const lookups = {
     occupations: useQuery({
       queryKey: ['hcm-workers', company, 'occupations'],
@@ -83,11 +87,16 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
         options={options.map((option) => ({
           id: option.id,
           code: option.code ?? '',
-          name: option.name ?? '',
+          name: localizedName(option, isRtl),
+          description: [option.name, option.nameAlias].filter(Boolean).join(' '),
         }))}
         required={required}
         disabled={disabled || loading}
         displayMode="select"
+        sideMode="client"
+        searchable
+        lazyLoading
+        pageSize={25}
       />
     ),
   });
@@ -114,6 +123,7 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
             id: 'personal',
             title: t('hcmWorkers.groups.personal'),
             fields: [
+              { name: 'nameAlias', label: t('hcmWorkers.fields.nameAlias') },
               lookupField(
                 'genderId',
                 t('hcmWorkers.fields.gender'),
@@ -147,6 +157,7 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
       lookups.nationalities.isLoading,
       lookups.occupations.data,
       lookups.occupations.isLoading,
+      isRtl,
       t,
     ]
   );
@@ -173,6 +184,7 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
       occupationId: record.occupationId,
       genderId: record.genderId,
       nationalityId: record.nationalityId,
+      nameAlias: record.nameAlias ?? '',
       hireDate: dateValue(record.hireDate),
       birthDate: dateValue(record.birthDate),
       isActive: record.isActive,
@@ -182,6 +194,7 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
       occupationId: numberValue(values.occupationId),
       genderId: numberValue(values.genderId),
       nationalityId: numberValue(values.nationalityId),
+      nameAlias: textValue(values.nameAlias) || null,
       hireDate: textValue(values.hireDate) || null,
       birthDate: textValue(values.birthDate) || null,
       isActive: Boolean(values.isActive),
@@ -207,21 +220,40 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
       ...sections,
       {
         id: 'organizationAssignments',
-        title: 'Organization assignments',
+        title: t('hcmWorkers.assignments.title'),
         minHeight: 220,
-        content: <HcmWorkerAssignmentsPanel workerId={record.recordId} company={company} />,
+        content: (
+          <HcmWorkerAssignmentsPanel
+            key={record.recordId}
+            workerId={record.recordId}
+            company={company}
+            editing={editing}
+          />
+        ),
       },
       {
         id: 'addresses',
         title: t('customerDetails.sections.addresses', 'Addresses'),
         minHeight: 145,
-        content: <PartyPostalAddressPanel partyId={record.person} editing={editing} storageKey="organization.worker.addresses" />,
+        content: (
+          <PartyPostalAddressPanel
+            partyId={record.person}
+            editing={editing}
+            storageKey="organization.worker.addresses"
+          />
+        ),
       },
       {
         id: 'contacts',
         title: t('customerDetails.sections.contacts', 'Contact information'),
         minHeight: 145,
-        content: <PartyElectronicAddressPanel partyId={record.person} editing={editing} storageKey="organization.worker.contacts" />,
+        content: (
+          <PartyElectronicAddressPanel
+            partyId={record.person}
+            editing={editing}
+            storageKey="organization.worker.contacts"
+          />
+        ),
       },
     ],
     permissions: {
@@ -231,6 +263,9 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
       delete: 'Organization.Employees.Delete',
     },
     validate: (record) => ({
+      ...(!record.name?.trim()
+        ? { name: t('validation.required', { field: t('hcmWorkers.fields.name') }) }
+        : {}),
       ...(record.occupationId <= 0
         ? { occupationId: t('validation.required', { field: t('hcmWorkers.fields.occupation') }) }
         : {}),

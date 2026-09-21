@@ -38,3 +38,22 @@ public sealed class HcmPosition : MasterEntity<long>
     public OrganizationRole Role { get; set; } = null!;
     public ICollection<HcmWorkerOrganizationAssignment> WorkerAssignments { get; set; } = new List<HcmWorkerOrganizationAssignment>();
 }
+
+public sealed class HcmReportingHierarchy : MasterEntity<long>
+{
+    public string Purpose { get; set; } = string.Empty;
+    public ICollection<HcmPositionReportingLine> ReportingLines { get; set; } = [];
+}
+
+public sealed class HcmPositionReportingLine : Entity<long>
+{
+    public long ReportingHierarchyId { get; set; }
+    public long SubordinatePositionId { get; set; }
+    public long ManagerPositionId { get; set; }
+    public DateOnly ValidFrom { get; set; }
+    public DateOnly? ValidTo { get; set; }
+    public bool IsPrimary { get; set; } = true;
+    public HcmReportingHierarchy ReportingHierarchy { get; set; } = null!;
+    public HcmPosition SubordinatePosition { get; set; } = null!;
+    public HcmPosition ManagerPosition { get; set; } = null!;
+}

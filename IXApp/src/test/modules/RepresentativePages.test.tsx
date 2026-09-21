@@ -162,7 +162,11 @@ describe('representative enterprise pages', () => {
     expect(screen.getByText('Line details')).toBeDefined();
     act(() => fireEvent.click(screen.getByText('High Performance Switch 48-Port')));
     expect(screen.getAllByText('ITEM-B20').length).toBeGreaterThan(1);
-    act(() => fireEvent.change(screen.getByRole('textbox', { name: 'Filter' }), { target: { value: 'Fabrikam' } }));
+    act(() =>
+      fireEvent.change(screen.getByRole('textbox', { name: 'Filter' }), {
+        target: { value: 'Fabrikam' },
+      })
+    );
     expect(screen.queryByText('SO-00101')).toBeNull();
     expect(screen.getByText('SO-00102')).toBeDefined();
     expect(screen.getByText('Sales order SO-00101')).toBeDefined();

@@ -58,7 +58,7 @@ public sealed class McpCatalogRefreshTests
             EnabledReadTools =
             [
                 "finance_customers_search",
-                "organization_departments_search",
+                "organization_units_list",
                 "workflow_requests_get"
             ],
             EmergencyDeniedTools = denied

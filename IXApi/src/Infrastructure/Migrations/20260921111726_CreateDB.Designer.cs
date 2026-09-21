@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace IAX.IXApi.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260918014344_AddWorkerOrganizationRoleNavigation")]
-    partial class AddWorkerOrganizationRoleNavigation
+    [Migration("20260921111726_CreateDB")]
+    partial class CreateDB
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -19292,6 +19292,159 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Foundation.Structure.HcmPositionReportingLine", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("ManagerPositionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<long>("ReportingHierarchyId")
+                        .HasColumnType("bigint");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<long>("SubordinatePositionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateOnly>("ValidFrom")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("ValidTo")
+                        .HasColumnType("date");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("ManagerPositionId");
+
+                    b.HasIndex("ReportingHierarchyId");
+
+                    b.HasIndex("SubordinatePositionId");
+
+                    b.HasIndex("DataAreaId", "ReportingHierarchyId", "ManagerPositionId", "ValidFrom", "ValidTo");
+
+                    b.HasIndex("DataAreaId", "ReportingHierarchyId", "SubordinatePositionId", "ValidFrom", "ValidTo");
+
+                    b.ToTable("HcmPositionReportingLines", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_HcmPositionReportingLines_Dates", "[ValidTo] IS NULL OR [ValidTo] > [ValidFrom]");
+                        });
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Foundation.Structure.HcmReportingHierarchy", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("NameAlias")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("DataAreaId", "Code")
+                        .IsUnique();
+
+                    b.ToTable("HcmReportingHierarchies", (string)null);
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Foundation.Structure.OrganizationHierarchy", b =>
                 {
                     b.Property<long>("RecId")
@@ -19510,19 +19663,23 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Foundation.WorkerOrganizationAssignments.HcmWorkerOrganizationAssignment", b =>
                 {
-                    b.Property<long>("AssignmentId")
+                    b.Property<long>("RecId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("AssignmentId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
 
                     b.Property<byte>("AssignmentRole")
                         .HasColumnType("tinyint");
 
-                    b.Property<DateTime>("CreatedDate")
+                    b.Property<DateTime?>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("SYSUTCDATETIME()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("DataAreaId")
                         .IsRequired()
@@ -19537,10 +19694,19 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsPrimary")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<long?>("OrganizationRoleId")
                         .HasColumnType("bigint");
@@ -19548,8 +19714,20 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<long>("OrganizationUnitId")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<long?>("PositionId")
                         .HasColumnType("bigint");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.Property<DateOnly>("ValidFrom")
                         .HasColumnType("date");
@@ -19557,7 +19735,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<DateOnly?>("ValidTo")
                         .HasColumnType("date");
 
-                    b.HasKey("AssignmentId");
+                    b.HasKey("RecId");
 
                     b.HasIndex("OrganizationRoleId");
 
@@ -24170,6 +24348,33 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Foundation.Structure.HcmPositionReportingLine", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Finance.Foundation.Structure.HcmPosition", "ManagerPosition")
+                        .WithMany()
+                        .HasForeignKey("ManagerPositionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("IAX.IXApi.Modules.Finance.Foundation.Structure.HcmReportingHierarchy", "ReportingHierarchy")
+                        .WithMany("ReportingLines")
+                        .HasForeignKey("ReportingHierarchyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("IAX.IXApi.Modules.Finance.Foundation.Structure.HcmPosition", "SubordinatePosition")
+                        .WithMany()
+                        .HasForeignKey("SubordinatePositionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ManagerPosition");
+
+                    b.Navigation("ReportingHierarchy");
+
+                    b.Navigation("SubordinatePosition");
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Foundation.Structure.OrganizationHierarchyNode", b =>
                 {
                     b.HasOne("IAX.IXApi.Modules.Finance.Foundation.Structure.OrganizationHierarchy", "Hierarchy")
@@ -24805,6 +25010,11 @@ namespace IAX.IXApi.Infrastructure.Migrations
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Foundation.Structure.HcmPosition", b =>
                 {
                     b.Navigation("WorkerAssignments");
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Foundation.Structure.HcmReportingHierarchy", b =>
+                {
+                    b.Navigation("ReportingLines");
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Foundation.Structure.OrganizationHierarchy", b =>

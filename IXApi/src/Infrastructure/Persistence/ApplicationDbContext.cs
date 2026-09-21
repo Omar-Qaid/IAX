@@ -222,6 +222,8 @@ namespace IAX.IXApi.Infrastructure.Persistence
         public DbSet<HcmWorkerOrganizationAssignment> HcmWorkerOrganizationAssignments => Set<HcmWorkerOrganizationAssignment>();
         public DbSet<HcmWorker> HcmWorkers => Set<HcmWorker>();
         public DbSet<HcmPosition> HcmPositions => Set<HcmPosition>();
+        public DbSet<HcmReportingHierarchy> HcmReportingHierarchies => Set<HcmReportingHierarchy>();
+        public DbSet<HcmPositionReportingLine> HcmPositionReportingLines => Set<HcmPositionReportingLine>();
 
         #endregion
 

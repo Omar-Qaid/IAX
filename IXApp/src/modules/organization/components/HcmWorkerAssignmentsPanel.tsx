@@ -1,41 +1,171 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { TabularDetailPanel } from '@patterns/list-details/TabularDetailPanel';
 import type { ColumnDef, DataGridHandle } from '@shared/components/data-grid/types';
-import { organizationStructureApi, type WorkerOrganizationAssignment } from '../api/organizationStructureApi';
+import {
+  organizationStructureApi,
+  type WorkerOrganizationAssignment,
+} from '../api/organizationStructureApi';
 
-const today = () => new Date().toISOString().slice(0, 10);
+const currentDate = (): string => new Date().toISOString().slice(0, 10);
 type Row = WorkerOrganizationAssignment & { id: string; positionName: string };
 
-export function HcmWorkerAssignmentsPanel({ workerId, company }: { workerId: number; company: string }): React.ReactElement {
+interface HcmWorkerAssignmentsPanelProps {
+  workerId: number;
+  company: string;
+  editing: boolean;
+}
+
+export function HcmWorkerAssignmentsPanel({
+  workerId,
+  company,
+  editing,
+}: HcmWorkerAssignmentsPanelProps): React.ReactElement {
+  const { t } = useAppTranslation();
   const gridRef = useRef<DataGridHandle>(null);
   const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
-  const assignments = useQuery({ queryKey: ['hcm-worker-assignments', company, workerId, today()], queryFn: ({ signal }) => organizationStructureApi.workerAssignments(workerId, today(), signal), enabled: workerId > 0 });
-  const positions = useQuery({ queryKey: ['organization-structure', company, 'positions', 'worker-assignment'], queryFn: ({ signal }) => organizationStructureApi.positions(today(), signal), enabled: workerId > 0 });
-  const roles = useQuery({ queryKey: ['organization-structure', company, 'roles'], queryFn: ({ signal }) => organizationStructureApi.roles(signal), enabled: workerId > 0 });
-  const rows = useMemo<Row[]>(() => (assignments.data ?? []).map((assignment) => {
-    const role = roles.data?.find((item) => item.id === assignment.organizationRoleId);
-    return { ...assignment, id: String(assignment.assignmentId), positionName: positions.data?.find((position) => position.id === assignment.positionId)?.name ?? '', roleCode: role ? `${role.code} — ${role.name}` : assignment.roleCode ?? '' };
-  }), [assignments.data, positions.data, roles.data]);
-  const columns = useMemo<ColumnDef<Row>[]>(() => [
-    { field: 'positionId', headerName: 'Position', minWidth: 250, flex: 1, editable: true, type: 'singleSelect', valueOptions: (positions.data ?? []).map((position) => ({ value: position.id, label: `${position.code} — ${position.name}` })) },
-    { field: 'roleCode', headerName: 'Role', minWidth: 210 },
-    { field: 'validFrom', headerName: 'Valid from', width: 135, editable: true, type: 'date' },
-    { field: 'validTo', headerName: 'Valid to', width: 135, editable: true, type: 'date' },
-    { field: 'isPrimary', headerName: 'Primary', type: 'boolean', width: 95, editable: true },
-  ], [positions.data]);
-  const save = async (values: Partial<Row>, isNew: boolean) => {
+  const asOf = currentDate();
+
+  const assignments = useQuery({
+    queryKey: ['hcm-worker-assignments', company, workerId, asOf],
+    queryFn: ({ signal }) => organizationStructureApi.workerAssignments(workerId, asOf, signal),
+    enabled: workerId > 0,
+  });
+  const positions = useQuery({
+    queryKey: ['organization-structure', company, 'positions', asOf],
+    queryFn: ({ signal }) => organizationStructureApi.positions(asOf, signal),
+    enabled: workerId > 0,
+  });
+  const roles = useQuery({
+    queryKey: ['organization-structure', company, 'roles'],
+    queryFn: ({ signal }) => organizationStructureApi.roles(signal),
+    enabled: workerId > 0,
+  });
+
+  const rows = useMemo<Row[]>(
+    () =>
+      (assignments.data ?? []).map((assignment) => {
+        const role = roles.data?.find((item) => item.id === assignment.organizationRoleId);
+        return {
+          ...assignment,
+          id: String(assignment.assignmentId),
+          positionName:
+            positions.data?.find((position) => position.id === assignment.positionId)?.name ?? '',
+          roleCode: role ? `${role.code} — ${role.name}` : (assignment.roleCode ?? ''),
+        };
+      }),
+    [assignments.data, positions.data, roles.data]
+  );
+
+  const columns = useMemo<ColumnDef<Row>[]>(
+    () => [
+      {
+        field: 'positionId',
+        headerName: t('hcmWorkers.assignments.position'),
+        minWidth: 250,
+        flex: 1,
+        editable: editing,
+        type: 'singleSelect',
+        valueOptions: (positions.data ?? []).map((position) => ({
+          value: position.id,
+          label: `${position.code} — ${position.name}`,
+        })),
+      },
+      { field: 'roleCode', headerName: t('hcmWorkers.assignments.role'), minWidth: 210 },
+      {
+        field: 'validFrom',
+        headerName: t('hcmWorkers.assignments.validFrom'),
+        width: 135,
+        editable: editing,
+        type: 'date',
+      },
+      {
+        field: 'validTo',
+        headerName: t('hcmWorkers.assignments.validTo'),
+        width: 135,
+        editable: editing,
+        type: 'date',
+      },
+      {
+        field: 'isPrimary',
+        headerName: t('hcmWorkers.assignments.primary'),
+        type: 'boolean',
+        width: 95,
+        editable: editing,
+      },
+    ],
+    [editing, positions.data, t]
+  );
+
+  const save = async (values: Partial<Row>, isNew: boolean): Promise<void> => {
     const positionId = Number(values.positionId) || 0;
     const validFrom = String(values.validFrom ?? '');
     const validTo = values.validTo ? String(values.validTo) : null;
     const isPrimary = Boolean(values.isPrimary);
-    if (positionId <= 0) throw new Error('Position is required.');
-    if (!validFrom) throw new Error('Valid from is required.');
-    if (validTo && validTo <= validFrom) throw new Error('Valid to must be later than valid from.');
-    if (isNew) await organizationStructureApi.assignWorker({ workerId, positionId, validFrom, validTo, isPrimary });
-    else await organizationStructureApi.updateWorkerAssignment(Number(values.assignmentId ?? values.id), { positionId, validFrom, validTo, isPrimary });
+    if (positionId <= 0) throw new Error(t('hcmWorkers.assignments.positionRequired'));
+    if (!validFrom) throw new Error(t('hcmWorkers.assignments.validFromRequired'));
+    if (validTo && validTo <= validFrom) {
+      throw new Error(t('hcmWorkers.assignments.validToAfterValidFrom'));
+    }
+
+    if (isNew) {
+      await organizationStructureApi.assignWorker({
+        workerId,
+        positionId,
+        validFrom,
+        validTo,
+        isPrimary,
+      });
+    } else {
+      await organizationStructureApi.updateWorkerAssignment(
+        Number(values.assignmentId ?? values.id),
+        { positionId, validFrom, validTo, isPrimary }
+      );
+    }
     await assignments.refetch();
   };
-  const close = async () => { const id = Number(selectedIds.at(-1)); if (!id) return; await organizationStructureApi.closeAssignment(id, today()); setSelectedIds([]); await assignments.refetch(); };
-  return <TabularDetailPanel rows={rows} columns={columns} addLabel="Add assignment" removeLabel="Close assignment" selectedIds={selectedIds} onSelectionChange={setSelectedIds} onAdd={() => gridRef.current?.startAddRow()} onRemove={close} onRowSave={save} onNewRow={() => ({ id: `new-${crypto.randomUUID()}`, assignmentId: 0, workerId, positionId: null, organizationUnitId: 0, organizationRoleId: 0, roleCode: null, isPrimary: false, validFrom: today(), validTo: null, positionName: '' })} gridRef={gridRef} masterForm disabled={workerId <= 0 || assignments.isLoading || positions.isLoading || roles.isLoading} storageKey="organization.worker.assignments" height={220} />;
+
+  const close = async (): Promise<void> => {
+    const id = Number(selectedIds.at(-1));
+    if (!id) return;
+    await organizationStructureApi.closeAssignment(id, currentDate());
+    setSelectedIds([]);
+    await assignments.refetch();
+  };
+
+  const disabled =
+    !editing || workerId <= 0 || assignments.isLoading || positions.isLoading || roles.isLoading;
+
+  return (
+    <TabularDetailPanel
+      rows={rows}
+      columns={columns}
+      addLabel={t('hcmWorkers.assignments.add')}
+      removeLabel={t('hcmWorkers.assignments.close')}
+      selectedIds={selectedIds}
+      onSelectionChange={setSelectedIds}
+      onAdd={() => gridRef.current?.startAddRow()}
+      onRemove={close}
+      onRowSave={editing ? save : undefined}
+      onNewRow={() => ({
+        id: `new-${crypto.randomUUID()}`,
+        assignmentId: 0,
+        workerId,
+        positionId: null,
+        organizationUnitId: 0,
+        organizationRoleId: 0,
+        roleCode: null,
+        isPrimary: false,
+        validFrom: currentDate(),
+        validTo: null,
+        positionName: '',
+      })}
+      gridRef={gridRef}
+      masterForm
+      disabled={disabled}
+      storageKey="organization.worker.assignments"
+      height={220}
+    />
+  );
 }

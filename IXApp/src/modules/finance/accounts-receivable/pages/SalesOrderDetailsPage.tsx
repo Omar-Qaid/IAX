@@ -10,7 +10,7 @@ import { salesOrderLinesApi, type SalesOrderLineRecord } from '../api/salesOrder
 import { PERMISSIONS } from '@core/permissions/permissions';
 import { usePermission } from '@core/permissions/usePermission';
 import { useQuery } from '@tanstack/react-query';
-import { ROUTE_PATHS } from '@app/routes/routePaths';
+import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { salesOrderListApi, type SalesOrderHeaderInput } from '../api/salesOrderListApi';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
@@ -541,7 +541,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
           getAuditRecordId: (record) => record.recId,
           onSelectionChange: (record) => {
             if (record && record.id !== order.id && !activeHeader)
-              navigate(ROUTE_PATHS.ACCOUNTS_RECEIVABLE.salesOrder(record.id));
+              navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrder(record.id));
           },
           presentation: { mode: 'list', listWidth: 280, listResizable: true, detailEndPadding: 8 },
           actionPaneAfterListContent: (

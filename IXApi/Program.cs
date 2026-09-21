@@ -39,7 +39,11 @@ builder.Services.AddMapster();
 
 // 2. Modular Domain Registrations
 var assembly = Assembly.GetExecutingAssembly();
-builder.Services.AddApplicationServices(assembly);
+builder.Services.AddApplicationServices(
+    assembly,
+    typeof(FinanceModule).Assembly,
+    typeof(WorkflowModule).Assembly,
+    typeof(IdentityModule).Assembly);
 builder.Services.AddCommunicationModule(builder.Configuration);
 builder.Services.AddAdministrationModule(builder.Configuration, assembly);
 builder.Services.AddWorkflowModule(builder.Configuration);

@@ -28,16 +28,19 @@ public sealed class OrganizationStructureTests
         var seeder = new IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks.OrganizationStructureSeeder();
         await seeder.SeedStructureAsync(f.Db);
         await seeder.SeedStructureAsync(f.Db);
-        Assert.Equal(9, await f.Db.OrganizationUnits.CountAsync());
-        Assert.Equal(6, await f.Db.OrganizationRoles.CountAsync());
+        Assert.Equal(13, await f.Db.OrganizationUnits.CountAsync());
+        Assert.Equal(12, await f.Db.OrganizationRoles.CountAsync());
         Assert.Equal(2, await f.Db.OrganizationHierarchies.CountAsync());
-        Assert.Equal(14, await f.Db.OrganizationHierarchyNodes.CountAsync());
-        Assert.Equal(7, await f.Db.HcmPositions.CountAsync());
+        Assert.Equal(19, await f.Db.OrganizationHierarchyNodes.CountAsync());
+        Assert.Equal(14, await f.Db.HcmPositions.CountAsync());
+        Assert.Equal(2, await f.Db.HcmReportingHierarchies.CountAsync());
+        Assert.Equal(7, await f.Db.HcmPositionReportingLines.CountAsync());
         Assert.NotEmpty(await f.Db.HcmWorkerOrganizationAssignments.ToListAsync());
         Assert.DoesNotContain(await f.Db.OrganizationUnits.ToListAsync(), x => string.IsNullOrWhiteSpace(x.NameAlias));
         Assert.DoesNotContain(await f.Db.OrganizationRoles.ToListAsync(), x => string.IsNullOrWhiteSpace(x.NameAlias));
         Assert.DoesNotContain(await f.Db.OrganizationHierarchies.ToListAsync(), x => string.IsNullOrWhiteSpace(x.NameAlias));
         Assert.DoesNotContain(await f.Db.HcmPositions.ToListAsync(), x => string.IsNullOrWhiteSpace(x.NameAlias));
+        Assert.DoesNotContain(await f.Db.HcmReportingHierarchies.ToListAsync(), x => string.IsNullOrWhiteSpace(x.NameAlias));
         var hierarchy = await f.Db.OrganizationHierarchies.SingleAsync(x => x.Code == "ORG-OPERATIONS");
         var shop = await f.Db.OrganizationUnits.SingleAsync(x => x.Code == "SH-A");
         Assert.Equal(new[] { "SH-A", "SUP-NJ", "REG-JED", "AREA-W", "ORG-BU", "ORG-COMPANY" },
@@ -63,8 +66,8 @@ public sealed class OrganizationStructureTests
         f.Company.Code = "ksa";
         await seeder.SeedStructureAsync(f.Db);
         Assert.Empty(await f.Db.OrganizationUnits.ToListAsync());
-        Assert.Equal(7, await f.Db.HcmPositions.IgnoreQueryFilters().CountAsync());
-        Assert.Equal(14, await f.Db.OrganizationHierarchyNodes.IgnoreQueryFilters().CountAsync());
+        Assert.Equal(14, await f.Db.HcmPositions.IgnoreQueryFilters().CountAsync());
+        Assert.Equal(19, await f.Db.OrganizationHierarchyNodes.IgnoreQueryFilters().CountAsync());
         Assert.Equal("Customized seat", (await f.Db.HcmPositions.IgnoreQueryFilters().SingleAsync(x => x.RecId == position.RecId)).Name);
         Assert.Equal(TransferDate, (await f.Db.OrganizationHierarchyNodes.IgnoreQueryFilters().SingleAsync(x => x.RecId == node.RecId)).ValidTo);
         Assert.True((await f.Db.OrganizationRoles.IgnoreQueryFilters().SingleAsync(x => x.RecId == role.RecId)).IsDeleted);
@@ -233,6 +236,8 @@ public sealed class OrganizationStructureTests
         public DbSet<OrganizationHierarchy> OrganizationHierarchies => Set<OrganizationHierarchy>();
         public DbSet<OrganizationHierarchyNode> OrganizationHierarchyNodes => Set<OrganizationHierarchyNode>();
         public DbSet<HcmPosition> HcmPositions => Set<HcmPosition>();
+        public DbSet<HcmReportingHierarchy> HcmReportingHierarchies => Set<HcmReportingHierarchy>();
+        public DbSet<HcmPositionReportingLine> HcmPositionReportingLines => Set<HcmPositionReportingLine>();
         public DbSet<HcmWorkerOrganizationAssignment> HcmWorkerOrganizationAssignments => Set<HcmWorkerOrganizationAssignment>();
         public DbSet<TaxData> TaxData => Set<TaxData>();
         public DbSet<TaxGroupHeading> TaxGroupHeadings => Set<TaxGroupHeading>();
@@ -263,9 +268,12 @@ public sealed class OrganizationStructureTests
             b.ApplyConfiguration(new OrganizationHierarchyConfiguration());
             b.ApplyConfiguration(new OrganizationHierarchyNodeConfiguration());
             b.ApplyConfiguration(new HcmPositionConfiguration());
+            b.ApplyConfiguration(new HcmReportingHierarchyConfiguration());
+            b.ApplyConfiguration(new HcmPositionReportingLineConfiguration());
             b.ApplyConfiguration(new HcmWorkerOrganizationAssignmentConfiguration());
             var allowed = new[] { typeof(HcmWorker), typeof(OrganizationUnit), typeof(OrganizationRole), typeof(OrganizationHierarchy),
-                typeof(OrganizationHierarchyNode), typeof(HcmPosition), typeof(HcmWorkerOrganizationAssignment) };
+                typeof(OrganizationHierarchyNode), typeof(HcmPosition), typeof(HcmWorkerOrganizationAssignment),
+                typeof(HcmReportingHierarchy), typeof(HcmPositionReportingLine) };
             foreach (var unrelated in b.Model.GetEntityTypes().Where(x => !allowed.Contains(x.ClrType)).Select(x => x.ClrType).ToList())
                 b.Ignore(unrelated);
             b.Entity<HcmWorkerOrganizationAssignment>().Property(x => x.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");

@@ -338,6 +338,8 @@
       },
       "properties": {
         "text": "Text",
+        "textEnglish": "English text",
+        "textArabic": "Arabic text",
         "title": "Title",
         "columns": "Columns",
         "span": "Column span",
@@ -2324,6 +2326,19 @@
   "hcmWorkers": {
     "title": "Workers",
     "sections": { "employment": "Worker details" },
+    "assignments": {
+      "title": "Organization assignments",
+      "add": "Add assignment",
+      "close": "Close assignment",
+      "position": "Position",
+      "role": "Role",
+      "validFrom": "Valid from",
+      "validTo": "Valid to",
+      "primary": "Primary",
+      "positionRequired": "Position is required.",
+      "validFromRequired": "Valid from is required.",
+      "validToAfterValidFrom": "Valid to must be later than valid from."
+    },
     "groups": {
       "organization": "Organization",
       "personal": "Personal information",
@@ -2332,6 +2347,7 @@
     "fields": {
       "personnelNumber": "Personnel number",
       "name": "Name",
+      "nameAlias": "Search name",
       "department": "Department",
       "occupation": "Occupation",
       "gender": "Gender",

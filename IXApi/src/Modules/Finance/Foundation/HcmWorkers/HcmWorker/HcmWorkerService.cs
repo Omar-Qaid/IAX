@@ -25,8 +25,11 @@ public class HcmWorkerService : BaseService<HcmWorker>, IHcmWorkerService
         _dbContext = dbContext;
     }
 
-    public override async Task<HcmWorker> AddAsync(
+    public async Task<HcmWorker> AddWorkerAsync(
         HcmWorker entity,
+        string name,
+        string? nameAlias,
+        long? initialPositionId,
         CancellationToken cancellationToken = default)
     {
         async Task<HcmWorker> AddWorkerAsync()
@@ -35,8 +38,8 @@ public class HcmWorkerService : BaseService<HcmWorker>, IHcmWorkerService
                 "DirPartyTable",
                 cancellationToken: cancellationToken);
             var partyNumber = partyNumberResult.Code ?? Guid.NewGuid().ToString("N")[..20];
-            var partyName = entity.Name.Trim();
-            var partyAlias = string.IsNullOrWhiteSpace(entity.NameAlias) ? partyName : entity.NameAlias.Trim();
+            var partyName = name.Trim();
+            var partyAlias = string.IsNullOrWhiteSpace(nameAlias) ? partyName : nameAlias.Trim();
 
             var party = new DirPartyTable
             {
@@ -59,8 +62,9 @@ public class HcmWorkerService : BaseService<HcmWorker>, IHcmWorkerService
             entity.Person = party.RecId;
 
             var worker = await base.AddAsync(entity, cancellationToken);
+            worker.Party = party;
             party.HcmWorker = worker.RecId;
-            if (entity.InitialPositionId is long positionId && positionId > 0)
+            if (initialPositionId is long positionId && positionId > 0)
             {
                 var position = await _dbContext.HcmPositions.SingleOrDefaultAsync(x => x.RecId == positionId && x.IsActive, cancellationToken)
                     ?? throw new KeyNotFoundException("Initial position not found.");
@@ -73,8 +77,8 @@ public class HcmWorkerService : BaseService<HcmWorker>, IHcmWorkerService
             return worker;
         }
 
-        // BaseController already supplies an execution-strategy transaction. Keep that transaction
-        // instead of nesting another one; direct service callers still receive atomic persistence.
+        // Reuse an ambient transaction when one exists; otherwise keep party, worker, and initial
+        // assignment creation atomic for direct service and controller callers.
         if (_dbContext.Database.CurrentTransaction is not null)
             return await AddWorkerAsync();
 
@@ -96,20 +100,20 @@ public class HcmWorkerService : BaseService<HcmWorker>, IHcmWorkerService
         });
     }
 
-    public override async Task<HcmWorker> UpdateAsync(
+    public async Task<HcmWorker> UpdateWorkerAsync(
         HcmWorker entity,
+        string name,
+        string? nameAlias,
         CancellationToken cancellationToken = default)
     {
         var party = await _dbContext.Set<DirPartyTable>()
             .SingleAsync(candidate => candidate.RecId == entity.Person, cancellationToken);
-        if (entity.Party != null)
-        {
-            party.Name = entity.Party.Name.Trim();
-            party.NameAlias = string.IsNullOrWhiteSpace(entity.Party.NameAlias)
-                ? party.Name
-                : entity.Party.NameAlias.Trim();
-        }
+        party.Name = name.Trim();
+        party.NameAlias = string.IsNullOrWhiteSpace(nameAlias)
+            ? party.Name
+            : nameAlias.Trim();
         party.HcmWorker = entity.RecId;
+        entity.Party = party;
         return await base.UpdateAsync(entity, cancellationToken);
     }
 

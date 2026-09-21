@@ -19,6 +19,8 @@ public interface IFinanceDataContext
     DbSet<OrganizationHierarchy> OrganizationHierarchies { get; }
     DbSet<OrganizationHierarchyNode> OrganizationHierarchyNodes { get; }
     DbSet<HcmPosition> HcmPositions { get; }
+    DbSet<HcmReportingHierarchy> HcmReportingHierarchies { get; }
+    DbSet<HcmPositionReportingLine> HcmPositionReportingLines { get; }
     DbSet<TaxData> TaxData { get; }
     DbSet<TaxGroupHeading> TaxGroupHeadings { get; }
     DbSet<TaxGroupData> TaxGroupDatas { get; }

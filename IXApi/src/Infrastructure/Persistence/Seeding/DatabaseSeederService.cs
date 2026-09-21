@@ -42,14 +42,18 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding
                 new NumberSequenceSeeder(),
                 new DocumentManagementSeeder(),
                 new IdentitySeeder(),
+                new MainAccountSeeder(),
+                new CustPaymModeSeeder(),
+                new SalesPoolSeeder(),
+                new MarkupTableSeeder(),
                 new ErpSeeder(),
+                new VendSeeder(),
+                new TaxSeeder(),
+                new CustLedgerSeeder(),
                 new OthersDBOrganizationEmployeeSeeder(_seedDbConnectionString),
-                new OrganizationUnitSeeder(),
                 new OrganizationStructureSeeder(),
                 new OthersDBWorkflowMasterFromSeeder(_seedDbConnectionString),
                 new WfProcessSeedData(),
-               
-
             };
 
             foreach (var seeder in seeders)
@@ -73,6 +77,3 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding
         }
     }
 }
-
-
-

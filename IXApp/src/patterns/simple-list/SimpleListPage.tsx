@@ -194,6 +194,7 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
     return {
       ...defaults,
       ...suppliedConfig,
+      readOnly: suppliedConfig?.readOnly ?? !suppliedConfig,
       advancedFilter: suppliedConfig?.advancedFilter ?? defaults.advancedFilter,
     };
   }, [suppliedConfig, props.columns, props.recordTableName, title, t]);

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useAppStore } from '@app/store/useAppStore';
+import { useCompanyStore } from '@core/company/useCompanyStore';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { AppLookupField } from '@shared/components/fields/AppLookupField';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
@@ -48,7 +48,7 @@ const toPayload = (record: PositionRecord) => ({
 });
 
 export function HcmPositionPage(): React.ReactElement {
-  const company = useAppStore((state) => state.currentCompany);
+  const company = useCompanyStore((state) => state.currentCompany);
   return <HcmPositionContent key={company} company={company} />;
 }
 

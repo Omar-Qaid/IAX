@@ -1865,6 +1865,33 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "HcmReportingHierarchies",
+                columns: table => new
+                {
+                    RECID = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Purpose = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    RecVersion = table.Column<int>(type: "int", nullable: false),
+                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
+                    Code = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    NameAlias = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HcmReportingHierarchies", x => x.RECID);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "InventBatch",
                 columns: table => new
                 {
@@ -6358,6 +6385,53 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "HcmPositionReportingLines",
+                columns: table => new
+                {
+                    RECID = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ReportingHierarchyId = table.Column<long>(type: "bigint", nullable: false),
+                    SubordinatePositionId = table.Column<long>(type: "bigint", nullable: false),
+                    ManagerPositionId = table.Column<long>(type: "bigint", nullable: false),
+                    ValidFrom = table.Column<DateOnly>(type: "date", nullable: false),
+                    ValidTo = table.Column<DateOnly>(type: "date", nullable: true),
+                    IsPrimary = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    RecVersion = table.Column<int>(type: "int", nullable: false),
+                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HcmPositionReportingLines", x => x.RECID);
+                    table.CheckConstraint("CK_HcmPositionReportingLines_Dates", "[ValidTo] IS NULL OR [ValidTo] > [ValidFrom]");
+                    table.ForeignKey(
+                        name: "FK_HcmPositionReportingLines_HcmPositions_ManagerPositionId",
+                        column: x => x.ManagerPositionId,
+                        principalTable: "HcmPositions",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_HcmPositionReportingLines_HcmPositions_SubordinatePositionId",
+                        column: x => x.SubordinatePositionId,
+                        principalTable: "HcmPositions",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_HcmPositionReportingLines_HcmReportingHierarchies_ReportingHierarchyId",
+                        column: x => x.ReportingHierarchyId,
+                        principalTable: "HcmReportingHierarchies",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "SysNotificationAuditLogs",
                 columns: table => new
                 {
@@ -7867,22 +7941,30 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 name: "HcmWorkerOrganizationAssignments",
                 columns: table => new
                 {
-                    AssignmentId = table.Column<long>(type: "bigint", nullable: false)
+                    RECID = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
                     HcmWorkerId = table.Column<long>(type: "bigint", nullable: false),
                     OrganizationUnitId = table.Column<long>(type: "bigint", nullable: false),
                     PositionId = table.Column<long>(type: "bigint", nullable: true),
+                    OrganizationRoleId = table.Column<long>(type: "bigint", nullable: true),
                     AssignmentRole = table.Column<byte>(type: "tinyint", nullable: false),
                     ValidFrom = table.Column<DateOnly>(type: "date", nullable: false),
                     ValidTo = table.Column<DateOnly>(type: "date", nullable: true),
                     IsPrimary = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true, defaultValueSql: "SYSUTCDATETIME()"),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "SYSUTCDATETIME()")
+                    RecVersion = table.Column<int>(type: "int", nullable: false),
+                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_HcmWorkerOrganizationAssignments", x => x.AssignmentId);
+                    table.PrimaryKey("PK_HcmWorkerOrganizationAssignments", x => x.RECID);
                     table.CheckConstraint("CK_HcmWorkerOrganizationAssignments_Dates", "[ValidTo] IS NULL OR [ValidTo] > [ValidFrom]");
                     table.ForeignKey(
                         name: "FK_HcmWorkerOrganizationAssignments_HcmPositions_PositionId",
@@ -7894,6 +7976,12 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         name: "FK_HcmWorkerOrganizationAssignments_HcmWorker_HcmWorkerId",
                         column: x => x.HcmWorkerId,
                         principalTable: "HcmWorker",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_HcmWorkerOrganizationAssignments_OrganizationRoles_OrganizationRoleId",
+                        column: x => x.OrganizationRoleId,
+                        principalTable: "OrganizationRoles",
                         principalColumn: "RECID",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
@@ -8121,7 +8209,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         name: "FK_WfRequests_HcmWorkerOrganizationAssignments_HcmWorkerAssignmentId",
                         column: x => x.HcmWorkerAssignmentId,
                         principalTable: "HcmWorkerOrganizationAssignments",
-                        principalColumn: "AssignmentId",
+                        principalColumn: "RECID",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_WfRequests_HcmWorker_EmployeeId",
@@ -9075,6 +9163,31 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 column: "FiscalCalendar");
 
             migrationBuilder.CreateIndex(
+                name: "IX_HcmPositionReportingLines_DataAreaId_ReportingHierarchyId_ManagerPositionId_ValidFrom_ValidTo",
+                table: "HcmPositionReportingLines",
+                columns: new[] { "DataAreaId", "ReportingHierarchyId", "ManagerPositionId", "ValidFrom", "ValidTo" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HcmPositionReportingLines_DataAreaId_ReportingHierarchyId_SubordinatePositionId_ValidFrom_ValidTo",
+                table: "HcmPositionReportingLines",
+                columns: new[] { "DataAreaId", "ReportingHierarchyId", "SubordinatePositionId", "ValidFrom", "ValidTo" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HcmPositionReportingLines_ManagerPositionId",
+                table: "HcmPositionReportingLines",
+                column: "ManagerPositionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HcmPositionReportingLines_ReportingHierarchyId",
+                table: "HcmPositionReportingLines",
+                column: "ReportingHierarchyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HcmPositionReportingLines_SubordinatePositionId",
+                table: "HcmPositionReportingLines",
+                column: "SubordinatePositionId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_HcmPositions_DataAreaId_Code",
                 table: "HcmPositions",
                 columns: new[] { "DataAreaId", "Code" },
@@ -9089,6 +9202,12 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 name: "IX_HcmPositions_RoleId",
                 table: "HcmPositions",
                 column: "RoleId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HcmReportingHierarchies_DataAreaId_Code",
+                table: "HcmReportingHierarchies",
+                columns: new[] { "DataAreaId", "Code" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_HcmWorker_DataAreaId_PersonnelNumber",
@@ -9127,6 +9246,11 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 columns: new[] { "DataAreaId", "HcmWorkerId", "IsPrimary", "ValidFrom", "ValidTo" });
 
             migrationBuilder.CreateIndex(
+                name: "IX_HcmWorkerOrganizationAssignments_DataAreaId_OrganizationRoleId_ValidFrom_ValidTo",
+                table: "HcmWorkerOrganizationAssignments",
+                columns: new[] { "DataAreaId", "OrganizationRoleId", "ValidFrom", "ValidTo" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_HcmWorkerOrganizationAssignments_DataAreaId_PositionId_ValidFrom_ValidTo",
                 table: "HcmWorkerOrganizationAssignments",
                 columns: new[] { "DataAreaId", "PositionId", "ValidFrom", "ValidTo" });
@@ -9135,6 +9259,11 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 name: "IX_HcmWorkerOrganizationAssignments_HcmWorkerId_ValidFrom_ValidTo",
                 table: "HcmWorkerOrganizationAssignments",
                 columns: new[] { "HcmWorkerId", "ValidFrom", "ValidTo" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HcmWorkerOrganizationAssignments_OrganizationRoleId",
+                table: "HcmWorkerOrganizationAssignments",
+                column: "OrganizationRoleId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_HcmWorkerOrganizationAssignments_OrganizationUnitId_AssignmentRole_ValidFrom_ValidTo",
@@ -10158,6 +10287,9 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 name: "GeneralJournalEntry");
 
             migrationBuilder.DropTable(
+                name: "HcmPositionReportingLines");
+
+            migrationBuilder.DropTable(
                 name: "InventBatch");
 
             migrationBuilder.DropTable(
@@ -10411,6 +10543,9 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "ExchangeRateCurrencyPair");
+
+            migrationBuilder.DropTable(
+                name: "HcmReportingHierarchies");
 
             migrationBuilder.DropTable(
                 name: "InventTable");

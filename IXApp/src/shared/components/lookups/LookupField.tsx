@@ -148,7 +148,6 @@ function SelectLookup({
   const selected =
     options.find((option) => String(option.id) === String(scalarValue)) ??
     (String(selectedCache?.id) === String(scalarValue) ? selectedCache : null);
-
   const handleScroll = (event: React.UIEvent<HTMLUListElement>) => {
     if (!lazyLoading || !lookup.hasNextPage || lookup.isFetchingNextPage) return;
     const list = event.currentTarget;
@@ -171,10 +170,14 @@ function SelectLookup({
       }}
       onChange={(_, option) => {
         setSelectedCache(option);
+        setOpen(false);
+        setSearch('');
         onChange?.(option?.id ?? null, option ?? undefined);
       }}
       getOptionLabel={(option) => option.name}
-      isOptionEqualToValue={(option, selectedOption) => option.id === selectedOption.id}
+      isOptionEqualToValue={(option, selectedOption) =>
+        String(option.id) === String(selectedOption.id)
+      }
       filterOptions={(availableOptions) => availableOptions}
       loading={lookup.isLoading || (lookup.isFetching && !lookup.isFetchingNextPage)}
       disabled={disabled || readOnly}

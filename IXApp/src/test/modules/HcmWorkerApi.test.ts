@@ -46,7 +46,12 @@ describe('hcmWorkerApi identity mapping', () => {
 
     expect(apiClient.put).toHaveBeenCalledWith(
       '/v1/HcmWorker/12',
-      expect.objectContaining({ recId: 12, personnelNumber: 'W-12' })
+      expect.objectContaining({
+        recId: 12,
+        personnelNumber: 'W-12',
+        name: 'W-12',
+        nameAlias: 'W-12',
+      })
     );
   });
 
@@ -56,5 +61,23 @@ describe('hcmWorkerApi identity mapping', () => {
     });
 
     await expect(hcmWorkerApi.list()).rejects.toThrow('invalid record identifier');
+  });
+
+  it('maps lookup RecId values to selectable option ids', async () => {
+    vi.mocked(apiClient.get).mockResolvedValue({
+      data: {
+        success: true,
+        data: [
+          { recId: 7, code: 'MGR', name: 'Manager', nameAlias: 'مدير' },
+          { recId: 8, code: 'SUP', name: 'Supervisor', nameAlias: 'مشرف' },
+        ],
+      },
+    });
+
+    await expect(hcmWorkerApi.lookup('Occupation')).resolves.toEqual([
+      { id: 7, code: 'MGR', name: 'Manager', nameAlias: 'مدير' },
+      { id: 8, code: 'SUP', name: 'Supervisor', nameAlias: 'مشرف' },
+    ]);
+    expect(apiClient.get).toHaveBeenCalledWith('/v1/Occupation', { signal: undefined });
   });
 });

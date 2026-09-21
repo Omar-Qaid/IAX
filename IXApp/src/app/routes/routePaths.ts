@@ -1,4 +1,6 @@
 import { WORKFLOW_ROUTE_PATHS } from '@modules/workflow/routes/workflowRoutePaths';
+import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '@modules/finance/accounts-receivable/routes/accountsReceivableRoutePaths';
+import { ADMINISTRATION_ROUTE_PATHS } from '@modules/administration/routes/administrationRoutePaths';
 
 export const ROUTE_PATHS = {
   ROOT: '/',
@@ -10,22 +12,7 @@ export const ROUTE_PATHS = {
   PROCESS_BUILDER_NEW: WORKFLOW_ROUTE_PATHS.PROCESS_BUILDER_NEW,
   processBuilder: WORKFLOW_ROUTE_PATHS.processBuilder,
 
-  ACCOUNTS_RECEIVABLE: {
-    ROOT: '/accounts-receivable',
-    CUSTOMERS: '/accounts-receivable/customers',
-    CUSTOMER_DETAILS: '/accounts-receivable/customers/:customerId',
-    customer: (customerId: string) =>
-      `/accounts-receivable/customers/${encodeURIComponent(customerId)}`,
-    CUSTOMER_GROUPS: '/accounts-receivable/customer-groups',
-    CUSTOMER_POSTING_PROFILES: '/accounts-receivable/customer-posting-profiles',
-    CUSTOMER_PARAMETERS: '/accounts-receivable/customer-parameters',
-    CUSTOMER_PAYMENT_METHODS: '/accounts-receivable/customer-payment-methods',
-    CUSTOMER_PAYMENT_TERMS: '/accounts-receivable/customer-payment-terms',
-    SALES_ORDERS: '/accounts-receivable/sales-orders',
-    SALES_ORDER_DETAILS: '/accounts-receivable/sales-orders/:salesOrderId',
-    salesOrder: (salesOrderId: string) =>
-      `/accounts-receivable/sales-orders/${encodeURIComponent(salesOrderId)}`,
-  },
+  ACCOUNTS_RECEIVABLE: ACCOUNTS_RECEIVABLE_ROUTE_PATHS,
 
   FOUNDATION: {
     ROOT: '/foundation',
@@ -43,19 +30,12 @@ export const ROUTE_PATHS = {
     ORGANIZATIONS: '/organization-administration/organizations',
     ORGANIZATION_ROLES: '/organization-administration/organization-roles',
     ORGANIZATION_HIERARCHIES: '/organization-administration/organization-hierarchies',
+    REPORTING_HIERARCHIES: '/organization-administration/reporting-hierarchies',
     HCM_POSITIONS: '/organization-administration/positions',
     HCM_WORKERS: '/organization-administration/workers',
   },
 
-  SYSTEM_ADMINISTRATION: {
-    ROOT: '/system-administration',
-    SETTINGS: '/system-administration/settings',
-    NUMBER_SEQUENCES: '/system-administration/number-sequences',
-    BACKGROUND_JOBS: '/system-administration/batch-jobs',
-    BATCH_GROUPS: '/system-administration/batch-group',
-    BATCH_JOB_ACTIVE_PERIODS: '/system-administration/batch-job-active-periods',
-    BACKGROUND_JOB_HISTORY: '/system-administration/batch-job-history',
-  },
+  SYSTEM_ADMINISTRATION: ADMINISTRATION_ROUTE_PATHS,
 
   ACCESS_DENIED: '/access-denied',
   NOT_FOUND: '/not-found',

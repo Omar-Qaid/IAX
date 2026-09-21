@@ -29,6 +29,14 @@ export interface HcmLookupOption {
   id: number;
   code?: string | null;
   name?: string | null;
+  nameAlias?: string | null;
+}
+
+interface HcmLookupDto {
+  recId: number;
+  code?: string | null;
+  name?: string | null;
+  nameAlias?: string | null;
 }
 
 const requireData = <T>(response: ApiResponse<T>): T => {
@@ -80,9 +88,14 @@ export const hcmWorkerApi = {
     requireData(response.data);
   },
   async lookup(endpoint: string, signal?: AbortSignal): Promise<HcmLookupOption[]> {
-    const response = await apiClient.get<ApiResponse<HcmLookupOption[]>>(`/v1/${endpoint}`, {
+    const response = await apiClient.get<ApiResponse<HcmLookupDto[]>>(`/v1/${endpoint}`, {
       signal,
     });
-    return requireData(response.data);
+    return requireData(response.data).map(({ recId, code, name, nameAlias }) => ({
+      id: recId,
+      code,
+      name,
+      nameAlias,
+    }));
   },
 };

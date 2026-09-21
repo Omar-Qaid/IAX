@@ -227,10 +227,10 @@ public sealed class McpCatalogCompiler
         var responseSchema = operation["responses"]?["200"]?["content"]?["application/json"]?["schema"]
             ?? throw new ContractCompilationException(
                 $"Tool '{contract.ToolName}' has no JSON 200 response schema.");
-        var envelope = ResolveSchema(openApi, responseSchema, contract.ToolName);
-        var dataSchema = envelope["properties"]?["data"]
-            ?? throw new ContractCompilationException(
-                $"Tool '{contract.ToolName}' response has no data property.");
+        var response = ResolveSchema(openApi, responseSchema, contract.ToolName);
+        // IXApi contains both APIResponse<T> envelopes and endpoints that return T directly.
+        // Compile either documented shape, while applying the same explicit field projection.
+        var dataSchema = response["properties"]?["data"] ?? response;
         dataSchema = ResolveSchema(openApi, dataSchema, contract.ToolName);
         var isArray = dataSchema["type"]?.GetValue<string>() == "array";
         if (isArray)

@@ -171,82 +171,66 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 await db.SaveChangesAsync(ct);
             }
 
-            // 2. Seed Vendors (VendTable)
-            var vendTableSeeds = new[]
+            // 2. Seed Vendors (VendTable & DirPartyTable)
+            var vendorSeeds = new[]
             {
-                new VendTable
-                {
-                    AccountNum = "VEND-100",
-                    VendGroup = "DOM",
-                    Currency = "SAR",
-                    TaxGroup = "DOM",
-                    PaymTermId = "Monthly",
-                    PaymMode = "ELECTRONIC",
-                    IsActive = true,
-                    CreatedBy = createdBy,
-                    OwnerAccountId = createdBy,
-                    DataAreaId = "dat"
-                },
-                new VendTable
-                {
-                    AccountNum = "VEND-200",
-                    VendGroup = "INT",
-                    Currency = "USD",
-                    TaxGroup = "EXP",
-                    PaymTermId = "Monthly",
-                    PaymMode = "ELECTRONIC",
-                    IsActive = true,
-                    CreatedBy = createdBy,
-                    OwnerAccountId = createdBy,
-                    DataAreaId = "dat"
-                },
-                new VendTable
-                {
-                    AccountNum = "VEND-300",
-                    VendGroup = "SERVICES",
-                    Currency = "SAR",
-                    TaxGroup = "DOM",
-                    PaymTermId = "Monthly",
-                    PaymMode = "CHECK",
-                    IsActive = true,
-                    CreatedBy = createdBy,
-                    OwnerAccountId = createdBy,
-                    DataAreaId = "dat"
-                },
-                new VendTable
-                {
-                    AccountNum = "VEND-ZATCA",
-                    VendGroup = "GOV",
-                    Currency = "SAR",
-                    TaxGroup = "EXEMPT",
-                    PaymTermId = "Monthly",
-                    PaymMode = "ELECTRONIC",
-                    IsActive = true,
-                    CreatedBy = createdBy,
-                    OwnerAccountId = createdBy,
-                    DataAreaId = "dat"
-                },
-                new VendTable
-                {
-                    AccountNum = "VEND-400",
-                    VendGroup = "RAW_MAT",
-                    Currency = "SAR",
-                    TaxGroup = "DOM",
-                    PaymTermId = "Monthly",
-                    PaymMode = "ELECTRONIC",
-                    IsActive = true,
-                    CreatedBy = createdBy,
-                    OwnerAccountId = createdBy,
-                    DataAreaId = "dat"
-                }
+                (Account: "VEND-100", PartyNumber: "VEND-100", Name: "Domestic Trade Vendor 100", NameAlias: "مورد تجاري محلي 100", Group: "DOM", Currency: "SAR", TaxGroup: "DOM", PaymTermId: "Monthly", PaymMode: "ELECTRONIC"),
+                (Account: "VEND-200", PartyNumber: "VEND-200", Name: "International Vendor 200", NameAlias: "مورد دولي 200", Group: "INT", Currency: "USD", TaxGroup: "EXP", PaymTermId: "Monthly", PaymMode: "ELECTRONIC"),
+                (Account: "VEND-300", PartyNumber: "VEND-300", Name: "Service Vendor 300", NameAlias: "مورد خدمات 300", Group: "SERVICES", Currency: "SAR", TaxGroup: "DOM", PaymTermId: "Monthly", PaymMode: "CHECK"),
+                (Account: "VEND-ZATCA", PartyNumber: "VEND-ZATCA", Name: "ZATCA Authority", NameAlias: "هيئة الزكاة والضريبة والجمارك", Group: "GOV", Currency: "SAR", TaxGroup: "EXEMPT", PaymTermId: "Monthly", PaymMode: "ELECTRONIC"),
+                (Account: "VEND-400", PartyNumber: "VEND-400", Name: "Raw Material Supplier 400", NameAlias: "مورد مواد خام 400", Group: "RAW_MAT", Currency: "SAR", TaxGroup: "DOM", PaymTermId: "Monthly", PaymMode: "ELECTRONIC")
             };
 
-            var existingVendCodes = await db.Set<VendTable>()
+            var existingVendors = await db.Set<VendTable>()
                 .IgnoreQueryFilters()
-                .Select(v => v.AccountNum)
-                .ToListAsync(ct);
+                .Where(v => v.DataAreaId == "dat")
+                .ToDictionaryAsync(v => v.AccountNum, StringComparer.OrdinalIgnoreCase, ct);
 
-            var vendsToAdd = vendTableSeeds.Where(v => !existingVendCodes.Contains(v.AccountNum)).ToList();
+            var vendorPartyNumbers = vendorSeeds.Select(x => x.PartyNumber).ToArray();
+            var vendorParties = await db.Set<DirPartyTable>()
+                .IgnoreQueryFilters()
+                .Where(x => vendorPartyNumbers.Contains(x.PartyNumber))
+                .ToDictionaryAsync(x => x.PartyNumber, StringComparer.OrdinalIgnoreCase, ct);
+
+            foreach (var seed in vendorSeeds.Where(x => !existingVendors.ContainsKey(x.Account)))
+            {
+                if (vendorParties.ContainsKey(seed.PartyNumber)) continue;
+                var party = new DirPartyTable
+                {
+                    PartyNumber = seed.PartyNumber,
+                    Name = seed.Name,
+                    NameAlias = seed.NameAlias,
+                    LanguageId = "ar-sa",
+                    AddressBookNames = string.Empty,
+                    DataAreaId = "dat",
+                    IsActive = NoYes.Yes,
+                    CreatedBy = createdBy,
+                    OwnerAccountId = createdBy
+                };
+                db.Set<DirPartyTable>().Add(party);
+                vendorParties[seed.PartyNumber] = party;
+            }
+            await db.SaveChangesAsync(ct);
+
+            var vendsToAdd = new List<VendTable>();
+            foreach (var seed in vendorSeeds.Where(x => !existingVendors.ContainsKey(x.Account)))
+            {
+                vendsToAdd.Add(new VendTable
+                {
+                    AccountNum = seed.Account,
+                    Party = vendorParties[seed.PartyNumber].RecId,
+                    VendGroup = seed.Group,
+                    Currency = seed.Currency,
+                    TaxGroup = seed.TaxGroup,
+                    PaymTermId = seed.PaymTermId,
+                    PaymMode = seed.PaymMode,
+                    IsActive = true,
+                    CreatedBy = createdBy,
+                    OwnerAccountId = createdBy,
+                    DataAreaId = "dat"
+                });
+            }
+
             if (vendsToAdd.Count > 0)
             {
                 await db.Set<VendTable>().AddRangeAsync(vendsToAdd, ct);

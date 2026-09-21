@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ROUTE_PATHS } from '@app/routes/routePaths';
+import { ADMINISTRATION_ROUTE_PATHS } from '../routes/administrationRoutePaths';
 import { BatchJobRecurrenceForm } from './BatchJobRecurrenceForm';
 import { AppActionDrawer } from '@shared/components/dialogs/AppActionDrawer';
 import { useState } from 'react';
@@ -64,14 +64,18 @@ export function useBatchJobCommands() {
             : !edit),
     onClick: (record) => {
       if (!record) return;
-      if (label === 'Batch job history') { navigate(`${ROUTE_PATHS.SYSTEM_ADMINISTRATION.BACKGROUND_JOB_HISTORY}?jobId=${record.recId}`); return; }
+      if (label === 'Batch job history') {
+        navigate(`${ADMINISTRATION_ROUTE_PATHS.BACKGROUND_JOB_HISTORY}?jobId=${record.recId}`);
+        return;
+      }
       setError('');
       setStatus(record.status === 1 ? 'ready' : record.status === 0 ? 'withhold' : 'cancelled');
       const currentDateTime = new Date().toISOString();
       const scheduledStart = record.startDateTime ?? record.origStartDateTime;
-      const recurrenceStart = !scheduledStart || new Date(scheduledStart).getTime() < Date.now()
-        ? currentDateTime
-        : scheduledStart;
+      const recurrenceStart =
+        !scheduledStart || new Date(scheduledStart).getTime() < Date.now()
+          ? currentDateTime
+          : scheduledStart;
       setJob({
         ...record,
         ...(label === 'Recurrence'
@@ -99,7 +103,8 @@ export function useBatchJobCommands() {
           jobToSave = { ...job, recurrenceData: '60' };
         if (job.scheduleType === 3 && (!job.recurrenceData || job.recurrenceData.trim() === ''))
           throw new Error('Enter a CRON expression.');
-        if (job.scheduleType < 2 && !job.startDateTime) throw new Error('Select a start date/time.');
+        if (job.scheduleType < 2 && !job.startDateTime)
+          throw new Error('Select a start date/time.');
       }
       if (action === 'Change status') {
         const validTransition =
@@ -189,9 +194,11 @@ export function useBatchJobCommands() {
                   busy ||
                   (action === 'Change status' &&
                     ((status === 'cancelled' ? !cancel : !edit) ||
-                      !((status === 'withhold' && job?.status === 0) ||
+                      !(
+                        (status === 'withhold' && job?.status === 0) ||
                         (status === 'ready' && job?.status === 1) ||
-                        (status === 'cancelled' && (job?.status === 0 || job?.status === 1)))))
+                        (status === 'cancelled' && (job?.status === 0 || job?.status === 1))
+                      )))
                 }
                 variant="contained"
                 onClick={() => void save()}
@@ -204,7 +211,7 @@ export function useBatchJobCommands() {
       >
         <Stack spacing={2} sx={{ pt: 1 }}>
           {error && <Alert severity="error">{error}</Alert>}
-          
+
           {action === 'Change status' && (
             <List
               aria-label="Select new status"
@@ -215,8 +222,16 @@ export function useBatchJobCommands() {
                 Select new status
               </Typography>
               {[
-                { value: 'withhold' as const, label: 'Withhold', allowed: edit && job?.status === 0 },
-                { value: 'cancelled' as const, label: 'Canceling', allowed: cancel && (job?.status === 0 || job?.status === 1) },
+                {
+                  value: 'withhold' as const,
+                  label: 'Withhold',
+                  allowed: edit && job?.status === 0,
+                },
+                {
+                  value: 'cancelled' as const,
+                  label: 'Canceling',
+                  allowed: cancel && (job?.status === 0 || job?.status === 1),
+                },
                 { value: 'ready' as const, label: 'Waiting', allowed: edit && job?.status === 1 },
               ].map((option) => (
                 <ListItemButton
@@ -266,10 +281,15 @@ export function useBatchJobCommands() {
                   label="Scheduled start date/time (UTC)"
                   type="datetime-local"
                   slotProps={{ inputLabel: { shrink: true } }}
-                  value={job.startDateTime ? new Date(job.startDateTime).toISOString().slice(0, 16) : ''}
+                  value={
+                    job.startDateTime ? new Date(job.startDateTime).toISOString().slice(0, 16) : ''
+                  }
                   disabled={busy}
                   onChange={(e) =>
-                    setJob({ ...job, startDateTime: e.target.value ? `${e.target.value}:00Z` : null })
+                    setJob({
+                      ...job,
+                      startDateTime: e.target.value ? `${e.target.value}:00Z` : null,
+                    })
                   }
                 />
               )}

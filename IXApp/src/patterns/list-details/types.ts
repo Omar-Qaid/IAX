@@ -197,7 +197,7 @@ export type ListDetailsDataSource<T extends ListDetailRecord> =
       /** A create operation may persist one record or a batch created from one editor action. */
       create: (record: T) => Promise<T | T[]>;
       update: (record: T) => Promise<T>;
-      delete: (record: T) => Promise<void>;
+      delete?: (record: T) => Promise<void>;
       initialRecords?: T[];
       /** Optional polling interval for records whose server-calculated values change while open. */
       refreshIntervalMs?: number;

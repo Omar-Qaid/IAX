@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { afterEach, describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -54,12 +54,39 @@ describe('LookupField', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Open' }));
-    const searchField = screen.getByLabelText('Country');
+    const searchField = screen.getByRole('combobox', { name: 'Country' });
     fireEvent.change(searchField, { target: { value: 'Canada' } });
     fireEvent.click(await screen.findByText('Canada'));
 
     expect(onChange).toHaveBeenCalledWith('2', sampleOptions[1]);
     expect(screen.queryByText('Select Country')).toBeNull();
+  });
+
+  it('commits a numeric selection and keeps its label visible in controlled mode', async () => {
+    const numericOptions: LookupOption[] = [
+      { id: 1, code: 'MGR', name: 'Manager' },
+      { id: 2, code: 'SUP', name: 'Supervisor' },
+    ];
+
+    function ControlledLookup() {
+      const [value, setValue] = useState<number>(0);
+      return (
+        <LookupField
+          name="occupation"
+          label="Occupation"
+          value={value}
+          options={numericOptions}
+          onChange={(next) => setValue(Number(next) || 0)}
+        />
+      );
+    }
+
+    renderWithQueryClient(<ControlledLookup />);
+    fireEvent.click(screen.getByRole('button', { name: 'Open' }));
+    fireEvent.click(await screen.findByText('Manager'));
+
+    expect(screen.getByLabelText('Occupation')).toHaveValue('Manager');
+    expect(screen.queryByRole('listbox')).toBeNull();
   });
 
   it('opens the shared popup and shows loading state while options load', () => {

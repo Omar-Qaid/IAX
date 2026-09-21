@@ -7,7 +7,10 @@ namespace IAX.IXApi.Bootstrap
 {
     public static class DependencyInjection
     {
-        public static IServiceCollection AddApplicationServices(this IServiceCollection services, Assembly assembly)
+        public static IServiceCollection AddApplicationServices(
+            this IServiceCollection services,
+            Assembly assembly,
+            params Assembly[] mappingAssemblies)
         {
             services.AddSignalR();
 
@@ -36,7 +39,7 @@ namespace IAX.IXApi.Bootstrap
             services.AddScoped<Shared.Domain.Events.ISysEventBus, Shared.Domain.Events.SysEventBus>();
 
             services.RegisterValidators(assembly);
-            services.RegisterMapsterConfigurations(assembly);
+            services.RegisterMapsterConfigurations([assembly, .. mappingAssemblies]);
             
             return services;
         }

@@ -7,7 +7,7 @@ import type { ColumnDef } from '@shared/components/data-grid/types';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { salesOrderListApi, type SalesOrderListRecord } from '../api/salesOrderListApi';
 import { useNavigate } from 'react-router-dom';
-import { ROUTE_PATHS } from '@app/routes/routePaths';
+import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
 import { SalesOrderQuickCreate } from '../components/SalesOrderQuickCreate';
 
 export function SalesOrderListPage(): React.ReactElement {
@@ -20,17 +20,31 @@ export function SalesOrderListPage(): React.ReactElement {
     queryFn: ({ signal }) => salesOrderListApi.list(signal),
   });
   const orders = orderQuery.data ?? [];
-  const columns = useMemo<ColumnDef<SalesOrderListRecord>[]>(() => [
-    { field: 'salesId', headerName: 'fields.salesOrderNumber', width: 145, pinned: 'left' },
-    { field: 'customerAccount', headerName: 'fields.customerAccount', width: 150 },
-    { field: 'customerName', headerName: 'fields.customerName', minWidth: 220, flex: 1 },
-    { field: 'invoiceAccount', headerName: 'fields.invoiceAccount', width: 150 },
-    { field: 'customerGroup', headerName: 'fields.customerGroup', width: 145 },
-    { field: 'currencyCode', headerName: 'fields.currency', width: 95 },
-    { field: 'deliveryDate', headerName: 'fields.requestedDelivery', width: 135, type: 'date' },
-    { field: 'orderTotal', headerName: 'fields.orderTotal', width: 125, type: 'number', align: 'right' },
-    { field: 'salesStatus', headerName: 'common.status', width: 115, renderCell: ({ row }) => <StatusBadge status={row.salesStatus.toLocaleLowerCase()} /> },
-  ], []);
+  const columns = useMemo<ColumnDef<SalesOrderListRecord>[]>(
+    () => [
+      { field: 'salesId', headerName: 'fields.salesOrderNumber', width: 145, pinned: 'left' },
+      { field: 'customerAccount', headerName: 'fields.customerAccount', width: 150 },
+      { field: 'customerName', headerName: 'fields.customerName', minWidth: 220, flex: 1 },
+      { field: 'invoiceAccount', headerName: 'fields.invoiceAccount', width: 150 },
+      { field: 'customerGroup', headerName: 'fields.customerGroup', width: 145 },
+      { field: 'currencyCode', headerName: 'fields.currency', width: 95 },
+      { field: 'deliveryDate', headerName: 'fields.requestedDelivery', width: 135, type: 'date' },
+      {
+        field: 'orderTotal',
+        headerName: 'fields.orderTotal',
+        width: 125,
+        type: 'number',
+        align: 'right',
+      },
+      {
+        field: 'salesStatus',
+        headerName: 'common.status',
+        width: 115,
+        renderCell: ({ row }) => <StatusBadge status={row.salesStatus.toLocaleLowerCase()} />,
+      },
+    ],
+    []
+  );
 
   const commandIds = ['sell', 'invoice', 'collect', 'general', 'options'] as const;
   const config: EnterpriseListConfig<SalesOrderListRecord> = {
@@ -53,7 +67,7 @@ export function SalesOrderListPage(): React.ReactElement {
       newLabel: t('actions.new'),
       deleteLabel: t('actions.delete'),
       onNew: () => setQuickCreateOpen(true),
-      onEdit: (order) => navigate(ROUTE_PATHS.ACCOUNTS_RECEIVABLE.salesOrder(order.id)),
+      onEdit: (order) => navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrder(order.id)),
     },
     commands: commandIds.map((id) => ({
       id,
@@ -61,12 +75,20 @@ export function SalesOrderListPage(): React.ReactElement {
       disabled: true,
     })),
     utilities: {
-      personalizeLabel: t('utilities.personalize'), guideLabel: t('utilities.guide'), notificationsLabel: t('common.notifications'),
-      refreshLabel: t('actions.refresh'), openWindowLabel: t('utilities.openWindow'), notificationCount: 0,
+      personalizeLabel: t('utilities.personalize'),
+      guideLabel: t('utilities.guide'),
+      notificationsLabel: t('common.notifications'),
+      refreshLabel: t('actions.refresh'),
+      openWindowLabel: t('utilities.openWindow'),
+      notificationCount: 0,
     },
     advancedFilter: {
-      title: t('filters.title'), addLabel: t('actions.add'), fieldLabel: t('fields.salesOrderNumber'), operatorLabel: t('filters.contains'),
-      applyLabel: t('actions.apply'), resetLabel: t('actions.reset'),
+      title: t('filters.title'),
+      addLabel: t('actions.add'),
+      fieldLabel: t('fields.salesOrderNumber'),
+      operatorLabel: t('filters.contains'),
+      applyLabel: t('actions.apply'),
+      resetLabel: t('actions.reset'),
       fields: [
         { field: 'salesId', label: t('fields.salesOrderNumber') },
         { field: 'customerAccount', label: t('fields.customerAccount') },
@@ -76,45 +98,102 @@ export function SalesOrderListPage(): React.ReactElement {
         { field: 'salesStatus', label: t('common.status') },
       ],
       getValue: (order) => order.salesId,
-      matches: (order, value) => order.salesId.toLocaleLowerCase(currentLanguage.code).includes(value.trim().toLocaleLowerCase(currentLanguage.code)),
+      matches: (order, value) =>
+        order.salesId
+          .toLocaleLowerCase(currentLanguage.code)
+          .includes(value.trim().toLocaleLowerCase(currentLanguage.code)),
     },
     relatedInformation: {
       title: t('relatedInformation.title'),
       sections: (order) => [
-        { id: 'customer', label: t('fields.customer'), defaultExpanded: true, content: <InfoValue value={order ? `${order.customerAccount}\n${order.customerName}` : ''} empty={t('relatedInformation.selectCustomer')} /> },
-        { id: 'delivery', label: t('fields.delivery', 'Delivery'), content: <InfoValue value={order ? `${order.deliveryDate}\n${order.deliveryMode}` : ''} empty={t('relatedInformation.selectCustomer')} /> },
-        { id: 'payment', label: t('fields.payment', 'Payment'), content: <InfoValue value={order ? `${order.paymentTerms}\n${order.currencyCode}` : ''} empty={t('relatedInformation.selectCustomer')} /> },
-        { id: 'status', label: t('common.status'), content: <InfoValue value={order?.documentStatus} empty={t('relatedInformation.selectCustomer')} /> },
+        {
+          id: 'customer',
+          label: t('fields.customer'),
+          defaultExpanded: true,
+          content: (
+            <InfoValue
+              value={order ? `${order.customerAccount}\n${order.customerName}` : ''}
+              empty={t('relatedInformation.selectCustomer')}
+            />
+          ),
+        },
+        {
+          id: 'delivery',
+          label: t('fields.delivery', 'Delivery'),
+          content: (
+            <InfoValue
+              value={order ? `${order.deliveryDate}\n${order.deliveryMode}` : ''}
+              empty={t('relatedInformation.selectCustomer')}
+            />
+          ),
+        },
+        {
+          id: 'payment',
+          label: t('fields.payment', 'Payment'),
+          content: (
+            <InfoValue
+              value={order ? `${order.paymentTerms}\n${order.currencyCode}` : ''}
+              empty={t('relatedInformation.selectCustomer')}
+            />
+          ),
+        },
+        {
+          id: 'status',
+          label: t('common.status'),
+          content: (
+            <InfoValue
+              value={order?.documentStatus}
+              empty={t('relatedInformation.selectCustomer')}
+            />
+          ),
+        },
       ],
     },
   };
 
-  return <SimpleListPage
-    title={t('pages.salesOrders.title')}
-    enterpriseConfig={config}
-    dataSource={{ type: 'controlled', rows: orders }}
-    columns={columns}
-    loading={orderQuery.isLoading}
-    error={orderQuery.error instanceof Error ? orderQuery.error.message : null}
-    onRetry={() => orderQuery.refetch()}
-    dataGridProps={{ storageKey: 'accounts-receivable.sales-orders.reference-view' }}
-    dialogs={
-      <SalesOrderQuickCreate
-        open={quickCreateOpen}
-        onClose={() => setQuickCreateOpen(false)}
-        onSave={(order) => {
-          queryClient.setQueryData<SalesOrderListRecord[]>(
-            ['accounts-receivable', 'sales-orders'],
-            (current = []) => [order, ...current.filter((existing) => existing.recId !== order.recId)],
-          );
-          setQuickCreateOpen(false);
-          void queryClient.invalidateQueries({ queryKey: ['accounts-receivable', 'sales-orders'] });
-        }}
-      />
-    }
-  />;
+  return (
+    <SimpleListPage
+      title={t('pages.salesOrders.title')}
+      enterpriseConfig={config}
+      dataSource={{ type: 'controlled', rows: orders }}
+      columns={columns}
+      loading={orderQuery.isLoading}
+      error={orderQuery.error instanceof Error ? orderQuery.error.message : null}
+      onRetry={() => orderQuery.refetch()}
+      dataGridProps={{ storageKey: 'accounts-receivable.sales-orders.reference-view' }}
+      dialogs={
+        <SalesOrderQuickCreate
+          open={quickCreateOpen}
+          onClose={() => setQuickCreateOpen(false)}
+          onSave={(order) => {
+            queryClient.setQueryData<SalesOrderListRecord[]>(
+              ['accounts-receivable', 'sales-orders'],
+              (current = []) => [
+                order,
+                ...current.filter((existing) => existing.recId !== order.recId),
+              ]
+            );
+            setQuickCreateOpen(false);
+            void queryClient.invalidateQueries({
+              queryKey: ['accounts-receivable', 'sales-orders'],
+            });
+          }}
+        />
+      }
+    />
+  );
 }
 
 function InfoValue({ value, empty }: { value?: string | null; empty: string }): React.ReactElement {
-  return <Typography sx={{ fontSize: '0.75rem', color: value ? 'text.primary' : 'text.secondary', whiteSpace: 'pre-line' }}>{value || empty}</Typography>;
+  return (
+    <Typography
+      sx={{
+        fontSize: '0.75rem',
+        color: value ? 'text.primary' : 'text.secondary',
+        whiteSpace: 'pre-line',
+      }}
+    >
+      {value || empty}
+    </Typography>
+  );
 }

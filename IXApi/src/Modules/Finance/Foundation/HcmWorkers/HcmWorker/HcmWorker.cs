@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Foundation.Genders;
 using IAX.IXApi.Modules.Finance.Foundation.Nationalities;
@@ -21,15 +20,6 @@ public class HcmWorker : Entity<long>
     public DateTime? HireDate { get; set; }
     public DateTime? BirthDate { get; set; }
     public string? UserId { get; set; }
-
-    [NotMapped]
-    public string Name { get; set; } = string.Empty;
-
-    [NotMapped]
-    public string NameAlias { get; set; } = string.Empty;
-
-    [NotMapped]
-    public long? InitialPositionId { get; set; }
 
     public virtual DirPartyTable Party { get; set; } = null!;
     public virtual Occupation Occupation { get; set; } = null!;

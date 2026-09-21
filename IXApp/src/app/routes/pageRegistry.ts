@@ -325,6 +325,15 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'reporting-hierarchies',
+    path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.REPORTING_HIERARCHIES,
+    permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
+    component: lazyPage(
+      () => import('@modules/organization/pages/ReportingHierarchyPage'),
+      (module) => module.ReportingHierarchyPage
+    ),
+  },
+  {
     id: 'hcm-workers',
     path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.HCM_WORKERS,
     permission: PERMISSIONS.HCM_WORKER_VIEW,

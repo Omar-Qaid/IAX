@@ -18,21 +18,21 @@ public sealed class McpCatalogCompilerTests
         Assert.Equal(3, catalog.Tools.Count);
         Assert.All(catalog.Tools, tool => Assert.False(tool.ExecutionEnabled));
         Assert.Equal(
-            ["finance_customers_search", "organization_departments_search", "workflow_requests_get"],
+            ["finance_customers_search", "organization_units_list", "workflow_requests_get"],
             catalog.Tools.Select(tool => tool.Name).ToArray());
         var workflow = Assert.Single(catalog.Tools, tool => tool.Name == "workflow_requests_get");
         Assert.Equal("string", workflow.InputSchema["properties"]?["path"]?["properties"]?["id"]?["type"]?.GetValue<string>());
         Assert.Equal(workflow.AllowedDataFields.Count, workflow.OutputDataSchema["properties"]?.AsObject().Count);
         Assert.False(workflow.ResponseDataIsArray);
         Assert.True(catalog.Tools.Single(tool => tool.Name == "finance_customers_search").ResponseDataIsArray);
-        Assert.True(catalog.Tools.Single(tool => tool.Name == "organization_departments_search").ResponseDataIsArray);
+        Assert.True(catalog.Tools.Single(tool => tool.Name == "organization_units_list").ResponseDataIsArray);
     }
 
     [Fact]
     public async Task New_approved_endpoint_updates_catalog_without_adapter_changes()
     {
         using var fixture = ContractFixture.FromCurrentExport();
-        fixture.CloneDepartmentAs("organization_teams_search", "/api/v1/Team/paged", "Organization_Team_GetPaged_GET_fixture");
+        fixture.CloneOrganizationUnitAs("organization_teams_search", "/api/v1/Team", "Organization_Team_Get_GET_fixture");
         fixture.Save();
 
         var catalog = await new McpCatalogCompiler().CompileAsync(fixture.Directory);
@@ -45,13 +45,13 @@ public sealed class McpCatalogCompilerTests
     public async Task DTO_field_change_updates_projected_output_without_adapter_changes()
     {
         using var fixture = ContractFixture.FromCurrentExport();
-        fixture.AddDepartmentOutputField("externalCode", new JsonObject { ["type"] = "string" });
+        fixture.AddOrganizationUnitOutputField("externalCode", new JsonObject { ["type"] = "string" });
         fixture.Save();
 
         var catalog = await new McpCatalogCompiler().CompileAsync(fixture.Directory);
 
-        var department = Assert.Single(catalog.Tools, tool => tool.Name == "organization_departments_search");
-        Assert.Equal("string", department.OutputDataSchema["properties"]?["externalCode"]?["type"]?.GetValue<string>());
+        var unit = Assert.Single(catalog.Tools, tool => tool.Name == "organization_units_list");
+        Assert.Equal("string", unit.OutputDataSchema["properties"]?["externalCode"]?["type"]?.GetValue<string>());
     }
 
     [Fact]
@@ -71,13 +71,13 @@ public sealed class McpCatalogCompilerTests
     public async Task Drift_between_OpenAPI_and_policy_contract_is_rejected()
     {
         using var fixture = ContractFixture.FromCurrentExport();
-        fixture.ChangeEmbeddedDepartmentToolName("organization_wrong_name");
+        fixture.ChangeEmbeddedOrganizationUnitToolName("organization_wrong_name");
         fixture.Save();
 
         var exception = await Assert.ThrowsAsync<ContractCompilationException>(
             () => new McpCatalogCompiler().CompileAsync(fixture.Directory));
 
-        Assert.Contains("must be 'organization_departments_search'", exception.Message);
+        Assert.Contains("must be 'organization_units_list'", exception.Message);
     }
 
     private static string FindRepositoryRoot()
@@ -129,18 +129,18 @@ public sealed class McpCatalogCompilerTests
                 ReadObject(source, "manifest.json"));
         }
 
-        public void CloneDepartmentAs(string toolName, string path, string operationId)
+        public void CloneOrganizationUnitAs(string toolName, string path, string operationId)
         {
-            const string sourcePath = "/api/v1/Department/paged";
+            const string sourcePath = "/api/v1/organization-structure/units";
             var sourceOperation = openApi["paths"]?[sourcePath]?["get"]?.DeepClone().AsObject()
-                ?? throw new InvalidOperationException("Department OpenAPI operation not found.");
+                ?? throw new InvalidOperationException("Organization unit OpenAPI operation not found.");
             sourceOperation["operationId"] = operationId;
             sourceOperation["x-ix-pilot-contract"]!["toolName"] = toolName;
             sourceOperation["x-ix-pilot-contract"]!["path"] = path;
             openApi["paths"]![path] = new JsonObject { ["get"] = sourceOperation };
 
             var sourceInventory = operations.OfType<JsonObject>()
-                .Single(operation => operation["proposedToolName"]?.GetValue<string>() == "organization_departments_search")
+                .Single(operation => operation["proposedToolName"]?.GetValue<string>() == "organization_units_list")
                 .DeepClone().AsObject();
             sourceInventory["operationId"] = operationId;
             sourceInventory["path"] = path;
@@ -150,30 +150,30 @@ public sealed class McpCatalogCompilerTests
             operations.Add(sourceInventory);
 
             var sourcePilot = pilots.OfType<JsonObject>()
-                .Single(pilot => pilot["toolName"]?.GetValue<string>() == "organization_departments_search")
+                .Single(pilot => pilot["toolName"]?.GetValue<string>() == "organization_units_list")
                 .DeepClone().AsObject();
             sourcePilot["toolName"] = toolName;
             sourcePilot["path"] = path;
             pilots.Add(sourcePilot);
         }
 
-        public void AddDepartmentOutputField(string fieldName, JsonObject schema)
+        public void AddOrganizationUnitOutputField(string fieldName, JsonObject schema)
         {
-            openApi["components"]!["schemas"]!["DepartmentDto"]!["properties"]![fieldName] = schema;
+            openApi["components"]!["schemas"]!["OrganizationUnitInfo"]!["properties"]![fieldName] = schema;
             pilots.OfType<JsonObject>()
-                .Single(pilot => pilot["toolName"]?.GetValue<string>() == "organization_departments_search")
+                .Single(pilot => pilot["toolName"]?.GetValue<string>() == "organization_units_list")
                 ["allowedDataFields"]!.AsArray().Add(fieldName);
-            var operation = openApi["paths"]?["/api/v1/Department/paged"]?["get"]?[
+            var operation = openApi["paths"]?["/api/v1/organization-structure/units"]?["get"]?[
                 "x-ix-pilot-contract"]?.AsObject()
-                ?? throw new InvalidOperationException("Embedded Department contract not found.");
+                ?? throw new InvalidOperationException("Embedded organization unit contract not found.");
             operation["allowedDataFields"]!.AsArray().Add(fieldName);
         }
 
-        public void ChangeEmbeddedDepartmentToolName(string toolName)
+        public void ChangeEmbeddedOrganizationUnitToolName(string toolName)
         {
-            var embedded = openApi["paths"]?["/api/v1/Department/paged"]?["get"]?[
+            var embedded = openApi["paths"]?["/api/v1/organization-structure/units"]?["get"]?[
                 "x-ix-pilot-contract"]?.AsObject()
-                ?? throw new InvalidOperationException("Embedded Department contract not found.");
+                ?? throw new InvalidOperationException("Embedded organization unit contract not found.");
             embedded["toolName"] = toolName;
         }
 

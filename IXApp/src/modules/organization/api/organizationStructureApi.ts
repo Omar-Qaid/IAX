@@ -28,6 +28,8 @@ export interface OrganizationRole {
 }
 export interface OrganizationHierarchyNode { id: number; hierarchyId: number; organizationUnitId: number; parentNodeId: number | null; validFrom: string; validTo: string | null; }
 export interface WorkerOrganizationAssignment { assignmentId: number; workerId: number; positionId: number | null; organizationUnitId: number; organizationRoleId: number; roleCode: string | null; isPrimary: boolean; validFrom: string; validTo: string | null; }
+export interface ReportingHierarchy { id: number; code: string; name: string; purpose: string; }
+export interface PositionReportingLine { id: number; reportingHierarchyId: number; subordinatePositionId: number; managerPositionId: number; validFrom: string; validTo: string | null; isPrimary: boolean; }
 export interface NewOrganizationUnit {
   code: string;
   name: string;
@@ -53,6 +55,13 @@ export const organizationStructureApi = {
   async roles(signal?: AbortSignal) {
     return (await apiClient.get<OrganizationRole[]>(`${base}/roles`, { signal })).data;
   },
+  async reportingHierarchies(signal?: AbortSignal) { return (await apiClient.get<ReportingHierarchy[]>(`${base}/reporting-hierarchies`, { signal })).data; },
+  async createReportingHierarchy(payload: Omit<ReportingHierarchy, 'id'>) { return (await apiClient.post<number>(`${base}/reporting-hierarchies`, payload)).data; },
+  async updateReportingHierarchy(id: number, payload: Omit<ReportingHierarchy, 'id'>) { return (await apiClient.put<number>(`${base}/reporting-hierarchies/${id}`, payload)).data; },
+  async reportingLines(hierarchyId: number, asOf: string, signal?: AbortSignal) { return (await apiClient.get<PositionReportingLine[]>(`${base}/reporting-hierarchies/${hierarchyId}/lines`, { params: { asOf }, signal })).data; },
+  async createReportingLine(payload: Omit<PositionReportingLine, 'id'>) { return (await apiClient.post<number>(`${base}/reporting-lines`, payload)).data; },
+  async updateReportingLine(id: number, payload: Omit<PositionReportingLine, 'id' | 'reportingHierarchyId'>) { return (await apiClient.put<number>(`${base}/reporting-lines/${id}`, payload)).data; },
+  async closeReportingLine(id: number, validTo: string) { return (await apiClient.put<number>(`${base}/reporting-lines/${id}/close`, { validTo })).data; },
   async createRole(role: Omit<OrganizationRole, 'id'>) { return (await apiClient.post<number>(`${base}/roles`, role)).data; },
   async updateRole(id: number, role: Omit<OrganizationRole, 'id'>) { return (await apiClient.put<number>(`${base}/roles/${id}`, role)).data; },
   async deactivateRole(id: number) { return (await apiClient.delete<number>(`${base}/roles/${id}`)).data; },

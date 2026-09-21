@@ -270,7 +270,10 @@ export function useListDetailsPage<T extends ListDetailRecord>(
     setSaving(true);
     setError(null);
     try {
-      if (source.type === 'remote') await source.delete(selected);
+      if (source.type === 'remote') {
+        if (!source.delete) throw new Error('Delete is not available for this record.');
+        await source.delete(selected);
+      }
       const remaining = records.filter((record) => record.id !== selected.id);
       replaceRecords(remaining);
       setSelectedId(remaining[0]?.id ?? null);

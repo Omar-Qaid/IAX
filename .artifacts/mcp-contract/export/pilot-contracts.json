@@ -32,36 +32,6 @@
   },
   {
     "metadataVersion": 1,
-    "toolName": "organization_departments_search",
-    "contractVersion": 1,
-    "method": "GET",
-    "path": "/api/v1/Department/paged",
-    "executionEnabled": false,
-    "companyScope": "company-required",
-    "allowedQueryParameters": [
-      "PageNumber",
-      "PageSize",
-      "SearchTerm"
-    ],
-    "defaultPageSize": 25,
-    "maximumPageSize": 100,
-    "allowedDataFields": [
-      "recId",
-      "code",
-      "name",
-      "description",
-      "isActive"
-    ],
-    "recordAuthorization": "Organization.Departments.View; company-filtered API query",
-    "requiredEvidence": [
-      "adapter-enforces-input-and-output-policy",
-      "authenticated-company-and-record-isolation",
-      "real-client-invocation",
-      "data-owner-review"
-    ]
-  },
-  {
-    "metadataVersion": 1,
     "toolName": "workflow_requests_get",
     "contractVersion": 1,
     "method": "GET",
@@ -82,6 +52,33 @@
       "progress"
     ],
     "recordAuthorization": "CanAccessRequestAsync; creator/employee/assignment or broad view; preserve API 404 concealment",
+    "requiredEvidence": [
+      "adapter-enforces-input-and-output-policy",
+      "authenticated-company-and-record-isolation",
+      "real-client-invocation",
+      "data-owner-review"
+    ]
+  },
+  {
+    "metadataVersion": 1,
+    "toolName": "organization_units_list",
+    "contractVersion": 1,
+    "method": "GET",
+    "path": "/api/v1/organization-structure/units",
+    "executionEnabled": false,
+    "companyScope": "company-required",
+    "allowedQueryParameters": [
+      "asOf"
+    ],
+    "defaultPageSize": null,
+    "maximumPageSize": null,
+    "allowedDataFields": [
+      "id",
+      "code",
+      "name",
+      "type"
+    ],
+    "recordAuthorization": "Organization.Structure.View; company-filtered API query",
     "requiredEvidence": [
       "adapter-enforces-input-and-output-policy",
       "authenticated-company-and-record-isolation",

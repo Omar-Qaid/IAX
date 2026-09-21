@@ -264,26 +264,59 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             #endregion
 
             #region Sample Customers & Vendors (AX CustTable / VendTable)
-            var existingCustCodes = await db.CustTables.IgnoreQueryFilters().Select(p => p.AccountNum).ToListAsync(ct);
+            var customerSeeds = new[]
+            {
+                (Account: "C00015", PartyNumber: "CUST-C00015", Name: "Consultant Customer", NameAlias: "عميل استشاري", Group: "Consultant", Currency: "SAR"),
+                (Account: "CUST-100", PartyNumber: "CUST-100", Name: "Consulting Customer 100", NameAlias: "عميل استشارات 100", Group: "Consultant", Currency: "SAR"),
+                (Account: "CUST-200", PartyNumber: "CUST-200", Name: "Retail Customer 200", NameAlias: "عميل تجزئة 200", Group: "CUST-RTL", Currency: "SAR"),
+                (Account: "CUST-300", PartyNumber: "CUST-300", Name: "International Customer 300", NameAlias: "عميل دولي 300", Group: "Consultant", Currency: "USD"),
+                (Account: "CUS-00001", PartyNumber: "CUS-00001", Name: "Retail Customer 1", NameAlias: "عميل تجزئة 1", Group: "CUST-RTL", Currency: "SAR"),
+                (Account: "CUS-00002", PartyNumber: "CUS-00002", Name: "VIP Customer 2", NameAlias: "عميل مميز 2", Group: "CUST-VIP", Currency: "USD")
+            };
+            var existingCustomers = await db.CustTables.IgnoreQueryFilters()
+                .Where(x => x.DataAreaId == "dat")
+                .ToDictionaryAsync(x => x.AccountNum, StringComparer.OrdinalIgnoreCase, ct);
+            var partyNumbers = customerSeeds.Select(x => x.PartyNumber).ToArray();
+            var customerParties = await db.Set<DirPartyTable>().IgnoreQueryFilters()
+                .Where(x => partyNumbers.Contains(x.PartyNumber))
+                .ToDictionaryAsync(x => x.PartyNumber, StringComparer.OrdinalIgnoreCase, ct);
+
+            foreach (var seed in customerSeeds.Where(x => !existingCustomers.ContainsKey(x.Account)))
+            {
+                if (customerParties.ContainsKey(seed.PartyNumber)) continue;
+                var party = new DirPartyTable
+                {
+                    PartyNumber = seed.PartyNumber,
+                    Name = seed.Name,
+                    NameAlias = seed.NameAlias,
+                    LanguageId = "ar-sa",
+                    AddressBookNames = string.Empty,
+                    DataAreaId = "dat",
+                    IsActive = NoYes.Yes,
+                    CreatedBy = createdBy,
+                    OwnerAccountId = createdBy
+                };
+                db.Set<DirPartyTable>().Add(party);
+                customerParties[seed.PartyNumber] = party;
+            }
+            await db.SaveChangesAsync(ct);
+
             var custsToAdd = new List<CustTable>();
-
-            if (!existingCustCodes.Contains("C00015"))
-                custsToAdd.Add(new CustTable { AccountNum = "C00015", CustGroupId = "Consultant", IsActive = true, CreatedBy = createdBy, OwnerAccountId = createdBy, CurrencyCode = "SAR", TaxGroupId = "DOM" });
-
-            if (!existingCustCodes.Contains("CUST-100"))
-                custsToAdd.Add(new CustTable { AccountNum = "CUST-100", CustGroupId = "Consultant", IsActive = true, CreatedBy = createdBy, OwnerAccountId = createdBy, CurrencyCode = "SAR", TaxGroupId = "DOM" });
-
-            if (!existingCustCodes.Contains("CUST-200"))
-                custsToAdd.Add(new CustTable { AccountNum = "CUST-200", CustGroupId = "CUST-RTL", IsActive = true, CreatedBy = createdBy, OwnerAccountId = createdBy, CurrencyCode = "SAR", TaxGroupId = "DOM" });
-
-            if (!existingCustCodes.Contains("CUST-300"))
-                custsToAdd.Add(new CustTable { AccountNum = "CUST-300", CustGroupId = "Consultant", IsActive = true, CreatedBy = createdBy, OwnerAccountId = createdBy, CurrencyCode = "USD", TaxGroupId = "DOM" });
-
-            if (!existingCustCodes.Contains("CUS-00001"))
-                custsToAdd.Add(new CustTable { AccountNum = "CUS-00001", CustGroupId = "CUST-RTL", IsActive = true, CreatedBy = createdBy, OwnerAccountId = createdBy, CurrencyCode = "SAR", TaxGroupId = "DOM" });
-
-            if (!existingCustCodes.Contains("CUS-00002"))
-                custsToAdd.Add(new CustTable { AccountNum = "CUS-00002", CustGroupId = "CUST-VIP", IsActive = true, CreatedBy = createdBy, OwnerAccountId = createdBy, CurrencyCode = "USD", TaxGroupId = "DOM" });
+            foreach (var seed in customerSeeds.Where(x => !existingCustomers.ContainsKey(x.Account)))
+            {
+                custsToAdd.Add(new CustTable
+                {
+                    AccountNum = seed.Account,
+                    Party = customerParties[seed.PartyNumber].RecId,
+                    CustGroupId = seed.Group,
+                    IsActive = true,
+                    CreatedBy = createdBy,
+                    OwnerAccountId = createdBy,
+                    DataAreaId = "dat",
+                    CurrencyCode = seed.Currency,
+                    TaxGroupId = "DOM"
+                });
+            }
 
             if (custsToAdd.Any()) { await db.CustTables.AddRangeAsync(custsToAdd, ct); await db.SaveChangesAsync(ct); }
             #endregion

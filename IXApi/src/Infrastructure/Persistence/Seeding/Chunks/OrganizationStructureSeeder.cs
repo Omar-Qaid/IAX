@@ -30,6 +30,8 @@ public sealed class OrganizationStructureSeeder : ISeeder
         ("SH-A", "Showroom A", "معرض أ", 4),
         ("SH-B", "Showroom B", "معرض ب", 4),
         ("ORG-FIN", "Finance Department", "الإدارة المالية", 8),
+        ("ORG-FIN-ACC", "Accounts Department", "قسم الحسابات", 8),
+        ("ORG-FIN-AR", "Accounts Receivable Team", "فريق حسابات العملاء", 8),
         ("ORG-IT", "IT Department", "إدارة تقنية المعلومات", 8),
         ("BR-JED", "Jeddah Branch", "فرع جدة", 7),
         ("ORG-WH", "Central Warehouse", "المستودع المركزي", 9)
@@ -60,6 +62,9 @@ public sealed class OrganizationStructureSeeder : ISeeder
         ("FINANCE_MANAGER", "Finance Manager", "مدير المالية"),
         ("WAREHOUSE_MANAGER", "Warehouse Manager", "مدير المستودع"),
         ("DIRECT_MANAGER", "Direct Manager", "المدير المباشر"),
+        ("EMPLOYEE", "Employee", "موظف"),
+        ("DEPARTMENT_MANAGER", "Department Manager", "مدير القسم"),
+        ("ADMINISTRATION_MANAGER", "Administration Manager", "مدير الإدارة"),
         ("IT_MANAGER", "IT Manager", "مدير تقنية المعلومات"),
         ("BOSS", "Boss", "الرئيس") };
     var roles = new Dictionary<string, OrganizationRole>();
@@ -86,7 +91,8 @@ public sealed class OrganizationStructureSeeder : ISeeder
         ("AREA-W", "ORG-BU"), ("REG-JED", "AREA-W"), ("SUP-NJ", "REG-JED"), ("SH-A", "SUP-NJ"),
         ("SH-B", "SUP-NJ"), ("ORG-WH", "ORG-BU"), ("BR-JED", "REG-JED"), ("ORG-IT", "ORG-BU") };
     var financial = new (string Unit, string? Parent)[] { ("ORG-COMPANY", null), ("ORG-BU", "ORG-COMPANY"),
-        ("ORG-FIN", "ORG-BU"), ("SH-A", "ORG-BU"), ("SH-B", "ORG-BU"), ("ORG-WH", "ORG-BU"), ("BR-JED", "REG-JED"), ("ORG-IT", "ORG-BU") };
+        ("ORG-FIN", "ORG-BU"), ("ORG-FIN-ACC", "ORG-FIN"), ("ORG-FIN-AR", "ORG-FIN-ACC"),
+        ("SH-A", "ORG-BU"), ("SH-B", "ORG-BU"), ("ORG-WH", "ORG-BU"), ("BR-JED", "REG-JED"), ("ORG-IT", "ORG-BU") };
     await SeedHierarchyAsync("ORG-OPERATIONS", "Operational Organization", "الهيكل التشغيلي",
         "Operations", operational);
     await SeedHierarchyAsync("ORG-FINANCE", "Financial Organization", "الهيكل المالي",
@@ -102,7 +108,11 @@ public sealed class OrganizationStructureSeeder : ISeeder
         ("ORG-WH-MGR", "Warehouse Manager", "مدير المستودع", "ORG-WH", "WAREHOUSE_MANAGER"),
         ("BR-JED-BOSS", "Jeddah Branch Boss", "رئيس فرع جدة", "BR-JED", "BOSS"),
         ("ORG-IT-MGR", "IT Manager", "مدير تقنية المعلومات", "ORG-IT", "IT_MANAGER"),
-        ("SH-A-DIRECT-MGR", "Showroom A Direct Manager", "المدير المباشر لمعرض أ", "SH-A", "DIRECT_MANAGER") };
+        ("SH-A-DIRECT-MGR", "Showroom A Direct Manager", "المدير المباشر لمعرض أ", "SH-A", "DIRECT_MANAGER"),
+        ("ORG-FIN-ADMIN-MGR", "Finance Administration Manager", "مدير الإدارة المالية", "ORG-FIN", "ADMINISTRATION_MANAGER"),
+        ("ORG-FIN-ACC-MGR", "Accounts Department Manager", "مدير قسم الحسابات", "ORG-FIN-ACC", "DEPARTMENT_MANAGER"),
+        ("ORG-FIN-AR-LINE-MGR", "Accounts Receivable Direct Manager", "المدير المباشر لحسابات العملاء", "ORG-FIN-AR", "DIRECT_MANAGER"),
+        ("ORG-FIN-AR-EMP-01", "Accounts Receivable Employee", "موظف حسابات العملاء", "ORG-FIN-AR", "EMPLOYEE") };
     var positions = new Dictionary<string, HcmPosition>();
     foreach (var (code, name, nameAlias, unitCode, roleCode) in positionSeeds)
     {
@@ -130,7 +140,9 @@ public sealed class OrganizationStructureSeeder : ISeeder
     {
         ("AREA-W-MGR", 1), ("REG-JED-MGR", 2), ("SUP-NJ-SUP", 3),
         ("SH-A-SELLER-01", 4), ("SH-B-SELLER-01", 5),
-        ("ORG-FIN-MGR", 1), ("ORG-WH-MGR", 2)
+        ("ORG-FIN-MGR", 1), ("ORG-WH-MGR", 2),
+        ("ORG-FIN-ADMIN-MGR", 1), ("ORG-FIN-ACC-MGR", 2),
+        ("ORG-FIN-AR-LINE-MGR", 3), ("ORG-FIN-AR-EMP-01", 4)
     };
     var workers = await db.HcmWorkers.IgnoreQueryFilters()
         .Where(x => x.IsActive && !x.IsDeleted).ToDictionaryAsync(x => x.RecId, ct);
@@ -147,6 +159,62 @@ public sealed class OrganizationStructureSeeder : ISeeder
                 DataAreaId = SeedCompany, HcmWorkerId = targetWorkerId, PositionId = position.RecId,
                 OrganizationUnitId = position.OrganizationUnitId, OrganizationRoleId = position.RoleId, AssignmentRole = 1, IsPrimary = true,
                 IsActive = true, ValidFrom = EffectiveFrom
+            });
+        }
+    }
+    await db.SaveChangesAsync(ct);
+
+    var reportingSeeds = new[]
+    {
+        (Code: "SALES", Name: "Sales Reporting Structure", NameAlias: "هيكل الإشراف البيعي", Purpose: "Sales reporting"),
+        (Code: "ADMIN", Name: "Administrative Reporting Structure", NameAlias: "هيكل الإشراف الإداري", Purpose: "Administrative reporting")
+    };
+    var reportingHierarchies = new Dictionary<string, HcmReportingHierarchy>(StringComparer.OrdinalIgnoreCase);
+    foreach (var seed in reportingSeeds)
+    {
+        var hierarchy = await db.HcmReportingHierarchies.IgnoreQueryFilters()
+            .SingleOrDefaultAsync(x => x.DataAreaId == SeedCompany && x.Code == seed.Code, ct);
+        if (hierarchy == null)
+        {
+            hierarchy = new HcmReportingHierarchy
+            {
+                DataAreaId = SeedCompany, Code = seed.Code, Name = seed.Name,
+                NameAlias = seed.NameAlias, Purpose = seed.Purpose
+            };
+            db.HcmReportingHierarchies.Add(hierarchy);
+        }
+        else if (string.IsNullOrWhiteSpace(hierarchy.NameAlias))
+        {
+            hierarchy.NameAlias = seed.NameAlias;
+        }
+        reportingHierarchies[seed.Code] = hierarchy;
+    }
+    await db.SaveChangesAsync(ct);
+
+    var reportingLineSeeds = new[]
+    {
+        (Hierarchy: "SALES", Subordinate: "SH-A-SELLER-01", Manager: "SUP-NJ-SUP"),
+        (Hierarchy: "SALES", Subordinate: "SH-B-SELLER-01", Manager: "SUP-NJ-SUP"),
+        (Hierarchy: "SALES", Subordinate: "SUP-NJ-SUP", Manager: "REG-JED-MGR"),
+        (Hierarchy: "SALES", Subordinate: "REG-JED-MGR", Manager: "AREA-W-MGR"),
+        (Hierarchy: "ADMIN", Subordinate: "ORG-FIN-AR-EMP-01", Manager: "ORG-FIN-AR-LINE-MGR"),
+        (Hierarchy: "ADMIN", Subordinate: "ORG-FIN-AR-LINE-MGR", Manager: "ORG-FIN-ACC-MGR"),
+        (Hierarchy: "ADMIN", Subordinate: "ORG-FIN-ACC-MGR", Manager: "ORG-FIN-ADMIN-MGR")
+    };
+    foreach (var seed in reportingLineSeeds)
+    {
+        var hierarchyId = reportingHierarchies[seed.Hierarchy].RecId;
+        var subordinateId = positions[seed.Subordinate].RecId;
+        var managerId = positions[seed.Manager].RecId;
+        if (!await db.HcmPositionReportingLines.IgnoreQueryFilters().AnyAsync(x =>
+                x.DataAreaId == SeedCompany && x.ReportingHierarchyId == hierarchyId &&
+                x.SubordinatePositionId == subordinateId && x.ManagerPositionId == managerId, ct))
+        {
+            db.HcmPositionReportingLines.Add(new HcmPositionReportingLine
+            {
+                DataAreaId = SeedCompany, ReportingHierarchyId = hierarchyId,
+                SubordinatePositionId = subordinateId, ManagerPositionId = managerId,
+                ValidFrom = EffectiveFrom, IsPrimary = true
             });
         }
     }
