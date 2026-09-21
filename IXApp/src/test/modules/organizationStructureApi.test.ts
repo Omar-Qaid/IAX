@@ -32,7 +32,7 @@ describe('Organization structure HTTP contracts', () => {
     const draft = {
       code: 'WH-1',
       name: 'Warehouse',
-      nameAR: null,
+      nameAlias: null,
       type: 9,
       parentOrganizationUnitId: null,
       validFrom: '2026-01-01',

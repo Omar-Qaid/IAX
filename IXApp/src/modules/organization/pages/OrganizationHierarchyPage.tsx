@@ -1,9 +1,7 @@
 import React, { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useCompanyStore } from '@core/company/useCompanyStore';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
-import { ROUTE_PATHS } from '@app/routes/routePaths';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
 import type {
   DetailFieldConfig,
@@ -39,7 +37,6 @@ export function OrganizationHierarchyPage(): React.ReactElement {
 
 function OrganizationHierarchyContent({ company }: { company: string }): React.ReactElement {
   const { t, isRtl } = useAppTranslation();
-  const navigate = useNavigate();
   const asOf = today();
   const [activeHierarchyId, setActiveHierarchyId] = useState<number | null>(null);
   const units = useQuery({
@@ -58,7 +55,7 @@ function OrganizationHierarchyContent({ company }: { company: string }): React.R
           <LookupField
             name="rootOrganizationUnitId"
             label={t('organizationStructure.rootUnit')}
-            value={value || undefined}
+            value={Number(value) || undefined}
             disabled={disabled || units.isLoading}
             required
             displayMode="select"
@@ -119,6 +116,7 @@ function OrganizationHierarchyContent({ company }: { company: string }): React.R
     recordId: 0,
     code: '',
     name: '',
+    nameAlias: null,
     purpose: '',
     rootOrganizationUnitId: 0,
     validFrom: asOf,
@@ -143,6 +141,7 @@ function OrganizationHierarchyContent({ company }: { company: string }): React.R
         const recordId = await api.createHierarchyWithRootNode({
           code: record.code.trim(),
           name: record.name.trim(),
+          nameAlias: record.nameAlias?.trim() || null,
           purpose: record.purpose.trim(),
           organizationUnitId: record.rootOrganizationUnitId,
           validFrom: record.validFrom,
@@ -154,6 +153,7 @@ function OrganizationHierarchyContent({ company }: { company: string }): React.R
         await api.updateHierarchy(record.recordId, {
           code: record.code.trim(),
           name: record.name.trim(),
+          nameAlias: record.nameAlias?.trim() || null,
           purpose: record.purpose.trim(),
         });
         return record;
@@ -192,6 +192,13 @@ function OrganizationHierarchyContent({ company }: { company: string }): React.R
         getValue: (record) => record.name,
         getDisplayValue: (record) => localizedName(record, isRtl),
         setValue: (record, value) => ({ ...record, name: textValue(value) }),
+      },
+      {
+        id: 'nameAlias',
+        label: t('hcmWorkers.fields.nameAlias'),
+        width: 'minmax(260px, 420px)',
+        getValue: (record) => record.nameAlias ?? '',
+        setValue: (record, value) => ({ ...record, nameAlias: textValue(value) || null }),
       },
       {
         id: 'purpose',
@@ -249,6 +256,9 @@ function OrganizationHierarchyContent({ company }: { company: string }): React.R
       ...(!record.code.trim() ? { code: t('organizationStructure.codeRequired') } : {}),
       ...(!record.name.trim() ? { name: t('organizationStructure.nameRequired') } : {}),
       ...(!record.purpose.trim() ? { purpose: t('organizationStructure.purposeRequired') } : {}),
+      ...((record.nameAlias?.length ?? 0) > 200
+        ? { nameAlias: t('organizationUnits.nameError') }
+        : {}),
       ...(record.recordId === 0 && record.rootOrganizationUnitId <= 0
         ? { rootOrganizationUnitId: t('organizationStructure.rootUnitRequired') }
         : {}),

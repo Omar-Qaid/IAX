@@ -51,6 +51,7 @@ export function ReportingHierarchyPage(): React.ReactElement {
         const recordId = await api.createReportingHierarchy({
           code: r.code.trim(),
           name: r.name.trim(),
+          nameAlias: r.nameAlias?.trim() || null,
           purpose: r.purpose.trim(),
         });
         return { ...r, id: String(recordId), recordId };
@@ -59,6 +60,7 @@ export function ReportingHierarchyPage(): React.ReactElement {
         await api.updateReportingHierarchy(r.recordId, {
           code: r.code.trim(),
           name: r.name.trim(),
+          nameAlias: r.nameAlias?.trim() || null,
           purpose: r.purpose.trim(),
         });
         return r;
@@ -69,6 +71,7 @@ export function ReportingHierarchyPage(): React.ReactElement {
       recordId: 0,
       code: '',
       name: '',
+      nameAlias: null,
       purpose: '',
     }),
     getPrimaryText: (r) => localizedName(r, isRtl),
@@ -94,6 +97,13 @@ export function ReportingHierarchyPage(): React.ReactElement {
         getValue: (r) => r.name,
         getDisplayValue: (r) => localizedName(r, isRtl),
         setValue: (r, v) => ({ ...r, name: String(v ?? '') }),
+      },
+      {
+        id: 'nameAlias',
+        label: t('hcmWorkers.fields.nameAlias'),
+        width: 260,
+        getValue: (r) => r.nameAlias ?? '',
+        setValue: (r, v) => ({ ...r, nameAlias: String(v ?? '') || null }),
       },
       {
         id: 'purpose',
@@ -129,6 +139,7 @@ export function ReportingHierarchyPage(): React.ReactElement {
       ...(!r.code.trim() ? { code: t('organizationStructure.codeRequired') } : {}),
       ...(!r.name.trim() ? { name: t('organizationStructure.nameRequired') } : {}),
       ...(!r.purpose.trim() ? { purpose: t('organizationStructure.purposeRequired') } : {}),
+      ...((r.nameAlias?.length ?? 0) > 200 ? { nameAlias: t('organizationUnits.nameError') } : {}),
     }),
   };
   return (

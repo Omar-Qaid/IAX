@@ -22,11 +22,11 @@ describe('Organization roles localized names', () => {
     ]);
     await i18n.changeLanguage('ar');
     render(<OrganizationRolePage />);
-    expect(await screen.findByText('مدير المنطقة')).toBeInTheDocument();
+    expect((await screen.findAllByText('مدير المنطقة')).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Custom role')).toBeInTheDocument();
     expect(screen.queryByText('Area Manager')).not.toBeInTheDocument();
     await act(() => i18n.changeLanguage('en'));
     expect(await screen.findByText('Area Manager')).toBeInTheDocument();
-    expect(screen.queryByText('مدير المنطقة')).not.toBeInTheDocument();
+    expect(screen.getByText('مدير المنطقة')).toBeInTheDocument();
   });
 });

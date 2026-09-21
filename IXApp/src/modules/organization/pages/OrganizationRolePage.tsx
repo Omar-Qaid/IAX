@@ -41,6 +41,13 @@ export function OrganizationRolePage(): React.ReactElement {
         flex: 1,
         editable: true,
       },
+      {
+        field: 'nameAlias',
+        headerName: t('hcmWorkers.fields.nameAlias'),
+        minWidth: 260,
+        flex: 1,
+        editable: true,
+      },
     ],
     [t, isRtl]
   );
@@ -103,17 +110,28 @@ export function OrganizationRolePage(): React.ReactElement {
         pageSize: 50,
         rowHeight: uiDensity.gridRowHeight,
         headerHeight: uiDensity.gridRowHeight,
-        onNewRow: () => ({ id: `new-${crypto.randomUUID()}`, recordId: 0, code: '', name: '' }),
+        onNewRow: () => ({
+          id: `new-${crypto.randomUUID()}`,
+          recordId: 0,
+          code: '',
+          name: '',
+          nameAlias: null,
+        }),
         onRowSave: async (values, isNew) => {
           const record = values as OrganizationRoleRow;
           if (!record.code.trim()) throw new Error(t('organizationStructure.codeRequired'));
           if (!record.name.trim()) throw new Error(t('organizationStructure.nameRequired'));
           if (isNew || record.recordId === 0)
-            await api.createRole({ code: record.code.trim(), name: record.name.trim() });
+            await api.createRole({
+              code: record.code.trim(),
+              name: record.name.trim(),
+              nameAlias: record.nameAlias?.trim() || null,
+            });
           else
             await api.updateRole(record.recordId, {
               code: record.code.trim(),
               name: record.name.trim(),
+              nameAlias: record.nameAlias?.trim() || null,
             });
           await refresh();
           notifySuccess(t('organizationStructure.roleSaved'));

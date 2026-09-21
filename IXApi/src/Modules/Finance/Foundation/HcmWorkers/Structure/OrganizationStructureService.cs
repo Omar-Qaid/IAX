@@ -88,6 +88,7 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
         }
         unit.Code = code;
         unit.Name = Text(request.Name, 200, "Name");
+        unit.NameAlias = OptionalText(request.NameAlias, 200, "NameAlias");
         unit.OrganizationUnitType = request.Type;
         unit.ParentOrganizationUnitId = request.ParentOrganizationUnitId;
         unit.ValidFrom = request.ValidFrom;
@@ -100,7 +101,7 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
     {
         var code = Text(request.Code, 50, "Code");
         Require(!await Roles.AnyAsync(x => x.Code == code, ct), "Role code already exists in this company.");
-        var role = new OrganizationRole { Code = code, Name = Text(request.Name, 200, "Name"), DataAreaId = Company };
+        var role = new OrganizationRole { Code = code, Name = Text(request.Name, 200, "Name"), NameAlias = OptionalText(request.NameAlias, 200, "NameAlias"), DataAreaId = Company };
         db.OrganizationRoles.Add(role);
         await db.SaveChangesAsync(ct);
         return role.RecId;
@@ -114,6 +115,7 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
         Require(!await Roles.AnyAsync(x => x.RecId != id && x.Code == code, ct), "Role code already exists in this company.");
         role.Code = code;
         role.Name = Text(request.Name, 200, "Name");
+        role.NameAlias = OptionalText(request.NameAlias, 200, "NameAlias");
         await db.SaveChangesAsync(ct);
         return role.RecId;
     }, ct);
@@ -132,7 +134,7 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
     {
         var code = Text(request.Code, 50, "Code");
         Require(!await Hierarchies.AnyAsync(x => x.Code == code, ct), "Hierarchy code already exists in this company.");
-        var hierarchy = new OrganizationHierarchy { Code = code, Name = Text(request.Name, 200, "Name"),
+        var hierarchy = new OrganizationHierarchy { Code = code, Name = Text(request.Name, 200, "Name"), NameAlias = OptionalText(request.NameAlias, 200, "NameAlias"),
             Purpose = Text(request.Purpose, 100, "Purpose"), DataAreaId = Company };
         db.OrganizationHierarchies.Add(hierarchy);
         await db.SaveChangesAsync(ct);
@@ -151,6 +153,7 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
         {
             Code = code,
             Name = Text(request.Name, 200, "Name"),
+            NameAlias = OptionalText(request.NameAlias, 200, "NameAlias"),
             Purpose = Text(request.Purpose, 100, "Purpose"),
             DataAreaId = Company
         };
@@ -175,6 +178,7 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
         Require(!await Hierarchies.AnyAsync(x => x.RecId != id && x.Code == code, ct), "Hierarchy code already exists in this company.");
         hierarchy.Code = code;
         hierarchy.Name = Text(request.Name, 200, "Name");
+        hierarchy.NameAlias = OptionalText(request.NameAlias, 200, "NameAlias");
         hierarchy.Purpose = Text(request.Purpose, 100, "Purpose");
         await db.SaveChangesAsync(ct);
         return hierarchy.RecId;
@@ -243,7 +247,7 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
         Require(await Roles.AnyAsync(x => x.RecId == request.RoleId && x.IsActive, ct), "Role not found in this company.");
         var code = Text(request.Code, 50, "Code");
         Require(!await Positions.AnyAsync(x => x.Code == code, ct), "Position code already exists in this company.");
-        var position = new HcmPosition { Code = code, Name = Text(request.Name, 200, "Name"), DataAreaId = Company,
+        var position = new HcmPosition { Code = code, Name = Text(request.Name, 200, "Name"), NameAlias = OptionalText(request.NameAlias, 200, "NameAlias"), DataAreaId = Company,
             OrganizationUnitId = unit.RecId, RoleId = request.RoleId, ValidFrom = request.ValidFrom, ValidTo = request.ValidTo };
         db.HcmPositions.Add(position);
         await db.SaveChangesAsync(ct);
@@ -266,6 +270,7 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
             "A position with assignment history can only change its code or name.");
         position.Code = code;
         position.Name = Text(request.Name, 200, "Name");
+        position.NameAlias = OptionalText(request.NameAlias, 200, "NameAlias");
         position.OrganizationUnitId = request.OrganizationUnitId;
         position.RoleId = request.RoleId;
         position.ValidFrom = request.ValidFrom;

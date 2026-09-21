@@ -1,6 +1,5 @@
 import { localizedName } from '@shared/utilities/localizedName';
 import React, { useState } from 'react';
-import { TextField } from '@mui/material';
 import { LookupField } from '@shared/components/lookups/LookupField';
 import { useCompanyStore } from '@core/company/useCompanyStore';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
@@ -14,8 +13,7 @@ interface UnitRecord {
   recordId: number;
   code: string;
   name: string;
-  nameAlias?: string | null;
-  nameAR: string;
+  nameAlias: string | null;
   type: number;
   parentOrganizationUnitId: number | null;
   validFrom: string;
@@ -49,7 +47,7 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
     recordId: 0,
     code: '',
     name: '',
-    nameAR: '',
+    nameAlias: null,
     type: 1,
     parentOrganizationUnitId: null,
     validFrom: asOf,
@@ -67,7 +65,7 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
           ...unit,
           id: String(unit.id),
           recordId: unit.id,
-          nameAR: unit.nameAlias ?? '',
+          nameAlias: unit.nameAlias ?? null,
           validFrom: unit.validFrom ? unit.validFrom.split('T')[0] : asOf,
           validTo: unit.validTo ? unit.validTo.split('T')[0] : null,
         }));
@@ -78,7 +76,7 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
         const recordId = await api.create({
           code: record.code.trim(),
           name: record.name.trim(),
-          nameAR: record.nameAR.trim() || null,
+          nameAlias: record.nameAlias?.trim() || null,
           type: record.type,
           parentOrganizationUnitId: record.parentOrganizationUnitId,
           validFrom: record.validFrom,
@@ -90,6 +88,7 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
         await api.update(record.recordId, {
           code: record.code.trim(),
           name: record.name.trim(),
+          nameAlias: record.nameAlias?.trim() || null,
           type: record.type,
           parentOrganizationUnitId: record.parentOrganizationUnitId,
           validFrom: record.validFrom,
@@ -105,13 +104,13 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
     getPrimaryText: (record) => localizedName(record, isRtl),
     getSecondaryText: (record) => record.code,
     matchesSearch: (record, query) =>
-      `${record.code} ${record.name} ${record.nameAlias ?? ''} ${record.nameAR}`
+      `${record.code} ${record.name} ${record.nameAlias ?? ''}`
         .toLocaleLowerCase()
         .includes(query.toLocaleLowerCase()),
     getValues: (record): DetailValues => ({
       type: record.type,
       parentOrganizationUnitId: record.parentOrganizationUnitId ?? '',
-      nameAR: record.nameAR,
+      nameAlias: record.nameAlias ?? '',
       validFrom: record.validFrom,
       validTo: record.validTo ?? '',
     }),
@@ -122,7 +121,7 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
         values.parentOrganizationUnitId === ''
           ? null
           : numberValue(values.parentOrganizationUnitId),
-      nameAR: textValue(values.nameAR),
+      nameAlias: textValue(values.nameAlias) || null,
       validFrom: textValue(values.validFrom),
       validTo: textValue(values.validTo) || null,
     }),
@@ -186,7 +185,7 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
                     <LookupField
                       name="parentOrganizationUnitId"
                       label={label('parent')}
-                      value={value || undefined}
+                      value={Number(value) || undefined}
                       disabled={disabled}
                       displayMode="select"
                       searchable
@@ -246,7 +245,7 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
                 label: label('exclusiveEnd'),
                 type: 'date',
               },
-              ...(record.recordId === 0 ? [{ name: 'nameAR', label: label('nameAR') }] : []),
+              { name: 'nameAlias', label: t('hcmWorkers.fields.nameAlias') },
             ],
           },
         ],
@@ -261,7 +260,7 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
     validate: (record) => ({
       ...(!record.code.trim() || record.code.length > 50 ? { code: label('codeError') } : {}),
       ...(!record.name.trim() || record.name.length > 200 ? { name: label('nameError') } : {}),
-      ...(record.nameAR.length > 200 ? { nameAR: label('nameError') } : {}),
+      ...((record.nameAlias?.length ?? 0) > 200 ? { nameAlias: label('nameError') } : {}),
       ...(record.type <= 0 ? { type: label('required') } : {}),
       ...(!record.validFrom ? { validFrom: label('required') } : {}),
       ...(record.validTo && record.validTo <= record.validFrom

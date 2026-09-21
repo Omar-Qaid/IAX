@@ -21,6 +21,13 @@ public static class OrganizationPeriod
         if (!condition) throw new ValidationException(new[] { new FluentValidation.Results.ValidationFailure("Organization", message) });
     }
 
+    public static string? OptionalText(string? value, int maxLength, string field)
+    {
+        var text = value?.Trim();
+        Require(text == null || text.Length <= maxLength, $"{field} must not exceed {maxLength} characters.");
+        return string.IsNullOrEmpty(text) ? null : text;
+    }
+
     public static string Text(string? value, int maxLength, string field)
     {
         var text = value?.Trim();

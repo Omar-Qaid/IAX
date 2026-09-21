@@ -71,7 +71,7 @@ export interface PositionReportingLine {
 export interface NewOrganizationUnit {
   code: string;
   name: string;
-  nameAR: string | null;
+  nameAlias: string | null;
   type: number;
   parentOrganizationUnitId: number | null;
   validFrom: string;
@@ -167,14 +167,14 @@ export const organizationStructureApi = {
       )
     ).data;
   },
-  async create({ nameAR, ...unit }: NewOrganizationUnit) {
-    return (await apiClient.post<number>(`${base}/units`, { ...unit, nameAlias: nameAR })).data;
+  async create(unit: NewOrganizationUnit) {
+    return (await apiClient.post<number>(`${base}/units`, unit)).data;
   },
   async update(
     id: number,
     unit: Pick<
       NewOrganizationUnit,
-      'code' | 'name' | 'type' | 'parentOrganizationUnitId' | 'validFrom' | 'validTo'
+      'code' | 'name' | 'nameAlias' | 'type' | 'parentOrganizationUnitId' | 'validFrom' | 'validTo'
     >
   ) {
     return (await apiClient.put<number>(`${base}/units/${id}`, unit)).data;

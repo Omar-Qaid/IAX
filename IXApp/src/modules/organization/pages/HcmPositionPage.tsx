@@ -34,6 +34,7 @@ const emptyPosition = (): PositionRecord => ({
   recordId: 0,
   code: '',
   name: '',
+  nameAlias: null,
   organizationUnitId: 0,
   roleId: 0,
   validFrom: today(),
@@ -43,6 +44,7 @@ const emptyPosition = (): PositionRecord => ({
 const toPayload = (record: PositionRecord) => ({
   code: record.code.trim(),
   name: record.name.trim(),
+  nameAlias: record.nameAlias?.trim() || null,
   organizationUnitId: record.organizationUnitId,
   roleId: record.roleId,
   validFrom: record.validFrom,
@@ -88,6 +90,11 @@ function HcmPositionContent({ company }: { company: string }): React.ReactElemen
         id: 'configuration',
         title: t('hcmPositions.sections.configuration'),
         groups: [
+          {
+            id: 'identity',
+            title: t('hcmWorkers.fields.nameAlias'),
+            fields: [{ name: 'nameAlias', label: t('hcmWorkers.fields.nameAlias') }],
+          },
           {
             id: 'assignment',
             title: t('hcmPositions.groups.organizationAssignment'),
@@ -173,6 +180,7 @@ function HcmPositionContent({ company }: { company: string }): React.ReactElemen
         .toLocaleLowerCase()
         .includes(query.toLocaleLowerCase()),
     getValues: (record): DetailValues => ({
+      nameAlias: record.nameAlias ?? '',
       organizationUnitId: record.organizationUnitId,
       roleId: record.roleId,
       validFrom: record.validFrom,
@@ -180,6 +188,7 @@ function HcmPositionContent({ company }: { company: string }): React.ReactElemen
     }),
     setValues: (record, values) => ({
       ...record,
+      nameAlias: textValue(values.nameAlias) || null,
       organizationUnitId: numberValue(values.organizationUnitId),
       roleId: numberValue(values.roleId),
       validFrom: textValue(values.validFrom),

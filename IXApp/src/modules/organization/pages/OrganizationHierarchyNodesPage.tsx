@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ROUTE_PATHS } from '@app/routes/routePaths';
 import { Alert, Box, MenuItem, TextField, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useCompanyStore } from '@core/company/useCompanyStore';
@@ -89,7 +88,7 @@ function OrganizationHierarchyNodesContent({
     if (!hierarchyId || hierarchyId === requestedHierarchyId) return;
     if (onHierarchyChange) onHierarchyChange(hierarchyId);
     else
-      navigate(ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.organizationHierarchyNodes(hierarchyId), {
+      navigate(`/organization-administration/organization-hierarchies/${hierarchyId}/nodes`, {
         replace: true,
       });
   }, [hierarchyId, navigate, onHierarchyChange, requestedHierarchyId]);
@@ -119,7 +118,7 @@ function OrganizationHierarchyNodesContent({
       isRtl={isRtl}
       onHierarchyChange={(id) => {
         if (onHierarchyChange) onHierarchyChange(id);
-        else navigate(ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.organizationHierarchyNodes(id));
+        else navigate(`/organization-administration/organization-hierarchies/${id}/nodes`);
       }}
       onExit={onExit}
     />
@@ -456,7 +455,7 @@ function PagedLookup<T>({
       <LookupField
         name={name}
         label={label}
-        value={value || undefined}
+        value={Number(value) || undefined}
         disabled={disabled}
         displayMode="select"
         searchable
