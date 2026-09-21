@@ -1,3 +1,5 @@
+import { localizedName } from '@shared/utilities/localizedName';
+import { useAppTranslation } from '@core/localization/useAppTranslation';
 import React, { useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useCompanyStore } from '@core/company/useCompanyStore';
@@ -22,6 +24,7 @@ interface HierarchyRecord {
   recordId: number;
   code: string;
   name: string;
+  nameAlias?: string | null;
   purpose: string;
   rootOrganizationUnitId: number;
   validFrom: string;
@@ -38,6 +41,7 @@ export function OrganizationHierarchyPage(): React.ReactElement {
 }
 
 function OrganizationHierarchyContent({ company }: { company: string }): React.ReactElement {
+  const { t, isRtl } = useAppTranslation();
   const asOf = today();
   const [selected, setSelected] = useState<HierarchyRecord | null>(null);
   const units = useQuery({
@@ -62,7 +66,7 @@ function OrganizationHierarchyContent({ company }: { company: string }): React.R
   const rootUnitField = useMemo(
     () => ({
       name: 'rootOrganizationUnitId',
-      label: 'Root organization unit',
+      label: t('organizationStructure.rootUnit'),
       renderOwnLabel: true,
       render: ({
         value,
@@ -75,13 +79,13 @@ function OrganizationHierarchyContent({ company }: { company: string }): React.R
       }) => (
         <AppLookupField
           name="rootOrganizationUnitId"
-          label="Root organization unit"
+          label={t('organizationStructure.rootUnit')}
           value={numberValue(value)}
           onChange={(next) => onChange(Number(next) || 0)}
           options={(units.data ?? []).map((unit) => ({
             id: unit.id,
             code: unit.code,
-            name: unit.name,
+            name: localizedName(unit, isRtl),
           }))}
           required
           disabled={disabled || units.isLoading}
@@ -89,27 +93,27 @@ function OrganizationHierarchyContent({ company }: { company: string }): React.R
         />
       ),
     }),
-    [units.data, units.isLoading]
+    [units.data, units.isLoading, t, isRtl]
   );
   const sections = useMemo<DetailSectionConfig[]>(
     () => [
       {
         id: 'rootNode',
-        title: 'Root organization node',
+        title: t('organizationStructure.rootOrganizationNode'),
         groups: [
           {
             id: 'rootNodeDetails',
-            title: 'Initial membership',
+            title: t('organizationStructure.initialMembership'),
             fields: [
               rootUnitField,
-              { name: 'validFrom', label: 'Valid from', type: 'date' },
-              { name: 'validTo', label: 'Valid to', type: 'date' },
+              { name: 'validFrom', label: t('organizationStructure.validFrom'), type: 'date' },
+              { name: 'validTo', label: t('organizationStructure.validTo'), type: 'date' },
             ],
           },
         ],
       },
     ],
-    [rootUnitField]
+    [rootUnitField, t]
   );
   const config: EnterpriseListDetailsConfig<HierarchyRecord> = {
     recordTableName: 'OrganizationHierarchy',
@@ -146,10 +150,10 @@ function OrganizationHierarchyContent({ company }: { company: string }): React.R
       },
     },
     createRecord: emptyHierarchy,
-    getPrimaryText: (record) => record.name,
+    getPrimaryText: (record) => localizedName(record, isRtl),
     getSecondaryText: (record) => record.code,
     matchesSearch: (record, query) =>
-      `${record.code} ${record.name} ${record.purpose}`
+      `${record.code} ${record.name} ${record.nameAlias ?? ''} ${record.purpose}`
         .toLocaleLowerCase()
         .includes(query.toLocaleLowerCase()),
     getValues: (record): DetailValues => ({
@@ -166,21 +170,22 @@ function OrganizationHierarchyContent({ company }: { company: string }): React.R
     headerFields: [
       {
         id: 'code',
-        label: 'Code',
+        label: t('organizationStructure.code'),
         width: 170,
         getValue: (record) => record.code,
         setValue: (record, value) => ({ ...record, code: textValue(value) }),
       },
       {
         id: 'name',
-        label: 'Name',
+        label: t('organizationStructure.name'),
         width: 'minmax(320px, 520px)',
         getValue: (record) => record.name,
+        getDisplayValue: (record) => localizedName(record, isRtl),
         setValue: (record, value) => ({ ...record, name: textValue(value) }),
       },
       {
         id: 'purpose',
-        label: 'Purpose',
+        label: t('organizationStructure.purpose'),
         width: 230,
         getValue: (record) => record.purpose,
         setValue: (record, value) => ({ ...record, purpose: textValue(value) }),
@@ -191,7 +196,7 @@ function OrganizationHierarchyContent({ company }: { company: string }): React.R
       ...(record.recordId === 0 ? sections : []),
       {
         id: 'nodes',
-        title: 'Organization hierarchy nodes',
+        title: t('organizationStructure.nodes'),
         minHeight: 280,
         content: (
           <HierarchyNodesPanel
@@ -210,27 +215,35 @@ function OrganizationHierarchyContent({ company }: { company: string }): React.R
       edit: 'Organization.Structure.Edit',
     },
     validate: (record) => ({
-      ...(!record.code.trim() ? { code: 'Code is required.' } : {}),
-      ...(!record.name.trim() ? { name: 'Name is required.' } : {}),
-      ...(!record.purpose.trim() ? { purpose: 'Purpose is required.' } : {}),
+      ...(!record.code.trim() ? { code: t('organizationStructure.codeRequired') } : {}),
+      ...(!record.name.trim() ? { name: t('organizationStructure.nameRequired') } : {}),
+      ...(!record.purpose.trim() ? { purpose: t('organizationStructure.purposeRequired') } : {}),
       ...(record.recordId === 0 && record.rootOrganizationUnitId <= 0
-        ? { rootOrganizationUnitId: 'Root organization unit is required.' }
+        ? { rootOrganizationUnitId: t('organizationStructure.rootUnitRequired') }
         : {}),
       ...(record.recordId === 0 && !record.validFrom
-        ? { validFrom: 'Valid from is required.' }
+        ? { validFrom: t('organizationStructure.validFromRequired') }
         : {}),
       ...(record.recordId === 0 && record.validTo && record.validTo <= record.validFrom
-        ? { validTo: 'Valid to must be later than valid from.' }
+        ? { validTo: t('organizationStructure.dateError') }
         : {}),
     }),
     advancedFilter: {
-      fieldLabel: 'Name',
+      fieldLabel: t('organizationStructure.name'),
       getValue: (record) => record.name,
       matches: (record, value) =>
-        record.name.toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()),
+        `${record.name} ${record.nameAlias ?? ''}`
+          .toLocaleLowerCase()
+          .includes(value.trim().toLocaleLowerCase()),
     },
   };
-  return <ListDetailsPage variant="enterprise" title="Organization hierarchies" config={config} />;
+  return (
+    <ListDetailsPage
+      variant="enterprise"
+      title={t('organizationStructure.hierarchiesTitle')}
+      config={config}
+    />
+  );
 }
 
 function HierarchyNodesPanel({
@@ -246,6 +259,7 @@ function HierarchyNodesPanel({
   loading: boolean;
   onRefresh: () => Promise<unknown>;
 }): React.ReactElement {
+  const { t, isRtl } = useAppTranslation();
   const gridRef = useRef<DataGridHandle>(null);
   const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
   const rows = useMemo<HierarchyNodeRow[]>(
@@ -256,59 +270,73 @@ function HierarchyNodesPanel({
     () => [
       {
         field: 'organizationUnitId',
-        headerName: 'Organization unit',
+        headerName: t('organizationStructure.unit'),
         minWidth: 260,
         flex: 1,
         editable: true,
         type: 'singleSelect',
         valueOptions: units.map((unit) => ({
           value: unit.id,
-          label: `${unit.code} — ${unit.name}`,
+          label: `${unit.code} — ${localizedName(unit, isRtl)}`,
         })),
         renderCell: ({ value }) => {
           const unit = units.find((item) => item.id === Number(value));
-          return unit ? `${unit.code} — ${unit.name}` : '';
+          return unit ? `${unit.code} — ${localizedName(unit, isRtl)}` : '';
         },
       },
       {
         field: 'parentNodeId',
-        headerName: 'Parent node',
+        headerName: t('organizationStructure.parentNode'),
         width: 250,
         editable: true,
         type: 'singleSelect',
         valueOptions: [
-          { value: null, label: 'Root node' },
+          { value: null, label: t('organizationStructure.rootNode') },
           ...nodes.map((node) => {
             const unit = units.find((item) => item.id === node.organizationUnitId);
             return {
               value: node.id,
-              label: `#${node.id} — ${unit ? `${unit.code} — ${unit.name}` : `Organization unit ${node.organizationUnitId}`}`,
+              label: `#${node.id} — ${unit ? `${unit.code} — ${localizedName(unit, isRtl)}` : t('organizationStructure.unitReference', { id: node.organizationUnitId })}`,
             };
           }),
         ],
         renderCell: ({ value }) => {
-          if (value == null) return 'Root node';
+          if (value == null) return t('organizationStructure.rootNode');
           const parent = nodes.find((node) => node.id === Number(value));
           if (!parent) return '';
           const unit = units.find((item) => item.id === parent.organizationUnitId);
-          return unit ? `${unit.code} — ${unit.name}` : `Node #${parent.id}`;
+          return unit
+            ? `${unit.code} — ${localizedName(unit, isRtl)}`
+            : t('organizationStructure.nodeReference', { id: parent.id });
         },
       },
-      { field: 'validFrom', headerName: 'Valid from', width: 135, editable: true, type: 'date' },
-      { field: 'validTo', headerName: 'Valid to', width: 135, editable: true, type: 'date' },
+      {
+        field: 'validFrom',
+        headerName: t('organizationStructure.validFrom'),
+        width: 135,
+        editable: true,
+        type: 'date',
+      },
+      {
+        field: 'validTo',
+        headerName: t('organizationStructure.validTo'),
+        width: 135,
+        editable: true,
+        type: 'date',
+      },
     ],
-    [nodes, units]
+    [nodes, units, t, isRtl]
   );
   const save = async (values: Partial<HierarchyNodeRow>, isNew: boolean) => {
     const organizationUnitId = Number(values.organizationUnitId) || 0;
     const parentNodeId = values.parentNodeId == null ? null : Number(values.parentNodeId);
     const validFrom = String(values.validFrom ?? '');
     const validTo = values.validTo ? String(values.validTo) : null;
-    if (organizationUnitId <= 0) throw new Error('Organization unit is required.');
-    if (!validFrom) throw new Error('Valid from is required.');
-    if (validTo && validTo <= validFrom) throw new Error('Valid to must be later than valid from.');
+    if (organizationUnitId <= 0) throw new Error(t('organizationStructure.unitRequired'));
+    if (!validFrom) throw new Error(t('organizationStructure.validFromRequired'));
+    if (validTo && validTo <= validFrom) throw new Error(t('organizationStructure.dateError'));
     if (!isNew && parentNodeId === Number(values.id))
-      throw new Error('A node cannot be its own parent.');
+      throw new Error(t('organizationStructure.selfParent'));
     if (isNew)
       await api.createNode({ hierarchyId, organizationUnitId, parentNodeId, validFrom, validTo });
     else
@@ -331,8 +359,8 @@ function HierarchyNodesPanel({
     <TabularDetailPanel
       rows={rows}
       columns={columns}
-      addLabel="Add node"
-      removeLabel="Close node"
+      addLabel={t('organizationStructure.addNode')}
+      removeLabel={t('organizationStructure.closeNode')}
       selectedIds={selectedIds}
       onSelectionChange={setSelectedIds}
       onAdd={() => gridRef.current?.startAddRow()}

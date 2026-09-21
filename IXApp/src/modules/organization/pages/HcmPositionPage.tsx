@@ -1,3 +1,4 @@
+import { localizedName } from '@shared/utilities/localizedName';
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useCompanyStore } from '@core/company/useCompanyStore';
@@ -17,6 +18,7 @@ interface PositionRecord {
   recordId: number;
   code: string;
   name: string;
+  nameAlias?: string | null;
   organizationUnitId: number;
   roleId: number;
   validFrom: string;
@@ -53,7 +55,7 @@ export function HcmPositionPage(): React.ReactElement {
 }
 
 function HcmPositionContent({ company }: { company: string }): React.ReactElement {
-  const { t } = useAppTranslation();
+  const { t, isRtl } = useAppTranslation();
   const unitsQuery = useQuery({
     queryKey: ['organization-structure', company, 'units', 'position-lookup'],
     queryFn: ({ signal }) => api.units(today(), signal),
@@ -67,18 +69,18 @@ function HcmPositionContent({ company }: { company: string }): React.ReactElemen
       (unitsQuery.data ?? []).map((unit) => ({
         id: unit.id,
         code: unit.code,
-        name: unit.name,
+        name: localizedName(unit, isRtl),
       })),
-    [unitsQuery.data]
+    [unitsQuery.data, isRtl]
   );
   const roleOptions = useMemo(
     () =>
       (rolesQuery.data ?? []).map((role) => ({
         id: role.id,
         code: role.code,
-        name: role.name,
+        name: localizedName(role, isRtl),
       })),
-    [rolesQuery.data]
+    [rolesQuery.data, isRtl]
   );
   const sections = useMemo<DetailSectionConfig[]>(
     () => [
@@ -164,10 +166,12 @@ function HcmPositionContent({ company }: { company: string }): React.ReactElemen
       },
     },
     createRecord: emptyPosition,
-    getPrimaryText: (record) => record.name,
+    getPrimaryText: (record) => localizedName(record, isRtl),
     getSecondaryText: (record) => record.code,
     matchesSearch: (record, query) =>
-      `${record.code} ${record.name}`.toLocaleLowerCase().includes(query.toLocaleLowerCase()),
+      `${record.code} ${record.name} ${record.nameAlias ?? ''}`
+        .toLocaleLowerCase()
+        .includes(query.toLocaleLowerCase()),
     getValues: (record): DetailValues => ({
       organizationUnitId: record.organizationUnitId,
       roleId: record.roleId,
@@ -194,6 +198,7 @@ function HcmPositionContent({ company }: { company: string }): React.ReactElemen
         label: t('hcmPositions.fields.name'),
         width: 'minmax(320px, 520px)',
         getValue: (record) => record.name,
+        getDisplayValue: (record) => localizedName(record, isRtl),
         setValue: (record, value) => ({ ...record, name: textValue(value) }),
       },
     ],
@@ -236,7 +241,9 @@ function HcmPositionContent({ company }: { company: string }): React.ReactElemen
       fieldLabel: t('hcmPositions.fields.name'),
       getValue: (record) => record.name,
       matches: (record, value) =>
-        record.name.toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()),
+        `${record.name} ${record.nameAlias ?? ''}`
+          .toLocaleLowerCase()
+          .includes(value.trim().toLocaleLowerCase()),
     },
   };
 

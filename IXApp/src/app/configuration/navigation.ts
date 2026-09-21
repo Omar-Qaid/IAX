@@ -266,17 +266,17 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
             permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
           },
           {
-            label: 'Organization roles',
+            label: 'organizationStructure.rolesTitle',
             path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.ORGANIZATION_ROLES,
             permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
           },
           {
-            label: 'Organization hierarchies',
+            label: 'organizationStructure.hierarchiesTitle',
             path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.ORGANIZATION_HIERARCHIES,
             permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
           },
           {
-            label: 'Positions',
+            label: 'hcmPositions.title',
             path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.HCM_POSITIONS,
             permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
           },

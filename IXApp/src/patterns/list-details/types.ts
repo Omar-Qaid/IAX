@@ -72,6 +72,8 @@ export interface ListDetailsCommand<T extends ListDetailRecord = ListDetailRecor
 export interface ListDetailsHeaderField<T> extends Omit<DetailFieldConfig, 'name'> {
   id: string;
   getValue: (record: T) => DetailValue;
+  /** Optional read-only text; editing always uses getValue and setValue. */
+  getDisplayValue?: (record: T) => DetailValue;
   setValue: (record: T, value: DetailValue) => T;
 }
 

@@ -733,7 +733,7 @@ function RecordHeader<T>({
           }}
         >
           {fields.map((field, index) => {
-            const value = field.getValue(record);
+            const value = field.getDisplayValue?.(record) ?? field.getValue(record);
             const custom = field.render?.({
               value,
               editing: false,
@@ -825,7 +825,9 @@ function RecordHeader<T>({
         }}
       >
         {fields.map((field) => {
-          const value = field.getValue(record);
+          const value = editing
+            ? field.getValue(record)
+            : (field.getDisplayValue?.(record) ?? field.getValue(record));
           const editable = editing && !field.disabled && field.type !== 'display';
           return (
             <Box key={field.id}>

@@ -1,3 +1,4 @@
+import { localizedName } from '@shared/utilities/localizedName';
 import React, { useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
@@ -22,7 +23,7 @@ export function HcmWorkerAssignmentsPanel({
   company,
   editing,
 }: HcmWorkerAssignmentsPanelProps): React.ReactElement {
-  const { t } = useAppTranslation();
+  const { t, isRtl } = useAppTranslation();
   const gridRef = useRef<DataGridHandle>(null);
   const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
   const asOf = currentDate();
@@ -50,12 +51,16 @@ export function HcmWorkerAssignmentsPanel({
         return {
           ...assignment,
           id: String(assignment.assignmentId),
-          positionName:
-            positions.data?.find((position) => position.id === assignment.positionId)?.name ?? '',
-          roleCode: role ? `${role.code} — ${role.name}` : (assignment.roleCode ?? ''),
+          positionName: localizedName(
+            positions.data?.find((position) => position.id === assignment.positionId),
+            isRtl
+          ),
+          roleCode: role
+            ? `${role.code} — ${localizedName(role, isRtl)}`
+            : (assignment.roleCode ?? ''),
         };
       }),
-    [assignments.data, positions.data, roles.data]
+    [assignments.data, positions.data, roles.data, isRtl]
   );
 
   const columns = useMemo<ColumnDef<Row>[]>(
@@ -69,7 +74,7 @@ export function HcmWorkerAssignmentsPanel({
         type: 'singleSelect',
         valueOptions: (positions.data ?? []).map((position) => ({
           value: position.id,
-          label: `${position.code} — ${position.name}`,
+          label: `${position.code} — ${localizedName(position, isRtl)}`,
         })),
       },
       { field: 'roleCode', headerName: t('hcmWorkers.assignments.role'), minWidth: 210 },
@@ -95,7 +100,7 @@ export function HcmWorkerAssignmentsPanel({
         editable: editing,
       },
     ],
-    [editing, positions.data, t]
+    [editing, positions.data, t, isRtl]
   );
 
   const save = async (values: Partial<Row>, isNew: boolean): Promise<void> => {

@@ -1,3 +1,4 @@
+import { localizedName } from '@shared/utilities/localizedName';
 import React, { useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Alert, MenuItem, Stack, TextField, Typography } from '@mui/material';
@@ -22,6 +23,7 @@ interface UnitRecord {
   recordId: number;
   code: string;
   name: string;
+  nameAlias?: string | null;
   nameAR: string;
   type: number;
   validFrom: string;
@@ -41,7 +43,7 @@ export function OrganizationUnitsPage(): React.ReactElement {
 }
 
 function OrganizationUnitsContent({ company }: { company: string }): React.ReactElement {
-  const { t } = useAppTranslation();
+  const { t, isRtl } = useAppTranslation();
   const label = (key: string) => t(`organizationUnits.${key}`);
   const [asOf, setAsOf] = useState(today);
   const [selected, setSelected] = useState<UnitRecord | null>(null);
@@ -88,7 +90,7 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
           ...unit,
           id: String(unit.id),
           recordId: unit.id,
-          nameAR: '',
+          nameAR: unit.nameAlias ?? '',
           validFrom: asOf,
           validTo: null,
         })),
@@ -116,10 +118,10 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
       },
     },
     createRecord: emptyUnit,
-    getPrimaryText: (record) => record.name,
+    getPrimaryText: (record) => localizedName(record, isRtl),
     getSecondaryText: (record) => record.code,
     matchesSearch: (record, query) =>
-      `${record.code} ${record.name} ${record.nameAR}`
+      `${record.code} ${record.name} ${record.nameAlias ?? ''} ${record.nameAR}`
         .toLocaleLowerCase()
         .includes(query.toLocaleLowerCase()),
     getValues: (record): DetailValues => ({
@@ -148,6 +150,7 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
         label: label('name'),
         width: 'minmax(320px, 520px)',
         getValue: (record) => record.name,
+        getDisplayValue: (record) => localizedName(record, isRtl),
         setValue: (record, value) => ({ ...record, name: textValue(value) }),
       },
     ],
@@ -207,7 +210,7 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
               <MenuItem value="">{label('chooseHierarchy')}</MenuItem>
               {(hierarchies.data ?? []).map((item) => (
                 <MenuItem key={item.id} value={String(item.id)}>
-                  {item.name}
+                  {localizedName(item, isRtl)}
                 </MenuItem>
               ))}
             </TextField>
@@ -221,7 +224,7 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
                   : ancestors.data?.length
                     ? [...ancestors.data]
                         .reverse()
-                        .map((unit) => unit.name)
+                        .map((unit) => localizedName(unit, isRtl))
                         .join(' / ')
                     : label('noMembership')}
               </Typography>
@@ -267,7 +270,9 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
       fieldLabel: label('name'),
       getValue: (record) => record.name,
       matches: (record, value) =>
-        record.name.toLocaleLowerCase().includes(value.trim().toLocaleLowerCase()),
+        `${record.name} ${record.nameAlias ?? ''}`
+          .toLocaleLowerCase()
+          .includes(value.trim().toLocaleLowerCase()),
     },
   };
 
@@ -289,6 +294,7 @@ function OrganizationUnitPositionsPanel({
   disabled: boolean;
   onRefresh: () => Promise<unknown>;
 }): React.ReactElement {
+  const { t, isRtl } = useAppTranslation();
   const gridRef = useRef<DataGridHandle>(null);
   const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
   const rows = useMemo<PositionRow[]>(
@@ -297,23 +303,42 @@ function OrganizationUnitPositionsPanel({
   );
   const columns = useMemo<ColumnDef<PositionRow>[]>(
     () => [
-      { field: 'code', headerName: 'Code', width: 160, editable: true },
-      { field: 'name', headerName: 'Name', minWidth: 230, flex: 1, editable: true },
+      { field: 'code', headerName: t('organizationStructure.code'), width: 160, editable: true },
+      {
+        field: 'name',
+        valueGetter: ({ row }) => localizedName(row, isRtl),
+        headerName: t('organizationStructure.name'),
+        minWidth: 230,
+        flex: 1,
+        editable: true,
+      },
       {
         field: 'roleId',
-        headerName: 'Organization role',
+        headerName: t('organizationStructure.role'),
         minWidth: 210,
         editable: true,
         type: 'singleSelect',
         valueOptions: roles.map((role) => ({
           value: role.id,
-          label: `${role.code} — ${role.name}`,
+          label: `${role.code} — ${localizedName(role, isRtl)}`,
         })),
       },
-      { field: 'validFrom', headerName: 'Valid from', width: 135, editable: true, type: 'date' },
-      { field: 'validTo', headerName: 'Valid to', width: 135, editable: true, type: 'date' },
+      {
+        field: 'validFrom',
+        headerName: t('organizationStructure.validFrom'),
+        width: 135,
+        editable: true,
+        type: 'date',
+      },
+      {
+        field: 'validTo',
+        headerName: t('organizationStructure.validTo'),
+        width: 135,
+        editable: true,
+        type: 'date',
+      },
     ],
-    [roles]
+    [roles, t, isRtl]
   );
   const save = async (values: Partial<PositionRow>, isNew: boolean) => {
     const code = String(values.code ?? '').trim();
@@ -321,11 +346,11 @@ function OrganizationUnitPositionsPanel({
     const roleId = Number(values.roleId) || 0;
     const validFrom = String(values.validFrom ?? '');
     const validTo = values.validTo ? String(values.validTo) : null;
-    if (!code) throw new Error('Code is required.');
-    if (!name) throw new Error('Name is required.');
-    if (roleId <= 0) throw new Error('Organization role is required.');
-    if (!validFrom) throw new Error('Valid from is required.');
-    if (validTo && validTo <= validFrom) throw new Error('Valid to must be later than valid from.');
+    if (!code) throw new Error(t('organizationStructure.codeRequired'));
+    if (!name) throw new Error(t('organizationStructure.nameRequired'));
+    if (roleId <= 0) throw new Error(t('organizationStructure.roleRequired'));
+    if (!validFrom) throw new Error(t('organizationStructure.validFromRequired'));
+    if (validTo && validTo <= validFrom) throw new Error(t('organizationStructure.dateError'));
     const payload = { code, name, organizationUnitId, roleId, validFrom, validTo };
     if (isNew) await api.createPosition(payload);
     else await api.updatePosition(Number(values.id), payload);
@@ -343,8 +368,8 @@ function OrganizationUnitPositionsPanel({
       showFilterRow={false}
       rows={rows}
       columns={columns}
-      addLabel="Add position"
-      removeLabel="Close position"
+      addLabel={t('organizationStructure.addPosition')}
+      removeLabel={t('organizationStructure.closePosition')}
       selectedIds={selectedIds}
       onSelectionChange={setSelectedIds}
       onAdd={() => gridRef.current?.startAddRow()}

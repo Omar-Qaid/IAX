@@ -30,15 +30,15 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
 
     public async Task<IReadOnlyList<OrganizationUnitInfo>> GetUnitsAsync(DateOnly asOf, CancellationToken ct) =>
         await Units.AsNoTracking().Where(x => x.IsActive && x.ValidFrom <= asOf && (x.ValidTo == null || asOf < x.ValidTo))
-            .OrderBy(x => x.Code).Select(x => new OrganizationUnitInfo(x.RecId, x.Code, x.Name, x.OrganizationUnitType)).ToListAsync(ct);
+            .OrderBy(x => x.Code).Select(x => new OrganizationUnitInfo(x.RecId, x.Code, x.Name, x.OrganizationUnitType, x.NameAlias)).ToListAsync(ct);
 
     public async Task<IReadOnlyList<OrganizationRoleInfo>> GetRolesAsync(CancellationToken ct) =>
         await Roles.AsNoTracking().Where(x => x.IsActive).OrderBy(x => x.Code)
-            .Select(x => new OrganizationRoleInfo(x.RecId, x.Code, x.Name)).ToListAsync(ct);
+            .Select(x => new OrganizationRoleInfo(x.RecId, x.Code, x.Name, x.NameAlias)).ToListAsync(ct);
 
     public async Task<IReadOnlyList<OrganizationHierarchyInfo>> GetHierarchiesAsync(CancellationToken ct) =>
         await Hierarchies.AsNoTracking().Where(x => x.IsActive).OrderBy(x => x.Code)
-            .Select(x => new OrganizationHierarchyInfo(x.RecId, x.Code, x.Name, x.Purpose)).ToListAsync(ct);
+            .Select(x => new OrganizationHierarchyInfo(x.RecId, x.Code, x.Name, x.Purpose, x.NameAlias)).ToListAsync(ct);
 
     public async Task<IReadOnlyList<OrganizationNodeInfo>> GetNodesAsync(long hierarchyId, DateOnly asOf, CancellationToken ct)
     {
@@ -49,7 +49,7 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
 
     public async Task<IReadOnlyList<PositionInfo>> GetPositionsAsync(DateOnly asOf, CancellationToken ct) =>
         await Positions.AsNoTracking().Where(x => x.IsActive && x.ValidFrom <= asOf && (x.ValidTo == null || asOf < x.ValidTo))
-            .OrderBy(x => x.Code).Select(x => new PositionInfo(x.RecId, x.Code, x.Name, x.OrganizationUnitId, x.RoleId, x.ValidFrom, x.ValidTo)).ToListAsync(ct);
+            .OrderBy(x => x.Code).Select(x => new PositionInfo(x.RecId, x.Code, x.Name, x.OrganizationUnitId, x.RoleId, x.ValidFrom, x.ValidTo, x.NameAlias)).ToListAsync(ct);
 
     public Task<long> CreateUnitAsync(CreateOrganizationUnit request, CancellationToken ct) => WriteAsync(async () =>
     {
@@ -381,7 +381,7 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
             node = byId[node.ParentNodeId.Value];
         }
         var units = await Units.AsNoTracking().Where(x => unitIds.Contains(x.RecId) && x.ValidFrom <= asOf && (x.ValidTo == null || asOf < x.ValidTo))
-            .Select(x => new OrganizationUnitInfo(x.RecId, x.Code, x.Name, x.OrganizationUnitType)).ToDictionaryAsync(x => x.Id, ct);
+            .Select(x => new OrganizationUnitInfo(x.RecId, x.Code, x.Name, x.OrganizationUnitType, x.NameAlias)).ToDictionaryAsync(x => x.Id, ct);
         Require(units.Count == unitIds.Count, "Hierarchy contains a unit outside its effective period or company.");
         return unitIds.Select(id => units[id]).ToList();
     }

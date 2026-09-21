@@ -174,7 +174,7 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
     },
     createRecord: emptyWorker,
     numberSequence: { key: 'HcmWorker', field: 'personnelNumber' },
-    getPrimaryText: (record) => record.name?.trim() || record.personnelNumber,
+    getPrimaryText: (record) => localizedName(record, isRtl) || record.personnelNumber,
     getSecondaryText: (record) => record.personnelNumber,
     matchesSearch: (record, query) =>
       `${record.personnelNumber} ${record.name ?? ''} ${record.nameAlias ?? ''} ${record.occupationName ?? ''}`
@@ -213,6 +213,7 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
         label: t('hcmWorkers.fields.name'),
         width: 'minmax(320px, 520px)',
         getValue: (record) => record.name ?? '',
+        getDisplayValue: (record) => localizedName(record, isRtl),
         setValue: (record, value) => ({ ...record, name: textValue(value) }),
       },
     ],
@@ -233,7 +234,7 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
       },
       {
         id: 'addresses',
-        title: t('customerDetails.sections.addresses', 'Addresses'),
+        title: t('hcmWorkers.sections.addresses'),
         minHeight: 145,
         content: (
           <PartyPostalAddressPanel
@@ -245,7 +246,7 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
       },
       {
         id: 'contacts',
-        title: t('customerDetails.sections.contacts', 'Contact information'),
+        title: t('hcmWorkers.sections.contacts'),
         minHeight: 145,
         content: (
           <PartyElectronicAddressPanel
@@ -280,7 +281,7 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
       fieldLabel: t('hcmWorkers.fields.name'),
       getValue: (record) => record.name ?? record.personnelNumber,
       matches: (record, value) =>
-        (record.name ?? record.personnelNumber)
+        `${record.name ?? record.personnelNumber} ${record.nameAlias ?? ''}`
           .toLocaleLowerCase()
           .includes(value.trim().toLocaleLowerCase()),
     },

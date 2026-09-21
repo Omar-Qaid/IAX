@@ -16,11 +16,11 @@ export function DataGridSelectionSummary({ serverSide, loadedRows, totalRowCount
     if (serverSide) {
       return loadedRows < totalRowCount
         ? t('grid.rows_loaded', { loaded: loadedRows.toLocaleString(), total: totalRowCount.toLocaleString() })
-        : t('grid.rows_count', { count: loadedRows.toLocaleString() });
+        : t('grid.rows_count', { count: loadedRows });
     }
     return filteredRows < totalRowCount
       ? t('grid.rows_filtered', { filtered: filteredRows.toLocaleString(), total: totalRowCount.toLocaleString() })
-      : t('grid.rows_count', { count: totalRowCount.toLocaleString() });
+      : t('grid.rows_count', { count: totalRowCount });
   })();
 
   const isFiltered = serverSide ? loadedRows < totalRowCount : filteredRows < totalRowCount;

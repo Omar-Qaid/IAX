@@ -41,8 +41,14 @@ public sealed class OrganizationStructureTests
         Assert.DoesNotContain(await f.Db.OrganizationHierarchies.ToListAsync(), x => string.IsNullOrWhiteSpace(x.NameAlias));
         Assert.DoesNotContain(await f.Db.HcmPositions.ToListAsync(), x => string.IsNullOrWhiteSpace(x.NameAlias));
         Assert.DoesNotContain(await f.Db.HcmReportingHierarchies.ToListAsync(), x => string.IsNullOrWhiteSpace(x.NameAlias));
+        Assert.All(await f.Service.GetUnitsAsync(Start, default), x => Assert.False(string.IsNullOrWhiteSpace(x.NameAlias)));
+        Assert.All(await f.Service.GetRolesAsync(default), x => Assert.False(string.IsNullOrWhiteSpace(x.NameAlias)));
+        Assert.All(await f.Service.GetHierarchiesAsync(default), x => Assert.False(string.IsNullOrWhiteSpace(x.NameAlias)));
+        Assert.All(await f.Service.GetPositionsAsync(Start, default), x => Assert.False(string.IsNullOrWhiteSpace(x.NameAlias)));
         var hierarchy = await f.Db.OrganizationHierarchies.SingleAsync(x => x.Code == "ORG-OPERATIONS");
         var shop = await f.Db.OrganizationUnits.SingleAsync(x => x.Code == "SH-A");
+        Assert.All(await f.Service.GetAncestorsAsync(hierarchy.RecId, shop.RecId, Start),
+            x => Assert.False(string.IsNullOrWhiteSpace(x.NameAlias)));
         Assert.Equal(new[] { "SH-A", "SUP-NJ", "REG-JED", "AREA-W", "ORG-BU", "ORG-COMPANY" },
             (await f.Service.GetAncestorsAsync(hierarchy.RecId, shop.RecId, Start)).Select(x => x.Code));
     }
