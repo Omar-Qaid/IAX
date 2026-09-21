@@ -164,70 +164,82 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
     ),
   ];
   if (!canView) return <AccessDeniedState />;
-  const listPane =
-    config.presentation?.mode === 'grid' && config.presentation.columns ? (
-      <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-        {state.filterVisible && (
-          <Box sx={{ p: 1 }}>
-            <TextField
-              fullWidth
-              size="small"
-              placeholder={labels.filter}
-              value={state.query}
-              disabled={state.editing}
-              onChange={(event) => state.setQuery(event.target.value)}
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon sx={{ fontSize: 16 }} />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-              sx={filterSx}
-            />
-          </Box>
-        )}
-        {config.presentation.headerContent}
-        <Box sx={{ flex: 1, minHeight: 0 }}>
-          <DataGrid
-            rows={state.visibleRecords}
-            columns={config.presentation.columns}
-            loading={state.loading}
-            height="100%"
-            rowHeight={config.presentation.masterRowHeight}
-            headerHeight={config.presentation.masterHeaderHeight}
-            hideToolbar
-            hideFooter
-            hideSidebar
-            hideFilterRow
-            selectionMode="single"
-            selectedIds={state.selectedId ? [state.selectedId] : []}
-            onRowClick={state.choose}
-            storageKey={config.presentation.storageKey}
+  const listPane = config.renderListPane ? (
+    config.renderListPane({
+      records: state.records,
+      visibleRecords: state.visibleRecords,
+      selectedId: state.selectedId,
+      editing: state.editing,
+      loading: state.loading,
+      query: state.query,
+      filterVisible: state.filterVisible,
+      filterLabel: labels.filter,
+      onQueryChange: state.setQuery,
+      onSelect: state.choose,
+    })
+  ) : config.presentation?.mode === 'grid' && config.presentation.columns ? (
+    <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+      {state.filterVisible && (
+        <Box sx={{ p: 1 }}>
+          <TextField
+            fullWidth
+            size="small"
+            placeholder={labels.filter}
+            value={state.query}
+            disabled={state.editing}
+            onChange={(event) => state.setQuery(event.target.value)}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ fontSize: 16 }} />
+                  </InputAdornment>
+                ),
+              },
+            }}
+            sx={filterSx}
           />
         </Box>
+      )}
+      {config.presentation.headerContent}
+      <Box sx={{ flex: 1, minHeight: 0 }}>
+        <DataGrid
+          rows={state.visibleRecords}
+          columns={config.presentation.columns}
+          loading={state.loading}
+          height="100%"
+          rowHeight={config.presentation.masterRowHeight}
+          headerHeight={config.presentation.masterHeaderHeight}
+          hideToolbar
+          hideFooter
+          hideSidebar
+          hideFilterRow
+          selectionMode="single"
+          selectedIds={state.selectedId ? [state.selectedId] : []}
+          onRowClick={state.choose}
+          storageKey={config.presentation.storageKey}
+        />
       </Box>
-    ) : (
-      <RecordList
-        records={state.visibleRecords}
-        selectedId={state.selectedId}
-        editing={state.editing}
-        query={state.query}
-        filterVisible={state.filterVisible}
-        filterLabel={labels.filter}
-        getPrimaryText={config.getPrimaryText}
-        getSecondaryText={config.getSecondaryText}
-        getProgress={config.getProgress}
-        progressLabel={config.progressLabel}
-        batchSize={config.presentation?.recordListBatchSize}
-        headerContent={config.presentation?.headerContent}
-        rowHeight={config.presentation?.masterRowHeight}
-        onQueryChange={state.setQuery}
-        onSelect={state.choose}
-      />
-    );
+    </Box>
+  ) : (
+    <RecordList
+      records={state.visibleRecords}
+      selectedId={state.selectedId}
+      editing={state.editing}
+      query={state.query}
+      filterVisible={state.filterVisible}
+      filterLabel={labels.filter}
+      getPrimaryText={config.getPrimaryText}
+      getSecondaryText={config.getSecondaryText}
+      getProgress={config.getProgress}
+      progressLabel={config.progressLabel}
+      batchSize={config.presentation?.recordListBatchSize}
+      headerContent={config.presentation?.headerContent}
+      rowHeight={config.presentation?.masterRowHeight}
+      onQueryChange={state.setQuery}
+      onSelect={state.choose}
+    />
+  );
   const fullscreen = config.presentation?.fullscreenCanvas;
   return (
     <PageContainer

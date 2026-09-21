@@ -8,7 +8,17 @@ vi.mock('@core/api/apiClient', () => ({
 describe('Organization structure HTTP contracts', () => {
   beforeEach(() => vi.clearAllMocks());
   it('reads raw DTO arrays and sends the explicit effective date', async () => {
-    const rows = [{ id: 7, code: 'SH-A', name: 'Showroom A', type: 4 }];
+    const rows = [
+      {
+        id: 7,
+        code: 'SH-A',
+        name: 'Showroom A',
+        type: 4,
+        parentOrganizationUnitId: null,
+        validFrom: '2026-01-01',
+        validTo: null,
+      },
+    ];
     vi.mocked(apiClient.get).mockResolvedValue({ data: rows });
     const signal = new AbortController().signal;
     expect(await api.units('2026-09-16', signal)).toEqual(rows);
@@ -24,11 +34,20 @@ describe('Organization structure HTTP contracts', () => {
       name: 'Warehouse',
       nameAR: null,
       type: 9,
+      parentOrganizationUnitId: null,
       validFrom: '2026-01-01',
       validTo: null,
     };
     expect(await api.create(draft)).toBe(12);
-    expect(apiClient.post).toHaveBeenCalledWith('/v1/organization-structure/units', draft);
+    expect(apiClient.post).toHaveBeenCalledWith('/v1/organization-structure/units', {
+      code: 'WH-1',
+      name: 'Warehouse',
+      nameAlias: null,
+      type: 9,
+      parentOrganizationUnitId: null,
+      validFrom: '2026-01-01',
+      validTo: null,
+    });
   });
   it('closes a period using PUT rather than deleting the unit', async () => {
     vi.mocked(apiClient.put).mockResolvedValue({ data: 12 });

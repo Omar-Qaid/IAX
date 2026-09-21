@@ -2389,6 +2389,7 @@
     "name": "Name",
     "nameAR": "Arabic name",
     "type": "Unit type",
+    "parent": "Parent organization unit",
     "newUnit": "New unit",
     "closeUnit": "Close unit",
     "asOf": "Effective date",

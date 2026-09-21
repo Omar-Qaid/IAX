@@ -6,6 +6,9 @@ export interface OrganizationUnit {
   name: string;
   nameAlias?: string | null;
   type: number;
+  parentOrganizationUnitId: number | null;
+  validFrom: string;
+  validTo: string | null;
 }
 export interface OrganizationPosition {
   id: number;
@@ -70,6 +73,7 @@ export interface NewOrganizationUnit {
   name: string;
   nameAR: string | null;
   type: number;
+  parentOrganizationUnitId: number | null;
   validFrom: string;
   validTo: string | null;
 }
@@ -166,7 +170,13 @@ export const organizationStructureApi = {
   async create({ nameAR, ...unit }: NewOrganizationUnit) {
     return (await apiClient.post<number>(`${base}/units`, { ...unit, nameAlias: nameAR })).data;
   },
-  async update(id: number, unit: Pick<NewOrganizationUnit, 'code' | 'name' | 'type'>) {
+  async update(
+    id: number,
+    unit: Pick<
+      NewOrganizationUnit,
+      'code' | 'name' | 'type' | 'parentOrganizationUnitId' | 'validFrom' | 'validTo'
+    >
+  ) {
     return (await apiClient.put<number>(`${base}/units/${id}`, unit)).data;
   },
   async nodes(hierarchyId: number, asOf: string, signal?: AbortSignal) {

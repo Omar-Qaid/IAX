@@ -1,22 +1,13 @@
 import { localizedName } from '@shared/utilities/localizedName';
-import React, { useMemo, useRef, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Alert, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import React, { useState } from 'react';
+import { TextField } from '@mui/material';
+import { LookupField } from '@shared/components/lookups/LookupField';
 import { useCompanyStore } from '@core/company/useCompanyStore';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
-import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
-import type {
-  DetailValue,
-  DetailValues,
-  EnterpriseListDetailsConfig,
-} from '@patterns/list-details/types';
-import { TabularDetailPanel } from '@patterns/list-details/TabularDetailPanel';
-import type { ColumnDef, DataGridHandle } from '@shared/components/data-grid/types';
-import {
-  organizationStructureApi as api,
-  type OrganizationPosition,
-  type OrganizationRole,
-} from '../api/organizationStructureApi';
+import { ListDetailsTreePage } from '@patterns/list-details-tree';
+import type { DetailValue, DetailValues } from '@patterns/list-details/types';
+import type { ListDetailsTreePageConfig } from '@patterns/list-details-tree';
+import { organizationStructureApi as api } from '../api/organizationStructureApi';
 
 interface UnitRecord {
   id: string;
@@ -26,6 +17,7 @@ interface UnitRecord {
   nameAlias?: string | null;
   nameAR: string;
   type: number;
+  parentOrganizationUnitId: number | null;
   validFrom: string;
   validTo: string | null;
 }
@@ -45,30 +37,13 @@ export function OrganizationUnitsPage(): React.ReactElement {
 function OrganizationUnitsContent({ company }: { company: string }): React.ReactElement {
   const { t, isRtl } = useAppTranslation();
   const label = (key: string) => t(`organizationUnits.${key}`);
-  const [asOf, setAsOf] = useState(today);
-  const [selected, setSelected] = useState<UnitRecord | null>(null);
-  const [hierarchy, setHierarchy] = useState('');
-  const positions = useQuery({
-    queryKey: ['organization-structure', company, 'positions', asOf],
-    queryFn: ({ signal }) => api.positions(asOf, signal),
-  });
-  const roles = useQuery({
-    queryKey: ['organization-structure', company, 'roles'],
-    queryFn: ({ signal }) => api.roles(signal),
-  });
-  const hierarchies = useQuery({
-    queryKey: ['organization-structure', company, 'hierarchies'],
-    queryFn: ({ signal }) => api.hierarchies(signal),
-  });
-  const ancestors = useQuery({
-    queryKey: ['organization-structure', company, 'ancestors', hierarchy, selected?.id, asOf],
-    queryFn: ({ signal }) => api.ancestors(Number(hierarchy), selected!.recordId, asOf, signal),
-    enabled: Boolean(hierarchy && selected),
-  });
+  const [asOf] = useState(today);
+  const [units, setUnits] = useState<UnitRecord[]>([]);
   const typeOptions = Array.from({ length: 9 }, (_, index) => ({
     value: String(index + 1),
     label: label(`types.${index + 1}`),
   }));
+
   const emptyUnit = (): UnitRecord => ({
     id: `new-${crypto.randomUUID()}`,
     recordId: 0,
@@ -76,30 +51,36 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
     name: '',
     nameAR: '',
     type: 1,
+    parentOrganizationUnitId: null,
     validFrom: asOf,
     validTo: null,
   });
-  const config: EnterpriseListDetailsConfig<UnitRecord> = {
+
+  const config: ListDetailsTreePageConfig<UnitRecord> = {
     recordTableName: 'OrganizationUnit',
     filterStorageKey: 'organization-units',
     dataSource: {
       type: 'remote',
       key: `organization-units-${company}-${asOf}`,
-      load: async (signal) =>
-        (await api.units(asOf, signal)).map((unit) => ({
+      load: async (signal) => {
+        const loaded = (await api.units(asOf, signal)).map((unit) => ({
           ...unit,
           id: String(unit.id),
           recordId: unit.id,
           nameAR: unit.nameAlias ?? '',
-          validFrom: asOf,
-          validTo: null,
-        })),
+          validFrom: unit.validFrom ? unit.validFrom.split('T')[0] : asOf,
+          validTo: unit.validTo ? unit.validTo.split('T')[0] : null,
+        }));
+        setUnits(loaded);
+        return loaded;
+      },
       create: async (record) => {
         const recordId = await api.create({
           code: record.code.trim(),
           name: record.name.trim(),
           nameAR: record.nameAR.trim() || null,
           type: record.type,
+          parentOrganizationUnitId: record.parentOrganizationUnitId,
           validFrom: record.validFrom,
           validTo: record.validTo,
         });
@@ -110,6 +91,9 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
           code: record.code.trim(),
           name: record.name.trim(),
           type: record.type,
+          parentOrganizationUnitId: record.parentOrganizationUnitId,
+          validFrom: record.validFrom,
+          validTo: record.validTo,
         });
         return record;
       },
@@ -126,6 +110,7 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
         .includes(query.toLocaleLowerCase()),
     getValues: (record): DetailValues => ({
       type: record.type,
+      parentOrganizationUnitId: record.parentOrganizationUnitId ?? '',
       nameAR: record.nameAR,
       validFrom: record.validFrom,
       validTo: record.validTo ?? '',
@@ -133,6 +118,10 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
     setValues: (record, values) => ({
       ...record,
       type: numberValue(values.type),
+      parentOrganizationUnitId:
+        values.parentOrganizationUnitId === ''
+          ? null
+          : numberValue(values.parentOrganizationUnitId),
       nameAR: textValue(values.nameAR),
       validFrom: textValue(values.validFrom),
       validTo: textValue(values.validTo) || null,
@@ -154,20 +143,8 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
         setValue: (record, value) => ({ ...record, name: textValue(value) }),
       },
     ],
-    onSelectionChange: setSelected,
-    actionPaneEndContent: (
-      <TextField
-        size="small"
-        type="date"
-        label={label('asOf')}
-        value={asOf}
-        slotProps={{ inputLabel: { shrink: true } }}
-        onChange={(event) => {
-          if (event.target.value) setAsOf(event.target.value);
-        }}
-      />
-    ),
-    sections: ({ record, editing }) => [
+
+    sections: ({ record }) => [
       {
         id: 'configuration',
         title: label('general'),
@@ -182,72 +159,97 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
                 type: 'select',
                 options: typeOptions,
               },
-              ...(record.recordId === 0
-                ? [
-                    { name: 'nameAR', label: label('nameAR') },
-                    { name: 'validFrom', label: label('validFrom'), type: 'date' as const },
-                    { name: 'validTo', label: label('exclusiveEnd'), type: 'date' as const },
-                  ]
-                : []),
+              {
+                name: 'parentOrganizationUnitId',
+                label: label('parent'),
+                renderOwnLabel: true,
+                render: ({ value, disabled, onChange }) => {
+                  const byId = new Map(units.map((unit) => [unit.recordId, unit]));
+                  const isDescendant = (candidate: UnitRecord) => {
+                    if (record.recordId <= 0) return false;
+                    let parentId = candidate.parentOrganizationUnitId;
+                    const visited = new Set<number>();
+                    while (parentId != null && !visited.has(parentId)) {
+                      if (parentId === record.recordId) return true;
+                      visited.add(parentId);
+                      parentId = byId.get(parentId)?.parentOrganizationUnitId ?? null;
+                    }
+                    return false;
+                  };
+                  const available = units.filter(
+                    (unit) => unit.recordId !== record.recordId && !isDescendant(unit)
+                  );
+                  const selectedParent = available.find(
+                    (unit) => unit.recordId === record.parentOrganizationUnitId
+                  );
+                  return (
+                    <LookupField
+                      name="parentOrganizationUnitId"
+                      label={label('parent')}
+                      value={value || undefined}
+                      disabled={disabled}
+                      displayMode="select"
+                      searchable
+                      sideMode="server"
+                      lazyLoading
+                      pageSize={20}
+                      searchDebounceMs={250}
+                      queryKey={['organization-unit-parent', company, asOf, record.id]}
+                      options={
+                        selectedParent
+                          ? [
+                              {
+                                id: selectedParent.recordId,
+                                code: selectedParent.code,
+                                name: localizedName(selectedParent, isRtl),
+                              },
+                            ]
+                          : []
+                      }
+                      fetchPage={async ({ pageNumber, pageSize, search }) => {
+                        const term = search.trim().toLocaleLowerCase();
+                        const filtered = available
+                          .filter((unit) =>
+                            term
+                              ? `${unit.code} ${unit.name} ${unit.nameAlias ?? ''}`
+                                  .toLocaleLowerCase()
+                                  .includes(term)
+                              : true
+                          )
+                          .sort((left, right) =>
+                            localizedName(left, isRtl).localeCompare(localizedName(right, isRtl))
+                          );
+                        const start = (pageNumber - 1) * pageSize;
+                        return {
+                          data: filtered.slice(start, start + pageSize).map((unit) => ({
+                            id: unit.recordId,
+                            code: unit.code,
+                            name: localizedName(unit, isRtl),
+                          })),
+                          pageNumber,
+                          totalPages: Math.max(1, Math.ceil(filtered.length / pageSize)),
+                          totalRecords: filtered.length,
+                        };
+                      }}
+                      onChange={(nextValue) => onChange(nextValue == null ? '' : Number(nextValue))}
+                    />
+                  );
+                },
+              },
+              {
+                name: 'validFrom',
+                label: label('validFrom'),
+                type: 'date',
+              },
+              {
+                name: 'validTo',
+                label: label('exclusiveEnd'),
+                type: 'date',
+              },
+              ...(record.recordId === 0 ? [{ name: 'nameAR', label: label('nameAR') }] : []),
             ],
           },
         ],
-      },
-      {
-        id: 'hierarchy',
-        title: label('hierarchy'),
-        content: (
-          <Stack spacing={1}>
-            <TextField
-              select
-              size="small"
-              label={label('hierarchy')}
-              value={hierarchy}
-              disabled={editing}
-              onChange={(event) => setHierarchy(event.target.value)}
-              sx={{ maxWidth: 350 }}
-            >
-              <MenuItem value="">{label('chooseHierarchy')}</MenuItem>
-              {(hierarchies.data ?? []).map((item) => (
-                <MenuItem key={item.id} value={String(item.id)}>
-                  {localizedName(item, isRtl)}
-                </MenuItem>
-              ))}
-            </TextField>
-            {(hierarchies.error || ancestors.error) && (
-              <Alert severity="error">{(hierarchies.error || ancestors.error)?.message}</Alert>
-            )}
-            {hierarchy && record.recordId > 0 && (
-              <Typography variant="body2">
-                {ancestors.isFetching
-                  ? t('common.loading')
-                  : ancestors.data?.length
-                    ? [...ancestors.data]
-                        .reverse()
-                        .map((unit) => localizedName(unit, isRtl))
-                        .join(' / ')
-                    : label('noMembership')}
-              </Typography>
-            )}
-          </Stack>
-        ),
-      },
-      {
-        id: 'positions',
-        title: label('positions'),
-        content: positions.error ? (
-          <Alert severity="error">{positions.error.message}</Alert>
-        ) : (
-          <OrganizationUnitPositionsPanel
-            organizationUnitId={record.recordId}
-            positions={(positions.data ?? []).filter(
-              (position) => position.organizationUnitId === record.recordId
-            )}
-            roles={roles.data ?? []}
-            disabled={editing || positions.isLoading || roles.isLoading}
-            onRefresh={() => positions.refetch()}
-          />
-        ),
       },
     ],
     permissions: {
@@ -266,6 +268,23 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
         ? { validTo: label('dateError') }
         : {}),
     }),
+    tree: {
+      getParentId: (record) =>
+        record.parentOrganizationUnitId == null ? null : String(record.parentOrganizationUnitId),
+      getLabel: (record) => localizedName(record, isRtl),
+      getSecondaryText: (record) => record.code,
+      compare: (left, right) =>
+        localizedName(left, isRtl).localeCompare(localizedName(right, isRtl)),
+      initiallyExpanded: 'all',
+      ariaLabel: label('title'),
+    },
+    presentation: {
+      mode: 'list',
+      listWidth: 330,
+      listMinWidth: 240,
+      listMaxWidth: 520,
+      listWidthStorageKey: 'organization-units-tree',
+    },
     advancedFilter: {
       fieldLabel: label('name'),
       getValue: (record) => record.name,
@@ -276,119 +295,5 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
     },
   };
 
-  return <ListDetailsPage key={asOf} variant="enterprise" title={label('title')} config={config} />;
-}
-
-type PositionRow = Omit<OrganizationPosition, 'id'> & { id: string };
-
-function OrganizationUnitPositionsPanel({
-  organizationUnitId,
-  positions,
-  roles,
-  disabled,
-  onRefresh,
-}: {
-  organizationUnitId: number;
-  positions: OrganizationPosition[];
-  roles: OrganizationRole[];
-  disabled: boolean;
-  onRefresh: () => Promise<unknown>;
-}): React.ReactElement {
-  const { t, isRtl } = useAppTranslation();
-  const gridRef = useRef<DataGridHandle>(null);
-  const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
-  const rows = useMemo<PositionRow[]>(
-    () => positions.map((position) => ({ ...position, id: String(position.id) })),
-    [positions]
-  );
-  const columns = useMemo<ColumnDef<PositionRow>[]>(
-    () => [
-      { field: 'code', headerName: t('organizationStructure.code'), width: 160, editable: true },
-      {
-        field: 'name',
-        valueGetter: ({ row }) => localizedName(row, isRtl),
-        headerName: t('organizationStructure.name'),
-        minWidth: 230,
-        flex: 1,
-        editable: true,
-      },
-      {
-        field: 'roleId',
-        headerName: t('organizationStructure.role'),
-        minWidth: 210,
-        editable: true,
-        type: 'singleSelect',
-        valueOptions: roles.map((role) => ({
-          value: role.id,
-          label: `${role.code} — ${localizedName(role, isRtl)}`,
-        })),
-      },
-      {
-        field: 'validFrom',
-        headerName: t('organizationStructure.validFrom'),
-        width: 135,
-        editable: true,
-        type: 'date',
-      },
-      {
-        field: 'validTo',
-        headerName: t('organizationStructure.validTo'),
-        width: 135,
-        editable: true,
-        type: 'date',
-      },
-    ],
-    [roles, t, isRtl]
-  );
-  const save = async (values: Partial<PositionRow>, isNew: boolean) => {
-    const code = String(values.code ?? '').trim();
-    const name = String(values.name ?? '').trim();
-    const roleId = Number(values.roleId) || 0;
-    const validFrom = String(values.validFrom ?? '');
-    const validTo = values.validTo ? String(values.validTo) : null;
-    if (!code) throw new Error(t('organizationStructure.codeRequired'));
-    if (!name) throw new Error(t('organizationStructure.nameRequired'));
-    if (roleId <= 0) throw new Error(t('organizationStructure.roleRequired'));
-    if (!validFrom) throw new Error(t('organizationStructure.validFromRequired'));
-    if (validTo && validTo <= validFrom) throw new Error(t('organizationStructure.dateError'));
-    const payload = { code, name, organizationUnitId, roleId, validFrom, validTo };
-    if (isNew) await api.createPosition(payload);
-    else await api.updatePosition(Number(values.id), payload);
-    await onRefresh();
-  };
-  const close = async () => {
-    const id = Number(selectedIds.at(-1));
-    if (!id) return;
-    await api.closePosition(id, today());
-    setSelectedIds([]);
-    await onRefresh();
-  };
-  return (
-    <TabularDetailPanel
-      showFilterRow={false}
-      rows={rows}
-      columns={columns}
-      addLabel={t('organizationStructure.addPosition')}
-      removeLabel={t('organizationStructure.closePosition')}
-      selectedIds={selectedIds}
-      onSelectionChange={setSelectedIds}
-      onAdd={() => gridRef.current?.startAddRow()}
-      onRemove={close}
-      onRowSave={save}
-      onNewRow={() => ({
-        id: `new-${crypto.randomUUID()}`,
-        organizationUnitId,
-        roleId: 0,
-        code: '',
-        name: '',
-        validFrom: today(),
-        validTo: null,
-      })}
-      gridRef={gridRef}
-      masterForm
-      disabled={disabled || organizationUnitId <= 0}
-      height={250}
-      storageKey="organization-unit-positions"
-    />
-  );
+  return <ListDetailsTreePage key={asOf} title={label('title')} config={config} />;
 }

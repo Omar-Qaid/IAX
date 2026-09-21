@@ -30,7 +30,7 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
 
     public async Task<IReadOnlyList<OrganizationUnitInfo>> GetUnitsAsync(DateOnly asOf, CancellationToken ct) =>
         await Units.AsNoTracking().Where(x => x.IsActive && x.ValidFrom <= asOf && (x.ValidTo == null || asOf < x.ValidTo))
-            .OrderBy(x => x.Code).Select(x => new OrganizationUnitInfo(x.RecId, x.Code, x.Name, x.OrganizationUnitType, x.NameAlias)).ToListAsync(ct);
+            .OrderBy(x => x.Code).Select(x => new OrganizationUnitInfo(x.RecId, x.Code, x.Name, x.OrganizationUnitType, x.ParentOrganizationUnitId, x.ValidFrom, x.ValidTo, x.NameAlias)).ToListAsync(ct);
 
     public async Task<IReadOnlyList<OrganizationRoleInfo>> GetRolesAsync(CancellationToken ct) =>
         await Roles.AsNoTracking().Where(x => x.IsActive).OrderBy(x => x.Code)
@@ -58,8 +58,13 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
         var code = Text(request.Code, 50, "Code");
         Require(!await Units.AnyAsync(x => x.Code == code, ct), "Unit code already exists in this company.");
         Require(request.NameAlias == null || request.NameAlias.Length <= 200, "NameAlias must not exceed 200 characters.");
+        if (request.ParentOrganizationUnitId != null)
+        {
+            var parent = await RequireUnitAsync(request.ParentOrganizationUnitId.Value, ct);
+            Require(Contains(parent.ValidFrom, parent.ValidTo, request.ValidFrom, request.ValidTo), "Parent unit period must contain the child unit period.");
+        }
         var unit = new OrganizationUnit { Code = code, Name = Text(request.Name, 200, "Name"), NameAlias = request.NameAlias?.Trim(),
-            OrganizationUnitType = request.Type, DataAreaId = Company, ValidFrom = request.ValidFrom, ValidTo = request.ValidTo };
+            OrganizationUnitType = request.Type, ParentOrganizationUnitId = request.ParentOrganizationUnitId, DataAreaId = Company, ValidFrom = request.ValidFrom, ValidTo = request.ValidTo };
         db.OrganizationUnits.Add(unit);
         await db.SaveChangesAsync(ct);
         return unit.RecId ;
@@ -67,13 +72,26 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
 
     public Task<long> UpdateUnitAsync(long id, UpdateOrganizationUnit request, CancellationToken ct) => WriteAsync(async () =>
     {
+        Validate(request.ValidFrom, request.ValidTo);
         Require(Enum.IsDefined(typeof(OrganizationUnitType), request.Type), "Unknown organization unit type.");
         var unit = await RequireUnitAsync(id, ct);
         var code = Text(request.Code, 50, "Code");
         Require(!await Units.AnyAsync(x => x.RecId != id && x.Code == code, ct), "Unit code already exists in this company.");
+        var parentId = request.ParentOrganizationUnitId;
+        var visited = new HashSet<long> { id };
+        while (parentId != null)
+        {
+            Require(visited.Add(parentId.Value), "Organization unit hierarchy contains a cycle.");
+            var parent = await RequireUnitAsync(parentId.Value, ct);
+            Require(Contains(parent.ValidFrom, parent.ValidTo, request.ValidFrom, request.ValidTo), "Parent unit period must contain the child unit period.");
+            parentId = parent.ParentOrganizationUnitId;
+        }
         unit.Code = code;
         unit.Name = Text(request.Name, 200, "Name");
         unit.OrganizationUnitType = request.Type;
+        unit.ParentOrganizationUnitId = request.ParentOrganizationUnitId;
+        unit.ValidFrom = request.ValidFrom;
+        unit.ValidTo = request.ValidTo;
         await db.SaveChangesAsync(ct);
         return unit.RecId;
     }, ct);
@@ -381,7 +399,7 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
             node = byId[node.ParentNodeId.Value];
         }
         var units = await Units.AsNoTracking().Where(x => unitIds.Contains(x.RecId) && x.ValidFrom <= asOf && (x.ValidTo == null || asOf < x.ValidTo))
-            .Select(x => new OrganizationUnitInfo(x.RecId, x.Code, x.Name, x.OrganizationUnitType, x.NameAlias)).ToDictionaryAsync(x => x.Id, ct);
+            .Select(x => new OrganizationUnitInfo(x.RecId, x.Code, x.Name, x.OrganizationUnitType, x.ParentOrganizationUnitId, x.ValidFrom, x.ValidTo, x.NameAlias)).ToDictionaryAsync(x => x.Id, ct);
         Require(units.Count == unitIds.Count, "Hierarchy contains a unit outside its effective period or company.");
         return unitIds.Select(id => units[id]).ToList();
     }

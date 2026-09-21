@@ -1,7 +1,7 @@
 namespace IAX.IXApi.Modules.Finance.Foundation.Structure;
 
-public sealed record CreateOrganizationUnit(string Code, string Name, byte Type, DateOnly ValidFrom, DateOnly? ValidTo, string? NameAlias = null);
-public sealed record UpdateOrganizationUnit(string Code, string Name, byte Type);
+public sealed record CreateOrganizationUnit(string Code, string Name, byte Type, DateOnly ValidFrom, DateOnly? ValidTo = null, long? ParentOrganizationUnitId = null, string? NameAlias = null);
+public sealed record UpdateOrganizationUnit(string Code, string Name, byte Type, DateOnly ValidFrom, DateOnly? ValidTo = null, long? ParentOrganizationUnitId = null);
 public sealed record CreateOrganizationRole(string Code, string Name);
 public sealed record UpdateOrganizationRole(string Code, string Name);
 public sealed record CreateOrganizationHierarchy(string Code, string Name, string Purpose);

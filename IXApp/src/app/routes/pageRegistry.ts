@@ -316,6 +316,15 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'organization-hierarchy-nodes',
+    path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.ORGANIZATION_HIERARCHY_NODES,
+    permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
+    component: lazyPage(
+      () => import('@modules/organization/pages/OrganizationHierarchyNodesPage'),
+      (module) => module.OrganizationHierarchyNodesPage
+    ),
+  },
+  {
     id: 'hcm-positions',
     path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.HCM_POSITIONS,
     permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,

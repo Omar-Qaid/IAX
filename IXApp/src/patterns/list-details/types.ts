@@ -60,6 +60,19 @@ export interface ListDetailRecord {
   id: string;
 }
 
+export interface ListDetailsNavigationContext<T extends ListDetailRecord> {
+  records: T[];
+  visibleRecords: T[];
+  selectedId: string | null;
+  editing: boolean;
+  loading: boolean;
+  query: string;
+  filterVisible: boolean;
+  filterLabel: string;
+  onQueryChange: (query: string) => void;
+  onSelect: (record: T) => void;
+}
+
 export interface ListDetailsCommand<T extends ListDetailRecord = ListDetailRecord> {
   id: string;
   label: string;
@@ -96,6 +109,8 @@ export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
   /** Stable per-page key used to remember the list search text across navigation and reloads. */
   filterStorageKey?: string;
   matchesSearch?: (record: T, query: string) => boolean;
+  /** Replaces the standard record list while retaining the page controller and responsive layout. */
+  renderListPane?: (context: ListDetailsNavigationContext<T>) => ReactNode;
   getValues: (record: T) => DetailValues;
   setValues: (record: T, values: DetailValues) => T;
   headerFields: ListDetailsHeaderField<T>[];

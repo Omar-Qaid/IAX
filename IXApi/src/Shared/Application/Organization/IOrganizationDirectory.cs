@@ -8,6 +8,6 @@ public interface IOrganizationDirectory
     Task<IReadOnlyList<WorkerAssignmentInfo>> GetRoleOccupantsAsync(long hierarchyId, long unitId, string roleCode, DateOnly asOf, CancellationToken ct = default);
 }
 
-public sealed record OrganizationUnitInfo(long Id, string Code, string Name, byte Type, string? NameAlias = null);
+public sealed record OrganizationUnitInfo(long Id, string Code, string Name, byte Type, long? ParentOrganizationUnitId, DateOnly ValidFrom, DateOnly? ValidTo, string? NameAlias = null);
 public sealed record WorkerAssignmentInfo(long AssignmentId, long WorkerId, long? PositionId,
     long OrganizationUnitId, long? OrganizationRoleId, string? RoleCode, bool IsPrimary, DateOnly ValidFrom, DateOnly? ValidTo);

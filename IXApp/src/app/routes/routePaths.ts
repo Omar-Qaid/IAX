@@ -30,6 +30,10 @@ export const ROUTE_PATHS = {
     ORGANIZATIONS: '/organization-administration/organizations',
     ORGANIZATION_ROLES: '/organization-administration/organization-roles',
     ORGANIZATION_HIERARCHIES: '/organization-administration/organization-hierarchies',
+    ORGANIZATION_HIERARCHY_NODES:
+      '/organization-administration/organization-hierarchies/:hierarchyId/nodes',
+    organizationHierarchyNodes: (hierarchyId: string | number) =>
+      `/organization-administration/organization-hierarchies/${hierarchyId}/nodes`,
     REPORTING_HIERARCHIES: '/organization-administration/reporting-hierarchies',
     HCM_POSITIONS: '/organization-administration/positions',
     HCM_WORKERS: '/organization-administration/workers',
