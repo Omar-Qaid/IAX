@@ -88,6 +88,28 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
         return role.RecId;
     }, ct);
 
+    public Task<long> UpdateRoleAsync(long id, UpdateOrganizationRole request, CancellationToken ct) => WriteAsync(async () =>
+    {
+        var role = await Roles.SingleOrDefaultAsync(x => x.RecId == id && x.IsActive, ct)
+            ?? throw new KeyNotFoundException("Organization role not found in this company.");
+        var code = Text(request.Code, 50, "Code");
+        Require(!await Roles.AnyAsync(x => x.RecId != id && x.Code == code, ct), "Role code already exists in this company.");
+        role.Code = code;
+        role.Name = Text(request.Name, 200, "Name");
+        await db.SaveChangesAsync(ct);
+        return role.RecId;
+    }, ct);
+
+    public Task<long> DeactivateRoleAsync(long id, CancellationToken ct) => WriteAsync(async () =>
+    {
+        var role = await Roles.SingleOrDefaultAsync(x => x.RecId == id && x.IsActive, ct)
+            ?? throw new KeyNotFoundException("Organization role not found in this company.");
+        Require(!await Positions.AnyAsync(x => x.RoleId == id, ct), "A role with positions cannot be deactivated.");
+        Require(!await Assignments.AnyAsync(x => x.OrganizationRoleId == id, ct), "A role with worker assignments cannot be deactivated.");
+        role.IsActive = false;
+        await db.SaveChangesAsync(ct);
+        return role.RecId;
+    }, ct);
     public Task<long> CreateHierarchyAsync(CreateOrganizationHierarchy request, CancellationToken ct) => WriteAsync(async () =>
     {
         var code = Text(request.Code, 50, "Code");
@@ -99,6 +121,35 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
         return hierarchy.RecId;
     }, ct);
 
+    public Task<long> CreateHierarchyWithRootNodeAsync(CreateOrganizationHierarchyWithRootNode request, CancellationToken ct) => WriteAsync(async () =>
+    {
+        Validate(request.ValidFrom, request.ValidTo);
+        var code = Text(request.Code, 50, "Code");
+        Require(!await Hierarchies.AnyAsync(x => x.Code == code, ct), "Hierarchy code already exists in this company.");
+        var unit = await RequireUnitAsync(request.OrganizationUnitId, ct);
+        Require(Contains(unit.ValidFrom, unit.ValidTo, request.ValidFrom, request.ValidTo), "Root node period must be within the organization unit period.");
+
+        var hierarchy = new OrganizationHierarchy
+        {
+            Code = code,
+            Name = Text(request.Name, 200, "Name"),
+            Purpose = Text(request.Purpose, 100, "Purpose"),
+            DataAreaId = Company
+        };
+        db.OrganizationHierarchies.Add(hierarchy);
+        await db.SaveChangesAsync(ct);
+
+        db.OrganizationHierarchyNodes.Add(new OrganizationHierarchyNode
+        {
+            DataAreaId = Company,
+            HierarchyId = hierarchy.RecId,
+            OrganizationUnitId = unit.RecId,
+            ValidFrom = request.ValidFrom,
+            ValidTo = request.ValidTo
+        });
+        await db.SaveChangesAsync(ct);
+        return hierarchy.RecId;
+    }, ct);
     public Task<long> UpdateHierarchyAsync(long id, UpdateOrganizationHierarchy request, CancellationToken ct) => WriteAsync(async () =>
     {
         var hierarchy = await RequireHierarchyAsync(id, ct);
@@ -137,6 +188,35 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
         return node.RecId;
     }, ct);
 
+    public Task<long> UpdateNodeAsync(long id, UpdateOrganizationNode request, CancellationToken ct) => WriteAsync(async () =>
+    {
+        Validate(request.ValidFrom, request.ValidTo);
+        var node = await Nodes.SingleOrDefaultAsync(x => x.RecId == id && x.IsActive, ct)
+            ?? throw new KeyNotFoundException("Hierarchy node not found in this company.");
+        var unit = await RequireUnitAsync(request.OrganizationUnitId, ct);
+        Require(Contains(unit.ValidFrom, unit.ValidTo, request.ValidFrom, request.ValidTo), "Node period must be within the unit period.");
+        Require(!await Nodes.AnyAsync(x => x.RecId != id && x.HierarchyId == node.HierarchyId && x.OrganizationUnitId == unit.RecId &&
+            (request.ValidTo == null || x.ValidFrom < request.ValidTo) && (x.ValidTo == null || request.ValidFrom < x.ValidTo), ct), "Unit already belongs to this hierarchy during the requested period.");
+
+        var parentId = request.ParentNodeId;
+        var visited = new HashSet<long> { id };
+        while (parentId != null)
+        {
+            Require(visited.Add(parentId.Value), "Hierarchy contains a cycle.");
+            var parent = await Nodes.SingleOrDefaultAsync(x => x.RecId == parentId && x.HierarchyId == node.HierarchyId && x.IsActive, ct)
+                ?? throw new KeyNotFoundException("Parent node not found in this company and hierarchy.");
+            Require(parent.OrganizationUnitId != unit.RecId, "A unit cannot appear in its own ancestry.");
+            Require(Contains(parent.ValidFrom, parent.ValidTo, request.ValidFrom, request.ValidTo), "Parent period must contain the entire child period.");
+            parentId = parent.ParentNodeId;
+        }
+        Require(!await Nodes.AnyAsync(x => x.ParentNodeId == id && !Contains(request.ValidFrom, request.ValidTo, x.ValidFrom, x.ValidTo), ct), "Updated node period must contain every child node period.");
+        node.OrganizationUnitId = unit.RecId;
+        node.ParentNodeId = request.ParentNodeId;
+        node.ValidFrom = request.ValidFrom;
+        node.ValidTo = request.ValidTo;
+        await db.SaveChangesAsync(ct);
+        return node.RecId;
+    }, ct);
     public Task<long> CreatePositionAsync(CreatePosition request, CancellationToken ct) => WriteAsync(async () =>
     {
         Validate(request.ValidFrom, request.ValidTo);
@@ -198,6 +278,27 @@ public sealed class OrganizationStructureService(IFinanceDataContext db, ICompan
         return assignment.RecId;
     }
 
+    public Task<long> UpdateAssignmentAsync(long id, UpdateWorkerAssignment request, CancellationToken ct) => WriteAsync(async () =>
+    {
+        var assignment = await RequireAssignmentAsync(id, ct);
+        Validate(request.ValidFrom, request.ValidTo);
+        var position = await Positions.SingleOrDefaultAsync(x => x.RecId == request.PositionId && x.IsActive, ct)
+            ?? throw new KeyNotFoundException("Position not found in this company.");
+        var unit = await RequireUnitAsync(position.OrganizationUnitId, ct);
+        Require(Contains(position.ValidFrom, position.ValidTo, request.ValidFrom, request.ValidTo) && Contains(unit.ValidFrom, unit.ValidTo, request.ValidFrom, request.ValidTo), "Assignment period must be within the position and unit periods.");
+        var overlaps = Assignments.Where(x => x.RecId != id &&
+            (request.ValidTo == null || x.ValidFrom < request.ValidTo) && (x.ValidTo == null || request.ValidFrom < x.ValidTo));
+        Require(!await overlaps.AnyAsync(x => x.PositionId == position.RecId, ct), "Position is already occupied during this period.");
+        Require(!request.IsPrimary || !await overlaps.AnyAsync(x => x.HcmWorkerId == assignment.HcmWorkerId && x.IsPrimary, ct), "Worker already has a primary assignment during this period.");
+        assignment.PositionId = position.RecId;
+        assignment.OrganizationUnitId = position.OrganizationUnitId;
+        assignment.OrganizationRoleId = position.RoleId;
+        assignment.ValidFrom = request.ValidFrom;
+        assignment.ValidTo = request.ValidTo;
+        assignment.IsPrimary = request.IsPrimary;
+        await db.SaveChangesAsync(ct);
+        return assignment.RecId;
+    }, ct);
     public Task<long> TransferAsync(long assignmentId, TransferWorker request, CancellationToken ct) => WriteAsync(async () =>
     {
         var old = await RequireAssignmentAsync(assignmentId, ct);

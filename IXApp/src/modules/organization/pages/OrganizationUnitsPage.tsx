@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Alert, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { useAppStore } from '@app/store/useAppStore';
@@ -10,7 +10,8 @@ import type {
   EnterpriseListDetailsConfig,
 } from '@patterns/list-details/types';
 import { TabularDetailPanel } from '@patterns/list-details/TabularDetailPanel';
-import { organizationStructureApi as api } from '../api/organizationStructureApi';
+import type { ColumnDef, DataGridHandle } from '@shared/components/data-grid/types';
+import { organizationStructureApi as api, type OrganizationPosition, type OrganizationRole } from '../api/organizationStructureApi';
 
 interface UnitRecord {
   id: string;
@@ -45,6 +46,10 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
   const positions = useQuery({
     queryKey: ['organization-structure', company, 'positions', asOf],
     queryFn: ({ signal }) => api.positions(asOf, signal),
+  });
+  const roles = useQuery({
+    queryKey: ['organization-structure', company, 'roles'],
+    queryFn: ({ signal }) => api.roles(signal),
   });
   const hierarchies = useQuery({
     queryKey: ['organization-structure', company, 'hierarchies'],
@@ -227,24 +232,12 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
         content: positions.error ? (
           <Alert severity="error">{positions.error.message}</Alert>
         ) : (
-          <TabularDetailPanel
-            showFilterRow={false}
-            rows={(positions.data ?? [])
-              .filter((position) => position.organizationUnitId === record.recordId)
-              .map((position) => ({ ...position, id: String(position.id) }))}
-            columns={[
-              { field: 'code', headerName: label('code'), width: 170 },
-              { field: 'name', headerName: label('name'), flex: 1 },
-              { field: 'validFrom', headerName: label('validFrom'), width: 140 },
-              { field: 'validTo', headerName: label('validTo'), width: 140 },
-            ]}
-            addLabel={t('actions.new')}
-            removeLabel={t('actions.delete')}
-            selectedIds={selectedPositionIds}
-            onSelectionChange={setSelectedPositionIds}
-            disabled={editing || positions.isLoading}
-            height={250}
-            storageKey="organization-unit-positions"
+          <OrganizationUnitPositionsPanel
+            organizationUnitId={record.recordId}
+            positions={(positions.data ?? []).filter((position) => position.organizationUnitId === record.recordId)}
+            roles={roles.data ?? []}
+            disabled={editing || positions.isLoading || roles.isLoading}
+            onRefresh={() => positions.refetch()}
           />
         ),
       },
@@ -274,4 +267,29 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
   };
 
   return <ListDetailsPage key={asOf} variant="enterprise" title={label('title')} config={config} />;
+}
+
+type PositionRow = OrganizationPosition & { id: string };
+
+function OrganizationUnitPositionsPanel({ organizationUnitId, positions, roles, disabled, onRefresh }: { organizationUnitId: number; positions: OrganizationPosition[]; roles: OrganizationRole[]; disabled: boolean; onRefresh: () => Promise<unknown> }): React.ReactElement {
+  const gridRef = useRef<DataGridHandle>(null);
+  const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
+  const rows = useMemo<PositionRow[]>(() => positions.map((position) => ({ ...position, id: String(position.id) })), [positions]);
+  const columns = useMemo<ColumnDef<PositionRow>[]>(() => [
+    { field: 'code', headerName: 'Code', width: 160, editable: true },
+    { field: 'name', headerName: 'Name', minWidth: 230, flex: 1, editable: true },
+    { field: 'roleId', headerName: 'Organization role', minWidth: 210, editable: true, type: 'singleSelect', valueOptions: roles.map((role) => ({ value: role.id, label: `${role.code} — ${role.name}` })) },
+    { field: 'validFrom', headerName: 'Valid from', width: 135, editable: true, type: 'date' },
+    { field: 'validTo', headerName: 'Valid to', width: 135, editable: true, type: 'date' },
+  ], [roles]);
+  const save = async (values: Partial<PositionRow>, isNew: boolean) => {
+    const code = String(values.code ?? '').trim(); const name = String(values.name ?? '').trim(); const roleId = Number(values.roleId) || 0;
+    const validFrom = String(values.validFrom ?? ''); const validTo = values.validTo ? String(values.validTo) : null;
+    if (!code) throw new Error('Code is required.'); if (!name) throw new Error('Name is required.'); if (roleId <= 0) throw new Error('Organization role is required.'); if (!validFrom) throw new Error('Valid from is required.'); if (validTo && validTo <= validFrom) throw new Error('Valid to must be later than valid from.');
+    const payload = { code, name, organizationUnitId, roleId, validFrom, validTo };
+    if (isNew) await api.createPosition(payload); else await api.updatePosition(Number(values.id), payload);
+    await onRefresh();
+  };
+  const close = async () => { const id = Number(selectedIds.at(-1)); if (!id) return; await api.closePosition(id, today()); setSelectedIds([]); await onRefresh(); };
+  return <TabularDetailPanel showFilterRow={false} rows={rows} columns={columns} addLabel="Add position" removeLabel="Close position" selectedIds={selectedIds} onSelectionChange={setSelectedIds} onAdd={() => gridRef.current?.startAddRow()} onRemove={close} onRowSave={save} onNewRow={() => ({ id: `new-${crypto.randomUUID()}`, organizationUnitId, roleId: 0, code: '', name: '', validFrom: today(), validTo: null })} gridRef={gridRef} masterForm disabled={disabled || organizationUnitId <= 0} height={250} storageKey="organization-unit-positions" />;
 }

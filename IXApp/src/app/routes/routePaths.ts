@@ -41,6 +41,7 @@ export const ROUTE_PATHS = {
     LEGAL_ENTITIES: '/organization-administration/legal-entities',
     ORGANIZATION_UNITS: '/organization-administration/organization-units',
     ORGANIZATIONS: '/organization-administration/organizations',
+    ORGANIZATION_ROLES: '/organization-administration/organization-roles',
     ORGANIZATION_HIERARCHIES: '/organization-administration/organization-hierarchies',
     HCM_POSITIONS: '/organization-administration/positions',
     HCM_WORKERS: '/organization-administration/workers',

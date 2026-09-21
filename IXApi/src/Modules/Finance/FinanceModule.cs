@@ -30,7 +30,10 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<Shared.Features.IPaymSchedLineService, Shared.Features.PaymSchedLineService>();
             services.AddScoped<Shared.Features.IPaymSchedService, Shared.Features.PaymSchedService>();
             services.AddScoped<Shared.Features.IPaymTermService, Shared.Features.PaymTermService>();
-            services.AddScoped<Foundation.Structure.OrganizationStructureService>();
+            services.AddScoped<Foundation.Genders.IGenderService, Foundation.Genders.GenderService>();
+            services.AddScoped<Foundation.Nationalities.INationalityService, Foundation.Nationalities.NationalityService>();
+            services.AddScoped<Foundation.Occupations.IOccupationService, Foundation.Occupations.OccupationService>();
+            services.AddScoped<Foundation.HcmWorkers.IHcmWorkerService, Foundation.HcmWorkers.HcmWorkerService>();            services.AddScoped<Foundation.Structure.OrganizationStructureService>();
             services.AddScoped<IAX.IXApi.Shared.Application.Organization.IOrganizationDirectory,
                 Foundation.Structure.OrganizationStructureService>();
             return services;

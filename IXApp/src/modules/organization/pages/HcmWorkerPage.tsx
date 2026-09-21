@@ -209,7 +209,7 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
         id: 'organizationAssignments',
         title: 'Organization assignments',
         minHeight: 220,
-        content: <HcmWorkerAssignmentsPanel workerId={record.recordId} editing={editing} company={company} />,
+        content: <HcmWorkerAssignmentsPanel workerId={record.recordId} company={company} />,
       },
       {
         id: 'addresses',

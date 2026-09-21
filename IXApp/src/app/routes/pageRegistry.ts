@@ -298,6 +298,15 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'organization-roles',
+    path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.ORGANIZATION_ROLES,
+    permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
+    component: lazyPage(
+      () => import('@modules/organization/pages/OrganizationRolePage'),
+      (module) => module.OrganizationRolePage
+    ),
+  },
+  {
     id: 'organization-hierarchies',
     path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.ORGANIZATION_HIERARCHIES,
     permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,

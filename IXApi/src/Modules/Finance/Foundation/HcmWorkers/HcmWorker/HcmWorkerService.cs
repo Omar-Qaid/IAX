@@ -5,6 +5,7 @@ using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Persistence;
+using IAX.IXApi.Modules.Finance.Foundation.WorkerOrganizationAssignments;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
@@ -34,10 +35,8 @@ public class HcmWorkerService : BaseService<HcmWorker>, IHcmWorkerService
                 "DirPartyTable",
                 cancellationToken: cancellationToken);
             var partyNumber = partyNumberResult.Code ?? Guid.NewGuid().ToString("N")[..20];
-            var partyName = entity.Party?.Name?.Trim() ?? string.Empty;
-            var partyAlias = string.IsNullOrWhiteSpace(entity.Party?.NameAlias)
-                ? partyName
-                : entity.Party.NameAlias.Trim();
+            var partyName = entity.Name.Trim();
+            var partyAlias = string.IsNullOrWhiteSpace(entity.NameAlias) ? partyName : entity.NameAlias.Trim();
 
             var party = new DirPartyTable
             {
@@ -61,6 +60,15 @@ public class HcmWorkerService : BaseService<HcmWorker>, IHcmWorkerService
 
             var worker = await base.AddAsync(entity, cancellationToken);
             party.HcmWorker = worker.RecId;
+            if (entity.InitialPositionId is long positionId && positionId > 0)
+            {
+                var position = await _dbContext.HcmPositions.SingleOrDefaultAsync(x => x.RecId == positionId && x.IsActive, cancellationToken)
+                    ?? throw new KeyNotFoundException("Initial position not found.");
+                var validFrom = DateOnly.FromDateTime(entity.HireDate ?? DateTime.UtcNow);
+                if (position.ValidFrom > validFrom || (position.ValidTo is not null && validFrom >= position.ValidTo))
+                    throw new InvalidOperationException("Initial assignment date must be within the selected position period.");
+                _dbContext.HcmWorkerOrganizationAssignments.Add(new HcmWorkerOrganizationAssignment { DataAreaId = entity.DataAreaId, HcmWorkerId = worker.RecId, PositionId = position.RecId, OrganizationUnitId = position.OrganizationUnitId, OrganizationRoleId = position.RoleId, AssignmentRole = 1, IsPrimary = true, IsActive = true, ValidFrom = validFrom });
+            }
             await _dbContext.SaveChangesAsync(cancellationToken);
             return worker;
         }

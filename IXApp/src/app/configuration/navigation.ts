@@ -266,8 +266,8 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
             permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
           },
           {
-            label: 'Organization units (simple list)',
-            path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.ORGANIZATIONS,
+            label: 'Organization roles',
+            path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.ORGANIZATION_ROLES,
             permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
           },
           {

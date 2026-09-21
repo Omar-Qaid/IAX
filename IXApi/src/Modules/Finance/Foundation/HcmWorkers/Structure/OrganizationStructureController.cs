@@ -24,16 +24,24 @@ public sealed class OrganizationStructureController(OrganizationStructureService
     public Task<IReadOnlyList<OrganizationRoleInfo>> Roles(CancellationToken ct) => service.GetRolesAsync(ct);
     [HttpPost("roles")]
     public Task<long> CreateRole(CreateOrganizationRole request, CancellationToken ct) => service.CreateRoleAsync(request, ct);
+    [HttpPut("roles/{id:long}")]
+    public Task<long> UpdateRole(long id, UpdateOrganizationRole request, CancellationToken ct) => service.UpdateRoleAsync(id, request, ct);
+    [HttpDelete("roles/{id:long}")]
+    public Task<long> DeactivateRole(long id, CancellationToken ct) => service.DeactivateRoleAsync(id, ct);
     [HttpGet("hierarchies")]
     public Task<IReadOnlyList<OrganizationHierarchyInfo>> Hierarchies(CancellationToken ct) => service.GetHierarchiesAsync(ct);
     [HttpPost("hierarchies")]
     public Task<long> CreateHierarchy(CreateOrganizationHierarchy request, CancellationToken ct) => service.CreateHierarchyAsync(request, ct);
+    [HttpPost("hierarchies/with-root-node")]
+    public Task<long> CreateHierarchyWithRootNode(CreateOrganizationHierarchyWithRootNode request, CancellationToken ct) => service.CreateHierarchyWithRootNodeAsync(request, ct);
     [HttpPut("hierarchies/{id:long}")]
     public Task<long> UpdateHierarchy(long id, UpdateOrganizationHierarchy request, CancellationToken ct) => service.UpdateHierarchyAsync(id, request, ct);
     [HttpGet("hierarchies/{hierarchyId:long}/nodes")]
     public Task<IReadOnlyList<OrganizationNodeInfo>> Nodes(long hierarchyId, [FromQuery, BindRequired] DateOnly asOf, CancellationToken ct) => service.GetNodesAsync(hierarchyId, asOf, ct);
     [HttpPost("nodes")]
     public Task<long> CreateNode(CreateOrganizationNode request, CancellationToken ct) => service.CreateNodeAsync(request, ct);
+    [HttpPut("nodes/{id:long}")]
+    public Task<long> UpdateNode(long id, UpdateOrganizationNode request, CancellationToken ct) => service.UpdateNodeAsync(id, request, ct);
     [HttpPut("nodes/{id:long}/close")]
     public Task<long> CloseNode(long id, CloseOrganizationPeriod request, CancellationToken ct) => service.CloseNodeAsync(id, request.ValidTo, ct);
     [HttpGet("positions")]
@@ -46,6 +54,8 @@ public sealed class OrganizationStructureController(OrganizationStructureService
     public Task<long> ClosePosition(long id, CloseOrganizationPeriod request, CancellationToken ct) => service.ClosePositionAsync(id, request.ValidTo, ct);
     [HttpPost("assignments")]
     public Task<long> Assign(AssignWorker request, CancellationToken ct) => service.AssignWorkerAsync(request, ct);
+    [HttpPut("assignments/{id:long}")]
+    public Task<long> UpdateAssignment(long id, UpdateWorkerAssignment request, CancellationToken ct) => service.UpdateAssignmentAsync(id, request, ct);
     [HttpPut("assignments/{id:long}/transfer")]
     public Task<long> Transfer(long id, TransferWorker request, CancellationToken ct) => service.TransferAsync(id, request, ct);
     [HttpPut("assignments/{id:long}/close")]

@@ -26,6 +26,7 @@ export interface OrganizationRole {
   code: string;
   name: string;
 }
+export interface OrganizationHierarchyNode { id: number; hierarchyId: number; organizationUnitId: number; parentNodeId: number | null; validFrom: string; validTo: string | null; }
 export interface WorkerOrganizationAssignment { assignmentId: number; workerId: number; positionId: number | null; organizationUnitId: number; organizationRoleId: number; roleCode: string | null; isPrimary: boolean; validFrom: string; validTo: string | null; }
 export interface NewOrganizationUnit {
   code: string;
@@ -52,8 +53,14 @@ export const organizationStructureApi = {
   async roles(signal?: AbortSignal) {
     return (await apiClient.get<OrganizationRole[]>(`${base}/roles`, { signal })).data;
   },
+  async createRole(role: Omit<OrganizationRole, 'id'>) { return (await apiClient.post<number>(`${base}/roles`, role)).data; },
+  async updateRole(id: number, role: Omit<OrganizationRole, 'id'>) { return (await apiClient.put<number>(`${base}/roles/${id}`, role)).data; },
+  async deactivateRole(id: number) { return (await apiClient.delete<number>(`${base}/roles/${id}`)).data; },
   async workerAssignments(workerId: number, asOf: string, signal?: AbortSignal) { return (await apiClient.get<WorkerOrganizationAssignment[]>(`${base}/workers/${workerId}/assignments`, { params: { asOf }, signal })).data; },
   async assignWorker(payload: { workerId: number; positionId: number; validFrom: string; validTo: string | null; isPrimary: boolean; }) { return (await apiClient.post<number>(`${base}/assignments`, payload)).data; },
+  async updateWorkerAssignment(id: number, payload: { positionId: number; validFrom: string; validTo: string | null; isPrimary: boolean; }) {
+    return (await apiClient.put<number>(`${base}/assignments/${id}`, payload)).data;
+  },
   async closeAssignment(id: number, validTo: string) { return (await apiClient.put<number>(`${base}/assignments/${id}/close`, { validTo })).data; },
   async ancestors(hierarchyId: number, unitId: number, asOf: string, signal?: AbortSignal) {
     return (
@@ -69,8 +76,22 @@ export const organizationStructureApi = {
   async update(id: number, unit: Pick<NewOrganizationUnit, 'code' | 'name' | 'type'>) {
     return (await apiClient.put<number>(`${base}/units/${id}`, unit)).data;
   },
-  async createHierarchy(hierarchy: Omit<OrganizationHierarchy, 'id'>) {
+  async nodes(hierarchyId: number, asOf: string, signal?: AbortSignal) {
+    return (await apiClient.get<OrganizationHierarchyNode[]>(`${base}/hierarchies/${hierarchyId}/nodes`, { params: { asOf }, signal })).data;
+  },
+  async createNode(node: Omit<OrganizationHierarchyNode, 'id'>) {
+    return (await apiClient.post<number>(`${base}/nodes`, node)).data;
+  },
+  async updateNode(id: number, node: Omit<OrganizationHierarchyNode, 'id' | 'hierarchyId'>) {
+    return (await apiClient.put<number>(`${base}/nodes/${id}`, node)).data;
+  },
+  async closeNode(id: number, validTo: string) {
+    return (await apiClient.put<number>(`${base}/nodes/${id}/close`, { validTo })).data;
+  },  async createHierarchy(hierarchy: Omit<OrganizationHierarchy, 'id'>) {
     return (await apiClient.post<number>(`${base}/hierarchies`, hierarchy)).data;
+  },
+  async createHierarchyWithRootNode(hierarchy: Omit<OrganizationHierarchy, 'id'> & { organizationUnitId: number; validFrom: string; validTo: string | null }) {
+    return (await apiClient.post<number>(`${base}/hierarchies/with-root-node`, hierarchy)).data;
   },
   async updateHierarchy(id: number, hierarchy: Omit<OrganizationHierarchy, 'id'>) {
     return (await apiClient.put<number>(`${base}/hierarchies/${id}`, hierarchy)).data;
