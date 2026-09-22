@@ -19,6 +19,7 @@ public interface IFinanceDataContext
     DbSet<HcmShowroom> HcmShowrooms { get; }
     DbSet<OrganizationUnit> OrganizationUnits { get; }
     DbSet<HcmWorkerOrganizationAssignment> HcmWorkerOrganizationAssignments { get; }
+    DbSet<IAX.IXApi.Modules.Finance.Foundation.WorkerShowroomAssignments.HcmWorkerShowroomAssignment> HcmWorkerShowroomAssignments { get; }
     DbSet<OrganizationRole> OrganizationRoles { get; }
     DbSet<OrganizationHierarchy> OrganizationHierarchies { get; }
     DbSet<OrganizationHierarchyNode> OrganizationHierarchyNodes { get; }

@@ -220,6 +220,7 @@ namespace IAX.IXApi.Infrastructure.Persistence
         public DbSet<OrganizationHierarchyNode> OrganizationHierarchyNodes => Set<OrganizationHierarchyNode>();
 
         public DbSet<HcmWorkerOrganizationAssignment> HcmWorkerOrganizationAssignments => Set<HcmWorkerOrganizationAssignment>();
+        public DbSet<IAX.IXApi.Modules.Finance.Foundation.WorkerShowroomAssignments.HcmWorkerShowroomAssignment> HcmWorkerShowroomAssignments => Set<IAX.IXApi.Modules.Finance.Foundation.WorkerShowroomAssignments.HcmWorkerShowroomAssignment>();
         public DbSet<HcmWorker> HcmWorkers => Set<HcmWorker>();
         public DbSet<HcmShowroom> HcmShowrooms => Set<HcmShowroom>();
         public DbSet<HcmPosition> HcmPositions => Set<HcmPosition>();

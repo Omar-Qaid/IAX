@@ -27,4 +27,5 @@ public class HcmWorker : Entity<long>
     public virtual HcmNationality Nationality { get; set; } = null!;
     public virtual AspNetUser? User { get; set; }
     public virtual ICollection<HcmWorkerOrganizationAssignment> WorkerOrganizationAssignments { get; set; } = [];
+    public virtual ICollection<IAX.IXApi.Modules.Finance.Foundation.WorkerShowroomAssignments.HcmWorkerShowroomAssignment> WorkerShowroomAssignments { get; set; } = [];
 }

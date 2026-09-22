@@ -10,4 +10,6 @@ public class HcmShowroom : Entity<long>
 
     [ForeignKey(nameof(Party))]
     public virtual DirPartyTable PartyTable { get; set; } = null!;
+
+    public virtual ICollection<IAX.IXApi.Modules.Finance.Foundation.WorkerShowroomAssignments.HcmWorkerShowroomAssignment> WorkerShowroomAssignments { get; set; } = [];
 }
