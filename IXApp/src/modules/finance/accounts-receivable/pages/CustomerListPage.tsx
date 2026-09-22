@@ -1,3 +1,4 @@
+import { localizedName } from '@shared/utilities/localizedName';
 import React, { useMemo, useState } from 'react';
 import { Link, Typography } from '@mui/material';
 import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
@@ -12,7 +13,7 @@ import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRou
 import { useNotifications } from '@shared/hooks/useNotifications';
 
 export function CustomerListPage(): React.ReactElement {
-  const { t, currentLanguage } = useAppTranslation();
+  const { t, currentLanguage, isRtl } = useAppTranslation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { notifyError, notifySuccess } = useNotifications();
@@ -39,7 +40,7 @@ export function CustomerListPage(): React.ReactElement {
           </Link>
         ),
       },
-      { field: 'name', headerName: 'fields.customerName', width: 205 },
+      { field: 'name', valueGetter: ({ row }) => localizedName({ name: row.name, nameAlias: row.nameAr }, isRtl), headerName: 'fields.customerName', width: 205 },
       {
         field: 'nameAr',
         headerName: 'fields.arabicName',
@@ -90,7 +91,7 @@ export function CustomerListPage(): React.ReactElement {
         renderCell: ({ row }) => <StatusBadge status={row.status} />,
       },
     ],
-    []
+    [isRtl]
   );
 
   const commandIds = [
@@ -185,7 +186,7 @@ export function CustomerListPage(): React.ReactElement {
               sx={{ fontSize: '0.75rem', color: 'text.secondary', whiteSpace: 'pre-line' }}
             >
               {customer
-                ? t('relatedInformation.noAddressFor', { customer: customer.name })
+                ? t('relatedInformation.noAddressFor', { customer: localizedName({ name: customer.name, nameAlias: customer.nameAr }, isRtl) })
                 : t('relatedInformation.selectCustomer')}
             </Typography>
           ),

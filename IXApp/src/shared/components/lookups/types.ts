@@ -6,6 +6,7 @@ export interface LookupOption {
   id: string | number;
   code: string;
   name: string;
+  nameAlias?: string | null;
   description?: string;
   [key: string]: unknown;
 }

@@ -1,3 +1,4 @@
+import { localizedName } from '@shared/utilities/localizedName';
 import React from 'react';
 import { TransitionRuleGroup } from './TransitionRuleGroup';
 import { isSupportedBuilderOperator, resolveBuilderOperator } from '../api/processBuilderOperators';
@@ -188,7 +189,7 @@ const workspaceCardSx = (selected = false) => ({
 });
 
 export function DesignerWorkspace() {
-  const { t } = useAppTranslation();
+  const { t, isRtl } = useAppTranslation();
   const s = useProcessBuilderStore();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
   const dragStep = ({ active, over }: DragEndEvent) => {
@@ -375,11 +376,11 @@ export function DesignerWorkspace() {
                           }}
                         >
                           <Typography sx={{ flex: 1, fontSize: tokens.fontSize.body }}>
-                            {activity.name}
+                            {localizedName(activity, isRtl)}
                           </Typography>
                           <Button
                             size="small"
-                            aria-label={`${t('wfProcessBuilder.actions.configure')} ${activity.name}`}
+                            aria-label={`${t('wfProcessBuilder.actions.configure')} ${localizedName(activity, isRtl)}`}
                             onClick={(event) => {
                               event.stopPropagation();
                               s.select({ kind: 'activity', stepId: step.id, id: activity.id });
@@ -821,7 +822,7 @@ export function ActivitiesWorkspace({
   saving?: boolean;
   manualCode?: boolean;
 }) {
-  const { t } = useAppTranslation();
+  const { t, isRtl } = useAppTranslation();
   const s = useProcessBuilderStore();
   const activityTypes = useQuery({
     queryKey: ['workflow', 'builder-activity-type-options'],
@@ -831,6 +832,7 @@ export function ActivitiesWorkspace({
     id: item.recId,
     code: item.code ?? '',
     name: item.name ?? '',
+              nameAlias: item.nameAlias,
   }));
   const node = s.selected;
   const step =
@@ -861,7 +863,7 @@ export function ActivitiesWorkspace({
           sx={{ flex: 1, fontSize: tokens.fontSize.heading, fontWeight: 700 }}
         >
           {t('wfProcessBuilder.workspace.activitiesForStep', {
-            name: step?.name ?? t('wfProcessBuilder.workspace.selectStep'),
+            name: (step ? localizedName(step, isRtl) : undefined) ?? t('wfProcessBuilder.workspace.selectStep'),
           })}
         </Typography>
         {s.dirty && <UnsavedStatus />}
@@ -894,7 +896,7 @@ export function ActivitiesWorkspace({
         >
           {s.document.steps.map((x) => (
             <MenuItem key={x.id} value={x.id}>
-              {x.name}
+              {localizedName(x, isRtl)}
             </MenuItem>
           ))}
         </TextField>
@@ -1090,7 +1092,7 @@ export function ActivitiesWorkspace({
                           color="error"
                           size="small"
                           aria-label={t('wfProcessBuilder.actions.deleteItem', {
-                            name: activity.name,
+                            name: localizedName(activity, isRtl),
                           })}
                           onClick={(event) => {
                             event.stopPropagation();
@@ -1331,10 +1333,10 @@ export function ActivityFormWorkspace({
   onSave?: () => void;
   saving?: boolean;
 }) {
-  const { t } = useAppTranslation();
+  const { t, isRtl } = useAppTranslation();
   const s = useProcessBuilderStore();
   const activityOptions = s.document.steps.flatMap((step) =>
-    step.activities.map((activity) => ({ activity, stepId: step.id, stepName: step.name }))
+    step.activities.map((activity) => ({ activity, stepId: step.id, stepName: localizedName(step, isRtl) }))
   );
   const paletteOrder = [
     'text',
@@ -1396,7 +1398,7 @@ export function ActivityFormWorkspace({
                     key={item.id}
                     onClick={() => s.select({ kind: 'activity', stepId: step.id, id: item.id })}
                   >
-                    {item.name}
+                    {localizedName(item, isRtl)}
                   </Button>
                 ))
               )}
@@ -1423,7 +1425,7 @@ export function ActivityFormWorkspace({
           component="h2"
           sx={{ flex: 1, fontSize: tokens.fontSize.heading, fontWeight: 700 }}
         >
-          {t('wfProcessBuilder.workspace.activityFormNamed', { name: activity.name })}
+          {t('wfProcessBuilder.workspace.activityFormNamed', { name: localizedName(activity, isRtl) })}
         </Typography>
         {s.dirty && <UnsavedStatus compact />}
         <Button
@@ -1449,7 +1451,7 @@ export function ActivityFormWorkspace({
         >
           {activityOptions.map((option) => (
             <MenuItem key={`${option.stepId}-${option.activity.id}`} value={option.activity.id}>
-              {option.stepName} · {option.activity.name}
+              {option.stepName} · {localizedName(option.activity, isRtl)}
             </MenuItem>
           ))}
         </TextField>
@@ -1813,7 +1815,7 @@ export function ActivityFormWorkspace({
                   .filter((step) => step.id !== stepId)
                   .map((step) => (
                     <MenuItem key={step.id} value={step.id}>
-                      {step.name}
+                      {localizedName(step, isRtl)}
                     </MenuItem>
                   ))}
               </TextField>
@@ -1832,7 +1834,7 @@ export function ActivityFormWorkspace({
   );
 }
 export function DiagramWorkspace() {
-  const { t } = useAppTranslation();
+  const { t, isRtl } = useAppTranslation();
   const s = useProcessBuilderStore();
   const d = s.document;
   return (
@@ -1926,10 +1928,10 @@ export function DiagramWorkspace() {
               >
                 <Stack direction="row" sx={{ justifyContent: 'center', gap: 0.75 }}>
                   <Chip size="small" label={`#${step.order}`} />
-                  <Typography sx={{ fontWeight: 800 }}>{step.name}</Typography>
+                  <Typography sx={{ fontWeight: 800 }}>{localizedName(step, isRtl)}</Typography>
                 </Stack>
                 <Typography variant="caption">
-                  {step.activities.map((activity) => activity.name).join(' · ') ||
+                  {step.activities.map((activity) => localizedName(activity, isRtl)).join(' · ') ||
                     t('wfProcessBuilder.workspace.noActivities')}
                 </Typography>
               </Box>
@@ -1961,14 +1963,14 @@ export function TransitionsWorkspace({
   onSave?: () => void;
   saving?: boolean;
 }) {
-  const { t } = useAppTranslation();
+  const { t, isRtl } = useAppTranslation();
   const s = useProcessBuilderStore();
   const operators = useQuery({
     queryKey: ['workflow', 'builder-operator-options'],
     queryFn: ({ signal }) => wfOperatorApi.list(signal),
   });
   const activities = s.document.steps.flatMap((step) =>
-    step.activities.map((activity) => ({ ...activity, stepName: step.name }))
+    step.activities.map((activity) => ({ ...activity, stepName: localizedName(step, isRtl) }))
   );
   return (
     <Stack spacing="12px">
@@ -2108,7 +2110,7 @@ export function TransitionsWorkspace({
                 >
                   {activities.map((activity) => (
                     <MenuItem key={activity.id} value={activity.id}>
-                      {activity.stepName} · {activity.name}
+                      {activity.stepName} · {localizedName(activity, isRtl)}
                     </MenuItem>
                   ))}
                 </TextField>
@@ -2131,7 +2133,7 @@ export function TransitionsWorkspace({
               >
                 {s.document.variables.map((item) => (
                   <MenuItem key={item.id} value={item.id}>
-                    {item.name}
+                    {localizedName(item, isRtl)}
                   </MenuItem>
                 ))}
               </TextField>
@@ -2143,6 +2145,7 @@ export function TransitionsWorkspace({
                   id: item.recId,
                   code: item.code ?? '',
                   name: item.name ?? '',
+              nameAlias: item.nameAlias,
                 }))}
                 onChange={(value, option) =>
                   s.updateTransition(x.id, {
@@ -2171,7 +2174,7 @@ export function TransitionsWorkspace({
               >
                 {s.document.steps.map((step) => (
                   <MenuItem key={step.id} value={step.id}>
-                    {step.name}
+                    {localizedName(step, isRtl)}
                   </MenuItem>
                 ))}
               </TextField>

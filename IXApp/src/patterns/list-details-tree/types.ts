@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { EnterpriseListDetailsConfig, ListDetailRecord } from '@patterns/list-details/types';
 
 export interface ListDetailsTreeConfig<T extends ListDetailRecord> {
+  renderHeader?: (context: { editing: boolean; loading: boolean }) => ReactNode;
   getParentId: (record: T) => string | null;
   getLabel?: (record: T) => string;
   getSecondaryText?: (record: T) => string;

@@ -17,6 +17,39 @@ const renderWithQueryClient = (element: React.ReactElement) => {
 };
 
 describe('LookupField', () => {
+  it('shows and searches Arabic aliases while returning the original bilingual record', async () => {
+    await i18n.changeLanguage('ar');
+    const option = { id: 'mgr', code: 'MGR', name: 'Manager', nameAlias: 'المدير' };
+    const onChange = vi.fn();
+    renderWithQueryClient(
+      <LookupField name="role" label="Role" options={[option]} onChange={onChange} />
+    );
+    fireEvent.change(screen.getByRole('combobox', { name: 'Role' }), {
+      target: { value: 'المدير' },
+    });
+    fireEvent.click(await screen.findByText('المدير'));
+    expect(onChange).toHaveBeenCalledWith('mgr', option);
+  });
+
+  it.each(['ar', 'en'])(
+    'uses the correct selected name in %s and falls back for empty aliases',
+    async (language) => {
+      await i18n.changeLanguage(language);
+      const options = [
+        { id: '1', code: 'MGR', name: 'Manager', nameAlias: 'المدير' },
+        { id: '2', code: 'EMP', name: 'Employee', nameAlias: '  ' },
+      ];
+      renderWithQueryClient(
+        <>
+          <LookupField name="role" label="Role" value="1" options={options} />
+          <LookupField name="fallback" label="Fallback" value="2" options={options} />
+        </>
+      );
+      expect(screen.getByLabelText('Role')).toHaveValue(language === 'ar' ? 'المدير' : 'Manager');
+      expect(screen.getByLabelText('Fallback')).toHaveValue('Employee');
+    }
+  );
+
   afterEach(async () => {
     await i18n.changeLanguage('en');
   });

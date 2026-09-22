@@ -1,3 +1,4 @@
+import { localizedName } from '@shared/utilities/localizedName';
 import React, { useState, useMemo } from 'react';
 import {
   Dialog,
@@ -37,7 +38,7 @@ export const LookupDialog: React.FC<LookupDialogProps> = ({
   hasMore = false,
   onLoadMore,
 }) => {
-  const { t } = useAppTranslation();
+  const { t, isRtl } = useAppTranslation();
   const [localSearchTerm, setLocalSearchTerm] = useState('');
   const searchTerm = searchValue ?? localSearchTerm;
   const setSearchTerm = onSearchChange ?? setLocalSearchTerm;
@@ -49,6 +50,7 @@ export const LookupDialog: React.FC<LookupDialogProps> = ({
       (opt) =>
         opt.code.toLowerCase().includes(term) ||
         opt.name.toLowerCase().includes(term) ||
+        (opt.nameAlias ?? '').toLowerCase().includes(term) ||
         (opt.description && opt.description.toLowerCase().includes(term))
     );
   }, [options, searchTerm, searchable, sideMode]);
@@ -128,7 +130,7 @@ export const LookupDialog: React.FC<LookupDialogProps> = ({
                 sx={{ borderRadius: 1, mb: 0.5 }}
               >
                 <ListItemText
-                  primary={`${opt.code} - ${opt.name}`}
+                  primary={`${opt.code} - ${localizedName(opt, isRtl)}`}
                   secondary={opt.description}
                   slotProps={{
                     primary: { sx: { fontSize: '0.875rem', fontWeight: 600 } },

@@ -1,5 +1,6 @@
 import { localizedName } from '@shared/utilities/localizedName';
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { LookupField } from '@shared/components/lookups/LookupField';
 import { useCompanyStore } from '@core/company/useCompanyStore';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
@@ -36,7 +37,22 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
   const { t, isRtl } = useAppTranslation();
   const label = (key: string) => t(`organizationUnits.${key}`);
   const [asOf] = useState(today);
-  const [units, setUnits] = useState<UnitRecord[]>([]);
+  const loadUnits = async (signal?: AbortSignal): Promise<UnitRecord[]> => {
+    const loaded = (await api.units(asOf, signal)).map((unit) => ({
+      ...unit,
+      id: String(unit.id),
+      recordId: unit.id,
+      nameAlias: unit.nameAlias ?? null,
+      validFrom: unit.validFrom ? unit.validFrom.split('T')[0] : asOf,
+      validTo: unit.validTo ? unit.validTo.split('T')[0] : null,
+    }));
+
+    return loaded;
+  };
+  const { data: units = [] } = useQuery({
+    queryKey: ['list-details', `organization-units-${company}-${asOf}`],
+    queryFn: ({ signal }) => loadUnits(signal),
+  });
   const typeOptions = Array.from({ length: 9 }, (_, index) => ({
     value: String(index + 1),
     label: label(`types.${index + 1}`),
@@ -60,18 +76,7 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
     dataSource: {
       type: 'remote',
       key: `organization-units-${company}-${asOf}`,
-      load: async (signal) => {
-        const loaded = (await api.units(asOf, signal)).map((unit) => ({
-          ...unit,
-          id: String(unit.id),
-          recordId: unit.id,
-          nameAlias: unit.nameAlias ?? null,
-          validFrom: unit.validFrom ? unit.validFrom.split('T')[0] : asOf,
-          validTo: unit.validTo ? unit.validTo.split('T')[0] : null,
-        }));
-        setUnits(loaded);
-        return loaded;
-      },
+      load: loadUnits,
       create: async (record) => {
         const recordId = await api.create({
           code: record.code.trim(),
@@ -193,14 +198,15 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
                       lazyLoading
                       pageSize={20}
                       searchDebounceMs={250}
-                      queryKey={['organization-unit-parent', company, asOf, record.id]}
+                      queryKey={['organization-unit-parent', company, asOf, record.id, units]}
                       options={
                         selectedParent
                           ? [
                               {
                                 id: selectedParent.recordId,
                                 code: selectedParent.code,
-                                name: localizedName(selectedParent, isRtl),
+                                name: selectedParent.name,
+                                nameAlias: selectedParent.nameAlias,
                               },
                             ]
                           : []
@@ -223,7 +229,8 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
                           data: filtered.slice(start, start + pageSize).map((unit) => ({
                             id: unit.recordId,
                             code: unit.code,
-                            name: localizedName(unit, isRtl),
+                            name: unit.name,
+                            nameAlias: unit.nameAlias,
                           })),
                           pageNumber,
                           totalPages: Math.max(1, Math.ceil(filtered.length / pageSize)),

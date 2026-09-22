@@ -311,6 +311,15 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.ORGANIZATION_HIERARCHIES,
     permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
     component: lazyPage(
+      () => import('@modules/organization/pages/OrganizationHierarchyNodePage'),
+      (module) => module.OrganizationHierarchyNodePage
+    ),
+  },
+  {
+    id: 'organization-hierarchy-setup',
+    path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.ORGANIZATION_HIERARCHY_SETUP,
+    permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
+    component: lazyPage(
       () => import('@modules/organization/pages/OrganizationHierarchyPage'),
       (module) => module.OrganizationHierarchyPage
     ),
@@ -320,8 +329,8 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.ORGANIZATION_HIERARCHY_NODES,
     permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
     component: lazyPage(
-      () => import('@modules/organization/pages/OrganizationHierarchyNodesPage'),
-      (module) => module.OrganizationHierarchyNodesPage
+      () => import('@modules/organization/pages/OrganizationHierarchyNodePage'),
+      (module) => module.OrganizationHierarchyNodePage
     ),
   },
   {

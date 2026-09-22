@@ -310,6 +310,29 @@ beforeEach(() => {
 });
 
 describe('Process Builder Activity Form backend integration', () => {
+  it('loads and saves both names independently for process, steps, activities and variables', async () => {
+    mocks.processGet.mockResolvedValue({ ...process, nameAlias: 'العملية' });
+    mocks.stepList.mockResolvedValue([{ ...step, nameAlias: 'الخطوة' }]);
+    mocks.activityList.mockResolvedValue([{ ...activity, nameAlias: 'المراجعة' }]);
+    mocks.variableList.mockResolvedValue([{ id: '60', recId: 60, processId: 1, code: 'VAR', name: 'decision', nameAlias: 'القرار', dataTypeId: 2, sortOrder: 1, isActive: true }]);
+    mocks.stepUpdate.mockImplementation(async (record) => record);
+    mocks.variableUpdate.mockImplementation(async (record) => record);
+    const document = await loadProcessBuilder(1);
+    expect(document).toMatchObject({ name: 'Process', nameAlias: 'العملية' });
+    expect(document.steps[0]).toMatchObject({ name: 'Step 1', nameAlias: 'الخطوة' });
+    expect(document.steps[0].activities[0]).toMatchObject({ name: 'Review', nameAlias: 'المراجعة' });
+    expect(document.variables[0]).toMatchObject({ name: 'decision', nameAlias: 'القرار' });
+    document.nameAlias = 'عملية جديدة';
+    document.steps[0].nameAlias = 'خطوة جديدة';
+    document.steps[0].activities[0].nameAlias = '';
+    document.variables[0].nameAlias = 'قرار جديد';
+    await saveProcessBuilder(document);
+    expect(mocks.processUpdate.mock.calls[0][0]).toMatchObject({ name: 'Process', nameAlias: 'عملية جديدة' });
+    expect(mocks.stepUpdate.mock.calls[0][0]).toMatchObject({ name: 'Step 1', nameAlias: 'خطوة جديدة' });
+    expect(mocks.activityUpdate.mock.calls[0][0]).toMatchObject({ name: 'Review', nameAlias: null });
+    expect(mocks.variableUpdate.mock.calls[0][0]).toMatchObject({ name: 'decision', nameAlias: 'قرار جديد' });
+  });
+
   it.each(['full', 'activities'] as const)(
     'round trips and explicitly clears the notification template in %s save',
     async (mode) => {

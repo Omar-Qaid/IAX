@@ -164,6 +164,7 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
             },
             {
               field: 'name' as const,
+              valueGetter: ({ row }: { row: WorkflowMasterRecord<TDto> }) => localizedName(row, isRtl),
               headerName: 'workflowSetup.fields.name',
               minWidth: 220,
               flex: 1,
@@ -173,6 +174,7 @@ export function WorkflowSetupListPage<TDto extends WorkflowMasterDto>({
         : [
             {
               field: 'name' as const,
+              valueGetter: ({ row }: { row: WorkflowMasterRecord<TDto> }) => localizedName(row, isRtl),
               headerName: 'workflowSetup.fields.name',
               minWidth: 220,
               flex: 1,

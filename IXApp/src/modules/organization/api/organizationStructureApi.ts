@@ -214,6 +214,7 @@ export const organizationStructureApi = {
   async createPosition(position: {
     code: string;
     name: string;
+    nameAlias?: string | null;
     organizationUnitId: number;
     roleId: number;
     validFrom: string;
@@ -226,6 +227,7 @@ export const organizationStructureApi = {
     position: {
       code: string;
       name: string;
+      nameAlias?: string | null;
       organizationUnitId: number;
       roleId: number;
       validFrom: string;

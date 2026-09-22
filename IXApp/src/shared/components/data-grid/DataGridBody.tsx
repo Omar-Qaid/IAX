@@ -254,6 +254,11 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>(
       if (isEditingThisRow && col.editable) {
         const fieldKey = col.field as string;
         const currentValue = (editValues as Record<string, unknown>)[fieldKey] ?? '';
+        if (col.renderEditCell) {
+          return <Box onClick={(event) => event.stopPropagation()}>
+            {col.renderEditCell({ row, value: currentValue, onChange: (value) => onFieldChange?.(fieldKey, value), disabled: Boolean(saving) })}
+          </Box>;
+        }
         const isBoolCol = col.type === 'boolean';
         if (isBoolCol) {
           const boolVal = currentValue === true || String(currentValue) === 'true';

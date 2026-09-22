@@ -1,3 +1,4 @@
+import { localizedName } from '@shared/utilities/localizedName';
 import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
@@ -58,7 +59,7 @@ const emptyEntity = (): LegalEntityRecord => ({
 const value = (input: string | null): string => input ?? '';
 
 export function LegalEntityPage(): React.ReactElement {
-  const { t, currentLanguage } = useAppTranslation();
+  const { t, currentLanguage, isRtl } = useAppTranslation();
 
   const config = useMemo<EnterpriseListDetailsConfig<LegalEntityRecord>>(
     () => ({
@@ -76,10 +77,10 @@ export function LegalEntityPage(): React.ReactElement {
         delete: (record) => legalEntityService.delete(record),
       },
       createRecord: emptyEntity,
-      getPrimaryText: (record) => record.name,
+      getPrimaryText: (record) => localizedName({ name: record.name, nameAlias: record.arabicName }, isRtl),
       getSecondaryText: (record) => record.dataArea,
       matchesSearch: (record, query) =>
-        `${record.name} ${record.dataArea}`
+        `${record.name} ${record.arabicName ?? ''} ${record.dataArea}`
           .toLocaleLowerCase(currentLanguage.code)
           .includes(query.toLocaleLowerCase(currentLanguage.code)),
       getValues: (record): DetailValues => ({
@@ -120,6 +121,7 @@ export function LegalEntityPage(): React.ReactElement {
           id: 'name',
           label: t('legalEntities.fields.name'),
           getValue: (record) => record.name,
+          getDisplayValue: (record) => localizedName({ name: record.name, nameAlias: record.arabicName }, isRtl),
           setValue: (record, next) => ({ ...record, name: String(next) }),
         },
         {
@@ -326,7 +328,7 @@ export function LegalEntityPage(): React.ReactElement {
           record.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()),
       },
     }),
-    [currentLanguage.code, t]
+    [currentLanguage.code, t, isRtl]
   );
 
   return (

@@ -1,3 +1,4 @@
+import { localizedName } from '@shared/utilities/localizedName';
 import React from 'react';
 import { Typography } from '@mui/material';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
@@ -48,7 +49,7 @@ const createCustomer = (record: CustomerRecord) => customerQuickCreateApi.create
 });
 
 export function CustTablePage(): React.ReactElement {
-  const { t } = useAppTranslation();
+  const { t, isRtl } = useAppTranslation();
   const { customerId } = useParams<{ customerId: string }>();
   const sections = ({ record, editing }: { record: CustomerRecord; editing: boolean }): DetailSectionConfig[] => [
     {
@@ -115,7 +116,7 @@ export function CustTablePage(): React.ReactElement {
       delete: customerQuickCreateApi.remove,
     },
     createRecord: emptyCustomer,
-    getPrimaryText: (record) => record.name,
+    getPrimaryText: (record) => localizedName({ name: record.name, nameAlias: record.nameAr }, isRtl),
     getSecondaryText: (record) => record.accountNumber,
     matchesSearch: (record, query) => `${record.accountNumber} ${record.name} ${record.nameAr ?? ''}`.toLocaleLowerCase().includes(query.toLocaleLowerCase()),
     getValues: (record): DetailValues => ({
@@ -135,7 +136,7 @@ export function CustTablePage(): React.ReactElement {
     }),
     headerFields: [{
       id: 'summary', label: t('pages.customers.title'), type: 'display',
-      getValue: (record) => `${record.accountNumber} : ${record.name}`,
+      getValue: (record) => `${record.accountNumber} : ${localizedName({ name: record.name, nameAlias: record.nameAr }, isRtl)}`,
       setValue: (record) => record,
     }],
     sections,

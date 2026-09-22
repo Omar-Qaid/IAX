@@ -1,3 +1,4 @@
+import { localizedName } from '@shared/utilities/localizedName';
 import React from 'react';
 import {
   Box,
@@ -98,9 +99,9 @@ export function ProcessBuilderTreePanel() {
       >
         <ExpandMore sx={{ marginInlineEnd: '4px', fontSize: 18, color: tokens.textMuted }} />
         <AccountTree sx={{ marginInlineEnd: '8px', fontSize: 20, color: tokens.textMuted }} />
-        <Tooltip title={`${d.name} · ${d.code}`} placement={isRtl ? 'left' : 'right'}>
+        <Tooltip title={`${localizedName(d, isRtl)} · ${d.code}`} placement={isRtl ? 'left' : 'right'}>
           <ListItemText
-            primary={d.name || t('wfProcessBuilder.structure.untitled')}
+            primary={localizedName(d, isRtl) || t('wfProcessBuilder.structure.untitled')}
             secondary={`${d.code || t('wfProcessBuilder.structure.draft')} · ${d.active ? t('wfProcessBuilder.status.active') : t('wfProcessBuilder.status.inactive')} · ${t('wfProcessBuilder.structure.stepCount', { count: d.steps.length })}`}
           />
         </Tooltip>
@@ -121,8 +122,8 @@ export function ProcessBuilderTreePanel() {
             sx={itemSx}
             onClick={() => select({ kind: 'variable', id: v.id })}
           >
-            <Tooltip title={`${variableName(v.name)} · ${t(`wfProcessBuilder.dataTypes.${v.dataType}`)}`} placement={isRtl ? 'left' : 'right'}>
-              <ListItemText primary={variableName(v.name)} secondary={`${v.code || t('wfProcessBuilder.structure.draft')} · ${t(`wfProcessBuilder.dataTypes.${v.dataType}`)} · #${v.sortOrder} · ${v.active ? t('wfProcessBuilder.status.active') : t('wfProcessBuilder.status.inactive')}`} />
+            <Tooltip title={`${variableName(localizedName(v, isRtl))} · ${t(`wfProcessBuilder.dataTypes.${v.dataType}`)}`} placement={isRtl ? 'left' : 'right'}>
+              <ListItemText primary={variableName(localizedName(v, isRtl))} secondary={`${v.code || t('wfProcessBuilder.structure.draft')} · ${t(`wfProcessBuilder.dataTypes.${v.dataType}`)} · #${v.sortOrder} · ${v.active ? t('wfProcessBuilder.status.active') : t('wfProcessBuilder.status.inactive')}`} />
             </Tooltip>
           </ListItemButton>
         ))}
@@ -183,7 +184,7 @@ export function ProcessBuilderTreePanel() {
                     </Box>
                     <IconButton
                       size="small"
-                      aria-label={t(expanded[s.id] ? 'wfProcessBuilder.structure.collapseItem' : 'wfProcessBuilder.structure.expandItem', { name: stepName(s.name, s.order) })}
+                      aria-label={t(expanded[s.id] ? 'wfProcessBuilder.structure.collapseItem' : 'wfProcessBuilder.structure.expandItem', { name: stepName(localizedName(s, isRtl), s.order) })}
                       onClick={(event) => {
                         event.stopPropagation();
                         setExpanded((value) => ({ ...value, [s.id]: !value[s.id] }));
@@ -196,8 +197,8 @@ export function ProcessBuilderTreePanel() {
                         <ChevronRight fontSize="small" sx={{ transform: isRtl ? 'scaleX(-1)' : 'none' }} />
                       )}
                     </IconButton>
-                    <Tooltip title={`${s.order}. ${stepName(s.name, s.order)} · ${t('wfProcessBuilder.structure.activityCount', { count: s.activities.length })}`} placement={isRtl ? 'left' : 'right'}>
-                      <ListItemText primary={`${s.order}. ${stepName(s.name, s.order)}`} secondary={`${s.code || t('wfProcessBuilder.structure.draft')} · ${t('wfProcessBuilder.structure.activityCount', { count: s.activities.length })} · ${s.active ? t('wfProcessBuilder.status.active') : t('wfProcessBuilder.status.inactive')}`} />
+                    <Tooltip title={`${s.order}. ${stepName(localizedName(s, isRtl), s.order)} · ${t('wfProcessBuilder.structure.activityCount', { count: s.activities.length })}`} placement={isRtl ? 'left' : 'right'}>
+                      <ListItemText primary={`${s.order}. ${stepName(localizedName(s, isRtl), s.order)}`} secondary={`${s.code || t('wfProcessBuilder.structure.draft')} · ${t('wfProcessBuilder.structure.activityCount', { count: s.activities.length })} · ${s.active ? t('wfProcessBuilder.status.active') : t('wfProcessBuilder.status.inactive')}`} />
                     </Tooltip>
                   </ListItemButton>
                   {expanded[s.id] && (
@@ -209,8 +210,8 @@ export function ProcessBuilderTreePanel() {
                           sx={itemSx}
                           onClick={() => select({ kind: 'activity', stepId: s.id, id: a.id })}
                         >
-                          <Tooltip title={`${activityName(a.name)} · ${activityType(a.type)} · ${t('wfProcessBuilder.structure.controlCount', { count: a.controls.length })}`} placement={isRtl ? 'left' : 'right'}>
-                            <ListItemText primary={activityName(a.name)} secondary={`${a.code || t('wfProcessBuilder.structure.draft')} · ${activityType(a.type)} · ${t('wfProcessBuilder.structure.controlCount', { count: a.controls.length })} · ${a.active ? t('wfProcessBuilder.status.active') : t('wfProcessBuilder.status.inactive')}`} />
+                          <Tooltip title={`${activityName(localizedName(a, isRtl))} · ${activityType(a.type)} · ${t('wfProcessBuilder.structure.controlCount', { count: a.controls.length })}`} placement={isRtl ? 'left' : 'right'}>
+                            <ListItemText primary={activityName(localizedName(a, isRtl))} secondary={`${a.code || t('wfProcessBuilder.structure.draft')} · ${activityType(a.type)} · ${t('wfProcessBuilder.structure.controlCount', { count: a.controls.length })} · ${a.active ? t('wfProcessBuilder.status.active') : t('wfProcessBuilder.status.inactive')}`} />
                           </Tooltip>
                         </ListItemButton>
                         <Box sx={{ marginInlineStart: '20px', paddingInlineStart: '10px', borderInlineStart: '1px solid #dbe2ea' }}>

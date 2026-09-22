@@ -85,3 +85,4 @@ Thumbs.db
 .artifacts/
 [Bb]in/
 [Oo]bj/
+.nuget/

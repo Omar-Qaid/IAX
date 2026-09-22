@@ -1,3 +1,4 @@
+import { localizedName } from '@shared/utilities/localizedName';
 import { Box, Button, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import type { BuilderCondition, BuilderTransition, BuilderVariable } from '../types/processBuilderTypes';
@@ -9,7 +10,7 @@ export function TransitionRuleGroup({ transition, variables, onChange }: {
   variables: BuilderVariable[];
   onChange: (patch: Partial<BuilderTransition>) => void;
 }) {
-  const { t } = useAppTranslation();
+  const { t, isRtl } = useAppTranslation();
   const conditions = transition.additionalConditions ?? [];
   const operatorKeys: Record<string, string> = { '=': 'equals', '!=': 'notEquals', '>': 'greater', '<': 'less', '>=': 'atLeast', '<=': 'atMost', contains: 'contains', isEmpty: 'empty' };
   const operatorLabel = (operator: string) => t('wfProcessBuilder.settings.ruleGroup.operators.' + (operatorKeys[operator] ?? operator));
@@ -25,7 +26,7 @@ export function TransitionRuleGroup({ transition, variables, onChange }: {
           <Typography sx={{ fontSize: tokens.fontSize.caption, fontWeight: 600 }}>{t('wfProcessBuilder.settings.ruleGroup.preview')}</Typography>
           {[transition, ...conditions].map((condition, index) => <Typography key={index} sx={{ fontSize: tokens.fontSize.body, overflowWrap: 'anywhere' }}>
             {index > 0 && (transition.conditionCombinator === 'OR' ? t('wfProcessBuilder.settings.ruleGroup.orWord') : t('wfProcessBuilder.settings.ruleGroup.andWord'))}{' '}
-            {variables.find((variable) => variable.id === condition.variableId)?.name || t('wfProcessBuilder.settings.ruleGroup.selectField')}{' '}
+            {localizedName(variables.find((variable) => variable.id === condition.variableId), isRtl) || t('wfProcessBuilder.settings.ruleGroup.selectField')}{' '}
             {operatorLabel(condition.operator)}{' '}
             {condition.operator !== 'isEmpty' && (condition.value === 'true' ? t('wfProcessBuilder.settings.yes') : condition.value === 'false' ? t('wfProcessBuilder.settings.no') : condition.value || '...')}
           </Typography>)}
@@ -42,7 +43,7 @@ export function TransitionRuleGroup({ transition, variables, onChange }: {
               onChange={(event) => update(index, { variableId: event.target.value, value: normalizeTransitionValue(condition.value, variables.find((variable) => variable.id === event.target.value)?.dataType) })}>
               <MenuItem value="">{t('wfProcessBuilder.settings.ruleGroup.selectField')}</MenuItem>
               {condition.variableId && !variables.some((variable) => variable.id === condition.variableId) && <MenuItem value={condition.variableId}>{t('wfProcessBuilder.settings.ruleGroup.missingVariable')}</MenuItem>}
-              {variables.map((variable) => <MenuItem key={variable.id} value={variable.id}>{variable.name}</MenuItem>)}
+              {variables.map((variable) => <MenuItem key={variable.id} value={variable.id}>{localizedName(variable, isRtl)}</MenuItem>)}
             </TextField>
             <TextField select fullWidth size="small" label={t('wfProcessBuilder.settings.ruleGroup.check')} value={condition.operator}
               onChange={(event) => update(index, { operator: event.target.value as BuilderCondition['operator'] })}>

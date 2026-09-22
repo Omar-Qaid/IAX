@@ -36,6 +36,7 @@ export type BuilderOperator =
 export type BuilderActionType = 'approve' | 'reject' | 'return' | 'escalate';
 
 export interface BuilderVariable {
+  nameAlias?: string | null;
   id: string;
   code: string;
   name: string;
@@ -181,6 +182,7 @@ export interface BuilderActivityAction {
   condition: BuilderCondition | null;
 }
 export interface BuilderActivity {
+  nameAlias?: string | null;
   id: string;
   code: string;
   name: string;
@@ -210,6 +212,7 @@ export interface BuilderActivity {
   config: { apiMethod: 'GET' | 'POST' | 'PUT' | 'DELETE'; apiUrl: string; notifyEmails: string };
 }
 export interface BuilderStep {
+  nameAlias?: string | null;
   id: string;
   code: string;
   name: string;
@@ -238,6 +241,7 @@ export interface BuilderTransition {
   triggerId: string;
 }
 export interface ProcessBuilderDocument {
+  nameAlias?: string | null;
   dataTypeCatalogVersion?: 1;
   id: string;
   code: string;

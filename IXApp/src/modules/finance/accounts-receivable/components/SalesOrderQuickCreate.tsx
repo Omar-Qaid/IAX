@@ -1,3 +1,4 @@
+import { localizedName } from '@shared/utilities/localizedName';
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { FastTabsDrawer } from '@patterns/drawer-fast-tabs';
@@ -47,7 +48,7 @@ const initialValues = (): Record<string, FastTabValue> => ({
 });
 
 export function SalesOrderQuickCreate({ open, onClose, onSave }: SalesOrderQuickCreateProps): React.ReactElement {
-  const { t } = useAppTranslation();
+  const { t, isRtl } = useAppTranslation();
   const customersQuery = useQuery({
     queryKey: ['accounts-receivable', 'sales-order-quick-create', 'customers'],
     queryFn: ({ signal }) => customerQuickCreateApi.list(signal),
@@ -71,11 +72,11 @@ export function SalesOrderQuickCreate({ open, onClose, onSave }: SalesOrderQuick
       id: 'customer',
       title: t('fields.customer', 'Customer'),
       fields: [
-        { name: 'customerAccount', label: t('fields.customerAccount'), type: 'select', required: true, options: customers.map((customer) => ({ value: customer.accountNumber, label: `${customer.accountNumber} - ${customer.name}` })) },
+        { name: 'customerAccount', label: t('fields.customerAccount'), type: 'select', required: true, options: customers.map((customer) => ({ value: customer.accountNumber, label: `${customer.accountNumber} - ${localizedName({ name: customer.name, nameAlias: customer.nameAr }, isRtl)}` })) },
         { name: 'oneTimeCustomer', label: t('salesOrderQuickCreate.oneTimeCustomer', 'One-time customer'), type: 'select', options: [{ value: 'false', label: t('common.no', 'No') }, { value: 'true', label: t('common.yes', 'Yes') }] },
         { name: 'searchBy', label: t('fields.searchBy'), type: 'select', options: [{ value: 'keyword', label: t('common.keyword', 'Keyword') }, { value: 'account', label: t('fields.customerAccount') }, { value: 'name', label: t('fields.customerName') }] },
         { name: 'searchFor', label: t('salesOrderQuickCreate.searchFor', 'Search for') },
-        { name: 'customerName', label: t('fields.customerName'), disabled: true, valueGetter: (values) => customers.find((customer) => customer.accountNumber === String(values.customerAccount))?.name ?? '' },
+        { name: 'customerName', label: t('fields.customerName'), disabled: true, valueGetter: (values) => localizedName({ name: customerFor(values)?.name, nameAlias: customerFor(values)?.nameAr }, isRtl) },
         { name: 'contact', label: t('relatedInformation.contacts', 'Contact'), type: 'select', optionsGetter: (values) => {
           const customer = customers.find((candidate) => candidate.accountNumber === String(values.customerAccount));
           return [customer?.phone, customer?.email].filter((value): value is string => Boolean(value)).map((value) => ({ value, label: value }));
@@ -91,7 +92,7 @@ export function SalesOrderQuickCreate({ open, onClose, onSave }: SalesOrderQuick
       fields: [
         { name: 'salesId', label: t('fields.salesOrderNumber'), disabled: true },
         { name: 'currencyCode', label: t('fields.currency'), type: 'select', required: true, valueGetter: (values) => values.currencyCode || customerFor(values)?.currencyCode || '', options: [...new Set(customers.map((customer) => customer.currencyCode).filter(Boolean))].map((currency) => ({ value: currency, label: currency })) },
-        { name: 'invoiceAccount', label: t('fields.invoiceAccount'), type: 'select', required: true, valueGetter: (values) => values.invoiceAccount || customerFor(values)?.invoiceAccount || customerFor(values)?.accountNumber || '', options: customers.map((customer) => ({ value: customer.accountNumber, label: `${customer.accountNumber} - ${customer.name}` })) },
+        { name: 'invoiceAccount', label: t('fields.invoiceAccount'), type: 'select', required: true, valueGetter: (values) => values.invoiceAccount || customerFor(values)?.invoiceAccount || customerFor(values)?.accountNumber || '', options: customers.map((customer) => ({ value: customer.accountNumber, label: `${customer.accountNumber} - ${localizedName({ name: customer.name, nameAlias: customer.nameAr }, isRtl)}` })) },
         { name: 'inventSiteId', label: t('salesOrderQuickCreate.site', 'Site'), valueGetter: (values) => values.inventSiteId || customerFor(values)?.inventSiteId || '' },
         { name: 'orderType', label: t('salesOrderQuickCreate.orderType', 'Order type'), type: 'select', options: [{ value: 'sales', label: t('salesOrderQuickCreate.salesOrder', 'Sales order') }] },
         { name: 'inventLocationId', label: t('salesOrderQuickCreate.warehouse', 'Warehouse'), valueGetter: (values) => values.inventLocationId || customerFor(values)?.inventLocationId || '' },
@@ -119,7 +120,7 @@ export function SalesOrderQuickCreate({ open, onClose, onSave }: SalesOrderQuick
         { name: 'deliveryTerms', label: t('customerQuickCreate.fields.deliveryTerms'), type: 'select', options: deliveryLookupsQuery.data?.deliveryTerms ?? [] },
       ],
     },
-  ], [customerFor, customers, deliveryLookupsQuery.data, t]);
+  ], [customerFor, customers, deliveryLookupsQuery.data, t, isRtl]);
 
   return (
     <FastTabsDrawer

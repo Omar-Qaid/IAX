@@ -1,3 +1,4 @@
+import { localizedName } from '@shared/utilities/localizedName';
 import React from 'react';
 import { loadBuilderNotificationTemplates } from '../api/processBuilderNotificationTemplates';
 import { validationTypesForControl } from '../validationTypesForControl';
@@ -106,7 +107,7 @@ const fetchCategoryPage = async ({
   const normalizedSearch = search.trim().toLocaleLowerCase();
   const filtered = normalizedSearch
     ? categories.filter((category) =>
-        `${category.code ?? ''} ${category.name ?? ''}`
+        `${category.code ?? ''} ${category.name ?? ''} ${category.nameAlias ?? ''}`
           .toLocaleLowerCase()
           .includes(normalizedSearch)
       )
@@ -520,7 +521,7 @@ function TransitionRules({
   onUpdate: (id: string, values: Partial<BuilderTransition>) => void;
   onRemove: (id: string) => void;
 }) {
-  const { t } = useAppTranslation();
+  const { t, isRtl } = useAppTranslation();
   return (
     <Box sx={{ pt: '12px', borderTop: `1px solid ${tokens.border}` }}>
       <Stack direction="row" sx={{ alignItems: 'center' }}>
@@ -557,7 +558,7 @@ function TransitionRules({
                   <MenuItem value="">{t('wfProcessBuilder.settings.fields.variable')}</MenuItem>
                   {variables.map((variable) => (
                     <MenuItem key={variable.id} value={variable.id}>
-                      {variable.name}
+                      {localizedName(variable, isRtl)}
                     </MenuItem>
                   ))}
                 </TextField>
@@ -598,7 +599,7 @@ function TransitionRules({
                   <MenuItem value="">{t('wfProcessBuilder.settings.fields.targetStep')}</MenuItem>
                   {steps.map((step) => (
                     <MenuItem key={step.id} value={step.id}>
-                      {step.name}
+                      {localizedName(step, isRtl)}
                     </MenuItem>
                   ))}
                 </TextField>
@@ -642,7 +643,7 @@ function TransitionRules({
 }
 
 export function ProcessBuilderSettingsPanel() {
-  const { t } = useAppTranslation();
+  const { t, isRtl } = useAppTranslation();
   const s = useProcessBuilderStore();
   const d = s.document;
   const selected = s.selected;
@@ -749,6 +750,7 @@ export function ProcessBuilderSettingsPanel() {
           disabled
         />
         {text(t('wfProcess.fields.name'), d.name, (name) => s.updateProcess({ name }))}
+        {text(t('workflowSetup.fields.nameAlias'), d.nameAlias ?? '', (nameAlias) => s.updateProcess({ nameAlias }))}
         <TextField
           fullWidth
           multiline
@@ -786,7 +788,7 @@ export function ProcessBuilderSettingsPanel() {
           <MenuItem value="">{t('wfProcessBuilder.settings.selectPriority')}</MenuItem>
           {(priorities.data ?? []).map((priority) => (
             <MenuItem key={priority.recId} value={String(priority.recId)}>
-              {priority.code} - {priority.name}
+              {priority.code} - {localizedName(priority, isRtl)}
             </MenuItem>
           ))}
         </TextField>
@@ -800,7 +802,7 @@ export function ProcessBuilderSettingsPanel() {
           <MenuItem value="">{t('wfProcessBuilder.settings.selectProcessType')}</MenuItem>
           {(processTypes.data ?? []).map((processType) => (
             <MenuItem key={processType.recId} value={String(processType.recId)}>
-              {processType.code} - {processType.name}
+              {processType.code} - {localizedName(processType, isRtl)}
             </MenuItem>
           ))}
         </TextField>
@@ -992,6 +994,7 @@ export function ProcessBuilderSettingsPanel() {
           x.name === 'New variable' ? t('wfProcessBuilder.structure.newVariable') : x.name,
           (name) => s.updateVariable(x.id, { name })
         )}
+        {text(t('workflowSetup.fields.nameAlias'), x.nameAlias ?? '', (nameAlias) => s.updateVariable(x.id, { nameAlias }))}
         {text(t('wfProcessBuilder.settings.fields.description'), x.description, (description) =>
           s.updateVariable(x.id, { description })
         )}
@@ -1050,6 +1053,7 @@ export function ProcessBuilderSettingsPanel() {
         {text(`${t('wfProcessBuilder.settings.fields.stepName')} *`, x.name, (name) =>
           s.updateStep(x.id, { name })
         )}
+        {text(t('workflowSetup.fields.nameAlias'), x.nameAlias ?? '', (nameAlias) => s.updateStep(x.id, { nameAlias }))}
         <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 1 }}>
           {text(
             t('wfProcessBuilder.settings.fields.order'),
@@ -1141,6 +1145,7 @@ export function ProcessBuilderSettingsPanel() {
           x.name === 'New activity' ? t('wfProcessBuilder.structure.newActivity') : x.name,
           (name) => s.updateActivity(selected.stepId, x.id, { name })
         )}
+        {text(t('workflowSetup.fields.nameAlias'), x.nameAlias ?? '', (nameAlias) => s.updateActivity(selected.stepId, x.id, { nameAlias }))}
         <Stack spacing={1}>
           <AppLookupField
             name={`settings-performerId-${x.id}`}
@@ -1169,6 +1174,7 @@ export function ProcessBuilderSettingsPanel() {
               id: item.recId,
               code: item.code ?? '',
               name: item.name ?? '',
+              nameAlias: item.nameAlias,
             }))}
             onChange={(value, option) =>
               s.updateActivity(selected.stepId, x.id, {
@@ -1362,10 +1368,10 @@ export function ProcessBuilderSettingsPanel() {
     const transitionSummary = controlTransitions.map((transition) => {
       const variable = d.variables.find((item) => item.id === transition.variableId);
       const target = d.steps.find((step) => step.id === transition.targetStepId);
-      const condition = `${variable?.name || t('wfProcessBuilder.settings.fields.variable')} ${transition.operator}${
+      const condition = `${localizedName(variable, isRtl) || t('wfProcessBuilder.settings.fields.variable')} ${transition.operator}${
         transition.operator === 'isEmpty' ? '' : ` ${transition.value || '…'}`
       }`;
-      return `${condition} → ${target?.name || t('wfProcessBuilder.settings.unassignedStep')}`;
+      return `${condition} → ${localizedName(target, isRtl) || t('wfProcessBuilder.settings.unassignedStep')}`;
     });
     const optionFeaturesAt = (index: number) => ({
       ...emptyOptionFeatures(),
@@ -1854,7 +1860,7 @@ export function ProcessBuilderSettingsPanel() {
         >
           <MenuItem value="">{t('common.none')}</MenuItem>
           {d.variables.filter((variable) => variable.active).map((variable) => (
-            <MenuItem key={variable.id} value={variable.id}>{variable.name}</MenuItem>
+            <MenuItem key={variable.id} value={variable.id}>{localizedName(variable, isRtl)}</MenuItem>
           ))}
         </TextField>
         <Stack direction="row" spacing="8px">
@@ -2203,7 +2209,7 @@ export function ProcessBuilderSettingsPanel() {
         >
           <MenuItem value="">{t('common.none')}</MenuItem>
           {d.variables.filter((variable) => variable.active).map((variable) => (
-            <MenuItem key={variable.id} value={variable.id}>{variable.name}</MenuItem>
+            <MenuItem key={variable.id} value={variable.id}>{localizedName(variable, isRtl)}</MenuItem>
           ))}
         </TextField>
         {text(t('wfProcessBuilder.settings.arabicLabel'), control.labelAR, (labelAR) =>
@@ -2276,7 +2282,7 @@ export function ProcessBuilderSettingsPanel() {
     if (!x) return null;
     const variable = d.variables.find((item) => item.id === x.variableId);
     const activities = d.steps.flatMap((step) =>
-      step.activities.map((activity) => ({ ...activity, stepName: step.name }))
+      step.activities.map((activity) => ({ ...activity, stepName: localizedName(step, isRtl) }))
     );
     return (
       <Stack spacing="8px" sx={{ p: '10px' }}>
@@ -2343,7 +2349,7 @@ export function ProcessBuilderSettingsPanel() {
           >
             {activities.map((activity) => (
               <MenuItem key={activity.id} value={activity.id}>
-                {activity.stepName} · {activity.name}
+                {activity.stepName} · {localizedName(activity, isRtl)}
               </MenuItem>
             ))}
           </TextField>
@@ -2365,7 +2371,7 @@ export function ProcessBuilderSettingsPanel() {
         >
           {d.variables.map((item) => (
             <MenuItem key={item.id} value={item.id}>
-              {item.name}
+              {localizedName(item, isRtl)}
             </MenuItem>
           ))}
         </TextField>
@@ -2378,6 +2384,7 @@ export function ProcessBuilderSettingsPanel() {
               id: item.recId,
               code: item.code ?? '',
               name: item.name ?? '',
+              nameAlias: item.nameAlias,
             }))}
             onChange={(value, option) =>
               s.updateTransition(x.id, {
@@ -2411,7 +2418,7 @@ export function ProcessBuilderSettingsPanel() {
           >
             {d.steps.map((step) => (
               <MenuItem key={step.id} value={step.id}>
-                {step.name}
+                {localizedName(step, isRtl)}
               </MenuItem>
             ))}
           </TextField>

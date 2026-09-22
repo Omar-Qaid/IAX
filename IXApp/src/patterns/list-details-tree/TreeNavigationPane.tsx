@@ -186,6 +186,9 @@ export function TreeNavigationPane<T extends ListDetailRecord>({
 
   return (
     <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+      {tree.renderHeader && (
+        <Box sx={{ p: 1, flexShrink: 0 }}>{tree.renderHeader({ editing, loading })}</Box>
+      )}
       {filterVisible && (
         <Box sx={{ p: 1 }}>
           <TextField

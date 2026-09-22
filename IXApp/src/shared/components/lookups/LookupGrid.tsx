@@ -17,6 +17,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useTranslation } from 'react-i18next';
+import { localizedName } from '@shared/utilities/localizedName';
 
 import type { GridLookupProps, GridLookupColumn, LookupValue } from './types';
 import { useLookupGridField } from '@shared/hooks/useLookupGridField';
@@ -52,7 +53,7 @@ export function LookupGrid<T extends object>({
   showClearButton = true,
   actions,
 }: GridLookupProps<T>) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const anchorRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -237,6 +238,17 @@ export function LookupGrid<T extends object>({
 
   const renderCell = (col: GridLookupColumn<T>, row: T) => {
     if (col.render) return col.render(row);
+    if ((col.field === 'name' || col.field === 'nameAlias') && 'name' in row) {
+      const name = getLookupValue(row, 'name');
+      const nameAlias = getLookupValue(row, 'nameAlias');
+      return localizedName(
+        {
+          name: typeof name === 'string' ? name : '',
+          nameAlias: typeof nameAlias === 'string' ? nameAlias : null,
+        },
+        col.field === 'nameAlias' || i18n.dir() === 'rtl'
+      );
+    }
     const v = getLookupValue(row, col.field);
     return v == null ? '' : String(v);
   };

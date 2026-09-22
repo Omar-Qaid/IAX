@@ -37,6 +37,7 @@ export interface ColumnDef<T> {
   valueOptions?: readonly (unknown | { value: unknown; label: React.ReactNode })[];
   /** When masterForm=true, cells in this column render as inputs while a row is being edited. */
   editable?: boolean;
+  renderEditCell?: (params: { row: T; value: unknown; onChange: (value: unknown) => void; disabled: boolean }) => React.ReactNode;
 }
 
 export interface SortModel {

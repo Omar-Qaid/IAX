@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Alert, Box, MenuItem, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useCompanyStore } from '@core/company/useCompanyStore';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
@@ -33,17 +33,17 @@ const today = () => new Date().toISOString().slice(0, 10);
 const numberValue = (value: DetailValue | undefined): number => Number(value) || 0;
 const textValue = (value: DetailValue | undefined): string => String(value ?? '');
 
-interface OrganizationHierarchyNodesPageProps {
+interface OrganizationHierarchyNodePageProps {
   initialHierarchyId?: number;
   onHierarchyChange?: (id: number) => void;
   onExit?: () => void;
 }
 
-export function OrganizationHierarchyNodesPage({
+export function OrganizationHierarchyNodePage({
   initialHierarchyId,
   onHierarchyChange,
   onExit,
-}: OrganizationHierarchyNodesPageProps = {}): React.ReactElement {
+}: OrganizationHierarchyNodePageProps = {}): React.ReactElement {
   const company = useCompanyStore((state) => state.currentCompany);
   return (
     <OrganizationHierarchyNodesContent
@@ -104,7 +104,12 @@ function OrganizationHierarchyNodesContent({
     return <Typography sx={{ p: 2 }}>{t('common.loading')}</Typography>;
   }
   if (!hierarchies.data?.length) {
-    return <Typography sx={{ p: 2 }}>{t('common.noData')}</Typography>;
+    return <Box sx={{ p: 2 }}>
+      <Typography>{t('common.noData')}</Typography>
+      <Button onClick={onExit ?? (() => navigate('/organization-administration/organization-hierarchies/setup'))}>
+        {t('organizationStructure.hierarchiesTitle')}
+      </Button>
+    </Box>;
   }
 
   return (
@@ -120,7 +125,7 @@ function OrganizationHierarchyNodesContent({
         if (onHierarchyChange) onHierarchyChange(id);
         else navigate(`/organization-administration/organization-hierarchies/${id}/nodes`);
       }}
-      onExit={onExit}
+      onExit={onExit ?? (() => navigate('/organization-administration/organization-hierarchies/setup'))}
     />
   );
 }
@@ -259,22 +264,6 @@ function HierarchyNodesTreePage({
         setValue: (record) => record,
       },
     ],
-    actionPaneEndContent: (
-      <TextField
-        select
-        size="small"
-        label={t('organizationStructure.hierarchy')}
-        value={hierarchyId}
-        onChange={(event) => onHierarchyChange(Number(event.target.value))}
-        sx={{ minWidth: 220 }}
-      >
-        {hierarchies.map((hierarchy) => (
-          <MenuItem key={hierarchy.id} value={hierarchy.id}>
-            {hierarchy.code} — {localizedName(hierarchy, isRtl)}
-          </MenuItem>
-        ))}
-      </TextField>
-    ),
     sections: ({ record }) => [
       {
         id: 'node',
@@ -351,6 +340,28 @@ function HierarchyNodesTreePage({
       },
     ],
     tree: {
+      renderHeader: ({ editing, loading }) => (
+        <LookupField
+          name="hierarchyId"
+          label={t('organizationStructure.hierarchy')}
+          required
+          value={hierarchyId}
+          options={hierarchies.map((hierarchy) => ({
+            id: hierarchy.id,
+            code: hierarchy.code,
+            name: localizedName(hierarchy, isRtl),
+          }))}
+          displayMode="select"
+          sideMode="client"
+          searchable
+          fullWidth
+          disabled={editing || loading}
+          onChange={(value) => {
+            const nextId = Number(value);
+            if (nextId && nextId !== hierarchyId) onHierarchyChange(nextId);
+          }}
+        />
+      ),
       getParentId: (record) => (record.parentNodeId == null ? null : String(record.parentNodeId)),
       getLabel: (record) => localizedName(record, isRtl),
       getSecondaryText: (record) => record.code,

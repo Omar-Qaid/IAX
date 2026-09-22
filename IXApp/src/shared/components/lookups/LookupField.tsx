@@ -1,3 +1,4 @@
+import { localizedName } from '@shared/utilities/localizedName';
 import React, { useMemo, useState } from 'react';
 import { Autocomplete, TextField, InputAdornment, IconButton } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
@@ -100,6 +101,7 @@ function SelectLookup({
   pageSize = 50,
   searchDebounceMs = 350,
 }: LookupFieldProps) {
+  const { isRtl } = useAppTranslation();
   const usesServerDataSource = sideMode === 'server' && Boolean(fetchPage || onFetchOptions);
   const resolvedFetchPage = useMemo(
     () =>
@@ -116,6 +118,7 @@ function SelectLookup({
                   (option) =>
                     option.code.toLowerCase().includes(term) ||
                     option.name.toLowerCase().includes(term) ||
+                    (option.nameAlias ?? '').toLowerCase().includes(term) ||
                     option.description?.toLowerCase().includes(term)
                 )
               : options;
@@ -164,7 +167,7 @@ function SelectLookup({
       }}
       value={selected}
       options={lookup.rows}
-      inputValue={open && searchable ? search : selected?.name || ''}
+      inputValue={open && searchable ? search : localizedName(selected, isRtl)}
       onInputChange={(_, nextInput, reason) => {
         if (searchable && reason === 'input') setSearch(nextInput);
       }}
@@ -174,7 +177,7 @@ function SelectLookup({
         setSearch('');
         onChange?.(option?.id ?? null, option ?? undefined);
       }}
-      getOptionLabel={(option) => option.name}
+      getOptionLabel={(option) => localizedName(option, isRtl)}
       isOptionEqualToValue={(option, selectedOption) =>
         String(option.id) === String(selectedOption.id)
       }
@@ -227,7 +230,7 @@ export function LookupField<TFieldValues extends FieldValues = FieldValues>({
   pageSize,
   searchDebounceMs,
 }: LookupFieldProps<TFieldValues>): React.ReactElement {
-  const { t } = useAppTranslation();
+  const { t, isRtl } = useAppTranslation();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedOptionCache, setSelectedOptionCache] = useState<LookupOption | undefined>();
   const usesServerDataSource = sideMode === 'server' && Boolean(fetchPage || onFetchOptions);
@@ -235,7 +238,9 @@ export function LookupField<TFieldValues extends FieldValues = FieldValues>({
   const selectedOption =
     options.find((opt) => String(opt.id) === String(value)) ??
     (String(selectedOptionCache?.id) === String(value) ? selectedOptionCache : undefined);
-  const displayValue = selectedOption ? `${selectedOption.code} - ${selectedOption.name}` : '';
+  const displayValue = selectedOption
+    ? `${selectedOption.code} - ${localizedName(selectedOption, isRtl)}`
+    : '';
   const handleClear = (e: React.MouseEvent) => {
     e.stopPropagation();
     onChange?.(null, undefined);

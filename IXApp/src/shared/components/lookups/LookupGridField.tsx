@@ -25,7 +25,7 @@ function LookupGridFieldInner<T extends object>({
   fetchById,
   valueField = 'id' as keyof T,
   labelField = 'name' as keyof T,
-  labelFieldAr = 'nameAR' as keyof T,
+  labelFieldAr = 'nameAlias' as keyof T,
   label,
   placeholder,
   disabled,
@@ -38,7 +38,7 @@ function LookupGridFieldInner<T extends object>({
   permissionResource,
 }: LookupGridFieldBaseProps<T>) {
   const { t, i18n } = useTranslation();
-  const isRtl = i18n.language === 'ar';
+  const isRtl = i18n.language.startsWith('ar');
   const displayField = (isRtl ? labelFieldAr : labelField) as keyof T;
 
   const { hasPermission, isAdmin } = usePermissions();
@@ -95,7 +95,7 @@ function LookupGridFieldInner<T extends object>({
 
   const hasValue = value != null && value !== 0 && value !== '';
   const displayText = selectedRow
-    ? String(selectedRow[displayField] ?? selectedRow[labelField] ?? '')
+    ? String(selectedRow[displayField] ?? '').trim() || String(selectedRow[labelField] ?? '')
     : hasValue
       ? String(value)
       : '';
