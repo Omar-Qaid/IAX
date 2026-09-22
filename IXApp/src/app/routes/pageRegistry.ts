@@ -361,6 +361,33 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'hcm-nationalities',
+    path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.HCM_NATIONALITIES,
+    permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
+    component: lazyPage(
+      () => import('@modules/organization/pages/HcmNationalityPage'),
+      (module) => module.HcmNationalityPage
+    ),
+  },
+  {
+    id: 'hcm-occupations',
+    path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.HCM_OCCUPATIONS,
+    permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
+    component: lazyPage(
+      () => import('@modules/organization/pages/HcmOccupationPage'),
+      (module) => module.HcmOccupationPage
+    ),
+  },
+  {
+    id: 'hcm-departments',
+    path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.HCM_DEPARTMENTS,
+    permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
+    component: lazyPage(
+      () => import('@modules/organization/pages/HcmDepartmentPage'),
+      (module) => module.HcmDepartmentPage
+    ),
+  },
+  {
     id: 'application-settings',
     path: ROUTE_PATHS.SYSTEM_ADMINISTRATION.SETTINGS,
     permission: PERMISSIONS.SETTINGS_VIEW,

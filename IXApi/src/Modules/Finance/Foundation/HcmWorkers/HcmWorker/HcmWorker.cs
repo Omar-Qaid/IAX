@@ -22,9 +22,9 @@ public class HcmWorker : Entity<long>
     public string? UserId { get; set; }
 
     public virtual DirPartyTable Party { get; set; } = null!;
-    public virtual Occupation Occupation { get; set; } = null!;
+    public virtual HcmOccupation Occupation { get; set; } = null!;
     public virtual Gender Gender { get; set; } = null!;
-    public virtual Nationality Nationality { get; set; } = null!;
+    public virtual HcmNationality Nationality { get; set; } = null!;
     public virtual AspNetUser? User { get; set; }
     public virtual ICollection<HcmWorkerOrganizationAssignment> WorkerOrganizationAssignments { get; set; } = [];
 }

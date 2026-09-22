@@ -46,7 +46,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             var createdBy = sysUser?.Id ?? "sys";
 
             #region Nationality
-            if (!await db.Nationalities.IgnoreQueryFilters().AnyAsync(n => n.RecId == 1, ct))
+            if (!await db.HcmNationalities.IgnoreQueryFilters().AnyAsync(n => n.RecId == 1, ct))
             {
                 var nationalities = new (short Id, string Name)[]
                 {
@@ -85,7 +85,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     (472, "سويدي"),
                 };
 
-                db.Nationalities.AddRange(nationalities.Select(n => new Nationality
+                db.HcmNationalities.AddRange(nationalities.Select(n => new HcmNationality
                 {
                     RecId = n.Id,
                     Code = "NAT" + n.Id,
@@ -98,9 +98,9 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 await db.Database.OpenConnectionAsync(ct);
                 try
                 {
-                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT OrgNationalities ON", ct);
+                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT HcmNationalities ON", ct);
                     await db.SaveChangesAsync(ct);
-                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT OrgNationalities OFF", ct);
+                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT HcmNationalities OFF", ct);
                 }
                 finally
                 {
@@ -111,7 +111,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
 
 
             #region Occupation
-            if (!await db.Occupations.IgnoreQueryFilters().AnyAsync(o => o.RecId == 1, ct))
+            if (!await db.HcmOccupations.IgnoreQueryFilters().AnyAsync(o => o.RecId == 1, ct))
             {
                 var occupations = new (short Id, string Name)[]
                 {
@@ -265,7 +265,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     (369, "مدقق معاملات"),
                 };
 
-                db.Occupations.AddRange(occupations.Select(o => new Occupation
+                db.HcmOccupations.AddRange(occupations.Select(o => new HcmOccupation
                 {
                     RecId = o.Id,
                     Code = "OCC" + o.Id,
@@ -278,9 +278,9 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 await db.Database.OpenConnectionAsync(ct);
                 try
                 {
-                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT Occupations ON", ct);
+                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT HcmOccupations ON", ct);
                     await db.SaveChangesAsync(ct);
-                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT Occupations OFF", ct);
+                    await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT HcmOccupations OFF", ct);
                 }
                 finally
                 {
@@ -318,7 +318,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             #region HcmWorker & Data Integrity
             // Fetch valid reference IDs for data integrity validation
             var validGenderIds = (await db.Genders.IgnoreQueryFilters().Select(g => g.RecId).ToListAsync(ct)).ToHashSet();
-            var validNatIds = (await db.Nationalities.IgnoreQueryFilters().Select(n => n.RecId).ToListAsync(ct)).ToHashSet();
+            var validNatIds = (await db.HcmNationalities.IgnoreQueryFilters().Select(n => n.RecId).ToListAsync(ct)).ToHashSet();
 
             byte defaultGenderId = validGenderIds.Contains(1) ? (byte)1 : validGenderIds.FirstOrDefault((byte)1);
             short defaultNatId = validNatIds.Contains(1) ? (short)1 : validNatIds.FirstOrDefault((short)1);

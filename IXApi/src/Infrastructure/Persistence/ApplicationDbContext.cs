@@ -16,6 +16,9 @@ using IAX.IXApi.Modules.Finance.Foundation.WorkerOrganizationAssignments;
 using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 using IAX.IXApi.Modules.Finance.Foundation.Genders;
 using IAX.IXApi.Modules.Finance.Foundation.Nationalities;
+using IAX.IXApi.Modules.Finance.Foundation.Departments;
+using IAX.IXApi.Modules.Finance.Foundation.Occupations;
+using IAX.IXApi.Modules.Finance.Foundation.HcmShowrooms;
 
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 
@@ -203,17 +206,14 @@ namespace IAX.IXApi.Infrastructure.Persistence
         #endregion
 
         #region Organization
-
-        
-
-      
-        public DbSet<Occupation> Occupations => Set<Occupation>();
+        public DbSet<HcmDepartment> HcmDepartments => Set<HcmDepartment>();
+        public DbSet<HcmOccupation> HcmOccupations => Set<HcmOccupation>();
         public DbSet<Announcement> Announcements => Set<Announcement>();
         public DbSet<DocuType> DocuTypes => Set<DocuType>();
         public DbSet<DocuValue> DocuValues => Set<DocuValue>();
         public DbSet<DocuRef> DocuRefs => Set<DocuRef>();
         public DbSet<Gender> Genders => Set<Gender>();
-        public DbSet<Nationality> Nationalities => Set<Nationality>();
+        public DbSet<HcmNationality> HcmNationalities => Set<HcmNationality>();
         public DbSet<OrganizationUnit> OrganizationUnits => Set<OrganizationUnit>();
         public DbSet<OrganizationRole> OrganizationRoles => Set<OrganizationRole>();
         public DbSet<OrganizationHierarchy> OrganizationHierarchies => Set<OrganizationHierarchy>();
@@ -221,6 +221,7 @@ namespace IAX.IXApi.Infrastructure.Persistence
 
         public DbSet<HcmWorkerOrganizationAssignment> HcmWorkerOrganizationAssignments => Set<HcmWorkerOrganizationAssignment>();
         public DbSet<HcmWorker> HcmWorkers => Set<HcmWorker>();
+        public DbSet<HcmShowroom> HcmShowrooms => Set<HcmShowroom>();
         public DbSet<HcmPosition> HcmPositions => Set<HcmPosition>();
         public DbSet<HcmReportingHierarchy> HcmReportingHierarchies => Set<HcmReportingHierarchy>();
         public DbSet<HcmPositionReportingLine> HcmPositionReportingLines => Set<HcmPositionReportingLine>();

@@ -2464,5 +2464,23 @@
     "selfManager": "A position cannot manage itself.",
     "unitReference": "Organization unit {{id}}",
     "nodeReference": "Node #{{id}}"
+  },
+  "hcmNationalities": {
+    "title": "Nationalities",
+    "fields": {
+      "code": "Code"
+    }
+  },
+  "hcmOccupations": {
+    "title": "Occupations",
+    "fields": {
+      "code": "Code"
+    }
+  },
+  "hcmDepartments": {
+    "title": "Departments",
+    "fields": {
+      "code": "Code"
+    }
   }
 }

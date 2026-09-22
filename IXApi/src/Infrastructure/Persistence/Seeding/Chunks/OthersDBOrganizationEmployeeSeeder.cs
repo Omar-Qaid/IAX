@@ -5,6 +5,7 @@ using IAX.IXApi.Modules.Finance.Foundation.Genders;
 using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 using IAX.IXApi.Modules.Finance.Foundation.Nationalities;
 using IAX.IXApi.Modules.Finance.Foundation.Occupations;
+using IAX.IXApi.Modules.Finance.Foundation.Departments;
 using IAX.IXApi.Modules.Identity.Roles;
 using IAX.IXApi.Modules.Identity.Users;
 using Microsoft.AspNetCore.Identity;
@@ -32,19 +33,25 @@ public sealed class OthersDBOrganizationEmployeeSeeder : OthersDBSeedData
         _=roles;
         var owner=(await users.FindByNameAsync("sys"))?.Id??"sys";
         var data=await ReadAsync(ct);
+        await UpsertDepartmentsAsync(db,data.Departments,owner,ct);
         await UpsertOccupationsAsync(db,data.Occupations,owner,ct);
         await UpsertGendersAsync(db,data.Genders,owner,ct);
         await UpsertNationalitiesAsync(db,data.Nationalities,owner,ct);
         await UpsertEmployeesAsync(db,data.Employees,owner,ct);
     }
 
-   
+    private static async Task UpsertDepartmentsAsync(ApplicationDbContext db,LookupShort[] rows,string owner,CancellationToken ct)
+    {
+        var existing=await db.HcmDepartments.IgnoreQueryFilters().ToDictionaryAsync(x=>x.RecId,ct);
+        foreach(var row in rows){if(existing.TryGetValue(row.Id,out var value)){Apply(value,row.Name,row.Description,row.Active);}else db.HcmDepartments.Add(new HcmDepartment{RecId=row.Id,Code=$"DEP{row.Id}",Name=Text(row.Name,255),Description=Text(row.Description,1000),IsActive=row.Active,CreatedBy=owner,OwnerAccountId=owner});}
+        await SaveWithOptionalIdentityAsync(db,"HcmDepartments",ct);
+    }
 
     private static async Task UpsertOccupationsAsync(ApplicationDbContext db,LookupShort[] rows,string owner,CancellationToken ct)
     {
-        var existing=await db.Occupations.IgnoreQueryFilters().ToDictionaryAsync(x=>x.RecId,ct);
-        foreach(var row in rows){if(existing.TryGetValue(row.Id,out var value)){Apply(value,row.Name,row.Description,row.Active);}else db.Occupations.Add(new Occupation{RecId=row.Id,Code=$"OCC{row.Id}",Name=Text(row.Name,255),Description=Text(row.Description,1000),IsActive=row.Active,CreatedBy=owner,OwnerAccountId=owner});}
-        await SaveWithOptionalIdentityAsync(db,"Occupations",ct);
+        var existing=await db.HcmOccupations.IgnoreQueryFilters().ToDictionaryAsync(x=>x.RecId,ct);
+        foreach(var row in rows){if(existing.TryGetValue(row.Id,out var value)){Apply(value,row.Name,row.Description,row.Active);}else db.HcmOccupations.Add(new HcmOccupation{RecId=row.Id,Code=$"OCC{row.Id}",Name=Text(row.Name,255),Description=Text(row.Description,1000),IsActive=row.Active,CreatedBy=owner,OwnerAccountId=owner});}
+        await SaveWithOptionalIdentityAsync(db,"HcmOccupations",ct);
     }
 
     private static async Task UpsertGendersAsync(ApplicationDbContext db,LookupByte[] rows,string owner,CancellationToken ct)
@@ -56,9 +63,9 @@ public sealed class OthersDBOrganizationEmployeeSeeder : OthersDBSeedData
 
     private static async Task UpsertNationalitiesAsync(ApplicationDbContext db,LookupShort[] rows,string owner,CancellationToken ct)
     {
-        var existing=await db.Nationalities.IgnoreQueryFilters().ToDictionaryAsync(x=>x.RecId,ct);
-        foreach(var row in rows){if(existing.TryGetValue(row.Id,out var value)){Apply(value,row.Name,row.Description,row.Active);}else db.Nationalities.Add(new Nationality{RecId=row.Id,Code=$"NAT{row.Id}",Name=Text(row.Name,255),Description=Text(row.Description,1000),IsActive=row.Active,CreatedBy=owner,OwnerAccountId=owner});}
-        await SaveWithOptionalIdentityAsync(db,"OrgNationalities",ct);
+        var existing=await db.HcmNationalities.IgnoreQueryFilters().ToDictionaryAsync(x=>x.RecId,ct);
+        foreach(var row in rows){if(existing.TryGetValue(row.Id,out var value)){Apply(value,row.Name,row.Description,row.Active);}else db.HcmNationalities.Add(new HcmNationality{RecId=row.Id,Code=$"NAT{row.Id}",Name=Text(row.Name,255),Description=Text(row.Description,1000),IsActive=row.Active,CreatedBy=owner,OwnerAccountId=owner});}
+        await SaveWithOptionalIdentityAsync(db,"HcmNationalities",ct);
     }
 
     private static async Task UpsertEmployeesAsync(ApplicationDbContext db,Employee[] rows,string owner,CancellationToken ct)

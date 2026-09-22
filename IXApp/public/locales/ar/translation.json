@@ -2464,5 +2464,23 @@
     "selfManager": "لا يمكن أن يكون المنصب مديراً لنفسه.",
     "unitReference": "الوحدة التنظيمية {{id}}",
     "nodeReference": "العقدة #{{id}}"
+  },
+  "hcmNationalities": {
+    "title": "الجنسيات",
+    "fields": {
+      "code": "الكود"
+    }
+  },
+  "hcmOccupations": {
+    "title": "المهن",
+    "fields": {
+      "code": "الكود"
+    }
+  },
+  "hcmDepartments": {
+    "title": "الأقسام",
+    "fields": {
+      "code": "الكود"
+    }
   }
 }

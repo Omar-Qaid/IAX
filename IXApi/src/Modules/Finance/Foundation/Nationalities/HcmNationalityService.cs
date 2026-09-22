@@ -5,11 +5,10 @@ using IAX.IXApi.Infrastructure.Identity;
 
 namespace IAX.IXApi.Modules.Finance.Foundation.Nationalities
 {
-    public class NationalityService : BaseService<Nationality>, INationalityService
+    public class HcmNationalityService : BaseService<HcmNationality>, IHcmNationalityService
     {
-        public NationalityService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)
+        public HcmNationalityService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)
         {
         }
     }
 }
-

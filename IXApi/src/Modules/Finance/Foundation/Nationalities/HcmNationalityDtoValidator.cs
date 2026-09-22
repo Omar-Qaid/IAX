@@ -1,11 +1,11 @@
 using IAX.IXApi.Shared.Application.Validation;
 using FluentValidation;
 
-namespace IAX.IXApi.Modules.Finance.Foundation.Occupations
+namespace IAX.IXApi.Modules.Finance.Foundation.Nationalities
 {
-    public class OccupationDtoValidator : BaseValidator<OccupationDto>
+    public class HcmNationalityDtoValidator : BaseValidator<HcmNationalityDto>
     {
-        public OccupationDtoValidator()
+        public HcmNationalityDtoValidator()
         {
             RuleFor(x => x.Name).NotEmpty().WithMessage("English Name is required");
         }

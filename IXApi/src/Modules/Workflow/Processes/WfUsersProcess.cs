@@ -13,7 +13,7 @@ namespace IAX.IXApi.Modules.Workflow.Processes
         public virtual WfProcess Process { get; set; } = null!;
         public short? OccupationId { get; set; }
         [ForeignKey(nameof(OccupationId))]
-        public virtual Occupation? Occupation { get; set; }
+        public virtual HcmOccupation? Occupation { get; set; }
 
         public long? EmployeeId { get; set; }
         [ForeignKey(nameof(EmployeeId))]

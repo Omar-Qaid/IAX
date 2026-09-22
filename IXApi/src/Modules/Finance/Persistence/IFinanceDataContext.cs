@@ -3,6 +3,8 @@ using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 using IAX.IXApi.Modules.Finance.Foundation.OrganizationUnits;
 using IAX.IXApi.Modules.Finance.Foundation.WorkerOrganizationAssignments;
 using IAX.IXApi.Modules.Finance.Foundation.Structure;
+using IAX.IXApi.Modules.Finance.Foundation.Departments;
+using IAX.IXApi.Modules.Finance.Foundation.HcmShowrooms;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
@@ -13,6 +15,8 @@ public interface IFinanceDataContext
     DatabaseFacade Database { get; }
     Microsoft.EntityFrameworkCore.ChangeTracking.ChangeTracker ChangeTracker { get; }
     DbSet<HcmWorker> HcmWorkers { get; }
+    DbSet<HcmDepartment> HcmDepartments { get; }
+    DbSet<HcmShowroom> HcmShowrooms { get; }
     DbSet<OrganizationUnit> OrganizationUnits { get; }
     DbSet<HcmWorkerOrganizationAssignment> HcmWorkerOrganizationAssignments { get; }
     DbSet<OrganizationRole> OrganizationRoles { get; }

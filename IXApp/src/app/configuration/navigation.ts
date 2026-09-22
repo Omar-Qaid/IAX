@@ -285,6 +285,21 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
             path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.HCM_WORKERS,
             permission: PERMISSIONS.HCM_WORKER_VIEW,
           },
+          {
+            label: 'hcmNationalities.title',
+            path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.HCM_NATIONALITIES,
+            permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
+          },
+          {
+            label: 'hcmOccupations.title',
+            path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.HCM_OCCUPATIONS,
+            permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
+          },
+          {
+            label: 'hcmDepartments.title',
+            path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.HCM_DEPARTMENTS,
+            permission: PERMISSIONS.ORGANIZATION_STRUCTURE_VIEW,
+          },
         ],
       },
     ],
