@@ -1642,7 +1642,7 @@
     "fields": {
       "code": "Code",
       "name": "English name",
-      "nameAlias": "Name alias",
+      "nameAlias": "Search name",
       "nameAR": "Arabic name",
       "description": "English description",
       "descriptionAR": "Arabic description",

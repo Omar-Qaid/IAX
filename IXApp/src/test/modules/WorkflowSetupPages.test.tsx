@@ -45,6 +45,7 @@ describe('workflow setup pages', () => {
 
       expect(screen.getByText(title)).toBeDefined();
       expect(await screen.findByText(name)).toBeDefined();
+      expect(screen.getByText('Search name')).toBeDefined();
       expect(screen.getByRole('button', { name: 'Back' })).toBeDefined();
       expect(screen.getByRole('button', { name: 'Edit' })).toBeDefined();
       expect(screen.getByRole('button', { name: 'New' })).toBeDefined();

@@ -1642,7 +1642,7 @@
     "fields": {
       "code": "الرمز",
       "name": "الاسم الإنجليزي",
-      "nameAlias": "الاسم البديل",
+      "nameAlias": "اسم البحث",
       "nameAR": "الاسم العربي",
       "description": "الوصف الإنجليزي",
       "descriptionAR": "الوصف العربي",
