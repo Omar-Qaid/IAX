@@ -1,8 +1,11 @@
 using FluentValidation;
+using IAX.IXApi.Modules.Finance.Foundation.Departments;
+using IAX.IXApi.Modules.Finance.Foundation.HcmShowrooms;
 using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 using IAX.IXApi.Modules.Finance.Foundation.OrganizationUnits;
 using IAX.IXApi.Modules.Finance.Foundation.Structure;
 using IAX.IXApi.Modules.Finance.Foundation.WorkerOrganizationAssignments;
+using IAX.IXApi.Modules.Finance.Foundation.WorkerShowroomAssignments;
 using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Organization.DocumentManagement.Entities;
 using IAX.IXApi.Modules.Organization.Persistence;
@@ -237,6 +240,9 @@ public sealed class OrganizationStructureTests
     {
         public string CompanyCode => company.Code;
         public DbSet<HcmWorker> HcmWorkers => Set<HcmWorker>();
+        public DbSet<HcmDepartment> HcmDepartments => Set<HcmDepartment>();
+        public DbSet<HcmShowroom> HcmShowrooms => Set<HcmShowroom>();
+        public DbSet<HcmWorkerShowroomAssignment> HcmWorkerShowroomAssignments => Set<HcmWorkerShowroomAssignment>();
         public DbSet<OrganizationUnit> OrganizationUnits => Set<OrganizationUnit>();
         public DbSet<OrganizationRole> OrganizationRoles => Set<OrganizationRole>();
         public DbSet<OrganizationHierarchy> OrganizationHierarchies => Set<OrganizationHierarchy>();
