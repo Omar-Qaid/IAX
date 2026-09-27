@@ -10,6 +10,9 @@ export interface HcmWorkerDto {
   nameAlias?: string | null;
   occupationId: number;
   occupationName?: string | null;
+  managerWorkerId?: number | null;
+  departmentId?: number | null;
+  showroomId?: number | null;
   genderId: number;
   genderName?: string | null;
   nationalityId: number;
@@ -30,6 +33,84 @@ export interface HcmLookupOption {
   code?: string | null;
   name?: string | null;
   nameAlias?: string | null;
+}
+
+interface HcmWorkerLookupDto {
+  recId: number;
+  personnelNumber: string;
+  name?: string | null;
+  nameAlias?: string | null;
+}
+
+interface HcmWorkerLookupPageDto {
+  data: HcmWorkerLookupDto[];
+  pageNumber: number;
+  totalPages: number;
+  totalRecords: number;
+}
+
+export interface HcmWorkerLookupPage {
+  data: Array<{ id: number; code: string; name: string; nameAlias?: string | null }>;
+  pageNumber: number;
+  totalPages: number;
+  totalRecords: number;
+}
+
+export interface HcmWorkerOrganizationAssignmentV1Record {
+  recId: number;
+  hcmManagerWorkerId: number;
+  managerPersonnelNumber: string;
+  managerName?: string | null;
+  managerNameAlias?: string | null;
+  departmentId?: number | null;
+  departmentName?: string | null;
+  departmentNameAlias?: string | null;
+  occupationId?: number | null;
+  occupationName?: string | null;
+  occupationNameAlias?: string | null;
+  validFrom: string;
+  validTo?: string | null;
+  isPrimary: boolean;
+  isActive: boolean;
+}
+
+export interface HcmWorkerShowroomAssignmentRecord {
+  recId: number;
+  hcmShowroomId: number;
+  showroomName: string;
+  showroomNameAlias?: string | null;
+  validFrom: string;
+  validTo?: string | null;
+  isPrimary: boolean;
+  isActive: boolean;
+}
+
+export interface HcmWorkerAssignmentChainNode {
+  type: 'manager' | 'worker' | 'showroom';
+  recId: number;
+  code: string;
+  name?: string | null;
+  nameAlias?: string | null;
+  title?: string | null;
+  titleAlias?: string | null;
+}
+
+export interface SaveHcmWorkerOrganizationAssignmentV1 {
+  hcmManagerWorkerId: number;
+  departmentId: number | null;
+  occupationId: number | null;
+  validFrom: string;
+  validTo: string | null;
+  isPrimary: boolean;
+  isActive: boolean;
+}
+
+export interface SaveHcmWorkerShowroomAssignment {
+  hcmShowroomId: number;
+  validFrom: string;
+  validTo: string | null;
+  isPrimary: boolean;
+  isActive: boolean;
 }
 
 interface HcmLookupDto {
@@ -67,6 +148,33 @@ export const hcmWorkerApi = {
     const response = await apiClient.get<ApiResponse<HcmWorkerDto[]>>('/v1/HcmWorker', { signal });
     return requireData(response.data).map(toRecord);
   },
+  async managerLookup(params: {
+    pageNumber: number;
+    pageSize: number;
+    search: string;
+    selectedId?: number | null;
+    signal?: AbortSignal;
+  }): Promise<HcmWorkerLookupPage> {
+    const response = await apiClient.get<ApiResponse<HcmWorkerLookupPageDto>>(
+      '/v1/HcmWorker/lookup',
+      { params: {
+        pageNumber: params.pageNumber,
+        pageSize: params.pageSize,
+        search: params.search || undefined,
+        selectedId: params.selectedId || undefined,
+      }, signal: params.signal }
+    );
+    const page = requireData(response.data);
+    return {
+      ...page,
+      data: page.data.map((worker) => ({
+        id: worker.recId,
+        code: worker.personnelNumber,
+        name: worker.name ?? worker.personnelNumber,
+        nameAlias: worker.nameAlias,
+      })),
+    };
+  },
   async create(record: HcmWorkerRecord): Promise<HcmWorkerRecord> {
     const response = await apiClient.post<ApiResponse<HcmWorkerDto>>(
       '/v1/HcmWorker',
@@ -97,5 +205,56 @@ export const hcmWorkerApi = {
       name,
       nameAlias,
     }));
+  },
+  async organizationAssignmentsV1(
+    workerId: number,
+    signal?: AbortSignal
+  ): Promise<HcmWorkerOrganizationAssignmentV1Record[]> {
+    const response = await apiClient.get<
+      ApiResponse<HcmWorkerOrganizationAssignmentV1Record[]>
+    >(`/v1/HcmWorker/${workerId}/organization-assignments-v1`, { signal });
+    return requireData(response.data);
+  },
+  async assignmentChain(
+    workerId: number,
+    signal?: AbortSignal
+  ): Promise<HcmWorkerAssignmentChainNode[]> {
+    const response = await apiClient.get<ApiResponse<HcmWorkerAssignmentChainNode[]>>(
+      `/v1/HcmWorker/${workerId}/assignment-chain`,
+      { signal }
+    );
+    return requireData(response.data);
+  },
+  async showroomAssignments(
+    workerId: number,
+    signal?: AbortSignal
+  ): Promise<HcmWorkerShowroomAssignmentRecord[]> {
+    const response = await apiClient.get<ApiResponse<HcmWorkerShowroomAssignmentRecord[]>>(
+      `/v1/HcmWorker/${workerId}/showroom-assignments`,
+      { signal }
+    );
+    return requireData(response.data);
+  },
+  async saveOrganizationAssignmentV1(
+    workerId: number,
+    assignmentId: number | null,
+    request: SaveHcmWorkerOrganizationAssignmentV1
+  ): Promise<void> {
+    const path = `/v1/HcmWorker/${workerId}/organization-assignments-v1`;
+    const response = assignmentId
+      ? await apiClient.put<ApiResponse<boolean>>(`${path}/${assignmentId}`, request)
+      : await apiClient.post<ApiResponse<boolean>>(path, request);
+    requireData(response.data);
+  },
+  async saveShowroomAssignment(
+    workerId: number,
+    assignmentId: number | null,
+    request: SaveHcmWorkerShowroomAssignment
+  ): Promise<void> {
+    const path = `/v1/HcmWorker/${workerId}/showroom-assignments`;
+    const response = assignmentId
+      ? await apiClient.put<ApiResponse<boolean>>(`${path}/${assignmentId}`, request)
+      : await apiClient.post<ApiResponse<boolean>>(path, request);
+    requireData(response.data);
   },
 };

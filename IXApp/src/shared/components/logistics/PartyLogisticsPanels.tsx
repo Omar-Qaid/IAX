@@ -59,6 +59,7 @@ interface PartyPanelProps {
   partyId: number;
   editing: boolean;
   storageKey: string;
+  showFilterRow?: boolean;
 }
 
 const requireData = <T,>(response: ApiResponse<T>): T => {
@@ -156,6 +157,7 @@ export function PartyPostalAddressPanel({
   partyId,
   editing,
   storageKey,
+  showFilterRow = false,
 }: PartyPanelProps): React.ReactElement {
   const { t } = useAppTranslation();
   const client = useQueryClient();
@@ -253,6 +255,7 @@ export function PartyPostalAddressPanel({
           },
         ]}
         storageKey={storageKey}
+        showFilterRow={showFilterRow}
         height={220}
       />
       <LogisticsPostalAddressDrawer
@@ -278,6 +281,7 @@ export function PartyElectronicAddressPanel({
   partyId,
   editing,
   storageKey,
+  showFilterRow = false,
 }: PartyPanelProps): React.ReactElement {
   const { t } = useAppTranslation();
   const client = useQueryClient();
@@ -358,6 +362,7 @@ export function PartyElectronicAddressPanel({
           },
         ]}
         storageKey={storageKey}
+        showFilterRow={showFilterRow}
         height={180}
       />
       <LogisticsElectronicAddressDrawer

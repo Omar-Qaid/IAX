@@ -143,13 +143,14 @@ function SelectLookup({
   const lookup = useLookupGridField<LookupOption>({
     queryKey: queryKey ?? ['lookup-field', label],
     fetchPage: resolvedFetchPage,
-    enabled: open,
+    enabled: open || (usesServerDataSource && scalarValue != null),
     pageSize,
     search: searchable ? search : '',
     debounceMs: searchDebounceMs,
   });
   const selected =
     options.find((option) => String(option.id) === String(scalarValue)) ??
+    lookup.rows.find((option) => String(option.id) === String(scalarValue)) ??
     (String(selectedCache?.id) === String(scalarValue) ? selectedCache : null);
   const handleScroll = (event: React.UIEvent<HTMLUListElement>) => {
     if (!lazyLoading || !lookup.hasNextPage || lookup.isFetchingNextPage) return;

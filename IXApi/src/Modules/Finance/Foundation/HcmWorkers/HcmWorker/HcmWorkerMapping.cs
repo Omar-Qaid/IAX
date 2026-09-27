@@ -10,6 +10,21 @@ public sealed class HcmWorkerMapping : IRegister
             .Map(destination => destination.Name, source => source.Party.Name)
             .Map(destination => destination.NameAlias, source => source.Party.NameAlias)
             .Map(destination => destination.OccupationName, source => source.Occupation.Name)
+            .Map(destination => destination.ManagerWorkerId, source => source.WorkerOrganizationAssignmentsV1
+                .Where(assignment => assignment.IsPrimary)
+                .OrderByDescending(assignment => assignment.ValidFrom)
+                .Select(assignment => (long?)assignment.HcmManagerWorkerId)
+                .FirstOrDefault())
+            .Map(destination => destination.DepartmentId, source => source.WorkerOrganizationAssignmentsV1
+                .Where(assignment => assignment.IsPrimary)
+                .OrderByDescending(assignment => assignment.ValidFrom)
+                .Select(assignment => assignment.DepartmentId)
+                .FirstOrDefault())
+            .Map(destination => destination.ShowroomId, source => source.WorkerShowroomAssignments
+                .Where(assignment => assignment.IsPrimary)
+                .OrderByDescending(assignment => assignment.ValidFrom)
+                .Select(assignment => (long?)assignment.HcmShowroomId)
+                .FirstOrDefault())
             .Map(destination => destination.GenderName, source => source.Gender.Name)
             .Map(destination => destination.NationalityName, source => source.Nationality.Name);
 

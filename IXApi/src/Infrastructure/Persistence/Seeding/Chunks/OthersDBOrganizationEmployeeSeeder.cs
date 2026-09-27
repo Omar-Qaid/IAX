@@ -43,14 +43,14 @@ public sealed class OthersDBOrganizationEmployeeSeeder : OthersDBSeedData
     private static async Task UpsertDepartmentsAsync(ApplicationDbContext db,LookupShort[] rows,string owner,CancellationToken ct)
     {
         var existing=await db.HcmDepartments.IgnoreQueryFilters().ToDictionaryAsync(x=>x.RecId,ct);
-        foreach(var row in rows){if(existing.TryGetValue(row.Id,out var value)){Apply(value,row.Name,row.Description,row.Active);}else db.HcmDepartments.Add(new HcmDepartment{RecId=row.Id,Code=$"DEP{row.Id}",Name=Text(row.Name,255),Description=Text(row.Description,1000),IsActive=row.Active,CreatedBy=owner,OwnerAccountId=owner});}
+        foreach(var row in rows){if(existing.TryGetValue(row.Id,out var value)){Apply(value,row.Name,row.Description,row.Active);if(string.IsNullOrWhiteSpace(value.NameAlias))value.NameAlias=Text(row.NameAr??row.Name,60);}else db.HcmDepartments.Add(new HcmDepartment{RecId=row.Id,Code=$"DEP{row.Id}",Name=Text(row.Name,255),NameAlias=Text(row.NameAr??row.Name,60),Description=Text(row.Description,1000),IsActive=row.Active,CreatedBy=owner,OwnerAccountId=owner});}
         await SaveWithOptionalIdentityAsync(db,"HcmDepartments",ct);
     }
 
     private static async Task UpsertOccupationsAsync(ApplicationDbContext db,LookupShort[] rows,string owner,CancellationToken ct)
     {
         var existing=await db.HcmOccupations.IgnoreQueryFilters().ToDictionaryAsync(x=>x.RecId,ct);
-        foreach(var row in rows){if(existing.TryGetValue(row.Id,out var value)){Apply(value,row.Name,row.Description,row.Active);}else db.HcmOccupations.Add(new HcmOccupation{RecId=row.Id,Code=$"OCC{row.Id}",Name=Text(row.Name,255),Description=Text(row.Description,1000),IsActive=row.Active,CreatedBy=owner,OwnerAccountId=owner});}
+        foreach(var row in rows){if(existing.TryGetValue(row.Id,out var value)){Apply(value,row.Name,row.Description,row.Active);if(string.IsNullOrWhiteSpace(value.NameAlias))value.NameAlias=Text(row.NameAr??row.Name,60);}else db.HcmOccupations.Add(new HcmOccupation{RecId=row.Id,Code=$"OCC{row.Id}",Name=Text(row.Name,255),NameAlias=Text(row.NameAr??row.Name,60),Description=Text(row.Description,1000),IsActive=row.Active,CreatedBy=owner,OwnerAccountId=owner});}
         await SaveWithOptionalIdentityAsync(db,"HcmOccupations",ct);
     }
 
@@ -80,7 +80,7 @@ public sealed class OthersDBOrganizationEmployeeSeeder : OthersDBSeedData
             var code=EmployeeCode(row,duplicateCodes);
             var hasParty=parties.TryGetValue(row.Id,out var party);
             if(!hasParty&&existingWorkers.TryGetValue(row.Id,out var linkedWorker))hasParty=partiesById.TryGetValue(linkedWorker.Person,out party);
-            if(hasParty){party!.PartyNumber=code;party.Name=Text(row.Name,255)??code;party.NameAlias=Text(row.NameAr,60)??code;party.RFullName=Text(row.NameAr,255);party.HcmWorker=row.Id;party.IsActive=row.Active?NoYes.Yes:NoYes.No;}
+            if(hasParty){party!.PartyNumber=code;party.Name=Text(row.Name,255)??code;if(string.IsNullOrWhiteSpace(party.NameAlias))party.NameAlias=Text(row.NameAr,60)??code;party.RFullName=Text(row.NameAr,255);party.HcmWorker=row.Id;party.IsActive=row.Active?NoYes.Yes:NoYes.No;parties[row.Id]=party;}
             else{party=new DirPartyTable{PartyNumber=code,Name=Text(row.Name,255)??code,NameAlias=Text(row.NameAr,60)??code,RFullName=Text(row.NameAr,255),LanguageId="ar-sa",AddressBookNames="",HcmWorker=row.Id,IsActive=row.Active?NoYes.Yes:NoYes.No,CreatedAt=row.CreatedAt,CreatedBy=row.CreatedBy??owner,OwnerAccountId=owner};db.DirPartyTables.Add(party);parties[row.Id]=party;}
         }
         await db.SaveChangesAsync(ct);
@@ -121,12 +121,12 @@ public sealed class OthersDBOrganizationEmployeeSeeder : OthersDBSeedData
         const string sql = """
             SELECT
               JSON_QUERY((SELECT DepartmentId AS Id,
-                                  COALESCE(NULLIF(DepartmentNameAR, N''), DepartmentName) AS Name,
+                                  COALESCE(NULLIF(DepartmentName, N''), DepartmentNameAR) AS Name, DepartmentNameAR AS NameAr,
                                   COALESCE(DescriptionAR, Description) AS Description,
                                   Activated AS Active
                            FROM dbo.Departments FOR JSON PATH)) AS Departments,
               JSON_QUERY((SELECT OccupationId AS Id,
-                                  COALESCE(NULLIF(OccupationNameAR, N''), OccupationName) AS Name,
+                                  COALESCE(NULLIF(OccupationName, N''), OccupationNameAR) AS Name, OccupationNameAR AS NameAr,
                                   COALESCE(DescriptionAR, Description) AS Description,
                                   Activated AS Active
                            FROM dbo.Occupations FOR JSON PATH)) AS Occupations,
@@ -165,7 +165,7 @@ public sealed class OthersDBOrganizationEmployeeSeeder : OthersDBSeedData
     }
 
     private sealed class Data{public LookupShort[] Departments{get;set;}=[];public LookupShort[] Occupations{get;set;}=[];public LookupByte[] Genders{get;set;}=[];public LookupShort[] Nationalities{get;set;}=[];public Employee[] Employees{get;set;}=[];}
-    private sealed class LookupShort{public short Id{get;set;}public string? Name{get;set;}public string? Description{get;set;}public bool Active{get;set;}}
+    private sealed class LookupShort{public short Id{get;set;}public string? Name{get;set;}public string? NameAr{get;set;}public string? Description{get;set;}public bool Active{get;set;}}
     private sealed class LookupByte{public byte Id{get;set;}public string? Name{get;set;}public string? Description{get;set;}}
     private sealed class Employee{public long Id{get;set;}public string? Code{get;set;}public string? Name{get;set;}public string? NameAr{get;set;}public short DepartmentId{get;set;}public short OccupationId{get;set;}public byte GenderId{get;set;}public short NationalityId{get;set;}public DateTime CreatedAt{get;set;}public string? CreatedBy{get;set;}public bool Active{get;set;}}
 }

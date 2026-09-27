@@ -251,6 +251,7 @@ public sealed class OrganizationStructureTests
         public DbSet<HcmReportingHierarchy> HcmReportingHierarchies => Set<HcmReportingHierarchy>();
         public DbSet<HcmPositionReportingLine> HcmPositionReportingLines => Set<HcmPositionReportingLine>();
         public DbSet<HcmWorkerOrganizationAssignment> HcmWorkerOrganizationAssignments => Set<HcmWorkerOrganizationAssignment>();
+        public DbSet<HcmWorkerOrganizationAssignmentV1> HcmWorkerOrganizationAssignmentsV1 => Set<HcmWorkerOrganizationAssignmentV1>();
         public DbSet<TaxData> TaxData => Set<TaxData>();
         public DbSet<TaxGroupHeading> TaxGroupHeadings => Set<TaxGroupHeading>();
         public DbSet<TaxGroupData> TaxGroupDatas => Set<TaxGroupData>();

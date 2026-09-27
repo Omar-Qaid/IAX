@@ -80,4 +80,47 @@ describe('hcmWorkerApi identity mapping', () => {
     ]);
     expect(apiClient.get).toHaveBeenCalledWith('/v1/Occupation', { signal: undefined });
   });
+
+  it('creates and updates organization and showroom assignments under the selected worker', async () => {
+    vi.mocked(apiClient.post).mockResolvedValue({ data: { success: true, data: true } });
+    vi.mocked(apiClient.put).mockResolvedValue({ data: { success: true, data: true } });
+    const organization = {
+      hcmManagerWorkerId: 12,
+      departmentId: 3,
+      occupationId: 4,
+      validFrom: '2026-09-27',
+      validTo: null,
+      isPrimary: true,
+      isActive: true,
+    };
+    const showroom = {
+      hcmShowroomId: 8,
+      validFrom: '2026-09-27',
+      validTo: null,
+      isPrimary: true,
+      isActive: true,
+    };
+
+    await hcmWorkerApi.saveOrganizationAssignmentV1(11, null, organization);
+    await hcmWorkerApi.saveOrganizationAssignmentV1(11, 21, organization);
+    await hcmWorkerApi.saveShowroomAssignment(11, null, showroom);
+    await hcmWorkerApi.saveShowroomAssignment(11, 31, showroom);
+
+    expect(apiClient.post).toHaveBeenCalledWith(
+      '/v1/HcmWorker/11/organization-assignments-v1',
+      organization
+    );
+    expect(apiClient.put).toHaveBeenCalledWith(
+      '/v1/HcmWorker/11/organization-assignments-v1/21',
+      organization
+    );
+    expect(apiClient.post).toHaveBeenCalledWith(
+      '/v1/HcmWorker/11/showroom-assignments',
+      showroom
+    );
+    expect(apiClient.put).toHaveBeenCalledWith(
+      '/v1/HcmWorker/11/showroom-assignments/31',
+      showroom
+    );
+  });
 });

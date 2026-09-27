@@ -18,7 +18,96 @@ namespace IAX.IXApi.Modules.Finance.Foundation.HcmWorkers
             _workerService = service;
         }
 
-        protected override string[]? GetDefaultIncludes() => new[] { "Party", "Occupation", "Gender", "Nationality" };
+        protected override string[]? GetDefaultIncludes() => new[] { "Party", "Occupation", "Gender", "Nationality", "WorkerOrganizationAssignmentsV1", "WorkerShowroomAssignments" };
+
+        public override async Task<ActionResult<APIResponse<IEnumerable<HcmWorkerDto>>>> GetAll(
+            CancellationToken cancellationToken = default)
+        {
+            var workers = await _workerService.GetWorkerListAsync(cancellationToken);
+            return Ok(APIResponse<IEnumerable<HcmWorkerDto>>.Ok(workers));
+        }
+
+        [HttpGet("lookup")]
+        public async Task<ActionResult<APIResponse<HcmWorkerLookupPageDto>>> GetLookup(
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 25,
+            [FromQuery] string? search = null,
+            [FromQuery] long? selectedId = null,
+            CancellationToken cancellationToken = default)
+        {
+            var workers = await _workerService.GetWorkerLookupAsync(
+                pageNumber, pageSize, search, selectedId, cancellationToken);
+            return Ok(APIResponse<HcmWorkerLookupPageDto>.Ok(workers));
+        }
+
+        [HttpGet("{workerId:long}/organization-assignments-v1")]
+        public async Task<ActionResult<APIResponse<IReadOnlyList<HcmWorkerOrganizationAssignmentV1Dto>>>> GetOrganizationAssignmentsV1(
+            long workerId,
+            CancellationToken cancellationToken = default)
+        {
+            var assignments = await _workerService.GetOrganizationAssignmentsV1Async(workerId, cancellationToken);
+            return Ok(APIResponse<IReadOnlyList<HcmWorkerOrganizationAssignmentV1Dto>>.Ok(assignments));
+        }
+
+        [HttpGet("{workerId:long}/assignment-chain")]
+        public async Task<ActionResult<APIResponse<IReadOnlyList<HcmWorkerAssignmentChainNodeDto>>>> GetAssignmentChain(
+            long workerId,
+            CancellationToken cancellationToken = default)
+        {
+            var chain = await _workerService.GetAssignmentChainAsync(workerId, cancellationToken);
+            return Ok(APIResponse<IReadOnlyList<HcmWorkerAssignmentChainNodeDto>>.Ok(chain));
+        }
+
+        [HttpGet("{workerId:long}/showroom-assignments")]
+        public async Task<ActionResult<APIResponse<IReadOnlyList<HcmWorkerShowroomAssignmentDto>>>> GetShowroomAssignments(
+            long workerId,
+            CancellationToken cancellationToken = default)
+        {
+            var assignments = await _workerService.GetShowroomAssignmentsAsync(workerId, cancellationToken);
+            return Ok(APIResponse<IReadOnlyList<HcmWorkerShowroomAssignmentDto>>.Ok(assignments));
+        }
+
+        [HttpPost("{workerId:long}/organization-assignments-v1")]
+        public async Task<ActionResult<APIResponse<bool>>> CreateOrganizationAssignmentV1(
+            long workerId,
+            SaveHcmWorkerOrganizationAssignmentV1Request request,
+            CancellationToken cancellationToken = default)
+        {
+            await _workerService.SaveOrganizationAssignmentV1Async(workerId, null, request, cancellationToken);
+            return Ok(APIResponse<bool>.Ok(true, "Created successfully"));
+        }
+
+        [HttpPut("{workerId:long}/organization-assignments-v1/{assignmentId:long}")]
+        public async Task<ActionResult<APIResponse<bool>>> UpdateOrganizationAssignmentV1(
+            long workerId,
+            long assignmentId,
+            SaveHcmWorkerOrganizationAssignmentV1Request request,
+            CancellationToken cancellationToken = default)
+        {
+            await _workerService.SaveOrganizationAssignmentV1Async(workerId, assignmentId, request, cancellationToken);
+            return Ok(APIResponse<bool>.Ok(true, "Updated successfully"));
+        }
+
+        [HttpPost("{workerId:long}/showroom-assignments")]
+        public async Task<ActionResult<APIResponse<bool>>> CreateShowroomAssignment(
+            long workerId,
+            SaveHcmWorkerShowroomAssignmentRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            await _workerService.SaveShowroomAssignmentAsync(workerId, null, request, cancellationToken);
+            return Ok(APIResponse<bool>.Ok(true, "Created successfully"));
+        }
+
+        [HttpPut("{workerId:long}/showroom-assignments/{assignmentId:long}")]
+        public async Task<ActionResult<APIResponse<bool>>> UpdateShowroomAssignment(
+            long workerId,
+            long assignmentId,
+            SaveHcmWorkerShowroomAssignmentRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            await _workerService.SaveShowroomAssignmentAsync(workerId, assignmentId, request, cancellationToken);
+            return Ok(APIResponse<bool>.Ok(true, "Updated successfully"));
+        }
 
         public override async Task<ActionResult<APIResponse<HcmWorkerDto>>> Create(
             HcmWorkerDto dto,
@@ -32,6 +121,8 @@ namespace IAX.IXApi.Modules.Finance.Foundation.HcmWorkers
                 dto.InitialPositionId,
                 cancellationToken);
             var result = await ReloadWithDefaultsAsync(created.RecId, cancellationToken) ?? created;
+            await SaveAssignmentChangesAsync(created.RecId, dto, cancellationToken);
+            result = await ReloadWithDefaultsAsync(created.RecId, cancellationToken) ?? result;
             return Ok(APIResponse<HcmWorkerDto>.Ok(result.Adapt<HcmWorkerDto>(), "Created successfully"));
         }
 
@@ -44,14 +135,46 @@ namespace IAX.IXApi.Modules.Finance.Foundation.HcmWorkers
             if (existing == null)
                 return NotFound(APIResponse<HcmWorkerDto>.Fail("HcmWorker not found"));
 
+            var currentOrganization = (await _workerService.GetOrganizationAssignmentsV1Async(existing.RecId, cancellationToken))
+                .FirstOrDefault(assignment => assignment.IsPrimary);
+            var currentShowroom = (await _workerService.GetShowroomAssignmentsAsync(existing.RecId, cancellationToken))
+                .FirstOrDefault(assignment => assignment.IsPrimary);
             dto.Adapt(existing);
             var updated = await _workerService.UpdateWorkerAsync(
                 existing,
                 dto.Name ?? string.Empty,
                 dto.NameAlias,
                 cancellationToken);
+            await SaveAssignmentChangesAsync(existing.RecId, dto, cancellationToken, currentOrganization, currentShowroom);
             var result = await ReloadWithDefaultsAsync(id, cancellationToken) ?? updated;
             return Ok(APIResponse<HcmWorkerDto>.Ok(result.Adapt<HcmWorkerDto>(), "Updated successfully"));
+        }
+
+        private async Task SaveAssignmentChangesAsync(
+            long workerId,
+            HcmWorkerDto dto,
+            CancellationToken cancellationToken,
+            HcmWorkerOrganizationAssignmentV1Dto? currentOrganization = null,
+            HcmWorkerShowroomAssignmentDto? currentShowroom = null)
+        {
+            var validFrom = DateOnly.FromDateTime(DateTime.UtcNow);
+            if (dto.ManagerWorkerId is long managerWorkerId && managerWorkerId > 0 &&
+                (currentOrganization == null ||
+                 currentOrganization.HcmManagerWorkerId != managerWorkerId ||
+                 currentOrganization.DepartmentId != dto.DepartmentId ||
+                 currentOrganization.OccupationId != dto.OccupationId))
+            {
+                await _workerService.SaveOrganizationAssignmentV1Async(workerId, null,
+                    new(managerWorkerId, dto.DepartmentId, dto.OccupationId, validFrom, null, true, true),
+                    cancellationToken);
+            }
+
+            if (dto.ShowroomId is long showroomId && showroomId > 0 &&
+                (currentShowroom == null || currentShowroom.HcmShowroomId != showroomId))
+            {
+                await _workerService.SaveShowroomAssignmentAsync(workerId, null,
+                    new(showroomId, validFrom, null, true, true), cancellationToken);
+            }
         }
     }
 }

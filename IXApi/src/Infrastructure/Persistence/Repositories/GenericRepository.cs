@@ -45,6 +45,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
                     if (includes != null)
                     {
                         foreach (var include in includes) query = query.Include(include);
+                        if (includes.Length > 1) query = query.AsSplitQuery();
                     }
                     return await query.FirstOrDefaultAsync(e => EF.Property<string>(e, codeProp.Name) == strId, cancellationToken);
                 }
@@ -56,6 +57,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         {
             var query = dbSet.AsQueryable();
             foreach (var include in includes) query = query.Include(include);
+            if (includes.Length > 1) query = query.AsSplitQuery();
             
             var keyName = keyProperty?.Name ?? "Id";
             return await query.FirstOrDefaultAsync(e => EF.Property<object>(e, keyName).Equals(id), cancellationToken);

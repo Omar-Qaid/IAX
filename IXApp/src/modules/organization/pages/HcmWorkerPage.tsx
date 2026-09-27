@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useMemo, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { useCompanyStore } from '@core/company/useCompanyStore';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
@@ -17,6 +17,7 @@ import {
   PartyElectronicAddressPanel,
 } from '@shared/components/logistics/PartyLogisticsPanels';
 import { HcmWorkerAssignmentsPanel } from '../components/HcmWorkerAssignmentsPanel';
+import { HcmWorkerAssignmentDiagram } from '../components/HcmWorkerAssignmentDiagram';
 
 const numberValue = (value: DetailValue | undefined): number => Number(value) || 0;
 const textValue = (value: DetailValue | undefined): string => String(value ?? '');
@@ -30,6 +31,9 @@ const emptyWorker = (): HcmWorkerRecord => ({
   name: null,
   nameAlias: null,
   occupationId: 0,
+  managerWorkerId: null,
+  departmentId: null,
+  showroomId: null,
   genderId: 0,
   nationalityId: 0,
   hireDate: null,
@@ -45,6 +49,8 @@ export function HcmWorkerPage(): React.ReactElement {
 
 function HcmWorkerContent({ company }: { company: string }): React.ReactElement {
   const { t, isRtl } = useAppTranslation();
+  const queryClient = useQueryClient();
+  const [assignmentFiltersVisible, setAssignmentFiltersVisible] = useState(false);
   const lookups = {
     occupations: useQuery({
       queryKey: ['hcm-workers', company, 'occupations'],
@@ -57,6 +63,14 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
     nationalities: useQuery({
       queryKey: ['hcm-workers', company, 'nationalities'],
       queryFn: ({ signal }) => hcmWorkerApi.lookup('Nationality', signal),
+    }),
+    departments: useQuery({
+      queryKey: ['hcm-workers', company, 'departments'],
+      queryFn: ({ signal }) => hcmWorkerApi.lookup('HcmDepartment', signal),
+    }),
+    showrooms: useQuery({
+      queryKey: ['hcm-workers', company, 'showrooms'],
+      queryFn: ({ signal }) => hcmWorkerApi.lookup('HcmShowroom', signal),
     }),
   };
 
@@ -108,18 +122,6 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
         title: t('hcmWorkers.sections.employment'),
         groups: [
           {
-            id: 'organization',
-            title: t('hcmWorkers.groups.organization'),
-            fields: [
-              lookupField(
-                'occupationId',
-                t('hcmWorkers.fields.occupation'),
-                lookups.occupations.data ?? [],
-                lookups.occupations.isLoading
-              ),
-            ],
-          },
-          {
             id: 'personal',
             title: t('hcmWorkers.groups.personal'),
             fields: [
@@ -140,6 +142,62 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
             ],
           },
           {
+            id: 'organization',
+            title: t('hcmWorkers.groups.organization'),
+            fields: [
+              {
+                name: 'managerWorkerId',
+                label: t('hcmWorkers.assignments.manager'),
+                renderOwnLabel: true,
+                render: ({ value, disabled, onChange }) => (
+                  <AppLookupField
+                    name="managerWorkerId"
+                    label={t('hcmWorkers.assignments.manager')}
+                    value={numberValue(value)}
+                    onChange={(next) => onChange(Number(next) || 0)}
+                    fetchPage={({ pageNumber, pageSize, search, signal }) =>
+                      hcmWorkerApi.managerLookup({
+                        pageNumber,
+                        pageSize,
+                        search,
+                        selectedId: numberValue(value),
+                        signal,
+                      })
+                    }
+                    queryKey={['hcm-workers', company, 'manager-lookup', numberValue(value)]}
+                    required={false}
+                    disabled={disabled}
+                    displayMode="select"
+                    sideMode="server"
+                    searchable
+                    lazyLoading
+                    pageSize={25}
+                  />
+                ),
+              },
+              lookupField(
+                'departmentId',
+                t('hcmWorkers.fields.department'),
+                lookups.departments.data ?? [],
+                lookups.departments.isLoading,
+                false
+              ),
+              lookupField(
+                'occupationId',
+                t('hcmWorkers.fields.occupation'),
+                lookups.occupations.data ?? [],
+                lookups.occupations.isLoading
+              ),
+              lookupField(
+                'showroomId',
+                t('hcmWorkers.fields.showroom'),
+                lookups.showrooms.data ?? [],
+                lookups.showrooms.isLoading,
+                false
+              ),
+            ],
+          },
+          {
             id: 'dates',
             title: t('hcmWorkers.groups.dates'),
             fields: [
@@ -155,21 +213,52 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
       lookups.genders.isLoading,
       lookups.nationalities.data,
       lookups.nationalities.isLoading,
+      lookups.departments.data,
+      lookups.departments.isLoading,
       lookups.occupations.data,
       lookups.occupations.isLoading,
+      lookups.showrooms.data,
+      lookups.showrooms.isLoading,
       isRtl,
       t,
     ]
   );
 
+  const refreshAssignmentHistory = async (workerId: number): Promise<void> => {
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: ['hcm-worker-organization-assignments-v1', company, workerId],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: ['hcm-worker-showroom-assignments', company, workerId],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: ['hcm-worker-assignment-chain', company, workerId],
+      }),
+    ]);
+  };
+
+  const createWorker = async (record: HcmWorkerRecord): Promise<HcmWorkerRecord> => {
+    const saved = await hcmWorkerApi.create(record);
+    await refreshAssignmentHistory(saved.recordId);
+    return saved;
+  };
+
+  const updateWorker = async (record: HcmWorkerRecord): Promise<HcmWorkerRecord> => {
+    const saved = await hcmWorkerApi.update(record);
+    await refreshAssignmentHistory(saved.recordId);
+    return saved;
+  };
+
   const config: EnterpriseListDetailsConfig<HcmWorkerRecord> = {
     recordTableName: 'HcmWorker',
+    onSearch: () => setAssignmentFiltersVisible((visible) => !visible),
     dataSource: {
       type: 'remote',
       key: `hcm-workers-${company}`,
       load: (signal) => hcmWorkerApi.list(signal),
-      create: hcmWorkerApi.create,
-      update: hcmWorkerApi.update,
+      create: createWorker,
+      update: updateWorker,
       delete: hcmWorkerApi.delete,
     },
     createRecord: emptyWorker,
@@ -182,6 +271,9 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
         .includes(query.toLocaleLowerCase()),
     getValues: (record): DetailValues => ({
       occupationId: record.occupationId,
+      managerWorkerId: record.managerWorkerId ?? 0,
+      departmentId: record.departmentId ?? 0,
+      showroomId: record.showroomId ?? 0,
       genderId: record.genderId,
       nationalityId: record.nationalityId,
       nameAlias: record.nameAlias ?? '',
@@ -192,6 +284,9 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
     setValues: (record, values) => ({
       ...record,
       occupationId: numberValue(values.occupationId),
+      managerWorkerId: numberValue(values.managerWorkerId) || null,
+      departmentId: numberValue(values.departmentId) || null,
+      showroomId: numberValue(values.showroomId) || null,
       genderId: numberValue(values.genderId),
       nationalityId: numberValue(values.nationalityId),
       nameAlias: textValue(values.nameAlias) || null,
@@ -220,15 +315,44 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
     sections: ({ record, editing }) => [
       ...sections,
       {
+        id: 'assignmentDiagram',
+        title: t('hcmWorkers.assignments.diagramTitle'),
+        minHeight: 220,
+        content: (
+          <HcmWorkerAssignmentDiagram
+            key={record.recordId}
+            workerId={record.recordId}
+            company={company}
+          />
+        ),
+      },
+      {
         id: 'organizationAssignments',
-        title: t('hcmWorkers.assignments.title'),
+        title: t('hcmWorkers.assignments.organizationTitle'),
         minHeight: 220,
         content: (
           <HcmWorkerAssignmentsPanel
             key={record.recordId}
             workerId={record.recordId}
             company={company}
+            type="organization"
             editing={editing}
+            showFilterRow={assignmentFiltersVisible}
+          />
+        ),
+      },
+      {
+        id: 'showroomAssignments',
+        title: t('hcmWorkers.assignments.showroomTitle'),
+        minHeight: 220,
+        content: (
+          <HcmWorkerAssignmentsPanel
+            key={record.recordId}
+            workerId={record.recordId}
+            company={company}
+            type="showroom"
+            editing={editing}
+            showFilterRow={assignmentFiltersVisible}
           />
         ),
       },
@@ -241,6 +365,7 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
             partyId={record.person}
             editing={editing}
             storageKey="organization.worker.addresses"
+            showFilterRow={assignmentFiltersVisible}
           />
         ),
       },
@@ -253,6 +378,7 @@ function HcmWorkerContent({ company }: { company: string }): React.ReactElement 
             partyId={record.person}
             editing={editing}
             storageKey="organization.worker.contacts"
+            showFilterRow={assignmentFiltersVisible}
           />
         ),
       },

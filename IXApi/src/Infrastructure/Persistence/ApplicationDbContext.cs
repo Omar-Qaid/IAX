@@ -17,7 +17,6 @@ using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 using IAX.IXApi.Modules.Finance.Foundation.Genders;
 using IAX.IXApi.Modules.Finance.Foundation.Nationalities;
 using IAX.IXApi.Modules.Finance.Foundation.Departments;
-using IAX.IXApi.Modules.Finance.Foundation.Occupations;
 using IAX.IXApi.Modules.Finance.Foundation.HcmShowrooms;
 
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
@@ -220,6 +219,7 @@ namespace IAX.IXApi.Infrastructure.Persistence
         public DbSet<OrganizationHierarchyNode> OrganizationHierarchyNodes => Set<OrganizationHierarchyNode>();
 
         public DbSet<HcmWorkerOrganizationAssignment> HcmWorkerOrganizationAssignments => Set<HcmWorkerOrganizationAssignment>();
+        public DbSet<HcmWorkerOrganizationAssignmentV1> HcmWorkerOrganizationAssignmentsV1 => Set<HcmWorkerOrganizationAssignmentV1>();
         public DbSet<IAX.IXApi.Modules.Finance.Foundation.WorkerShowroomAssignments.HcmWorkerShowroomAssignment> HcmWorkerShowroomAssignments => Set<IAX.IXApi.Modules.Finance.Foundation.WorkerShowroomAssignments.HcmWorkerShowroomAssignment>();
         public DbSet<HcmWorker> HcmWorkers => Set<HcmWorker>();
         public DbSet<HcmShowroom> HcmShowrooms => Set<HcmShowroom>();

@@ -52,6 +52,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding
                 new CustLedgerSeeder(),
                 new OthersDBOrganizationEmployeeSeeder(_seedDbConnectionString),
                 new OrganizationStructureSeeder(),
+                new HcmExampleSeeder(),
                 new OthersDBWorkflowMasterFromSeeder(_seedDbConnectionString),
                 new WfProcessSeedData(),
             };
