@@ -39,8 +39,15 @@ export const referenceFilterFieldsFallback = (referenceType: 'Employee' | 'Showr
     ? [
         field('BirthDate', 'date', true), field('GenderId', 'integer', false, true),
         field('HireDate', 'date', true), field('NationalityId', 'integer', false, true),
-        field('OccupationId', 'integer', false, true), field('Person', 'integer', false, true),
+        field('Person', 'integer', false, true),
         field('PersonnelNumber', 'string'), field('UserId', 'string', true, true),
+        field('OrganizationAssignment.DepartmentId', 'integer', true, true),
+        field('OrganizationAssignment.HcmManagerWorkerId', 'integer', false, true),
+        field('OrganizationAssignment.HcmWorkerId', 'integer', false, true),
+        field('OrganizationAssignment.OccupationId', 'integer', true, true),
+        field('OrganizationAssignment.ValidFrom', 'date'),
+        field('OrganizationAssignment.ValidTo', 'date', true),
+        field('OrganizationAssignment.IsPrimary', 'boolean'),
       ]
     : [field('Party', 'integer', false, true), field('PersonnelNumber', 'string')];
   return [...common, ...specific].sort((left, right) => left.name.localeCompare(right.name));

@@ -1,11 +1,13 @@
 using System.Globalization;
 using System.Linq.Expressions;
 using IAX.IXApi.Modules.Finance.Entities;
+using IAX.IXApi.Modules.Finance.Foundation.Departments;
 using IAX.IXApi.Modules.Finance.Foundation.Genders;
 using IAX.IXApi.Modules.Finance.Foundation.HcmShowrooms;
 using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 using IAX.IXApi.Modules.Finance.Foundation.Nationalities;
 using IAX.IXApi.Modules.Finance.Foundation.Occupations;
+using IAX.IXApi.Modules.Finance.Foundation.WorkerOrganizationAssignments;
 using IAX.IXApi.Modules.Identity.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -14,6 +16,7 @@ namespace IAX.IXApi.Modules.Workflow.Requests;
 
 public partial class WfRequestService
 {
+    private const string OrganizationAssignmentFieldPrefix = "OrganizationAssignment.";
     private static readonly string[] TextOperators = ["equals", "notEquals", "contains", "startsWith", "endsWith", "isEmpty", "isNotEmpty"];
     private static readonly string[] ComparableOperators = ["equals", "notEquals", "greaterThan", "greaterThanOrEqual", "lessThan", "lessThanOrEqual", "isEmpty", "isNotEmpty"];
     private static readonly string[] EqualityOperators = ["equals", "notEquals", "isEmpty", "isNotEmpty"];
@@ -21,12 +24,15 @@ public partial class WfRequestService
     public IReadOnlyList<DynamicReferenceFilterFieldDto>? GetReferenceFilterFields(string referenceType)
         => referenceType switch
         {
-            "Employee" => ReferenceFields<HcmWorker>(),
+            "Employee" => ReferenceFields<HcmWorker>()
+                .Concat(ReferenceFields<HcmWorkerOrganizationAssignmentV1>(OrganizationAssignmentFieldPrefix))
+                .OrderBy(field => field.Name)
+                .ToList(),
             "Showroom" => ReferenceFields<HcmShowroom>(),
             _ => null
         };
 
-    private IReadOnlyList<DynamicReferenceFilterFieldDto> ReferenceFields<TEntity>() where TEntity : class
+    private IReadOnlyList<DynamicReferenceFilterFieldDto> ReferenceFields<TEntity>(string prefix = "") where TEntity : class
     {
         var entity = _context.Model.FindEntityType(typeof(TEntity))!;
         return entity.GetProperties()
@@ -38,7 +44,7 @@ public partial class WfRequestService
                 var operators = foreignKey || type == typeof(bool) ? EqualityOperators
                     : type == typeof(string) ? TextOperators : ComparableOperators;
                 return new DynamicReferenceFilterFieldDto(
-                    property.Name, TypeName(type), property.IsNullable, foreignKey, operators);
+                    prefix + property.Name, TypeName(type), property.IsNullable, foreignKey, operators);
             })
             .OrderBy(field => field.Name)
             .ToList();
@@ -53,19 +59,40 @@ public partial class WfRequestService
         return (referenceType, field) switch
         {
             ("Employee", "Person") or ("Showroom", "Party") => await ReferenceValues(
-                _context.Set<DirPartyTable>().AsNoTracking().Select(item => new ReferenceValueRow(item.RecId.ToString(), item.Name ?? item.PartyNumber, item.NameAlias)),
+                _context.Set<DirPartyTable>().AsNoTracking()
+                    .OrderBy(item => item.Name ?? item.PartyNumber).ThenBy(item => item.RecId)
+                    .Select(item => new ReferenceValueRow(item.RecId.ToString(), item.Name ?? item.PartyNumber, item.NameAlias)),
                 pageNumber, pageSize, search, cancellationToken),
-            ("Employee", "OccupationId") => await ReferenceValues(
-                _context.Set<HcmOccupation>().AsNoTracking().Select(item => new ReferenceValueRow(item.RecId.ToString(), item.Name ?? item.Code ?? item.RecId.ToString(), item.NameAlias)),
+            ("Employee", "OccupationId") or ("Employee", OrganizationAssignmentFieldPrefix + "OccupationId") => await ReferenceValues(
+                _context.Set<HcmOccupation>().AsNoTracking()
+                    .OrderBy(item => item.Name ?? item.Code).ThenBy(item => item.RecId)
+                    .Select(item => new ReferenceValueRow(item.RecId.ToString(), item.Name ?? item.Code ?? item.RecId.ToString(), item.NameAlias)),
                 pageNumber, pageSize, search, cancellationToken),
             ("Employee", "GenderId") => await ReferenceValues(
-                _context.Set<Gender>().AsNoTracking().Select(item => new ReferenceValueRow(item.RecId.ToString(), item.Name ?? item.Code ?? item.RecId.ToString(), item.NameAlias)),
+                _context.Set<Gender>().AsNoTracking()
+                    .OrderBy(item => item.Name ?? item.Code).ThenBy(item => item.RecId)
+                    .Select(item => new ReferenceValueRow(item.RecId.ToString(), item.Name ?? item.Code ?? item.RecId.ToString(), item.NameAlias)),
                 pageNumber, pageSize, search, cancellationToken),
             ("Employee", "NationalityId") => await ReferenceValues(
-                _context.Set<HcmNationality>().AsNoTracking().Select(item => new ReferenceValueRow(item.RecId.ToString(), item.Name ?? item.Code ?? item.RecId.ToString(), item.NameAlias)),
+                _context.Set<HcmNationality>().AsNoTracking()
+                    .OrderBy(item => item.Name ?? item.Code).ThenBy(item => item.RecId)
+                    .Select(item => new ReferenceValueRow(item.RecId.ToString(), item.Name ?? item.Code ?? item.RecId.ToString(), item.NameAlias)),
                 pageNumber, pageSize, search, cancellationToken),
             ("Employee", "UserId") => await ReferenceValues(
-                _context.Set<AspNetUser>().AsNoTracking().Select(item => new ReferenceValueRow(item.Id, item.UserName ?? item.Email ?? item.Id, null)),
+                _context.Set<AspNetUser>().AsNoTracking()
+                    .OrderBy(item => item.UserName ?? item.Email ?? item.Id).ThenBy(item => item.Id)
+                    .Select(item => new ReferenceValueRow(item.Id, item.UserName ?? item.Email ?? item.Id, null)),
+                pageNumber, pageSize, search, cancellationToken),
+            ("Employee", OrganizationAssignmentFieldPrefix + "DepartmentId") => await ReferenceValues(
+                _context.Set<HcmDepartment>().AsNoTracking()
+                    .OrderBy(item => item.Name ?? item.Code).ThenBy(item => item.RecId)
+                    .Select(item => new ReferenceValueRow(item.RecId.ToString(), item.Name ?? item.Code ?? item.RecId.ToString(), item.NameAlias)),
+                pageNumber, pageSize, search, cancellationToken),
+            ("Employee", OrganizationAssignmentFieldPrefix + "HcmWorkerId")
+                or ("Employee", OrganizationAssignmentFieldPrefix + "HcmManagerWorkerId") => await ReferenceValues(
+                _context.Set<HcmWorker>().AsNoTracking()
+                    .OrderBy(item => item.PersonnelNumber).ThenBy(item => item.RecId)
+                    .Select(item => new ReferenceValueRow(item.RecId.ToString(), item.Party.Name ?? item.PersonnelNumber, item.Party.NameAlias)),
                 pageNumber, pageSize, search, cancellationToken),
             _ => null
         };
@@ -81,8 +108,7 @@ public partial class WfRequestService
                 || item.LabelAlias != null && item.LabelAlias.Contains(term));
         }
         var total = await query.CountAsync(cancellationToken);
-        var rows = await query.OrderBy(item => item.Label).ThenBy(item => item.Value)
-            .Skip((pageNumber - 1) * pageSize).Take(pageSize)
+        var rows = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize)
             .Select(item => new DynamicReferenceFilterValueDto(item.Value, item.Label, item.LabelAlias))
             .ToListAsync(cancellationToken);
         return new(rows, pageNumber, Math.Max(1, (int)Math.Ceiling(total / (double)pageSize)), total);
@@ -106,6 +132,31 @@ public partial class WfRequestService
             if (body != null) query = query.Where(Expression.Lambda<Func<TEntity, bool>>(body, parameter));
         }
         return query;
+    }
+
+    private IQueryable<HcmWorker> ApplyEmployeeReferenceRules(
+        IQueryable<HcmWorker> workers,
+        IReadOnlyList<RuntimeReferenceFilterRule> rules,
+        DateOnly today)
+    {
+        var workerRules = rules
+            .Where(rule => !rule.Field.StartsWith(OrganizationAssignmentFieldPrefix, StringComparison.Ordinal))
+            .ToList();
+        workers = ApplyReferenceRules(workers, workerRules);
+
+        var assignmentRules = rules
+            .Where(rule => rule.Field.StartsWith(OrganizationAssignmentFieldPrefix, StringComparison.Ordinal))
+            .Select(rule => rule with { Field = rule.Field[OrganizationAssignmentFieldPrefix.Length..] })
+            .ToList();
+        if (assignmentRules.Count == 0) return workers;
+
+        var assignments = _context.Set<HcmWorkerOrganizationAssignmentV1>().AsNoTracking()
+            .Where(assignment => assignment.IsPrimary && assignment.IsActive && !assignment.IsDeleted
+                && assignment.ValidFrom <= today
+                && (!assignment.ValidTo.HasValue || assignment.ValidTo.Value >= today));
+        assignments = ApplyReferenceRules(assignments, assignmentRules);
+        var workerIds = assignments.Select(assignment => assignment.HcmWorkerId);
+        return workers.Where(worker => workerIds.Contains(worker.RecId));
     }
 
     private static Expression IsEmptyExpression(Expression member, Type type)

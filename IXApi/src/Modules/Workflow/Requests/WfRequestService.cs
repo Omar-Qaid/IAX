@@ -354,7 +354,7 @@ namespace IAX.IXApi.Modules.Workflow.Requests
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
             var workers = _context.Set<HcmWorker>().AsNoTracking()
                 .Where(item => item.IsActive && !item.IsDeleted);
-            workers = ApplyReferenceRules(workers, filter.Rules);
+            workers = ApplyEmployeeReferenceRules(workers, filter.Rules, today);
             if (filter.ManagerLevel.HasValue)
                 workers = managerId.HasValue ? workers.Where(item => item.RecId == managerId.Value) : workers.Where(_ => false);
             if (filter.DepartmentId.HasValue || filter.OccupationId.HasValue)
