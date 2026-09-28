@@ -9,7 +9,16 @@ public sealed class HcmWorkerMapping : IRegister
         config.NewConfig<HcmWorker, HcmWorkerDto>()
             .Map(destination => destination.Name, source => source.Party.Name)
             .Map(destination => destination.NameAlias, source => source.Party.NameAlias)
-            .Map(destination => destination.OccupationName, source => source.Occupation.Name)
+            .Map(destination => destination.OccupationId, source => source.WorkerOrganizationAssignmentsV1
+                .Where(assignment => assignment.IsPrimary)
+                .OrderByDescending(assignment => assignment.ValidFrom)
+                .Select(assignment => assignment.OccupationId ?? 0)
+                .FirstOrDefault())
+            .Map(destination => destination.OccupationName, source => source.WorkerOrganizationAssignmentsV1
+                .Where(assignment => assignment.IsPrimary)
+                .OrderByDescending(assignment => assignment.ValidFrom)
+                .Select(assignment => assignment.Occupation != null ? assignment.Occupation.Name : null)
+                .FirstOrDefault())
             .Map(destination => destination.ManagerWorkerId, source => source.WorkerOrganizationAssignmentsV1
                 .Where(assignment => assignment.IsPrimary)
                 .OrderByDescending(assignment => assignment.ValidFrom)
@@ -31,7 +40,6 @@ public sealed class HcmWorkerMapping : IRegister
         config.NewConfig<HcmWorkerDto, HcmWorker>()
             .Ignore(destination => destination.Person)
             .Ignore(destination => destination.Party)
-            .Ignore(destination => destination.Occupation)
             .Ignore(destination => destination.Gender)
             .Ignore(destination => destination.Nationality)
             .Ignore(destination => destination.User)

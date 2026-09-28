@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace IAX.IXApi.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260927104053_AddHcmWorkerOrganizationAssignmentV1AndShowroomAssignments")]
-    partial class AddHcmWorkerOrganizationAssignmentV1AndShowroomAssignments
+    [Migration("20260928111242_ExpandWorkflowRequestAnswers")]
+    partial class ExpandWorkflowRequestAnswers
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -19003,6 +19003,11 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<long>("Party")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("PersonnelNumber")
+                        .IsRequired()
+                        .HasMaxLength(25)
+                        .HasColumnType("nvarchar(25)");
+
                     b.Property<int>("RecVersion")
                         .HasColumnType("int");
 
@@ -19015,6 +19020,9 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.HasKey("RecId");
 
                     b.HasIndex("Party");
+
+                    b.HasIndex("DataAreaId", "PersonnelNumber")
+                        .IsUnique();
 
                     b.ToTable("HcmShowroom", (string)null);
                 });
@@ -22672,7 +22680,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<string>("NameAlias")
                         .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("NameAlias");
 
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
@@ -22831,8 +22840,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasColumnType("tinyint");
 
                     b.Property<string>("ControlValue")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -24748,7 +24756,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("IAX.IXApi.Modules.Finance.Foundation.HcmWorkers.HcmWorker", "HcmWorker")
-                        .WithMany()
+                        .WithMany("WorkerOrganizationAssignmentsV1")
                         .HasForeignKey("HcmWorkerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -25351,6 +25359,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Foundation.HcmWorkers.HcmWorker", b =>
                 {
                     b.Navigation("WorkerOrganizationAssignments");
+
+                    b.Navigation("WorkerOrganizationAssignmentsV1");
 
                     b.Navigation("WorkerShowroomAssignments");
                 });

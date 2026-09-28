@@ -80,6 +80,61 @@ describe('DynamicControlRenderer', () => {
     expect(onChange).toHaveBeenCalledWith('business');
   });
 
+  it('searches and lazy-loads employee reference options from the database', async () => {
+    const lookup = vi.spyOn(dynamicRequestFormApi, 'getReferenceOptions').mockResolvedValue({
+      data: [{ optionId: 44, value: '44', label: 'Ahmed Saleh', labelAlias: 'أحمد صالح', score: 0, sortOrder: 0 }],
+      pageNumber: 1,
+      totalPages: 1,
+      totalRecords: 1,
+    });
+    const onChange = vi.fn();
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <DynamicControlRenderer
+          control={{ processId: 603, requestControlId: 90, label: 'Employee', controlType: 'employee-search', referenceType: 'Employee' }}
+          value=""
+          onChange={onChange}
+        />
+      </QueryClientProvider>
+    );
+
+    await userEvent.click(screen.getByRole('combobox', { name: 'Employee' }));
+    await waitFor(() => expect(lookup).toHaveBeenCalledWith(
+      603, 90, expect.objectContaining({ pageNumber: 1, pageSize: 25 })
+    ));
+    await userEvent.click(await screen.findByRole('option', { name: 'Ahmed Saleh' }));
+    expect(onChange).toHaveBeenCalledWith('44');
+    lookup.mockRestore();
+  });
+
+  it('keeps database reference options usable when the paged lookup endpoint is unavailable', async () => {
+    const lookup = vi.spyOn(dynamicRequestFormApi, 'getReferenceOptions').mockRejectedValue(new Error('API unavailable'));
+    const onChange = vi.fn();
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={queryClient}>
+        <DynamicControlRenderer
+          control={{
+            processId: 603,
+            requestControlId: 91,
+            label: 'Showroom',
+            controlType: 'showroom',
+            referenceType: 'Showroom',
+            options: [{ value: '7', label: 'Main showroom' }],
+          }}
+          value=""
+          onChange={onChange}
+        />
+      </QueryClientProvider>
+    );
+
+    await userEvent.click(screen.getByRole('combobox', { name: 'Showroom' }));
+    await userEvent.click(await screen.findByRole('option', { name: 'Main showroom' }));
+    expect(onChange).toHaveBeenCalledWith('7');
+    lookup.mockRestore();
+  });
+
   it('shows compact metadata indicators on configured options', () => {
     render(
       <DynamicControlRenderer

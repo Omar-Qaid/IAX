@@ -271,6 +271,15 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'workflow-performers',
+    path: ROUTE_PATHS.WORKFLOW.PERFORMERS,
+    permission: PERMISSIONS.WF_PERFORMER_VIEW,
+    component: lazyPage(
+      () => import('@modules/workflow/pages/WfPerformersPage'),
+      (module) => module.WfPerformersPage
+    ),
+  },
+  {
     id: 'legal-entities',
     path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.LEGAL_ENTITIES,
     permission: PERMISSIONS.LEGAL_ENTITY_VIEW,
@@ -358,6 +367,15 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     component: lazyPage(
       () => import('@modules/organization/pages/HcmWorkerPage'),
       (module) => module.HcmWorkerPage
+    ),
+  },
+  {
+    id: 'hcm-showrooms',
+    path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.HCM_SHOWROOMS,
+    permission: PERMISSIONS.HCM_SHOWROOM_VIEW,
+    component: lazyPage(
+      () => import('@modules/organization/pages/HcmShowroomPage'),
+      (module) => module.HcmShowroomPage
     ),
   },
   {

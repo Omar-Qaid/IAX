@@ -88,27 +88,31 @@ export function RequestFromPage(): React.ReactElement {
   const { categoryId: categoryParam, processId: processParam } = useParams();
   const categoryId = Number(categoryParam);
   const requestedProcessId = Number(processParam);
+  const hasCategoryFilter = Number.isSafeInteger(categoryId) && categoryId > 0;
+  const hasRequestedProcess = Number.isSafeInteger(requestedProcessId) && requestedProcessId > 0;
+  const [selectedProcessId, setSelectedProcessId] = React.useState<number | null>(
+    hasRequestedProcess ? requestedProcessId : null
+  );
   const currentCompany = useCompanyStore((state) => state.currentCompany);
   const processes = useQuery({
     queryKey: ['workflow', 'request-from-processes', categoryId, requestedProcessId],
     queryFn: async ({ signal }) =>
       (await wfProcessApi.list(signal))
-        .filter((process) => process.categoryId === categoryId)
+        .filter((process) => !hasCategoryFilter || process.categoryId === categoryId)
         .sort((left, right) =>
-          left.recId === requestedProcessId
+          hasRequestedProcess && left.recId === requestedProcessId
             ? -1
-            : right.recId === requestedProcessId
+            : hasRequestedProcess && right.recId === requestedProcessId
               ? 1
               : left.sortOrder - right.sortOrder
         ),
-    enabled:
-      Number.isSafeInteger(categoryId) &&
-      categoryId > 0 &&
-      Number.isSafeInteger(requestedProcessId) &&
-      requestedProcessId > 0,
   });
   const records = processes.data ?? [];
   const requestedProcess = records.find((process) => process.recId === requestedProcessId);
+  const effectiveProcessId = selectedProcessId ?? requestedProcess?.recId ?? records[0]?.recId ?? 0;
+  React.useEffect(() => {
+    if (effectiveProcessId > 0 && selectedProcessId == null) setSelectedProcessId(effectiveProcessId);
+  }, [effectiveProcessId, selectedProcessId]);
   const requestDate = React.useMemo(() => new Date().toISOString().slice(0, 10), []);
   const requestDateLabel = React.useMemo(
     () =>
@@ -121,10 +125,10 @@ export function RequestFromPage(): React.ReactElement {
     [currentLanguage.code, requestDate]
   );
   const publishedTemplates = useQuery({
-    queryKey: ['workflow', 'request-from-published-templates', requestedProcessId],
+    queryKey: ['workflow', 'request-from-published-templates', effectiveProcessId],
     queryFn: ({ signal }) =>
-      reportDesignerApi.listPublished(recordTableId('WfProcesses'), requestedProcessId, signal),
-    enabled: Number.isSafeInteger(requestedProcessId) && requestedProcessId > 0,
+      reportDesignerApi.listPublished(recordTableId('WfProcesses'), effectiveProcessId, signal),
+    enabled: effectiveProcessId > 0,
   });
   const selectedTemplate = React.useMemo(
     () =>
@@ -136,17 +140,17 @@ export function RequestFromPage(): React.ReactElement {
     queryKey: [
       'workflow',
       'request-from-published-template',
-      requestedProcessId,
+      effectiveProcessId,
       selectedTemplate?.templateId,
     ],
     queryFn: ({ signal }) =>
       reportDesignerApi.getPublishedForRecord(
         recordTableId('WfProcesses'),
-        requestedProcessId,
+        effectiveProcessId,
         selectedTemplate!.templateId,
         signal
       ),
-    enabled: displayMode === 'printTemplate' && requestedProcessId > 0 && Boolean(selectedTemplate),
+    enabled: displayMode === 'printTemplate' && effectiveProcessId > 0 && Boolean(selectedTemplate),
   });
   const reportCompany = useQuery({
     queryKey: ['report-company', currentCompany],
@@ -169,10 +173,18 @@ export function RequestFromPage(): React.ReactElement {
       },
     },
     createRecord: emptyProcess,
+    initialSelectedId: hasRequestedProcess ? String(requestedProcessId) : undefined,
+    onSelectionChange: (process) => {
+      const nextId = process?.recId ?? null;
+      if (nextId !== selectedProcessId) setRequestFiles([]);
+      setSelectedProcessId(nextId);
+    },
     getPrimaryText: (process) =>
       localizedName(process, isRtl) || process.code || t('workflowRequest.unnamedProcess'),
     getSecondaryText: (process) => process.description || process.code || '',
-    initialQuery: localizedName(requestedProcess, isRtl) || requestedProcess?.code || '',
+    initialQuery: hasRequestedProcess
+      ? localizedName(requestedProcess, isRtl) || requestedProcess?.code || ''
+      : '',
     matchesSearch: (process, query) =>
       `${process.code ?? ''} ${process.name ?? ''} ${process.nameAlias ?? ''} ${process.description ?? ''}`
         .toLocaleLowerCase()

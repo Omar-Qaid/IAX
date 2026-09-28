@@ -119,8 +119,11 @@ public sealed partial class WfProcessSeedData
     {
         var rows = new[]
         {
-            new WfPerformerType { RecId = 1, Code = "RELATIONAL", Name = "Relational", SortOrder = 1, IsActive = true, CreatedBy = owner, OwnerAccountId = owner },
-            new WfPerformerType { RecId = 3, Code = "LEGACY", Name = "Legacy Performer", SortOrder = 3, IsActive = true, CreatedBy = owner, OwnerAccountId = owner },
+            new WfPerformerType { RecId = 1, Code = "ORGANIZATIONAL", Name = "OrganizationalPerformer", NameAlias = "منفذ تنظيمي", SortOrder = 1, IsActive = true, CreatedBy = owner, OwnerAccountId = owner },
+            new WfPerformerType { RecId = 2, Code = "REQUEST_CONTROL", Name = "RequestControlPerformer", NameAlias = "منفذ من حقل نموذج الطلب", SortOrder = 2, IsActive = true, CreatedBy = owner, OwnerAccountId = owner },
+            new WfPerformerType { RecId = 3, Code = "ACTIVITY_CONTROL", Name = "ActivityControlPerformer", NameAlias = "منفذ من حقل نموذج النشاط", SortOrder = 3, IsActive = true, CreatedBy = owner, OwnerAccountId = owner },
+            new WfPerformerType { RecId = 4, Code = "USER", Name = "UserPerformer", NameAlias = "منفذ من المستخدمين المحددين", SortOrder = 4, IsActive = true, CreatedBy = owner, OwnerAccountId = owner },
+            new WfPerformerType { RecId = 5, Code = "QUERY_DATABASE", Name = "QueryDatabasePerformer", NameAlias = "منفذ استعلام قاعدة البيانات", SortOrder = 5, IsActive = true, CreatedBy = owner, OwnerAccountId = owner },
         };
 
         var existingIds = await db.WfPerformerTypes.IgnoreQueryFilters()
@@ -140,11 +143,11 @@ public sealed partial class WfProcessSeedData
     {
         var rows = new[]
         {
-            new WfPerformer { RecId = 12, Code = "PERF12", Name = "مقدم الطلب", PerformerTypeId = 3, IsApplicant = true, IsEmployee = true, IsActive = true, CreatedBy = owner, OwnerAccountId = owner },
-            new WfPerformer { RecId = 13, Code = "PERF13", Name = "المدير الاول للمقدم الطلب", PerformerTypeId = 3, IsManager1 = true, IsActive = true, CreatedBy = owner, OwnerAccountId = owner },
-            new WfPerformer { RecId = 14, Code = "PERF14", Name = "المدير الثاني للمقدم الطلب", PerformerTypeId = 3, IsManager2 = true, IsActive = true, CreatedBy = owner, OwnerAccountId = owner },
-            new WfPerformer { RecId = 15, Code = "PERF15", Name = "المدير الثالث للمقدم الطلب", PerformerTypeId = 3, IsManager3 = true, IsActive = true, CreatedBy = owner, OwnerAccountId = owner },
-            new WfPerformer { RecId = 16, Code = "PERF16", Name = "المدير الثالث للمقدم الطلب", PerformerTypeId = 3, IsManager4 = true, IsActive = true, CreatedBy = owner, OwnerAccountId = owner },
+            new WfPerformer { RecId = 12, Code = "PERF12", Name = "مقدم الطلب", PerformerTypeId = 1, IsApplicant = true, IsEmployee = true, IsActive = true, CreatedBy = owner, OwnerAccountId = owner },
+            new WfPerformer { RecId = 13, Code = "PERF13", Name = "المدير الاول للمقدم الطلب", PerformerTypeId = 1, IsManager1 = true, IsActive = true, CreatedBy = owner, OwnerAccountId = owner },
+            new WfPerformer { RecId = 14, Code = "PERF14", Name = "المدير الثاني للمقدم الطلب", PerformerTypeId = 1, IsManager2 = true, IsActive = true, CreatedBy = owner, OwnerAccountId = owner },
+            new WfPerformer { RecId = 15, Code = "PERF15", Name = "المدير الثالث للمقدم الطلب", PerformerTypeId = 1, IsManager3 = true, IsActive = true, CreatedBy = owner, OwnerAccountId = owner },
+            new WfPerformer { RecId = 16, Code = "PERF16", Name = "المدير الثالث للمقدم الطلب", PerformerTypeId = 1, IsManager4 = true, IsActive = true, CreatedBy = owner, OwnerAccountId = owner },
         };
 
         var existingIds = await db.WfPerformers.IgnoreQueryFilters()
@@ -228,21 +231,49 @@ public sealed partial class WfProcessSeedData
             new WfControl { RecId = 16, Code = "url", Name = "رابط", Description = "رابط", ControlType = "TextBox", SortOrder = 16, IsActive = true, CreatedBy = owner, OwnerAccountId = owner },
             new WfControl { RecId = 17, Code = "file", Name = "ملف", Description = "ملف", ControlType = "File", SortOrder = 17, IsActive = true, CreatedBy = owner, OwnerAccountId = owner },
             new WfControl { RecId = 18, Code = "showroom", Name = "معرض", Description = "معرض", ControlType = "Showroom", SortOrder = 18, IsActive = true, CreatedBy = owner, OwnerAccountId = owner },
-            new WfControl { RecId = 19, Code = "EmployeeID", Name = "رقم وظيفي", Description = "رقم وظيفي", ControlType = "EmployeeID", SortOrder = 19, IsActive = true, CreatedBy = owner, OwnerAccountId = owner },
+            new WfControl { RecId = 19, Code = "EmployeeID", Name = "رقم وظيفي", Description = "رقم وظيفي", ControlType = "EmployeeID", SortOrder = 19, IsActive = false, IsDeleted = false, CreatedBy = owner, OwnerAccountId = owner },
             new WfControl { RecId = 20, Code = "Signature", Name = "توقيع", Description = "توقيع", ControlType = "Signature", SortOrder = 20, IsActive = true, CreatedBy = owner, OwnerAccountId = owner },
             new WfControl { RecId = 21, Code = "Location", Name = "الموقع", Description = "الموقع", ControlType = "Location", SortOrder = 21, IsActive = true, CreatedBy = owner, OwnerAccountId = owner },
             new WfControl { RecId = 22, Code = "Advertiser", Name = "معلن", Description = "معلن", ControlType = "Advertiser", SortOrder = 22, IsActive = true, CreatedBy = owner, OwnerAccountId = owner },
             new WfControl { RecId = 23, Code = "CheckBoxList", Name = "قائمة اختيار متعددة", Description = "قائمة اختيار متعددة", ControlType = "CheckBoxList", SortOrder = 23, IsActive = true, CreatedBy = owner, OwnerAccountId = owner },
         };
 
-        var existingIds = await db.WfControls.IgnoreQueryFilters()
-            .Select(x => x.RecId).ToListAsync(ct);
-        var missing = rows.Where(x => !existingIds.Contains(x.RecId)).ToArray();
-        if (missing.Length == 0)
-            return;
+        var controlIds = rows.Select(row => row.RecId).ToArray();
+        var existing = await db.WfControls.IgnoreQueryFilters()
+            .Where(x => controlIds.Contains(x.RecId))
+            .ToDictionaryAsync(x => x.RecId, ct);
+        var missing = rows.Where(x => !existing.ContainsKey(x.RecId)).ToArray();
+        if (missing.Length > 0)
+        {
+            await db.WfControls.AddRangeAsync(missing, ct);
+            await SaveIdentityRowsAsync(db, "WfControls", ct);
+        }
 
-        await db.WfControls.AddRangeAsync(missing, ct);
-        await SaveIdentityRowsAsync(db, "WfControls", ct);
+        foreach (var row in rows)
+        {
+            if (!existing.TryGetValue(row.RecId, out var current))
+                continue;
+            current.IsActive = row.RecId != 19;
+            current.IsDeleted = false;
+            current.SortOrder = row.SortOrder;
+        }
+
+        // EmployeeSearch is the single employee selector. EmployeeID remains in
+        // the catalog only for compatibility with existing saved process controls.
+        if (existing.TryGetValue(19, out var duplicateEmployeeId))
+        {
+            duplicateEmployeeId.IsActive = false;
+            duplicateEmployeeId.IsDeleted = false;
+        }
+
+        await db.WfRequestControls.IgnoreQueryFilters()
+            .Where(control => control.ControlId == 19)
+            .ExecuteUpdateAsync(update => update.SetProperty(control => control.ControlId, 12), ct);
+        await db.WfActivityControls.IgnoreQueryFilters()
+            .Where(control => control.ControlId == 19)
+            .ExecuteUpdateAsync(update => update.SetProperty(control => control.ControlId, 12), ct);
+
+        await db.SaveChangesAsync(ct);
     }
 
     private static async Task AddMissingProcessTypesAsync(

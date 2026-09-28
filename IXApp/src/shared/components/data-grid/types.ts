@@ -2,7 +2,10 @@ import type React from 'react';
 
 export type SortDirection = 'asc' | 'desc' | null;
 
-export interface GridCellAddress { rowId: string | number; field: string; }
+export interface GridCellAddress {
+  rowId: string | number;
+  field: string;
+}
 
 export interface DataGridHandle {
   cancelPendingFocus: () => void;
@@ -13,7 +16,7 @@ export interface DataGridHandle {
   focusFilter: () => void;
   startAddRow: () => void;
   startEditRow: (id: string | number) => void;
-  saveEdit: () => void;
+  saveEdit: () => Promise<boolean>;
   cancelEdit: () => void;
   toggleSidebar: (tab?: 'columns' | 'filters' | 'features') => void;
 }
@@ -37,7 +40,12 @@ export interface ColumnDef<T> {
   valueOptions?: readonly (unknown | { value: unknown; label: React.ReactNode })[];
   /** When masterForm=true, cells in this column render as inputs while a row is being edited. */
   editable?: boolean;
-  renderEditCell?: (params: { row: T; value: unknown; onChange: (value: unknown) => void; disabled: boolean }) => React.ReactNode;
+  renderEditCell?: (params: {
+    row: T;
+    value: unknown;
+    onChange: (value: unknown) => void;
+    disabled: boolean;
+  }) => React.ReactNode;
 }
 
 export interface SortModel {
@@ -47,7 +55,17 @@ export interface SortModel {
 
 export interface FilterModel {
   field: string;
-  operator: 'contains' | 'equals' | 'startsWith' | 'endsWith' | 'gt' | 'lt' | 'notEquals' | 'doesNotContain' | 'in' | 'matches';
+  operator:
+    | 'contains'
+    | 'equals'
+    | 'startsWith'
+    | 'endsWith'
+    | 'gt'
+    | 'lt'
+    | 'notEquals'
+    | 'doesNotContain'
+    | 'in'
+    | 'matches';
   value: unknown;
 }
 
@@ -86,7 +104,7 @@ export interface DataGridProps<T> {
   onShowAllFields?: (row: T) => void;
   onBuild?: (row: T) => void;
   processRowUpdate?: (newRow: T, oldRow: T) => T | Promise<T>;
-  
+
   // ── Keyboard Actions ──────────────────────────────────────────────────────────
   onRefresh?: () => void;
   onValidate?: () => void;

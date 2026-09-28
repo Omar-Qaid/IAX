@@ -83,6 +83,7 @@
     "wfVariables": "Workflow variables",
     "wfSteps": "Workflow steps",
     "wfActivities": "Workflow activities",
+    "wfPerformers": "Performers",
     "printTemplates": "Print templates",
     "reports": "Reports",
     "wfGenericReport": "Generic workflow report",
@@ -1375,6 +1376,8 @@
         "maxDate": "Maximum Date",
         "maxValue": "Maximum value",
         "range": "Range",
+        "uniquePerApplicant": "Unique per applicant",
+        "uniqueGlobal": "Unique across all requests",
         "regex": "Regular expression",
         "pattern": "Pattern",
         "startsWith": "Starts with",
@@ -1400,6 +1403,40 @@
         "crossField": "Cross-field validation",
         "mask": "Mask",
         "inputMask": "Input mask"
+      },
+      "validationHelp": {
+        "required": "The field must have a value before submission.",
+        "minLength": "Minimum character count. Example: 5 requires at least five characters.",
+        "maxLength": "Maximum character count. Example: 20 allows up to twenty characters.",
+        "exactLength": "Exact character count. Example: 10 requires exactly ten characters.",
+        "minValue": "Minimum numeric value. Example: 1 rejects zero and negative numbers.",
+        "maxValue": "Maximum numeric value. Example: 100 rejects values above 100.",
+        "range": "Allowed numeric range. Example: minimum 10 and maximum 50.",
+        "minDate": "Earliest allowed date. Use yyyy-MM-dd, today, or values such as today+30d.",
+        "maxDate": "Latest allowed date. Use yyyy-MM-dd, today, or values such as today+1y.",
+        "pattern": "Regular expression example: ^[A-Z]{2}-\\d{6}$ accepts AB-123456.",
+        "email": "Requires a valid email address, for example user@example.com.",
+        "url": "Requires a complete HTTP or HTTPS URL, for example https://example.com.",
+        "phone": "Requires a phone-like value containing 7 to 20 digits or phone symbols.",
+        "saudiMobile": "Requires a Saudi mobile number, for example 05XXXXXXXX or +9665XXXXXXXX.",
+        "saudiNationalId": "Requires 10 digits beginning with 1 or 2.",
+        "saudiIban": "Requires a Saudi IBAN beginning with SA followed by 22 digits.",
+        "taxNumber": "Requires a 15-digit tax number.",
+        "passport": "Requires 6 to 12 English letters or digits.",
+        "fileExtensions": "Comma-separated allowed extensions. Example: pdf,jpg,png.",
+        "fileSize": "Maximum file size configured as a number of bytes.",
+        "maxFiles": "Maximum number of uploaded files. Example: 3.",
+        "minSelected": "Minimum number of selected list items. Example: 1.",
+        "maxSelected": "Maximum number of selected list items. Example: 3.",
+        "expression": "Use {value} for this field or {CONTROL_CODE} for another field. Example: {value} >= {MIN_AMOUNT}.",
+        "compare": "Compare this value with a fixed value using an operator such as >= 100.",
+        "crossField": "Compare with another request field. Enter its control code in braces, for example {END_DATE}.",
+        "inputMask": "Mask example: 000-000-0000, where 0 represents a required digit.",
+        "startsWith": "Enter the required starting text, for example INV-.",
+        "endsWith": "Enter the required ending text, for example -SA.",
+        "contains": "Enter text that the submitted value must contain.",
+        "uniquePerApplicant": "The same applicant cannot reuse this number in this field.",
+        "uniqueGlobal": "No request can reuse this number in this field."
       },
       "activitySettings": "Activity Settings",
       "activityName": "Activity name",
@@ -2323,6 +2360,57 @@
       "options": "Options"
     }
   },
+  "wfPerformers": {
+    "title": "Performers",
+    "filters": {
+      "type": "Performer type",
+      "allTypes": "All performer types"
+    },
+    "sections": {
+      "configuration": "Performer configuration",
+      "users": "Performer users"
+    },
+    "groups": {
+      "behavior": "Performer behavior",
+      "general": "General information",
+      "organizational": "Organization hierarchy",
+      "formControl": "Form control source",
+      "query": "Query configuration"
+    },
+    "actions": {
+      "addWorker": "Add worker",
+      "removeWorker": "Remove worker"
+    },
+    "validation": {
+      "workerRequired": "Worker is required.",
+      "workerDuplicate": "This worker has already been added."
+    },
+    "fields": {
+      "code": "Code",
+      "name": "Name",
+      "nameAlias": "Search name",
+      "type": "Performer type",
+      "process": "Process",
+      "requestControl": "Request form control",
+      "activityControl": "Activity form control",
+      "worker": "Worker",
+      "relatedField": "Related field",
+      "sortOrder": "Sort order",
+      "active": "Active",
+      "applicant": "Applicant",
+      "employee": "Employee",
+      "manager1": "Manager level 1",
+      "manager2": "Manager level 2",
+      "manager3": "Manager level 3",
+      "manager4": "Manager level 4",
+      "description": "Description",
+      "sqlTable": "SQL table",
+      "sqlField": "SQL field",
+      "sqlWhere": "SQL condition",
+      "userId": "User ID",
+      "extendedProperties": "Extended properties"
+    }
+  },
   "hcmWorkers": {
     "title": "Workers",
     "sections": {
@@ -2368,6 +2456,22 @@
       "hireDate": "Hire date",
       "birthDate": "Birth date",
       "active": "Active"
+    }
+  },
+  "hcmShowrooms": {
+    "title": "Showrooms",
+    "sections": { "details": "Showroom details" },
+    "fields": {
+      "personnelNumber": "Showroom number",
+      "name": "Name",
+      "nameAlias": "Search name",
+      "description": "Description",
+      "worker": "Worker"
+    },
+    "assignments": {
+      "primaryTitle": "Current worker assignments",
+      "historyTitle": "Worker assignment history",
+      "add": "Add worker assignment"
     }
   },
   "hcmPositions": {

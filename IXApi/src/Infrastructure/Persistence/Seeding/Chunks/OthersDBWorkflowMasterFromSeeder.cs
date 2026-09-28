@@ -54,7 +54,11 @@ public sealed class OthersDBWorkflowMasterFromSeeder : OthersDBSeedData
         }, "WfProcessTypes", ct);
         await AddMissingAsync(db, db.WfPerformerTypes, new[]
         {
-            new WfPerformerType { RecId=1,Code="RELATIONAL",Name="Relational",NameAlias="ارتباطي",SortOrder=1,IsActive=true,CreatedBy=owner,OwnerAccountId=owner }
+            new WfPerformerType { RecId=1,Code="ORGANIZATIONAL",Name="OrganizationalPerformer",NameAlias="منفذ تنظيمي",SortOrder=1,IsActive=true,CreatedBy=owner,OwnerAccountId=owner },
+            new WfPerformerType { RecId=2,Code="REQUEST_CONTROL",Name="RequestControlPerformer",NameAlias="منفذ من حقل نموذج الطلب",SortOrder=2,IsActive=true,CreatedBy=owner,OwnerAccountId=owner },
+            new WfPerformerType { RecId=3,Code="ACTIVITY_CONTROL",Name="ActivityControlPerformer",NameAlias="منفذ من حقل نموذج النشاط",SortOrder=3,IsActive=true,CreatedBy=owner,OwnerAccountId=owner },
+            new WfPerformerType { RecId=4,Code="USER",Name="UserPerformer",NameAlias="منفذ من المستخدمين المحددين",SortOrder=4,IsActive=true,CreatedBy=owner,OwnerAccountId=owner },
+            new WfPerformerType { RecId=5,Code="QUERY_DATABASE",Name="QueryDatabasePerformer",NameAlias="منفذ استعلام قاعدة البيانات",SortOrder=5,IsActive=true,CreatedBy=owner,OwnerAccountId=owner }
         }, "WfPerformerType", ct);
 
         await AddMissingAsync(db, db.WfDataTypes, data.DataTypes.Select(x => new WfDataType { RecId=x.Id,Code=$"DT{x.Id}",Name=Text(x.Name,255),NameAlias=Text(x.NameAlias,255),Description=Text(x.Description,1000),SortOrder=x.Id,IsActive=true,CreatedBy=owner,OwnerAccountId=owner }), "WfDataTypes", ct);

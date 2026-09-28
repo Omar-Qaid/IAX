@@ -1865,6 +1865,84 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "HcmDepartments",
+                columns: table => new
+                {
+                    RECID = table.Column<short>(type: "smallint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    RecVersion = table.Column<int>(type: "int", nullable: false),
+                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
+                    Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NameAlias = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HcmDepartments", x => x.RECID);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "HcmNationalities",
+                columns: table => new
+                {
+                    RECID = table.Column<short>(type: "smallint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    RecVersion = table.Column<int>(type: "int", nullable: false),
+                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
+                    Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NameAlias = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HcmNationalities", x => x.RECID);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "HcmOccupations",
+                columns: table => new
+                {
+                    RECID = table.Column<short>(type: "smallint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    RecVersion = table.Column<int>(type: "int", nullable: false),
+                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
+                    Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    NameAlias = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HcmOccupations", x => x.RECID);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "HcmReportingHierarchies",
                 columns: table => new
                 {
@@ -3445,32 +3523,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Occupations",
-                columns: table => new
-                {
-                    RECID = table.Column<short>(type: "smallint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    RecVersion = table.Column<int>(type: "int", nullable: false),
-                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
-                    Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    NameAlias = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Occupations", x => x.RECID);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "OrganizationHierarchies",
                 columns: table => new
                 {
@@ -3558,32 +3610,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         principalTable: "OrganizationUnits",
                         principalColumn: "RECID",
                         onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "OrgNationalities",
-                columns: table => new
-                {
-                    RECID = table.Column<short>(type: "smallint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    RecVersion = table.Column<int>(type: "int", nullable: false),
-                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false),
-                    Code = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    NameAlias = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_OrgNationalities", x => x.RECID);
                 });
 
             migrationBuilder.CreateTable(
@@ -7715,6 +7741,36 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "HcmShowroom",
+                columns: table => new
+                {
+                    RECID = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PersonnelNumber = table.Column<string>(type: "nvarchar(25)", maxLength: 25, nullable: false),
+                    Party = table.Column<long>(type: "bigint", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    RecVersion = table.Column<int>(type: "int", nullable: false),
+                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HcmShowroom", x => x.RECID);
+                    table.ForeignKey(
+                        name: "FK_HcmShowroom_DirPartyTable_Party",
+                        column: x => x.Party,
+                        principalTable: "DirPartyTable",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "HcmWorker",
                 columns: table => new
                 {
@@ -7760,15 +7816,15 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         principalColumn: "RECID",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_HcmWorker_Occupations_OccupationId",
-                        column: x => x.OccupationId,
-                        principalTable: "Occupations",
+                        name: "FK_HcmWorker_HcmNationalities_NationalityId",
+                        column: x => x.NationalityId,
+                        principalTable: "HcmNationalities",
                         principalColumn: "RECID",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_HcmWorker_OrgNationalities_NationalityId",
-                        column: x => x.NationalityId,
-                        principalTable: "OrgNationalities",
+                        name: "FK_HcmWorker_HcmOccupations_OccupationId",
+                        column: x => x.OccupationId,
+                        principalTable: "HcmOccupations",
                         principalColumn: "RECID",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -7993,6 +8049,100 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "HcmWorkerOrganizationAssignmentsV1",
+                columns: table => new
+                {
+                    RECID = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    HcmWorkerId = table.Column<long>(type: "bigint", nullable: false),
+                    HcmManagerWorkerId = table.Column<long>(type: "bigint", nullable: false),
+                    DepartmentId = table.Column<short>(type: "smallint", nullable: true),
+                    OccupationId = table.Column<short>(type: "smallint", nullable: true),
+                    ValidFrom = table.Column<DateOnly>(type: "date", nullable: false),
+                    ValidTo = table.Column<DateOnly>(type: "date", nullable: true),
+                    IsPrimary = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true, defaultValueSql: "SYSUTCDATETIME()"),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    RecVersion = table.Column<int>(type: "int", nullable: false),
+                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HcmWorkerOrganizationAssignmentsV1", x => x.RECID);
+                    table.CheckConstraint("CK_HcmWorkerOrganizationAssignmentsV1_Dates", "[ValidTo] IS NULL OR [ValidTo] > [ValidFrom]");
+                    table.ForeignKey(
+                        name: "FK_HcmWorkerOrganizationAssignmentsV1_HcmDepartments_DepartmentId",
+                        column: x => x.DepartmentId,
+                        principalTable: "HcmDepartments",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_HcmWorkerOrganizationAssignmentsV1_HcmOccupations_OccupationId",
+                        column: x => x.OccupationId,
+                        principalTable: "HcmOccupations",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_HcmWorkerOrganizationAssignmentsV1_HcmWorker_HcmManagerWorkerId",
+                        column: x => x.HcmManagerWorkerId,
+                        principalTable: "HcmWorker",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_HcmWorkerOrganizationAssignmentsV1_HcmWorker_HcmWorkerId",
+                        column: x => x.HcmWorkerId,
+                        principalTable: "HcmWorker",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "HcmWorkerShowroomAssignments",
+                columns: table => new
+                {
+                    RECID = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    HcmWorkerId = table.Column<long>(type: "bigint", nullable: false),
+                    HcmShowroomId = table.Column<long>(type: "bigint", nullable: false),
+                    ValidFrom = table.Column<DateOnly>(type: "date", nullable: false),
+                    ValidTo = table.Column<DateOnly>(type: "date", nullable: true),
+                    IsPrimary = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true, defaultValueSql: "SYSUTCDATETIME()"),
+                    LastModifiedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastModifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    OwnerAccountId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    RecVersion = table.Column<int>(type: "int", nullable: false),
+                    DataAreaId = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_HcmWorkerShowroomAssignments", x => x.RECID);
+                    table.CheckConstraint("CK_HcmWorkerShowroomAssignments_Dates", "[ValidTo] IS NULL OR [ValidTo] > [ValidFrom]");
+                    table.ForeignKey(
+                        name: "FK_HcmWorkerShowroomAssignments_HcmShowroom_HcmShowroomId",
+                        column: x => x.HcmShowroomId,
+                        principalTable: "HcmShowroom",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_HcmWorkerShowroomAssignments_HcmWorker_HcmWorkerId",
+                        column: x => x.HcmWorkerId,
+                        principalTable: "HcmWorker",
+                        principalColumn: "RECID",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "VendTable",
                 columns: table => new
                 {
@@ -8150,16 +8300,16 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_WfUsersProcesses", x => x.UsersProcessesId);
                     table.ForeignKey(
+                        name: "FK_WfUsersProcesses_HcmOccupations_OccupationId",
+                        column: x => x.OccupationId,
+                        principalTable: "HcmOccupations",
+                        principalColumn: "RECID");
+                    table.ForeignKey(
                         name: "FK_WfUsersProcesses_HcmWorker_EmployeeId",
                         column: x => x.EmployeeId,
                         principalTable: "HcmWorker",
                         principalColumn: "RECID",
                         onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_WfUsersProcesses_Occupations_OccupationId",
-                        column: x => x.OccupationId,
-                        principalTable: "Occupations",
-                        principalColumn: "RECID");
                     table.ForeignKey(
                         name: "FK_WfUsersProcesses_WfProcesses_ProcessId",
                         column: x => x.ProcessId,
@@ -9210,6 +9360,17 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_HcmShowroom_DataAreaId_PersonnelNumber",
+                table: "HcmShowroom",
+                columns: new[] { "DataAreaId", "PersonnelNumber" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HcmShowroom_Party",
+                table: "HcmShowroom",
+                column: "Party");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_HcmWorker_DataAreaId_PersonnelNumber",
                 table: "HcmWorker",
                 columns: new[] { "DataAreaId", "PersonnelNumber" },
@@ -9274,6 +9435,61 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 name: "IX_HcmWorkerOrganizationAssignments_PositionId",
                 table: "HcmWorkerOrganizationAssignments",
                 column: "PositionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HcmWorkerOrganizationAssignmentsV1_DataAreaId_DepartmentId_ValidFrom_ValidTo",
+                table: "HcmWorkerOrganizationAssignmentsV1",
+                columns: new[] { "DataAreaId", "DepartmentId", "ValidFrom", "ValidTo" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HcmWorkerOrganizationAssignmentsV1_DataAreaId_HcmManagerWorkerId_ValidFrom_ValidTo",
+                table: "HcmWorkerOrganizationAssignmentsV1",
+                columns: new[] { "DataAreaId", "HcmManagerWorkerId", "ValidFrom", "ValidTo" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HcmWorkerOrganizationAssignmentsV1_DataAreaId_HcmWorkerId_IsPrimary_ValidFrom_ValidTo",
+                table: "HcmWorkerOrganizationAssignmentsV1",
+                columns: new[] { "DataAreaId", "HcmWorkerId", "IsPrimary", "ValidFrom", "ValidTo" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HcmWorkerOrganizationAssignmentsV1_DataAreaId_OccupationId_ValidFrom_ValidTo",
+                table: "HcmWorkerOrganizationAssignmentsV1",
+                columns: new[] { "DataAreaId", "OccupationId", "ValidFrom", "ValidTo" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HcmWorkerOrganizationAssignmentsV1_DepartmentId",
+                table: "HcmWorkerOrganizationAssignmentsV1",
+                column: "DepartmentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HcmWorkerOrganizationAssignmentsV1_HcmManagerWorkerId",
+                table: "HcmWorkerOrganizationAssignmentsV1",
+                column: "HcmManagerWorkerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HcmWorkerOrganizationAssignmentsV1_HcmWorkerId",
+                table: "HcmWorkerOrganizationAssignmentsV1",
+                column: "HcmWorkerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HcmWorkerOrganizationAssignmentsV1_OccupationId",
+                table: "HcmWorkerOrganizationAssignmentsV1",
+                column: "OccupationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HcmWorkerShowroomAssignments_DataAreaId_HcmWorkerId_IsPrimary_ValidFrom_ValidTo",
+                table: "HcmWorkerShowroomAssignments",
+                columns: new[] { "DataAreaId", "HcmWorkerId", "IsPrimary", "ValidFrom", "ValidTo" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HcmWorkerShowroomAssignments_HcmShowroomId_ValidFrom_ValidTo",
+                table: "HcmWorkerShowroomAssignments",
+                columns: new[] { "HcmShowroomId", "ValidFrom", "ValidTo" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_HcmWorkerShowroomAssignments_HcmWorkerId_ValidFrom_ValidTo",
+                table: "HcmWorkerShowroomAssignments",
+                columns: new[] { "HcmWorkerId", "ValidFrom", "ValidTo" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_InventTrans_ItemId",
@@ -10290,6 +10506,12 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 name: "HcmPositionReportingLines");
 
             migrationBuilder.DropTable(
+                name: "HcmWorkerOrganizationAssignmentsV1");
+
+            migrationBuilder.DropTable(
+                name: "HcmWorkerShowroomAssignments");
+
+            migrationBuilder.DropTable(
                 name: "InventBatch");
 
             migrationBuilder.DropTable(
@@ -10548,6 +10770,12 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 name: "HcmReportingHierarchies");
 
             migrationBuilder.DropTable(
+                name: "HcmDepartments");
+
+            migrationBuilder.DropTable(
+                name: "HcmShowroom");
+
+            migrationBuilder.DropTable(
                 name: "InventTable");
 
             migrationBuilder.DropTable(
@@ -10683,10 +10911,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 name: "Genders");
 
             migrationBuilder.DropTable(
-                name: "Occupations");
+                name: "HcmNationalities");
 
             migrationBuilder.DropTable(
-                name: "OrgNationalities");
+                name: "HcmOccupations");
 
             migrationBuilder.DropTable(
                 name: "DirPartyTable");

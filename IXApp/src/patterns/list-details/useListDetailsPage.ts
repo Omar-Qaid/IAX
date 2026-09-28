@@ -218,9 +218,17 @@ export function useListDetailsPage<T extends ListDetailRecord>(
   };
   const save = async () => {
     if (!draft) return;
-    const errors = (await config.validate?.(draft)) ?? {};
+    let preparedDraft: T;
+    try {
+      preparedDraft = config.prepareSave ? await config.prepareSave(draft) : draft;
+    } catch (reason: unknown) {
+      setError(reason instanceof Error ? reason.message : String(reason));
+      return;
+    }
+    setDraft(preparedDraft);
+    const errors = (await config.validate?.(preparedDraft)) ?? {};
     if (isNew && config.numberSequence && numberSequenceQuery.data?.manual) {
-      const code = draft[config.numberSequence.field];
+      const code = preparedDraft[config.numberSequence.field];
       if (typeof code !== 'string' || !code.trim())
         errors[String(config.numberSequence.field)] =
           'Code is required for a manual number sequence.';
@@ -232,19 +240,19 @@ export function useListDetailsPage<T extends ListDetailRecord>(
     try {
       const createPayload =
         isNew && config.numberSequence && !numberSequenceQuery.data?.manual
-          ? { ...draft, [config.numberSequence.field]: null }
-          : draft;
+          ? { ...preparedDraft, [config.numberSequence.field]: null }
+          : preparedDraft;
       const result =
         source.type === 'remote'
-          ? await (isNew ? source.create(createPayload) : source.update(draft))
-          : draft;
+          ? await (isNew ? source.create(createPayload) : source.update(preparedDraft))
+          : preparedDraft;
       const created = isNew && Array.isArray(result) ? result : [result as T];
       if (created.length === 0) throw new Error('The create operation did not return any records.');
       const persisted = created[0];
       replaceRecords(
         isNew
           ? [...created, ...records]
-          : records.map((record) => (record.id === draft.id ? persisted : record))
+          : records.map((record) => (record.id === preparedDraft.id ? persisted : record))
       );
       setDraft(persisted);
       setSelectedId(persisted.id);

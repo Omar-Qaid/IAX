@@ -1,5 +1,6 @@
 using System.Globalization;
 using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
+using IAX.IXApi.Modules.Finance.Foundation.WorkerOrganizationAssignments;
 using IAX.IXApi.Modules.Workflow.Activities;
 using IAX.IXApi.Modules.Workflow.Execution;
 using IAX.IXApi.Modules.Workflow.Operators;
@@ -129,35 +130,20 @@ public partial class WfRequestService
     {
         if (performer == null || !performer.IsActive || performer.IsDeleted || performer.PerformerType == null || !performer.PerformerType.IsActive || performer.PerformerType.IsDeleted)
             throw ConfigurationError("An activity has an unavailable performer.");
-        var kind = performer.PerformerType.Code?.Trim().ToUpperInvariant();
-        if (kind is not ("RELATIONAL" or "REQUEST" or "REQUESTFIELD" or "USERS") ||
-            !string.IsNullOrWhiteSpace(performer.SqlTable) || !string.IsNullOrWhiteSpace(performer.SqlWhere) || !string.IsNullOrWhiteSpace(performer.SqlField))
-            throw ConfigurationError($"Performer {performer.RecId} uses an unsupported resolution type.");
-        var employees = new HashSet<long>();
-        var managerLevels = new[] { performer.IsManager1, performer.IsManager2, performer.IsManager3, performer.IsManager4 };
-        if (managerLevels.Count(item => item) > 1)
-            throw ConfigurationError($"Performer {performer.RecId} selects multiple manager levels.");
-        var needsSubject = performer.RelatedField.HasValue || performer.IsApplicant || performer.IsEmployee || managerLevels.Any(item => item) || kind is "REQUEST" or "REQUESTFIELD";
-        if (needsSubject)
+        var kind = ResolvePerformerKind(performer);
+        var employees = kind switch
         {
-            var subject = request.EmployeeId;
-            if (performer.RelatedField.HasValue)
-            {
-                if (!prepared.Visible.Any(item => item.RequestControlId == performer.RelatedField.Value) ||
-                    !long.TryParse(prepared.Values.GetValueOrDefault(performer.RelatedField.Value), NumberStyles.None, CultureInfo.InvariantCulture, out var fieldEmployee))
-                    throw ConfigurationError($"Performer {performer.RecId} requires a visible employee field.");
-                subject = fieldEmployee;
-            }
-            if (!subject.HasValue) throw ConfigurationError($"Performer {performer.RecId} requires a request employee.");
-            if (!await _context.Set<HcmWorker>().AsNoTracking().AnyAsync(item => item.RecId == subject.Value && item.IsActive && !item.IsDeleted, ct))
-                throw ConfigurationError($"Performer {performer.RecId} references an unavailable employee.");
-       
-            else employees.Add(subject.Value);
-        }
-        var explicitEmployees = await _context.Set<WfPerformerUsers>().AsNoTracking()
-            .Where(item => item.PerformerId == performer.RecId && !item.IsDeleted)
-            .Select(item => item.UserID).ToListAsync(ct);
-        employees.UnionWith(explicitEmployees);
+            "ORGANIZATIONAL" => await ResolveOrganizationalPerformerAsync(performer, request, ct),
+            "REQUEST_CONTROL" or "REQUEST" or "REQUESTFIELD" =>
+                ResolveRequestControlPerformer(performer, prepared),
+            "USER" or "USERS" => await ResolveUserPerformerAsync(performer.RecId, ct),
+            "ACTIVITY_CONTROL" => throw ConfigurationError(
+                $"Performer {performer.RecId} uses an activity control, which is unavailable when a request starts."),
+            "QUERY" or "QUERY_DATABASE" => throw ConfigurationError(
+                $"Performer {performer.RecId} database-query execution is not configured."),
+            _ => throw ConfigurationError($"Performer {performer.RecId} uses an unsupported resolution type.")
+        };
+
         var ids = employees.ToList();
         var validIds = await _context.Set<HcmWorker>().AsNoTracking()
             .Where(item => ids.Contains(item.RecId) && item.IsActive && !item.IsDeleted)
@@ -165,6 +151,108 @@ public partial class WfRequestService
         if (ids.Count == 0 || validIds.Count != ids.Count)
             throw ConfigurationError($"Performer {performer.RecId} has no eligible employees or contains an unavailable employee.");
         return validIds;
+    }
+
+    private static string ResolvePerformerKind(WfPerformer performer) => performer.PerformerTypeId switch
+    {
+        1 => "ORGANIZATIONAL",
+        2 => "REQUEST_CONTROL",
+        3 => "ACTIVITY_CONTROL",
+        4 => "USER",
+        5 => "QUERY_DATABASE",
+        _ => performer.PerformerType.Code?.Trim().ToUpperInvariant() ?? string.Empty
+    };
+
+    private async Task<HashSet<long>> ResolveOrganizationalPerformerAsync(
+        WfPerformer performer,
+        WfRequest request,
+        CancellationToken ct)
+    {
+        var employees = new HashSet<long>();
+        var managerLevels = new[]
+        {
+            performer.IsManager1,
+            performer.IsManager2,
+            performer.IsManager3,
+            performer.IsManager4
+        };
+        if (managerLevels.Count(selected => selected) > 1)
+            throw ConfigurationError($"Performer {performer.RecId} selects multiple manager levels.");
+
+        var applicantId = request.EmployeeId;
+        var employeeId = request.RequestForHcmWorkerId ?? request.EmployeeId;
+        if (performer.IsApplicant && applicantId.HasValue) employees.Add(applicantId.Value);
+        if (performer.IsEmployee && employeeId.HasValue) employees.Add(employeeId.Value);
+
+        var managerLevel = Array.FindIndex(managerLevels, selected => selected) + 1;
+        if (managerLevel > 0)
+        {
+            if (!employeeId.HasValue)
+                throw ConfigurationError($"Performer {performer.RecId} requires a request employee.");
+            employees.Add(await ResolveManagerAsync(employeeId.Value, managerLevel, request.RequestDate, performer.RecId, ct));
+        }
+
+        if (employees.Count == 0)
+            throw ConfigurationError($"Performer {performer.RecId} has no organizational role selected.");
+        return employees;
+    }
+
+    private HashSet<long> ResolveRequestControlPerformer(WfPerformer performer, PreparedSubmission prepared)
+    {
+        var relatedField = performer.RelatedField;
+        var control = relatedField.HasValue
+            ? prepared.Visible.FirstOrDefault(item => item.RequestControlId == relatedField.Value)
+            : null;
+        if (control == null ||
+            !string.Equals(control.ReferenceType, "Employee", StringComparison.OrdinalIgnoreCase) ||
+            !long.TryParse(
+                prepared.Values.GetValueOrDefault(relatedField!.Value),
+                NumberStyles.None,
+                CultureInfo.InvariantCulture,
+                out var employeeId))
+            throw ConfigurationError($"Performer {performer.RecId} requires a visible employee request field.");
+        return [employeeId];
+    }
+
+    private async Task<HashSet<long>> ResolveUserPerformerAsync(long performerId, CancellationToken ct) =>
+        (await _context.Set<WfPerformerUsers>().AsNoTracking()
+            // WfUsersPerformers is a legacy link table. IsActive is deliberately
+            // ignored by its EF configuration because that column does not exist.
+            .Where(item => item.PerformerId == performerId && !item.IsDeleted)
+            .Select(item => item.UserID)
+            .ToListAsync(ct))
+        .ToHashSet();
+
+    private async Task<long> ResolveManagerAsync(
+        long employeeId,
+        int managerLevel,
+        DateTime effectiveDate,
+        long performerId,
+        CancellationToken ct)
+    {
+        var currentId = employeeId;
+        var asOf = DateOnly.FromDateTime(effectiveDate);
+        for (var level = 1; level <= managerLevel; level++)
+        {
+            var managerId = await _context.Set<HcmWorkerOrganizationAssignmentV1>()
+                .AsNoTracking()
+                .Where(assignment =>
+                    assignment.HcmWorkerId == currentId &&
+                    assignment.IsPrimary &&
+                    assignment.IsActive &&
+                    !assignment.IsDeleted &&
+                    assignment.ValidFrom <= asOf &&
+                    (!assignment.ValidTo.HasValue || assignment.ValidTo.Value >= asOf))
+                .OrderByDescending(assignment => assignment.ValidFrom)
+                .ThenByDescending(assignment => assignment.RecId)
+                .Select(assignment => (long?)assignment.HcmManagerWorkerId)
+                .FirstOrDefaultAsync(ct);
+            if (!managerId.HasValue)
+                throw ConfigurationError(
+                    $"Performer {performerId} cannot resolve manager level {managerLevel} for employee {employeeId}.");
+            currentId = managerId.Value;
+        }
+        return currentId;
     }
 
     private static DynamicRequestValidationException ConfigurationError(string message) => new([

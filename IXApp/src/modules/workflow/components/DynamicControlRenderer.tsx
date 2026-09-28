@@ -25,6 +25,8 @@ import SubdirectoryArrowRightOutlined from '@mui/icons-material/SubdirectoryArro
 import { FileDropControl, LocationControl, SignatureControl } from './DynamicSpecialControls';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import type { RenderableControl, RenderableOption } from './dynamicControlTypes';
+import { LookupField } from '@shared/components/lookups';
+import { dynamicRequestFormApi } from '../api/dynamicRequestFormApi';
 export type {
   RenderableControl,
   RenderableOption,
@@ -117,6 +119,63 @@ export function DynamicControlRenderer({
   const type = normalizeDynamicControlType(control.controlType);
   const options = control.options ?? [];
   const disabled = Boolean(control.readOnly || preview);
+  const databaseReference = control.referenceType === 'Employee' || control.referenceType === 'Showroom';
+  if (databaseReference && control.processId && control.requestControlId) {
+    return (
+      <LookupField
+        name={`requestControl_${control.requestControlId}`}
+        label={control.label}
+        value={value || undefined}
+        onChange={(nextValue) => onChange(nextValue == null ? '' : String(nextValue))}
+        options={options.map((option) => ({ id: option.value, code: option.value, name: option.label }))}
+        disabled={disabled}
+        required={control.required}
+        error={error}
+        helperText={helperText}
+        displayMode="select"
+        searchable
+        sideMode="server"
+        lazyLoading
+        showAllNamesInOptions
+        pageSize={25}
+        queryKey={['workflow-reference-options', control.processId, control.requestControlId]}
+        fetchPage={async ({ pageNumber, pageSize, search, signal }) => {
+          try {
+            const page = await dynamicRequestFormApi.getReferenceOptions(
+              control.processId!, control.requestControlId!, { pageNumber, pageSize, search, signal }
+            );
+            return {
+              ...page,
+              data: page.data.map((option) => ({
+                id: option.value,
+                code: option.value,
+                name: option.label,
+                nameAlias: option.labelAlias,
+              })),
+            };
+          } catch (error) {
+            if (signal?.aborted) throw error;
+            const term = search.trim().toLocaleLowerCase();
+            const available = options.filter((option) =>
+              !term || option.value.toLocaleLowerCase().includes(term)
+                || option.label.toLocaleLowerCase().includes(term)
+            );
+            const start = (pageNumber - 1) * pageSize;
+            return {
+              data: available.slice(start, start + pageSize).map((option) => ({
+                id: option.value,
+                code: option.value,
+                name: option.label,
+              })),
+              pageNumber,
+              totalPages: Math.max(1, Math.ceil(available.length / pageSize)),
+              totalRecords: available.length,
+            };
+          }
+        }}
+      />
+    );
+  }
   if (type === 'label') {
     const noteColor = control.labelColor || '#7a4b00';
     return (

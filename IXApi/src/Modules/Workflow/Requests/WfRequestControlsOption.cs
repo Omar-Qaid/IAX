@@ -12,9 +12,9 @@ namespace IAX.IXApi.Modules.Workflow.Requests
         public long RequestControlId { get; set; }
         [System.ComponentModel.DataAnnotations.Schema.ForeignKey(nameof(RequestControlId))]
         public virtual WfRequestControl RequestControl { get; set; } = null!;
-        [System.ComponentModel.DataAnnotations.StringLength(255)]
+        [System.ComponentModel.DataAnnotations.StringLength(1000)]
         public string Value { get; set; } = null!;   // value submitted when selected
-        [System.ComponentModel.DataAnnotations.StringLength(255)]
+        [System.ComponentModel.DataAnnotations.StringLength(500)]
         public string Name { get; set; } = null!;   // display label
         [System.ComponentModel.DataAnnotations.StringLength(255)]
         public string? NameAlias { get; set; }

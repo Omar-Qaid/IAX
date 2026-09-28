@@ -61,10 +61,37 @@ public sealed partial class WfProcess651SeedData
             new WfRequestDetail { RecId = 1947926L, RequestId = 192663L, ControlId = 2, ControlDataId = 21728L, Name = "Swift code", NameAlias = "سوفت كود", ControlValue = "1", ProcessId = 651L, SortOrder = 9, Score = 0 },
             new WfRequestDetail { RecId = 1947927L, RequestId = 192663L, ControlId = 3, ControlDataId = 21073L, Name = "Notes", NameAlias = "ملاحظات", ControlValue = null!, ProcessId = 651L, SortOrder = 12, Score = 0 },
         };
+        WfRequestService.ApplyRequestDetailSnapshotValues(requestDetailsXml, requestDetails);
+        var requestOptions = await db.WfRequestControlsOptions.IgnoreQueryFilters()
+            .Where(option => requestDetails.Select(detail => detail.ControlDataId).Contains(option.RequestControlId))
+            .ToListAsync(ct);
+        var seededRequest = await db.WfRequests.IgnoreQueryFilters()
+            .SingleAsync(item => item.RecId == 192663L, ct);
+        seededRequest.RequestDetails = WfRequestService.SerializeRequestDetails(651L, requestDetails, requestOptions);
+
         foreach (var rd in requestDetails)
         {
-            if (!await db.Set<WfRequestDetail>().IgnoreQueryFilters().AnyAsync(x => x.RecId == rd.RecId, ct))
+            var existing = await db.Set<WfRequestDetail>().IgnoreQueryFilters()
+                .FirstOrDefaultAsync(x => x.RecId == rd.RecId, ct);
+            if (existing is null)
                 db.Set<WfRequestDetail>().Add(rd);
+            else
+            {
+                existing.ProcessId = rd.ProcessId;
+                existing.RequestId = rd.RequestId;
+                existing.ControlId = rd.ControlId;
+                existing.ControlDataId = rd.ControlDataId;
+                existing.Name = rd.Name;
+                existing.NameAlias = rd.NameAlias;
+                existing.ControlValue = rd.ControlValue;
+                existing.SortOrder = rd.SortOrder;
+                existing.ValueAlias = rd.ValueAlias;
+                existing.Value = rd.Value;
+                existing.Score = rd.Score;
+                existing.EarnedScore = rd.EarnedScore;
+                existing.IsActive = true;
+                existing.IsDeleted = false;
+            }
         }
         await SaveWithIdentityAsync(db, "WfRequestDetails", ct);
 

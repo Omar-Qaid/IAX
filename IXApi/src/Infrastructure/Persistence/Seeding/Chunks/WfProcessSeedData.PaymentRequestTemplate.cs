@@ -141,8 +141,10 @@ public sealed partial class WfProcessSeedData
                     owner);
                 db.WfRequestControlsOptions.Add(option);
             }
+            option.Value = definition.Value;
             option.Name = definition.Name;
             option.NameAlias = definition.NameAlias;
+            option.Score = 0;
             option.SortOrder = definition.SortOrder;
             option.IsActive = true;
             option.IsDeleted = false;

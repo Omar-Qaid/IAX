@@ -17,7 +17,7 @@ public sealed partial class WfProcess603SeedData
             .ToListAsync(ct);
 
         var toAdd = new List<WfActivityControl>();
-        string RequiredRule = "[{\"rule\":\"required\"}]";
+        string RequiredRule = "{\"validations\":[{\"type\":\"required\",\"active\":true}]}";
 
         var items = new[]
         {

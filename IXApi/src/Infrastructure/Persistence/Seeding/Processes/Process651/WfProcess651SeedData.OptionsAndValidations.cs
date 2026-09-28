@@ -1,4 +1,5 @@
 using System.Xml.Linq;
+using System.Globalization;
 using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Modules.Workflow.Activities;
 using IAX.IXApi.Modules.Workflow.Requests;
@@ -32,33 +33,44 @@ public sealed partial class WfProcess651SeedData
                         .Where(x => x.RequestControlId == ctrl.RecId).ToListAsync(ct);
                     
                     int sortOrder = 1;
+                    var seededValues = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                     foreach (var item in items)
                     {
                         var enName = item.Element("en")?.Value ?? item.Element("value")?.Value ?? "Option";
                         var arName = item.Element("ar")?.Value;
                         var val = item.Element("value")?.Value ?? enName;
+                        var score = decimal.TryParse(item.Element("weight")?.Value, NumberStyles.Number,
+                            CultureInfo.InvariantCulture, out var parsedScore) ? parsedScore : 0m;
+                        seededValues.Add(val);
 
-                        if (!existingOptions.Any(x => x.Value == val))
+                        var option = existingOptions.FirstOrDefault(x =>
+                            string.Equals(x.Value, val, StringComparison.OrdinalIgnoreCase));
+                        if (option is null)
                         {
-                            db.WfRequestControlsOptions.Add(new WfRequestControlsOption
+                            option = new WfRequestControlsOption
                             {
                                 RequestControlId = ctrl.RecId,
-                                Name = enName,
-                                NameAlias = arName,
                                 Value = val,
-                                SortOrder = sortOrder,
-                                Score = 0,
                                 CreatedBy = owner,
-                                OwnerAccountId = owner,
-                                IsActive = true
-                            });
+                                OwnerAccountId = owner
+                            };
+                            db.WfRequestControlsOptions.Add(option);
                         }
+                        option.Value = val;
+                        option.Name = enName;
+                        option.NameAlias = arName;
+                        option.SortOrder = sortOrder;
+                        option.Score = score;
+                        option.IsActive = true;
+                        option.IsDeleted = false;
                         sortOrder++;
                     }
+                    foreach (var staleOption in existingOptions.Where(option => !seededValues.Contains(option.Value)))
+                        staleOption.IsActive = false;
                 }
-                catch (Exception exception)
+                catch
                 {
-                    throw exception;
+                    throw;
                 }
             }
 

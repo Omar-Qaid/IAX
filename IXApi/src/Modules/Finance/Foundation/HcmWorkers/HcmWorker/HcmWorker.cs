@@ -14,7 +14,7 @@ public class HcmWorker : Entity<long>
     public string PersonnelNumber { get; set; } = string.Empty;
 
     public long Person { get; set; }
-    public short OccupationId { get; set; }
+
     public byte GenderId { get; set; }
     public short NationalityId { get; set; }
     public DateTime? HireDate { get; set; }
@@ -22,7 +22,6 @@ public class HcmWorker : Entity<long>
     public string? UserId { get; set; }
 
     public virtual DirPartyTable Party { get; set; } = null!;
-    public virtual HcmOccupation Occupation { get; set; } = null!;
     public virtual Gender Gender { get; set; } = null!;
     public virtual HcmNationality Nationality { get; set; } = null!;
     public virtual AspNetUser? User { get; set; }

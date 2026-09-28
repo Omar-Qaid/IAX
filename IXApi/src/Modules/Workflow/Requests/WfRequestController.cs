@@ -79,6 +79,42 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                 : Ok(APIResponse<DynamicRequestFormDto>.Ok(definition));
         }
 
+        [HttpGet("form-definition/{processId:long}/controls/{requestControlId:long}/options")]
+        public async Task<ActionResult<APIResponse<DynamicRequestLookupPageDto>>> GetReferenceOptions(
+            long processId, long requestControlId, [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 25, [FromQuery] string? search = null,
+            CancellationToken cancellationToken = default)
+        {
+            var page = await _requestService.GetReferenceOptionsAsync(
+                processId, requestControlId, pageNumber, pageSize, search, cancellationToken);
+            return page == null
+                ? NotFound(APIResponse<DynamicRequestLookupPageDto>.Fail("The database lookup control was not found."))
+                : Ok(APIResponse<DynamicRequestLookupPageDto>.Ok(page));
+        }
+
+        [HttpGet("reference-filters/{referenceType}/fields")]
+        public ActionResult<APIResponse<IReadOnlyList<DynamicReferenceFilterFieldDto>>> GetReferenceFilterFields(
+            string referenceType)
+        {
+            var fields = _requestService.GetReferenceFilterFields(referenceType);
+            return fields == null
+                ? NotFound(APIResponse<IReadOnlyList<DynamicReferenceFilterFieldDto>>.Fail("The reference type does not support filters."))
+                : Ok(APIResponse<IReadOnlyList<DynamicReferenceFilterFieldDto>>.Ok(fields));
+        }
+
+        [HttpGet("reference-filters/{referenceType}/fields/{field}/values")]
+        public async Task<ActionResult<APIResponse<DynamicReferenceFilterValuePageDto>>> GetReferenceFilterValues(
+            string referenceType, string field, [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 25, [FromQuery] string? search = null,
+            CancellationToken cancellationToken = default)
+        {
+            var values = await _requestService.GetReferenceFilterValuesAsync(
+                referenceType, field, pageNumber, pageSize, search, cancellationToken);
+            return values == null
+                ? NotFound(APIResponse<DynamicReferenceFilterValuePageDto>.Fail("The foreign-key field was not found."))
+                : Ok(APIResponse<DynamicReferenceFilterValuePageDto>.Ok(values));
+        }
+
         [HttpGet("{requestId:long}/mail-details")]
         public async Task<ActionResult<APIResponse<MailRequestDetailsDto>>> GetMailDetails(long requestId, CancellationToken cancellationToken)
         {
@@ -113,6 +149,7 @@ namespace IAX.IXApi.Modules.Workflow.Requests
         }
 
         [HttpPost("submit")]
+        [Consumes("application/json")]
         public async Task<ActionResult<APIResponse<SubmitDynamicRequestResultDto>>> SubmitDynamic([FromBody] SubmitDynamicRequestDto submission, CancellationToken cancellationToken)
         {
             try
@@ -132,6 +169,34 @@ namespace IAX.IXApi.Modules.Workflow.Requests
             {
                 return NotFound(APIResponse<SubmitDynamicRequestResultDto>.Fail(exception.Message));
             }
+            catch (ArgumentException exception)
+            {
+                return BadRequest(APIResponse<SubmitDynamicRequestResultDto>.Fail(exception.Message));
+            }
+        }
+
+        [HttpPost("submit-with-files")]
+        [DomainPermission("System", "Documents")]
+        [Consumes("multipart/form-data")]
+        [RequestSizeLimit(104_857_600)]
+        [RequestFormLimits(MultipartBodyLengthLimit = 104_857_600)]
+        public async Task<ActionResult<APIResponse<SubmitDynamicRequestResultDto>>> SubmitWithFiles(
+            [FromForm] SubmitDynamicRequestForm form, CancellationToken cancellationToken)
+        {
+            SubmitDynamicRequestDto? submission;
+            try
+            {
+                submission = System.Text.Json.JsonSerializer.Deserialize<SubmitDynamicRequestDto>(
+                    form.Submission, new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web));
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                return BadRequest(APIResponse<SubmitDynamicRequestResultDto>.Fail("Invalid submission JSON."));
+            }
+            if (submission == null || !TryValidateModel(submission))
+                return BadRequest(APIResponse<SubmitDynamicRequestResultDto>.Fail("Invalid submission."));
+            submission.Files = form.Files;
+            return await SubmitDynamic(submission, cancellationToken);
         }
 
         [HttpPost("validate-submission")]

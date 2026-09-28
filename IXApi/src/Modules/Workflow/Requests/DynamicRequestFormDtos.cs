@@ -5,6 +5,7 @@ public sealed class DynamicRequestFormDto
     public long ProcessId { get; set; }
     public string ProcessName { get; set; } = string.Empty;
     public string? ProcessDescription { get; set; }
+    public bool MandatoryDocuments { get; set; }
     public List<DynamicRequestControlDto> Controls { get; set; } = [];
 }
 
@@ -39,8 +40,29 @@ public sealed class DynamicRequestOptionDto
     public string? LabelAlias { get; set; }
     public decimal Score { get; set; }
     public int SortOrder { get; set; }
+    public string? ExtendedProperties { get; set; }
     public DynamicRequestOptionFeatureDto FeatureConfiguration { get; set; } = new();
 }
+
+public sealed record DynamicRequestLookupPageDto(
+    IReadOnlyList<DynamicRequestOptionDto> Data,
+    int PageNumber,
+    int TotalPages,
+    int TotalRecords);
+
+public sealed record DynamicReferenceFilterFieldDto(
+    string Name,
+    string DataType,
+    bool Nullable,
+    bool IsForeignKey,
+    IReadOnlyList<string> Operators);
+
+public sealed record DynamicReferenceFilterValueDto(string Value, string Label, string? LabelAlias);
+public sealed record DynamicReferenceFilterValuePageDto(
+    IReadOnlyList<DynamicReferenceFilterValueDto> Data,
+    int PageNumber,
+    int TotalPages,
+    int TotalRecords);
 
 public sealed class DynamicRequestOptionFeatureDto
 {
@@ -78,6 +100,21 @@ public sealed class SubmitDynamicRequestDto
     public long ProcessId { get; set; }
     public List<DynamicRequestValueDto> Values { get; set; } = [];
     public List<DynamicRequestOptionFeatureValueDto> OptionFeatureValues { get; set; } = [];
+    public List<DynamicRequestUploadTarget> UploadTargets { get; set; } = [];
+    [System.Text.Json.Serialization.JsonIgnore]
+    public List<Microsoft.AspNetCore.Http.IFormFile> Files { get; set; } = [];
+}
+
+public sealed class DynamicRequestUploadTarget
+{
+    public long? RequestControlId { get; set; }
+    public long? OptionId { get; set; }
+}
+
+public sealed class SubmitDynamicRequestForm
+{
+    public string Submission { get; set; } = string.Empty;
+    public List<Microsoft.AspNetCore.Http.IFormFile> Files { get; set; } = [];
 }
 
 public sealed class DynamicRequestValueDto

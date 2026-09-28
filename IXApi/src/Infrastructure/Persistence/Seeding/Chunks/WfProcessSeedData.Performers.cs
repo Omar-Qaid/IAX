@@ -257,11 +257,16 @@ public sealed partial class WfProcessSeedData
                     RecId = item.RecId,
                     Code = "PERF" + item.RecId,
                     Name = item.Name,
-                    // Source rows use legacy performer-type IDs (2, 4, and 5)
-                    // that do not exist in the supported master-data catalog.
-                    // Preserve the row's employee/manager/related-field flags and
-                    // map imported performers to the supported relational type.
-                    PerformerTypeId = 1,
+                    // Legacy source IDs: 3 = organizational, 4 = request control,
+                    // 5 = activity control, and 2 = explicitly assigned users.
+                    PerformerTypeId = item.PerformerTypeId switch
+                    {
+                        3 => 1,
+                        4 => 2,
+                        5 => 3,
+                        2 => 4,
+                        _ => 1
+                    },
                     RelatedField = item.RelatedField,
                     IsApplicant = item.PerformerTypeId == 3,
                     IsEmployee = item.IsEmployee,

@@ -39,7 +39,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("SysDataSeedLogs");
+                    b.ToTable("SysDataSeedLogs", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Administration.AuditLogs.Entities.SysAuditLog", b =>
@@ -81,7 +81,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("SysAuditLogs");
+                    b.ToTable("SysAuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Administration.AuditLogs.Entities.SysExceptionLog", b =>
@@ -185,7 +185,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("SysExceptionLogs");
+                    b.ToTable("SysExceptionLogs", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Administration.BackgroundJobs.Entities.BatchSettings", b =>
@@ -201,7 +201,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("BatchSettings");
+                    b.ToTable("BatchSettings", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Administration.BackgroundJobs.Entities.SysBackgroundJob", b =>
@@ -744,7 +744,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasIndex("BatchJobId");
 
-                    b.ToTable("SysBackgroundJobRecurrenceCounts");
+                    b.ToTable("SysBackgroundJobRecurrenceCounts", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Administration.BackgroundJobs.Entities.SysBackgroundJobTask", b =>
@@ -791,7 +791,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasIndex("JobId");
 
-                    b.ToTable("BatchJobTasks");
+                    b.ToTable("BatchJobTasks", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Administration.BackgroundJobs.Entities.SysBackgroundJobTaskExecution", b =>
@@ -838,7 +838,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasIndex("ExecutionId");
 
-                    b.ToTable("BatchJobTaskHistory");
+                    b.ToTable("BatchJobTaskHistory", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Administration.NumberSequences.SysNumberSequence", b =>
@@ -1430,7 +1430,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasIndex("NotificationId");
 
-                    b.ToTable("SysNotificationAuditLogs");
+                    b.ToTable("SysNotificationAuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Communication.Notifications.Entities.SysNotificationPreference", b =>
@@ -1465,7 +1465,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("SysNotificationPreferences");
+                    b.ToTable("SysNotificationPreferences", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Communication.Notifications.Entities.SysNotificationRecipient", b =>
@@ -1727,7 +1727,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("SysScheduledNotifications");
+                    b.ToTable("SysScheduledNotifications", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CustConfirmJour", b =>
@@ -1932,7 +1932,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("CustConfirmJour");
+                    b.ToTable("CustConfirmJour", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CustConfirmTrans", b =>
@@ -2138,7 +2138,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("CustConfirmTrans");
+                    b.ToTable("CustConfirmTrans", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CustGroup", b =>
@@ -3986,7 +3986,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasIndex("SalesId");
 
-                    b.ToTable("CustPackingSlipJour");
+                    b.ToTable("CustPackingSlipJour", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CustPackingSlipTrans", b =>
@@ -4205,7 +4205,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasIndex("PackingSlipId");
 
-                    b.ToTable("CustPackingSlipTrans");
+                    b.ToTable("CustPackingSlipTrans", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CustPaymModeTable", b =>
@@ -5068,7 +5068,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("CustSettlement");
+                    b.ToTable("CustSettlement", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CustTable", b =>
@@ -5870,7 +5870,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("CustTrans");
+                    b.ToTable("CustTrans", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.CustTransOpen", b =>
@@ -6266,7 +6266,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("MarkupTrans");
+                    b.ToTable("MarkupTrans", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.SalesLine", b =>
@@ -8742,7 +8742,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("BankAccountTable");
+                    b.ToTable("BankAccountTable", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.BankGroup", b =>
@@ -8835,7 +8835,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("BankGroup");
+                    b.ToTable("BankGroup", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.CompanyInfo", b =>
@@ -9559,7 +9559,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("DimensionAttributeValueCombination");
+                    b.ToTable("DimensionAttributeValueCombination", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DirPartyLocation", b =>
@@ -9656,7 +9656,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasIndex("Party");
 
-                    b.ToTable("DirPartyLocation");
+                    b.ToTable("DirPartyLocation", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DirPartyLocationRole", b =>
@@ -10753,7 +10753,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("GeneralJournalAccountEntry");
+                    b.ToTable("GeneralJournalAccountEntry", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.GeneralJournalEntry", b =>
@@ -10861,7 +10861,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("GeneralJournalEntry");
+                    b.ToTable("GeneralJournalEntry", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.InventBatch", b =>
@@ -10971,7 +10971,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("InventBatch");
+                    b.ToTable("InventBatch", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.InventClosing", b =>
@@ -11115,7 +11115,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("InventClosing");
+                    b.ToTable("InventClosing", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.InventCountJour", b =>
@@ -11200,7 +11200,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("InventCountJour");
+                    b.ToTable("InventCountJour", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.InventDim", b =>
@@ -11333,7 +11333,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("InventDim");
+                    b.ToTable("InventDim", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.InventItemBarcode", b =>
@@ -11433,7 +11433,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("InventItemBarcode");
+                    b.ToTable("InventItemBarcode", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.InventItemGroup", b =>
@@ -11527,7 +11527,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("InventItemGroup");
+                    b.ToTable("InventItemGroup", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.InventItemLocation", b =>
@@ -11623,7 +11623,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("InventItemLocation");
+                    b.ToTable("InventItemLocation", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.InventItemPrice", b =>
@@ -11736,7 +11736,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("InventItemPrice");
+                    b.ToTable("InventItemPrice", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.InventJournalName", b =>
@@ -11831,7 +11831,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("InventJournalName");
+                    b.ToTable("InventJournalName", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.InventJournalTable", b =>
@@ -11998,7 +11998,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("InventJournalTable");
+                    b.ToTable("InventJournalTable", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.InventJournalTrans", b =>
@@ -12244,7 +12244,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("InventJournalTrans");
+                    b.ToTable("InventJournalTrans", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.InventLocation", b =>
@@ -12521,7 +12521,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("InventLocation");
+                    b.ToTable("InventLocation", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.InventPosting", b =>
@@ -12598,7 +12598,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("InventPosting");
+                    b.ToTable("InventPosting", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.InventSettlement", b =>
@@ -12733,7 +12733,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("InventSettlement");
+                    b.ToTable("InventSettlement", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.InventSite", b =>
@@ -12809,7 +12809,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("InventSite");
+                    b.ToTable("InventSite", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.InventSum", b =>
@@ -13081,7 +13081,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("InventSum");
+                    b.ToTable("InventSum", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.InventTable", b =>
@@ -13539,7 +13539,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("InventTable");
+                    b.ToTable("InventTable", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.InventTableModule", b =>
@@ -13667,7 +13667,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("InventTableModule");
+                    b.ToTable("InventTableModule", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.InventTrans", b =>
@@ -13889,7 +13889,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasIndex("ItemId");
 
-                    b.ToTable("InventTrans");
+                    b.ToTable("InventTrans", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.InventTransOrigin", b =>
@@ -13970,7 +13970,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("InventTransOrigin");
+                    b.ToTable("InventTransOrigin", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.Ledger", b =>
@@ -14063,7 +14063,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("Ledger");
+                    b.ToTable("Ledger", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.LedgerChartOfAccounts", b =>
@@ -14127,7 +14127,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("LedgerChartOfAccounts");
+                    b.ToTable("LedgerChartOfAccounts", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.LedgerFiscalCalendarPeriod", b =>
@@ -14403,7 +14403,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("LedgerJournalName");
+                    b.ToTable("LedgerJournalName", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable", b =>
@@ -14669,7 +14669,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("LedgerJournalTable");
+                    b.ToTable("LedgerJournalTable", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans", b =>
@@ -15243,7 +15243,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("LedgerJournalTrans");
+                    b.ToTable("LedgerJournalTrans", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.LogisticsAddressCity", b =>
@@ -15733,7 +15733,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("LogisticsAddressZipCode");
+                    b.ToTable("LogisticsAddressZipCode", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.LogisticsElectronicAddress", b =>
@@ -16310,7 +16310,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("MainAccount");
+                    b.ToTable("MainAccount", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.MarkupTable", b =>
@@ -16733,7 +16733,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("PaymTerm");
+                    b.ToTable("PaymTerm", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.TaxAuthorityAddress", b =>
@@ -17029,7 +17029,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("TaxExemptCodeTable");
+                    b.ToTable("TaxExemptCodeTable", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.TaxGroupData", b =>
@@ -18332,7 +18332,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("UnitOfMeasure");
+                    b.ToTable("UnitOfMeasure", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.VendGroup", b =>
@@ -19000,6 +19000,11 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<long>("Party")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("PersonnelNumber")
+                        .IsRequired()
+                        .HasMaxLength(25)
+                        .HasColumnType("nvarchar(25)");
+
                     b.Property<int>("RecVersion")
                         .HasColumnType("int");
 
@@ -19012,6 +19017,9 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.HasKey("RecId");
 
                     b.HasIndex("Party");
+
+                    b.HasIndex("DataAreaId", "PersonnelNumber")
+                        .IsUnique();
 
                     b.ToTable("HcmShowroom", (string)null);
                 });
@@ -22669,7 +22677,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<string>("NameAlias")
                         .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("NameAlias");
 
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
@@ -22828,8 +22837,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasColumnType("tinyint");
 
                     b.Property<string>("ControlValue")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -22905,7 +22913,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("WfRequestDetails");
+                    b.ToTable("WfRequestDetails", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Workflow.Requests.WfRequestMappingVariable", b =>
@@ -24745,7 +24753,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("IAX.IXApi.Modules.Finance.Foundation.HcmWorkers.HcmWorker", "HcmWorker")
-                        .WithMany()
+                        .WithMany("WorkerOrganizationAssignmentsV1")
                         .HasForeignKey("HcmWorkerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -25348,6 +25356,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Foundation.HcmWorkers.HcmWorker", b =>
                 {
                     b.Navigation("WorkerOrganizationAssignments");
+
+                    b.Navigation("WorkerOrganizationAssignmentsV1");
 
                     b.Navigation("WorkerShowroomAssignments");
                 });

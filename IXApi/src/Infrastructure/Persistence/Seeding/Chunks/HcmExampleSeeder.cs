@@ -55,7 +55,7 @@ public sealed class HcmExampleSeeder : ISeeder
                 worker = new HcmWorker
                 {
                     DataAreaId = Company, PersonnelNumber = seed.Code, Person = party.RecId,
-                    OccupationId = occupation.RecId, GenderId = gender.RecId, NationalityId = nationality.RecId,
+                    GenderId = gender.RecId, NationalityId = nationality.RecId,
                     HireDate = EffectiveFrom.ToDateTime(TimeOnly.MinValue)
                 };
                 db.Add(worker);
@@ -91,8 +91,18 @@ public sealed class HcmExampleSeeder : ISeeder
                 .SingleOrDefaultAsync(x => x.DataAreaId == Company && x.Party == party.RecId, ct);
             if (showroom == null)
             {
-                showroom = new HcmShowroom { DataAreaId = Company, Party = party.RecId };
+                showroom = new HcmShowroom
+                {
+                    DataAreaId = Company,
+                    Party = party.RecId,
+                    PersonnelNumber = "DEMO-SHOWROOM-" + suffix
+                };
                 db.Add(showroom);
+                await db.SaveChangesAsync(ct);
+            }
+            else if (string.IsNullOrWhiteSpace(showroom.PersonnelNumber))
+            {
+                showroom.PersonnelNumber = "DEMO-SHOWROOM-" + suffix;
                 await db.SaveChangesAsync(ct);
             }
             var worker = workers["DEMO-SELLER-" + suffix];

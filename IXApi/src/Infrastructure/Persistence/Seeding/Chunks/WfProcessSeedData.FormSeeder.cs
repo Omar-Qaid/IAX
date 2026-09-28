@@ -110,6 +110,9 @@ public sealed partial class WfProcessSeedData
                 var existingOptions = await db.WfRequestControlsOptions.IgnoreQueryFilters()
                     .Where(x => x.RequestControlId == control.RecId)
                     .ToListAsync(ct);
+                var seededValues = controlDefinition.Options
+                    .Select(option => option.Value)
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
                 foreach (var (optionDefinition, optionIndex) in controlDefinition.Options.Select((option, index) => (option, index)))
                 {
                     var option = existingOptions.FirstOrDefault(item =>
@@ -125,12 +128,16 @@ public sealed partial class WfProcessSeedData
                             owner);
                         db.WfRequestControlsOptions.Add(option);
                     }
+                    option.Value = optionDefinition.Value;
                     option.Name = optionDefinition.Name;
                     option.NameAlias = optionDefinition.NameAlias;
+                    option.Score = 0;
                     option.SortOrder = optionIndex + 1;
                     option.IsActive = true;
                     option.IsDeleted = false;
                 }
+                foreach (var staleOption in existingOptions.Where(option => !seededValues.Contains(option.Value)))
+                    staleOption.IsActive = false;
             }
         }
         await db.SaveChangesAsync(ct);

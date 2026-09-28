@@ -190,6 +190,11 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
             permission: PERMISSIONS.WF_ACTIVITY_VIEW,
           },
           {
+            label: 'nav.wfPerformers',
+            path: ROUTE_PATHS.WORKFLOW.PERFORMERS,
+            permission: PERMISSIONS.WF_PERFORMER_VIEW,
+          },
+          {
             label: 'nav.workflowCategories',
             path: ROUTE_PATHS.WORKFLOW.CATEGORIES,
             permission: PERMISSIONS.WF_CATEGORY_VIEW,
@@ -284,6 +289,11 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
             label: 'hcmWorkers.title',
             path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.HCM_WORKERS,
             permission: PERMISSIONS.HCM_WORKER_VIEW,
+          },
+          {
+            label: 'hcmShowrooms.title',
+            path: ROUTE_PATHS.ORGANIZATION_ADMINISTRATION.HCM_SHOWROOMS,
+            permission: PERMISSIONS.HCM_SHOWROOM_VIEW,
           },
           {
             label: 'hcmNationalities.title',

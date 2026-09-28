@@ -15,6 +15,8 @@ export interface RenderableValidation {
 }
 
 export interface RenderableControl {
+  processId?: number;
+  requestControlId?: number;
   label: string;
   hideLabel?: boolean;
   compact?: boolean;

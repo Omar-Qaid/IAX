@@ -59,6 +59,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
 
                 // ─── Organization ────────────────────────────────────────────────
                 ("HcmWorker",         "HcmWorker Sequence",         "EMP-######", "{PREFIX}-{SEQ}",       0),
+                ("HcmShowroom",       "HcmShowroom Sequence",       "SHR-######", "{PREFIX}-{SEQ}",       0),
                 ("Department",       "Department Sequence",       "DPT-######", "{PREFIX}-{SEQ}",       0),
                 ("Occupation",       "Occupation Sequence",       "OCC-######", "{PREFIX}-{SEQ}",       0),
                 ("Nationality",      "Nationality Sequence",      "NAT-######", "{PREFIX}-{SEQ}",       0),

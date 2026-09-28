@@ -59,6 +59,8 @@ export type BuilderValidationType =
   | 'maxDate'
   | 'maxValue'
   | 'range'
+  | 'uniquePerApplicant'
+  | 'uniqueGlobal'
   | 'regex'
   | 'pattern'
   | 'startsWith'
@@ -160,6 +162,17 @@ export interface BuilderControl {
   canGroup: boolean;
   canSort: boolean;
   referenceType: BuilderReferenceType | null;
+  referenceFilter?: {
+    departmentId: number | null;
+    occupationId: number | null;
+    managerLevel: 1 | 2 | 3 | null;
+    rules: Array<{
+      id: string;
+      field: string;
+      operator: string;
+      value: string;
+    }>;
+  };
   fieldRole: BuilderFieldRole;
   dataType: BuilderReportingDataType;
   defaultAggregation: BuilderAggregation;

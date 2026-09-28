@@ -95,19 +95,20 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>(
     row: T | null;
   } | null>(null);
 
-  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const selectedSet = useMemo(() => new Set(selectedIds.map(String)), [selectedIds]);
   const selectedSetRef = useRef(selectedSet);
   selectedSetRef.current = selectedSet;
 
   const onToggleRow = useCallback(
     (rowId: string | number) => {
       const set = selectedSetRef.current;
+      const rowKey = String(rowId);
       if (selectionMode === 'single') {
-        onSelectionChange?.(set.has(rowId) ? [] : [rowId]);
+        onSelectionChange?.(set.has(rowKey) ? [] : [rowId]);
       } else if (selectionMode === 'multiple') {
         const next = new Set(set);
-        if (next.has(rowId)) next.delete(rowId);
-        else next.add(rowId);
+        if (next.has(rowKey)) next.delete(rowKey);
+        else next.add(rowKey);
         onSelectionChange?.(Array.from(next));
       }
     },
@@ -255,9 +256,16 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>(
         const fieldKey = col.field as string;
         const currentValue = (editValues as Record<string, unknown>)[fieldKey] ?? '';
         if (col.renderEditCell) {
-          return <Box onClick={(event) => event.stopPropagation()}>
-            {col.renderEditCell({ row, value: currentValue, onChange: (value) => onFieldChange?.(fieldKey, value), disabled: Boolean(saving) })}
-          </Box>;
+          return (
+            <Box onClick={(event) => event.stopPropagation()} sx={{ width: '100%', minWidth: 0 }}>
+              {col.renderEditCell({
+                row,
+                value: currentValue,
+                onChange: (value) => onFieldChange?.(fieldKey, value),
+                disabled: Boolean(saving),
+              })}
+            </Box>
+          );
         }
         const isBoolCol = col.type === 'boolean';
         if (isBoolCol) {
@@ -460,7 +468,7 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>(
               virtualRow={virtualRow}
               getRowId={getRowId}
               selectionMode={selectionMode}
-              isSelected={selectedSet.has(rowId)}
+              isSelected={selectedSet.has(String(rowId))}
               onToggleRow={onToggleRow}
               onRowClick={isEditingRow ? undefined : onRowClick}
               onRowDoubleClick={isEditingRow ? undefined : onRowDoubleClick}

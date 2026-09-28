@@ -152,6 +152,7 @@ export interface LookupFieldProps<TFieldValues extends FieldValues = FieldValues
   lazyLoading?: boolean;
   pageSize?: number;
   searchDebounceMs?: number;
+  showAllNamesInOptions?: boolean;
   multiple?: boolean;
   disabled?: boolean;
   readOnly?: boolean;

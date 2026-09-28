@@ -1,11 +1,10 @@
 import React from 'react';
 import { dateBoundValid } from './dateBounds';
+import { inputMaskValid, supportedSubmissionRule } from './submissionRules';
 import { Alert, Box, Button, CircularProgress, Paper, Stack, Typography } from '@mui/material';
 import AssignmentOutlined from '@mui/icons-material/AssignmentOutlined';
 import { useQuery } from '@tanstack/react-query';
 import { useNotifications } from '@shared/hooks/useNotifications';
-import { documentApi } from '@shared/components/documents/documentApi';
-import { documentTableIds } from '@shared/components/documents/recordTableIds';
 import {
   dynamicRequestFormApi,
   type DynamicRequestCondition,
@@ -84,9 +83,11 @@ const configuredRuleValid = (rule: DynamicRequestValidation, value: string, cont
 };
 const ruleValid = (rule: DynamicRequestValidation, value: string, controls: DynamicRequestControl[], values: Values): boolean => {
   const type = normalized(rule.type); const operand = rule.value ?? rule.expression ?? '';
+  if (!supportedSubmissionRule(type)) return false;
   if (empty(value) && type !== 'required') return true;
   switch (type) {
     case 'required': return !empty(value);
+    case 'mask': case 'inputmask': return inputMaskValid(value, rule.mask);
     case 'minlength': return value.length >= Number(operand);
     case 'maxlength': return value.length <= Number(operand);
     case 'exactlength': case 'length': return value.length === Number(operand);
@@ -154,12 +155,15 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, DynamicFormProps>
   const [formError, setFormError] = React.useState('');
   const [saving, setSaving] = React.useState(false);
   const [savedRequestId, setSavedRequestId] = React.useState<number | null>(null);
+  const submittingRef = React.useRef(false);
+  const initializedProcess = React.useRef<number | null>(null);
 
   React.useEffect(() => {
-    if (!definition.data) return;
+    if (!definition.data || initializedProcess.current === processId) return;
+    initializedProcess.current = processId;
     setErrors({}); setFormError(''); setOptionFeatureValues({}); setControlFiles({}); setOptionFiles({}); setSavedRequestId(null);
     setValues(initialValues(definition.data.controls));
-  }, [definition.data]);
+  }, [definition.data, processId]);
 
   const sortedControls = React.useMemo(() => [...(definition.data?.controls ?? [])].sort((left, right) =>
     (left.sortOrder ?? Number.MAX_SAFE_INTEGER) - (right.sortOrder ?? Number.MAX_SAFE_INTEGER) ||
@@ -252,10 +256,21 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, DynamicFormProps>
     return Object.keys(next).length === 0;
   };
   const submit = async () => {
+    if (submittingRef.current || savedRequestId != null) return;
     setFormError('');
     if (!validate()) return;
+    submittingRef.current = true;
     setSaving(true);
     try {
+      const uploads = requestFiles.map((file) => ({ file, requestControlId: null as number | null, optionId: null as number | null }));
+      for (const control of inputControls) {
+        if (normalized(control.controlType) === 'file')
+          for (const file of controlFiles[control.requestControlId] ?? [])
+            uploads.push({ file, requestControlId: control.requestControlId, optionId: null });
+        for (const option of selectedOptions(control, values).filter((item) => item.featureConfiguration?.requireFileUpload))
+          for (const file of optionFiles[`${control.requestControlId}:${option.optionId}`] ?? [])
+            uploads.push({ file, requestControlId: control.requestControlId, optionId: option.optionId });
+      }
       const result = await dynamicRequestFormApi.submit({
         processId,
         values: inputControls.map((control) => ({ requestControlId: control.requestControlId, value: values[control.requestControlId] ?? control.defaultValue ?? '' })),
@@ -265,37 +280,13 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, DynamicFormProps>
             optionId: option.optionId,
             fileValue: optionFeatureValues[`${control.requestControlId}:${option.optionId}:files`] ?? '',
           }))),
-      });
-      const uploads: Promise<unknown>[] = [];
-      const attachmentOwners = result.attachmentOwners ?? [];
-      for (const file of requestFiles) uploads.push(documentApi.create(documentTableIds.wfRequest, result.requestId, {
-        typeId: 'File', name: file.name, notes: t('workflowRequest.attachmentNote'), url: '', file,
-      }));
-      for (const [requestControlIdText, files] of Object.entries(controlFiles)) {
-        const requestControlId = Number(requestControlIdText);
-        const owner = attachmentOwners.find((item) => item.requestControlId === requestControlId && item.optionId == null);
-        if (!owner) continue;
-        for (const file of files) uploads.push(documentApi.create(documentTableIds.wfRequestDetail, owner.detailRecId, {
-          typeId: 'File', name: file.name, notes: t('workflowRequest.controlAttachmentNote', { id: requestControlId }), url: '', file,
-        }));
-      }
-      for (const [key, files] of Object.entries(optionFiles)) {
-        const [requestControlId, optionId] = key.split(':').map(Number);
-        const owner = attachmentOwners.find((item) => item.requestControlId === requestControlId && item.optionId === optionId);
-        if (!owner) continue;
-        for (const file of files) uploads.push(documentApi.create(documentTableIds.wfRequestDetail, owner.detailRecId, {
-          typeId: 'File', name: file.name, notes: t('workflowRequest.optionAttachmentNote', { id: optionId }), url: '', file,
-        }));
-      }
-      const uploadResults = await Promise.allSettled(uploads);
-      const failedUploads = uploadResults.filter((item) => item.status === 'rejected').length;
+      }, uploads);
       setSavedRequestId(result.requestId);
       notifySuccess(t('workflowRequest.submitted', { request: result.code ?? result.requestId, score: result.score }));
-      if (failedUploads > 0) notifyError(t('workflowRequest.uploadsFailed', { count: failedUploads }));
     } catch (reason) {
       const message = reason instanceof Error ? reason.message : String(reason);
       setFormError(message); notifyError(message);
-    } finally { setSaving(false); }
+    } finally { submittingRef.current = false; setSaving(false); }
   };
   const submitRef = React.useRef(submit);
   submitRef.current = submit;
@@ -310,7 +301,7 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, DynamicFormProps>
   const childControlsFor = (option: DynamicRequestOption) => option.featureConfiguration?.showOtherControls
     ? option.featureConfiguration.visibleControlIds
       .map((id) => visibleControls.find((item) => item.requestControlId === id))
-      .filter((item): item is DynamicRequestControl => Boolean(item))
+      .filter((item): item is DynamicRequestControl => Boolean(item) && !(displayMode === 'printTemplate' && boundTemplateControlIds.has(item!.requestControlId)))
     : [];
   const usesFullDependencyRow = (option: DynamicRequestOption) => {
     const children = childControlsFor(option);
@@ -343,6 +334,8 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, DynamicFormProps>
     const activeOptions = selectedOptions(control, values);
     return <Box key={control.requestControlId} sx={{ minWidth: 0 }}>
     <DynamicControlRenderer control={{
+      processId,
+      requestControlId: control.requestControlId,
       label: isRtl ? control.labelAr || control.label : control.label,
       labelColor: control.labelColor, controlType: control.controlType, referenceType: control.referenceType,
       required: control.required,
@@ -389,7 +382,7 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, DynamicFormProps>
     const control = binding.requestControlId != null
       ? visibleControls.find((item) => item.requestControlId === binding.requestControlId)
       : visibleControls.find((item) => item.controlId === binding.controlId);
-    return control ? renderControl(control, new Set<number>(), false, false) : null;
+    return control ? renderControl(control, new Set<number>(), false, true) : null;
   };
   const templateBindings = printTemplate ? requestControlTemplateBindings(printTemplate) : [];
   const boundTemplateControlIds = new Set(templateBindings.flatMap((binding) => {
@@ -398,7 +391,7 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, DynamicFormProps>
     return control ? [control.requestControlId] : [];
   }));
   const unboundTemplateControls = visibleControls.filter(
-    (control) => !boundTemplateControlIds.has(control.requestControlId)
+    (control) => !boundTemplateControlIds.has(control.requestControlId) && !inlineChildIds.has(control.requestControlId)
   );
   const unboundRows = (() => {
     const rows: DynamicRequestControl[][] = [];
@@ -424,7 +417,7 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, DynamicFormProps>
             >
               {row.map((control) => (
                 <Box key={control.requestControlId} data-control-id={control.requestControlId} sx={{ minWidth: 0, gridColumn: { xs: 'span 1', md: `span ${Math.min(2, Math.max(1, control.columnSpan || 1))}`, lg: `span ${Math.min(3, Math.max(1, control.columnSpan || 1))}` } }}>
-                  {renderControl(control, new Set<number>(), false, false)}
+                  {renderControl(control, new Set<number>(), false, true)}
                 </Box>
               ))}
             </Box>
@@ -465,7 +458,7 @@ export const DynamicForm = React.forwardRef<DynamicFormHandle, DynamicFormProps>
       {formError && <Alert severity="error">{formError}</Alert>}
       {showActions && <Paper square variant="outlined" sx={{ position: 'sticky', bottom: 0, zIndex: 5, mt: 'auto', px: { xs: 1.25, sm: 2.5 }, py: 0.8, mx: { xs: -0.25, sm: -0.5 }, bgcolor: 'rgba(255,255,255,.98)', backdropFilter: 'blur(8px)', boxShadow: '0 -2px 8px rgba(32,42,64,.12)' }}>
         <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center', justifyContent: { xs: 'flex-start', sm: 'flex-end' } }}>
-          <Button variant="contained" disabled={saving || inputControls.length === 0} onClick={() => void submit()} sx={{ minWidth: { xs: 128, sm: 190 }, height: { xs: 38, sm: 46 }, whiteSpace: 'nowrap', borderRadius: { xs: 1, sm: 0.5 }, fontSize: { xs: 12, sm: 15 } }}>{saving ? t('workflowRequest.submitting') : t('workflowRequest.submit')}</Button>
+          <Button variant="contained" disabled={saving || savedRequestId != null || inputControls.length === 0} onClick={() => void submit()} sx={{ minWidth: { xs: 128, sm: 190 }, height: { xs: 38, sm: 46 }, whiteSpace: 'nowrap', borderRadius: { xs: 1, sm: 0.5 }, fontSize: { xs: 12, sm: 15 } }}>{saving ? t('workflowRequest.submitting') : t('workflowRequest.submit')}</Button>
           <Box sx={{ width: 54, height: 54, flexShrink: 0, borderRadius: '50%', bgcolor: 'primary.main', color: 'primary.contrastText', display: { xs: 'grid', sm: 'none' }, placeItems: 'center', boxShadow: '0 2px 7px rgba(0,91,161,.30)' }}><Stack spacing={0} sx={{ alignItems: 'center' }}><Typography sx={{ fontSize: 18, lineHeight: 1, fontWeight: 800 }}>{score}</Typography><AssignmentOutlined sx={{ fontSize: 13, mt: 0.25 }} /></Stack></Box>
           <Box sx={{ minWidth: 0, px: { sm: 1.25 }, py: { sm: 0.7 }, border: { sm: '1px solid' }, borderColor: { sm: 'divider' }, borderRadius: { sm: 1 }, bgcolor: { sm: '#f8f8f8' } }}><Typography sx={{ fontSize: { xs: 11.5, sm: 13 }, lineHeight: 1.15, fontWeight: 750 }}>{t('workflowRequest.requestScore', { score })}</Typography><Typography color="text.secondary" sx={{ fontSize: { xs: 10.5, sm: 11.5 }, lineHeight: 1.1 }}>{t('workflowRequest.scoreHelp')}</Typography></Box>
         </Stack>

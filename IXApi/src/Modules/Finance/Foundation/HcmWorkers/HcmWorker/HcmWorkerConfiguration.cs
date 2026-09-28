@@ -15,10 +15,6 @@ public sealed class HcmWorkerConfiguration : IEntityTypeConfiguration<HcmWorker>
             .WithMany()
             .HasForeignKey(x => x.Person)
             .OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne(x => x.Occupation)
-            .WithMany()
-            .HasForeignKey(x => x.OccupationId)
-            .OnDelete(DeleteBehavior.Restrict);
         builder.HasOne(x => x.Gender)
             .WithMany()
             .HasForeignKey(x => x.GenderId)

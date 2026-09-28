@@ -7,6 +7,7 @@ public class HcmShowroomDtoValidator : BaseValidator<HcmShowroomDto>
 {
     public HcmShowroomDtoValidator()
     {
-        RuleFor(x => x.Party).GreaterThan(0).WithMessage("Party is required.");
+        RuleFor(x => x.Name).NotEmpty().WithMessage("Name is required.");
+        RuleFor(x => x.PersonnelNumber).MaximumLength(25);
     }
 }

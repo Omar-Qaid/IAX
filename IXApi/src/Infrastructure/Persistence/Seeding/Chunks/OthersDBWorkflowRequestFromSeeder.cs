@@ -123,34 +123,62 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
                 OwnerAccountId = by,
             })
             .ToList();
+        var detailOptions = await LoadRequestOptionsAsync(db, details, ct);
 
         foreach (var request in Requests.Where(request => request.Id == requestId))
         {
-            if (await db.WfRequests.IgnoreQueryFilters().AnyAsync(row => row.RecId == request.Id, ct))
-                continue;
-
-            db.WfRequests.Add(new WfRequest
+            var seededRequest = await db.WfRequests.IgnoreQueryFilters()
+                .SingleOrDefaultAsync(row => row.RecId == request.Id, ct);
+            if (seededRequest is null)
             {
-                RecId = request.Id,
-                Code = request.Id.ToString(),
-                Name = $"Daily fund closing - {request.Date:yyyy-MM-dd}",
-                ProcessId = ProcessId,
-                EmployeeId = 157424,
-                RequestDate = request.Date,
-                RequestDetails = BuildXml(details.Where(detail => detail.RequestId == request.Id)),
-                IsFinished = true,
-                FinishedDate = request.Finished,
-                Progress = 100,
-                IsActive = true,
-                CreatedAt = request.Date,
-                CreatedBy = request.CreatedBy,
-                OwnerAccountId = by,
-            });
-            await SaveIdentityAsync(db, "WfRequests", ct);
+                seededRequest = new WfRequest { RecId = request.Id, CreatedBy = request.CreatedBy, OwnerAccountId = by };
+                db.WfRequests.Add(seededRequest);
+            }
+            seededRequest.Code = request.Id.ToString();
+            seededRequest.Name = $"Daily fund closing - {request.Date:yyyy-MM-dd}";
+            seededRequest.ProcessId = ProcessId;
+            seededRequest.EmployeeId = 157424;
+            seededRequest.RequestDate = request.Date;
+            seededRequest.RequestDetails = BuildXml(
+                details.Where(detail => detail.RequestId == request.Id), detailOptions);
+            seededRequest.IsFinished = true;
+            seededRequest.FinishedDate = request.Finished;
+            seededRequest.Progress = 100;
+            seededRequest.IsActive = true;
+            seededRequest.IsDeleted = false;
+            seededRequest.CreatedAt = request.Date;
+            if (db.Entry(seededRequest).State == EntityState.Added)
+                await SaveIdentityAsync(db, "WfRequests", ct);
+            else
+                await db.SaveChangesAsync(ct);
         }
 
         foreach (var d in details)
-            if (!await db.WfRequestDetails.IgnoreQueryFilters().AnyAsync(x => x.RecId == d.RecId, ct)) { db.WfRequestDetails.Add(d); await SaveIdentityAsync(db, "WfRequestDetails", ct); }
+        {
+            var existingDetail = await db.WfRequestDetails.IgnoreQueryFilters()
+                .SingleOrDefaultAsync(x => x.RecId == d.RecId, ct);
+            if (existingDetail is null)
+            {
+                db.WfRequestDetails.Add(d);
+                await SaveIdentityAsync(db, "WfRequestDetails", ct);
+                continue;
+            }
+            existingDetail.ProcessId = d.ProcessId;
+            existingDetail.RequestId = d.RequestId;
+            existingDetail.ControlId = d.ControlId;
+            existingDetail.ControlDataId = d.ControlDataId;
+            existingDetail.Name = d.Name;
+            existingDetail.NameAlias = d.NameAlias;
+            existingDetail.ControlValue = d.ControlValue;
+            existingDetail.SortOrder = d.SortOrder;
+            existingDetail.ValueAlias = d.ValueAlias;
+            existingDetail.Value = d.Value;
+            existingDetail.Score = d.Score;
+            existingDetail.EarnedScore = d.EarnedScore;
+            existingDetail.IsActive = true;
+            existingDetail.IsDeleted = false;
+            await db.SaveChangesAsync(ct);
+        }
         foreach (var a in Assignments.Where(x => x.Request == requestId))
             if (!await db.WfAssignments.IgnoreQueryFilters().AnyAsync(x => x.RecId == a.Id, ct)) { db.WfAssignments.Add(new WfAssignment { RecId = a.Id, RequestId = a.Request, ActivityId = a.Activity, UserId = a.User, AssignDate = a.Assigned, IsFinished = true, FinishedDate = a.Finished, AutoPassing = a.AutoPassing, AutoPassingHrs = a.Hours, StepId = a.Step, Automatically = a.Automatically, CreatedBy = by, OwnerAccountId = by }); await SaveIdentityAsync(db, "WfAssignments", ct); }
         var selectedAssignmentIds = Assignments.Where(x => x.Request == requestId).Select(x => x.Id).ToHashSet();
@@ -381,7 +409,8 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
             if (newRequestDetails.Count > 0)
                 db.WfRequestDetails.AddRange(newRequestDetails);
 
-            var serializedRequestDetails = BuildXml(requestDetails);
+            var requestOptions = await LoadRequestOptionsAsync(db, requestDetails, ct);
+            var serializedRequestDetails = BuildXml(requestDetails, requestOptions);
             if (newRequestDetails.Count > 0
                 || !string.Equals(request.RequestDetails, serializedRequestDetails, StringComparison.Ordinal))
             {
@@ -816,7 +845,26 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
         return JsonSerializer.Serialize(document, new JsonSerializerOptions(JsonSerializerDefaults.Web));
     }
 
-    private static string BuildXml(IEnumerable<WfRequestDetail> rows) => new XElement("Details", rows.OrderBy(x => x.SortOrder).Select(x => new XElement("Control", new XElement("ControlDataId", x.ControlDataId), new XElement("ControlValue", x.ControlValue), new XElement("ControlId", x.ControlId), new XElement("ControlOrder", x.SortOrder), new XElement("RelatedObjectId", x.ProcessId ?? ProcessId)))).ToString(SaveOptions.DisableFormatting);
+    private static string BuildXml(
+        IEnumerable<WfRequestDetail> rows,
+        IEnumerable<WfRequestControlsOption>? options = null) =>
+        WfRequestService.SerializeRequestDetails(ProcessId, rows, options);
+
+    private static async System.Threading.Tasks.Task<List<WfRequestControlsOption>> LoadRequestOptionsAsync(
+        ApplicationDbContext db,
+        IEnumerable<WfRequestDetail> details,
+        CancellationToken ct)
+    {
+        var controlIds = details.Where(detail => detail.ControlDataId.HasValue)
+            .Select(detail => detail.ControlDataId!.Value).Distinct().ToList();
+        return controlIds.Count == 0
+            ? []
+            : await db.WfRequestControlsOptions.IgnoreQueryFilters().AsNoTracking()
+                .Where(option => controlIds.Contains(option.RequestControlId)
+                    && option.IsActive && !option.IsDeleted)
+                .OrderBy(option => option.SortOrder).ThenBy(option => option.RecId)
+                .ToListAsync(ct);
+    }
     private static string BuildXml(IEnumerable<WfActivityDetail> rows) => new XElement("Details", rows.OrderBy(x => x.SortOrder).Select(x => new XElement("Control", new XElement("ControlDataId", x.ControlDataId), new XElement("ControlValue", x.ControlValue), new XElement("ControlId", x.ControlId),  new XElement("ControlOrder", x.SortOrder), new XElement("RelatedObjectId", 0)))).ToString(SaveOptions.DisableFormatting);
 
     private static async System.Threading.Tasks.Task AddMissingAsync<TEntity>(ApplicationDbContext db, DbSet<TEntity> set, IEnumerable<TEntity> source, CancellationToken ct) where TEntity : class, IBaseEntity

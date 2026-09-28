@@ -2,6 +2,7 @@ using IAX.IXApi.Modules.Identity.Permissions;
 using IAX.IXApi.Api.Controllers;
 using IAX.IXApi.Shared.Application.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +21,36 @@ namespace IAX.IXApi.Modules.Workflow.Performers
             _unitOfWork = unitOfWork;
         }
 
+        public override async Task<ActionResult<APIResponse<IEnumerable<WfPerformerDto>>>> GetAll(
+            CancellationToken cancellationToken = default)
+        {
+            var performers = (await _service.GetAllAsync(cancellationToken: cancellationToken)).ToList();
+            var performerIds = performers.Select(item => item.RecId).ToList();
+            var usersByPerformer = await _unitOfWork.Repository<WfPerformerUsers>()
+                .GetQueryable()
+                .AsNoTracking()
+                .Where(item => performerIds.Contains(item.PerformerId))
+                .GroupBy(item => item.PerformerId)
+                .ToDictionaryAsync(
+                    group => group.Key,
+                    group => group.Select(item => item.UserID).ToList(),
+                    cancellationToken);
+            var workerIds = usersByPerformer.Values.SelectMany(ids => ids).Distinct().ToList();
+            var workerOptions = await LoadWorkerOptionsAsync(workerIds, cancellationToken);
+
+            var result = performers.Select(entity =>
+            {
+                var dto = entity.Adapt<WfPerformerDto>();
+                dto.UserIds = usersByPerformer.GetValueOrDefault(entity.RecId) ?? [];
+                dto.UserOptions = dto.UserIds
+                    .Where(workerOptions.ContainsKey)
+                    .Select(workerId => workerOptions[workerId])
+                    .ToList();
+                return dto;
+            });
+            return Ok(APIResponse<IEnumerable<WfPerformerDto>>.Ok(result));
+        }
+
         public override async Task<ActionResult<APIResponse<WfPerformerDto>>> GetById(string id, CancellationToken cancellationToken = default)
         {
             var entity = await _service.GetByIdAsync(id, include: null!, cancellationToken: cancellationToken);
@@ -35,6 +66,7 @@ namespace IAX.IXApi.Modules.Workflow.Performers
                 .Where(x => x.PerformerId == entity.RecId)
                 .Select(x => x.UserID)
                 .ToListAsync(cancellationToken);
+            dto.UserOptions = (await LoadWorkerOptionsAsync(dto.UserIds, cancellationToken)).Values.ToList();
 
             return Ok(APIResponse<WfPerformerDto>.Ok(dto));
         }
@@ -48,6 +80,7 @@ namespace IAX.IXApi.Modules.Workflow.Performers
 
             var resultDto = created.Adapt<WfPerformerDto>();
             resultDto.UserIds = dto.UserIds ?? new();
+            resultDto.UserOptions = (await LoadWorkerOptionsAsync(resultDto.UserIds, cancellationToken)).Values.ToList();
             return Ok(APIResponse<WfPerformerDto>.Ok(resultDto, "Created successfully"));
         }
 
@@ -66,21 +99,60 @@ namespace IAX.IXApi.Modules.Workflow.Performers
 
             var resultDto = updated.Adapt<WfPerformerDto>();
             resultDto.UserIds = dto.UserIds ?? new();
+            resultDto.UserOptions = (await LoadWorkerOptionsAsync(resultDto.UserIds, cancellationToken)).Values.ToList();
             return Ok(APIResponse<WfPerformerDto>.Ok(resultDto, "Updated successfully"));
         }
 
         [HttpGet("sql-schema")]
         public ActionResult<APIResponse<Dictionary<string, string[]>>> GetSqlSchema()
         {
+            var commonFields = new[]
+            {
+                "RECID", "Code", "Name", "NameAlias", "Description", "IsActive", "DataAreaId"
+            };
             var schema = new Dictionary<string, string[]>
             {
-                ["OrgEmployees"] = new[] { "EmployeeId", "EmployeeName", "EmployeeNameAR", "DepartmentId", "JobId", "Activated" },
-                ["Departments"] = new[] { "DepartmentId", "DepartmentName", "DepartmentNameAR", "ParentId" },
-                ["OrgJobs"] = new[] { "JobId", "JobName", "JobNameAR" },
-                ["OrgCompanies"] = new[] { "CompanyId", "CompanyName", "CompanyNameAR" },
-                ["WfPerformers"] = new[] { "PerformerId", "PerformerName", "PerformerType" },
+                ["HcmDepartments"] = commonFields,
+                ["HcmOccupations"] = commonFields,
+                ["WfProcesses"] = commonFields.Concat(new[]
+                {
+                    "CategoryId", "Score", "IsRepeatable", "RepeatIntervalHours",
+                    "MandatoryDocuments", "PriorityId", "ProcessTypeId", "IsSystemDefined", "SortOrder"
+                }).ToArray(),
+                ["WfRequestControls"] = commonFields.Concat(new[]
+                {
+                    "ProcessId", "ControlId", "Score", "SortOrder", "CanFilter", "CanGroup",
+                    "CanSort", "ReferenceType", "FieldRole", "DataType", "DefaultAggregation"
+                }).ToArray(),
+                ["WfActivityControls"] = commonFields.Concat(new[]
+                {
+                    "ActivityId", "ProcessId", "ControlId", "Score", "SortOrder", "CanFilter",
+                    "CanGroup", "CanSort", "ReferenceType", "FieldRole", "DataType", "DefaultAggregation"
+                }).ToArray()
             };
+
             return Ok(APIResponse<Dictionary<string, string[]>>.Ok(schema));
+        }
+
+        [HttpGet("{performerId:long}/users")]
+        public async Task<ActionResult<APIResponse<IReadOnlyList<WfPerformerUserDto>>>> GetUsers(
+            long performerId,
+            CancellationToken cancellationToken = default)
+        {
+            var users = await _unitOfWork.Repository<WfPerformerUsers>()
+                .GetQueryable()
+                .AsNoTracking()
+                .Where(item => item.PerformerId == performerId)
+                .OrderBy(item => item.RecId)
+                .Select(item => new WfPerformerUserDto(
+                    item.RecId,
+                    item.PerformerId,
+                    item.UserID,
+                    item.RelatedField,
+                    item.ExtendedProperties))
+                .ToListAsync(cancellationToken);
+
+            return Ok(APIResponse<IReadOnlyList<WfPerformerUserDto>>.Ok(users));
         }
 
         private async Task SyncUsersAsync(long performerId, List<long>? userIds, CancellationToken cancellationToken)
@@ -109,6 +181,25 @@ namespace IAX.IXApi.Modules.Workflow.Performers
             }
 
             await _unitOfWork.CompleteAsync(cancellationToken);
+        }
+
+        private async Task<Dictionary<long, WfPerformerUserOptionDto>> LoadWorkerOptionsAsync(
+            IEnumerable<long> workerIds,
+            CancellationToken cancellationToken)
+        {
+            var ids = workerIds.Distinct().ToList();
+            if (ids.Count == 0) return [];
+
+            return await _unitOfWork.Repository<HcmWorker>()
+                .GetQueryable()
+                .AsNoTracking()
+                .Where(worker => ids.Contains(worker.RecId))
+                .Select(worker => new WfPerformerUserOptionDto(
+                    worker.RecId,
+                    worker.PersonnelNumber,
+                    worker.Party.Name,
+                    worker.Party.NameAlias))
+                .ToDictionaryAsync(worker => worker.Id, cancellationToken);
         }
     }
 }

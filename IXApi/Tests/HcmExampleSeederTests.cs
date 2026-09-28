@@ -43,7 +43,6 @@ public sealed class HcmExampleSeederTests
             Assert.Equal("dat", x.HcmManager.DataAreaId);
             Assert.NotNull(x.Department);
             Assert.NotNull(x.Occupation);
-            Assert.Equal(x.HcmWorker.OccupationId, x.OccupationId);
         });
         Assert.Equal(2, await db.Set<HcmWorkerShowroomAssignment>().CountAsync());
 

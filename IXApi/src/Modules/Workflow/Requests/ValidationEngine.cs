@@ -34,6 +34,12 @@ namespace IAX.IXApi.Modules.Workflow.Requests
             var controlsList = await _context.WfRequestControls
                 .Where(c => c.ProcessId == processId)
                 .ToListAsync();
+            var currentRequest = requestId.HasValue && requestId.Value > 0
+                ? await _context.WfRequests.AsNoTracking()
+                    .Where(request => request.RecId == requestId.Value)
+                    .Select(request => new { request.EmployeeId, request.CreatedBy })
+                    .FirstOrDefaultAsync()
+                : null;
 
             var detailLookup = new Dictionary<string, string>(); // code -> value
             var idLookup = new Dictionary<long, string>(); // requestControlId -> value
@@ -138,6 +144,7 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                         break;
 
                     case "unique":
+                    case "uniqueglobal":
                         if (!string.IsNullOrEmpty(value))
                         {
                             // If it's a new request, requestId is null or 0.
@@ -151,6 +158,20 @@ namespace IAX.IXApi.Modules.Workflow.Requests
 
                             var exists = await query.AnyAsync();
                             isValid = !exists;
+                        }
+                        break;
+
+                    case "uniqueperapplicant":
+                        if (!string.IsNullOrEmpty(value) && currentRequest != null)
+                        {
+                            var query = _context.WfRequestDetails.Where(detail =>
+                                detail.ControlDataId == requestControlId && detail.ControlValue == value &&
+                                detail.RequestId != requestId!.Value &&
+                                _context.WfRequests.Any(request => request.RecId == detail.RequestId &&
+                                    (currentRequest.EmployeeId.HasValue
+                                        ? request.EmployeeId == currentRequest.EmployeeId.Value
+                                        : request.CreatedBy == currentRequest.CreatedBy)));
+                            isValid = !await query.AnyAsync();
                         }
                         break;
 

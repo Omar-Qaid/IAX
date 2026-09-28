@@ -4,6 +4,7 @@ export const PERMISSIONS = {
   HCM_WORKER_CREATE: 'Organization.Employees.Create',
   HCM_WORKER_EDIT: 'Organization.Employees.Edit',
   HCM_WORKER_DELETE: 'Organization.Employees.Delete',
+  HCM_SHOWROOM_VIEW: 'Organization.Showrooms.View',
   DASHBOARD_VIEW: 'Application.Dashboard.View',
 
   CUSTOMER_VIEW: 'AccountsReceivable.Customers.View',
@@ -66,6 +67,11 @@ export const PERMISSIONS = {
   WF_ACTIVITY_CREATE: 'Workflow.Activities.Create',
   WF_ACTIVITY_EDIT: 'Workflow.Activities.Edit',
   WF_ACTIVITY_DELETE: 'Workflow.Activities.Delete',
+
+  WF_PERFORMER_VIEW: 'Workflow.Performers.View',
+  WF_PERFORMER_CREATE: 'Workflow.Performers.Create',
+  WF_PERFORMER_EDIT: 'Workflow.Performers.Edit',
+  WF_PERFORMER_DELETE: 'Workflow.Performers.Delete',
 
   WF_PRINT_TEMPLATE_VIEW: 'Workflow.PrintTemplates.View',
   WF_PRINT_TEMPLATE_CREATE: 'Workflow.PrintTemplates.Create',

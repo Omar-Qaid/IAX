@@ -51,10 +51,37 @@ public sealed partial class WfProcess590SeedData
             new WfRequestDetail { RecId = 1496094L, RequestId = 127677L, ControlId = 10, ControlDataId = 20528L, Name = "Proof of Violation Attached", NameAlias = "يرجى ارفاق اثبات المخالفة ؟", ControlValue = null!, ProcessId = 590L, SortOrder = 8, Score = 0 },
         };
 
+        WfRequestService.ApplyRequestDetailSnapshotValues(requestDetailsXml, requestDetails);
+        var requestOptions = await db.WfRequestControlsOptions.IgnoreQueryFilters()
+            .Where(option => requestDetails.Select(detail => detail.ControlDataId).Contains(option.RequestControlId))
+            .ToListAsync(ct);
+        var seededRequest = await db.WfRequests.IgnoreQueryFilters()
+            .SingleAsync(item => item.RecId == 127677L, ct);
+        seededRequest.RequestDetails = WfRequestService.SerializeRequestDetails(590L, requestDetails, requestOptions);
+
         foreach (var rd in requestDetails)
         {
-            if (!await db.Set<WfRequestDetail>().IgnoreQueryFilters().AnyAsync(x => x.RecId == rd.RecId, ct))
+            var existing = await db.Set<WfRequestDetail>().IgnoreQueryFilters()
+                .FirstOrDefaultAsync(x => x.RecId == rd.RecId, ct);
+            if (existing is null)
                 db.Set<WfRequestDetail>().Add(rd);
+            else
+            {
+                existing.ProcessId = rd.ProcessId;
+                existing.RequestId = rd.RequestId;
+                existing.ControlId = rd.ControlId;
+                existing.ControlDataId = rd.ControlDataId;
+                existing.Name = rd.Name;
+                existing.NameAlias = rd.NameAlias;
+                existing.ControlValue = rd.ControlValue;
+                existing.SortOrder = rd.SortOrder;
+                existing.ValueAlias = rd.ValueAlias;
+                existing.Value = rd.Value;
+                existing.Score = rd.Score;
+                existing.EarnedScore = rd.EarnedScore;
+                existing.IsActive = true;
+                existing.IsDeleted = false;
+            }
         }
         await SaveWithIdentityAsync(db, "WfRequestDetails", ct);
 

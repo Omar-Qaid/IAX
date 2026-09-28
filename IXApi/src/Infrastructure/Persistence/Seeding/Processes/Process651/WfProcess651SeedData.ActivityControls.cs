@@ -18,7 +18,7 @@ public sealed partial class WfProcess651SeedData
 
         var toAdd = new List<WfActivityControl>();
         var generatedControls = new List<WfActivityControl>();
-        string RequiredRule = "[{\"rule\":\"required\"}]";
+        string RequiredRule = "{\"validations\":[{\"type\":\"required\",\"active\":true}]}";
 
         var items = new[]
         {

@@ -15,6 +15,6 @@ public class WfRequestDetailConfiguration : IEntityTypeConfiguration<WfRequestDe
             .HasColumnName("ControlLabelAlias")
             .IsRequired()
             .HasDefaultValue(string.Empty);
-        builder.Property(item => item.ControlValue).HasMaxLength(255);
+        builder.Property(item => item.ControlValue).HasColumnType("nvarchar(max)");
     }
 }

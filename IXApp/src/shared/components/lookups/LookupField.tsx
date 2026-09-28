@@ -1,6 +1,6 @@
 import { localizedName } from '@shared/utilities/localizedName';
 import React, { useMemo, useState } from 'react';
-import { Autocomplete, TextField, InputAdornment, IconButton } from '@mui/material';
+import { Autocomplete, Box, TextField, InputAdornment, IconButton } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import { LookupDialog } from './LookupDialog';
@@ -100,6 +100,7 @@ function SelectLookup({
   queryKey,
   pageSize = 50,
   searchDebounceMs = 350,
+  showAllNamesInOptions = false,
 }: LookupFieldProps) {
   const { isRtl } = useAppTranslation();
   const usesServerDataSource = sideMode === 'server' && Boolean(fetchPage || onFetchOptions);
@@ -179,6 +180,17 @@ function SelectLookup({
         onChange?.(option?.id ?? null, option ?? undefined);
       }}
       getOptionLabel={(option) => localizedName(option, isRtl)}
+      renderOption={showAllNamesInOptions ? (optionProps, option) => (
+        <Box component="li" {...optionProps} aria-label={localizedName(option, isRtl)} sx={{ display: 'grid !important', gap: 0.2 }}>
+          <Box component="span" sx={{ fontSize: 12, fontWeight: 800 }}>{option.code}</Box>
+          <Box component="span" sx={{ fontSize: 13 }}>{option.name}</Box>
+          {option.nameAlias?.trim() && option.nameAlias.trim() !== option.name.trim() ? (
+            <Box component="span" dir="rtl" sx={{ fontSize: 12, color: 'text.secondary', textAlign: 'start' }}>
+              {option.nameAlias}
+            </Box>
+          ) : null}
+        </Box>
+      ) : undefined}
       isOptionEqualToValue={(option, selectedOption) =>
         String(option.id) === String(selectedOption.id)
       }
@@ -230,6 +242,7 @@ export function LookupField<TFieldValues extends FieldValues = FieldValues>({
   queryKey,
   pageSize,
   searchDebounceMs,
+  showAllNamesInOptions = false,
 }: LookupFieldProps<TFieldValues>): React.ReactElement {
   const { t, isRtl } = useAppTranslation();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -275,6 +288,7 @@ export function LookupField<TFieldValues extends FieldValues = FieldValues>({
         queryKey={queryKey}
         pageSize={pageSize}
         searchDebounceMs={searchDebounceMs}
+        showAllNamesInOptions={showAllNamesInOptions}
       />
     );
   }

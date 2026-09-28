@@ -28,6 +28,10 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                 .HasMaxLength(500)
                 .IsRequired();
 
+            builder.Property(x => x.NameAlias)
+                .HasColumnName("NameAlias")
+                .HasMaxLength(255);
+
             builder.Property(x => x.SortOrder)
                 .HasColumnName("SortOrder");
 

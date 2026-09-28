@@ -5,6 +5,7 @@ using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Persistence;
+using IAX.IXApi.Modules.Finance.Foundation.WorkerShowroomAssignments;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.Foundation.HcmShowrooms;
@@ -38,6 +39,14 @@ public class HcmShowroomService : BaseService<HcmShowroom>, IHcmShowroomService
             var partyNumber = partyNumberResult.Code ?? Guid.NewGuid().ToString("N")[..20];
             var partyName = name.Trim();
             var partyAlias = string.IsNullOrWhiteSpace(nameAlias) ? partyName : nameAlias.Trim();
+
+            if (string.IsNullOrWhiteSpace(entity.PersonnelNumber))
+            {
+                var showroomNumberResult = await _numberSequenceService.NextAsync(
+                    "HcmShowroom",
+                    cancellationToken: cancellationToken);
+                entity.PersonnelNumber = showroomNumberResult.Code ?? Guid.NewGuid().ToString("N")[..20];
+            }
 
             var party = new DirPartyTable
             {
@@ -95,5 +104,84 @@ public class HcmShowroomService : BaseService<HcmShowroom>, IHcmShowroomService
             : nameAlias.Trim();
         entity.PartyTable = party;
         return await base.UpdateAsync(entity, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<HcmShowroomWorkerAssignmentDto>> GetWorkerAssignmentsAsync(
+        long showroomId,
+        CancellationToken cancellationToken = default) =>
+        await _dbContext.HcmWorkerShowroomAssignments
+            .AsNoTracking()
+            .Where(assignment => assignment.HcmShowroomId == showroomId)
+            .OrderByDescending(assignment => assignment.IsPrimary)
+            .ThenByDescending(assignment => assignment.ValidFrom)
+            .ThenByDescending(assignment => assignment.RecId)
+            .Select(assignment => new HcmShowroomWorkerAssignmentDto(
+                assignment.RecId,
+                assignment.HcmWorkerId,
+                assignment.HcmWorker.PersonnelNumber,
+                assignment.HcmWorker.Party.Name,
+                assignment.HcmWorker.Party.NameAlias,
+                assignment.ValidFrom,
+                assignment.ValidTo,
+                assignment.IsPrimary,
+                assignment.IsActive))
+            .ToListAsync(cancellationToken);
+
+    public async Task SaveWorkerAssignmentAsync(
+        long showroomId,
+        long? assignmentId,
+        SaveHcmShowroomWorkerAssignmentRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (request.ValidFrom == default)
+            throw new InvalidOperationException("Valid from is required.");
+        if (request.ValidTo is not null && request.ValidTo <= request.ValidFrom)
+            throw new InvalidOperationException("Valid to must be later than valid from.");
+
+        var showroom = await _dbContext.HcmShowrooms.AsNoTracking()
+            .SingleOrDefaultAsync(item => item.RecId == showroomId && item.IsActive, cancellationToken)
+            ?? throw new KeyNotFoundException("Showroom not found.");
+        _ = await _dbContext.HcmWorkers.AsNoTracking()
+            .SingleOrDefaultAsync(item => item.RecId == request.HcmWorkerId && item.IsActive, cancellationToken)
+            ?? throw new KeyNotFoundException("Worker not found.");
+
+        HcmWorkerShowroomAssignment assignment;
+        if (assignmentId is long id)
+        {
+            assignment = await _dbContext.HcmWorkerShowroomAssignments
+                .SingleOrDefaultAsync(item => item.RecId == id && item.HcmShowroomId == showroomId, cancellationToken)
+                ?? throw new KeyNotFoundException("Showroom assignment not found.");
+        }
+        else
+        {
+            assignment = new HcmWorkerShowroomAssignment
+            {
+                HcmShowroomId = showroomId,
+                HcmWorkerId = request.HcmWorkerId,
+                DataAreaId = showroom.DataAreaId
+            };
+            _dbContext.HcmWorkerShowroomAssignments.Add(assignment);
+        }
+
+        assignment.HcmWorkerId = request.HcmWorkerId;
+        assignment.ValidFrom = request.ValidFrom;
+        assignment.ValidTo = request.ValidTo;
+        assignment.IsPrimary = true;
+        assignment.IsActive = request.IsActive;
+
+        var previousPrimary = await _dbContext.HcmWorkerShowroomAssignments
+            .Where(item => item.HcmWorkerId == request.HcmWorkerId && item.RecId != assignment.RecId && item.IsPrimary)
+            .ToListAsync(cancellationToken);
+        foreach (var previous in previousPrimary)
+        {
+            previous.IsPrimary = false;
+            if (assignmentId is null)
+            {
+                previous.IsActive = false;
+                if (request.ValidFrom > previous.ValidFrom) previous.ValidTo = request.ValidFrom;
+            }
+        }
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

@@ -294,21 +294,55 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             #endregion
 
             #region WfPerformerTypes
-            if (!await db.Set<WfPerformerType>().AnyAsync(ct))
+            var performerTypeDefinitions = new[]
             {
-                db.Set<WfPerformerType>().Add(new WfPerformerType
+                new { RecId = (short)1, Code = "ORGANIZATIONAL", Name = "OrganizationalPerformer", NameAlias = "منفذ تنظيمي" },
+                new { RecId = (short)2, Code = "REQUEST_CONTROL", Name = "RequestControlPerformer", NameAlias = "منفذ من حقل نموذج الطلب" },
+                new { RecId = (short)3, Code = "ACTIVITY_CONTROL", Name = "ActivityControlPerformer", NameAlias = "منفذ من حقل نموذج النشاط" },
+                new { RecId = (short)4, Code = "USER", Name = "UserPerformer", NameAlias = "منفذ من المستخدمين المحددين" },
+                new { RecId = (short)5, Code = "QUERY_DATABASE", Name = "QueryDatabasePerformer", NameAlias = "منفذ استعلام قاعدة البيانات" }
+            };
+            var existingPerformerTypes = await db.Set<WfPerformerType>()
+                .IgnoreQueryFilters()
+                .Where(item => item.RecId >= 1 && item.RecId <= 5)
+                .ToDictionaryAsync(item => item.RecId, ct);
+            var missingPerformerTypes = new List<WfPerformerType>();
+
+            foreach (var definition in performerTypeDefinitions)
+            {
+                if (existingPerformerTypes.TryGetValue(definition.RecId, out var existingPerformerType))
                 {
-                    RecId = 1,
-                    Code = "RELATIONAL",
-                    Name = "Relational",
-                    SortOrder = 1,
+                    existingPerformerType.Code = definition.Code;
+                    existingPerformerType.Name = definition.Name;
+                    existingPerformerType.NameAlias = definition.NameAlias;
+                    existingPerformerType.SortOrder = (byte)definition.RecId;
+                    existingPerformerType.IsActive = true;
+                    continue;
+                }
+
+                missingPerformerTypes.Add(new WfPerformerType
+                {
+                    RecId = definition.RecId,
+                    Code = definition.Code,
+                    Name = definition.Name,
+                    NameAlias = definition.NameAlias,
+                    SortOrder = (byte)definition.RecId,
                     IsActive = true,
                     CreatedBy = "sys",
                     CreatedAt = DateTime.UtcNow,
                     OwnerAccountId = "sys",
                     DataAreaId = "dat"
                 });
+            }
+
+            if (missingPerformerTypes.Count > 0)
+            {
+                await db.Set<WfPerformerType>().AddRangeAsync(missingPerformerTypes, ct);
                 await SeedWithIdentityInsertAsync(db, "WfPerformerType", ct);
+            }
+            else
+            {
+                await db.SaveChangesAsync(ct);
             }
             #endregion
 

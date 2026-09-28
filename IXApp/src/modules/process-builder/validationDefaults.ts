@@ -11,6 +11,8 @@ export const DEFAULT_VALIDATION_MESSAGES: Record<BuilderValidationType, string> 
   maxDate: 'Select a date on or before the maximum allowed date.',
   maxValue: 'The value exceeds the maximum allowed value.',
   range: 'The value is outside the allowed range.',
+  uniquePerApplicant: 'This value has already been used by the applicant.',
+  uniqueGlobal: 'This value has already been used.',
   regex: 'The value does not match the required pattern.',
   pattern: 'The value does not match the required pattern.',
   startsWith: 'The value does not start with the required text.',

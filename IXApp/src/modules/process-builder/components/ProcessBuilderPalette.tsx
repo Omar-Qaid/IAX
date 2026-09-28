@@ -44,7 +44,6 @@ export const controlPalette: ReadonlyArray<{ type: BuilderControlType; label: st
   { type: 'table', label: 'Table', icon: <GridOn fontSize="small" /> },
   { type: 'label', label: 'Label', icon: <TextFields fontSize="small" /> },
   { type: 'employeesearch', label: 'EmployeeSearch', icon: <HowToReg fontSize="small" /> },
-  { type: 'employeeid', label: 'Employee ID', icon: <HowToReg fontSize="small" /> },
   { type: 'file', label: 'File', icon: <CloudUpload fontSize="small" /> },
   { type: 'showroom', label: 'ShowRoom', icon: <Search fontSize="small" /> },
   { type: 'signature', label: 'Signature', icon: <Draw fontSize="small" /> },

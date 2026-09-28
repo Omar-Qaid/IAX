@@ -8,6 +8,7 @@ public sealed class HcmShowroomConfiguration : IEntityTypeConfiguration<HcmShowr
     public void Configure(EntityTypeBuilder<HcmShowroom> builder)
     {
         builder.ToTable("HcmShowroom");
+        builder.HasIndex(x => new { x.DataAreaId, x.PersonnelNumber }).IsUnique();
         builder.HasOne(x => x.PartyTable)
             .WithMany()
             .HasForeignKey(x => x.Party)

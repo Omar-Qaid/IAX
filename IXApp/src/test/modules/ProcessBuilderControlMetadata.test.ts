@@ -12,4 +12,9 @@ describe('control metadata save validation', () => {
       expect(() => readControlMetadataForSave(value, 'Decision: ExtendedProperties')).toThrow('Decision: ExtendedProperties');
     }
   );
+
+  it('accepts legacy XML so it can be upgraded to JSON during save', () => {
+    const xml = '<Validation><Required>true</Required></Validation>';
+    expect(readControlMetadataForSave(xml, 'Date: ValidationRules')).toEqual({ legacyXml: xml });
+  });
 });

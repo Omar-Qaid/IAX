@@ -92,6 +92,8 @@ describe('module navigation configuration', () => {
   it('registers the backend-backed workflow processes page', () => {
     expect(getPageDefinition(ROUTE_PATHS.WORKFLOW.REQUEST_SUBMISSION)).toBeDefined();
     expect(getPageDefinition(ROUTE_PATHS.WORKFLOW.REQUEST_FROM)).toBeDefined();
+    expect(findPageDefinitionForPath('/workflow/request-from')?.id).toBe('request-from');
+    expect(findPageDefinitionForPath('/workflow/request-from/10')?.id).toBe('request-from');
     expect(findPageDefinitionForPath('/workflow/request-from/10/100')?.id).toBe('request-from');
     expect(
       AVAILABLE_MODULE_NAV_CONFIGS['mod-Workflow']?.sections.find(

@@ -52,5 +52,35 @@ namespace IAX.IXApi.Modules.Finance.Foundation.HcmShowrooms
             var result = await ReloadWithDefaultsAsync(id, cancellationToken) ?? updated;
             return Ok(APIResponse<HcmShowroomDto>.Ok(result.Adapt<HcmShowroomDto>(), "Updated successfully"));
         }
+
+        [HttpGet("{showroomId:long}/worker-assignments")]
+        public async Task<ActionResult<APIResponse<IReadOnlyList<HcmShowroomWorkerAssignmentDto>>>> GetWorkerAssignments(
+            long showroomId,
+            CancellationToken cancellationToken = default)
+        {
+            var assignments = await _showroomService.GetWorkerAssignmentsAsync(showroomId, cancellationToken);
+            return Ok(APIResponse<IReadOnlyList<HcmShowroomWorkerAssignmentDto>>.Ok(assignments));
+        }
+
+        [HttpPost("{showroomId:long}/worker-assignments")]
+        public async Task<ActionResult<APIResponse<bool>>> CreateWorkerAssignment(
+            long showroomId,
+            SaveHcmShowroomWorkerAssignmentRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            await _showroomService.SaveWorkerAssignmentAsync(showroomId, null, request, cancellationToken);
+            return Ok(APIResponse<bool>.Ok(true, "Created successfully"));
+        }
+
+        [HttpPut("{showroomId:long}/worker-assignments/{assignmentId:long}")]
+        public async Task<ActionResult<APIResponse<bool>>> UpdateWorkerAssignment(
+            long showroomId,
+            long assignmentId,
+            SaveHcmShowroomWorkerAssignmentRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            await _showroomService.SaveWorkerAssignmentAsync(showroomId, assignmentId, request, cancellationToken);
+            return Ok(APIResponse<bool>.Ok(true, "Updated successfully"));
+        }
     }
 }

@@ -18,7 +18,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.HcmWorkers
             _workerService = service;
         }
 
-        protected override string[]? GetDefaultIncludes() => new[] { "Party", "Occupation", "Gender", "Nationality", "WorkerOrganizationAssignmentsV1", "WorkerShowroomAssignments" };
+        protected override string[]? GetDefaultIncludes() => new[] { "Party", "Gender", "Nationality", "WorkerOrganizationAssignmentsV1", "WorkerShowroomAssignments" };
 
         public override async Task<ActionResult<APIResponse<IEnumerable<HcmWorkerDto>>>> GetAll(
             CancellationToken cancellationToken = default)

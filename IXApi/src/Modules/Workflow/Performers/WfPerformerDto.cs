@@ -18,5 +18,19 @@ namespace IAX.IXApi.Modules.Workflow.Performers
         public string? SqlWhere { get; set; }
 
         public List<long> UserIds { get; set; } = new();
+        public List<WfPerformerUserOptionDto> UserOptions { get; set; } = new();
     }
+
+    public sealed record WfPerformerUserOptionDto(
+        long Id,
+        string Code,
+        string Name,
+        string? NameAlias);
+
+    public sealed record WfPerformerUserDto(
+        long RecId,
+        long PerformerId,
+        long UserID,
+        long RelatedField,
+        string? ExtendedProperties);
 }

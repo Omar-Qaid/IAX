@@ -52,7 +52,7 @@ const optionControlTypes = new Set<BuilderControlType>([
   'radiobuttonlist',
   'table',
 ]);
-const builderControlType = (value: string): BuilderControlType => {
+export const builderControlType = (value: string): BuilderControlType => {
   const normalized = value.replace(/[^a-z0-9]/gi, '').toLocaleLowerCase();
   const types: BuilderControlType[] = [
     'digits',
@@ -79,6 +79,9 @@ const builderControlType = (value: string): BuilderControlType => {
   )
     return 'dropdown-db';
   if (normalized.includes('dropdown')) return 'dropdown-manual';
+  // WfControl RECID 1 is stored as code "number" and ControlType "TextBox".
+  // Treat that legacy metadata as the builder's numeric Digits control.
+  if (normalized.includes('number') || normalized.includes('numeric')) return 'digits';
   return types.find((type) => normalized.includes(type.replace(/[^a-z0-9]/gi, ''))) ?? 'text';
 };
 const parseObject = (value: string | null): Record<string, unknown> => {
@@ -108,7 +111,7 @@ const normalizeOptionFeatureConfiguration = (
       : [],
   };
 };
-const builderValidationType = (value: string): BuilderControl['validations'][number]['type'] => {
+export const builderValidationType = (value: string): BuilderControl['validations'][number]['type'] => {
   const normalized = value.replace(/[^a-z0-9]/gi, '').toLocaleLowerCase();
   const aliases: Record<string, BuilderControl['validations'][number]['type']> = {
     required: 'required',
@@ -123,11 +126,13 @@ const builderValidationType = (value: string): BuilderControl['validations'][num
     maxdate: 'maxDate',
     maxvalue: 'maxValue',
     range: 'range',
+    uniqueperapplicant: 'uniquePerApplicant',
+    uniqueglobal: 'uniqueGlobal',
     compare: 'compare',
-    comparison: 'comparison',
+    comparison: 'expression',
     expression: 'expression',
-    custom: 'custom',
-    customexpression: 'custom',
+    custom: 'expression',
+    customexpression: 'expression',
     crossfield: 'crossField',
     mask: 'mask',
     inputmask: 'inputMask',
@@ -148,7 +153,7 @@ const builderValidationType = (value: string): BuilderControl['validations'][num
     minselected: 'minSelected',
     maxselected: 'maxSelected',
   };
-  return aliases[normalized] ?? 'custom';
+  return aliases[normalized] ?? 'expression';
 };
 const builderActivityType = (value: string): BuilderActivity['type'] => {
   const normalized = value.replace(/[^a-z0-9]/gi, '').toLocaleLowerCase();
@@ -511,6 +516,27 @@ export async function loadProcessBuilder(processId: number, signal?: AbortSignal
         canGroup: control.canGroup ?? true,
         canSort: control.canSort ?? true,
         referenceType: control.referenceType ?? null,
+        referenceFilter: (() => {
+          const filter = properties.referenceFilter;
+          const item = filter && typeof filter === 'object' ? filter as Record<string, unknown> : {};
+          const departmentId = Number(item.departmentId);
+          const occupationId = Number(item.occupationId);
+          const managerLevel = Number(item.managerLevel);
+          const rules = Array.isArray(item.rules) ? item.rules
+            .filter((rule): rule is Record<string, unknown> => Boolean(rule) && typeof rule === 'object')
+            .map((rule, index) => ({
+              id: typeof rule.id === 'string' ? rule.id : `reference-filter-${index}`,
+              field: typeof rule.field === 'string' ? rule.field : '',
+              operator: typeof rule.operator === 'string' ? rule.operator : 'equals',
+              value: typeof rule.value === 'string' ? rule.value : '',
+            })).filter((rule) => rule.field) : [];
+          return {
+            departmentId: departmentId > 0 ? departmentId : null,
+            occupationId: occupationId > 0 ? occupationId : null,
+            managerLevel: ([1, 2, 3].includes(managerLevel) ? managerLevel : null) as 1 | 2 | 3 | null,
+            rules,
+          };
+        })(),
         fieldRole: control.fieldRole ?? 'Dimension',
         dataType: control.dataType ?? 'String',
         defaultAggregation: control.defaultAggregation ?? 'NONE',
@@ -1125,7 +1151,7 @@ async function syncActivityControls(
           dataAreaId: process.dataAreaId,
         }),
         activityControlId,
-        validationType: rule.type,
+        validationType: builderValidationType(rule.type),
         validationExpression: rule.secondaryValue.trim() || null,
         operator: rule.operator.trim() || null,
         value: rule.value.trim() || null,
@@ -1471,6 +1497,9 @@ export async function saveProcessRequestControls(
         usedAsCriteria: control.usedAsCriteria,
         defaultValue: control.defaultValue,
         columnSpan: control.columnSpan ?? 1,
+        referenceFilter: control.referenceType === 'Employee' || control.referenceType === 'Showroom'
+          ? control.referenceFilter ?? { departmentId: null, occupationId: null, managerLevel: null, rules: [] }
+          : undefined,
       }),
       isActive: control.visible,
     };
@@ -1510,7 +1539,7 @@ export async function saveProcessRequestControls(
           dataAreaId: process.dataAreaId,
         }),
         requestControlId,
-        validationType: rule.type,
+        validationType: builderValidationType(rule.type),
         validationExpression: rule.secondaryValue.trim() || null,
         operator: rule.operator.trim() || null,
         value: rule.value.trim() || null,

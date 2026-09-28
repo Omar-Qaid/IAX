@@ -16,7 +16,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks;
 public sealed partial class WfProcessSeedData : ISeeder
 {
     private const string ProcessCode = "PAYMENT_REQUEST";
-    private const string RequiredRule = "<Validation><Required>true</Required></Validation>";
+    private const string RequiredRule = "{\"validations\":[{\"type\":\"required\",\"active\":true}]}";
 
     public async Task SeedAsync(
         ApplicationDbContext db,

@@ -171,6 +171,8 @@ export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
   };
   permissions?: { view?: string; create?: string; edit?: string; delete?: string };
   validate?: (record: T) => Record<string, string> | Promise<Record<string, string>>;
+  /** Commits nested editors and returns the final record before validation and persistence. */
+  prepareSave?: (record: T) => T | Promise<T>;
   validationTitle?: string;
   showInformation?: boolean;
   advancedFilter?: {

@@ -49,8 +49,6 @@ public class HcmWorkerService : BaseService<HcmWorker>, IHcmWorkerService
                 Person = worker.Person,
                 Name = worker.Party.Name,
                 NameAlias = worker.Party.NameAlias,
-                OccupationId = worker.OccupationId,
-                OccupationName = worker.Occupation.Name,
                 GenderId = worker.GenderId,
                 GenderName = worker.Gender.Name,
                 NationalityId = worker.NationalityId,
@@ -72,7 +70,9 @@ public class HcmWorkerService : BaseService<HcmWorker>, IHcmWorkerService
             {
                 assignment.HcmWorkerId,
                 assignment.HcmManagerWorkerId,
-                assignment.DepartmentId
+                assignment.DepartmentId,
+                assignment.OccupationId,
+                OccupationName = assignment.Occupation != null ? assignment.Occupation.Name : null
             })
             .ToListAsync(cancellationToken);
         var organizationByWorker = organizationAssignments
@@ -96,6 +96,8 @@ public class HcmWorkerService : BaseService<HcmWorker>, IHcmWorkerService
             {
                 worker.ManagerWorkerId = organization.HcmManagerWorkerId;
                 worker.DepartmentId = organization.DepartmentId;
+                worker.OccupationId = organization.OccupationId ?? 0;
+                worker.OccupationName = organization.OccupationName;
             }
             if (showroomByWorker.TryGetValue(worker.RecId, out var showroom))
                 worker.ShowroomId = showroom.HcmShowroomId;
@@ -161,8 +163,16 @@ public class HcmWorkerService : BaseService<HcmWorker>, IHcmWorkerService
                     item.PersonnelNumber,
                     item.Party.Name,
                     item.Party.NameAlias,
-                    item.Occupation.Name,
-                    item.Occupation.NameAlias))
+                    item.WorkerOrganizationAssignmentsV1
+                        .Where(assignment => assignment.IsPrimary)
+                        .OrderByDescending(assignment => assignment.ValidFrom)
+                        .Select(assignment => assignment.Occupation != null ? assignment.Occupation.Name : null)
+                        .FirstOrDefault(),
+                    item.WorkerOrganizationAssignmentsV1
+                        .Where(assignment => assignment.IsPrimary)
+                        .OrderByDescending(assignment => assignment.ValidFrom)
+                        .Select(assignment => assignment.Occupation != null ? assignment.Occupation.NameAlias : null)
+                        .FirstOrDefault()))
                 .SingleOrDefaultAsync(cancellationToken);
             if (worker is null) break;
             chain.Add(worker);

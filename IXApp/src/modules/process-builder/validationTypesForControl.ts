@@ -1,19 +1,21 @@
 import type { BuilderControlType, BuilderValidationType } from './types/processBuilderTypes';
 
-const conditional: BuilderValidationType[] = ['compare', 'comparison', 'crossField', 'expression', 'custom'];
+// Keep legacy aliases supported by the API, but expose one canonical option for
+// each behavior in the Process Builder menu.
+const conditional: BuilderValidationType[] = ['compare', 'crossField', 'expression'];
 const text: BuilderValidationType[] = [
-  'required', 'minLength', 'maxLength', 'exactLength', 'length', 'regex', 'pattern',
+  'required', 'minLength', 'maxLength', 'exactLength', 'pattern',
   'startsWith', 'endsWith', 'contains', 'email', 'url', 'phone', 'saudiMobile',
-  'saudiNationalId', 'saudiIban', 'taxNumber', 'passport', 'mask', 'inputMask', ...conditional,
+  'saudiNationalId', 'saudiIban', 'taxNumber', 'passport', 'inputMask', ...conditional,
 ];
 const scalar: BuilderValidationType[] = ['required', ...conditional];
 const types: Record<BuilderControlType, readonly BuilderValidationType[]> = {
   text, longtext: text,
-  digits: ['required', 'minValue', 'maxValue', 'range', ...conditional],
+  digits: ['required', 'minValue', 'maxValue', 'range', 'uniquePerApplicant', 'uniqueGlobal', ...conditional],
   employeeid: ['required', ...conditional],
   date: ['required', 'minDate', 'maxDate', ...conditional],
   time: scalar,
-  url: ['required', 'url', 'minLength', 'maxLength', 'regex', 'pattern', ...conditional],
+  url: ['required', 'url', 'minLength', 'maxLength', 'pattern', ...conditional],
   'dropdown-db': scalar,
   'dropdown-manual': scalar,
   checkbox: scalar,

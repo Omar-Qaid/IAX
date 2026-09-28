@@ -88,8 +88,8 @@ public sealed class OthersDBOrganizationEmployeeSeeder : OthersDBSeedData
         foreach(var row in rows)
         {
             var code=EmployeeCode(row,duplicateCodes);
-            if(existingWorkers.TryGetValue(row.Id,out var worker)){worker.PersonnelNumber=code;worker.Person=parties[row.Id].RecId;worker.OccupationId=row.OccupationId;worker.GenderId=row.GenderId;worker.NationalityId=row.NationalityId;worker.IsActive=row.Active;worker.IsDeleted=false;}
-            else db.HcmWorkers.Add(new HcmWorker{RecId=row.Id,PersonnelNumber=code,Person=parties[row.Id].RecId,OccupationId=row.OccupationId,GenderId=row.GenderId,NationalityId=row.NationalityId,IsActive=row.Active,CreatedAt=row.CreatedAt,CreatedBy=row.CreatedBy??owner,OwnerAccountId=owner});
+            if(existingWorkers.TryGetValue(row.Id,out var worker)){worker.PersonnelNumber=code;worker.Person=parties[row.Id].RecId;worker.GenderId=row.GenderId;worker.NationalityId=row.NationalityId;worker.IsActive=row.Active;worker.IsDeleted=false;}
+            else db.HcmWorkers.Add(new HcmWorker{RecId=row.Id,PersonnelNumber=code,Person=parties[row.Id].RecId,GenderId=row.GenderId,NationalityId=row.NationalityId,IsActive=row.Active,CreatedAt=row.CreatedAt,CreatedBy=row.CreatedBy??owner,OwnerAccountId=owner});
         }
         await SaveWithOptionalIdentityAsync(db,"HcmWorker",ct);
     }

@@ -54,6 +54,8 @@ import {
 import { wfPerformerApi } from '@modules/workflow/api/wfPerformerApi';
 import { AppLookupGridField } from '@shared/components/fields/AppLookupGridField';
 import { AppLookupField } from '@shared/components/fields/AppLookupField';
+import { LookupField } from '@shared/components/lookups';
+import { referenceFilterApi } from '../api/referenceFilterApi';
 import { SortableBuilderItem } from './SortableBuilderItem';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 
@@ -80,6 +82,78 @@ const emptyOptionFeatures = (): BuilderOptionFeatureConfiguration => ({
   showOtherControls: false,
   visibleControlIds: [],
 });
+
+type ReferenceFilter = NonNullable<import('../types/processBuilderTypes').BuilderControl['referenceFilter']>;
+
+function ReferenceFilterEditor({
+  referenceType,
+  value,
+  onChange,
+}: {
+  referenceType: 'Employee' | 'Showroom';
+  value?: ReferenceFilter;
+  onChange: (value: ReferenceFilter) => void;
+}) {
+  const { t, isRtl } = useAppTranslation();
+  const fields = useQuery({
+    queryKey: ['workflow-reference-filter-fields', referenceType],
+    queryFn: ({ signal }) => referenceFilterApi.fields(referenceType, signal),
+  });
+  const rules = value?.rules ?? [];
+  const base = value ?? { departmentId: null, occupationId: null, managerLevel: null, rules: [] };
+  const updateRule = (id: string, patch: Partial<(typeof rules)[number]>) =>
+    onChange({ ...base, rules: rules.map((rule) => rule.id === id ? { ...rule, ...patch } : rule) });
+  return (
+    <Stack spacing="8px">
+      <Stack direction="row" alignItems="center" justifyContent="space-between">
+        <Typography sx={{ fontSize: 12, fontWeight: 800 }}>
+          {t('wfProcessBuilder.settings.referenceFilter', { defaultValue: 'Database filter' })}
+        </Typography>
+        <Button size="small" onClick={() => onChange({ ...base, rules: [...rules, { id: crypto.randomUUID(), field: '', operator: 'equals', value: '' }] })}>
+          {t('wfProcessBuilder.settings.addFilter', { defaultValue: 'Add filter' })}
+        </Button>
+      </Stack>
+      {rules.map((rule) => {
+        const field = fields.data?.find((item) => item.name === rule.field);
+        return (
+          <Stack key={rule.id} direction="row" spacing="6px" alignItems="flex-start">
+            <TextField select fullWidth size="small" label={t('wfProcessBuilder.settings.fields.field', { defaultValue: 'Field' })}
+              value={rule.field} onChange={(event) => {
+                const next = fields.data?.find((item) => item.name === event.target.value);
+                updateRule(rule.id, { field: event.target.value, operator: next?.operators[0] ?? 'equals', value: '' });
+              }}>
+              {(fields.data ?? []).map((item) => <MenuItem key={item.name} value={item.name}>{item.name}</MenuItem>)}
+            </TextField>
+            <TextField select fullWidth size="small" label={t('wfProcessBuilder.settings.fields.operator', { defaultValue: 'Operator' })}
+              value={rule.operator} disabled={!field} onChange={(event) => updateRule(rule.id, { operator: event.target.value })}>
+              {(field?.operators ?? []).map((operator) => <MenuItem key={operator} value={operator}>{operator}</MenuItem>)}
+            </TextField>
+            {field?.isForeignKey && !['isEmpty', 'isNotEmpty'].includes(rule.operator) ? (
+              <LookupField name={`referenceFilter_${rule.id}`} label={t('wfProcessBuilder.settings.fields.value', { defaultValue: 'Value' })}
+                value={rule.value || undefined} displayMode="select" searchable sideMode="server" lazyLoading pageSize={25}
+                queryKey={['workflow-reference-filter-values', referenceType, field.name]}
+                onChange={(next) => updateRule(rule.id, { value: next == null ? '' : String(next) })}
+                fetchPage={async (params) => {
+                  const page = await referenceFilterApi.values(referenceType, field.name, params);
+                  return { ...page, data: page.data.map((item) => ({ id: item.value, code: item.value, name: item.label, nameAlias: item.labelAlias })) };
+                }}
+              />
+            ) : !['isEmpty', 'isNotEmpty'].includes(rule.operator) ? (
+              <TextField fullWidth size="small" label={t('wfProcessBuilder.settings.fields.value', { defaultValue: 'Value' })}
+                type={field?.dataType === 'date' ? 'date' : field?.dataType === 'integer' || field?.dataType === 'decimal' ? 'number' : 'text'}
+                value={rule.value} onChange={(event) => updateRule(rule.id, { value: event.target.value })}
+                slotProps={field?.dataType === 'date' ? { inputLabel: { shrink: true } } : undefined} />
+            ) : <Box sx={{ flex: 1 }} />}
+            <IconButton size="small" aria-label={t('actions.delete')} onClick={() => onChange({ ...base, rules: rules.filter((item) => item.id !== rule.id) })}>
+              <Delete fontSize="small" />
+            </IconButton>
+          </Stack>
+        );
+      })}
+      {fields.isError ? <Typography color="error" sx={{ fontSize: 11 }}>{t('common.loadFailed', { defaultValue: 'Could not load fields.' })}</Typography> : null}
+    </Stack>
+  );
+}
 const builderTypeFromLabel = (
   label: string
 ): 'approval' | 'review' | 'data-entry' | 'api' | 'notification' => {
@@ -245,13 +319,20 @@ function ValidationRules({
   values,
   onChange,
   disabled = false,
+  allowRequestUniqueness = false,
 }: {
   controlType?: import('../types/processBuilderTypes').BuilderControlType;
   values: BuilderValidation[];
   onChange: (values: BuilderValidation[]) => void;
   disabled?: boolean;
+  allowRequestUniqueness?: boolean;
 }) {
   const { t } = useAppTranslation();
+  const validationHelp = (type: BuilderValidationType): string => {
+    const key = `wfProcessBuilder.settings.validationHelp.${type}`;
+    const translated = t(key);
+    return translated === key ? '' : translated;
+  };
   type ConditionalValidationField = 'value' | 'secondaryValue' | 'operator' | 'expression' | 'mask';
   const fieldsByType: Record<BuilderValidationType, readonly ConditionalValidationField[]> = {
     required: [],
@@ -266,6 +347,8 @@ function ValidationRules({
     maxDate: ['value'],
     maxValue: ['value'],
     range: ['value', 'secondaryValue'],
+    uniquePerApplicant: [],
+    uniqueGlobal: [],
     compare: ['operator', 'value'],
     comparison: ['operator', 'value'],
     crossField: ['operator', 'value'],
@@ -298,7 +381,9 @@ function ValidationRules({
     }));
   const update = (id: string, patch: Partial<BuilderValidation>) =>
     onChange(normalizeRules(values.map((rule) => (rule.id === id ? { ...rule, ...patch } : rule))));
-  const availableTypes = validationTypesForControl(controlType);
+  const availableTypes = validationTypesForControl(controlType).filter(
+    (type) => allowRequestUniqueness || (type !== 'uniquePerApplicant' && type !== 'uniqueGlobal')
+  );
   const changeType = (id: string, type: BuilderValidationType) => {
     const current = values.find((rule) => rule.id === id);
     if (!current) return;
@@ -372,14 +457,17 @@ function ValidationRules({
                 select
                 size="small"
                 label={t('wfProcessBuilder.settings.validationType')}
-                value={rule.type}
+                value={availableTypes.includes(rule.type) ? rule.type : ''}
+                helperText={availableTypes.includes(rule.type) ? validationHelp(rule.type) : ''}
                 onChange={(event) =>
                   changeType(rule.id, event.target.value as BuilderValidationType)
                 }
               >
-                {[...availableTypes, ...(!availableTypes.includes(rule.type) ? [rule.type] : [])].map((type) => (
+                {availableTypes.map((type) => (
                   <MenuItem key={type} value={type}>
-                    {t(`wfProcessBuilder.settings.validationTypes.${type}`)}
+                    <Box component="span" title={validationHelp(type)} sx={{ width: '100%' }}>
+                      {t(`wfProcessBuilder.settings.validationTypes.${type}`)}
+                    </Box>
                   </MenuItem>
                 ))}
               </TextField>
@@ -1809,8 +1897,16 @@ export function ProcessBuilderSettingsPanel() {
           <ValidationRules
             controlType={control.type}
             values={control.validations}
+            allowRequestUniqueness
             onChange={(validations) => update({ validations })}
           />
+          {control.referenceType === 'Employee' || control.referenceType === 'Showroom' ? (
+            <ReferenceFilterEditor
+              referenceType={control.referenceType}
+              value={control.referenceFilter}
+              onChange={(referenceFilter) => update({ referenceFilter })}
+            />
+          ) : null}
         </Stack>
       );
     }

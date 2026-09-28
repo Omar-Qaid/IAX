@@ -2,7 +2,7 @@ export const WORKFLOW_ROUTE_PATHS = {
   ROOT: '/workflow',
   MAIL: '/workflow/mail',
   REQUEST_SUBMISSION: '/workflow/request-submission',
-  REQUEST_FROM: '/workflow/request-from/:categoryId/:processId',
+  REQUEST_FROM: '/workflow/request-from/:categoryId?/:processId?',
   requestFrom: (categoryId: string | number, processId: string | number) =>
     `/workflow/request-from/${encodeURIComponent(String(categoryId))}/${encodeURIComponent(String(processId))}`,
   PROCESS_BUILDER: '/process-builder/:builderId',
@@ -18,6 +18,7 @@ export const WORKFLOW_ROUTE_PATHS = {
   VARIABLES: '/workflow/variables',
   STEPS: '/workflow/steps',
   ACTIVITIES: '/workflow/activities',
+  PERFORMERS: '/workflow/performers',
   PRINT_TEMPLATES: '/workflow/print-templates',
   GENERIC_REPORT: '/workflow/generic-report',
 } as const;
