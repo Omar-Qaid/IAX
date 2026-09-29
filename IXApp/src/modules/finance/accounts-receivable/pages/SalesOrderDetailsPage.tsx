@@ -13,7 +13,9 @@ import { useQuery } from '@tanstack/react-query';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { salesOrderListApi, type SalesOrderHeaderInput } from '../api/salesOrderListApi';
+import { customerQuickCreateApi } from '../api/customerQuickCreateApi';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
+import { LookupField } from '@shared/components/lookups/LookupField';
 
 import { SalesOrderLinesGrid } from './SalesOrderLinesGrid';
 import { SalesOrderLinesProvider } from './SalesOrderLineState';
@@ -46,6 +48,21 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     : orders[0];
   const activeHeader = headerDraft?.id === order?.id ? headerDraft : null;
   const canEditHeader = canEditLines && order?.salesStatus.toLowerCase() === 'backorder';
+
+  const customersQuery = useQuery({
+    queryKey: ['accounts-receivable', 'sales-order-header-customers'],
+    queryFn: ({ signal }) => customerQuickCreateApi.list(signal),
+    enabled: Boolean(activeHeader),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const lookupsQuery = useQuery({
+    queryKey: ['accounts-receivable', 'sales-order-header-lookups'],
+    queryFn: ({ signal }) => customerQuickCreateApi.lookups(signal),
+    enabled: Boolean(activeHeader),
+    staleTime: 5 * 60 * 1000,
+  });
+
   const startHeaderEdit = () => {
     if (!order || !canEditHeader) return;
     setHeaderError('');
@@ -84,21 +101,42 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       setSavingHeader(false);
     }
   };
-  const headerInput = (name: keyof SalesOrderHeaderInput, label: string) => (
-    <TextField
-      fullWidth
-      size="small"
-      variant="standard"
-      label={label}
-      type={name === 'deliveryDate' ? 'date' : 'text'}
-      value={activeHeader?.[name] ?? ''}
-      disabled={savingHeader}
-      slotProps={{ inputLabel: { shrink: true } }}
-      onChange={(event) =>
-        setHeaderDraft((draft) => (draft ? { ...draft, [name]: event.target.value } : draft))
-      }
-    />
-  );
+  const headerInput = (name: keyof SalesOrderHeaderInput, label: string, options?: { value: string; label: string }[]) => {
+    if (options) {
+      return (
+        <Box sx={{ minWidth: 0, '& .MuiFormControl-root': { mt: 2 } }}>
+          <LookupField
+            name={name}
+            label={label}
+            value={activeHeader?.[name] ?? ''}
+            disabled={savingHeader || !customersQuery.data || !lookupsQuery.data}
+            options={options.map((opt) => ({ id: opt.value, code: opt.value, name: opt.label }))}
+            displayMode="select"
+            searchable
+            lazyLoading={false}
+            onChange={(value) =>
+              setHeaderDraft((draft) => (draft ? { ...draft, [name]: String(value ?? '') } : draft))
+            }
+          />
+        </Box>
+      );
+    }
+    return (
+      <TextField
+        fullWidth
+        size="small"
+        variant="standard"
+        label={label}
+        type={name === 'deliveryDate' ? 'date' : 'text'}
+        value={activeHeader?.[name] ?? ''}
+        disabled={savingHeader}
+        slotProps={{ inputLabel: { shrink: true } }}
+        onChange={(event) =>
+          setHeaderDraft((draft) => (draft ? { ...draft, [name]: event.target.value } : draft))
+        }
+      />
+    );
+  };
   const linesQuery = useQuery({
     queryKey: ['sales-order-lines', order?.id],
     queryFn: ({ signal }) => salesOrderLinesApi.list(order!.id, signal),
@@ -133,19 +171,19 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       {field(t('fields.customerAccount'), order.customerAccount)}
       {field(t('fields.customerName'), order.customerName)}
       {activeHeader
-        ? headerInput('invoiceAccount', t('fields.invoiceAccount'))
+        ? headerInput('invoiceAccount', t('fields.invoiceAccount'), customersQuery.data?.map(c => ({ value: c.accountNumber, label: `${c.accountNumber} - ${c.name}` })))
         : field(t('fields.invoiceAccount'), order.invoiceAccount)}
       {activeHeader
         ? headerInput('customerReference', t('fields.customerReference', 'Customer reference'))
         : field(t('fields.customerReference', 'Customer reference'), order.customerReference)}
       {activeHeader
-        ? headerInput('currencyCode', t('fields.currency'))
+        ? headerInput('currencyCode', t('fields.currency'), lookupsQuery.data?.currencies)
         : field(t('fields.currency'), order.currencyCode)}
       {activeHeader
-        ? headerInput('paymentTerms', t('fields.paymentTerms'))
+        ? headerInput('paymentTerms', t('fields.paymentTerms'), lookupsQuery.data?.paymentTerms)
         : field(t('fields.paymentTerms'), order.paymentTerms)}
       {activeHeader
-        ? headerInput('deliveryMode', t('fields.deliveryMode'))
+        ? headerInput('deliveryMode', t('fields.deliveryMode'), lookupsQuery.data?.deliveryModes)
         : field(t('fields.deliveryMode'), order.deliveryMode)}
       {field(t('customerQuickCreate.fields.deliveryTerms'))}
       {field(t('fields.orderDate'))}
@@ -175,11 +213,23 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     ...(activeHeader && name in activeHeader && name !== 'id'
       ? {
           renderOwnLabel: true,
-          render: () =>
-            headerInput(
+          render: () => {
+            let options: { value: string; label: string }[] | undefined = undefined;
+            if (name === 'invoiceAccount') {
+              options = customersQuery.data?.map(c => ({ value: c.accountNumber, label: `${c.accountNumber} - ${c.name}` }));
+            } else if (name === 'currencyCode') {
+              options = lookupsQuery.data?.currencies;
+            } else if (name === 'paymentTerms') {
+              options = lookupsQuery.data?.paymentTerms;
+            } else if (name === 'deliveryMode') {
+              options = lookupsQuery.data?.deliveryModes;
+            }
+            return headerInput(
               name as keyof SalesOrderHeaderInput,
-              t(`salesOrder.headerFields.${name}`, label)
-            ),
+              t(`salesOrder.headerFields.${name}`, label),
+              options
+            );
+          },
         }
       : {}),
   });

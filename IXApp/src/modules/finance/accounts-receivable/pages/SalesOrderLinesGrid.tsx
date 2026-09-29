@@ -33,6 +33,20 @@ import type { SalesOrderListRecord } from '../api/salesOrderListApi';
 
 type DetailLine = SalesOrderLineRecord;
 const EMPTY_LINES: DetailLine[] = [];
+
+const LINE_TYPE_OPTIONS = [
+  'Journal',
+  'Quotation',
+  'Subscription',
+  'Sales',
+  'Return item',
+  'Blanket',
+  'Item requirement',
+  'Prepayment',
+];
+
+const DELIVERY_TYPE_OPTIONS = ['None', 'Pickup', 'Direct delivery'];
+
 // Most visible cells are plain text. Avoid running MUI/Emotion style processing
 // for each one whenever the active editor changes.
 const displayCellStyle: React.CSSProperties = {
@@ -364,11 +378,17 @@ export function SalesOrderLinesGrid({
     const editable =
       editableFields.has(String(column.field)) ||
       (column.field === 'itemNumber' && !row.itemNumber);
-    if (row.id !== activeDraft?.id || activeField !== column.field)
+    if (row.id !== activeDraft?.id || activeField !== column.field) {
+      let displayValue = value;
+      if (column.field === 'lineType' && typeof value === 'number') {
+        displayValue = LINE_TYPE_OPTIONS[value] ?? value;
+      } else if (column.field === 'deliveryType' && typeof value === 'number') {
+        displayValue = DELIVERY_TYPE_OPTIONS[value] ?? value;
+      }
       return (
         <div
           data-grid-cell-focus
-          title={String(value ?? '')}
+          title={String(displayValue ?? '')}
           aria-label={editable ? t(column.headerName) : undefined}
           tabIndex={
             row.id === (selectedLineId ?? lines[0]?.id) && column.field === 'itemNumber' ? 0 : -1
@@ -399,9 +419,10 @@ export function SalesOrderLinesGrid({
             event.currentTarget.focus();
           }}
         >
-          {String(value ?? '')}
+          {String(displayValue ?? '')}
         </div>
       );
+    }
     if (column.field === 'itemNumber' && !row.itemNumber)
       return (
         <LookupGridField<SalesItem>
@@ -457,18 +478,7 @@ export function SalesOrderLinesGrid({
       );
     if (column.field === 'lineType' || column.field === 'deliveryType') {
       const options =
-        column.field === 'lineType'
-          ? [
-              'Journal',
-              'Quotation',
-              'Subscription',
-              'Sales',
-              'Return item',
-              'Blanket',
-              'Item requirement',
-              'Prepayment',
-            ]
-          : ['None', 'Pickup', 'Direct delivery'];
+        column.field === 'lineType' ? LINE_TYPE_OPTIONS : DELIVERY_TYPE_OPTIONS;
       return (
         <TextField
           select
@@ -595,6 +605,8 @@ export function SalesOrderLinesGrid({
               unit: line.unit,
               unitPrice: line.unitPrice,
               deliveryDate: line.deliveryDate || undefined,
+              inventSiteId: line.site,
+              inventLocationId: line.warehouse,
             });
       if (line.id === 'new-sales-line') savedNewRowIdRef.current = saved.id;
       setLineBaseline({ ...line, ...saved });
