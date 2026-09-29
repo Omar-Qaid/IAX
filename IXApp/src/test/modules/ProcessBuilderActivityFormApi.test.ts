@@ -310,6 +310,41 @@ beforeEach(() => {
 });
 
 describe('Process Builder Activity Form backend integration', () => {
+  it('reloads once after a full save and scopes save reads to the process', async () => {
+    mocks.stepUpdate.mockImplementation(async (record) => record);
+    const document = await loadProcessBuilder(1);
+    vi.clearAllMocks();
+
+    const saved = await saveProcessBuilder(document);
+
+    expect(saved.id).toBe('1');
+    // Data types are read for variable persistence and the final reload only.
+    expect(mocks.dataTypeList).toHaveBeenCalledTimes(2);
+    expect(mocks.operatorList).toHaveBeenCalledTimes(2);
+    for (const list of [mocks.variableList, mocks.stepList, mocks.activityList,
+      mocks.requestControlList, mocks.requestValidationList, mocks.requestOptionList,
+      mocks.activityControlList, mocks.activityValidationList, mocks.activityOptionList,
+      mocks.transitionList]) {
+      for (const args of list.mock.calls) expect(args).toEqual([undefined, 1]);
+    }
+    expect(mocks.activityValidationUpdate).toHaveBeenCalled();
+    expect(mocks.activityOptionUpdate).toHaveBeenCalled();
+  });
+
+  it('avoids a second control write when visibility metadata is already unchanged', async () => {
+    mocks.requestControlList.mockResolvedValue([{
+      ...activityControl,
+      extendedProperties: JSON.stringify({ visible: true, visibilityCondition: null }),
+    }]);
+    const document = await loadProcessBuilder(1);
+
+    await saveProcessRequestControls(document);
+
+    expect(mocks.requestControlUpdate).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(mocks.requestControlUpdate.mock.calls[0][0].extendedProperties))
+      .toMatchObject({ visibilityCondition: null });
+  });
+
   it('loads and saves both names independently for process, steps, activities and variables', async () => {
     mocks.processGet.mockResolvedValue({ ...process, nameAlias: 'العملية' });
     mocks.stepList.mockResolvedValue([{ ...step, nameAlias: 'الخطوة' }]);

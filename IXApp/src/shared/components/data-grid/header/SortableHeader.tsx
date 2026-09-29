@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Box, Typography, IconButton, useTheme } from '@mui/material';
 import ArrowUpward from '@mui/icons-material/ArrowUpward';
 import ArrowDownward from '@mui/icons-material/ArrowDownward';
-import MoreVert from '@mui/icons-material/MoreVert';
+import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
 import FilterIcon from '@mui/icons-material/FilterList';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -102,6 +102,8 @@ export function SortableHeader<T>({
           height: headerHeight,
           minHeight: headerHeight,
           boxSizing: 'border-box',
+          '&:hover .column-menu-trigger, &:focus-within .column-menu-trigger': { opacity: 1 },
+          '@media (hover: none)': { '& .column-menu-trigger': { opacity: 1 } },
           '&:hover': {
             bgcolor: theme.palette.mode === 'light' ? '#e9e8e7' : theme.palette.action.hover,
           },
@@ -134,13 +136,14 @@ export function SortableHeader<T>({
           <IconButton
             size="small"
             aria-label={t('grid.column_menu', { column: t(column.headerName || '') })}
-            sx={{ p: 0.25, marginInlineStart: 0.25 }}
+            className="column-menu-trigger"
+            sx={{ p: 0.25, marginInlineStart: 0.25, opacity: 0, flexShrink: 0, color: 'text.primary' }}
             onClick={(e) => {
               e.stopPropagation();
               onMenuOpen(e, column);
             }}
           >
-            <MoreVert sx={{ fontSize: 14 }} />
+            <KeyboardArrowDown sx={{ fontSize: 16 }} />
           </IconButton>
         )}
       </Box>

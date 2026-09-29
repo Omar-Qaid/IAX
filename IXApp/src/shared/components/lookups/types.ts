@@ -136,6 +136,8 @@ export type FormLookupGridFieldProps<
 export type FormLookupGridFieldBaseProps<T extends object> = LookupGridFieldBaseProps<T>;
 
 export interface LookupFieldProps<TFieldValues extends FieldValues = FieldValues> {
+  /** The select lookup's label is rendered by its parent; retain its accessible name. */
+  externalLabel?: boolean;
   name: FieldPath<TFieldValues>;
   label: string;
   value?: string | number | (string | number)[];

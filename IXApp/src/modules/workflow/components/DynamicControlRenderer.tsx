@@ -122,7 +122,26 @@ export function DynamicControlRenderer({
   const databaseReference = control.referenceType === 'Employee' || control.referenceType === 'Showroom';
   if (databaseReference && control.processId && control.requestControlId) {
     return (
+      <Box sx={{
+        display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 0.45,
+        '& .MuiOutlinedInput-root': {
+          borderRadius: '3px',
+          bgcolor: disabled ? 'action.disabledBackground' : '#fff',
+        },
+        '&& .MuiAutocomplete-root .MuiOutlinedInput-root.MuiInputBase-sizeSmall': {
+          py: 0,
+          paddingInlineStart: 0,
+        },
+        '&& .MuiAutocomplete-root .MuiOutlinedInput-root .MuiAutocomplete-input': {
+          padding: '6px 8px',
+        },
+      }}>
+      <Typography component="label" sx={{ fontSize: 12.5, lineHeight: 1.2, fontWeight: 700 }}>
+        {control.label}
+        {control.required ? ' *' : ''}
+      </Typography>
       <LookupField
+        externalLabel
         name={`requestControl_${control.requestControlId}`}
         label={control.label}
         value={value || undefined}
@@ -174,6 +193,7 @@ export function DynamicControlRenderer({
           }
         }}
       />
+      </Box>
     );
   }
   if (type === 'label') {

@@ -82,6 +82,7 @@ function ServerLookupDialog({
 
 function SelectLookup({
   label,
+  externalLabel = false,
   value,
   onChange,
   options = [],
@@ -203,7 +204,7 @@ function SelectLookup({
       renderInput={(params) => (
         <TextField
           {...params}
-          label={label}
+          label={externalLabel ? undefined : label}
           required={required}
           error={error}
           helperText={helperText}
@@ -211,7 +212,8 @@ function SelectLookup({
           size="small"
           slotProps={{
             ...params.slotProps,
-            htmlInput: { ...params.slotProps.htmlInput, readOnly: !searchable },
+            htmlInput: { ...params.slotProps.htmlInput, readOnly: !searchable,
+              ...(externalLabel ? { 'aria-label': label } : {}) },
           }}
         />
       )}
@@ -222,6 +224,7 @@ function SelectLookup({
 export function LookupField<TFieldValues extends FieldValues = FieldValues>({
   name,
   label,
+  externalLabel = false,
   value,
   onChange,
   options = [],
@@ -270,6 +273,7 @@ export function LookupField<TFieldValues extends FieldValues = FieldValues>({
       <SelectLookup
         name={name}
         label={label}
+        externalLabel={externalLabel}
         value={value}
         onChange={onChange}
         options={options}

@@ -18,5 +18,16 @@ describe('reference filter metadata fallback', () => {
     const fields = referenceFilterFieldsFallback('Showroom');
     expect(fields.map((item) => item.name)).toEqual(expect.arrayContaining(['RecId', 'PersonnelNumber', 'Party']));
     expect(fields.find((item) => item.name === 'Party')).toMatchObject({ isForeignKey: true });
+    expect(fields.map((item) => item.name)).toEqual(expect.arrayContaining([
+      'ShowroomAssignment.HcmWorkerId', 'ShowroomAssignment.HcmShowroomId',
+      'ShowroomAssignment.ValidFrom', 'ShowroomAssignment.ValidTo',
+      'ShowroomAssignment.IsPrimary', 'ShowroomAssignment.RecId',
+    ]));
+    for (const name of ['ShowroomAssignment.HcmWorkerId', 'ShowroomAssignment.HcmShowroomId']) {
+      expect(fields.find((item) => item.name === name)).toMatchObject({
+        isForeignKey: true, operators: ['equals', 'notEquals', 'isEmpty', 'isNotEmpty'],
+      });
+    }
+    expect(referenceFilterFieldsFallback('Employee').some((item) => item.name.startsWith('ShowroomAssignment.'))).toBe(false);
   });
 });

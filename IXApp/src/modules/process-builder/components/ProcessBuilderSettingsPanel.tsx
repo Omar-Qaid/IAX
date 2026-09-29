@@ -116,18 +116,32 @@ function ReferenceFilterEditor({
       {rules.map((rule) => {
         const field = fields.data?.find((item) => item.name === rule.field);
         return (
-          <Stack key={rule.id} direction="row" spacing="6px" alignItems="flex-start">
+          <Box key={rule.id} sx={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.6fr) 28px',
+            gap: '10px 8px',
+            alignItems: 'start',
+            p: '12px 10px 10px',
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 1,
+            bgcolor: 'background.paper',
+            '& .MuiFormControl-root, & .MuiAutocomplete-root': { minWidth: 0 },
+          }}>
             <TextField select fullWidth size="small" label={t('wfProcessBuilder.settings.fields.field', { defaultValue: 'Field' })}
+              sx={{ gridColumn: '1 / 3', '& .MuiSelect-select': { whiteSpace: 'normal', overflowWrap: 'anywhere' } }}
               value={rule.field} onChange={(event) => {
                 const next = fields.data?.find((item) => item.name === event.target.value);
                 updateRule(rule.id, { field: event.target.value, operator: next?.operators[0] ?? 'equals', value: '' });
               }}>
-              {(fields.data ?? []).map((item) => <MenuItem key={item.name} value={item.name}>{item.name}</MenuItem>)}
+              {(fields.data ?? []).map((item) => <MenuItem key={item.name} value={item.name} sx={{ whiteSpace: 'normal', overflowWrap: 'anywhere' }}>{item.name}</MenuItem>)}
             </TextField>
             <TextField select fullWidth size="small" label={t('wfProcessBuilder.settings.fields.operator', { defaultValue: 'Operator' })}
+              sx={{ gridColumn: '1', gridRow: '2' }}
               value={rule.operator} disabled={!field} onChange={(event) => updateRule(rule.id, { operator: event.target.value })}>
               {(field?.operators ?? []).map((operator) => <MenuItem key={operator} value={operator}>{operator}</MenuItem>)}
             </TextField>
+            <Box sx={{ gridColumn: '2 / 4', gridRow: '2', minWidth: 0 }}>
             {field?.isForeignKey && !['isEmpty', 'isNotEmpty'].includes(rule.operator) ? (
               <LookupField name={`referenceFilter_${rule.id}`} label={t('wfProcessBuilder.settings.fields.value', { defaultValue: 'Value' })}
                 value={rule.value || undefined} displayMode="select" searchable sideMode="server" lazyLoading pageSize={25}
@@ -143,11 +157,14 @@ function ReferenceFilterEditor({
                 type={field?.dataType === 'date' ? 'date' : field?.dataType === 'integer' || field?.dataType === 'decimal' ? 'number' : 'text'}
                 value={rule.value} onChange={(event) => updateRule(rule.id, { value: event.target.value })}
                 slotProps={field?.dataType === 'date' ? { inputLabel: { shrink: true } } : undefined} />
-            ) : <Box sx={{ flex: 1 }} />}
-            <IconButton size="small" aria-label={t('actions.delete')} onClick={() => onChange({ ...base, rules: rules.filter((item) => item.id !== rule.id) })}>
+            ) : null}
+            </Box>
+            <IconButton size="small" aria-label={t('actions.delete')} title={t('actions.delete')}
+              sx={{ gridColumn: '3', gridRow: '1', mt: '3px', color: 'text.secondary', '&:hover': { color: 'error.main', bgcolor: 'action.hover' } }}
+              onClick={() => onChange({ ...base, rules: rules.filter((item) => item.id !== rule.id) })}>
               <Delete fontSize="small" />
             </IconButton>
-          </Stack>
+          </Box>
         );
       })}
       {fields.isError ? <Typography color="error" sx={{ fontSize: 11 }}>{t('common.loadFailed', { defaultValue: 'Could not load fields.' })}</Typography> : null}

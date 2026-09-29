@@ -666,16 +666,16 @@ export async function saveProcessBuilder(
     ? await wfProcessApi.update(record)
     : await wfProcessApi.create({ ...record, code: null });
   const [serverSteps, activityTypes, stepCodeMetadata] = await Promise.all([
-    wfStepApi.list(),
+    wfStepApi.list(undefined, persisted.recId),
     wfActivityTypeApi.list(),
     getStepCodeMetadata(),
   ]);
   const variableResult = await saveProcessVariables({ ...document, id: String(persisted.recId) });
-  const requestControlResult = await saveProcessRequestControls({
+  const requestControlResult = await persistProcessRequestControls({
     ...document,
     id: String(persisted.recId),
     variables: variableResult.variables,
-  });
+  }, false);
 
   const stepIds = new Map<string, number>();
   for (const step of document.steps) {
@@ -708,7 +708,7 @@ export async function saveProcessBuilder(
   }
 
   const [serverActivities, activityCodeMetadata] = await Promise.all([
-    wfActivityApi.list(),
+    wfActivityApi.list(undefined, persisted.recId),
     getActivityCodeMetadata(),
   ]);
   const activityIds = new Map<string, number>();
@@ -801,9 +801,7 @@ export async function saveProcessBuilder(
             : '',
     })),
   };
-  await saveProcessTransitions(persistedTransitionsDocument);
-
-  return loadProcessBuilder(persisted.recId);
+  return saveProcessTransitions(persistedTransitionsDocument);
 }
 
 async function validateStoredDocumentOwnership(document: ProcessBuilderDocument): Promise<void> {
@@ -811,8 +809,8 @@ async function validateStoredDocumentOwnership(document: ProcessBuilderDocument)
   if (document.id !== 'new' && (!processId || !Number.isSafeInteger(processId)))
     throw new Error('Process identity is invalid. Reload before saving.');
   const [variables, steps, activities, requestControls, activityControls, requestValidations, activityValidations, transitions] = await Promise.all([
-    wfVariableApi.list(), wfStepApi.list(), wfActivityApi.list(), wfRequestControlApi.list(),
-    wfActivityControlApi.list(), wfRequestControlValidationApi.list(), wfActivityControlValidationApi.list(), wfTransitionApi.list(),
+    wfVariableApi.list(undefined, processId ?? undefined), wfStepApi.list(undefined, processId ?? undefined), wfActivityApi.list(undefined, processId ?? undefined), wfRequestControlApi.list(undefined, processId ?? undefined),
+    wfActivityControlApi.list(undefined, processId ?? undefined), wfRequestControlValidationApi.list(undefined, processId ?? undefined), wfActivityControlValidationApi.list(undefined, processId ?? undefined), wfTransitionApi.list(undefined, processId ?? undefined),
   ]);
   validateRecordOwnership(document.variables, variables.filter((item) => item.processId === processId), 'Variables');
   validateRecordOwnership(document.steps, steps.filter((item) => item.processId === processId), 'Steps');
@@ -847,7 +845,7 @@ export async function saveProcessVariables(
 
   const [process, allVariables, codeMetadata, dataTypes] = await Promise.all([
     wfProcessApi.getById(processId),
-    wfVariableApi.list(),
+    wfVariableApi.list(undefined, processId),
     getVariableCodeMetadata(),
     wfDataTypeApi.list(),
   ]);
@@ -904,7 +902,7 @@ export async function saveProcessVariables(
     savedVariableIds.set(variable.id, saved.recId);
   }
 
-  const variables = (await wfVariableApi.list())
+  const variables = (await wfVariableApi.list(undefined, processId))
     .filter((variable) => variable.processId === processId)
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .map((variable) => toBuilderVariable(variable, dataTypes));
@@ -941,7 +939,7 @@ export async function saveProcessSteps(
 
   const [process, allSteps, codeMetadata] = await Promise.all([
     wfProcessApi.getById(processId),
-    wfStepApi.list(),
+    wfStepApi.list(undefined, processId),
     getStepCodeMetadata(),
   ]);
   const serverSteps = allSteps.filter((step) => step.processId === processId);
@@ -999,10 +997,10 @@ async function syncActivityControls(
   const [process, serverControls, controlTypes, serverValidations, serverOptions, serverMappings] =
     await Promise.all([
       wfProcessApi.getById(processId),
-      wfActivityControlApi.list(),
+      wfActivityControlApi.list(undefined, processId),
       wfControlApi.list(),
-      wfActivityControlValidationApi.list(),
-      wfActivityControlOptionApi.list(),
+      wfActivityControlValidationApi.list(undefined, processId),
+      wfActivityControlOptionApi.list(undefined, processId),
       wfActivityMappingVariableApi.list(),
     ]);
   const persistedActivityIds = new Set(activityIds.values());
@@ -1253,11 +1251,11 @@ export async function saveProcessActivities(
   const [process, serverActivities, serverControls, activityTypes, codeMetadata, serverSteps] =
     await Promise.all([
       wfProcessApi.getById(processId),
-      wfActivityApi.list(),
-      wfActivityControlApi.list(),
+      wfActivityApi.list(undefined, processId),
+      wfActivityControlApi.list(undefined, processId),
       wfActivityTypeApi.list(),
       getActivityCodeMetadata(),
-      wfStepApi.list(),
+      wfStepApi.list(undefined, processId),
     ]);
   validateRecordOwnership(document.steps, serverSteps.filter((step) => step.processId === processId), 'Activity parent steps');
   for (const step of document.steps)
@@ -1360,17 +1358,24 @@ export interface SaveProcessRequestControlsResult {
 export async function saveProcessRequestControls(
   document: ProcessBuilderDocument
 ): Promise<SaveProcessRequestControlsResult> {
+  return persistProcessRequestControls(document, true);
+}
+
+async function persistProcessRequestControls(
+  document: ProcessBuilderDocument,
+  reload: boolean
+): Promise<SaveProcessRequestControlsResult> {
   const processId = Number(document.id);
   if (!Number.isInteger(processId) || processId <= 0)
     throw new Error('Save the process before saving request controls.');
   const [process, serverControls, controlTypes, codeMetadata, serverValidations, serverOptions, serverMappings] =
     await Promise.all([
       wfProcessApi.getById(processId),
-      wfRequestControlApi.list(),
+      wfRequestControlApi.list(undefined, processId),
       wfControlApi.list(),
       getRequestControlCodeMetadata(),
-      wfRequestControlValidationApi.list(),
-      wfRequestControlOptionApi.list(),
+      wfRequestControlValidationApi.list(undefined, processId),
+      wfRequestControlOptionApi.list(undefined, processId),
       wfRequestMappingVariableApi.list(),
     ]);
   const processControls = serverControls.filter((control) => control.processId === processId);
@@ -1631,21 +1636,20 @@ export async function saveProcessRequestControls(
         Number(control.visibilityCondition.variableId))
       : null;
     const properties = parseObject(saved.extendedProperties);
-    await wfRequestControlApi.update({
-      ...saved,
-      extendedProperties: JSON.stringify({
-        ...properties,
-        optionFeatureConfigurations: undefined,
-        visibilityCondition:
-          sourceControlId && sourceControlId > 0
-            ? {
-                sourceControlId,
-                operator: control.visibilityCondition?.operator ?? '=',
-                value: control.visibilityCondition?.value ?? '',
-              }
-            : null,
-      }),
+    const extendedProperties = JSON.stringify({
+      ...properties,
+      optionFeatureConfigurations: undefined,
+      visibilityCondition:
+        sourceControlId && sourceControlId > 0
+          ? {
+              sourceControlId,
+              operator: control.visibilityCondition?.operator ?? '=',
+              value: control.visibilityCondition?.value ?? '',
+            }
+          : null,
     });
+    if (extendedProperties !== saved.extendedProperties)
+      await wfRequestControlApi.update({ ...saved, extendedProperties });
   }
   const processMappings = serverMappings.filter((mapping) => retainedControlIds.has(mapping.requestControlId));
   for (const control of requestControls) {
@@ -1670,9 +1674,13 @@ export async function saveProcessRequestControls(
       });
     }
   }
-  const reloaded = await loadProcessBuilder(processId);
+  // Full saves only need persisted control IDs for transitions. The final reload
+  // reconciles validation/option IDs after all dependent writes have completed.
+  const controls = reload
+    ? (await loadProcessBuilder(processId)).requestControls
+    : requestControls.map((control) => ({ ...control, id: String(savedControlIds.get(control.id)!) }));
   return {
-    controls: reloaded.requestControls,
+    controls,
     controlIds: Object.fromEntries(
       [...savedControlIds].map(([localId, persistedId]) => [localId, String(persistedId)])
     ),
@@ -1688,7 +1696,7 @@ export async function saveProcessTransitions(
     throw new Error('Save the process before saving transitions.');
   const [process, serverTransitions, operators] = await Promise.all([
     wfProcessApi.getById(processId),
-    wfTransitionApi.list(),
+    wfTransitionApi.list(undefined, processId),
     wfOperatorApi.list(),
   ]);
   const processTransitions = serverTransitions.filter(

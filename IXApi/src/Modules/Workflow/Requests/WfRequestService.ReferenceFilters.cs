@@ -8,6 +8,7 @@ using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 using IAX.IXApi.Modules.Finance.Foundation.Nationalities;
 using IAX.IXApi.Modules.Finance.Foundation.Occupations;
 using IAX.IXApi.Modules.Finance.Foundation.WorkerOrganizationAssignments;
+using IAX.IXApi.Modules.Finance.Foundation.WorkerShowroomAssignments;
 using IAX.IXApi.Modules.Identity.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -17,6 +18,7 @@ namespace IAX.IXApi.Modules.Workflow.Requests;
 public partial class WfRequestService
 {
     private const string OrganizationAssignmentFieldPrefix = "OrganizationAssignment.";
+    private const string ShowroomAssignmentFieldPrefix = "ShowroomAssignment.";
     private static readonly string[] TextOperators = ["equals", "notEquals", "contains", "startsWith", "endsWith", "isEmpty", "isNotEmpty"];
     private static readonly string[] ComparableOperators = ["equals", "notEquals", "greaterThan", "greaterThanOrEqual", "lessThan", "lessThanOrEqual", "isEmpty", "isNotEmpty"];
     private static readonly string[] EqualityOperators = ["equals", "notEquals", "isEmpty", "isNotEmpty"];
@@ -28,7 +30,10 @@ public partial class WfRequestService
                 .Concat(ReferenceFields<HcmWorkerOrganizationAssignmentV1>(OrganizationAssignmentFieldPrefix))
                 .OrderBy(field => field.Name)
                 .ToList(),
-            "Showroom" => ReferenceFields<HcmShowroom>(),
+            "Showroom" => ReferenceFields<HcmShowroom>()
+                .Concat(ReferenceFields<HcmWorkerShowroomAssignment>(ShowroomAssignmentFieldPrefix))
+                .OrderBy(field => field.Name)
+                .ToList(),
             _ => null
         };
 
@@ -89,10 +94,16 @@ public partial class WfRequestService
                     .Select(item => new ReferenceValueRow(item.RecId.ToString(), item.Name ?? item.Code ?? item.RecId.ToString(), item.NameAlias)),
                 pageNumber, pageSize, search, cancellationToken),
             ("Employee", OrganizationAssignmentFieldPrefix + "HcmWorkerId")
-                or ("Employee", OrganizationAssignmentFieldPrefix + "HcmManagerWorkerId") => await ReferenceValues(
+                or ("Employee", OrganizationAssignmentFieldPrefix + "HcmManagerWorkerId")
+                or ("Showroom", ShowroomAssignmentFieldPrefix + "HcmWorkerId") => await ReferenceValues(
                 _context.Set<HcmWorker>().AsNoTracking()
                     .OrderBy(item => item.PersonnelNumber).ThenBy(item => item.RecId)
                     .Select(item => new ReferenceValueRow(item.RecId.ToString(), item.Party.Name ?? item.PersonnelNumber, item.Party.NameAlias)),
+                pageNumber, pageSize, search, cancellationToken),
+            ("Showroom", ShowroomAssignmentFieldPrefix + "HcmShowroomId") => await ReferenceValues(
+                _context.Set<HcmShowroom>().AsNoTracking()
+                    .OrderBy(item => item.PersonnelNumber).ThenBy(item => item.RecId)
+                    .Select(item => new ReferenceValueRow(item.RecId.ToString(), item.PartyTable.Name ?? item.PersonnelNumber, item.PartyTable.NameAlias)),
                 pageNumber, pageSize, search, cancellationToken),
             _ => null
         };
@@ -157,6 +168,27 @@ public partial class WfRequestService
         assignments = ApplyReferenceRules(assignments, assignmentRules);
         var workerIds = assignments.Select(assignment => assignment.HcmWorkerId);
         return workers.Where(worker => workerIds.Contains(worker.RecId));
+    }
+
+    private IQueryable<HcmShowroom> ApplyShowroomReferenceRules(
+        IQueryable<HcmShowroom> showrooms,
+        IReadOnlyList<RuntimeReferenceFilterRule> rules,
+        DateOnly today)
+    {
+        showrooms = ApplyReferenceRules(showrooms, rules
+            .Where(rule => !rule.Field.StartsWith(ShowroomAssignmentFieldPrefix, StringComparison.Ordinal)).ToList());
+        var assignmentRules = rules
+            .Where(rule => rule.Field.StartsWith(ShowroomAssignmentFieldPrefix, StringComparison.Ordinal))
+            .Select(rule => rule with { Field = rule.Field[ShowroomAssignmentFieldPrefix.Length..] }).ToList();
+        if (assignmentRules.Count == 0) return showrooms;
+
+        var assignments = _context.Set<HcmWorkerShowroomAssignment>().AsNoTracking()
+            .Where(assignment => assignment.IsPrimary && assignment.IsActive && !assignment.IsDeleted
+                && assignment.ValidFrom <= today
+                && (!assignment.ValidTo.HasValue || assignment.ValidTo.Value >= today));
+        assignments = ApplyReferenceRules(assignments, assignmentRules);
+        var showroomIds = assignments.Select(assignment => assignment.HcmShowroomId);
+        return showrooms.Where(showroom => showroomIds.Contains(showroom.RecId));
     }
 
     private static Expression IsEmptyExpression(Expression member, Type type)

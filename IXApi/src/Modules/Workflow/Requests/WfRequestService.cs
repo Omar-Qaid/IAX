@@ -239,7 +239,19 @@ namespace IAX.IXApi.Modules.Workflow.Requests
                 }).ToList();
                 foreach (var control in controls.Where(item =>
                     string.Equals(item.ReferenceType, "Showroom", StringComparison.OrdinalIgnoreCase)))
-                    referenceOptions[control.RecId] = showroomOptions;
+                {
+                    var rules = ParseProperties(control.ExtendedProperties).ReferenceFilter.Rules;
+                    if (rules.Count == 0)
+                    {
+                        referenceOptions[control.RecId] = showroomOptions;
+                        continue;
+                    }
+                    var allowedIds = (await ApplyShowroomReferenceRules(
+                            _context.Set<HcmShowroom>().AsNoTracking().Where(item => item.IsActive && !item.IsDeleted),
+                            rules, DateOnly.FromDateTime(DateTime.UtcNow))
+                        .Select(item => item.RecId).ToListAsync(cancellationToken)).ToHashSet();
+                    referenceOptions[control.RecId] = showroomOptions.Where(item => allowedIds.Contains(item.OptionId)).ToList();
+                }
             }
 
             return new DynamicRequestFormDto
@@ -321,7 +333,8 @@ namespace IAX.IXApi.Modules.Workflow.Requests
             {
                 var query = _context.Set<HcmShowroom>().AsNoTracking()
                     .Where(item => item.IsActive && !item.IsDeleted);
-                query = ApplyReferenceRules(query, ParseProperties(control.ExtendedProperties).ReferenceFilter.Rules);
+                query = ApplyShowroomReferenceRules(query, ParseProperties(control.ExtendedProperties).ReferenceFilter.Rules,
+                    DateOnly.FromDateTime(DateTime.UtcNow));
                 if (!string.IsNullOrWhiteSpace(term))
                     query = query.Where(item => item.PersonnelNumber.Contains(term)
                         || item.PartyTable.Name.Contains(term)

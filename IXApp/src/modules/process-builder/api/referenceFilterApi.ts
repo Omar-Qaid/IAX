@@ -41,6 +41,7 @@ export const referenceFilterFieldsFallback = (referenceType: 'Employee' | 'Showr
         field('HireDate', 'date', true), field('NationalityId', 'integer', false, true),
         field('Person', 'integer', false, true),
         field('PersonnelNumber', 'string'), field('UserId', 'string', true, true),
+        ...common.map((item) => ({ ...item, name: `OrganizationAssignment.${item.name}` })),
         field('OrganizationAssignment.DepartmentId', 'integer', true, true),
         field('OrganizationAssignment.HcmManagerWorkerId', 'integer', false, true),
         field('OrganizationAssignment.HcmWorkerId', 'integer', false, true),
@@ -49,7 +50,15 @@ export const referenceFilterFieldsFallback = (referenceType: 'Employee' | 'Showr
         field('OrganizationAssignment.ValidTo', 'date', true),
         field('OrganizationAssignment.IsPrimary', 'boolean'),
       ]
-    : [field('Party', 'integer', false, true), field('PersonnelNumber', 'string')];
+    : [
+        field('Party', 'integer', false, true), field('PersonnelNumber', 'string'),
+        ...common.map((item) => ({ ...item, name: `ShowroomAssignment.${item.name}` })),
+        field('ShowroomAssignment.HcmWorkerId', 'integer', false, true),
+        field('ShowroomAssignment.HcmShowroomId', 'integer', false, true),
+        field('ShowroomAssignment.ValidFrom', 'date'),
+        field('ShowroomAssignment.ValidTo', 'date', true),
+        field('ShowroomAssignment.IsPrimary', 'boolean'),
+      ];
   return [...common, ...specific].sort((left, right) => left.name.localeCompare(right.name));
 };
 
