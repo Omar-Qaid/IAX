@@ -497,6 +497,8 @@ export function SalesOrderDetailsPage(): React.ReactElement {
             {lineDetailField('description', t('salesOrder.productName', 'Product name'))}
             {unitField()}
             {lineValue('inventDimId', 'Inventory dimension')}
+            {lineValue('taxGroup', 'Sales tax group')}
+            {lineValue('taxItemGroup', 'Item sales tax group')}
           </>
         );
       case 'Packing':
@@ -558,8 +560,6 @@ export function SalesOrderDetailsPage(): React.ReactElement {
           <>
             {lineValue('ledgerDimension', 'Ledger dimension')}
             {lineValue('defaultDimension', 'Default dimension')}
-            {lineValue('taxGroup', 'Sales tax group')}
-            {lineValue('taxItemGroup', 'Item sales tax group')}
           </>
         );
       case 'Loads':

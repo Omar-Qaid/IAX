@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
-import { Box, Typography } from '@mui/material';
+import React, { useMemo, useState } from 'react';
+import { Box, Button, ButtonBase, Collapse, Typography } from '@mui/material';
+import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import WarehouseOutlinedIcon from '@mui/icons-material/WarehouseOutlined';
+import { useQuery } from '@tanstack/react-query';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
 import type {
   DetailSectionConfig,
@@ -24,8 +25,130 @@ const emptySite = (): InventSiteRecord => ({
   warehouses: [],
 });
 
+interface SiteHierarchyProps {
+  sites: InventSiteRecord[];
+  selectedSiteId: string;
+  expandLabel: string;
+  collapseLabel: string;
+  noWarehousesLabel: string;
+}
+
+function SiteHierarchy({
+  sites,
+  selectedSiteId,
+  expandLabel,
+  collapseLabel,
+  noWarehousesLabel,
+}: SiteHierarchyProps): React.ReactElement {
+  const [expandedSiteIds, setExpandedSiteIds] = useState<Set<string>>(() => new Set());
+
+  const allExpanded = sites.length > 0 && sites.every((site) => expandedSiteIds.has(site.id));
+  const toggleAll = () =>
+    setExpandedSiteIds(allExpanded ? new Set() : new Set(sites.map((site) => site.id)));
+  const toggleSite = (siteId: string) =>
+    setExpandedSiteIds((current) => {
+      const next = new Set(current);
+      if (next.has(siteId)) next.delete(siteId);
+      else next.add(siteId);
+      return next;
+    });
+
+  return (
+    <Box sx={{ display: 'grid', gap: 0.25 }}>
+      <Box>
+        <Button
+          onClick={toggleAll}
+          size="small"
+          sx={{ minWidth: 0, px: 0.5, py: 0.25, textTransform: 'none', fontSize: 12 }}
+        >
+          {allExpanded ? collapseLabel : expandLabel}
+        </Button>
+      </Box>
+      <Box sx={{ maxHeight: 198, overflowY: 'auto', pe: 0.5 }}>
+        {sites.map((site) => {
+          const expanded = expandedSiteIds.has(site.id);
+          const selected = site.id === selectedSiteId;
+          const contentId = `site-hierarchy-${site.id}`;
+          return (
+            <Box key={site.id}>
+              <ButtonBase
+                aria-controls={contentId}
+                aria-expanded={expanded}
+                onClick={() => toggleSite(site.id)}
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'flex-start',
+                  width: '100%',
+                  minHeight: 28,
+                  gap: 0.75,
+                  px: 0.5,
+                  bgcolor: selected ? '#dbe7fb' : undefined,
+                  textAlign: 'start',
+                  '&:hover': { bgcolor: selected ? '#dbe7fb' : 'action.hover' },
+                }}
+              >
+                {expanded ? (
+                  <KeyboardArrowDownIcon sx={{ fontSize: 16 }} />
+                ) : (
+                  <KeyboardArrowRightIcon sx={{ fontSize: 16 }} />
+                )}
+                <Typography component="span" variant="body2" sx={{ fontSize: 13 }}>
+                  {site.siteId}, {site.name}
+                </Typography>
+              </ButtonBase>
+              <Collapse in={expanded} timeout="auto" unmountOnExit>
+                <Box id={contentId}>
+                  {site.warehouses.map((warehouse) => (
+                    <Typography
+                      key={warehouse.id}
+                      variant="body2"
+                      sx={{
+                        minHeight: 28,
+                        display: 'flex',
+                        alignItems: 'center',
+                        marginInlineStart: '10px',
+                        paddingInlineStart: '34px',
+                        fontSize: 13,
+                        cursor: 'default',
+                        '&:hover': { bgcolor: 'action.hover' },
+                      }}
+                    >
+                      {warehouse.inventLocationId}, {warehouse.name}
+                    </Typography>
+                  ))}
+                  {!site.warehouses.length && (
+                    <Typography
+                      sx={{
+                        minHeight: 28,
+                        display: 'flex',
+                        alignItems: 'center',
+                        marginInlineStart: '10px',
+                        paddingInlineStart: '34px',
+                        fontSize: 13,
+                      }}
+                      color="text.secondary"
+                      variant="body2"
+                    >
+                      {noWarehousesLabel}
+                    </Typography>
+                  )}
+                </Box>
+              </Collapse>
+            </Box>
+          );
+        })}
+      </Box>
+    </Box>
+  );
+}
+
 export function InventSitePage(): React.ReactElement {
   const { t } = useAppTranslation();
+  const hierarchySites = useQuery({
+    queryKey: ['inventory-sites'],
+    queryFn: ({ signal }) => inventSiteApi.list(signal),
+    staleTime: 300000,
+  });
   const config = useMemo<EnterpriseListDetailsConfig<InventSiteRecord>>(
     () => ({
       recordTableName: 'InventSite',
@@ -72,42 +195,13 @@ export function InventSitePage(): React.ReactElement {
       ],
       sections: ({ record }) => {
         const hierarchy = (
-          <Box sx={{ display: 'grid', gap: 0.75 }}>
-            <Typography color="primary" variant="body2">
-              {t('actions.expand', 'Expand')}
-            </Typography>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                bgcolor: 'action.selected',
-                px: 1,
-                py: 0.5,
-              }}
-            >
-              <KeyboardArrowDownIcon fontSize="small" />
-              <strong>{record.siteId}</strong>
-              <span>{record.name}</span>
-            </Box>
-            {record.warehouses.map((warehouse) => (
-              <Box
-                key={warehouse.id}
-                sx={{ display: 'flex', alignItems: 'center', gap: 1, ps: 5, py: 0.25 }}
-              >
-                <WarehouseOutlinedIcon fontSize="small" color="action" />
-                <Typography variant="body2" color="primary">
-                  {warehouse.inventLocationId}
-                </Typography>
-                <Typography variant="body2">{warehouse.name}</Typography>
-              </Box>
-            ))}
-            {!record.warehouses.length && (
-              <Typography sx={{ ps: 5 }} color="text.secondary" variant="body2">
-                {t('inventSite.noWarehouses', 'No warehouses belong to this site.')}
-              </Typography>
-            )}
-          </Box>
+          <SiteHierarchy
+            sites={hierarchySites.data ?? [record]}
+            selectedSiteId={record.id}
+            expandLabel={t('actions.expand', 'Expand')}
+            collapseLabel={t('actions.collapse', 'Collapse')}
+            noWarehousesLabel={t('inventSite.noWarehouses', 'No warehouses belong to this site.')}
+          />
         );
         return [
           {
@@ -192,12 +286,12 @@ export function InventSitePage(): React.ReactElement {
           },
         ] satisfies DetailSectionConfig[];
       },
-    permissions: {
-      view: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
-      create: PERMISSIONS.INVENTORY_TRANSACTION_CREATE,
-      edit: PERMISSIONS.INVENTORY_TRANSACTION_EDIT,
-      delete: PERMISSIONS.INVENTORY_TRANSACTION_DELETE,
-    },
+      permissions: {
+        view: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+        create: PERMISSIONS.INVENTORY_TRANSACTION_CREATE,
+        edit: PERMISSIONS.INVENTORY_TRANSACTION_EDIT,
+        delete: PERMISSIONS.INVENTORY_TRANSACTION_DELETE,
+      },
       validate: (site) => ({
         ...(!site.siteId.trim()
           ? { siteId: t('validation.required', { field: t('inventSite.fields.site', 'Site') }) }
@@ -214,7 +308,7 @@ export function InventSitePage(): React.ReactElement {
       },
       presentation: { mode: 'list', listWidth: 270, listResizable: true },
     }),
-    [t]
+    [hierarchySites.data, t]
   );
   return (
     <ListDetailsPage variant="enterprise" title={t('inventSite.title', 'Sites')} config={config} />
