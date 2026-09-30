@@ -1,5 +1,5 @@
 ﻿import React, { useMemo } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
 import type {
@@ -8,9 +8,33 @@ import type {
   EnterpriseListDetailsConfig,
 } from '@patterns/list-details/types';
 import { LookupField } from '@shared/components/lookups/LookupField';
+import { TreeControl } from '@shared/components/tree-control';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { PERMISSIONS } from '@core/permissions/permissions';
 import { inventLocationApi, type InventLocationRecord } from '../api/inventLocationApi';
+
+type InventoryHierarchyNode =
+  | { kind: 'site'; id: string; label: string; children: InventoryHierarchyNode[] }
+  | { kind: 'warehouse'; id: string; label: string; children: [] };
+
+const inventoryHierarchyNodes = (
+  sites: readonly { id: string; code: string; name: string }[],
+  warehouses: readonly { id: string; code: string; name: string; siteId?: string }[]
+): InventoryHierarchyNode[] =>
+  sites.map((site) => ({
+    kind: 'site',
+    id: `site:${site.id}`,
+    label: `${site.code}, ${site.name}`,
+    children: warehouses
+      .filter((warehouse) => warehouse.siteId === site.id)
+      .map((warehouse) => ({
+        kind: 'warehouse' as const,
+        id: `warehouse:${warehouse.id}`,
+        label: `${warehouse.code}, ${warehouse.name}`,
+        children: [] as [],
+      })),
+  }));
+
 const empty = (): InventLocationRecord => ({
   id: `new-${crypto.randomUUID()}`,
   recId: 0,
@@ -385,37 +409,26 @@ export function InventLocationPage(): React.ReactElement {
             title: 'Hierarchy',
             defaultExpanded: true,
             content: (
-              <Box sx={{ display: 'grid', gap: 0.5 }}>
-                {(lookups.data?.sites ?? []).map((site) => (
-                  <Box key={site.id}>
-                    <Typography
-                      sx={{
-                        px: 1,
-                        py: 0.5,
-                        bgcolor: site.id === record.inventSiteId ? 'action.selected' : undefined,
-                      }}
-                    >
-                      <strong>{site.code}</strong> {site.name}
-                    </Typography>
-                    {(lookups.data?.warehouses ?? [])
-                      .filter((w) => w.siteId === site.id)
-                      .map((w) => (
-                        <Typography
-                          key={w.id}
-                          variant="body2"
-                          sx={{
-                            ps: 5,
-                            py: 0.25,
-                            color:
-                              w.id === record.inventLocationId ? 'primary.main' : 'text.primary',
-                          }}
-                        >
-                          {w.code}, {w.name}
-                        </Typography>
-                      ))}
-                  </Box>
-                ))}
-              </Box>
+              <TreeControl<InventoryHierarchyNode>
+                key={record.id}
+                nodes={inventoryHierarchyNodes(
+                  lookups.data?.sites ?? [],
+                  lookups.data?.warehouses ?? []
+                )}
+                config={{
+                  getId: (node) => node.id,
+                  getLabel: (node) => node.label,
+                  getChildren: (node) => node.children,
+                  isBranch: (node) => node.kind === 'site',
+                  selectedId: `warehouse:${record.inventLocationId}`,
+                  initialExpandedIds: record.inventSiteId ? [`site:${record.inventSiteId}`] : [],
+                  expandAllLabel: t('actions.expand', 'Expand'),
+                  collapseAllLabel: t('actions.collapse', 'Collapse'),
+                  emptyChildrenLabel: 'No warehouses belong to this site.',
+                  maxHeight: 198,
+                  ariaLabel: 'Warehouse hierarchy',
+                }}
+              />
             ),
           },
           {
