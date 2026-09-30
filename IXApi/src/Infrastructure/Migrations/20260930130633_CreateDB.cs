@@ -2706,6 +2706,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     ItemId = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     Product = table.Column<long>(type: "bigint", nullable: false),
                     NameAlias = table.Column<string>(type: "nvarchar(60)", maxLength: 60, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(60)", maxLength: 60, nullable: false),
                     Sku = table.Column<string>(type: "nvarchar(40)", maxLength: 40, nullable: false),
                     ItemType = table.Column<int>(type: "int", nullable: false),
                     UseAltItemId = table.Column<int>(type: "int", nullable: false),
@@ -4125,6 +4126,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     ShipCarrierPostalAddress = table.Column<long>(type: "bigint", nullable: false),
                     SubBillBillToPostalAddress = table.Column<long>(type: "bigint", nullable: false),
                     DeliveryName = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
+                    OrderDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DeliveryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DeliveryDateControlType = table.Column<int>(type: "int", nullable: false),
                     ShippingDateRequested = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -5154,7 +5156,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     ControlDataId = table.Column<long>(type: "bigint", nullable: true),
                     ControlLabel = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: ""),
                     ControlLabelAlias = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValue: ""),
-                    ControlValue = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    ControlValue = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     SortOrder = table.Column<byte>(type: "tinyint", nullable: false),
                     ValueAlias = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Value = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -7778,7 +7780,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     PersonnelNumber = table.Column<string>(type: "nvarchar(25)", maxLength: 25, nullable: false),
                     Person = table.Column<long>(type: "bigint", nullable: false),
-                    OccupationId = table.Column<short>(type: "smallint", nullable: false),
                     GenderId = table.Column<byte>(type: "tinyint", nullable: false),
                     NationalityId = table.Column<short>(type: "smallint", nullable: false),
                     HireDate = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -7819,12 +7820,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         name: "FK_HcmWorker_HcmNationalities_NationalityId",
                         column: x => x.NationalityId,
                         principalTable: "HcmNationalities",
-                        principalColumn: "RECID",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_HcmWorker_HcmOccupations_OccupationId",
-                        column: x => x.OccupationId,
-                        principalTable: "HcmOccupations",
                         principalColumn: "RECID",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -9387,11 +9382,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 column: "NationalityId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_HcmWorker_OccupationId",
-                table: "HcmWorker",
-                column: "OccupationId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_HcmWorker_Person",
                 table: "HcmWorker",
                 column: "Person");
@@ -10821,6 +10811,9 @@ namespace IAX.IXApi.Infrastructure.Migrations
                 name: "WfVariables");
 
             migrationBuilder.DropTable(
+                name: "HcmOccupations");
+
+            migrationBuilder.DropTable(
                 name: "BatchJobs");
 
             migrationBuilder.DropTable(
@@ -10912,9 +10905,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "HcmNationalities");
-
-            migrationBuilder.DropTable(
-                name: "HcmOccupations");
 
             migrationBuilder.DropTable(
                 name: "DirPartyTable");

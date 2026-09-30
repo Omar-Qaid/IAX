@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace IAX.IXApi.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260929121108_addinveinttableName")]
-    partial class addinveinttableName
+    [Migration("20260930130633_CreateDB")]
+    partial class CreateDB
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -8017,6 +8017,9 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<int>("OneTimeCustomer")
                         .HasColumnType("int");
+
+                    b.Property<DateTime>("OrderDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("OverrideSalesTax")
                         .HasColumnType("int");
