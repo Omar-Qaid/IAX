@@ -139,6 +139,25 @@ public sealed class SalesTableController : ControllerBase
         public decimal OverDeliveryPercent { get; set; }
         [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0", "100")]
         public decimal UnderDeliveryPercent { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.Name)]
+        public string? DeliveryName { get; set; }
+        public long DeliveryPostalAddress { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.ReferenceId)]
+        public string? CustomerReference { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.UnitId)]
+        public string? PackingUnit { get; set; }
+        [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0", "1000000000")]
+        public decimal PackingUnitQuantity { get; set; }
+        [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0.000001", "1000000000")]
+        public decimal PriceUnit { get; set; } = 1;
+        [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0", "1000000000")]
+        public decimal LineDiscount { get; set; }
+        [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0", "100")]
+        public decimal LineDiscountPercent { get; set; }
+        [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0", "1000000000")]
+        public decimal MultiLineDiscount { get; set; }
+        [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0", "100")]
+        public decimal MultiLineDiscountPercent { get; set; }
     }
 
     [HttpPost("{recId:long}/lines")]
@@ -167,11 +186,27 @@ public sealed class SalesTableController : ControllerBase
                 Name = string.IsNullOrWhiteSpace(input.Description) ? item.NameAlias : input.Description.Trim(),
                 CustAccount = order.CustAccount, CustGroupId = order.CustGroup, CurrencyCode = order.CurrencyCode,
                 SalesQty = input.Quantity, QtyOrdered = input.Quantity, RemainSalesPhysical = input.Quantity,
-                RemainSalesFinancial = input.Quantity, SalesUnit = string.IsNullOrWhiteSpace(input.Unit) ? module.UnitId : input.Unit.Trim(), PriceUnit = 1,
+                RemainSalesFinancial = input.Quantity, SalesUnit = string.IsNullOrWhiteSpace(input.Unit) ? module.UnitId : input.Unit.Trim(), PriceUnit = input.PriceUnit,
                 SalesPrice = input.UnitPrice, LineAmount = input.Quantity * input.UnitPrice,
                 SalesStatus = SalesStatus.Backorder, SalesType = input.LineType ?? order.SalesType ?? SalesType.Sales,
                 DeliveryType = input.DeliveryType ?? SalesDeliveryType.None, SalesCategory = input.SalesCategory,
-                ReceiptDateRequested = input.DeliveryDate?.Date ?? order.ReceiptDateRequested, ShippingDateRequested = order.ShippingDateRequested,
+                ReceiptDateRequested = input.DeliveryDate?.Date ?? order.ReceiptDateRequested,
+                ShippingDateRequested = input.ShippingDateRequested?.Date ?? order.ShippingDateRequested,
+                ShippingDateConfirmed = input.ShippingDateConfirmed?.Date ?? default,
+                ReceiptDateConfirmed = input.ReceiptDateConfirmed?.Date ?? default,
+                DlvMode = input.DeliveryMode?.Trim() ?? order.DlvMode,
+                DlvTerm = input.DeliveryTerms?.Trim() ?? order.DlvTerm,
+                OverDeliveryPct = input.OverDeliveryPercent,
+                UnderDeliveryPct = input.UnderDeliveryPercent,
+                DeliveryName = input.DeliveryName?.Trim() ?? order.DeliveryName,
+                DeliveryPostalAddress = input.DeliveryPostalAddress,
+                CustomerRef = input.CustomerReference?.Trim() ?? string.Empty,
+                PackingUnit = input.PackingUnit?.Trim() ?? string.Empty,
+                PackingUnitQty = input.PackingUnitQuantity,
+                LineDisc = input.LineDiscount,
+                LinePercent = input.LineDiscountPercent,
+                MultiLnDisc = input.MultiLineDiscount,
+                MultiLnPercent = input.MultiLineDiscountPercent,
                 DataAreaId = order.DataAreaId,
             };
             var inventSiteId = string.IsNullOrWhiteSpace(input.InventSiteId) ? order.InventSiteId : input.InventSiteId;
@@ -235,11 +270,21 @@ public sealed class SalesTableController : ControllerBase
                 if (input.DeliveryDate.HasValue) line.ReceiptDateRequested = input.DeliveryDate.Value.Date;
                 line.DlvMode = input.DeliveryMode?.Trim() ?? string.Empty;
                 line.DlvTerm = input.DeliveryTerms?.Trim() ?? string.Empty;
-                if (input.ShippingDateRequested.HasValue) line.ShippingDateRequested = input.ShippingDateRequested.Value.Date;
+                line.ShippingDateRequested = input.ShippingDateRequested?.Date ?? default;
                 line.ShippingDateConfirmed = input.ShippingDateConfirmed?.Date ?? default;
                 line.ReceiptDateConfirmed = input.ReceiptDateConfirmed?.Date ?? default;
                 line.OverDeliveryPct = input.OverDeliveryPercent;
                 line.UnderDeliveryPct = input.UnderDeliveryPercent;
+                line.DeliveryName = input.DeliveryName?.Trim() ?? string.Empty;
+                line.DeliveryPostalAddress = input.DeliveryPostalAddress;
+                line.CustomerRef = input.CustomerReference?.Trim() ?? string.Empty;
+                line.PackingUnit = input.PackingUnit?.Trim() ?? string.Empty;
+                line.PackingUnitQty = input.PackingUnitQuantity;
+                line.PriceUnit = input.PriceUnit;
+                line.LineDisc = input.LineDiscount;
+                line.LinePercent = input.LineDiscountPercent;
+                line.MultiLnDisc = input.MultiLineDiscount;
+                line.MultiLnPercent = input.MultiLineDiscountPercent;
                 var currentDimension = await _dbContext.Set<InventDim>().AsNoTracking()
                     .FirstOrDefaultAsync(item => item.DataAreaId == line.DataAreaId
                         && item.InventDimId == line.InventDimId, cancellationToken);
@@ -273,8 +318,11 @@ public sealed class SalesTableController : ControllerBase
         overDeliveryPercent = line.OverDeliveryPct, underDeliveryPercent = line.UnderDeliveryPct,
         line.RemainSalesPhysical, line.RemainSalesFinancial, line.SalesDeliverNow, line.InventDeliverNow,
         line.PackingUnit, packingUnitQuantity = line.PackingUnitQty, deliveryMode = line.DlvMode,
-        deliveryTerms = line.DlvTerm, line.ShippingDateRequested, line.ShippingDateConfirmed,
-        line.ReceiptDateConfirmed, customerReference = line.CustomerRef, line.DeliveryName,
+        deliveryTerms = line.DlvTerm,
+        shippingDateRequested = line.ShippingDateRequested == default ? (DateTime?)null : line.ShippingDateRequested,
+        shippingDateConfirmed = line.ShippingDateConfirmed == default ? (DateTime?)null : line.ShippingDateConfirmed,
+        receiptDateConfirmed = line.ReceiptDateConfirmed == default ? (DateTime?)null : line.ReceiptDateConfirmed,
+        customerReference = line.CustomerRef, line.DeliveryName,
         line.DeliveryPostalAddress, line.TaxGroup, line.TaxItemGroup, line.LedgerDimension,
         line.DefaultDimension, financialTag = line.FinTag, line.IntrastatCommodity,
         site = inventSiteId, warehouse = inventLocationId,
@@ -324,6 +372,18 @@ public sealed class SalesTableController : ControllerBase
             OrderDate = order.OrderDate == default ? order.CreatedAt?.Date ?? default : order.OrderDate,
             InventSiteId = order.InventSiteId,
             InventLocationId = order.InventLocationId,
+            SalesNameAlias = order.SalesNameAlias,
+            SalesType = (int)(order.SalesType ?? SalesType.Sales),
+            OneTimeCustomer = order.OneTimeCustomer == NoYes.Yes,
+            Email = order.Email,
+            Phone = order.Phone,
+            Deadline = order.Deadline == default ? null : order.Deadline,
+            CustomerRequisitionNumber = order.CustRequisitionNum,
+            CampaignId = order.SmmCampaignId,
+            TaxGroupId = order.TaxGroupId,
+            PricesIncludeSalesTax = order.InclTax,
+            SalesGroup = order.SalesGroup,
+            LanguageId = order.LanguageId,
             PaymentTerms = order.PaymTerm
         }).ToList();
 
@@ -352,6 +412,27 @@ public sealed class SalesTableController : ControllerBase
         public string InventLocationId { get; set; } = string.Empty;
         [System.ComponentModel.DataAnnotations.Required]
         public DateTime? OrderDate { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.NameAlias)]
+        public string SalesNameAlias { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.EnumDataType(typeof(SalesType))]
+        public SalesType SalesType { get; set; } = SalesType.Sales;
+        public bool OneTimeCustomer { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.Email)]
+        public string Email { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.Phone)]
+        public string Phone { get; set; } = string.Empty;
+        public DateTime? Deadline { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.Description)]
+        public string CustomerRequisitionNumber { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.CampaignId)]
+        public string CampaignId { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.TaxGroupId)]
+        public string TaxGroupId { get; set; } = string.Empty;
+        public bool PricesIncludeSalesTax { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.SalesGroupId)]
+        public string SalesGroup { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.LanguageId)]
+        public string LanguageId { get; set; } = string.Empty;
         [System.ComponentModel.DataAnnotations.Required]
         public DateTime? DeliveryDate { get; set; }
     }
@@ -390,6 +471,18 @@ public sealed class SalesTableController : ControllerBase
             order.InventSiteId = inventSiteId;
             order.InventLocationId = inventLocationId;
             order.OrderDate = input.OrderDate!.Value.Date;
+            order.SalesNameAlias = input.SalesNameAlias.Trim();
+            order.SalesType = input.SalesType;
+            order.OneTimeCustomer = input.OneTimeCustomer ? NoYes.Yes : NoYes.No;
+            order.Email = input.Email.Trim();
+            order.Phone = input.Phone.Trim();
+            order.Deadline = input.Deadline?.Date ?? default;
+            order.CustRequisitionNum = input.CustomerRequisitionNumber.Trim();
+            order.SmmCampaignId = input.CampaignId.Trim();
+            order.TaxGroupId = input.TaxGroupId.Trim();
+            order.InclTax = input.PricesIncludeSalesTax;
+            order.SalesGroup = input.SalesGroup.Trim();
+            order.LanguageId = input.LanguageId.Trim();
             order.DeliveryDate = input.DeliveryDate!.Value.Date;
             order.ReceiptDateRequested = order.DeliveryDate;
             await _dbContext.SaveChangesAsync(cancellationToken);
@@ -483,6 +576,18 @@ public sealed class SalesTableController : ControllerBase
             OrderDate = order.OrderDate,
             InventSiteId = order.InventSiteId,
             InventLocationId = order.InventLocationId,
+            SalesNameAlias = order.SalesNameAlias,
+            SalesType = (int)(order.SalesType ?? SalesType.Sales),
+            OneTimeCustomer = order.OneTimeCustomer == NoYes.Yes,
+            Email = order.Email,
+            Phone = order.Phone,
+            Deadline = order.Deadline == default ? null : order.Deadline,
+            CustomerRequisitionNumber = order.CustRequisitionNum,
+            CampaignId = order.SmmCampaignId,
+            TaxGroupId = order.TaxGroupId,
+            PricesIncludeSalesTax = order.InclTax,
+            SalesGroup = order.SalesGroup,
+            LanguageId = order.LanguageId,
             PaymentTerms = order.PaymTerm
         }, "Created successfully"));
     }

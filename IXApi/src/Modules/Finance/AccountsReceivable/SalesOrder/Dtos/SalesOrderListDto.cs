@@ -21,4 +21,16 @@ public sealed class SalesOrderListDto
     public DateTime OrderDate { get; set; }
     public string InventSiteId { get; set; } = string.Empty;
     public string InventLocationId { get; set; } = string.Empty;
+    public string SalesNameAlias { get; set; } = string.Empty;
+    public int SalesType { get; set; }
+    public bool OneTimeCustomer { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
+    public DateTime? Deadline { get; set; }
+    public string CustomerRequisitionNumber { get; set; } = string.Empty;
+    public string CampaignId { get; set; } = string.Empty;
+    public string TaxGroupId { get; set; } = string.Empty;
+    public bool PricesIncludeSalesTax { get; set; }
+    public string SalesGroup { get; set; } = string.Empty;
+    public string LanguageId { get; set; } = string.Empty;
 }

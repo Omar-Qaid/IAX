@@ -21,6 +21,20 @@ export interface SalesOrderListRecord {
   deliveryTerms: string;
   paymentTerms: string;
   orderDate?: string;
+  inventSiteId: string;
+  inventLocationId: string;
+  salesNameAlias: string;
+  salesType: number;
+  oneTimeCustomer: boolean;
+  email: string;
+  phone: string;
+  deadline?: string;
+  customerRequisitionNumber: string;
+  campaignId: string;
+  taxGroupId: string;
+  pricesIncludeSalesTax: boolean;
+  salesGroup: string;
+  languageId: string;
 }
 
 export type SalesOrderHeaderInput = Pick<
@@ -32,6 +46,21 @@ export type SalesOrderHeaderInput = Pick<
   | 'deliveryMode'
   | 'deliveryTerms'
   | 'deliveryDate'
+  | 'orderDate'
+  | 'inventSiteId'
+  | 'inventLocationId'
+  | 'salesNameAlias'
+  | 'salesType'
+  | 'oneTimeCustomer'
+  | 'email'
+  | 'phone'
+  | 'deadline'
+  | 'customerRequisitionNumber'
+  | 'campaignId'
+  | 'taxGroupId'
+  | 'pricesIncludeSalesTax'
+  | 'salesGroup'
+  | 'languageId'
 >;
 
 type SalesOrderListDto = Omit<SalesOrderListRecord, 'id'>;

@@ -79,6 +79,21 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       deliveryMode: order.deliveryMode,
       deliveryTerms: order.deliveryTerms,
       deliveryDate: order.deliveryDate?.slice(0, 10),
+      orderDate: order.orderDate?.slice(0, 10),
+      inventSiteId: order.inventSiteId,
+      inventLocationId: order.inventLocationId,
+      salesNameAlias: order.salesNameAlias,
+      salesType: order.salesType,
+      oneTimeCustomer: order.oneTimeCustomer,
+      email: order.email,
+      phone: order.phone,
+      deadline: order.deadline?.slice(0, 10),
+      customerRequisitionNumber: order.customerRequisitionNumber,
+      campaignId: order.campaignId,
+      taxGroupId: order.taxGroupId,
+      pricesIncludeSalesTax: order.pricesIncludeSalesTax,
+      salesGroup: order.salesGroup,
+      languageId: order.languageId,
     });
   };
   const saveHeader = async () => {
@@ -86,6 +101,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     if (
       !activeHeader.invoiceAccount.trim() ||
       !activeHeader.currencyCode.trim() ||
+      !activeHeader.orderDate ||
       !activeHeader.deliveryDate
     ) {
       setHeaderError(t('validation.required', 'This field is required.'));
@@ -111,6 +127,12 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     label: string,
     options?: { value: string; label: string }[]
   ) => {
+    const convertValue = (value: unknown) => {
+      if (name === 'oneTimeCustomer' || name === 'pricesIncludeSalesTax')
+        return String(value) === 'true';
+      if (name === 'salesType') return Number(value);
+      return String(value ?? '');
+    };
     if (options) {
       return (
         <Box sx={{ minWidth: 0, '& .MuiFormControl-root': { mt: 2 } }}>
@@ -124,7 +146,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
             searchable
             lazyLoading={false}
             onChange={(value) =>
-              setHeaderDraft((draft) => (draft ? { ...draft, [name]: String(value ?? '') } : draft))
+              setHeaderDraft((draft) => (draft ? { ...draft, [name]: convertValue(value) } : draft))
             }
           />
         </Box>
@@ -136,12 +158,16 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         size="small"
         variant="standard"
         label={label}
-        type={name === 'deliveryDate' ? 'date' : 'text'}
+        type={
+          name === 'deliveryDate' || name === 'orderDate' || name === 'deadline' ? 'date' : 'text'
+        }
         value={activeHeader?.[name] ?? ''}
         disabled={savingHeader}
         slotProps={{ inputLabel: { shrink: true } }}
         onChange={(event) =>
-          setHeaderDraft((draft) => (draft ? { ...draft, [name]: event.target.value } : draft))
+          setHeaderDraft((draft) =>
+            draft ? { ...draft, [name]: convertValue(event.target.value) } : draft
+          )
         }
       />
     );
@@ -160,6 +186,38 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     enabled: Boolean(activeHeader),
     staleTime: 5 * 60 * 1000,
   });
+  const headerDimensionInput = (name: 'inventSiteId' | 'inventLocationId', label: string) => {
+    const options =
+      name === 'inventSiteId'
+        ? (dimensionsQuery.data?.sites ?? [])
+        : (dimensionsQuery.data?.warehouses ?? []).filter(
+            (warehouse) =>
+              Boolean(activeHeader?.inventSiteId) && warehouse.siteId === activeHeader?.inventSiteId
+          );
+    return (
+      <LookupField
+        name={name}
+        label={label}
+        value={activeHeader?.[name] ?? ''}
+        options={options}
+        displayMode="select"
+        searchable
+        lazyLoading={false}
+        disabled={savingHeader || dimensionsQuery.isLoading}
+        onChange={(value) =>
+          setHeaderDraft((draft) =>
+            draft
+              ? {
+                  ...draft,
+                  [name]: String(value ?? ''),
+                  ...(name === 'inventSiteId' ? { inventLocationId: '' } : {}),
+                }
+              : draft
+          )
+        }
+      />
+    );
+  };
   const unitsQuery = useQuery({
     queryKey: ['sales-order-unit-options'],
     queryFn: async ({ signal }) => {
@@ -265,7 +323,18 @@ export function SalesOrderDetailsPage(): React.ReactElement {
             lookupsQuery.data?.deliveryTerms
           )
         : field(t('customerQuickCreate.fields.deliveryTerms'), order.deliveryTerms)}
-      {field(t('fields.orderDate'), order.orderDate?.slice(0, 10))}
+      {activeHeader
+        ? headerDimensionInput('inventSiteId', t('salesOrderQuickCreate.site', 'Site'))
+        : field(t('salesOrderQuickCreate.site', 'Site'), order.inventSiteId)}
+      {activeHeader
+        ? headerDimensionInput(
+            'inventLocationId',
+            t('salesOrderQuickCreate.warehouse', 'Warehouse')
+          )
+        : field(t('salesOrderQuickCreate.warehouse', 'Warehouse'), order.inventLocationId)}
+      {activeHeader
+        ? headerInput('orderDate', t('fields.orderDate'))
+        : field(t('fields.orderDate'), order.orderDate?.slice(0, 10))}
       {activeHeader
         ? headerInput('deliveryDate', t('fields.requestedDelivery'))
         : field(t('fields.requestedDelivery'), order.deliveryDate)}
@@ -364,6 +433,36 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     const text = value == null || value === '' ? undefined : String(value);
     return field(label, date ? text?.slice(0, 10) : text);
   };
+  const lineLookupField = (
+    name: 'deliveryMode' | 'deliveryTerms',
+    label: string,
+    options: { value: string; label: string }[] = []
+  ) => {
+    if (!displayedLine) return null;
+    if (!activeHeader) return lineValue(name, label);
+    return (
+      <LookupField
+        name={name}
+        label={label}
+        value={lineDetailDraft?.[name] ?? ''}
+        options={options.map((option) => ({
+          id: option.value,
+          code: option.value,
+          name: option.label,
+        }))}
+        displayMode="select"
+        searchable
+        lazyLoading={false}
+        disabled={savingLineDetail || lookupsQuery.isLoading}
+        onChange={(value) => {
+          if (!lineDetailDraft) return;
+          const next = { ...lineDetailDraft, [name]: String(value ?? '') };
+          setLineDetailDraft(next);
+          void saveLineDetail(next);
+        }}
+      />
+    );
+  };
   const lineTabContent = (): React.ReactNode => {
     switch (lineTab) {
       case 'Setup':
@@ -383,9 +482,12 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       case 'Address':
         return (
           <>
-            {lineValue('deliveryName', 'Delivery name')}
-            {lineValue('deliveryPostalAddress', 'Delivery postal address')}
-            {lineValue('customerReference', t('fields.customerReference', 'Customer reference'))}
+            {lineDetailField('deliveryName', 'Delivery name')}
+            {lineDetailField('deliveryPostalAddress', 'Delivery postal address', 'number')}
+            {lineDetailField(
+              'customerReference',
+              t('fields.customerReference', 'Customer reference')
+            )}
           </>
         );
       case 'Product':
@@ -400,8 +502,8 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       case 'Packing':
         return (
           <>
-            {lineValue('packingUnit', 'Packing unit')}
-            {lineValue('packingUnitQuantity', 'Packing unit quantity')}
+            {lineDetailField('packingUnit', 'Packing unit')}
+            {lineDetailField('packingUnitQuantity', 'Packing unit quantity', 'number')}
           </>
         );
       case 'Delivery':
@@ -410,13 +512,21 @@ export function SalesOrderDetailsPage(): React.ReactElement {
             {lineDetailField('deliveryDate', t('fields.requestedDelivery'), 'date')}
             {dimensionField('site', t('salesOrderQuickCreate.site', 'Site'))}
             {dimensionField('warehouse', t('salesOrderQuickCreate.warehouse', 'Warehouse'))}
-            {lineValue('deliveryMode', t('fields.deliveryMode'))}
-            {lineValue('deliveryTerms', t('customerQuickCreate.fields.deliveryTerms'))}
-            {lineValue('shippingDateRequested', 'Requested shipping date', true)}
-            {lineValue('shippingDateConfirmed', 'Confirmed shipping date', true)}
-            {lineValue('receiptDateConfirmed', 'Confirmed receipt date', true)}
-            {lineValue('overDeliveryPercent', 'Overdelivery percentage')}
-            {lineValue('underDeliveryPercent', 'Underdelivery percentage')}
+            {lineLookupField(
+              'deliveryMode',
+              t('fields.deliveryMode'),
+              lookupsQuery.data?.deliveryModes
+            )}
+            {lineLookupField(
+              'deliveryTerms',
+              t('customerQuickCreate.fields.deliveryTerms'),
+              lookupsQuery.data?.deliveryTerms
+            )}
+            {lineDetailField('shippingDateRequested', 'Requested shipping date', 'date')}
+            {lineDetailField('shippingDateConfirmed', 'Confirmed shipping date', 'date')}
+            {lineDetailField('receiptDateConfirmed', 'Confirmed receipt date', 'date')}
+            {lineDetailField('overDeliveryPercent', 'Overdelivery percentage', 'number')}
+            {lineDetailField('underDeliveryPercent', 'Underdelivery percentage', 'number')}
           </>
         );
       case 'Sourcing':
@@ -432,13 +542,13 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         return (
           <>
             {lineDetailField('unitPrice', t('fields.unitPrice'), 'number')}
-            {lineValue('priceUnit', 'Price unit')}
+            {lineDetailField('priceUnit', 'Price unit', 'number')}
             {lineValue('costPrice', 'Cost price')}
             {lineValue('lineTotal', 'Net amount')}
-            {lineValue('lineDiscount', 'Line discount')}
-            {lineValue('lineDiscountPercent', 'Line discount percentage')}
-            {lineValue('multiLineDiscount', 'Multiline discount')}
-            {lineValue('multiLineDiscountPercent', 'Multiline discount percentage')}
+            {lineDetailField('lineDiscount', 'Line discount', 'number')}
+            {lineDetailField('lineDiscountPercent', 'Line discount percentage', 'number')}
+            {lineDetailField('multiLineDiscount', 'Multiline discount', 'number')}
+            {lineDetailField('multiLineDiscountPercent', 'Multiline discount percentage', 'number')}
           </>
         );
       case 'Foreign trade':
@@ -504,6 +614,8 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       ? {
           renderOwnLabel: true,
           render: () => {
+            if (name === 'inventSiteId' || name === 'inventLocationId')
+              return headerDimensionInput(name, t(`salesOrder.headerFields.${name}`, label));
             let options: { value: string; label: string }[] | undefined = undefined;
             if (name === 'invoiceAccount') {
               options = customersQuery.data?.map((c) => ({
@@ -516,6 +628,16 @@ export function SalesOrderDetailsPage(): React.ReactElement {
               options = lookupsQuery.data?.paymentTerms;
             } else if (name === 'deliveryMode') {
               options = lookupsQuery.data?.deliveryModes;
+            } else if (name === 'salesType') {
+              options = [
+                { value: '3', label: 'Sales order' },
+                { value: '4', label: 'Returned order' },
+              ];
+            } else if (name === 'oneTimeCustomer' || name === 'pricesIncludeSalesTax') {
+              options = [
+                { value: 'false', label: t('common.no', 'No') },
+                { value: 'true', label: t('common.yes', 'Yes') },
+              ];
             }
             return headerInput(
               name as keyof SalesOrderHeaderInput,
@@ -543,8 +665,18 @@ export function SalesOrderDetailsPage(): React.ReactElement {
           value: order.invoiceAccount,
           accent: true,
         },
-        { id: 'site', label: t('salesOrderQuickCreate.site', 'Site'), accent: true },
-        { id: 'warehouse', label: t('salesOrderQuickCreate.warehouse', 'Warehouse'), accent: true },
+        {
+          id: 'site',
+          label: t('salesOrderQuickCreate.site', 'Site'),
+          value: order.inventSiteId,
+          accent: true,
+        },
+        {
+          id: 'warehouse',
+          label: t('salesOrderQuickCreate.warehouse', 'Warehouse'),
+          value: order.inventLocationId,
+          accent: true,
+        },
       ],
       id: 'header-general',
       title: t('salesOrder.general', 'General'),
@@ -558,30 +690,25 @@ export function SalesOrderDetailsPage(): React.ReactElement {
           title: t('salesOrder.salesOrder', 'Sales order'),
           fields: [
             headerField('salesId', 'Sales order'),
-            headerField('source', 'Source'),
-            headerField('retailSale', 'Retail sale'),
             headerField('customerName', 'Customer name'),
-            headerField('arabicName', 'Arabic name'),
+            headerField('salesNameAlias', 'Arabic name'),
           ],
         },
         {
           id: 'customer',
           fields: [
-            headerField('orderType', 'Order type'),
-            headerField('continuityOrder', 'Continuity order'),
+            headerField('salesType', 'Order type'),
             headerField('customerAccount', 'Customer account', t('fields.customer')),
             headerField('oneTimeCustomer', 'One-time customer'),
             headerField('invoiceAccount', 'Invoice account'),
-            headerField('contact', 'Contact'),
           ],
         },
         {
           id: 'contact',
           title: t('salesOrder.contactInformation', 'Contact information'),
           fields: [
-            headerField('internetAddress', 'Internet address'),
             headerField('email', 'Email'),
-            headerField('telephone', 'Telephone'),
+            headerField('phone', 'Telephone'),
             headerField('salesStatus', 'Status', t('common.status')),
             headerField('deadline', 'Deadline'),
           ],
@@ -590,9 +717,12 @@ export function SalesOrderDetailsPage(): React.ReactElement {
           id: 'storage',
           fields: [
             headerField('documentStatus', 'Document status'),
-            headerField('doNotProcess', 'Do not process'),
-            headerField('site', 'Site', t('salesOrder.storageDimensions', 'Storage dimensions')),
-            headerField('warehouse', 'Warehouse'),
+            headerField(
+              'inventSiteId',
+              'Site',
+              t('salesOrder.storageDimensions', 'Storage dimensions')
+            ),
+            headerField('inventLocationId', 'Warehouse'),
             headerField('campaignId', 'Campaign ID'),
           ],
         },
@@ -600,11 +730,8 @@ export function SalesOrderDetailsPage(): React.ReactElement {
           id: 'references',
           title: t('salesOrder.references', 'References'),
           fields: [
-            headerField('customerRequisition', 'Customer requisition'),
+            headerField('customerRequisitionNumber', 'Customer requisition'),
             headerField('customerReference', 'Customer reference'),
-            headerField('rmaNumber', 'RMA number'),
-            headerField('reasonCode', 'Reason code'),
-            headerField('reasonComment', 'Reason comment'),
           ],
         },
       ],
@@ -635,7 +762,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
           id: 'tax',
           title: t('salesOrder.salesTax', 'Sales tax'),
           fields: [
-            headerField('salesTaxGroup', 'Sales tax group'),
+            headerField('taxGroupId', 'Sales tax group'),
             headerField('pricesIncludeSalesTax', 'Prices include sales tax'),
           ],
         },
@@ -655,7 +782,6 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         {
           id: 'reservation',
           fields: [
-            headerField('autoBatchReservation', 'Auto batch reservation'),
             headerField('deliveryMode', 'Delivery mode'),
             headerField('deliveryDate', 'Requested delivery'),
           ],
@@ -663,7 +789,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         {
           id: 'language',
           fields: [
-            headerField('language', 'Language'),
+            headerField('languageId', 'Language'),
             headerField('paymentTerms', 'Payment terms'),
           ],
         },
