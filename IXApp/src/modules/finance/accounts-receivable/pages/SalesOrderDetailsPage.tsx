@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Box, Stack, Tab, Tabs, TextField, Typography } from '@mui/material';
 import { useUnsavedChanges } from '@shared/hooks/useUnsavedChanges';
 import { EnterpriseCrudActions } from '@shared/components/action-pane/EnterpriseCrudActions';
@@ -9,7 +9,7 @@ import { ErrorState } from '@shared/components/feedback/ErrorState';
 import { salesOrderLinesApi, type SalesOrderLineRecord } from '../api/salesOrderLinesApi';
 import { PERMISSIONS } from '@core/permissions/permissions';
 import { usePermission } from '@core/permissions/usePermission';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { salesOrderListApi, type SalesOrderHeaderInput } from '../api/salesOrderListApi';
@@ -24,6 +24,7 @@ type DetailLine = SalesOrderLineRecord;
 
 export function SalesOrderDetailsPage(): React.ReactElement {
   const { t, currentLanguage } = useAppTranslation();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { salesOrderId } = useParams<{ salesOrderId: string }>();
   const [headerDraft, setHeaderDraft] = useState<(SalesOrderHeaderInput & { id: string }) | null>(
@@ -38,6 +39,9 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   const [lineTab, setLineTab] = useState('General');
   const [tab, setTab] = useState('lines');
   const [selectedLineId, setSelectedLineId] = useState<string>();
+  const [lineDetailDraft, setLineDetailDraft] = useState<DetailLine | null>(null);
+  const [savingLineDetail, setSavingLineDetail] = useState(false);
+  const lineDetailSaveLock = useRef(false);
   const orderQuery = useQuery({
     queryKey: ['accounts-receivable', 'sales-orders'],
     queryFn: ({ signal }) => salesOrderListApi.list(signal),
@@ -143,6 +147,63 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     enabled: Boolean(order),
   });
   const lines = linesQuery.data ?? [];
+  const selectedLine: DetailLine | undefined =
+    lines.find((line) => line.id === selectedLineId) ?? lines[0];
+  const dimensionsQuery = useQuery({
+    queryKey: ['sales-order-inventory-dimensions'],
+    queryFn: ({ signal }) => salesOrderLinesApi.inventoryDimensions(signal),
+    enabled: Boolean(activeHeader),
+    staleTime: 5 * 60 * 1000,
+  });
+  const unitsQuery = useQuery({
+    queryKey: ['sales-order-unit-options'],
+    queryFn: async ({ signal }) => {
+      const first = await salesOrderLinesApi.units({
+        pageNumber: 1,
+        pageSize: 100,
+        search: '',
+        signal,
+      });
+      const units = [...first.data];
+      for (let pageNumber = 2; pageNumber <= first.totalPages; pageNumber++) {
+        const page = await salesOrderLinesApi.units({
+          pageNumber,
+          pageSize: 100,
+          search: '',
+          signal,
+        });
+        units.push(...page.data);
+      }
+      return units;
+    },
+    enabled: Boolean(activeHeader),
+    staleTime: 5 * 60 * 1000,
+  });
+  useEffect(() => {
+    if (!activeHeader || !selectedLine) {
+      setLineDetailDraft(null);
+      return;
+    }
+    setLineDetailDraft({ ...selectedLine, deliveryDate: selectedLine.deliveryDate?.slice(0, 10) });
+  }, [activeHeader, selectedLine]);
+  const saveLineDetail = async (draft = lineDetailDraft) => {
+    if (!draft || lineDetailSaveLock.current) return;
+    lineDetailSaveLock.current = true;
+    setSavingLineDetail(true);
+    try {
+      const saved = await salesOrderLinesApi.update(order!.id, draft);
+      queryClient.setQueryData<DetailLine[]>(['sales-order-lines', order!.id], (current = []) =>
+        current.map((line) => (line.id === saved.id ? saved : line))
+      );
+      setLineDetailDraft({ ...saved, deliveryDate: saved.deliveryDate?.slice(0, 10) });
+      await orderQuery.refetch();
+    } catch (error) {
+      setHeaderError(error instanceof Error ? error.message : t('errors.generic'));
+    } finally {
+      lineDetailSaveLock.current = false;
+      setSavingLineDetail(false);
+    }
+  };
   if (orderQuery.isPending) return <LoadingState />;
   if (orderQuery.isError)
     return (
@@ -192,8 +253,92 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         : field(t('fields.requestedDelivery'), order.deliveryDate)}
     </Box>
   );
-  const selectedLine: DetailLine | undefined =
-    lines.find((line) => line.id === selectedLineId) ?? lines[0];
+  const displayedLine = lineDetailDraft ?? selectedLine;
+  const lineDetailField = (
+    name: keyof DetailLine,
+    label: string,
+    type: 'text' | 'number' | 'date' = 'text'
+  ) => {
+    if (!displayedLine) return null;
+    if (!activeHeader || name === 'itemNumber') return field(label, String(displayedLine[name] ?? ''));
+    return (
+      <TextField
+        key={name}
+        fullWidth
+        size="small"
+        variant="standard"
+        label={label}
+        type={type}
+        value={lineDetailDraft?.[name] ?? ''}
+        disabled={savingLineDetail}
+        slotProps={{ inputLabel: { shrink: true } }}
+        onChange={(event) => {
+          const value = type === 'number' ? Number(event.target.value) : event.target.value;
+          setLineDetailDraft((draft) => (draft ? { ...draft, [name]: value } : draft));
+        }}
+        onBlur={() => void saveLineDetail()}
+      />
+    );
+  };
+  const dimensionField = (name: 'site' | 'warehouse', label: string) => {
+    if (!displayedLine) return null;
+    if (!activeHeader) return field(label, displayedLine[name]);
+    const options = name === 'site'
+      ? dimensionsQuery.data?.sites ?? []
+      : (dimensionsQuery.data?.warehouses ?? []).filter(
+          (warehouse) => !lineDetailDraft?.site || warehouse.siteId === lineDetailDraft.site
+        );
+    return (
+      <LookupField
+        key={name}
+        name={name}
+        label={label}
+        value={lineDetailDraft?.[name] ?? ''}
+        options={options}
+        displayMode="select"
+        searchable
+        lazyLoading={false}
+        disabled={savingLineDetail || dimensionsQuery.isLoading}
+        onChange={(value) => {
+          if (!lineDetailDraft) return;
+          const next = {
+            ...lineDetailDraft,
+            [name]: String(value ?? ''),
+            ...(name === 'site' ? { warehouse: '' } : {}),
+          };
+          setLineDetailDraft(next);
+          void saveLineDetail(next);
+        }}
+      />
+    );
+  };
+  const unitField = () => {
+    const label = t('fields.unit');
+    if (!displayedLine) return null;
+    if (!activeHeader) return field(label, displayedLine.unit);
+    return (
+      <LookupField
+        name="unit"
+        label={label}
+        value={lineDetailDraft?.unit ?? ''}
+        options={(unitsQuery.data ?? []).map((unit) => ({
+          id: unit.symbol,
+          code: unit.symbol,
+          name: unit.symbol,
+        }))}
+        displayMode="select"
+        searchable
+        lazyLoading={false}
+        disabled={savingLineDetail || unitsQuery.isLoading}
+        onChange={(value) => {
+          if (!lineDetailDraft) return;
+          const next = { ...lineDetailDraft, unit: String(value ?? '') };
+          setLineDetailDraft(next);
+          void saveLineDetail(next);
+        }}
+      />
+    );
+  };
   const section = (
     title: string,
     content: React.ReactNode,
@@ -387,6 +532,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         <SalesOrderLinesGrid
           key={order.id}
           order={order}
+          editing={Boolean(activeHeader)}
           selectedLineId={selectedLineId}
           setSelectedLineId={setSelectedLineId}
           lineFilterVisible={lineFilterVisible}
@@ -438,7 +584,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
             id="line-details-panel"
             aria-labelledby={`line-tab-${lineTab.replaceAll(' ', '-')}`}
           >
-            {!selectedLine ? (
+            {!displayedLine ? (
               <Typography variant="body2" color="text.secondary" sx={{ minHeight: 100 }}>
                 {t('salesOrder.selectLine', 'Select a sales order line to view its details.')}
               </Typography>
@@ -450,13 +596,15 @@ export function SalesOrderDetailsPage(): React.ReactElement {
                   gap: 2,
                 }}
               >
-                {field(t('fields.item'), selectedLine.itemNumber)}
-                {field(t('fields.quantity'), String(selectedLine.quantity))}
-                {field(t('fields.unit'), selectedLine.unit)}
-                {field(t('salesOrderQuickCreate.site', 'Site'), selectedLine.site)}
-                {field(t('salesOrderQuickCreate.warehouse', 'Warehouse'), selectedLine.warehouse)}
-                {field(t('fields.unitPrice'), amount(selectedLine.unitPrice))}
-                {field(t('fields.requestedDelivery'), selectedLine.deliveryDate)}
+                {lineDetailField('itemNumber', t('fields.item'))}
+                {lineDetailField('description', t('salesOrder.productName', 'Product name'))}
+                {lineDetailField('quantity', t('fields.quantity'), 'number')}
+                {unitField()}
+                {dimensionField('site', t('salesOrderQuickCreate.site', 'Site'))}
+                {dimensionField('warehouse', t('salesOrderQuickCreate.warehouse', 'Warehouse'))}
+                {lineDetailField('unitPrice', t('fields.unitPrice'), 'number')}
+                {lineDetailField('salesCategory', t('salesOrder.salesCategory', 'Sales category'), 'number')}
+                {lineDetailField('deliveryDate', t('fields.requestedDelivery'), 'date')}
               </Box>
             )}
           </Box>
