@@ -1,7 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { Box, Button, ButtonBase, Collapse, Typography } from '@mui/material';
-import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import React, { useMemo } from 'react';
+import { Typography } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
 import type {
@@ -11,6 +9,7 @@ import type {
 } from '@patterns/list-details/types';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { PERMISSIONS } from '@core/permissions/permissions';
+import { TreeControl, type TreeControlConfig } from '@shared/components/tree-control';
 import { inventSiteApi, type InventSiteRecord } from '../api/inventSiteApi';
 
 const emptySite = (): InventSiteRecord => ({
@@ -25,122 +24,9 @@ const emptySite = (): InventSiteRecord => ({
   warehouses: [],
 });
 
-interface SiteHierarchyProps {
-  sites: InventSiteRecord[];
-  selectedSiteId: string;
-  expandLabel: string;
-  collapseLabel: string;
-  noWarehousesLabel: string;
-}
-
-function SiteHierarchy({
-  sites,
-  selectedSiteId,
-  expandLabel,
-  collapseLabel,
-  noWarehousesLabel,
-}: SiteHierarchyProps): React.ReactElement {
-  const [expandedSiteIds, setExpandedSiteIds] = useState<Set<string>>(() => new Set());
-
-  const allExpanded = sites.length > 0 && sites.every((site) => expandedSiteIds.has(site.id));
-  const toggleAll = () =>
-    setExpandedSiteIds(allExpanded ? new Set() : new Set(sites.map((site) => site.id)));
-  const toggleSite = (siteId: string) =>
-    setExpandedSiteIds((current) => {
-      const next = new Set(current);
-      if (next.has(siteId)) next.delete(siteId);
-      else next.add(siteId);
-      return next;
-    });
-
-  return (
-    <Box sx={{ display: 'grid', gap: 0.25 }}>
-      <Box>
-        <Button
-          onClick={toggleAll}
-          size="small"
-          sx={{ minWidth: 0, px: 0.5, py: 0.25, textTransform: 'none', fontSize: 12 }}
-        >
-          {allExpanded ? collapseLabel : expandLabel}
-        </Button>
-      </Box>
-      <Box sx={{ maxHeight: 198, overflowY: 'auto', pe: 0.5 }}>
-        {sites.map((site) => {
-          const expanded = expandedSiteIds.has(site.id);
-          const selected = site.id === selectedSiteId;
-          const contentId = `site-hierarchy-${site.id}`;
-          return (
-            <Box key={site.id}>
-              <ButtonBase
-                aria-controls={contentId}
-                aria-expanded={expanded}
-                onClick={() => toggleSite(site.id)}
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'flex-start',
-                  width: '100%',
-                  minHeight: 28,
-                  gap: 0.75,
-                  px: 0.5,
-                  bgcolor: selected ? '#dbe7fb' : undefined,
-                  textAlign: 'start',
-                  '&:hover': { bgcolor: selected ? '#dbe7fb' : 'action.hover' },
-                }}
-              >
-                {expanded ? (
-                  <KeyboardArrowDownIcon sx={{ fontSize: 16 }} />
-                ) : (
-                  <KeyboardArrowRightIcon sx={{ fontSize: 16 }} />
-                )}
-                <Typography component="span" variant="body2" sx={{ fontSize: 13 }}>
-                  {site.siteId}, {site.name}
-                </Typography>
-              </ButtonBase>
-              <Collapse in={expanded} timeout="auto" unmountOnExit>
-                <Box id={contentId}>
-                  {site.warehouses.map((warehouse) => (
-                    <Typography
-                      key={warehouse.id}
-                      variant="body2"
-                      sx={{
-                        minHeight: 28,
-                        display: 'flex',
-                        alignItems: 'center',
-                        marginInlineStart: '10px',
-                        paddingInlineStart: '34px',
-                        fontSize: 13,
-                        cursor: 'default',
-                        '&:hover': { bgcolor: 'action.hover' },
-                      }}
-                    >
-                      {warehouse.inventLocationId}, {warehouse.name}
-                    </Typography>
-                  ))}
-                  {!site.warehouses.length && (
-                    <Typography
-                      sx={{
-                        minHeight: 28,
-                        display: 'flex',
-                        alignItems: 'center',
-                        marginInlineStart: '10px',
-                        paddingInlineStart: '34px',
-                        fontSize: 13,
-                      }}
-                      color="text.secondary"
-                      variant="body2"
-                    >
-                      {noWarehousesLabel}
-                    </Typography>
-                  )}
-                </Box>
-              </Collapse>
-            </Box>
-          );
-        })}
-      </Box>
-    </Box>
-  );
-}
+type SiteHierarchyNode =
+  | { kind: 'site'; id: string; label: string; children: SiteHierarchyNode[] }
+  | { kind: 'warehouse'; id: string; label: string; children: [] };
 
 export function InventSitePage(): React.ReactElement {
   const { t } = useAppTranslation();
@@ -194,14 +80,33 @@ export function InventSitePage(): React.ReactElement {
         },
       ],
       sections: ({ record }) => {
+        const hierarchyNodes: SiteHierarchyNode[] = (hierarchySites.data ?? [record]).map(
+          (site) => ({
+            kind: 'site',
+            id: `site:${site.id}`,
+            label: `${site.siteId}, ${site.name}`,
+            children: site.warehouses.map((warehouse) => ({
+              kind: 'warehouse' as const,
+              id: `warehouse:${warehouse.id}`,
+              label: `${warehouse.inventLocationId}, ${warehouse.name}`,
+              children: [] as [],
+            })),
+          })
+        );
+        const hierarchyConfig: TreeControlConfig<SiteHierarchyNode> = {
+          getId: (node) => node.id,
+          getLabel: (node) => node.label,
+          getChildren: (node) => node.children,
+          isBranch: (node) => node.kind === 'site',
+          selectedId: `site:${record.id}`,
+          expandAllLabel: t('actions.expand', 'Expand'),
+          collapseAllLabel: t('actions.collapse', 'Collapse'),
+          emptyChildrenLabel: t('inventSite.noWarehouses', 'No warehouses belong to this site.'),
+          maxHeight: 198,
+          ariaLabel: t('inventSite.hierarchy', 'Hierarchy'),
+        };
         const hierarchy = (
-          <SiteHierarchy
-            sites={hierarchySites.data ?? [record]}
-            selectedSiteId={record.id}
-            expandLabel={t('actions.expand', 'Expand')}
-            collapseLabel={t('actions.collapse', 'Collapse')}
-            noWarehousesLabel={t('inventSite.noWarehouses', 'No warehouses belong to this site.')}
-          />
+          <TreeControl<SiteHierarchyNode> nodes={hierarchyNodes} config={hierarchyConfig} />
         );
         return [
           {
