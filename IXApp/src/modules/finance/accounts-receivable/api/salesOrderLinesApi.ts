@@ -59,6 +59,8 @@ export const salesOrderLinesApi = {
       salesCategory?: number;
       lineType?: number;
       deliveryType?: number;
+      inventSiteId?: string;
+      inventLocationId?: string;
     }
   ) {
     return unwrap(

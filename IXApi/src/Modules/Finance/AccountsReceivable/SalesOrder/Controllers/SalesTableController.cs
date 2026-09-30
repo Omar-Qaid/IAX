@@ -1,10 +1,11 @@
-using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Finance.Entities;
+using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
+using IAX.IXApi.Modules.Finance.Persistence;
 using IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses;
 using IAX.IXApi.Modules.Identity.Permissions;
 using IAX.IXApi.Shared.Application.Contracts;
 using IAX.IXApi.Modules.Administration.NumberSequences;
-using IAX.IXApi.Infrastructure.Identity;
+using IAX.IXApi.Shared.Application.Identity;
 using IAX.IXApi.Modules.Finance.Common;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,18 +17,21 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
 [DomainPermission("AccountsReceivable", "SalesOrders", "View")]
 public sealed class SalesTableController : ControllerBase
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IFinanceDataContext _dbContext;
     private readonly ISysNumberSequenceService _numberSequences;
-    private readonly ICurrentUserService _currentUser;
+    private readonly ICompanyExecutionContext _company;
+    private readonly ISalesInventoryDemandService _inventoryDemand;
 
     public SalesTableController(
-        IUnitOfWork unitOfWork,
+        IFinanceDataContext dbContext,
         ISysNumberSequenceService numberSequences,
-        ICurrentUserService currentUser)
+        ICompanyExecutionContext company,
+        ISalesInventoryDemandService inventoryDemand)
     {
-        _unitOfWork = unitOfWork;
+        _dbContext = dbContext;
         _numberSequences = numberSequences;
-        _currentUser = currentUser;
+        _company = company;
+        _inventoryDemand = inventoryDemand;
     }
 
     [HttpGet("units")]
@@ -35,7 +39,7 @@ public sealed class SalesTableController : ControllerBase
     {
         pageNumber = Math.Max(1, pageNumber);
         pageSize = Math.Clamp(pageSize, 1, 100);
-        var query = _unitOfWork.Context.Set<UnitOfMeasure>().AsNoTracking();
+        var query = _dbContext.Set<UnitOfMeasure>().AsNoTracking();
         if (!string.IsNullOrWhiteSpace(search)) query = query.Where(unit => unit.Symbol.Contains(search));
         var totalRecords = await query.CountAsync(cancellationToken);
         var data = await query.OrderBy(unit => unit.Symbol).Skip((pageNumber - 1) * pageSize).Take(pageSize)
@@ -48,14 +52,14 @@ public sealed class SalesTableController : ControllerBase
     {
         pageNumber = Math.Max(1, pageNumber);
         pageSize = Math.Clamp(pageSize, 1, 100);
-        var query = _unitOfWork.Context.Set<InventTable>().AsNoTracking();
+        var query = _dbContext.Set<InventTable>().AsNoTracking();
         if (!string.IsNullOrWhiteSpace(search))
             query = query.Where(item => item.ItemId.Contains(search) || item.NameAlias.Contains(search));
         var totalRecords = await query.CountAsync(cancellationToken);
         var items = await query.OrderBy(item => item.ItemId).Skip((pageNumber - 1) * pageSize).Take(pageSize)
             .ToListAsync(cancellationToken);
         var itemIds = items.Select(item => item.ItemId).ToList();
-        var modules = await _unitOfWork.Context.Set<InventTableModule>().AsNoTracking()
+        var modules = await _dbContext.Set<InventTableModule>().AsNoTracking()
             .Where(module => itemIds.Contains(module.ItemId) && (int)module.ModuleType == 2).ToListAsync(cancellationToken);
         var data = items.Select(item => {
             var module = modules.FirstOrDefault(row => row.ItemId == item.ItemId);
@@ -68,12 +72,18 @@ public sealed class SalesTableController : ControllerBase
     [HttpGet("{recId:long}/lines")]
     public async Task<IActionResult> Lines(long recId, CancellationToken cancellationToken = default)
     {
-        var order = await _unitOfWork.Context.Set<SalesTable>().AsNoTracking().FirstOrDefaultAsync(row => row.RecId == recId, cancellationToken);
+        var order = await _dbContext.Set<SalesTable>().AsNoTracking().FirstOrDefaultAsync(row => row.RecId == recId, cancellationToken);
         if (order == null) return NotFound(APIResponse<object>.Fail("Sales order was not found."));
-        var lines = await _unitOfWork.Context.Set<SalesLine>().AsNoTracking()
+        var lines = await _dbContext.Set<SalesLine>().AsNoTracking()
             .Where(line => line.SalesId == order.SalesId && line.DataAreaId == order.DataAreaId)
             .OrderBy(line => line.LineNum).ToListAsync(cancellationToken);
-        return Ok(APIResponse<object>.Ok(lines.Select(LineRecord)));
+        var dimensionIds = lines.Select(line => line.InventDimId).Where(id => id != string.Empty).Distinct().ToList();
+        var dimensions = await _dbContext.Set<InventDim>().AsNoTracking()
+            .Where(item => item.DataAreaId == order.DataAreaId && dimensionIds.Contains(item.InventDimId))
+            .ToDictionaryAsync(item => item.InventDimId, cancellationToken);
+        return Ok(APIResponse<object>.Ok(lines.Select(line => dimensions.TryGetValue(line.InventDimId, out var dimension)
+            ? LineRecord(line, dimension.InventSiteId, dimension.InventLocationId)
+            : LineRecord(line))));
     }
 
     public sealed class AddSalesLineInput
@@ -95,27 +105,31 @@ public sealed class SalesTableController : ControllerBase
         public SalesDeliveryType? DeliveryType { get; set; }
         [System.ComponentModel.DataAnnotations.Range(typeof(long), "0", "9223372036854775807")]
         public long SalesCategory { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(10)]
+        public string? InventSiteId { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(10)]
+        public string? InventLocationId { get; set; }
     }
 
     [HttpPost("{recId:long}/lines")]
     [DomainPermission("AccountsReceivable", "SalesOrders", "Edit")]
     public async Task<IActionResult> AddLine(long recId, [FromBody] AddSalesLineInput input, CancellationToken cancellationToken = default)
     {
-        return await _unitOfWork.Context.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        return await _dbContext.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
-            await using var transaction = await _unitOfWork.Context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
-            var order = await _unitOfWork.Context.Set<SalesTable>().FirstOrDefaultAsync(row => row.RecId == recId, cancellationToken);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
+            var order = await _dbContext.Set<SalesTable>().FirstOrDefaultAsync(row => row.RecId == recId, cancellationToken);
             if (order == null) return (IActionResult)NotFound(APIResponse<object>.Fail("Sales order was not found."));
             if (order.SalesStatus != SalesStatus.Backorder)
                 return UnprocessableEntity(APIResponse<object>.Fail("Lines can only be added to open sales orders."));
-            var item = await _unitOfWork.Context.Set<InventTable>().AsNoTracking()
+            var item = await _dbContext.Set<InventTable>().AsNoTracking()
                 .FirstOrDefaultAsync(row => row.ItemId == input.ItemNumber && row.DataAreaId == order.DataAreaId, cancellationToken);
             if (item == null) return UnprocessableEntity(APIResponse<object>.Fail("Item was not found."));
-            var module = await _unitOfWork.Context.Set<InventTableModule>().AsNoTracking()
+            var module = await _dbContext.Set<InventTableModule>().AsNoTracking()
                 .FirstOrDefaultAsync(row => row.ItemId == item.ItemId && row.DataAreaId == order.DataAreaId && (int)row.ModuleType == 2, cancellationToken);
             if (module == null || string.IsNullOrWhiteSpace(module.UnitId))
                 return UnprocessableEntity(APIResponse<object>.Fail("The item must have a sales unit configured."));
-            var lastLine = await _unitOfWork.Context.Set<SalesLine>()
+            var lastLine = await _dbContext.Set<SalesLine>()
                 .Where(row => row.SalesId == order.SalesId && row.DataAreaId == order.DataAreaId)
                 .MaxAsync(row => (decimal?)row.LineNum, cancellationToken) ?? 0;
             var line = new SalesLine {
@@ -129,11 +143,15 @@ public sealed class SalesTableController : ControllerBase
                 ReceiptDateRequested = input.DeliveryDate?.Date ?? order.ReceiptDateRequested, ShippingDateRequested = order.ShippingDateRequested,
                 DataAreaId = order.DataAreaId,
             };
-            _unitOfWork.Context.Set<SalesLine>().Add(line);
+            var inventSiteId = string.IsNullOrWhiteSpace(input.InventSiteId) ? order.InventSiteId : input.InventSiteId;
+            var inventLocationId = string.IsNullOrWhiteSpace(input.InventLocationId) ? order.InventLocationId : input.InventLocationId;
+            await _inventoryDemand.CreateAsync(order, line,
+                inventSiteId, inventLocationId, cancellationToken);
+            _dbContext.Set<SalesLine>().Add(line);
             order.SmmSalesAmountTotal += line.LineAmount;
-            await _unitOfWork.CompleteAsync(cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
-            return Ok(APIResponse<object>.Ok(LineRecord(line)));
+            return Ok(APIResponse<object>.Ok(LineRecord(line, inventSiteId, inventLocationId)));
         });
     }
 
@@ -150,20 +168,23 @@ public sealed class SalesTableController : ControllerBase
 
     private async Task<IActionResult> ChangeLine(long recId, long lineId, AddSalesLineInput? input, CancellationToken cancellationToken)
     {
-        return await _unitOfWork.Context.Database.CreateExecutionStrategy().ExecuteAsync(async () => {
-            await using var transaction = await _unitOfWork.Context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
-            var order = await _unitOfWork.Context.Set<SalesTable>().FirstOrDefaultAsync(row => row.RecId == recId, cancellationToken);
+        return await _dbContext.Database.CreateExecutionStrategy().ExecuteAsync(async () => {
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
+            var order = await _dbContext.Set<SalesTable>().FirstOrDefaultAsync(row => row.RecId == recId, cancellationToken);
             if (order == null) return (IActionResult)NotFound(APIResponse<object>.Fail("Sales order was not found."));
             if (order.SalesStatus != SalesStatus.Backorder)
                 return UnprocessableEntity(APIResponse<object>.Fail("Only open sales orders can be changed."));
-            var line = await _unitOfWork.Context.Set<SalesLine>().FirstOrDefaultAsync(row => row.RecId == lineId && row.SalesId == order.SalesId && row.DataAreaId == order.DataAreaId, cancellationToken);
+            var line = await _dbContext.Set<SalesLine>().FirstOrDefaultAsync(row => row.RecId == lineId && row.SalesId == order.SalesId && row.DataAreaId == order.DataAreaId, cancellationToken);
             if (line == null) return NotFound(APIResponse<object>.Fail("Sales line was not found."));
             if (line.SalesStatus != SalesStatus.Backorder || line.RemainSalesPhysical != line.SalesQty || line.RemainSalesFinancial != line.SalesQty)
                 return UnprocessableEntity(APIResponse<object>.Fail("Processed sales lines cannot be changed."));
             if (input != null && input.ItemNumber != line.ItemId)
                 return UnprocessableEntity(APIResponse<object>.Fail("The item number cannot be changed."));
             var previousAmount = line.LineAmount;
-            if (input == null) _unitOfWork.Context.Set<SalesLine>().Remove(line);
+            if (input == null) {
+                await _inventoryDemand.DeleteAsync(line, cancellationToken);
+                _dbContext.Set<SalesLine>().Remove(line);
+            }
             else {
                 // Item identity and name remain unchanged after item selection.
                 line.SalesType = input.LineType ?? line.SalesType;
@@ -178,38 +199,40 @@ public sealed class SalesTableController : ControllerBase
                 line.LineAmount = input.Quantity * input.UnitPrice;
                 if (!string.IsNullOrWhiteSpace(input.Unit)) line.SalesUnit = input.Unit.Trim();
                 if (input.DeliveryDate.HasValue) line.ReceiptDateRequested = input.DeliveryDate.Value.Date;
+                await _inventoryDemand.UpdateAsync(line, cancellationToken);
             }
             order.SmmSalesAmountTotal += (input == null ? 0 : line.LineAmount) - previousAmount;
-            await _unitOfWork.CompleteAsync(cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return Ok(APIResponse<object>.Ok(input == null ? new { deleted = true } : LineRecord(line)));
         });
     }
 
-    private static object LineRecord(SalesLine line) => new {
+    private static object LineRecord(SalesLine line, string? inventSiteId = null, string? inventLocationId = null) => new {
         id = line.RecId.ToString(), lineNumber = line.LineNum, itemNumber = line.ItemId,
         lineType = (int)line.SalesType, deliveryType = (int)line.DeliveryType, salesCategory = line.SalesCategory,
         description = line.Name, quantity = line.SalesQty, unit = line.SalesUnit,
         unitPrice = line.SalesPrice, lineTotal = line.LineAmount, deliveryDate = line.ReceiptDateRequested,
+        site = inventSiteId, warehouse = inventLocationId,
     };
 
     [HttpGet("list")]
     public async Task<ActionResult<APIResponse<IEnumerable<SalesOrderListDto>>>> GetList(
         CancellationToken cancellationToken = default)
     {
-        var orders = await _unitOfWork.Context.Set<SalesTable>()
+        var orders = await _dbContext.Set<SalesTable>()
             .AsNoTracking()
             .OrderByDescending(order => order.RecId)
             .ToListAsync(cancellationToken);
 
         var customerAccounts = orders.Select(order => order.CustAccount).Where(account => account != string.Empty).Distinct().ToList();
-        var customers = await _unitOfWork.Context.Set<CustTable>()
+        var customers = await _dbContext.Set<CustTable>()
             .AsNoTracking()
             .Where(customer => customerAccounts.Contains(customer.AccountNum))
             .Select(customer => new { customer.AccountNum, customer.Party })
             .ToListAsync(cancellationToken);
         var partyIds = customers.Select(customer => customer.Party).Where(id => id > 0).Distinct().ToList();
-        var parties = await _unitOfWork.Context.Set<DirPartyTable>()
+        var parties = await _dbContext.Set<DirPartyTable>()
             .AsNoTracking()
             .Where(party => partyIds.Contains(party.RecId))
             .ToDictionaryAsync(party => party.RecId, party => party.Name, cancellationToken);
@@ -261,18 +284,18 @@ public sealed class SalesTableController : ControllerBase
     [DomainPermission("AccountsReceivable", "SalesOrders", "Edit")]
     public async Task<IActionResult> UpdateHeader(long recId, [FromBody] UpdateSalesHeaderInput input, CancellationToken cancellationToken = default)
     {
-        return await _unitOfWork.Context.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        return await _dbContext.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
-            await using var transaction = await _unitOfWork.Context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
-            var order = await _unitOfWork.Context.Set<SalesTable>().FirstOrDefaultAsync(row => row.RecId == recId, cancellationToken);
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
+            var order = await _dbContext.Set<SalesTable>().FirstOrDefaultAsync(row => row.RecId == recId, cancellationToken);
             if (order == null) return (IActionResult)NotFound(APIResponse<object>.Fail("Sales order was not found."));
             if (order.SalesStatus != SalesStatus.Backorder)
                 return UnprocessableEntity(APIResponse<object>.Fail("Only open sales orders can be changed."));
             var invoiceAccount = input.InvoiceAccount.Trim();
-            if (!await _unitOfWork.Context.Set<CustTable>().AnyAsync(row => row.AccountNum == invoiceAccount && row.DataAreaId == order.DataAreaId, cancellationToken))
+            if (!await _dbContext.Set<CustTable>().AnyAsync(row => row.AccountNum == invoiceAccount && row.DataAreaId == order.DataAreaId, cancellationToken))
                 return UnprocessableEntity(APIResponse<object>.Fail("Invoice account was not found."));
             var currency = input.CurrencyCode.Trim();
-            if (currency != order.CurrencyCode && await _unitOfWork.Context.Set<SalesLine>().AnyAsync(row => row.SalesId == order.SalesId && row.DataAreaId == order.DataAreaId, cancellationToken))
+            if (currency != order.CurrencyCode && await _dbContext.Set<SalesLine>().AnyAsync(row => row.SalesId == order.SalesId && row.DataAreaId == order.DataAreaId, cancellationToken))
                 return UnprocessableEntity(APIResponse<object>.Fail("Currency cannot be changed after sales lines have been added."));
             order.InvoiceAccount = invoiceAccount;
             order.CurrencyCode = currency;
@@ -281,7 +304,7 @@ public sealed class SalesTableController : ControllerBase
             order.DlvMode = input.DeliveryMode?.Trim() ?? string.Empty;
             order.DeliveryDate = input.DeliveryDate!.Value.Date;
             order.ReceiptDateRequested = order.DeliveryDate;
-            await _unitOfWork.CompleteAsync(cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return Ok(APIResponse<object>.Ok(new { saved = true }));
         });
@@ -294,14 +317,14 @@ public sealed class SalesTableController : ControllerBase
         CancellationToken cancellationToken = default)
     {
         var account = input.CustomerAccount.Trim();
-        var customer = await _unitOfWork.Context.Set<CustTable>()
+        var customer = await _dbContext.Set<CustTable>()
             .AsNoTracking()
             .FirstOrDefaultAsync(candidate => candidate.AccountNum == account, cancellationToken);
         if (customer == null)
             return UnprocessableEntity(APIResponse<SalesOrderListDto>.Fail("Customer account was not found."));
 
         var party = customer.Party > 0
-            ? await _unitOfWork.Context.Set<DirPartyTable>()
+            ? await _dbContext.Set<DirPartyTable>()
                 .AsNoTracking()
                 .FirstOrDefaultAsync(candidate => candidate.RecId == customer.Party, cancellationToken)
             : null;
@@ -345,11 +368,11 @@ public sealed class SalesTableController : ControllerBase
             DeliveryDateControlType = Enum.IsDefined(typeof(SalesDlvDateControlType), input.DeliveryDateControlType)
                 ? (SalesDlvDateControlType)input.DeliveryDateControlType
                 : default,
-            DataAreaId = _currentUser.GetDataAreaId() ?? "dat"
+            DataAreaId = _company.GetDataAreaId() ?? "dat"
         };
 
-        _unitOfWork.Context.Set<SalesTable>().Add(order);
-        await _unitOfWork.CompleteAsync(cancellationToken);
+        _dbContext.Set<SalesTable>().Add(order);
+        await _dbContext.SaveChangesAsync(cancellationToken);
 
         return Ok(APIResponse<SalesOrderListDto>.Ok(new SalesOrderListDto
         {
