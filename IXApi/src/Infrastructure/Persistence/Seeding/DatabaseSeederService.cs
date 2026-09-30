@@ -47,6 +47,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding
                 new SalesPoolSeeder(),
                 new MarkupTableSeeder(),
                 new ErpSeeder(),
+                new InventorySiteWarehouseSeeder(),
                 new VendSeeder(),
                 new TaxSeeder(),
                 new CustLedgerSeeder(),
