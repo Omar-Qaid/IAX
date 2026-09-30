@@ -5,6 +5,7 @@ import {
   Box,
   Button,
   MenuItem,
+  Menu,
   Stack,
   TextField,
   Typography,
@@ -12,6 +13,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/Delete';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { PERMISSIONS } from '@core/permissions/permissions';
@@ -20,6 +22,7 @@ import { DataGrid } from '@shared/components/data-grid/DataGrid';
 import type { ColumnDef, DataGridHandle } from '@shared/components/data-grid/types';
 import { ErrorState } from '@shared/components/feedback/ErrorState';
 import { LookupGridField } from '@shared/components/lookups/LookupGridField';
+import { LookupField } from '@shared/components/lookups/LookupField';
 import { SalesLineValueField } from './SalesLineValueField';
 import { SalesLineGridSurface } from './SalesLineGridSurface';
 import { SalesLineCell, SalesLineCellProvider } from './SalesLineCell';
@@ -30,6 +33,7 @@ import {
   type SalesOrderLineRecord,
 } from '../api/salesOrderLinesApi';
 import type { SalesOrderListRecord } from '../api/salesOrderListApi';
+import { INVENTORY_ROUTE_PATHS } from '../../inventory/routes/inventoryRoutePaths';
 
 type DetailLine = SalesOrderLineRecord;
 const EMPTY_LINES: DetailLine[] = [];
@@ -57,6 +61,7 @@ const displayCellStyle: React.CSSProperties = {
 };
 interface Props {
   order: SalesOrderListRecord;
+  editing: boolean;
   selectedLineId?: string;
   setSelectedLineId: (id: string | undefined) => void;
   lineFilterVisible: boolean;
@@ -65,6 +70,7 @@ interface Props {
 }
 export function SalesOrderLinesGrid({
   order,
+  editing,
   selectedLineId,
   setSelectedLineId,
   lineFilterVisible,
@@ -72,6 +78,8 @@ export function SalesOrderLinesGrid({
   refreshOrder,
 }: Props) {
   const { t, currentLanguage } = useAppTranslation();
+  const navigate = useNavigate();
+  const [inventoryMenuAnchor, setInventoryMenuAnchor] = React.useState<HTMLElement | null>(null);
   const queryClient = useQueryClient();
   const selectedLineIds = useMemo(() => (selectedLineId ? [selectedLineId] : []), [selectedLineId]);
   const handleSelectionChange = useCallback(
@@ -98,6 +106,13 @@ export function SalesOrderLinesGrid({
     totalsRefreshTimerRef,
   } = useSalesOrderLineState();
   const newRowFocusFrame = useRef<number | null>(null);
+  useEffect(() => {
+    if (editing) return;
+    setDraftLine(null);
+    setLineBaseline(null);
+    setActiveField(null);
+    setLineError('');
+  }, [editing, setActiveField, setDraftLine, setLineBaseline, setLineError]);
   useEffect(
     () => () => {
       if (newRowFocusFrame.current != null) cancelAnimationFrame(newRowFocusFrame.current);
@@ -176,7 +191,14 @@ export function SalesOrderLinesGrid({
     },
     enabled: Boolean(draftLine),
   });
+  const dimensionsQuery = useQuery({
+    queryKey: ['sales-order-inventory-dimensions'],
+    queryFn: ({ signal }) => salesOrderLinesApi.inventoryDimensions(signal),
+    enabled: editing,
+    staleTime: 5 * 60 * 1000,
+  });
   const lines = linesQuery.data ?? EMPTY_LINES;
+  const selectedLine = lines.find((line) => line.id === selectedLineId);
   const columns = useMemo<ColumnDef<DetailLine>[]>(
     () => [
       {
@@ -195,6 +217,12 @@ export function SalesOrderLinesGrid({
         pinned: 'left',
       },
       { field: 'description', headerName: t('salesOrder.productName', 'Product name'), width: 220 },
+      {
+        field: 'salesCategory',
+        headerName: t('salesOrder.salesCategory', 'Sales category'),
+        width: 130,
+        type: 'number',
+      },
       {
         field: 'quantity',
         headerName: 'fields.quantity',
@@ -230,6 +258,16 @@ export function SalesOrderLinesGrid({
         headerName: t('salesOrder.deliveryType', 'Delivery type'),
         width: 180,
       },
+      {
+        field: 'site',
+        headerName: t('salesOrderQuickCreate.site', 'Site'),
+        width: 120,
+      },
+      {
+        field: 'warehouse',
+        headerName: t('salesOrderQuickCreate.warehouse', 'Warehouse'),
+        width: 140,
+      },
     ],
     [t]
   );
@@ -241,7 +279,7 @@ export function SalesOrderLinesGrid({
       if (savingLine || (activeDraftId === 'new-sales-line' && line.id !== activeDraftId))
         return;
       setSelectedLineId(line.id);
-      if (canEditLines && order.salesStatus.toLowerCase() === 'backorder') {
+      if (editing && canEditLines && order.salesStatus.toLowerCase() === 'backorder') {
         setLineBaseline(line);
         setDraftLine({
           ...line,
@@ -255,6 +293,7 @@ export function SalesOrderLinesGrid({
       savingLine,
       setSelectedLineId,
       canEditLines,
+      editing,
       order.salesStatus,
       order.id,
       setLineBaseline,
@@ -283,10 +322,14 @@ export function SalesOrderLinesGrid({
     'lineType',
     'salesCategory',
     'deliveryType',
+    'description',
+    'salesCategory',
     'quantity',
     'unit',
     'unitPrice',
     'deliveryDate',
+    'site',
+    'warehouse',
   ]);
   const handleCellBlur = () => {
     if (activeDraft?.itemNumber && !navigatingCellRef.current) void saveLine();
@@ -399,6 +442,7 @@ export function SalesOrderLinesGrid({
             if (selectedLineId !== row.id) setSelectedLineId(row.id);
             if (
               !editable ||
+              !editing ||
               !canEditLines ||
               (savingLine && row.id !== activeDraft?.id) ||
               order?.salesStatus.toLowerCase() !== 'backorder'
@@ -476,6 +520,42 @@ export function SalesOrderLinesGrid({
           />
         </Box>
       );
+    if (column.field === 'site' || column.field === 'warehouse') {
+      const isSite = column.field === 'site';
+      const options = isSite
+        ? dimensionsQuery.data?.sites ?? []
+        : (dimensionsQuery.data?.warehouses ?? []).filter(
+            (warehouse) => !row.site || warehouse.siteId === row.site
+          );
+      return (
+        <LookupField
+          name={column.field}
+          label={t(column.headerName)}
+          value={String(value ?? '')}
+          options={options}
+          displayMode="select"
+          searchable
+          lazyLoading={false}
+          disabled={savingLine || dimensionsQuery.isLoading}
+          onChange={(nextValue) => {
+            const next = {
+              ...row,
+              [column.field]: String(nextValue ?? ''),
+              ...(isSite &&
+              row.warehouse &&
+              !dimensionsQuery.data?.warehouses.some(
+                (warehouse) =>
+                  warehouse.id === row.warehouse && warehouse.siteId === String(nextValue ?? '')
+              )
+                ? { warehouse: '' }
+                : {}),
+            };
+            setDraftLine({ ...next, orderId: order.id });
+            if (next.itemNumber) void saveLine({ ...next, orderId: order.id });
+          }}
+        />
+      );
+    }
     if (column.field === 'lineType' || column.field === 'deliveryType') {
       const options =
         column.field === 'lineType' ? LINE_TYPE_OPTIONS : DELIVERY_TYPE_OPTIONS;
@@ -571,6 +651,7 @@ export function SalesOrderLinesGrid({
     const baseline = lineBaseline;
     const fields = [
       'itemNumber',
+      'description',
       'quantity',
       'unit',
       'unitPrice',
@@ -578,6 +659,8 @@ export function SalesOrderLinesGrid({
       'deliveryType',
       'salesCategory',
       'deliveryDate',
+      'site',
+      'warehouse',
     ] as const;
     if (
       line.id !== 'new-sales-line' &&
@@ -598,6 +681,7 @@ export function SalesOrderLinesGrid({
           ? await salesOrderLinesApi.update(order.id, line)
           : await salesOrderLinesApi.add(order.id, {
               itemNumber: line.itemNumber,
+              description: line.description,
               salesCategory: line.salesCategory ?? 0,
               lineType: line.lineType ?? 3,
               deliveryType: line.deliveryType ?? 0,
@@ -687,6 +771,7 @@ export function SalesOrderLinesGrid({
           disabled={
             savingLine ||
             activeDraft?.id === 'new-sales-line' ||
+            !editing ||
             !canEditLines ||
             order.salesStatus.toLowerCase() !== 'backorder'
           }
@@ -723,6 +808,7 @@ export function SalesOrderLinesGrid({
         <Button
           disabled={
             savingLine ||
+            !editing ||
             !canEditLines ||
             order.salesStatus.toLowerCase() !== 'backorder' ||
             !(selectedLineId ?? activeDraft?.id)
@@ -738,7 +824,42 @@ export function SalesOrderLinesGrid({
         {[
           'Sales order line',
           'Financials',
-          'Inventory',
+        ].map((label) => (
+          <Button key={label} disabled endIcon={<ExpandMoreIcon />}>
+            {label}
+          </Button>
+        ))}
+        <Button
+          disabled={!selectedLine}
+          endIcon={<ExpandMoreIcon />}
+          onClick={(event) => setInventoryMenuAnchor(event.currentTarget)}
+        >
+          {t('salesOrder.inventory', 'Inventory')}
+        </Button>
+        <Menu
+          anchorEl={inventoryMenuAnchor}
+          open={Boolean(inventoryMenuAnchor)}
+          onClose={() => setInventoryMenuAnchor(null)}
+        >
+          <MenuItem disabled>{t('salesOrder.inventoryMaintain', 'Maintain')}</MenuItem>
+          <MenuItem disabled>{t('salesOrder.reservation', 'Reservation')}</MenuItem>
+          <MenuItem disabled>{t('salesOrder.onHandInventory', 'On-hand inventory')}</MenuItem>
+          <MenuItem
+            onClick={() => {
+              if (!selectedLine) return;
+              setInventoryMenuAnchor(null);
+              const query = new URLSearchParams({
+                itemId: selectedLine.itemNumber,
+                salesId: order.salesId,
+              });
+              navigate(`${INVENTORY_ROUTE_PATHS.TRANSACTIONS}?${query.toString()}`);
+            }}
+          >
+            {t('salesOrder.transactions', 'Transactions')}
+          </MenuItem>
+          <MenuItem disabled>{t('salesOrder.dimensions', 'Dimensions')}</MenuItem>
+        </Menu>
+        {[
           'Product and supply',
           'Update line',
           'Warehouse',

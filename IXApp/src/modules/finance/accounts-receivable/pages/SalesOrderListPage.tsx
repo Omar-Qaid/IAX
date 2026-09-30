@@ -177,6 +177,7 @@ export function SalesOrderListPage(): React.ReactElement {
             void queryClient.invalidateQueries({
               queryKey: ['accounts-receivable', 'sales-orders'],
             });
+            navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrder(order.id));
           }}
         />
       }

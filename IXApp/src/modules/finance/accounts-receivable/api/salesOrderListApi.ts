@@ -18,7 +18,9 @@ export interface SalesOrderListRecord {
   orderTotal: number;
   customerReference: string;
   deliveryMode: string;
+  deliveryTerms: string;
   paymentTerms: string;
+  orderDate?: string;
 }
 
 export type SalesOrderHeaderInput = Pick<
@@ -28,6 +30,7 @@ export type SalesOrderHeaderInput = Pick<
   | 'customerReference'
   | 'paymentTerms'
   | 'deliveryMode'
+  | 'deliveryTerms'
   | 'deliveryDate'
 >;
 

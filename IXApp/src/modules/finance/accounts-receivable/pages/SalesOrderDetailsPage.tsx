@@ -77,6 +77,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       customerReference: order.customerReference,
       paymentTerms: order.paymentTerms,
       deliveryMode: order.deliveryMode,
+      deliveryTerms: order.deliveryTerms,
       deliveryDate: order.deliveryDate?.slice(0, 10),
     });
   };
@@ -105,7 +106,11 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       setSavingHeader(false);
     }
   };
-  const headerInput = (name: keyof SalesOrderHeaderInput, label: string, options?: { value: string; label: string }[]) => {
+  const headerInput = (
+    name: keyof SalesOrderHeaderInput,
+    label: string,
+    options?: { value: string; label: string }[]
+  ) => {
     if (options) {
       return (
         <Box sx={{ minWidth: 0, '& .MuiFormControl-root': { mt: 2 } }}>
@@ -232,7 +237,14 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       {field(t('fields.customerAccount'), order.customerAccount)}
       {field(t('fields.customerName'), order.customerName)}
       {activeHeader
-        ? headerInput('invoiceAccount', t('fields.invoiceAccount'), customersQuery.data?.map(c => ({ value: c.accountNumber, label: `${c.accountNumber} - ${c.name}` })))
+        ? headerInput(
+            'invoiceAccount',
+            t('fields.invoiceAccount'),
+            customersQuery.data?.map((c) => ({
+              value: c.accountNumber,
+              label: `${c.accountNumber} - ${c.name}`,
+            }))
+          )
         : field(t('fields.invoiceAccount'), order.invoiceAccount)}
       {activeHeader
         ? headerInput('customerReference', t('fields.customerReference', 'Customer reference'))
@@ -246,8 +258,14 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       {activeHeader
         ? headerInput('deliveryMode', t('fields.deliveryMode'), lookupsQuery.data?.deliveryModes)
         : field(t('fields.deliveryMode'), order.deliveryMode)}
-      {field(t('customerQuickCreate.fields.deliveryTerms'))}
-      {field(t('fields.orderDate'))}
+      {activeHeader
+        ? headerInput(
+            'deliveryTerms',
+            t('customerQuickCreate.fields.deliveryTerms'),
+            lookupsQuery.data?.deliveryTerms
+          )
+        : field(t('customerQuickCreate.fields.deliveryTerms'), order.deliveryTerms)}
+      {field(t('fields.orderDate'), order.orderDate?.slice(0, 10))}
       {activeHeader
         ? headerInput('deliveryDate', t('fields.requestedDelivery'))
         : field(t('fields.requestedDelivery'), order.deliveryDate)}
@@ -260,7 +278,8 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     type: 'text' | 'number' | 'date' = 'text'
   ) => {
     if (!displayedLine) return null;
-    if (!activeHeader || name === 'itemNumber') return field(label, String(displayedLine[name] ?? ''));
+    if (!activeHeader || name === 'itemNumber')
+      return field(label, String(displayedLine[name] ?? ''));
     return (
       <TextField
         key={name}
@@ -283,11 +302,12 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   const dimensionField = (name: 'site' | 'warehouse', label: string) => {
     if (!displayedLine) return null;
     if (!activeHeader) return field(label, displayedLine[name]);
-    const options = name === 'site'
-      ? dimensionsQuery.data?.sites ?? []
-      : (dimensionsQuery.data?.warehouses ?? []).filter(
-          (warehouse) => !lineDetailDraft?.site || warehouse.siteId === lineDetailDraft.site
-        );
+    const options =
+      name === 'site'
+        ? (dimensionsQuery.data?.sites ?? [])
+        : (dimensionsQuery.data?.warehouses ?? []).filter(
+            (warehouse) => !lineDetailDraft?.site || warehouse.siteId === lineDetailDraft.site
+          );
     return (
       <LookupField
         key={name}
@@ -339,6 +359,131 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       />
     );
   };
+  const lineValue = (name: keyof DetailLine, label: string, date = false) => {
+    const value = displayedLine?.[name];
+    const text = value == null || value === '' ? undefined : String(value);
+    return field(label, date ? text?.slice(0, 10) : text);
+  };
+  const lineTabContent = (): React.ReactNode => {
+    switch (lineTab) {
+      case 'Setup':
+        return (
+          <>
+            {lineDetailField('lineType', 'Line type', 'number')}
+            {lineDetailField('deliveryType', 'Delivery type', 'number')}
+            {lineDetailField(
+              'salesCategory',
+              t('salesOrder.salesCategory', 'Sales category'),
+              'number'
+            )}
+            {lineValue('salesStatus', 'Sales status')}
+            {lineValue('currencyCode', t('fields.currency'))}
+          </>
+        );
+      case 'Address':
+        return (
+          <>
+            {lineValue('deliveryName', 'Delivery name')}
+            {lineValue('deliveryPostalAddress', 'Delivery postal address')}
+            {lineValue('customerReference', t('fields.customerReference', 'Customer reference'))}
+          </>
+        );
+      case 'Product':
+        return (
+          <>
+            {lineDetailField('itemNumber', t('fields.item'))}
+            {lineDetailField('description', t('salesOrder.productName', 'Product name'))}
+            {unitField()}
+            {lineValue('inventDimId', 'Inventory dimension')}
+          </>
+        );
+      case 'Packing':
+        return (
+          <>
+            {lineValue('packingUnit', 'Packing unit')}
+            {lineValue('packingUnitQuantity', 'Packing unit quantity')}
+          </>
+        );
+      case 'Delivery':
+        return (
+          <>
+            {lineDetailField('deliveryDate', t('fields.requestedDelivery'), 'date')}
+            {dimensionField('site', t('salesOrderQuickCreate.site', 'Site'))}
+            {dimensionField('warehouse', t('salesOrderQuickCreate.warehouse', 'Warehouse'))}
+            {lineValue('deliveryMode', t('fields.deliveryMode'))}
+            {lineValue('deliveryTerms', t('customerQuickCreate.fields.deliveryTerms'))}
+            {lineValue('shippingDateRequested', 'Requested shipping date', true)}
+            {lineValue('shippingDateConfirmed', 'Confirmed shipping date', true)}
+            {lineValue('receiptDateConfirmed', 'Confirmed receipt date', true)}
+            {lineValue('overDeliveryPercent', 'Overdelivery percentage')}
+            {lineValue('underDeliveryPercent', 'Underdelivery percentage')}
+          </>
+        );
+      case 'Sourcing':
+        return (
+          <>
+            {lineValue('inventTransId', 'Inventory transaction')}
+            {lineValue('inventDimId', 'Inventory dimension')}
+            {lineValue('site', t('salesOrderQuickCreate.site', 'Site'))}
+            {lineValue('warehouse', t('salesOrderQuickCreate.warehouse', 'Warehouse'))}
+          </>
+        );
+      case 'Price and discount':
+        return (
+          <>
+            {lineDetailField('unitPrice', t('fields.unitPrice'), 'number')}
+            {lineValue('priceUnit', 'Price unit')}
+            {lineValue('costPrice', 'Cost price')}
+            {lineValue('lineTotal', 'Net amount')}
+            {lineValue('lineDiscount', 'Line discount')}
+            {lineValue('lineDiscountPercent', 'Line discount percentage')}
+            {lineValue('multiLineDiscount', 'Multiline discount')}
+            {lineValue('multiLineDiscountPercent', 'Multiline discount percentage')}
+          </>
+        );
+      case 'Foreign trade':
+        return <>{lineValue('intrastatCommodity', 'Intrastat commodity')}</>;
+      case 'Financial dimensions':
+        return (
+          <>
+            {lineValue('ledgerDimension', 'Ledger dimension')}
+            {lineValue('defaultDimension', 'Default dimension')}
+            {lineValue('taxGroup', 'Sales tax group')}
+            {lineValue('taxItemGroup', 'Item sales tax group')}
+          </>
+        );
+      case 'Loads':
+        return (
+          <>
+            {lineValue('quantity', t('fields.quantity'))}
+            {lineValue('salesDeliverNow', 'Deliver now')}
+            {lineValue('inventDeliverNow', 'Inventory deliver now')}
+            {lineValue('remainSalesPhysical', 'Remaining physical quantity')}
+            {lineValue('remainSalesFinancial', 'Remaining financial quantity')}
+          </>
+        );
+      case 'Financial tags':
+        return <>{lineValue('financialTag', 'Financial tag')}</>;
+      default:
+        return (
+          <>
+            {lineDetailField('itemNumber', t('fields.item'))}
+            {lineDetailField('description', t('salesOrder.productName', 'Product name'))}
+            {lineDetailField('quantity', t('fields.quantity'), 'number')}
+            {unitField()}
+            {dimensionField('site', t('salesOrderQuickCreate.site', 'Site'))}
+            {dimensionField('warehouse', t('salesOrderQuickCreate.warehouse', 'Warehouse'))}
+            {lineDetailField('unitPrice', t('fields.unitPrice'), 'number')}
+            {lineDetailField(
+              'salesCategory',
+              t('salesOrder.salesCategory', 'Sales category'),
+              'number'
+            )}
+            {lineDetailField('deliveryDate', t('fields.requestedDelivery'), 'date')}
+          </>
+        );
+    }
+  };
   const section = (
     title: string,
     content: React.ReactNode,
@@ -361,7 +506,10 @@ export function SalesOrderDetailsPage(): React.ReactElement {
           render: () => {
             let options: { value: string; label: string }[] | undefined = undefined;
             if (name === 'invoiceAccount') {
-              options = customersQuery.data?.map(c => ({ value: c.accountNumber, label: `${c.accountNumber} - ${c.name}` }));
+              options = customersQuery.data?.map((c) => ({
+                value: c.accountNumber,
+                label: `${c.accountNumber} - ${c.name}`,
+              }));
             } else if (name === 'currencyCode') {
               options = lookupsQuery.data?.currencies;
             } else if (name === 'paymentTerms') {
@@ -596,15 +744,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
                   gap: 2,
                 }}
               >
-                {lineDetailField('itemNumber', t('fields.item'))}
-                {lineDetailField('description', t('salesOrder.productName', 'Product name'))}
-                {lineDetailField('quantity', t('fields.quantity'), 'number')}
-                {unitField()}
-                {dimensionField('site', t('salesOrderQuickCreate.site', 'Site'))}
-                {dimensionField('warehouse', t('salesOrderQuickCreate.warehouse', 'Warehouse'))}
-                {lineDetailField('unitPrice', t('fields.unitPrice'), 'number')}
-                {lineDetailField('salesCategory', t('salesOrder.salesCategory', 'Sales category'), 'number')}
-                {lineDetailField('deliveryDate', t('fields.requestedDelivery'), 'date')}
+                {lineTabContent()}
               </Box>
             )}
           </Box>

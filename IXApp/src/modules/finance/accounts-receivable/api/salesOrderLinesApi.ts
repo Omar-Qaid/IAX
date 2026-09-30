@@ -20,6 +20,38 @@ export interface SalesOrderLineRecord {
   site?: string;
   warehouse?: string;
   deliveryDate?: string;
+  inventTransId?: string;
+  inventDimId?: string;
+  currencyCode?: string;
+  salesStatus?: string;
+  priceUnit?: number;
+  costPrice?: number;
+  lineDiscount?: number;
+  lineDiscountPercent?: number;
+  multiLineDiscount?: number;
+  multiLineDiscountPercent?: number;
+  overDeliveryPercent?: number;
+  underDeliveryPercent?: number;
+  remainSalesPhysical?: number;
+  remainSalesFinancial?: number;
+  salesDeliverNow?: number;
+  inventDeliverNow?: number;
+  packingUnit?: string;
+  packingUnitQuantity?: number;
+  deliveryMode?: string;
+  deliveryTerms?: string;
+  shippingDateRequested?: string;
+  shippingDateConfirmed?: string;
+  receiptDateConfirmed?: string;
+  customerReference?: string;
+  deliveryName?: string;
+  deliveryPostalAddress?: number;
+  taxGroup?: string;
+  taxItemGroup?: string;
+  ledgerDimension?: number;
+  defaultDimension?: number;
+  financialTag?: number;
+  intrastatCommodity?: number;
 }
 export interface SalesUnit {
   symbol: string;
@@ -31,12 +63,30 @@ export interface SalesItem {
   unitPrice?: number;
   itemType?: string;
 }
+export interface InventoryDimensionOption {
+  id: string;
+  code: string;
+  name: string;
+  siteId?: string;
+}
 function unwrap<T>(response: ApiResponse<T>): T {
   if (!response.success || response.data == null)
     throw new Error(response.message || 'Unable to load sales order data.');
   return response.data;
 }
 export const salesOrderLinesApi = {
+  async inventoryDimensions(signal?: AbortSignal) {
+    return unwrap(
+      (
+        await apiClient.get<
+          ApiResponse<{
+            sites: InventoryDimensionOption[];
+            warehouses: InventoryDimensionOption[];
+          }>
+        >('/v1/SalesTable/inventory-dimensions', { signal })
+      ).data
+    );
+  },
   async list(id: string, signal?: AbortSignal) {
     return unwrap(
       (
@@ -77,7 +127,11 @@ export const salesOrderLinesApi = {
       (
         await apiClient.put<ApiResponse<SalesOrderLineRecord>>(
           `/v1/SalesTable/${encodeURIComponent(id)}/lines/${encodeURIComponent(line.id)}`,
-          line
+          {
+            ...line,
+            inventSiteId: line.site,
+            inventLocationId: line.warehouse,
+          }
         )
       ).data
     );
