@@ -11,6 +11,10 @@ public interface ISalesInventoryDemandService
         string inventLocationId,
         CancellationToken cancellationToken = default);
 
-    Task UpdateAsync(SalesLine line, CancellationToken cancellationToken = default);
+    Task UpdateAsync(
+        SalesLine line,
+        string inventSiteId,
+        string inventLocationId,
+        CancellationToken cancellationToken = default);
     Task DeleteAsync(SalesLine line, CancellationToken cancellationToken = default);
 }

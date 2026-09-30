@@ -1,6 +1,7 @@
 import { WORKFLOW_ROUTE_PATHS } from '@modules/workflow/routes/workflowRoutePaths';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '@modules/finance/accounts-receivable/routes/accountsReceivableRoutePaths';
 import { ADMINISTRATION_ROUTE_PATHS } from '@modules/administration/routes/administrationRoutePaths';
+import { INVENTORY_ROUTE_PATHS } from '@modules/finance/inventory/routes/inventoryRoutePaths';
 
 export const ROUTE_PATHS = {
   ROOT: '/',
@@ -20,6 +21,8 @@ export const ROUTE_PATHS = {
     EXCHANGE_RATE_TYPES: '/foundation/exchange-rate-types',
     EXCHANGE_RATES: '/foundation/exchange-rates',
   },
+
+  INVENTORY: INVENTORY_ROUTE_PATHS,
 
   WORKFLOW: WORKFLOW_ROUTE_PATHS,
 

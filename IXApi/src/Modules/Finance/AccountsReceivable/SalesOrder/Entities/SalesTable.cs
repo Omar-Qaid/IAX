@@ -110,6 +110,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
       
         //----------------------------------------- Dates
 
+        public DateTime OrderDate { get; set; }
         public DateTime DeliveryDate { get; set; }
         public SalesDlvDateControlType DeliveryDateControlType { get; set; }
         public DateTime ShippingDateRequested { get; set; }

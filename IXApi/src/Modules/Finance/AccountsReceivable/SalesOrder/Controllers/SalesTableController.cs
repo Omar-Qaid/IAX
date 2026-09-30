@@ -69,6 +69,25 @@ public sealed class SalesTableController : ControllerBase
         return Ok(APIResponse<object>.Ok(new { data, pageNumber, totalRecords, totalPages = (int)Math.Ceiling((double)totalRecords / pageSize) }));
     }
 
+    [HttpGet("inventory-dimensions")]
+    public async Task<IActionResult> InventoryDimensions(CancellationToken cancellationToken = default)
+    {
+        var sites = await _dbContext.Set<InventSite>().AsNoTracking()
+            .OrderBy(site => site.SiteId)
+            .Select(site => new { id = site.SiteId, code = site.SiteId, name = site.Name })
+            .ToListAsync(cancellationToken);
+        var warehouses = await _dbContext.Set<InventLocation>().AsNoTracking()
+            .OrderBy(location => location.InventLocationId)
+            .Select(location => new {
+                id = location.InventLocationId,
+                code = location.InventLocationId,
+                name = location.Name,
+                siteId = location.InventSiteId
+            })
+            .ToListAsync(cancellationToken);
+        return Ok(APIResponse<object>.Ok(new { sites, warehouses }));
+    }
+
     [HttpGet("{recId:long}/lines")]
     public async Task<IActionResult> Lines(long recId, CancellationToken cancellationToken = default)
     {
@@ -109,6 +128,17 @@ public sealed class SalesTableController : ControllerBase
         public string? InventSiteId { get; set; }
         [System.ComponentModel.DataAnnotations.StringLength(10)]
         public string? InventLocationId { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.DlvModeId)]
+        public string? DeliveryMode { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.DlvTermId)]
+        public string? DeliveryTerms { get; set; }
+        public DateTime? ShippingDateRequested { get; set; }
+        public DateTime? ShippingDateConfirmed { get; set; }
+        public DateTime? ReceiptDateConfirmed { get; set; }
+        [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0", "100")]
+        public decimal OverDeliveryPercent { get; set; }
+        [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0", "100")]
+        public decimal UnderDeliveryPercent { get; set; }
     }
 
     [HttpPost("{recId:long}/lines")]
@@ -133,7 +163,8 @@ public sealed class SalesTableController : ControllerBase
                 .Where(row => row.SalesId == order.SalesId && row.DataAreaId == order.DataAreaId)
                 .MaxAsync(row => (decimal?)row.LineNum, cancellationToken) ?? 0;
             var line = new SalesLine {
-                SalesId = order.SalesId, LineNum = lastLine + 1, ItemId = item.ItemId, Name = item.NameAlias,
+                SalesId = order.SalesId, LineNum = lastLine + 1, ItemId = item.ItemId,
+                Name = string.IsNullOrWhiteSpace(input.Description) ? item.NameAlias : input.Description.Trim(),
                 CustAccount = order.CustAccount, CustGroupId = order.CustGroup, CurrencyCode = order.CurrencyCode,
                 SalesQty = input.Quantity, QtyOrdered = input.Quantity, RemainSalesPhysical = input.Quantity,
                 RemainSalesFinancial = input.Quantity, SalesUnit = string.IsNullOrWhiteSpace(input.Unit) ? module.UnitId : input.Unit.Trim(), PriceUnit = 1,
@@ -181,6 +212,8 @@ public sealed class SalesTableController : ControllerBase
             if (input != null && input.ItemNumber != line.ItemId)
                 return UnprocessableEntity(APIResponse<object>.Fail("The item number cannot be changed."));
             var previousAmount = line.LineAmount;
+            string? responseSiteId = null;
+            string? responseLocationId = null;
             if (input == null) {
                 await _inventoryDemand.DeleteAsync(line, cancellationToken);
                 _dbContext.Set<SalesLine>().Remove(line);
@@ -190,6 +223,7 @@ public sealed class SalesTableController : ControllerBase
                 line.SalesType = input.LineType ?? line.SalesType;
                 line.DeliveryType = input.DeliveryType ?? line.DeliveryType;
                 line.SalesCategory = input.SalesCategory;
+                if (!string.IsNullOrWhiteSpace(input.Description)) line.Name = input.Description.Trim();
                 line.SalesQty = input.Quantity;
                 line.QtyOrdered = input.Quantity;
                 line.RemainSalesPhysical = input.Quantity;
@@ -199,12 +233,32 @@ public sealed class SalesTableController : ControllerBase
                 line.LineAmount = input.Quantity * input.UnitPrice;
                 if (!string.IsNullOrWhiteSpace(input.Unit)) line.SalesUnit = input.Unit.Trim();
                 if (input.DeliveryDate.HasValue) line.ReceiptDateRequested = input.DeliveryDate.Value.Date;
-                await _inventoryDemand.UpdateAsync(line, cancellationToken);
+                line.DlvMode = input.DeliveryMode?.Trim() ?? string.Empty;
+                line.DlvTerm = input.DeliveryTerms?.Trim() ?? string.Empty;
+                if (input.ShippingDateRequested.HasValue) line.ShippingDateRequested = input.ShippingDateRequested.Value.Date;
+                line.ShippingDateConfirmed = input.ShippingDateConfirmed?.Date ?? default;
+                line.ReceiptDateConfirmed = input.ReceiptDateConfirmed?.Date ?? default;
+                line.OverDeliveryPct = input.OverDeliveryPercent;
+                line.UnderDeliveryPct = input.UnderDeliveryPercent;
+                var currentDimension = await _dbContext.Set<InventDim>().AsNoTracking()
+                    .FirstOrDefaultAsync(item => item.DataAreaId == line.DataAreaId
+                        && item.InventDimId == line.InventDimId, cancellationToken);
+                var inventSiteId = string.IsNullOrWhiteSpace(input.InventSiteId)
+                    ? currentDimension?.InventSiteId ?? order.InventSiteId
+                    : input.InventSiteId.Trim();
+                var inventLocationId = string.IsNullOrWhiteSpace(input.InventLocationId)
+                    ? currentDimension?.InventLocationId ?? order.InventLocationId
+                    : input.InventLocationId.Trim();
+                await _inventoryDemand.UpdateAsync(line, inventSiteId, inventLocationId, cancellationToken);
+                responseSiteId = inventSiteId;
+                responseLocationId = inventLocationId;
             }
             order.SmmSalesAmountTotal += (input == null ? 0 : line.LineAmount) - previousAmount;
             await _dbContext.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
-            return Ok(APIResponse<object>.Ok(input == null ? new { deleted = true } : LineRecord(line)));
+            return Ok(APIResponse<object>.Ok(input == null
+                ? new { deleted = true }
+                : LineRecord(line, responseSiteId, responseLocationId)));
         });
     }
 
@@ -213,6 +267,16 @@ public sealed class SalesTableController : ControllerBase
         lineType = (int)line.SalesType, deliveryType = (int)line.DeliveryType, salesCategory = line.SalesCategory,
         description = line.Name, quantity = line.SalesQty, unit = line.SalesUnit,
         unitPrice = line.SalesPrice, lineTotal = line.LineAmount, deliveryDate = line.ReceiptDateRequested,
+        line.InventTransId, line.InventDimId, line.CurrencyCode, salesStatus = line.SalesStatus.ToString(),
+        line.PriceUnit, line.CostPrice, lineDiscount = line.LineDisc, lineDiscountPercent = line.LinePercent,
+        multiLineDiscount = line.MultiLnDisc, multiLineDiscountPercent = line.MultiLnPercent,
+        overDeliveryPercent = line.OverDeliveryPct, underDeliveryPercent = line.UnderDeliveryPct,
+        line.RemainSalesPhysical, line.RemainSalesFinancial, line.SalesDeliverNow, line.InventDeliverNow,
+        line.PackingUnit, packingUnitQuantity = line.PackingUnitQty, deliveryMode = line.DlvMode,
+        deliveryTerms = line.DlvTerm, line.ShippingDateRequested, line.ShippingDateConfirmed,
+        line.ReceiptDateConfirmed, customerReference = line.CustomerRef, line.DeliveryName,
+        line.DeliveryPostalAddress, line.TaxGroup, line.TaxItemGroup, line.LedgerDimension,
+        line.DefaultDimension, financialTag = line.FinTag, line.IntrastatCommodity,
         site = inventSiteId, warehouse = inventLocationId,
     };
 
@@ -256,6 +320,10 @@ public sealed class SalesTableController : ControllerBase
             OrderTotal = order.SmmSalesAmountTotal,
             CustomerReference = order.CustomerRef,
             DeliveryMode = order.DlvMode,
+            DeliveryTerms = order.DlvTerm,
+            OrderDate = order.OrderDate == default ? order.CreatedAt?.Date ?? default : order.OrderDate,
+            InventSiteId = order.InventSiteId,
+            InventLocationId = order.InventLocationId,
             PaymentTerms = order.PaymTerm
         }).ToList();
 
@@ -276,6 +344,14 @@ public sealed class SalesTableController : ControllerBase
         public string PaymentTerms { get; set; } = string.Empty;
         [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.DlvModeId)]
         public string DeliveryMode { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.DlvTermId)]
+        public string DeliveryTerms { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.InventSiteId)]
+        public string InventSiteId { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.InventLocationId)]
+        public string InventLocationId { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.Required]
+        public DateTime? OrderDate { get; set; }
         [System.ComponentModel.DataAnnotations.Required]
         public DateTime? DeliveryDate { get; set; }
     }
@@ -302,6 +378,18 @@ public sealed class SalesTableController : ControllerBase
             order.CustomerRef = input.CustomerReference?.Trim() ?? string.Empty;
             order.PaymTerm = input.PaymentTerms?.Trim() ?? string.Empty;
             order.DlvMode = input.DeliveryMode?.Trim() ?? string.Empty;
+            order.DlvTerm = input.DeliveryTerms?.Trim() ?? string.Empty;
+            var inventSiteId = input.InventSiteId.Trim();
+            var inventLocationId = input.InventLocationId.Trim();
+            if (!string.IsNullOrEmpty(inventSiteId) &&
+                !await _dbContext.Set<InventSite>().AnyAsync(row => row.SiteId == inventSiteId, cancellationToken))
+                return UnprocessableEntity(APIResponse<object>.Fail("Site was not found."));
+            if (!string.IsNullOrEmpty(inventLocationId) &&
+                !await _dbContext.Set<InventLocation>().AnyAsync(row => row.InventLocationId == inventLocationId && row.InventSiteId == inventSiteId, cancellationToken))
+                return UnprocessableEntity(APIResponse<object>.Fail("Warehouse was not found in the selected site."));
+            order.InventSiteId = inventSiteId;
+            order.InventLocationId = inventLocationId;
+            order.OrderDate = input.OrderDate!.Value.Date;
             order.DeliveryDate = input.DeliveryDate!.Value.Date;
             order.ReceiptDateRequested = order.DeliveryDate;
             await _dbContext.SaveChangesAsync(cancellationToken);
@@ -328,11 +416,11 @@ public sealed class SalesTableController : ControllerBase
                 .AsNoTracking()
                 .FirstOrDefaultAsync(candidate => candidate.RecId == customer.Party, cancellationToken)
             : null;
-        var sequence = await _numberSequences.NextAsync("SalesTable", cancellationToken: cancellationToken);
+        var salesId = await NextAvailableSalesIdAsync(cancellationToken);
         var today = DateTime.UtcNow.Date;
         var order = new SalesTable
         {
-            SalesId = sequence.Code,
+            SalesId = salesId,
             SalesName = string.IsNullOrWhiteSpace(input.SalesName) ? party?.Name ?? account : input.SalesName.Trim(),
             SalesNameAlias = party?.NameAlias ?? string.Empty,
             SalesStatus = SalesStatus.Backorder,
@@ -360,6 +448,7 @@ public sealed class SalesTableController : ControllerBase
             DeliveryPostalAddress = input.DeliveryPostalAddress ?? 0,
             CustomerRef = input.CustomerReference?.Trim() ?? string.Empty,
             Email = input.Contact?.Trim() ?? string.Empty,
+            OrderDate = today,
             DeliveryDate = input.RequestedReceiptDate?.Date ?? today,
             ReceiptDateRequested = input.RequestedReceiptDate?.Date ?? today,
             ShippingDateRequested = input.RequestedShipDate?.Date ?? today,
@@ -390,7 +479,30 @@ public sealed class SalesTableController : ControllerBase
             OrderTotal = order.SmmSalesAmountTotal,
             CustomerReference = order.CustomerRef,
             DeliveryMode = order.DlvMode,
+            DeliveryTerms = order.DlvTerm,
+            OrderDate = order.OrderDate,
+            InventSiteId = order.InventSiteId,
+            InventLocationId = order.InventLocationId,
             PaymentTerms = order.PaymTerm
         }, "Created successfully"));
+    }
+
+    private async Task<string> NextAvailableSalesIdAsync(CancellationToken cancellationToken)
+    {
+        const int maximumCollisionAttempts = 10_000;
+        for (var attempt = 0; attempt < maximumCollisionAttempts; attempt++)
+        {
+            var candidate = (await _numberSequences.NextAsync(
+                "SalesTable", cancellationToken: cancellationToken)).Code;
+            var exists = await _dbContext.Set<SalesTable>()
+                .IgnoreQueryFilters()
+                .AsNoTracking()
+                .AnyAsync(order => order.SalesId == candidate, cancellationToken);
+            if (!exists) return candidate;
+        }
+
+        throw new InvalidOperationException(
+            "The sales order number sequence could not produce an unused SalesId. " +
+            "Review the SalesTable number sequence NextRec value.");
     }
 }

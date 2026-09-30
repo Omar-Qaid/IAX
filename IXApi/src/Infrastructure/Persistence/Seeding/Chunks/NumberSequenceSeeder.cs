@@ -1,5 +1,6 @@
 using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Modules.Administration.NumberSequences;
+using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Identity.Authentication;
 using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Identity.Roles;
@@ -31,7 +32,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 ("Voucher",             "Voucher Sequence",          "VOU-######", "{PREFIX}-{SEQ}",       0),
 
                 // ─── ERP / AR ────────────────────────────────────────────────────
-                ("SalesTable",          "Sales Order Sequence",      "SO-######",  "{PREFIX}-{YYYY}-{SEQ}", 1),
+                ("SalesTable",          "Sales Order Sequence",      "SO-######",  "{PREFIX}-{YYYY}-{SEQ}", 0),
                 ("SalesLine",           "Sale Line Sequence",        "SOL-######", "{PREFIX}-{SEQ}",       0),
                 ("PackingSlip",         "Packing Slip Sequence",     "PS-######",  "{PREFIX}-{YYYY}-{SEQ}", 1),
                 ("CustConfirmJour",     "SO Confirm Sequence",       "CONF-######","{PREFIX}-{YYYY}-{SEQ}", 1),
@@ -125,6 +126,30 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             if (toAdd.Count > 0)
             {
                 db.SysNumberSequences.AddRange(toAdd);
+                await db.SaveChangesAsync(ct);
+            }
+
+            // Sales order IDs include the year but the runtime currently treats every cyclic
+            // sequence as daily. A daily reset can regenerate an existing SalesId within the
+            // same year, so repair databases seeded with the earlier cyclic configuration.
+            var salesOrderSequence = await db.SysNumberSequences
+                .FirstOrDefaultAsync(sequence => sequence.NumberSequence == "SalesTable", ct);
+            if (salesOrderSequence != null)
+            {
+                salesOrderSequence.Cyclic = 0;
+                var salesIds = await db.Set<SalesTable>()
+                    .IgnoreQueryFilters()
+                    .Select(order => order.SalesId)
+                    .ToListAsync(ct);
+                var highestUsedSequence = salesIds
+                    .Select(id => id.LastIndexOf('-') is var separator && separator >= 0
+                        && int.TryParse(id[(separator + 1)..], out var value)
+                            ? value
+                            : 0)
+                    .DefaultIfEmpty(0)
+                    .Max();
+                if ((salesOrderSequence.NextRec ?? 1) <= highestUsedSequence)
+                    salesOrderSequence.NextRec = checked(highestUsedSequence + 1);
                 await db.SaveChangesAsync(ct);
             }
         }

@@ -25,6 +25,11 @@ export const PERMISSIONS = {
   SALES_ORDER_CONFIRM: 'AccountsReceivable.SalesOrders.Confirm',
   SALES_ORDER_POST: 'AccountsReceivable.SalesOrders.Post',
 
+  INVENTORY_TRANSACTION_VIEW: 'Inventory.Transactions.View',
+  INVENTORY_TRANSACTION_CREATE: 'Inventory.Transactions.Create',
+  INVENTORY_TRANSACTION_EDIT: 'Inventory.Transactions.Edit',
+  INVENTORY_TRANSACTION_DELETE: 'Inventory.Transactions.Delete',
+
   CURRENCY_VIEW: 'GeneralLedger.Currencies.View',
   CURRENCY_MANAGE: 'GeneralLedger.Currencies.Edit',
 

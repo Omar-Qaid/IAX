@@ -29,6 +29,10 @@ namespace IAX.IXApi.Modules.Finance.Entities
         public string NameAlias { get; set; } = string.Empty;
 
         [Required]
+        [StringLength(FieldLengths.Name)]
+        public string Name { get; set; } = string.Empty;
+
+        [Required]
         [StringLength(FieldLengths.Sku)]
         public string Sku { get; set; } = string.Empty;
 

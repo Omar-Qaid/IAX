@@ -27,6 +27,42 @@ export interface ModuleNavConfig {
 }
 
 export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
+  'mod-Inventory': {
+    moduleId: 'mod-Inventory',
+    label: 'nav.inventory',
+    icon: 'inventory',
+    defaultPath: ROUTE_PATHS.INVENTORY.TRANSACTIONS,
+    matchPath: ROUTE_PATHS.INVENTORY.ROOT,
+    sections: [
+      {
+        id: 'setup',
+        title: 'nav.setup',
+        links: [
+          {
+            label: 'inventSite.title',
+            path: ROUTE_PATHS.INVENTORY.SITES,
+            permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+          },
+          {
+            label: 'inventLocation.title',
+            path: ROUTE_PATHS.INVENTORY.WAREHOUSES,
+            permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+          },
+        ],
+      },
+      {
+        id: 'inquiries',
+        title: 'nav.inquiries',
+        links: [
+          {
+            label: 'nav.inventoryTransactions',
+            path: ROUTE_PATHS.INVENTORY.TRANSACTIONS,
+            permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+          },
+        ],
+      },
+    ],
+  },
   'mod-AccountsReceivable': {
     moduleId: 'mod-AccountsReceivable',
     label: 'nav.accountsReceivable',

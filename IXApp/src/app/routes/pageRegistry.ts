@@ -107,6 +107,33 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'inventory-transactions',
+    path: ROUTE_PATHS.INVENTORY.TRANSACTIONS,
+    permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/inventory/pages/InventTransPage'),
+      (module) => module.InventTransPage
+    ),
+  },
+  {
+    id: 'inventory-sites',
+    path: ROUTE_PATHS.INVENTORY.SITES,
+    permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/inventory/pages/InventSitePage'),
+      (module) => module.InventSitePage
+    ),
+  },
+  {
+    id: 'inventory-warehouses',
+    path: ROUTE_PATHS.INVENTORY.WAREHOUSES,
+    permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/inventory/pages/InventLocationPage'),
+      (module) => module.InventLocationPage
+    ),
+  },
+  {
     id: 'currencies',
     path: ROUTE_PATHS.FOUNDATION.CURRENCIES,
     permission: PERMISSIONS.CURRENCY_VIEW,

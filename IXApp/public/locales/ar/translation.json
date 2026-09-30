@@ -104,7 +104,10 @@
     "application_navigation": "التنقل في التطبيق",
     "finance_operations": "المالية والعمليات",
     "app_launcher": "مشغّل التطبيقات",
-    "global_search": "البحث عن صفحة"
+    "global_search": "البحث عن صفحة",
+    "inventory": "إدارة المخزون",
+    "inquiries": "الاستعلامات والتقارير",
+    "inventoryTransactions": "حركات المخزون"
   },
   "pages": {
     "login": {
@@ -238,6 +241,37 @@
     "notFound": {
       "title": "الصفحة غير موجودة",
       "message": "الصفحة المطلوبة غير موجودة أو غير متاحة."
+    },
+    "inventTrans": {
+      "title": "حركات المخزون"
+    }
+  },
+  "inventSite": {
+    "title": "المواقع",
+    "orderEntry": "إدخال الطلب",
+    "masterPlanning": "التخطيط الرئيسي",
+    "addresses": "العناوين",
+    "addressesHelp": "لا يوجد عنوان موقع مكوّن.",
+    "financialDimensions": "الأبعاد المالية",
+    "hierarchy": "التسلسل الهرمي",
+    "warehouse": "المستودع",
+    "noWarehouses": "لا توجد مستودعات تابعة لهذا الموقع.",
+    "fields": {
+      "site": "الموقع",
+      "name": "الاسم",
+      "timeZone": "المنطقة الزمنية",
+      "receivingOverride": "السماح بتجاوز مستودع الاستلام",
+      "defaultDimension": "البعد الافتراضي",
+      "defaultStatus": "معرف حالة المخزون الافتراضية"
+    }
+  },
+  "inventLocation": {
+    "title": "المستودعات",
+    "fields": {
+      "warehouse": "المستودع",
+      "name": "الاسم",
+      "site": "الموقع",
+      "type": "النوع"
     }
   },
   "printTemplates": {
@@ -2593,6 +2627,49 @@
     "title": "الأقسام",
     "fields": {
       "code": "الكود"
+    }
+  },
+  "inventTrans": {
+    "transactionFilter": "عامل تصفية الحركة",
+    "fields": {
+      "itemNumber": "رقم الصنف",
+      "physicalDate": "التاريخ الفعلي",
+      "financialDate": "التاريخ المالي",
+      "reference": "المرجع",
+      "number": "الرقم",
+      "transactionId": "حركة المخزون",
+      "receipt": "الاستلام",
+      "issue": "الصرف",
+      "quantity": "الكمية",
+      "unitPrice": "سعر الوحدة",
+      "unitCost": "تكلفة الوحدة",
+      "costAmount": "مبلغ التكلفة",
+      "site": "الموقع",
+      "warehouse": "المستودع",
+      "batchNumber": "رقم الدفعة",
+      "serialNumber": "الرقم التسلسلي",
+      "expectedDate": "التاريخ المتوقع",
+      "voucher": "القسيمة"
+    },
+    "actions": {
+      "details": "تفاصيل الحركة",
+      "dimensions": "عرض الأبعاد",
+      "summation": "الإجماليات",
+      "split": "تقسيم",
+      "archived": "الحركات المؤرشفة",
+      "inventory": "المخزون",
+      "ledger": "دفتر الأستاذ"
+    },
+    "filters": {
+      "all": "عرض الكل",
+      "receipts": "الاستلامات",
+      "issues": "عمليات الصرف",
+      "open": "الحركات المفتوحة"
+    },
+    "summary": {
+      "transactions": "الحركات",
+      "receipts": "صفوف الاستلام",
+      "issues": "صفوف الصرف"
     }
   }
 }

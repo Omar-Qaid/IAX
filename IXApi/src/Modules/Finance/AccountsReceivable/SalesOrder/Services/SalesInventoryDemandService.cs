@@ -67,28 +67,45 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
         });
     }
 
-    public async Task UpdateAsync(SalesLine line, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(SalesLine line, string inventSiteId,
+        string inventLocationId, CancellationToken cancellationToken = default)
     {
         // Preserve update support for sales lines created before inventory-demand integration.
         if (string.IsNullOrWhiteSpace(line.InventTransId)) return;
-        var originId = await _dbContext.Set<InventTransOrigin>().AsNoTracking()
-            .Where(item => item.DataAreaId == line.DataAreaId && item.InventTransId == line.InventTransId)
-            .Select(item => (long?)item.RecId).SingleOrDefaultAsync(cancellationToken);
-        if (!originId.HasValue) throw new InvalidOperationException("The sales line inventory origin was not found.");
+        var origin = await _dbContext.Set<InventTransOrigin>().SingleOrDefaultAsync(item =>
+            item.DataAreaId == line.DataAreaId && item.InventTransId == line.InventTransId,
+            cancellationToken);
+        if (origin == null) throw new InvalidOperationException("The sales line inventory origin was not found.");
         var transaction = await _dbContext.Set<InventTrans>().SingleOrDefaultAsync(item =>
-            item.DataAreaId == line.DataAreaId && item.InventTransOrigin == originId.Value, cancellationToken);
+            item.DataAreaId == line.DataAreaId && item.InventTransOrigin == origin.RecId, cancellationToken);
         if (transaction == null) throw new InvalidOperationException("The sales line inventory transaction was not found.");
         var previousDemand = -transaction.Qty;
+        var previousDimensionId = line.InventDimId;
+        var dimension = await _dimensions.ResolveAsync(line.DataAreaId, inventSiteId,
+            inventLocationId, cancellationToken);
         transaction.Qty = -line.SalesQty;
         transaction.DateExpected = line.ReceiptDateRequested;
         line.RemainInventPhysical = line.SalesQty;
         line.RemainInventFinancial = line.SalesQty;
-        var inventorySummary = await _dbContext.Set<InventSum>().SingleOrDefaultAsync(item =>
+        var previousSummary = await _dbContext.Set<InventSum>().SingleOrDefaultAsync(item =>
             item.DataAreaId == line.DataAreaId && item.ItemId == line.ItemId
-            && item.InventDimId == line.InventDimId, cancellationToken)
+            && item.InventDimId == previousDimensionId, cancellationToken)
             ?? throw new InvalidOperationException("The sales line inventory summary was not found.");
-        inventorySummary.OnOrder += line.SalesQty - previousDemand;
-        inventorySummary.LastUpdDateExpected = line.ReceiptDateRequested;
+        if (previousDimensionId == dimension.InventDimId)
+        {
+            previousSummary.OnOrder += line.SalesQty - previousDemand;
+            previousSummary.LastUpdDateExpected = line.ReceiptDateRequested;
+            return;
+        }
+
+        previousSummary.OnOrder -= previousDemand;
+        var nextSummary = await GetOrCreateInventorySummaryAsync(
+            line.DataAreaId, line.ItemId, dimension, cancellationToken);
+        nextSummary.OnOrder += line.SalesQty;
+        nextSummary.LastUpdDateExpected = line.ReceiptDateRequested;
+        line.InventDimId = dimension.InventDimId;
+        origin.ItemInventDimId = dimension.InventDimId;
+        transaction.InventDimId = dimension.InventDimId;
     }
 
     public async Task DeleteAsync(SalesLine line, CancellationToken cancellationToken = default)

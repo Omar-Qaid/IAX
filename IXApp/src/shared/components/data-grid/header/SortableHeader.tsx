@@ -4,6 +4,7 @@ import { Box, Typography, IconButton, useTheme } from '@mui/material';
 import ArrowUpward from '@mui/icons-material/ArrowUpward';
 import ArrowDownward from '@mui/icons-material/ArrowDownward';
 import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
+import DragIndicator from '@mui/icons-material/DragIndicator';
 import FilterIcon from '@mui/icons-material/FilterList';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -102,13 +103,26 @@ export function SortableHeader<T>({
           height: headerHeight,
           minHeight: headerHeight,
           boxSizing: 'border-box',
-          '&:hover .column-menu-trigger, &:focus-within .column-menu-trigger': { opacity: 1 },
-          '@media (hover: none)': { '& .column-menu-trigger': { opacity: 1 } },
+          '&:hover .column-header-action, &:focus-within .column-header-action': { opacity: 1 },
+          '@media (hover: none)': { '& .column-header-action': { opacity: 1 } },
           '&:hover': {
             bgcolor: theme.palette.mode === 'light' ? '#e9e8e7' : theme.palette.action.hover,
           },
         }}
       >
+        <DragIndicator
+          className="column-header-action"
+          aria-hidden="true"
+          sx={{
+            fontSize: 15,
+            color: 'text.secondary',
+            opacity: isDragging ? 1 : 0,
+            marginInlineStart: -0.75,
+            marginInlineEnd: 0.25,
+            flexShrink: 0,
+            pointerEvents: 'none',
+          }}
+        />
         <Typography
           variant="subtitle2"
           sx={{
@@ -136,7 +150,7 @@ export function SortableHeader<T>({
           <IconButton
             size="small"
             aria-label={t('grid.column_menu', { column: t(column.headerName || '') })}
-            className="column-menu-trigger"
+            className="column-header-action"
             sx={{ p: 0.25, marginInlineStart: 0.25, opacity: 0, flexShrink: 0, color: 'text.primary' }}
             onClick={(e) => {
               e.stopPropagation();

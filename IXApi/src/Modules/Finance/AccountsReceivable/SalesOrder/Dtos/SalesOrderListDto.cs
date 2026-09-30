@@ -16,5 +16,9 @@ public sealed class SalesOrderListDto
     public decimal OrderTotal { get; set; }
     public string CustomerReference { get; set; } = string.Empty;
     public string DeliveryMode { get; set; } = string.Empty;
+    public string DeliveryTerms { get; set; } = string.Empty;
     public string PaymentTerms { get; set; } = string.Empty;
+    public DateTime OrderDate { get; set; }
+    public string InventSiteId { get; set; } = string.Empty;
+    public string InventLocationId { get; set; } = string.Empty;
 }

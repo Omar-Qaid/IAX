@@ -104,7 +104,10 @@
     "application_navigation": "Application navigation",
     "finance_operations": "Finance and Operations",
     "app_launcher": "App launcher",
-    "global_search": "Search for a page"
+    "global_search": "Search for a page",
+    "inventory": "Inventory management",
+    "inquiries": "Inquiries and reports",
+    "inventoryTransactions": "Inventory transactions"
   },
   "pages": {
     "login": {
@@ -238,6 +241,37 @@
     "notFound": {
       "title": "Page not found",
       "message": "The requested page does not exist or is not available."
+    },
+    "inventTrans": {
+      "title": "Inventory transactions"
+    }
+  },
+  "inventSite": {
+    "title": "Sites",
+    "orderEntry": "Order entry",
+    "masterPlanning": "Master planning",
+    "addresses": "Addresses",
+    "addressesHelp": "No site address is configured.",
+    "financialDimensions": "Financial dimensions",
+    "hierarchy": "Hierarchy",
+    "warehouse": "Warehouse",
+    "noWarehouses": "No warehouses belong to this site.",
+    "fields": {
+      "site": "Site",
+      "name": "Name",
+      "timeZone": "Time zone",
+      "receivingOverride": "Allow receiving warehouse override",
+      "defaultDimension": "Default dimension",
+      "defaultStatus": "Default inventory status ID"
+    }
+  },
+  "inventLocation": {
+    "title": "Warehouses",
+    "fields": {
+      "warehouse": "Warehouse",
+      "name": "Name",
+      "site": "Site",
+      "type": "Type"
     }
   },
   "printTemplates": {
@@ -2593,6 +2627,49 @@
     "title": "Departments",
     "fields": {
       "code": "Code"
+    }
+  },
+  "inventTrans": {
+    "transactionFilter": "Transaction filter",
+    "fields": {
+      "itemNumber": "Item number",
+      "physicalDate": "Physical date",
+      "financialDate": "Financial date",
+      "reference": "Reference",
+      "number": "Number",
+      "transactionId": "Inventory transaction",
+      "receipt": "Receipt",
+      "issue": "Issue",
+      "quantity": "Quantity",
+      "unitPrice": "Unit price",
+      "unitCost": "Unit cost",
+      "costAmount": "Cost amount",
+      "site": "Site",
+      "warehouse": "Warehouse",
+      "batchNumber": "Batch number",
+      "serialNumber": "Serial number",
+      "expectedDate": "Expected date",
+      "voucher": "Voucher"
+    },
+    "actions": {
+      "details": "Transaction details",
+      "dimensions": "Display dimensions",
+      "summation": "Summation",
+      "split": "Split",
+      "archived": "Archived transactions",
+      "inventory": "Inventory",
+      "ledger": "Ledger"
+    },
+    "filters": {
+      "all": "Display all",
+      "receipts": "Receipts",
+      "issues": "Issues",
+      "open": "Open transactions"
+    },
+    "summary": {
+      "transactions": "Transactions",
+      "receipts": "Receipt rows",
+      "issues": "Issue rows"
     }
   }
 }
