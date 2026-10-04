@@ -25,14 +25,14 @@ export const salesOrderCopyApi = {
     );
     return data(response, 'Source documents could not be loaded.');
   },
-  async lines(orderId: string, mode: SalesOrderCopyMode, sourceId: number, signal?: AbortSignal) {
+  async lines(orderId: string, mode: SalesOrderCopyMode, sourceId: string, signal?: AbortSignal) {
     const response = await apiClient.get<ApiResponse<DocumentCopyLine[]>>(
       `/v1/SalesTable/${orderId}/copy/${segment(mode)}/documents/${sourceId}/lines`,
       { signal }
     );
     return data(response, 'Source lines could not be loaded.');
   },
-  async copy(orderId: string, mode: SalesOrderCopyMode, lineIds: number[], options: DocumentCopyOptions) {
+  async copy(orderId: string, mode: SalesOrderCopyMode, lineIds: string[], options: DocumentCopyOptions) {
     const response = await apiClient.post<ApiResponse<{ copiedLineCount: number }>>(
       `/v1/SalesTable/${orderId}/copy`,
       { mode, lineIds, ...options }

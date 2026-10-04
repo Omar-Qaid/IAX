@@ -31,9 +31,10 @@ public sealed class SalesOrderCopyController : ControllerBase
             return NotFound(APIResponse<object>.Fail("Destination sales order was not found."));
         var area = destination.DataAreaId;
         var rows = await _db.Set<SalesTable>().AsNoTracking()
-            .Where(x => x.DataAreaId == area && x.RecId != destinationRecId)
+            .Where(x => x.DataAreaId == area && x.RecId != destinationRecId
+                && _db.Set<SalesLine>().Any(line => line.DataAreaId == area && line.SalesId == x.SalesId))
             .OrderByDescending(x => x.CreatedAt)
-            .Select(x => new { id = x.RecId, documentNumber = x.SalesId, account = x.CustAccount,
+            .Select(x => new { id = x.RecId.ToString(), documentNumber = x.SalesId, account = x.CustAccount,
                 accountName = x.SalesName, createdAt = x.CreatedAt, currencyCode = x.CurrencyCode,
                 sourceType = "salesOrder" })
             .ToListAsync(ct);
@@ -70,9 +71,10 @@ public sealed class SalesOrderCopyController : ControllerBase
             return NotFound(APIResponse<object>.Fail("Destination sales order was not found."));
         var area = destination.DataAreaId;
         var rows = await _db.Set<CustConfirmJour>().AsNoTracking()
-            .Where(x => x.DataAreaId == area)
+            .Where(x => x.DataAreaId == area
+                && _db.Set<CustConfirmTrans>().Any(line => line.DataAreaId == area && line.ConfirmId == x.ConfirmId))
             .OrderByDescending(x => x.ConfirmDate)
-            .Select(x => new { id = x.RecId, documentNumber = x.ConfirmId, account = x.OrderAccount,
+            .Select(x => new { id = x.RecId.ToString(), documentNumber = x.ConfirmId, account = x.OrderAccount,
                 accountName = x.DeliveryName, createdAt = x.ConfirmDate, currencyCode = x.CurrencyCode,
                 sourceType = "confirmation" })
             .ToListAsync(ct);
@@ -99,7 +101,7 @@ public sealed class SalesOrderCopyController : ControllerBase
             x.DlvDate, default, x.SalesCategory)).ToList(), area, ct)));
     }
 
-    public sealed record CopyRequest(string Mode, List<long> LineIds, decimal QuantityFactor = 1,
+    public sealed record CopyRequest(string Mode, List<string> LineIds, decimal QuantityFactor = 1,
         bool InvertSign = false, bool RecalculatePrice = false, bool CopyPrecisely = true);
 
     [HttpPost]
@@ -113,6 +115,13 @@ public sealed class SalesOrderCopyController : ControllerBase
             return BadRequest(APIResponse<object>.Fail("Copy mode must be fromAll or fromJournal."));
         if (request.LineIds.Count == 0)
             return BadRequest(APIResponse<object>.Fail("Select at least one source line."));
+        var lineIds = new List<long>(request.LineIds.Count);
+        foreach (var value in request.LineIds.Distinct())
+        {
+            if (!long.TryParse(value, out var id))
+                return BadRequest(APIResponse<object>.Fail("One or more source line identifiers are invalid."));
+            lineIds.Add(id);
+        }
         if (request.QuantityFactor <= 0)
             return BadRequest(APIResponse<object>.Fail("Quantity factor must be greater than zero."));
 
@@ -130,7 +139,7 @@ public sealed class SalesOrderCopyController : ControllerBase
             if (request.Mode.Equals("fromJournal", StringComparison.OrdinalIgnoreCase))
             {
                 sources = await _db.Set<CustConfirmTrans>().AsNoTracking()
-                    .Where(x => request.LineIds.Contains(x.RecId) && x.DataAreaId == area)
+                    .Where(x => lineIds.Contains(x.RecId) && x.DataAreaId == area)
                     .Select(x => new CopySourceLine(x.RecId, x.ItemId, x.Name, x.Qty, x.SalesUnit,
                         x.SalesPrice, x.PriceUnit, x.LineDisc, x.LinePercent, x.MultiLnDisc,
                         x.MultiLnPercent, x.LineAmount, x.InventDimId, x.TaxGroup, x.TaxItemGroup,
@@ -139,14 +148,15 @@ public sealed class SalesOrderCopyController : ControllerBase
             else
             {
                 sources = await _db.Set<SalesLine>().AsNoTracking()
-                    .Where(x => request.LineIds.Contains(x.RecId) && x.DataAreaId == area)
+                    .Where(x => lineIds.Contains(x.RecId) && x.DataAreaId == area
+                        && x.SalesId != destination.SalesId)
                     .Select(x => new CopySourceLine(x.RecId, x.ItemId, x.Name, x.SalesQty, x.SalesUnit,
                         x.SalesPrice, x.PriceUnit, x.LineDisc, x.LinePercent, x.MultiLnDisc,
                         x.MultiLnPercent, x.LineAmount, x.InventDimId, x.TaxGroup, x.TaxItemGroup,
                         x.DlvMode, x.DlvTerm, x.ReceiptDateRequested, x.ShippingDateRequested,
                         x.SalesCategory)).ToListAsync(ct);
             }
-            if (sources.Count != request.LineIds.Distinct().Count())
+            if (sources.Count != lineIds.Count)
                 return UnprocessableEntity(APIResponse<object>.Fail("One or more selected source lines were not found."));
 
             var dimensionIds = sources.Select(x => x.InventDimId).Where(x => x != string.Empty).Distinct().ToList();
@@ -206,7 +216,7 @@ public sealed class SalesOrderCopyController : ControllerBase
         var ids = lines.Select(x => x.InventDimId).Where(x => x != string.Empty).Distinct().ToList();
         var dims = await _db.Set<InventDim>().AsNoTracking().Where(x => x.DataAreaId == area && ids.Contains(x.InventDimId))
             .ToDictionaryAsync(x => x.InventDimId, ct);
-        return lines.Select(x => new { x.Id, x.ItemId, description = x.Name, quantity = x.Quantity,
+        return lines.Select(x => new { id = x.Id.ToString(), x.ItemId, description = x.Name, quantity = x.Quantity,
             unit = x.Unit, unitPrice = x.UnitPrice, netAmount = x.LineAmount,
             discount = x.LineDiscount, discountPercent = x.LineDiscountPercent,
             site = dims.TryGetValue(x.InventDimId, out var d) ? d.InventSiteId : string.Empty,

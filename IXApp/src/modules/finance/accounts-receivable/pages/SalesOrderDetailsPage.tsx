@@ -54,7 +54,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   const [savingLineDetail, setSavingLineDetail] = useState(false);
   const [totalsOpen, setTotalsOpen] = useState(false);
   const [copyMode, setCopyMode] = useState<SalesOrderCopyMode>();
-  const [copySourceId, setCopySourceId] = useState<number>();
+  const [copySourceId, setCopySourceId] = useState<string>();
   const [copyBusy, setCopyBusy] = useState(false);
   const [copyError, setCopyError] = useState('');
   const lineDetailSaveLock = useRef(false);
@@ -228,7 +228,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   const copyLinesQuery = useQuery({
     queryKey: ['sales-order-copy-lines', order?.id, copyMode, copySourceId],
     queryFn: ({ signal }) => salesOrderCopyApi.lines(order!.id, copyMode!, copySourceId!, signal),
-    enabled: Boolean(order && copyMode && copySourceId),
+    enabled: Boolean(order && copyMode && copySourceId !== undefined),
   });
 
   const startHeaderEdit = () => {

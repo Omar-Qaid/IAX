@@ -90,7 +90,7 @@ export function SalesOrderLinesGrid({
   const selectedLineIds = useMemo(() => (selectedLineId ? [selectedLineId] : []), [selectedLineId]);
   const handleSelectionChange = useCallback(
     (ids: (string | number)[]) => {
-      if (ids[0] != null) setSelectedLineId(String(ids[0]));
+      setSelectedLineId(ids[0] == null ? undefined : String(ids[0]));
     },
     [setSelectedLineId]
   );

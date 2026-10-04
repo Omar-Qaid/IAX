@@ -14,7 +14,7 @@ import { DataGrid } from '@shared/components/data-grid/DataGrid';
 import type { ColumnDef } from '@shared/components/data-grid/types';
 
 export interface DocumentCopySource {
-  id: number;
+  id: string;
   documentNumber: string;
   account: string;
   accountName: string;
@@ -24,7 +24,7 @@ export interface DocumentCopySource {
 }
 
 export interface DocumentCopyLine {
-  id: number;
+  id: string;
   itemId: string;
   description: string;
   quantity: number;
@@ -57,7 +57,7 @@ export interface DocumentCopyDrawerProps {
   error?: string;
   onClose: () => void;
   onSourceChange: (source?: DocumentCopySource) => void;
-  onCopy: (lineIds: number[], options: DocumentCopyOptions) => Promise<void> | void;
+  onCopy: (lineIds: string[], options: DocumentCopyOptions) => Promise<void> | void;
 }
 
 const sourceColumns: ColumnDef<DocumentCopySource>[] = [
@@ -96,7 +96,7 @@ export function DocumentCopyDrawer({
   onSourceChange,
   onCopy,
 }: DocumentCopyDrawerProps): React.ReactElement {
-  const [selectedSource, setSelectedSource] = useState<number>();
+  const [selectedSource, setSelectedSource] = useState<string>();
   const [selectedLines, setSelectedLines] = useState<(string | number)[]>([]);
   const options: DocumentCopyOptions = {
     quantityFactor: 1,
@@ -135,7 +135,7 @@ export function DocumentCopyDrawer({
           <Button
             variant="contained"
             disabled={busy || selectedLines.length === 0}
-            onClick={() => void onCopy(selectedLines.map(Number), options)}
+            onClick={() => void onCopy(selectedLines.map(String), options)}
           >
             OK
           </Button>
@@ -158,7 +158,7 @@ export function DocumentCopyDrawer({
             selectedIds={selectedSourceIds}
             onRowClick={selectSource}
             onSelectionChange={(ids) => {
-              const id = ids.length ? Number(ids[ids.length - 1]) : undefined;
+              const id = ids.length ? String(ids[ids.length - 1]) : undefined;
               selectSource(sources.find((source) => source.id === id));
             }}
             height={225}

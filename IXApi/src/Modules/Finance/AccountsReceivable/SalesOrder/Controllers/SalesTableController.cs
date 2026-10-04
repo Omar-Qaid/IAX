@@ -387,9 +387,8 @@ public sealed class SalesTableController : ControllerBase
         {
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(
                 System.Data.IsolationLevel.Serializable, cancellationToken);
-            var dataAreaId = _company.GetDataAreaId() ?? "dat";
             var order = await _dbContext.Set<SalesTable>().FirstOrDefaultAsync(
-                row => row.RecId == recId && row.DataAreaId == dataAreaId, cancellationToken);
+                row => row.RecId == recId, cancellationToken);
             if (order == null) return (IActionResult)NotFound(APIResponse<object>.Fail("Sales order was not found."));
             if (order.SalesStatus != SalesStatus.Backorder)
                 return UnprocessableEntity(APIResponse<object>.Fail("Only an open sales order can be cancelled."));
