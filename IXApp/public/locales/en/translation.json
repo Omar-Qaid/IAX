@@ -37,7 +37,9 @@
   },
   "salesOrder": {
     "gridHelp": "Tab / Enter: next cell | Shift: previous | Up / Down: next row | F2: edit | Insert: add | Alt+Delete: remove | Ctrl+F: filter",
-    "pasteSingleCell": "Paste one cell at a time. Select a value in the lookup for item and unit fields."
+    "pasteSingleCell": "Paste one cell at a time. Select a value in the lookup for item and unit fields.",
+    "lineDiscount": "Discount",
+    "lineDiscountPercent": "Discount %"
   },
   "accessibility": {
     "skipToContent": "Skip to main content",
@@ -69,6 +71,12 @@
     "currencies": "Currencies",
     "exchangeRateTypes": "Exchange rate types",
     "exchangeRates": "Currency exchange rates",
+    "chargesCodes": "Charges codes",
+    "salesTaxAuthorities": "Sales tax authorities",
+    "salesTaxSettlementPeriods": "Sales tax settlement periods",
+    "salesTaxCodes": "Sales tax codes",
+    "salesTaxGroups": "Sales tax groups",
+    "itemSalesTaxGroups": "Item sales tax groups",
     "workflow": "Workflow",
     "mail": "Mail",
     "requestSubmission": "Request Submission",

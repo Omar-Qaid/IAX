@@ -160,7 +160,11 @@ export function SalesOrderListPage(): React.ReactElement {
       loading={orderQuery.isLoading}
       error={orderQuery.error instanceof Error ? orderQuery.error.message : null}
       onRetry={() => orderQuery.refetch()}
-      dataGridProps={{ storageKey: 'accounts-receivable.sales-orders.reference-view' }}
+      dataGridProps={{
+        storageKey: 'accounts-receivable.sales-orders.reference-view',
+        onRowDoubleClick: (order) =>
+          navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrder(order.id)),
+      }}
       dialogs={
         <SalesOrderQuickCreate
           open={quickCreateOpen}

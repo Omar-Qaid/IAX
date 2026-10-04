@@ -17,6 +17,9 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
 [DomainPermission("AccountsReceivable", "SalesOrders", "View")]
 public sealed class SalesTableController : ControllerBase
 {
+    private const int SalesTableDocumentId = 2002;
+    private const int SalesLineDocumentId = 2003;
+
     private readonly IFinanceDataContext _dbContext;
     private readonly ISysNumberSequenceService _numberSequences;
     private readonly ICompanyExecutionContext _company;
@@ -88,6 +91,28 @@ public sealed class SalesTableController : ControllerBase
         return Ok(APIResponse<object>.Ok(new { sites, warehouses }));
     }
 
+    [HttpGet("tax-groups")]
+    public async Task<IActionResult> TaxGroups(CancellationToken cancellationToken = default)
+    {
+        var salesTaxGroups = await _dbContext.TaxGroupHeadings.AsNoTracking()
+            .OrderBy(group => group.TaxGroup)
+            .Select(group => new {
+                id = group.TaxGroup,
+                code = group.TaxGroup,
+                name = group.TaxGroupName
+            })
+            .ToListAsync(cancellationToken);
+        var itemSalesTaxGroups = await _dbContext.Set<TaxItemGroupHeading>().AsNoTracking()
+            .OrderBy(group => group.TaxItemGroup)
+            .Select(group => new {
+                id = group.TaxItemGroup,
+                code = group.TaxItemGroup,
+                name = group.Name
+            })
+            .ToListAsync(cancellationToken);
+        return Ok(APIResponse<object>.Ok(new { salesTaxGroups, itemSalesTaxGroups }));
+    }
+
     [HttpGet("{recId:long}/lines")]
     public async Task<IActionResult> Lines(long recId, CancellationToken cancellationToken = default)
     {
@@ -103,6 +128,111 @@ public sealed class SalesTableController : ControllerBase
         return Ok(APIResponse<object>.Ok(lines.Select(line => dimensions.TryGetValue(line.InventDimId, out var dimension)
             ? LineRecord(line, dimension.InventSiteId, dimension.InventLocationId)
             : LineRecord(line))));
+    }
+
+    [HttpGet("{recId:long}/totals")]
+    public async Task<IActionResult> Totals(long recId, CancellationToken cancellationToken = default)
+    {
+        var order = await _dbContext.Set<SalesTable>().AsNoTracking()
+            .FirstOrDefaultAsync(row => row.RecId == recId, cancellationToken);
+        if (order == null) return NotFound(APIResponse<object>.Fail("Sales order was not found."));
+
+        var lines = await _dbContext.Set<SalesLine>().AsNoTracking()
+            .Where(line => line.SalesId == order.SalesId && line.DataAreaId == order.DataAreaId)
+            .ToListAsync(cancellationToken);
+        var lineRecIds = lines.Select(line => line.RecId).ToList();
+        var charges = await _dbContext.Set<MarkupTrans>().AsNoTracking()
+            .Where(charge => charge.DataAreaId == order.DataAreaId
+                && charge.IsDeleted != NoYes.Yes
+                && (charge.ModuleType == MarkupModuleType.Customer || charge.ModuleType == MarkupModuleType.Sales)
+                && ((charge.TransRecId == order.RecId
+                        && (charge.TransTableId == SalesTableDocumentId || charge.TransTableId == 0))
+                    || (lineRecIds.Contains(charge.TransRecId)
+                        && charge.TransTableId == SalesLineDocumentId)))
+            .ToListAsync(cancellationToken);
+        var taxGroups = lines.Select(line => line.TaxGroup)
+            .Concat(charges.Select(charge => charge.TaxGroup))
+            .Where(value => value != string.Empty).Distinct().ToList();
+        var itemTaxGroups = lines.Select(line => line.TaxItemGroup)
+            .Concat(charges.Select(charge => charge.TaxItemGroup))
+            .Where(value => value != string.Empty).Distinct().ToList();
+        var groupRows = await _dbContext.Set<TaxGroupData>().AsNoTracking()
+            .Where(row => taxGroups.Contains(row.TaxGroup)).ToListAsync(cancellationToken);
+        var itemRows = await _dbContext.Set<TaxOnItem>().AsNoTracking()
+            .Where(row => itemTaxGroups.Contains(row.TaxItemGroup)).ToListAsync(cancellationToken);
+        var taxCodes = groupRows.Select(row => row.TaxCode).Intersect(itemRows.Select(row => row.TaxCode)).Distinct().ToList();
+        var rates = await _dbContext.Set<TaxData>().AsNoTracking()
+            .Where(row => taxCodes.Contains(row.TaxCode)).ToListAsync(cancellationToken);
+
+        decimal grossAmount = 0;
+        decimal lineDiscount = 0;
+        decimal multiLineDiscount = 0;
+        decimal salesTax = 0;
+        decimal totalCharges = 0;
+        foreach (var line in lines)
+        {
+            grossAmount += line.LineAmount;
+            lineDiscount += line.LineDisc;
+            multiLineDiscount += line.MultiLnDisc;
+            var taxableAmount = Math.Max(0, line.LineAmount - line.LineDisc - line.MultiLnDisc);
+            var applicableCodes = groupRows
+                .Where(row => row.TaxGroup == line.TaxGroup && row.ExemptTax != NoYes.Yes)
+                .Select(row => row.TaxCode)
+                .Intersect(itemRows.Where(row => row.TaxItemGroup == line.TaxItemGroup).Select(row => row.TaxCode));
+            var combinedRate = applicableCodes.Distinct().Sum(taxCode =>
+            {
+                var effectiveRate = rates
+                    .Where(rate => rate.TaxCode == taxCode
+                        && (rate.TaxFromDate == default || rate.TaxFromDate.Date <= order.OrderDate.Date)
+                        && (rate.TaxToDate == default || rate.TaxToDate.Date >= order.OrderDate.Date))
+                    .OrderByDescending(rate => rate.TaxFromDate)
+                    .FirstOrDefault();
+                return effectiveRate?.TaxValue ?? 0m;
+            });
+            salesTax += order.InclTax && combinedRate > 0
+                ? taxableAmount * combinedRate / (100m + combinedRate)
+                : taxableAmount * combinedRate / 100m;
+        }
+
+        foreach (var charge in charges)
+        {
+            var chargeAmount = charge.CalculatedAmount != 0m ? charge.CalculatedAmount : charge.Value;
+            totalCharges += chargeAmount;
+            var applicableCodes = groupRows
+                .Where(row => row.TaxGroup == charge.TaxGroup && row.ExemptTax != NoYes.Yes)
+                .Select(row => row.TaxCode)
+                .Intersect(itemRows.Where(row => row.TaxItemGroup == charge.TaxItemGroup).Select(row => row.TaxCode));
+            var combinedRate = applicableCodes.Distinct().Sum(taxCode =>
+            {
+                var effectiveRate = rates
+                    .Where(rate => rate.TaxCode == taxCode
+                        && (rate.TaxFromDate == default || rate.TaxFromDate.Date <= order.OrderDate.Date)
+                        && (rate.TaxToDate == default || rate.TaxToDate.Date >= order.OrderDate.Date))
+                    .OrderByDescending(rate => rate.TaxFromDate)
+                    .FirstOrDefault();
+                return effectiveRate?.TaxValue ?? 0m;
+            });
+            salesTax += order.InclTax && combinedRate > 0
+                ? chargeAmount * combinedRate / (100m + combinedRate)
+                : chargeAmount * combinedRate / 100m;
+        }
+
+        var totalDiscount = lineDiscount + multiLineDiscount;
+        var subtotal = grossAmount - totalDiscount - (order.InclTax ? salesTax : 0m);
+        return Ok(APIResponse<object>.Ok(new
+        {
+            currencyCode = order.CurrencyCode,
+            grossAmount,
+            lineDiscount,
+            multiLineDiscount,
+            totalDiscount,
+            subtotal,
+            totalCharges,
+            salesTax,
+            invoiceAmount = subtotal + totalCharges + salesTax,
+            quantity = lines.Sum(line => line.SalesQty),
+            costValue = lines.Sum(line => line.CostPrice * line.SalesQty)
+        }));
     }
 
     public sealed class AddSalesLineInput
@@ -158,6 +288,10 @@ public sealed class SalesTableController : ControllerBase
         public decimal MultiLineDiscount { get; set; }
         [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0", "100")]
         public decimal MultiLineDiscountPercent { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.TaxGroup)]
+        public string? TaxGroup { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.TaxItemGroup)]
+        public string? TaxItemGroup { get; set; }
     }
 
     [HttpPost("{recId:long}/lines")]
@@ -178,6 +312,14 @@ public sealed class SalesTableController : ControllerBase
                 .FirstOrDefaultAsync(row => row.ItemId == item.ItemId && row.DataAreaId == order.DataAreaId && (int)row.ModuleType == 2, cancellationToken);
             if (module == null || string.IsNullOrWhiteSpace(module.UnitId))
                 return UnprocessableEntity(APIResponse<object>.Fail("The item must have a sales unit configured."));
+            var discountValidationError = NormalizeAndValidateLineDiscount(input);
+            if (discountValidationError != null)
+                return UnprocessableEntity(APIResponse<object>.Fail(discountValidationError));
+            var lineTaxGroup = string.IsNullOrWhiteSpace(input.TaxGroup) ? order.TaxGroupId : input.TaxGroup.Trim();
+            var lineTaxItemGroup = string.IsNullOrWhiteSpace(input.TaxItemGroup) ? module.TaxItemGroupId : input.TaxItemGroup.Trim();
+            var taxValidationError = await ValidateTaxSetupAsync(lineTaxGroup, lineTaxItemGroup, cancellationToken);
+            if (taxValidationError != null)
+                return UnprocessableEntity(APIResponse<object>.Fail(taxValidationError));
             var lastLine = await _dbContext.Set<SalesLine>()
                 .Where(row => row.SalesId == order.SalesId && row.DataAreaId == order.DataAreaId)
                 .MaxAsync(row => (decimal?)row.LineNum, cancellationToken) ?? 0;
@@ -207,6 +349,8 @@ public sealed class SalesTableController : ControllerBase
                 LinePercent = input.LineDiscountPercent,
                 MultiLnDisc = input.MultiLineDiscount,
                 MultiLnPercent = input.MultiLineDiscountPercent,
+                TaxGroup = lineTaxGroup,
+                TaxItemGroup = lineTaxItemGroup,
                 DataAreaId = order.DataAreaId,
             };
             var inventSiteId = string.IsNullOrWhiteSpace(input.InventSiteId) ? order.InventSiteId : input.InventSiteId;
@@ -254,6 +398,14 @@ public sealed class SalesTableController : ControllerBase
                 _dbContext.Set<SalesLine>().Remove(line);
             }
             else {
+                var discountValidationError = NormalizeAndValidateLineDiscount(input);
+                if (discountValidationError != null)
+                    return UnprocessableEntity(APIResponse<object>.Fail(discountValidationError));
+                var lineTaxGroup = string.IsNullOrWhiteSpace(input.TaxGroup) ? order.TaxGroupId : input.TaxGroup.Trim();
+                var lineTaxItemGroup = input.TaxItemGroup?.Trim() ?? string.Empty;
+                var taxValidationError = await ValidateTaxSetupAsync(lineTaxGroup, lineTaxItemGroup, cancellationToken);
+                if (taxValidationError != null)
+                    return UnprocessableEntity(APIResponse<object>.Fail(taxValidationError));
                 // Item identity and name remain unchanged after item selection.
                 line.SalesType = input.LineType ?? line.SalesType;
                 line.DeliveryType = input.DeliveryType ?? line.DeliveryType;
@@ -285,6 +437,8 @@ public sealed class SalesTableController : ControllerBase
                 line.LinePercent = input.LineDiscountPercent;
                 line.MultiLnDisc = input.MultiLineDiscount;
                 line.MultiLnPercent = input.MultiLineDiscountPercent;
+                line.TaxGroup = lineTaxGroup;
+                line.TaxItemGroup = lineTaxItemGroup;
                 var currentDimension = await _dbContext.Set<InventDim>().AsNoTracking()
                     .FirstOrDefaultAsync(item => item.DataAreaId == line.DataAreaId
                         && item.InventDimId == line.InventDimId, cancellationToken);
@@ -327,6 +481,66 @@ public sealed class SalesTableController : ControllerBase
         line.DefaultDimension, financialTag = line.FinTag, line.IntrastatCommodity,
         site = inventSiteId, warehouse = inventLocationId,
     };
+
+    private static string? NormalizeAndValidateLineDiscount(AddSalesLineInput input)
+    {
+        var grossAmount = input.Quantity * input.UnitPrice;
+        if (input.LineDiscount < 0 || input.LineDiscountPercent < 0 || input.LineDiscountPercent > 100)
+            return "The line discount must be nonnegative and the discount percentage must be between 0 and 100.";
+
+        if (input.LineDiscountPercent > 0 && input.LineDiscount == 0)
+            input.LineDiscount = decimal.Round(
+                grossAmount * input.LineDiscountPercent / 100m,
+                2,
+                MidpointRounding.AwayFromZero);
+        else if (input.LineDiscount > 0 && input.LineDiscountPercent == 0 && grossAmount > 0)
+            input.LineDiscountPercent = decimal.Round(
+                input.LineDiscount / grossAmount * 100m,
+                4,
+                MidpointRounding.AwayFromZero);
+
+        if (input.LineDiscount > grossAmount)
+            return "The line discount cannot exceed the gross line amount.";
+
+        var expectedAmount = decimal.Round(
+            grossAmount * input.LineDiscountPercent / 100m,
+            2,
+            MidpointRounding.AwayFromZero);
+        if (Math.Abs(input.LineDiscount - expectedAmount) > 0.01m)
+            return "The line discount amount does not match the discount percentage.";
+
+        return null;
+    }
+
+    private async Task<string?> ValidateTaxSetupAsync(
+        string taxGroup,
+        string taxItemGroup,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(taxGroup))
+            return "A sales tax group is required for the sales line.";
+        if (string.IsNullOrWhiteSpace(taxItemGroup))
+            return "An item sales tax group is required for the sales line.";
+
+        var salesGroupExists = await _dbContext.Set<TaxGroupHeading>().AsNoTracking()
+            .AnyAsync(group => group.TaxGroup == taxGroup, cancellationToken);
+        if (!salesGroupExists)
+            return $"Sales tax group '{taxGroup}' was not found.";
+
+        var itemGroupExists = await _dbContext.Set<TaxItemGroupHeading>().AsNoTracking()
+            .AnyAsync(group => group.TaxItemGroup == taxItemGroup, cancellationToken);
+        if (!itemGroupExists)
+            return $"Item sales tax group '{taxItemGroup}' was not found.";
+
+        var salesTaxCodes = _dbContext.Set<TaxGroupData>().AsNoTracking()
+            .Where(row => row.TaxGroup == taxGroup)
+            .Select(row => row.TaxCode);
+        var hasCommonTaxCode = await _dbContext.Set<TaxOnItem>().AsNoTracking()
+            .AnyAsync(row => row.TaxItemGroup == taxItemGroup && salesTaxCodes.Contains(row.TaxCode), cancellationToken);
+        return hasCommonTaxCode
+            ? null
+            : $"Sales tax group '{taxGroup}' and item sales tax group '{taxItemGroup}' do not share a sales tax code.";
+    }
 
     [HttpGet("list")]
     public async Task<ActionResult<APIResponse<IEnumerable<SalesOrderListDto>>>> GetList(
@@ -479,7 +693,11 @@ public sealed class SalesTableController : ControllerBase
             order.Deadline = input.Deadline?.Date ?? default;
             order.CustRequisitionNum = input.CustomerRequisitionNumber.Trim();
             order.SmmCampaignId = input.CampaignId.Trim();
-            order.TaxGroupId = input.TaxGroupId.Trim();
+            var taxGroupId = input.TaxGroupId.Trim();
+            if (!await _dbContext.Set<TaxGroupHeading>().AsNoTracking()
+                    .AnyAsync(group => group.TaxGroup == taxGroupId, cancellationToken))
+                return UnprocessableEntity(APIResponse<object>.Fail("Sales tax group was not found."));
+            order.TaxGroupId = taxGroupId;
             order.InclTax = input.PricesIncludeSalesTax;
             order.SalesGroup = input.SalesGroup.Trim();
             order.LanguageId = input.LanguageId.Trim();

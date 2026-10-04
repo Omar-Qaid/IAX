@@ -105,7 +105,7 @@ function ReferenceFilterEditor({
     onChange({ ...base, rules: rules.map((rule) => rule.id === id ? { ...rule, ...patch } : rule) });
   return (
     <Stack spacing="8px">
-      <Stack direction="row" alignItems="center" justifyContent="space-between">
+      <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
         <Typography sx={{ fontSize: 12, fontWeight: 800 }}>
           {t('wfProcessBuilder.settings.referenceFilter', { defaultValue: 'Database filter' })}
         </Typography>

@@ -33,6 +33,36 @@ export const PERMISSIONS = {
   CURRENCY_VIEW: 'GeneralLedger.Currencies.View',
   CURRENCY_MANAGE: 'GeneralLedger.Currencies.Edit',
 
+  MARKUP_TABLE_VIEW: 'GeneralLedger.ChargesCodes.View',
+  MARKUP_TABLE_CREATE: 'GeneralLedger.ChargesCodes.Create',
+  MARKUP_TABLE_EDIT: 'GeneralLedger.ChargesCodes.Edit',
+  MARKUP_TABLE_DELETE: 'GeneralLedger.ChargesCodes.Delete',
+
+  TAX_AUTHORITY_VIEW: 'Tax.TaxAuthorities.View',
+  TAX_AUTHORITY_CREATE: 'Tax.TaxAuthorities.Create',
+  TAX_AUTHORITY_EDIT: 'Tax.TaxAuthorities.Edit',
+  TAX_AUTHORITY_DELETE: 'Tax.TaxAuthorities.Delete',
+
+  TAX_PERIOD_VIEW: 'Tax.SettlementPeriods.View',
+  TAX_PERIOD_CREATE: 'Tax.SettlementPeriods.Create',
+  TAX_PERIOD_EDIT: 'Tax.SettlementPeriods.Edit',
+  TAX_PERIOD_DELETE: 'Tax.SettlementPeriods.Delete',
+
+  TAX_CODE_VIEW: 'Tax.TaxCodes.View',
+  TAX_CODE_CREATE: 'Tax.TaxCodes.Create',
+  TAX_CODE_EDIT: 'Tax.TaxCodes.Edit',
+  TAX_CODE_DELETE: 'Tax.TaxCodes.Delete',
+
+  TAX_GROUP_VIEW: 'Tax.TaxGroups.View',
+  TAX_GROUP_CREATE: 'Tax.TaxGroups.Create',
+  TAX_GROUP_EDIT: 'Tax.TaxGroups.Edit',
+  TAX_GROUP_DELETE: 'Tax.TaxGroups.Delete',
+
+  TAX_ITEM_GROUP_VIEW: 'Tax.ItemTaxGroups.View',
+  TAX_ITEM_GROUP_CREATE: 'Tax.ItemTaxGroups.Create',
+  TAX_ITEM_GROUP_EDIT: 'Tax.ItemTaxGroups.Edit',
+  TAX_ITEM_GROUP_DELETE: 'Tax.ItemTaxGroups.Delete',
+
   WF_PROCESS_VIEW: 'Workflow.Processes.View',
   WF_PROCESS_CREATE: 'Workflow.Processes.Create',
   WF_PROCESS_EDIT: 'Workflow.Processes.Edit',

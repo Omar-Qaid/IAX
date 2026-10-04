@@ -9,6 +9,30 @@ import { useLookupGridField } from '@shared/hooks/useLookupGridField';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import type { FieldValues } from 'react-hook-form';
 
+const standardLookupSx = {
+  minWidth: 0,
+  '& .MuiInput-root': {
+    minHeight: 32,
+    boxSizing: 'border-box',
+  },
+  '& .MuiAutocomplete-inputRoot.MuiInput-root': {
+    paddingBlock: '0 !important',
+  },
+  '& .MuiAutocomplete-inputRoot.MuiInput-root .MuiAutocomplete-input': {
+    boxSizing: 'border-box',
+    height: 31,
+    paddingBlock: '6px !important',
+    paddingInlineStart: '0 !important',
+    paddingInlineEnd: '30px !important',
+  },
+  '& .MuiAutocomplete-endAdornment': {
+    insetInlineEnd: 0,
+    right: 'auto',
+    top: '50%',
+    transform: 'translateY(-50%)',
+  },
+} as const;
+
 type ServerLookupDialogProps = Pick<
   LookupFieldProps,
   | 'fetchPage'
@@ -143,13 +167,25 @@ function SelectLookup({
   const [search, setSearch] = useState('');
   const [selectedCache, setSelectedCache] = useState<LookupOption | null>(null);
   const lookup = useLookupGridField<LookupOption>({
-    queryKey: queryKey ?? ['lookup-field', label],
+    queryKey: queryKey ?? ['lookup-field', label, 'server'],
     fetchPage: resolvedFetchPage,
-    enabled: open || (usesServerDataSource && scalarValue != null),
+    enabled: usesServerDataSource && (open || scalarValue != null),
     pageSize,
     search: searchable ? search : '',
     debounceMs: searchDebounceMs,
   });
+  const visibleOptions = useMemo(() => {
+    if (usesServerDataSource) return lookup.rows;
+    const term = searchable ? search.trim().toLowerCase() : '';
+    if (!term) return options;
+    return options.filter(
+      (option) =>
+        option.code.toLowerCase().includes(term) ||
+        option.name.toLowerCase().includes(term) ||
+        (option.nameAlias ?? '').toLowerCase().includes(term) ||
+        option.description?.toLowerCase().includes(term)
+    );
+  }, [lookup.rows, options, search, searchable, usesServerDataSource]);
   const selected =
     options.find((option) => String(option.id) === String(scalarValue)) ??
     lookup.rows.find((option) => String(option.id) === String(scalarValue)) ??
@@ -162,6 +198,7 @@ function SelectLookup({
 
   return (
     <Autocomplete<LookupOption, false, boolean, false>
+      sx={standardLookupSx}
       open={open}
       onOpen={() => setOpen(true)}
       onClose={() => {
@@ -169,7 +206,7 @@ function SelectLookup({
         setSearch('');
       }}
       value={selected}
-      options={lookup.rows}
+      options={visibleOptions}
       inputValue={open && searchable ? search : localizedName(selected, isRtl)}
       onInputChange={(_, nextInput, reason) => {
         if (searchable && reason === 'input') setSearch(nextInput);
@@ -196,7 +233,10 @@ function SelectLookup({
         String(option.id) === String(selectedOption.id)
       }
       filterOptions={(availableOptions) => availableOptions}
-      loading={lookup.isLoading || (lookup.isFetching && !lookup.isFetchingNextPage)}
+      loading={
+        usesServerDataSource &&
+        (lookup.isLoading || (lookup.isFetching && !lookup.isFetchingNextPage))
+      }
       disabled={disabled || readOnly}
       fullWidth={fullWidth}
       disableClearable={required}
@@ -204,6 +244,7 @@ function SelectLookup({
       renderInput={(params) => (
         <TextField
           {...params}
+          variant="standard"
           label={externalLabel ? undefined : label}
           required={required}
           error={error}
@@ -212,6 +253,7 @@ function SelectLookup({
           size="small"
           slotProps={{
             ...params.slotProps,
+            inputLabel: { ...params.slotProps.inputLabel, shrink: true },
             htmlInput: { ...params.slotProps.htmlInput, readOnly: !searchable,
               ...(externalLabel ? { 'aria-label': label } : {}) },
           }}
@@ -300,6 +342,7 @@ export function LookupField<TFieldValues extends FieldValues = FieldValues>({
   return (
     <>
       <TextField
+        variant="standard"
         label={label}
         value={displayValue}
         required={required}
@@ -311,6 +354,7 @@ export function LookupField<TFieldValues extends FieldValues = FieldValues>({
         size="small"
         onClick={() => !disabled && !readOnly && setDialogOpen(true)}
         slotProps={{
+          inputLabel: { shrink: true },
           input: {
             readOnly: true,
             endAdornment: (
@@ -332,7 +376,10 @@ export function LookupField<TFieldValues extends FieldValues = FieldValues>({
             ),
           },
         }}
-        sx={{ cursor: disabled || readOnly ? 'default' : 'pointer' }}
+        sx={{
+          ...standardLookupSx,
+          cursor: disabled || readOnly ? 'default' : 'pointer',
+        }}
       />
 
       {usesServerDataSource ? (

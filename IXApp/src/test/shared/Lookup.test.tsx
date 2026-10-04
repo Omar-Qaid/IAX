@@ -17,6 +17,26 @@ const renderWithQueryClient = (element: React.ReactElement) => {
 };
 
 describe('LookupField', () => {
+  it('uses the shared standard field layout and keeps an empty lookup label aligned', () => {
+    renderWithQueryClient(
+      <LookupField name="taxGroup" label="Sales tax group" options={sampleOptions} />
+    );
+
+    const input = screen.getByRole('combobox', { name: 'Sales tax group' });
+    expect(input.closest('.MuiInputBase-root')).toHaveClass('MuiInput-underline');
+    expect(screen.getByText('Sales tax group')).toHaveAttribute('data-shrink', 'true');
+  });
+
+  it('normalizes autocomplete spacing to the shared standard field baseline', () => {
+    const { container } = renderWithQueryClient(
+      <LookupField name="taxGroup" label="Sales tax group" options={sampleOptions} />
+    );
+
+    const root = container.querySelector('.MuiAutocomplete-root');
+    expect(root).toHaveStyle({ minWidth: '0' });
+    expect(root?.querySelector('.MuiInput-root')).toBeDefined();
+  });
+
   it('shows and searches Arabic aliases while returning the original bilingual record', async () => {
     await i18n.changeLanguage('ar');
     const option = { id: 'mgr', code: 'MGR', name: 'Manager', nameAlias: 'المدير' };
@@ -93,6 +113,38 @@ describe('LookupField', () => {
 
     expect(onChange).toHaveBeenCalledWith('2', sampleOptions[1]);
     expect(screen.queryByText('Select Country')).toBeNull();
+  });
+
+  it('refreshes local options when a dependent lookup changes its option set', async () => {
+    const riyadh = [{ id: 'RIY-1', code: 'RIY-1', name: 'Riyadh Main Warehouse' }];
+    const jeddah = [{ id: 'JED-1', code: 'JED-1', name: 'Jeddah Main Warehouse' }];
+
+    function DependentWarehouseLookup() {
+      const [site, setSite] = useState<'RIY' | 'JED'>('RIY');
+      return (
+        <>
+          <button type="button" onClick={() => setSite('JED')}>
+            Select JED
+          </button>
+          <LookupField
+            name="warehouse"
+            label="Warehouse"
+            options={site === 'RIY' ? riyadh : jeddah}
+          />
+        </>
+      );
+    }
+
+    renderWithQueryClient(<DependentWarehouseLookup />);
+    fireEvent.click(screen.getByRole('button', { name: 'Open' }));
+    expect(await screen.findByText('Riyadh Main Warehouse')).toBeDefined();
+    fireEvent.click(screen.getByText('Riyadh Main Warehouse'));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Select JED' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Open' }));
+
+    expect(await screen.findByText('Jeddah Main Warehouse')).toBeDefined();
+    expect(screen.queryByText('Riyadh Main Warehouse')).toBeNull();
   });
 
   it('commits a numeric selection and keeps its label visible in controlled mode', async () => {

@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import HistoryIcon from '@mui/icons-material/History';
-import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { AppRecordAuditDrawer } from '@shared/components/dialogs/AppRecordAuditDrawer';
 import { AppRecordInfoDrawer } from '@shared/components/dialogs/AppRecordInfoDrawer';
-import { ActionPaneMenu } from './ActionPaneMenu';
+import { ActionPaneRibbonTrigger } from './ActionPaneRibbonTrigger';
 
 export interface OptionsMenuProps<T> {
   record: T | null;
@@ -31,22 +28,26 @@ export function OptionsMenu<T>({
 
   return (
     <>
-      <ActionPaneMenu
+      <ActionPaneRibbonTrigger
+        id="options"
         label={t('common.options')}
-        icon={<SettingsOutlinedIcon sx={{ fontSize: 17 }} />}
         disabled={disabled || !record}
-        actions={[
+        groups={[
           {
-            id: 'record-info',
-            label: t('common.recordInfo'),
-            icon: <InfoOutlinedIcon fontSize="small" />,
-            onClick: () => setInfoOpen(true),
-          },
-          {
-            id: 'record-audit',
-            label: t('common.recordAudit'),
-            icon: <HistoryIcon fontSize="small" />,
-            onClick: () => setAuditOpen(true),
+            id: 'record',
+            label: t('common.record', 'Record'),
+            actions: [
+              {
+                id: 'record-info',
+                label: t('common.recordInfo'),
+                onClick: () => setInfoOpen(true),
+              },
+              {
+                id: 'record-audit',
+                label: t('common.recordAudit'),
+                onClick: () => setAuditOpen(true),
+              },
+            ],
           },
         ]}
       />

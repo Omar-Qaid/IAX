@@ -34,6 +34,11 @@ import {
 } from '../api/salesOrderLinesApi';
 import type { SalesOrderListRecord } from '../api/salesOrderListApi';
 import { INVENTORY_ROUTE_PATHS } from '../../inventory/routes/inventoryRoutePaths';
+import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
+import {
+  salesLineNetAmount,
+  synchronizeSalesLineDiscount,
+} from '../utils/salesLineDiscount';
 
 type DetailLine = SalesOrderLineRecord;
 const EMPTY_LINES: DetailLine[] = [];
@@ -80,6 +85,7 @@ export function SalesOrderLinesGrid({
   const { t, currentLanguage } = useAppTranslation();
   const navigate = useNavigate();
   const [inventoryMenuAnchor, setInventoryMenuAnchor] = React.useState<HTMLElement | null>(null);
+  const [financialsMenuAnchor, setFinancialsMenuAnchor] = React.useState<HTMLElement | null>(null);
   const queryClient = useQueryClient();
   const selectedLineIds = useMemo(() => (selectedLineId ? [selectedLineId] : []), [selectedLineId]);
   const handleSelectionChange = useCallback(
@@ -110,7 +116,7 @@ export function SalesOrderLinesGrid({
     if (editing) return;
     setDraftLine(null);
     setLineBaseline(null);
-    setActiveField(null);
+    setActiveField('');
     setLineError('');
   }, [editing, setActiveField, setDraftLine, setLineBaseline, setLineError]);
   useEffect(
@@ -206,7 +212,6 @@ export function SalesOrderLinesGrid({
         headerName: t('salesOrder.lineType', 'Type'),
         width: 110,
         minWidth: 85,
-        pinned: 'left',
         type: 'number',
       },
       {
@@ -214,24 +219,41 @@ export function SalesOrderLinesGrid({
         headerName: t('salesOrder.itemNumber', 'Item number'),
         width: 160,
         minWidth: 120,
-        pinned: 'left',
       },
       { field: 'description', headerName: t('salesOrder.productName', 'Product name'), width: 220 },
       {
-        field: 'salesCategory',
-        headerName: t('salesOrder.salesCategory', 'Sales category'),
-        width: 130,
-        type: 'number',
-      },
-      {
         field: 'quantity',
-        headerName: 'fields.quantity',
+        headerName: t('fields.quantity', 'Quantity'),
         width: 85,
         type: 'number',
         align: 'right',
+        headerAlign: 'right',
       },
       { field: 'unit', headerName: t('salesOrder.unit', 'Unit'), width: 100 },
-      { field: 'unitPrice', headerName: t('fields.unitPrice'), width: 110, type: 'number' },
+      {
+        field: 'unitPrice',
+        headerName: t('fields.unitPrice'),
+        width: 110,
+        type: 'number',
+        align: 'right',
+        headerAlign: 'right',
+      },
+      {
+        field: 'lineDiscount',
+        headerName: t('salesOrder.lineDiscount', 'Discount'),
+        width: 110,
+        type: 'number',
+        align: 'right',
+        headerAlign: 'right',
+      },
+      {
+        field: 'lineDiscountPercent',
+        headerName: t('salesOrder.lineDiscountPercent', 'Discount %'),
+        width: 110,
+        type: 'number',
+        align: 'right',
+        headerAlign: 'right',
+      },
       {
         field: 'deliveryDate',
         headerName: t('fields.requestedDelivery'),
@@ -239,18 +261,12 @@ export function SalesOrderLinesGrid({
         type: 'date',
       },
       {
-        field: 'taxAmount',
-        headerName: t('fields.tax', 'Tax'),
-        width: 110,
-        type: 'number',
-        align: 'right',
-      },
-      {
         field: 'netAmount',
         headerName: t('salesOrder.netAmount', 'Net Amount'),
         width: 130,
         type: 'number',
         align: 'right',
+        headerAlign: 'right',
         valueGetter: ({ row }) => row.lineTotal,
       },
       {
@@ -309,6 +325,8 @@ export function SalesOrderLinesGrid({
       quantity: 1,
       unit: '',
       unitPrice: 0,
+      lineDiscount: 0,
+      lineDiscountPercent: 0,
       lineTotal: 0,
       deliveryDate: order.deliveryDate?.slice(0, 10),
     }),
@@ -327,6 +345,8 @@ export function SalesOrderLinesGrid({
     'quantity',
     'unit',
     'unitPrice',
+    'lineDiscount',
+    'lineDiscountPercent',
     'deliveryDate',
     'site',
     'warehouse',
@@ -407,16 +427,7 @@ export function SalesOrderLinesGrid({
       : row[column.field as keyof DetailLine];
     if (column.field === 'netAmount')
       return (
-        <>
-          {(row.id === activeDraft?.id
-            ? row.quantity * row.unitPrice
-            : row.lineTotal
-          ).toLocaleString(currentLanguage.code)}
-        </>
-      );
-    if (column.field === 'taxAmount')
-      return (
-        <>{row.taxAmount == null ? '-' : row.taxAmount.toLocaleString(currentLanguage.code)}</>
+        <>{salesLineNetAmount(row).toLocaleString(currentLanguage.code)}</>
       );
     const editable =
       editableFields.has(String(column.field)) ||
@@ -616,7 +627,18 @@ export function SalesOrderLinesGrid({
         onBlur={handleCellBlur}
         onChange={(event) => {
           const next = column.type === 'number' ? Number(event.target.value) : event.target.value;
-          setDraftLine((draft) => (draft ? { ...draft, [column.field]: next } : draft));
+          setDraftLine((draft) => {
+            if (!draft) return draft;
+            if (
+              typeof next === 'number' &&
+              (column.field === 'quantity' ||
+                column.field === 'unitPrice' ||
+                column.field === 'lineDiscount' ||
+                column.field === 'lineDiscountPercent')
+            )
+              return synchronizeSalesLineDiscount(draft, column.field, next);
+            return { ...draft, [column.field]: next };
+          });
         }}
       />
     );
@@ -655,6 +677,8 @@ export function SalesOrderLinesGrid({
       'quantity',
       'unit',
       'unitPrice',
+      'lineDiscount',
+      'lineDiscountPercent',
       'lineType',
       'deliveryType',
       'salesCategory',
@@ -688,6 +712,8 @@ export function SalesOrderLinesGrid({
               quantity: line.quantity,
               unit: line.unit,
               unitPrice: line.unitPrice,
+              lineDiscount: line.lineDiscount ?? 0,
+              lineDiscountPercent: line.lineDiscountPercent ?? 0,
               deliveryDate: line.deliveryDate || undefined,
               inventSiteId: line.site,
               inventLocationId: line.warehouse,
@@ -821,14 +847,29 @@ export function SalesOrderLinesGrid({
         >
           {t('actions.remove', 'Remove')}
         </Button>
-        {[
-          'Sales order line',
-          'Financials',
-        ].map((label) => (
-          <Button key={label} disabled endIcon={<ExpandMoreIcon />}>
-            {label}
-          </Button>
-        ))}
+        <Button disabled endIcon={<ExpandMoreIcon />}>Sales order line</Button>
+        <Button
+          disabled={!selectedLine}
+          endIcon={<ExpandMoreIcon />}
+          onClick={(event) => setFinancialsMenuAnchor(event.currentTarget)}
+        >
+          Financials
+        </Button>
+        <Menu
+          anchorEl={financialsMenuAnchor}
+          open={Boolean(financialsMenuAnchor)}
+          onClose={() => setFinancialsMenuAnchor(null)}
+        >
+          <MenuItem
+            onClick={() => {
+              if (!selectedLine) return;
+              setFinancialsMenuAnchor(null);
+              navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrderLineCharges(order.id, selectedLine.id));
+            }}
+          >
+            Maintain charges
+          </MenuItem>
+        </Menu>
         <Button
           disabled={!selectedLine}
           endIcon={<ExpandMoreIcon />}
@@ -922,11 +963,11 @@ export function SalesOrderLinesGrid({
             onRowClick={handleRowClick}
             columns={gridColumns}
             height={232}
-            rowHeight={33}
-            headerHeight={32}
+            rowHeight={27}
+            headerHeight={27}
             hideFooter
             hideColumnMenu={false}
-            showColumnBorders={false}
+            showColumnBorders
             showCellBorders
             hideAddRowButton
             hideToolbar
@@ -934,7 +975,7 @@ export function SalesOrderLinesGrid({
             hideFilterRow={!lineFilterVisible}
             hideSidebarTabs
             onRefresh={handleRefreshLines}
-            storageKey="accounts-receivable.sales-order-lines.compact"
+            storageKey="accounts-receivable.sales-order-lines.compact.v6"
           />
         </SalesLineCellProvider>
       </SalesLineGridSurface>

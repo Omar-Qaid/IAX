@@ -151,6 +151,36 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
             path: ROUTE_PATHS.FOUNDATION.EXCHANGE_RATES,
             permission: PERMISSIONS.CURRENCY_VIEW,
           },
+          {
+            label: 'nav.chargesCodes',
+            path: ROUTE_PATHS.FOUNDATION.CHARGES_CODES,
+            permission: PERMISSIONS.MARKUP_TABLE_VIEW,
+          },
+          {
+            label: 'nav.salesTaxAuthorities',
+            path: ROUTE_PATHS.FOUNDATION.TAX_AUTHORITIES,
+            permission: PERMISSIONS.TAX_AUTHORITY_VIEW,
+          },
+          {
+            label: 'nav.salesTaxSettlementPeriods',
+            path: ROUTE_PATHS.FOUNDATION.TAX_PERIODS,
+            permission: PERMISSIONS.TAX_PERIOD_VIEW,
+          },
+          {
+            label: 'nav.salesTaxCodes',
+            path: ROUTE_PATHS.FOUNDATION.TAX_CODES,
+            permission: PERMISSIONS.TAX_CODE_VIEW,
+          },
+          {
+            label: 'nav.salesTaxGroups',
+            path: ROUTE_PATHS.FOUNDATION.TAX_GROUPS,
+            permission: PERMISSIONS.TAX_GROUP_VIEW,
+          },
+          {
+            label: 'nav.itemSalesTaxGroups',
+            path: ROUTE_PATHS.FOUNDATION.TAX_ITEM_GROUPS,
+            permission: PERMISSIONS.TAX_ITEM_GROUP_VIEW,
+          },
         ],
       },
     ],

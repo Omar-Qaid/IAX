@@ -1,7 +1,7 @@
 import type { SxProps, Theme } from '@mui/material/styles';
 import { d365 } from '@shared/constants/enterpriseUiTokens';
 
-export const actionPaneControlSx: SxProps<Theme> = {
+export const actionPaneControlSx = {
   minWidth: 0,
   minHeight: 31,
   height: 31,
@@ -32,4 +32,4 @@ export const actionPaneControlSx: SxProps<Theme> = {
     '& .MuiSvgIcon-root': { fontSize: 17 },
   },
   '&.Mui-disabled': { color: 'text.disabled' },
-};
+} satisfies SxProps<Theme>;

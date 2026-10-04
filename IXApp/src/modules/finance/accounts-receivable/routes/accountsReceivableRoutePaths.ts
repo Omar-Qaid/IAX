@@ -11,6 +11,11 @@ export const ACCOUNTS_RECEIVABLE_ROUTE_PATHS = {
   CUSTOMER_PAYMENT_TERMS: '/accounts-receivable/customer-payment-terms',
   SALES_ORDERS: '/accounts-receivable/sales-orders',
   SALES_ORDER_DETAILS: '/accounts-receivable/sales-orders/:salesOrderId',
+  SALES_ORDER_CHARGES: '/accounts-receivable/sales-orders/:salesOrderId/charges',
   salesOrder: (salesOrderId: string) =>
     `/accounts-receivable/sales-orders/${encodeURIComponent(salesOrderId)}`,
+  salesOrderCharges: (salesOrderId: string) =>
+    `/accounts-receivable/sales-orders/${encodeURIComponent(salesOrderId)}/charges`,
+  salesOrderLineCharges: (salesOrderId: string, lineId: string) =>
+    `/accounts-receivable/sales-orders/${encodeURIComponent(salesOrderId)}/charges?lineId=${encodeURIComponent(lineId)}`,
 } as const;

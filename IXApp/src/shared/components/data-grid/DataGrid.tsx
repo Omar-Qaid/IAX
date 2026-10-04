@@ -90,6 +90,7 @@ function DataGridInternal<T>(
   const gridRootRef = useRef<HTMLDivElement | null>(null);
   const gridBodyRef = useRef<GridBodyHandle | null>(null);
   const pendingScrollTopRef = useRef<number | null>(null);
+  const saveInFlightRef = useRef<Promise<boolean> | null>(null);
   const focusedCellRef = useRef({ r: 0, c: 0 });
   const initialColumns = rawInitialColumns;
   const [focusedRowId, setFocusedRowId] = useState<string | null>(null);
@@ -162,26 +163,36 @@ function DataGridInternal<T>(
     }, 100);
   }, [cancelEdit]);
 
-  const handleSaveEdit = useCallback(async () => {
-    if (!onRowSave) {
-      handleCancelEdit();
-      return true;
-    }
-    const isNew = editingRowId === NEW_ROW_ID;
-    const scrollTop = scrollContainerRef.current?.scrollTop ?? 0;
-    setSaving(true);
-    try {
-      await onRowSave(editValues, isNew);
-      pendingScrollTopRef.current = scrollTop;
-      handleCancelEdit();
-      return true;
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      notifyError(msg);
-      return false;
-    } finally {
-      setSaving(false);
-    }
+  const handleSaveEdit = useCallback((): Promise<boolean> => {
+    if (saveInFlightRef.current) return saveInFlightRef.current;
+
+    const saveWork = (async () => {
+      if (!onRowSave) {
+        handleCancelEdit();
+        return true;
+      }
+      const isNew = editingRowId === NEW_ROW_ID;
+      const scrollTop = scrollContainerRef.current?.scrollTop ?? 0;
+      setSaving(true);
+      try {
+        await onRowSave(editValues, isNew);
+        pendingScrollTopRef.current = scrollTop;
+        handleCancelEdit();
+        return true;
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        notifyError(msg);
+        return false;
+      } finally {
+        setSaving(false);
+      }
+    })();
+
+    saveInFlightRef.current = saveWork;
+    void saveWork.finally(() => {
+      if (saveInFlightRef.current === saveWork) saveInFlightRef.current = null;
+    });
+    return saveWork;
   }, [
     onRowSave,
     editingRowId,

@@ -37,7 +37,9 @@
   },
   "salesOrder": {
     "gridHelp": "Tab / Enter: الخلية التالية | Shift: السابقة | أعلى / أسفل: الانتقال بين الصفوف | F2: تحرير | Insert: إضافة | Alt+Delete: حذف | Ctrl+F: تصفية",
-    "pasteSingleCell": "الصق قيمة خلية واحدة في كل مرة. اختر الصنف والوحدة من قائمة البحث."
+    "pasteSingleCell": "الصق قيمة خلية واحدة في كل مرة. اختر الصنف والوحدة من قائمة البحث.",
+    "lineDiscount": "الخصم",
+    "lineDiscountPercent": "نسبة الخصم %"
   },
   "accessibility": {
     "skipToContent": "الانتقال إلى المحتوى الرئيسي",
@@ -71,6 +73,7 @@
     "currencies": "العملات",
     "exchangeRateTypes": "أنواع أسعار الصرف",
     "exchangeRates": "أسعار صرف العملات",
+    "chargesCodes": "أكواد المصروفات",
     "workflow": "سير العمل",
     "mail": "البريد",
     "processBuilder": "مصمم العمليات",
@@ -107,7 +110,12 @@
     "global_search": "البحث عن صفحة",
     "inventory": "إدارة المخزون",
     "inquiries": "الاستعلامات والتقارير",
-    "inventoryTransactions": "حركات المخزون"
+    "inventoryTransactions": "حركات المخزون",
+    "salesTaxAuthorities": "سلطات ضريبة المبيعات",
+    "salesTaxSettlementPeriods": "فترات تسوية ضريبة المبيعات",
+    "salesTaxCodes": "أكواد ضريبة المبيعات",
+    "salesTaxGroups": "مجموعات ضريبة المبيعات",
+    "itemSalesTaxGroups": "مجموعات ضريبة مبيعات الأصناف"
   },
   "pages": {
     "login": {

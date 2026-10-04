@@ -221,7 +221,9 @@ export function SalesLineGridSurface({
         );
       }}
       sx={{
-        '& [role="gridcell"]': { px: 1, fontSize: 13 },
+        '& [role="gridcell"]': { px: 0.75, fontSize: 11.5 },
+        '& [role="columnheader"]': { fontSize: 11 },
+        '& [role="columnheader"] .MuiTypography-root': { fontSize: 11, fontWeight: 500 },
         '& [role="gridcell"]:focus-within': {
           outline: '1px solid',
           outlineColor: 'primary.main',
@@ -235,8 +237,8 @@ export function SalesLineGridSurface({
           outlineColor: 'error.main',
           outlineOffset: '-1px',
         },
-        '& [role="gridcell"] .MuiInputBase-root': { fontSize: 13, minHeight: 28 },
-        '& [role="gridcell"] .MuiInputBase-input': { py: 0.5 },
+        '& [role="gridcell"] .MuiInputBase-root': { fontSize: 11.5, minHeight: 26 },
+        '& [role="gridcell"] .MuiInputBase-input': { py: 0.25 },
         '& [role="gridcell"] .MuiInput-root::before, & [role="gridcell"] .MuiInput-root::after': {
           display: 'none',
         },
@@ -248,8 +250,7 @@ export function SalesLineGridSurface({
         },
         '& [data-grid-resize-handle]:hover': { bgcolor: 'primary.main' },
         '& [role="row"][aria-selected="true"], & [role="row"][aria-selected="true"]:hover': {
-          bgcolor: (theme) =>
-            `color-mix(in srgb, ${theme.palette.primary.main} 3%, ${theme.palette.background.paper})`,
+          bgcolor: (theme) => theme.palette.mode === 'light' ? '#d7e3f8' : 'rgba(49,94,251,.22)',
           boxShadow: 'none',
         },
       }}

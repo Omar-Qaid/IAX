@@ -74,6 +74,78 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     IncludeIntoIntrastatStatisticalValue = NoYes.No,
                     IsShipping = NoYes.No,
                     DataAreaId = "dat"
+                },
+                new MarkupTable
+                {
+                    MarkupCode = "Sample",
+                    Txt = "Customer Samples",
+                    ModuleType = ModuleInventPurchSales.Sales,
+                    TaxItemGroup = "EXEMPT",
+                    CustType = 1, // Customer
+                    VendType = 0, // Ledger
+                    IncludeIntoIntrastatInvoiceValue = NoYes.No,
+                    IncludeIntoIntrastatStatisticalValue = NoYes.No,
+                    Refundable = NoYes.No,
+                    McrProrate = NoYes.No,
+                    IsShipping = NoYes.No,
+                    DataAreaId = "dat"
+                },
+                new MarkupTable
+                {
+                    MarkupCode = "ShipCharge",
+                    Txt = "Shipping Charges",
+                    ModuleType = ModuleInventPurchSales.Sales,
+                    TaxItemGroup = "FULL",
+                    CustType = 1, // Customer
+                    VendType = 0, // Ledger
+                    IncludeIntoIntrastatInvoiceValue = NoYes.Yes,
+                    IncludeIntoIntrastatStatisticalValue = NoYes.Yes,
+                    Refundable = NoYes.Yes,
+                    McrProrate = NoYes.Yes,
+                    IsShipping = NoYes.Yes,
+                    DataAreaId = "dat"
+                },
+                new MarkupTable
+                {
+                    MarkupCode = "PFreight",
+                    Txt = "Purchase Freight Charges",
+                    ModuleType = ModuleInventPurchSales.Purchase,
+                    TaxItemGroup = "FULL",
+                    CustType = 0, // Ledger
+                    VendType = 1, // Vendor
+                    UseInMatching = NoYes.Yes,
+                    IncludeIntoIntrastatInvoiceValue = NoYes.Yes,
+                    IncludeIntoIntrastatStatisticalValue = NoYes.Yes,
+                    IsShipping = NoYes.Yes,
+                    DataAreaId = "dat"
+                },
+                new MarkupTable
+                {
+                    MarkupCode = "PHandling",
+                    Txt = "Purchase Handling Fee",
+                    ModuleType = ModuleInventPurchSales.Purchase,
+                    TaxItemGroup = "FULL",
+                    CustType = 0, // Ledger
+                    VendType = 1, // Vendor
+                    UseInMatching = NoYes.Yes,
+                    IncludeIntoIntrastatInvoiceValue = NoYes.No,
+                    IncludeIntoIntrastatStatisticalValue = NoYes.No,
+                    IsShipping = NoYes.No,
+                    DataAreaId = "dat"
+                },
+                new MarkupTable
+                {
+                    MarkupCode = "PInsurance",
+                    Txt = "Purchase Transit Insurance",
+                    ModuleType = ModuleInventPurchSales.Purchase,
+                    TaxItemGroup = "EXEMPT",
+                    CustType = 0, // Ledger
+                    VendType = 1, // Vendor
+                    UseInMatching = NoYes.Yes,
+                    IncludeIntoIntrastatInvoiceValue = NoYes.Yes,
+                    IncludeIntoIntrastatStatisticalValue = NoYes.No,
+                    IsShipping = NoYes.No,
+                    DataAreaId = "dat"
                 }
             };
 
@@ -82,7 +154,8 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 .Select(p => p.MarkupCode)
                 .ToListAsync(ct);
 
-            var toAdd = seeds.Where(s => !existingCodes.Contains(s.MarkupCode)).ToList();
+            var existingCodeSet = existingCodes.ToHashSet(System.StringComparer.OrdinalIgnoreCase);
+            var toAdd = seeds.Where(s => !existingCodeSet.Contains(s.MarkupCode)).ToList();
             if (toAdd.Count > 0)
             {
                 await db.MarkupTables.AddRangeAsync(toAdd, ct);

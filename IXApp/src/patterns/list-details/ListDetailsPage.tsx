@@ -263,6 +263,8 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
     >
       <ActionPane
         variant="flat"
+        expandedContent={config.actionPaneExpandedContent}
+        onClickAway={config.onActionPaneClickAway}
         endActions={
           <>
             {config.actionPaneEndContent}
@@ -368,13 +370,15 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
             disabled={state.editing}
             onClick={config.onSearch ?? state.toggleFilter}
           />
-          <OptionsMenu
-            record={state.selected}
-            tableName={config.recordTableName ?? title}
-            getRecordId={config.getAuditRecordId}
-            title={title}
-            disabled={state.editing}
-          />
+          {config.showOptionsMenu !== false && (
+            <OptionsMenu
+              record={state.selected}
+              tableName={config.recordTableName ?? title}
+              getRecordId={config.getAuditRecordId}
+              title={title}
+              disabled={state.editing}
+            />
+          )}
         </ActionPaneGroup>
       </ActionPane>
       <Box

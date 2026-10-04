@@ -107,6 +107,15 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'sales-order-charges',
+    path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.SALES_ORDER_CHARGES,
+    permission: PERMISSIONS.SALES_ORDER_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-receivable/pages/SalesOrderChargesPage'),
+      (module) => module.SalesOrderChargesPage
+    ),
+  },
+  {
     id: 'inventory-transactions',
     path: ROUTE_PATHS.INVENTORY.TRANSACTIONS,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
@@ -158,6 +167,60 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     component: lazyPage(
       () => import('@modules/finance/foundation/pages/ExchangeRatePage'),
       (module) => module.ExchangeRatePage
+    ),
+  },
+  {
+    id: 'tax-authorities',
+    path: ROUTE_PATHS.FOUNDATION.TAX_AUTHORITIES,
+    permission: PERMISSIONS.TAX_AUTHORITY_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/foundation/pages/TaxAuthorityPage'),
+      (module) => module.TaxAuthorityPage
+    ),
+  },
+  {
+    id: 'charges-codes',
+    path: ROUTE_PATHS.FOUNDATION.CHARGES_CODES,
+    permission: PERMISSIONS.MARKUP_TABLE_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/foundation/pages/MarkupTablePage'),
+      (module) => module.MarkupTablePage
+    ),
+  },
+  {
+    id: 'tax-periods',
+    path: ROUTE_PATHS.FOUNDATION.TAX_PERIODS,
+    permission: PERMISSIONS.TAX_PERIOD_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/foundation/pages/TaxPeriodPage'),
+      (module) => module.TaxPeriodPage
+    ),
+  },
+  {
+    id: 'tax-codes',
+    path: ROUTE_PATHS.FOUNDATION.TAX_CODES,
+    permission: PERMISSIONS.TAX_CODE_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/foundation/pages/TaxTablePage'),
+      (module) => module.TaxTablePage
+    ),
+  },
+  {
+    id: 'tax-groups',
+    path: ROUTE_PATHS.FOUNDATION.TAX_GROUPS,
+    permission: PERMISSIONS.TAX_GROUP_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/foundation/pages/TaxGroupPage'),
+      (module) => module.TaxGroupPage
+    ),
+  },
+  {
+    id: 'tax-item-groups',
+    path: ROUTE_PATHS.FOUNDATION.TAX_ITEM_GROUPS,
+    permission: PERMISSIONS.TAX_ITEM_GROUP_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/foundation/pages/TaxItemGroupPage'),
+      (module) => module.TaxItemGroupPage
     ),
   },
   {

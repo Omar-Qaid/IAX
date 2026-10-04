@@ -1439,8 +1439,9 @@ namespace IAX.IXApi.Modules.Finance.Common
     }
     public enum MarkupCategory
     {
-        None = 0,
-        Category = 1
+        Fixed = 0,
+        Pcs = 1,
+        Percent = 2
     }
     public enum MaritalStatus
     {

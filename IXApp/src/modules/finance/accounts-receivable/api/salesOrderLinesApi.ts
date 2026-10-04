@@ -10,7 +10,6 @@ export interface SalesOrderLineRecord {
   unit: string;
   unitPrice: number;
   lineTotal: number;
-  taxAmount?: number | null;
   itemType?: string;
   arabicName?: string;
   salesCategory?: number;
@@ -68,6 +67,20 @@ export interface InventoryDimensionOption {
   code: string;
   name: string;
   siteId?: string;
+  [key: string]: unknown;
+}
+export interface SalesOrderTotals {
+  currencyCode: string;
+  grossAmount: number;
+  lineDiscount: number;
+  multiLineDiscount: number;
+  totalDiscount: number;
+  subtotal: number;
+  totalCharges: number;
+  salesTax: number;
+  invoiceAmount: number;
+  quantity: number;
+  costValue: number;
 }
 function unwrap<T>(response: ApiResponse<T>): T {
   if (!response.success || response.data == null)
@@ -75,6 +88,16 @@ function unwrap<T>(response: ApiResponse<T>): T {
   return response.data;
 }
 export const salesOrderLinesApi = {
+  async totals(id: string, signal?: AbortSignal) {
+    return unwrap(
+      (
+        await apiClient.get<ApiResponse<SalesOrderTotals>>(
+          `/v1/SalesTable/${encodeURIComponent(id)}/totals`,
+          { signal }
+        )
+      ).data
+    );
+  },
   async inventoryDimensions(signal?: AbortSignal) {
     return unwrap(
       (
@@ -84,6 +107,18 @@ export const salesOrderLinesApi = {
             warehouses: InventoryDimensionOption[];
           }>
         >('/v1/SalesTable/inventory-dimensions', { signal })
+      ).data
+    );
+  },
+  async taxGroups(signal?: AbortSignal) {
+    return unwrap(
+      (
+        await apiClient.get<
+          ApiResponse<{
+            salesTaxGroups: InventoryDimensionOption[];
+            itemSalesTaxGroups: InventoryDimensionOption[];
+          }>
+        >('/v1/SalesTable/tax-groups', { signal })
       ).data
     );
   },
@@ -111,6 +146,10 @@ export const salesOrderLinesApi = {
       deliveryType?: number;
       inventSiteId?: string;
       inventLocationId?: string;
+      taxGroup?: string;
+      taxItemGroup?: string;
+      lineDiscount?: number;
+      lineDiscountPercent?: number;
     }
   ) {
     return unwrap(

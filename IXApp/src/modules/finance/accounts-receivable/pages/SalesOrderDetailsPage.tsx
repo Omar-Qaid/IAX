@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Box, Stack, Tab, Tabs, TextField, Typography } from '@mui/material';
 import { useUnsavedChanges } from '@shared/hooks/useUnsavedChanges';
 import { EnterpriseCrudActions } from '@shared/components/action-pane/EnterpriseCrudActions';
+import { ActionPaneGroup } from '@shared/components/action-pane/ActionPaneGroup';
+import type { ActionPaneRibbonGroup } from '@shared/components/action-pane/ActionPaneRibbon';
+import { ActionPaneRibbonTrigger } from '@shared/components/action-pane/ActionPaneRibbonTrigger';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ListDetailsPage } from '@patterns/list-details/ListDetailsPage';
 import type { DetailFieldConfig, DetailSectionConfig } from '@patterns/list-details/types';
@@ -16,11 +19,17 @@ import { salesOrderListApi, type SalesOrderHeaderInput } from '../api/salesOrder
 import { customerQuickCreateApi } from '../api/customerQuickCreateApi';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { LookupField } from '@shared/components/lookups/LookupField';
+import { synchronizeSalesLineDiscount } from '../utils/salesLineDiscount';
+import {
+  DocumentTotalsDrawer,
+  type DocumentTotalsSection,
+} from '@patterns/document/DocumentTotalsDrawer';
 
 import { SalesOrderLinesGrid } from './SalesOrderLinesGrid';
 import { SalesOrderLinesProvider } from './SalesOrderLineState';
 
 type DetailLine = SalesOrderLineRecord;
+const salesOrderRibbonPinnedStorageKey = 'sales-order.action-pane.ribbon-pinned';
 
 export function SalesOrderDetailsPage(): React.ReactElement {
   const { t, currentLanguage } = useAppTranslation();
@@ -41,6 +50,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   const [selectedLineId, setSelectedLineId] = useState<string>();
   const [lineDetailDraft, setLineDetailDraft] = useState<DetailLine | null>(null);
   const [savingLineDetail, setSavingLineDetail] = useState(false);
+  const [totalsOpen, setTotalsOpen] = useState(false);
   const lineDetailSaveLock = useRef(false);
   const orderQuery = useQuery({
     queryKey: ['accounts-receivable', 'sales-orders'],
@@ -52,6 +62,122 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     : orders[0];
   const activeHeader = headerDraft?.id === order?.id ? headerDraft : null;
   const canEditHeader = canEditLines && order?.salesStatus.toLowerCase() === 'backorder';
+
+  const salesOrderRibbonGroups: ActionPaneRibbonGroup[] = [
+    {
+      id: 'new',
+      label: 'New',
+      actions: [
+        { id: 'purchase-order', label: 'Purchase order' },
+        { id: 'direct-delivery', label: 'Direct delivery' },
+      ],
+    },
+    { id: 'maintain', label: 'Maintain', actions: [{ id: 'cancel', label: 'Cancel' }] },
+    {
+      id: 'payments',
+      label: 'Payments',
+      actions: [{ id: 'payments', label: 'Payments', disabled: true }],
+    },
+    {
+      id: 'copy',
+      label: 'Copy',
+      actions: [
+        { id: 'from-all', label: 'From all' },
+        { id: 'from-journal', label: 'From journal' },
+      ],
+    },
+    {
+      id: 'view',
+      label: 'View',
+      actions: [
+        { id: 'totals', label: 'Totals', onClick: () => setTotalsOpen(true) },
+        { id: 'order-events', label: 'Order events' },
+      ],
+    },
+    {
+      id: 'functions',
+      label: 'Functions',
+      actions: [
+        { id: 'sales-order-recap', label: 'Recap', disabled: true },
+        { id: 'order-holds', label: 'Order holds' },
+      ],
+    },
+    { id: 'attachments', label: 'Attachments', actions: [{ id: 'notes', label: 'Notes' }] },
+  ];
+
+  const sellRibbonGroups: ActionPaneRibbonGroup[] = [
+    {
+      id: 'credit-note',
+      label: 'Credit note',
+      actions: [{ id: 'credit-note', label: 'Credit note' }],
+    },
+    {
+      id: 'charges',
+      label: 'Charges',
+      actions: [
+        {
+          id: 'maintain-charges',
+          label: 'Maintain charges',
+          onClick: () => order && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrderCharges(order.id)),
+        },
+        { id: 'allocate-charges', label: 'Allocate charges' },
+      ],
+    },
+    {
+      id: 'tax',
+      label: 'Tax',
+      actions: [{ id: 'sales-tax', label: 'Sales tax' }],
+    },
+    {
+      id: 'calculate-delivery',
+      label: 'Calculate',
+      actions: [
+        { id: 'confirmed-delivery-dates', label: 'Confirmed delivery dates' },
+        { id: 'multiline-discount', label: 'Multiline discount' },
+        { id: 'total-discount', label: 'Total discount' },
+      ],
+    },
+    {
+      id: 'calculate-price',
+      label: '',
+      actions: [
+        { id: 'supplementary-items', label: 'Supplementary items' },
+        { id: 'tiered-charges', label: 'Tiered charges' },
+        { id: 'push-price-and-totals', label: 'Push price and totals' },
+      ],
+    },
+    {
+      id: 'generate',
+      label: 'Generate',
+      actions: [
+        { id: 'confirmation', label: 'Confirmation' },
+        { id: 'pro-forma-confirmation', label: 'Pro forma confirmation' },
+      ],
+    },
+    {
+      id: 'actions',
+      label: 'Actions',
+      actions: [{ id: 'confirm-now', label: 'Confirm now' }],
+    },
+    {
+      id: 'apply',
+      label: 'Apply',
+      actions: [{ id: 'service-agreement', label: 'Service agreement' }],
+    },
+    {
+      id: 'journals',
+      label: 'Journals',
+      actions: [
+        { id: 'sales-order-confirmations', label: 'Sales order confirmations', disabled: true },
+        { id: 'quotation-confirmation-journal', label: 'Quotation confirmation journal', disabled: true },
+      ],
+    },
+    {
+      id: 'prepayment',
+      label: 'Prepayment',
+      actions: [{ id: 'prepayment', label: 'Prepayment', disabled: true }],
+    },
+  ];
 
   const customersQuery = useQuery({
     queryKey: ['accounts-receivable', 'sales-order-header-customers'],
@@ -135,11 +261,11 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     };
     if (options) {
       return (
-        <Box sx={{ minWidth: 0, '& .MuiFormControl-root': { mt: 2 } }}>
+        <Box sx={{ minWidth: 0 }}>
           <LookupField
             name={name}
             label={label}
-            value={activeHeader?.[name] ?? ''}
+            value={String(activeHeader?.[name] ?? '')}
             disabled={savingHeader || !customersQuery.data || !lookupsQuery.data}
             options={options.map((opt) => ({ id: opt.value, code: opt.value, name: opt.label }))}
             displayMode="select"
@@ -178,6 +304,11 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     enabled: Boolean(order),
   });
   const lines = linesQuery.data ?? [];
+  const totalsQuery = useQuery({
+    queryKey: ['sales-order-totals', order?.id],
+    queryFn: ({ signal }) => salesOrderLinesApi.totals(order!.id, signal),
+    enabled: Boolean(order && totalsOpen),
+  });
   const selectedLine: DetailLine | undefined =
     lines.find((line) => line.id === selectedLineId) ?? lines[0];
   const dimensionsQuery = useQuery({
@@ -195,27 +326,29 @@ export function SalesOrderDetailsPage(): React.ReactElement {
               Boolean(activeHeader?.inventSiteId) && warehouse.siteId === activeHeader?.inventSiteId
           );
     return (
-      <LookupField
-        name={name}
-        label={label}
-        value={activeHeader?.[name] ?? ''}
-        options={options}
-        displayMode="select"
-        searchable
-        lazyLoading={false}
-        disabled={savingHeader || dimensionsQuery.isLoading}
-        onChange={(value) =>
-          setHeaderDraft((draft) =>
-            draft
-              ? {
-                  ...draft,
-                  [name]: String(value ?? ''),
-                  ...(name === 'inventSiteId' ? { inventLocationId: '' } : {}),
-                }
-              : draft
-          )
-        }
-      />
+      <Box sx={{ minWidth: 0 }}>
+        <LookupField
+          name={name}
+          label={label}
+          value={activeHeader?.[name] ?? ''}
+          options={options}
+          displayMode="select"
+          searchable
+          lazyLoading={false}
+          disabled={savingHeader || dimensionsQuery.isLoading}
+          onChange={(value) =>
+            setHeaderDraft((draft) =>
+              draft
+                ? {
+                    ...draft,
+                    [name]: String(value ?? ''),
+                    ...(name === 'inventSiteId' ? { inventLocationId: '' } : {}),
+                  }
+                : draft
+            )
+          }
+        />
+      </Box>
     );
   };
   const unitsQuery = useQuery({
@@ -239,6 +372,12 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       }
       return units;
     },
+    enabled: Boolean(activeHeader),
+    staleTime: 5 * 60 * 1000,
+  });
+  const taxGroupsQuery = useQuery({
+    queryKey: ['sales-order-tax-groups'],
+    queryFn: ({ signal }) => salesOrderLinesApi.taxGroups(signal),
     enabled: Boolean(activeHeader),
     staleTime: 5 * 60 * 1000,
   });
@@ -275,6 +414,78 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   if (!order) return <ErrorState message={t('messages.noSalesOrders')} />;
   const amount = (value: number) =>
     `${value.toLocaleString(currentLanguage.code)} ${order.currencyCode}`;
+  const number = (value: number, digits = 2) =>
+    value.toLocaleString(currentLanguage.code, {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
+    });
+  const calculatedLineDiscount = lines.reduce((sum, line) => sum + (line.lineDiscount || 0), 0);
+  const calculatedTotalDiscount = lines.reduce(
+    (sum, line) => sum + (line.lineDiscount || 0) + (line.multiLineDiscount || 0),
+    0
+  );
+  const calculatedSubtotal =
+    lines.reduce((sum, line) => sum + (line.lineTotal || 0), 0) - calculatedTotalDiscount;
+  const calculatedCostValue = lines.reduce(
+    (sum, line) => sum + (line.costPrice || 0) * (line.quantity || 0),
+    0
+  );
+  const subtotal = totalsQuery.data?.subtotal ?? calculatedSubtotal;
+  const lineDiscount = totalsQuery.data?.lineDiscount ?? calculatedLineDiscount;
+  const totalDiscount = totalsQuery.data?.totalDiscount ?? calculatedTotalDiscount;
+  const salesTax = totalsQuery.data?.salesTax ?? 0;
+  const totalCharges = totalsQuery.data?.totalCharges ?? 0;
+  const costValue = totalsQuery.data?.costValue ?? calculatedCostValue;
+  const invoiceAmount = totalsQuery.data?.invoiceAmount ?? subtotal + totalCharges + salesTax;
+  const margin = subtotal - costValue;
+  const quantity = totalsQuery.data?.quantity ?? lines.reduce((sum, line) => sum + (line.quantity || 0), 0);
+  const totalsSections: DocumentTotalsSection[] = [
+    {
+      id: 'sales-order-totals',
+      title: 'Sales order totals',
+      columns: [
+        {
+          id: 'totals',
+          title: 'Totals',
+          fields: [
+            { id: 'currency', label: 'Currency', value: order.currencyCode },
+            { id: 'exchange-rate', label: 'Exchange rate', value: number(1, 4) },
+            { id: 'line-discount', label: 'Line discount', value: number(lineDiscount) },
+            { id: 'subtotal', label: 'Subtotal amount', value: number(subtotal), emphasized: true },
+            { id: 'total-discount', label: 'Total discount', value: number(totalDiscount) },
+            { id: 'cash-discount', label: 'Cash discount', value: number(0) },
+            { id: 'total-charges', label: 'Total charges', value: number(totalCharges) },
+            { id: 'sales-tax', label: 'Sales tax', value: number(salesTax) },
+            { id: 'round-off', label: 'Round-off', value: number(0) },
+            { id: 'coupon', label: 'Total coupon amount', value: number(0) },
+            {
+              id: 'invoice-amount',
+              label: 'Invoice amount',
+              value: number(invoiceAmount),
+              emphasized: true,
+            },
+          ],
+        },
+        {
+          id: 'analysis',
+          fields: [
+            { id: 'credit-limit', label: 'Credit limit', value: '-' },
+            { id: 'credit-available', label: 'Credit available', value: '-' },
+            { id: 'cost-value', label: 'Cost value in accounting currency', value: number(costValue) },
+            { id: 'margin', label: 'Margin in accounting currency', value: number(margin) },
+            {
+              id: 'contribution-ratio',
+              label: 'Contribution ratio',
+              value: `${number(subtotal ? (margin / subtotal) * 100 : 0)}%`,
+            },
+            { id: 'quantity', label: 'Quantity', value: number(quantity) },
+            { id: 'weight', label: 'Weight', value: number(0) },
+            { id: 'volume', label: 'Volume', value: number(0) },
+          ],
+        },
+      ],
+    },
+  ];
   const field = (label: string, value?: string) => (
     <Box key={label}>
       <Typography variant="caption" color="text.secondary">
@@ -362,7 +573,18 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         slotProps={{ inputLabel: { shrink: true } }}
         onChange={(event) => {
           const value = type === 'number' ? Number(event.target.value) : event.target.value;
-          setLineDetailDraft((draft) => (draft ? { ...draft, [name]: value } : draft));
+          setLineDetailDraft((draft) => {
+            if (!draft) return draft;
+            if (
+              typeof value === 'number' &&
+              (name === 'quantity' ||
+                name === 'unitPrice' ||
+                name === 'lineDiscount' ||
+                name === 'lineDiscountPercent')
+            )
+              return synchronizeSalesLineDiscount(draft, name, value);
+            return { ...draft, [name]: value };
+          });
         }}
         onBlur={() => void saveLineDetail()}
       />
@@ -377,7 +599,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         : (dimensionsQuery.data?.warehouses ?? []).filter(
             (warehouse) => !lineDetailDraft?.site || warehouse.siteId === lineDetailDraft.site
           );
-    return (
+    return lineLookupShell(
       <LookupField
         key={name}
         name={name}
@@ -401,11 +623,14 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       />
     );
   };
+  const lineLookupShell = (content: React.ReactNode) => (
+    <Box sx={{ minWidth: 0 }}>{content}</Box>
+  );
   const unitField = () => {
     const label = t('fields.unit');
     if (!displayedLine) return null;
     if (!activeHeader) return field(label, displayedLine.unit);
-    return (
+    return lineLookupShell(
       <LookupField
         name="unit"
         label={label}
@@ -440,7 +665,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   ) => {
     if (!displayedLine) return null;
     if (!activeHeader) return lineValue(name, label);
-    return (
+    return lineLookupShell(
       <LookupField
         name={name}
         label={label}
@@ -454,6 +679,32 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         searchable
         lazyLoading={false}
         disabled={savingLineDetail || lookupsQuery.isLoading}
+        onChange={(value) => {
+          if (!lineDetailDraft) return;
+          const next = { ...lineDetailDraft, [name]: String(value ?? '') };
+          setLineDetailDraft(next);
+          void saveLineDetail(next);
+        }}
+      />
+    );
+  };
+  const taxGroupField = (name: 'taxGroup' | 'taxItemGroup', label: string) => {
+    if (!displayedLine) return null;
+    if (!activeHeader) return lineValue(name, label);
+    const options =
+      name === 'taxGroup'
+        ? (taxGroupsQuery.data?.salesTaxGroups ?? [])
+        : (taxGroupsQuery.data?.itemSalesTaxGroups ?? []);
+    return lineLookupShell(
+      <LookupField
+        name={name}
+        label={label}
+        value={lineDetailDraft?.[name] ?? ''}
+        options={options}
+        displayMode="select"
+        searchable
+        lazyLoading={false}
+        disabled={savingLineDetail || taxGroupsQuery.isLoading}
         onChange={(value) => {
           if (!lineDetailDraft) return;
           const next = { ...lineDetailDraft, [name]: String(value ?? '') };
@@ -497,8 +748,8 @@ export function SalesOrderDetailsPage(): React.ReactElement {
             {lineDetailField('description', t('salesOrder.productName', 'Product name'))}
             {unitField()}
             {lineValue('inventDimId', 'Inventory dimension')}
-            {lineValue('taxGroup', 'Sales tax group')}
-            {lineValue('taxItemGroup', 'Item sales tax group')}
+            {taxGroupField('taxGroup', 'Sales tax group')}
+            {taxGroupField('taxItemGroup', 'Item sales tax group')}
           </>
         );
       case 'Packing':
@@ -628,6 +879,11 @@ export function SalesOrderDetailsPage(): React.ReactElement {
               options = lookupsQuery.data?.paymentTerms;
             } else if (name === 'deliveryMode') {
               options = lookupsQuery.data?.deliveryModes;
+            } else if (name === 'taxGroupId') {
+              options = (taxGroupsQuery.data?.salesTaxGroups ?? []).map((group) => ({
+                value: group.code,
+                label: `${group.code} - ${group.name}`,
+              }));
             } else if (name === 'salesType') {
               options = [
                 { value: '3', label: 'Sales order' },
@@ -1009,29 +1265,43 @@ export function SalesOrderDetailsPage(): React.ReactElement {
           },
           presentation: { mode: 'list', listWidth: 280, listResizable: true, detailEndPadding: 8 },
           actionPaneAfterListContent: (
-            <EnterpriseCrudActions
-              editLabel={t('actions.edit')}
-              newLabel={t('actions.new')}
-              deleteLabel={t('actions.delete')}
-              saveLabel={t('actions.save')}
-              cancelLabel={t('actions.cancel')}
-              canEdit={Boolean(canEditHeader) && !savingHeader}
-              canNew={false}
-              canDelete={false}
-              editing={Boolean(activeHeader)}
-              saving={savingHeader}
-              onEdit={startHeaderEdit}
-              onSave={() => void saveHeader()}
-              onCancel={() => {
-                if (savingHeader) return;
-                setHeaderDraft(null);
-                setHeaderError('');
-              }}
-            />
+            <>
+              <EnterpriseCrudActions
+                editLabel={t('actions.edit')}
+                newLabel={t('actions.new')}
+                deleteLabel={t('actions.delete')}
+                saveLabel={t('actions.save')}
+                cancelLabel={t('actions.cancel')}
+                canEdit={Boolean(canEditHeader) && !savingHeader}
+                canNew={false}
+                canDelete={false}
+                editing={Boolean(activeHeader)}
+                saving={savingHeader}
+                onEdit={startHeaderEdit}
+                onSave={() => void saveHeader()}
+                onCancel={() => {
+                  if (savingHeader) return;
+                  setHeaderDraft(null);
+                  setHeaderError('');
+                }}
+              />
+              <ActionPaneGroup>
+                <ActionPaneRibbonTrigger
+                  id="sales-order"
+                  label="Sales order"
+                  groups={salesOrderRibbonGroups}
+                  disabled={Boolean(activeHeader)}
+                  persistenceKey={salesOrderRibbonPinnedStorageKey}
+                />
+                <ActionPaneRibbonTrigger
+                  id="sell"
+                  label="Sell"
+                  groups={sellRibbonGroups}
+                />
+              </ActionPaneGroup>
+            </>
           ),
           commands: [
-            'Sales order',
-            'Sell',
             'Manage',
             'Pick and pack',
             'Invoice',
@@ -1084,6 +1354,14 @@ export function SalesOrderDetailsPage(): React.ReactElement {
             </>
           ),
         }}
+      />
+      <DocumentTotalsDrawer
+        open={totalsOpen}
+        onClose={() => setTotalsOpen(false)}
+        title="Totals"
+        viewLabel={t('pages.customers.standardView')}
+        sections={totalsSections}
+        okLabel={t('common.ok', 'OK')}
       />
     </SalesOrderLinesProvider>
   );

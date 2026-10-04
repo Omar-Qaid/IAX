@@ -176,8 +176,7 @@ namespace IAX.IXApi.Modules.Finance.Shared.Features
                 await _db.SaveChangesAsync(cancellationToken);
             }
 
-            var resultDto = created.Adapt<TaxGroupDto>();
-            return Ok(APIResponse<TaxGroupDto>.Ok(resultDto, "Created successfully"));
+            return await GetById(created.RecId.ToString(), cancellationToken);
         }
 
         [HttpPut("{id}")]
@@ -203,8 +202,10 @@ namespace IAX.IXApi.Modules.Finance.Shared.Features
             }
 
             var originalRecId = existingEntity.RecId;
+            var originalCode = existingEntity.TaxGroup;
             dto.Adapt(existingEntity);
             existingEntity.RecId = originalRecId;
+            existingEntity.TaxGroup = originalCode;
             await OnBeforeUpdateAsync(existingEntity);
 
             var updatedEntity = await _service.UpdateAsync(existingEntity, cancellationToken);
@@ -249,8 +250,7 @@ namespace IAX.IXApi.Modules.Finance.Shared.Features
                 await _db.SaveChangesAsync(cancellationToken);
             }
 
-            var resultDto = updatedEntity.Adapt<TaxGroupDto>();
-            return Ok(APIResponse<TaxGroupDto>.Ok(resultDto, "Updated successfully"));
+            return await GetById(updatedEntity.RecId.ToString(), cancellationToken);
         }
 
         [HttpPost("{id}/lines")]

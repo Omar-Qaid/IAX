@@ -1,12 +1,16 @@
 export const documentTableIds = {
   wfRequest: 1001,
   wfRequestDetail: 1002,
+  salesTable: 2002,
+  salesLine: 2003,
 } as const;
 
 const knownTableIds: Record<string, number> = {
   wfrequests: documentTableIds.wfRequest, workflowrequests: documentTableIds.wfRequest,
   wfrequestdetails: documentTableIds.wfRequestDetail, customers: 2001, custtable: 2001,
-  salesorders: 2002, salestable: 2002, vendors: 3001, vendtable: 3001,
+  salesorders: documentTableIds.salesTable, salestable: documentTableIds.salesTable,
+  saleslines: documentTableIds.salesLine, salesline: documentTableIds.salesLine,
+  vendors: 3001, vendtable: 3001,
   purchaseorders: 3002, purchtable: 3002, employees: 4001, hcmworkers: 4001,
 };
 

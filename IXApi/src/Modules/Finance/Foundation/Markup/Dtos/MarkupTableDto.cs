@@ -16,13 +16,9 @@ namespace IAX.IXApi.Modules.Finance.Shared.Features
         [StringLength(FieldLengths.Txt)]
         public string Txt { get; set; } = string.Empty;
 
-        public string CurrencyCode { get; set; } = string.Empty;
-
         public ModuleInventPurchSales ModuleType { get; set; }
 
         public string TaxItemGroup { get; set; } = string.Empty;
-
-        public string? ZatcaNominalCode { get; set; }
 
         public long TaxRateType { get; set; }
 
@@ -33,13 +29,13 @@ namespace IAX.IXApi.Modules.Finance.Shared.Features
         public int CustPosting { get; set; }
         public long? CustomerLedgerDimension { get; set; }
 
-        // Bank Document Charge
-        public NoYes IsBankDocumentCharge { get; set; }
-
         // Credit Posting
         public int VendType { get; set; }
         public int VendPosting { get; set; }
         public long? VendorLedgerDimension { get; set; }
+
+        public decimal MaxAmount { get; set; }
+        public NoYes UseInMatching { get; set; }
 
 
         // Foreign Trade

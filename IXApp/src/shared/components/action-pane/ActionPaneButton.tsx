@@ -6,6 +6,8 @@ import { actionPaneControlSx } from './actionPaneControlStyles';
 
 export interface ActionPaneButtonProps extends Omit<ActionDefinition, 'id'> {
   actionId?: string;
+  selected?: boolean;
+  controlsId?: string;
 }
 
 export const ActionPaneButton: React.FC<ActionPaneButtonProps> = ({
@@ -16,6 +18,8 @@ export const ActionPaneButton: React.FC<ActionPaneButtonProps> = ({
   loading = false,
   permission,
   tooltip,
+  selected = false,
+  controlsId,
 }) => {
   const { hasPermission } = usePermission(permission);
 
@@ -28,7 +32,19 @@ export const ActionPaneButton: React.FC<ActionPaneButtonProps> = ({
       startIcon={loading ? <CircularProgress size={14} color="inherit" /> : icon}
       onClick={onClick}
       disabled={disabled || loading || !onClick}
-      sx={actionPaneControlSx}
+      aria-expanded={controlsId ? selected : undefined}
+      aria-controls={selected ? controlsId : undefined}
+      sx={[
+        actionPaneControlSx,
+        selected
+          ? {
+              borderBottomColor: 'primary.main',
+              borderBottomWidth: 3,
+              borderRadius: 0,
+              fontWeight: 600,
+            }
+          : {},
+      ]}
     >
       {label}
     </Button>

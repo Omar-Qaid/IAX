@@ -139,6 +139,9 @@ export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
   getAuditRecordId?: (record: T) => string | number;
   actionPaneAfterListContent?: ReactNode;
   actionPaneEndContent?: ReactNode;
+  actionPaneExpandedContent?: ReactNode;
+  onActionPaneClickAway?: () => void;
+  showOptionsMenu?: boolean;
   attachments?: { refTableId: number; getRefRecId?: (record: T) => number };
   showAttachmentAction?: boolean;
   utilities?: Partial<{

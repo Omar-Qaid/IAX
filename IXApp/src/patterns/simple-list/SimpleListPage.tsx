@@ -139,6 +139,8 @@ export interface SimpleListPageProps<T extends { id: string } = { id: string }> 
   contentMinHeight?: number;
   containerSx?: SxProps<Theme>;
   contentSx?: SxProps<Theme>;
+  /** Document/list-specific content rendered below the grid for the active row. */
+  belowGridContent?: React.ReactNode | ((selectedRow: T | null) => React.ReactNode);
 }
 
 export function SimpleListPage<T extends { id: string } = { id: string }>(
@@ -596,6 +598,13 @@ export function SimpleListPage<T extends { id: string } = { id: string }>(
                 />
               )}
             </Box>
+            {props.belowGridContent && (
+              <Box sx={{ mx: { xs: 1, sm: 2.5 } }}>
+                {typeof props.belowGridContent === 'function'
+                  ? props.belowGridContent(selectedRow)
+                  : props.belowGridContent}
+              </Box>
+            )}
           </Box>
           {generatedSidePanels ?? props.sidePanels}
         </Box>

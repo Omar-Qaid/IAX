@@ -33,6 +33,8 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
     /// </summary>
     public class TaxSeeder : ISeeder
     {
+        private const string DataAreaId = "dat";
+
         public async Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles, UserManager<AspNetUser> users, CancellationToken ct)
         {
             var sysUser = await users.FindByNameAsync("sys");
@@ -85,11 +87,13 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
 
             var existingAuthorities = await db.Set<TaxAuthorityAddress>()
                 .IgnoreQueryFilters()
+                .Where(x => x.DataAreaId == DataAreaId)
                 .Select(x => x.TaxAuthority)
                 .ToListAsync(ct);
 
             var existingVendAccounts = await db.Set<VendTable>()
                 .IgnoreQueryFilters()
+                .Where(v => v.DataAreaId == DataAreaId)
                 .Select(v => v.AccountNum)
                 .ToListAsync(ct);
 
@@ -133,6 +137,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
 
             var existingPeriodHeads = await db.Set<TaxPeriodHead>()
                 .IgnoreQueryFilters()
+                .Where(x => x.DataAreaId == DataAreaId)
                 .Select(x => x.TaxPeriod)
                 .ToListAsync(ct);
 
@@ -144,36 +149,31 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             }
 
             // 3. Seed TaxReportPeriod (Settlement Period Intervals)
-            var periodIntervalSeeds = new[]
+            const int exampleTaxYear = 2026;
+            var monthlyIntervals = Enumerable.Range(1, 12).Select(month => new TaxReportPeriod
             {
-                new TaxReportPeriod
-                {
-                    TaxPeriod = "Monthly",
-                    FromDate = new DateTime(2026, 1, 1),
-                    ToDate = new DateTime(2026, 1, 31),
-                    Closed = NoYes.No,
-                    DataAreaId = "dat"
-                },
-                new TaxReportPeriod
-                {
-                    TaxPeriod = "Monthly",
-                    FromDate = new DateTime(2026, 2, 1),
-                    ToDate = new DateTime(2026, 2, 28),
-                    Closed = NoYes.No,
-                    DataAreaId = "dat"
-                },
-                new TaxReportPeriod
-                {
-                    TaxPeriod = "Quarterly",
-                    FromDate = new DateTime(2026, 1, 1),
-                    ToDate = new DateTime(2026, 3, 31),
-                    Closed = NoYes.No,
-                    DataAreaId = "dat"
-                }
-            };
+                TaxPeriod = "Monthly",
+                FromDate = new DateTime(exampleTaxYear, month, 1),
+                ToDate = new DateTime(exampleTaxYear, month, DateTime.DaysInMonth(exampleTaxYear, month)),
+                Closed = NoYes.No,
+                LastPeriod = month == 12 ? NoYes.Yes : NoYes.No,
+                DataAreaId = DataAreaId
+            });
+            var quarterlyIntervals = Enumerable.Range(0, 4).Select(quarter => new TaxReportPeriod
+            {
+                TaxPeriod = "Quarterly",
+                FromDate = new DateTime(exampleTaxYear, quarter * 3 + 1, 1),
+                ToDate = new DateTime(exampleTaxYear, quarter * 3 + 3,
+                    DateTime.DaysInMonth(exampleTaxYear, quarter * 3 + 3)),
+                Closed = NoYes.No,
+                LastPeriod = quarter == 3 ? NoYes.Yes : NoYes.No,
+                DataAreaId = DataAreaId
+            });
+            var periodIntervalSeeds = monthlyIntervals.Concat(quarterlyIntervals).ToList();
 
             var existingPeriodIntervals = await db.Set<TaxReportPeriod>()
                 .IgnoreQueryFilters()
+                .Where(x => x.DataAreaId == DataAreaId)
                 .Select(x => new { x.TaxPeriod, x.FromDate })
                 .ToListAsync(ct);
 
@@ -193,11 +193,14 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 new TaxExemptCodeTable { ExemptCode = "NONE", Description = "No Exemption - Standard VAT Applies", DataAreaId = "dat" },
                 new TaxExemptCodeTable { ExemptCode = "EXPORT", Description = "Zero-rated export of goods outside GCC", DataAreaId = "dat" },
                 new TaxExemptCodeTable { ExemptCode = "GOV_EXEMPT", Description = "Governmental / Sovereign Exemption", DataAreaId = "dat" },
-                new TaxExemptCodeTable { ExemptCode = "MED_EXEMPT", Description = "Exempt Qualifying Medicines and Medical Devices", DataAreaId = "dat" }
+                new TaxExemptCodeTable { ExemptCode = "MED_EXEMPT", Description = "Exempt Qualifying Medicines and Medical Devices", DataAreaId = "dat" },
+                new TaxExemptCodeTable { ExemptCode = "ZERO_RATE", Description = "Zero-rated supply under Saudi VAT regulations", DataAreaId = "dat" },
+                new TaxExemptCodeTable { ExemptCode = "INTL_SVC", Description = "International service supplied outside the taxable territory", DataAreaId = "dat" }
             };
 
             var existingExemptCodes = await db.Set<TaxExemptCodeTable>()
                 .IgnoreQueryFilters()
+                .Where(x => x.DataAreaId == DataAreaId)
                 .Select(x => x.ExemptCode)
                 .ToListAsync(ct);
 
@@ -215,6 +218,16 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 {
                     TaxGroup = "DOM",
                     TaxGroupName = "Domestic Standard Sales Tax Group",
+                    TaxGroupSetup = TaxGroupSetup.Standard,
+                    Source = TaxGroupSource.Customer,
+                    TaxGroupRounding = TaxGroupRounding.None,
+                    TaxReverseOnCashDisc = NoYes.No,
+                    DataAreaId = "dat"
+                },
+                new TaxGroupHeading
+                {
+                    TaxGroup = "KSA",
+                    TaxGroupName = "Saudi Arabia Standard VAT",
                     TaxGroupSetup = TaxGroupSetup.Standard,
                     Source = TaxGroupSource.Customer,
                     TaxGroupRounding = TaxGroupRounding.None,
@@ -245,6 +258,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
 
             var existingTaxGroups = await db.TaxGroupHeadings
                 .IgnoreQueryFilters()
+                .Where(x => x.DataAreaId == DataAreaId)
                 .Select(x => x.TaxGroup)
                 .ToListAsync(ct);
 
@@ -281,11 +295,44 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     Source = TaxGroupSource.Customer,
                     EuSalesListType = EuSalesListType.Item,
                     DataAreaId = "dat"
+                },
+                new TaxItemGroupHeading
+                {
+                    TaxItemGroup = "VAT15",
+                    Name = "Standard VAT 15% Items",
+                    Source = TaxGroupSource.Customer,
+                    EuSalesListType = EuSalesListType.Item,
+                    DataAreaId = "dat"
+                },
+                new TaxItemGroupHeading
+                {
+                    TaxItemGroup = "SERVICES",
+                    Name = "Standard Rated Services (15%)",
+                    Source = TaxGroupSource.Customer,
+                    EuSalesListType = EuSalesListType.Service,
+                    DataAreaId = "dat"
+                },
+                new TaxItemGroupHeading
+                {
+                    TaxItemGroup = "FIXEDASSET",
+                    Name = "Fixed Assets (15%)",
+                    Source = TaxGroupSource.Customer,
+                    EuSalesListType = EuSalesListType.Item,
+                    DataAreaId = "dat"
+                },
+                new TaxItemGroupHeading
+                {
+                    TaxItemGroup = "EXPORT",
+                    Name = "Exported Goods and Services (0%)",
+                    Source = TaxGroupSource.Customer,
+                    EuSalesListType = EuSalesListType.Item,
+                    DataAreaId = "dat"
                 }
             };
 
             var existingTaxItemGroups = await db.Set<TaxItemGroupHeading>()
                 .IgnoreQueryFilters()
+                .Where(x => x.DataAreaId == DataAreaId)
                 .Select(x => x.TaxItemGroup)
                 .ToListAsync(ct);
 
@@ -304,7 +351,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     TaxCode = "VAT15",
                     TaxName = "Standard VAT 15%",
                     TaxPeriod = "Monthly",
-                    TaxAccountGroup = "STANDARD",
+                    TaxAccountGroup = "VAT-STD",
                     TaxCurrencyCode = "SAR",
                     TaxUnit = "EA",
                     TaxBase = TaxBase.Net,
@@ -318,7 +365,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     TaxCode = "VAT5",
                     TaxName = "Reduced VAT 5%",
                     TaxPeriod = "Monthly",
-                    TaxAccountGroup = "STANDARD",
+                    TaxAccountGroup = "VAT-STD",
                     TaxCurrencyCode = "SAR",
                     TaxUnit = "EA",
                     TaxBase = TaxBase.Net,
@@ -332,7 +379,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     TaxCode = "VAT0",
                     TaxName = "Zero Rated VAT 0%",
                     TaxPeriod = "Monthly",
-                    TaxAccountGroup = "STANDARD",
+                    TaxAccountGroup = "VAT-EXP",
                     TaxCurrencyCode = "SAR",
                     TaxUnit = "EA",
                     TaxBase = TaxBase.Net,
@@ -346,7 +393,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     TaxCode = "EXEMPT",
                     TaxName = "Exempt Tax Code 0%",
                     TaxPeriod = "Monthly",
-                    TaxAccountGroup = "STANDARD",
+                    TaxAccountGroup = "VAT-EXEMPT",
                     TaxCurrencyCode = "SAR",
                     TaxUnit = "EA",
                     TaxBase = TaxBase.Net,
@@ -354,11 +401,40 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     TaxLimitBase = TaxLimitBase.Line,
                     PrintCode = "EXEMPT",
                     DataAreaId = "dat"
+                },
+                new TaxTable
+                {
+                    TaxCode = "SERVICES15",
+                    TaxName = "VAT Services 15%",
+                    TaxPeriod = "Monthly",
+                    TaxAccountGroup = "VAT-STD",
+                    TaxCurrencyCode = "SAR",
+                    TaxUnit = "EA",
+                    TaxBase = TaxBase.Net,
+                    TaxCalcMethod = TaxCalcMethod.Line,
+                    TaxLimitBase = TaxLimitBase.Line,
+                    PrintCode = "SVC VAT15",
+                    DataAreaId = "dat"
+                },
+                new TaxTable
+                {
+                    TaxCode = "VATFA",
+                    TaxName = "VAT on Fixed Assets 15%",
+                    TaxPeriod = "Monthly",
+                    TaxAccountGroup = "VAT-STD",
+                    TaxCurrencyCode = "SAR",
+                    TaxUnit = "EA",
+                    TaxBase = TaxBase.Net,
+                    TaxCalcMethod = TaxCalcMethod.Line,
+                    TaxLimitBase = TaxLimitBase.Line,
+                    PrintCode = "VAT FA 15%",
+                    DataAreaId = "dat"
                 }
             };
 
             var existingTaxCodes = await db.TaxTables
                 .IgnoreQueryFilters()
+                .Where(x => x.DataAreaId == DataAreaId)
                 .Select(x => x.TaxCode)
                 .ToListAsync(ct);
 
@@ -407,11 +483,30 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     TaxValue = 0.00m,
                     VatExemptPct = 100.00m,
                     DataAreaId = "dat"
+                },
+                new TaxData
+                {
+                    TaxCode = "SERVICES15",
+                    TaxFromDate = new DateTime(2020, 7, 1),
+                    TaxToDate = new DateTime(2099, 12, 31),
+                    TaxValue = 15.00m,
+                    VatExemptPct = 0.00m,
+                    DataAreaId = "dat"
+                },
+                new TaxData
+                {
+                    TaxCode = "VATFA",
+                    TaxFromDate = new DateTime(2020, 7, 1),
+                    TaxToDate = new DateTime(2099, 12, 31),
+                    TaxValue = 15.00m,
+                    VatExemptPct = 0.00m,
+                    DataAreaId = "dat"
                 }
             };
 
             var existingTaxDataCodes = await db.TaxData
                 .IgnoreQueryFilters()
+                .Where(x => x.DataAreaId == DataAreaId)
                 .Select(x => x.TaxCode)
                 .ToListAsync(ct);
 
@@ -427,12 +522,16 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             {
                 new TaxGroupData { TaxGroup = "DOM", TaxCode = "VAT15", TaxExemptCode = "NONE", ExemptTax = NoYes.No, DataAreaId = "dat" },
                 new TaxGroupData { TaxGroup = "DOM", TaxCode = "VAT5", TaxExemptCode = "NONE", ExemptTax = NoYes.No, DataAreaId = "dat" },
+                new TaxGroupData { TaxGroup = "DOM", TaxCode = "SERVICES15", TaxExemptCode = "NONE", ExemptTax = NoYes.No, DataAreaId = "dat" },
+                new TaxGroupData { TaxGroup = "DOM", TaxCode = "VATFA", TaxExemptCode = "NONE", ExemptTax = NoYes.No, DataAreaId = "dat" },
+                new TaxGroupData { TaxGroup = "KSA", TaxCode = "VAT15", TaxExemptCode = "NONE", ExemptTax = NoYes.No, DataAreaId = "dat" },
                 new TaxGroupData { TaxGroup = "EXP", TaxCode = "VAT0", TaxExemptCode = "EXPORT", ExemptTax = NoYes.Yes, DataAreaId = "dat" },
                 new TaxGroupData { TaxGroup = "EXEMPT", TaxCode = "EXEMPT", TaxExemptCode = "GOV_EXEMPT", ExemptTax = NoYes.Yes, DataAreaId = "dat" }
             };
 
             var existingTaxGroupData = await db.TaxGroupDatas
                 .IgnoreQueryFilters()
+                .Where(x => x.DataAreaId == DataAreaId)
                 .Select(x => new { x.TaxGroup, x.TaxCode })
                 .ToListAsync(ct);
 
@@ -450,12 +549,17 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             var taxOnItemSeeds = new[]
             {
                 new TaxOnItem { TaxItemGroup = "FULL", TaxCode = "VAT15", TaxExemptCode = "NONE", DataAreaId = "dat" },
+                new TaxOnItem { TaxItemGroup = "VAT15", TaxCode = "VAT15", TaxExemptCode = "NONE", DataAreaId = "dat" },
                 new TaxOnItem { TaxItemGroup = "REDUCED", TaxCode = "VAT5", TaxExemptCode = "NONE", DataAreaId = "dat" },
-                new TaxOnItem { TaxItemGroup = "EXEMPT", TaxCode = "EXEMPT", TaxExemptCode = "MED_EXEMPT", DataAreaId = "dat" }
+                new TaxOnItem { TaxItemGroup = "EXEMPT", TaxCode = "EXEMPT", TaxExemptCode = "MED_EXEMPT", DataAreaId = "dat" },
+                new TaxOnItem { TaxItemGroup = "SERVICES", TaxCode = "SERVICES15", TaxExemptCode = "NONE", DataAreaId = "dat" },
+                new TaxOnItem { TaxItemGroup = "FIXEDASSET", TaxCode = "VATFA", TaxExemptCode = "NONE", DataAreaId = "dat" },
+                new TaxOnItem { TaxItemGroup = "EXPORT", TaxCode = "VAT0", TaxExemptCode = "EXPORT", DataAreaId = "dat" }
             };
 
             var existingTaxOnItems = await db.TaxOnItems
                 .IgnoreQueryFilters()
+                .Where(x => x.DataAreaId == DataAreaId)
                 .Select(x => new { x.TaxItemGroup, x.TaxCode })
                 .ToListAsync(ct);
 
@@ -494,6 +598,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
 
             var existingLedgerGroups = await db.Set<TaxLedgerAccountGroup>()
                 .IgnoreQueryFilters()
+                .Where(x => x.DataAreaId == DataAreaId)
                 .Select(x => x.TaxAccountGroup)
                 .ToListAsync(ct);
 
@@ -506,6 +611,24 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 await db.Set<TaxLedgerAccountGroup>().AddRangeAsync(ledgerGroupsToAdd, ct);
                 await db.SaveChangesAsync(ct);
             }
+
+            // Repair the legacy example value used by earlier runs so every seeded tax code
+            // points at one of the posting groups owned by this seed set.
+            var seededTaxCodes = await db.TaxTables.IgnoreQueryFilters()
+                .Where(x => x.DataAreaId == DataAreaId
+                    && new[] { "VAT15", "VAT5", "VAT0", "EXEMPT", "SERVICES15", "VATFA" }.Contains(x.TaxCode)
+                    && x.TaxAccountGroup == "STANDARD")
+                .ToListAsync(ct);
+            foreach (var taxCode in seededTaxCodes)
+            {
+                taxCode.TaxAccountGroup = taxCode.TaxCode switch
+                {
+                    "VAT0" => "VAT-EXP",
+                    "EXEMPT" => "VAT-EXEMPT",
+                    _ => "VAT-STD"
+                };
+            }
+            if (seededTaxCodes.Count > 0) await db.SaveChangesAsync(ct);
         }
     }
 }

@@ -8,6 +8,7 @@ import type {
   EnterpriseListDetailsConfig,
 } from '@patterns/list-details/types';
 import { LookupField } from '@shared/components/lookups/LookupField';
+import type { LookupOption } from '@shared/components/lookups/types';
 import { TreeControl } from '@shared/components/tree-control';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { PERMISSIONS } from '@core/permissions/permissions';
@@ -18,18 +19,18 @@ type InventoryHierarchyNode =
   | { kind: 'warehouse'; id: string; label: string; children: [] };
 
 const inventoryHierarchyNodes = (
-  sites: readonly { id: string; code: string; name: string }[],
-  warehouses: readonly { id: string; code: string; name: string; siteId?: string }[]
+  sites: readonly LookupOption[],
+  warehouses: readonly (LookupOption & { siteId?: string })[]
 ): InventoryHierarchyNode[] =>
   sites.map((site) => ({
     kind: 'site',
-    id: `site:${site.id}`,
+    id: `site:${String(site.id)}`,
     label: `${site.code}, ${site.name}`,
     children: warehouses
-      .filter((warehouse) => warehouse.siteId === site.id)
+      .filter((warehouse) => warehouse.siteId === String(site.id))
       .map((warehouse) => ({
         kind: 'warehouse' as const,
-        id: `warehouse:${warehouse.id}`,
+        id: `warehouse:${String(warehouse.id)}`,
         label: `${warehouse.code}, ${warehouse.name}`,
         children: [] as [],
       })),

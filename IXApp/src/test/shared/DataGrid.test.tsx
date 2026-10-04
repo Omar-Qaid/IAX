@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { AppProviders } from '@app/providers/AppProviders';
 import { AppDataGrid } from '@shared/components/data-grid/DataGrid';
-import type { ColumnDef } from '@shared/components/data-grid/types';
+import type { ColumnDef, DataGridHandle } from '@shared/components/data-grid/types';
 import i18n from '@core/localization/i18n';
 
 interface TestRow {
@@ -57,6 +57,35 @@ describe('AppDataGrid', () => {
       consoleError.mock.calls.some((call) => String(call[0]).includes('MenuListContext is missing'))
     ).toBe(false);
     consoleError.mockRestore();
+  });
+
+  it('submits an inline row only once when save is triggered twice before completion', async () => {
+    const gridRef = React.createRef<DataGridHandle>();
+    let completeSave: (() => void) | undefined;
+    const onRowSave = vi.fn(
+      () => new Promise<void>((resolve) => { completeSave = resolve; })
+    );
+
+    render(
+      <AppProviders>
+        <AppDataGrid<TestRow>
+          ref={gridRef}
+          columns={[{ field: 'code', headerName: 'Code', editable: true }]}
+          rows={[]}
+          masterForm
+          onNewRow={() => ({ code: 'FREIGHT' })}
+          onRowSave={onRowSave}
+        />
+      </AppProviders>
+    );
+
+    act(() => gridRef.current?.startAddRow());
+    const firstSave = gridRef.current!.saveEdit();
+    const secondSave = gridRef.current!.saveEdit();
+
+    expect(onRowSave).toHaveBeenCalledTimes(1);
+    completeSave?.();
+    await expect(Promise.all([firstSave, secondSave])).resolves.toEqual([true, true]);
   });
 
   it('renders pinned and flexible columns in RTL without crashing', async () => {
