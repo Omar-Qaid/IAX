@@ -118,6 +118,12 @@ export const salesOrderListApi = {
       throw new ApiError(response.data.message || 'The sales order could not be saved.', 500);
   },
 
+  async cancel(id: string): Promise<void> {
+    const response = await apiClient.post<ApiResponse<unknown>>(`/v1/SalesTable/${id}/cancel`);
+    if (!response.data.success)
+      throw new ApiError(response.data.message || 'The sales order could not be cancelled.', 500);
+  },
+
   async create(input: SalesOrderQuickCreateInput): Promise<SalesOrderListRecord> {
     const response = await apiClient.post<ApiResponse<SalesOrderListDto>>(
       '/v1/SalesTable/quick-create',

@@ -24,6 +24,8 @@ import {
   DocumentTotalsDrawer,
   type DocumentTotalsSection,
 } from '@patterns/document/DocumentTotalsDrawer';
+import { DocumentCopyDrawer } from '@patterns/document/DocumentCopyDrawer';
+import { salesOrderCopyApi, type SalesOrderCopyMode } from '../api/salesOrderCopyApi';
 
 import { SalesOrderLinesGrid } from './SalesOrderLinesGrid';
 import { SalesOrderLinesProvider } from './SalesOrderLineState';
@@ -51,6 +53,10 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   const [lineDetailDraft, setLineDetailDraft] = useState<DetailLine | null>(null);
   const [savingLineDetail, setSavingLineDetail] = useState(false);
   const [totalsOpen, setTotalsOpen] = useState(false);
+  const [copyMode, setCopyMode] = useState<SalesOrderCopyMode>();
+  const [copySourceId, setCopySourceId] = useState<number>();
+  const [copyBusy, setCopyBusy] = useState(false);
+  const [copyError, setCopyError] = useState('');
   const lineDetailSaveLock = useRef(false);
   const orderQuery = useQuery({
     queryKey: ['accounts-receivable', 'sales-orders'],
@@ -72,7 +78,28 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         { id: 'direct-delivery', label: 'Direct delivery' },
       ],
     },
-    { id: 'maintain', label: 'Maintain', actions: [{ id: 'cancel', label: 'Cancel' }] },
+    {
+      id: 'maintain',
+      label: 'Maintain',
+      actions: [{
+        id: 'cancel',
+        label: 'Cancel',
+        disabled: order?.salesStatus.toLowerCase() !== 'backorder',
+        onClick: async () => {
+          if (!order || !window.confirm(`Cancel the remaining quantity for ${order.salesId}?`)) return;
+          try {
+            await salesOrderListApi.cancel(order.id);
+            await Promise.all([
+              queryClient.invalidateQueries({ queryKey: ['accounts-receivable', 'sales-orders'] }),
+              queryClient.invalidateQueries({ queryKey: ['sales-order-lines', order.id] }),
+              queryClient.invalidateQueries({ queryKey: ['sales-order-totals', order.id] }),
+            ]);
+          } catch (error) {
+            setHeaderError(error instanceof Error ? error.message : t('errors.generic'));
+          }
+        },
+      }],
+    },
     {
       id: 'payments',
       label: 'Payments',
@@ -82,8 +109,8 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       id: 'copy',
       label: 'Copy',
       actions: [
-        { id: 'from-all', label: 'From all' },
-        { id: 'from-journal', label: 'From journal' },
+        { id: 'from-all', label: 'From all', disabled: !canEditHeader, onClick: () => { setCopyError(''); setCopySourceId(undefined); setCopyMode('fromAll'); } },
+        { id: 'from-journal', label: 'From journal', disabled: !canEditHeader, onClick: () => { setCopyError(''); setCopySourceId(undefined); setCopyMode('fromJournal'); } },
       ],
     },
     {
@@ -193,6 +220,17 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     staleTime: 5 * 60 * 1000,
   });
 
+  const copySourcesQuery = useQuery({
+    queryKey: ['sales-order-copy-sources', order?.id, copyMode],
+    queryFn: ({ signal }) => salesOrderCopyApi.documents(order!.id, copyMode!, signal),
+    enabled: Boolean(order && copyMode),
+  });
+  const copyLinesQuery = useQuery({
+    queryKey: ['sales-order-copy-lines', order?.id, copyMode, copySourceId],
+    queryFn: ({ signal }) => salesOrderCopyApi.lines(order!.id, copyMode!, copySourceId!, signal),
+    enabled: Boolean(order && copyMode && copySourceId),
+  });
+
   const startHeaderEdit = () => {
     if (!order || !canEditHeader) return;
     setHeaderError('');
@@ -239,6 +277,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     try {
       const { id, ...input } = activeHeader;
       await salesOrderListApi.updateHeader(id, input);
+      await queryClient.invalidateQueries({ queryKey: ['sales-order-totals', id] });
       await orderQuery.refetch({ throwOnError: true });
       setHeaderDraft(null);
     } catch (error) {
@@ -307,7 +346,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   const totalsQuery = useQuery({
     queryKey: ['sales-order-totals', order?.id],
     queryFn: ({ signal }) => salesOrderLinesApi.totals(order!.id, signal),
-    enabled: Boolean(order && totalsOpen),
+    enabled: Boolean(order),
   });
   const selectedLine: DetailLine | undefined =
     lines.find((line) => line.id === selectedLineId) ?? lines[0];
@@ -398,6 +437,9 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         current.map((line) => (line.id === saved.id ? saved : line))
       );
       setLineDetailDraft({ ...saved, deliveryDate: saved.deliveryDate?.slice(0, 10) });
+      await queryClient.invalidateQueries({
+        queryKey: ['sales-order-totals', order!.id],
+      });
       await orderQuery.refetch();
     } catch (error) {
       setHeaderError(error instanceof Error ? error.message : t('errors.generic'));
@@ -1135,10 +1177,10 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     section(
       t('fields.totals', 'Totals'),
       <Stack direction="row" spacing={4} useFlexGap sx={{ flexWrap: 'wrap' }}>
-        {field(t('fields.subtotal'))}
-        {field(t('fields.discount'))}
-        {field(t('fields.tax'))}
-        {field(t('fields.total'), amount(order.orderTotal))}
+        {field(t('fields.subtotal'), amount(subtotal))}
+        {field(t('fields.discount'), amount(totalDiscount))}
+        {field(t('fields.tax'), amount(salesTax))}
+        {field(t('fields.total'), amount(invoiceAmount))}
       </Stack>
     ),
   ].filter((value): value is DetailSectionConfig => Boolean(value));
@@ -1362,6 +1404,48 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         viewLabel={t('pages.customers.standardView')}
         sections={totalsSections}
         okLabel={t('common.ok', 'OK')}
+      />
+      <DocumentCopyDrawer
+        open={Boolean(copyMode)}
+        title={copyMode === 'fromJournal' ? 'Copy from journal' : 'Copy from all'}
+        sourceSectionLabel={copyMode === 'fromJournal' ? 'Confirmation journals' : 'Sales orders'}
+        additionalSections={copyMode === 'fromJournal'
+          ? ['Quotations', 'Packing slips', 'Invoices', 'Project invoices']
+          : ['Quotations', 'Confirmation']}
+        sources={copySourcesQuery.data ?? []}
+        lines={copyLinesQuery.data ?? []}
+        loadingSources={copySourcesQuery.isLoading}
+        loadingLines={copyLinesQuery.isLoading}
+        busy={copyBusy}
+        error={copyError
+          || (copySourcesQuery.error instanceof Error ? copySourcesQuery.error.message : '')
+          || (copyLinesQuery.error instanceof Error ? copyLinesQuery.error.message : '')}
+        onSourceChange={(source) => setCopySourceId(source?.id)}
+        onClose={() => {
+          if (copyBusy) return;
+          setCopyMode(undefined);
+          setCopySourceId(undefined);
+          setCopyError('');
+        }}
+        onCopy={async (lineIds, options) => {
+          if (!order || !copyMode || copyBusy) return;
+          setCopyBusy(true);
+          setCopyError('');
+          try {
+            await salesOrderCopyApi.copy(order.id, copyMode, lineIds, options);
+            await Promise.all([
+              queryClient.invalidateQueries({ queryKey: ['sales-order-lines', order.id] }),
+              queryClient.invalidateQueries({ queryKey: ['sales-order-totals', order.id] }),
+              queryClient.invalidateQueries({ queryKey: ['accounts-receivable', 'sales-orders'] }),
+            ]);
+            setCopyMode(undefined);
+            setCopySourceId(undefined);
+          } catch (error) {
+            setCopyError(error instanceof Error ? error.message : t('errors.generic'));
+          } finally {
+            setCopyBusy(false);
+          }
+        }}
       />
     </SalesOrderLinesProvider>
   );

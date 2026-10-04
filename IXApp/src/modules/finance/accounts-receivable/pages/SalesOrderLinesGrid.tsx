@@ -127,6 +127,9 @@ export function SalesOrderLinesGrid({
   );
   const scheduleTotalsRefresh = () => {
     void queryClient.invalidateQueries({
+      queryKey: ['sales-order-totals', order.id],
+    });
+    void queryClient.invalidateQueries({
       queryKey: ['accounts-receivable', 'sales-orders'],
       refetchType: 'none',
     });
@@ -963,7 +966,7 @@ export function SalesOrderLinesGrid({
             onRowClick={handleRowClick}
             columns={gridColumns}
             height={232}
-            rowHeight={27}
+            rowHeight={24}
             headerHeight={27}
             hideFooter
             hideColumnMenu={false}

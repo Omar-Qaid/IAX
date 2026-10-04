@@ -157,12 +157,15 @@ public sealed class SalesTableController : ControllerBase
             .Concat(charges.Select(charge => charge.TaxItemGroup))
             .Where(value => value != string.Empty).Distinct().ToList();
         var groupRows = await _dbContext.Set<TaxGroupData>().AsNoTracking()
-            .Where(row => taxGroups.Contains(row.TaxGroup)).ToListAsync(cancellationToken);
+            .Where(row => row.DataAreaId == order.DataAreaId && taxGroups.Contains(row.TaxGroup))
+            .ToListAsync(cancellationToken);
         var itemRows = await _dbContext.Set<TaxOnItem>().AsNoTracking()
-            .Where(row => itemTaxGroups.Contains(row.TaxItemGroup)).ToListAsync(cancellationToken);
+            .Where(row => row.DataAreaId == order.DataAreaId && itemTaxGroups.Contains(row.TaxItemGroup))
+            .ToListAsync(cancellationToken);
         var taxCodes = groupRows.Select(row => row.TaxCode).Intersect(itemRows.Select(row => row.TaxCode)).Distinct().ToList();
         var rates = await _dbContext.Set<TaxData>().AsNoTracking()
-            .Where(row => taxCodes.Contains(row.TaxCode)).ToListAsync(cancellationToken);
+            .Where(row => row.DataAreaId == order.DataAreaId && taxCodes.Contains(row.TaxCode))
+            .ToListAsync(cancellationToken);
 
         decimal grossAmount = 0;
         decimal lineDiscount = 0;
@@ -375,6 +378,37 @@ public sealed class SalesTableController : ControllerBase
     [DomainPermission("AccountsReceivable", "SalesOrders", "Edit")]
     public Task<IActionResult> RemoveLine(long recId, long lineId, CancellationToken cancellationToken = default)
         => ChangeLine(recId, lineId, null, cancellationToken);
+
+    [HttpPost("{recId:long}/cancel")]
+    [DomainPermission("AccountsReceivable", "SalesOrders", "Edit")]
+    public async Task<IActionResult> Cancel(long recId, CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(
+                System.Data.IsolationLevel.Serializable, cancellationToken);
+            var dataAreaId = _company.GetDataAreaId() ?? "dat";
+            var order = await _dbContext.Set<SalesTable>().FirstOrDefaultAsync(
+                row => row.RecId == recId && row.DataAreaId == dataAreaId, cancellationToken);
+            if (order == null) return (IActionResult)NotFound(APIResponse<object>.Fail("Sales order was not found."));
+            if (order.SalesStatus != SalesStatus.Backorder)
+                return UnprocessableEntity(APIResponse<object>.Fail("Only an open sales order can be cancelled."));
+            var lines = await _dbContext.Set<SalesLine>()
+                .Where(row => row.SalesId == order.SalesId && row.DataAreaId == order.DataAreaId)
+                .ToListAsync(cancellationToken);
+            if (lines.Any(line => line.SalesStatus != SalesStatus.Backorder
+                || line.RemainSalesPhysical != line.SalesQty
+                || line.RemainSalesFinancial != line.SalesQty))
+                return UnprocessableEntity(APIResponse<object>.Fail(
+                    "This cancellation currently supports only completely open, unprocessed sales orders."));
+            foreach (var line in lines)
+                await _inventoryDemand.CancelRemainingAsync(line, cancellationToken);
+            order.SalesStatus = SalesStatus.Canceled;
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            return Ok(APIResponse<object>.Ok(new { cancelled = true }));
+        });
+    }
 
     private async Task<IActionResult> ChangeLine(long recId, long lineId, AddSalesLineInput? input, CancellationToken cancellationToken)
     {

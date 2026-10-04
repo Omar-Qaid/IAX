@@ -161,6 +161,8 @@ public sealed class MarkupTransController : ControllerBase
         var dataAreaId = _company.GetDataAreaId() ?? "dat";
         if (string.IsNullOrWhiteSpace(input.MarkupCode))
             return BadRequest(APIResponse<MarkupTransDto>.Fail("Charges code is required."));
+        if (!Enum.IsDefined(input.MarkupCategory))
+            return BadRequest(APIResponse<MarkupTransDto>.Fail("Charge category must be Fixed, Pcs, or Percentage."));
         if (input.Value < 0)
             return BadRequest(APIResponse<MarkupTransDto>.Fail("Charges value cannot be negative."));
         if (input.MarkupCategory == MarkupCategory.Percent && input.Value > 100)

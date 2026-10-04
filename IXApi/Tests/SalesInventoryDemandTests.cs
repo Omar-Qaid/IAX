@@ -83,7 +83,7 @@ public sealed class SalesInventoryDemandTests
         Assert.Equal(1, numbers.DimensionCalls);
 
         line.SalesQty = 12;
-        await service.UpdateAsync(line);
+        await service.UpdateAsync(line, "1", "11");
         await financeData.SaveChangesAsync();
         Assert.Equal(-12, (await db.Set<InventTrans>().SingleAsync()).Qty);
         Assert.Equal(12, (await db.Set<InventSum>().SingleAsync()).OnOrder);

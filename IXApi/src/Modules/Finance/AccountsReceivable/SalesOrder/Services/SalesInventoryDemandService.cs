@@ -128,6 +128,50 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
         _dbContext.Set<InventTransOrigin>().Remove(origin);
     }
 
+    public async Task CancelRemainingAsync(SalesLine line, CancellationToken cancellationToken = default)
+    {
+        var remainingDemand = Math.Max(0m, line.RemainInventPhysical);
+        if (!string.IsNullOrWhiteSpace(line.InventTransId))
+        {
+            var origin = await _dbContext.Set<InventTransOrigin>().SingleOrDefaultAsync(item =>
+                item.DataAreaId == line.DataAreaId && item.InventTransId == line.InventTransId,
+                cancellationToken);
+            if (origin == null) throw new InvalidOperationException("The sales line inventory origin was not found.");
+            var transactions = await _dbContext.Set<InventTrans>()
+                .Where(item => item.DataAreaId == line.DataAreaId
+                    && item.InventTransOrigin == origin.RecId
+                    && item.StatusIssue == StatusIssue.Ordered)
+                .ToListAsync(cancellationToken);
+            if (transactions.Count == 0 && remainingDemand > 0)
+                throw new InvalidOperationException(
+                    "The open sales line has no On order inventory demand to cancel.");
+            var openTransactionDemand = -transactions.Sum(item => item.Qty);
+            if (openTransactionDemand != remainingDemand)
+                throw new InvalidOperationException(
+                    "The inventory demand no longer matches the completely open sales quantity.");
+            var demandToCancel = Math.Min(remainingDemand, Math.Max(0m, openTransactionDemand));
+            var inventorySummary = await _dbContext.Set<InventSum>().SingleOrDefaultAsync(item =>
+                item.DataAreaId == line.DataAreaId && item.ItemId == line.ItemId
+                && item.InventDimId == line.InventDimId, cancellationToken);
+            if (inventorySummary != null)
+                inventorySummary.OnOrder = Math.Max(0m, inventorySummary.OnOrder - demandToCancel);
+            foreach (var transaction in transactions)
+            {
+                transaction.Qty = 0;
+                transaction.StatusIssue = StatusIssue.None;
+                transaction.ValueOpen = InventTransOpen.No;
+            }
+        }
+
+        line.RemainSalesPhysical = 0;
+        line.RemainSalesFinancial = 0;
+        line.RemainInventPhysical = 0;
+        line.RemainInventFinancial = 0;
+        line.SalesDeliverNow = 0;
+        line.InventDeliverNow = 0;
+        line.SalesStatus = SalesStatus.Canceled;
+    }
+
     private async Task<InventSum> GetOrCreateInventorySummaryAsync(
         string dataAreaId,
         string itemId,

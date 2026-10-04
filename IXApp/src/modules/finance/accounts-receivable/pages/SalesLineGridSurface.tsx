@@ -237,7 +237,7 @@ export function SalesLineGridSurface({
           outlineColor: 'error.main',
           outlineOffset: '-1px',
         },
-        '& [role="gridcell"] .MuiInputBase-root': { fontSize: 11.5, minHeight: 26 },
+        '& [role="gridcell"] .MuiInputBase-root': { fontSize: 11.5, minHeight: 23 },
         '& [role="gridcell"] .MuiInputBase-input': { py: 0.25 },
         '& [role="gridcell"] .MuiInput-root::before, & [role="gridcell"] .MuiInput-root::after': {
           display: 'none',
