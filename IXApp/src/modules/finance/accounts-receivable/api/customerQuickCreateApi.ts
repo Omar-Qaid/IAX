@@ -15,6 +15,7 @@ export interface CustomerGroupOption extends CustomerLookupOption {
 
 export interface CustomerSalesOrderDefaults {
   address: string;
+  addresses: { id: string; address: string; primary: boolean }[];
   contacts: CustomerContact[];
 }
 

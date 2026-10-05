@@ -584,7 +584,7 @@ public sealed class SalesTableController : ControllerBase
             if (order == null) return (IActionResult)NotFound(APIResponse<object>.Fail("Sales order was not found."));
             if (order.SalesStatus != SalesStatus.Backorder)
                 return UnprocessableEntity(APIResponse<object>.Fail("Lines can only be added to open sales orders."));
-            long deliveryAddressId = 0;
+            long deliveryAddressId = order.DeliveryPostalAddress;
             if (!string.IsNullOrWhiteSpace(input.DeliveryPostalAddress))
             {
                 if (!long.TryParse(input.DeliveryPostalAddress, out deliveryAddressId)
@@ -1091,7 +1091,9 @@ public sealed class SalesTableController : ControllerBase
             LanguageId = order.LanguageId,
             PaymentTerms = order.PaymTerm,
             DeliveryName = order.DeliveryName,
-            DeliveryPostalAddress = order.DeliveryPostalAddress.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            DeliveryPostalAddress = order.DeliveryPostalAddress == 0
+                ? string.Empty
+                : order.DeliveryPostalAddress.ToString(System.Globalization.CultureInfo.InvariantCulture),
             DeliveryAddress = postalAddresses.GetValueOrDefault(order.DeliveryPostalAddress) ?? string.Empty,
             ShippingDateConfirmed = order.ShippingDateConfirmed == default ? null : order.ShippingDateConfirmed,
             ReceiptDateConfirmed = order.ReceiptDateConfirmed == default ? null : order.ReceiptDateConfirmed,
@@ -1307,7 +1309,8 @@ public sealed class SalesTableController : ControllerBase
             order.CustRequisitionNum = input.CustomerRequisitionNumber.Trim();
             order.SmmCampaignId = input.CampaignId.Trim();
             var taxGroupId = input.TaxGroupId.Trim();
-            if (!await _dbContext.Set<TaxGroupHeading>().AsNoTracking()
+            if (!string.IsNullOrEmpty(taxGroupId)
+                && !await _dbContext.Set<TaxGroupHeading>().AsNoTracking()
                     .AnyAsync(group => group.TaxGroup == taxGroupId, cancellationToken))
                 return UnprocessableEntity(APIResponse<object>.Fail("Sales tax group was not found."));
             order.TaxGroupId = taxGroupId;
@@ -1320,6 +1323,7 @@ public sealed class SalesTableController : ControllerBase
             var deliveryName = input.DeliveryName.Trim();
             var deliveryAddressId = 0L;
             if (!string.IsNullOrWhiteSpace(input.DeliveryPostalAddress)
+                && input.DeliveryPostalAddress != "0"
                 && (!long.TryParse(input.DeliveryPostalAddress, out deliveryAddressId)
                     || !await IsDeliveryAddressAvailableForOrderAsync(order, deliveryAddressId, cancellationToken)))
                 return UnprocessableEntity(APIResponse<object>.Fail("The selected delivery address does not belong to this customer."));
@@ -1391,6 +1395,14 @@ public sealed class SalesTableController : ControllerBase
                 .FirstOrDefaultAsync(candidate => candidate.RecId == customer.Party, cancellationToken)
             : null;
         var deliveryPostalAddress = input.DeliveryPostalAddress ?? 0;
+        if (!string.IsNullOrWhiteSpace(input.DeliveryPostalAddressId)
+            && (!long.TryParse(input.DeliveryPostalAddressId, out deliveryPostalAddress) || deliveryPostalAddress <= 0))
+            return UnprocessableEntity(APIResponse<SalesOrderListDto>.Fail("The selected delivery address is invalid."));
+        var taxGroupId = string.IsNullOrWhiteSpace(input.TaxGroupId) ? customer.TaxGroupId : input.TaxGroupId.Trim();
+        if (!string.IsNullOrWhiteSpace(taxGroupId)
+            && !await _dbContext.Set<TaxGroupHeading>().AsNoTracking()
+                .AnyAsync(group => group.TaxGroup == taxGroupId, cancellationToken))
+            return UnprocessableEntity(APIResponse<SalesOrderListDto>.Fail("The selected sales tax group was not found."));
         if (customer.Party > 0)
         {
             var customerAddresses = await (
@@ -1443,7 +1455,7 @@ public sealed class SalesTableController : ControllerBase
                 : input.InvoiceAccount.Trim(),
             CustGroup = customer.CustGroupId,
             CurrencyCode = string.IsNullOrWhiteSpace(input.CurrencyCode) ? customer.CurrencyCode : input.CurrencyCode.Trim(),
-            TaxGroupId = customer.TaxGroupId,
+            TaxGroupId = taxGroupId,
             PaymTerm = string.IsNullOrWhiteSpace(input.PaymentTerms) ? customer.PaymTermId : input.PaymentTerms.Trim(),
             PaymMode = string.IsNullOrWhiteSpace(input.PaymentMethod) ? customer.PaymModeId : input.PaymentMethod.Trim(),
             DlvMode = string.IsNullOrWhiteSpace(input.DeliveryMode) ? customer.DlvModeId : input.DeliveryMode.Trim(),

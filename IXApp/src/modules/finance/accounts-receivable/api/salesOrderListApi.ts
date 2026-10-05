@@ -162,6 +162,8 @@ export interface SalesOrderQuickCreateInput {
   contactType?: string;
   deliveryName?: string;
   deliveryPostalAddress?: number;
+  deliveryPostalAddressId?: string;
+  taxGroupId?: string;
   customerReference?: string;
   invoiceAccount?: string;
   currencyCode?: string;

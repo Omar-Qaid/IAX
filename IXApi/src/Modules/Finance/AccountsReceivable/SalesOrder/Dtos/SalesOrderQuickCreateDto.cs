@@ -11,6 +11,8 @@ public sealed class SalesOrderQuickCreateDto
     public string? ContactType { get; set; }
     public string? DeliveryName { get; set; }
     public long? DeliveryPostalAddress { get; set; }
+    public string? DeliveryPostalAddressId { get; set; }
+    public string? TaxGroupId { get; set; }
     public string? CustomerReference { get; set; }
     public string? InvoiceAccount { get; set; }
     public string? CurrencyCode { get; set; }

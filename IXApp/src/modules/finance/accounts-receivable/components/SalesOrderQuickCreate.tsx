@@ -25,6 +25,8 @@ const initialValues = (): Record<string, FastTabValue> => ({
   deliveryName: '',
   address: '',
   deliveryAddress: '',
+  deliveryPostalAddressId: '',
+  taxGroupId: '',
   customerReference: '',
   invoiceAccount: '',
   currencyCode: '',
@@ -69,6 +71,8 @@ export function SalesOrderQuickCreate({
     enabled: open && Boolean(selectedAccount),
   });
   const primaryAddress = customerDefaultsQuery.data?.address ?? '';
+  const customerAddresses = customerDefaultsQuery.data?.addresses ?? [];
+  const primaryDeliveryAddress = customerAddresses[0];
   const orderContacts = useMemo(() => (customerDefaultsQuery.data?.contacts ?? []).filter(
     (contact) => contact.type === 'Email' || contact.type === 'Phone'
   ), [customerDefaultsQuery.data]);
@@ -163,8 +167,9 @@ export function SalesOrderQuickCreate({
           {
             name: 'deliveryAddress',
             label: t('salesOrderQuickCreate.deliveryAddress', 'Delivery address'),
-            disabled: true,
-            valueGetter: () => primaryAddress,
+            type: 'select',
+            valueGetter: (values) => values.deliveryAddress || primaryDeliveryAddress?.id || '',
+            options: customerAddresses.map((address) => ({ value: address.id, label: address.address })),
           },
         ],
       },
@@ -269,6 +274,13 @@ export function SalesOrderQuickCreate({
             valueGetter: (values) => values.paymentMethod || customerFor(values)?.paymModeId || '',
             options: deliveryLookupsQuery.data?.paymentMethods ?? [],
           },
+          {
+            name: 'taxGroupId',
+            label: t('fields.salesTaxGroup', 'Sales tax group'),
+            type: 'select',
+            valueGetter: (values) => values.taxGroupId || customerFor(values)?.taxGroupId || '',
+            options: deliveryLookupsQuery.data?.salesTaxGroups ?? [],
+          },
           { name: 'salesGroup', label: t('salesOrderQuickCreate.salesGroup', 'Sales group') },
           { name: 'intercompanyCompanyId', label: t('fields.company', 'Company') },
           {
@@ -340,7 +352,7 @@ export function SalesOrderQuickCreate({
         ],
       },
     ],
-    [customerFor, customers, orderContacts, deliveryLookupsQuery.data, dimensionsQuery.data, primaryAddress, primaryContact, t, isRtl]
+    [customerFor, customers, orderContacts, deliveryLookupsQuery.data, dimensionsQuery.data, primaryAddress, primaryContact, primaryDeliveryAddress, customerAddresses, t, isRtl]
   );
 
   return (
@@ -374,7 +386,7 @@ export function SalesOrderQuickCreate({
         if (!customer) return {
           contact: '', deliveryName: '', invoiceAccount: '', currencyCode: '',
           paymentTerms: '', paymentMethod: '', salesName: '', inventSiteId: '',
-          inventLocationId: '', deliveryMode: '',
+          inventLocationId: '', deliveryMode: '', taxGroupId: '', deliveryAddress: '',
         };
         return {
           customerName: customer.name,
@@ -382,6 +394,7 @@ export function SalesOrderQuickCreate({
           deliveryName: customer.name,
           address: '',
           deliveryAddress: '',
+          taxGroupId: customer.taxGroupId,
           invoiceAccount: customer.invoiceAccount || customer.accountNumber,
           currencyCode: customer.currencyCode,
           paymentTerms: customer.paymTermId ?? '',
@@ -439,6 +452,8 @@ export function SalesOrderQuickCreate({
           oneTimeCustomer: String(values.oneTimeCustomer) === 'true',
           contact,
           contactType: selectedContact?.type,
+          deliveryPostalAddressId: String(values.deliveryAddress || primaryDeliveryAddress?.id || ''),
+          taxGroupId: String(values.taxGroupId || customer?.taxGroupId || ''),
           deliveryName: String(values.deliveryName ?? '') || customer?.name,
           customerReference: String(values.customerReference ?? ''),
           invoiceAccount: String(

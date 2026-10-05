@@ -49,7 +49,15 @@ public sealed class CustomerListDto
 public sealed class CustomerSalesOrderDefaultsDto
 {
     public string Address { get; set; } = string.Empty;
+    public List<CustomerSalesOrderAddressDto> Addresses { get; set; } = [];
     public List<CustomerSalesOrderContactDto> Contacts { get; set; } = [];
+}
+
+public sealed class CustomerSalesOrderAddressDto
+{
+    public string Id { get; set; } = string.Empty;
+    public string Address { get; set; } = string.Empty;
+    public bool Primary { get; set; }
 }
 
 public sealed class CustomerSalesOrderContactDto

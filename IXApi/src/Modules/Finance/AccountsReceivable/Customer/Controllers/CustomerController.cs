@@ -85,7 +85,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
                     && address.DataAreaId == area
                     && address.ValidFrom <= DateTime.UtcNow && address.ValidTo >= DateTime.UtcNow
                 orderby link.IsPrimary descending, address.RecId
-                select address.Address
+                select new { address.RecId, address.Address, Primary = link.IsPrimary == IAX.IXApi.Modules.Finance.Common.NoYes.Yes }
             ).ToListAsync(cancellationToken);
 
             var contacts = await (
@@ -102,7 +102,13 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
 
             return Ok(APIResponse<CustomerSalesOrderDefaultsDto>.Ok(new CustomerSalesOrderDefaultsDto
             {
-                Address = addresses.FirstOrDefault() ?? string.Empty,
+                Address = addresses.FirstOrDefault()?.Address ?? string.Empty,
+                Addresses = addresses.Select(address => new CustomerSalesOrderAddressDto
+                {
+                    Id = address.RecId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    Address = address.Address,
+                    Primary = address.Primary
+                }).ToList(),
                 Contacts = contacts.Select(contact => new CustomerSalesOrderContactDto
                 {
                     Type = contact.Type.ToString(),
