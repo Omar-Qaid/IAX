@@ -59,10 +59,9 @@ export function FastTabsDialog<TValues extends Record<string, FastTabValue>>({ o
   const dirty = !deepEqual(values, pristineValues);
   useUnsavedChanges(open && dirty);
   const changeValue = (name: string, value: FastTabValue) => {
-    setValues((current) => {
-      const changed = { ...current, [name]: value };
-      return { ...changed, ...(onFieldChange?.(name, value, changed) ?? {}) };
-    });
+    const changed = { ...values, [name]: value };
+    const additional = onFieldChange?.(name, value, changed);
+    setValues({ ...changed, ...additional });
     setErrors((current) => { const next = { ...current }; delete next[name]; return next; });
   };
   const submit = async (mode: FastTabsSubmitMode) => {

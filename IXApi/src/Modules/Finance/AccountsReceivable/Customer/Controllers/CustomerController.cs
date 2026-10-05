@@ -25,6 +25,9 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         private readonly ISysNumberSequenceService _numberSequences;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ICurrentUserService _currentUser;
+        private readonly ILocationService _locations;
+        private readonly IPostalAddressService _postalAddresses;
+        private readonly IPartyLocationService _partyLocations;
 
         public CustomerController(
             IBaseService<CustTable> service,
@@ -32,13 +35,19 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
             IPartyService partyService,
             ISysNumberSequenceService numberSequences,
             IUnitOfWork unitOfWork,
-            ICurrentUserService currentUser)
+            ICurrentUserService currentUser,
+            ILocationService locations,
+            IPostalAddressService postalAddresses,
+            IPartyLocationService partyLocations)
             : base(service, logger)
         {
             _partyService = partyService;
             _numberSequences = numberSequences;
             _unitOfWork = unitOfWork;
             _currentUser = currentUser;
+            _locations = locations;
+            _postalAddresses = postalAddresses;
+            _partyLocations = partyLocations;
         }
 
         [HttpGet("list")]
@@ -54,6 +63,53 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
 
             var result = customers.Select(customer => MapCustomer(customer, parties.GetValueOrDefault(customer.Party))).ToList();
             return Ok(APIResponse<IEnumerable<CustomerListDto>>.Ok(result));
+        }
+
+        [HttpGet("{accountNumber}/sales-order-defaults")]
+        public async Task<ActionResult<APIResponse<CustomerSalesOrderDefaultsDto>>> GetSalesOrderDefaults(
+            string accountNumber, CancellationToken cancellationToken = default)
+        {
+            var area = _currentUser.GetDataAreaId() ?? "dat";
+            var partyId = await _unitOfWork.Context.Set<CustTable>().AsNoTracking()
+                .Where(customer => customer.AccountNum == accountNumber && customer.DataAreaId == area)
+                .Select(customer => customer.Party)
+                .FirstOrDefaultAsync(cancellationToken);
+            if (partyId == 0)
+                return NotFound(APIResponse<CustomerSalesOrderDefaultsDto>.Fail("Customer account was not found."));
+
+            var addresses = await (
+                from link in _unitOfWork.Context.Set<DirPartyLocation>().AsNoTracking()
+                join address in _unitOfWork.Context.Set<LogisticsPostalAddress>().AsNoTracking()
+                    on link.Location equals address.Location
+                where link.Party == partyId && link.IsPostalAddress == IAX.IXApi.Modules.Finance.Common.NoYes.Yes
+                    && address.DataAreaId == area
+                    && address.ValidFrom <= DateTime.UtcNow && address.ValidTo >= DateTime.UtcNow
+                orderby link.IsPrimary descending, address.RecId
+                select address.Address
+            ).ToListAsync(cancellationToken);
+
+            var contacts = await (
+                from link in _unitOfWork.Context.Set<DirPartyLocation>().AsNoTracking()
+                join contact in _unitOfWork.Context.Set<LogisticsElectronicAddress>().AsNoTracking()
+                    on link.Location equals contact.Location
+                where link.Party == partyId && link.IsPostalAddress == IAX.IXApi.Modules.Finance.Common.NoYes.No
+                    && (contact.Type == IAX.IXApi.Modules.Finance.Common.ElectronicAddressType.Email
+                        || contact.Type == IAX.IXApi.Modules.Finance.Common.ElectronicAddressType.Phone)
+                orderby link.IsPrimary descending, contact.IsPrimary descending, contact.RecId
+                select new { contact.Type, contact.Locator, Primary = link.IsPrimary == IAX.IXApi.Modules.Finance.Common.NoYes.Yes
+                    || contact.IsPrimary == IAX.IXApi.Modules.Finance.Common.NoYes.Yes }
+            ).ToListAsync(cancellationToken);
+
+            return Ok(APIResponse<CustomerSalesOrderDefaultsDto>.Ok(new CustomerSalesOrderDefaultsDto
+            {
+                Address = addresses.FirstOrDefault() ?? string.Empty,
+                Contacts = contacts.Select(contact => new CustomerSalesOrderContactDto
+                {
+                    Type = contact.Type.ToString(),
+                    Number = contact.Locator,
+                    Primary = contact.Primary
+                }).ToList()
+            }));
         }
 
         [HttpPost("quick-create")]
@@ -89,6 +145,20 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
                         Memo = input.Memo?.Trim(),
                         DataAreaId = _currentUser.GetDataAreaId() ?? "dat"
                     }, cancellationToken);
+
+                    if (!string.IsNullOrWhiteSpace(input.Street))
+                    {
+                        var address = new AddressInfoDto
+                        {
+                            Description = "Primary address",
+                            Primary = true,
+                            Street = input.Street.Trim(),
+                            CountryRegionId = input.CountryRegionId?.Trim() ?? string.Empty
+                        };
+                        var location = await _locations.CreateLocationAsync(address.Description, true, cancellationToken);
+                        await _postalAddresses.CreatePostalAddressAsync(location.RecId, address, cancellationToken);
+                        await _partyLocations.LinkLocationToPartyAsync(party.RecId, location.RecId, true, true, cancellationToken);
+                    }
 
                     await _unitOfWork.CommitTransactionAsync(cancellationToken);
                     return MapCustomer(customer, party);

@@ -24,17 +24,23 @@ public sealed class SalesTableController : ControllerBase
     private readonly ISysNumberSequenceService _numberSequences;
     private readonly ICompanyExecutionContext _company;
     private readonly ISalesInventoryDemandService _inventoryDemand;
+    private readonly ILocationService _locationService;
+    private readonly IPostalAddressService _postalAddressService;
 
     public SalesTableController(
         IFinanceDataContext dbContext,
         ISysNumberSequenceService numberSequences,
         ICompanyExecutionContext company,
-        ISalesInventoryDemandService inventoryDemand)
+        ISalesInventoryDemandService inventoryDemand,
+        ILocationService locationService,
+        IPostalAddressService postalAddressService)
     {
         _dbContext = dbContext;
         _numberSequences = numberSequences;
         _company = company;
         _inventoryDemand = inventoryDemand;
+        _locationService = locationService;
+        _postalAddressService = postalAddressService;
     }
 
     [HttpGet("units")]
@@ -113,6 +119,125 @@ public sealed class SalesTableController : ControllerBase
         return Ok(APIResponse<object>.Ok(new { salesTaxGroups, itemSalesTaxGroups }));
     }
 
+    [HttpGet("ledger-dimensions")]
+    public async Task<IActionResult> LedgerDimensions(string? search = null, int pageNumber = 1,
+        int pageSize = 50, CancellationToken cancellationToken = default)
+    {
+        pageNumber = Math.Max(1, pageNumber);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        var dataAreaId = _company.GetDataAreaId();
+        var query = _dbContext.Set<DimensionAttributeValueCombination>().AsNoTracking()
+            .Where(row => row.DataAreaId == dataAreaId && row.MainAccountValue != string.Empty);
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            query = query.Where(row => row.MainAccountValue.Contains(term) || row.DisplayValue.Contains(term));
+        }
+        var totalRecords = await query.CountAsync(cancellationToken);
+        var dimensions = await query
+            .OrderBy(row => row.MainAccountValue)
+            .ThenBy(row => row.RecId)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(row => new { id = row.RecId, code = row.MainAccountValue, name = row.DisplayValue })
+            .ToListAsync(cancellationToken);
+        return Ok(APIResponse<object>.Ok(new
+        {
+            data = dimensions,
+            pageNumber,
+            totalRecords,
+            totalPages = (int)Math.Ceiling((double)totalRecords / pageSize)
+        }));
+    }
+
+    [HttpGet("return-lots")]
+    public async Task<IActionResult> ReturnLots(string itemNumber, string? search = null,
+        int pageNumber = 1, int pageSize = 50,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(itemNumber))
+            return BadRequest(APIResponse<object>.Fail("An item number is required to find return lots."));
+
+        pageNumber = Math.Max(1, pageNumber);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        var dataAreaId = _company.GetDataAreaId();
+        var query = _dbContext.Set<InventTransOrigin>().AsNoTracking()
+            .Where(origin => origin.DataAreaId == dataAreaId && origin.ItemId == itemNumber
+                && _dbContext.Set<InventTrans>().Any(transaction =>
+                    transaction.DataAreaId == dataAreaId && transaction.InventTransOrigin == origin.RecId));
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            query = query.Where(origin => origin.InventTransId.Contains(term)
+                || origin.ReferenceId.Contains(term));
+        }
+
+        var totalRecords = await query.CountAsync(cancellationToken);
+        var lots = await query.OrderByDescending(origin => origin.RecId)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(origin => new { id = origin.InventTransId, code = origin.InventTransId,
+                name = origin.ReferenceId })
+            .ToListAsync(cancellationToken);
+        return Ok(APIResponse<object>.Ok(new
+        {
+            data = lots,
+            pageNumber,
+            totalRecords,
+            totalPages = (int)Math.Ceiling((double)totalRecords / pageSize)
+        }));
+    }
+
+    [HttpGet("batch-numbers")]
+    public async Task<IActionResult> BatchNumbers(string itemNumber, string? search = null,
+        int pageNumber = 1, int pageSize = 50, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(itemNumber))
+            return BadRequest(APIResponse<object>.Fail("An item number is required to find batches."));
+        pageNumber = Math.Max(1, pageNumber);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        var dataAreaId = _company.GetDataAreaId();
+        var query = _dbContext.Set<InventBatch>().AsNoTracking()
+            .Where(batch => batch.DataAreaId == dataAreaId && batch.ItemId == itemNumber);
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            query = query.Where(batch => batch.InventBatchId.Contains(term));
+        }
+        var totalRecords = await query.CountAsync(cancellationToken);
+        var rows = await query.OrderBy(batch => batch.InventBatchId)
+            .Skip((pageNumber - 1) * pageSize).Take(pageSize)
+            .Select(batch => new { id = batch.InventBatchId, code = batch.InventBatchId, name = batch.InventBatchId })
+            .ToListAsync(cancellationToken);
+        return Ok(APIResponse<object>.Ok(new { data = rows, pageNumber, totalRecords,
+            totalPages = (int)Math.Ceiling((double)totalRecords / pageSize) }));
+    }
+
+    [HttpGet("serial-numbers")]
+    public async Task<IActionResult> SerialNumbers(string itemNumber, string? search = null,
+        int pageNumber = 1, int pageSize = 50, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(itemNumber))
+            return BadRequest(APIResponse<object>.Fail("An item number is required to find serial numbers."));
+        pageNumber = Math.Max(1, pageNumber);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+        var dataAreaId = _company.GetDataAreaId();
+        var query = _dbContext.Set<InventSerial>().AsNoTracking()
+            .Where(serial => serial.DataAreaId == dataAreaId && serial.ItemId == itemNumber);
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            query = query.Where(serial => serial.InventSerialId.Contains(term));
+        }
+        var totalRecords = await query.CountAsync(cancellationToken);
+        var rows = await query.OrderBy(serial => serial.InventSerialId)
+            .Skip((pageNumber - 1) * pageSize).Take(pageSize)
+            .Select(serial => new { id = serial.InventSerialId, code = serial.InventSerialId, name = serial.InventSerialId })
+            .ToListAsync(cancellationToken);
+        return Ok(APIResponse<object>.Ok(new { data = rows, pageNumber, totalRecords,
+            totalPages = (int)Math.Ceiling((double)totalRecords / pageSize) }));
+    }
+
     [HttpGet("{recId:long}/lines")]
     public async Task<IActionResult> Lines(long recId, CancellationToken cancellationToken = default)
     {
@@ -125,9 +250,121 @@ public sealed class SalesTableController : ControllerBase
         var dimensions = await _dbContext.Set<InventDim>().AsNoTracking()
             .Where(item => item.DataAreaId == order.DataAreaId && dimensionIds.Contains(item.InventDimId))
             .ToDictionaryAsync(item => item.InventDimId, cancellationToken);
-        return Ok(APIResponse<object>.Ok(lines.Select(line => dimensions.TryGetValue(line.InventDimId, out var dimension)
-            ? LineRecord(line, dimension.InventSiteId, dimension.InventLocationId)
-            : LineRecord(line))));
+        var ledgerDimensionIds = lines.Select(line => line.LedgerDimension).Where(id => id != 0).Distinct().ToList();
+        var ledgerDimensions = await _dbContext.Set<DimensionAttributeValueCombination>().AsNoTracking()
+            .Where(row => row.DataAreaId == order.DataAreaId && ledgerDimensionIds.Contains(row.RecId))
+            .ToDictionaryAsync(row => row.RecId, row => row.DisplayValue, cancellationToken);
+        var itemIds = lines.Select(line => line.ItemId).Distinct().ToList();
+        var productNames = await _dbContext.Set<InventTable>().AsNoTracking()
+            .Where(item => item.DataAreaId == order.DataAreaId && itemIds.Contains(item.ItemId))
+            .ToDictionaryAsync(item => item.ItemId, item => item.NameAlias, cancellationToken);
+        return Ok(APIResponse<object>.Ok(lines.Select(line =>
+        {
+            dimensions.TryGetValue(line.InventDimId, out var dimension);
+            ledgerDimensions.TryGetValue(line.LedgerDimension, out var ledgerDisplay);
+            productNames.TryGetValue(line.ItemId, out var productName);
+            return LineRecord(line, dimension?.InventSiteId, dimension?.InventLocationId,
+                ledgerDisplay, dimension, productName);
+        })));
+    }
+
+    [HttpGet("{recId:long}/delivery-addresses")]
+    public async Task<IActionResult> DeliveryAddresses(long recId, CancellationToken cancellationToken = default)
+    {
+        var area = _company.GetDataAreaId();
+        var order = await _dbContext.Set<SalesTable>().AsNoTracking()
+            .FirstOrDefaultAsync(row => row.RecId == recId && row.DataAreaId == area, cancellationToken);
+        if (order == null) return NotFound(APIResponse<object>.Fail("Sales order was not found."));
+        var partyId = await _dbContext.Set<CustTable>().AsNoTracking()
+            .Where(customer => customer.DataAreaId == area && customer.AccountNum == order.CustAccount)
+            .Select(customer => customer.Party).FirstOrDefaultAsync(cancellationToken);
+        var addresses = await (
+            from partyLocation in _dbContext.Set<DirPartyLocation>().AsNoTracking()
+            join address in _dbContext.Set<LogisticsPostalAddress>().AsNoTracking()
+                on partyLocation.Location equals address.Location
+            join location in _dbContext.Set<LogisticsLocation>().AsNoTracking()
+                on partyLocation.Location equals location.RecId
+            where partyLocation.Party == partyId && partyLocation.IsPostalAddress == NoYes.Yes
+                && address.DataAreaId == area && address.ValidFrom <= DateTime.UtcNow
+                && address.ValidTo >= DateTime.UtcNow
+            orderby partyLocation.IsPrimary descending, location.Description
+            select new { value = address.RecId.ToString(System.Globalization.CultureInfo.InvariantCulture), label = location.Description,
+                address = address.Address, isPrimary = partyLocation.IsPrimary == NoYes.Yes,
+                postalAddress = new { locationId = location.LocationId, description = location.Description,
+                    street = address.Street, building = address.StreetNumber, buildingComplement = address.BuildingCompliment,
+                    postBox = address.PostBox, city = address.City, state = address.State, zipCode = address.ZipCode,
+                    county = address.County, countryRegionId = address.CountryRegionId, district = address.DistrictName,
+                    validFrom = address.ValidFrom, validTo = address.ValidTo, primary = partyLocation.IsPrimary == NoYes.Yes } }
+        ).ToListAsync(cancellationToken);
+        var currentIds = await _dbContext.Set<SalesLine>().AsNoTracking()
+            .Where(line => line.SalesId == order.SalesId && line.DataAreaId == area && line.DeliveryPostalAddress > 0)
+            .Select(line => line.DeliveryPostalAddress).Distinct().ToListAsync(cancellationToken);
+        if (order.DeliveryPostalAddress > 0) currentIds.Add(order.DeliveryPostalAddress);
+        var existingValues = addresses.Select(row => row.value).ToHashSet(StringComparer.Ordinal);
+        var orderAddresses = await (
+            from address in _dbContext.Set<LogisticsPostalAddress>().AsNoTracking()
+            join location in _dbContext.Set<LogisticsLocation>().AsNoTracking() on address.Location equals location.RecId
+            where currentIds.Contains(address.RecId) && address.DataAreaId == area
+            select new { value = address.RecId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                label = location.Description, address = address.Address, isPrimary = false,
+                postalAddress = new { locationId = location.LocationId, description = location.Description,
+                    street = address.Street, building = address.StreetNumber, buildingComplement = address.BuildingCompliment,
+                    postBox = address.PostBox, city = address.City, state = address.State, zipCode = address.ZipCode,
+                    county = address.County, countryRegionId = address.CountryRegionId, district = address.DistrictName,
+                    validFrom = address.ValidFrom, validTo = address.ValidTo, primary = false } }
+        ).ToListAsync(cancellationToken);
+        addresses.AddRange(orderAddresses.Where(row => existingValues.Add(row.value)));
+        return Ok(APIResponse<object>.Ok(addresses));
+    }
+
+    [HttpPost("{recId:long}/delivery-addresses")]
+    [DomainPermission("AccountsReceivable", "SalesOrders", "Edit")]
+    public async Task<IActionResult> CreateDeliveryAddress(long recId, [FromBody] CreateSalesDeliveryAddressInput input,
+        CancellationToken cancellationToken = default)
+    {
+        var area = _company.GetDataAreaId();
+        var order = await _dbContext.Set<SalesTable>().FirstOrDefaultAsync(
+            row => row.RecId == recId && row.DataAreaId == area, cancellationToken);
+        if (order == null) return NotFound(APIResponse<object>.Fail("Sales order was not found."));
+        if (order.SalesStatus != SalesStatus.Backorder)
+            return UnprocessableEntity(APIResponse<object>.Fail("Only open sales orders can be changed."));
+        SalesLine? line = null;
+        if (!string.IsNullOrWhiteSpace(input.LineId))
+        {
+            if (!long.TryParse(input.LineId, System.Globalization.NumberStyles.None,
+                    System.Globalization.CultureInfo.InvariantCulture, out var lineId))
+                return BadRequest(APIResponse<object>.Fail("Sales line was not found."));
+            line = await _dbContext.Set<SalesLine>().FirstOrDefaultAsync(row => row.RecId == lineId
+                && row.SalesId == order.SalesId && row.DataAreaId == order.DataAreaId, cancellationToken);
+            if (line == null) return NotFound(APIResponse<object>.Fail("Sales line was not found."));
+            if (line.SalesStatus != SalesStatus.Backorder || line.RemainSalesPhysical != line.SalesQty
+                || line.RemainSalesFinancial != line.SalesQty)
+                return UnprocessableEntity(APIResponse<object>.Fail("Processed sales lines cannot be changed."));
+        }
+
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync(
+            System.Data.IsolationLevel.Serializable, cancellationToken);
+        try
+        {
+            var location = await _locationService.CreateLocationAsync(input.Address.Description.Trim(), true, cancellationToken);
+            var postalAddress = await _postalAddressService.CreatePostalAddressAsync(location.RecId, input.Address, cancellationToken);
+            postalAddress.DataAreaId = order.DataAreaId;
+            if (line == null) order.DeliveryPostalAddress = postalAddress.RecId;
+            else line.DeliveryPostalAddress = postalAddress.RecId;
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            return Ok(APIResponse<object>.Ok(new
+            {
+                id = postalAddress.RecId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                description = location.Description,
+                address = postalAddress.Address
+            }));
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
     }
 
     [HttpGet("{recId:long}/totals")]
@@ -255,12 +492,35 @@ public sealed class SalesTableController : ControllerBase
         public SalesType? LineType { get; set; }
         [System.ComponentModel.DataAnnotations.EnumDataType(typeof(SalesDeliveryType))]
         public SalesDeliveryType? DeliveryType { get; set; }
+        [System.ComponentModel.DataAnnotations.EnumDataType(typeof(InventRefType))]
+        public InventRefType? ItemReferenceType { get; set; }
+        [System.ComponentModel.DataAnnotations.EnumDataType(typeof(SalesLineSourcingOrigin))]
+        public SalesLineSourcingOrigin? SourcingOrigin { get; set; }
+        public bool? ExcludeFromMasterPlanning { get; set; }
+        [System.ComponentModel.DataAnnotations.EnumDataType(typeof(SalesDeliveryType))]
+        public SalesDeliveryType? LineDeliveryType { get; set; }
+        [System.ComponentModel.DataAnnotations.EnumDataType(typeof(SalesDlvDateControlType))]
+        public SalesDlvDateControlType? DeliveryDateControlType { get; set; }
+        [System.ComponentModel.DataAnnotations.EnumDataType(typeof(ReqFullCTPStatus))]
+        public ReqFullCTPStatus? MpsFullRunCtpStatus { get; set; }
+        [System.ComponentModel.DataAnnotations.EnumDataType(typeof(WHSShipCarrierDlvType))]
+        public WHSShipCarrierDlvType? ShipCarrierDlvType { get; set; }
+        [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0", "1000000000")]
+        public decimal? PlanningPriority { get; set; }
+        [System.ComponentModel.DataAnnotations.EnumDataType(typeof(SalesIntercompanyOrigin))]
+        public SalesIntercompanyOrigin? IntercompanyOrigin { get; set; }
+        public bool? Stopped { get; set; }
+        public bool? PreventPartialDelivery { get; set; }
         [System.ComponentModel.DataAnnotations.Range(typeof(long), "0", "9223372036854775807")]
         public long SalesCategory { get; set; }
         [System.ComponentModel.DataAnnotations.StringLength(10)]
         public string? InventSiteId { get; set; }
         [System.ComponentModel.DataAnnotations.StringLength(10)]
         public string? InventLocationId { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.InventBatchId)]
+        public string? BatchNumber { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.InventSerialId)]
+        public string? SerialNumber { get; set; }
         [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.DlvModeId)]
         public string? DeliveryMode { get; set; }
         [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.DlvTermId)]
@@ -274,9 +534,21 @@ public sealed class SalesTableController : ControllerBase
         public decimal UnderDeliveryPercent { get; set; }
         [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.Name)]
         public string? DeliveryName { get; set; }
-        public long DeliveryPostalAddress { get; set; }
+        public string? DeliveryPostalAddress { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.InventTransId)]
+        public string? ReturnLotId { get; set; }
+        [System.ComponentModel.DataAnnotations.EnumDataType(typeof(SalesAutoReservation))]
+        public SalesAutoReservation? Reservation { get; set; }
+        public bool? AutoBatchReservation { get; set; }
+        public bool? SameBatchSelection { get; set; }
+        public bool? Scrap { get; set; }
+        public long? LedgerDimension { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.SalesGroupId)]
+        public string? SalesGroup { get; set; }
         [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.ReferenceId)]
         public string? CustomerReference { get; set; }
+        [System.ComponentModel.DataAnnotations.Range(0, int.MaxValue)]
+        public int? CustomerLineNumber { get; set; }
         [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.UnitId)]
         public string? PackingUnit { get; set; }
         [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0", "1000000000")]
@@ -291,6 +563,10 @@ public sealed class SalesTableController : ControllerBase
         public decimal MultiLineDiscount { get; set; }
         [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0", "100")]
         public decimal MultiLineDiscountPercent { get; set; }
+        [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0", "1000000000")]
+        public decimal SalesMarkup { get; set; }
+        public bool? ExcludeFromRebate { get; set; }
+        public bool? ExcludeFromRebateManagement { get; set; }
         [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.TaxGroup)]
         public string? TaxGroup { get; set; }
         [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.TaxItemGroup)]
@@ -308,6 +584,13 @@ public sealed class SalesTableController : ControllerBase
             if (order == null) return (IActionResult)NotFound(APIResponse<object>.Fail("Sales order was not found."));
             if (order.SalesStatus != SalesStatus.Backorder)
                 return UnprocessableEntity(APIResponse<object>.Fail("Lines can only be added to open sales orders."));
+            long deliveryAddressId = 0;
+            if (!string.IsNullOrWhiteSpace(input.DeliveryPostalAddress))
+            {
+                if (!long.TryParse(input.DeliveryPostalAddress, out deliveryAddressId)
+                    || !await IsDeliveryAddressAvailableForOrderAsync(order, deliveryAddressId, cancellationToken))
+                    return UnprocessableEntity(APIResponse<object>.Fail("The selected delivery address does not belong to this customer."));
+            }
             var item = await _dbContext.Set<InventTable>().AsNoTracking()
                 .FirstOrDefaultAsync(row => row.ItemId == input.ItemNumber && row.DataAreaId == order.DataAreaId, cancellationToken);
             if (item == null) return UnprocessableEntity(APIResponse<object>.Fail("Item was not found."));
@@ -323,6 +606,19 @@ public sealed class SalesTableController : ControllerBase
             var taxValidationError = await ValidateTaxSetupAsync(lineTaxGroup, lineTaxItemGroup, cancellationToken);
             if (taxValidationError != null)
                 return UnprocessableEntity(APIResponse<object>.Fail(taxValidationError));
+            if (!string.IsNullOrWhiteSpace(input.ReturnLotId))
+            {
+                var returnLotExists = await _dbContext.Set<InventTransOrigin>().AnyAsync(origin =>
+                    origin.DataAreaId == order.DataAreaId && origin.ItemId == item.ItemId
+                    && origin.InventTransId == input.ReturnLotId.Trim(), cancellationToken);
+                if (!returnLotExists)
+                    return UnprocessableEntity(APIResponse<object>.Fail("The selected return lot does not belong to this item."));
+            }
+            if (input.LedgerDimension.HasValue && input.LedgerDimension.Value != 0
+                && !await _dbContext.Set<DimensionAttributeValueCombination>().AnyAsync(dimension =>
+                    dimension.DataAreaId == order.DataAreaId
+                    && dimension.RecId == input.LedgerDimension.Value, cancellationToken))
+                return UnprocessableEntity(APIResponse<object>.Fail("The selected main account was not found."));
             var lastLine = await _dbContext.Set<SalesLine>()
                 .Where(row => row.SalesId == order.SalesId && row.DataAreaId == order.DataAreaId)
                 .MaxAsync(row => (decimal?)row.LineNum, cancellationToken) ?? 0;
@@ -335,6 +631,17 @@ public sealed class SalesTableController : ControllerBase
                 SalesPrice = input.UnitPrice, LineAmount = input.Quantity * input.UnitPrice,
                 SalesStatus = SalesStatus.Backorder, SalesType = input.LineType ?? order.SalesType ?? SalesType.Sales,
                 DeliveryType = input.DeliveryType ?? SalesDeliveryType.None, SalesCategory = input.SalesCategory,
+                InventRefType = input.ItemReferenceType ?? InventRefType.None,
+                LineDeliveryType = input.LineDeliveryType ?? SalesDeliveryType.None,
+                SourcingOrigin = input.SourcingOrigin ?? SalesLineSourcingOrigin.None,
+                MpsExcludeSalesLine = input.ExcludeFromMasterPlanning == true ? 1 : 0,
+                DeliveryDateControlType = input.DeliveryDateControlType ?? SalesDlvDateControlType.None,
+                MpsFullRunCtpStatus = input.MpsFullRunCtpStatus ?? ReqFullCTPStatus.None,
+                ShipCarrierDlvType = input.ShipCarrierDlvType ?? WHSShipCarrierDlvType.None,
+                PlanningPriority = input.PlanningPriority ?? 0,
+                IntercompanyOrigin = input.IntercompanyOrigin ?? SalesIntercompanyOrigin.None,
+                Blocked = input.Stopped == true ? SalesLineBlocked.Yes : SalesLineBlocked.No,
+                Complete = input.PreventPartialDelivery == true ? 1 : 0,
                 ReceiptDateRequested = input.DeliveryDate?.Date ?? order.ReceiptDateRequested,
                 ShippingDateRequested = input.ShippingDateRequested?.Date ?? order.ShippingDateRequested,
                 ShippingDateConfirmed = input.ShippingDateConfirmed?.Date ?? default,
@@ -344,14 +651,25 @@ public sealed class SalesTableController : ControllerBase
                 OverDeliveryPct = input.OverDeliveryPercent,
                 UnderDeliveryPct = input.UnderDeliveryPercent,
                 DeliveryName = input.DeliveryName?.Trim() ?? order.DeliveryName,
-                DeliveryPostalAddress = input.DeliveryPostalAddress,
+                DeliveryPostalAddress = deliveryAddressId,
+                InventTransIdReturn = input.ReturnLotId?.Trim() ?? string.Empty,
+                Reservation = input.Reservation ?? SalesAutoReservation.None,
+                PdsBatchAttribAutoRes = input.AutoBatchReservation == true ? 1 : 0,
+                PdsSameLot = input.SameBatchSelection == true ? 1 : 0,
+                Scrap = input.Scrap == true ? 1 : 0,
+                LedgerDimension = input.LedgerDimension ?? 0,
+                SalesGroup = input.SalesGroup?.Trim() ?? string.Empty,
                 CustomerRef = input.CustomerReference?.Trim() ?? string.Empty,
+                CustomerLineNum = input.CustomerLineNumber ?? 0,
                 PackingUnit = input.PackingUnit?.Trim() ?? string.Empty,
                 PackingUnitQty = input.PackingUnitQuantity,
                 LineDisc = input.LineDiscount,
                 LinePercent = input.LineDiscountPercent,
                 MultiLnDisc = input.MultiLineDiscount,
                 MultiLnPercent = input.MultiLineDiscountPercent,
+                SalesMarkup = input.SalesMarkup,
+                PdsExcludeFromRebate = input.ExcludeFromRebate == true ? 1 : 0,
+                TamRebateExcludeRebateManagement = input.ExcludeFromRebateManagement == true ? 1 : 0,
                 TaxGroup = lineTaxGroup,
                 TaxItemGroup = lineTaxItemGroup,
                 DataAreaId = order.DataAreaId,
@@ -364,7 +682,8 @@ public sealed class SalesTableController : ControllerBase
             order.SmmSalesAmountTotal += line.LineAmount;
             await _dbContext.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
-            return Ok(APIResponse<object>.Ok(LineRecord(line, inventSiteId, inventLocationId)));
+            return Ok(APIResponse<object>.Ok(LineRecord(line, inventSiteId, inventLocationId,
+                productName: item.NameAlias)));
         });
     }
 
@@ -442,7 +761,21 @@ public sealed class SalesTableController : ControllerBase
                 // Item identity and name remain unchanged after item selection.
                 line.SalesType = input.LineType ?? line.SalesType;
                 line.DeliveryType = input.DeliveryType ?? line.DeliveryType;
+                if (input.ItemReferenceType.HasValue) line.InventRefType = input.ItemReferenceType.Value;
+                if (input.SourcingOrigin.HasValue) line.SourcingOrigin = input.SourcingOrigin.Value;
+                if (input.ExcludeFromMasterPlanning.HasValue)
+                    line.MpsExcludeSalesLine = input.ExcludeFromMasterPlanning.Value ? 1 : 0;
+                if (input.LineDeliveryType.HasValue) line.LineDeliveryType = input.LineDeliveryType.Value;
+                if (input.DeliveryDateControlType.HasValue) line.DeliveryDateControlType = input.DeliveryDateControlType.Value;
+                if (input.MpsFullRunCtpStatus.HasValue) line.MpsFullRunCtpStatus = input.MpsFullRunCtpStatus.Value;
+                if (input.ShipCarrierDlvType.HasValue) line.ShipCarrierDlvType = input.ShipCarrierDlvType.Value;
+                if (input.PlanningPriority.HasValue) line.PlanningPriority = input.PlanningPriority.Value;
                 line.SalesCategory = input.SalesCategory;
+                if (input.IntercompanyOrigin.HasValue) line.IntercompanyOrigin = input.IntercompanyOrigin.Value;
+                if (input.Stopped.HasValue)
+                    line.Blocked = input.Stopped.Value ? SalesLineBlocked.Yes : SalesLineBlocked.No;
+                if (input.PreventPartialDelivery.HasValue)
+                    line.Complete = input.PreventPartialDelivery.Value ? 1 : 0;
                 if (!string.IsNullOrWhiteSpace(input.Description)) line.Name = input.Description.Trim();
                 line.SalesQty = input.Quantity;
                 line.QtyOrdered = input.Quantity;
@@ -461,8 +794,46 @@ public sealed class SalesTableController : ControllerBase
                 line.OverDeliveryPct = input.OverDeliveryPercent;
                 line.UnderDeliveryPct = input.UnderDeliveryPercent;
                 line.DeliveryName = input.DeliveryName?.Trim() ?? string.Empty;
-                line.DeliveryPostalAddress = input.DeliveryPostalAddress;
+                if (string.IsNullOrWhiteSpace(input.DeliveryPostalAddress))
+                    line.DeliveryPostalAddress = 0;
+                else if (!long.TryParse(input.DeliveryPostalAddress, out var deliveryAddressId)
+                    || !await IsDeliveryAddressAvailableForOrderAsync(order, deliveryAddressId, cancellationToken))
+                    return UnprocessableEntity(APIResponse<object>.Fail("The selected delivery address does not belong to this customer."));
+                else
+                    line.DeliveryPostalAddress = deliveryAddressId;
+                if (!string.IsNullOrWhiteSpace(input.ReturnLotId))
+                {
+                    var returnLotId = input.ReturnLotId.Trim();
+                    var returnLotExists = await _dbContext.Set<InventTransOrigin>().AnyAsync(origin =>
+                        origin.DataAreaId == line.DataAreaId && origin.ItemId == line.ItemId
+                        && origin.InventTransId == returnLotId, cancellationToken);
+                    if (!returnLotExists)
+                        return UnprocessableEntity(APIResponse<object>.Fail("The selected return lot does not belong to this item."));
+                    line.InventTransIdReturn = returnLotId;
+                }
+                else if (input.ReturnLotId != null)
+                {
+                    line.InventTransIdReturn = string.Empty;
+                }
+                if (input.LedgerDimension.HasValue)
+                {
+                    var ledgerDimensionExists = input.LedgerDimension.Value == 0 ||
+                        await _dbContext.Set<DimensionAttributeValueCombination>().AnyAsync(dimension =>
+                            dimension.DataAreaId == line.DataAreaId
+                            && dimension.RecId == input.LedgerDimension.Value, cancellationToken);
+                    if (!ledgerDimensionExists)
+                        return UnprocessableEntity(APIResponse<object>.Fail("The selected main account was not found."));
+                    line.LedgerDimension = input.LedgerDimension.Value;
+                }
+                if (input.Reservation.HasValue) line.Reservation = input.Reservation.Value;
+                if (input.AutoBatchReservation.HasValue)
+                    line.PdsBatchAttribAutoRes = input.AutoBatchReservation.Value ? 1 : 0;
+                if (input.SameBatchSelection.HasValue)
+                    line.PdsSameLot = input.SameBatchSelection.Value ? 1 : 0;
+                if (input.Scrap.HasValue) line.Scrap = input.Scrap.Value ? 1 : 0;
+                if (input.SalesGroup != null) line.SalesGroup = input.SalesGroup.Trim();
                 line.CustomerRef = input.CustomerReference?.Trim() ?? string.Empty;
+                if (input.CustomerLineNumber.HasValue) line.CustomerLineNum = input.CustomerLineNumber.Value;
                 line.PackingUnit = input.PackingUnit?.Trim() ?? string.Empty;
                 line.PackingUnitQty = input.PackingUnitQuantity;
                 line.PriceUnit = input.PriceUnit;
@@ -470,6 +841,11 @@ public sealed class SalesTableController : ControllerBase
                 line.LinePercent = input.LineDiscountPercent;
                 line.MultiLnDisc = input.MultiLineDiscount;
                 line.MultiLnPercent = input.MultiLineDiscountPercent;
+                line.SalesMarkup = input.SalesMarkup;
+                if (input.ExcludeFromRebate.HasValue)
+                    line.PdsExcludeFromRebate = input.ExcludeFromRebate.Value ? 1 : 0;
+                if (input.ExcludeFromRebateManagement.HasValue)
+                    line.TamRebateExcludeRebateManagement = input.ExcludeFromRebateManagement.Value ? 1 : 0;
                 line.TaxGroup = lineTaxGroup;
                 line.TaxItemGroup = lineTaxItemGroup;
                 var currentDimension = await _dbContext.Set<InventDim>().AsNoTracking()
@@ -481,7 +857,18 @@ public sealed class SalesTableController : ControllerBase
                 var inventLocationId = string.IsNullOrWhiteSpace(input.InventLocationId)
                     ? currentDimension?.InventLocationId ?? order.InventLocationId
                     : input.InventLocationId.Trim();
-                await _inventoryDemand.UpdateAsync(line, inventSiteId, inventLocationId, cancellationToken);
+                var batchNumber = input.BatchNumber?.Trim();
+                if (!string.IsNullOrEmpty(batchNumber)
+                    && !await _dbContext.Set<InventBatch>().AnyAsync(batch => batch.DataAreaId == line.DataAreaId
+                        && batch.ItemId == line.ItemId && batch.InventBatchId == batchNumber, cancellationToken))
+                    return UnprocessableEntity(APIResponse<object>.Fail("The selected batch does not belong to this item."));
+                var serialNumber = input.SerialNumber?.Trim();
+                if (!string.IsNullOrEmpty(serialNumber)
+                    && !await _dbContext.Set<InventSerial>().AnyAsync(serial => serial.DataAreaId == line.DataAreaId
+                        && serial.ItemId == line.ItemId && serial.InventSerialId == serialNumber, cancellationToken))
+                    return UnprocessableEntity(APIResponse<object>.Fail("The selected serial number does not belong to this item."));
+                await _inventoryDemand.UpdateAsync(line, inventSiteId, inventLocationId,
+                    cancellationToken, batchNumber, serialNumber);
                 responseSiteId = inventSiteId;
                 responseLocationId = inventLocationId;
             }
@@ -490,17 +877,39 @@ public sealed class SalesTableController : ControllerBase
             await transaction.CommitAsync(cancellationToken);
             return Ok(APIResponse<object>.Ok(input == null
                 ? new { deleted = true }
-                : LineRecord(line, responseSiteId, responseLocationId)));
+                : LineRecord(line, responseSiteId, responseLocationId,
+                    inventoryDimension: await _dbContext.Set<InventDim>().AsNoTracking()
+                        .FirstOrDefaultAsync(item => item.DataAreaId == line.DataAreaId
+                            && item.InventDimId == line.InventDimId, cancellationToken),
+                    productName: await _dbContext.Set<InventTable>().AsNoTracking()
+                        .Where(item => item.DataAreaId == line.DataAreaId && item.ItemId == line.ItemId)
+                        .Select(item => item.NameAlias).FirstOrDefaultAsync(cancellationToken))));
         });
     }
 
-    private static object LineRecord(SalesLine line, string? inventSiteId = null, string? inventLocationId = null) => new {
+    private static object LineRecord(SalesLine line, string? inventSiteId = null,
+        string? inventLocationId = null, string? ledgerDimensionDisplay = null,
+        InventDim? inventoryDimension = null, string? productName = null) => new {
         id = line.RecId.ToString(), lineNumber = line.LineNum, itemNumber = line.ItemId,
-        lineType = (int)line.SalesType, deliveryType = (int)line.DeliveryType, salesCategory = line.SalesCategory,
+        productName = productName ?? line.Name,
+        lineType = (int)line.SalesType, deliveryType = (int)line.DeliveryType,
+        lineDeliveryType = (int)line.LineDeliveryType,
+        sourcingOrigin = (int)line.SourcingOrigin,
+        excludeFromMasterPlanning = line.MpsExcludeSalesLine != 0,
+        deliveryDateControlType = (int)line.DeliveryDateControlType,
+        mpsFullRunCtpStatus = (int)line.MpsFullRunCtpStatus,
+        shipCarrierDlvType = (int)line.ShipCarrierDlvType,
+        planningPriority = line.PlanningPriority,
+        salesCategory = line.SalesCategory,
+        customerLineNumber = line.CustomerLineNum, intercompanyOrigin = (int)line.IntercompanyOrigin,
+        stopped = line.Blocked != SalesLineBlocked.No, preventPartialDelivery = line.Complete != 0,
         description = line.Name, quantity = line.SalesQty, unit = line.SalesUnit,
         unitPrice = line.SalesPrice, lineTotal = line.LineAmount, deliveryDate = line.ReceiptDateRequested,
         line.InventTransId, line.InventDimId, line.CurrencyCode, salesStatus = line.SalesStatus.ToString(),
-        line.PriceUnit, line.CostPrice, lineDiscount = line.LineDisc, lineDiscountPercent = line.LinePercent,
+        line.PriceUnit, line.CostPrice, line.SalesMarkup,
+        excludeFromRebate = line.PdsExcludeFromRebate != 0,
+        excludeFromRebateManagement = line.TamRebateExcludeRebateManagement != 0,
+        lineDiscount = line.LineDisc, lineDiscountPercent = line.LinePercent,
         multiLineDiscount = line.MultiLnDisc, multiLineDiscountPercent = line.MultiLnPercent,
         overDeliveryPercent = line.OverDeliveryPct, underDeliveryPercent = line.UnderDeliveryPct,
         line.RemainSalesPhysical, line.RemainSalesFinancial, line.SalesDeliverNow, line.InventDeliverNow,
@@ -510,8 +919,20 @@ public sealed class SalesTableController : ControllerBase
         shippingDateConfirmed = line.ShippingDateConfirmed == default ? (DateTime?)null : line.ShippingDateConfirmed,
         receiptDateConfirmed = line.ReceiptDateConfirmed == default ? (DateTime?)null : line.ReceiptDateConfirmed,
         customerReference = line.CustomerRef, line.DeliveryName,
-        line.DeliveryPostalAddress, line.TaxGroup, line.TaxItemGroup, line.LedgerDimension,
+        deliveryPostalAddress = line.DeliveryPostalAddress.ToString(System.Globalization.CultureInfo.InvariantCulture), line.TaxGroup, line.TaxItemGroup, line.LedgerDimension,
+        batchNumber = inventoryDimension?.InventBatchId ?? string.Empty,
+        serialNumber = inventoryDimension?.InventSerialId ?? string.Empty,
+        location = inventoryDimension?.WmsLocationId ?? string.Empty,
+        inventoryStatus = inventoryDimension?.InventStatusId ?? string.Empty,
+        licensePlate = inventoryDimension?.LicensePlateId ?? string.Empty,
+        itemReferenceNumber = line.InventRefId,
+        itemReferenceType = (int)line.InventRefType,
+        itemReferenceLot = line.InventRefTransId,
         line.DefaultDimension, financialTag = line.FinTag, line.IntrastatCommodity,
+        returnLotId = line.InventTransIdReturn, reservation = (int)line.Reservation,
+        autoBatchReservation = line.PdsBatchAttribAutoRes != 0,
+        sameBatchSelection = line.PdsSameLot != 0, scrap = line.Scrap != 0,
+        line.SalesGroup, line.CreatedAt, ledgerDimensionDisplay,
         site = inventSiteId, warehouse = inventLocationId,
     };
 
@@ -543,6 +964,39 @@ public sealed class SalesTableController : ControllerBase
             return "The line discount amount does not match the discount percentage.";
 
         return null;
+    }
+
+    public sealed class CreateSalesDeliveryAddressInput
+    {
+        public string? LineId { get; set; }
+        public AddressInfoDto Address { get; set; } = new();
+    }
+
+    private async Task<bool> IsCustomerPostalAddressAsync(string customerAccount, string dataAreaId,
+        long postalAddressId, CancellationToken cancellationToken)
+    {
+        var partyId = await _dbContext.Set<CustTable>().AsNoTracking()
+            .Where(customer => customer.DataAreaId == dataAreaId && customer.AccountNum == customerAccount)
+            .Select(customer => customer.Party).FirstOrDefaultAsync(cancellationToken);
+        if (partyId == 0) return false;
+        var addressLocation = await _dbContext.Set<LogisticsPostalAddress>().AsNoTracking()
+            .Where(address => address.RecId == postalAddressId && address.DataAreaId == dataAreaId)
+            .Select(address => address.Location).FirstOrDefaultAsync(cancellationToken);
+        if (addressLocation == 0) return false;
+        return await _dbContext.Set<DirPartyLocation>().AsNoTracking().AnyAsync(link =>
+            link.Party == partyId && link.Location == addressLocation
+            && link.IsPostalAddress == NoYes.Yes, cancellationToken);
+    }
+
+    private async Task<bool> IsDeliveryAddressAvailableForOrderAsync(SalesTable order, long postalAddressId,
+        CancellationToken cancellationToken)
+    {
+        if (await IsCustomerPostalAddressAsync(order.CustAccount, order.DataAreaId, postalAddressId, cancellationToken))
+            return true;
+        if (order.DeliveryPostalAddress == postalAddressId) return true;
+        return await _dbContext.Set<SalesLine>().AsNoTracking().AnyAsync(line =>
+            line.SalesId == order.SalesId && line.DataAreaId == order.DataAreaId
+            && line.DeliveryPostalAddress == postalAddressId, cancellationToken);
     }
 
     private async Task<string?> ValidateTaxSetupAsync(
@@ -598,6 +1052,10 @@ public sealed class SalesTableController : ControllerBase
         var customerNames = customers.ToDictionary(
             customer => customer.AccountNum,
             customer => parties.GetValueOrDefault(customer.Party) ?? customer.AccountNum);
+        var postalAddressIds = orders.Select(order => order.DeliveryPostalAddress).Where(id => id > 0).Distinct().ToList();
+        var postalAddresses = await _dbContext.Set<LogisticsPostalAddress>().AsNoTracking()
+            .Where(address => postalAddressIds.Contains(address.RecId))
+            .ToDictionaryAsync(address => address.RecId, address => address.Address, cancellationToken);
 
         var result = orders.Select(order => new SalesOrderListDto
         {
@@ -631,7 +1089,53 @@ public sealed class SalesTableController : ControllerBase
             PricesIncludeSalesTax = order.InclTax,
             SalesGroup = order.SalesGroup,
             LanguageId = order.LanguageId,
-            PaymentTerms = order.PaymTerm
+            PaymentTerms = order.PaymTerm,
+            DeliveryName = order.DeliveryName,
+            DeliveryPostalAddress = order.DeliveryPostalAddress.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            DeliveryAddress = postalAddresses.GetValueOrDefault(order.DeliveryPostalAddress) ?? string.Empty,
+            ShippingDateConfirmed = order.ShippingDateConfirmed == default ? null : order.ShippingDateConfirmed,
+            ReceiptDateConfirmed = order.ReceiptDateConfirmed == default ? null : order.ReceiptDateConfirmed,
+            DeliveryDateControlType = (int)order.DeliveryDateControlType,
+            MpsFullRunCtpStatus = (int)order.MpsFullRunCtpStatus,
+            BlindShipment = order.ShipCarrierBlindShipment == NoYes.Yes,
+            ResidentialDestination = order.ShipCarrierResidential,
+            ExcludeFromMasterPlanning = order.MpsExcludeSalesOrder,
+            DeliveryReason = order.DlvReason,
+            ExportReason = order.ExportReason,
+            ShippingCarrier = order.ShipCarrierName,
+            CarrierId = order.ShipCarrierId,
+            CarrierGroup = order.MarkupGroup,
+            BrokerId = order.ShipCarrierAccountCode,
+            TransportMode = order.Transport,
+            CarrierService = (int)order.ShipCarrierDlvType,
+            PaymentMethod = order.PaymMode,
+            PaymentSchedule = order.PaymentSched,
+            PaymentSpecification = order.PaymSpec,
+            FixedDueDate = order.FixedDueDate == default ? null : order.FixedDueDate,
+            PaymentTermsBaseDate = order.CashDiscBaseDate == default ? null : order.CashDiscBaseDate,
+            CashDiscountCode = order.CashDisc,
+            DiscountPercent = order.CashDiscPercent,
+            TotalDiscountPercent = order.DiscPercent,
+            FixedExchangeRate = order.FixedExchRate,
+            ReportingCurrencyFixedExchangeRate = order.ReportingCurrencyFixedExchRate,
+            PriceGroup = order.PriceGroupId,
+            LineDiscountGroup = order.LineDisc,
+            MultiLineDiscountGroup = order.MultiLineDisc,
+            TotalDiscountGroup = order.EndDisc,
+            ChargesGroup = order.MarkupGroup,
+            CustomerRebateGroup = order.PdsCustRebateGroupId,
+            CustomerTmaGroup = order.PdsRebateProgramTmaGroup,
+            RebateReference = order.TamRebateReference,
+            SalesPool = order.SalesPoolId,
+            CarrierCustomerAccount = order.ShipCarrierAccount,
+            FreightZone = order.FreightZone,
+            Notes = order.Notes,
+            IntercompanyAutoCreateOrders = order.IntercompanyAutoCreateOrders,
+            IntercompanyDirectDelivery = order.IntercompanyDirectDelivery,
+            IntercompanyOrigin = (int)order.IntercompanyOrigin,
+            IntercompanyAllowIndirectCreation = order.IntercompanyAllowIndirectCreation,
+            ReleaseStatus = order.ReleaseStatus.ToString(),
+            Reservation = (int)order.Reservation
         }).ToList();
 
         return Ok(APIResponse<IEnumerable<SalesOrderListDto>>.Ok(result));
@@ -682,6 +1186,82 @@ public sealed class SalesTableController : ControllerBase
         public string LanguageId { get; set; } = string.Empty;
         [System.ComponentModel.DataAnnotations.Required]
         public DateTime? DeliveryDate { get; set; }
+        public DateTime? ShippingDateRequested { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.Name)]
+        public string DeliveryName { get; set; } = string.Empty;
+        public string DeliveryPostalAddress { get; set; } = string.Empty;
+        public DateTime? ShippingDateConfirmed { get; set; }
+        public DateTime? ReceiptDateConfirmed { get; set; }
+        [System.ComponentModel.DataAnnotations.EnumDataType(typeof(SalesDlvDateControlType))]
+        public SalesDlvDateControlType DeliveryDateControlType { get; set; }
+        [System.ComponentModel.DataAnnotations.EnumDataType(typeof(ReqFullCTPStatus))]
+        public ReqFullCTPStatus MpsFullRunCtpStatus { get; set; }
+        public bool BlindShipment { get; set; }
+        public bool ResidentialDestination { get; set; }
+        public bool ExcludeFromMasterPlanning { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.ReasonCodeId)]
+        public string DeliveryReason { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.Code)]
+        public string ExportReason { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.Name)]
+        public string ShippingCarrier { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.Code)]
+        public string CarrierId { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.MarkupGroup)]
+        public string CarrierGroup { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.Code)]
+        public string BrokerId { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.Code)]
+        public string TransportMode { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.EnumDataType(typeof(WHSShipCarrierDlvType))]
+        public WHSShipCarrierDlvType CarrierService { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.PaymModeId)]
+        public string PaymentMethod { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.PaymentSched)]
+        public string PaymentSchedule { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.PaymSpec)]
+        public string PaymentSpecification { get; set; } = string.Empty;
+        public DateTime? FixedDueDate { get; set; }
+        public DateTime? PaymentTermsBaseDate { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.CashDisc)]
+        public string CashDiscountCode { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0", "100")]
+        public decimal DiscountPercent { get; set; }
+        [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0", "100")]
+        public decimal TotalDiscountPercent { get; set; }
+        [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0", "1000000000")]
+        public decimal FixedExchangeRate { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.PriceGroupId)]
+        public string PriceGroup { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.LineDisc)]
+        public string LineDiscountGroup { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.Code)]
+        public string MultiLineDiscountGroup { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.EndDisc)]
+        public string TotalDiscountGroup { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.MarkupGroup)]
+        public string ChargesGroup { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.GroupId)]
+        public string CustomerRebateGroup { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.GroupId)]
+        public string CustomerTmaGroup { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.Num)]
+        public string RebateReference { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.SalesPoolId)]
+        public string SalesPool { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.Code)]
+        public string CarrierCustomerAccount { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.Code)]
+        public string FreightZone { get; set; } = string.Empty;
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.Memo)]
+        public string Notes { get; set; } = string.Empty;
+        public bool IntercompanyAutoCreateOrders { get; set; }
+        public bool IntercompanyDirectDelivery { get; set; }
+        [System.ComponentModel.DataAnnotations.EnumDataType(typeof(SalesIntercompanyOrigin))]
+        public SalesIntercompanyOrigin IntercompanyOrigin { get; set; }
+        public bool IntercompanyAllowIndirectCreation { get; set; }
+        [System.ComponentModel.DataAnnotations.EnumDataType(typeof(SalesAutoReservation))]
+        public SalesAutoReservation Reservation { get; set; }
     }
 
     [HttpPut("{recId:long}/header")]
@@ -736,6 +1316,56 @@ public sealed class SalesTableController : ControllerBase
             order.LanguageId = input.LanguageId.Trim();
             order.DeliveryDate = input.DeliveryDate!.Value.Date;
             order.ReceiptDateRequested = order.DeliveryDate;
+            order.ShippingDateRequested = input.ShippingDateRequested?.Date ?? default;
+            var deliveryName = input.DeliveryName.Trim();
+            var deliveryAddressId = 0L;
+            if (!string.IsNullOrWhiteSpace(input.DeliveryPostalAddress)
+                && (!long.TryParse(input.DeliveryPostalAddress, out deliveryAddressId)
+                    || !await IsDeliveryAddressAvailableForOrderAsync(order, deliveryAddressId, cancellationToken)))
+                return UnprocessableEntity(APIResponse<object>.Fail("The selected delivery address does not belong to this customer."));
+            order.DeliveryName = deliveryName;
+            order.DeliveryPostalAddress = deliveryAddressId;
+            order.ShippingDateConfirmed = input.ShippingDateConfirmed?.Date ?? default;
+            order.ReceiptDateConfirmed = input.ReceiptDateConfirmed?.Date ?? default;
+            order.DeliveryDateControlType = input.DeliveryDateControlType;
+            order.MpsFullRunCtpStatus = input.MpsFullRunCtpStatus;
+            order.ShipCarrierBlindShipment = input.BlindShipment ? NoYes.Yes : NoYes.No;
+            order.ShipCarrierResidential = input.ResidentialDestination;
+            order.MpsExcludeSalesOrder = input.ExcludeFromMasterPlanning;
+            order.DlvReason = input.DeliveryReason.Trim();
+            order.ExportReason = input.ExportReason.Trim();
+            order.ShipCarrierName = input.ShippingCarrier.Trim();
+            order.ShipCarrierId = input.CarrierId.Trim();
+            order.MarkupGroup = input.CarrierGroup.Trim();
+            order.ShipCarrierAccountCode = input.BrokerId.Trim();
+            order.Transport = input.TransportMode.Trim();
+            order.ShipCarrierDlvType = input.CarrierService;
+            order.PaymMode = input.PaymentMethod.Trim();
+            order.PaymentSched = input.PaymentSchedule.Trim();
+            order.PaymSpec = input.PaymentSpecification.Trim();
+            order.FixedDueDate = input.FixedDueDate?.Date ?? default;
+            order.CashDiscBaseDate = input.PaymentTermsBaseDate?.Date ?? default;
+            order.CashDisc = input.CashDiscountCode.Trim();
+            order.CashDiscPercent = input.DiscountPercent;
+            order.DiscPercent = input.TotalDiscountPercent;
+            order.FixedExchRate = input.FixedExchangeRate;
+            order.PriceGroupId = input.PriceGroup.Trim();
+            order.LineDisc = input.LineDiscountGroup.Trim();
+            order.MultiLineDisc = input.MultiLineDiscountGroup.Trim();
+            order.EndDisc = input.TotalDiscountGroup.Trim();
+            order.MarkupGroup = input.ChargesGroup.Trim();
+            order.PdsCustRebateGroupId = input.CustomerRebateGroup.Trim();
+            order.PdsRebateProgramTmaGroup = input.CustomerTmaGroup.Trim();
+            order.TamRebateReference = input.RebateReference.Trim();
+            order.SalesPoolId = input.SalesPool.Trim();
+            order.ShipCarrierAccount = input.CarrierCustomerAccount.Trim();
+            order.FreightZone = input.FreightZone.Trim();
+            order.Notes = input.Notes.Trim();
+            order.IntercompanyAutoCreateOrders = input.IntercompanyAutoCreateOrders;
+            order.IntercompanyDirectDelivery = input.IntercompanyDirectDelivery;
+            order.IntercompanyOrigin = input.IntercompanyOrigin;
+            order.IntercompanyAllowIndirectCreation = input.IntercompanyAllowIndirectCreation;
+            order.Reservation = input.Reservation;
             await _dbContext.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return Ok(APIResponse<object>.Ok(new { saved = true }));
@@ -760,6 +1390,43 @@ public sealed class SalesTableController : ControllerBase
                 .AsNoTracking()
                 .FirstOrDefaultAsync(candidate => candidate.RecId == customer.Party, cancellationToken)
             : null;
+        var deliveryPostalAddress = input.DeliveryPostalAddress ?? 0;
+        if (customer.Party > 0)
+        {
+            var customerAddresses = await (
+                from link in _dbContext.Set<DirPartyLocation>().AsNoTracking()
+                join address in _dbContext.Set<LogisticsPostalAddress>().AsNoTracking()
+                    on link.Location equals address.Location
+                where link.Party == customer.Party && link.IsPostalAddress == NoYes.Yes
+                    && address.DataAreaId == customer.DataAreaId
+                    && address.ValidFrom <= DateTime.UtcNow && address.ValidTo >= DateTime.UtcNow
+                orderby link.IsPrimary descending, address.RecId
+                select address.RecId
+            ).ToListAsync(cancellationToken);
+            if (deliveryPostalAddress != 0 && !customerAddresses.Contains(deliveryPostalAddress))
+                return UnprocessableEntity(APIResponse<SalesOrderListDto>.Fail("The selected delivery address does not belong to this customer."));
+            if (deliveryPostalAddress == 0)
+                deliveryPostalAddress = customerAddresses.FirstOrDefault();
+        }
+        var customerContacts = customer.Party > 0
+            ? await (
+                from link in _dbContext.Set<DirPartyLocation>().AsNoTracking()
+                join contact in _dbContext.Set<LogisticsElectronicAddress>().AsNoTracking()
+                    on link.Location equals contact.Location
+                where link.Party == customer.Party && link.IsPostalAddress == NoYes.No
+                    && (contact.Type == ElectronicAddressType.Email || contact.Type == ElectronicAddressType.Phone)
+                orderby link.IsPrimary descending, contact.IsPrimary descending, contact.RecId
+                select new { contact.Type, contact.Locator }
+            ).ToListAsync(cancellationToken)
+            : [];
+        var email = customerContacts.FirstOrDefault(contact => contact.Type == ElectronicAddressType.Email)?.Locator ?? string.Empty;
+        var phone = customerContacts.FirstOrDefault(contact => contact.Type == ElectronicAddressType.Phone)?.Locator ?? string.Empty;
+        var chosenContact = input.Contact?.Trim();
+        if (!string.IsNullOrEmpty(chosenContact))
+        {
+            if (string.Equals(input.ContactType, "Phone", StringComparison.OrdinalIgnoreCase)) phone = chosenContact;
+            else email = chosenContact;
+        }
         var salesId = await NextAvailableSalesIdAsync(cancellationToken);
         var today = DateTime.UtcNow.Date;
         var order = new SalesTable
@@ -777,21 +1444,23 @@ public sealed class SalesTableController : ControllerBase
             CustGroup = customer.CustGroupId,
             CurrencyCode = string.IsNullOrWhiteSpace(input.CurrencyCode) ? customer.CurrencyCode : input.CurrencyCode.Trim(),
             TaxGroupId = customer.TaxGroupId,
-            PaymTerm = input.PaymentTerms?.Trim() ?? customer.PaymTermId,
-            PaymMode = input.PaymentMethod?.Trim() ?? customer.PaymModeId,
+            PaymTerm = string.IsNullOrWhiteSpace(input.PaymentTerms) ? customer.PaymTermId : input.PaymentTerms.Trim(),
+            PaymMode = string.IsNullOrWhiteSpace(input.PaymentMethod) ? customer.PaymModeId : input.PaymentMethod.Trim(),
             DlvMode = string.IsNullOrWhiteSpace(input.DeliveryMode) ? customer.DlvModeId : input.DeliveryMode.Trim(),
             DlvTerm = input.DeliveryTerms?.Trim() ?? string.Empty,
             InventSiteId = string.IsNullOrWhiteSpace(input.InventSiteId) ? customer.InventSiteId : input.InventSiteId.Trim(),
             InventLocationId = string.IsNullOrWhiteSpace(input.InventLocationId) ? customer.InventLocationId : input.InventLocationId.Trim(),
             SalesGroup = input.SalesGroup?.Trim() ?? string.Empty,
+            SalesPoolId = customer.SalesPoolId,
             CustRequisitionNum = input.CustomerRequisitionNumber?.Trim() ?? string.Empty,
             IntercompanyOrder = input.Intercompany,
             IntercompanyCompanyId = input.IntercompanyCompanyId?.Trim() ?? string.Empty,
             OneTimeCustomer = input.OneTimeCustomer ? NoYes.Yes : NoYes.No,
             DeliveryName = input.DeliveryName?.Trim() ?? party?.Name ?? account,
-            DeliveryPostalAddress = input.DeliveryPostalAddress ?? 0,
+            DeliveryPostalAddress = deliveryPostalAddress,
             CustomerRef = input.CustomerReference?.Trim() ?? string.Empty,
-            Email = input.Contact?.Trim() ?? string.Empty,
+            Email = email,
+            Phone = phone,
             OrderDate = today,
             DeliveryDate = input.RequestedReceiptDate?.Date ?? today,
             ReceiptDateRequested = input.RequestedReceiptDate?.Date ?? today,
@@ -834,6 +1503,7 @@ public sealed class SalesTableController : ControllerBase
             Phone = order.Phone,
             Deadline = order.Deadline == default ? null : order.Deadline,
             CustomerRequisitionNumber = order.CustRequisitionNum,
+            Notes = order.Notes,
             CampaignId = order.SmmCampaignId,
             TaxGroupId = order.TaxGroupId,
             PricesIncludeSalesTax = order.InclTax,

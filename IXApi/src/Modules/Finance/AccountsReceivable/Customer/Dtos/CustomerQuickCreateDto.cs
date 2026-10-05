@@ -17,6 +17,7 @@ public sealed class CustomerQuickCreateDto
     public string? TaxGroupId { get; set; }
     public string? VatNum { get; set; }
     public string? CountryRegionId { get; set; }
+    public string? Street { get; set; }
     public string? Memo { get; set; }
 }
 
@@ -43,4 +44,17 @@ public sealed class CustomerListDto
     public string InventLocationId { get; set; } = string.Empty;
     public string Status { get; set; } = "active";
     public DateTime CreatedAt { get; set; }
+}
+
+public sealed class CustomerSalesOrderDefaultsDto
+{
+    public string Address { get; set; } = string.Empty;
+    public List<CustomerSalesOrderContactDto> Contacts { get; set; } = [];
+}
+
+public sealed class CustomerSalesOrderContactDto
+{
+    public string Type { get; set; } = string.Empty;
+    public string Number { get; set; } = string.Empty;
+    public bool Primary { get; set; }
 }

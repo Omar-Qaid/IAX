@@ -8,5 +8,6 @@ public interface IInventDimensionResolver
         string dataAreaId,
         string inventSiteId,
         string inventLocationId,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        InventDim? template = null);
 }

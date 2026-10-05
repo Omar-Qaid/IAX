@@ -35,6 +35,52 @@ export interface SalesOrderListRecord {
   pricesIncludeSalesTax: boolean;
   salesGroup: string;
   languageId: string;
+  deliveryName: string;
+  deliveryPostalAddress: string;
+  deliveryAddress: string;
+  shippingDateConfirmed?: string;
+  receiptDateConfirmed?: string;
+  deliveryDateControlType: number;
+  mpsFullRunCtpStatus: number;
+  blindShipment: boolean;
+  residentialDestination: boolean;
+  excludeFromMasterPlanning: boolean;
+  deliveryReason: string;
+  exportReason: string;
+  shippingCarrier: string;
+  carrierId: string;
+  carrierGroup: string;
+  brokerId: string;
+  transportMode: string;
+  carrierService: number;
+  paymentMethod: string;
+  paymentSchedule: string;
+  paymentSpecification: string;
+  fixedDueDate?: string;
+  paymentTermsBaseDate?: string;
+  cashDiscountCode: string;
+  discountPercent: number;
+  totalDiscountPercent: number;
+  fixedExchangeRate: number;
+  reportingCurrencyFixedExchangeRate: number;
+  priceGroup: string;
+  lineDiscountGroup: string;
+  multiLineDiscountGroup: string;
+  totalDiscountGroup: string;
+  chargesGroup: string;
+  customerRebateGroup: string;
+  customerTmaGroup: string;
+  rebateReference: string;
+  salesPool: string;
+  carrierCustomerAccount: string;
+  freightZone: string;
+  notes: string;
+  intercompanyAutoCreateOrders: boolean;
+  intercompanyDirectDelivery: boolean;
+  intercompanyOrigin: number;
+  intercompanyAllowIndirectCreation: boolean;
+  releaseStatus: string;
+  reservation: number;
 }
 
 export type SalesOrderHeaderInput = Pick<
@@ -46,6 +92,7 @@ export type SalesOrderHeaderInput = Pick<
   | 'deliveryMode'
   | 'deliveryTerms'
   | 'deliveryDate'
+  | 'shippingDateRequested'
   | 'orderDate'
   | 'inventSiteId'
   | 'inventLocationId'
@@ -61,6 +108,49 @@ export type SalesOrderHeaderInput = Pick<
   | 'pricesIncludeSalesTax'
   | 'salesGroup'
   | 'languageId'
+  | 'deliveryName'
+  | 'deliveryPostalAddress'
+  | 'shippingDateConfirmed'
+  | 'receiptDateConfirmed'
+  | 'deliveryDateControlType'
+  | 'mpsFullRunCtpStatus'
+  | 'blindShipment'
+  | 'residentialDestination'
+  | 'excludeFromMasterPlanning'
+  | 'deliveryReason'
+  | 'exportReason'
+  | 'shippingCarrier'
+  | 'carrierId'
+  | 'carrierGroup'
+  | 'brokerId'
+  | 'transportMode'
+  | 'carrierService'
+  | 'paymentMethod'
+  | 'paymentSchedule'
+  | 'paymentSpecification'
+  | 'fixedDueDate'
+  | 'paymentTermsBaseDate'
+  | 'cashDiscountCode'
+  | 'discountPercent'
+  | 'totalDiscountPercent'
+  | 'fixedExchangeRate'
+  | 'priceGroup'
+  | 'lineDiscountGroup'
+  | 'multiLineDiscountGroup'
+  | 'totalDiscountGroup'
+  | 'chargesGroup'
+  | 'customerRebateGroup'
+  | 'customerTmaGroup'
+  | 'rebateReference'
+  | 'salesPool'
+  | 'carrierCustomerAccount'
+  | 'freightZone'
+  | 'notes'
+  | 'intercompanyAutoCreateOrders'
+  | 'intercompanyDirectDelivery'
+  | 'intercompanyOrigin'
+  | 'intercompanyAllowIndirectCreation'
+  | 'reservation'
 >;
 
 type SalesOrderListDto = Omit<SalesOrderListRecord, 'id'>;
@@ -69,6 +159,7 @@ export interface SalesOrderQuickCreateInput {
   customerAccount: string;
   oneTimeCustomer: boolean;
   contact?: string;
+  contactType?: string;
   deliveryName?: string;
   deliveryPostalAddress?: number;
   customerReference?: string;

@@ -39,7 +39,66 @@
     "gridHelp": "Tab / Enter: الخلية التالية | Shift: السابقة | أعلى / أسفل: الانتقال بين الصفوف | F2: تحرير | Insert: إضافة | Alt+Delete: حذف | Ctrl+F: تصفية",
     "pasteSingleCell": "الصق قيمة خلية واحدة في كل مرة. اختر الصنف والوحدة من قائمة البحث.",
     "lineDiscount": "الخصم",
-    "lineDiscountPercent": "نسبة الخصم %"
+    "lineDiscountPercent": "نسبة الخصم %",
+    "lineType": "نوع السطر",
+    "deliveryType": "نوع التسليم",
+    "lineTypes": {
+      "journal": "يومية",
+      "quotation": "عرض سعر",
+      "subscription": "اشتراك",
+      "sales": "مبيعات",
+      "returnItem": "صنف مرتجع",
+      "blanket": "اتفاقية عامة",
+      "itemRequirement": "متطلبات الصنف",
+      "prepayment": "دفعة مقدمة"
+    },
+    "deliveryTypes": {
+      "none": "بدون",
+      "pickup": "استلام",
+      "direct": "تسليم مباشر"
+    },
+    "lotId": "رقم التشغيلة",
+    "returnLotId": "رقم تشغيلة الإرجاع",
+    "reservation": "الحجز",
+    "reservationTypes": {
+      "none": "بدون",
+      "standard": "قياسي",
+      "sameLocation": "الموقع نفسه",
+      "sameWarehouse": "المستودع نفسه",
+      "sameSite": "الموقع نفسه"
+    },
+    "autoBatchReservation": "الحجز التلقائي للتشغيلة",
+    "sameBatchSelection": "اختيار التشغيلة نفسها",
+    "scrap": "هالك",
+    "mainAccount": "الحساب الرئيسي",
+    "salesGroup": "مجموعة المبيعات",
+    "createdDateTime": "تاريخ ووقت الإنشاء",
+    "setupGroups": {
+      "inventory": "المخزون",
+      "returnedOrder": "أمر مرتجع",
+      "posting": "الترحيل",
+      "salesTax": "ضريبة المبيعات",
+      "commission": "العمولة",
+      "sales": "المبيعات",
+      "dateTime": "التاريخ والوقت"
+    },
+    "salesTaxGroup": "مجموعة ضريبة المبيعات",
+    "itemSalesTaxGroup": "مجموعة ضريبة المبيعات للصنف",
+    "generalGroups": {
+      "orderLine": "سطر الأمر",
+      "productName": "اسم المنتج",
+      "externalReferences": "المراجع الخارجية",
+      "intercompany": "بين الشركات",
+      "status": "الحالة"
+    },
+    "external": "خارجي",
+    "customerLineNumber": "رقم السطر",
+    "intercompanyOrigin": "الأصل (طلبات بين الشركات)",
+    "intercompanyOutbound": "صادر",
+    "intercompanyInbound": "وارد",
+    "lineStatus": "حالة السطر",
+    "stopped": "متوقف",
+    "preventPartialDelivery": "منع التسليم الجزئي"
   },
   "accessibility": {
     "skipToContent": "الانتقال إلى المحتوى الرئيسي",

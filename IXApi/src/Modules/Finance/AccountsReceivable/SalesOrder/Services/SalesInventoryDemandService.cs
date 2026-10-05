@@ -68,10 +68,26 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
     }
 
     public async Task UpdateAsync(SalesLine line, string inventSiteId,
-        string inventLocationId, CancellationToken cancellationToken = default)
+        string inventLocationId, CancellationToken cancellationToken = default,
+        string? batchNumber = null, string? serialNumber = null)
     {
         // Preserve update support for sales lines created before inventory-demand integration.
-        if (string.IsNullOrWhiteSpace(line.InventTransId)) return;
+        if (string.IsNullOrWhiteSpace(line.InventTransId))
+        {
+            if (batchNumber == null && serialNumber == null) return;
+            var legacyDimension = await _dbContext.Set<InventDim>().AsNoTracking()
+                .FirstOrDefaultAsync(item => item.DataAreaId == line.DataAreaId
+                    && item.InventDimId == line.InventDimId, cancellationToken);
+            if (legacyDimension != null)
+            {
+                if (batchNumber != null) legacyDimension.InventBatchId = batchNumber;
+                if (serialNumber != null) legacyDimension.InventSerialId = serialNumber;
+            }
+            var resolvedLegacyDimension = await _dimensions.ResolveAsync(line.DataAreaId,
+                inventSiteId, inventLocationId, cancellationToken, legacyDimension);
+            line.InventDimId = resolvedLegacyDimension.InventDimId;
+            return;
+        }
         var origin = await _dbContext.Set<InventTransOrigin>().SingleOrDefaultAsync(item =>
             item.DataAreaId == line.DataAreaId && item.InventTransId == line.InventTransId,
             cancellationToken);
@@ -81,8 +97,16 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
         if (transaction == null) throw new InvalidOperationException("The sales line inventory transaction was not found.");
         var previousDemand = -transaction.Qty;
         var previousDimensionId = line.InventDimId;
+        var previousDimension = await _dbContext.Set<InventDim>().AsNoTracking()
+            .FirstOrDefaultAsync(item => item.DataAreaId == line.DataAreaId
+                && item.InventDimId == previousDimensionId, cancellationToken);
+        if (previousDimension != null)
+        {
+            if (batchNumber != null) previousDimension.InventBatchId = batchNumber;
+            if (serialNumber != null) previousDimension.InventSerialId = serialNumber;
+        }
         var dimension = await _dimensions.ResolveAsync(line.DataAreaId, inventSiteId,
-            inventLocationId, cancellationToken);
+            inventLocationId, cancellationToken, previousDimension);
         transaction.Qty = -line.SalesQty;
         transaction.DateExpected = line.ReceiptDateRequested;
         line.RemainInventPhysical = line.SalesQty;
@@ -154,7 +178,7 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
                 item.DataAreaId == line.DataAreaId && item.ItemId == line.ItemId
                 && item.InventDimId == line.InventDimId, cancellationToken);
             if (inventorySummary != null)
-                inventorySummary.OnOrder = Math.Max(0m, inventorySummary.OnOrder - demandToCancel);
+                inventorySummary.OnOrder -= demandToCancel;
             foreach (var transaction in transactions)
             {
                 transaction.Qty = 0;

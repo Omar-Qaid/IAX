@@ -23,11 +23,11 @@ const standardLookupSx = {
     height: 31,
     paddingBlock: '6px !important',
     paddingInlineStart: '0 !important',
-    paddingInlineEnd: '30px !important',
+    // A selected value can render both the clear and popup buttons.
+    paddingInlineEnd: '60px !important',
   },
   '& .MuiAutocomplete-endAdornment': {
     insetInlineEnd: 0,
-    right: 'auto',
     top: '50%',
     transform: 'translateY(-50%)',
   },

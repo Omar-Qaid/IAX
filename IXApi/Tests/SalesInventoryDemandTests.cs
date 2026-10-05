@@ -96,6 +96,49 @@ public sealed class SalesInventoryDemandTests
         Assert.Equal(0, (await db.Set<InventSum>().SingleAsync()).OnOrder);
     }
 
+    [Fact]
+    public async Task Cancelling_one_line_preserves_other_orders_inventory_demand()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>()
+            .UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        var financeData = new TestFinanceDataContext(db);
+        var numbers = new TestNumbers();
+        var dimensions = new InventDimensionResolver(financeData, numbers);
+        var service = new SalesInventoryDemandService(financeData, numbers, dimensions);
+        var firstOrder = new SalesTable { SalesId = "SO-1", CurrencyCode = "USD", DataAreaId = "DAT" };
+        var secondOrder = new SalesTable { SalesId = "SO-2", CurrencyCode = "USD", DataAreaId = "DAT" };
+        var firstLine = new SalesLine
+        {
+            SalesId = firstOrder.SalesId, ItemId = "A0001", SalesQty = 10,
+            RemainInventPhysical = 10, RemainSalesPhysical = 10,
+            RemainSalesFinancial = 10, DataAreaId = "DAT"
+        };
+        var secondLine = new SalesLine
+        {
+            SalesId = secondOrder.SalesId, ItemId = "A0001", SalesQty = 7,
+            RemainInventPhysical = 7, RemainSalesPhysical = 7,
+            RemainSalesFinancial = 7, DataAreaId = "DAT"
+        };
+
+        await service.CreateAsync(firstOrder, firstLine, "1", "11");
+        await financeData.SaveChangesAsync();
+        await service.CreateAsync(secondOrder, secondLine, "1", "11");
+        await financeData.SaveChangesAsync();
+        Assert.Equal(17, (await db.Set<InventSum>().SingleAsync()).OnOrder);
+
+        await service.CancelRemainingAsync(firstLine);
+        await financeData.SaveChangesAsync();
+
+        Assert.Equal(7, (await db.Set<InventSum>().SingleAsync()).OnOrder);
+        Assert.Equal(-7, (await db.Set<InventTrans>().SingleAsync(
+            item => item.InventTransOrigin == db.Set<InventTransOrigin>()
+                .Where(origin => origin.InventTransId == secondLine.InventTransId)
+                .Select(origin => origin.RecId).Single())).Qty);
+    }
+
     private sealed class InventoryContext(DbContextOptions<InventoryContext> options) : DbContext(options)
     {
         protected override void OnModelCreating(ModelBuilder builder)

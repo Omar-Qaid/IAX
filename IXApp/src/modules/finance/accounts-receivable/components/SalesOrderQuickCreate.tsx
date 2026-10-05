@@ -58,9 +58,21 @@ export function SalesOrderQuickCreate({
     queryKey: ['accounts-receivable', 'sales-order-quick-create', 'customers'],
     queryFn: ({ signal }) => customerQuickCreateApi.list(signal),
     enabled: open,
-    staleTime: 5 * 60 * 1000,
+    refetchOnMount: 'always',
   });
   const customers = React.useMemo(() => customersQuery.data ?? [], [customersQuery.data]);
+  const [selectedAccount, setSelectedAccount] = React.useState('');
+  React.useEffect(() => { if (!open) setSelectedAccount(''); }, [open]);
+  const customerDefaultsQuery = useQuery({
+    queryKey: ['accounts-receivable', 'sales-order-quick-create', 'customer-defaults', selectedAccount],
+    queryFn: ({ signal }) => customerQuickCreateApi.salesOrderDefaults(selectedAccount, signal),
+    enabled: open && Boolean(selectedAccount),
+  });
+  const primaryAddress = customerDefaultsQuery.data?.address ?? '';
+  const orderContacts = useMemo(() => (customerDefaultsQuery.data?.contacts ?? []).filter(
+    (contact) => contact.type === 'Email' || contact.type === 'Phone'
+  ), [customerDefaultsQuery.data]);
+  const primaryContact = orderContacts.find((contact) => contact.primary) ?? orderContacts[0];
   const deliveryLookupsQuery = useQuery({
     queryKey: ['accounts-receivable', 'sales-order-quick-create', 'delivery-lookups'],
     queryFn: ({ signal }) => customerQuickCreateApi.lookups(signal),
@@ -128,14 +140,11 @@ export function SalesOrderQuickCreate({
             name: 'contact',
             label: t('relatedInformation.contacts', 'Contact'),
             type: 'select',
-            optionsGetter: (values) => {
-              const customer = customers.find(
-                (candidate) => candidate.accountNumber === String(values.customerAccount)
-              );
-              return [customer?.phone, customer?.email]
-                .filter((value): value is string => Boolean(value))
-                .map((value) => ({ value, label: value }));
-            },
+            valueGetter: (values) => values.contact || primaryContact?.number || '',
+            options: orderContacts.map((contact) => ({
+              value: contact.number,
+              label: `${contact.type}: ${contact.number}`,
+            })),
           },
           {
             name: 'deliveryName',
@@ -149,15 +158,13 @@ export function SalesOrderQuickCreate({
             type: 'multiline',
             rows: 3,
             disabled: true,
-            valueGetter: (values) =>
-              customers.find(
-                (customer) => customer.accountNumber === String(values.customerAccount)
-              )?.countryRegionId ?? '',
+            valueGetter: () => primaryAddress,
           },
           {
             name: 'deliveryAddress',
             label: t('salesOrderQuickCreate.deliveryAddress', 'Delivery address'),
             disabled: true,
+            valueGetter: () => primaryAddress,
           },
         ],
       },
@@ -252,12 +259,14 @@ export function SalesOrderQuickCreate({
             name: 'paymentTerms',
             label: t('fields.termsOfPayment'),
             type: 'select',
+            valueGetter: (values) => values.paymentTerms || customerFor(values)?.paymTermId || '',
             options: deliveryLookupsQuery.data?.paymentTerms ?? [],
           },
           {
             name: 'paymentMethod',
             label: t('customerQuickCreate.fields.paymentMethod'),
             type: 'select',
+            valueGetter: (values) => values.paymentMethod || customerFor(values)?.paymModeId || '',
             options: deliveryLookupsQuery.data?.paymentMethods ?? [],
           },
           { name: 'salesGroup', label: t('salesOrderQuickCreate.salesGroup', 'Sales group') },
@@ -331,7 +340,7 @@ export function SalesOrderQuickCreate({
         ],
       },
     ],
-    [customerFor, customers, deliveryLookupsQuery.data, dimensionsQuery.data, t, isRtl]
+    [customerFor, customers, orderContacts, deliveryLookupsQuery.data, dimensionsQuery.data, primaryAddress, primaryContact, t, isRtl]
   );
 
   return (
@@ -342,7 +351,8 @@ export function SalesOrderQuickCreate({
       viewLabel={t('common.standardView')}
       sections={sections}
       loading={
-        customersQuery.isLoading || deliveryLookupsQuery.isLoading || dimensionsQuery.isLoading
+        customersQuery.isLoading || deliveryLookupsQuery.isLoading || dimensionsQuery.isLoading ||
+        customerDefaultsQuery.isFetching
       }
       loadError={
         customersQuery.error instanceof Error
@@ -351,20 +361,27 @@ export function SalesOrderQuickCreate({
             ? deliveryLookupsQuery.error.message
             : dimensionsQuery.error instanceof Error
               ? dimensionsQuery.error.message
-              : null
+              : customerDefaultsQuery.error instanceof Error
+                ? customerDefaultsQuery.error.message
+                : null
       }
       initialValues={initialValues}
       onFieldChange={(name, value) => {
         if (name === 'inventSiteId') return { inventLocationId: '' };
         if (name !== 'customerAccount') return;
+        setSelectedAccount(String(value));
         const customer = customers.find((candidate) => candidate.accountNumber === String(value));
-        if (!customer) return;
+        if (!customer) return {
+          contact: '', deliveryName: '', invoiceAccount: '', currencyCode: '',
+          paymentTerms: '', paymentMethod: '', salesName: '', inventSiteId: '',
+          inventLocationId: '', deliveryMode: '',
+        };
         return {
           customerName: customer.name,
-          contact: customer.phone ?? customer.email ?? '',
+          contact: '',
           deliveryName: customer.name,
-          address: customer.countryRegionId,
-          deliveryAddress: customer.countryRegionId,
+          address: '',
+          deliveryAddress: '',
           invoiceAccount: customer.invoiceAccount || customer.accountNumber,
           currencyCode: customer.currencyCode,
           paymentTerms: customer.paymTermId ?? '',
@@ -415,10 +432,13 @@ export function SalesOrderQuickCreate({
             (warehouse) =>
               warehouse.id === inventLocationId && warehouse.siteId === inventSiteId
           );
+        const contact = String(values.contact || primaryContact?.number || '');
+        const selectedContact = orderContacts.find((item) => item.number === contact);
         const order = await salesOrderListApi.create({
           customerAccount: String(values.customerAccount),
           oneTimeCustomer: String(values.oneTimeCustomer) === 'true',
-          contact: String(values.contact ?? ''),
+          contact,
+          contactType: selectedContact?.type,
           deliveryName: String(values.deliveryName ?? '') || customer?.name,
           customerReference: String(values.customerReference ?? ''),
           invoiceAccount: String(

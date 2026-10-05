@@ -8,13 +8,32 @@ export interface CustomerLookupOption {
   label: string;
 }
 
+export interface CustomerGroupOption extends CustomerLookupOption {
+  paymTermId: string;
+  taxGroupId: string;
+}
+
+export interface CustomerSalesOrderDefaults {
+  address: string;
+  contacts: CustomerContact[];
+}
+
+export interface CustomerContact {
+  number: string;
+  type: string;
+  primary: boolean;
+}
+
 export interface CustomerQuickCreateLookups {
-  customerGroups: CustomerLookupOption[];
+  customerGroups: CustomerGroupOption[];
+  salesTaxGroups: CustomerLookupOption[];
   currencies: CustomerLookupOption[];
   paymentTerms: CustomerLookupOption[];
   paymentMethods: CustomerLookupOption[];
   deliveryTerms: CustomerLookupOption[];
   deliveryModes: CustomerLookupOption[];
+  salesPools: CustomerLookupOption[];
+  paymentSchedules: CustomerLookupOption[];
 }
 
 type LookupRow = Record<string, unknown>;
@@ -31,6 +50,7 @@ export interface CustomerQuickCreateInput {
   taxGroupId?: string;
   vatNum?: string;
   countryRegionId?: string;
+  street?: string;
   memo?: string;
 }
 
@@ -124,6 +144,29 @@ const toCustomer = (row: CustomerListDto): CustomerRecord => ({
 });
 
 export const customerQuickCreateApi = {
+  async groupFieldLookups(signal?: AbortSignal): Promise<{
+    paymentTerms: CustomerLookupOption[];
+    salesTaxGroups: CustomerLookupOption[];
+  }> {
+    const [terms, taxGroups] = await Promise.all([
+      load('/v1/PaymTerm', 'payment terms', signal),
+      load('/v1/TaxGroup', 'sales tax groups', signal),
+    ]);
+    return {
+      paymentTerms: options(terms, 'paymTermId', 'description'),
+      salesTaxGroups: options(taxGroups, 'taxGroup', 'taxGroupName'),
+    };
+  },
+
+  async salesOrderDefaults(accountNumber: string, signal?: AbortSignal): Promise<CustomerSalesOrderDefaults> {
+    const response = await apiClient.get<ApiResponse<CustomerSalesOrderDefaults>>(
+      `/v1/CustTable/${encodeURIComponent(accountNumber)}/sales-order-defaults`, { signal }
+    );
+    if (!response.data.success || !response.data.data)
+      throw new ApiError(response.data.message || 'Customer sales order defaults could not be loaded.', 500);
+    return response.data.data;
+  },
+
   async list(signal?: AbortSignal): Promise<CustomerRecord[]> {
     const response = await apiClient.get<ApiResponse<CustomerListDto[]>>('/v1/CustTable/list', { signal });
     return requireCustomerData(response.data, 'customer list').map(toCustomer);
@@ -163,21 +206,32 @@ export const customerQuickCreateApi = {
   },
 
   async lookups(signal?: AbortSignal): Promise<CustomerQuickCreateLookups> {
-    const [groups, currencies, terms, methods, deliveryTerms, deliveryModes] = await Promise.all([
+    const [groups, taxGroups, currencies, terms, methods, deliveryTerms, deliveryModes, salesPools, paymentSchedules] = await Promise.all([
       load('/v1/CustGroup', 'customer groups', signal),
+      load('/v1/TaxGroup', 'sales tax groups', signal),
       load('/v1/Currency', 'currencies', signal),
       load('/v1/PaymTerm', 'payment terms', signal),
       load('/v1/CustPaymMode', 'payment methods', signal),
       load('/v1/DlvTerm', 'delivery terms', signal),
       load('/v1/DlvMode', 'delivery modes', signal),
+      load('/v1/SalesPool', 'sales pools', signal),
+      load('/v1/PaymSched', 'payment schedules', signal),
     ]);
     return {
-      customerGroups: options(groups, 'custGroupId', 'name'),
+      customerGroups: groups.map((group) => ({
+        value: text(group, 'custGroupId'),
+        label: text(group, 'name') || text(group, 'custGroupId'),
+        paymTermId: text(group, 'paymTermId'),
+        taxGroupId: text(group, 'taxGroupId'),
+      })).filter((group) => group.value),
+      salesTaxGroups: options(taxGroups, 'taxGroup', 'taxGroupName'),
       currencies: options(currencies, 'currencyCode', 'txt'),
       paymentTerms: options(terms, 'paymTermId', 'description'),
       paymentMethods: options(methods, 'paymMode', 'name'),
       deliveryTerms: options(deliveryTerms, 'code', 'txt'),
       deliveryModes: options(deliveryModes, 'code', 'txt'),
+      salesPools: options(salesPools, 'salesPoolId', 'name'),
+      paymentSchedules: options(paymentSchedules, 'name', 'description'),
     };
   },
 };

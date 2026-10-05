@@ -8,6 +8,7 @@ public sealed class SalesOrderQuickCreateDto
     public string CustomerAccount { get; set; } = string.Empty;
     public bool OneTimeCustomer { get; set; }
     public string? Contact { get; set; }
+    public string? ContactType { get; set; }
     public string? DeliveryName { get; set; }
     public long? DeliveryPostalAddress { get; set; }
     public string? CustomerReference { get; set; }

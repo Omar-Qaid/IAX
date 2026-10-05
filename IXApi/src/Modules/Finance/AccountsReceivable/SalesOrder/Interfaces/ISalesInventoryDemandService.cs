@@ -15,7 +15,9 @@ public interface ISalesInventoryDemandService
         SalesLine line,
         string inventSiteId,
         string inventLocationId,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        string? batchNumber = null,
+        string? serialNumber = null);
     Task DeleteAsync(SalesLine line, CancellationToken cancellationToken = default);
     Task CancelRemainingAsync(SalesLine line, CancellationToken cancellationToken = default);
 }

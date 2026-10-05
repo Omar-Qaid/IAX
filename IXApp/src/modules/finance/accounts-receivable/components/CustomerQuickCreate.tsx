@@ -21,7 +21,7 @@ export function CustomerQuickCreate({ open, nextAccount, onClose, onSave }: Cust
   });
   const lookup = lookups.data;
   const sections = useMemo<FastTabSection[]>(() => [{ id: 'details', title: t('customerQuickCreate.sections.details'), summary: <FastTabSummary values={['--', 'SAR', '--', '--', '--', '--']} />, fields: [
-    { name: 'accountNumber', label: t('fields.customerAccount'), disabled: true }, { name: 'salesTaxGroup', label: t('fields.salesTaxGroup'), type: 'select', options: [option('vat15', 'customerQuickCreate.options.vat15')] },
+    { name: 'accountNumber', label: t('fields.customerAccount'), disabled: true }, { name: 'salesTaxGroup', label: t('fields.salesTaxGroup'), type: 'select', options: lookup?.salesTaxGroups ?? [] },
     { name: 'type', label: t('customerQuickCreate.fields.type'), type: 'select', options: [option('organization', 'customerQuickCreate.options.organization'), option('person', 'customerQuickCreate.options.person')] }, { name: 'customerCategory', label: t('customerQuickCreate.fields.category'), type: 'select', required: true, options: [option('retail', 'customerQuickCreate.options.retail'), option('wholesale', 'customerQuickCreate.options.wholesale')] },
     { name: 'name', label: t('fields.customerName'), required: true }, { name: 'mainCrNumber', label: t('customerQuickCreate.fields.mainCrNumber'), width: 100 },
     { name: 'nameAr', label: t('fields.arabicName') }, { name: 'branchCrNumber', label: t('customerQuickCreate.fields.branchCrNumber'), width: 100 },
@@ -40,6 +40,14 @@ export function CustomerQuickCreate({ open, nextAccount, onClose, onSave }: Cust
     loading={lookups.isLoading}
     loadError={lookups.error instanceof Error ? lookups.error.message : null}
     initialValues={() => initialValues(nextAccount)}
+    onFieldChange={(name, value) => {
+      if (name !== 'customerGroupId') return;
+      const group = lookup?.customerGroups.find((item) => item.value === String(value));
+      return {
+        termsOfPayment: group?.paymTermId ?? '',
+        salesTaxGroup: group?.taxGroupId ?? '',
+      };
+    }}
     validate={(values) => ['name', 'customerGroupId', 'customerCategory', 'country'].reduce<Record<string, string>>((result, name) => { if (!String(values[name] ?? '').trim()) result[name] = t('validation.required', { field: name }); return result; }, {})}
     onSubmit={async (values, mode) => {
       const customer = await customerQuickCreateApi.create({
@@ -47,7 +55,7 @@ export function CustomerQuickCreate({ open, nextAccount, onClose, onSave }: Cust
         currencyCode: String(values.currencyCode), custCategory: String(values.customerCategory),
         paymTermId: String(values.termsOfPayment), paymModeId: String(values.paymentMethod),
         dlvModeId: String(values.deliveryMode), taxGroupId: String(values.salesTaxGroup),
-        vatNum: String(values.vatNumber), countryRegionId: String(values.country), memo: String(values.notes),
+        vatNum: String(values.vatNumber), countryRegionId: String(values.country), street: String(values.street), memo: String(values.notes),
       });
       await onSave(customer, mode === 'save-and-open');
     }}
