@@ -1938,6 +1938,27 @@ namespace IAX.IXApi.Infrastructure.Persistence.ModelBuilding
 
             });
 
+            modelBuilder.Entity<PriceDiscTable>(entity =>
+            {
+                entity.HasOne(p => p.CustTable)
+                    .WithMany()
+                    .HasForeignKey(p => p.AccountRelation)
+                    .HasPrincipalKey(c => c.AccountNum)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(p => p.InventTable)
+                    .WithMany()
+                    .HasForeignKey(p => p.ItemRelation)
+                    .HasPrincipalKey(i => i.ItemId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne(p => p.InventDim)
+                    .WithMany()
+                    .HasForeignKey(p => p.InventDimId)
+                    .HasPrincipalKey(d => d.InventDimId)
+                    .OnDelete(DeleteBehavior.NoAction);
+            });
+
             modelBuilder.Entity<LogisticsAddressCounty>(entity =>
             {
                 entity.HasOne(itm => itm.CountryContext)

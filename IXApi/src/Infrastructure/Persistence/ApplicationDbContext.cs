@@ -251,6 +251,8 @@ namespace IAX.IXApi.Infrastructure.Persistence
         public DbSet<PaymSchedLine> PaymSchedLines => Set<PaymSchedLine>();
         #endregion
         #region AccountsReceivable
+        public DbSet<PriceDiscTable> PriceDiscTables => Set<PriceDiscTable>();
+        public DbSet<PriceDiscGroup> PriceDiscGroups => Set<PriceDiscGroup>();
         public DbSet<SalesTable> SalesTables => Set<SalesTable>();
         public DbSet<SalesQuotationTable> SalesQuotationTables => Set<SalesQuotationTable>();
         public DbSet<SalesQuotationLine> SalesQuotationLines => Set<SalesQuotationLine>();
