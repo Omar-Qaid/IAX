@@ -18,11 +18,10 @@ import type { DetailSectionConfig, DetailValue, DetailValues } from './types';
 import { d365 } from '@shared/constants/enterpriseUiTokens';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { getLogicalDrawerAnchor } from '@shared/hooks/useLogicalDrawerAnchor';
-import { LookupTitleMenu } from '@shared/components/lookups/LookupTitleMenu';
-import { lookupMasterRoute } from '@shared/components/lookups/lookupMasterRoutes';
+import { LookupNavigationLabel } from '@shared/components/lookups/LookupNavigationLabel';
 import { LookupField } from '@shared/components/lookups/LookupField';
 import { EditableViewField } from '@shared/components/fields/EditableViewField';
-import { FieldViewModeProvider } from '@shared/components/fields/FieldViewModeContext';
+import { FieldPresentationProvider } from '@shared/components/fields/FieldPresentationContext';
 
 export interface ListDetailsLayoutProps {
   detailEndPadding?: number;
@@ -466,8 +465,8 @@ export function ListDetailsLayout({
                                         color: d365.text,
                                       }}
                                     >
-                                      {field.type === 'select' || lookupMasterRoute(field.name, field.masterRoute)
-                                        ? <LookupTitleMenu name={field.name} label={fieldLabel} masterRoute={field.masterRoute} />
+                                      {field.type === 'select' || field.masterRoute
+                                        ? <LookupNavigationLabel label={fieldLabel} masterRoute={field.masterRoute} />
                                         : fieldLabel}
                                     </Typography>
                                   )}
@@ -480,7 +479,7 @@ export function ListDetailsLayout({
                                       disabled={field.disabled}
                                     />
                                   ) : field.render ? (
-                                    <FieldViewModeProvider viewMode={!editing}>
+                                    <FieldPresentationProvider viewMode={!editing} masterRoute={field.masterRoute}>
                                     <Box sx={{
                                       position: 'relative',
                                       '&:hover .field-edit-action, &:focus-within .field-edit-action': { opacity: 1 },
@@ -504,7 +503,7 @@ export function ListDetailsLayout({
                                       </IconButton>
                                     )}
                                     </Box>
-                                    </FieldViewModeProvider>
+                                    </FieldPresentationProvider>
                                   ) : field.type === 'boolean' ? (
                                     !editing ? <EditableViewField value={value ? yesLabel : noLabel} label={fieldLabel} onEdit={editField} disabled={field.disabled} /> : <Box
                                       sx={{
@@ -601,7 +600,7 @@ export function ListDetailsLayout({
                                       }
                                       numeric={field.type === 'number'}
                                       disabled={field.disabled}
-                                      lookup={field.type === 'select' || Boolean(lookupMasterRoute(field.name, field.masterRoute)) || Boolean(field.linkStyle) || (legalEntity && field.name === 'languageId')}
+                                      lookup={field.type === 'select' || Boolean(field.masterRoute?.trim()) || Boolean(field.linkStyle) || (legalEntity && field.name === 'languageId')}
                                       label={fieldLabel}
                                       onEdit={editField}
                                     />

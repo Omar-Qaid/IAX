@@ -322,30 +322,30 @@ public sealed class SalesTableController : ControllerBase
     public async Task<IActionResult> CreateDeliveryAddress(long recId, [FromBody] CreateSalesDeliveryAddressInput input,
         CancellationToken cancellationToken = default)
     {
-        var area = _company.GetDataAreaId();
-        var order = await _dbContext.Set<SalesTable>().FirstOrDefaultAsync(
-            row => row.RecId == recId && row.DataAreaId == area, cancellationToken);
-        if (order == null) return NotFound(APIResponse<object>.Fail("Sales order was not found."));
-        if (order.SalesStatus != SalesStatus.Backorder)
-            return UnprocessableEntity(APIResponse<object>.Fail("Only open sales orders can be changed."));
-        SalesLine? line = null;
-        if (!string.IsNullOrWhiteSpace(input.LineId))
+        return await _dbContext.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
-            if (!long.TryParse(input.LineId, System.Globalization.NumberStyles.None,
-                    System.Globalization.CultureInfo.InvariantCulture, out var lineId))
-                return BadRequest(APIResponse<object>.Fail("Sales line was not found."));
-            line = await _dbContext.Set<SalesLine>().FirstOrDefaultAsync(row => row.RecId == lineId
-                && row.SalesId == order.SalesId && row.DataAreaId == order.DataAreaId, cancellationToken);
-            if (line == null) return NotFound(APIResponse<object>.Fail("Sales line was not found."));
-            if (line.SalesStatus != SalesStatus.Backorder || line.RemainSalesPhysical != line.SalesQty
-                || line.RemainSalesFinancial != line.SalesQty)
-                return UnprocessableEntity(APIResponse<object>.Fail("Processed sales lines cannot be changed."));
-        }
+            await using var transaction = await _dbContext.Database.BeginTransactionAsync(
+                System.Data.IsolationLevel.Serializable, cancellationToken);
+            var area = _company.GetDataAreaId();
+            var order = await _dbContext.Set<SalesTable>().FirstOrDefaultAsync(
+                row => row.RecId == recId && row.DataAreaId == area, cancellationToken);
+            if (order == null) return (IActionResult)NotFound(APIResponse<object>.Fail("Sales order was not found."));
+            if (order.SalesStatus != SalesStatus.Backorder)
+                return UnprocessableEntity(APIResponse<object>.Fail("Only open sales orders can be changed."));
+            SalesLine? line = null;
+            if (!string.IsNullOrWhiteSpace(input.LineId))
+            {
+                if (!long.TryParse(input.LineId, System.Globalization.NumberStyles.None,
+                        System.Globalization.CultureInfo.InvariantCulture, out var lineId))
+                    return BadRequest(APIResponse<object>.Fail("Sales line was not found."));
+                line = await _dbContext.Set<SalesLine>().FirstOrDefaultAsync(row => row.RecId == lineId
+                    && row.SalesId == order.SalesId && row.DataAreaId == order.DataAreaId, cancellationToken);
+                if (line == null) return NotFound(APIResponse<object>.Fail("Sales line was not found."));
+                if (line.SalesStatus != SalesStatus.Backorder || line.RemainSalesPhysical != line.SalesQty
+                    || line.RemainSalesFinancial != line.SalesQty)
+                    return UnprocessableEntity(APIResponse<object>.Fail("Processed sales lines cannot be changed."));
+            }
 
-        await using var transaction = await _dbContext.Database.BeginTransactionAsync(
-            System.Data.IsolationLevel.Serializable, cancellationToken);
-        try
-        {
             var location = await _locationService.CreateLocationAsync(input.Address.Description.Trim(), true, cancellationToken);
             var postalAddress = await _postalAddressService.CreatePostalAddressAsync(location.RecId, input.Address, cancellationToken);
             postalAddress.DataAreaId = order.DataAreaId;
@@ -353,18 +353,13 @@ public sealed class SalesTableController : ControllerBase
             else line.DeliveryPostalAddress = postalAddress.RecId;
             await _dbContext.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
-            return Ok(APIResponse<object>.Ok(new
+            return (IActionResult)Ok(APIResponse<object>.Ok(new
             {
                 id = postalAddress.RecId.ToString(System.Globalization.CultureInfo.InvariantCulture),
                 description = location.Description,
                 address = postalAddress.Address
             }));
-        }
-        catch
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            throw;
-        }
+        });
     }
 
     [HttpGet("{recId:long}/totals")]

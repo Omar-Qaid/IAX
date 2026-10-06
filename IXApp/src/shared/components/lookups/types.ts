@@ -27,7 +27,6 @@ export interface GridLookupColumn<T extends object = Record<string, unknown>> {
 
 export interface GridLookupAction {
   label: string;
-  masterRoute?: string;
   icon?: React.ReactNode;
   onClick: () => void;
   disabled?: boolean;
@@ -62,7 +61,6 @@ export interface GridLookupProps<T extends object> {
   labelField?: keyof T;
 
   label?: string;
-  fieldName?: string;
   masterRoute?: string;
   placeholder?: string;
   error?: string;
@@ -133,17 +131,13 @@ export interface LookupGridFieldBaseProps<T extends object> extends Omit<
   errorMessage?: string;
 }
 
-export type FormLookupGridFieldProps<
-  T extends object,
-  TFieldValues extends FieldValues = FieldValues,
-> = LookupGridFieldProps<T, TFieldValues>;
-export type FormLookupGridFieldBaseProps<T extends object> = LookupGridFieldBaseProps<T>;
-
 export interface LookupFieldProps<TFieldValues extends FieldValues = FieldValues> {
   /** The select lookup's label is rendered by its parent; retain its accessible name. */
   externalLabel?: boolean;
   name: FieldPath<TFieldValues>;
   label: string;
+  /** Optional destination for the label's master-record navigation icon. */
+  masterRoute?: string;
   value?: string | number | (string | number)[];
   onChange?: (
     value: string | number | (string | number)[] | null,

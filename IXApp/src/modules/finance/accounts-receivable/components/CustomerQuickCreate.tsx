@@ -6,6 +6,8 @@ import type { FastTabSection, FastTabValue } from '@patterns/dialog-fast-tabs/Fa
 import type { Customer } from '@mocks/data/customers';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { customerQuickCreateApi } from '../api/customerQuickCreateApi';
+import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
+import { FOUNDATION_ROUTE_PATHS } from '@modules/finance/foundation/routes/foundationRoutePaths';
 
 interface CustomerQuickCreateProps { open: boolean; nextAccount: string; onClose: () => void; onSave: (customer: Customer, openAfterSave: boolean) => void | Promise<void> }
 const initialValues = (accountNumber: string): Record<string, FastTabValue> => ({ accountNumber, name: '', nameAr: '', customerGroupId: '', currencyCode: 'SAR', termsOfPayment: '', paymentMethod: '', deliveryMode: '', salesTaxGroup: '', customerCategory: '', vatNumber: '', notes: '', country: '', street: '' });
@@ -21,14 +23,14 @@ export function CustomerQuickCreate({ open, nextAccount, onClose, onSave }: Cust
   });
   const lookup = lookups.data;
   const sections = useMemo<FastTabSection[]>(() => [{ id: 'details', title: t('customerQuickCreate.sections.details'), summary: <FastTabSummary values={['--', 'SAR', '--', '--', '--', '--']} />, fields: [
-    { name: 'accountNumber', label: t('fields.customerAccount'), disabled: true }, { name: 'salesTaxGroup', label: t('fields.salesTaxGroup'), type: 'select', options: lookup?.salesTaxGroups ?? [] },
+    { name: 'accountNumber', label: t('fields.customerAccount'), disabled: true }, { name: 'salesTaxGroup', label: t('fields.salesTaxGroup'), type: 'select', masterRoute: FOUNDATION_ROUTE_PATHS.TAX_GROUPS, options: lookup?.salesTaxGroups ?? [] },
     { name: 'customerCategory', label: t('customerQuickCreate.fields.category'), type: 'select', required: true, options: [option('retail', 'customerQuickCreate.options.retail'), option('wholesale', 'customerQuickCreate.options.wholesale')] },
     { name: 'name', label: t('fields.customerName'), required: true },
     { name: 'nameAr', label: t('fields.arabicName') },
-    { name: 'customerGroupId', label: t('fields.customerGroup'), type: 'select', required: true, options: lookup?.customerGroups ?? [] }, { name: 'vatNumber', label: t('customerQuickCreate.fields.vatNumber') },
-    { name: 'currencyCode', label: t('fields.currency'), type: 'select', width: 100, options: lookup?.currencies ?? [{ value: 'SAR', label: 'SAR' }] }, { name: 'notes', label: t('customerQuickCreate.fields.notes'), type: 'multiline', rows: 4 },
-    { name: 'termsOfPayment', label: t('fields.termsOfPayment'), type: 'select', options: lookup?.paymentTerms ?? [] },
-    { name: 'paymentMethod', label: t('customerQuickCreate.fields.paymentMethod'), type: 'select', options: lookup?.paymentMethods ?? [] },
+    { name: 'customerGroupId', label: t('fields.customerGroup'), type: 'select', masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_GROUPS, required: true, options: lookup?.customerGroups ?? [] }, { name: 'vatNumber', label: t('customerQuickCreate.fields.vatNumber') },
+    { name: 'currencyCode', label: t('fields.currency'), type: 'select', masterRoute: FOUNDATION_ROUTE_PATHS.CURRENCIES, width: 100, options: lookup?.currencies ?? [{ value: 'SAR', label: 'SAR' }] }, { name: 'notes', label: t('customerQuickCreate.fields.notes'), type: 'multiline', rows: 4 },
+    { name: 'termsOfPayment', label: t('fields.termsOfPayment'), type: 'select', masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_TERMS, options: lookup?.paymentTerms ?? [] },
+    { name: 'paymentMethod', label: t('customerQuickCreate.fields.paymentMethod'), type: 'select', masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_METHODS, options: lookup?.paymentMethods ?? [] },
     { name: 'deliveryMode', label: t('customerQuickCreate.fields.deliveryMode'), type: 'select', options: lookup?.deliveryModes ?? [] },
   ] }, { id: 'address', title: t('customerQuickCreate.sections.address'), fields: [{ name: 'country', label: t('customerQuickCreate.fields.country'), type: 'select', required: true, options: lookup?.countryRegions ?? [] }, { name: 'street', label: t('customerQuickCreate.fields.street') }] }], [lookup, option, t]);
   return <FastTabsDrawer

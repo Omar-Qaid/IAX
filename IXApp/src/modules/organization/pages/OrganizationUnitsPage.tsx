@@ -2,6 +2,7 @@ import { localizedName } from '@shared/utilities/localizedName';
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { LookupField } from '@shared/components/lookups/LookupField';
+import { ORGANIZATION_ROUTE_PATHS } from '../routes/organizationRoutePaths';
 import { useCompanyStore } from '@core/company/useCompanyStore';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { ListDetailsTreePage } from '@patterns/list-details-tree';
@@ -189,6 +190,7 @@ function OrganizationUnitsContent({ company }: { company: string }): React.React
                   return (
                     <LookupField
                       name="parentOrganizationUnitId"
+                      masterRoute={ORGANIZATION_ROUTE_PATHS.ORGANIZATION_UNITS}
                       label={label('parent')}
                       value={Number(value) || undefined}
                       disabled={disabled}

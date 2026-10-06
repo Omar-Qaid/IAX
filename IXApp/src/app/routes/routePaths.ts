@@ -2,6 +2,8 @@ import { WORKFLOW_ROUTE_PATHS } from '@modules/workflow/routes/workflowRoutePath
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '@modules/finance/accounts-receivable/routes/accountsReceivableRoutePaths';
 import { ADMINISTRATION_ROUTE_PATHS } from '@modules/administration/routes/administrationRoutePaths';
 import { INVENTORY_ROUTE_PATHS } from '@modules/finance/inventory/routes/inventoryRoutePaths';
+import { FOUNDATION_ROUTE_PATHS } from '@modules/finance/foundation/routes/foundationRoutePaths';
+import { ORGANIZATION_ROUTE_PATHS } from '@modules/organization/routes/organizationRoutePaths';
 
 export const ROUTE_PATHS = {
   ROOT: '/',
@@ -15,43 +17,13 @@ export const ROUTE_PATHS = {
 
   ACCOUNTS_RECEIVABLE: ACCOUNTS_RECEIVABLE_ROUTE_PATHS,
 
-  FOUNDATION: {
-    ROOT: '/foundation',
-    CURRENCIES: '/foundation/currencies',
-    EXCHANGE_RATE_TYPES: '/foundation/exchange-rate-types',
-    EXCHANGE_RATES: '/foundation/exchange-rates',
-    CHARGES_CODES: '/foundation/charges-codes',
-    TAX_AUTHORITIES: '/foundation/tax-authorities',
-    TAX_PERIODS: '/foundation/tax-periods',
-    TAX_CODES: '/foundation/tax-codes',
-    TAX_GROUPS: '/foundation/tax-groups',
-    TAX_ITEM_GROUPS: '/foundation/tax-item-groups',
-  },
+  FOUNDATION: FOUNDATION_ROUTE_PATHS,
 
   INVENTORY: INVENTORY_ROUTE_PATHS,
 
   WORKFLOW: WORKFLOW_ROUTE_PATHS,
 
-  ORGANIZATION_ADMINISTRATION: {
-    ROOT: '/organization-administration',
-    LEGAL_ENTITIES: '/organization-administration/legal-entities',
-    ORGANIZATION_UNITS: '/organization-administration/organization-units',
-    ORGANIZATIONS: '/organization-administration/organizations',
-    ORGANIZATION_ROLES: '/organization-administration/organization-roles',
-    ORGANIZATION_HIERARCHIES: '/organization-administration/organization-hierarchies',
-    ORGANIZATION_HIERARCHY_SETUP: '/organization-administration/organization-hierarchies/setup',
-    ORGANIZATION_HIERARCHY_NODES:
-      '/organization-administration/organization-hierarchies/:hierarchyId/nodes',
-    organizationHierarchyNodes: (hierarchyId: string | number) =>
-      `/organization-administration/organization-hierarchies/${hierarchyId}/nodes`,
-    REPORTING_HIERARCHIES: '/organization-administration/reporting-hierarchies',
-    HCM_POSITIONS: '/organization-administration/positions',
-    HCM_WORKERS: '/organization-administration/workers',
-    HCM_SHOWROOMS: '/organization-administration/showrooms',
-    HCM_NATIONALITIES: '/organization-administration/nationalities',
-    HCM_OCCUPATIONS: '/organization-administration/occupations',
-    HCM_DEPARTMENTS: '/organization-administration/departments',
-  },
+  ORGANIZATION_ADMINISTRATION: ORGANIZATION_ROUTE_PATHS,
 
   SYSTEM_ADMINISTRATION: ADMINISTRATION_ROUTE_PATHS,
 

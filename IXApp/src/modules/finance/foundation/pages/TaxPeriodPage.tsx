@@ -7,6 +7,7 @@ import { PERMISSIONS } from '@core/permissions/permissions';
 import { taxPeriodApi, type TaxPeriodRecord } from '../api/taxPeriodApi';
 import { taxAuthorityApi } from '../api/taxAuthorityApi';
 import { TaxPeriodIntervalsPanel } from '../components/TaxPeriodIntervalsPanel';
+import { FOUNDATION_ROUTE_PATHS } from '../routes/foundationRoutePaths';
 
 const emptyTaxPeriod = (): TaxPeriodRecord => ({
   id: `new-${crypto.randomUUID()}`, recId: 0, taxPeriod: '', name: '', taxAuthority: '', paymentCode: '', qtyUnit: 1,
@@ -60,7 +61,7 @@ export function TaxPeriodPage(): React.ReactElement {
       {
         id: 'general', title: t('common.general', 'General'), defaultExpanded: true, columns: 6,
         groups: [
-          { id: 'authority', fields: [{ name: 'taxAuthority', label: t('taxPeriod.fields.authority', 'Authority'), type: 'select', options: taxAuthorityOptions }] },
+          { id: 'authority', fields: [{ name: 'taxAuthority', label: t('taxPeriod.fields.authority', 'Authority'), type: 'select', masterRoute: FOUNDATION_ROUTE_PATHS.TAX_AUTHORITIES, options: taxAuthorityOptions }] },
           { id: 'payment', fields: [{ name: 'paymentCode', label: t('taxPeriod.fields.paymentTerms', 'Terms of payment') }] },
           { id: 'unit', fields: [{ name: 'periodUnit', label: t('taxPeriod.fields.intervalUnit', 'Period interval unit'), type: 'select', options: periodUnitOptions }] },
           { id: 'duration', fields: [{ name: 'qtyUnit', label: t('taxPeriod.fields.intervalDuration', 'Period interval duration'), type: 'number' }] },

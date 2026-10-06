@@ -13,6 +13,7 @@ import { TreeControl } from '@shared/components/tree-control';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { PERMISSIONS } from '@core/permissions/permissions';
 import { inventLocationApi, type InventLocationRecord } from '../api/inventLocationApi';
+import { INVENTORY_ROUTE_PATHS } from '../routes/inventoryRoutePaths';
 
 type InventoryHierarchyNode =
   | { kind: 'site'; id: string; label: string; children: InventoryHierarchyNode[] }
@@ -129,6 +130,7 @@ export function InventLocationPage(): React.ReactElement {
       return (
         <LookupField
           name={name}
+          masterRoute={options === 'sites' ? INVENTORY_ROUTE_PATHS.SITES : INVENTORY_ROUTE_PATHS.WAREHOUSES}
           label={label}
           value={String(value ?? '')}
           options={lookupOptions}

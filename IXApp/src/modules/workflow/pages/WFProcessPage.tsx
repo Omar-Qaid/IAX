@@ -129,6 +129,7 @@ export function WFProcessPage(): React.ReactElement {
               {
                 name: 'categoryId',
                 label: t('wfProcess.fields.category'),
+                masterRoute: WORKFLOW_ROUTE_PATHS.CATEGORIES,
                 type: 'select',
                 formatValue: (value) => categoryOptions.find((option) => String(option.id) === String(value))?.name ?? '',
                 renderOwnLabel: true,
@@ -156,6 +157,7 @@ export function WFProcessPage(): React.ReactElement {
               {
                 name: 'priorityId',
                 label: t('wfProcess.fields.priority'),
+                masterRoute: WORKFLOW_ROUTE_PATHS.PRIORITIES,
                 type: 'select',
                 formatValue: (value) => priorityOptions.find((option) => String(option.id) === String(value))?.name ?? '',
                 renderOwnLabel: true,

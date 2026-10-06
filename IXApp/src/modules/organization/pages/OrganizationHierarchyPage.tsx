@@ -8,6 +8,7 @@ import type { ColumnDef } from '@shared/components/data-grid/types';
 import { localizedName } from '@shared/utilities/localizedName';
 import { uiDensity } from '@shared/constants/uiDensity';
 import { LookupField } from '@shared/components/lookups/LookupField';
+import { ORGANIZATION_ROUTE_PATHS } from '../routes/organizationRoutePaths';
 import { organizationStructureApi as api } from '../api/organizationStructureApi';
 
 interface HierarchyRecord {
@@ -61,6 +62,7 @@ export function OrganizationHierarchyPage(): React.ReactElement {
         renderEditCell: ({ value, onChange, disabled }) => (
           <LookupField
             name="rootOrganizationUnitId"
+            masterRoute={ORGANIZATION_ROUTE_PATHS.ORGANIZATION_UNITS}
             label={t('organizationStructure.rootUnit')}
             value={Number(value) || undefined}
             onChange={(id) => onChange(Number(id) || 0)}

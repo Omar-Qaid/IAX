@@ -8,6 +8,7 @@ import { ListDetailsTreePage } from '@patterns/list-details-tree';
 import type { ListDetailsTreePageConfig } from '@patterns/list-details-tree';
 import type { DetailValue, DetailValues } from '@patterns/list-details/types';
 import { LookupField } from '@shared/components/lookups/LookupField';
+import { ORGANIZATION_ROUTE_PATHS } from '../routes/organizationRoutePaths';
 import { localizedName } from '@shared/utilities/localizedName';
 import {
   organizationStructureApi as api,
@@ -343,6 +344,7 @@ function HierarchyNodesTreePage({
       renderHeader: ({ editing, loading }) => (
         <LookupField
           name="hierarchyId"
+          masterRoute={ORGANIZATION_ROUTE_PATHS.ORGANIZATION_HIERARCHIES}
           label={t('organizationStructure.hierarchy')}
           required
           value={hierarchyId}
@@ -465,6 +467,7 @@ function PagedLookup<T>({
     <Box>
       <LookupField
         name={name}
+        masterRoute={ORGANIZATION_ROUTE_PATHS.ORGANIZATION_UNITS}
         label={label}
         value={Number(value) || undefined}
         disabled={disabled}

@@ -1,10 +1,10 @@
 import React from 'react';
 import { expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ListDetailsLayout } from '@patterns/list-details/ListDetailsLayout';
 import { ListGridField } from '@patterns/list-details-listgrid/ListGridField';
-import { FieldViewModeProvider } from '@shared/components/fields/FieldViewModeContext';
+import { FieldPresentationProvider } from '@shared/components/fields/FieldPresentationContext';
 import { LookupField } from '@shared/components/lookups/LookupField';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -114,9 +114,9 @@ it('renders shared lookup values without dropdown controls in view mode', () => 
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const { rerender } = render(
     <QueryClientProvider client={client}>
-      <FieldViewModeProvider viewMode>
+      <FieldPresentationProvider viewMode>
         <LookupField name="priorityId" label="Priority" value="high" options={[{ id: 'high', code: 'HIGH', name: 'High' }]} />
-      </FieldViewModeProvider>
+      </FieldPresentationProvider>
     </QueryClientProvider>
   );
   expect(screen.getByText('High')).toBeInTheDocument();
@@ -125,10 +125,28 @@ it('renders shared lookup values without dropdown controls in view mode', () => 
 
   rerender(
     <QueryClientProvider client={client}>
-      <FieldViewModeProvider viewMode>
+      <FieldPresentationProvider viewMode>
         <LookupField name="priorityId" label="Priority" value="" options={[]} />
-      </FieldViewModeProvider>
+      </FieldPresentationProvider>
     </QueryClientProvider>
   );
   expect(screen.queryByText('Select...')).toBeNull();
+});
+
+it('uses the route configured on a custom field for its shared lookup icon', () => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  render(<QueryClientProvider client={client}><MemoryRouter initialEntries={['/form']}><Routes>
+    <Route path="/form" element={<ListDetailsLayout
+      listPane={null} listPaneVisible={false} header={null} editing={false}
+      sections={[{ id: 'general', title: 'General', groups: [{ id: 'classification', fields: [{
+        name: 'priorityId', label: 'Priority', masterRoute: '/workflow/priorities', renderOwnLabel: true,
+        render: ({ value }) => <LookupField name="priorityId" label="Priority" value={String(value)} options={[{ id: 'high', code: 'HIGH', name: 'High' }]} />,
+      }] }] }]}
+      values={{ priorityId: 'high' }} yesLabel="Yes" noLabel="No" onChange={vi.fn()}
+    />} />
+    <Route path="/workflow/priorities" element={<div>Priorities page</div>} />
+  </Routes></MemoryRouter></QueryClientProvider>);
+
+  fireEvent.click(screen.getByRole('button', { name: 'Open Priority details' }));
+  expect(screen.getByText('Priorities page')).toBeInTheDocument();
 });

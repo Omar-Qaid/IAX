@@ -4,6 +4,7 @@ import { Controller, type FieldValues } from 'react-hook-form';
 import type { BaseFieldProps } from './types';
 import type { SelectOption } from '@core/types/common';
 import { lookupValueSx } from '../lookups/lookupValueStyle';
+import { LookupNavigationLabel } from '../lookups/LookupNavigationLabel';
 
 const selectPlaceholder = <span className="app-select-placeholder">Select...</span>;
 const selectValue = (selected: unknown, options: SelectOption[]) =>
@@ -14,6 +15,7 @@ export interface AppSelectFieldProps<
   TFieldValues extends FieldValues = FieldValues,
 > extends BaseFieldProps<TFieldValues, string | number> {
   options: SelectOption[];
+  masterRoute?: string;
 }
 
 export function AppSelectField<TFieldValues extends FieldValues = FieldValues>({
@@ -21,6 +23,7 @@ export function AppSelectField<TFieldValues extends FieldValues = FieldValues>({
   label,
   control,
   options,
+  masterRoute,
   required = false,
   disabled = false,
   readOnly = false,
@@ -38,7 +41,7 @@ export function AppSelectField<TFieldValues extends FieldValues = FieldValues>({
       <TextField
         select
         name={name}
-        label={label}
+        label={label ? <LookupNavigationLabel label={label} masterRoute={masterRoute} /> : undefined}
         required={required}
         disabled={disabled || readOnly}
         helperText={helperText}
@@ -67,7 +70,7 @@ export function AppSelectField<TFieldValues extends FieldValues = FieldValues>({
         <TextField
           {...field}
           select
-          label={label}
+          label={label ? <LookupNavigationLabel label={label} masterRoute={masterRoute} /> : undefined}
           required={required}
           disabled={disabled || readOnly}
           error={!!error}

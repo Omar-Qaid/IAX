@@ -22,8 +22,9 @@ import { localizedName } from '@shared/utilities/localizedName';
 import type { GridLookupProps, GridLookupColumn, LookupValue } from './types';
 import { useLookupGridField } from '@shared/hooks/useLookupGridField';
 import { lookupValueSx } from './lookupValueStyle';
-import { AppDisplayField } from '@shared/components/fields/AppDisplayField';
-import { useFieldViewMode } from '@shared/components/fields/FieldViewModeContext';
+import { LookupNavigationLabel } from './LookupNavigationLabel';
+import { LookupDisplayField } from './LookupDisplayField';
+import { useFieldViewMode } from '@shared/components/fields/FieldPresentationContext';
 
 const DEFAULT_PAGE_SIZE = 50;
 const DEFAULT_ROW_HEIGHT = 36;
@@ -42,6 +43,7 @@ export function LookupGrid<T extends object>({
   valueField = 'id' as keyof T,
   labelField: _labelField = 'name' as keyof T,
   label,
+  masterRoute,
   placeholder,
   error,
   disabled,
@@ -390,13 +392,13 @@ export function LookupGrid<T extends object>({
     if (open) recalcPosition();
   }, [open, rows.length, recalcPosition]);
 
-  if (viewMode) return <AppDisplayField label={label ? t(label) : ''} value={resolvedDisplay} lookup />;
+  if (viewMode) return <LookupDisplayField label={label ? t(label) : ''} value={resolvedDisplay} masterRoute={masterRoute} />;
 
   return (
     <Box sx={{ width: fullWidth ? '100%' : undefined }}>
       <TextField
         ref={anchorRef}
-        label={label ? t(label) : undefined}
+        label={label ? <LookupNavigationLabel label={t(label)} masterRoute={masterRoute} /> : undefined}
         fullWidth={fullWidth}
         size={size}
         disabled={disabled}

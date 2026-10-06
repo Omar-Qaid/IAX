@@ -11,6 +11,9 @@ import { PartyPostalAddressPanel, PartyElectronicAddressPanel } from '@shared/co
 import { useQuery } from '@tanstack/react-query';
 import type { CustomerLookupOption } from '../api/customerQuickCreateApi';
 import { salesOrderLinesApi } from '../api/salesOrderLinesApi';
+import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
+import { FOUNDATION_ROUTE_PATHS } from '@modules/finance/foundation/routes/foundationRoutePaths';
+import { INVENTORY_ROUTE_PATHS } from '@modules/finance/inventory/routes/inventoryRoutePaths';
 
 const includingSelected = (options: CustomerLookupOption[], selected: string): CustomerLookupOption[] =>
   selected && !options.some((option) => option.value === selected)
@@ -105,14 +108,14 @@ export function CustTablePage(): React.ReactElement {
           { name: 'nameAr', label: t('fields.arabicName') },
         ] },
         { id: 'classification', fields: [
-          { name: 'customerGroupId', label: t('fields.customerGroup'), type: 'select', options: choices(lookups?.customerGroups, record.customerGroupId) },
-          { name: 'currencyCode', label: t('fields.currency'), type: 'select', options: choices(lookups?.currencies, record.currencyCode) },
+          { name: 'customerGroupId', label: t('fields.customerGroup'), type: 'select', masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_GROUPS, options: choices(lookups?.customerGroups, record.customerGroupId) },
+          { name: 'currencyCode', label: t('fields.currency'), type: 'select', masterRoute: FOUNDATION_ROUTE_PATHS.CURRENCIES, options: choices(lookups?.currencies, record.currencyCode) },
         ] },
         { id: 'taxPayment', title: 'Sales tax', fields: [
           { name: 'vatNum', label: t('customerQuickCreate.fields.vatNumber') },
-          { name: 'taxGroupId', label: t('fields.salesTaxGroup'), type: 'select', options: choices(lookups?.salesTaxGroups, record.taxGroupId) },
-          { name: 'paymTermId', label: t('fields.termsOfPayment'), type: 'select', options: choices(lookups?.paymentTerms, record.paymTermId) },
-          { name: 'paymModeId', label: t('customerQuickCreate.fields.paymentMethod'), type: 'select', options: choices(lookups?.paymentMethods, record.paymModeId) },
+          { name: 'taxGroupId', label: t('fields.salesTaxGroup'), type: 'select', masterRoute: FOUNDATION_ROUTE_PATHS.TAX_GROUPS, options: choices(lookups?.salesTaxGroups, record.taxGroupId) },
+          { name: 'paymTermId', label: t('fields.termsOfPayment'), type: 'select', masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_TERMS, options: choices(lookups?.paymentTerms, record.paymTermId) },
+          { name: 'paymModeId', label: t('customerQuickCreate.fields.paymentMethod'), type: 'select', masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_METHODS, options: choices(lookups?.paymentMethods, record.paymModeId) },
         ] },
         { id: 'organization', title: t('customerQuickCreate.options.organization'), fields: [
           { name: 'countryRegionId', label: t('customerQuickCreate.fields.country'), type: 'select', options: choices(lookups?.countryRegions, record.countryRegionId) },
@@ -128,12 +131,12 @@ export function CustTablePage(): React.ReactElement {
       gridTemplateColumns: 'repeat(5, minmax(150px, 1fr))',
       groups: [
         { id: 'salesOrder', title: 'Sales order', fields: [
-          { name: 'inventSiteId', label: 'Site', type: 'select', options: choices(dimensionsQuery.data?.sites.map((site) => ({ value: site.id, label: `${site.code} - ${site.name}` })), record.inventSiteId) },
-          { name: 'inventLocationId', label: 'Warehouse', type: 'select', options: choices(dimensionsQuery.data?.warehouses.map((warehouse) => ({ value: warehouse.id, label: `${warehouse.code} - ${warehouse.name}` })), record.inventLocationId) },
+          { name: 'inventSiteId', label: 'Site', type: 'select', masterRoute: INVENTORY_ROUTE_PATHS.SITES, options: choices(dimensionsQuery.data?.sites.map((site) => ({ value: site.id, label: `${site.code} - ${site.name}` })), record.inventSiteId) },
+          { name: 'inventLocationId', label: 'Warehouse', type: 'select', masterRoute: INVENTORY_ROUTE_PATHS.WAREHOUSES, options: choices(dimensionsQuery.data?.warehouses.map((warehouse) => ({ value: warehouse.id, label: `${warehouse.code} - ${warehouse.name}` })), record.inventLocationId) },
         ] },
         { id: 'salesOrderPool', fields: [
           { name: 'salesPoolId', label: 'Sales order pool', type: 'select', options: choices(lookups?.salesPools, record.salesPoolId ?? '') },
-          { name: 'invoiceAccount', label: 'Invoice account', type: 'select', options: choices(customersQuery.data?.map((customer) => ({ value: customer.accountNumber, label: `${customer.accountNumber} - ${customer.name}` })), record.invoiceAccount) },
+          { name: 'invoiceAccount', label: 'Invoice account', type: 'select', masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMERS, options: choices(customersQuery.data?.map((customer) => ({ value: customer.accountNumber, label: `${customer.accountNumber} - ${customer.name}` })), record.invoiceAccount) },
         ] },
       ],
     },
@@ -142,8 +145,8 @@ export function CustTablePage(): React.ReactElement {
       gridTemplateColumns: 'repeat(5, minmax(150px, 1fr))',
       groups: [
         { id: 'payment', title: 'Payment', fields: [
-          { name: 'paymTermId', label: 'Terms of payment', type: 'select', options: choices(lookups?.paymentTerms, record.paymTermId) },
-          { name: 'paymModeId', label: 'Method of payment', type: 'select', options: choices(lookups?.paymentMethods, record.paymModeId) },
+          { name: 'paymTermId', label: 'Terms of payment', type: 'select', masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_TERMS, options: choices(lookups?.paymentTerms, record.paymTermId) },
+          { name: 'paymModeId', label: 'Method of payment', type: 'select', masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_METHODS, options: choices(lookups?.paymentMethods, record.paymModeId) },
         ] },
         { id: 'paymentTerms', fields: [
           { name: 'blockFloorLimitUseInChannel', label: 'Block floor limit use in Channel', type: 'boolean' },

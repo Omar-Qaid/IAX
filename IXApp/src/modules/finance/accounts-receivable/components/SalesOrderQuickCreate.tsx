@@ -7,6 +7,9 @@ import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { customerQuickCreateApi } from '../api/customerQuickCreateApi';
 import { salesOrderListApi, type SalesOrderListRecord } from '../api/salesOrderListApi';
 import { salesOrderLinesApi } from '../api/salesOrderLinesApi';
+import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
+import { FOUNDATION_ROUTE_PATHS } from '@modules/finance/foundation/routes/foundationRoutePaths';
+import { INVENTORY_ROUTE_PATHS } from '@modules/finance/inventory/routes/inventoryRoutePaths';
 
 interface SalesOrderQuickCreateProps {
   open: boolean;
@@ -97,6 +100,7 @@ export function SalesOrderQuickCreate({
         fields: [
           {
             name: 'customerAccount',
+            masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMERS,
             label: t('fields.customerAccount'),
             type: 'select',
             required: true,
@@ -164,6 +168,7 @@ export function SalesOrderQuickCreate({
           { name: 'salesId', label: t('fields.salesOrderNumber'), disabled: true },
           {
             name: 'currencyCode',
+            masterRoute: FOUNDATION_ROUTE_PATHS.CURRENCIES,
             label: t('fields.currency'),
             type: 'select',
             required: true,
@@ -174,6 +179,7 @@ export function SalesOrderQuickCreate({
           },
           {
             name: 'invoiceAccount',
+            masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMERS,
             label: t('fields.invoiceAccount'),
             type: 'select',
             required: true,
@@ -189,6 +195,7 @@ export function SalesOrderQuickCreate({
           },
           {
             name: 'inventSiteId',
+            masterRoute: INVENTORY_ROUTE_PATHS.SITES,
             label: t('salesOrderQuickCreate.site', 'Site'),
             type: 'select',
             valueGetter: (values) => values.inventSiteId || customerFor(values)?.inventSiteId || '',
@@ -199,6 +206,7 @@ export function SalesOrderQuickCreate({
           },
           {
             name: 'inventLocationId',
+            masterRoute: INVENTORY_ROUTE_PATHS.WAREHOUSES,
             label: t('salesOrderQuickCreate.warehouse', 'Warehouse'),
             type: 'select',
             valueGetter: (values) => {
@@ -238,6 +246,7 @@ export function SalesOrderQuickCreate({
           },
           {
             name: 'paymentTerms',
+            masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_TERMS,
             label: t('fields.termsOfPayment'),
             type: 'select',
             valueGetter: (values) => values.paymentTerms || customerFor(values)?.paymTermId || '',
@@ -245,6 +254,7 @@ export function SalesOrderQuickCreate({
           },
           {
             name: 'paymentMethod',
+            masterRoute: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_METHODS,
             label: t('customerQuickCreate.fields.paymentMethod'),
             type: 'select',
             valueGetter: (values) => values.paymentMethod || customerFor(values)?.paymModeId || '',
@@ -252,6 +262,7 @@ export function SalesOrderQuickCreate({
           },
           {
             name: 'taxGroupId',
+            masterRoute: FOUNDATION_ROUTE_PATHS.TAX_GROUPS,
             label: t('fields.salesTaxGroup', 'Sales tax group'),
             type: 'select',
             valueGetter: (values) => values.taxGroupId || customerFor(values)?.taxGroupId || '',

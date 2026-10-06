@@ -8,10 +8,10 @@ import type { LookupFieldProps, LookupOption } from './types';
 import { useLookupGridField } from '@shared/hooks/useLookupGridField';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import type { FieldValues } from 'react-hook-form';
-import { LookupTitleMenu } from './LookupTitleMenu';
-import { lookupValueSx } from './lookupValueStyle';
-import { AppDisplayField } from '@shared/components/fields/AppDisplayField';
-import { useFieldViewMode } from '@shared/components/fields/FieldViewModeContext';
+import { LookupNavigationLabel } from './LookupNavigationLabel';
+import { hasLookupValue, lookupValueSx } from './lookupValueStyle';
+import { LookupDisplayField } from './LookupDisplayField';
+import { useFieldViewMode } from '@shared/components/fields/FieldPresentationContext';
 
 const standardLookupSx = {
   minWidth: 0,
@@ -190,7 +190,7 @@ function SelectLookup({
   const lookup = useLookupGridField<LookupOption>({
     queryKey: queryKey ?? ['lookup-field', label, 'server'],
     fetchPage: resolvedFetchPage,
-    enabled: usesServerDataSource && (open || scalarValue != null),
+    enabled: usesServerDataSource && (open || hasLookupValue(scalarValue)),
     pageSize,
     search: searchable ? search : '',
     debounceMs: searchDebounceMs,
@@ -217,7 +217,7 @@ function SelectLookup({
     if (list.scrollHeight - list.scrollTop - list.clientHeight <= 80) void lookup.fetchNextPage();
   };
 
-  if (viewMode) return <AppDisplayField label={externalLabel ? '' : label} value={selected ? localizedName(selected, isRtl) : scalarValue == null || scalarValue === 0 ? '' : String(scalarValue)} lookup />;
+  if (viewMode) return <LookupDisplayField label={externalLabel ? '' : label} value={selected ? localizedName(selected, isRtl) : scalarValue == null || scalarValue === 0 ? '' : String(scalarValue)} masterRoute={masterRoute} />;
 
   return (
     <Autocomplete<LookupOption, false, boolean, false>
@@ -268,7 +268,7 @@ function SelectLookup({
         <TextField
           {...params}
           variant={variant}
-          label={externalLabel ? undefined : <LookupTitleMenu name={name} label={label} masterRoute={masterRoute} />}
+          label={externalLabel ? undefined : <LookupNavigationLabel label={label} masterRoute={masterRoute} />}
           required={required}
           error={error}
           helperText={helperText}
@@ -336,7 +336,7 @@ export function LookupField<TFieldValues extends FieldValues = FieldValues>({
     onChange?.(option.id, option);
   };
 
-  if (viewMode && displayMode !== 'select') return <AppDisplayField label={externalLabel ? '' : label} value={displayValue || (value == null || value === 0 ? '' : String(value))} lookup />;
+  if (viewMode && displayMode !== 'select') return <LookupDisplayField label={externalLabel ? '' : label} value={displayValue || (value == null || value === 0 ? '' : String(value))} masterRoute={masterRoute} />;
 
   if (displayMode === 'select') {
     return (
@@ -373,7 +373,7 @@ export function LookupField<TFieldValues extends FieldValues = FieldValues>({
     <>
       <TextField
         variant={variant}
-        label={externalLabel ? undefined : <LookupTitleMenu name={name} label={label} masterRoute={masterRoute} />}
+        label={externalLabel ? undefined : <LookupNavigationLabel label={label} masterRoute={masterRoute} />}
         value={displayValue}
         required={required}
         disabled={disabled}

@@ -544,6 +544,7 @@ export function SalesOrderLinesGrid({
       return (
         <LookupField
           name={column.field}
+          masterRoute={isSite ? INVENTORY_ROUTE_PATHS.SITES : INVENTORY_ROUTE_PATHS.WAREHOUSES}
           label={t(column.headerName)}
           value={String(value ?? '')}
           options={options}

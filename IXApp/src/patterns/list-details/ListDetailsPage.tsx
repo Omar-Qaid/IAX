@@ -54,6 +54,7 @@ import type {
 } from './types';
 import { d365 } from '@shared/constants/enterpriseUiTokens';
 import { EditableViewField } from '@shared/components/fields/EditableViewField';
+import { LookupNavigationLabel } from '@shared/components/lookups/LookupNavigationLabel';
 
 interface LegacyListDetailsProps<T extends ListDetailRecord> {
   variant?: 'standard';
@@ -811,7 +812,9 @@ function RecordHeader<T>({
                     component="span"
                     sx={{ marginInlineEnd: 0.5, fontSize: 12, lineHeight: 1.35, fontWeight: 700 }}
                   >
-                    {field.label}:
+                    {field.type === 'select' || field.masterRoute
+                      ? <LookupNavigationLabel label={field.label} masterRoute={field.masterRoute} />
+                      : field.label}:
                   </Typography>
                 )}
                 {custom ?? (
@@ -902,7 +905,9 @@ function RecordHeader<T>({
                 title={field.label}
                 sx={{ mb: '2px', fontSize: d365.labelFontSize, lineHeight: 1.1, color: d365.text }}
               >
-                {field.label}
+                {field.type === 'select' || field.masterRoute
+                  ? <LookupNavigationLabel label={field.label} masterRoute={field.masterRoute} />
+                  : field.label}
               </Typography>
               {field.type === 'boolean' && !editing ? (
                 <EditableViewField value={value ? yesLabel : noLabel} label={field.label} onEdit={editField} disabled={field.disabled} />

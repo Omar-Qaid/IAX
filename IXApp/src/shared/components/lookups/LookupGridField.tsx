@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useMemo, useRef, useLayoutEffect } from 'react';
+import React, { useEffect, useState, useMemo, useRef, useLayoutEffect } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import type { FieldValues, Path } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -11,7 +11,6 @@ import { usePermissions } from '@core/auth/usePermissions';
 import type {
   LookupGridFieldProps,
   LookupGridFieldBaseProps,
-  LookupPage,
   LookupValue,
 } from './types';
 
@@ -27,7 +26,6 @@ function LookupGridFieldInner<T extends object>({
   labelField = 'name' as keyof T,
   labelFieldAr = 'nameAlias' as keyof T,
   label,
-  fieldName,
   masterRoute,
   placeholder,
   disabled,
@@ -52,24 +50,6 @@ function LookupGridFieldInner<T extends object>({
   const localizedColumns = useMemo(() => filterLocalizedColumns(columns, isRtl), [columns, isRtl]);
   const [selectedRow, setSelectedRow] = useState<T | null>(null);
 
-  const adaptedFetch = useCallback(
-    async (params: {
-      pageNumber: number;
-      pageSize: number;
-      search: string;
-      signal?: AbortSignal;
-    }): Promise<LookupPage<T>> => {
-      const r = await fetchPage(params);
-      return {
-        data: r.data,
-        pageNumber: r.pageNumber,
-        totalPages: r.totalPages,
-        totalRecords: r.totalRecords,
-      };
-    },
-    [fetchPage]
-  );
-
   const fetchByIdRef = useRef(fetchById);
   useLayoutEffect(() => {
     fetchByIdRef.current = fetchById;
@@ -81,7 +61,7 @@ function LookupGridFieldInner<T extends object>({
       setSelectedRow(null);
       return;
     }
-    setSelectedRow((prev) => (prev && prev[valueField] === value ? prev : prev));
+    setSelectedRow((prev) => (prev && String(prev[valueField]) === String(value) ? prev : null));
     const fn = fetchByIdRef.current;
     if (fn) {
       fn(value)
@@ -96,8 +76,9 @@ function LookupGridFieldInner<T extends object>({
   }, [value, valueField]);
 
   const hasValue = value != null && value !== 0 && value !== '';
-  const displayText = selectedRow
-    ? String(selectedRow[displayField] ?? '').trim() || String(selectedRow[labelField] ?? '')
+  const currentRow = selectedRow && String(selectedRow[valueField]) === String(value) ? selectedRow : null;
+  const displayText = currentRow
+    ? String(currentRow[displayField] ?? '').trim() || String(currentRow[labelField] ?? '')
     : hasValue
       ? String(value)
       : '';
@@ -112,12 +93,11 @@ function LookupGridFieldInner<T extends object>({
           setSelectedRow(row);
         }}
         columns={localizedColumns}
-        fetchPage={adaptedFetch}
+        fetchPage={fetchPage}
         queryKey={queryKey}
         valueField={valueField}
         labelField={displayField}
         label={label}
-        fieldName={fieldName}
         masterRoute={masterRoute}
         placeholder={placeholder}
         error={errorMessage}
@@ -151,23 +131,10 @@ function LookupGridFieldWrapper<T extends object, TFieldValues extends FieldValu
 
   // A value/onChange pair is controlled by the caller. Do not let an
   // unrelated parent FormProvider capture selection and clear events.
-  if (!controlProp && props.onChange) {
+  if (!control || (!controlProp && props.onChange)) {
     return (
       <LookupGridFieldInner<T>
         {...rest}
-        fieldName={name}
-        value={props.value}
-        onChange={(value, row) => props.onChange?.(value, row)}
-        errorMessage={errorMessage}
-      />
-    );
-  }
-
-  if (!control) {
-    return (
-      <LookupGridFieldInner<T>
-        {...rest}
-        fieldName={name}
         value={props.value}
         onChange={(value, row) => props.onChange?.(value, row)}
         errorMessage={errorMessage}
@@ -182,7 +149,6 @@ function LookupGridFieldWrapper<T extends object, TFieldValues extends FieldValu
       render={({ field, fieldState }) => (
         <LookupGridFieldInner<T>
           {...rest}
-          fieldName={name}
           value={field.value as LookupValue<T> | null | undefined}
           onChange={(val, row) => {
             field.onChange(val);
@@ -196,4 +162,3 @@ function LookupGridFieldWrapper<T extends object, TFieldValues extends FieldValu
 }
 
 export const LookupGridField = React.memo(LookupGridFieldWrapper) as typeof LookupGridFieldWrapper;
-export const FormGridLookupField = LookupGridField; // Backward compatibility alias

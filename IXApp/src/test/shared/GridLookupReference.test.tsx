@@ -138,6 +138,28 @@ describe('Grid Lookup Reference Integration', () => {
     expect(screen.getByLabelText('Customer')).toBeInTheDocument();
   });
 
+  it('does not display the previous row while a changed value loads', async () => {
+    let resolveSecond: (row: TestItem) => void = () => {};
+    const fetchById = vi.fn((id: string) => id === '1'
+      ? Promise.resolve(mockData[0])
+      : new Promise<TestItem>((resolve) => { resolveSecond = resolve; }));
+    const renderField = (value: string) => (
+      <AuthProvider><QueryClientProvider client={queryClient}>
+        <LookupGridField<TestItem> name="customerId" label="Customer" value={value} onChange={vi.fn()}
+          columns={mockColumns} fetchPage={mockFetchPage} fetchById={fetchById}
+          queryKey={['changed-grid-lookup']} valueField="id" />
+      </QueryClientProvider></AuthProvider>
+    );
+    const queryClient = createTestQueryClient();
+    const { rerender } = render(renderField('1'));
+    await waitFor(() => expect(screen.getByLabelText('Customer')).toHaveValue('Contoso Ltd'));
+
+    rerender(renderField('2'));
+    expect(screen.getByLabelText('Customer')).toHaveValue('2');
+    resolveSecond(mockData[1]);
+    await waitFor(() => expect(screen.getByLabelText('Customer')).toHaveValue('Fabrikam Inc'));
+  });
+
   it('clears an externally controlled value inside an unrelated form context', () => {
     const queryClient = createTestQueryClient();
     const handleChange = vi.fn();

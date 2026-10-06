@@ -27,6 +27,8 @@ import { PERMISSIONS } from '@core/permissions/permissions';
 import { usePermission } from '@core/permissions/usePermission';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
+import { FOUNDATION_ROUTE_PATHS } from '@modules/finance/foundation/routes/foundationRoutePaths';
+import { INVENTORY_ROUTE_PATHS } from '@modules/finance/inventory/routes/inventoryRoutePaths';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
 import { salesOrderListApi, type SalesOrderHeaderInput } from '../api/salesOrderListApi';
 import { customerQuickCreateApi } from '../api/customerQuickCreateApi';
@@ -46,6 +48,19 @@ import { SalesOrderLinesGrid } from './SalesOrderLinesGrid';
 import { SalesOrderLinesProvider } from './SalesOrderLineState';
 
 type DetailLine = SalesOrderLineRecord;
+
+const headerMasterRoutes: Partial<Record<keyof SalesOrderHeaderInput, string>> = {
+  customerAccount: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMERS,
+  invoiceAccount: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMERS,
+  customerGroup: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_GROUPS,
+  currencyCode: FOUNDATION_ROUTE_PATHS.CURRENCIES,
+  inventSiteId: INVENTORY_ROUTE_PATHS.SITES,
+  inventLocationId: INVENTORY_ROUTE_PATHS.WAREHOUSES,
+  taxGroupId: FOUNDATION_ROUTE_PATHS.TAX_GROUPS,
+  paymentTerms: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_TERMS,
+  paymentMethod: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_PAYMENT_METHODS,
+  chargesGroup: FOUNDATION_ROUTE_PATHS.CHARGES_CODES,
+};
 const salesOrderRibbonPinnedStorageKey = 'sales-order.action-pane.ribbon-pinned';
 
 export function SalesOrderDetailsPage(): React.ReactElement {
@@ -410,6 +425,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         <Box sx={{ minWidth: 0 }}>
           <LookupField
             name={name}
+            masterRoute={headerMasterRoutes[name]}
             label={label}
             value={String(activeHeader?.[name] ?? '')}
             disabled={savingHeader || !customersQuery.data || !lookupsQuery.data}
@@ -485,6 +501,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       <Box sx={{ minWidth: 0 }}>
         <LookupField
           name={name}
+          masterRoute={headerMasterRoutes[name]}
           label={label}
           value={activeHeader?.[name] ?? ''}
           options={options}
@@ -1682,6 +1699,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   ]);
   const headerField = (name: string, label: string, sectionTitle?: string): DetailFieldConfig => ({
     name,
+    masterRoute: headerMasterRoutes[name as keyof SalesOrderHeaderInput],
     label: t(`salesOrder.headerFields.${name}`, label),
     type: readOnlyHeaderFields.has(name) ? 'display' : headerLookupFields.has(name) ? 'select' : 'text',
     sectionTitle,
