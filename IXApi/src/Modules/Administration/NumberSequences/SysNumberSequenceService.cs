@@ -24,13 +24,13 @@ namespace IAX.IXApi.Modules.Administration.NumberSequences
                 throw new ArgumentException("EntityName (NumberSequence) is required", nameof(entityName));
 
             var db = _unitOfWork.Context;
+            var strategy = db.Database.CreateExecutionStrategy();
 
-            async Task<NextSequenceResultDto> ExecuteAllocationAsync()
+            async Task<NextSequenceResultDto> AllocateAsync()
             {
-                var hasExistingTx = db.Database.CurrentTransaction != null;
-                var tx = hasExistingTx 
-                    ? null 
-                    : await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
+                var tx = db.Database.CurrentTransaction == null 
+                    ? await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken) 
+                    : null;
 
                 try
                 {
@@ -78,13 +78,12 @@ namespace IAX.IXApi.Modules.Administration.NumberSequences
                 }
             }
 
-            if (db.Database.CurrentTransaction != null)
-            {
-                return await ExecuteAllocationAsync();
-            }
-
-            var strategy = db.Database.CreateExecutionStrategy();
-            return await strategy.ExecuteAsync(async () => await ExecuteAllocationAsync());
+            // The generic create pipeline already owns a retry-aware transaction.
+            // Starting another execution strategy inside it triggers EF Core's
+            // user-initiated transaction guard.
+            return db.Database.CurrentTransaction != null
+                ? await AllocateAsync()
+                : await strategy.ExecuteAsync(AllocateAsync);
         }
 
         public async Task<NextSequenceResultDto?> PeekAsync(string entityName, string? tenantId = null, CancellationToken cancellationToken = default)
