@@ -80,6 +80,14 @@ const textValue = (value: string | null | undefined): string => value ?? '';
 export function WFProcessPage(): React.ReactElement {
   const { t, isRtl } = useAppTranslation();
   const navigate = useNavigate();
+  const categoriesQuery = useQuery({
+    queryKey: ['workflow', 'category-display'],
+    queryFn: ({ signal }) => wfCategoryApi.list(signal),
+  });
+  const categoryOptions = useMemo(
+    () => (categoriesQuery.data ?? []).map((category) => ({ id: category.recId, name: localizedName(category, isRtl) })),
+    [categoriesQuery.data, isRtl]
+  );
   const prioritiesQuery = useQuery({
     queryKey: ['workflow', 'priority-lookup'],
     queryFn: ({ signal }) => wfPriorityApi.list(signal),
@@ -121,6 +129,8 @@ export function WFProcessPage(): React.ReactElement {
               {
                 name: 'categoryId',
                 label: t('wfProcess.fields.category'),
+                type: 'select',
+                formatValue: (value) => categoryOptions.find((option) => String(option.id) === String(value))?.name ?? '',
                 renderOwnLabel: true,
                 render: ({ value, disabled, onChange }) => (
                   <AppLookupGridField<WfCategoryRecord>
@@ -146,6 +156,8 @@ export function WFProcessPage(): React.ReactElement {
               {
                 name: 'priorityId',
                 label: t('wfProcess.fields.priority'),
+                type: 'select',
+                formatValue: (value) => priorityOptions.find((option) => String(option.id) === String(value))?.name ?? '',
                 renderOwnLabel: true,
                 render: ({ value, disabled, onChange }) => (
                   <AppLookupField
@@ -163,6 +175,8 @@ export function WFProcessPage(): React.ReactElement {
               {
                 name: 'processTypeId',
                 label: t('wfProcess.fields.processType'),
+                type: 'select',
+                formatValue: (value) => processTypeOptions.find((option) => String(option.id) === String(value))?.name ?? '',
                 renderOwnLabel: true,
                 render: ({ value, disabled, onChange }) => (
                   <AppLookupField
@@ -207,7 +221,7 @@ export function WFProcessPage(): React.ReactElement {
         ],
       },
     ],
-    [prioritiesQuery.isLoading, priorityOptions, processTypeOptions, processTypesQuery.isLoading, t]
+    [categoryOptions, prioritiesQuery.isLoading, priorityOptions, processTypeOptions, processTypesQuery.isLoading, t]
   );
 
   const config: EnterpriseListDetailsConfig<WfProcessRecord> = {

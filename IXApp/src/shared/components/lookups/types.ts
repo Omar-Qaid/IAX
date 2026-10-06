@@ -27,6 +27,7 @@ export interface GridLookupColumn<T extends object = Record<string, unknown>> {
 
 export interface GridLookupAction {
   label: string;
+  masterRoute?: string;
   icon?: React.ReactNode;
   onClick: () => void;
   disabled?: boolean;
@@ -61,6 +62,8 @@ export interface GridLookupProps<T extends object> {
   labelField?: keyof T;
 
   label?: string;
+  fieldName?: string;
+  masterRoute?: string;
   placeholder?: string;
   error?: string;
   disabled?: boolean;
@@ -83,6 +86,7 @@ export interface LookupGridFieldProps<
 > {
   name: FieldPath<TFieldValues>;
   label?: string;
+  masterRoute?: string;
   control?: Control<TFieldValues>;
   value?: LookupValue<T> | null;
   onChange?: (value: LookupValue<T> | null, row?: T | null) => void;
@@ -166,6 +170,7 @@ export interface LookupFieldProps<TFieldValues extends FieldValues = FieldValues
   fullWidth?: boolean;
   control?: Control<TFieldValues>;
   displayMode?: 'dialog' | 'select';
+  variant?: 'standard' | 'outlined';
 }
 
 export interface LookupDialogProps {

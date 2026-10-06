@@ -5,7 +5,7 @@ import {
   AccordionSummary,
   Box,
   Drawer,
-  MenuItem,
+  IconButton,
   Switch,
   TextField,
   Typography,
@@ -13,10 +13,16 @@ import {
   useTheme,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import type { DetailSectionConfig, DetailValue, DetailValues } from './types';
 import { d365 } from '@shared/constants/enterpriseUiTokens';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { getLogicalDrawerAnchor } from '@shared/hooks/useLogicalDrawerAnchor';
+import { LookupTitleMenu } from '@shared/components/lookups/LookupTitleMenu';
+import { lookupMasterRoute } from '@shared/components/lookups/lookupMasterRoutes';
+import { LookupField } from '@shared/components/lookups/LookupField';
+import { EditableViewField } from '@shared/components/fields/EditableViewField';
+import { FieldViewModeProvider } from '@shared/components/fields/FieldViewModeContext';
 
 export interface ListDetailsLayoutProps {
   detailEndPadding?: number;
@@ -28,6 +34,8 @@ export interface ListDetailsLayoutProps {
   yesLabel: string;
   noLabel: string;
   onChange: (name: string, value: DetailValue) => void;
+  onFieldEdit?: (fieldName: string) => void;
+  canEditField?: (fieldName: string) => boolean;
   listWidth?: number;
   listMinWidth?: number;
   listMaxWidth?: number;
@@ -47,6 +55,8 @@ export function ListDetailsLayout({
   yesLabel,
   noLabel,
   onChange,
+  onFieldEdit,
+  canEditField,
   listWidth = 264,
   listMinWidth = 176,
   listMaxWidth = 520,
@@ -372,16 +382,18 @@ export function ListDetailsLayout({
                             gridColumn: { xs: 'auto', xl: group.column },
                           }}
                         >
-                          {group.title && (
+                          {(group.title || section.groups?.some((candidate) => candidate.title)) && (
                             <Typography
+                              aria-hidden={!group.title}
                               sx={{
                                 mb: 1,
                                 fontSize: d365.labelFontSize,
                                 fontWeight: 700,
                                 textTransform: 'uppercase',
+                                visibility: group.title ? 'visible' : 'hidden',
                               }}
                             >
-                              {group.title}
+                              {group.title || '\u00a0'}
                             </Typography>
                           )}
                           <Box
@@ -411,6 +423,10 @@ export function ListDetailsLayout({
                                 legalEntity && field.name === 'timeZone'
                                   ? 'Time zone'
                                   : field.label;
+                              const editField = !editing && !field.disabled && field.type !== 'display' &&
+                                (!canEditField || canEditField(field.name)) && onFieldEdit
+                                  ? () => onFieldEdit(field.name)
+                                  : undefined;
                               return (
                                 <Box
                                   key={field.name}
@@ -438,7 +454,7 @@ export function ListDetailsLayout({
                                       {sectionTitle}
                                     </Typography>
                                   )}
-                                  {!field.renderOwnLabel && (
+                                  {(!field.renderOwnLabel || (!editing && field.render && field.type === 'select')) && (
                                     <Typography
                                       noWrap
                                       title={fieldLabel}
@@ -450,18 +466,47 @@ export function ListDetailsLayout({
                                         color: d365.text,
                                       }}
                                     >
-                                      {fieldLabel}
+                                      {field.type === 'select' || lookupMasterRoute(field.name, field.masterRoute)
+                                        ? <LookupTitleMenu name={field.name} label={fieldLabel} masterRoute={field.masterRoute} />
+                                        : fieldLabel}
                                     </Typography>
                                   )}
-                                  {field.render ? (
-                                    field.render({
+                                  {!editing && field.render && field.type === 'select' ? (
+                                    <EditableViewField
+                                      value={field.formatValue?.(value) ?? field.options?.find((option) => option.value === String(value))?.label ?? String(value ?? '')}
+                                      lookup
+                                      label={fieldLabel}
+                                      onEdit={editField}
+                                      disabled={field.disabled}
+                                    />
+                                  ) : field.render ? (
+                                    <FieldViewModeProvider viewMode={!editing}>
+                                    <Box sx={{
+                                      position: 'relative',
+                                      '&:hover .field-edit-action, &:focus-within .field-edit-action': { opacity: 1 },
+                                    }}>
+                                    {field.render({
                                       value,
                                       editing,
                                       disabled: !editable,
                                       onChange: (nextValue) => onChange(field.name, nextValue),
                                     })
+                                    }
+                                    {editField && (
+                                      <IconButton
+                                        className="field-edit-action"
+                                        size="small"
+                                        aria-label={`Edit ${fieldLabel}`}
+                                        onClick={editField}
+                                        sx={{ position: 'absolute', insetInlineEnd: 0, bottom: 0, opacity: 0, color: d365.primary, p: 0.25 }}
+                                      >
+                                        <EditOutlinedIcon sx={{ fontSize: 13 }} />
+                                      </IconButton>
+                                    )}
+                                    </Box>
+                                    </FieldViewModeProvider>
                                   ) : field.type === 'boolean' ? (
-                                    <Box
+                                    !editing ? <EditableViewField value={value ? yesLabel : noLabel} label={fieldLabel} onEdit={editField} disabled={field.disabled} /> : <Box
                                       sx={{
                                         display: 'flex',
                                         alignItems: 'center',
@@ -486,19 +531,34 @@ export function ListDetailsLayout({
                                       </Typography>
                                     </Box>
                                   ) : editable && field.type === 'select' ? (
-                                    <TextField
-                                      select
-                                      variant={legalEntity ? 'standard' : 'outlined'}
-                                      value={value ?? ''}
-                                      onChange={(event) => onChange(field.name, event.target.value)}
-                                      sx={legalEntity ? legalEntityFieldSx : editFieldSx}
-                                    >
-                                      {(field.options ?? []).map((option) => (
-                                        <MenuItem key={option.value} value={option.value}>
-                                          {option.label}
-                                        </MenuItem>
-                                      ))}
-                                    </TextField>
+                                    <Box sx={legalEntity ? legalEntityFieldSx : editFieldSx}>
+                                      <LookupField
+                                        name={field.name}
+                                        label={fieldLabel}
+                                        externalLabel
+                                        value={String(value ?? '')}
+                                        variant={legalEntity ? 'standard' : 'outlined'}
+                                        options={(field.options ?? []).map((option) => ({ id: option.value, code: option.value, name: option.label }))}
+                                        queryKey={['list-details-lookup', field.name, field.options]}
+                                        fetchPage={async ({ pageNumber, pageSize, search }) => {
+                                          const matches = (field.options ?? []).filter((option) =>
+                                            `${option.value} ${option.label}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase())
+                                          );
+                                          return {
+                                            data: matches.slice((pageNumber - 1) * pageSize, pageNumber * pageSize)
+                                              .map((option) => ({ id: option.value, code: option.value, name: option.label })),
+                                            pageNumber,
+                                            totalPages: Math.max(1, Math.ceil(matches.length / pageSize)),
+                                            totalRecords: matches.length,
+                                          };
+                                        }}
+                                        sideMode="server"
+                                        searchable
+                                        lazyLoading
+                                        pageSize={50}
+                                        onChange={(selected) => onChange(field.name, String(selected ?? ''))}
+                                      />
+                                    </Box>
                                   ) : editable ? (
                                     <TextField
                                       variant={legalEntity ? 'standard' : 'outlined'}
@@ -531,7 +591,7 @@ export function ListDetailsLayout({
                                       }
                                     />
                                   ) : (
-                                    <ViewField
+                                    <EditableViewField
                                       value={
                                         field.type === 'select'
                                           ? (field.options?.find(
@@ -541,10 +601,9 @@ export function ListDetailsLayout({
                                       }
                                       numeric={field.type === 'number'}
                                       disabled={field.disabled}
-                                      linkStyle={
-                                        field.linkStyle ||
-                                        (legalEntity && field.name === 'languageId')
-                                      }
+                                      lookup={field.type === 'select' || Boolean(lookupMasterRoute(field.name, field.masterRoute)) || Boolean(field.linkStyle) || (legalEntity && field.name === 'languageId')}
+                                      label={fieldLabel}
+                                      onEdit={editField}
                                     />
                                   )}
                                 </Box>
@@ -561,46 +620,6 @@ export function ListDetailsLayout({
           })}
         </Box>
       </Box>
-    </Box>
-  );
-}
-
-function ViewField({
-  value,
-  numeric = false,
-  disabled = false,
-  linkStyle = false,
-}: {
-  value: DetailValue | undefined;
-  numeric?: boolean;
-  disabled?: boolean;
-  linkStyle?: boolean;
-}): React.ReactElement {
-  return (
-    <Box
-      sx={{
-        width: '100%',
-        minHeight: d365.controlHeight,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: numeric ? 'flex-end' : 'flex-start',
-        borderBottom: disabled ? 0 : `1px solid ${d365.darkBorder}`,
-        borderRadius: disabled ? '3px' : 0,
-        bgcolor: disabled ? '#f3f2f1' : 'transparent',
-        px: 0.5,
-        overflow: 'hidden',
-      }}
-    >
-      <Typography
-        noWrap
-        sx={{
-          fontFamily: d365.fontFamily,
-          fontSize: d365.fontSize,
-          color: linkStyle ? d365.primary : 'inherit',
-        }}
-      >
-        {String(value ?? '')}
-      </Typography>
     </Box>
   );
 }

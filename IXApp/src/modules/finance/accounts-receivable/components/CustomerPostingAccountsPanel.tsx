@@ -223,6 +223,7 @@ export function CustomerPostingAccountsPanel({
               : current
           )
         }
+        onEdit={canEdit && !editing && !busy ? () => begin(selected) : undefined}
       />
     );
   };

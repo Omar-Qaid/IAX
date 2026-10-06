@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, MenuItem, TextField, Typography } from '@mui/material';
+import { EditableViewField } from '@shared/components/fields/EditableViewField';
 import { listGridControlSx, listGridLabelSx } from './fieldStyles';
 export function ListGridField({
   label,
@@ -10,6 +11,7 @@ export function ListGridField({
   options,
   underlined = false,
   disabled = false,
+  onEdit,
 }: {
   label: string;
   value: string | number;
@@ -19,28 +21,35 @@ export function ListGridField({
   options?: { value: string; label: string }[];
   underlined?: boolean;
   disabled?: boolean;
+  onEdit?: () => void;
 }): React.ReactElement {
   const id = React.useId();
   const editable = editing && !disabled;
+  const displayValue = options
+    ? (options.find((option) => option.value === String(value))?.label ?? value)
+    : value;
   return (
     <Box sx={{ minWidth: 0, maxWidth: underlined ? 153 : 206 }}>
       <Typography component="label" htmlFor={id} sx={listGridLabelSx}>
         {label}
       </Typography>
-      <TextField
+      {!editable ? <EditableViewField
+        value={displayValue}
+        label={label}
+        numeric={numeric}
+        lookup={Boolean(options)}
+        disabled={disabled}
+        onEdit={onEdit}
+      /> : <TextField
         id={id}
         fullWidth
         size="small"
         variant={underlined && !editable ? 'standard' : 'outlined'}
-        value={
-          options && !editable
-            ? (options.find((option) => option.value === String(value))?.label ?? value)
-            : value
-        }
-        select={Boolean(options && editable)}
-        type={numeric && editable ? 'number' : 'text'}
+        value={value}
+        select={Boolean(options)}
+        type={numeric ? 'number' : 'text'}
         onChange={(event) => onChange?.(event.target.value)}
-        slotProps={{ input: { readOnly: !editable }, htmlInput: { 'aria-label': label } }}
+        slotProps={{ htmlInput: { 'aria-label': label } }}
         sx={listGridControlSx}
       >
         {options?.map((option) => (
@@ -48,7 +57,7 @@ export function ListGridField({
             {option.label}
           </MenuItem>
         ))}
-      </TextField>
+      </TextField>}
     </Box>
   );
 }

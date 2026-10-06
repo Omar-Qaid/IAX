@@ -3,6 +3,12 @@ import { MenuItem, TextField } from '@mui/material';
 import { Controller, type FieldValues } from 'react-hook-form';
 import type { BaseFieldProps } from './types';
 import type { SelectOption } from '@core/types/common';
+import { lookupValueSx } from '../lookups/lookupValueStyle';
+
+const selectPlaceholder = <span className="app-select-placeholder">Select...</span>;
+const selectValue = (selected: unknown, options: SelectOption[]) =>
+  selected === '' ? selectPlaceholder
+    : options.find((option) => String(option.value) === String(selected))?.label ?? String(selected);
 
 export interface AppSelectFieldProps<
   TFieldValues extends FieldValues = FieldValues,
@@ -40,6 +46,8 @@ export function AppSelectField<TFieldValues extends FieldValues = FieldValues>({
         size="small"
         variant={variant}
         value={value ?? ''}
+        sx={{ ...lookupValueSx(value), '& .app-select-placeholder': { color: 'text.disabled' } }}
+        slotProps={{ select: { displayEmpty: true, renderValue: (selected) => selectValue(selected, options) } }}
         onChange={(e) => onChange?.(e.target.value)}
       >
         {options.map((opt) => (
@@ -67,6 +75,8 @@ export function AppSelectField<TFieldValues extends FieldValues = FieldValues>({
           fullWidth={fullWidth}
           size="small"
           value={field.value ?? ''}
+          sx={{ ...lookupValueSx(field.value), '& .app-select-placeholder': { color: 'text.disabled' } }}
+          slotProps={{ select: { displayEmpty: true, renderValue: (selected) => selectValue(selected, options) } }}
         >
           {options.map((opt) => (
             <MenuItem key={opt.value} value={opt.value} disabled={opt.disabled}>

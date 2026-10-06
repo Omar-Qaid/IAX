@@ -27,6 +27,8 @@ function LookupGridFieldInner<T extends object>({
   labelField = 'name' as keyof T,
   labelFieldAr = 'nameAlias' as keyof T,
   label,
+  fieldName,
+  masterRoute,
   placeholder,
   disabled,
   required,
@@ -115,6 +117,8 @@ function LookupGridFieldInner<T extends object>({
         valueField={valueField}
         labelField={displayField}
         label={label}
+        fieldName={fieldName}
+        masterRoute={masterRoute}
         placeholder={placeholder}
         error={errorMessage}
         disabled={disabled || !hasAccess}
@@ -151,6 +155,7 @@ function LookupGridFieldWrapper<T extends object, TFieldValues extends FieldValu
     return (
       <LookupGridFieldInner<T>
         {...rest}
+        fieldName={name}
         value={props.value}
         onChange={(value, row) => props.onChange?.(value, row)}
         errorMessage={errorMessage}
@@ -162,6 +167,7 @@ function LookupGridFieldWrapper<T extends object, TFieldValues extends FieldValu
     return (
       <LookupGridFieldInner<T>
         {...rest}
+        fieldName={name}
         value={props.value}
         onChange={(value, row) => props.onChange?.(value, row)}
         errorMessage={errorMessage}
@@ -176,6 +182,7 @@ function LookupGridFieldWrapper<T extends object, TFieldValues extends FieldValu
       render={({ field, fieldState }) => (
         <LookupGridFieldInner<T>
           {...rest}
+          fieldName={name}
           value={field.value as LookupValue<T> | null | undefined}
           onChange={(val, row) => {
             field.onChange(val);

@@ -19,6 +19,7 @@ import type { ColumnDef } from './types';
 import { getNestedValue } from './DataGridUtils';
 import { AppBooleanField } from '@shared/components/fields/AppBooleanField';
 import { EmptyDataWatermark } from '@shared/components/feedback/EmptyDataWatermark';
+import { hasLookupValue } from '@shared/components/lookups/lookupValueStyle';
 
 interface MobileGridBodyProps<T> {
   rows: T[];
@@ -113,7 +114,7 @@ export function DataGridMobileBodyInternal<T>({
           variant="body2"
           sx={{
             width: '100%',
-            color: 'text.primary',
+            color: hasLookupValue(val) ? 'primary.main' : 'text.primary',
             fontWeight: 500,
             wordBreak: 'break-word',
             textAlign: 'center',

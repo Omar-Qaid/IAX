@@ -8,7 +8,7 @@ import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { customerQuickCreateApi } from '../api/customerQuickCreateApi';
 
 interface CustomerQuickCreateProps { open: boolean; nextAccount: string; onClose: () => void; onSave: (customer: Customer, openAfterSave: boolean) => void | Promise<void> }
-const initialValues = (accountNumber: string): Record<string, FastTabValue> => ({ accountNumber, type: 'organization', name: '', nameAr: '', customerGroupId: '', currencyCode: 'SAR', termsOfPayment: '', paymentMethod: '', deliveryTerms: '', deliveryMode: '', salesTaxGroup: '', customerCategory: '', mainCrNumber: '', branchCrNumber: '', vatNumber: '', notes: '', zatcaType: 'none', sourceCode: '', country: '', street: '' });
+const initialValues = (accountNumber: string): Record<string, FastTabValue> => ({ accountNumber, name: '', nameAr: '', customerGroupId: '', currencyCode: 'SAR', termsOfPayment: '', paymentMethod: '', deliveryMode: '', salesTaxGroup: '', customerCategory: '', vatNumber: '', notes: '', country: '', street: '' });
 
 export function CustomerQuickCreate({ open, nextAccount, onClose, onSave }: CustomerQuickCreateProps): React.ReactElement {
   const { t } = useAppTranslation();
@@ -22,15 +22,15 @@ export function CustomerQuickCreate({ open, nextAccount, onClose, onSave }: Cust
   const lookup = lookups.data;
   const sections = useMemo<FastTabSection[]>(() => [{ id: 'details', title: t('customerQuickCreate.sections.details'), summary: <FastTabSummary values={['--', 'SAR', '--', '--', '--', '--']} />, fields: [
     { name: 'accountNumber', label: t('fields.customerAccount'), disabled: true }, { name: 'salesTaxGroup', label: t('fields.salesTaxGroup'), type: 'select', options: lookup?.salesTaxGroups ?? [] },
-    { name: 'type', label: t('customerQuickCreate.fields.type'), type: 'select', options: [option('organization', 'customerQuickCreate.options.organization'), option('person', 'customerQuickCreate.options.person')] }, { name: 'customerCategory', label: t('customerQuickCreate.fields.category'), type: 'select', required: true, options: [option('retail', 'customerQuickCreate.options.retail'), option('wholesale', 'customerQuickCreate.options.wholesale')] },
-    { name: 'name', label: t('fields.customerName'), required: true }, { name: 'mainCrNumber', label: t('customerQuickCreate.fields.mainCrNumber'), width: 100 },
-    { name: 'nameAr', label: t('fields.arabicName') }, { name: 'branchCrNumber', label: t('customerQuickCreate.fields.branchCrNumber'), width: 100 },
+    { name: 'customerCategory', label: t('customerQuickCreate.fields.category'), type: 'select', required: true, options: [option('retail', 'customerQuickCreate.options.retail'), option('wholesale', 'customerQuickCreate.options.wholesale')] },
+    { name: 'name', label: t('fields.customerName'), required: true },
+    { name: 'nameAr', label: t('fields.arabicName') },
     { name: 'customerGroupId', label: t('fields.customerGroup'), type: 'select', required: true, options: lookup?.customerGroups ?? [] }, { name: 'vatNumber', label: t('customerQuickCreate.fields.vatNumber') },
     { name: 'currencyCode', label: t('fields.currency'), type: 'select', width: 100, options: lookup?.currencies ?? [{ value: 'SAR', label: 'SAR' }] }, { name: 'notes', label: t('customerQuickCreate.fields.notes'), type: 'multiline', rows: 4 },
-    { name: 'termsOfPayment', label: t('fields.termsOfPayment'), type: 'select', options: lookup?.paymentTerms ?? [] }, { name: 'zatcaType', label: t('customerQuickCreate.fields.zatcaType'), type: 'select', options: [option('none', 'common.none')] },
-    { name: 'paymentMethod', label: t('customerQuickCreate.fields.paymentMethod'), type: 'select', options: lookup?.paymentMethods ?? [] }, { name: 'sourceCode', label: t('customerQuickCreate.fields.sourceCode') },
-    { name: 'deliveryTerms', label: t('customerQuickCreate.fields.deliveryTerms'), type: 'select', options: lookup?.deliveryTerms ?? [] }, { name: 'deliveryMode', label: t('customerQuickCreate.fields.deliveryMode'), type: 'select', options: lookup?.deliveryModes ?? [] },
-  ] }, { id: 'address', title: t('customerQuickCreate.sections.address'), fields: [{ name: 'country', label: t('customerQuickCreate.fields.country'), type: 'select', required: true, options: [option('SA', 'customerQuickCreate.options.saudiArabia')] }, { name: 'street', label: t('customerQuickCreate.fields.street') }] }], [lookup, option, t]);
+    { name: 'termsOfPayment', label: t('fields.termsOfPayment'), type: 'select', options: lookup?.paymentTerms ?? [] },
+    { name: 'paymentMethod', label: t('customerQuickCreate.fields.paymentMethod'), type: 'select', options: lookup?.paymentMethods ?? [] },
+    { name: 'deliveryMode', label: t('customerQuickCreate.fields.deliveryMode'), type: 'select', options: lookup?.deliveryModes ?? [] },
+  ] }, { id: 'address', title: t('customerQuickCreate.sections.address'), fields: [{ name: 'country', label: t('customerQuickCreate.fields.country'), type: 'select', required: true, options: lookup?.countryRegions ?? [] }, { name: 'street', label: t('customerQuickCreate.fields.street') }] }], [lookup, option, t]);
   return <FastTabsDrawer
     open={open}
     resetKey={nextAccount}

@@ -8,6 +8,10 @@ import type { LookupFieldProps, LookupOption } from './types';
 import { useLookupGridField } from '@shared/hooks/useLookupGridField';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import type { FieldValues } from 'react-hook-form';
+import { LookupTitleMenu } from './LookupTitleMenu';
+import { lookupValueSx } from './lookupValueStyle';
+import { AppDisplayField } from '@shared/components/fields/AppDisplayField';
+import { useFieldViewMode } from '@shared/components/fields/FieldViewModeContext';
 
 const standardLookupSx = {
   minWidth: 0,
@@ -30,6 +34,19 @@ const standardLookupSx = {
     insetInlineEnd: 0,
     top: '50%',
     transform: 'translateY(-50%)',
+  },
+} as const;
+
+const compactOutlinedLookupSx = {
+  '& .MuiAutocomplete-inputRoot.MuiOutlinedInput-root': {
+    minHeight: 28,
+    height: 28,
+    paddingBlock: '0 !important',
+  },
+  '& .MuiAutocomplete-inputRoot.MuiOutlinedInput-root .MuiAutocomplete-input': {
+    boxSizing: 'border-box',
+    height: 28,
+    paddingBlock: '4px !important',
   },
 } as const;
 
@@ -106,6 +123,9 @@ function ServerLookupDialog({
 
 function SelectLookup({
   label,
+  name,
+  masterRoute,
+  variant = 'outlined',
   externalLabel = false,
   value,
   onChange,
@@ -128,6 +148,7 @@ function SelectLookup({
   showAllNamesInOptions = false,
 }: LookupFieldProps) {
   const { isRtl } = useAppTranslation();
+  const viewMode = useFieldViewMode();
   const usesServerDataSource = sideMode === 'server' && Boolean(fetchPage || onFetchOptions);
   const resolvedFetchPage = useMemo(
     () =>
@@ -196,9 +217,11 @@ function SelectLookup({
     if (list.scrollHeight - list.scrollTop - list.clientHeight <= 80) void lookup.fetchNextPage();
   };
 
+  if (viewMode) return <AppDisplayField label={externalLabel ? '' : label} value={selected ? localizedName(selected, isRtl) : scalarValue == null || scalarValue === 0 ? '' : String(scalarValue)} lookup />;
+
   return (
     <Autocomplete<LookupOption, false, boolean, false>
-      sx={standardLookupSx}
+      sx={{ ...standardLookupSx, ...(variant === 'outlined' ? compactOutlinedLookupSx : {}), ...lookupValueSx(scalarValue) }}
       open={open}
       onOpen={() => setOpen(true)}
       onClose={() => {
@@ -244,8 +267,8 @@ function SelectLookup({
       renderInput={(params) => (
         <TextField
           {...params}
-          variant="standard"
-          label={externalLabel ? undefined : label}
+          variant={variant}
+          label={externalLabel ? undefined : <LookupTitleMenu name={name} label={label} masterRoute={masterRoute} />}
           required={required}
           error={error}
           helperText={helperText}
@@ -266,6 +289,8 @@ function SelectLookup({
 export function LookupField<TFieldValues extends FieldValues = FieldValues>({
   name,
   label,
+  masterRoute,
+  variant = 'outlined',
   externalLabel = false,
   value,
   onChange,
@@ -290,6 +315,7 @@ export function LookupField<TFieldValues extends FieldValues = FieldValues>({
   showAllNamesInOptions = false,
 }: LookupFieldProps<TFieldValues>): React.ReactElement {
   const { t, isRtl } = useAppTranslation();
+  const viewMode = useFieldViewMode();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedOptionCache, setSelectedOptionCache] = useState<LookupOption | undefined>();
   const usesServerDataSource = sideMode === 'server' && Boolean(fetchPage || onFetchOptions);
@@ -310,11 +336,15 @@ export function LookupField<TFieldValues extends FieldValues = FieldValues>({
     onChange?.(option.id, option);
   };
 
+  if (viewMode && displayMode !== 'select') return <AppDisplayField label={externalLabel ? '' : label} value={displayValue || (value == null || value === 0 ? '' : String(value))} lookup />;
+
   if (displayMode === 'select') {
     return (
       <SelectLookup
         name={name}
         label={label}
+        masterRoute={masterRoute}
+        variant={variant}
         externalLabel={externalLabel}
         value={value}
         onChange={onChange}
@@ -342,8 +372,8 @@ export function LookupField<TFieldValues extends FieldValues = FieldValues>({
   return (
     <>
       <TextField
-        variant="standard"
-        label={label}
+        variant={variant}
+        label={externalLabel ? undefined : <LookupTitleMenu name={name} label={label} masterRoute={masterRoute} />}
         value={displayValue}
         required={required}
         disabled={disabled}
@@ -378,6 +408,7 @@ export function LookupField<TFieldValues extends FieldValues = FieldValues>({
         }}
         sx={{
           ...standardLookupSx,
+          ...lookupValueSx(value),
           cursor: disabled || readOnly ? 'default' : 'pointer',
         }}
       />

@@ -14,6 +14,7 @@ export interface DetailFieldConfig {
   label: string;
   type?: 'text' | 'number' | 'date' | 'boolean' | 'select' | 'display';
   options?: DetailFieldOption[];
+  masterRoute?: string;
   disabled?: boolean;
   width?: number | string;
   column?: number | string;
@@ -22,6 +23,8 @@ export interface DetailFieldConfig {
   rows?: number;
   sectionTitle?: string;
   linkStyle?: boolean;
+  /** Text shown by a custom lookup while the form is in view mode. */
+  formatValue?: (value: DetailValue | undefined) => string;
   render?: (context: {
     value: DetailValue | undefined;
     editing: boolean;
@@ -95,6 +98,9 @@ export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
   interactionLocked?: boolean;
   /** Shows records as a selectable reference list without record-level CRUD actions. */
   readOnly?: boolean;
+  /** Uses a page-specific editor when a field pencil is clicked. */
+  onFieldEdit?: (fieldName: string) => void;
+  canEditField?: (fieldName: string) => boolean;
   initialSelectedId?: string;
   detailHeader?: ReactNode;
   onSearch?: () => void;
@@ -170,6 +176,8 @@ export interface EnterpriseListDetailsConfig<T extends ListDetailRecord> {
     fullscreenCanvas?: boolean;
     compactRecordHeader?: boolean;
     listInitiallyVisible?: boolean;
+    /** Matches the Customer form's external-label edit controls for custom section content. */
+    listVisibilityStorageKey?: string;
     recordListBatchSize?: number;
   };
   permissions?: { view?: string; create?: string; edit?: string; delete?: string };

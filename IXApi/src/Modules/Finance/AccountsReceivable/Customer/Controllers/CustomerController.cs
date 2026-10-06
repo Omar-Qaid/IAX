@@ -50,6 +50,17 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
             _partyLocations = partyLocations;
         }
 
+        [HttpGet("country-regions")]
+        public async Task<IActionResult> GetCountryRegions(CancellationToken cancellationToken = default)
+        {
+            var countries = await _unitOfWork.Context.Set<LogisticsAddressCountryRegion>()
+                .AsNoTracking()
+                .OrderBy(country => country.CountryRegionId)
+                .Select(country => new { country.CountryRegionId, country.IsoCode })
+                .ToListAsync(cancellationToken);
+            return Ok(APIResponse<object>.Ok(countries));
+        }
+
         [HttpGet("list")]
         public async Task<ActionResult<APIResponse<IEnumerable<CustomerListDto>>>> GetCustomerList(
             CancellationToken cancellationToken = default)
@@ -149,6 +160,16 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
                         VatNum = input.VatNum?.Trim() ?? string.Empty,
                         CountryRegionId = input.CountryRegionId?.Trim() ?? string.Empty,
                         Memo = input.Memo?.Trim(),
+                        InvoiceAccount = input.InvoiceAccount?.Trim() ?? string.Empty,
+                        InventSiteId = input.InventSiteId?.Trim() ?? string.Empty,
+                        InventLocationId = input.InventLocationId?.Trim() ?? string.Empty,
+                        SalesPoolId = input.SalesPoolId?.Trim() ?? string.Empty,
+                        CashDiscBaseDays = input.CashDiscBaseDays ?? 0,
+                        UseCashDisc = input.UseCashDisc ?? 0,
+                        InclTax = input.InclTax ?? 0,
+                        BlockFloorLimitUseInChannel = input.BlockFloorLimitUseInChannel ?? 0,
+                        PrepaymentValue = input.PrepaymentValue ?? 0,
+                        PrePayType = input.PrePayType ?? 0,
                         DataAreaId = _currentUser.GetDataAreaId() ?? "dat"
                     }, cancellationToken);
 
@@ -206,6 +227,16 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
             customer.VatNum = input.VatNum?.Trim() ?? string.Empty;
             customer.CountryRegionId = input.CountryRegionId?.Trim() ?? string.Empty;
             customer.Memo = input.Memo?.Trim();
+            if (input.InvoiceAccount != null) customer.InvoiceAccount = input.InvoiceAccount.Trim();
+            if (input.InventSiteId != null) customer.InventSiteId = input.InventSiteId.Trim();
+            if (input.InventLocationId != null) customer.InventLocationId = input.InventLocationId.Trim();
+            if (input.SalesPoolId != null) customer.SalesPoolId = input.SalesPoolId.Trim();
+            if (input.CashDiscBaseDays.HasValue) customer.CashDiscBaseDays = input.CashDiscBaseDays.Value;
+            if (input.UseCashDisc.HasValue) customer.UseCashDisc = input.UseCashDisc.Value;
+            if (input.InclTax.HasValue) customer.InclTax = input.InclTax.Value;
+            if (input.BlockFloorLimitUseInChannel.HasValue) customer.BlockFloorLimitUseInChannel = input.BlockFloorLimitUseInChannel.Value;
+            if (input.PrepaymentValue.HasValue) customer.PrepaymentValue = input.PrepaymentValue.Value;
+            if (input.PrePayType.HasValue) customer.PrePayType = input.PrePayType.Value;
 
             await _service.UpdateAsync(customer, cancellationToken);
             return Ok(APIResponse<CustomerListDto>.Ok(MapCustomer(customer, party), "Updated successfully"));
@@ -231,9 +262,17 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
             InvoiceAccount = customer.InvoiceAccount,
             InventSiteId = customer.InventSiteId,
             InventLocationId = customer.InventLocationId,
+            SalesPoolId = customer.SalesPoolId,
+            CashDiscBaseDays = customer.CashDiscBaseDays,
+            UseCashDisc = customer.UseCashDisc,
+            InclTax = customer.InclTax,
+            BlockFloorLimitUseInChannel = customer.BlockFloorLimitUseInChannel,
+            PrepaymentValue = customer.PrepaymentValue,
+            PrePayType = customer.PrePayType,
             Status = customer.IsActive ? "active" : "inactive",
             CreatedAt = customer.CreatedAt ?? DateTime.UtcNow
         };
+
     }
 }
 

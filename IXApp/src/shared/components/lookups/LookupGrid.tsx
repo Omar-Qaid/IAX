@@ -21,6 +21,9 @@ import { localizedName } from '@shared/utilities/localizedName';
 
 import type { GridLookupProps, GridLookupColumn, LookupValue } from './types';
 import { useLookupGridField } from '@shared/hooks/useLookupGridField';
+import { lookupValueSx } from './lookupValueStyle';
+import { AppDisplayField } from '@shared/components/fields/AppDisplayField';
+import { useFieldViewMode } from '@shared/components/fields/FieldViewModeContext';
 
 const DEFAULT_PAGE_SIZE = 50;
 const DEFAULT_ROW_HEIGHT = 36;
@@ -53,6 +56,7 @@ export function LookupGrid<T extends object>({
   showClearButton = true,
   actions,
 }: GridLookupProps<T>) {
+  const viewMode = useFieldViewMode();
   const { t, i18n } = useTranslation();
   const anchorRef = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -386,6 +390,8 @@ export function LookupGrid<T extends object>({
     if (open) recalcPosition();
   }, [open, rows.length, recalcPosition]);
 
+  if (viewMode) return <AppDisplayField label={label ? t(label) : ''} value={resolvedDisplay} lookup />;
+
   return (
     <Box sx={{ width: fullWidth ? '100%' : undefined }}>
       <TextField
@@ -397,7 +403,7 @@ export function LookupGrid<T extends object>({
         error={!!error}
         helperText={error ? t(error) : undefined}
         value={resolvedDisplay}
-        placeholder={placeholder ? t(placeholder) : undefined}
+        placeholder={placeholder ? t(placeholder) : 'Select...'}
         onClick={handleOpen}
         onKeyDown={handleKeyDown}
         slotProps={{
@@ -435,7 +441,7 @@ export function LookupGrid<T extends object>({
             ),
           },
         }}
-        sx={{ bgcolor: 'background.paper', cursor: disabled ? 'not-allowed' : 'pointer' }}
+        sx={{ bgcolor: 'background.paper', cursor: disabled ? 'not-allowed' : 'pointer', ...lookupValueSx(value) }}
       />
 
       {open && (

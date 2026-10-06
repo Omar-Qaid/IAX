@@ -19,6 +19,7 @@ import { AppBooleanField } from '@shared/components/fields/AppBooleanField';
 import { DataGridEmptyState } from './DataGridEmptyState';
 import { DataGridLoadingState } from './DataGridLoadingState';
 import { APP_FONT_FAMILY } from '@shared/constants/fontFamilies';
+import { hasLookupValue } from '@shared/components/lookups/lookupValueStyle';
 
 interface GridBodyProps<T> {
   rows: T[];
@@ -384,7 +385,7 @@ export const GridBodyInternal = React.forwardRef(function GridBodyInternal<T>(
               textAlign: col.align ?? 'start',
               fontFamily: APP_FONT_FAMILY,
               fontSize: 15,
-              color: '#323130',
+              color: hasLookupValue(val) ? 'primary.main' : '#323130',
             }}
           >
             {label ?? (val != null ? String(val) : '')}

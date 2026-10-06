@@ -17,24 +17,24 @@ const renderWithQueryClient = (element: React.ReactElement) => {
 };
 
 describe('LookupField', () => {
-  it('uses the shared standard field layout and keeps an empty lookup label aligned', () => {
+  it('uses the shared outlined field layout and keeps an empty lookup label aligned', () => {
     renderWithQueryClient(
       <LookupField name="taxGroup" label="Sales tax group" options={sampleOptions} />
     );
 
     const input = screen.getByRole('combobox', { name: 'Sales tax group' });
-    expect(input.closest('.MuiInputBase-root')).toHaveClass('MuiInput-underline');
-    expect(screen.getByText('Sales tax group')).toHaveAttribute('data-shrink', 'true');
+    expect(input.closest('.MuiInputBase-root')).toHaveClass('MuiOutlinedInput-root');
+    expect(input.closest('.MuiTextField-root')?.querySelector('label')).toHaveAttribute('data-shrink', 'true');
   });
 
-  it('normalizes autocomplete spacing to the shared standard field baseline', () => {
+  it('normalizes autocomplete spacing to the shared outlined field baseline', () => {
     const { container } = renderWithQueryClient(
       <LookupField name="taxGroup" label="Sales tax group" options={sampleOptions} />
     );
 
     const root = container.querySelector('.MuiAutocomplete-root');
     expect(root).toHaveStyle({ minWidth: '0' });
-    expect(root?.querySelector('.MuiInput-root')).toBeDefined();
+    expect(root?.querySelector('.MuiOutlinedInput-root')).toBeDefined();
   });
 
   it('shows and searches Arabic aliases while returning the original bilingual record', async () => {

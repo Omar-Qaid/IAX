@@ -24,12 +24,10 @@ export function CustomerGroupListPage(): React.ReactElement {
     { field: 'custGroupId', headerName: 'fields.customerGroup', width: 145, pinned: 'left', editable: true, renderCell: ({ row }) => <Link component="button" underline="none" sx={{ color: 'primary.main', fontSize: '0.75rem' }}>{row.custGroupId}</Link> },
     { field: 'name', headerName: 'fields.description', width: 205, editable: true },
     { field: 'paymTermId', headerName: 'fields.termsOfPayment', width: 205, editable: true, type: 'singleSelect', valueOptions: paymentOptions },
-    { field: 'invoiceDueInterval', headerName: 'fields.timeBetweenInvoiceDue', width: 210, sortable: false, filterable: false, valueGetter: () => '—' },
     { field: 'taxGroupId', headerName: 'fields.salesTaxGroup', width: 150, editable: true, type: 'singleSelect', valueOptions: taxOptions },
     { field: 'priceIncludeSalesTax', headerName: 'fields.pricesIncludeTax', width: 130, type: 'boolean', valueGetter: ({ row }) => row.priceIncludeSalesTax === 1 },
-    { field: 'defaultWriteOffReason', headerName: 'fields.defaultWriteOffReason', width: 190, sortable: false, filterable: false, valueGetter: () => '—' },
-    { field: 'accountingCurrencyExchange', headerName: 'fields.accountingCurrencyExchange', width: 190, sortable: false, filterable: false, valueGetter: () => '—' },
-    { field: 'reportingCurrencyExchange', headerName: 'fields.reportingCurrencyExchange', width: 190, sortable: false, filterable: false, valueGetter: () => '—' },
+    { field: 'accountingCurrencyExchangeRateType', headerName: 'fields.accountingCurrencyExchange', width: 190 },
+    { field: 'reportingCurrencyExchangeRateType', headerName: 'fields.reportingCurrencyExchange', width: 190 },
   ], [paymentOptions, taxOptions]);
 
   const config: EnterpriseListConfig<CustomerGroupRecord> = {

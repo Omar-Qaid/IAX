@@ -8,6 +8,14 @@ import { PERMISSIONS } from '@core/permissions/permissions';
 import { customerQuickCreateApi, type CustomerRecord } from '../api/customerQuickCreateApi';
 import { useParams } from 'react-router-dom';
 import { PartyPostalAddressPanel, PartyElectronicAddressPanel } from '@shared/components/logistics/PartyLogisticsPanels';
+import { useQuery } from '@tanstack/react-query';
+import type { CustomerLookupOption } from '../api/customerQuickCreateApi';
+import { salesOrderLinesApi } from '../api/salesOrderLinesApi';
+
+const includingSelected = (options: CustomerLookupOption[], selected: string): CustomerLookupOption[] =>
+  selected && !options.some((option) => option.value === selected)
+    ? [{ value: selected, label: selected }, ...options]
+    : options;
 
 const emptyCustomer = (): CustomerRecord => ({
   id: `new-${crypto.randomUUID()}`,
@@ -29,6 +37,8 @@ const emptyCustomer = (): CustomerRecord => ({
   inventSiteId: '',
   inventLocationId: '',
   memo: '',
+  salesPoolId: '', cashDiscBaseDays: 0, useCashDisc: 0, inclTax: 0,
+  blockFloorLimitUseInChannel: 0, prepaymentValue: 0, prePayType: 0,
   status: 'active',
   createdAt: new Date().toISOString(),
 });
@@ -46,11 +56,39 @@ const createCustomer = (record: CustomerRecord) => customerQuickCreateApi.create
   vatNum: record.vatNum,
   countryRegionId: record.countryRegionId,
   memo: record.memo,
+  invoiceAccount: record.invoiceAccount,
+  inventSiteId: record.inventSiteId,
+  inventLocationId: record.inventLocationId,
+  salesPoolId: record.salesPoolId,
+  cashDiscBaseDays: record.cashDiscBaseDays,
+  useCashDisc: record.useCashDisc,
+  inclTax: record.inclTax,
+  blockFloorLimitUseInChannel: record.blockFloorLimitUseInChannel,
+  prepaymentValue: record.prepaymentValue,
+  prePayType: record.prePayType,
 });
 
 export function CustTablePage(): React.ReactElement {
   const { t, isRtl } = useAppTranslation();
   const { customerId } = useParams<{ customerId: string }>();
+  const lookupsQuery = useQuery({
+    queryKey: ['accounts-receivable', 'customer-quick-create', 'lookups'],
+    queryFn: ({ signal }) => customerQuickCreateApi.lookups(signal),
+    staleTime: 5 * 60 * 1000,
+  });
+  const lookups = lookupsQuery.data;
+  const customersQuery = useQuery({
+    queryKey: ['accounts-receivable', 'customers'],
+    queryFn: ({ signal }) => customerQuickCreateApi.list(signal),
+    staleTime: 5 * 60 * 1000,
+  });
+  const dimensionsQuery = useQuery({
+    queryKey: ['sales-order-inventory-dimensions'],
+    queryFn: ({ signal }) => salesOrderLinesApi.inventoryDimensions(signal),
+    staleTime: 5 * 60 * 1000,
+  });
+  const choices = (options: CustomerLookupOption[] | undefined, selected: string) =>
+    includingSelected(options ?? [], selected);
   const sections = ({ record, editing }: { record: CustomerRecord; editing: boolean }): DetailSectionConfig[] => [
     {
       id: 'general',
@@ -58,27 +96,60 @@ export function CustTablePage(): React.ReactElement {
       gridTemplateColumns: 'repeat(5, minmax(150px, 1fr))',
       groups: [
         { id: 'customer', title: t('customerCommands.customer', 'Customer'), fields: [
-          { name: 'accountNumber', label: t('fields.account'), type: 'display', linkStyle: true },
-          { name: 'custCategory', label: t('customerQuickCreate.fields.category') },
-          { name: 'name', label: t('fields.customerName'), linkStyle: true },
+          { name: 'accountNumber', label: t('fields.account'), type: 'display' },
+          { name: 'custCategory', label: t('customerQuickCreate.fields.category'), type: 'select', options: choices([
+            { value: 'retail', label: t('customerQuickCreate.options.retail') },
+            { value: 'wholesale', label: t('customerQuickCreate.options.wholesale') },
+          ], record.custCategory) },
+          { name: 'name', label: t('fields.customerName') },
           { name: 'nameAr', label: t('fields.arabicName') },
         ] },
         { id: 'classification', fields: [
-          { name: 'customerGroupId', label: t('fields.customerGroup'), linkStyle: true },
-          { name: 'currencyCode', label: t('fields.currency') },
+          { name: 'customerGroupId', label: t('fields.customerGroup'), type: 'select', options: choices(lookups?.customerGroups, record.customerGroupId) },
+          { name: 'currencyCode', label: t('fields.currency'), type: 'select', options: choices(lookups?.currencies, record.currencyCode) },
         ] },
-        { id: 'taxPayment', title: t('fields.salesTaxGroup'), fields: [
-          { name: 'vatNum', label: t('customerQuickCreate.fields.vatNumber'), linkStyle: true },
-          { name: 'taxGroupId', label: t('fields.salesTaxGroup'), linkStyle: true },
-          { name: 'paymTermId', label: t('fields.termsOfPayment'), linkStyle: true },
-          { name: 'paymModeId', label: t('customerQuickCreate.fields.paymentMethod'), linkStyle: true },
+        { id: 'taxPayment', title: 'Sales tax', fields: [
+          { name: 'vatNum', label: t('customerQuickCreate.fields.vatNumber') },
+          { name: 'taxGroupId', label: t('fields.salesTaxGroup'), type: 'select', options: choices(lookups?.salesTaxGroups, record.taxGroupId) },
+          { name: 'paymTermId', label: t('fields.termsOfPayment'), type: 'select', options: choices(lookups?.paymentTerms, record.paymTermId) },
+          { name: 'paymModeId', label: t('customerQuickCreate.fields.paymentMethod'), type: 'select', options: choices(lookups?.paymentMethods, record.paymModeId) },
         ] },
         { id: 'organization', title: t('customerQuickCreate.options.organization'), fields: [
-          { name: 'countryRegionId', label: t('customerQuickCreate.fields.country') },
-          { name: 'dlvModeId', label: t('customerQuickCreate.fields.deliveryMode') },
+          { name: 'countryRegionId', label: t('customerQuickCreate.fields.country'), type: 'select', options: choices(lookups?.countryRegions, record.countryRegionId) },
+          { name: 'dlvModeId', label: t('customerQuickCreate.fields.deliveryMode'), type: 'select', options: choices(lookups?.deliveryModes, record.dlvModeId) },
         ] },
         { id: 'other', title: t('common.information'), fields: [
           { name: 'memo', label: t('customerQuickCreate.fields.notes'), multiline: true, rows: 3 },
+        ] },
+      ],
+    },
+    {
+      id: 'sales-order-defaults', title: 'Sales order defaults',
+      gridTemplateColumns: 'repeat(5, minmax(150px, 1fr))',
+      groups: [
+        { id: 'salesOrder', title: 'Sales order', fields: [
+          { name: 'inventSiteId', label: 'Site', type: 'select', options: choices(dimensionsQuery.data?.sites.map((site) => ({ value: site.id, label: `${site.code} - ${site.name}` })), record.inventSiteId) },
+          { name: 'inventLocationId', label: 'Warehouse', type: 'select', options: choices(dimensionsQuery.data?.warehouses.map((warehouse) => ({ value: warehouse.id, label: `${warehouse.code} - ${warehouse.name}` })), record.inventLocationId) },
+        ] },
+        { id: 'salesOrderPool', fields: [
+          { name: 'salesPoolId', label: 'Sales order pool', type: 'select', options: choices(lookups?.salesPools, record.salesPoolId ?? '') },
+          { name: 'invoiceAccount', label: 'Invoice account', type: 'select', options: choices(customersQuery.data?.map((customer) => ({ value: customer.accountNumber, label: `${customer.accountNumber} - ${customer.name}` })), record.invoiceAccount) },
+        ] },
+      ],
+    },
+    {
+      id: 'payment-defaults', title: 'Payment defaults',
+      gridTemplateColumns: 'repeat(5, minmax(150px, 1fr))',
+      groups: [
+        { id: 'payment', title: 'Payment', fields: [
+          { name: 'paymTermId', label: 'Terms of payment', type: 'select', options: choices(lookups?.paymentTerms, record.paymTermId) },
+          { name: 'paymModeId', label: 'Method of payment', type: 'select', options: choices(lookups?.paymentMethods, record.paymModeId) },
+        ] },
+        { id: 'paymentTerms', fields: [
+          { name: 'blockFloorLimitUseInChannel', label: 'Block floor limit use in Channel', type: 'boolean' },
+        ] },
+        { id: 'prepayment', title: 'Prepayment', fields: [
+          { name: 'prepaymentValue', label: 'Prepayment value', type: 'number' },
         ] },
       ],
     },
@@ -125,6 +196,11 @@ export function CustTablePage(): React.ReactElement {
       custCategory: record.custCategory, paymTermId: record.paymTermId, paymModeId: record.paymModeId,
       dlvModeId: record.dlvModeId, taxGroupId: record.taxGroupId, vatNum: record.vatNum,
       countryRegionId: record.countryRegionId, memo: record.memo ?? '', status: record.status,
+      invoiceAccount: record.invoiceAccount, inventSiteId: record.inventSiteId,
+      inventLocationId: record.inventLocationId, salesPoolId: record.salesPoolId ?? '',
+      cashDiscBaseDays: record.cashDiscBaseDays ?? 0,
+      blockFloorLimitUseInChannel: Boolean(record.blockFloorLimitUseInChannel),
+      prepaymentValue: record.prepaymentValue ?? 0,
     }),
     setValues: (record, values) => ({
       ...record,
@@ -133,6 +209,13 @@ export function CustTablePage(): React.ReactElement {
       paymTermId: String(values.paymTermId), paymModeId: String(values.paymModeId),
       dlvModeId: String(values.dlvModeId), taxGroupId: String(values.taxGroupId), vatNum: String(values.vatNum),
       countryRegionId: String(values.countryRegionId), memo: String(values.memo),
+      invoiceAccount: String(values.invoiceAccount ?? ''),
+      inventSiteId: String(values.inventSiteId ?? ''),
+      inventLocationId: String(values.inventLocationId ?? ''),
+      salesPoolId: String(values.salesPoolId ?? ''),
+      cashDiscBaseDays: Number(values.cashDiscBaseDays ?? 0),
+      blockFloorLimitUseInChannel: Number(Boolean(values.blockFloorLimitUseInChannel)),
+      prepaymentValue: Number(values.prepaymentValue ?? 0),
     }),
     headerFields: [{
       id: 'summary', label: t('pages.customers.title'), type: 'display',

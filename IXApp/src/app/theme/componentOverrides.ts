@@ -1,8 +1,14 @@
 import type { Components, Theme } from '@mui/material/styles';
 import { uiDensity } from '@shared/constants/uiDensity';
 import { APP_FONT_FAMILY_CSS_VARIABLE } from '@shared/constants/fontFamilies';
+import { d365 } from '@shared/constants/enterpriseUiTokens';
 
 export const getComponentOverrides = (theme: Theme): Components => ({
+  MuiTypography: {
+    styleOverrides: {
+      overline: { fontWeight: 700 },
+    },
+  },
   MuiButton: {
     styleOverrides: {
       root: {
@@ -63,6 +69,71 @@ export const getComponentOverrides = (theme: Theme): Components => ({
       size: 'small',
       variant: 'outlined',
     },
+    styleOverrides: {
+      root: {
+        minWidth: 0,
+        '& > .MuiInputLabel-root': {
+          position: 'static',
+          transform: 'none',
+          maxWidth: '100%',
+          marginBottom: 6,
+          padding: 0,
+          fontFamily: theme.typography.fontFamily,
+          fontSize: d365.labelFontSize,
+          lineHeight: 1.2,
+          color: theme.palette.text.primary,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        },
+        '& .MuiOutlinedInput-root:not(.MuiInputBase-multiline)': {
+          height: d365.controlHeight,
+          minHeight: d365.controlHeight,
+          borderRadius: d365.radius,
+          fontSize: d365.fontSize,
+        },
+        '& .MuiOutlinedInput-root.MuiInputBase-multiline': {
+          borderRadius: d365.radius,
+          fontSize: d365.fontSize,
+          padding: 0,
+        },
+        '& .MuiOutlinedInput-input': { padding: '4px 7px', boxSizing: 'border-box' },
+        '& .MuiOutlinedInput-root textarea': { padding: '5px 7px' },
+        '& .MuiOutlinedInput-notchedOutline legend': { display: 'none' },
+        '& .MuiInputBase-input::placeholder': { color: theme.palette.text.secondary, opacity: 0.6 },
+      },
+    },
+  },
+  MuiFormControl: {
+    styleOverrides: {
+      root: {
+        minWidth: 0,
+        '& > .MuiInputLabel-root': {
+          position: 'static',
+          transform: 'none',
+          maxWidth: '100%',
+          marginBottom: 6,
+          padding: 0,
+          fontFamily: theme.typography.fontFamily,
+          fontSize: d365.labelFontSize,
+          lineHeight: 1.2,
+          color: theme.palette.text.primary,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        },
+      },
+    },
+  },
+  MuiAutocomplete: {
+    styleOverrides: {
+      root: {
+        minWidth: 0,
+        '& .MuiOutlinedInput-root': { minHeight: d365.controlHeight, paddingBlock: 0 },
+        '& .MuiOutlinedInput-root .MuiAutocomplete-input': { height: d365.controlHeight, boxSizing: 'border-box', padding: '4px 7px' },
+        '& .MuiAutocomplete-endAdornment': { insetInlineEnd: 0, top: '50%', transform: 'translateY(-50%)' },
+      },
+    },
   },
   MuiInputBase: {
     styleOverrides: {
@@ -88,6 +159,10 @@ export const getComponentOverrides = (theme: Theme): Components => ({
   MuiSelect: {
     defaultProps: {
       size: 'small',
+    },
+    styleOverrides: {
+      select: { minHeight: 0, paddingInlineEnd: 28 },
+      icon: { color: theme.palette.text.secondary },
     },
   },
   MuiAppBar: {

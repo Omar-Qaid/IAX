@@ -19,6 +19,16 @@ public sealed class CustomerQuickCreateDto
     public string? CountryRegionId { get; set; }
     public string? Street { get; set; }
     public string? Memo { get; set; }
+    public string? InvoiceAccount { get; set; }
+    public string? InventSiteId { get; set; }
+    public string? InventLocationId { get; set; }
+    public string? SalesPoolId { get; set; }
+    public int? CashDiscBaseDays { get; set; }
+    public int? UseCashDisc { get; set; }
+    public int? InclTax { get; set; }
+    public int? BlockFloorLimitUseInChannel { get; set; }
+    public decimal? PrepaymentValue { get; set; }
+    public int? PrePayType { get; set; }
 }
 
 public sealed class CustomerListDto
@@ -38,6 +48,13 @@ public sealed class CustomerListDto
     public string VatNum { get; set; } = string.Empty;
     public string CountryRegionId { get; set; } = string.Empty;
     public string? Memo { get; set; }
+    public string SalesPoolId { get; set; } = string.Empty;
+    public int CashDiscBaseDays { get; set; }
+    public int UseCashDisc { get; set; }
+    public int InclTax { get; set; }
+    public int BlockFloorLimitUseInChannel { get; set; }
+    public decimal PrepaymentValue { get; set; }
+    public int PrePayType { get; set; }
     public string? Phone { get; set; }
     public string InvoiceAccount { get; set; } = string.Empty;
     public string InventSiteId { get; set; } = string.Empty;

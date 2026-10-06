@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Box,
-  FormControlLabel,
   IconButton,
   Stack,
   Switch,
@@ -33,6 +32,8 @@ import { salesOrderListApi, type SalesOrderHeaderInput } from '../api/salesOrder
 import { customerQuickCreateApi } from '../api/customerQuickCreateApi';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { LookupField } from '@shared/components/lookups/LookupField';
+import { EditableViewField } from '@shared/components/fields/EditableViewField';
+import { d365 } from '@shared/constants/enterpriseUiTokens';
 import { synchronizeSalesLineDiscount } from '../utils/salesLineDiscount';
 import {
   DocumentTotalsDrawer,
@@ -427,7 +428,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       <TextField
         fullWidth
         size="small"
-        variant="standard"
+        variant="outlined"
         label={label}
         type={
           name === 'deliveryDate' || name === 'orderDate' || name === 'deadline' || name === 'shippingDateConfirmed' || name === 'receiptDateConfirmed' || name === 'fixedDueDate' || name === 'paymentTermsBaseDate'
@@ -684,17 +685,17 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       ],
     },
   ];
-  const field = (label: string, value?: React.ReactNode) => (
+  const field = (label: string, value?: React.ReactNode, editable = false, lookup = false) => (
     <Box key={label}>
       <Typography variant="caption" color="text.secondary">
         {label}
       </Typography>
-      <Typography
-        variant="body2"
-        sx={{ borderBottom: 1, borderColor: 'divider', py: 0.5, minHeight: 30 }}
-      >
-        {value || '-'}
-      </Typography>
+      <EditableViewField
+        label={label}
+        value={value == null ? '' : String(value)}
+        lookup={lookup}
+        onEdit={editable && canEditHeader && !activeHeader ? startHeaderEdit : undefined}
+      />
     </Box>
   );
   const headerPanelField = (
@@ -719,7 +720,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
           />
         )
       : headerInput(name, label, options)
-    : field(label, displayValue);
+    : field(label, displayValue, true, Boolean(options) || name === 'inventSiteId' || name === 'inventLocationId');
   const selectedDeliveryAddress = deliveryAddressesQuery.data?.find(
     (address) => address.value === String(activeHeader?.deliveryPostalAddress ?? order.deliveryPostalAddress)
   );
@@ -748,14 +749,14 @@ export function SalesOrderDetailsPage(): React.ReactElement {
             />
           </Box>
         ) : (
-          <Typography
-            variant="body2"
-            noWrap
-            title={selectedDeliveryAddress?.label ?? ''}
-            sx={{ flex: 1, minWidth: 0, borderBottom: 1, borderColor: 'divider', py: 0.5, minHeight: 30 }}
-          >
-            {selectedDeliveryAddress?.label ?? order.deliveryName ?? '-'}
-          </Typography>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <EditableViewField
+              label="Delivery address"
+              value={selectedDeliveryAddress?.label ?? order.deliveryName ?? ''}
+              lookup
+              onEdit={canEditHeader ? startHeaderEdit : undefined}
+            />
+          </Box>
         )}
         <IconButton
           size="small"
@@ -770,7 +771,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       <TextField
         fullWidth
         size="small"
-        variant="standard"
+        variant="outlined"
         label="Address"
         value={selectedDeliveryAddress?.address ?? order.deliveryAddress ?? ''}
         multiline
@@ -781,7 +782,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   );
   const headerGroup = (title: string, children: React.ReactNode) => (
     <Box sx={{ minWidth: 0, display: 'grid', alignContent: 'start', gap: 1.25 }}>
-      <Typography variant="overline" fontWeight={700}>{title}</Typography>
+      <Typography sx={{ fontSize: d365.labelFontSize, fontWeight: 700, lineHeight: 1.5, textTransform: 'uppercase' }}>{title}</Typography>
       {children}
     </Box>
   );
@@ -825,13 +826,13 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   ) => {
     if (!displayedLine) return null;
     if (!activeHeader || name === 'itemNumber')
-      return field(label, String(displayedLine[name] ?? ''));
+      return field(label, String(displayedLine[name] ?? ''), name !== 'itemNumber');
     return (
       <TextField
         key={name}
         fullWidth
         size="small"
-        variant="standard"
+        variant="outlined"
         label={label}
         type={type}
         value={lineDetailDraft?.[name] ?? ''}
@@ -858,7 +859,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   };
   const lineMultilineField = (name: 'description' | 'deliveryName', label: string) => {
     if (!displayedLine) return null;
-    if (!activeHeader) return field(label, displayedLine[name]);
+    if (!activeHeader) return field(label, displayedLine[name], true);
     return (
       <TextField
         fullWidth
@@ -879,7 +880,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   };
   const dimensionField = (name: 'site' | 'warehouse', label: string) => {
     if (!displayedLine) return null;
-    if (!activeHeader) return field(label, displayedLine[name]);
+    if (!activeHeader) return field(label, displayedLine[name], true, true);
     const options =
       name === 'site'
         ? (dimensionsQuery.data?.sites ?? [])
@@ -918,7 +919,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     const options = deliveryAddressesQuery.data ?? [];
     const selected = options.find((option) => option.value === String(displayedLine.deliveryPostalAddress ?? ''));
     if (!activeHeader)
-      return <>{field('Delivery address', selected?.label ?? '')}{field('Address', selected?.address ?? '')}</>;
+      return <>{field('Delivery address', selected?.label ?? '', true, true)}{field('Address', selected?.address ?? '', true)}</>;
     return (
       <>
         <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
@@ -959,7 +960,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   const unitField = () => {
     const label = t('fields.unit');
     if (!displayedLine) return null;
-    if (!activeHeader) return field(label, displayedLine.unit);
+    if (!activeHeader) return field(label, displayedLine.unit, true, true);
     return lineLookupShell(
       <LookupField
         name="unit"
@@ -986,7 +987,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   const packingUnitField = () => {
     const label = t('salesOrder.packingUnit', 'وحدة التعبئة');
     if (!displayedLine) return null;
-    if (!activeHeader) return field(label, displayedLine.packingUnit);
+    if (!activeHeader) return field(label, displayedLine.packingUnit, true, true);
     return lineLookupShell(
       <LookupField
         name="packingUnit"
@@ -1010,10 +1011,10 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       />
     );
   };
-  const lineValue = (name: keyof DetailLine, label: string, date = false) => {
+  const lineValue = (name: keyof DetailLine, label: string, date = false, editable = false, lookup = false) => {
     const value = displayedLine?.[name];
     const text = value == null || value === '' ? undefined : String(value);
-    return field(label, date ? text?.slice(0, 10) : text);
+    return field(label, date ? text?.slice(0, 10) : text, editable, lookup);
   };
   const lineLookupField = (
     name: 'deliveryMode' | 'deliveryTerms',
@@ -1021,7 +1022,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     options: { value: string; label: string }[] = []
   ) => {
     if (!displayedLine) return null;
-    if (!activeHeader) return lineValue(name, label);
+    if (!activeHeader) return lineValue(name, label, false, true, true);
     return lineLookupShell(
       <LookupField
         name={name}
@@ -1053,7 +1054,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     if (!displayedLine) return null;
     const value = Number(displayedLine[name] ?? 0);
     if (!activeHeader)
-      return field(label, options.find((option) => option.value === value)?.label ?? String(value));
+      return field(label, options.find((option) => option.value === value)?.label ?? String(value), true, true);
     return lineLookupShell(
       <LookupField
         name={name}
@@ -1079,7 +1080,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   };
   const taxGroupField = (name: 'taxGroup' | 'taxItemGroup', label: string) => {
     if (!displayedLine) return null;
-    if (!activeHeader) return lineValue(name, label);
+    if (!activeHeader) return lineValue(name, label, false, true, true);
     const options =
       name === 'taxGroup'
         ? (taxGroupsQuery.data?.salesTaxGroups ?? [])
@@ -1116,12 +1117,14 @@ export function SalesOrderDetailsPage(): React.ReactElement {
           ? Boolean(displayedLine[name])
         : Boolean(displayedLine[name]);
     if (!activeHeader)
-      return field(label, checked ? t('common.yes', 'Yes') : t('common.no', 'No'));
+      return field(label, checked ? t('common.yes', 'Yes') : t('common.no', 'No'), true);
     return (
-      <Box sx={{ minWidth: 0, minHeight: 48, display: 'flex', alignItems: 'center' }}>
-        <FormControlLabel
-          control={
-            <Switch
+      <Box sx={{ minWidth: 0, minHeight: 48 }}>
+        <Typography sx={{ mb: '6px', fontFamily: d365.fontFamily, fontSize: d365.labelFontSize, lineHeight: 1.2 }}>
+          {label}
+        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', height: d365.controlHeight }}>
+          <Switch
               size="small"
               checked={checked}
               disabled={savingLineDetail}
@@ -1135,17 +1138,18 @@ export function SalesOrderDetailsPage(): React.ReactElement {
                 setLineDetailDraft(next);
                 void saveLineDetail(next);
               }}
-            />
-          }
-          label={label}
-        />
+          />
+          <Typography sx={{ fontFamily: d365.fontFamily, fontSize: d365.fontSize }}>
+            {checked ? t('common.yes', 'Yes') : t('common.no', 'No')}
+          </Typography>
+        </Box>
       </Box>
     );
   };
   const returnLotField = () => {
     if (!displayedLine) return null;
     const label = t('salesOrder.returnLotId', 'Return lot ID');
-    if (!activeHeader) return field(label, displayedLine.returnLotId);
+    if (!activeHeader) return field(label, displayedLine.returnLotId, true, true);
     return lineLookupShell(
       <LookupField
         name="returnLotId"
@@ -1192,7 +1196,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       : ({ pageNumber, pageSize, search, signal }: { pageNumber: number; pageSize: number; search: string; signal?: AbortSignal }) =>
           salesOrderLinesApi.serialNumbers({ itemNumber: displayedLine.itemNumber, pageNumber, pageSize, search, signal });
     const value = displayedLine[name] ?? '';
-    if (!activeHeader) return field(label, value);
+    if (!activeHeader) return field(label, value, true, true);
     return lineLookupShell(
       <LookupField
         name={name}
@@ -1218,7 +1222,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   const mainAccountField = () => {
     if (!displayedLine) return null;
     const label = t('salesOrder.mainAccount', 'Main account');
-    if (!activeHeader) return field(label, displayedLine.ledgerDimensionDisplay ?? '');
+    if (!activeHeader) return field(label, displayedLine.ledgerDimensionDisplay ?? '', true, true);
     return lineLookupShell(
       <LookupField
         name="ledgerDimension"
@@ -1662,10 +1666,24 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     defaultExpanded: expanded,
     visualVariant: 'legalEntity',
   });
+  const headerLookupFields = new Set([
+    'customerAccount', 'invoiceAccount', 'customerGroup', 'currencyCode',
+    'inventSiteId', 'inventLocationId', 'taxGroupId', 'salesGroup',
+    'deliveryPostalAddress', 'deliveryMode', 'deliveryTerms', 'salesPool',
+    'paymentTerms', 'paymentMethod', 'paymentSchedule', 'paymentSpecification',
+    'cashDiscountCode', 'priceGroup', 'lineDiscountGroup',
+    'multiLineDiscountGroup', 'totalDiscountGroup', 'chargesGroup',
+    'customerRebateGroup', 'customerTmaGroup', 'reservation',
+  ]);
+  const readOnlyHeaderFields = new Set([
+    'salesId', 'customerName', 'customerAccount', 'customerGroup',
+    'salesStatus', 'documentStatus', 'deliveryAddress',
+    'reportingCurrencyFixedExchangeRate', 'releaseStatus',
+  ]);
   const headerField = (name: string, label: string, sectionTitle?: string): DetailFieldConfig => ({
     name,
     label: t(`salesOrder.headerFields.${name}`, label),
-    type: 'display',
+    type: readOnlyHeaderFields.has(name) ? 'display' : headerLookupFields.has(name) ? 'select' : 'text',
     sectionTitle,
     ...((activeHeader && (name in activeHeader || name === 'deliveryAddress') && name !== 'id')
       || name === 'deliveryPostalAddress'
@@ -1683,7 +1701,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
                 <TextField
                   fullWidth
                   size="small"
-                  variant="standard"
+                  variant="outlined"
                   label={t(`salesOrder.headerFields.${name}`, label)}
                   value={selectedAddress?.address ?? order.deliveryAddress ?? ''}
                   multiline
@@ -1718,9 +1736,9 @@ export function SalesOrderDetailsPage(): React.ReactElement {
                       />
                     </Box>
                   ) : (
-                    <Typography variant="body2" noWrap title={selected?.label ?? ''} sx={{ flex: 1, minWidth: 0, borderBottom: 1, borderColor: 'divider', py: 0.5, minHeight: 30 }}>
-                      {selected?.label ?? order.deliveryName ?? '-'}
-                    </Typography>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <EditableViewField label="Delivery address" value={selected?.label ?? order.deliveryName ?? ''} lookup onEdit={canEditHeader ? startHeaderEdit : undefined} />
+                    </Box>
                   )}
                   <IconButton
                     size="small"
@@ -2133,6 +2151,8 @@ export function SalesOrderDetailsPage(): React.ReactElement {
             setLineFilterVisible((visible) => !visible);
           },
           readOnly: true,
+          onFieldEdit: canEditHeader && !savingHeader ? () => startHeaderEdit() : undefined,
+          canEditField: (name) => !readOnlyHeaderFields.has(name),
           initialSelectedId: order.id,
           dataSource: {
             type: 'controlled',
@@ -2242,7 +2262,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
             if (record && record.id !== order.id && !activeHeader)
               navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrder(record.id));
           },
-          presentation: { mode: 'list', listWidth: 280, listResizable: true, detailEndPadding: 8 },
+          presentation: { mode: 'list', listWidth: 280, listResizable: true, listInitiallyVisible: false, listVisibilityStorageKey: 'ixapp.sales-order.list-visible', detailEndPadding: 8 },
           actionPaneAfterListContent: (
             <>
               <EnterpriseCrudActions

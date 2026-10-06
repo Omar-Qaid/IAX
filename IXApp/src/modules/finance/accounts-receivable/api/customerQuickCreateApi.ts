@@ -25,10 +25,12 @@ export interface CustomerContact {
   primary: boolean;
 }
 
+
 export interface CustomerQuickCreateLookups {
   customerGroups: CustomerGroupOption[];
   salesTaxGroups: CustomerLookupOption[];
   currencies: CustomerLookupOption[];
+  countryRegions: CustomerLookupOption[];
   paymentTerms: CustomerLookupOption[];
   paymentMethods: CustomerLookupOption[];
   deliveryTerms: CustomerLookupOption[];
@@ -53,6 +55,16 @@ export interface CustomerQuickCreateInput {
   countryRegionId?: string;
   street?: string;
   memo?: string;
+  invoiceAccount?: string;
+  inventSiteId?: string;
+  inventLocationId?: string;
+  salesPoolId?: string;
+  cashDiscBaseDays?: number;
+  useCashDisc?: number;
+  inclTax?: number;
+  blockFloorLimitUseInChannel?: number;
+  prepaymentValue?: number;
+  prePayType?: number;
 }
 
 export interface CustomerRecord extends Customer {
@@ -69,6 +81,13 @@ export interface CustomerRecord extends Customer {
   invoiceAccount: string;
   inventSiteId: string;
   inventLocationId: string;
+  salesPoolId?: string;
+  cashDiscBaseDays?: number;
+  useCashDisc?: number;
+  inclTax?: number;
+  blockFloorLimitUseInChannel?: number;
+  prepaymentValue?: number;
+  prePayType?: number;
 }
 
 interface CustomerListDto {
@@ -91,6 +110,13 @@ interface CustomerListDto {
   invoiceAccount: string;
   inventSiteId: string;
   inventLocationId: string;
+  salesPoolId?: string;
+  cashDiscBaseDays?: number;
+  useCashDisc?: number;
+  inclTax?: number;
+  blockFloorLimitUseInChannel?: number;
+  prepaymentValue?: number;
+  prePayType?: number;
   status: string;
   createdAt: string;
 }
@@ -140,6 +166,13 @@ const toCustomer = (row: CustomerListDto): CustomerRecord => ({
   invoiceAccount: row.invoiceAccount,
   inventSiteId: row.inventSiteId,
   inventLocationId: row.inventLocationId,
+  salesPoolId: row.salesPoolId ?? '',
+  cashDiscBaseDays: row.cashDiscBaseDays ?? 0,
+  useCashDisc: row.useCashDisc ?? 0,
+  inclTax: row.inclTax ?? 0,
+  blockFloorLimitUseInChannel: row.blockFloorLimitUseInChannel ?? 0,
+  prepaymentValue: row.prepaymentValue ?? 0,
+  prePayType: row.prePayType ?? 0,
   status: row.status === 'blocked' ? 'blocked' : row.status === 'onHold' ? 'onHold' : 'active',
   createdAt: row.createdAt,
 });
@@ -194,6 +227,16 @@ export const customerQuickCreateApi = {
       vatNum: record.vatNum,
       countryRegionId: record.countryRegionId,
       memo: record.memo,
+      invoiceAccount: record.invoiceAccount,
+      inventSiteId: record.inventSiteId,
+      inventLocationId: record.inventLocationId,
+      salesPoolId: record.salesPoolId,
+      cashDiscBaseDays: record.cashDiscBaseDays,
+      useCashDisc: record.useCashDisc,
+      inclTax: record.inclTax,
+      blockFloorLimitUseInChannel: record.blockFloorLimitUseInChannel,
+      prepaymentValue: record.prepaymentValue,
+      prePayType: record.prePayType,
     };
     const response = await apiClient.put<ApiResponse<CustomerListDto>>(`/v1/CustTable/quick-update/${record.recId}`, input);
     if (!response.data.success || !response.data.data)
@@ -207,10 +250,11 @@ export const customerQuickCreateApi = {
   },
 
   async lookups(signal?: AbortSignal): Promise<CustomerQuickCreateLookups> {
-    const [groups, taxGroups, currencies, terms, methods, deliveryTerms, deliveryModes, salesPools, paymentSchedules] = await Promise.all([
+    const [groups, taxGroups, currencies, countries, terms, methods, deliveryTerms, deliveryModes, salesPools, paymentSchedules] = await Promise.all([
       load('/v1/CustGroup', 'customer groups', signal),
       load('/v1/TaxGroup', 'sales tax groups', signal),
       load('/v1/Currency', 'currencies', signal),
+      load('/v1/CustTable/country-regions', 'country regions', signal),
       load('/v1/PaymTerm', 'payment terms', signal),
       load('/v1/CustPaymMode', 'payment methods', signal),
       load('/v1/DlvTerm', 'delivery terms', signal),
@@ -227,6 +271,10 @@ export const customerQuickCreateApi = {
       })).filter((group) => group.value),
       salesTaxGroups: options(taxGroups, 'taxGroup', 'taxGroupName'),
       currencies: options(currencies, 'currencyCode', 'txt'),
+      countryRegions: countries.map((country) => ({
+        value: text(country, 'countryRegionId'),
+        label: [text(country, 'countryRegionId'), text(country, 'isoCode')].filter(Boolean).join(' - '),
+      })).filter((country) => country.value),
       paymentTerms: options(terms, 'paymTermId', 'description'),
       paymentMethods: options(methods, 'paymMode', 'name'),
       deliveryTerms: options(deliveryTerms, 'code', 'txt'),

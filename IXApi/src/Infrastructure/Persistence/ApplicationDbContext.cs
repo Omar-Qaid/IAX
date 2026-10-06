@@ -300,6 +300,7 @@ namespace IAX.IXApi.Infrastructure.Persistence
         public DbSet<InventSite> InventSites => Set<InventSite>();
         public DbSet<InventLocation> InventLocations => Set<InventLocation>();
         public DbSet<InventBatch> InventBatches => Set<InventBatch>();
+        public DbSet<IAX.IXApi.Modules.Finance.Entities.InventSerial> InventSerials => Set<IAX.IXApi.Modules.Finance.Entities.InventSerial>();
         
 
 

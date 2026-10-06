@@ -25,7 +25,7 @@ describe('sales order customer selection', () => {
       paymModeId: 'BANK', dlvModeId: 'GROUND', inventSiteId: '', inventLocationId: '',
     }] as Awaited<ReturnType<typeof customerQuickCreateApi.list>>);
     vi.mocked(customerQuickCreateApi.lookups).mockResolvedValue({
-      customerGroups: [], salesTaxGroups: [{ value: 'TAX-A', label: 'Tax A' }], currencies: [],
+      customerGroups: [], salesTaxGroups: [{ value: 'TAX-A', label: 'Tax A' }], currencies: [], countryRegions: [],
       paymentTerms: [{ value: 'NET30', label: 'Net 30' }],
       paymentMethods: [{ value: 'BANK', label: 'Bank' }],
       deliveryTerms: [], deliveryModes: [{ value: 'GROUND', label: 'Ground' }],

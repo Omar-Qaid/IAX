@@ -1,5 +1,5 @@
 import React from 'react';
-import { expect, it, vi } from 'vitest';
+import { beforeEach, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { queryClient } from '@core/api/queryClient';
@@ -52,7 +52,13 @@ vi.mock('@modules/finance/accounts-receivable/api/salesOrderLinesApi', () => ({
   },
 }));
 
-function openOrder(id: string) {
+beforeEach(() => {
+  globalThis.localStorage.setItem('ixapp.sales-order.list-visible', 'true');
+});
+
+function openOrder(id: string, listVisible?: boolean) {
+  if (listVisible !== undefined)
+    globalThis.localStorage.setItem('ixapp.sales-order.list-visible', String(listVisible));
   return render(
     <MemoryRouter initialEntries={[`/accounts-receivable/sales-orders/${id}`]}>
       <AppProviders>
@@ -81,14 +87,19 @@ it('does not substitute another order for an unknown ID', async () => {
 });
 
 it('toggles the record sidebar and opens the header tab', async () => {
-  openOrder('1');
+  const view = openOrder('1', false);
   await screen.findByText('SO-LIVE-001 : Live customer');
   const toggle = screen.getByRole('button', { name: /Toggle record list/i });
-  expect(toggle.getAttribute('aria-pressed')).toBe('true');
-  fireEvent.click(toggle);
   expect(toggle.getAttribute('aria-pressed')).toBe('false');
   fireEvent.click(toggle);
   expect(toggle.getAttribute('aria-pressed')).toBe('true');
+  expect(globalThis.localStorage.getItem('ixapp.sales-order.list-visible')).toBe('true');
+  view.unmount();
+  openOrder('1');
+  expect(screen.getByRole('button', { name: /Toggle record list/i }).getAttribute('aria-pressed')).toBe('true');
+  const restoredToggle = screen.getByRole('button', { name: /Toggle record list/i });
+  fireEvent.click(restoredToggle);
+  expect(restoredToggle.getAttribute('aria-pressed')).toBe('false');
   fireEvent.click(screen.getByRole('tab', { name: 'Header' }));
   expect(screen.getByLabelText('Invoice account').textContent).toBe('C-002');
   expect(screen.queryByText('Sales order lines')).toBeNull();

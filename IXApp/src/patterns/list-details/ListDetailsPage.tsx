@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { PageContainer } from '@shared/components/page/PageContainer';
 import { PageHeader } from '@shared/components/page/PageHeader';
 import { ActionPane } from '@shared/components/action-pane/ActionPane';
@@ -52,6 +53,7 @@ import type {
   ListDetailsHeaderField,
 } from './types';
 import { d365 } from '@shared/constants/enterpriseUiTokens';
+import { EditableViewField } from '@shared/components/fields/EditableViewField';
 
 interface LegacyListDetailsProps<T extends ListDetailRecord> {
   variant?: 'standard';
@@ -90,9 +92,25 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
 }: Omit<EnterpriseListDetailsProps<T>, 'variant'>): React.ReactElement {
   const { t } = useAppTranslation();
   const navigate = useNavigate();
-  const [listPaneVisible, setListPaneVisible] = React.useState(
-    config.presentation?.listInitiallyVisible ?? true
-  );
+  const listVisibilityStorageKey = config.presentation?.listVisibilityStorageKey;
+  const [listPaneVisible, setListPaneVisible] = React.useState(() => {
+    const initial = config.presentation?.listInitiallyVisible ?? true;
+    if (!listVisibilityStorageKey) return initial;
+    try {
+      const saved = globalThis.localStorage?.getItem(listVisibilityStorageKey);
+      return saved === 'true' ? true : saved === 'false' ? false : initial;
+    } catch {
+      return initial;
+    }
+  });
+  React.useEffect(() => {
+    if (!listVisibilityStorageKey) return;
+    try {
+      globalThis.localStorage?.setItem(listVisibilityStorageKey, String(listPaneVisible));
+    } catch {
+      // Browsers can disable local storage.
+    }
+  }, [listPaneVisible, listVisibilityStorageKey]);
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = React.useState(false);
   const state = useListDetailsPage(config);
   const selectionChangeRef = React.useRef(config.onSelectionChange);
@@ -120,6 +138,10 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
       : null;
   const displayedRecord = record ?? emptyPreviewRecord;
   const displayedEditing = Boolean(record) && state.editing;
+  const requestFieldEdit = state.selected && !displayedEditing && !state.saving && !config.interactionLocked &&
+    (config.onFieldEdit || (!config.readOnly && canEdit))
+      ? (name: string) => config.onFieldEdit ? config.onFieldEdit(name) : state.startEdit()
+      : undefined;
   const labels = {
     filter: config.filterLabel ?? t('actions.filter'),
     information: config.informationLabel ?? t('common.information'),
@@ -407,6 +429,8 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
             noLabel={labels.no}
             sections={sections as DetailSectionConfig[]}
             onChange={record ? state.changeValue : () => undefined}
+            onFieldEdit={requestFieldEdit}
+            canEditField={config.canEditField}
             listWidth={config.presentation?.listWidth}
             listMinWidth={config.presentation?.listMinWidth}
             listMaxWidth={config.presentation?.listMaxWidth}
@@ -421,6 +445,8 @@ function EnterpriseListDetailsPage<T extends ListDetailRecord>({
               <>
                 {config.detailHeader ?? (
                   <RecordHeader
+                    onFieldEdit={requestFieldEdit}
+                    canEditField={config.canEditField}
                     title={title}
                     viewLabel={config.viewLabel}
                     yesLabel={labels.yes}
@@ -714,6 +740,8 @@ function RecordHeader<T>({
   minHeight = 104,
   compact = false,
   onChange,
+  onFieldEdit,
+  canEditField,
 }: {
   title: string;
   viewLabel?: string;
@@ -726,6 +754,8 @@ function RecordHeader<T>({
   minHeight?: number;
   compact?: boolean;
   onChange: (id: string, value: DetailValue) => void;
+  onFieldEdit?: (fieldName: string) => void;
+  canEditField?: (fieldName: string) => boolean;
 }) {
   if (compact)
     return (
@@ -750,6 +780,10 @@ function RecordHeader<T>({
         >
           {fields.map((field, index) => {
             const value = field.getDisplayValue?.(record) ?? field.getValue(record);
+            const editField = !editing && !field.disabled && field.type !== 'display' &&
+              (!canEditField || canEditField(field.id)) && onFieldEdit
+                ? () => onFieldEdit(field.id)
+                : undefined;
             const custom = field.render?.({
               value,
               editing: false,
@@ -763,6 +797,7 @@ function RecordHeader<T>({
                   display: 'flex',
                   alignItems: 'baseline',
                   minWidth: 0,
+                  '&:hover .field-edit-action, &:focus-within .field-edit-action': { opacity: 1 },
                   '&:not(:last-of-type)::after': {
                     content: { xs: 'none', sm: '"|"' },
                     mx: { sm: 1.25 },
@@ -794,6 +829,17 @@ function RecordHeader<T>({
                   >
                     {String(value)}
                   </Typography>
+                )}
+                {editField && (
+                  <IconButton
+                    className="field-edit-action"
+                    size="small"
+                    aria-label={`Edit ${field.label}`}
+                    onClick={editField}
+                    sx={{ opacity: 0, color: d365.primary, p: 0.25 }}
+                  >
+                    <EditOutlinedIcon sx={{ fontSize: 13 }} />
+                  </IconButton>
                 )}
               </Box>
             );
@@ -845,6 +891,10 @@ function RecordHeader<T>({
             ? field.getValue(record)
             : (field.getDisplayValue?.(record) ?? field.getValue(record));
           const editable = editing && !field.disabled && field.type !== 'display';
+          const editField = !editing && !field.disabled && field.type !== 'display' &&
+            (!canEditField || canEditField(field.id)) && onFieldEdit
+              ? () => onFieldEdit(field.id)
+              : undefined;
           return (
             <Box key={field.id}>
               <Typography
@@ -854,7 +904,9 @@ function RecordHeader<T>({
               >
                 {field.label}
               </Typography>
-              {field.type === 'boolean' ? (
+              {field.type === 'boolean' && !editing ? (
+                <EditableViewField value={value ? yesLabel : noLabel} label={field.label} onEdit={editField} disabled={field.disabled} />
+              ) : field.type === 'boolean' ? (
                 <Box sx={{ display: 'flex', alignItems: 'center', height: d365.controlHeight }}>
                   <Switch
                     size="small"
@@ -893,7 +945,7 @@ function RecordHeader<T>({
                   sx={headerEditFieldSx}
                 />
               ) : (
-                <HeaderViewField
+                <EditableViewField
                   value={
                     field.type === 'select'
                       ? (field.options?.find((option) => option.value === String(value))?.label ??
@@ -901,6 +953,10 @@ function RecordHeader<T>({
                       : value
                   }
                   numeric={field.type === 'number'}
+                  label={field.label}
+                  lookup={field.type === 'select' || Boolean(field.linkStyle)}
+                  disabled={field.disabled}
+                  onEdit={editField}
                 />
               )}
             </Box>
@@ -979,33 +1035,6 @@ const filterSx = {
   '& .MuiInputBase-root': { height: 34, borderRadius: d365.radius, fontSize: d365.fontSize },
   '& .MuiInputAdornment-root': { marginInlineEnd: 0.25 },
 };
-function HeaderViewField({
-  value,
-  numeric = false,
-}: {
-  value: DetailValue;
-  numeric?: boolean;
-}): React.ReactElement {
-  return (
-    <Box
-      sx={{
-        minHeight: d365.controlHeight,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: numeric ? 'flex-end' : 'flex-start',
-        borderBottom: `1px solid ${d365.darkBorder}`,
-        px: 0.5,
-        overflow: 'hidden',
-        bgcolor: 'transparent',
-      }}
-    >
-      <Typography noWrap sx={{ fontSize: d365.fontSize, color: '#315efb' }}>
-        {String(value ?? '')}
-      </Typography>
-    </Box>
-  );
-}
-
 const headerEditFieldSx = {
   width: '100%',
   mt: '5px',
