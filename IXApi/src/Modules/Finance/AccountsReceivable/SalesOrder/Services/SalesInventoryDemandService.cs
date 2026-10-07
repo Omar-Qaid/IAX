@@ -21,10 +21,10 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
     }
 
     public async Task CreateAsync(SalesTable order, SalesLine line, string inventSiteId,
-        string inventLocationId, CancellationToken cancellationToken = default)
+        string inventLocationId, CancellationToken cancellationToken = default, InventDim? dimensionTemplate = null)
     {
         var dimension = await _dimensions.ResolveAsync(order.DataAreaId, inventSiteId,
-            inventLocationId, cancellationToken);
+            inventLocationId, cancellationToken, dimensionTemplate);
         var transactionId = await _numbers.NextInventTransIdAsync(cancellationToken);
         var origin = new InventTransOrigin
         {
@@ -69,20 +69,18 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
 
     public async Task UpdateAsync(SalesLine line, string inventSiteId,
         string inventLocationId, CancellationToken cancellationToken = default,
-        string? batchNumber = null, string? serialNumber = null)
+        string? batchNumber = null, string? serialNumber = null, InventDim? dimensionTemplate = null)
     {
         // Preserve update support for sales lines created before inventory-demand integration.
         if (string.IsNullOrWhiteSpace(line.InventTransId))
         {
-            if (batchNumber == null && serialNumber == null) return;
-            var legacyDimension = await _dbContext.Set<InventDim>().AsNoTracking()
+            var existingLegacyDimension = await _dbContext.Set<InventDim>().AsNoTracking()
                 .FirstOrDefaultAsync(item => item.DataAreaId == line.DataAreaId
                     && item.InventDimId == line.InventDimId, cancellationToken);
-            if (legacyDimension != null)
-            {
-                if (batchNumber != null) legacyDimension.InventBatchId = batchNumber;
-                if (serialNumber != null) legacyDimension.InventSerialId = serialNumber;
-            }
+            var legacyDimension = CopyDimension(existingLegacyDimension);
+            if (dimensionTemplate != null) CopyDimensionValues(dimensionTemplate, legacyDimension);
+            if (batchNumber != null) legacyDimension.InventBatchId = batchNumber;
+            if (serialNumber != null) legacyDimension.InventSerialId = serialNumber;
             var resolvedLegacyDimension = await _dimensions.ResolveAsync(line.DataAreaId,
                 inventSiteId, inventLocationId, cancellationToken, legacyDimension);
             line.InventDimId = resolvedLegacyDimension.InventDimId;
@@ -95,41 +93,72 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
         var transaction = await _dbContext.Set<InventTrans>().SingleOrDefaultAsync(item =>
             item.DataAreaId == line.DataAreaId && item.InventTransOrigin == origin.RecId, cancellationToken);
         if (transaction == null) throw new InvalidOperationException("The sales line inventory transaction was not found.");
+        if (transaction.StatusIssue != StatusIssue.Ordered)
+            throw new InvalidOperationException("Processed inventory demand cannot be changed through sales line editing.");
         var previousDemand = -transaction.Qty;
         var previousDimensionId = line.InventDimId;
         var previousDimension = await _dbContext.Set<InventDim>().AsNoTracking()
             .FirstOrDefaultAsync(item => item.DataAreaId == line.DataAreaId
                 && item.InventDimId == previousDimensionId, cancellationToken);
-        if (previousDimension != null)
-        {
-            if (batchNumber != null) previousDimension.InventBatchId = batchNumber;
-            if (serialNumber != null) previousDimension.InventSerialId = serialNumber;
-        }
+        var nextDimensionTemplate = CopyDimension(previousDimension);
+        if (dimensionTemplate != null) CopyDimensionValues(dimensionTemplate, nextDimensionTemplate);
+        if (batchNumber != null) nextDimensionTemplate.InventBatchId = batchNumber;
+        if (serialNumber != null) nextDimensionTemplate.InventSerialId = serialNumber;
         var dimension = await _dimensions.ResolveAsync(line.DataAreaId, inventSiteId,
-            inventLocationId, cancellationToken, previousDimension);
-        transaction.Qty = -line.SalesQty;
+            inventLocationId, cancellationToken, nextDimensionTemplate);
+        var nextOpenDemand = Math.Max(0m, line.RemainInventPhysical);
+        transaction.Qty = -nextOpenDemand;
         transaction.DateExpected = line.ReceiptDateRequested;
-        line.RemainInventPhysical = line.SalesQty;
-        line.RemainInventFinancial = line.SalesQty;
         var previousSummary = await _dbContext.Set<InventSum>().SingleOrDefaultAsync(item =>
             item.DataAreaId == line.DataAreaId && item.ItemId == line.ItemId
             && item.InventDimId == previousDimensionId, cancellationToken)
             ?? throw new InvalidOperationException("The sales line inventory summary was not found.");
         if (previousDimensionId == dimension.InventDimId)
         {
-            previousSummary.OnOrder += line.SalesQty - previousDemand;
+            previousSummary.OnOrder += nextOpenDemand - previousDemand;
             previousSummary.LastUpdDateExpected = line.ReceiptDateRequested;
+            origin.ItemInventDimId = dimension.InventDimId;
+            transaction.InventDimId = dimension.InventDimId;
             return;
         }
 
         previousSummary.OnOrder -= previousDemand;
         var nextSummary = await GetOrCreateInventorySummaryAsync(
             line.DataAreaId, line.ItemId, dimension, cancellationToken);
-        nextSummary.OnOrder += line.SalesQty;
+        nextSummary.OnOrder += nextOpenDemand;
         nextSummary.LastUpdDateExpected = line.ReceiptDateRequested;
         line.InventDimId = dimension.InventDimId;
         origin.ItemInventDimId = dimension.InventDimId;
         transaction.InventDimId = dimension.InventDimId;
+    }
+
+    private static InventDim CopyDimension(InventDim? source)
+    {
+        return new InventDim
+        {
+            ConfigId = source?.ConfigId ?? string.Empty,
+            InventSizeId = source?.InventSizeId ?? string.Empty,
+            InventColorId = source?.InventColorId ?? string.Empty,
+            InventStyleId = source?.InventStyleId ?? string.Empty,
+            InventVersionId = source?.InventVersionId ?? string.Empty,
+            InventBatchId = source?.InventBatchId ?? string.Empty,
+            InventSerialId = source?.InventSerialId ?? string.Empty,
+            InventStatusId = source?.InventStatusId ?? string.Empty,
+            WmsLocationId = source?.WmsLocationId ?? string.Empty,
+            LicensePlateId = source?.LicensePlateId ?? string.Empty,
+            InventDimension10 = source?.InventDimension10 ?? 0m,
+            InventDimension9 = source?.InventDimension9 ?? default,
+            InventDimension9TzId = source?.InventDimension9TzId ?? 0
+        };
+    }
+
+    private static void CopyDimensionValues(InventDim source, InventDim target)
+    {
+        target.ConfigId = source.ConfigId;
+        target.InventSizeId = source.InventSizeId;
+        target.InventColorId = source.InventColorId;
+        target.InventStyleId = source.InventStyleId;
+        target.InventVersionId = source.InventVersionId;
     }
 
     public async Task DeleteAsync(SalesLine line, CancellationToken cancellationToken = default)

@@ -402,6 +402,7 @@ export function SalesOrderLinesGrid({
       itemType: item.itemType,
       unit: item.unit ?? '',
       unitPrice: item.unitPrice ?? 0,
+      usePriceAgreement: true,
     });
     setActiveField('quantity');
   };
@@ -639,8 +640,12 @@ export function SalesOrderLinesGrid({
                 column.field === 'unitPrice' ||
                 column.field === 'lineDiscount' ||
                 column.field === 'lineDiscountPercent')
-            )
-              return synchronizeSalesLineDiscount(draft, column.field, next);
+            ) {
+              const updated = synchronizeSalesLineDiscount(draft, column.field, next);
+              return column.field === 'unitPrice'
+                ? { ...updated, usePriceAgreement: false }
+                : updated;
+            }
             return { ...draft, [column.field]: next };
           });
         }}
@@ -716,11 +721,20 @@ export function SalesOrderLinesGrid({
               quantity: line.quantity,
               unit: line.unit,
               unitPrice: line.unitPrice,
+              priceUnit: line.priceUnit ?? 1,
+              usePriceAgreement: line.usePriceAgreement === true,
               lineDiscount: line.lineDiscount ?? 0,
               lineDiscountPercent: line.lineDiscountPercent ?? 0,
               deliveryDate: line.deliveryDate || undefined,
               inventSiteId: line.site,
               inventLocationId: line.warehouse,
+              configId: line.configId,
+              inventSizeId: line.inventSizeId,
+              inventColorId: line.inventColorId,
+              inventStyleId: line.inventStyleId,
+              inventVersionId: line.inventVersionId,
+              batchNumber: line.batchNumber,
+              serialNumber: line.serialNumber,
             });
       if (line.id === 'new-sales-line') savedNewRowIdRef.current = saved.id;
       setLineBaseline({ ...line, ...saved });

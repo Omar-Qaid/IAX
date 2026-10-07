@@ -182,6 +182,7 @@ export interface SalesOrderQuickCreateInput {
   confirmDates?: boolean;
   deliveryMode?: string;
   deliveryTerms?: string;
+  priceGroup?: string;
 }
 
 const toRecord = (order: SalesOrderListDto): SalesOrderListRecord => ({

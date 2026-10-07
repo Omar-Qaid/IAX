@@ -253,6 +253,8 @@ namespace IAX.IXApi.Infrastructure.Persistence
         #region AccountsReceivable
         public DbSet<PriceDiscTable> PriceDiscTables => Set<PriceDiscTable>();
         public DbSet<PriceDiscGroup> PriceDiscGroups => Set<PriceDiscGroup>();
+        public DbSet<PriceDiscAdmTable> PriceDiscAdmTables => Set<PriceDiscAdmTable>();
+        public DbSet<PriceDiscAdmTrans> PriceDiscAdmTranses => Set<PriceDiscAdmTrans>();
         public DbSet<SalesTable> SalesTables => Set<SalesTable>();
         public DbSet<SalesQuotationTable> SalesQuotationTables => Set<SalesQuotationTable>();
         public DbSet<SalesQuotationLine> SalesQuotationLines => Set<SalesQuotationLine>();

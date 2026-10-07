@@ -31,6 +31,11 @@ export interface SalesOrderLineRecord {
   deliveryDate?: string;
   inventTransId?: string;
   inventDimId?: string;
+  configId?: string;
+  inventSizeId?: string;
+  inventColorId?: string;
+  inventStyleId?: string;
+  inventVersionId?: string;
   currencyCode?: string;
   salesStatus?: string;
   customerLineNumber?: number;
@@ -46,6 +51,7 @@ export interface SalesOrderLineRecord {
   itemReferenceType?: number;
   itemReferenceLot?: string;
   priceUnit?: number;
+  usePriceAgreement?: boolean;
   costPrice?: number;
   lineDiscount?: number;
   lineDiscountPercent?: number;
@@ -276,6 +282,8 @@ export const salesOrderLinesApi = {
       itemNumber: string;
       quantity: number;
       unitPrice: number;
+      priceUnit?: number;
+      usePriceAgreement?: boolean;
       description?: string;
       unit?: string;
       deliveryDate?: string;
@@ -285,6 +293,13 @@ export const salesOrderLinesApi = {
       customerLineNumber?: number;
       inventSiteId?: string;
       inventLocationId?: string;
+      configId?: string;
+      inventSizeId?: string;
+      inventColorId?: string;
+      inventStyleId?: string;
+      inventVersionId?: string;
+      batchNumber?: string;
+      serialNumber?: string;
       taxGroup?: string;
       taxItemGroup?: string;
       returnLotId?: string;

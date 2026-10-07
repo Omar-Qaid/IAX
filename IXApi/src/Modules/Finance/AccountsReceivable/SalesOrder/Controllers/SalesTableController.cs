@@ -81,11 +81,14 @@ public sealed class SalesTableController : ControllerBase
     [HttpGet("inventory-dimensions")]
     public async Task<IActionResult> InventoryDimensions(CancellationToken cancellationToken = default)
     {
+        var dataAreaId = _company.GetDataAreaId();
         var sites = await _dbContext.Set<InventSite>().AsNoTracking()
+            .Where(site => site.DataAreaId == dataAreaId)
             .OrderBy(site => site.SiteId)
             .Select(site => new { id = site.SiteId, code = site.SiteId, name = site.Name })
             .ToListAsync(cancellationToken);
         var warehouses = await _dbContext.Set<InventLocation>().AsNoTracking()
+            .Where(location => location.DataAreaId == dataAreaId)
             .OrderBy(location => location.InventLocationId)
             .Select(location => new {
                 id = location.InventLocationId,
@@ -512,6 +515,16 @@ public sealed class SalesTableController : ControllerBase
         public string? InventSiteId { get; set; }
         [System.ComponentModel.DataAnnotations.StringLength(10)]
         public string? InventLocationId { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.ConfigId)]
+        public string? ConfigId { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.InventSizeId)]
+        public string? InventSizeId { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.InventColorId)]
+        public string? InventColorId { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.InventStyleId)]
+        public string? InventStyleId { get; set; }
+        [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.InventVersionId)]
+        public string? InventVersionId { get; set; }
         [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.InventBatchId)]
         public string? BatchNumber { get; set; }
         [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.InventSerialId)]
@@ -550,6 +563,7 @@ public sealed class SalesTableController : ControllerBase
         public decimal PackingUnitQuantity { get; set; }
         [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0.000001", "1000000000")]
         public decimal PriceUnit { get; set; } = 1;
+        public bool UsePriceAgreement { get; set; }
         [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0", "1000000000")]
         public decimal LineDiscount { get; set; }
         [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0", "100")]
@@ -579,6 +593,9 @@ public sealed class SalesTableController : ControllerBase
             if (order == null) return (IActionResult)NotFound(APIResponse<object>.Fail("Sales order was not found."));
             if (order.SalesStatus != SalesStatus.Backorder)
                 return UnprocessableEntity(APIResponse<object>.Fail("Lines can only be added to open sales orders."));
+            var dataAreaId = _company.GetDataAreaId();
+            if (!string.Equals(order.DataAreaId, dataAreaId, StringComparison.OrdinalIgnoreCase))
+                return NotFound(APIResponse<object>.Fail("Sales order was not found in the selected company."));
             long deliveryAddressId = order.DeliveryPostalAddress;
             if (!string.IsNullOrWhiteSpace(input.DeliveryPostalAddress))
             {
@@ -587,12 +604,30 @@ public sealed class SalesTableController : ControllerBase
                     return UnprocessableEntity(APIResponse<object>.Fail("The selected delivery address does not belong to this customer."));
             }
             var item = await _dbContext.Set<InventTable>().AsNoTracking()
-                .FirstOrDefaultAsync(row => row.ItemId == input.ItemNumber && row.DataAreaId == order.DataAreaId, cancellationToken);
+                .FirstOrDefaultAsync(row => row.ItemId == input.ItemNumber
+                    && row.DataAreaId == order.DataAreaId, cancellationToken);
             if (item == null) return UnprocessableEntity(APIResponse<object>.Fail("Item was not found."));
             var module = await _dbContext.Set<InventTableModule>().AsNoTracking()
                 .FirstOrDefaultAsync(row => row.ItemId == item.ItemId && row.DataAreaId == order.DataAreaId && (int)row.ModuleType == 2, cancellationToken);
             if (module == null || string.IsNullOrWhiteSpace(module.UnitId))
                 return UnprocessableEntity(APIResponse<object>.Fail("The item must have a sales unit configured."));
+            if (!string.IsNullOrWhiteSpace(input.Unit) && !string.Equals(input.Unit.Trim(), module.UnitId, StringComparison.OrdinalIgnoreCase))
+                return UnprocessableEntity(APIResponse<object>.Fail("Sales unit conversion is unavailable for this item; use its configured sales unit."));
+            var priceUnit = input.PriceUnit > 0 ? input.PriceUnit : 1m;
+            var enteredPrice = input.UnitPrice;
+            var usePriceAgreement = input.UsePriceAgreement;
+            var listPrice = usePriceAgreement
+                ? await FindSalesPriceAsync(order, item.ItemId, input.Quantity,
+                    string.IsNullOrWhiteSpace(input.Unit) ? module.UnitId : input.Unit.Trim(),
+                    module.PriceUnit > 0 ? module.PriceUnit : 1m, null, cancellationToken)
+                : null;
+            var effectivePrice = !usePriceAgreement
+                ? enteredPrice
+                : listPrice?.Amount ?? module.Price;
+            if (usePriceAgreement)
+                priceUnit = listPrice?.PriceUnit ?? (module.PriceUnit > 0 ? module.PriceUnit : 1m);
+            input.UnitPrice = effectivePrice;
+            input.PriceUnit = priceUnit;
             var discountValidationError = NormalizeAndValidateLineDiscount(input);
             if (discountValidationError != null)
                 return UnprocessableEntity(APIResponse<object>.Fail(discountValidationError));
@@ -623,7 +658,8 @@ public sealed class SalesTableController : ControllerBase
                 CustAccount = order.CustAccount, CustGroupId = order.CustGroup, CurrencyCode = order.CurrencyCode,
                 SalesQty = input.Quantity, QtyOrdered = input.Quantity, RemainSalesPhysical = input.Quantity,
                 RemainSalesFinancial = input.Quantity, SalesUnit = string.IsNullOrWhiteSpace(input.Unit) ? module.UnitId : input.Unit.Trim(), PriceUnit = input.PriceUnit,
-                SalesPrice = input.UnitPrice, LineAmount = input.Quantity * input.UnitPrice,
+                SalesPrice = input.UnitPrice, LineAmount = CalculateGrossLineAmount(input),
+                ManualPrice = input.UsePriceAgreement ? NoYes.No : NoYes.Yes,
                 SalesStatus = SalesStatus.Backorder, SalesType = input.LineType ?? order.SalesType ?? SalesType.Sales,
                 DeliveryType = input.DeliveryType ?? SalesDeliveryType.None, SalesCategory = input.SalesCategory,
                 InventRefType = input.ItemReferenceType ?? InventRefType.None,
@@ -669,10 +705,30 @@ public sealed class SalesTableController : ControllerBase
                 TaxItemGroup = lineTaxItemGroup,
                 DataAreaId = order.DataAreaId,
             };
-            var inventSiteId = string.IsNullOrWhiteSpace(input.InventSiteId) ? order.InventSiteId : input.InventSiteId;
-            var inventLocationId = string.IsNullOrWhiteSpace(input.InventLocationId) ? order.InventLocationId : input.InventLocationId;
+            var inventSiteId = string.IsNullOrWhiteSpace(input.InventSiteId) ? order.InventSiteId : input.InventSiteId.Trim();
+            var inventLocationId = string.IsNullOrWhiteSpace(input.InventLocationId) ? order.InventLocationId : input.InventLocationId.Trim();
+            var dimensionError = await ValidateSiteWarehouseAsync(inventSiteId, inventLocationId, cancellationToken);
+            if (dimensionError != null) return UnprocessableEntity(APIResponse<object>.Fail(dimensionError));
+            if (!string.IsNullOrWhiteSpace(input.BatchNumber)
+                && !await _dbContext.Set<InventBatch>().AnyAsync(batch => batch.DataAreaId == order.DataAreaId
+                    && batch.ItemId == line.ItemId && batch.InventBatchId == input.BatchNumber.Trim(), cancellationToken))
+                return UnprocessableEntity(APIResponse<object>.Fail("The selected batch does not belong to this item."));
+            if (!string.IsNullOrWhiteSpace(input.SerialNumber)
+                && !await _dbContext.Set<InventSerial>().AnyAsync(serial => serial.DataAreaId == order.DataAreaId
+                    && serial.ItemId == line.ItemId && serial.InventSerialId == input.SerialNumber.Trim(), cancellationToken))
+                return UnprocessableEntity(APIResponse<object>.Fail("The selected serial number does not belong to this item."));
+            var dimensionTemplate = new InventDim
+            {
+                ConfigId = input.ConfigId?.Trim() ?? string.Empty,
+                InventSizeId = input.InventSizeId?.Trim() ?? string.Empty,
+                InventColorId = input.InventColorId?.Trim() ?? string.Empty,
+                InventStyleId = input.InventStyleId?.Trim() ?? string.Empty,
+                InventVersionId = input.InventVersionId?.Trim() ?? string.Empty,
+                InventBatchId = input.BatchNumber?.Trim() ?? string.Empty,
+                InventSerialId = input.SerialNumber?.Trim() ?? string.Empty
+            };
             await _inventoryDemand.CreateAsync(order, line,
-                inventSiteId, inventLocationId, cancellationToken);
+                inventSiteId, inventLocationId, cancellationToken, dimensionTemplate);
             _dbContext.Set<SalesLine>().Add(line);
             order.SmmSalesAmountTotal += line.LineAmount;
             await _dbContext.SaveChangesAsync(cancellationToken);
@@ -729,6 +785,8 @@ public sealed class SalesTableController : ControllerBase
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
             var order = await _dbContext.Set<SalesTable>().FirstOrDefaultAsync(row => row.RecId == recId, cancellationToken);
             if (order == null) return (IActionResult)NotFound(APIResponse<object>.Fail("Sales order was not found."));
+            if (!string.Equals(order.DataAreaId, _company.GetDataAreaId(), StringComparison.OrdinalIgnoreCase))
+                return NotFound(APIResponse<object>.Fail("Sales order was not found in the selected company."));
             if (order.SalesStatus != SalesStatus.Backorder)
                 return UnprocessableEntity(APIResponse<object>.Fail("Only open sales orders can be changed."));
             var line = await _dbContext.Set<SalesLine>().FirstOrDefaultAsync(row => row.RecId == lineId && row.SalesId == order.SalesId && row.DataAreaId == order.DataAreaId, cancellationToken);
@@ -772,13 +830,59 @@ public sealed class SalesTableController : ControllerBase
                 if (input.PreventPartialDelivery.HasValue)
                     line.Complete = input.PreventPartialDelivery.Value ? 1 : 0;
                 if (!string.IsNullOrWhiteSpace(input.Description)) line.Name = input.Description.Trim();
+                var salesModule = await _dbContext.Set<InventTableModule>().AsNoTracking()
+                    .FirstOrDefaultAsync(row => row.ItemId == line.ItemId
+                        && row.DataAreaId == order.DataAreaId && (int)row.ModuleType == 2, cancellationToken);
+                if (salesModule == null)
+                    return UnprocessableEntity(APIResponse<object>.Fail("The item must have a sales unit configured."));
+                var requestedUnit = string.IsNullOrWhiteSpace(input.Unit) ? line.SalesUnit : input.Unit.Trim();
+                if (!string.Equals(requestedUnit, salesModule.UnitId, StringComparison.OrdinalIgnoreCase))
+                    return UnprocessableEntity(APIResponse<object>.Fail("Sales unit conversion is unavailable for this item; use its configured sales unit."));
+                var requestedPriceUnit = input.PriceUnit > 0 ? input.PriceUnit :
+                    line.PriceUnit > 0 ? line.PriceUnit : 1m;
+                var priceWasChanged = input.UnitPrice != line.SalesPrice;
+                var priceUnitWasChanged = input.PriceUnit > 0 && input.PriceUnit != line.PriceUnit;
+                var requestedPrice = priceWasChanged ? input.UnitPrice : line.SalesPrice;
+                var shouldRecalculateAgreement = input.UsePriceAgreement
+                    || (!priceWasChanged && !priceUnitWasChanged && input.Quantity != line.SalesQty
+                        && line.ManualPrice != NoYes.Yes);
+                if (shouldRecalculateAgreement)
+                {
+                    var currentDimensionId = line.InventDimId;
+                    var applicablePrice = await FindSalesPriceAsync(order, line.ItemId,
+                        input.Quantity, requestedUnit, requestedPriceUnit,
+                        currentDimensionId, cancellationToken);
+                    if (applicablePrice != null)
+                    {
+                        requestedPrice = applicablePrice.Value.Amount;
+                        requestedPriceUnit = applicablePrice.Value.PriceUnit;
+                        line.ManualPrice = NoYes.No;
+                    }
+                    else if (shouldRecalculateAgreement && !input.UsePriceAgreement
+                        && input.Quantity != line.SalesQty && line.ManualPrice != NoYes.Yes)
+                    {
+                        requestedPrice = salesModule.Price;
+                        requestedPriceUnit = salesModule.PriceUnit > 0 ? salesModule.PriceUnit : 1m;
+                    }
+                }
+                if (priceWasChanged || priceUnitWasChanged)
+                    line.ManualPrice = NoYes.Yes;
+                input.UnitPrice = requestedPrice;
+                input.PriceUnit = requestedPriceUnit;
+                line.SalesPrice = requestedPrice;
+                line.PriceUnit = requestedPriceUnit;
+                var updatedDiscountValidationError = NormalizeAndValidateLineDiscount(input);
+                if (updatedDiscountValidationError != null)
+                    return UnprocessableEntity(APIResponse<object>.Fail(updatedDiscountValidationError));
+                var processedSalesQuantity = line.SalesQty - line.RemainSalesPhysical;
+                var processedFinancialQuantity = line.SalesQty - line.RemainSalesFinancial;
                 line.SalesQty = input.Quantity;
                 line.QtyOrdered = input.Quantity;
-                line.RemainSalesPhysical = input.Quantity;
-                line.RemainSalesFinancial = input.Quantity;
-                line.SalesPrice = input.UnitPrice;
-                line.PriceUnit = 1;
-                line.LineAmount = input.Quantity * input.UnitPrice;
+                line.RemainSalesPhysical = Math.Max(0m, input.Quantity - processedSalesQuantity);
+                line.RemainSalesFinancial = Math.Max(0m, input.Quantity - processedFinancialQuantity);
+                line.RemainInventPhysical = line.RemainSalesPhysical;
+                line.RemainInventFinancial = line.RemainSalesFinancial;
+                line.LineAmount = CalculateGrossLineAmount(input);
                 if (!string.IsNullOrWhiteSpace(input.Unit)) line.SalesUnit = input.Unit.Trim();
                 if (input.DeliveryDate.HasValue) line.ReceiptDateRequested = input.DeliveryDate.Value.Date;
                 line.DlvMode = input.DeliveryMode?.Trim() ?? string.Empty;
@@ -831,7 +935,7 @@ public sealed class SalesTableController : ControllerBase
                 if (input.CustomerLineNumber.HasValue) line.CustomerLineNum = input.CustomerLineNumber.Value;
                 line.PackingUnit = input.PackingUnit?.Trim() ?? string.Empty;
                 line.PackingUnitQty = input.PackingUnitQuantity;
-                line.PriceUnit = input.PriceUnit;
+                line.PriceUnit = requestedPriceUnit;
                 line.LineDisc = input.LineDiscount;
                 line.LinePercent = input.LineDiscountPercent;
                 line.MultiLnDisc = input.MultiLineDiscount;
@@ -852,6 +956,9 @@ public sealed class SalesTableController : ControllerBase
                 var inventLocationId = string.IsNullOrWhiteSpace(input.InventLocationId)
                     ? currentDimension?.InventLocationId ?? order.InventLocationId
                     : input.InventLocationId.Trim();
+                var dimensionError = await ValidateSiteWarehouseAsync(inventSiteId, inventLocationId, cancellationToken);
+                if (dimensionError != null)
+                    return UnprocessableEntity(APIResponse<object>.Fail(dimensionError));
                 var batchNumber = input.BatchNumber?.Trim();
                 if (!string.IsNullOrEmpty(batchNumber)
                     && !await _dbContext.Set<InventBatch>().AnyAsync(batch => batch.DataAreaId == line.DataAreaId
@@ -862,8 +969,24 @@ public sealed class SalesTableController : ControllerBase
                     && !await _dbContext.Set<InventSerial>().AnyAsync(serial => serial.DataAreaId == line.DataAreaId
                         && serial.ItemId == line.ItemId && serial.InventSerialId == serialNumber, cancellationToken))
                     return UnprocessableEntity(APIResponse<object>.Fail("The selected serial number does not belong to this item."));
+                var dimensionTemplate = new InventDim
+                {
+                    ConfigId = input.ConfigId == null ? currentDimension?.ConfigId ?? string.Empty : input.ConfigId.Trim(),
+                    InventSizeId = input.InventSizeId == null ? currentDimension?.InventSizeId ?? string.Empty : input.InventSizeId.Trim(),
+                    InventColorId = input.InventColorId == null ? currentDimension?.InventColorId ?? string.Empty : input.InventColorId.Trim(),
+                    InventStyleId = input.InventStyleId == null ? currentDimension?.InventStyleId ?? string.Empty : input.InventStyleId.Trim(),
+                    InventVersionId = input.InventVersionId == null ? currentDimension?.InventVersionId ?? string.Empty : input.InventVersionId.Trim(),
+                    InventBatchId = batchNumber ?? currentDimension?.InventBatchId ?? string.Empty,
+                    InventSerialId = serialNumber ?? currentDimension?.InventSerialId ?? string.Empty,
+                    InventStatusId = currentDimension?.InventStatusId ?? string.Empty,
+                    WmsLocationId = currentDimension?.WmsLocationId ?? string.Empty,
+                    LicensePlateId = currentDimension?.LicensePlateId ?? string.Empty,
+                    InventDimension10 = currentDimension?.InventDimension10 ?? 0m,
+                    InventDimension9 = currentDimension?.InventDimension9 ?? default,
+                    InventDimension9TzId = currentDimension?.InventDimension9TzId ?? 0
+                };
                 await _inventoryDemand.UpdateAsync(line, inventSiteId, inventLocationId,
-                    cancellationToken, batchNumber, serialNumber);
+                    cancellationToken, batchNumber, serialNumber, dimensionTemplate);
                 responseSiteId = inventSiteId;
                 responseLocationId = inventLocationId;
             }
@@ -917,6 +1040,11 @@ public sealed class SalesTableController : ControllerBase
         deliveryPostalAddress = line.DeliveryPostalAddress.ToString(System.Globalization.CultureInfo.InvariantCulture), line.TaxGroup, line.TaxItemGroup, line.LedgerDimension,
         batchNumber = inventoryDimension?.InventBatchId ?? string.Empty,
         serialNumber = inventoryDimension?.InventSerialId ?? string.Empty,
+        configId = inventoryDimension?.ConfigId ?? string.Empty,
+        inventSizeId = inventoryDimension?.InventSizeId ?? string.Empty,
+        inventColorId = inventoryDimension?.InventColorId ?? string.Empty,
+        inventStyleId = inventoryDimension?.InventStyleId ?? string.Empty,
+        inventVersionId = inventoryDimension?.InventVersionId ?? string.Empty,
         location = inventoryDimension?.WmsLocationId ?? string.Empty,
         inventoryStatus = inventoryDimension?.InventStatusId ?? string.Empty,
         licensePlate = inventoryDimension?.LicensePlateId ?? string.Empty,
@@ -933,7 +1061,7 @@ public sealed class SalesTableController : ControllerBase
 
     private static string? NormalizeAndValidateLineDiscount(AddSalesLineInput input)
     {
-        var grossAmount = input.Quantity * input.UnitPrice;
+        var grossAmount = input.Quantity * input.UnitPrice / (input.PriceUnit > 0 ? input.PriceUnit : 1m);
         if (input.LineDiscount < 0 || input.LineDiscountPercent < 0 || input.LineDiscountPercent > 100)
             return "The line discount must be nonnegative and the discount percentage must be between 0 and 100.";
 
@@ -959,6 +1087,66 @@ public sealed class SalesTableController : ControllerBase
             return "The line discount amount does not match the discount percentage.";
 
         return null;
+    }
+
+    private async Task<(decimal Amount, decimal PriceUnit)?> FindSalesPriceAsync(SalesTable order,
+        string itemId, decimal quantity, string unitId, decimal fallbackPriceUnit,
+        string? inventDimId, CancellationToken cancellationToken)
+    {
+        var today = DateTime.UtcNow.Date;
+        var agreements = await _dbContext.Set<PriceDiscTable>().AsNoTracking()
+            .Where(row => row.DataAreaId == order.DataAreaId
+                && row.Module == ModuleInventCustVend.Cust
+                && row.Relation == PriceType.PriceSales
+                && row.Currency == order.CurrencyCode
+                && (row.UnitId == unitId || row.UnitAppliesToAll != 0)
+                && (string.IsNullOrEmpty(row.PriceGroup)
+                    || (!string.IsNullOrEmpty(order.PriceGroupId)
+                        && row.PriceGroup == order.PriceGroupId))
+                && (string.IsNullOrEmpty(row.InventDimId)
+                    || row.InventDimId == inventDimId)
+                && (row.FromDate == default || row.FromDate <= today)
+                && (row.ToDate == default || row.ToDate >= today)
+                && (row.QuantityAmountFrom <= 0 || row.QuantityAmountFrom <= quantity)
+                && (row.QuantityAmountTo <= 0 || row.QuantityAmountTo >= quantity)
+                && ((row.ItemCode == PriceDiscProductCodeType.Table && row.ItemRelation == itemId)
+                    || row.ItemCode == PriceDiscProductCodeType.All)
+                && ((row.AccountCode == PriceDiscPartyCodeType.Table && row.AccountRelation == order.CustAccount)
+                    || row.AccountCode == PriceDiscPartyCodeType.All))
+            .ToListAsync(cancellationToken);
+
+        var rankedAgreements = agreements
+            .OrderByDescending(row => row.AccountCode == PriceDiscPartyCodeType.Table)
+            .ThenByDescending(row => row.ItemCode == PriceDiscProductCodeType.Table)
+            .ThenByDescending(row => !string.IsNullOrEmpty(row.PriceGroup))
+            .ThenByDescending(row => !string.IsNullOrEmpty(row.InventDimId))
+            .ThenByDescending(row => row.QuantityAmountFrom)
+            .ThenByDescending(row => row.FromDate)
+            .ToList();
+        var agreement = rankedAgreements.FirstOrDefault();
+        if (agreement == null) return null;
+
+        if (agreement.SearchAgain != 0)
+        {
+            var lowerEligiblePrice = rankedAgreements
+                .Where(row => row.RecId != agreement.RecId)
+                .OrderBy(row => row.Amount / (row.PriceUnit > 0 ? row.PriceUnit : 1m))
+                .FirstOrDefault();
+            if (lowerEligiblePrice != null
+                && lowerEligiblePrice.Amount / (lowerEligiblePrice.PriceUnit > 0 ? lowerEligiblePrice.PriceUnit : 1m)
+                    < agreement.Amount / (agreement.PriceUnit > 0 ? agreement.PriceUnit : 1m))
+                agreement = lowerEligiblePrice;
+        }
+
+        var agreementPriceUnit = agreement.PriceUnit > 0 ? agreement.PriceUnit :
+            fallbackPriceUnit > 0 ? fallbackPriceUnit : 1m;
+        return (agreement.Amount, agreementPriceUnit);
+    }
+
+    private static decimal CalculateGrossLineAmount(AddSalesLineInput input)
+    {
+        var priceUnit = input.PriceUnit > 0 ? input.PriceUnit : 1m;
+        return input.Quantity * input.UnitPrice / priceUnit;
     }
 
     public sealed class CreateSalesDeliveryAddressInput
@@ -992,6 +1180,25 @@ public sealed class SalesTableController : ControllerBase
         return await _dbContext.Set<SalesLine>().AsNoTracking().AnyAsync(line =>
             line.SalesId == order.SalesId && line.DataAreaId == order.DataAreaId
             && line.DeliveryPostalAddress == postalAddressId, cancellationToken);
+    }
+
+    private async Task<string?> ValidateSiteWarehouseAsync(string? siteId, string? warehouseId,
+        CancellationToken cancellationToken)
+    {
+        siteId = siteId?.Trim() ?? string.Empty;
+        warehouseId = warehouseId?.Trim() ?? string.Empty;
+        var dataAreaId = _company.GetDataAreaId();
+        if (!string.IsNullOrEmpty(siteId)
+            && !await _dbContext.Set<InventSite>().AnyAsync(site => site.DataAreaId == dataAreaId
+                && site.SiteId == siteId, cancellationToken))
+            return "Site was not found in the selected company.";
+        if (!string.IsNullOrEmpty(warehouseId)
+            && (string.IsNullOrEmpty(siteId)
+                || !await _dbContext.Set<InventLocation>().AnyAsync(location =>
+                    location.DataAreaId == dataAreaId && location.InventLocationId == warehouseId
+                    && location.InventSiteId == siteId, cancellationToken)))
+            return "Warehouse was not found in the selected site.";
+        return null;
     }
 
     private async Task<string?> ValidateTaxSetupAsync(
@@ -1270,27 +1477,50 @@ public sealed class SalesTableController : ControllerBase
             await using var transaction = await _dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
             var order = await _dbContext.Set<SalesTable>().FirstOrDefaultAsync(row => row.RecId == recId, cancellationToken);
             if (order == null) return (IActionResult)NotFound(APIResponse<object>.Fail("Sales order was not found."));
+            if (!string.Equals(order.DataAreaId, _company.GetDataAreaId(), StringComparison.OrdinalIgnoreCase))
+                return NotFound(APIResponse<object>.Fail("Sales order was not found in the selected company."));
             if (order.SalesStatus != SalesStatus.Backorder)
                 return UnprocessableEntity(APIResponse<object>.Fail("Only open sales orders can be changed."));
             var invoiceAccount = input.InvoiceAccount.Trim();
             if (!await _dbContext.Set<CustTable>().AnyAsync(row => row.AccountNum == invoiceAccount && row.DataAreaId == order.DataAreaId, cancellationToken))
                 return UnprocessableEntity(APIResponse<object>.Fail("Invoice account was not found."));
             var currency = input.CurrencyCode.Trim();
+            if (!await _dbContext.Set<Currency>().AnyAsync(row => row.CurrencyCode == currency
+                    && row.DataAreaId == order.DataAreaId, cancellationToken))
+                return UnprocessableEntity(APIResponse<object>.Fail("Currency was not found in the selected company."));
+            var paymentTerms = input.PaymentTerms.Trim();
+            if (!string.IsNullOrEmpty(paymentTerms)
+                && !await _dbContext.Set<PaymTerm>().AnyAsync(term => term.PaymTermId == paymentTerms, cancellationToken))
+                return UnprocessableEntity(APIResponse<object>.Fail("Payment terms were not found."));
+            var paymentMethod = input.PaymentMethod.Trim();
+            if (!string.IsNullOrEmpty(paymentMethod)
+                && !await _dbContext.Set<CustPaymModeTable>().AnyAsync(mode => mode.PaymMode == paymentMethod, cancellationToken))
+                return UnprocessableEntity(APIResponse<object>.Fail("Payment method was not found."));
+            var deliveryMode = input.DeliveryMode.Trim();
+            if (!string.IsNullOrEmpty(deliveryMode)
+                && !await _dbContext.Set<DlvMode>().AnyAsync(mode => mode.Code == deliveryMode, cancellationToken))
+                return UnprocessableEntity(APIResponse<object>.Fail("Delivery mode was not found."));
+            var deliveryTerms = input.DeliveryTerms.Trim();
+            if (!string.IsNullOrEmpty(deliveryTerms)
+                && !await _dbContext.Set<DlvTerm>().AnyAsync(term => term.Code == deliveryTerms, cancellationToken))
+                return UnprocessableEntity(APIResponse<object>.Fail("Delivery terms were not found."));
             if (currency != order.CurrencyCode && await _dbContext.Set<SalesLine>().AnyAsync(row => row.SalesId == order.SalesId && row.DataAreaId == order.DataAreaId, cancellationToken))
                 return UnprocessableEntity(APIResponse<object>.Fail("Currency cannot be changed after sales lines have been added."));
             order.InvoiceAccount = invoiceAccount;
             order.CurrencyCode = currency;
             order.CustomerRef = input.CustomerReference?.Trim() ?? string.Empty;
-            order.PaymTerm = input.PaymentTerms?.Trim() ?? string.Empty;
-            order.DlvMode = input.DeliveryMode?.Trim() ?? string.Empty;
-            order.DlvTerm = input.DeliveryTerms?.Trim() ?? string.Empty;
+            order.PaymTerm = paymentTerms;
+            order.DlvMode = deliveryMode;
+            order.DlvTerm = deliveryTerms;
             var inventSiteId = input.InventSiteId.Trim();
             var inventLocationId = input.InventLocationId.Trim();
             if (!string.IsNullOrEmpty(inventSiteId) &&
-                !await _dbContext.Set<InventSite>().AnyAsync(row => row.SiteId == inventSiteId, cancellationToken))
+                !await _dbContext.Set<InventSite>().AnyAsync(row => row.SiteId == inventSiteId
+                    && row.DataAreaId == order.DataAreaId, cancellationToken))
                 return UnprocessableEntity(APIResponse<object>.Fail("Site was not found."));
             if (!string.IsNullOrEmpty(inventLocationId) &&
-                !await _dbContext.Set<InventLocation>().AnyAsync(row => row.InventLocationId == inventLocationId && row.InventSiteId == inventSiteId, cancellationToken))
+                !await _dbContext.Set<InventLocation>().AnyAsync(row => row.InventLocationId == inventLocationId
+                    && row.InventSiteId == inventSiteId && row.DataAreaId == order.DataAreaId, cancellationToken))
                 return UnprocessableEntity(APIResponse<object>.Fail("Warehouse was not found in the selected site."));
             order.InventSiteId = inventSiteId;
             order.InventLocationId = inventLocationId;
@@ -1339,7 +1569,7 @@ public sealed class SalesTableController : ControllerBase
             order.ShipCarrierAccountCode = input.BrokerId.Trim();
             order.Transport = input.TransportMode.Trim();
             order.ShipCarrierDlvType = input.CarrierService;
-            order.PaymMode = input.PaymentMethod.Trim();
+            order.PaymMode = paymentMethod;
             order.PaymentSched = input.PaymentSchedule.Trim();
             order.PaymSpec = input.PaymentSpecification.Trim();
             order.FixedDueDate = input.FixedDueDate?.Date ?? default;
@@ -1378,9 +1608,11 @@ public sealed class SalesTableController : ControllerBase
         CancellationToken cancellationToken = default)
     {
         var account = input.CustomerAccount.Trim();
+        var dataAreaId = _company.GetDataAreaId();
         var customer = await _dbContext.Set<CustTable>()
             .AsNoTracking()
-            .FirstOrDefaultAsync(candidate => candidate.AccountNum == account, cancellationToken);
+            .FirstOrDefaultAsync(candidate => candidate.AccountNum == account
+                && candidate.DataAreaId == dataAreaId, cancellationToken);
         if (customer == null)
             return UnprocessableEntity(APIResponse<SalesOrderListDto>.Fail("Customer account was not found."));
 
@@ -1398,6 +1630,40 @@ public sealed class SalesTableController : ControllerBase
             && !await _dbContext.Set<TaxGroupHeading>().AsNoTracking()
                 .AnyAsync(group => group.TaxGroup == taxGroupId, cancellationToken))
             return UnprocessableEntity(APIResponse<SalesOrderListDto>.Fail("The selected sales tax group was not found."));
+        var invoiceAccount = string.IsNullOrWhiteSpace(input.InvoiceAccount)
+            ? (string.IsNullOrWhiteSpace(customer.InvoiceAccount) ? account : customer.InvoiceAccount.Trim())
+            : input.InvoiceAccount.Trim();
+        if (!await _dbContext.Set<CustTable>().AsNoTracking().AnyAsync(candidate =>
+                candidate.AccountNum == invoiceAccount && candidate.DataAreaId == dataAreaId, cancellationToken))
+            return UnprocessableEntity(APIResponse<SalesOrderListDto>.Fail("The invoice account was not found in the selected company."));
+        var currencyCode = string.IsNullOrWhiteSpace(input.CurrencyCode)
+            ? customer.CurrencyCode : input.CurrencyCode.Trim();
+        if (string.IsNullOrWhiteSpace(currencyCode)
+            || !await _dbContext.Set<Currency>().AsNoTracking().AnyAsync(currency =>
+                currency.CurrencyCode == currencyCode && currency.DataAreaId == dataAreaId, cancellationToken))
+            return UnprocessableEntity(APIResponse<SalesOrderListDto>.Fail("The selected currency was not found in the selected company."));
+        var paymentTerms = string.IsNullOrWhiteSpace(input.PaymentTerms) ? customer.PaymTermId : input.PaymentTerms.Trim();
+        if (!string.IsNullOrWhiteSpace(paymentTerms)
+            && !await _dbContext.Set<PaymTerm>().AnyAsync(term => term.PaymTermId == paymentTerms, cancellationToken))
+            return UnprocessableEntity(APIResponse<SalesOrderListDto>.Fail("The selected payment terms were not found."));
+        var paymentMethod = string.IsNullOrWhiteSpace(input.PaymentMethod) ? customer.PaymModeId : input.PaymentMethod.Trim();
+        if (!string.IsNullOrWhiteSpace(paymentMethod)
+            && !await _dbContext.Set<CustPaymModeTable>().AnyAsync(mode => mode.PaymMode == paymentMethod, cancellationToken))
+            return UnprocessableEntity(APIResponse<SalesOrderListDto>.Fail("The selected payment method was not found."));
+        var deliveryMode = string.IsNullOrWhiteSpace(input.DeliveryMode) ? customer.DlvModeId : input.DeliveryMode.Trim();
+        if (!string.IsNullOrWhiteSpace(deliveryMode)
+            && !await _dbContext.Set<DlvMode>().AnyAsync(mode => mode.Code == deliveryMode, cancellationToken))
+            return UnprocessableEntity(APIResponse<SalesOrderListDto>.Fail("The selected delivery mode was not found."));
+        var deliveryTerms = input.DeliveryTerms?.Trim() ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(deliveryTerms)
+            && !await _dbContext.Set<DlvTerm>().AnyAsync(term => term.Code == deliveryTerms, cancellationToken))
+            return UnprocessableEntity(APIResponse<SalesOrderListDto>.Fail("The selected delivery terms were not found."));
+        var inventSiteId = string.IsNullOrWhiteSpace(input.InventSiteId)
+            ? customer.InventSiteId : input.InventSiteId.Trim();
+        var inventLocationId = string.IsNullOrWhiteSpace(input.InventLocationId)
+            ? customer.InventLocationId : input.InventLocationId.Trim();
+        var dimensionError = await ValidateSiteWarehouseAsync(inventSiteId, inventLocationId, cancellationToken);
+        if (dimensionError != null) return UnprocessableEntity(APIResponse<SalesOrderListDto>.Fail(dimensionError));
         if (customer.Party > 0)
         {
             var customerAddresses = await (
@@ -1445,20 +1711,19 @@ public sealed class SalesTableController : ControllerBase
             DocumentStatus = DocumentStatus.None,
             SalesType = SalesType.Sales,
             CustAccount = account,
-            InvoiceAccount = string.IsNullOrWhiteSpace(input.InvoiceAccount)
-                ? string.IsNullOrWhiteSpace(customer.InvoiceAccount) ? account : customer.InvoiceAccount
-                : input.InvoiceAccount.Trim(),
+            InvoiceAccount = invoiceAccount,
             CustGroup = customer.CustGroupId,
-            CurrencyCode = string.IsNullOrWhiteSpace(input.CurrencyCode) ? customer.CurrencyCode : input.CurrencyCode.Trim(),
+            CurrencyCode = currencyCode,
             TaxGroupId = taxGroupId,
-            PaymTerm = string.IsNullOrWhiteSpace(input.PaymentTerms) ? customer.PaymTermId : input.PaymentTerms.Trim(),
-            PaymMode = string.IsNullOrWhiteSpace(input.PaymentMethod) ? customer.PaymModeId : input.PaymentMethod.Trim(),
-            DlvMode = string.IsNullOrWhiteSpace(input.DeliveryMode) ? customer.DlvModeId : input.DeliveryMode.Trim(),
-            DlvTerm = input.DeliveryTerms?.Trim() ?? string.Empty,
-            InventSiteId = string.IsNullOrWhiteSpace(input.InventSiteId) ? customer.InventSiteId : input.InventSiteId.Trim(),
-            InventLocationId = string.IsNullOrWhiteSpace(input.InventLocationId) ? customer.InventLocationId : input.InventLocationId.Trim(),
+            PaymTerm = paymentTerms,
+            PaymMode = paymentMethod,
+            DlvMode = deliveryMode,
+            DlvTerm = deliveryTerms,
+            InventSiteId = inventSiteId,
+            InventLocationId = inventLocationId,
             SalesGroup = input.SalesGroup?.Trim() ?? string.Empty,
             SalesPoolId = customer.SalesPoolId,
+            PriceGroupId = input.PriceGroup?.Trim() ?? string.Empty,
             CustRequisitionNum = input.CustomerRequisitionNumber?.Trim() ?? string.Empty,
             IntercompanyOrder = input.Intercompany,
             IntercompanyCompanyId = input.IntercompanyCompanyId?.Trim() ?? string.Empty,
@@ -1477,7 +1742,7 @@ public sealed class SalesTableController : ControllerBase
             DeliveryDateControlType = Enum.IsDefined(typeof(SalesDlvDateControlType), input.DeliveryDateControlType)
                 ? (SalesDlvDateControlType)input.DeliveryDateControlType
                 : default,
-            DataAreaId = _company.GetDataAreaId() ?? "dat"
+            DataAreaId = dataAreaId ?? "dat"
         };
 
         _dbContext.Set<SalesTable>().Add(order);

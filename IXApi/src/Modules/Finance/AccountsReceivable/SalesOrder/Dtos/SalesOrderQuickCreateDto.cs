@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using IAX.IXApi.Modules.Finance.Common;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
 
@@ -33,4 +34,6 @@ public sealed class SalesOrderQuickCreateDto
     public bool ConfirmDates { get; set; }
     public string? DeliveryMode { get; set; }
     public string? DeliveryTerms { get; set; }
+    [StringLength(FieldLengths.PriceGroupId)]
+    public string? PriceGroup { get; set; }
 }

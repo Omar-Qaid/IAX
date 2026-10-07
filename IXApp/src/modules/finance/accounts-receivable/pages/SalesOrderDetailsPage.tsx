@@ -865,8 +865,12 @@ export function SalesOrderDetailsPage(): React.ReactElement {
                 name === 'unitPrice' ||
                 name === 'lineDiscount' ||
                 name === 'lineDiscountPercent')
-            )
-              return synchronizeSalesLineDiscount(draft, name, value);
+            ) {
+              const updated = synchronizeSalesLineDiscount(draft, name, value);
+              return name === 'unitPrice'
+                ? { ...updated, usePriceAgreement: false }
+                : updated;
+            }
             return { ...draft, [name]: value };
           });
         }}
@@ -1453,6 +1457,11 @@ export function SalesOrderDetailsPage(): React.ReactElement {
                 {t('salesOrder.sourcingGroups.tracking', 'أبعاد التتبع')}
               </Typography>
               <Box sx={{ display: 'grid', gap: 1.5 }}>
+                {lineDetailField('configId', 'Configuration')}
+                {lineDetailField('inventSizeId', 'Size')}
+                {lineDetailField('inventColorId', 'Color')}
+                {lineDetailField('inventStyleId', 'Style')}
+                {lineDetailField('inventVersionId', 'Version')}
                 {inventoryTrackingField('batchNumber', t('salesOrder.batchNumber', 'رقم الدفعة'))}
                 {inventoryTrackingField('serialNumber', t('salesOrder.serialNumber', 'الرقم التسلسلي'))}
               </Box>
