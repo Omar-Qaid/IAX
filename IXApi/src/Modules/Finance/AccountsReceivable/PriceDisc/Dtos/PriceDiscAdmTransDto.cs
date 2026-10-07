@@ -108,6 +108,5 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
 
         public long PriceComponentCombination { get; set; }
 
-        public long Partition { get; set; }
     }
 }

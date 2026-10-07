@@ -52,8 +52,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public decimal PriceUnit { get; set; }
         public decimal CostPrice { get; set; }
         public decimal SalesPrice { get; set; }
-        public NoYes ManualPrice { get; set; }
-        public NoYes ManualPrice { get; set; }
         public decimal SalesMarkup { get; set; }
 
         // ==========================================================

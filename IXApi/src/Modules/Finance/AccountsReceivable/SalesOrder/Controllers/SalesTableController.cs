@@ -562,7 +562,7 @@ public sealed class SalesTableController : ControllerBase
         [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0", "1000000000")]
         public decimal PackingUnitQuantity { get; set; }
         [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0.000001", "1000000000")]
-        public decimal PriceUnit { get; set; } = 1;
+        public decimal? PriceUnit { get; set; }
         public bool UsePriceAgreement { get; set; }
         [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0", "1000000000")]
         public decimal LineDiscount { get; set; }
@@ -613,7 +613,7 @@ public sealed class SalesTableController : ControllerBase
                 return UnprocessableEntity(APIResponse<object>.Fail("The item must have a sales unit configured."));
             if (!string.IsNullOrWhiteSpace(input.Unit) && !string.Equals(input.Unit.Trim(), module.UnitId, StringComparison.OrdinalIgnoreCase))
                 return UnprocessableEntity(APIResponse<object>.Fail("Sales unit conversion is unavailable for this item; use its configured sales unit."));
-            var priceUnit = input.PriceUnit > 0 ? input.PriceUnit : 1m;
+            var priceUnit = input.PriceUnit.GetValueOrDefault() > 0 ? input.PriceUnit!.Value : 1m;
             var enteredPrice = input.UnitPrice;
             var usePriceAgreement = input.UsePriceAgreement;
             var listPrice = usePriceAgreement
@@ -657,9 +657,9 @@ public sealed class SalesTableController : ControllerBase
                 Name = string.IsNullOrWhiteSpace(input.Description) ? item.NameAlias : input.Description.Trim(),
                 CustAccount = order.CustAccount, CustGroupId = order.CustGroup, CurrencyCode = order.CurrencyCode,
                 SalesQty = input.Quantity, QtyOrdered = input.Quantity, RemainSalesPhysical = input.Quantity,
-                RemainSalesFinancial = input.Quantity, SalesUnit = string.IsNullOrWhiteSpace(input.Unit) ? module.UnitId : input.Unit.Trim(), PriceUnit = input.PriceUnit,
+                RemainSalesFinancial = input.Quantity, SalesUnit = string.IsNullOrWhiteSpace(input.Unit) ? module.UnitId : input.Unit.Trim(), PriceUnit = input.PriceUnit.GetValueOrDefault(1m),
                 SalesPrice = input.UnitPrice, LineAmount = CalculateGrossLineAmount(input),
-                ManualPrice = input.UsePriceAgreement ? NoYes.No : NoYes.Yes,
+                ManualEntryChangePolicy = input.UsePriceAgreement ? 0L : 1L,
                 SalesStatus = SalesStatus.Backorder, SalesType = input.LineType ?? order.SalesType ?? SalesType.Sales,
                 DeliveryType = input.DeliveryType ?? SalesDeliveryType.None, SalesCategory = input.SalesCategory,
                 InventRefType = input.ItemReferenceType ?? InventRefType.None,
@@ -838,15 +838,16 @@ public sealed class SalesTableController : ControllerBase
                 var requestedUnit = string.IsNullOrWhiteSpace(input.Unit) ? line.SalesUnit : input.Unit.Trim();
                 if (!string.Equals(requestedUnit, salesModule.UnitId, StringComparison.OrdinalIgnoreCase))
                     return UnprocessableEntity(APIResponse<object>.Fail("Sales unit conversion is unavailable for this item; use its configured sales unit."));
-                var requestedPriceUnit = input.PriceUnit > 0 ? input.PriceUnit :
+                var requestedPriceUnit = input.PriceUnit.GetValueOrDefault() > 0 ? input.PriceUnit!.Value :
                     line.PriceUnit > 0 ? line.PriceUnit : 1m;
                 var priceWasChanged = input.UnitPrice != line.SalesPrice;
-                var priceUnitWasChanged = input.PriceUnit > 0 && input.PriceUnit != line.PriceUnit;
+                var priceUnitWasChanged = input.PriceUnit.HasValue && input.PriceUnit.Value != line.PriceUnit;
+                var manualPriceWasEdited = priceWasChanged || priceUnitWasChanged;
+                var repriceByAgreement = input.UsePriceAgreement
+                    || (!manualPriceWasEdited && input.Quantity != line.SalesQty
+                        && line.ManualEntryChangePolicy != 1L);
                 var requestedPrice = priceWasChanged ? input.UnitPrice : line.SalesPrice;
-                var shouldRecalculateAgreement = input.UsePriceAgreement
-                    || (!priceWasChanged && !priceUnitWasChanged && input.Quantity != line.SalesQty
-                        && line.ManualPrice != NoYes.Yes);
-                if (shouldRecalculateAgreement)
+                if (repriceByAgreement)
                 {
                     var currentDimensionId = line.InventDimId;
                     var applicablePrice = await FindSalesPriceAsync(order, line.ItemId,
@@ -856,17 +857,15 @@ public sealed class SalesTableController : ControllerBase
                     {
                         requestedPrice = applicablePrice.Value.Amount;
                         requestedPriceUnit = applicablePrice.Value.PriceUnit;
-                        line.ManualPrice = NoYes.No;
+                        line.ManualEntryChangePolicy = 0L;
                     }
-                    else if (shouldRecalculateAgreement && !input.UsePriceAgreement
-                        && input.Quantity != line.SalesQty && line.ManualPrice != NoYes.Yes)
+                    else if (input.Quantity != line.SalesQty && line.ManualEntryChangePolicy != 1L)
                     {
                         requestedPrice = salesModule.Price;
                         requestedPriceUnit = salesModule.PriceUnit > 0 ? salesModule.PriceUnit : 1m;
                     }
                 }
-                if (priceWasChanged || priceUnitWasChanged)
-                    line.ManualPrice = NoYes.Yes;
+                if (manualPriceWasEdited) line.ManualEntryChangePolicy = 1L;
                 input.UnitPrice = requestedPrice;
                 input.PriceUnit = requestedPriceUnit;
                 line.SalesPrice = requestedPrice;
@@ -1061,7 +1060,7 @@ public sealed class SalesTableController : ControllerBase
 
     private static string? NormalizeAndValidateLineDiscount(AddSalesLineInput input)
     {
-        var grossAmount = input.Quantity * input.UnitPrice / (input.PriceUnit > 0 ? input.PriceUnit : 1m);
+        var grossAmount = input.Quantity * input.UnitPrice / (input.PriceUnit.GetValueOrDefault() > 0 ? input.PriceUnit!.Value : 1m);
         if (input.LineDiscount < 0 || input.LineDiscountPercent < 0 || input.LineDiscountPercent > 100)
             return "The line discount must be nonnegative and the discount percentage must be between 0 and 100.";
 
@@ -1115,28 +1114,15 @@ public sealed class SalesTableController : ControllerBase
                     || row.AccountCode == PriceDiscPartyCodeType.All))
             .ToListAsync(cancellationToken);
 
-        var rankedAgreements = agreements
+        var agreement = agreements
             .OrderByDescending(row => row.AccountCode == PriceDiscPartyCodeType.Table)
             .ThenByDescending(row => row.ItemCode == PriceDiscProductCodeType.Table)
             .ThenByDescending(row => !string.IsNullOrEmpty(row.PriceGroup))
             .ThenByDescending(row => !string.IsNullOrEmpty(row.InventDimId))
             .ThenByDescending(row => row.QuantityAmountFrom)
             .ThenByDescending(row => row.FromDate)
-            .ToList();
-        var agreement = rankedAgreements.FirstOrDefault();
+            .FirstOrDefault();
         if (agreement == null) return null;
-
-        if (agreement.SearchAgain != 0)
-        {
-            var lowerEligiblePrice = rankedAgreements
-                .Where(row => row.RecId != agreement.RecId)
-                .OrderBy(row => row.Amount / (row.PriceUnit > 0 ? row.PriceUnit : 1m))
-                .FirstOrDefault();
-            if (lowerEligiblePrice != null
-                && lowerEligiblePrice.Amount / (lowerEligiblePrice.PriceUnit > 0 ? lowerEligiblePrice.PriceUnit : 1m)
-                    < agreement.Amount / (agreement.PriceUnit > 0 ? agreement.PriceUnit : 1m))
-                agreement = lowerEligiblePrice;
-        }
 
         var agreementPriceUnit = agreement.PriceUnit > 0 ? agreement.PriceUnit :
             fallbackPriceUnit > 0 ? fallbackPriceUnit : 1m;
@@ -1145,7 +1131,7 @@ public sealed class SalesTableController : ControllerBase
 
     private static decimal CalculateGrossLineAmount(AddSalesLineInput input)
     {
-        var priceUnit = input.PriceUnit > 0 ? input.PriceUnit : 1m;
+        var priceUnit = input.PriceUnit.GetValueOrDefault() > 0 ? input.PriceUnit!.Value : 1m;
         return input.Quantity * input.UnitPrice / priceUnit;
     }
 

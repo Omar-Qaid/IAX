@@ -146,7 +146,7 @@ export function SalesOrderLinesGrid({
     const focusedControl = document.activeElement as HTMLElement | null;
     navigatingCellRef.current = true;
     try {
-      const saved = await saveLine();
+      const saved = await saveLine(activeDraft);
       if (!saved && document.activeElement === document.body && focusedControl?.isConnected) {
         // Disabling an input during a request moves browser focus to the body.
         // Return to the unsaved value once its editor is enabled for a retry.
@@ -355,7 +355,9 @@ export function SalesOrderLinesGrid({
     'warehouse',
   ]);
   const handleCellBlur = () => {
-    if (activeDraft?.itemNumber && !navigatingCellRef.current) void saveLine();
+    if (activeDraft?.itemNumber && !navigatingCellRef.current) {
+      void saveLine(activeDraft);
+    }
   };
   const cancelCellEdit = (row: DetailLine) => {
     navigatingCellRef.current = true;
@@ -380,7 +382,7 @@ export function SalesOrderLinesGrid({
     if (event.key === 'Enter') {
       event.preventDefault();
       event.stopPropagation();
-      void saveLine();
+      void saveLine(activeDraft);
     }
     if (event.key === 'Escape' && activeDraft) {
       event.preventDefault();
@@ -721,7 +723,6 @@ export function SalesOrderLinesGrid({
               quantity: line.quantity,
               unit: line.unit,
               unitPrice: line.unitPrice,
-              priceUnit: line.priceUnit ?? 1,
               usePriceAgreement: line.usePriceAgreement === true,
               lineDiscount: line.lineDiscount ?? 0,
               lineDiscountPercent: line.lineDiscountPercent ?? 0,
@@ -741,12 +742,13 @@ export function SalesOrderLinesGrid({
       setDraftLine({
         ...line,
         ...saved,
+        usePriceAgreement: line.usePriceAgreement !== false,
         deliveryDate: (saved.deliveryDate ?? line.deliveryDate)?.slice(0, 10),
         orderId: order.id,
       });
       setSelectedLineId(saved.id);
       await queryClient.cancelQueries({ queryKey: ['sales-order-lines', order.id] });
-      const confirmed = { ...line, ...saved };
+      const confirmed = { ...line, ...saved, usePriceAgreement: line.usePriceAgreement !== false };
       queryClient.setQueryData<DetailLine[]>(['sales-order-lines', order.id], (current = []) =>
         current.some((row) => row.id === confirmed.id)
           ? current.map((row) => (row.id === confirmed.id ? confirmed : row))

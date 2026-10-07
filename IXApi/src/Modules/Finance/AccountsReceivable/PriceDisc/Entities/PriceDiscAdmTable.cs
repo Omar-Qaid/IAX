@@ -37,6 +37,5 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
 
         public int PriceApplyAdjustment { get; set; }
 
-        public long Partition { get; set; }
     }
 }

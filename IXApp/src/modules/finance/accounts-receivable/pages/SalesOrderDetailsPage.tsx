@@ -563,10 +563,16 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   }, [activeHeader, selectedLine]);
   const saveLineDetail = async (draft = lineDetailDraft) => {
     if (!draft || lineDetailSaveLock.current) return;
+    const quantityChanged = draft.quantity !== selectedLine?.quantity;
+    const priceChanged = draft.unitPrice !== selectedLine?.unitPrice;
+    const updateDraft = {
+      ...draft,
+      usePriceAgreement: priceChanged ? false : quantityChanged && draft.usePriceAgreement !== false,
+    };
     lineDetailSaveLock.current = true;
     setSavingLineDetail(true);
     try {
-      const saved = await salesOrderLinesApi.update(order!.id, draft);
+      const saved = await salesOrderLinesApi.update(order!.id, updateDraft);
       const savedLine = {
         ...saved,
         ledgerDimensionDisplay: draft.ledgerDimensionDisplay ?? saved.ledgerDimensionDisplay,
@@ -863,11 +869,12 @@ export function SalesOrderDetailsPage(): React.ReactElement {
               typeof value === 'number' &&
               (name === 'quantity' ||
                 name === 'unitPrice' ||
+                name === 'priceUnit' ||
                 name === 'lineDiscount' ||
                 name === 'lineDiscountPercent')
             ) {
               const updated = synchronizeSalesLineDiscount(draft, name, value);
-              return name === 'unitPrice'
+              return name === 'unitPrice' || name === 'priceUnit'
                 ? { ...updated, usePriceAgreement: false }
                 : updated;
             }
