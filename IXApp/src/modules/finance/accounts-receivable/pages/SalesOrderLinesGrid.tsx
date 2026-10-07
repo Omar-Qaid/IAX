@@ -723,7 +723,8 @@ export function SalesOrderLinesGrid({
               quantity: line.quantity,
               unit: line.unit,
               unitPrice: line.unitPrice,
-              usePriceAgreement: line.usePriceAgreement === true,
+              usePriceAgreement:
+                line.id === 'new-sales-line' && line.usePriceAgreement !== false,
               lineDiscount: line.lineDiscount ?? 0,
               lineDiscountPercent: line.lineDiscountPercent ?? 0,
               deliveryDate: line.deliveryDate || undefined,
@@ -742,13 +743,13 @@ export function SalesOrderLinesGrid({
       setDraftLine({
         ...line,
         ...saved,
-        usePriceAgreement: line.usePriceAgreement !== false,
+        usePriceAgreement: false,
         deliveryDate: (saved.deliveryDate ?? line.deliveryDate)?.slice(0, 10),
         orderId: order.id,
       });
       setSelectedLineId(saved.id);
       await queryClient.cancelQueries({ queryKey: ['sales-order-lines', order.id] });
-      const confirmed = { ...line, ...saved, usePriceAgreement: line.usePriceAgreement !== false };
+      const confirmed = { ...line, ...saved, usePriceAgreement: false };
       queryClient.setQueryData<DetailLine[]>(['sales-order-lines', order.id], (current = []) =>
         current.some((row) => row.id === confirmed.id)
           ? current.map((row) => (row.id === confirmed.id ? confirmed : row))

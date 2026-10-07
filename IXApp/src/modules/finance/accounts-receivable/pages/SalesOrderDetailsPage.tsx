@@ -563,11 +563,9 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   }, [activeHeader, selectedLine]);
   const saveLineDetail = async (draft = lineDetailDraft) => {
     if (!draft || lineDetailSaveLock.current) return;
-    const quantityChanged = draft.quantity !== selectedLine?.quantity;
-    const priceChanged = draft.unitPrice !== selectedLine?.unitPrice;
     const updateDraft = {
       ...draft,
-      usePriceAgreement: priceChanged ? false : quantityChanged && draft.usePriceAgreement !== false,
+      usePriceAgreement: false,
     };
     lineDetailSaveLock.current = true;
     setSavingLineDetail(true);

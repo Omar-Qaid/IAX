@@ -1,6 +1,7 @@
 export interface DiscountableSalesLine {
   quantity: number;
   unitPrice: number;
+  priceUnit?: number;
   lineDiscount?: number;
   lineDiscountPercent?: number;
   multiLineDiscount?: number;
@@ -12,7 +13,8 @@ const round = (value: number, decimals: number) => {
 };
 
 export const salesLineGrossAmount = (line: DiscountableSalesLine) =>
-  Math.max(0, Number(line.quantity || 0) * Number(line.unitPrice || 0));
+  Math.max(0, Number(line.quantity || 0) * Number(line.unitPrice || 0)) /
+  (Number(line.priceUnit) > 0 ? Number(line.priceUnit) : 1);
 
 export const synchronizeSalesLineDiscount = <T extends DiscountableSalesLine>(
   line: T,

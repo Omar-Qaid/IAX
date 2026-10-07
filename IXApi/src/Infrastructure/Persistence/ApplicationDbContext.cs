@@ -256,6 +256,7 @@ namespace IAX.IXApi.Infrastructure.Persistence
         public DbSet<PriceDiscAdmTable> PriceDiscAdmTables => Set<PriceDiscAdmTable>();
         public DbSet<PriceDiscAdmTrans> PriceDiscAdmTranses => Set<PriceDiscAdmTrans>();
         public DbSet<PriceDiscAdmName> PriceDiscAdmNames => Set<PriceDiscAdmName>();
+        public DbSet<CustParameters> CustParameters => Set<CustParameters>();
         public DbSet<SalesTable> SalesTables => Set<SalesTable>();
         public DbSet<SalesQuotationTable> SalesQuotationTables => Set<SalesQuotationTable>();
         public DbSet<SalesQuotationLine> SalesQuotationLines => Set<SalesQuotationLine>();

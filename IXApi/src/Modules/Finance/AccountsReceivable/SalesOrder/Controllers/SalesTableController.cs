@@ -1092,6 +1092,13 @@ public sealed class SalesTableController : ControllerBase
         string itemId, decimal quantity, string unitId, decimal fallbackPriceUnit,
         string? inventDimId, CancellationToken cancellationToken)
     {
+        var custParameters = await _dbContext.Set<CustParameters>().AsNoTracking()
+            .Where(row => row.DataAreaId == order.DataAreaId)
+            .OrderBy(row => row.Key)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (custParameters?.PriceDiscSearchPrice == NoYes.No)
+            return null;
+
         var today = DateTime.UtcNow.Date;
         var agreements = await _dbContext.Set<PriceDiscTable>().AsNoTracking()
             .Where(row => row.DataAreaId == order.DataAreaId

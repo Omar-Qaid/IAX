@@ -20,6 +20,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<AccountsReceivable.IPriceDiscAdmTableService, AccountsReceivable.PriceDiscAdmTableService>();
             services.AddScoped<AccountsReceivable.IPriceDiscAdmTransService, AccountsReceivable.PriceDiscAdmTransService>();
             services.AddScoped<AccountsReceivable.IPriceDiscAdmNameService, AccountsReceivable.PriceDiscAdmNameService>();
+            services.AddScoped<AccountsReceivable.ICustParametersService, AccountsReceivable.CustParametersService>();
 
             // Explicit Finance registrations
             services.AddScoped<Shared.Features.ICurrencyService, Shared.Features.CurrencyService>();

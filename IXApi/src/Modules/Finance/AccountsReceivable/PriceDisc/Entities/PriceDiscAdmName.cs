@@ -20,6 +20,5 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
 
         public int PriceDiscPriceAttributeEnable { get; set; }
 
-        public long Partition { get; set; }
     }
 }
