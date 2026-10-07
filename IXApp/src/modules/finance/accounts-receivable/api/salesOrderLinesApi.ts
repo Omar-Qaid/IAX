@@ -125,6 +125,7 @@ export interface SalesOrderTotals {
   grossAmount: number;
   lineDiscount: number;
   multiLineDiscount: number;
+  orderDiscount: number;
   totalDiscount: number;
   subtotal: number;
   totalCharges: number;
@@ -173,6 +174,20 @@ export const salesOrderLinesApi = {
           `/v1/SalesTable/${encodeURIComponent(id)}/totals`,
           { signal }
         )
+      ).data
+    );
+  },
+  async recalculateDiscounts(id: string) {
+    return unwrap(
+      (
+        await apiClient.post<
+          ApiResponse<{
+            updatedLines: number;
+            lineDiscount: number;
+            multiLineDiscount: number;
+            totalDiscountPercent: number;
+          }>
+        >(`/v1/SalesTable/${encodeURIComponent(id)}/recalculate-discounts`, {})
       ).data
     );
   },

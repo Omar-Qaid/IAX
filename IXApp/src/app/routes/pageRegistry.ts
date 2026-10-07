@@ -26,6 +26,33 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'trade-agreement-journals',
+    path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.TRADE_AGREEMENT_JOURNALS,
+    permission: PERMISSIONS.TRADE_AGREEMENT_JOURNAL_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-receivable/pages/TradeAgreementJournalPage'),
+      (module) => module.TradeAgreementJournalPage
+    ),
+  },
+  {
+    id: 'price-discount-groups',
+    path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.PRICE_DISCOUNT_GROUPS,
+    permission: PERMISSIONS.PRICE_DISCOUNT_GROUP_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-receivable/pages/PriceDiscountGroupPage'),
+      (module) => module.PriceDiscountGroupPage
+    ),
+  },
+  {
+    id: 'trade-agreement-journal-names',
+    path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.TRADE_AGREEMENT_JOURNAL_NAMES,
+    permission: PERMISSIONS.TRADE_AGREEMENT_JOURNAL_NAME_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-receivable/pages/TradeAgreementJournalNamePage'),
+      (module) => module.TradeAgreementJournalNamePage
+    ),
+  },
+  {
     id: 'dashboard',
     path: ROUTE_PATHS.DASHBOARD,
     permission: PERMISSIONS.DASHBOARD_VIEW,

@@ -121,6 +121,21 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
             path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUSTOMER_PAYMENT_TERMS,
             permission: PERMISSIONS.CUSTOMER_VIEW,
           },
+          {
+            label: 'Trade agreement journals',
+            path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.TRADE_AGREEMENT_JOURNALS,
+            permission: PERMISSIONS.TRADE_AGREEMENT_JOURNAL_VIEW,
+          },
+          {
+            label: 'Price/discount groups',
+            path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.PRICE_DISCOUNT_GROUPS,
+            permission: PERMISSIONS.PRICE_DISCOUNT_GROUP_VIEW,
+          },
+          {
+            label: 'Trade agreement journal names',
+            path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.TRADE_AGREEMENT_JOURNAL_NAMES,
+            permission: PERMISSIONS.TRADE_AGREEMENT_JOURNAL_NAME_VIEW,
+          },
         ],
       },
     ],

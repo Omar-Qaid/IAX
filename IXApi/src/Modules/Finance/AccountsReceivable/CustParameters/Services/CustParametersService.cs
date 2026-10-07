@@ -4,7 +4,7 @@ using IAX.IXApi.Infrastructure.Persistence.Services;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable
 {
-    public class CustParametersService : BaseService<CustParameters>, ICustParametersService
+    public class CustParametersService : BaseService<ReceivableParameters>, ICustParametersService
     {
         public CustParametersService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
             : base(unitOfWork, currentUser)

@@ -5,9 +5,9 @@ using IAX.IXApi.Modules.Finance.Common;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable
 {
-    /// <summary>Accounts Receivable & Customer Parameters (AX CustParameters).</summary>
+    /// <summary>Accounts Receivable pricing and customer parameters mapped to the existing AX CustParameters table.</summary>
     [Table("CustParameters")]
-    public class CustParameters : Entity<long>
+    public class ReceivableParameters : Entity<long>
     {
         public int Key { get; set; } = 0;
 

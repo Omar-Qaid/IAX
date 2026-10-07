@@ -407,12 +407,29 @@ public sealed class SalesTableController : ControllerBase
         decimal multiLineDiscount = 0;
         decimal salesTax = 0;
         decimal totalCharges = 0;
+        var salesModules = await _dbContext.Set<InventTableModule>().AsNoTracking()
+            .Where(module => module.DataAreaId == order.DataAreaId
+                && (int)module.ModuleType == 2
+                && lines.Select(line => line.ItemId).Contains(module.ItemId))
+            .ToListAsync(cancellationToken);
+        var totalDiscountEligibleLineIds = lines
+            .Where(line => salesModules.Any(module => module.ItemId == line.ItemId && module.EndDisc == NoYes.Yes))
+            .Select(line => line.RecId)
+            .ToHashSet();
+        var eligibleNetAmount = lines
+            .Where(line => totalDiscountEligibleLineIds.Contains(line.RecId))
+            .Sum(line => Math.Max(0m, line.LineAmount - line.LineDisc - line.MultiLnDisc));
+        var orderDiscount = eligibleNetAmount * order.DiscPercent / 100m;
         foreach (var line in lines)
         {
             grossAmount += line.LineAmount;
             lineDiscount += line.LineDisc;
             multiLineDiscount += line.MultiLnDisc;
-            var taxableAmount = Math.Max(0, line.LineAmount - line.LineDisc - line.MultiLnDisc);
+            var lineNetAmount = Math.Max(0m, line.LineAmount - line.LineDisc - line.MultiLnDisc);
+            var allocatedOrderDiscount = totalDiscountEligibleLineIds.Contains(line.RecId) && eligibleNetAmount > 0
+                ? orderDiscount * lineNetAmount / eligibleNetAmount
+                : 0m;
+            var taxableAmount = Math.Max(0m, lineNetAmount - allocatedOrderDiscount);
             var applicableCodes = groupRows
                 .Where(row => row.TaxGroup == line.TaxGroup && row.ExemptTax != NoYes.Yes)
                 .Select(row => row.TaxCode)
@@ -455,7 +472,7 @@ public sealed class SalesTableController : ControllerBase
                 : chargeAmount * combinedRate / 100m;
         }
 
-        var totalDiscount = lineDiscount + multiLineDiscount;
+        var totalDiscount = lineDiscount + multiLineDiscount + orderDiscount;
         var subtotal = grossAmount - totalDiscount - (order.InclTax ? salesTax : 0m);
         return Ok(APIResponse<object>.Ok(new
         {
@@ -463,6 +480,7 @@ public sealed class SalesTableController : ControllerBase
             grossAmount,
             lineDiscount,
             multiLineDiscount,
+            orderDiscount,
             totalDiscount,
             subtotal,
             totalCharges,
@@ -470,6 +488,77 @@ public sealed class SalesTableController : ControllerBase
             invoiceAmount = subtotal + totalCharges + salesTax,
             quantity = lines.Sum(line => line.SalesQty),
             costValue = lines.Sum(line => line.CostPrice * line.SalesQty)
+        }));
+    }
+
+    [HttpPost("{recId:long}/recalculate-discounts")]
+    public async Task<IActionResult> RecalculateDiscounts(long recId, CancellationToken cancellationToken = default)
+    {
+        var order = await _dbContext.Set<SalesTable>()
+            .FirstOrDefaultAsync(row => row.RecId == recId, cancellationToken);
+        if (order == null || !string.Equals(order.DataAreaId, _company.GetDataAreaId(), StringComparison.OrdinalIgnoreCase))
+            return NotFound(APIResponse<object>.Fail("Sales order was not found in the selected company."));
+        if (order.SalesStatus != SalesStatus.Backorder)
+            return UnprocessableEntity(APIResponse<object>.Fail("Only open sales orders can recalculate discounts."));
+
+        var parameters = await _dbContext.Set<ReceivableParameters>().AsNoTracking()
+            .Where(row => row.DataAreaId == order.DataAreaId)
+            .OrderBy(row => row.Key)
+            .FirstOrDefaultAsync(cancellationToken);
+        var lines = await _dbContext.Set<SalesLine>()
+            .Where(line => line.SalesId == order.SalesId && line.DataAreaId == order.DataAreaId
+                && line.SalesStatus == SalesStatus.Backorder)
+            .ToListAsync(cancellationToken);
+        var modules = await _dbContext.Set<InventTableModule>().AsNoTracking()
+            .Where(module => module.DataAreaId == order.DataAreaId && (int)module.ModuleType == 2
+                && lines.Select(line => line.ItemId).Contains(module.ItemId))
+            .ToListAsync(cancellationToken);
+        if (parameters?.PriceDiscSearchLineDisc != NoYes.No)
+        {
+            foreach (var line in lines)
+            {
+                var module = modules.FirstOrDefault(row => row.ItemId == line.ItemId);
+                if (module == null) continue;
+                var agreement = await FindSalesDiscountAsync(order, line.ItemId, module.LineDisc,
+                    line.SalesQty, line.SalesUnit, line.InventDimId,
+                    PriceType.LineDiscSales, order.LineDisc, cancellationToken);
+                var gross = Math.Max(0m, line.LineAmount);
+                if (agreement == null)
+                {
+                    line.LineDisc = 0m;
+                    line.LinePercent = 0m;
+                    continue;
+                }
+
+                var discountPercent = Math.Clamp(agreement.Percent1, 0m, 100m);
+                var discount = discountPercent > 0m
+                    ? gross * discountPercent / 100m
+                    : Math.Min(gross, Math.Max(0m, agreement.Amount * line.SalesQty));
+                line.LineDisc = decimal.Round(discount, 2, MidpointRounding.AwayFromZero);
+                line.LinePercent = gross > 0m
+                    ? decimal.Round(line.LineDisc / gross * 100m, 4, MidpointRounding.AwayFromZero)
+                    : 0m;
+            }
+        }
+
+        if (parameters?.PriceDiscSearchTotalDisc != NoYes.No)
+        {
+            var eligibleNet = lines.Where(line => modules.Any(module => module.ItemId == line.ItemId && module.EndDisc == NoYes.Yes))
+                .Sum(line => Math.Max(0m, line.LineAmount - line.LineDisc - line.MultiLnDisc));
+            var agreement = eligibleNet > 0m
+                ? await FindSalesDiscountAsync(order, string.Empty, string.Empty, eligibleNet, string.Empty,
+                    null, PriceType.EndDiscSales, order.EndDisc, cancellationToken)
+                : null;
+            order.DiscPercent = Math.Clamp(agreement?.Percent1 ?? 0m, 0m, 100m);
+        }
+
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return Ok(APIResponse<object>.Ok(new
+        {
+            updatedLines = lines.Count,
+            lineDiscount = lines.Sum(line => line.LineDisc),
+            multiLineDiscount = lines.Sum(line => line.MultiLnDisc),
+            totalDiscountPercent = order.DiscPercent
         }));
     }
 
@@ -1092,7 +1181,7 @@ public sealed class SalesTableController : ControllerBase
         string itemId, decimal quantity, string unitId, decimal fallbackPriceUnit,
         string? inventDimId, CancellationToken cancellationToken)
     {
-        var custParameters = await _dbContext.Set<CustParameters>().AsNoTracking()
+        var custParameters = await _dbContext.Set<ReceivableParameters>().AsNoTracking()
             .Where(row => row.DataAreaId == order.DataAreaId)
             .OrderBy(row => row.Key)
             .FirstOrDefaultAsync(cancellationToken);
@@ -1134,6 +1223,46 @@ public sealed class SalesTableController : ControllerBase
         var agreementPriceUnit = agreement.PriceUnit > 0 ? agreement.PriceUnit :
             fallbackPriceUnit > 0 ? fallbackPriceUnit : 1m;
         return (agreement.Amount, agreementPriceUnit);
+    }
+
+    private async Task<PriceDiscTable?> FindSalesDiscountAsync(SalesTable order,
+        string itemId, string itemGroup, decimal qualifier, string unitId, string? inventDimId,
+        PriceType relation, string customerGroup, CancellationToken cancellationToken)
+    {
+        var pricingDate = order.OrderDate == default ? DateTime.UtcNow.Date : order.OrderDate.Date;
+        var rows = await _dbContext.Set<PriceDiscTable>().AsNoTracking()
+            .Where(row => row.DataAreaId == order.DataAreaId
+                && row.Module == ModuleInventCustVend.Cust
+                && row.Relation == relation
+                && (row.Currency == order.CurrencyCode || row.GenericCurrency != 0)
+                && (string.IsNullOrEmpty(unitId) || row.UnitId == unitId || row.UnitAppliesToAll != 0)
+                && (string.IsNullOrEmpty(row.InventDimId) || row.InventDimId == inventDimId)
+                && (row.FromDate == default || row.FromDate.Date <= pricingDate)
+                && (row.ToDate == default || row.ToDate.Date >= pricingDate)
+                && (row.QuantityAmountFrom <= 0 || row.QuantityAmountFrom <= qualifier)
+                && (row.QuantityAmountTo <= 0 || row.QuantityAmountTo >= qualifier))
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .Where(row => row.AccountCode == PriceDiscPartyCodeType.All
+                || (row.AccountCode == PriceDiscPartyCodeType.Table && row.AccountRelation == order.CustAccount)
+                || (row.AccountCode == PriceDiscPartyCodeType.GroupId
+                    && !string.IsNullOrWhiteSpace(customerGroup)
+                    && row.AccountRelation == customerGroup))
+            .Where(row => row.ItemCode == PriceDiscProductCodeType.All
+                || (row.ItemCode == PriceDiscProductCodeType.Table && !string.IsNullOrWhiteSpace(itemId)
+                    && row.ItemRelation == itemId)
+                || (row.ItemCode == PriceDiscProductCodeType.GroupId
+                    && !string.IsNullOrWhiteSpace(itemGroup)
+                    && row.ItemRelation == itemGroup))
+            .OrderByDescending(row => row.AccountCode == PriceDiscPartyCodeType.Table ? 3
+                : row.AccountCode == PriceDiscPartyCodeType.GroupId ? 2 : 1)
+            .ThenByDescending(row => row.ItemCode == PriceDiscProductCodeType.Table ? 3
+                : row.ItemCode == PriceDiscProductCodeType.GroupId ? 2 : 1)
+            .ThenByDescending(row => !string.IsNullOrEmpty(row.InventDimId))
+            .ThenByDescending(row => row.QuantityAmountFrom)
+            .ThenByDescending(row => row.FromDate)
+            .FirstOrDefault();
     }
 
     private static decimal CalculateGrossLineAmount(AddSalesLineInput input)

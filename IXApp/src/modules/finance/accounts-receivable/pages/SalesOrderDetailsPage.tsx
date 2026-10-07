@@ -146,6 +146,19 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     : orders[0];
   const activeHeader = headerDraft?.id === order?.id ? headerDraft : null;
   const canEditHeader = canEditLines && order?.salesStatus.toLowerCase() === 'backorder';
+  const recalculateSalesOrderDiscounts = async () => {
+    if (!order || !canEditHeader) return;
+    try {
+      await salesOrderLinesApi.recalculateDiscounts(order.id);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['sales-order-lines', order.id] }),
+        queryClient.invalidateQueries({ queryKey: ['sales-order-totals', order.id] }),
+        orderQuery.refetch(),
+      ]);
+    } catch (error) {
+      setHeaderError(error instanceof Error ? error.message : t('errors.generic'));
+    }
+  };
 
   const salesOrderRibbonGroups: ActionPaneRibbonGroup[] = [
     {
@@ -238,8 +251,12 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       label: 'Calculate',
       actions: [
         { id: 'confirmed-delivery-dates', label: 'Confirmed delivery dates' },
-        { id: 'multiline-discount', label: 'Multiline discount' },
-        { id: 'total-discount', label: 'Total discount' },
+        {
+          id: 'total-discount',
+          label: 'Recalculate discounts',
+          disabled: !canEditHeader,
+          onClick: () => void recalculateSalesOrderDiscounts(),
+        },
       ],
     },
     {
@@ -652,6 +669,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   );
   const subtotal = totalsQuery.data?.subtotal ?? calculatedSubtotal;
   const lineDiscount = totalsQuery.data?.lineDiscount ?? calculatedLineDiscount;
+  const orderDiscount = totalsQuery.data?.orderDiscount ?? 0;
   const totalDiscount = totalsQuery.data?.totalDiscount ?? calculatedTotalDiscount;
   const salesTax = totalsQuery.data?.salesTax ?? 0;
   const totalCharges = totalsQuery.data?.totalCharges ?? 0;
@@ -671,6 +689,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
             { id: 'currency', label: 'Currency', value: order.currencyCode },
             { id: 'exchange-rate', label: 'Exchange rate', value: number(1, 4) },
             { id: 'line-discount', label: 'Line discount', value: number(lineDiscount) },
+            { id: 'order-discount', label: 'Order discount', value: number(orderDiscount) },
             { id: 'subtotal', label: 'Subtotal amount', value: number(subtotal), emphasized: true },
             { id: 'total-discount', label: 'Total discount', value: number(totalDiscount) },
             { id: 'cash-discount', label: 'Cash discount', value: number(0) },

@@ -10,9 +10,9 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
     [Route("api/v1/[controller]")]
     [Route("api/[controller]")]
     [DomainPermission("AccountsReceivable", "CustParameters")]
-    public class CustParametersController : BaseController<CustParameters, CustParametersDto>
+    public class CustParametersController : BaseController<ReceivableParameters, CustParametersDto>
     {
-        public CustParametersController(IBaseService<CustParameters> service, ILogger<CustParametersController> logger)
+        public CustParametersController(IBaseService<ReceivableParameters> service, ILogger<CustParametersController> logger)
             : base(service, logger)
         {
         }

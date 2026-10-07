@@ -37,6 +37,9 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             // ── Accounts Receivable ──────────────────────────────────────────
             ("AccountsReceivable", "Customers"),
             ("AccountsReceivable", "CustomerGroups"),
+            ("AccountsReceivable", "PriceDiscAdmTables"),
+            ("AccountsReceivable", "PriceDiscGroups"),
+            ("AccountsReceivable", "PriceDiscAdmNames"),
             ("AccountsReceivable", "SalesOrders"),
             ("AccountsReceivable", "Invoices"),
             ("AccountsReceivable", "DeliveryModes"),

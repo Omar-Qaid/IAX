@@ -110,6 +110,8 @@ export function FilterInput<T>({
             fontSize: '0.75rem',
             height: 26,
             bgcolor: 'transparent',
+            borderRadius: 1,
+            transition: 'background-color 120ms ease, box-shadow 120ms ease',
             '& input': {
               padding: '2px 8px',
             },
@@ -117,12 +119,16 @@ export function FilterInput<T>({
               fontSize: '0.7rem',
               opacity: 0.5,
             },
-            '& fieldset': { border: 'none' },
-            '&:hover fieldset': { border: 'none' },
+            '& fieldset': { border: '1px solid transparent', transition: 'border-color 120ms ease' },
+            '&:hover fieldset': { borderColor: 'divider' },
+            '&:hover': { bgcolor: 'action.hover' },
             '&.Mui-focused fieldset': {
               border: '1px solid',
               borderColor: 'primary.main',
               borderRadius: 1,
+            },
+            '&.Mui-focused': {
+              bgcolor: 'background.paper',
             },
           },
         },
