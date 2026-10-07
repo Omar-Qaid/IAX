@@ -501,7 +501,7 @@ public sealed class SalesTableController : ControllerBase
         if (order.SalesStatus != SalesStatus.Backorder)
             return UnprocessableEntity(APIResponse<object>.Fail("Only open sales orders can recalculate discounts."));
 
-        var parameters = await _dbContext.Set<ReceivableParameters>().AsNoTracking()
+        var parameters = await _dbContext.Set<CustParameters>().AsNoTracking()
             .Where(row => row.DataAreaId == order.DataAreaId)
             .OrderBy(row => row.Key)
             .FirstOrDefaultAsync(cancellationToken);
@@ -1181,7 +1181,7 @@ public sealed class SalesTableController : ControllerBase
         string itemId, decimal quantity, string unitId, decimal fallbackPriceUnit,
         string? inventDimId, CancellationToken cancellationToken)
     {
-        var custParameters = await _dbContext.Set<ReceivableParameters>().AsNoTracking()
+        var custParameters = await _dbContext.Set<CustParameters>().AsNoTracking()
             .Where(row => row.DataAreaId == order.DataAreaId)
             .OrderBy(row => row.Key)
             .FirstOrDefaultAsync(cancellationToken);
@@ -1603,10 +1603,10 @@ public sealed class SalesTableController : ControllerBase
                 return NotFound(APIResponse<object>.Fail("Sales order was not found in the selected company."));
             if (order.SalesStatus != SalesStatus.Backorder)
                 return UnprocessableEntity(APIResponse<object>.Fail("Only open sales orders can be changed."));
-            var invoiceAccount = input.InvoiceAccount.Trim();
+            var invoiceAccount = string.IsNullOrWhiteSpace(input.InvoiceAccount) ? order.InvoiceAccount : input.InvoiceAccount.Trim();
             if (!await _dbContext.Set<CustTable>().AnyAsync(row => row.AccountNum == invoiceAccount && row.DataAreaId == order.DataAreaId, cancellationToken))
                 return UnprocessableEntity(APIResponse<object>.Fail("Invoice account was not found."));
-            var currency = input.CurrencyCode.Trim();
+            var currency = string.IsNullOrWhiteSpace(input.CurrencyCode) ? order.CurrencyCode : input.CurrencyCode.Trim();
             if (!await _dbContext.Set<Currency>().AnyAsync(row => row.CurrencyCode == currency
                     && row.DataAreaId == order.DataAreaId, cancellationToken))
                 return UnprocessableEntity(APIResponse<object>.Fail("Currency was not found in the selected company."));
@@ -1646,7 +1646,7 @@ public sealed class SalesTableController : ControllerBase
                 return UnprocessableEntity(APIResponse<object>.Fail("Warehouse was not found in the selected site."));
             order.InventSiteId = inventSiteId;
             order.InventLocationId = inventLocationId;
-            order.OrderDate = input.OrderDate!.Value.Date;
+            order.OrderDate = input.OrderDate?.Date ?? order.OrderDate;
             order.SalesNameAlias = input.SalesNameAlias.Trim();
             order.SalesType = input.SalesType;
             order.OneTimeCustomer = input.OneTimeCustomer ? NoYes.Yes : NoYes.No;
@@ -1664,7 +1664,7 @@ public sealed class SalesTableController : ControllerBase
             order.InclTax = input.PricesIncludeSalesTax;
             order.SalesGroup = input.SalesGroup.Trim();
             order.LanguageId = input.LanguageId.Trim();
-            order.DeliveryDate = input.DeliveryDate!.Value.Date;
+            order.DeliveryDate = input.DeliveryDate?.Date ?? order.DeliveryDate;
             order.ReceiptDateRequested = order.DeliveryDate;
             order.ShippingDateRequested = input.ShippingDateRequested?.Date ?? default;
             var deliveryName = input.DeliveryName.Trim();

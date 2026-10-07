@@ -126,13 +126,13 @@ export function PinnedHeaderCell<T>({
       {!hideFilterRow && (
         <Box
           sx={{
-            p: '3px 8px',
+            p: '2px 8px',
             borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
             bgcolor: (theme) => (theme.palette.mode === 'light' ? '#ffffff' : '#2d3748'),
             display: 'flex',
             alignItems: 'center',
-            height: headerHeight,
-            minHeight: headerHeight,
+            height: Math.max(26, headerHeight - 2),
+            minHeight: Math.max(26, headerHeight - 2),
             boxSizing: 'border-box',
           }}
         >

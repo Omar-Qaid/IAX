@@ -108,12 +108,12 @@ export function FilterInput<T>({
           ),
           sx: {
             fontSize: '0.75rem',
-            height: 26,
+            height: 22,
             bgcolor: 'transparent',
             borderRadius: 1,
             transition: 'background-color 120ms ease, box-shadow 120ms ease',
             '& input': {
-              padding: '2px 8px',
+              padding: '1px 7px',
             },
             '& input::placeholder': {
               fontSize: '0.7rem',

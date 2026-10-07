@@ -3,9 +3,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable
 {
-    public class CustParametersConfiguration : IEntityTypeConfiguration<ReceivableParameters>
+    public class CustParametersConfiguration : IEntityTypeConfiguration<CustParameters>
     {
-        public void Configure(EntityTypeBuilder<ReceivableParameters> builder)
+        public void Configure(EntityTypeBuilder<CustParameters> builder)
         {
             builder.ToTable("CustParameters");
             builder.HasIndex(x => new { x.DataAreaId, x.RecId }).IsUnique();
