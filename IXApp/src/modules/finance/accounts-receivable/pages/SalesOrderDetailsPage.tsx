@@ -43,6 +43,7 @@ import {
 } from '@patterns/document/DocumentTotalsDrawer';
 import { DocumentCopyDrawer } from '@patterns/document/DocumentCopyDrawer';
 import { salesOrderCopyApi, type SalesOrderCopyMode } from '../api/salesOrderCopyApi';
+import { SalesOrderConfirmationDialog } from '../components/SalesOrderConfirmationDialog';
 
 import { SalesOrderLinesGrid } from './SalesOrderLinesGrid';
 import { SalesOrderLinesProvider } from './SalesOrderLineState';
@@ -131,6 +132,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   const [deliveryAddressInitialData, setDeliveryAddressInitialData] = useState<LogisticsPostalAddress | null>(null);
   const [savingLineDetail, setSavingLineDetail] = useState(false);
   const [totalsOpen, setTotalsOpen] = useState(false);
+  const [confirmationsOpen, setConfirmationsOpen] = useState(false);
   const [copyMode, setCopyMode] = useState<SalesOrderCopyMode>();
   const [copySourceId, setCopySourceId] = useState<string>();
   const [copyBusy, setCopyBusy] = useState(false);
@@ -272,14 +274,14 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       id: 'generate',
       label: 'Generate',
       actions: [
-        { id: 'confirmation', label: 'Confirmation' },
+        { id: 'confirmation', label: 'Confirmation', onClick: () => setConfirmationsOpen(true) },
         { id: 'pro-forma-confirmation', label: 'Pro forma confirmation' },
       ],
     },
     {
       id: 'actions',
       label: 'Actions',
-      actions: [{ id: 'confirm-now', label: 'Confirm now' }],
+      actions: [{ id: 'confirm-now', label: 'Confirm now', disabled: !canEditHeader || Boolean(activeHeader), onClick: () => setConfirmationsOpen(true) }],
     },
     {
       id: 'apply',
@@ -290,7 +292,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       id: 'journals',
       label: 'Journals',
       actions: [
-        { id: 'sales-order-confirmations', label: 'Sales order confirmations', disabled: true },
+        { id: 'sales-order-confirmations', label: 'Sales order confirmations', onClick: () => setConfirmationsOpen(true) },
         { id: 'quotation-confirmation-journal', label: 'Quotation confirmation journal', disabled: true },
       ],
     },
@@ -2412,6 +2414,19 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         viewLabel={t('pages.customers.standardView')}
         sections={totalsSections}
         okLabel={t('common.ok', 'OK')}
+      />
+      <SalesOrderConfirmationDialog
+        open={confirmationsOpen}
+        orderId={order.id}
+        salesId={order.salesId}
+        canPost={Boolean(canEditHeader) && !activeHeader}
+        onClose={() => setConfirmationsOpen(false)}
+        onPosted={async () => {
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ['accounts-receivable', 'sales-orders'] }),
+            queryClient.invalidateQueries({ queryKey: ['sales-order-totals', order.id] }),
+          ]);
+        }}
       />
       <DocumentCopyDrawer
         open={Boolean(copyMode)}

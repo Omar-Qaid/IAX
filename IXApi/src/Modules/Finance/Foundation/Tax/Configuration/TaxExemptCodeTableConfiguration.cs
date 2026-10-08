@@ -2,7 +2,7 @@ using IAX.IXApi.Modules.Finance.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace IAX.IXApi.Modules.Finance.Shared.Features;
+namespace IAX.IXApi.Modules.Finance.Foundation.Tax;
 
 public sealed class TaxExemptCodeTableConfiguration : IEntityTypeConfiguration<TaxExemptCodeTable>
 {

@@ -1,5 +1,4 @@
 using IAX.IXApi.Modules.Finance.Common;
-using IAX.IXApi.Modules.Finance.Shared.Features;
 using Microsoft.Extensions.Logging;
 using System;
 using System.ComponentModel.DataAnnotations;

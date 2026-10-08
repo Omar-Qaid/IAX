@@ -1,0 +1,62 @@
+using IAX.IXApi.Modules.Finance.Common;
+using IAX.IXApi.Modules.Finance.Entities;
+
+namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
+
+public static class SalesOrderLinePresenter
+{
+    public static object Record(SalesLine line, string? inventSiteId = null,
+        string? inventLocationId = null, string? ledgerDimensionDisplay = null,
+        InventDim? inventoryDimension = null, string? productName = null) => new {
+        id = line.RecId.ToString(), lineNumber = line.LineNum, itemNumber = line.ItemId,
+        productName = productName ?? line.Name,
+        lineType = (int)line.SalesType, deliveryType = (int)line.DeliveryType,
+        lineDeliveryType = (int)line.LineDeliveryType,
+        sourcingOrigin = (int)line.SourcingOrigin,
+        excludeFromMasterPlanning = line.MpsExcludeSalesLine != 0,
+        deliveryDateControlType = (int)line.DeliveryDateControlType,
+        mpsFullRunCtpStatus = (int)line.MpsFullRunCtpStatus,
+        shipCarrierDlvType = (int)line.ShipCarrierDlvType,
+        planningPriority = line.PlanningPriority,
+        salesCategory = line.SalesCategory,
+        customerLineNumber = line.CustomerLineNum, intercompanyOrigin = (int)line.IntercompanyOrigin,
+        stopped = line.Blocked != SalesLineBlocked.No, preventPartialDelivery = line.Complete != 0,
+        description = line.Name, quantity = line.SalesQty, inventoryQuantity = line.QtyOrdered, unit = line.SalesUnit,
+        unitPrice = line.SalesPrice, lineTotal = line.LineAmount, deliveryDate = line.ReceiptDateRequested,
+        line.InventTransId, line.InventDimId, line.CurrencyCode, salesStatus = line.SalesStatus.ToString(),
+        line.PriceUnit, line.CostPrice, line.SalesMarkup,
+        excludeFromRebate = line.PdsExcludeFromRebate != 0,
+        excludeFromRebateManagement = line.TamRebateExcludeRebateManagement != 0,
+        lineDiscount = line.LineDisc, lineDiscountPercent = line.LinePercent,
+        multiLineDiscount = line.MultiLnDisc, multiLineDiscountPercent = line.MultiLnPercent,
+        overDeliveryPercent = line.OverDeliveryPct, underDeliveryPercent = line.UnderDeliveryPct,
+        line.RemainSalesPhysical, line.RemainSalesFinancial, line.SalesDeliverNow, line.InventDeliverNow,
+        line.PackingUnit, packingUnitQuantity = line.PackingUnitQty, deliveryMode = line.DlvMode,
+        deliveryTerms = line.DlvTerm,
+        shippingDateRequested = line.ShippingDateRequested == default ? (DateTime?)null : line.ShippingDateRequested,
+        shippingDateConfirmed = line.ShippingDateConfirmed == default ? (DateTime?)null : line.ShippingDateConfirmed,
+        receiptDateConfirmed = line.ReceiptDateConfirmed == default ? (DateTime?)null : line.ReceiptDateConfirmed,
+        customerReference = line.CustomerRef, line.DeliveryName,
+        deliveryPostalAddress = line.DeliveryPostalAddress.ToString(System.Globalization.CultureInfo.InvariantCulture), line.TaxGroup, line.TaxItemGroup, line.LedgerDimension,
+        batchNumber = inventoryDimension?.InventBatchId ?? string.Empty,
+        serialNumber = inventoryDimension?.InventSerialId ?? string.Empty,
+        configId = inventoryDimension?.ConfigId ?? string.Empty,
+        inventSizeId = inventoryDimension?.InventSizeId ?? string.Empty,
+        inventColorId = inventoryDimension?.InventColorId ?? string.Empty,
+        inventStyleId = inventoryDimension?.InventStyleId ?? string.Empty,
+        inventVersionId = inventoryDimension?.InventVersionId ?? string.Empty,
+        location = inventoryDimension?.WmsLocationId ?? string.Empty,
+        inventoryStatus = inventoryDimension?.InventStatusId ?? string.Empty,
+        licensePlate = inventoryDimension?.LicensePlateId ?? string.Empty,
+        itemReferenceNumber = line.InventRefId,
+        itemReferenceType = (int)line.InventRefType,
+        itemReferenceLot = line.InventRefTransId,
+        line.DefaultDimension, financialTag = line.FinTag, line.IntrastatCommodity,
+        returnLotId = line.InventTransIdReturn, reservation = (int)line.Reservation,
+        autoBatchReservation = line.PdsBatchAttribAutoRes != 0,
+        sameBatchSelection = line.PdsSameLot != 0, scrap = line.Scrap != 0,
+        line.SalesGroup, line.CreatedAt, ledgerDimensionDisplay,
+        site = inventSiteId, warehouse = inventLocationId,
+    };
+
+}

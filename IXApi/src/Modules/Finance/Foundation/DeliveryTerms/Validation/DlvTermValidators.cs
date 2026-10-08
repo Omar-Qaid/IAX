@@ -1,10 +1,10 @@
+using IAX.IXApi.Shared.Application.Validation;
 using FluentValidation;
 using IAX.IXApi.Modules.Finance.Common;
-using IAX.IXApi.Modules.Finance.Shared.Features;
 
-namespace IAX.IXApi.Modules.Finance.Shared.Features
+namespace IAX.IXApi.Modules.Finance.Foundation.DeliveryTerms
 {
-    public class DlvTermDtoValidator : AbstractValidator<DlvTermDto>
+    public class DlvTermDtoValidator : BaseValidator<DlvTermDto>
     {
         public DlvTermDtoValidator()
         {
@@ -13,4 +13,3 @@ namespace IAX.IXApi.Modules.Finance.Shared.Features
         }
     }
 }
-

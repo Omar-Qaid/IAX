@@ -41,7 +41,8 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
             var strategy = _unitOfWork.Context.Database.CreateExecutionStrategy();
             await strategy.ExecuteAsync(async () =>
             {
-                await _unitOfWork.BeginTransactionAsync(cancellationToken);
+                var ownsTransaction = _unitOfWork.Context.Database.CurrentTransaction == null;
+                if (ownsTransaction) await _unitOfWork.BeginTransactionAsync(cancellationToken);
                 try
                 {
                     var existingLocations = await _partyLocationService.GetPartyLocationsAsync(partyRecId, cancellationToken);
@@ -166,11 +167,11 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
                         }
                     }
 
-                    await _unitOfWork.CommitTransactionAsync(cancellationToken);
+                    if (ownsTransaction) await _unitOfWork.CommitTransactionAsync(cancellationToken);
                 }
                 catch
                 {
-                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                    if (ownsTransaction) await _unitOfWork.RollbackTransactionAsync(cancellationToken);
                     throw;
                 }
             });
@@ -181,7 +182,8 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
             var strategy = _unitOfWork.Context.Database.CreateExecutionStrategy();
             return await strategy.ExecuteAsync(async () =>
             {
-                await _unitOfWork.BeginTransactionAsync(cancellationToken);
+                var ownsTransaction = _unitOfWork.Context.Database.CurrentTransaction == null;
+                if (ownsTransaction) await _unitOfWork.BeginTransactionAsync(cancellationToken);
                 try
                 {
                     var location = await _locationService.CreateLocationAsync(dto.Description, true, cancellationToken);
@@ -192,12 +194,12 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
                     dto.Location = location.RecId;
                     dto.LocationId = location.LocationId;
 
-                    await _unitOfWork.CommitTransactionAsync(cancellationToken);
+                    if (ownsTransaction) await _unitOfWork.CommitTransactionAsync(cancellationToken);
                     return dto;
                 }
                 catch
                 {
-                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                    if (ownsTransaction) await _unitOfWork.RollbackTransactionAsync(cancellationToken);
                     throw;
                 }
             });
@@ -208,19 +210,20 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
             var strategy = _unitOfWork.Context.Database.CreateExecutionStrategy();
             return await strategy.ExecuteAsync(async () =>
             {
-                await _unitOfWork.BeginTransactionAsync(cancellationToken);
+                var ownsTransaction = _unitOfWork.Context.Database.CurrentTransaction == null;
+                if (ownsTransaction) await _unitOfWork.BeginTransactionAsync(cancellationToken);
                 try
                 {
                     await _locationService.UpdateLocationDescriptionAsync(dto.Location, dto.Description, cancellationToken);
                     var postal = await _postalAddressService.UpdatePostalAddressAsync(dto.Location, dto, cancellationToken);
                     await _partyLocationService.UpdatePartyLocationPrimaryAsync(partyId, dto.Location, true, dto.Primary, cancellationToken);
 
-                    await _unitOfWork.CommitTransactionAsync(cancellationToken);
+                    if (ownsTransaction) await _unitOfWork.CommitTransactionAsync(cancellationToken);
                     return dto;
                 }
                 catch
                 {
-                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                    if (ownsTransaction) await _unitOfWork.RollbackTransactionAsync(cancellationToken);
                     throw;
                 }
             });
@@ -231,7 +234,8 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
             var strategy = _unitOfWork.Context.Database.CreateExecutionStrategy();
             return await strategy.ExecuteAsync(async () =>
             {
-                await _unitOfWork.BeginTransactionAsync(cancellationToken);
+                var ownsTransaction = _unitOfWork.Context.Database.CurrentTransaction == null;
+                if (ownsTransaction) await _unitOfWork.BeginTransactionAsync(cancellationToken);
                 try
                 {
                     var postalLoc = await _unitOfWork.Context.Set<LogisticsPostalAddress>().FirstOrDefaultAsync(x => x.Location == locationId, cancellationToken);
@@ -241,12 +245,12 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
                     await _partyLocationService.UnlinkLocationAsync(partyId, locationId, cancellationToken);
                     await _partyLocationService.DeleteOrphanedLocationAsync(locationId, cancellationToken);
 
-                    await _unitOfWork.CommitTransactionAsync(cancellationToken);
+                    if (ownsTransaction) await _unitOfWork.CommitTransactionAsync(cancellationToken);
                     return true;
                 }
                 catch
                 {
-                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                    if (ownsTransaction) await _unitOfWork.RollbackTransactionAsync(cancellationToken);
                     throw;
                 }
             });
@@ -257,7 +261,8 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
             var strategy = _unitOfWork.Context.Database.CreateExecutionStrategy();
             return await strategy.ExecuteAsync(async () =>
             {
-                await _unitOfWork.BeginTransactionAsync(cancellationToken);
+                var ownsTransaction = _unitOfWork.Context.Database.CurrentTransaction == null;
+                if (ownsTransaction) await _unitOfWork.BeginTransactionAsync(cancellationToken);
                 try
                 {
                     var location = await _locationService.CreateLocationAsync(dto.Description, false, cancellationToken);
@@ -267,12 +272,12 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
                     dto.Id = contact.RecId.ToString();
                     dto.Location = location.RecId;
 
-                    await _unitOfWork.CommitTransactionAsync(cancellationToken);
+                    if (ownsTransaction) await _unitOfWork.CommitTransactionAsync(cancellationToken);
                     return dto;
                 }
                 catch
                 {
-                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                    if (ownsTransaction) await _unitOfWork.RollbackTransactionAsync(cancellationToken);
                     throw;
                 }
             });
@@ -283,19 +288,20 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
             var strategy = _unitOfWork.Context.Database.CreateExecutionStrategy();
             return await strategy.ExecuteAsync(async () =>
             {
-                await _unitOfWork.BeginTransactionAsync(cancellationToken);
+                var ownsTransaction = _unitOfWork.Context.Database.CurrentTransaction == null;
+                if (ownsTransaction) await _unitOfWork.BeginTransactionAsync(cancellationToken);
                 try
                 {
                     await _locationService.UpdateLocationDescriptionAsync(dto.Location, dto.Description, cancellationToken);
                     var contact = await _electronicAddressService.UpdateElectronicAddressAsync(dto.Location, dto, cancellationToken);
                     await _partyLocationService.UpdatePartyLocationPrimaryAsync(partyId, dto.Location, false, dto.Primary, cancellationToken);
 
-                    await _unitOfWork.CommitTransactionAsync(cancellationToken);
+                    if (ownsTransaction) await _unitOfWork.CommitTransactionAsync(cancellationToken);
                     return dto;
                 }
                 catch
                 {
-                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                    if (ownsTransaction) await _unitOfWork.RollbackTransactionAsync(cancellationToken);
                     throw;
                 }
             });
@@ -306,7 +312,8 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
             var strategy = _unitOfWork.Context.Database.CreateExecutionStrategy();
             return await strategy.ExecuteAsync(async () =>
             {
-                await _unitOfWork.BeginTransactionAsync(cancellationToken);
+                var ownsTransaction = _unitOfWork.Context.Database.CurrentTransaction == null;
+                if (ownsTransaction) await _unitOfWork.BeginTransactionAsync(cancellationToken);
                 try
                 {
                     var contactLoc = await _unitOfWork.Context.Set<LogisticsElectronicAddress>().FirstOrDefaultAsync(x => x.Location == locationId, cancellationToken);
@@ -316,12 +323,12 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
                     await _partyLocationService.UnlinkLocationAsync(partyId, locationId, cancellationToken);
                     await _partyLocationService.DeleteOrphanedLocationAsync(locationId, cancellationToken);
 
-                    await _unitOfWork.CommitTransactionAsync(cancellationToken);
+                    if (ownsTransaction) await _unitOfWork.CommitTransactionAsync(cancellationToken);
                     return true;
                 }
                 catch
                 {
-                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                    if (ownsTransaction) await _unitOfWork.RollbackTransactionAsync(cancellationToken);
                     throw;
                 }
             });

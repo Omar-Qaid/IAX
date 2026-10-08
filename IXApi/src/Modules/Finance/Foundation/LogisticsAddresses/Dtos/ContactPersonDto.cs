@@ -2,7 +2,7 @@ using IAX.IXApi.Shared.Application.Contracts;
 using IAX.IXApi.Modules.Finance.Common;
 using System;
 
-namespace IAX.IXApi.Modules.Finance.Shared.Features
+namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
 {
     public class ContactPersonDto : EntityDto<long>
     {

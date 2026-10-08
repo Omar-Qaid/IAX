@@ -1,3 +1,4 @@
+using Mapster;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,18 +29,11 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
         {
             Enum.TryParse<IAX.IXApi.Modules.Finance.Common.ElectronicAddressType>(dto.Type, out var typeEnum);
 
-            var electronic = new LogisticsElectronicAddress 
-            {
-                Location = locationRecId,
-                Description = dto.Description ?? string.Empty,
-                Type = typeEnum,
-                Locator = dto.Number ?? string.Empty,
-                LocatorExtension = dto.Extension ?? string.Empty,
-                IsPrimary = dto.Primary ? IAX.IXApi.Modules.Finance.Common.NoYes.Yes : IAX.IXApi.Modules.Finance.Common.NoYes.No
-            };
+            var electronic = new ElectronicAddressWriteSource(dto, typeEnum).Adapt<LogisticsElectronicAddress>();
+            electronic.Location = locationRecId;
             
             _unitOfWork.Context.Set<LogisticsElectronicAddress>().Add(electronic);
-            await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.CompleteAsync(cancellationToken);
             return electronic;
         }
 
@@ -54,14 +48,10 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
 
             Enum.TryParse<IAX.IXApi.Modules.Finance.Common.ElectronicAddressType>(dto.Type, out var typeEnum);
             
-            electronic.Type = typeEnum;
-            electronic.Locator = dto.Number ?? string.Empty;
-            electronic.LocatorExtension = dto.Extension ?? string.Empty;
-            electronic.Description = dto.Description ?? string.Empty;
-            electronic.IsPrimary = dto.Primary ? IAX.IXApi.Modules.Finance.Common.NoYes.Yes : IAX.IXApi.Modules.Finance.Common.NoYes.No;
+            new ElectronicAddressWriteSource(dto, typeEnum).Adapt(electronic);
 
             _unitOfWork.Context.Set<LogisticsElectronicAddress>().Update(electronic);
-            await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.CompleteAsync(cancellationToken);
             
             return electronic;
         }
@@ -72,7 +62,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
             if (electronic != null)
             {
                 _unitOfWork.Context.Set<LogisticsElectronicAddress>().Remove(electronic);
-                await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.CompleteAsync(cancellationToken);
                 return true;
             }
             return false;

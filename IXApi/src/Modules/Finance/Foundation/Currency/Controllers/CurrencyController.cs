@@ -1,3 +1,4 @@
+using CurrencyEntity = IAX.IXApi.Modules.Finance.Entities.Currency;
 using IAX.IXApi.Modules.Identity.Permissions;
 using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Api.Controllers;
@@ -9,12 +10,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 
-namespace IAX.IXApi.Modules.Finance.Shared.Features
+namespace IAX.IXApi.Modules.Finance.Foundation.Currency
 {
     [ApiController]
     [Route("api/v1/[controller]")]
     [DomainPermission("GeneralLedger", "Currencies")]
-    public class CurrencyController : BaseController<Currency, CurrencyDto>
+    public class CurrencyController : BaseController<CurrencyEntity, CurrencyDto>
     {
         public CurrencyController(ICurrencyService service, ILogger<CurrencyController> logger)
             : base(service, logger)

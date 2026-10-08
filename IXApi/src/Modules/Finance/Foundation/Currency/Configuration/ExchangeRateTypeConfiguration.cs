@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System.Reflection.Emit;
 
-namespace IAX.IXApi.Modules.Finance.Shared.Features
+namespace IAX.IXApi.Modules.Finance.Foundation.Currency
 {
     public class ExchangeRateTypeConfiguration : IEntityTypeConfiguration<ExchangeRateType>
     {

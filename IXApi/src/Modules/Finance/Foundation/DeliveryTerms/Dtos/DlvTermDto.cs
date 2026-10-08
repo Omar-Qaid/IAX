@@ -1,7 +1,7 @@
 using IAX.IXApi.Shared.Application.Contracts;
 using IAX.IXApi.Modules.Finance.Common;
 
-namespace IAX.IXApi.Modules.Finance.Shared.Features
+namespace IAX.IXApi.Modules.Finance.Foundation.DeliveryTerms
 {
     public class DlvTermDto : EntityDto<long>
     {

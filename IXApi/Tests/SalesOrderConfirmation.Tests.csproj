@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsTestProject>true</IsTestProject>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <BaseIntermediateOutputPath>obj/SalesOrderConfirmation.Tests/</BaseIntermediateOutputPath>
+    <OutputPath>bin/SalesOrderConfirmation.Tests/</OutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="SalesOrderConfirmationTests.cs" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.9" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../src/Shared/IAX.IXApi.Shared.csproj" />
+    <ProjectReference Include="../src/Modules/Administration/IAX.IXApi.Modules.Administration.csproj" />
+    <ProjectReference Include="../src/Modules/Finance/IAX.IXApi.Modules.Finance.csproj" />
+  </ItemGroup>
+</Project>

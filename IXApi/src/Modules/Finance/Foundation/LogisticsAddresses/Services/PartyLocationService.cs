@@ -55,7 +55,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
                 await EnforceSinglePrimaryAsync(partyRecId, locationRecId, isPostalAddress, cancellationToken);
             }
             
-            await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.CompleteAsync(cancellationToken);
             return partyLoc;
         }
 
@@ -74,7 +74,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
                 await EnforceSinglePrimaryAsync(partyRecId, locationRecId, isPostalAddress, cancellationToken);
             }
             
-            await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.CompleteAsync(cancellationToken);
             return partyLoc;
         }
 
@@ -84,7 +84,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
             if (partyLoc != null)
             {
                 _unitOfWork.Context.Set<DirPartyLocation>().Remove(partyLoc);
-                await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.CompleteAsync(cancellationToken);
                 return true;
             }
             return false;
@@ -106,7 +106,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
                     if (referencingPartyLocs.Any())
                     {
                         _unitOfWork.Context.Set<DirPartyLocation>().RemoveRange(referencingPartyLocs);
-                        await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
+                        await _unitOfWork.CompleteAsync(cancellationToken);
                     }
 
                     var trackedEntries = _unitOfWork.Context.ChangeTracker.Entries<DirPartyLocation>()
@@ -134,7 +134,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
                     }
 
                     _unitOfWork.Context.Set<LogisticsLocation>().Remove(loc);
-                    await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
+                    await _unitOfWork.CompleteAsync(cancellationToken);
                     return true;
                 }
             }

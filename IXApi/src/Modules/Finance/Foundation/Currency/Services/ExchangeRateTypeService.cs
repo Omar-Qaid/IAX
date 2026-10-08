@@ -10,7 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
-namespace IAX.IXApi.Modules.Finance.Shared.Features
+namespace IAX.IXApi.Modules.Finance.Foundation.Currency
 {
     public class ExchangeRateTypeService : BaseService<ExchangeRateType>, IExchangeRateTypeService
     {

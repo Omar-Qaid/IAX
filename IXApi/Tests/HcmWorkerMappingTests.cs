@@ -23,7 +23,6 @@ public sealed class HcmWorkerMappingTests
                 Name = "Wafaa Muhammad Yahya Muree",
                 NameAlias = "وفاء محمد يحيى مرعي"
             },
-            Occupation = new HcmOccupation(),
             Gender = new Gender(),
             Nationality = new HcmNationality()
         };

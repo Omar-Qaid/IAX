@@ -1,7 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using IAX.IXApi.Modules.Finance.Shared.Features;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Inventory.InventTable;
 using IAX.IXApi.Shared.Domain.Entities;

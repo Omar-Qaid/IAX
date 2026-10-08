@@ -17,49 +17,23 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
     [DomainPermission("Organization", "ElectronicAddresses")]
     public class LogisticsElectronicAddressController : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly ILocationService _locationService;
-        private readonly IElectronicAddressService _electronicAddressService;
+        private readonly IAddressBookQueryService _queries;
         private readonly IPartyLocationService _partyLocationService;
         private readonly IGlobalAddressBookService _globalAddressBookService;
 
         public LogisticsElectronicAddressController(
-            IUnitOfWork unitOfWork, 
-            ILocationService locationService,
-            IElectronicAddressService electronicAddressService,
+            IAddressBookQueryService queries,
             IPartyLocationService partyLocationService,
             IGlobalAddressBookService globalAddressBookService)
         {
-            _unitOfWork = unitOfWork;
-            _locationService = locationService;
-            _electronicAddressService = electronicAddressService;
+            _queries = queries;
             _partyLocationService = partyLocationService;
             _globalAddressBookService = globalAddressBookService;
         }
 
         [HttpGet("Party/{partyId}")]
         public async Task<IActionResult> GetPartyContacts(long partyId)
-        {
-            var partyLocations = await _partyLocationService.GetPartyLocationsAsync(partyId);
-            var electronicOnly = partyLocations.Where(x => x.IsPostalAddress == IAX.IXApi.Modules.Finance.Common.NoYes.No).ToList();
-            var locationIds = electronicOnly.Select(x => x.Location).ToList();
-            var electronicAddresses = await _electronicAddressService.GetContactsByLocationsAsync(locationIds);
-
-            var dtos = electronicAddresses.Select(e => {
-                var pLoc = electronicOnly.FirstOrDefault(l => l.Location == e.Location);
-                return new ContactInfoDto
-                {
-                    Id = e.RecId.ToString(),
-                    Location = e.Location,
-                    Description = e.Description,
-                    Type = e.Type.ToString(),
-                    Number = e.Locator,
-                    Extension = e.LocatorExtension,
-                    Primary = e.IsPrimary == IAX.IXApi.Modules.Finance.Common.NoYes.Yes || (pLoc != null && pLoc.IsPrimary == IAX.IXApi.Modules.Finance.Common.NoYes.Yes)
-                };
-            }).ToList();
-            return Ok(APIResponse<System.Collections.Generic.IEnumerable<ContactInfoDto>>.Ok(dtos));
-        }
+            => Ok(APIResponse<System.Collections.Generic.IEnumerable<ContactInfoDto>>.Ok(await _queries.GetPartyContactsAsync(partyId)));
 
         [HttpPost("Party/{partyId}")]
         public async Task<IActionResult> CreatePartyContact(long partyId, [FromBody] ContactInfoDto dto, CancellationToken cancellationToken)
@@ -92,4 +66,3 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
         }
     }
 }
-

@@ -10,7 +10,7 @@ using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace IAX.IXApi.Modules.Finance.AccountsReceivable
+namespace IAX.IXApi.Modules.Finance.AccountsReceivable.PostingProfile
 {
     [ApiController]
     [Route("api/v1/[controller]")]
@@ -18,7 +18,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
     [DomainPermission("AccountsReceivable", "PostingProfiles")]
     public class CustLedgerAccountsController : BaseController<CustLedgerAccounts, CustLedgerAccountsDto>
     {
-        public CustLedgerAccountsController(IBaseService<CustLedgerAccounts> service, ILogger<CustLedgerAccountsController> logger)
+        public CustLedgerAccountsController(ICustLedgerAccountsService service, ILogger<CustLedgerAccountsController> logger)
             : base(service, logger)
         {
         }

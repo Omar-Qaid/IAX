@@ -1,6 +1,6 @@
 using IAX.IXApi.Shared.Application.Contracts;
 
-namespace IAX.IXApi.Modules.Finance.Shared.Features
+namespace IAX.IXApi.Modules.Finance.Foundation.Currency
 {
     public class ExchangeRateTypeDto : EntityDto<long>
     {

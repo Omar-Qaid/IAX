@@ -8,7 +8,6 @@ using IAX.IXApi.Infrastructure.Persistence.Seeding.Entities;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.Inventory;
 using IAX.IXApi.Modules.Finance.GeneralLedger;
-using IAX.IXApi.Modules.Finance.Shared.Features;
 using DocumentFormat.OpenXml.Vml.Office;
 using DocumentFormat.OpenXml.Bibliography;
 using System.ComponentModel.DataAnnotations.Schema;

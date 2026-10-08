@@ -1,5 +1,4 @@
 using IAX.IXApi.Modules.Finance.Common;
-using IAX.IXApi.Modules.Finance.Shared.Features;
 using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;

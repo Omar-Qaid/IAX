@@ -12,7 +12,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
     [DomainPermission("AccountsReceivable", "SalesPools")]
     public class SalesPoolController : BaseController<SalesPool, SalesPoolDto>
     {
-        public SalesPoolController(IBaseService<SalesPool> service, ILogger<SalesPoolController> logger)
+        public SalesPoolController(ISalesPoolService service, ILogger<SalesPoolController> logger)
             : base(service, logger)
         {
         }

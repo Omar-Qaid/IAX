@@ -2,7 +2,6 @@ using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Modules.Identity.Authentication;
 using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Identity.Roles;
-using IAX.IXApi.Modules.Finance.Shared.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using IAX.IXApi.Modules.Finance.Inventory;
@@ -940,7 +939,7 @@ var translationSeeds = new (string Code, string Description)[]
     ("M",   "متر"),     ("CM",  "سنتيمتر"),  ("MM",  "مليمتر"),   ("FT",  "قدم"),
     ("BOX", "صندوق"),   ("CTN", "كرتون"),    ("PCK", "حزمة"),
     ("PLT", "منصة"),    ("BAG", "كيس"),      ("CAN", "علبة"),
-    ("BTL", "زجاجة"),   ("ROL", "لفة"),
+    ("BTL", "زجاجة"),   ("ROL", "ل�ة"),
     ("HR",  "ساعة"),    ("DAY", "يوم"),      ("MON", "شهر"),
 };
 

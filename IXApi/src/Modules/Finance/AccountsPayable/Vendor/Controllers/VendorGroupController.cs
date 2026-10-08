@@ -14,7 +14,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
     [DomainPermission("AccountsPayable", "VendorGroups")]
     public class VendorGroupController : BaseController<VendGroup, VendorGroupDto>
     {
-        public VendorGroupController(IBaseService<VendGroup> service, ILogger<VendorGroupController> logger)
+        public VendorGroupController(IVendorGroupService service, ILogger<VendorGroupController> logger)
             : base(service, logger)
         {
         }

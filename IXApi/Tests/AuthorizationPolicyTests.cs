@@ -97,7 +97,7 @@ public sealed class AuthorizationPolicyTests
     [Fact]
     public void Finance_business_controllers_require_domain_permissions()
     {
-        var financeAssembly = typeof(IAX.IXApi.Modules.Finance.Shared.Features.CurrencyController).Assembly;
+        var financeAssembly = typeof(IAX.IXApi.Modules.Finance.Foundation.Currency.CurrencyController).Assembly;
         var intentionallySharedReferenceControllers = new HashSet<Type>
         {
             typeof(IAX.IXApi.Modules.Finance.Common.Controllers.EnumsController),
@@ -111,10 +111,10 @@ public sealed class AuthorizationPolicyTests
             .ToList();
 
         Assert.Empty(unprotected);
-        AssertPermission(typeof(IAX.IXApi.Modules.Finance.AccountsReceivable.CustomerController), null, "AccountsReceivable", "Customers", null);
+        AssertPermission(typeof(IAX.IXApi.Modules.Finance.AccountsReceivable.Customer.CustomerController), null, "AccountsReceivable", "Customers", null);
         AssertPermission(typeof(IAX.IXApi.Modules.Finance.AccountsPayable.VendorController), null, "AccountsPayable", "Vendors", null);
-        AssertPermission(typeof(IAX.IXApi.Modules.Finance.Shared.Features.CurrencyController), null, "GeneralLedger", "Currencies", null);
-        AssertPermission(typeof(IAX.IXApi.Modules.Finance.Shared.Features.TaxTableController), null, "Tax", "TaxCodes", null);
+        AssertPermission(typeof(IAX.IXApi.Modules.Finance.Foundation.Currency.CurrencyController), null, "GeneralLedger", "Currencies", null);
+        AssertPermission(typeof(IAX.IXApi.Modules.Finance.Foundation.Tax.TaxTableController), null, "Tax", "TaxCodes", null);
         AssertPermission(typeof(IAX.IXApi.Modules.Finance.GeneralLedger.FiscalCalendar.FiscalCalendarController), null, "GeneralLedger", "FiscalCalendars", null);
     }
 

@@ -40,7 +40,7 @@ public sealed class SalesInventoryDemandTests
         };
         var line = new SalesLine
         {
-            SalesId = order.SalesId, ItemId = "A0001", SalesQty = 10,
+            SalesId = order.SalesId, ItemId = "A0001", SalesQty = 10, QtyOrdered = 10,
             RemainSalesPhysical = 10, RemainSalesFinancial = 10,
             ReceiptDateRequested = new DateTime(2026, 9, 30), DataAreaId = order.DataAreaId
         };
@@ -83,6 +83,8 @@ public sealed class SalesInventoryDemandTests
         Assert.Equal(1, numbers.DimensionCalls);
 
         line.SalesQty = 12;
+        line.QtyOrdered = 12;
+        line.RemainInventPhysical = 12;
         await service.UpdateAsync(line, "1", "11");
         await financeData.SaveChangesAsync();
         Assert.Equal(-12, (await db.Set<InventTrans>().SingleAsync()).Qty);
@@ -112,13 +114,13 @@ public sealed class SalesInventoryDemandTests
         var secondOrder = new SalesTable { SalesId = "SO-2", CurrencyCode = "USD", DataAreaId = "DAT" };
         var firstLine = new SalesLine
         {
-            SalesId = firstOrder.SalesId, ItemId = "A0001", SalesQty = 10,
+            SalesId = firstOrder.SalesId, ItemId = "A0001", SalesQty = 10, QtyOrdered = 10,
             RemainInventPhysical = 10, RemainSalesPhysical = 10,
             RemainSalesFinancial = 10, DataAreaId = "DAT"
         };
         var secondLine = new SalesLine
         {
-            SalesId = secondOrder.SalesId, ItemId = "A0001", SalesQty = 7,
+            SalesId = secondOrder.SalesId, ItemId = "A0001", SalesQty = 7, QtyOrdered = 7,
             RemainInventPhysical = 7, RemainSalesPhysical = 7,
             RemainSalesFinancial = 7, DataAreaId = "DAT"
         };
@@ -186,12 +188,13 @@ public sealed class SalesInventoryDemandTests
     private sealed class TestNumbers : ISalesInventoryNumberService
     {
         public int DimensionCalls { get; private set; }
+        private int _transactionCalls;
         public Task<string> NextInventDimIdAsync(CancellationToken cancellationToken = default)
         {
             DimensionCalls++;
             return Task.FromResult("DIM-000001");
         }
         public Task<string> NextInventTransIdAsync(CancellationToken cancellationToken = default)
-            => Task.FromResult("LOT-000001");
+            => Task.FromResult($"LOT-{++_transactionCalls:000001}");
     }
 }

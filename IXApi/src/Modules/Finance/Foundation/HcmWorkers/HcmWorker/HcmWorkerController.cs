@@ -121,7 +121,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.HcmWorkers
                 dto.InitialPositionId,
                 cancellationToken);
             var result = await ReloadWithDefaultsAsync(created.RecId, cancellationToken) ?? created;
-            await SaveAssignmentChangesAsync(created.RecId, dto, cancellationToken);
+            await _workerService.SaveAssignmentChangesAsync(created.RecId, dto, cancellationToken);
             result = await ReloadWithDefaultsAsync(created.RecId, cancellationToken) ?? result;
             return Ok(APIResponse<HcmWorkerDto>.Ok(result.Adapt<HcmWorkerDto>(), "Created successfully"));
         }
@@ -145,37 +145,10 @@ namespace IAX.IXApi.Modules.Finance.Foundation.HcmWorkers
                 dto.Name ?? string.Empty,
                 dto.NameAlias,
                 cancellationToken);
-            await SaveAssignmentChangesAsync(existing.RecId, dto, cancellationToken, currentOrganization, currentShowroom);
+            await _workerService.SaveAssignmentChangesAsync(existing.RecId, dto, cancellationToken, currentOrganization, currentShowroom);
             var result = await ReloadWithDefaultsAsync(id, cancellationToken) ?? updated;
             return Ok(APIResponse<HcmWorkerDto>.Ok(result.Adapt<HcmWorkerDto>(), "Updated successfully"));
         }
 
-        private async Task SaveAssignmentChangesAsync(
-            long workerId,
-            HcmWorkerDto dto,
-            CancellationToken cancellationToken,
-            HcmWorkerOrganizationAssignmentV1Dto? currentOrganization = null,
-            HcmWorkerShowroomAssignmentDto? currentShowroom = null)
-        {
-            var validFrom = DateOnly.FromDateTime(DateTime.UtcNow);
-            if (dto.ManagerWorkerId is long managerWorkerId && managerWorkerId > 0 &&
-                (currentOrganization == null ||
-                 currentOrganization.HcmManagerWorkerId != managerWorkerId ||
-                 currentOrganization.DepartmentId != dto.DepartmentId ||
-                 currentOrganization.OccupationId != dto.OccupationId))
-            {
-                await _workerService.SaveOrganizationAssignmentV1Async(workerId, null,
-                    new(managerWorkerId, dto.DepartmentId, dto.OccupationId, validFrom, null, true, true),
-                    cancellationToken);
-            }
-
-            if (dto.ShowroomId is long showroomId && showroomId > 0 &&
-                (currentShowroom == null || currentShowroom.HcmShowroomId != showroomId))
-            {
-                await _workerService.SaveShowroomAssignmentAsync(workerId, null,
-                    new(showroomId, validFrom, null, true, true), cancellationToken);
-            }
-        }
     }
 }
-

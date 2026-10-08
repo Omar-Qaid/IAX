@@ -4,7 +4,7 @@ using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace IAX.IXApi.Modules.Finance.Shared.Features
+namespace IAX.IXApi.Modules.Finance.Foundation.DeliveryModes
 {
     public class DlvModeConfiguration : IEntityTypeConfiguration<DlvMode>
     {

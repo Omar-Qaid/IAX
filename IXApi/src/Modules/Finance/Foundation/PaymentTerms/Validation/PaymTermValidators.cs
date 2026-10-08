@@ -1,10 +1,10 @@
+using IAX.IXApi.Shared.Application.Validation;
 using FluentValidation;
 using IAX.IXApi.Modules.Finance.Common;
-using IAX.IXApi.Modules.Finance.Shared.Features;
 
-namespace IAX.IXApi.Modules.Finance.Shared.Features
+namespace IAX.IXApi.Modules.Finance.Foundation.PaymentTerms
 {
-    public class PaymTermDtoValidator : AbstractValidator<PaymTermDto>
+    public class PaymTermDtoValidator : BaseValidator<PaymTermDto>
     {
         public PaymTermDtoValidator()
         {
@@ -13,4 +13,3 @@ namespace IAX.IXApi.Modules.Finance.Shared.Features
         }
     }
 }
-

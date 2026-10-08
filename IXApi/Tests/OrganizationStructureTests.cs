@@ -1,3 +1,5 @@
+using Mapster;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using FluentValidation;
 using IAX.IXApi.Modules.Finance.Foundation.Departments;
 using IAX.IXApi.Modules.Finance.Foundation.HcmShowrooms;
@@ -21,6 +23,7 @@ namespace IXApi.Tests;
 
 public sealed class OrganizationStructureTests
 {
+    static OrganizationStructureTests() => new OrganizationStructureMapping().Register(TypeAdapterConfig.GlobalSettings);
     private static readonly DateOnly Start = new(2026, 1, 1);
     private static readonly DateOnly TransferDate = new(2026, 9, 16);
 
@@ -221,7 +224,7 @@ public sealed class OrganizationStructureTests
             await f.Db.Database.EnsureCreatedAsync();
             f.Db.HcmWorkers.AddRange(new HcmWorker { RecId = 1, PersonnelNumber = "W1", DataAreaId = "dat" }, new HcmWorker { RecId = 2, PersonnelNumber = "W2", DataAreaId = "dat" });
             await f.Db.SaveChangesAsync();
-            f.Service = new OrganizationStructureService(f.Db, f.Company);
+            f.Service = new OrganizationStructureService(new StructureUnitOfWork(f.Db), f.Company);
             return f;
         }
         public async Task<(long Unit, long Role, long Position)> SeatAsync(string code)
@@ -236,6 +239,17 @@ public sealed class OrganizationStructureTests
 
     // Real relational execution with the production Organization mappings; unrelated modules are
     // excluded. SQL Server-specific defaults/rowversion are adapted only in this SQLite fixture.
+    private sealed class StructureUnitOfWork(DbContext context) : IUnitOfWork
+    {
+        public DbContext Context => context;
+        public IGenericRepository<T> Repository<T>() where T : class => throw new NotSupportedException();
+        public Task<int> CompleteAsync(CancellationToken ct = default) => context.SaveChangesAsync(ct);
+        public Task BeginTransactionAsync(CancellationToken ct = default) => throw new NotSupportedException();
+        public Task CommitTransactionAsync(CancellationToken ct = default) => throw new NotSupportedException();
+        public Task RollbackTransactionAsync(CancellationToken ct = default) => throw new NotSupportedException();
+        public void Dispose() { }
+    }
+
     private sealed class TestContext(DbContextOptions<TestContext> options, TestCompany company) : DbContext(options), IOrganizationDataContext, IFinanceDataContext
     {
         public string CompanyCode => company.Code;

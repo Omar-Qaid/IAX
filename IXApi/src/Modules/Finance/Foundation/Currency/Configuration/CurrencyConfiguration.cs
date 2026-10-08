@@ -1,14 +1,15 @@
+using CurrencyEntity = IAX.IXApi.Modules.Finance.Entities.Currency;
 using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Finance.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System.Reflection.Emit;
 
-namespace IAX.IXApi.Modules.Finance.Shared.Features
+namespace IAX.IXApi.Modules.Finance.Foundation.Currency
 {
-    public class CurrencyConfiguration : IEntityTypeConfiguration<Currency>
+    public class CurrencyConfiguration : IEntityTypeConfiguration<CurrencyEntity>
     {
-        public void Configure(EntityTypeBuilder<Currency> builder)
+        public void Configure(EntityTypeBuilder<CurrencyEntity> builder)
         {
             builder.ToTable("Currency");
 

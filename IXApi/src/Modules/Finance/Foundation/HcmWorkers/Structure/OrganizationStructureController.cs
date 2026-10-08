@@ -10,7 +10,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.Structure;
 [Authorize]
 [Route("api/v1/organization-structure")]
 [DomainPermission("Organization", "Structure")]
-public sealed class OrganizationStructureController(OrganizationStructureService service) : ControllerBase
+public sealed class OrganizationStructureController(IOrganizationStructureService service) : ControllerBase
 {
     [HttpGet("units")]
     public Task<IReadOnlyList<OrganizationUnitInfo>> Units([FromQuery, BindRequired] DateOnly asOf, CancellationToken ct) => service.GetUnitsAsync(asOf, ct);

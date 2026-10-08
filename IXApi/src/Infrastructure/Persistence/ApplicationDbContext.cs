@@ -53,7 +53,6 @@ using IAX.IXApi.Infrastructure.Persistence.ModelBuilding;
 using System.Linq.Expressions;
 using System.Reflection.Metadata;
 using IAX.IXApi.Modules.Finance.Inventory;
-using IAX.IXApi.Modules.Finance.Shared.Features;
 using IAX.IXApi.Modules.Finance.GeneralLedger;
 using IAX.IXApi.Shared.Application.Identity;
 using IAX.IXApi.Modules.Finance.Foundation.Occupations;
@@ -297,6 +296,7 @@ namespace IAX.IXApi.Infrastructure.Persistence
         public DbSet<InventTrans> InventTrans => Set<InventTrans>();
         public DbSet<UnitOfMeasure> UnitOfMeasures => Set<UnitOfMeasure>();
         public DbSet<InventTransOrigin> InventTransOrigins => Set<InventTransOrigin>();
+        public DbSet<InventTransOriginSalesLine> InventTransOriginSalesLines => Set<InventTransOriginSalesLine>();
         public DbSet<InventSum> InventSums => Set<InventSum>();
         public DbSet<InventDim> InventDims => Set<InventDim>();
         public DbSet<InventSettlement> InventSettlements => Set<InventSettlement>();
@@ -337,6 +337,8 @@ namespace IAX.IXApi.Infrastructure.Persistence
         public DbSet<TaxGroupData> TaxGroupDatas => Set<TaxGroupData>();
         public DbSet<InventPosting> InventPostings => Set<InventPosting>();
         public DbSet< MarkupTable> MarkupTables => Set< MarkupTable>();
+        public DbSet<MarkupAutoTable> MarkupAutoTables => Set<MarkupAutoTable>();
+        public DbSet<MarkupAutoLine> MarkupAutoLines => Set<MarkupAutoLine>();
         public DbSet< MarkupTrans> MarkupTrans => Set< MarkupTrans>();
 
         public DbSet<Ledger> Ledgers => Set<Ledger>();

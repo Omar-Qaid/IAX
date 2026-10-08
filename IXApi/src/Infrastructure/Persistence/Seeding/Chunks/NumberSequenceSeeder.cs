@@ -35,7 +35,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 ("SalesTable",          "Sales Order Sequence",      "SO-######",  "{PREFIX}-{YYYY}-{SEQ}", 0),
                 ("SalesLine",           "Sale Line Sequence",        "SOL-######", "{PREFIX}-{SEQ}",       0),
                 ("PackingSlip",         "Packing Slip Sequence",     "PS-######",  "{PREFIX}-{YYYY}-{SEQ}", 1),
-                ("CustConfirmJour",     "SO Confirm Sequence",       "CONF-######","{PREFIX}-{YYYY}-{SEQ}", 1),
+                ("CustConfirmJour",     "SO Confirm Sequence",       "CONF-######","{PREFIX}-{YYYY}-{SEQ}", 0),
                 ("CustPackingSlipJour", "PS Journal ID Sequence",    "PSJ-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
                 ("CustInvoiceJour",     "Invoice Sequence",          "INV-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
                 ("CustInvoiceTrans",    "Invoice Trans Sequence",    "INVT-######","{PREFIX}-{SEQ}",       0),
@@ -150,6 +150,30 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     .Max();
                 if ((salesOrderSequence.NextRec ?? 1) <= highestUsedSequence)
                     salesOrderSequence.NextRec = checked(highestUsedSequence + 1);
+                await db.SaveChangesAsync(ct);
+            }
+
+            // ConfirmId contains a year, while Cyclic currently resets every day. Keep the
+            // confirmation sequence monotonic and advance older seeded databases past
+            // existing journal numbers before accepting a new confirmation.
+            var confirmationSequence = await db.SysNumberSequences
+                .FirstOrDefaultAsync(sequence => sequence.NumberSequence == "CustConfirmJour", ct);
+            if (confirmationSequence != null)
+            {
+                confirmationSequence.Cyclic = 0;
+                var confirmIds = await db.Set<CustConfirmJour>()
+                    .IgnoreQueryFilters()
+                    .Select(journal => journal.ConfirmId)
+                    .ToListAsync(ct);
+                var highestUsedSequence = confirmIds
+                    .Select(id => id.LastIndexOf('-') is var separator && separator >= 0
+                        && int.TryParse(id[(separator + 1)..], out var value)
+                            ? value
+                            : 0)
+                    .DefaultIfEmpty(0)
+                    .Max();
+                if ((confirmationSequence.NextRec ?? 1) <= highestUsedSequence)
+                    confirmationSequence.NextRec = checked(highestUsedSequence + 1);
                 await db.SaveChangesAsync(ct);
             }
         }

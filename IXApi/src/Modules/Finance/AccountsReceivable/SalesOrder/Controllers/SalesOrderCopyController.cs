@@ -15,12 +15,12 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
 public sealed class SalesOrderCopyController : ControllerBase
 {
     private readonly IFinanceDataContext _db;
-    private readonly ISalesInventoryDemandService _inventoryDemand;
+    private readonly SalesOrderCopyService _copy;
 
-    public SalesOrderCopyController(IFinanceDataContext db, ISalesInventoryDemandService inventoryDemand)
+    public SalesOrderCopyController(IFinanceDataContext db, SalesOrderCopyService copy)
     {
         _db = db;
-        _inventoryDemand = inventoryDemand;
+        _copy = copy;
     }
 
     [HttpGet("from-all/documents")]
@@ -102,7 +102,8 @@ public sealed class SalesOrderCopyController : ControllerBase
     }
 
     public sealed record CopyRequest(string Mode, List<string> LineIds, decimal QuantityFactor = 1,
-        bool InvertSign = false, bool RecalculatePrice = false, bool CopyPrecisely = true);
+        bool InvertSign = false, bool RecalculatePrice = false, bool CopyPrecisely = true)
+        : SalesOrderCopyRequest(Mode, LineIds, QuantityFactor, InvertSign, RecalculatePrice, CopyPrecisely);
 
     [HttpPost]
     [DomainPermission("AccountsReceivable", "SalesOrders", "Edit")]
@@ -125,90 +126,15 @@ public sealed class SalesOrderCopyController : ControllerBase
         if (request.QuantityFactor <= 0)
             return BadRequest(APIResponse<object>.Fail("Quantity factor must be greater than zero."));
 
-        return await _db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        var result = await _copy.CopyAsync(destinationRecId, request, lineIds, ct);
+        return result.Status switch
         {
-            await using var transaction = await _db.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, ct);
-            var destination = await _db.Set<SalesTable>().SingleOrDefaultAsync(
-                x => x.RecId == destinationRecId, ct);
-            if (destination == null) return (IActionResult)NotFound(APIResponse<object>.Fail("Destination sales order was not found."));
-            var area = destination.DataAreaId;
-            if (destination.SalesStatus != SalesStatus.Backorder)
-                return UnprocessableEntity(APIResponse<object>.Fail("Lines can only be copied to an open sales order."));
-
-            List<CopySourceLine> sources;
-            if (request.Mode.Equals("fromJournal", StringComparison.OrdinalIgnoreCase))
-            {
-                sources = await _db.Set<CustConfirmTrans>().AsNoTracking()
-                    .Where(x => lineIds.Contains(x.RecId) && x.DataAreaId == area)
-                    .Select(x => new CopySourceLine(x.RecId, x.ItemId, x.Name, x.Qty, x.SalesUnit,
-                        x.SalesPrice, x.PriceUnit, x.LineDisc, x.LinePercent, x.MultiLnDisc,
-                        x.MultiLnPercent, x.LineAmount, x.InventDimId, x.TaxGroup, x.TaxItemGroup,
-                        string.Empty, x.DlvTerm, x.DlvDate, default, x.SalesCategory)).ToListAsync(ct);
-            }
-            else
-            {
-                sources = await _db.Set<SalesLine>().AsNoTracking()
-                    .Where(x => lineIds.Contains(x.RecId) && x.DataAreaId == area
-                        && x.SalesId != destination.SalesId)
-                    .Select(x => new CopySourceLine(x.RecId, x.ItemId, x.Name, x.SalesQty, x.SalesUnit,
-                        x.SalesPrice, x.PriceUnit, x.LineDisc, x.LinePercent, x.MultiLnDisc,
-                        x.MultiLnPercent, x.LineAmount, x.InventDimId, x.TaxGroup, x.TaxItemGroup,
-                        x.DlvMode, x.DlvTerm, x.ReceiptDateRequested, x.ShippingDateRequested,
-                        x.SalesCategory)).ToListAsync(ct);
-            }
-            if (sources.Count != lineIds.Count)
-                return UnprocessableEntity(APIResponse<object>.Fail("One or more selected source lines were not found."));
-
-            var dimensionIds = sources.Select(x => x.InventDimId).Where(x => x != string.Empty).Distinct().ToList();
-            var dimensions = await _db.Set<InventDim>().AsNoTracking()
-                .Where(x => x.DataAreaId == area && dimensionIds.Contains(x.InventDimId))
-                .ToDictionaryAsync(x => x.InventDimId, ct);
-            var nextLine = await _db.Set<SalesLine>().Where(x => x.SalesId == destination.SalesId && x.DataAreaId == area)
-                .MaxAsync(x => (decimal?)x.LineNum, ct) ?? 0;
-            var created = 0;
-            foreach (var source in sources.OrderBy(x => x.Id))
-            {
-                var sign = request.InvertSign ? -1 : 1;
-                var quantity = source.Quantity * request.QuantityFactor * sign;
-                if (quantity == 0) continue;
-                var price = source.UnitPrice;
-                if (request.RecalculatePrice)
-                {
-                    var module = await _db.Set<InventTableModule>().AsNoTracking().FirstOrDefaultAsync(
-                        x => x.ItemId == source.ItemId && x.DataAreaId == area && (int)x.ModuleType == 2, ct);
-                    if (module != null) price = module.Price / (module.PriceUnit > 0 ? module.PriceUnit : 1);
-                }
-                var line = new SalesLine
-                {
-                    SalesId = destination.SalesId, LineNum = ++nextLine, ItemId = source.ItemId,
-                    Name = source.Name, CustAccount = destination.CustAccount, CustGroupId = destination.CustGroup,
-                    CurrencyCode = destination.CurrencyCode, SalesQty = quantity, QtyOrdered = quantity,
-                    RemainSalesPhysical = quantity, RemainSalesFinancial = quantity,
-                    SalesUnit = source.Unit, PriceUnit = source.PriceUnit > 0 ? source.PriceUnit : 1,
-                    SalesPrice = price, LineAmount = quantity * price,
-                    LineDisc = request.CopyPrecisely ? source.LineDiscount * request.QuantityFactor * sign : 0,
-                    LinePercent = request.CopyPrecisely ? source.LineDiscountPercent : 0,
-                    MultiLnDisc = request.CopyPrecisely ? source.MultiLineDiscount * request.QuantityFactor * sign : 0,
-                    MultiLnPercent = request.CopyPrecisely ? source.MultiLineDiscountPercent : 0,
-                    TaxGroup = source.TaxGroup, TaxItemGroup = source.TaxItemGroup,
-                    DlvMode = source.DeliveryMode, DlvTerm = source.DeliveryTerms,
-                    ReceiptDateRequested = source.DeliveryDate == default ? destination.ReceiptDateRequested : source.DeliveryDate,
-                    ShippingDateRequested = source.ShippingDate == default ? destination.ShippingDateRequested : source.ShippingDate,
-                    SalesCategory = source.SalesCategory, SalesStatus = SalesStatus.Backorder,
-                    SalesType = destination.SalesType ?? SalesType.Sales, DataAreaId = area
-                };
-                dimensions.TryGetValue(source.InventDimId, out var dimension);
-                await _inventoryDemand.CreateAsync(destination, line,
-                    dimension?.InventSiteId ?? destination.InventSiteId,
-                    dimension?.InventLocationId ?? destination.InventLocationId, ct);
-                _db.Set<SalesLine>().Add(line);
-                destination.SmmSalesAmountTotal += line.LineAmount;
-                created++;
-            }
-            await _db.SaveChangesAsync(ct);
-            await transaction.CommitAsync(ct);
-            return Ok(APIResponse<object>.Ok(new { copiedLineCount = created }));
-        });
+            SalesOrderCopyStatus.DestinationNotFound => NotFound(APIResponse<object>.Fail("Destination sales order was not found.")),
+            SalesOrderCopyStatus.DestinationClosed => UnprocessableEntity(APIResponse<object>.Fail("Lines can only be copied to an open sales order.")),
+            SalesOrderCopyStatus.SourceLinesNotFound => UnprocessableEntity(APIResponse<object>.Fail("One or more selected source lines were not found.")),
+            SalesOrderCopyStatus.InvalidUnit => UnprocessableEntity(APIResponse<object>.Fail("A source line has no valid conversion to its inventory unit.")),
+            _ => Ok(APIResponse<object>.Ok(new { copiedLineCount = result.CopiedLineCount }))
+        };
     }
 
     private async Task<object> PresentLines(List<CopySourceLine> lines, string area, CancellationToken ct)
@@ -227,10 +153,4 @@ public sealed class SalesOrderCopyController : ControllerBase
         => _db.Set<SalesTable>().AsNoTracking().SingleOrDefaultAsync(
             x => x.RecId == destinationRecId, ct);
 
-    private sealed record CopySourceLine(long Id, string ItemId, string Name, decimal Quantity,
-        string Unit, decimal UnitPrice, decimal PriceUnit, decimal LineDiscount,
-        decimal LineDiscountPercent, decimal MultiLineDiscount, decimal MultiLineDiscountPercent,
-        decimal LineAmount, string InventDimId, string TaxGroup, string TaxItemGroup,
-        string DeliveryMode, string DeliveryTerms, DateTime DeliveryDate, DateTime ShippingDate,
-        long SalesCategory);
 }

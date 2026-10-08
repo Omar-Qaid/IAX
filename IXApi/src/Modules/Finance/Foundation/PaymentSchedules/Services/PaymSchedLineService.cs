@@ -6,7 +6,7 @@ using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Infrastructure.Identity;
 
-namespace IAX.IXApi.Modules.Finance.Shared.Features
+namespace IAX.IXApi.Modules.Finance.Foundation.PaymentSchedules
 {
     public class PaymSchedLineService : BaseService<PaymSchedLine>, IPaymSchedLineService
     {

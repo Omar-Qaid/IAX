@@ -4,7 +4,8 @@ using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
-using IAX.IXApi.Modules.Finance.Persistence;
+using Mapster;
+using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 using IAX.IXApi.Modules.Finance.Foundation.WorkerShowroomAssignments;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,16 +14,14 @@ namespace IAX.IXApi.Modules.Finance.Foundation.HcmShowrooms;
 public class HcmShowroomService : BaseService<HcmShowroom>, IHcmShowroomService
 {
     private readonly ISysNumberSequenceService _numberSequenceService;
-    private readonly IFinanceDataContext _dbContext;
+    private DbContext _dbContext => _unitOfWork.Context;
 
     public HcmShowroomService(
         IUnitOfWork unitOfWork,
         ICurrentUserService currentUser,
-        ISysNumberSequenceService numberSequenceService,
-        IFinanceDataContext dbContext) : base(unitOfWork, currentUser)
+        ISysNumberSequenceService numberSequenceService) : base(unitOfWork, currentUser)
     {
         _numberSequenceService = numberSequenceService;
-        _dbContext = dbContext;
     }
 
     public async Task<HcmShowroom> AddShowroomAsync(
@@ -60,12 +59,12 @@ public class HcmShowroomService : BaseService<HcmShowroom>, IHcmShowroomService
                 IsActive = NoYes.Yes
             };
             _dbContext.Set<DirPartyTable>().Add(party);
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.CompleteAsync(cancellationToken);
 
             entity.Party = party.RecId;
             var showroom = await base.AddAsync(entity, cancellationToken);
             showroom.PartyTable = party;
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.CompleteAsync(cancellationToken);
             return showroom;
         }
 
@@ -75,16 +74,16 @@ public class HcmShowroomService : BaseService<HcmShowroom>, IHcmShowroomService
         var strategy = _dbContext.Database.CreateExecutionStrategy();
         return await strategy.ExecuteAsync(async () =>
         {
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+            await _unitOfWork.BeginTransactionAsync(cancellationToken);
             try
             {
                 var showroom = await AddAsync();
-                await transaction.CommitAsync(cancellationToken);
+                await _unitOfWork.CommitTransactionAsync(cancellationToken);
                 return showroom;
             }
             catch
             {
-                await transaction.RollbackAsync(cancellationToken);
+                await _unitOfWork.RollbackTransactionAsync(cancellationToken);
                 throw;
             }
         });
@@ -109,22 +108,13 @@ public class HcmShowroomService : BaseService<HcmShowroom>, IHcmShowroomService
     public async Task<IReadOnlyList<HcmShowroomWorkerAssignmentDto>> GetWorkerAssignmentsAsync(
         long showroomId,
         CancellationToken cancellationToken = default) =>
-        await _dbContext.HcmWorkerShowroomAssignments
+        await _dbContext.Set<HcmWorkerShowroomAssignment>()
             .AsNoTracking()
             .Where(assignment => assignment.HcmShowroomId == showroomId)
             .OrderByDescending(assignment => assignment.IsPrimary)
             .ThenByDescending(assignment => assignment.ValidFrom)
             .ThenByDescending(assignment => assignment.RecId)
-            .Select(assignment => new HcmShowroomWorkerAssignmentDto(
-                assignment.RecId,
-                assignment.HcmWorkerId,
-                assignment.HcmWorker.PersonnelNumber,
-                assignment.HcmWorker.Party.Name,
-                assignment.HcmWorker.Party.NameAlias,
-                assignment.ValidFrom,
-                assignment.ValidTo,
-                assignment.IsPrimary,
-                assignment.IsActive))
+            .ProjectToType<HcmShowroomWorkerAssignmentDto>()
             .ToListAsync(cancellationToken);
 
     public async Task SaveWorkerAssignmentAsync(
@@ -138,17 +128,17 @@ public class HcmShowroomService : BaseService<HcmShowroom>, IHcmShowroomService
         if (request.ValidTo is not null && request.ValidTo <= request.ValidFrom)
             throw new InvalidOperationException("Valid to must be later than valid from.");
 
-        var showroom = await _dbContext.HcmShowrooms.AsNoTracking()
+        var showroom = await _dbContext.Set<HcmShowroom>().AsNoTracking()
             .SingleOrDefaultAsync(item => item.RecId == showroomId && item.IsActive, cancellationToken)
             ?? throw new KeyNotFoundException("Showroom not found.");
-        _ = await _dbContext.HcmWorkers.AsNoTracking()
+        _ = await _dbContext.Set<HcmWorker>().AsNoTracking()
             .SingleOrDefaultAsync(item => item.RecId == request.HcmWorkerId && item.IsActive, cancellationToken)
             ?? throw new KeyNotFoundException("Worker not found.");
 
         HcmWorkerShowroomAssignment assignment;
         if (assignmentId is long id)
         {
-            assignment = await _dbContext.HcmWorkerShowroomAssignments
+            assignment = await _dbContext.Set<HcmWorkerShowroomAssignment>()
                 .SingleOrDefaultAsync(item => item.RecId == id && item.HcmShowroomId == showroomId, cancellationToken)
                 ?? throw new KeyNotFoundException("Showroom assignment not found.");
         }
@@ -160,16 +150,12 @@ public class HcmShowroomService : BaseService<HcmShowroom>, IHcmShowroomService
                 HcmWorkerId = request.HcmWorkerId,
                 DataAreaId = showroom.DataAreaId
             };
-            _dbContext.HcmWorkerShowroomAssignments.Add(assignment);
+            _dbContext.Set<HcmWorkerShowroomAssignment>().Add(assignment);
         }
 
-        assignment.HcmWorkerId = request.HcmWorkerId;
-        assignment.ValidFrom = request.ValidFrom;
-        assignment.ValidTo = request.ValidTo;
-        assignment.IsPrimary = true;
-        assignment.IsActive = request.IsActive;
+        request.Adapt(assignment);
 
-        var previousPrimary = await _dbContext.HcmWorkerShowroomAssignments
+        var previousPrimary = await _dbContext.Set<HcmWorkerShowroomAssignment>()
             .Where(item => item.HcmWorkerId == request.HcmWorkerId && item.RecId != assignment.RecId && item.IsPrimary)
             .ToListAsync(cancellationToken);
         foreach (var previous in previousPrimary)
@@ -182,6 +168,6 @@ public class HcmShowroomService : BaseService<HcmShowroom>, IHcmShowroomService
             }
         }
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.CompleteAsync(cancellationToken);
     }
 }

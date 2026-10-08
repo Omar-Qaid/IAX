@@ -4,7 +4,7 @@ using IAX.IXApi.Modules.Identity.Permissions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace IAX.IXApi.Modules.Finance.AccountsReceivable
+namespace IAX.IXApi.Modules.Finance.AccountsReceivable.PostingProfile
 {
     [ApiController]
     [Route("api/v1/[controller]")]
@@ -12,7 +12,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
     [DomainPermission("AccountsReceivable", "PostingProfiles")]
     public class CustLedgerController : BaseController<CustLedger, CustLedgerDto>
     {
-        public CustLedgerController(IBaseService<CustLedger> service, ILogger<CustLedgerController> logger)
+        public CustLedgerController(ICustLedgerService service, ILogger<CustLedgerController> logger)
             : base(service, logger)
         {
         }

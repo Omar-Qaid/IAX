@@ -1,3 +1,4 @@
+using Mapster;
 using IAX.IXApi.Shared.Application.Attributes;
 using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Finance.Entities;
@@ -10,7 +11,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
-namespace IAX.IXApi.Modules.Finance.Shared.Features
+namespace IAX.IXApi.Modules.Finance.Foundation.Currency
 {
     public class ExchangeRateCurrencyPairService : BaseService<ExchangeRateCurrencyPair>, IExchangeRateCurrencyPairService
     {
@@ -21,76 +22,70 @@ namespace IAX.IXApi.Modules.Finance.Shared.Features
 
         public async Task<BulkExchangeRatePairDto> BulkSaveAsync(BulkExchangeRatePairDto dto)
         {
-            var pairRepo = _unitOfWork.Repository<ExchangeRateCurrencyPair>();
-            var ratesRepo = _unitOfWork.Repository<ExchangeRate>();
+            await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                var pairRepo = _unitOfWork.Repository<ExchangeRateCurrencyPair>();
+                var ratesRepo = _unitOfWork.Repository<ExchangeRate>();
 
-            ExchangeRateCurrencyPair pair;
-            if (dto.RecId > 0)
-            {
-                pair = await pairRepo.GetByIdAsync(dto.RecId)
-                    ?? throw new KeyNotFoundException("Exchange-rate currency pair not found.");
-                pair.FromCurrencyCode = dto.FromCurrencyCode;
-                pair.ToCurrencyCode = dto.ToCurrencyCode;
-                pair.ExchangeRateType = dto.ExchangeRateType;
-                pair.ExchangeRateDisplayFactor = dto.ExchangeRateDisplayFactor;
-                await pairRepo.UpdateAsync(pair);
-            }
-            else
-            {
-                pair = new ExchangeRateCurrencyPair
+                ExchangeRateCurrencyPair pair;
+                if (dto.RecId > 0)
                 {
-                    FromCurrencyCode = dto.FromCurrencyCode,
-                    ToCurrencyCode = dto.ToCurrencyCode,
-                    ExchangeRateType = dto.ExchangeRateType,
-                    ExchangeRateDisplayFactor = dto.ExchangeRateDisplayFactor
-                };
-                pair = await pairRepo.AddAsync(pair);
-            }
-            
-            // Need to save before updating rates if it's new
-            await _unitOfWork.CompleteAsync();
-            dto.RecId = pair.RecId;
-
-            var existingRates = await ratesRepo.GetQueryable()
-                .Where(r => r.ExchangeRateCurrencyPair == pair.RecId)
-                .ToListAsync();
-
-            // Find rates to delete (exist in DB but not in DTO)
-            var dtoRateIds = dto.ExchangeRates.Where(r => r.RecId > 0).Select(r => r.RecId).ToList();
-            var ratesToDelete = existingRates.Where(r => !dtoRateIds.Contains(r.RecId)).ToList();
-            if (ratesToDelete.Any())
-            {
-                await ratesRepo.RemoveRangeAsync(ratesToDelete);
-            }
-
-            foreach (var rateDto in dto.ExchangeRates)
-            {
-                if (rateDto.RecId > 0)
-                {
-                    var existing = existingRates.FirstOrDefault(r => r.RecId == rateDto.RecId);
-                    if (existing != null)
-                    {
-                        existing.ValidFrom = rateDto.ValidFrom;
-                        existing.ValidTo = rateDto.ValidTo;
-                        existing.ExchangeRateValue = rateDto.ExchangeRateValue;
-                        await ratesRepo.UpdateAsync(existing);
-                    }
+                    pair = await pairRepo.GetByIdAsync(dto.RecId)
+                        ?? throw new KeyNotFoundException("Exchange-rate currency pair not found.");
+                    dto.Adapt(pair);
+                    await pairRepo.UpdateAsync(pair);
                 }
                 else
                 {
-                    var newRate = new ExchangeRate
-                    {
-                        ExchangeRateCurrencyPair = pair.RecId,
-                        ValidFrom = rateDto.ValidFrom,
-                        ValidTo = rateDto.ValidTo,
-                        ExchangeRateValue = rateDto.ExchangeRateValue
-                    };
-                    await ratesRepo.AddAsync(newRate);
+                    pair = dto.Adapt<ExchangeRateCurrencyPair>();
+                    pair = await pairRepo.AddAsync(pair);
                 }
-            }
+            
+                // Need to save before updating rates if it's new
+                await _unitOfWork.CompleteAsync();
+                dto.RecId = pair.RecId;
 
-            await _unitOfWork.CompleteAsync();
-            return dto;
+                var existingRates = await ratesRepo.GetQueryable()
+                    .Where(r => r.ExchangeRateCurrencyPair == pair.RecId)
+                    .ToListAsync();
+
+                // Find rates to delete (exist in DB but not in DTO)
+                var dtoRateIds = dto.ExchangeRates.Where(r => r.RecId > 0).Select(r => r.RecId).ToList();
+                var ratesToDelete = existingRates.Where(r => !dtoRateIds.Contains(r.RecId)).ToList();
+                if (ratesToDelete.Any())
+                {
+                    await ratesRepo.RemoveRangeAsync(ratesToDelete);
+                }
+
+                foreach (var rateDto in dto.ExchangeRates)
+                {
+                    if (rateDto.RecId > 0)
+                    {
+                        var existing = existingRates.FirstOrDefault(r => r.RecId == rateDto.RecId);
+                        if (existing != null)
+                        {
+                            new ExchangeRateBulkMappingSource(rateDto).Adapt(existing);
+                            await ratesRepo.UpdateAsync(existing);
+                        }
+                    }
+                    else
+                    {
+                        var newRate = new ExchangeRateBulkMappingSource(rateDto).Adapt<ExchangeRate>();
+                        newRate.ExchangeRateCurrencyPair = pair.RecId;
+                        await ratesRepo.AddAsync(newRate);
+                    }
+                }
+
+                await _unitOfWork.CompleteAsync();
+                await _unitOfWork.CommitTransactionAsync();
+                return dto;
+            }
+            catch
+            {
+                await _unitOfWork.RollbackTransactionAsync();
+                throw;
+            }
         }
     }
 }

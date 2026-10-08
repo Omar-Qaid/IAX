@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace IAX.IXApi.Modules.Finance.AccountsReceivable
+namespace IAX.IXApi.Modules.Finance.AccountsReceivable.PriceDisc
 {
     public class PriceDiscAdmTransConfiguration : IEntityTypeConfiguration<PriceDiscAdmTrans>
     {

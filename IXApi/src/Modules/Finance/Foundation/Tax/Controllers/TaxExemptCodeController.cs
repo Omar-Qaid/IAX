@@ -6,7 +6,6 @@ using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Identity.Permissions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using IAX.IXApi.Modules.Finance.Shared.Features;
 
 namespace IAX.IXApi.Modules.Finance.Foundation.Tax.Controllers
 {
@@ -16,7 +15,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.Tax.Controllers
     public class TaxExemptCodeController : BaseController<TaxExemptCodeTable, TaxExemptCodeDto>
     {
         public TaxExemptCodeController(
-            IBaseService<TaxExemptCodeTable> service, 
+            ITaxExemptCodeService service,
             ILogger<TaxExemptCodeController> logger) : base(service, logger)
         {
         }

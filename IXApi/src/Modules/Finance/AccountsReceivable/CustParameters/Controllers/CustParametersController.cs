@@ -12,7 +12,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
     [DomainPermission("AccountsReceivable", "CustParameters")]
     public class CustParametersController : BaseController<CustParameters, CustParametersDto>
     {
-        public CustParametersController(IBaseService<CustParameters> service, ILogger<CustParametersController> logger)
+        public CustParametersController(ICustParametersService service, ILogger<CustParametersController> logger)
             : base(service, logger)
         {
         }

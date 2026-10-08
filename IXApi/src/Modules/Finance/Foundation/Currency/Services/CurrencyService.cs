@@ -1,3 +1,4 @@
+using CurrencyEntity = IAX.IXApi.Modules.Finance.Entities.Currency;
 using IAX.IXApi.Shared.Application.Attributes;
 using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Finance.Entities;
@@ -10,9 +11,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 
-namespace IAX.IXApi.Modules.Finance.Shared.Features
+namespace IAX.IXApi.Modules.Finance.Foundation.Currency
 {
-    public class CurrencyService : BaseService<Currency>, ICurrencyService
+    public class CurrencyService : BaseService<CurrencyEntity>, ICurrencyService
     {
         public CurrencyService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
             : base(unitOfWork, currentUser)

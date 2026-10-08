@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace IAX.IXApi.Modules.Finance.Shared.Features
+namespace IAX.IXApi.Modules.Finance.Foundation.Tax
 {
     [ApiController]
     [Route("api/v1/TaxLedgerAccountGroup")]
@@ -24,7 +24,7 @@ namespace IAX.IXApi.Modules.Finance.Shared.Features
     {
         private readonly IFinanceDataContext _db;
 
-        public TaxLedgerAccountGroupController(IBaseService<TaxLedgerAccountGroup> service, IFinanceDataContext db, ILogger<TaxLedgerAccountGroupController> logger)
+        public TaxLedgerAccountGroupController(ITaxLedgerAccountGroupService service, IFinanceDataContext db, ILogger<TaxLedgerAccountGroupController> logger)
             : base(service, logger)
         {
             _db = db;

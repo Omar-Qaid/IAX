@@ -1,3 +1,4 @@
+using Mapster;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -67,7 +68,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
                     IsActive = true
                 };
                 _unitOfWork.Context.Set<LogisticsAddressState>().Add(stateEntity);
-                await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.CompleteAsync(cancellationToken);
             }
 
             var cleanStateId = stateEntity.StateId;
@@ -90,7 +91,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
                     IsActive = true
                 };
                 _unitOfWork.Context.Set<LogisticsAddressCounty>().Add(countyEntity);
-                await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.CompleteAsync(cancellationToken);
             }
 
             var cleanCountyId = countyEntity.CountyId;
@@ -112,7 +113,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
                     IsActive = true
                 };
                 _unitOfWork.Context.Set<LogisticsAddressCity>().Add(cityEntity);
-                await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.CompleteAsync(cancellationToken);
             }
 
             var zipEntity = await _unitOfWork.Context.Set<LogisticsAddressZipCode>()
@@ -136,7 +137,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
                     IsActive = true
                 };
                 _unitOfWork.Context.Set<LogisticsAddressZipCode>().Add(zipEntity);
-                await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.CompleteAsync(cancellationToken);
             }
 
             var districtEntity = await _unitOfWork.Context.Set<LogisticsAddressDistrict>()
@@ -154,7 +155,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
                     IsActive = true
                 };
                 _unitOfWork.Context.Set<LogisticsAddressDistrict>().Add(districtEntity);
-                await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.CompleteAsync(cancellationToken);
             }
 
             return (cleanCountryId, cleanStateId, cleanCountyId, cityEntity.Name, cityEntity.RecId, zipEntity.ZipCode, zipEntity.RecId, districtEntity.Name, districtEntity.RecId);
@@ -164,26 +165,11 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
         {
             var geo = await ResolveGeographicalHierarchyAsync(dto.CountryRegionId, dto.State, dto.County, dto.City, dto.ZipCode, dto.DistrictName, cancellationToken);
 
-            var postal = new LogisticsPostalAddress 
-            {
-                Location = locationRecId,
-                CountryRegionId = geo.countryId,
-                ZipCode = geo.zipCode,
-                State = geo.stateId,
-                County = geo.countyId,
-                City = geo.city,
-                DistrictName = geo.districtName,
-                CityRecId = geo.cityId,
-                ZipCodeRecId = geo.zipCodeId,
-                District = geo.districtId,
-                Street = dto.Street ?? string.Empty,
-                Address = $"{dto.Street}, {geo.city}, {geo.stateId} {geo.zipCode}, {geo.countryId}",
-                ValidFrom = dto.ValidFrom ?? DateTime.MinValue,
-                ValidTo = dto.ValidTo ?? DateTime.MaxValue
-            };
+            var postal = new PostalAddressWriteSource(dto, geo).Adapt<LogisticsPostalAddress>();
+            postal.Location = locationRecId;
             
             _unitOfWork.Context.Set<LogisticsPostalAddress>().Add(postal);
-            await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.CompleteAsync(cancellationToken);
             return postal;
         }
 
@@ -198,22 +184,10 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
 
             var geo = await ResolveGeographicalHierarchyAsync(dto.CountryRegionId, dto.State, dto.County, dto.City, dto.ZipCode, dto.DistrictName, cancellationToken);
 
-            postal.CountryRegionId = geo.countryId;
-            postal.ZipCode = geo.zipCode;
-            postal.State = geo.stateId;
-            postal.County = geo.countyId;
-            postal.City = geo.city;
-            postal.DistrictName = geo.districtName;
-            postal.CityRecId = geo.cityId;
-            postal.ZipCodeRecId = geo.zipCodeId;
-            postal.District = geo.districtId;
-            postal.Street = dto.Street ?? string.Empty;
-            postal.Address = $"{dto.Street}, {geo.city}, {geo.stateId} {geo.zipCode}, {geo.countryId}";
-            postal.ValidFrom = dto.ValidFrom ?? DateTime.MinValue;
-            postal.ValidTo = dto.ValidTo ?? DateTime.MaxValue;
+            new PostalAddressWriteSource(dto, geo).Adapt(postal);
 
             _unitOfWork.Context.Set<LogisticsPostalAddress>().Update(postal);
-            await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.CompleteAsync(cancellationToken);
             
             return postal;
         }
@@ -224,7 +198,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
             if (postal != null)
             {
                 _unitOfWork.Context.Set<LogisticsPostalAddress>().Remove(postal);
-                await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.CompleteAsync(cancellationToken);
                 return true;
             }
             return false;

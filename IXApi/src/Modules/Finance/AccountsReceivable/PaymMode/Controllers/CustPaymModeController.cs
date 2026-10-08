@@ -4,7 +4,7 @@ using IAX.IXApi.Modules.Identity.Permissions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace IAX.IXApi.Modules.Finance.AccountsReceivable
+namespace IAX.IXApi.Modules.Finance.AccountsReceivable.PaymMode
 {
     [ApiController]
     [Route("api/v1/[controller]")]
@@ -16,7 +16,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
     [DomainPermission("AccountsReceivable", "PaymentMethods")]
     public class CustPaymModeController : BaseController<CustPaymModeTable, CustPaymModeDto>
     {
-        public CustPaymModeController(IBaseService<CustPaymModeTable> service, ILogger<CustPaymModeController> logger)
+        public CustPaymModeController(ICustPaymModeService service, ILogger<CustPaymModeController> logger)
             : base(service, logger)
         {
         }

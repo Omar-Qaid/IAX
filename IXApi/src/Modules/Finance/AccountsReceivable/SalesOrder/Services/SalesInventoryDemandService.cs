@@ -43,12 +43,12 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
         line.InventRefId = order.SalesId;
         line.InventRefTransId = transactionId;
         line.InventRefType = InventRefType.SalesTable;
-        line.RemainInventPhysical = line.SalesQty;
-        line.RemainInventFinancial = line.SalesQty;
+        line.RemainInventPhysical = line.QtyOrdered;
+        line.RemainInventFinancial = line.QtyOrdered;
 
         var inventorySummary = await GetOrCreateInventorySummaryAsync(
             order.DataAreaId, line.ItemId, dimension, cancellationToken);
-        inventorySummary.OnOrder += line.SalesQty;
+        inventorySummary.OnOrder += line.QtyOrdered;
         inventorySummary.LastUpdDateExpected = line.ReceiptDateRequested;
 
         _dbContext.Set<InventTrans>().Add(new InventTrans
@@ -56,7 +56,7 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
             InventTransOrigin = origin.RecId,
             ItemId = line.ItemId,
             InventDimId = dimension.InventDimId,
-            Qty = -line.SalesQty,
+            Qty = -line.QtyOrdered,
             StatusIssue = StatusIssue.Ordered,
             StatusReceipt = StatusReceipt.None,
             ValueOpen = InventTransOpen.Yes,

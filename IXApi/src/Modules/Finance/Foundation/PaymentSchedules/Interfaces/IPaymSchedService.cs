@@ -3,7 +3,7 @@ using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 using IAX.IXApi.Infrastructure.Persistence.Services;
 
-namespace IAX.IXApi.Modules.Finance.Shared.Features
+namespace IAX.IXApi.Modules.Finance.Foundation.PaymentSchedules
 {
     public interface IPaymSchedService : IBaseService<PaymSched>
     {

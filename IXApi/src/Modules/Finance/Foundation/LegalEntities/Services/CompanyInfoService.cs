@@ -5,7 +5,7 @@ using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
-using IAX.IXApi.Modules.Finance.Persistence;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 
 using IAX.IXApi.Modules.Administration.NumberSequences;
@@ -16,7 +16,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LegalEntities
 {
     public class CompanyInfoService : BaseService<CompanyInfo>, ICompanyInfoService
     {
-        private readonly IFinanceDataContext _dbContext;
+        private DbContext _dbContext => _unitOfWork.Context;
         private readonly ISysNumberSequenceService _numberSequenceService;
         private readonly IPartyService _partyService;
         private readonly ILocationService _locationService;
@@ -26,14 +26,12 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LegalEntities
         public CompanyInfoService(
             IUnitOfWork unitOfWork, 
             ICurrentUserService currentUser, 
-            IFinanceDataContext dbContext, 
             ISysNumberSequenceService numberSequenceService, 
             IPartyService partyService,
             ILocationService locationService,
             IGlobalAddressBookService globalAddressBookService,
             IPartyLocationService partyLocationService) : base(unitOfWork, currentUser)
         {
-            _dbContext = dbContext;
             _numberSequenceService = numberSequenceService;
             _partyService = partyService;
             _locationService = locationService;
@@ -71,7 +69,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LegalEntities
                     AddressBookNames = string.Empty
                 };
                 _dbContext.Set<DirPartyTable>().Add(party);
-                await _dbContext.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.CompleteAsync(cancellationToken);
                 entity.Party = party.RecId;
             }
 
@@ -83,7 +81,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LegalEntities
             var strategy = _dbContext.Database.CreateExecutionStrategy();
             return await strategy.ExecuteAsync(async () =>
             {
-                using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+                await _unitOfWork.BeginTransactionAsync(cancellationToken);
                 try
                 {
                     // 1. Save DirPartyTable
@@ -102,17 +100,17 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LegalEntities
                         IsActive = NoYes.Yes
                     };
                     _dbContext.Set<DirPartyTable>().Add(party);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _unitOfWork.CompleteAsync(cancellationToken);
 
                     // 2. Save CompanyInfo
                     var company = new CompanyInfo();
-                    ApplyCompanyFields(dto, company);
+                    new CompanyWriteSource(dto).Adapt(company);
                     company.Party = party.RecId;
                     company.CreatedBy = _currentUser.GetCurrentUserId() ?? "sys";
                     company.OwnerAccountId = _currentUser.GetOwnerAccountId() ?? "sys";
                     company.IsActive = true;
                     _dbContext.Set<CompanyInfo>().Add(company);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _unitOfWork.CompleteAsync(cancellationToken);
 
                     // 3. Save Addresses and Contacts using the global orchestrator
                     if (dto.Addresses != null || dto.Contacts != null)
@@ -120,12 +118,12 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LegalEntities
                         await _globalAddressBookService.UpdateGlobalAddressBookAsync(party.RecId, dto.Addresses ?? new(), dto.Contacts ?? new(), cancellationToken);
                     }
 
-                    await transaction.CommitAsync(cancellationToken);
+                    await _unitOfWork.CommitTransactionAsync(cancellationToken);
                     return company;
                 }
                 catch
                 {
-                    await transaction.RollbackAsync(cancellationToken);
+                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
                     throw;
                 }
             });
@@ -136,7 +134,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LegalEntities
             var strategy = _dbContext.Database.CreateExecutionStrategy();
             return await strategy.ExecuteAsync(async () =>
             {
-                using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
+                await _unitOfWork.BeginTransactionAsync(cancellationToken);
                 try
                 {
                     if (!long.TryParse(id, out long parsedId)) throw new Exception("Invalid Company ID.");
@@ -148,13 +146,13 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LegalEntities
                     var originalRecId = company.RecId;
                     var originalParty = company.Party;
                     
-                    ApplyCompanyFields(dto, company);
+                    new CompanyWriteSource(dto).Adapt(company);
                     
                     company.RecId = originalRecId;
                     company.Party = originalParty;
                     
                     _dbContext.Set<CompanyInfo>().Update(company);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    await _unitOfWork.CompleteAsync(cancellationToken);
 
                     var party = await _dbContext.Set<DirPartyTable>().FirstOrDefaultAsync(p => p.RecId == company.Party, cancellationToken);
                     if (party != null)
@@ -162,7 +160,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LegalEntities
                         party.Name = dto.Name;
                         party.NameAlias = dto.Name;
                         _dbContext.Set<DirPartyTable>().Update(party);
-                        await _dbContext.SaveChangesAsync(cancellationToken);
+                        await _unitOfWork.CompleteAsync(cancellationToken);
                     }
 
                     // 2. Delegate address and contact updates to global orchestrator
@@ -171,37 +169,18 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LegalEntities
                         await _globalAddressBookService.UpdateGlobalAddressBookAsync(company.Party, dto.Addresses ?? new(), dto.Contacts ?? new(), cancellationToken);
                     }
 
-                    await transaction.CommitAsync(cancellationToken);
+                    await _unitOfWork.CommitTransactionAsync(cancellationToken);
                     return company;
                 }
                 catch
                 {
-                    await transaction.RollbackAsync(cancellationToken);
+                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
                     throw;
                 }
             });
         }
 
         // UpdateGlobalAddressBookAsync has been moved to GlobalAddressBookService
-
-        private static void ApplyCompanyFields(CompanyInfoDto dto, CompanyInfo company)
-        {
-            company.DataArea = dto.DataArea;
-            company.Name = dto.Name;
-            company.LanguageId = dto.LanguageId;
-            company.CurrencyCode = dto.CurrencyCode;
-            company.TaxLicenseNum = dto.TaxLicenseNum;
-            company.FederalTaxId = dto.FederalTaxId;
-            company.BankAccount = dto.BankAccount;
-            company.Calendar = dto.Calendar;
-            company.TimeZone = dto.TimeZone;
-            company.Memo = dto.Memo;
-            company.ArabicName = dto.ArabicName;
-            company.LocalizedRegion = dto.LocalizedRegion;
-
-            // Logo and ReportLogo are legacy byte[] columns. New images are stored
-            // through Document Management, so normal legal-entity saves preserve them.
-        }
 
         public async Task PopulateGlobalAddressBookAsync(IEnumerable<CompanyInfoDto> dtos, CancellationToken cancellationToken)
         {
@@ -248,56 +227,29 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LegalEntities
                 dto.Addresses = pAddrs.Select(p => {
                     var pLoc = locationsForParty.FirstOrDefault(l => l.Location == p.Location);
                     var loc = logisticsLocations.FirstOrDefault(l => l.RecId == p.Location);
-                    return new AddressInfoDto
-                    {
-                        Id = p.RecId.ToString(),
-                        Location = p.Location,
-                        LocationId = loc?.LocationId ?? string.Empty,
-                        Description = loc?.Description ?? string.Empty,
-                        Address = p.Address,
-                        Primary = pLoc?.IsPrimary == IAX.IXApi.Modules.Finance.Common.NoYes.Yes,
-                        Street = p.Street,
-                        City = p.City,
-                        State = p.State,
-                        ZipCode = p.ZipCode,
-                        County = p.County,
-                        CountryRegionId = p.CountryRegionId,
-                        ValidFrom = p.ValidFrom,
-                        ValidTo = p.ValidTo,
-                        Roles = pLoc != null 
+                    var roles = pLoc != null
                             ? dirPartyLocationRoles.Where(r => r.PartyLocation == pLoc.RecId)
                                 .Select(r => logisticsLocationRoles.FirstOrDefault(lr => lr.RecId == r.LocationRole)?.Name ?? "")
                                 .Where(n => !string.IsNullOrEmpty(n))
                                 .ToList()
-                            : new List<string>()
-                    };
+                            : new List<string>();
+                    return new CompanyPostalMappingSource(p, pLoc, loc, roles).Adapt<AddressInfoDto>();
                 }).ToList();
 
                 var eAddrs = electronicAddresses.Where(x => locIdsForParty.Contains(x.Location)).ToList();
                 dto.Contacts = eAddrs.Select(e => {
                     var pLoc = locationsForParty.FirstOrDefault(l => l.Location == e.Location);
                     var loc = logisticsLocations.FirstOrDefault(l => l.RecId == e.Location);
-                    return new ContactInfoDto
-                    {
-                        Id = e.RecId.ToString(),
-                        Location = e.Location,
-                        LocationId = loc?.LocationId ?? string.Empty,
-                        Description = e.Description,
-                        Type = e.Type.ToString(),
-                        Number = e.Locator,
-                        Extension = e.LocatorExtension,
-                        Primary = e.IsPrimary == IAX.IXApi.Modules.Finance.Common.NoYes.Yes || (pLoc != null && pLoc.IsPrimary == IAX.IXApi.Modules.Finance.Common.NoYes.Yes),
-                        Roles = pLoc != null 
+                    var roles = pLoc != null
                             ? dirPartyLocationRoles.Where(r => r.PartyLocation == pLoc.RecId)
                                 .Select(r => logisticsLocationRoles.FirstOrDefault(lr => lr.RecId == r.LocationRole)?.Name ?? "")
                                 .Where(n => !string.IsNullOrEmpty(n))
                                 .ToList()
-                            : new List<string>()
-                    };
+                            : new List<string>();
+                    return new CompanyContactMappingSource(e, pLoc, loc, roles).Adapt<ContactInfoDto>();
                 }).ToList();
             }
         }
     }
 }
-
 

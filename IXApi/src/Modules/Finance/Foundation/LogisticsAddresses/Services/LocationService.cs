@@ -40,7 +40,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
             };
 
             _unitOfWork.Context.Set<LogisticsLocation>().Add(location);
-            await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.CompleteAsync(cancellationToken);
 
             return location;
         }
@@ -54,7 +54,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
             }
             loc.Description = description ?? string.Empty;
             _unitOfWork.Context.Set<LogisticsLocation>().Update(loc);
-            await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.CompleteAsync(cancellationToken);
             
             return loc;
         }
@@ -65,7 +65,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
             if (loc != null) 
             {
                 _unitOfWork.Context.Set<LogisticsLocation>().Remove(loc);
-                await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.CompleteAsync(cancellationToken);
                 return true;
             }
             return false;

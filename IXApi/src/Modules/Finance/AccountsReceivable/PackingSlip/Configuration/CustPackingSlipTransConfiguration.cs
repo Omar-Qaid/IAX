@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace IAX.IXApi.Modules.Finance.AccountsReceivable
+namespace IAX.IXApi.Modules.Finance.AccountsReceivable.PackingSlip
 {
     public class CustPackingSlipTransConfiguration : IEntityTypeConfiguration<CustPackingSlipTrans>
     {

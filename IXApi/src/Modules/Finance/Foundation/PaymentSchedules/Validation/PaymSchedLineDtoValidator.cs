@@ -1,8 +1,9 @@
+using IAX.IXApi.Shared.Application.Validation;
 using FluentValidation;
 
-namespace IAX.IXApi.Modules.Finance.Shared.Features
+namespace IAX.IXApi.Modules.Finance.Foundation.PaymentSchedules
 {
-    public class PaymSchedLineDtoValidator : AbstractValidator<PaymSchedLineDto>
+    public class PaymSchedLineDtoValidator : BaseValidator<PaymSchedLineDto>
     {
         public PaymSchedLineDtoValidator()
         {

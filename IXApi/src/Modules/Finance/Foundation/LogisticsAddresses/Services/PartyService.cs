@@ -45,7 +45,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
             };
 
             _unitOfWork.Context.Set<DirPartyTable>().Add(party);
-            await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.CompleteAsync(cancellationToken);
 
             return party;
         }
@@ -60,7 +60,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses
             party.Name = name;
             party.NameAlias = name;
             _unitOfWork.Context.Set<DirPartyTable>().Update(party);
-            await _unitOfWork.Context.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.CompleteAsync(cancellationToken);
             
             return party;
         }

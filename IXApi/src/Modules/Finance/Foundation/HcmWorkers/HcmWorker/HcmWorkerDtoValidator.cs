@@ -1,8 +1,9 @@
+using IAX.IXApi.Shared.Application.Validation;
 using FluentValidation;
 
 namespace IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 
-public sealed class HcmWorkerDtoValidator : AbstractValidator<HcmWorkerDto>
+public sealed class HcmWorkerDtoValidator : BaseValidator<HcmWorkerDto>
 {
     public HcmWorkerDtoValidator()
     {

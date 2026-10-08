@@ -2,7 +2,7 @@
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Shared.Application.Contracts;
 
-namespace IAX.IXApi.Modules.Finance.AccountsReceivable
+namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Customer
 {
     public class CustomerDto : EntityDto<long>
     {

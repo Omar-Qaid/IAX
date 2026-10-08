@@ -1,9 +1,10 @@
+using IAX.IXApi.Shared.Application.Validation;
 using FluentValidation;
 using IAX.IXApi.Modules.Finance.Common;
 
-namespace IAX.IXApi.Modules.Finance.Shared.Features
+namespace IAX.IXApi.Modules.Finance.Foundation.Currency
 {
-    public class CurrencyDtoValidator : AbstractValidator<CurrencyDto>
+    public class CurrencyDtoValidator : BaseValidator<CurrencyDto>
     {
         public CurrencyDtoValidator()
         {

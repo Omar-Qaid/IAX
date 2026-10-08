@@ -6,7 +6,7 @@ using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace IAX.IXApi.Modules.Finance.Shared.Features
+namespace IAX.IXApi.Modules.Finance.Foundation.PaymentTerms
 {
     [ApiController]
     [Route("api/v1/[controller]")]
