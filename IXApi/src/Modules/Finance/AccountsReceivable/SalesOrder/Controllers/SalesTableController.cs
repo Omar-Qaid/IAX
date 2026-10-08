@@ -564,7 +564,7 @@ public sealed class SalesTableController : ControllerBase
 
     public sealed class AddSalesLineInput
     {
-        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.Required]
         public string ItemNumber { get; set; } = string.Empty;
         [System.ComponentModel.DataAnnotations.Range(typeof(decimal), "0.000001", "1000000000")]
         public decimal Quantity { get; set; }
@@ -1469,12 +1469,12 @@ public sealed class SalesTableController : ControllerBase
 
     public sealed class UpdateSalesHeaderInput
     {
-        [System.ComponentModel.DataAnnotations.Required]
+
         [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.InvoiceAccount)]
-        public string InvoiceAccount { get; set; } = string.Empty;
-        [System.ComponentModel.DataAnnotations.Required]
+        public string? InvoiceAccount { get; set; }
+
         [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.CurrencyCode)]
-        public string CurrencyCode { get; set; } = string.Empty;
+        public string? CurrencyCode { get; set; }
         [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.ReferenceId)]
         public string CustomerReference { get; set; } = string.Empty;
         [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.PaymTermId)]
@@ -1487,7 +1487,6 @@ public sealed class SalesTableController : ControllerBase
         public string InventSiteId { get; set; } = string.Empty;
         [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.InventLocationId)]
         public string InventLocationId { get; set; } = string.Empty;
-        [System.ComponentModel.DataAnnotations.Required]
         public DateTime? OrderDate { get; set; }
         [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.NameAlias)]
         public string SalesNameAlias { get; set; } = string.Empty;
@@ -1510,7 +1509,6 @@ public sealed class SalesTableController : ControllerBase
         public string SalesGroup { get; set; } = string.Empty;
         [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.LanguageId)]
         public string LanguageId { get; set; } = string.Empty;
-        [System.ComponentModel.DataAnnotations.Required]
         public DateTime? DeliveryDate { get; set; }
         public DateTime? ShippingDateRequested { get; set; }
         [System.ComponentModel.DataAnnotations.StringLength(FieldLengths.Name)]
