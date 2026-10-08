@@ -1,62 +1,33 @@
-using IAX.IXApi.Modules.Finance.Persistence;
+using Mapster;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Finance.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.Foundation.Tax;
 
-public sealed class TaxGroupQueryService
+public sealed class TaxGroupQueryService : ITaxGroupQueryService
 {
-    private readonly IFinanceDataContext _db;
+    private readonly IUnitOfWork _unitOfWork;
+    private DbContext _db => _unitOfWork.Context;
 
-    public TaxGroupQueryService(IFinanceDataContext db) => _db = db;
+    public TaxGroupQueryService(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
 
         public async Task<IEnumerable<TaxGroupDto>> GetAllAsync(CancellationToken cancellationToken = default)
         {
-            var headings = await _db.TaxGroupHeadings.AsNoTracking().ToListAsync(cancellationToken);
-            var allLines = await _db.TaxGroupDatas
+            var headings = await _db.Set<TaxGroupHeading>().AsNoTracking().ToListAsync(cancellationToken);
+            var allLines = await _db.Set<TaxGroupData>()
                 .AsNoTracking()
                 .Include(x => x.TaxTable)
                 .ToListAsync(cancellationToken);
 
-            var taxDataList = await _db.TaxData.AsNoTracking().ToListAsync(cancellationToken);
+            var taxDataList = await _db.Set<TaxData>().AsNoTracking().ToListAsync(cancellationToken);
 
             var dtos = headings.Select(heading =>
             {
-                var dto = new TaxGroupDto
-                {
-                    RecId = heading.RecId,
-                    DataAreaId = heading.DataAreaId,
-                    TaxGroup = heading.TaxGroup,
-                    TaxGroupName = heading.TaxGroupName,
-                    TaxGroupSetup = heading.TaxGroupSetup,
-                    Source = heading.Source,
-                    TaxGroupRounding = heading.TaxGroupRounding,
-                    TaxReverseOnCashDisc = heading.TaxReverseOnCashDisc,
-                    EuTrade_W = heading.EuTrade_W,
-                    MandatorySalesDate_W = heading.MandatorySalesDate_W,
-                    FillSalesDate_W = heading.FillSalesDate_W,
-                    FillVatDueDatePeriodNumber = heading.FillVatDueDatePeriodNumber,
-                    FillVatDueDate_W = heading.FillVatDueDate_W,
-                    FillVatDueDateBasedOn = heading.FillVatDueDateBasedOn,
-                    FillVatDueDatePeriod = heading.FillVatDueDatePeriod,
-                    TaxPrintDetail = heading.TaxPrintDetail
-                };
+                var dto = new TaxGroupReadSource(heading).Adapt<TaxGroupDto>();
                 dto.Lines = allLines
                     .Where(l => l.TaxGroup == heading.TaxGroup)
-                    .Select(l => new TaxGroupDataDto
-                    {
-                        RecId = l.RecId,
-                        DataAreaId = l.DataAreaId,
-                        TaxGroup = l.TaxGroup,
-                        TaxCode = l.TaxCode,
-                        TaxExemptCode = l.TaxExemptCode,
-                        ExemptTax = l.ExemptTax,
-                        UseTax = l.UseTax,
-                        IntracomVat = l.IntracomVat,
-                        ReverseCharge_W = l.ReverseCharge_W,
-                        TaxCodeName = l.TaxTable?.TaxName,
-                        TaxValue = taxDataList.Where(td => td.TaxCode == l.TaxCode).Select(td => (decimal?)td.TaxValue).FirstOrDefault() ?? 0
-                    }).ToList();
+                    .Select(l => new TaxGroupLineReadSource(l, taxDataList.Where(td => td.TaxCode == l.TaxCode).Select(td => (decimal?)td.TaxValue).FirstOrDefault() ?? 0).Adapt<TaxGroupDataDto>()).ToList();
                 return dto;
             }).ToList();
 
@@ -69,11 +40,11 @@ public sealed class TaxGroupQueryService
             TaxGroupHeading? heading = null;
             if (long.TryParse(searchCode, out long recId))
             {
-                heading = await _db.TaxGroupHeadings.FindAsync(new object[] { recId }, cancellationToken);
+                heading = await _db.Set<TaxGroupHeading>().FindAsync(new object[] { recId }, cancellationToken);
             }
             if (heading == null)
             {
-                heading = await _db.TaxGroupHeadings.FirstOrDefaultAsync(x =>
+                heading = await _db.Set<TaxGroupHeading>().FirstOrDefaultAsync(x =>
                     x.TaxGroup == searchCode ||
                     x.TaxGroup.ToUpper() == searchCode.ToUpper() ||
                     (searchCode.Equals("Export", StringComparison.OrdinalIgnoreCase) && (x.TaxGroup == "EXP" || x.TaxGroup == "EXPORT")) ||
@@ -81,46 +52,15 @@ public sealed class TaxGroupQueryService
             }
             if (heading == null) return null;
 
-            var dto = new TaxGroupDto
-            {
-                RecId = heading.RecId,
-                DataAreaId = heading.DataAreaId,
-                TaxGroup = heading.TaxGroup,
-                TaxGroupName = heading.TaxGroupName,
-                TaxGroupSetup = heading.TaxGroupSetup,
-                Source = heading.Source,
-                TaxGroupRounding = heading.TaxGroupRounding,
-                TaxReverseOnCashDisc = heading.TaxReverseOnCashDisc,
-                EuTrade_W = heading.EuTrade_W,
-                MandatorySalesDate_W = heading.MandatorySalesDate_W,
-                FillSalesDate_W = heading.FillSalesDate_W,
-                FillVatDueDatePeriodNumber = heading.FillVatDueDatePeriodNumber,
-                FillVatDueDate_W = heading.FillVatDueDate_W,
-                FillVatDueDateBasedOn = heading.FillVatDueDateBasedOn,
-                FillVatDueDatePeriod = heading.FillVatDueDatePeriod,
-                TaxPrintDetail = heading.TaxPrintDetail
-            };
+            var dto = new TaxGroupReadSource(heading).Adapt<TaxGroupDto>();
 
-            var lines = await _db.TaxGroupDatas
+            var lines = await _db.Set<TaxGroupData>()
                 .AsNoTracking()
                 .Include(x => x.TaxTable)
                 .Where(x => x.TaxGroup == heading.TaxGroup)
                 .ToListAsync(cancellationToken);
 
-            dto.Lines = lines.Select(l => new TaxGroupDataDto
-            {
-                RecId = l.RecId,
-                DataAreaId = l.DataAreaId,
-                TaxGroup = l.TaxGroup,
-                TaxCode = l.TaxCode,
-                TaxExemptCode = l.TaxExemptCode,
-                ExemptTax = l.ExemptTax,
-                UseTax = l.UseTax,
-                IntracomVat = l.IntracomVat,
-                ReverseCharge_W = l.ReverseCharge_W,
-                TaxCodeName = l.TaxTable?.TaxName,
-                TaxValue = _db.TaxData.Where(td => td.TaxCode == l.TaxCode).Select(td => (decimal?)td.TaxValue).FirstOrDefault() ?? 0
-            }).ToList();
+            dto.Lines = lines.Select(l => new TaxGroupLineReadSource(l, _db.Set<TaxData>().Where(td => td.TaxCode == l.TaxCode).Select(td => (decimal?)td.TaxValue).FirstOrDefault() ?? 0).Adapt<TaxGroupDataDto>()).ToList();
 
             return dto;
         }

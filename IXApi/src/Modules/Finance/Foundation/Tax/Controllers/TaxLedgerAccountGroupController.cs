@@ -1,17 +1,11 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using IAX.IXApi.Modules.Finance.Persistence;
 using IAX.IXApi.Api.Controllers;
 using IAX.IXApi.Shared.Application.Contracts;
-using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Finance.Entities;
-using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
-using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Identity.Permissions;
-using Mapster;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace IAX.IXApi.Modules.Finance.Foundation.Tax
@@ -22,32 +16,25 @@ namespace IAX.IXApi.Modules.Finance.Foundation.Tax
     [DomainPermission("Tax", "LedgerAccountGroups")]
     public class TaxLedgerAccountGroupController : BaseController<TaxLedgerAccountGroup, TaxLedgerAccountGroupDto>
     {
-        private readonly IFinanceDataContext _db;
+        private readonly ITaxLedgerAccountGroupService _ledgerService;
 
-        public TaxLedgerAccountGroupController(ITaxLedgerAccountGroupService service, IFinanceDataContext db, ILogger<TaxLedgerAccountGroupController> logger)
+        public TaxLedgerAccountGroupController(ITaxLedgerAccountGroupService service, ILogger<TaxLedgerAccountGroupController> logger)
             : base(service, logger)
         {
-            _db = db;
+            _ledgerService = service;
         }
 
         protected override Task OnBeforeCreateAsync(TaxLedgerAccountGroup entity)
         {
-            SanitizeEntity(entity);
+            _ledgerService.Normalize(entity);
             return base.OnBeforeCreateAsync(entity);
         }
 
         protected override Task OnBeforeUpdateAsync(TaxLedgerAccountGroup entity)
         {
-            SanitizeEntity(entity);
+            _ledgerService.Normalize(entity);
             return base.OnBeforeUpdateAsync(entity);
         }
 
-        private static void SanitizeEntity(TaxLedgerAccountGroup entity)
-        {
-            entity.TaxAccountGroup = entity.TaxAccountGroup?.Trim() ?? string.Empty;
-            entity.Name = entity.Name?.Trim() ?? string.Empty;
-            entity.DataAreaId = string.IsNullOrWhiteSpace(entity.DataAreaId) ? "dat" : entity.DataAreaId;
-        }
     }
 }
-

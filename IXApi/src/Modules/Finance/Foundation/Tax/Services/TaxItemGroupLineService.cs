@@ -1,14 +1,16 @@
-using IAX.IXApi.Modules.Finance.Persistence;
+using Mapster;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Finance.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.Foundation.Tax;
 
-public sealed class TaxItemGroupLineService
+public sealed class TaxItemGroupLineService : ITaxItemGroupLineService
 {
-    private readonly IFinanceDataContext _db;
+    private readonly IUnitOfWork _unitOfWork;
+    private DbContext _db => _unitOfWork.Context;
 
-    public TaxItemGroupLineService(IFinanceDataContext db) => _db = db;
+    public TaxItemGroupLineService(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
 
         public async Task<TaxOnItemDto?> AddLineAsync(string id, TaxOnItemDto lineDto)
         {
@@ -24,25 +26,19 @@ public sealed class TaxItemGroupLineService
             }
             if (heading == null) return null;
 
-            var existingLine = await _db.TaxOnItems.FirstOrDefaultAsync(x => x.TaxItemGroup == heading.TaxItemGroup && x.TaxCode == lineDto.TaxCode);
+            var existingLine = await _db.Set<TaxOnItem>().FirstOrDefaultAsync(x => x.TaxItemGroup == heading.TaxItemGroup && x.TaxCode == lineDto.TaxCode);
             if (existingLine != null)
             {
-                existingLine.TaxExemptCode = string.IsNullOrWhiteSpace(lineDto.TaxExemptCode) ? "NONE" : lineDto.TaxExemptCode;
-                _db.TaxOnItems.Update(existingLine);
-                await _db.SaveChangesAsync();
+                new TaxItemGroupLineWriteSource(lineDto).Adapt(existingLine);
+                _db.Set<TaxOnItem>().Update(existingLine);
+                await _unitOfWork.CompleteAsync();
                 lineDto.RecId = existingLine.RecId;
             }
             else
             {
-                var line = new TaxOnItem
-                {
-                    DataAreaId = string.IsNullOrEmpty(heading.DataAreaId) ? "dat" : heading.DataAreaId,
-                    TaxItemGroup = heading.TaxItemGroup,
-                    TaxCode = lineDto.TaxCode,
-                    TaxExemptCode = string.IsNullOrWhiteSpace(lineDto.TaxExemptCode) ? "NONE" : lineDto.TaxExemptCode
-                };
-                await _db.TaxOnItems.AddAsync(line);
-                await _db.SaveChangesAsync();
+                var line = new TaxItemGroupLineCreateSource(lineDto, string.IsNullOrEmpty(heading.DataAreaId) ? "dat" : heading.DataAreaId, heading.TaxItemGroup).Adapt<TaxOnItem>();
+                await _db.Set<TaxOnItem>().AddAsync(line);
+                await _unitOfWork.CompleteAsync();
                 lineDto.RecId = line.RecId;
             }
 
@@ -52,11 +48,11 @@ public sealed class TaxItemGroupLineService
 
         public async Task<bool> DeleteLineAsync(long lineId)
         {
-            var line = await _db.TaxOnItems.FindAsync(lineId);
+            var line = await _db.Set<TaxOnItem>().FindAsync(lineId);
             if (line == null) return false;
 
-            _db.TaxOnItems.Remove(line);
-            await _db.SaveChangesAsync();
+            _db.Set<TaxOnItem>().Remove(line);
+            await _unitOfWork.CompleteAsync();
             return true;
         }
 }

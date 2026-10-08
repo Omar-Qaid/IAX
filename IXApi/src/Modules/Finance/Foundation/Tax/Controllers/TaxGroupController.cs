@@ -1,18 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using IAX.IXApi.Modules.Finance.Persistence;
 using IAX.IXApi.Api.Controllers;
 using IAX.IXApi.Shared.Application.Contracts;
-using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Finance.Entities;
-using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
-using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Identity.Permissions;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Mapster;
 
 
 namespace IAX.IXApi.Modules.Finance.Foundation.Tax
@@ -25,11 +19,11 @@ namespace IAX.IXApi.Modules.Finance.Foundation.Tax
     [DomainPermission("Tax", "TaxGroups")]
     public class TaxGroupController : BaseController<TaxGroupHeading, TaxGroupDto>
     {
-        private readonly TaxGroupQueryService _queries;
-        private readonly TaxGroupLineService _lines;
-        private readonly TaxGroupCommandService _commands;
+        private readonly ITaxGroupQueryService _queries;
+        private readonly ITaxGroupLineService _lines;
+        private readonly ITaxGroupCommandService _commands;
 
-        public TaxGroupController(ITaxGroupService service, TaxGroupQueryService queries, TaxGroupLineService lines, TaxGroupCommandService commands, ILogger<TaxGroupController> logger)
+        public TaxGroupController(ITaxGroupService service, ITaxGroupQueryService queries, ITaxGroupLineService lines, ITaxGroupCommandService commands, ILogger<TaxGroupController> logger)
             : base(service, logger)
         {
             _queries = queries;

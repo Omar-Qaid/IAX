@@ -1,19 +1,20 @@
 using IAX.IXApi.Infrastructure.Persistence.Services;
-using IAX.IXApi.Modules.Finance.Persistence;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Finance.Entities;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.Foundation.Tax;
 
-public sealed class TaxPeriodService
+public sealed class TaxPeriodService : ITaxPeriodService
 {
-    private readonly IFinanceDataContext _db;
+    private readonly IUnitOfWork _unitOfWork;
+    private DbContext _db => _unitOfWork.Context;
     private readonly IBaseService<TaxPeriodHead> _headers;
 
-    public TaxPeriodService(IFinanceDataContext db, IBaseService<TaxPeriodHead> headers)
+    public TaxPeriodService(IUnitOfWork unitOfWork, IBaseService<TaxPeriodHead> headers)
     {
-        _db = db;
+        _unitOfWork = unitOfWork;
         _headers = headers;
     }
 
@@ -91,7 +92,7 @@ public sealed class TaxPeriodService
                     if (string.IsNullOrEmpty(intervalEntity.DataAreaId)) intervalEntity.DataAreaId = created.DataAreaId;
                     await _db.Set<TaxReportPeriod>().AddAsync(intervalEntity, cancellationToken);
                 }
-                await _db.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.CompleteAsync(cancellationToken);
             }
 
             return created;
@@ -152,7 +153,7 @@ public sealed class TaxPeriodService
                     if (string.IsNullOrEmpty(intervalEntity.DataAreaId)) intervalEntity.DataAreaId = existingEntity.DataAreaId;
                     await _db.Set<TaxReportPeriod>().AddAsync(intervalEntity, cancellationToken);
                 }
-                await _db.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.CompleteAsync(cancellationToken);
             }
 
             return updatedEntity;
@@ -190,7 +191,7 @@ public sealed class TaxPeriodService
             if (intervals.Any())
             {
                 _db.Set<TaxReportPeriod>().RemoveRange(intervals);
-                await _db.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.CompleteAsync(cancellationToken);
             }
 
             await _headers.RemoveAsync(existingEntity, cancellationToken);

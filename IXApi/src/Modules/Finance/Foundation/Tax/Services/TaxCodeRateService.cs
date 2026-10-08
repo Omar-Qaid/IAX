@@ -1,36 +1,37 @@
-using IAX.IXApi.Modules.Finance.Persistence;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Finance.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace IAX.IXApi.Modules.Finance.Foundation.Tax;
 
-public sealed class TaxCodeRateService
+public sealed class TaxCodeRateService : ITaxCodeRateService
 {
-    private readonly IFinanceDataContext _db;
+    private readonly IUnitOfWork _unitOfWork;
+    private DbContext _db => _unitOfWork.Context;
     private readonly ILogger<TaxCodeRateService> _logger;
 
-    public TaxCodeRateService(IFinanceDataContext db, ILogger<TaxCodeRateService> logger)
+    public TaxCodeRateService(IUnitOfWork unitOfWork, ILogger<TaxCodeRateService> logger)
     {
-        _db = db;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
         public async Task SyncTaxDataRateAsync(string taxCode, decimal taxValue, CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(taxCode) || _db == null || _db.TaxData == null) return;
+            if (string.IsNullOrWhiteSpace(taxCode) || _db == null || _db.Set<TaxData>() == null) return;
 
             try
             {
-                var existingData = await _db.TaxData.FirstOrDefaultAsync(td => td.TaxCode == taxCode, cancellationToken);
+                var existingData = await _db.Set<TaxData>().FirstOrDefaultAsync(td => td.TaxCode == taxCode, cancellationToken);
                 if (existingData != null)
                 {
                     existingData.TaxValue = taxValue;
-                    _db.TaxData.Update(existingData);
+                    _db.Set<TaxData>().Update(existingData);
                 }
                 else
                 {
-                    _db.TaxData.Add(new TaxData
+                    _db.Set<TaxData>().Add(new TaxData
                     {
                         TaxCode = taxCode,
                         TaxValue = taxValue,
@@ -39,7 +40,7 @@ public sealed class TaxCodeRateService
                         DataAreaId = "dat"
                     });
                 }
-                await _db.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.CompleteAsync(cancellationToken);
             }
             catch (System.Exception ex)
             {

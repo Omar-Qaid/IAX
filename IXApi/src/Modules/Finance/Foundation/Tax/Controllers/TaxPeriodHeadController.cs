@@ -3,17 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using IAX.IXApi.Modules.Finance.Persistence;
 using IAX.IXApi.Api.Controllers;
 using IAX.IXApi.Shared.Application.Contracts;
-using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Finance.Entities;
-using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
-using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Identity.Permissions;
-using Mapster;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace IAX.IXApi.Modules.Finance.Foundation.Tax
@@ -26,9 +20,9 @@ namespace IAX.IXApi.Modules.Finance.Foundation.Tax
     [DomainPermission("Tax", "SettlementPeriods")]
     public class TaxPeriodHeadController : BaseController<TaxPeriodHead, TaxPeriodHeadDto>
     {
-        private readonly TaxPeriodService _periods;
+        private readonly ITaxPeriodService _periods;
 
-        public TaxPeriodHeadController(ITaxPeriodHeadCrudService service, TaxPeriodService periods, ILogger<TaxPeriodHeadController> logger)
+        public TaxPeriodHeadController(ITaxPeriodHeadCrudService service, ITaxPeriodService periods, ILogger<TaxPeriodHeadController> logger)
             : base(service, logger)
         {
             _periods = periods;

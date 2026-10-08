@@ -1,48 +1,33 @@
-using IAX.IXApi.Modules.Finance.Persistence;
+using Mapster;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Finance.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.Foundation.Tax;
 
-public sealed class TaxItemGroupQueryService
+public sealed class TaxItemGroupQueryService : ITaxItemGroupQueryService
 {
-    private readonly IFinanceDataContext _db;
+    private readonly IUnitOfWork _unitOfWork;
+    private DbContext _db => _unitOfWork.Context;
 
-    public TaxItemGroupQueryService(IFinanceDataContext db) => _db = db;
+    public TaxItemGroupQueryService(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
 
         public async Task<IEnumerable<TaxItemGroupDto>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             var headings = await _db.Set<TaxItemGroupHeading>().AsNoTracking().ToListAsync(cancellationToken);
-            var allLines = await _db.TaxOnItems
+            var allLines = await _db.Set<TaxOnItem>()
                 .AsNoTracking()
                 .Include(x => x.TaxTable)
                 .ToListAsync(cancellationToken);
 
-            var taxDataList = await _db.TaxData.AsNoTracking().ToListAsync(cancellationToken);
+            var taxDataList = await _db.Set<TaxData>().AsNoTracking().ToListAsync(cancellationToken);
 
             var dtos = headings.Select(heading =>
             {
-                var dto = new TaxItemGroupDto
-                {
-                    RecId = heading.RecId,
-                    DataAreaId = heading.DataAreaId,
-                    TaxItemGroup = heading.TaxItemGroup,
-                    Name = heading.Name,
-                    Source = heading.Source,
-                    EuSalesListType = heading.EuSalesListType
-                };
+                var dto = new TaxItemGroupReadSource(heading).Adapt<TaxItemGroupDto>();
                 dto.Lines = allLines
                     .Where(l => l.TaxItemGroup == heading.TaxItemGroup)
-                    .Select(l => new TaxOnItemDto
-                    {
-                        RecId = l.RecId,
-                        DataAreaId = l.DataAreaId,
-                        TaxItemGroup = l.TaxItemGroup,
-                        TaxCode = l.TaxCode,
-                        TaxExemptCode = l.TaxExemptCode,
-                        TaxCodeName = l.TaxTable?.TaxName,
-                        TaxValue = taxDataList.Where(td => td.TaxCode == l.TaxCode).Select(td => (decimal?)td.TaxValue).FirstOrDefault() ?? 0
-                    }).ToList();
+                    .Select(l => new TaxItemGroupLineReadSource(l, taxDataList.Where(td => td.TaxCode == l.TaxCode).Select(td => (decimal?)td.TaxValue).FirstOrDefault() ?? 0).Adapt<TaxOnItemDto>()).ToList();
                 return dto;
             }).ToList();
 
@@ -63,32 +48,15 @@ public sealed class TaxItemGroupQueryService
             }
             if (heading == null) return null;
 
-            var dto = new TaxItemGroupDto
-            {
-                RecId = heading.RecId,
-                DataAreaId = heading.DataAreaId,
-                TaxItemGroup = heading.TaxItemGroup,
-                Name = heading.Name,
-                Source = heading.Source,
-                EuSalesListType = heading.EuSalesListType
-            };
+            var dto = new TaxItemGroupReadSource(heading).Adapt<TaxItemGroupDto>();
 
-            var lines = await _db.TaxOnItems
+            var lines = await _db.Set<TaxOnItem>()
                 .AsNoTracking()
                 .Include(x => x.TaxTable)
                 .Where(x => x.TaxItemGroup == heading.TaxItemGroup)
                 .ToListAsync(cancellationToken);
 
-            dto.Lines = lines.Select(l => new TaxOnItemDto
-            {
-                RecId = l.RecId,
-                DataAreaId = l.DataAreaId,
-                TaxItemGroup = l.TaxItemGroup,
-                TaxCode = l.TaxCode,
-                TaxExemptCode = l.TaxExemptCode,
-                TaxCodeName = l.TaxTable?.TaxName,
-                TaxValue = _db.TaxData.Where(td => td.TaxCode == l.TaxCode).Select(td => (decimal?)td.TaxValue).FirstOrDefault() ?? 0
-            }).ToList();
+            dto.Lines = lines.Select(l => new TaxItemGroupLineReadSource(l, _db.Set<TaxData>().Where(td => td.TaxCode == l.TaxCode).Select(td => (decimal?)td.TaxValue).FirstOrDefault() ?? 0).Adapt<TaxOnItemDto>()).ToList();
 
             return dto;
         }

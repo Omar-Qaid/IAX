@@ -9,4 +9,10 @@ public sealed class TaxLedgerAccountGroupService : BaseService<TaxLedgerAccountG
 {
     public TaxLedgerAccountGroupService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
         : base(unitOfWork, currentUser) { }
+    public void Normalize(TaxLedgerAccountGroup entity)
+    {
+        entity.TaxAccountGroup = entity.TaxAccountGroup?.Trim() ?? string.Empty;
+        entity.Name = entity.Name?.Trim() ?? string.Empty;
+        entity.DataAreaId = string.IsNullOrWhiteSpace(entity.DataAreaId) ? "dat" : entity.DataAreaId;
+    }
 }

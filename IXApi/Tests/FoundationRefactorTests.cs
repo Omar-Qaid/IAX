@@ -1,3 +1,4 @@
+using IAX.IXApi.Modules.Finance.Foundation.Tax;
 using System.Reflection;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Finance.Entities;
@@ -79,6 +80,34 @@ public sealed class FoundationRefactorTests
         await service.UpdateGlobalAddressBookAsync(1, [], []);
         Assert.Equal(0, unitOfWork.TransactionCalls);
         Assert.Same(transaction, db.Database.CurrentTransaction);
+    }
+
+    [Fact]
+    public void Tax_line_mapping_preserves_identity_and_operation_specific_exemption_defaults()
+    {
+        var config = new TypeAdapterConfig();
+        new TaxOperationMapping().Register(config);
+        var dto = new TaxGroupDataDto { RecId = 99, DataAreaId = "other", TaxGroup = "other", TaxCode = "VAT", TaxExemptCode = "", UseTax = NoYes.Yes };
+        var created = new TaxGroupLineCreateSource(dto, "dat", "DOM", true).Adapt<TaxGroupData>(config);
+        Assert.Equal("", created.TaxExemptCode);
+        Assert.Equal(0, created.RecId);
+        Assert.Equal("dat", created.DataAreaId);
+        Assert.Equal("DOM", created.TaxGroup);
+        created.RecId = 10;
+        new TaxGroupLineWriteSource(dto).Adapt(created, config);
+        Assert.Equal("NONE", created.TaxExemptCode);
+        Assert.Equal(10, created.RecId);
+        Assert.Equal("DOM", created.TaxGroup);
+        Assert.Equal(NoYes.Yes, created.UseTax);
+        var response = new TaxGroupLineReadSource(created, 15m).Adapt<TaxGroupDataDto>(config);
+        Assert.Null(response.TaxCodeName);
+        Assert.Equal(15m, response.TaxValue);
+        Assert.Equal(10, response.RecId);
+        var item = new TaxOnItem { RecId = 20, TaxCode = "VAT", TaxItemGroup = "GOODS", DataAreaId = "dat" };
+        new TaxItemGroupLineWriteSource(new TaxOnItemDto { RecId = 999, TaxCode = "BAD", TaxExemptCode = " " }).Adapt(item, config);
+        Assert.Equal(20, item.RecId);
+        Assert.Equal("VAT", item.TaxCode);
+        Assert.Equal("NONE", item.TaxExemptCode);
     }
 
     public class EmptyPartyLocations : DispatchProxy

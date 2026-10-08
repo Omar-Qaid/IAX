@@ -1,19 +1,20 @@
 using IAX.IXApi.Infrastructure.Persistence.Services;
-using IAX.IXApi.Modules.Finance.Persistence;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Finance.Entities;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.Foundation.Tax;
 
-public sealed class TaxItemGroupCommandService
+public sealed class TaxItemGroupCommandService : ITaxItemGroupCommandService
 {
-    private readonly IFinanceDataContext _db;
+    private readonly IUnitOfWork _unitOfWork;
+    private DbContext _db => _unitOfWork.Context;
     private readonly IBaseService<TaxItemGroupHeading> _headers;
 
-    public TaxItemGroupCommandService(IFinanceDataContext db, IBaseService<TaxItemGroupHeading> headers)
+    public TaxItemGroupCommandService(IUnitOfWork unitOfWork, IBaseService<TaxItemGroupHeading> headers)
     {
-        _db = db;
+        _unitOfWork = unitOfWork;
         _headers = headers;
     }
 
@@ -39,15 +40,9 @@ public sealed class TaxItemGroupCommandService
                 {
                     if (string.IsNullOrWhiteSpace(lineDto.TaxCode)) continue;
 
-                    await _db.TaxOnItems.AddAsync(new TaxOnItem
-                    {
-                        DataAreaId = string.IsNullOrEmpty(created.DataAreaId) ? "dat" : created.DataAreaId,
-                        TaxItemGroup = created.TaxItemGroup,
-                        TaxCode = lineDto.TaxCode,
-                        TaxExemptCode = string.IsNullOrWhiteSpace(lineDto.TaxExemptCode) ? "NONE" : lineDto.TaxExemptCode
-                    }, cancellationToken);
+                    await _db.Set<TaxOnItem>().AddAsync(new TaxItemGroupLineCreateSource(lineDto, string.IsNullOrEmpty(created.DataAreaId) ? "dat" : created.DataAreaId, created.TaxItemGroup).Adapt<TaxOnItem>(), cancellationToken);
                 }
-                await _db.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.CompleteAsync(cancellationToken);
             }
 
             return created;
@@ -93,7 +88,7 @@ public sealed class TaxItemGroupCommandService
 
             if (dto.Lines != null)
             {
-                var currentLines = await _db.TaxOnItems
+                var currentLines = await _db.Set<TaxOnItem>()
                     .Where(x => x.TaxItemGroup == existingEntity.TaxItemGroup)
                     .ToListAsync(cancellationToken);
 
@@ -103,7 +98,7 @@ public sealed class TaxItemGroupCommandService
                     .ToHashSet();
 
                 var toRemove = currentLines.Where(l => !dtoTaxCodes.Contains(l.TaxCode)).ToList();
-                if (toRemove.Any()) _db.TaxOnItems.RemoveRange(toRemove);
+                if (toRemove.Any()) _db.Set<TaxOnItem>().RemoveRange(toRemove);
 
                 foreach (var lineDto in dto.Lines)
                 {
@@ -112,21 +107,15 @@ public sealed class TaxItemGroupCommandService
                     var line = currentLines.FirstOrDefault(l => l.TaxCode == lineDto.TaxCode);
                     if (line == null)
                     {
-                        await _db.TaxOnItems.AddAsync(new TaxOnItem
-                        {
-                            DataAreaId = string.IsNullOrEmpty(existingEntity.DataAreaId) ? "dat" : existingEntity.DataAreaId,
-                            TaxItemGroup = existingEntity.TaxItemGroup,
-                            TaxCode = lineDto.TaxCode,
-                            TaxExemptCode = string.IsNullOrWhiteSpace(lineDto.TaxExemptCode) ? "NONE" : lineDto.TaxExemptCode
-                        }, cancellationToken);
+                        await _db.Set<TaxOnItem>().AddAsync(new TaxItemGroupLineCreateSource(lineDto, string.IsNullOrEmpty(existingEntity.DataAreaId) ? "dat" : existingEntity.DataAreaId, existingEntity.TaxItemGroup).Adapt<TaxOnItem>(), cancellationToken);
                     }
                     else
                     {
-                        line.TaxExemptCode = string.IsNullOrWhiteSpace(lineDto.TaxExemptCode) ? "NONE" : lineDto.TaxExemptCode;
-                        _db.TaxOnItems.Update(line);
+                        new TaxItemGroupLineWriteSource(lineDto).Adapt(line);
+                        _db.Set<TaxOnItem>().Update(line);
                     }
                 }
-                await _db.SaveChangesAsync(cancellationToken);
+                await _unitOfWork.CompleteAsync(cancellationToken);
             }
 
             return updatedEntity;
