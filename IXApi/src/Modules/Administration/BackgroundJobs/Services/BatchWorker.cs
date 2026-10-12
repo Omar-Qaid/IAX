@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using IAX.IXApi.Modules.Administration.Persistence;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.BackgroundJobs.Entities;
 using IAX.IXApi.Infrastructure.Realtime;
 using Microsoft.EntityFrameworkCore;
@@ -58,8 +58,8 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                 try
                 {
                     using var settingsScope = _services.CreateScope();
-                    var settings = await settingsScope.ServiceProvider.GetRequiredService<IAdministrationDataContext>()
-                        .BatchSettings.AsNoTracking().SingleOrDefaultAsync(s => s.Id == 1, stoppingToken);
+                    var settings = await settingsScope.ServiceProvider.GetRequiredService<IUnitOfWork>()
+                        .Context.Set<BatchSettings>().AsNoTracking().SingleOrDefaultAsync(s => s.Id == 1, stoppingToken);
                     interval = TimeSpan.FromSeconds(Math.Clamp(settings?.PollIntervalSeconds ?? _options.PollIntervalSeconds, 1, 3600));
                     if (settings?.Enabled != false)
                     {
@@ -87,7 +87,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
         private async Task ScheduleDueJobsAsync(CancellationToken ct)
         {
             using var scope = _services.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<IAdministrationDataContext>();
+            var db = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             var now = DateTime.UtcNow;
 
             await using var queueLock = await BatchDatabaseLock.TryAcquireAsync(db, "Batch:Queue", ct);
@@ -95,7 +95,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
 
             // Only explicitly self-scoped handlers may discover jobs outside the default company.
             var selfScopedKeys = _registry.SelfScopedKeys.ToArray();
-            var dueJobs = await db.SysBackgroundJobs.IgnoreQueryFilters()
+            var dueJobs = await db.Context.Set<SysBackgroundJob>().IgnoreQueryFilters()
                 .Where(j => j.DataAreaId == IAX.IXApi.Shared.Application.Identity.CompanyContextDefaults.DataAreaId
                     || selfScopedKeys.Contains(j.JobKey))
                 .Where(j => !j.IsDeleted
@@ -109,7 +109,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
 
             foreach (var job in dueJobs)
             {
-                var hasActiveRun = await db.SysBackgroundJobExecutions.AnyAsync(
+                var hasActiveRun = await db.Context.Set<SysBackgroundJobExecution>().AnyAsync(
                     e => e.JobId == job.RecId
                       && (e.Status == SysJobExecutionStatus.Pending || e.Status == SysJobExecutionStatus.Running), ct);
 
@@ -126,7 +126,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                     continue;
                 }
 
-                db.SysBackgroundJobExecutions.Add(new SysBackgroundJobExecution
+                db.Context.Set<SysBackgroundJobExecution>().Add(new SysBackgroundJobExecution
                 {
                     JobId = job.RecId,
                     Attempt = 1,
@@ -140,7 +140,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
             if (dueJobs.Count > 0)
             {
                 await queueLock.CheckAsync(ct);
-                await db.SaveChangesAsync(ct);
+                await db.Context.SaveChangesAsync(ct);
             }
         }
 
@@ -152,11 +152,11 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
             if (available <= 0) return;
 
             using var scope = _services.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<IAdministrationDataContext>();
+            var db = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             var now = DateTime.UtcNow;
 
             var take = Math.Min(available, _options.BatchSize);
-            var claimable = await db.SysBackgroundJobExecutions
+            var claimable = await db.Context.Set<SysBackgroundJobExecution>()
                 .Where(e => e.Status == SysJobExecutionStatus.Pending
                          && e.Job != null && !e.Job.IsDeleted && e.Job.IsEnabled && e.Job.Status == SysJobStatus.Active
                          && (e.ScheduledFor == null || e.ScheduledFor <= now))
@@ -172,7 +172,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                 if (executionLock == null) continue;
                 try
                 {
-                    var claimed = await db.SysBackgroundJobExecutions
+                    var claimed = await db.Context.Set<SysBackgroundJobExecution>()
                         .Where(row => row.RecId == e.RecId && row.Status == SysJobExecutionStatus.Pending &&
                             row.Job != null && row.Job.IsEnabled && !row.Job.IsDeleted && row.Job.Status == SysJobStatus.Active)
                         .ExecuteUpdateAsync(setters => setters.SetProperty(row => row.Status, SysJobExecutionStatus.Running)
@@ -192,12 +192,12 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
             {
                 using var scope = _services.CreateScope();
                 var sp = scope.ServiceProvider;
-                var db = sp.GetRequiredService<IAdministrationDataContext>();
+                var db = sp.GetRequiredService<IUnitOfWork>();
                 var realtime = sp.GetRequiredService<ISysRealtimeManager>();
 
-                var execution = await db.SysBackgroundJobExecutions.FirstOrDefaultAsync(x => x.RecId == executionId, stoppingToken);
+                var execution = await db.Context.Set<SysBackgroundJobExecution>().FirstOrDefaultAsync(x => x.RecId == executionId, stoppingToken);
                 var selfScopedKeys = _registry.SelfScopedKeys.ToArray();
-                var job = await db.SysBackgroundJobs.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.RecId == jobId && !x.IsDeleted
+                var job = await db.Context.Set<SysBackgroundJob>().IgnoreQueryFilters().FirstOrDefaultAsync(x => x.RecId == jobId && !x.IsDeleted
                     && (x.DataAreaId == IAX.IXApi.Shared.Application.Identity.CompanyContextDefaults.DataAreaId
                         || selfScopedKeys.Contains(x.JobKey)), stoppingToken);
                 if (execution is null || job is null) return;
@@ -238,10 +238,10 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
 
                     job.ExecutingBy = execution.TriggeredByUserId ?? _serverName;
                     job.Progress = 0;
-                    await db.SaveChangesAsync(stoppingToken);
+                    await db.Context.SaveChangesAsync(stoppingToken);
 
                     await handler.ExecuteAsync(context, timeoutCts.Token);
-                    if (await db.SysBackgroundJobs.IgnoreQueryFilters().AnyAsync(j => j.RecId == jobId &&
+                    if (await db.Context.Set<SysBackgroundJob>().IgnoreQueryFilters().AnyAsync(j => j.RecId == jobId &&
                         (j.Status == SysJobStatus.Cancelled || j.IsDeleted), stoppingToken))
                     {
                         cancellationRequested = true;
@@ -261,7 +261,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                     job.LastError = null;
                     job.Progress = 100;
                     job.HasAlert = execution.AlertsProcessed > 0;
-                    var recurrence = await db.SysBackgroundJobRecurrenceCounts
+                    var recurrence = await db.Context.Set<SysBackgroundJobRecurrenceCount>()
                         .FirstOrDefaultAsync(count => count.BatchJobId == job.RecId, stoppingToken);
                     if (recurrence == null)
                     {
@@ -271,15 +271,15 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                             DataAreaId = job.DataAreaId,
                             RecurrenceCount = 1
                         };
-                        db.SysBackgroundJobRecurrenceCounts.Add(recurrence);
+                        db.Context.Set<SysBackgroundJobRecurrenceCount>().Add(recurrence);
                     }
                     else recurrence.RecurrenceCount++;
                     if (job.ScheduleType is SysJobScheduleType.OneTime or SysJobScheduleType.Delayed)
-                        await db.SysBackgroundJobs.IgnoreQueryFilters().Where(j => j.RecId == jobId &&
+                        await db.Context.Set<SysBackgroundJob>().IgnoreQueryFilters().Where(j => j.RecId == jobId &&
                             j.Status == SysJobStatus.Active).ExecuteUpdateAsync(setters =>
                                 setters.SetProperty(j => j.Status, SysJobStatus.Completed), stoppingToken);
 
-                    await db.SaveChangesAsync(stoppingToken);
+                    await db.Context.SaveChangesAsync(stoppingToken);
 
                     await realtime.BroadcastAsync(SysRealtimeMessage.Create(
                         SysRealtimeEventType.JobCompleted,
@@ -299,7 +299,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                     execution.CompletedAt = DateTime.UtcNow;
                     execution.DurationMs = sw.ElapsedMilliseconds;
                     execution.ErrorMessage = "Cancelled by administrator or execution lock lost.";
-                    await db.SaveChangesAsync(CancellationToken.None);
+                    await db.Context.SaveChangesAsync(CancellationToken.None);
                 }
                 catch (OperationCanceledException)
                 {
@@ -336,8 +336,8 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                 {
                     await executionLock.CheckAsync(token);
                     using var scope = _services.CreateScope();
-                    var db = scope.ServiceProvider.GetRequiredService<IAdministrationDataContext>();
-                    return await db.SysBackgroundJobs.IgnoreQueryFilters().AnyAsync(j => j.RecId == jobId &&
+                    var db = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                    return await db.Context.Set<SysBackgroundJob>().IgnoreQueryFilters().AnyAsync(j => j.RecId == jobId &&
                         (j.Status == SysJobStatus.Cancelled || j.IsDeleted), token);
                 }, executionCts, ct, markCancelled);
             }
@@ -350,7 +350,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
         }
 
         private async Task FailAsync(
-            IAdministrationDataContext db, ISysRealtimeManager realtime,
+            IUnitOfWork db, ISysRealtimeManager realtime,
             SysBackgroundJobExecution execution, SysBackgroundJob job,
             string error, string? detail, Stopwatch sw, bool allowRetry, CancellationToken ct)
         {
@@ -367,13 +367,13 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
             job.LastError = error;
 
             // Retry policy: schedule a new pending execution with exponential backoff.
-            var schedulable = await db.SysBackgroundJobs.IgnoreQueryFilters().AnyAsync(j => j.RecId == job.RecId &&
+            var schedulable = await db.Context.Set<SysBackgroundJob>().IgnoreQueryFilters().AnyAsync(j => j.RecId == job.RecId &&
                 !j.IsDeleted && j.IsEnabled && j.Status == SysJobStatus.Active, ct);
             var willRetry = schedulable && allowRetry && _registry.SupportsWholeJobRetry(job.JobKey) && execution.Attempt <= job.MaxRetryCount;
             if (willRetry)
             {
                 var backoff = TimeSpan.FromSeconds(job.RetryDelaySeconds * Math.Pow(2, execution.Attempt - 1));
-                db.SysBackgroundJobExecutions.Add(new SysBackgroundJobExecution
+                db.Context.Set<SysBackgroundJobExecution>().Add(new SysBackgroundJobExecution
                 {
                     JobId = job.RecId,
                     Attempt = execution.Attempt + 1,
@@ -384,7 +384,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                 });
             }
 
-            await db.SaveChangesAsync(ct);
+            await db.Context.SaveChangesAsync(ct);
 
             await realtime.BroadcastAsync(SysRealtimeMessage.Create(
                 SysRealtimeEventType.JobFailed,
@@ -404,9 +404,9 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
             try
             {
                 using var scope = _services.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<IAdministrationDataContext>();
+                var db = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-                var orphaned = await db.SysBackgroundJobExecutions
+                var orphaned = await db.Context.Set<SysBackgroundJobExecution>()
                     .AsNoTracking()
                     .Where(e => e.Status == SysJobExecutionStatus.Running)
                     .ToListAsync(ct);
@@ -415,7 +415,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                 {
                     await using var recoveryLock = await BatchDatabaseLock.TryAcquireAsync(db, $"Batch:Job:{e.JobId}", ct);
                     if (recoveryLock == null) continue;
-                    await db.SysBackgroundJobExecutions.Where(row => row.RecId == e.RecId &&
+                    await db.Context.Set<SysBackgroundJobExecution>().Where(row => row.RecId == e.RecId &&
                         row.Status == SysJobExecutionStatus.Running).ExecuteUpdateAsync(setters => setters
                             .SetProperty(row => row.Status, SysJobExecutionStatus.Failed)
                             .SetProperty(row => row.CompletedAt, DateTime.UtcNow)

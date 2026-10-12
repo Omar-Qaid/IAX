@@ -1,4 +1,4 @@
-using IAX.IXApi.Modules.Administration.Persistence;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.BackgroundJobs.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,9 +13,9 @@ public sealed class BatchTasksJobHandler : ISysBackgroundJobHandler
 
     public async Task ExecuteAsync(SysBackgroundJobContext context, CancellationToken cancellationToken)
     {
-        var db = context.Services.GetRequiredService<IAdministrationDataContext>();
+        var db = context.Services.GetRequiredService<IUnitOfWork>();
         var registry = context.Services.GetRequiredService<ISysBackgroundJobRegistry>();
-        var tasks = await db.SysBackgroundJobTasks.AsNoTracking()
+        var tasks = await db.Context.Set<SysBackgroundJobTask>().AsNoTracking()
             .Where(t => t.JobId == context.JobId && t.IsEnabled)
             .OrderBy(t => t.ExecutionOrder).ThenBy(t => t.RecId).ToListAsync(cancellationToken);
         if (tasks.Count == 0) throw new InvalidOperationException("The batch job has no enabled tasks.");
@@ -36,8 +36,8 @@ public sealed class BatchTasksJobHandler : ISysBackgroundJobHandler
                     ExecutionId = context.ExecutionId, TaskId = task.RecId, TaskName = task.Name, Attempt = attempt,
                     StartedAt = DateTime.UtcNow, Status = SysJobExecutionStatus.Running
                 };
-                db.SysBackgroundJobTaskExecutions.Add(history);
-                await db.SaveChangesAsync(cancellationToken);
+                db.Context.Set<SysBackgroundJobTaskExecution>().Add(history);
+                await db.Context.SaveChangesAsync(cancellationToken);
                 var taskContext = new SysBackgroundJobContext
                 {
                     JobId = context.JobId, TaskId = task.RecId, CorrelationId = history.CorrelationId,
@@ -61,7 +61,7 @@ public sealed class BatchTasksJobHandler : ISysBackgroundJobHandler
                 finally
                 {
                     history.CompletedAt = DateTime.UtcNow;
-                    await db.SaveChangesAsync(CancellationToken.None);
+                    await db.Context.SaveChangesAsync(CancellationToken.None);
                 }
                 if (history.Status == SysJobExecutionStatus.Completed) break;
                 await Task.Delay(TimeSpan.FromSeconds(Math.Clamp(task.RetryDelaySeconds, 1, 3600)), cancellationToken);

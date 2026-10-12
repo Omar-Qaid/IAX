@@ -32,8 +32,13 @@ public static class AdministrationModule
         services.AddScoped<AuditLogs.Services.ISysAuditService, AuditLogs.Services.SysAuditService>();
         services.AddSingleton<BackgroundJobs.Services.ISysBackgroundJobRegistry, BackgroundJobs.Services.SysBackgroundJobRegistry>();
         services.AddScoped<BackgroundJobs.Services.ISysBackgroundJobManager, BackgroundJobs.Services.SysBackgroundJobManager>();
+        services.AddScoped<BackgroundJobs.Services.IBatchSettingsService, BackgroundJobs.Services.BatchSettingsService>();
+        services.AddScoped<BackgroundJobs.Services.IBatchJobActivePeriodService, BackgroundJobs.Services.BatchJobActivePeriodService>();
+        services.AddScoped<BackgroundJobs.Services.ISysBackgroundJobGroupService, BackgroundJobs.Services.SysBackgroundJobGroupService>();
+        services.AddScoped<BackgroundJobs.Services.ISysBackgroundJobTaskService, BackgroundJobs.Services.SysBackgroundJobTaskService>();
         services.AddScoped<DataManagement.Services.ISysDataManagementEntityProvider, DataManagement.Providers.SysDataManagementEntityProvider>();
         services.AddScoped<DataManagement.Services.ISysDataManagementService, DataManagement.Services.SysDataManagementService>();
+        services.AddScoped<DataManagement.Services.ISysDataManagementEndpointService, DataManagement.Services.SysDataManagementEndpointService>();
         services.AddScoped<DataManagement.Services.ISysExcelService, DataManagement.Services.SysExcelService>();
         services.AddScoped<NumberSequences.ISysNumberSequenceService, NumberSequences.SysNumberSequenceService>();
         services.AddScoped<Shared.Application.NumberSequences.INumberSequenceRuntime>(provider =>

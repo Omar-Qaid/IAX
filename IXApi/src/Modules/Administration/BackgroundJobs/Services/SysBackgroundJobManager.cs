@@ -1,6 +1,7 @@
+using Mapster;
 using System.Text.Json;
 using IAX.IXApi.Shared.Application.Attributes;
-using IAX.IXApi.Modules.Administration.Persistence;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.BackgroundJobs;
 using IAX.IXApi.Modules.Administration.BackgroundJobs.Entities;
 using IAX.IXApi.Infrastructure.Identity;
@@ -13,13 +14,13 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
     /// </summary>
     public class SysBackgroundJobManager : ISysBackgroundJobManager
     {
-        private readonly IAdministrationDataContext _db;
+        private readonly IUnitOfWork _db;
         private readonly ISysBackgroundJobRegistry _registry;
         private readonly ICurrentUserService _currentUser;
         private readonly ILogger<SysBackgroundJobManager> _logger;
 
         public SysBackgroundJobManager(
-            IAdministrationDataContext db,
+            IUnitOfWork db,
             ISysBackgroundJobRegistry registry,
             ICurrentUserService currentUser,
             ILogger<SysBackgroundJobManager> logger)
@@ -49,7 +50,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
             if (scheduleError != null)
                 throw new InvalidOperationException(scheduleError);
 
-            if (await _db.SysBackgroundJobs.AnyAsync(j => j.Caption == dto.Caption && !j.IsDeleted, ct))
+            if (await _db.Context.Set<SysBackgroundJob>().AnyAsync(j => j.Caption == dto.Caption && !j.IsDeleted, ct))
                 throw new InvalidOperationException($"A job named '{dto.Caption}' already exists.");
 
             var now = DateTime.UtcNow;
@@ -86,8 +87,8 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
 
             job.StartDateTime = job.IsEnabled ? SysJobScheduleCalculator.ComputeNextRun(job, now) : null;
 
-            _db.SysBackgroundJobs.Add(job);
-            await _db.SaveChangesAsync(ct);
+            _db.Context.Set<SysBackgroundJob>().Add(job);
+            await _db.Context.SaveChangesAsync(ct);
 
             _logger.LogInformation("[BgJobs] Created job {Id} '{Caption}' ({Key}), next run {Next}",
                 job.RecId, job.Caption, job.JobKey, job.StartDateTime);
@@ -97,7 +98,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
 
         public async Task<SysBackgroundJobDto> UpdateScheduleAsync(long jobId, UpdateSysBackgroundJobScheduleDto dto, CancellationToken ct = default)
         {
-            var job = await _db.SysBackgroundJobs.FirstOrDefaultAsync(j => j.RecId == jobId && !j.IsDeleted, ct)
+            var job = await _db.Context.Set<SysBackgroundJob>().FirstOrDefaultAsync(j => j.RecId == jobId && !j.IsDeleted, ct)
                 ?? throw new KeyNotFoundException($"Job {jobId} not found.");
 
             var effectiveStartDateTime = dto.StartDateTime ?? job.StartDateTime;
@@ -105,7 +106,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                 dto.RetryDelaySeconds ?? job.RetryDelaySeconds, dto.TimeoutSeconds ?? job.TimeoutSeconds,
                 dto.SchedulingPriority ?? job.SchedulingPriority, dto.PayloadJson);
             if (job.JobKey == Handlers.BatchTasksJobHandler.Key && dto.IsEnabled == true &&
-                !await _db.SysBackgroundJobTasks.AnyAsync(t => t.JobId == jobId && t.IsEnabled, ct))
+                !await _db.Context.Set<SysBackgroundJobTask>().AnyAsync(t => t.JobId == jobId && t.IsEnabled, ct))
                 throw new InvalidOperationException("Configure at least one enabled task before enabling the batch job.");
             if (job.JobKey == Handlers.BatchTasksJobHandler.Key &&
                 ((dto.MaxRetryCount ?? job.MaxRetryCount) != 0 || !(dto.PreventOverlap ?? job.PreventOverlap)))
@@ -120,7 +121,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
             if (dto.Caption != null)
             {
                 if (string.IsNullOrWhiteSpace(dto.Caption)) throw new InvalidOperationException("Job caption is required.");
-                if (await _db.SysBackgroundJobs.AnyAsync(j => j.RecId != jobId && !j.IsDeleted && j.Caption == dto.Caption.Trim(), ct))
+                if (await _db.Context.Set<SysBackgroundJob>().AnyAsync(j => j.RecId != jobId && !j.IsDeleted && j.Caption == dto.Caption.Trim(), ct))
                     throw new InvalidOperationException("A job with this caption already exists.");
                 job.Caption = dto.Caption.Trim();
             }
@@ -161,13 +162,13 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
             job.LastModifiedBy = SafeUserId();
             job.LastModifiedAt = now;
 
-            await _db.SaveChangesAsync(ct);
+            await _db.Context.SaveChangesAsync(ct);
             return Map(job);
         }
 
         public async Task DeleteAsync(long jobId, CancellationToken ct = default)
         {
-            var job = await _db.SysBackgroundJobs.FirstOrDefaultAsync(j => j.RecId == jobId && !j.IsDeleted, ct)
+            var job = await _db.Context.Set<SysBackgroundJob>().FirstOrDefaultAsync(j => j.RecId == jobId && !j.IsDeleted, ct)
                 ?? throw new KeyNotFoundException($"Job {jobId} not found.");
 
             job.IsDeleted = true;
@@ -175,14 +176,14 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
             job.StartDateTime = null;
             job.LastModifiedBy = SafeUserId();
             job.LastModifiedAt = DateTime.UtcNow;
-            await _db.SaveChangesAsync(ct);
+            await _db.Context.SaveChangesAsync(ct);
         }
 
         // ── Queries ──────────────────────────────────────────────────────
 
         public async Task<SysBackgroundJobDto?> GetByIdAsync(long jobId, CancellationToken ct = default)
         {
-            var job = await _db.SysBackgroundJobs.AsNoTracking().Include(j => j.RecurrenceCounts)
+            var job = await _db.Context.Set<SysBackgroundJob>().AsNoTracking().Include(j => j.RecurrenceCounts)
                 .FirstOrDefaultAsync(j => j.RecId == jobId && !j.IsDeleted, ct);
             return job is null ? null : Map(job);
         }
@@ -191,7 +192,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
             int pageNumber = 1, int pageSize = 20, string? search = null,
             SysJobStatus? status = null, string? jobKey = null, CancellationToken ct = default)
         {
-            var query = _db.SysBackgroundJobs.AsNoTracking().Include(j => j.RecurrenceCounts).Where(j => !j.IsDeleted);
+            var query = _db.Context.Set<SysBackgroundJob>().AsNoTracking().Include(j => j.RecurrenceCounts).Where(j => !j.IsDeleted);
 
             if (!string.IsNullOrWhiteSpace(search))
                 query = query.Where(j => j.Caption.Contains(search) || j.JobKey.Contains(search));
@@ -212,7 +213,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
         public async Task<(IEnumerable<SysBackgroundJobExecutionDto> Items, int TotalCount)> GetExecutionsAsync(
             long jobId, int pageNumber = 1, int pageSize = 20, CancellationToken ct = default)
         {
-            var query = _db.SysBackgroundJobExecutions.AsNoTracking().Include(e => e.Job)
+            var query = _db.Context.Set<SysBackgroundJobExecution>().AsNoTracking().Include(e => e.Job)
                 .Where(e => e.JobId == jobId);
 
             var total = await query.CountAsync(ct);
@@ -229,8 +230,8 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
             var now = DateTime.UtcNow;
             var since = now.AddHours(-24);
 
-            var jobs = _db.SysBackgroundJobs.AsNoTracking().Where(j => !j.IsDeleted);
-            var execs = _db.SysBackgroundJobExecutions.AsNoTracking();
+            var jobs = _db.Context.Set<SysBackgroundJob>().AsNoTracking().Where(j => !j.IsDeleted);
+            var execs = _db.Context.Set<SysBackgroundJobExecution>().AsNoTracking();
 
             var dto = new SysBackgroundJobDashboardDto
             {
@@ -267,12 +268,12 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
         {
             await using var queueLock = await BatchDatabaseLock.TryAcquireAsync(_db, "Batch:Queue", ct)
                 ?? throw new InvalidOperationException("The batch queue is busy. Retry shortly.");
-            var job = await _db.SysBackgroundJobs.FirstOrDefaultAsync(j => j.RecId == jobId && !j.IsDeleted, ct)
+            var job = await _db.Context.Set<SysBackgroundJob>().FirstOrDefaultAsync(j => j.RecId == jobId && !j.IsDeleted, ct)
                 ?? throw new KeyNotFoundException($"Job {jobId} not found.");
 
             if (!job.IsEnabled || job.Status != SysJobStatus.Active)
                 throw new InvalidOperationException("Enable and resume the batch job before running it.");
-            if (job.PreventOverlap && await _db.SysBackgroundJobExecutions.AnyAsync(
+            if (job.PreventOverlap && await _db.Context.Set<SysBackgroundJobExecution>().AnyAsync(
                 e => e.JobId == jobId && (e.Status == SysJobExecutionStatus.Pending || e.Status == SysJobExecutionStatus.Running), ct))
                 throw new InvalidOperationException("This batch job already has a pending or running execution.");
 
@@ -287,8 +288,8 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                 ScheduledFor = DateTime.UtcNow,
                 CreatedAt = DateTime.UtcNow,
             };
-            _db.SysBackgroundJobExecutions.Add(execution);
-            await _db.SaveChangesAsync(ct);
+            _db.Context.Set<SysBackgroundJobExecution>().Add(execution);
+            await _db.Context.SaveChangesAsync(ct);
 
             _logger.LogInformation("[BgJobs] Manual trigger queued for job {RecId} (execution {ExecId})", job.RecId, execution.RecId);
             return execution.RecId;
@@ -300,9 +301,9 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
 
         public async Task ResumeAsync(long jobId, CancellationToken ct = default)
         {
-            if (await _db.SysBackgroundJobExecutions.AnyAsync(e => e.JobId == jobId && e.Status == SysJobExecutionStatus.Running, ct))
+            if (await _db.Context.Set<SysBackgroundJobExecution>().AnyAsync(e => e.JobId == jobId && e.Status == SysJobExecutionStatus.Running, ct))
                 throw new InvalidOperationException("Wait for running work to stop before resuming the job.");
-            var job = await _db.SysBackgroundJobs.FirstOrDefaultAsync(j => j.RecId == jobId && !j.IsDeleted, ct)
+            var job = await _db.Context.Set<SysBackgroundJob>().FirstOrDefaultAsync(j => j.RecId == jobId && !j.IsDeleted, ct)
                 ?? throw new KeyNotFoundException($"Job {jobId} not found.");
             if (job.Status != SysJobStatus.Paused)
                 throw new InvalidOperationException("Only a withheld batch job can be changed to Waiting.");
@@ -319,7 +320,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
             }
             job.LastModifiedBy = SafeUserId();
             job.LastModifiedAt = DateTime.UtcNow;
-            await _db.SaveChangesAsync(ct);
+            await _db.Context.SaveChangesAsync(ct);
         }
 
         public Task CancelAsync(long jobId, CancellationToken ct = default) =>
@@ -331,7 +332,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
         private async Task SetStatusAsync(long jobId, SysJobStatus status, bool clearNextRun,
             SysJobStatus[] allowedCurrentStatuses, CancellationToken ct)
         {
-            var job = await _db.SysBackgroundJobs.FirstOrDefaultAsync(j => j.RecId == jobId && !j.IsDeleted, ct)
+            var job = await _db.Context.Set<SysBackgroundJob>().FirstOrDefaultAsync(j => j.RecId == jobId && !j.IsDeleted, ct)
                 ?? throw new KeyNotFoundException($"Job {jobId} not found.");
             if (!allowedCurrentStatuses.Contains(job.Status))
                 throw new InvalidOperationException($"Batch job status cannot change from {job.Status} to {status}.");
@@ -339,7 +340,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
             job.Status = status;
             if (status == SysJobStatus.Cancelled)
             {
-                var pending = await _db.SysBackgroundJobExecutions.Where(e => e.JobId == jobId &&
+                var pending = await _db.Context.Set<SysBackgroundJobExecution>().Where(e => e.JobId == jobId &&
                     e.Status == SysJobExecutionStatus.Pending).ToListAsync(ct);
                 foreach (var execution in pending)
                 {
@@ -351,7 +352,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
             if (clearNextRun) job.StartDateTime = null;
             job.LastModifiedBy = SafeUserId();
             job.LastModifiedAt = DateTime.UtcNow;
-            await _db.SaveChangesAsync(ct);
+            await _db.Context.SaveChangesAsync(ct);
         }
 
         private static DateTime? ResolveRunAt(SysJobScheduleType type, DateTime? runAt, int? delaySeconds, DateTime now)
@@ -388,89 +389,9 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
             catch { return null; } // background/system contexts have no current user
         }
 
-        private static SysBackgroundJobDto Map(SysBackgroundJob j) => new()
-        {
-            RecId = j.RecId,
-            Caption = j.Caption,
-            JobKey = j.JobKey,
-            Description = j.Description,
-            TenantId = j.TenantId,
-            DataAreaId = j.DataAreaId,
-            ScheduleType = j.ScheduleType,
-            RecurrenceData = j.RecurrenceData,
-            StartDateTime = j.StartDateTime,
-            StartDateTimeTzId = j.StartDateTimeTzId,
-            StartDate = j.StartDate,
-            StartTime = j.StartTime,
-            OrigStartDateTime = j.OrigStartDateTime,
-            OrigStartDateTimeTzId = j.OrigStartDateTimeTzId,
-            EndDateTime = j.EndDateTime,
-            EndDateTimeTzId = j.EndDateTimeTzId,
-            CanceledBy = j.CanceledBy,
-            DataPartition = j.DataPartition,
-            Finishing = j.Finishing,
-            LogLevel = j.LogLevel,
-            RuntimeJob = j.RuntimeJob,
-            Status = j.Status,
-            IsEnabled = j.IsEnabled,
-            PreventOverlap = j.PreventOverlap,
-            SchedulingPriority = j.SchedulingPriority,
-            SchedulingPriorityIsOverridden = j.SchedulingPriorityIsOverridden,
-            Critical = j.Critical,
-            MonitoringCategory = j.MonitoringCategory,
-            Managed = j.Managed,
-            ExecutingBy = j.ExecutingBy,
-            ActivePeriod = j.ActivePeriod,
-            BatchGroup = j.BatchGroup,
-            EmitBusinessEvent = j.EmitBusinessEvent,
-            HasAlert = j.HasAlert,
-            Progress = j.Progress,
-            RecurrenceCount = j.RecurrenceCounts.Sum(count => count.RecurrenceCount),
-            MaxRetryCount = j.MaxRetryCount,
-            RetryDelaySeconds = j.RetryDelaySeconds,
-            TimeoutSeconds = j.TimeoutSeconds,
-            PayloadJson = j.PayloadJson,
-            RunCount = j.RunCount,
-            LastStatus = j.LastStatus,
-            LastError = j.LastError,
-            CreatedAt = j.CreatedAt,
-            CreatedBy = j.CreatedBy,
-        };
+        private static SysBackgroundJobDto Map(SysBackgroundJob job) => job.Adapt<SysBackgroundJobDto>();
 
-        private static SysBackgroundJobExecutionDto MapExecution(SysBackgroundJobExecution e) => new()
-        {
-            RecId = e.RecId,
-            JobId = e.JobId,
-            JobCaption = e.Job?.Caption,
-            Attempt = e.Attempt,
-            Trigger = e.Trigger,
-            TriggeredByUserId = e.TriggeredByUserId,
-            Status = e.Status,
-            StartedAt = e.StartedAt,
-            CompletedAt = e.CompletedAt,
-            DurationMs = e.DurationMs,
-            Output = e.Output,
-            ErrorMessage = e.ErrorMessage,
-            ServerName = e.ServerName,
-            CreatedAt = e.CreatedAt ?? DateTime.UtcNow,
-            AlertsProcessed = e.AlertsProcessed,
-            BatchCreatedBy = e.BatchCreatedBy,
-            CanceledBy = e.CanceledBy,
-            Caption = e.Caption,
-            DataPartition = e.DataPartition,
-            EndDateTimeTzId = e.EndDateTimeTzId,
-            Finishing = e.Finishing,
-            OrigStartDateTime = e.OrigStartDateTime,
-            OrigStartDateTimeTzId = e.OrigStartDateTimeTzId,
-            StartDateTimeTzId = e.StartDateTimeTzId,
-            ExecutedBy = e.ExecutedBy,
-            RuntimeJob = e.RuntimeJob,
-            BatchGroup = e.BatchGroup,
-            GroupSchedulingPriority = e.GroupSchedulingPriority,
-            JobSchedulingPriority = e.JobSchedulingPriority,
-            JobSchedulingPriorityIsOverridden = e.JobSchedulingPriorityIsOverridden,
-        };
+        private static SysBackgroundJobExecutionDto MapExecution(SysBackgroundJobExecution execution) =>
+            execution.Adapt<SysBackgroundJobExecutionDto>();
     }
 }
-
-

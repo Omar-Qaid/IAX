@@ -1,6 +1,7 @@
 using System.Text.Json;
 using IAX.IXApi.Infrastructure.Realtime;
-using IAX.IXApi.Modules.Administration.Persistence;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Modules.Administration.BackgroundJobs.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -54,8 +55,8 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services
                 // Use a separate scope because a batch handler may be using the execution scope's
                 // DbContext at the same time. ExecuteUpdate persists progress immediately.
                 using var progressScope = Services.CreateScope();
-                var db = progressScope.ServiceProvider.GetRequiredService<IAdministrationDataContext>();
-                await db.SysBackgroundJobs.IgnoreQueryFilters()
+                var db = progressScope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+                await db.Context.Set<SysBackgroundJob>().IgnoreQueryFilters()
                     .Where(job => job.RecId == JobId && !job.IsDeleted)
                     .ExecuteUpdateAsync(update => update.SetProperty(job => job.Progress, normalizedPercent), ct);
 

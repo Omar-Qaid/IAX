@@ -1,6 +1,6 @@
 using System.Data;
 using System.Data.Common;
-using IAX.IXApi.Modules.Administration.Persistence;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services;
@@ -11,11 +11,14 @@ public sealed class BatchDatabaseLock : IAsyncDisposable
     private readonly DbConnection connection;
     private BatchDatabaseLock(DbConnection connection) => this.connection = connection;
 
-    public static async Task<BatchDatabaseLock?> TryAcquireAsync(IAdministrationDataContext db,
+    public static async Task<BatchDatabaseLock?> TryAcquireAsync(IUnitOfWork db,
+        string resource, CancellationToken ct) => await TryAcquireAsync(db.Context, resource, ct);
+
+    public static async Task<BatchDatabaseLock?> TryAcquireAsync(DbContext db,
         string resource, CancellationToken ct)
     {
         var template = db.Database.GetDbConnection();
-        var connection = DbProviderFactories.GetFactory(template).CreateConnection()
+        var connection = DbProviderFactories.GetFactory(template)!.CreateConnection()
             ?? throw new InvalidOperationException("The database provider cannot create a lock connection.");
         connection.ConnectionString = db.Database.GetConnectionString() ?? template.ConnectionString;
         try

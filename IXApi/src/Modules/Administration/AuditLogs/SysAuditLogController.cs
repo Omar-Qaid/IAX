@@ -16,12 +16,12 @@ namespace IAX.IXApi.Modules.Administration.AuditLogs
     [DomainPermission("System", "AuditLog")]
     public class SysAuditLogController : BaseController<SysAuditLog, SysAuditLogDto>
     {
-        private readonly IAdministrationDataContext _db;
+        private readonly ISysAuditLogService _auditLogs;
 
-        public SysAuditLogController(ISysAuditLogService service, ILogger<SysAuditLogController> logger, IAdministrationDataContext db)
+        public SysAuditLogController(ISysAuditLogService service, ILogger<SysAuditLogController> logger)
             : base(service, logger)
         {
-            _db = db;
+            _auditLogs = service;
         }
 
         // Audit records are append-only infrastructure output. They must never be created,
@@ -65,61 +65,13 @@ namespace IAX.IXApi.Modules.Administration.AuditLogs
             if (pageNumber < 1) pageNumber = 1;
             if (pageSize < 1) pageSize = 50;
 
-            var resolved = ResolveTableName(tableName);
-
-            var baseQuery = _db.SysAuditLogs.AsNoTracking()
-                .Where(a => a.TableName == resolved && a.RecordId == recordId);
-
-            var total = await baseQuery.CountAsync(cancellationToken);
-
-            var items = await baseQuery
-                .OrderByDescending(a => a.ChangedOn)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .Select(a => new SysAuditLogDto
-                {
-                    RecId = a.RecId,
-                    TableName = a.TableName,
-                    RecordId = a.RecordId,
-                    ColumnName = a.ColumnName,
-                    OldValue = a.OldValue,
-                    NewValue = a.NewValue,
-                    Operation = a.Operation,
-                    ChangedBy = a.ChangedBy,
-                    ChangedOn = a.ChangedOn,
-                })
-                .ToListAsync(cancellationToken);
+            var (items, total) = await _auditLogs.GetByRecordAsync(
+                tableName, recordId, pageNumber, pageSize, cancellationToken);
 
             var response = APIResponse<IEnumerable<SysAuditLogDto>>.Ok(items);
             response.Pagination = new PaginationMetadata(pageNumber, pageSize, total);
             return Ok(response);
         }
 
-        /// <summary>
-        /// Resolve a physical table name or a logical/entity class name to the physical
-        /// table name. Falls back to the input when nothing matches.
-        /// </summary>
-        private string ResolveTableName(string name)
-        {
-            var entityTypes = _db.Model.GetEntityTypes();
-
-            // Already a physical table name (e.g. opened from the Audit Log list).
-            foreach (var et in entityTypes)
-            {
-                var table = et.GetTableName();
-                if (!string.IsNullOrEmpty(table) && string.Equals(table, name, StringComparison.OrdinalIgnoreCase))
-                    return table!;
-            }
-
-            // Logical/entity class name (e.g. "ARSalesOrder" -> table "ARSalesOrders").
-            foreach (var et in entityTypes)
-            {
-                if (string.Equals(et.ClrType.Name, name, StringComparison.OrdinalIgnoreCase))
-                    return et.GetTableName() ?? name;
-            }
-
-            return name;
-        }
     }
 }
-
