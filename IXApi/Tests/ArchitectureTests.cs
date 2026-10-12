@@ -3,6 +3,7 @@ using IAX.IXApi.Modules.Administration;
 using IAX.IXApi.Modules.Identity.Authentication;
 using IAX.IXApi.Modules.Organization;
 using IAX.IXApi.Modules.Finance;
+using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Communication;
 using IAX.IXApi.Modules.Workflow;
 using IAX.IXApi.Infrastructure.Persistence;
@@ -59,6 +60,7 @@ public sealed class ArchitectureTests
         using var context = new ApplicationDbContext(options);
 
         Assert.NotEmpty(context.Model.GetEntityTypes());
+        Assert.NotNull(context.Model.FindEntityType(typeof(UnitOfMeasureConversion)));
     }
 }
 

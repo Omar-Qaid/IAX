@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Typography } from '@mui/material';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
 import { StatusBadge } from '@shared/components/status/StatusBadge';
 import type { ColumnDef } from '@shared/components/data-grid/types';
@@ -13,7 +13,6 @@ import { SalesOrderQuickCreate } from '../components/SalesOrderQuickCreate';
 export function SalesOrderListPage(): React.ReactElement {
   const { t, currentLanguage } = useAppTranslation();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const orderQuery = useQuery({
     queryKey: ['accounts-receivable', 'sales-orders'],
@@ -169,18 +168,9 @@ export function SalesOrderListPage(): React.ReactElement {
         <SalesOrderQuickCreate
           open={quickCreateOpen}
           onClose={() => setQuickCreateOpen(false)}
-          onSave={(order) => {
-            queryClient.setQueryData<SalesOrderListRecord[]>(
-              ['accounts-receivable', 'sales-orders'],
-              (current = []) => [
-                order,
-                ...current.filter((existing) => existing.recId !== order.recId),
-              ]
-            );
+          onSave={async (order) => {
             setQuickCreateOpen(false);
-            void queryClient.invalidateQueries({
-              queryKey: ['accounts-receivable', 'sales-orders'],
-            });
+            await orderQuery.refetch();
             navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrder(order.id));
           }}
         />
