@@ -24,7 +24,7 @@ public sealed class SalesOrderConfirmationController(ISalesOrderConfirmationServ
 
     private IActionResult Present(ConfirmationResult result) => result.StatusCode switch
     {
-        200 => Ok(APIResponse<object>.Ok(result.Data!, result.Message)),
+        200 => Ok(APIResponse<object>.Ok(result.Data!, result.Message!)),
         400 => BadRequest(APIResponse<object>.Fail(result.Message!)),
         404 => NotFound(APIResponse<object>.Fail(result.Message!)),
         422 => UnprocessableEntity(APIResponse<object>.Fail(result.Message!)),

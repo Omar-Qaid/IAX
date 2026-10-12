@@ -33,6 +33,7 @@ public static class CommunicationModule
         // Explicit Communication services
         services.AddScoped<Chat.Services.ISysChatService, Chat.Services.SysChatService>();
         services.AddScoped<Notifications.Services.ISysNotificationService, Notifications.Services.SysNotificationService>();
+        services.AddScoped<Notifications.Services.ISysNotificationPreferenceService, Notifications.Services.SysNotificationPreferenceService>();
         services.AddScoped<ISysBackgroundJobHandler, CleanupExpiredNotificationsJobHandler>();
 
         return services;

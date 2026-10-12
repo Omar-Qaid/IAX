@@ -1,3 +1,4 @@
+using Mapster;
 using IAX.IXApi.Shared.Application.Attributes;
 using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Communication.Notifications.Entities;
@@ -32,30 +33,8 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services.Channels
         {
             try
             {
-                var dto = new SysNotificationDto
-                {
-                    RecId = notification.RecId,
-                    TenantId = notification.TenantId,
-                    EntityId = notification.EntityId,
-                    EntityType = notification.EntityType,
-                    ReferenceNumber = notification.ReferenceNumber,
-                    Title = notification.Title,
-                    Message = notification.Message,
-                    Description = notification.Description,
-                    Icon = notification.Icon,
-                    ImageUrl = notification.ImageUrl,
-                    Url = notification.Url,
-                    Priority = notification.Priority,
-                    Category = notification.Category,
-                    Channel = notification.Channel,
-                    Status = notification.Status,
-                    ExpiryDate = notification.ExpiryDate,
-                    CreatedBy = notification.CreatedBy,
-                    CreatedAt = notification.CreatedAt,
-                    IsRead = recipient.IsRead,
-                    ReadDate = recipient.ReadDate,
-                    IsArchived = recipient.IsArchived
-                };
+                var dto = notification.Adapt<SysNotificationDto>();
+                recipient.Adapt(dto);
 
                 // Send realtime message to the recipient's private group
                 var rtMessage = SysRealtimeMessage.Notification(dto);

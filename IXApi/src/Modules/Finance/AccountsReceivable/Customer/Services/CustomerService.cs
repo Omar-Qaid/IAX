@@ -12,13 +12,11 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Customer;
 public sealed class CustomerService : BaseService<CustTable>, ICustomerService
 {
     private readonly IUnitOfWork _data;
-    private readonly ICurrentUserService _currentUser;
 
     public CustomerService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
         : base(unitOfWork, currentUser)
     {
         _data = unitOfWork;
-        _currentUser = currentUser;
     }
 
     public async Task<object> GetCountryRegionsAsync(CancellationToken cancellationToken)

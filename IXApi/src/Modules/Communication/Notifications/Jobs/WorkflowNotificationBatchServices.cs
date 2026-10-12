@@ -1,7 +1,7 @@
 using IAX.IXApi.Shared.Application.Batch;
 using IAX.IXApi.Modules.Communication.Notifications.Services;
 using IAX.IXApi.Modules.Communication.Notifications.Entities;
-using IAX.IXApi.Modules.Communication.Persistence;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Communication.Notifications.Jobs;
@@ -25,15 +25,15 @@ public sealed class WorkflowEscalationBatchService(ScheduledNotificationBatchPro
         processor.ProcessPendingJobsAsync(SysNotificationChannel.InApp, cancellationToken, SysScheduledJobType.Escalation);
 }
 
-public sealed class WorkflowCleanupBatchService(ICommunicationDataContext db) : IBatchService
+public sealed class WorkflowCleanupBatchService(IUnitOfWork db) : IBatchService
 {
     public async Task<BatchExecutionResult> ProcessAsync(BatchExecutionContext context, CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
-        var expired = await db.Set<SysNotification>().Where(n => !n.IsDeleted && n.ExpiryDate <= now &&
+        var expired = await db.Context.Set<SysNotification>().Where(n => !n.IsDeleted && n.ExpiryDate <= now &&
             n.Status != SysNotificationStatus.Expired).OrderBy(n => n.RecId).Take(500).ToListAsync(cancellationToken);
         foreach (var notification in expired) notification.Status = SysNotificationStatus.Expired;
-        await db.SaveChangesAsync(cancellationToken);
+        await db.Context.SaveChangesAsync(cancellationToken);
         return new() { ProcessedCount = expired.Count, SuccessCount = expired.Count, Message = "Expired notifications marked." };
     }
 }

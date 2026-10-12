@@ -1,5 +1,5 @@
 using IAX.IXApi.Shared.Application.Identity;
-using IAX.IXApi.Modules.Communication.Persistence;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Communication.Notifications;
 using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Communication.Notifications.Entities;
@@ -43,9 +43,9 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
             if (!_configuration.GetValue("Notifications:BackgroundServiceEnabled", true))
                 return result;
             using var discoveryScope = _serviceProvider.CreateScope();
-            var discoveryDb = discoveryScope.ServiceProvider.GetRequiredService<ICommunicationDataContext>();
+            var discoveryDb = discoveryScope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             var now = DateTime.UtcNow;
-            var pendingIds = await discoveryDb.Set<SysScheduledNotification>().AsNoTracking()
+            var pendingIds = await discoveryDb.Context.Set<SysScheduledNotification>().AsNoTracking()
                 .Where(ScheduledNotificationClaims.Due(now))
                 .Where(j => channel.HasValue ? j.Channel == channel.Value :
                     j.Channel != SysNotificationChannel.Email && j.Channel != SysNotificationChannel.SMS &&
@@ -59,15 +59,15 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
             {
                 now = DateTime.UtcNow;
                 using var scope = _serviceProvider.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<ICommunicationDataContext>();
+                var db = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                 var token = Guid.NewGuid();
-                var claimed = await db.Set<SysScheduledNotification>()
+                var claimed = await db.Context.Set<SysScheduledNotification>()
                     .Where(j => j.RecId == id).Where(ScheduledNotificationClaims.Due(now))
                     .ExecuteUpdateAsync(setters => setters.SetProperty(j => j.Status, SysScheduledJobStatus.Processing)
                         .SetProperty(j => j.ClaimToken, token).SetProperty(j => j.SendAt, now.AddMinutes(10)), ct);
                 if (claimed == 0) continue;
                 result.ProcessedCount++;
-                var job = await db.Set<SysScheduledNotification>().SingleAsync(j => j.RecId == id, ct);
+                var job = await db.Context.Set<SysScheduledNotification>().SingleAsync(j => j.RecId == id, ct);
                 var notificationService = scope.ServiceProvider.GetRequiredService<ISysNotificationService>();
                 try
                 {
@@ -79,7 +79,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                         && job.OriginalNotificationId.HasValue
                         && !string.IsNullOrEmpty(job.EscalationUserId))
                     {
-                        var wasRead = await db.Set<SysNotificationRecipient>()
+                        var wasRead = await db.Context.Set<SysNotificationRecipient>()
                             .AnyAsync(r => r.NotificationId == job.OriginalNotificationId.Value
                                         && r.UserId == job.EscalationUserId
                                         && r.IsRead, ct);
@@ -89,7 +89,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                             job.Status = SysScheduledJobStatus.Cancelled;
                             job.CompletedAt = now;
                             _logger.LogInformation("[NotificationBgService] Escalation {RecId} skipped â€” already read", job.RecId);
-                            await db.SaveChangesAsync(ct);
+                            await db.Context.SaveChangesAsync(ct);
                             result.SuccessCount++;
                             continue;
                         }
@@ -121,7 +121,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                     deliveryTimeout.CancelAfter(TimeSpan.FromMinutes(5));
                     var delivery = await notificationService.SendAsync(dto, deliveryTimeout.Token);
                     if (delivery.RecId > 0 && delivery.Channel != SysNotificationChannel.InApp &&
-                        await db.Set<SysNotificationRecipient>().AnyAsync(r => r.NotificationId == delivery.RecId &&
+                        await db.Context.Set<SysNotificationRecipient>().AnyAsync(r => r.NotificationId == delivery.RecId &&
                             (r.DeliveryStatus == SysDeliveryStatus.Failed || r.DeliveryStatus == SysDeliveryStatus.Pending), ct))
                         throw new InvalidOperationException("The configured notification channel did not deliver the message.");
 
@@ -161,7 +161,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                         };
 
                         if (nextJob.Status == SysScheduledJobStatus.Pending)
-                            db.Set<SysScheduledNotification>().Add(nextJob);
+                            db.Context.Set<SysScheduledNotification>().Add(nextJob);
                     }
                 }
                 catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
@@ -170,11 +170,11 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                     // A failed sender may leave tracked notification entities unsaved. Persist retry
                     // state through a clean scope, guarded by the claim token, rather than saving them.
                     using var failureScope = _serviceProvider.CreateScope();
-                    var failureDb = failureScope.ServiceProvider.GetRequiredService<ICommunicationDataContext>();
+                    var failureDb = failureScope.ServiceProvider.GetRequiredService<IUnitOfWork>();
                     var retries = job.RetryCount + 1;
                     var status = retries <= 3 ? SysScheduledJobStatus.Pending : SysScheduledJobStatus.Failed;
                     var retryAt = DateTime.UtcNow.AddMinutes(Math.Pow(2, Math.Min(retries, 3)));
-                    await failureDb.Set<SysScheduledNotification>().Where(j => j.RecId == id && j.ClaimToken == token)
+                    await failureDb.Context.Set<SysScheduledNotification>().Where(j => j.RecId == id && j.ClaimToken == token)
                         .ExecuteUpdateAsync(setters => setters.SetProperty(j => j.Status, status)
                             .SetProperty(j => j.RetryCount, retries).SetProperty(j => j.ErrorMessage, ex.Message)
                             .SetProperty(j => j.SendAt, retryAt), ct);
@@ -182,7 +182,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                     result.FailedCount++;
                     continue;
                 }
-                await db.SaveChangesAsync(ct);
+                await db.Context.SaveChangesAsync(ct);
                 result.SuccessCount++;
             }
             return result;

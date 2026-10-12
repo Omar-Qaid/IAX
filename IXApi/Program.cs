@@ -43,6 +43,7 @@ builder.Services.AddApplicationServices(
     assembly,
     typeof(FinanceModule).Assembly,
     typeof(WorkflowModule).Assembly,
+    typeof(CommunicationModule).Assembly,
     typeof(IdentityModule).Assembly);
 builder.Services.AddCommunicationModule(builder.Configuration);
 builder.Services.AddAdministrationModule(builder.Configuration, assembly);

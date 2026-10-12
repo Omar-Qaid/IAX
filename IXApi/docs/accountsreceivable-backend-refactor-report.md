@@ -286,3 +286,9 @@ Inspected BaseController, IBaseService, BaseService, IUnitOfWork and UnitOfWork,
 | `Dtos/SpecTransDto.cs` | SpecTransDto | Reviewed; retained |
 | `Entities/CustSettlement.cs` | CustSettlement | Reviewed; retained |
 | `Entities/SpecTrans.cs` | SpecTrans | Reviewed; retained |
+
+## Follow-up verification (2026-10-12)
+
+The repeated AccountsReceivable request was checked against the current tree. The previous 175-file inventory and controller/service boundaries still apply. This follow-up removed the redundant `CustomerService._currentUser` field so the inherited Shared field is used, and made the existing confirmation success-message nullability assertion explicit. Neither change alters routes, permissions, response values, entities, or schema.
+
+Verification: `CustomerMapping.Tests.csproj` 2/2 passed; `SalesOrderConfirmation.Tests.csproj` 4/4 passed; `IXApi.Tests.csproj` 231 passed, 2 skipped; `dotnet build IXApi/IXApi.csproj --no-restore -m:1 -nr:false -v:q -clp:ErrorsOnly` succeeded with 0 errors and 170 project warnings. `git diff --check` passed. No authenticated API or live database comparison was run. The existing `RecalculateDiscounts` View permission remains an authorization issue that requires a separate behavior-changing permission update.

@@ -49,6 +49,7 @@ public sealed class CommunicationCharacterizationTests
             8,
             services.Count(x => x.ServiceType == typeof(ISysNotificationChannelSender)));
         Assert.Contains(services, x => x.ServiceType == typeof(ISysNotificationService));
+        Assert.Contains(services, x => x.ServiceType == typeof(ISysNotificationPreferenceService));
         Assert.Contains(services, x => x.ServiceType == typeof(ISysChatService));
     }
 }

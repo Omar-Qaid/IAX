@@ -1,5 +1,6 @@
 using IAX.IXApi.Shared.Application.Attributes;
-using IAX.IXApi.Modules.Communication.Persistence;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using Mapster;
 using IAX.IXApi.Modules.Communication.Chat.Entities;
 using IAX.IXApi.Infrastructure.Realtime;
 using Microsoft.AspNetCore.SignalR;
@@ -14,12 +15,12 @@ namespace IAX.IXApi.Modules.Communication.Chat.Services
     /// </summary>
     public class SysChatService : ISysChatService
     {
-        private readonly ICommunicationDataContext _db;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IHubContext<SysChatHub> _hub;
 
-        public SysChatService(ICommunicationDataContext db, IHubContext<SysChatHub> hub)
+        public SysChatService(IUnitOfWork unitOfWork, IHubContext<SysChatHub> hub)
         {
-            _db = db;
+            _unitOfWork = unitOfWork;
             _hub = hub;
         }
 
@@ -48,10 +49,10 @@ namespace IAX.IXApi.Modules.Communication.Chat.Services
                 IsActive = true,
             };
 
-            _db.Set<SysChatMessage>().Add(entity);
-            await _db.SaveChangesAsync(ct);
+            _unitOfWork.Context.Set<SysChatMessage>().Add(entity);
+            await _unitOfWork.Context.SaveChangesAsync(ct);
 
-            var dto = Map(entity);
+            var dto = entity.Adapt<SysChatMessageDto>();
 
             var payload = SysRealtimeMessage.Create(SysRealtimeEventType.ChatMessage, dto, senderId);
 
@@ -77,7 +78,7 @@ namespace IAX.IXApi.Modules.Communication.Chat.Services
         public async Task<(IReadOnlyList<SysChatMessageDto> Items, int TotalCount)> GetHistoryAsync(
             string roomId, int pageNumber = 1, int pageSize = 50, CancellationToken ct = default)
         {
-            var query = _db.Set<SysChatMessage>()
+            var query = _unitOfWork.Context.Set<SysChatMessage>()
                 .AsNoTracking()
                 .Where(m => m.RoomId == roomId);
 
@@ -90,7 +91,7 @@ namespace IAX.IXApi.Modules.Communication.Chat.Services
                 .ToListAsync(ct);
 
             // Map in memory â€” Map() is a C# method EF can't translate to SQL.
-            var items = rows.Select(Map).ToList();
+            var items = rows.Adapt<List<SysChatMessageDto>>();
 
             return (items, total);
         }
@@ -98,13 +99,13 @@ namespace IAX.IXApi.Modules.Communication.Chat.Services
         public async Task<IReadOnlyList<SysChatConversationDto>> GetConversationsAsync(string userId, CancellationToken ct = default)
         {
             // Candidate rooms: DMs containing the user, rooms the user has posted in, plus 'general'.
-            var dmRoomCandidates = await _db.Set<SysChatMessage>()
+            var dmRoomCandidates = await _unitOfWork.Context.Set<SysChatMessage>()
                 .Where(m => m.RoomId.StartsWith("dm:"))
                 .Select(m => m.RoomId)
                 .Distinct()
                 .ToListAsync(ct);
             var dmRooms = dmRoomCandidates.Where(roomId => CanAccessRoom(userId, roomId));
-            var mineRooms = _db.Set<SysChatMessage>()
+            var mineRooms = _unitOfWork.Context.Set<SysChatMessage>()
                 .Where(m => m.SenderId == userId)
                 .Select(m => m.RoomId);
 
@@ -115,7 +116,7 @@ namespace IAX.IXApi.Modules.Communication.Chat.Services
                 .ToList();
             if (!roomIds.Contains("general")) roomIds.Add("general");
 
-            var reads = await _db.Set<SysChatReadState>()
+            var reads = await _unitOfWork.Context.Set<SysChatReadState>()
                 .AsNoTracking()
                 .Where(r => r.UserId == userId && roomIds.Contains(r.RoomId))
                 .ToDictionaryAsync(r => r.RoomId, r => r.LastReadAt, ct);
@@ -123,14 +124,14 @@ namespace IAX.IXApi.Modules.Communication.Chat.Services
             var result = new List<SysChatConversationDto>();
             foreach (var room in roomIds)
             {
-                var last = await _db.Set<SysChatMessage>()
+                var last = await _unitOfWork.Context.Set<SysChatMessage>()
                     .Where(m => m.RoomId == room)
                     .OrderByDescending(m => m.SentAt)
                     .Select(m => new { m.Content, m.SenderId, m.SentAt })
                     .FirstOrDefaultAsync(ct);
 
                 var lastReadAt = reads.TryGetValue(room, out var lr) ? lr : DateTime.MinValue;
-                var unread = await _db.Set<SysChatMessage>()
+                var unread = await _unitOfWork.Context.Set<SysChatMessage>()
                     .CountAsync(m => m.RoomId == room
                                   && m.SenderId != userId && m.SentAt > lastReadAt, ct);
 
@@ -157,7 +158,7 @@ namespace IAX.IXApi.Modules.Communication.Chat.Services
             // Atomic SQL MERGE â€” a single round-trip that inserts or updates.
             // No race condition possible: the unique index (UserId, RoomId) is held
             // exclusively by the MERGE, so concurrent calls just serialise cleanly.
-            await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            await _unitOfWork.Context.Database.ExecuteSqlInterpolatedAsync($@"
                 MERGE INTO SysChatReadStates AS target
                 USING (SELECT {userId} AS UserId, {roomId} AS RoomId) AS source
                 ON target.UserId = source.UserId AND target.RoomId = source.RoomId
@@ -179,14 +180,5 @@ namespace IAX.IXApi.Modules.Communication.Chat.Services
                 ? roomId[3..].Split(':', StringSplitOptions.RemoveEmptyEntries)
                 : Array.Empty<string>();
 
-        private static SysChatMessageDto Map(SysChatMessage m) => new()
-        {
-            RecId = m.RecId,
-            RoomId = m.RoomId,
-            SenderId = m.SenderId,
-            Content = m.Content,
-            SentAt = m.SentAt,
-        };
     }
 }
-

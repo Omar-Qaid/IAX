@@ -1,5 +1,9 @@
 using IAX.IXApi.Shared.Application.Attributes;
-using IAX.IXApi.Modules.Communication.Persistence;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Modules.Identity.Roles;
+using IAX.IXApi.Modules.Identity.Users;
+using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
+using Mapster;
 using IAX.IXApi.Modules.Communication.Notifications;
 using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Communication.Notifications.Entities;
@@ -16,14 +20,14 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
     /// </summary>
     public class SysNotificationService : ISysNotificationService
     {
-        private readonly ICommunicationDataContext _db;
+        private readonly IUnitOfWork _db;
         private readonly ICurrentUserService _currentUser;
         private readonly ISysRealtimeManager _realtime;
         private readonly IEnumerable<Channels.ISysNotificationChannelSender> _channelSenders;
         private readonly ILogger<SysNotificationService> _logger;
 
         public SysNotificationService(
-            ICommunicationDataContext db,
+            IUnitOfWork db,
             ICurrentUserService currentUser,
             ISysRealtimeManager realtime,
             IEnumerable<Channels.ISysNotificationChannelSender> channelSenders,
@@ -55,7 +59,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
 
             if (!string.IsNullOrWhiteSpace(dto.TemplateCode))
             {
-                var template = await _db.Set<SysNotificationTemplate>()
+                var template = await _db.Context.Set<SysNotificationTemplate>()
                     .AsNoTracking()
                     .FirstOrDefaultAsync(t => t.Code == dto.TemplateCode && !t.IsDeleted, ct);
 
@@ -84,7 +88,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
             var finalRecipients = new List<SysNotificationRecipient>();
             var categoryStr = category ?? "System";
 
-            var userPrefs = await _db.Set<SysNotificationPreference>()
+            var userPrefs = await _db.Context.Set<SysNotificationPreference>()
                 .AsNoTracking()
                 .Where(p => recipientIds.Contains(p.UserId) && p.Category == categoryStr)
                 .ToListAsync(ct);
@@ -145,8 +149,8 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                 Recipients = finalRecipients
             };
 
-            _db.Set<SysNotification>().Add(notification);
-            await _db.SaveChangesAsync(ct);
+            _db.Context.Set<SysNotification>().Add(notification);
+            await _db.Context.SaveChangesAsync(ct);
 
             // 4. Send through the strategy channel sender and log audit trial
             var sender = _channelSenders.FirstOrDefault(s => s.Channel == channel);
@@ -171,12 +175,12 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                         ErrorMessage = result.ErrorMessage,
                         Timestamp = DateTime.UtcNow
                     };
-                    _db.SysNotificationAuditLogs.Add(auditLog);
+                    _db.Context.Set<SysNotificationAuditLog>().Add(auditLog);
                 }
                 
                 notification.Status = finalRecipients.Any(rec => rec.DeliveryStatus == SysDeliveryStatus.Failed)
                     ? SysNotificationStatus.Failed : SysNotificationStatus.Sent;
-                await _db.SaveChangesAsync(ct);
+                await _db.Context.SaveChangesAsync(ct);
             }
             else
             {
@@ -185,7 +189,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                 {
                     notification.Status = SysNotificationStatus.Failed;
                     foreach (var recipient in finalRecipients) recipient.DeliveryStatus = SysDeliveryStatus.Failed;
-                    await _db.SaveChangesAsync(ct);
+                    await _db.Context.SaveChangesAsync(ct);
                 }
             }
 
@@ -305,7 +309,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
             bool? isRead = null, string? category = null,
             CancellationToken ct = default, bool isArchived = false)
         {
-            var query = _db.Set<SysNotificationRecipient>()
+            var query = _db.Context.Set<SysNotificationRecipient>()
                 .AsNoTracking()
                 .Include(r => r.Notification)
                 .Where(r => r.UserId == userId && r.IsArchived == isArchived)
@@ -321,42 +325,24 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
 
             var totalCount = await query.CountAsync(ct);
 
-            var items = await query
+            var rows = await query
                 .OrderByDescending(r => r.Notification.CreatedAt)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
-                .Select(r => new SysNotificationDto
-                {
-                    RecId = r.Notification.RecId,
-                    TenantId = r.Notification.TenantId,
-                    EntityId = r.Notification.EntityId,
-                    EntityType = r.Notification.EntityType,
-                    ReferenceNumber = r.Notification.ReferenceNumber,
-                    Title = r.Notification.Title,
-                    Message = r.Notification.Message,
-                    Description = r.Notification.Description,
-                    Icon = r.Notification.Icon,
-                    ImageUrl = r.Notification.ImageUrl,
-                    Url = r.Notification.Url,
-                    Priority = r.Notification.Priority,
-                    Category = r.Notification.Category,
-                    Channel = r.Notification.Channel,
-                    Status = r.Notification.Status,
-                    ExpiryDate = r.Notification.ExpiryDate,
-                    CreatedBy = r.Notification.CreatedBy,
-                    CreatedAt = r.Notification.CreatedAt,
-                    IsRead = r.IsRead,
-                    ReadDate = r.ReadDate,
-                    IsArchived = r.IsArchived,
-                })
                 .ToListAsync(ct);
+            var items = rows.Select(row =>
+            {
+                var mapped = row.Notification.Adapt<SysNotificationDto>();
+                row.Adapt(mapped);
+                return mapped;
+            }).ToList();
 
             return (items, totalCount);
         }
 
         public async Task<int> GetUnreadCountAsync(string userId, CancellationToken ct = default)
         {
-            return await _db.Set<SysNotificationRecipient>()
+            return await _db.Context.Set<SysNotificationRecipient>()
                 .AsNoTracking()
                 .Where(r => r.UserId == userId && !r.IsRead && !r.IsArchived)
                 .Where(r => !r.Notification.IsDeleted)
@@ -370,7 +356,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
 
         public async Task MarkAsReadAsync(long notificationId, string userId, CancellationToken ct = default)
         {
-            var recipient = await _db.Set<SysNotificationRecipient>()
+            var recipient = await _db.Context.Set<SysNotificationRecipient>()
                 .FirstOrDefaultAsync(r => r.NotificationId == notificationId && r.UserId == userId, ct);
 
             if (recipient != null && !recipient.IsRead)
@@ -378,7 +364,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                 recipient.IsRead = true;
                 recipient.ReadDate = DateTime.UtcNow;
                 recipient.DeliveryStatus = SysDeliveryStatus.Read;
-                await _db.SaveChangesAsync(ct);
+                await _db.Context.SaveChangesAsync(ct);
 
                 var unreadCount = await GetUnreadCountAsync(userId, ct);
                 await _realtime.SendToUserAsync(userId, SysRealtimeMessage.UnreadCount(unreadCount));
@@ -387,7 +373,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
 
         public async Task MarkAllAsReadAsync(string userId, CancellationToken ct = default)
         {
-            var unread = await _db.Set<SysNotificationRecipient>()
+            var unread = await _db.Context.Set<SysNotificationRecipient>()
                 .Where(r => r.UserId == userId && !r.IsRead && !r.IsArchived)
                 .ToListAsync(ct);
 
@@ -399,13 +385,13 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                 r.DeliveryStatus = SysDeliveryStatus.Read;
             }
 
-            await _db.SaveChangesAsync(ct);
+            await _db.Context.SaveChangesAsync(ct);
             await _realtime.SendToUserAsync(userId, SysRealtimeMessage.UnreadCount(0));
         }
 
         public async Task ArchiveAsync(long notificationId, string userId, CancellationToken ct = default)
         {
-            var recipient = await _db.Set<SysNotificationRecipient>()
+            var recipient = await _db.Context.Set<SysNotificationRecipient>()
                 .FirstOrDefaultAsync(r => r.NotificationId == notificationId && r.UserId == userId, ct);
 
             if (recipient != null)
@@ -413,7 +399,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
                 recipient.IsArchived = true;
                 recipient.IsRead = true;
                 recipient.ReadDate ??= DateTime.UtcNow;
-                await _db.SaveChangesAsync(ct);
+                await _db.Context.SaveChangesAsync(ct);
 
                 var unreadCount = await GetUnreadCountAsync(userId, ct);
                 await _realtime.SendToUserAsync(userId, SysRealtimeMessage.UnreadCount(unreadCount));
@@ -422,13 +408,13 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
 
         public async Task DeleteAsync(long notificationId, string userId, CancellationToken ct = default)
         {
-            var recipient = await _db.Set<SysNotificationRecipient>()
+            var recipient = await _db.Context.Set<SysNotificationRecipient>()
                 .FirstOrDefaultAsync(r => r.NotificationId == notificationId && r.UserId == userId, ct);
 
             if (recipient != null)
             {
-                _db.Set<SysNotificationRecipient>().Remove(recipient);
-                await _db.SaveChangesAsync(ct);
+                _db.Context.Set<SysNotificationRecipient>().Remove(recipient);
+                await _db.Context.SaveChangesAsync(ct);
 
                 var unreadCount = await GetUnreadCountAsync(userId, ct);
                 await _realtime.SendToUserAsync(userId, SysRealtimeMessage.UnreadCount(unreadCount));
@@ -448,8 +434,8 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
 
             if (dto.RoleNames?.Any() == true)
             {
-                var roleUserIds = await _db.UserRoles.AsNoTracking()
-                    .Join(_db.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => new { ur.UserId, r.Name })
+                var roleUserIds = await _db.Context.Set<AspNetUserRole>().AsNoTracking()
+                    .Join(_db.Context.Set<AspNetRole>(), ur => ur.RoleId, r => r.Id, (ur, r) => new { ur.UserId, r.Name })
                     .Where(x => x.Name != null && dto.RoleNames.Contains(x.Name))
                     .Select(x => x.UserId)
                     .ToListAsync(ct);
@@ -458,7 +444,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
 
             if (dto.DepartmentIds?.Any() == true)
             {
-                var deptUserIds = await _db.HcmWorkers.AsNoTracking()
+                var deptUserIds = await _db.Context.Set<HcmWorker>().AsNoTracking()
                     .Where(e => e.WorkerOrganizationAssignments.Any(a => dto.DepartmentIds.Contains((short)a.OrganizationUnitId)) && e.UserId != null)
                     .Select(e => e.UserId!)
                     .ToListAsync(ct);
@@ -483,37 +469,12 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
 
         private static SysNotificationDto MapToDto(SysNotification entity, string? currentUserId)
         {
-            var recipientEntry = currentUserId != null
+            var dto = entity.Adapt<SysNotificationDto>();
+            var recipient = currentUserId != null
                 ? entity.Recipients?.FirstOrDefault(r => r.UserId == currentUserId)
                 : null;
-
-            return new SysNotificationDto
-            {
-                RecId = entity.RecId,
-                TenantId = entity.TenantId,
-                EntityId = entity.EntityId,
-                EntityType = entity.EntityType,
-                ReferenceNumber = entity.ReferenceNumber,
-                Title = entity.Title,
-                Message = entity.Message,
-                Description = entity.Description,
-                Icon = entity.Icon,
-                ImageUrl = entity.ImageUrl,
-                Url = entity.Url,
-                Priority = entity.Priority,
-                Category = entity.Category,
-                Channel = entity.Channel,
-                Status = entity.Status,
-                ExpiryDate = entity.ExpiryDate,
-                CreatedBy = entity.CreatedBy,
-                CreatedAt = entity.CreatedAt,
-                IsRead = recipientEntry?.IsRead ?? false,
-                ReadDate = recipientEntry?.ReadDate,
-                IsArchived = recipientEntry?.IsArchived ?? false,
-            };
+            recipient?.Adapt(dto);
+            return dto;
         }
     }
 }
-
-
-
