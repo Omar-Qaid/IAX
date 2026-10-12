@@ -8,7 +8,7 @@ public sealed class SysNotificationMapping : IRegister
     public void Register(TypeAdapterConfig config)
     {
         config.NewConfig<SysNotification, SysNotificationDto>()
-            .Ignore(destination => destination.Recipients);
+            .Ignore(destination => destination.Recipients!);
 
         config.NewConfig<SysNotificationRecipient, SysNotificationDto>()
             .Map(destination => destination.IsRead, source => source.IsRead)

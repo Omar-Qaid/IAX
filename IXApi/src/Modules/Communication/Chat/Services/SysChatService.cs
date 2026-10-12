@@ -90,7 +90,7 @@ namespace IAX.IXApi.Modules.Communication.Chat.Services
                 .Take(pageSize)
                 .ToListAsync(ct);
 
-            // Map in memory â€” Map() is a C# method EF can't translate to SQL.
+            // Map after materializing the page so the entity-to-DTO conversion stays in memory.
             var items = rows.Adapt<List<SysChatMessageDto>>();
 
             return (items, total);
