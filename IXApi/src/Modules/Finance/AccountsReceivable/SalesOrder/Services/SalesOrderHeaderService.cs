@@ -1,6 +1,6 @@
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
-using IAX.IXApi.Modules.Finance.Persistence;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,13 +9,13 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
 public enum SalesHeaderUpdateStatus { NotFound, Invalid, Saved }
 public sealed record SalesHeaderUpdateResult(SalesHeaderUpdateStatus Status, string? Error = null);
 
-public sealed class SalesOrderHeaderService
+public sealed class SalesOrderHeaderService : ISalesOrderHeaderService
 {
-    private readonly IFinanceDataContext _dbContext;
+    private readonly IUnitOfWork _dbContext;
     private readonly ICompanyExecutionContext _company;
     private readonly SalesOrderValidationService _validation;
 
-    public SalesOrderHeaderService(IFinanceDataContext dbContext, ICompanyExecutionContext company,
+    public SalesOrderHeaderService(IUnitOfWork dbContext, ICompanyExecutionContext company,
         SalesOrderValidationService validation)
     {
         _dbContext = dbContext;
@@ -26,39 +26,39 @@ public sealed class SalesOrderHeaderService
     public async Task<SalesHeaderUpdateResult> UpdateAsync(long recId, UpdateSalesHeaderInputDto input,
         CancellationToken cancellationToken)
     {
-        return await _dbContext.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        return await _dbContext.Context.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
-            var order = await _dbContext.Set<SalesTable>().FirstOrDefaultAsync(row => row.RecId == recId, cancellationToken);
+            await using var transaction = await _dbContext.Context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
+            var order = await _dbContext.Context.Set<SalesTable>().FirstOrDefaultAsync(row => row.RecId == recId, cancellationToken);
             if (order == null) return new SalesHeaderUpdateResult(SalesHeaderUpdateStatus.NotFound, "Sales order was not found.");
             if (!string.Equals(order.DataAreaId, _company.GetDataAreaId(), StringComparison.OrdinalIgnoreCase))
                 return new SalesHeaderUpdateResult(SalesHeaderUpdateStatus.NotFound, "Sales order was not found in the selected company.");
             if (order.SalesStatus != SalesStatus.Backorder)
                 return new SalesHeaderUpdateResult(SalesHeaderUpdateStatus.Invalid, "Only open sales orders can be changed.");
             var invoiceAccount = string.IsNullOrWhiteSpace(input.InvoiceAccount) ? order.InvoiceAccount : input.InvoiceAccount.Trim();
-            if (!await _dbContext.Set<CustTable>().AnyAsync(row => row.AccountNum == invoiceAccount && row.DataAreaId == order.DataAreaId, cancellationToken))
+            if (!await _dbContext.Context.Set<CustTable>().AnyAsync(row => row.AccountNum == invoiceAccount && row.DataAreaId == order.DataAreaId, cancellationToken))
                 return new SalesHeaderUpdateResult(SalesHeaderUpdateStatus.Invalid, "Invoice account was not found.");
             var currency = string.IsNullOrWhiteSpace(input.CurrencyCode) ? order.CurrencyCode : input.CurrencyCode.Trim();
-            if (!await _dbContext.Set<Currency>().AnyAsync(row => row.CurrencyCode == currency
+            if (!await _dbContext.Context.Set<Currency>().AnyAsync(row => row.CurrencyCode == currency
                     && row.DataAreaId == order.DataAreaId, cancellationToken))
                 return new SalesHeaderUpdateResult(SalesHeaderUpdateStatus.Invalid, "Currency was not found in the selected company.");
             var paymentTerms = input.PaymentTerms.Trim();
             if (!string.IsNullOrEmpty(paymentTerms)
-                && !await _dbContext.Set<PaymTerm>().AnyAsync(term => term.PaymTermId == paymentTerms, cancellationToken))
+                && !await _dbContext.Context.Set<PaymTerm>().AnyAsync(term => term.PaymTermId == paymentTerms, cancellationToken))
                 return new SalesHeaderUpdateResult(SalesHeaderUpdateStatus.Invalid, "Payment terms were not found.");
             var paymentMethod = input.PaymentMethod.Trim();
             if (!string.IsNullOrEmpty(paymentMethod)
-                && !await _dbContext.Set<CustPaymModeTable>().AnyAsync(mode => mode.PaymMode == paymentMethod, cancellationToken))
+                && !await _dbContext.Context.Set<CustPaymModeTable>().AnyAsync(mode => mode.PaymMode == paymentMethod, cancellationToken))
                 return new SalesHeaderUpdateResult(SalesHeaderUpdateStatus.Invalid, "Payment method was not found.");
             var deliveryMode = input.DeliveryMode.Trim();
             if (!string.IsNullOrEmpty(deliveryMode)
-                && !await _dbContext.Set<DlvMode>().AnyAsync(mode => mode.Code == deliveryMode, cancellationToken))
+                && !await _dbContext.Context.Set<DlvMode>().AnyAsync(mode => mode.Code == deliveryMode, cancellationToken))
                 return new SalesHeaderUpdateResult(SalesHeaderUpdateStatus.Invalid, "Delivery mode was not found.");
             var deliveryTerms = input.DeliveryTerms.Trim();
             if (!string.IsNullOrEmpty(deliveryTerms)
-                && !await _dbContext.Set<DlvTerm>().AnyAsync(term => term.Code == deliveryTerms, cancellationToken))
+                && !await _dbContext.Context.Set<DlvTerm>().AnyAsync(term => term.Code == deliveryTerms, cancellationToken))
                 return new SalesHeaderUpdateResult(SalesHeaderUpdateStatus.Invalid, "Delivery terms were not found.");
-            if (currency != order.CurrencyCode && await _dbContext.Set<SalesLine>().AnyAsync(row => row.SalesId == order.SalesId && row.DataAreaId == order.DataAreaId, cancellationToken))
+            if (currency != order.CurrencyCode && await _dbContext.Context.Set<SalesLine>().AnyAsync(row => row.SalesId == order.SalesId && row.DataAreaId == order.DataAreaId, cancellationToken))
                 return new SalesHeaderUpdateResult(SalesHeaderUpdateStatus.Invalid, "Currency cannot be changed after sales lines have been added.");
             order.InvoiceAccount = invoiceAccount;
             order.CurrencyCode = currency;
@@ -69,11 +69,11 @@ public sealed class SalesOrderHeaderService
             var inventSiteId = input.InventSiteId.Trim();
             var inventLocationId = input.InventLocationId.Trim();
             if (!string.IsNullOrEmpty(inventSiteId) &&
-                !await _dbContext.Set<InventSite>().AnyAsync(row => row.SiteId == inventSiteId
+                !await _dbContext.Context.Set<InventSite>().AnyAsync(row => row.SiteId == inventSiteId
                     && row.DataAreaId == order.DataAreaId, cancellationToken))
                 return new SalesHeaderUpdateResult(SalesHeaderUpdateStatus.Invalid, "Site was not found.");
             if (!string.IsNullOrEmpty(inventLocationId) &&
-                !await _dbContext.Set<InventLocation>().AnyAsync(row => row.InventLocationId == inventLocationId
+                !await _dbContext.Context.Set<InventLocation>().AnyAsync(row => row.InventLocationId == inventLocationId
                     && row.InventSiteId == inventSiteId && row.DataAreaId == order.DataAreaId, cancellationToken))
                 return new SalesHeaderUpdateResult(SalesHeaderUpdateStatus.Invalid, "Warehouse was not found in the selected site.");
             order.InventSiteId = inventSiteId;
@@ -89,7 +89,7 @@ public sealed class SalesOrderHeaderService
             order.SmmCampaignId = input.CampaignId.Trim();
             var taxGroupId = input.TaxGroupId.Trim();
             if (!string.IsNullOrEmpty(taxGroupId)
-                && !await _dbContext.Set<TaxGroupHeading>().AsNoTracking()
+                && !await _dbContext.Context.Set<TaxGroupHeading>().AsNoTracking()
                     .AnyAsync(group => group.TaxGroup == taxGroupId, cancellationToken))
                 return new SalesHeaderUpdateResult(SalesHeaderUpdateStatus.Invalid, "Sales tax group was not found.");
             order.TaxGroupId = taxGroupId;
@@ -149,7 +149,7 @@ public sealed class SalesOrderHeaderService
             order.IntercompanyOrigin = input.IntercompanyOrigin;
             order.IntercompanyAllowIndirectCreation = input.IntercompanyAllowIndirectCreation;
             order.Reservation = input.Reservation;
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await _dbContext.Context.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return new SalesHeaderUpdateResult(SalesHeaderUpdateStatus.Saved);
         });

@@ -1,7 +1,7 @@
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses;
-using IAX.IXApi.Modules.Finance.Persistence;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,14 +11,14 @@ public enum SalesDeliveryAddressStatus { OrderNotFound, NotOpen, BadLineId, Line
 public sealed record SalesDeliveryAddressResult(SalesDeliveryAddressStatus Status, long Id = 0,
     string Description = "", string Address = "");
 
-public sealed class SalesOrderDeliveryAddressService
+public sealed class SalesOrderDeliveryAddressService : ISalesOrderDeliveryAddressService
 {
-    private readonly IFinanceDataContext _dbContext;
+    private readonly IUnitOfWork _dbContext;
     private readonly ICompanyExecutionContext _company;
     private readonly ILocationService _locationService;
     private readonly IPostalAddressService _postalAddressService;
 
-    public SalesOrderDeliveryAddressService(IFinanceDataContext dbContext, ICompanyExecutionContext company,
+    public SalesOrderDeliveryAddressService(IUnitOfWork dbContext, ICompanyExecutionContext company,
         ILocationService locationService, IPostalAddressService postalAddressService)
     {
         _dbContext = dbContext;
@@ -30,12 +30,12 @@ public sealed class SalesOrderDeliveryAddressService
     public async Task<SalesDeliveryAddressResult> CreateAsync(long recId, string? lineIdText,
         AddressInfoDto address, CancellationToken cancellationToken)
     {
-        return await _dbContext.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        return await _dbContext.Context.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(
+            await using var transaction = await _dbContext.Context.Database.BeginTransactionAsync(
                 System.Data.IsolationLevel.Serializable, cancellationToken);
             var area = _company.GetDataAreaId();
-            var order = await _dbContext.Set<SalesTable>().FirstOrDefaultAsync(
+            var order = await _dbContext.Context.Set<SalesTable>().FirstOrDefaultAsync(
                 row => row.RecId == recId && row.DataAreaId == area, cancellationToken);
             if (order == null) return new SalesDeliveryAddressResult(SalesDeliveryAddressStatus.OrderNotFound);
             if (order.SalesStatus != SalesStatus.Backorder)
@@ -46,7 +46,7 @@ public sealed class SalesOrderDeliveryAddressService
                 if (!long.TryParse(lineIdText, System.Globalization.NumberStyles.None,
                         System.Globalization.CultureInfo.InvariantCulture, out var lineId))
                     return new SalesDeliveryAddressResult(SalesDeliveryAddressStatus.BadLineId);
-                line = await _dbContext.Set<SalesLine>().FirstOrDefaultAsync(row => row.RecId == lineId
+                line = await _dbContext.Context.Set<SalesLine>().FirstOrDefaultAsync(row => row.RecId == lineId
                     && row.SalesId == order.SalesId && row.DataAreaId == order.DataAreaId, cancellationToken);
                 if (line == null) return new SalesDeliveryAddressResult(SalesDeliveryAddressStatus.LineNotFound);
                 if (line.SalesStatus != SalesStatus.Backorder || line.RemainSalesPhysical != line.SalesQty
@@ -59,7 +59,7 @@ public sealed class SalesOrderDeliveryAddressService
             postalAddress.DataAreaId = order.DataAreaId;
             if (line == null) order.DeliveryPostalAddress = postalAddress.RecId;
             else line.DeliveryPostalAddress = postalAddress.RecId;
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await _dbContext.Context.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return new SalesDeliveryAddressResult(SalesDeliveryAddressStatus.Created,
                 postalAddress.RecId, location.Description, postalAddress.Address);

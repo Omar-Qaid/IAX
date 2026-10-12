@@ -4,6 +4,9 @@ namespace IAX.IXApi.Modules.Finance.Foundation.HcmShowrooms;
 
 public interface IHcmShowroomService : IBaseService<HcmShowroom>
 {
+    Task<HcmShowroomDto> CreateFromDtoAsync(HcmShowroomDto dto, CancellationToken cancellationToken = default);
+    Task<HcmShowroomDto?> UpdateFromDtoAsync(string id, HcmShowroomDto dto, CancellationToken cancellationToken = default);
+
     Task<HcmShowroom> AddShowroomAsync(
         HcmShowroom showroom,
         string name,

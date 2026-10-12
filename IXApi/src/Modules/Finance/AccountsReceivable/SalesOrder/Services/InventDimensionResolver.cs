@@ -3,17 +3,17 @@ using System.Text;
 using System.Globalization;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
 using IAX.IXApi.Modules.Finance.Entities;
-using IAX.IXApi.Modules.Finance.Persistence;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Services;
 
 public sealed class InventDimensionResolver : IInventDimensionResolver
 {
-    private readonly IFinanceDataContext _dbContext;
+    private readonly IUnitOfWork _dbContext;
     private readonly ISalesInventoryNumberService _numbers;
 
-    public InventDimensionResolver(IFinanceDataContext dbContext, ISalesInventoryNumberService numbers)
+    public InventDimensionResolver(IUnitOfWork dbContext, ISalesInventoryNumberService numbers)
     {
         _dbContext = dbContext;
         _numbers = numbers;
@@ -38,7 +38,7 @@ public sealed class InventDimensionResolver : IInventDimensionResolver
         var dimension10 = template?.InventDimension10 ?? 0m;
         var dimension9 = template?.InventDimension9 ?? default;
         var dimension9TzId = template?.InventDimension9TzId ?? 0;
-        var existing = await _dbContext.Set<InventDim>().FirstOrDefaultAsync(item =>
+        var existing = await _dbContext.Context.Set<InventDim>().FirstOrDefaultAsync(item =>
             item.DataAreaId == dataAreaId && item.InventSiteId == inventSiteId
             && item.InventLocationId == inventLocationId && item.ConfigId == configId
             && item.InventSizeId == sizeId && item.InventColorId == colorId
@@ -83,7 +83,7 @@ public sealed class InventDimensionResolver : IInventDimensionResolver
             Sha3HashHex = Convert.ToHexString(SHA3_384.HashData(canonicalBytes)),
             DataAreaId = dataAreaId
         };
-        _dbContext.Set<InventDim>().Add(dimension);
+        _dbContext.Context.Set<InventDim>().Add(dimension);
         return dimension;
     }
 }

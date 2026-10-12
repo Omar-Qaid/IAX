@@ -1,4 +1,4 @@
-﻿using IAX.IXApi.Shared.Application.Contracts;
+using IAX.IXApi.Shared.Application.Contracts;
 using System;
 using System.Collections.Generic;
 

@@ -18,107 +18,107 @@ public sealed class TaxItemGroupCommandService : ITaxItemGroupCommandService
         _headers = headers;
     }
 
-        public Task<TaxItemGroupHeading> CreateAsync(TaxItemGroupDto dto, CancellationToken cancellationToken = default)
-            => _db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
-            {
-                await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
-                var created = await CreateCoreAsync(dto, cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
-                return created;
-            });
-
-        private async Task<TaxItemGroupHeading> CreateCoreAsync(TaxItemGroupDto dto, CancellationToken cancellationToken)
+    public Task<TaxItemGroupHeading> CreateAsync(TaxItemGroupDto dto, CancellationToken cancellationToken = default)
+        => _db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
-            var entity = dto.Adapt<TaxItemGroupHeading>();
-            if (string.IsNullOrEmpty(entity.DataAreaId)) entity.DataAreaId = "dat";
-
-            var created = await _headers.AddAsync(entity, cancellationToken);
-
-            if (dto.Lines != null && dto.Lines.Any())
-            {
-                foreach (var lineDto in dto.Lines)
-                {
-                    if (string.IsNullOrWhiteSpace(lineDto.TaxCode)) continue;
-
-                    await _db.Set<TaxOnItem>().AddAsync(new TaxItemGroupLineCreateSource(lineDto, string.IsNullOrEmpty(created.DataAreaId) ? "dat" : created.DataAreaId, created.TaxItemGroup).Adapt<TaxOnItem>(), cancellationToken);
-                }
-                await _unitOfWork.CompleteAsync(cancellationToken);
-            }
-
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+            var created = await CreateCoreAsync(dto, cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
             return created;
-        }
+        });
 
-        public Task<TaxItemGroupHeading?> UpdateAsync(string id, TaxItemGroupDto dto, CancellationToken cancellationToken = default)
-            => _db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
-            {
-                await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
-                var updated = await UpdateCoreAsync(id, dto, cancellationToken);
-                if (updated != null) await transaction.CommitAsync(cancellationToken);
-                return updated;
-            });
+    private async Task<TaxItemGroupHeading> CreateCoreAsync(TaxItemGroupDto dto, CancellationToken cancellationToken)
+    {
+        var entity = dto.Adapt<TaxItemGroupHeading>();
+        if (string.IsNullOrEmpty(entity.DataAreaId)) entity.DataAreaId = "dat";
 
-        private async Task<TaxItemGroupHeading?> UpdateCoreAsync(string id, TaxItemGroupDto dto, CancellationToken cancellationToken)
+        var created = await _headers.AddAsync(entity, cancellationToken);
+
+        if (dto.Lines != null && dto.Lines.Any())
         {
-            var searchCode = System.Uri.UnescapeDataString(id).Trim();
-            TaxItemGroupHeading? existingEntity = null;
-            if (long.TryParse(searchCode, out long recId))
+            foreach (var lineDto in dto.Lines)
             {
-                existingEntity = await _db.Set<TaxItemGroupHeading>().FindAsync(new object[] { recId }, cancellationToken);
+                if (string.IsNullOrWhiteSpace(lineDto.TaxCode)) continue;
+
+                await _db.Set<TaxOnItem>().AddAsync(new TaxItemGroupLineCreateSource(lineDto, string.IsNullOrEmpty(created.DataAreaId) ? "dat" : created.DataAreaId, created.TaxItemGroup).Adapt<TaxOnItem>(), cancellationToken);
             }
-            if (existingEntity == null)
-            {
-                existingEntity = await _db.Set<TaxItemGroupHeading>().FirstOrDefaultAsync(x => x.TaxItemGroup == searchCode || x.TaxItemGroup.ToUpper() == searchCode.ToUpper(), cancellationToken);
-            }
-            if (existingEntity == null)
-            {
-                return null;
-            }
-
-            var originalRecId = existingEntity.RecId;
-            var originalCode = existingEntity.TaxItemGroup;
-
-            dto.Adapt(existingEntity);
-            existingEntity.RecId = originalRecId;
-            if (!string.IsNullOrEmpty(originalCode))
-            {
-                existingEntity.TaxItemGroup = originalCode;
-            }
-
-            var updatedEntity = await _headers.UpdateAsync(existingEntity, cancellationToken);
-
-            if (dto.Lines != null)
-            {
-                var currentLines = await _db.Set<TaxOnItem>()
-                    .Where(x => x.TaxItemGroup == existingEntity.TaxItemGroup)
-                    .ToListAsync(cancellationToken);
-
-                var dtoTaxCodes = dto.Lines
-                    .Select(l => l.TaxCode)
-                    .Where(code => !string.IsNullOrWhiteSpace(code))
-                    .ToHashSet();
-
-                var toRemove = currentLines.Where(l => !dtoTaxCodes.Contains(l.TaxCode)).ToList();
-                if (toRemove.Any()) _db.Set<TaxOnItem>().RemoveRange(toRemove);
-
-                foreach (var lineDto in dto.Lines)
-                {
-                    if (string.IsNullOrWhiteSpace(lineDto.TaxCode)) continue;
-
-                    var line = currentLines.FirstOrDefault(l => l.TaxCode == lineDto.TaxCode);
-                    if (line == null)
-                    {
-                        await _db.Set<TaxOnItem>().AddAsync(new TaxItemGroupLineCreateSource(lineDto, string.IsNullOrEmpty(existingEntity.DataAreaId) ? "dat" : existingEntity.DataAreaId, existingEntity.TaxItemGroup).Adapt<TaxOnItem>(), cancellationToken);
-                    }
-                    else
-                    {
-                        new TaxItemGroupLineWriteSource(lineDto).Adapt(line);
-                        _db.Set<TaxOnItem>().Update(line);
-                    }
-                }
-                await _unitOfWork.CompleteAsync(cancellationToken);
-            }
-
-            return updatedEntity;
+            await _unitOfWork.CompleteAsync(cancellationToken);
         }
+
+        return created;
+    }
+
+    public Task<TaxItemGroupHeading?> UpdateAsync(string id, TaxItemGroupDto dto, CancellationToken cancellationToken = default)
+        => _db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+            var updated = await UpdateCoreAsync(id, dto, cancellationToken);
+            if (updated != null) await transaction.CommitAsync(cancellationToken);
+            return updated;
+        });
+
+    private async Task<TaxItemGroupHeading?> UpdateCoreAsync(string id, TaxItemGroupDto dto, CancellationToken cancellationToken)
+    {
+        var searchCode = System.Uri.UnescapeDataString(id).Trim();
+        TaxItemGroupHeading? existingEntity = null;
+        if (long.TryParse(searchCode, out long recId))
+        {
+            existingEntity = await _db.Set<TaxItemGroupHeading>().FindAsync(new object[] { recId }, cancellationToken);
+        }
+        if (existingEntity == null)
+        {
+            existingEntity = await _db.Set<TaxItemGroupHeading>().FirstOrDefaultAsync(x => x.TaxItemGroup == searchCode || x.TaxItemGroup.ToUpper() == searchCode.ToUpper(), cancellationToken);
+        }
+        if (existingEntity == null)
+        {
+            return null;
+        }
+
+        var originalRecId = existingEntity.RecId;
+        var originalCode = existingEntity.TaxItemGroup;
+
+        dto.Adapt(existingEntity);
+        existingEntity.RecId = originalRecId;
+        if (!string.IsNullOrEmpty(originalCode))
+        {
+            existingEntity.TaxItemGroup = originalCode;
+        }
+
+        var updatedEntity = await _headers.UpdateAsync(existingEntity, cancellationToken);
+
+        if (dto.Lines != null)
+        {
+            var currentLines = await _db.Set<TaxOnItem>()
+                .Where(x => x.TaxItemGroup == existingEntity.TaxItemGroup)
+                .ToListAsync(cancellationToken);
+
+            var dtoTaxCodes = dto.Lines
+                .Select(l => l.TaxCode)
+                .Where(code => !string.IsNullOrWhiteSpace(code))
+                .ToHashSet();
+
+            var toRemove = currentLines.Where(l => !dtoTaxCodes.Contains(l.TaxCode)).ToList();
+            if (toRemove.Any()) _db.Set<TaxOnItem>().RemoveRange(toRemove);
+
+            foreach (var lineDto in dto.Lines)
+            {
+                if (string.IsNullOrWhiteSpace(lineDto.TaxCode)) continue;
+
+                var line = currentLines.FirstOrDefault(l => l.TaxCode == lineDto.TaxCode);
+                if (line == null)
+                {
+                    await _db.Set<TaxOnItem>().AddAsync(new TaxItemGroupLineCreateSource(lineDto, string.IsNullOrEmpty(existingEntity.DataAreaId) ? "dat" : existingEntity.DataAreaId, existingEntity.TaxItemGroup).Adapt<TaxOnItem>(), cancellationToken);
+                }
+                else
+                {
+                    new TaxItemGroupLineWriteSource(lineDto).Adapt(line);
+                    _db.Set<TaxOnItem>().Update(line);
+                }
+            }
+            await _unitOfWork.CompleteAsync(cancellationToken);
+        }
+
+        return updatedEntity;
+    }
 
 }

@@ -1,7 +1,7 @@
 using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
-using IAX.IXApi.Modules.Finance.Persistence;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,15 +10,15 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
 public enum SalesLineWriteStatus { NotFound, Invalid, Success }
 public sealed record SalesLineWriteResult(SalesLineWriteStatus Status, string? Error = null, object? Data = null);
 
-public sealed class SalesOrderLineService
+public sealed class SalesOrderLineService : ISalesOrderLineService
 {
-    private readonly IFinanceDataContext _dbContext;
+    private readonly IUnitOfWork _dbContext;
     private readonly ICompanyExecutionContext _company;
     private readonly SalesOrderValidationService _validation;
     private readonly ISalesInventoryDemandService _inventoryDemand;
     private readonly SalesUnitConversionService _units;
 
-    public SalesOrderLineService(IFinanceDataContext dbContext, ICompanyExecutionContext company,
+    public SalesOrderLineService(IUnitOfWork dbContext, ICompanyExecutionContext company,
         SalesOrderValidationService validation, ISalesInventoryDemandService inventoryDemand,
         SalesUnitConversionService units)
     {
@@ -31,10 +31,10 @@ public sealed class SalesOrderLineService
 
     public async Task<SalesLineWriteResult> AddAsync(long recId, SalesLineInputDto input, CancellationToken cancellationToken)
     {
-        return await _dbContext.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        return await _dbContext.Context.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
-            var order = await _dbContext.Set<SalesTable>().FirstOrDefaultAsync(row => row.RecId == recId, cancellationToken);
+            await using var transaction = await _dbContext.Context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
+            var order = await _dbContext.Context.Set<SalesTable>().FirstOrDefaultAsync(row => row.RecId == recId, cancellationToken);
             if (order == null) return new SalesLineWriteResult(SalesLineWriteStatus.NotFound, "Sales order was not found.");
             if (order.SalesStatus != SalesStatus.Backorder)
                 return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, "Lines can only be added to open sales orders.");
@@ -48,11 +48,11 @@ public sealed class SalesOrderLineService
                     || !await _validation.IsDeliveryAddressAvailableForOrderAsync(order, deliveryAddressId, cancellationToken))
                     return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, "The selected delivery address does not belong to this customer.");
             }
-            var item = await _dbContext.Set<InventTable>().AsNoTracking()
+            var item = await _dbContext.Context.Set<InventTable>().AsNoTracking()
                 .FirstOrDefaultAsync(row => row.ItemId == input.ItemNumber
                     && row.DataAreaId == order.DataAreaId, cancellationToken);
             if (item == null) return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, "Item was not found.");
-            var module = await _dbContext.Set<InventTableModule>().AsNoTracking()
+            var module = await _dbContext.Context.Set<InventTableModule>().AsNoTracking()
                 .FirstOrDefaultAsync(row => row.ItemId == item.ItemId && row.DataAreaId == order.DataAreaId && row.ModuleType == ModuleInventPurchSales.Sales, cancellationToken);
             if (module == null || string.IsNullOrWhiteSpace(module.UnitId))
                 return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, "The item must have a sales unit configured.");
@@ -86,18 +86,18 @@ public sealed class SalesOrderLineService
                 return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, taxValidationError);
             if (!string.IsNullOrWhiteSpace(input.ReturnLotId))
             {
-                var returnLotExists = await _dbContext.Set<InventTransOrigin>().AnyAsync(origin =>
+                var returnLotExists = await _dbContext.Context.Set<InventTransOrigin>().AnyAsync(origin =>
                     origin.DataAreaId == order.DataAreaId && origin.ItemId == item.ItemId
                     && origin.InventTransId == input.ReturnLotId.Trim(), cancellationToken);
                 if (!returnLotExists)
                     return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, "The selected return lot does not belong to this item.");
             }
             if (input.LedgerDimension.HasValue && input.LedgerDimension.Value != 0
-                && !await _dbContext.Set<DimensionAttributeValueCombination>().AnyAsync(dimension =>
+                && !await _dbContext.Context.Set<DimensionAttributeValueCombination>().AnyAsync(dimension =>
                     dimension.DataAreaId == order.DataAreaId
                     && dimension.RecId == input.LedgerDimension.Value, cancellationToken))
                 return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, "The selected main account was not found.");
-            var lastLine = await _dbContext.Set<SalesLine>()
+            var lastLine = await _dbContext.Context.Set<SalesLine>()
                 .Where(row => row.SalesId == order.SalesId && row.DataAreaId == order.DataAreaId)
                 .MaxAsync(row => (decimal?)row.LineNum, cancellationToken) ?? 0;
             var line = new SalesLine {
@@ -158,11 +158,11 @@ public sealed class SalesOrderLineService
             var dimensionError = await _validation.ValidateSiteWarehouseAsync(inventSiteId, inventLocationId, cancellationToken);
             if (dimensionError != null) return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, dimensionError);
             if (!string.IsNullOrWhiteSpace(input.BatchNumber)
-                && !await _dbContext.Set<InventBatch>().AnyAsync(batch => batch.DataAreaId == order.DataAreaId
+                && !await _dbContext.Context.Set<InventBatch>().AnyAsync(batch => batch.DataAreaId == order.DataAreaId
                     && batch.ItemId == line.ItemId && batch.InventBatchId == input.BatchNumber.Trim(), cancellationToken))
                 return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, "The selected batch does not belong to this item.");
             if (!string.IsNullOrWhiteSpace(input.SerialNumber)
-                && !await _dbContext.Set<InventSerial>().AnyAsync(serial => serial.DataAreaId == order.DataAreaId
+                && !await _dbContext.Context.Set<InventSerial>().AnyAsync(serial => serial.DataAreaId == order.DataAreaId
                     && serial.ItemId == line.ItemId && serial.InventSerialId == input.SerialNumber.Trim(), cancellationToken))
                 return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, "The selected serial number does not belong to this item.");
             var dimensionTemplate = new InventDim
@@ -177,9 +177,9 @@ public sealed class SalesOrderLineService
             };
             await _inventoryDemand.CreateAsync(order, line,
                 inventSiteId, inventLocationId, cancellationToken, dimensionTemplate);
-            _dbContext.Set<SalesLine>().Add(line);
+            _dbContext.Context.Set<SalesLine>().Add(line);
             order.SmmSalesAmountTotal += line.LineAmount;
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await _dbContext.Context.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return new SalesLineWriteResult(SalesLineWriteStatus.Success,
                 Data: SalesOrderLinePresenter.Record(line, inventSiteId, inventLocationId,
@@ -189,15 +189,15 @@ public sealed class SalesOrderLineService
 
     public async Task<SalesLineWriteResult> ChangeAsync(long recId, long lineId, SalesLineInputDto? input, CancellationToken cancellationToken)
     {
-        return await _dbContext.Database.CreateExecutionStrategy().ExecuteAsync(async () => {
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
-            var order = await _dbContext.Set<SalesTable>().FirstOrDefaultAsync(row => row.RecId == recId, cancellationToken);
+        return await _dbContext.Context.Database.CreateExecutionStrategy().ExecuteAsync(async () => {
+            await using var transaction = await _dbContext.Context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
+            var order = await _dbContext.Context.Set<SalesTable>().FirstOrDefaultAsync(row => row.RecId == recId, cancellationToken);
             if (order == null) return new SalesLineWriteResult(SalesLineWriteStatus.NotFound, "Sales order was not found.");
             if (!string.Equals(order.DataAreaId, _company.GetDataAreaId(), StringComparison.OrdinalIgnoreCase))
                 return new SalesLineWriteResult(SalesLineWriteStatus.NotFound, "Sales order was not found in the selected company.");
             if (order.SalesStatus != SalesStatus.Backorder)
                 return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, "Only open sales orders can be changed.");
-            var line = await _dbContext.Set<SalesLine>().FirstOrDefaultAsync(row => row.RecId == lineId && row.SalesId == order.SalesId && row.DataAreaId == order.DataAreaId, cancellationToken);
+            var line = await _dbContext.Context.Set<SalesLine>().FirstOrDefaultAsync(row => row.RecId == lineId && row.SalesId == order.SalesId && row.DataAreaId == order.DataAreaId, cancellationToken);
             if (line == null) return new SalesLineWriteResult(SalesLineWriteStatus.NotFound, "Sales line was not found.");
             if (line.SalesStatus != SalesStatus.Backorder || line.RemainSalesPhysical != line.SalesQty || line.RemainSalesFinancial != line.SalesQty)
                 return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, "Processed sales lines cannot be changed.");
@@ -208,7 +208,7 @@ public sealed class SalesOrderLineService
             string? responseLocationId = null;
             if (input == null) {
                 await _inventoryDemand.DeleteAsync(line, cancellationToken);
-                _dbContext.Set<SalesLine>().Remove(line);
+                _dbContext.Context.Set<SalesLine>().Remove(line);
             }
             else {
                 var discountValidationError = NormalizeAndValidateLineDiscount(input);
@@ -238,13 +238,13 @@ public sealed class SalesOrderLineService
                 if (input.PreventPartialDelivery.HasValue)
                     line.Complete = input.PreventPartialDelivery.Value ? 1 : 0;
                 if (!string.IsNullOrWhiteSpace(input.Description)) line.Name = input.Description.Trim();
-                var salesModule = await _dbContext.Set<InventTableModule>().AsNoTracking()
+                var salesModule = await _dbContext.Context.Set<InventTableModule>().AsNoTracking()
                     .FirstOrDefaultAsync(row => row.ItemId == line.ItemId
                         && row.DataAreaId == order.DataAreaId && row.ModuleType == ModuleInventPurchSales.Sales, cancellationToken);
                 if (salesModule == null)
                     return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, "The item must have a sales unit configured.");
                 var requestedUnit = string.IsNullOrWhiteSpace(input.Unit) ? line.SalesUnit : input.Unit.Trim();
-                var item = await _dbContext.Set<InventTable>().AsNoTracking()
+                var item = await _dbContext.Context.Set<InventTable>().AsNoTracking()
                     .FirstOrDefaultAsync(row => row.ItemId == line.ItemId && row.DataAreaId == order.DataAreaId, cancellationToken);
                 if (item == null) return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, "Item was not found.");
                 var inventoryQuantity = await _units.ToInventoryQuantityAsync(item, requestedUnit, input.Quantity, cancellationToken);
@@ -322,7 +322,7 @@ public sealed class SalesOrderLineService
                 if (!string.IsNullOrWhiteSpace(input.ReturnLotId))
                 {
                     var returnLotId = input.ReturnLotId.Trim();
-                    var returnLotExists = await _dbContext.Set<InventTransOrigin>().AnyAsync(origin =>
+                    var returnLotExists = await _dbContext.Context.Set<InventTransOrigin>().AnyAsync(origin =>
                         origin.DataAreaId == line.DataAreaId && origin.ItemId == line.ItemId
                         && origin.InventTransId == returnLotId, cancellationToken);
                     if (!returnLotExists)
@@ -336,7 +336,7 @@ public sealed class SalesOrderLineService
                 if (input.LedgerDimension.HasValue)
                 {
                     var ledgerDimensionExists = input.LedgerDimension.Value == 0 ||
-                        await _dbContext.Set<DimensionAttributeValueCombination>().AnyAsync(dimension =>
+                        await _dbContext.Context.Set<DimensionAttributeValueCombination>().AnyAsync(dimension =>
                             dimension.DataAreaId == line.DataAreaId
                             && dimension.RecId == input.LedgerDimension.Value, cancellationToken);
                     if (!ledgerDimensionExists)
@@ -366,7 +366,7 @@ public sealed class SalesOrderLineService
                     line.TamRebateExcludeRebateManagement = input.ExcludeFromRebateManagement.Value ? 1 : 0;
                 line.TaxGroup = lineTaxGroup;
                 line.TaxItemGroup = lineTaxItemGroup;
-                var currentDimension = await _dbContext.Set<InventDim>().AsNoTracking()
+                var currentDimension = await _dbContext.Context.Set<InventDim>().AsNoTracking()
                     .FirstOrDefaultAsync(item => item.DataAreaId == line.DataAreaId
                         && item.InventDimId == line.InventDimId, cancellationToken);
                 var inventSiteId = string.IsNullOrWhiteSpace(input.InventSiteId)
@@ -380,12 +380,12 @@ public sealed class SalesOrderLineService
                     return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, dimensionError);
                 var batchNumber = input.BatchNumber?.Trim();
                 if (!string.IsNullOrEmpty(batchNumber)
-                    && !await _dbContext.Set<InventBatch>().AnyAsync(batch => batch.DataAreaId == line.DataAreaId
+                    && !await _dbContext.Context.Set<InventBatch>().AnyAsync(batch => batch.DataAreaId == line.DataAreaId
                         && batch.ItemId == line.ItemId && batch.InventBatchId == batchNumber, cancellationToken))
                     return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, "The selected batch does not belong to this item.");
                 var serialNumber = input.SerialNumber?.Trim();
                 if (!string.IsNullOrEmpty(serialNumber)
-                    && !await _dbContext.Set<InventSerial>().AnyAsync(serial => serial.DataAreaId == line.DataAreaId
+                    && !await _dbContext.Context.Set<InventSerial>().AnyAsync(serial => serial.DataAreaId == line.DataAreaId
                         && serial.ItemId == line.ItemId && serial.InventSerialId == serialNumber, cancellationToken))
                     return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, "The selected serial number does not belong to this item.");
                 var dimensionTemplate = new InventDim
@@ -410,16 +410,16 @@ public sealed class SalesOrderLineService
                 responseLocationId = inventLocationId;
             }
             order.SmmSalesAmountTotal += (input == null ? 0 : line.LineAmount) - previousAmount;
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await _dbContext.Context.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return new SalesLineWriteResult(SalesLineWriteStatus.Success,
                 Data: input == null
                     ? new { deleted = true }
                     : SalesOrderLinePresenter.Record(line, responseSiteId, responseLocationId,
-                        inventoryDimension: await _dbContext.Set<InventDim>().AsNoTracking()
+                        inventoryDimension: await _dbContext.Context.Set<InventDim>().AsNoTracking()
                             .FirstOrDefaultAsync(item => item.DataAreaId == line.DataAreaId
                                 && item.InventDimId == line.InventDimId, cancellationToken),
-                        productName: await _dbContext.Set<InventTable>().AsNoTracking()
+                        productName: await _dbContext.Context.Set<InventTable>().AsNoTracking()
                             .Where(item => item.DataAreaId == line.DataAreaId && item.ItemId == line.ItemId)
                             .Select(item => item.NameAlias).FirstOrDefaultAsync(cancellationToken)));
         });
@@ -460,7 +460,7 @@ public sealed class SalesOrderLineService
         string itemId, decimal quantity, string unitId, decimal fallbackPriceUnit,
         string? inventDimId, CancellationToken cancellationToken)
     {
-        var custParameters = await _dbContext.Set<CustParameters>().AsNoTracking()
+        var custParameters = await _dbContext.Context.Set<CustParameters>().AsNoTracking()
             .Where(row => row.DataAreaId == order.DataAreaId)
             .OrderBy(row => row.Key)
             .FirstOrDefaultAsync(cancellationToken);
@@ -468,7 +468,7 @@ public sealed class SalesOrderLineService
             return null;
 
         var today = DateTime.UtcNow.Date;
-        var agreements = await _dbContext.Set<PriceDiscTable>().AsNoTracking()
+        var agreements = await _dbContext.Context.Set<PriceDiscTable>().AsNoTracking()
             .Where(row => row.DataAreaId == order.DataAreaId
                 && row.Module == ModuleInventCustVend.Cust
                 && row.Relation == PriceType.PriceSales

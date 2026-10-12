@@ -1,7 +1,8 @@
+using Mapster;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
-using IAX.IXApi.Modules.Finance.Persistence;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,14 +10,14 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
 
 public sealed record SalesOrderQuickCreateResult(SalesOrderListDto? Order, string? Error = null);
 
-public sealed class SalesOrderQuickCreateService
+public sealed class SalesOrderQuickCreateService : ISalesOrderQuickCreateService
 {
-    private readonly IFinanceDataContext _dbContext;
+    private readonly IUnitOfWork _dbContext;
     private readonly ICompanyExecutionContext _company;
     private readonly ISysNumberSequenceService _numberSequences;
     private readonly SalesOrderValidationService _validation;
 
-    public SalesOrderQuickCreateService(IFinanceDataContext dbContext, ICompanyExecutionContext company,
+    public SalesOrderQuickCreateService(IUnitOfWork dbContext, ICompanyExecutionContext company,
         ISysNumberSequenceService numberSequences, SalesOrderValidationService validation)
     {
         _dbContext = dbContext;
@@ -30,7 +31,7 @@ public sealed class SalesOrderQuickCreateService
     {
         var account = input.CustomerAccount.Trim();
         var dataAreaId = _company.GetDataAreaId();
-        var customer = await _dbContext.Set<CustTable>()
+        var customer = await _dbContext.Context.Set<CustTable>()
             .AsNoTracking()
             .FirstOrDefaultAsync(candidate => candidate.AccountNum == account
                 && candidate.DataAreaId == dataAreaId, cancellationToken);
@@ -38,7 +39,7 @@ public sealed class SalesOrderQuickCreateService
             return new SalesOrderQuickCreateResult(null, "Customer account was not found.");
 
         var party = customer.Party > 0
-            ? await _dbContext.Set<DirPartyTable>()
+            ? await _dbContext.Context.Set<DirPartyTable>()
                 .AsNoTracking()
                 .FirstOrDefaultAsync(candidate => candidate.RecId == customer.Party, cancellationToken)
             : null;
@@ -48,36 +49,36 @@ public sealed class SalesOrderQuickCreateService
             return new SalesOrderQuickCreateResult(null, "The selected delivery address is invalid.");
         var taxGroupId = string.IsNullOrWhiteSpace(input.TaxGroupId) ? customer.TaxGroupId : input.TaxGroupId.Trim();
         if (!string.IsNullOrWhiteSpace(taxGroupId)
-            && !await _dbContext.Set<TaxGroupHeading>().AsNoTracking()
+            && !await _dbContext.Context.Set<TaxGroupHeading>().AsNoTracking()
                 .AnyAsync(group => group.TaxGroup == taxGroupId, cancellationToken))
             return new SalesOrderQuickCreateResult(null, "The selected sales tax group was not found.");
         var invoiceAccount = string.IsNullOrWhiteSpace(input.InvoiceAccount)
             ? (string.IsNullOrWhiteSpace(customer.InvoiceAccount) ? account : customer.InvoiceAccount.Trim())
             : input.InvoiceAccount.Trim();
-        if (!await _dbContext.Set<CustTable>().AsNoTracking().AnyAsync(candidate =>
+        if (!await _dbContext.Context.Set<CustTable>().AsNoTracking().AnyAsync(candidate =>
                 candidate.AccountNum == invoiceAccount && candidate.DataAreaId == dataAreaId, cancellationToken))
             return new SalesOrderQuickCreateResult(null, "The invoice account was not found in the selected company.");
         var currencyCode = string.IsNullOrWhiteSpace(input.CurrencyCode)
             ? customer.CurrencyCode : input.CurrencyCode.Trim();
         if (string.IsNullOrWhiteSpace(currencyCode)
-            || !await _dbContext.Set<Currency>().AsNoTracking().AnyAsync(currency =>
+            || !await _dbContext.Context.Set<Currency>().AsNoTracking().AnyAsync(currency =>
                 currency.CurrencyCode == currencyCode && currency.DataAreaId == dataAreaId, cancellationToken))
             return new SalesOrderQuickCreateResult(null, "The selected currency was not found in the selected company.");
         var paymentTerms = string.IsNullOrWhiteSpace(input.PaymentTerms) ? customer.PaymTermId : input.PaymentTerms.Trim();
         if (!string.IsNullOrWhiteSpace(paymentTerms)
-            && !await _dbContext.Set<PaymTerm>().AnyAsync(term => term.PaymTermId == paymentTerms, cancellationToken))
+            && !await _dbContext.Context.Set<PaymTerm>().AnyAsync(term => term.PaymTermId == paymentTerms, cancellationToken))
             return new SalesOrderQuickCreateResult(null, "The selected payment terms were not found.");
         var paymentMethod = string.IsNullOrWhiteSpace(input.PaymentMethod) ? customer.PaymModeId : input.PaymentMethod.Trim();
         if (!string.IsNullOrWhiteSpace(paymentMethod)
-            && !await _dbContext.Set<CustPaymModeTable>().AnyAsync(mode => mode.PaymMode == paymentMethod, cancellationToken))
+            && !await _dbContext.Context.Set<CustPaymModeTable>().AnyAsync(mode => mode.PaymMode == paymentMethod, cancellationToken))
             return new SalesOrderQuickCreateResult(null, "The selected payment method was not found.");
         var deliveryMode = string.IsNullOrWhiteSpace(input.DeliveryMode) ? customer.DlvModeId : input.DeliveryMode.Trim();
         if (!string.IsNullOrWhiteSpace(deliveryMode)
-            && !await _dbContext.Set<DlvMode>().AnyAsync(mode => mode.Code == deliveryMode, cancellationToken))
+            && !await _dbContext.Context.Set<DlvMode>().AnyAsync(mode => mode.Code == deliveryMode, cancellationToken))
             return new SalesOrderQuickCreateResult(null, "The selected delivery mode was not found.");
         var deliveryTerms = input.DeliveryTerms?.Trim() ?? string.Empty;
         if (!string.IsNullOrWhiteSpace(deliveryTerms)
-            && !await _dbContext.Set<DlvTerm>().AnyAsync(term => term.Code == deliveryTerms, cancellationToken))
+            && !await _dbContext.Context.Set<DlvTerm>().AnyAsync(term => term.Code == deliveryTerms, cancellationToken))
             return new SalesOrderQuickCreateResult(null, "The selected delivery terms were not found.");
         var inventSiteId = string.IsNullOrWhiteSpace(input.InventSiteId)
             ? customer.InventSiteId : input.InventSiteId.Trim();
@@ -88,8 +89,8 @@ public sealed class SalesOrderQuickCreateService
         if (customer.Party > 0)
         {
             var customerAddresses = await (
-                from link in _dbContext.Set<DirPartyLocation>().AsNoTracking()
-                join address in _dbContext.Set<LogisticsPostalAddress>().AsNoTracking()
+                from link in _dbContext.Context.Set<DirPartyLocation>().AsNoTracking()
+                join address in _dbContext.Context.Set<LogisticsPostalAddress>().AsNoTracking()
                     on link.Location equals address.Location
                 where link.Party == customer.Party && link.IsPostalAddress == NoYes.Yes
                     && address.DataAreaId == customer.DataAreaId
@@ -104,8 +105,8 @@ public sealed class SalesOrderQuickCreateService
         }
         var customerContacts = customer.Party > 0
             ? await (
-                from link in _dbContext.Set<DirPartyLocation>().AsNoTracking()
-                join contact in _dbContext.Set<LogisticsElectronicAddress>().AsNoTracking()
+                from link in _dbContext.Context.Set<DirPartyLocation>().AsNoTracking()
+                join contact in _dbContext.Context.Set<LogisticsElectronicAddress>().AsNoTracking()
                     on link.Location equals contact.Location
                 where link.Party == customer.Party && link.IsPostalAddress == NoYes.No
                     && (contact.Type == ElectronicAddressType.Email || contact.Type == ElectronicAddressType.Phone)
@@ -166,44 +167,12 @@ public sealed class SalesOrderQuickCreateService
             DataAreaId = dataAreaId ?? "dat"
         };
 
-        _dbContext.Set<SalesTable>().Add(order);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        _dbContext.Context.Set<SalesTable>().Add(order);
+        await _dbContext.Context.SaveChangesAsync(cancellationToken);
 
-        return new SalesOrderQuickCreateResult(new SalesOrderListDto
-        {
-            RecId = order.RecId,
-            SalesId = order.SalesId,
-            CustomerAccount = order.CustAccount,
-            CustomerName = party?.Name ?? order.SalesName,
-            InvoiceAccount = order.InvoiceAccount,
-            CustomerGroup = order.CustGroup,
-            CurrencyCode = order.CurrencyCode,
-            SalesStatus = order.SalesStatus.ToString(),
-            DocumentStatus = order.DocumentStatus.ToString(),
-            DeliveryDate = order.DeliveryDate,
-            ShippingDateRequested = order.ShippingDateRequested,
-            OrderTotal = order.SmmSalesAmountTotal,
-            CustomerReference = order.CustomerRef,
-            DeliveryMode = order.DlvMode,
-            DeliveryTerms = order.DlvTerm,
-            OrderDate = order.OrderDate,
-            InventSiteId = order.InventSiteId,
-            InventLocationId = order.InventLocationId,
-            SalesNameAlias = order.SalesNameAlias,
-            SalesType = (int)(order.SalesType ?? SalesType.Sales),
-            OneTimeCustomer = order.OneTimeCustomer == NoYes.Yes,
-            Email = order.Email,
-            Phone = order.Phone,
-            Deadline = order.Deadline == default ? null : order.Deadline,
-            CustomerRequisitionNumber = order.CustRequisitionNum,
-            Notes = order.Notes,
-            CampaignId = order.SmmCampaignId,
-            TaxGroupId = order.TaxGroupId,
-            PricesIncludeSalesTax = order.InclTax,
-            SalesGroup = order.SalesGroup,
-            LanguageId = order.LanguageId,
-            PaymentTerms = order.PaymTerm
-        });
+        return new SalesOrderQuickCreateResult(
+            new SalesOrderQuickCreateMappingSource(order, party?.Name ?? order.SalesName)
+                .Adapt<SalesOrderListDto>());
     }
 
     private async Task<string> NextAvailableSalesIdAsync(CancellationToken cancellationToken)
@@ -213,7 +182,7 @@ public sealed class SalesOrderQuickCreateService
         {
             var candidate = (await _numberSequences.NextAsync(
                 "SalesTable", cancellationToken: cancellationToken)).Code;
-            var exists = await _dbContext.Set<SalesTable>()
+            var exists = await _dbContext.Context.Set<SalesTable>()
                 .IgnoreQueryFilters()
                 .AsNoTracking()
                 .AnyAsync(order => order.SalesId == candidate, cancellationToken);

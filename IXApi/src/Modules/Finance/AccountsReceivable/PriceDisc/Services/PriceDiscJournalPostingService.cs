@@ -1,4 +1,4 @@
-using IAX.IXApi.Modules.Finance.Persistence;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Shared.Application.Identity;
@@ -9,12 +9,12 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable.PriceDisc;
 public enum PriceDiscJournalPostStatus { NotFound, AlreadyPosted, Invalid, Posted }
 public sealed record PriceDiscJournalPostResult(PriceDiscJournalPostStatus Status, List<string>? Errors = null, int PublishedRules = 0);
 
-public sealed class PriceDiscJournalPostingService
+public sealed class PriceDiscJournalPostingService : IPriceDiscJournalPostingService
 {
-    private readonly IFinanceDataContext _db;
+    private readonly IUnitOfWork _db;
     private readonly ICompanyExecutionContext _company;
 
-    public PriceDiscJournalPostingService(IFinanceDataContext db, ICompanyExecutionContext company)
+    public PriceDiscJournalPostingService(IUnitOfWork db, ICompanyExecutionContext company)
     {
         _db = db;
         _company = company;
@@ -30,9 +30,9 @@ public sealed class PriceDiscJournalPostingService
 
         public async Task<PriceDiscJournalPostResult> PostAsync(long recId, CancellationToken cancellationToken)
         {
-            return await _db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+            return await _db.Context.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
             {
-                await using var transaction = await _db.Database.BeginTransactionAsync(
+                await using var transaction = await _db.Context.Database.BeginTransactionAsync(
                     System.Data.IsolationLevel.Serializable, cancellationToken);
                 var header = await FindHeaderAsync(recId, cancellationToken);
                 if (header == null) return new PriceDiscJournalPostResult(PriceDiscJournalPostStatus.NotFound);
@@ -43,7 +43,7 @@ public sealed class PriceDiscJournalPostingService
                 if (errors.Count > 0)
                     return new PriceDiscJournalPostResult(PriceDiscJournalPostStatus.Invalid, errors);
 
-                var lines = await _db.Set<PriceDiscAdmTrans>()
+                var lines = await _db.Context.Set<PriceDiscAdmTrans>()
                     .Where(line => line.DataAreaId == header.DataAreaId && line.JournalNum == header.JournalNum)
                     .OrderBy(line => line.LineNum)
                     .ToListAsync(cancellationToken);
@@ -52,32 +52,32 @@ public sealed class PriceDiscJournalPostingService
                     var relation = EffectiveRelation(header, line);
                     if (line.MustBeDeleted != 0)
                     {
-                        var existing = line.PriceDiscTableRef == 0 ? null : await _db.Set<PriceDiscTable>()
+                        var existing = line.PriceDiscTableRef == 0 ? null : await _db.Context.Set<PriceDiscTable>()
                             .FirstOrDefaultAsync(row => row.DataAreaId == header.DataAreaId
                                 && row.RecId == line.PriceDiscTableRef, cancellationToken);
-                        if (existing != null) _db.Set<PriceDiscTable>().Remove(existing);
+                        if (existing != null) _db.Context.Set<PriceDiscTable>().Remove(existing);
                         continue;
                     }
 
-                    var posted = line.PriceDiscTableRef == 0 ? null : await _db.Set<PriceDiscTable>()
+                    var posted = line.PriceDiscTableRef == 0 ? null : await _db.Context.Set<PriceDiscTable>()
                         .FirstOrDefaultAsync(row => row.DataAreaId == header.DataAreaId
                             && row.RecId == line.PriceDiscTableRef, cancellationToken);
                     var isNewRule = posted == null;
                     if (posted == null)
                     {
                         posted = new PriceDiscTable { DataAreaId = header.DataAreaId };
-                        _db.Set<PriceDiscTable>().Add(posted);
+                        _db.Context.Set<PriceDiscTable>().Add(posted);
                     }
                     CopyToPublishedRule(line, posted, relation);
                     if (isNewRule)
-                        await _db.SaveChangesAsync(cancellationToken);
+                        await _db.Context.SaveChangesAsync(cancellationToken);
                     line.PriceDiscTableRef = posted.RecId;
                     line.DifferentFromPosted = 0;
                 }
 
                 header.Posted = NoYes.Yes;
                 header.PostedDate = DateTime.UtcNow;
-                await _db.SaveChangesAsync(cancellationToken);
+                await _db.Context.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
                 return new PriceDiscJournalPostResult(PriceDiscJournalPostStatus.Posted, PublishedRules: lines.Count(line => line.MustBeDeleted == 0));
             });
@@ -86,20 +86,20 @@ public sealed class PriceDiscJournalPostingService
         private async Task<PriceDiscAdmTable?> FindHeaderAsync(long recId, CancellationToken cancellationToken)
         {
             var dataAreaId = _company.GetDataAreaId();
-            return await _db.Set<PriceDiscAdmTable>().FirstOrDefaultAsync(header =>
+            return await _db.Context.Set<PriceDiscAdmTable>().FirstOrDefaultAsync(header =>
                 header.RecId == recId && header.DataAreaId == dataAreaId, cancellationToken);
         }
 
         private async Task<List<string>> ValidateJournalAsync(PriceDiscAdmTable header, CancellationToken cancellationToken)
         {
             var errors = new List<string>();
-            var lines = await _db.Set<PriceDiscAdmTrans>().AsNoTracking()
+            var lines = await _db.Context.Set<PriceDiscAdmTrans>().AsNoTracking()
                 .Where(line => line.DataAreaId == header.DataAreaId && line.JournalNum == header.JournalNum)
                 .OrderBy(line => line.LineNum)
                 .ToListAsync(cancellationToken);
             if (lines.Count == 0) errors.Add("The journal must contain at least one line.");
             if (!string.IsNullOrWhiteSpace(header.JournalName)
-                && !await _db.Set<PriceDiscAdmName>().AnyAsync(name => name.DataAreaId == header.DataAreaId
+                && !await _db.Context.Set<PriceDiscAdmName>().AnyAsync(name => name.DataAreaId == header.DataAreaId
                     && name.JournalName == header.JournalName, cancellationToken))
                 errors.Add($"Journal name '{header.JournalName}' was not found.");
 
@@ -121,20 +121,20 @@ public sealed class PriceDiscJournalPostingService
                 if (relation != PriceType.PriceSales && (line.Amount < 0 || line.Percent1 < 0 || line.Percent1 > 100))
                     errors.Add($"Line {line.LineNum}: discount amount and percentage are invalid.");
                 if (line.AccountCode == PriceDiscPartyCodeType.Table
-                    && !await _db.Set<CustTable>().AnyAsync(customer => customer.DataAreaId == header.DataAreaId
+                    && !await _db.Context.Set<CustTable>().AnyAsync(customer => customer.DataAreaId == header.DataAreaId
                         && customer.AccountNum == line.AccountRelation, cancellationToken))
                     errors.Add($"Line {line.LineNum}: customer '{line.AccountRelation}' was not found.");
                 if (line.AccountCode == PriceDiscPartyCodeType.GroupId
-                    && !await _db.Set<PriceDiscGroup>().AnyAsync(group => group.DataAreaId == header.DataAreaId
+                    && !await _db.Context.Set<PriceDiscGroup>().AnyAsync(group => group.DataAreaId == header.DataAreaId
                         && group.Module == ModuleInventCustVend.Cust && group.GroupId == line.AccountRelation,
                         cancellationToken))
                     errors.Add($"Line {line.LineNum}: customer discount group '{line.AccountRelation}' was not found.");
                 if (line.ItemCode == PriceDiscProductCodeType.Table
-                    && !await _db.Set<InventTable>().AnyAsync(item => item.DataAreaId == header.DataAreaId
+                    && !await _db.Context.Set<InventTable>().AnyAsync(item => item.DataAreaId == header.DataAreaId
                         && item.ItemId == line.ItemRelation, cancellationToken))
                     errors.Add($"Line {line.LineNum}: item '{line.ItemRelation}' was not found.");
                 if (line.ItemCode == PriceDiscProductCodeType.GroupId
-                    && !await _db.Set<PriceDiscGroup>().AnyAsync(group => group.DataAreaId == header.DataAreaId
+                    && !await _db.Context.Set<PriceDiscGroup>().AnyAsync(group => group.DataAreaId == header.DataAreaId
                         && group.Module == ModuleInventCustVend.Invent && group.GroupId == line.ItemRelation,
                         cancellationToken))
                     errors.Add($"Line {line.LineNum}: item discount group '{line.ItemRelation}' was not found.");

@@ -51,7 +51,7 @@ public sealed class SalesOrderConfirmationTests
             RecId = 1, Product = 42, FromUnitOfMeasure = 2, ToUnitOfMeasure = 1, Factor = 12
         });
         await fixture.Db.SaveChangesAsync();
-        var service = new SalesUnitConversionService(new FinanceContextAdapter(fixture.Db));
+        var service = new SalesUnitConversionService(new TestUnitOfWork(fixture.Db));
         var item = await fixture.Db.Set<InventTable>().SingleAsync();
         Assert.Equal(24m, await service.ToInventoryQuantityAsync(item, "box", 2m, default));
         Assert.Equal(2m, await service.ToInventoryQuantityAsync(item, "ea", 2m, default));

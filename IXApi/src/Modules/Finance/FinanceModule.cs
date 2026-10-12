@@ -12,7 +12,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<GeneralLedger.FiscalCalendar.IFiscalCalendarYearService, GeneralLedger.FiscalCalendar.FiscalCalendarYearService>();
             services.AddScoped<GeneralLedger.FiscalCalendar.IFiscalCalendarPeriodService, GeneralLedger.FiscalCalendar.FiscalCalendarPeriodService>();
             services.AddScoped<AccountsReceivable.PostingProfile.Interfaces.ICustPostingProfileService, AccountsReceivable.PostingProfile.Services.CustPostingProfileService>();
-            services.AddScoped<AccountsReceivable.PriceDisc.PriceDiscJournalPostingService>();
+            services.AddScoped<AccountsReceivable.PriceDisc.IPriceDiscJournalPostingService, AccountsReceivable.PriceDisc.PriceDiscJournalPostingService>();
             services.AddScoped<AccountsReceivable.Confirm.ISalesOrderConfirmationService, AccountsReceivable.Confirm.SalesOrderConfirmationService>();
             services.AddScoped<FluentValidation.IValidator<AccountsReceivable.Confirm.PostConfirmationRequest>, AccountsReceivable.Confirm.SalesOrderConfirmationValidator>();
             services.AddScoped<AccountsReceivable.Customer.ICustomerService, AccountsReceivable.Customer.CustomerService>();
@@ -27,14 +27,17 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<AccountsReceivable.SalesOrder.Interfaces.IInventDimensionResolver, AccountsReceivable.SalesOrder.Services.InventDimensionResolver>();
             services.AddScoped<AccountsReceivable.SalesOrder.Interfaces.ISalesInventoryNumberService, AccountsReceivable.SalesOrder.Services.SalesInventoryNumberService>();
             services.AddScoped<AccountsReceivable.SalesOrder.Interfaces.ISalesInventoryDemandService, AccountsReceivable.SalesOrder.Services.SalesInventoryDemandService>();
-            services.AddScoped<AccountsReceivable.SalesOrderCopyService>();
-            services.AddScoped<AccountsReceivable.SalesOrderCancellationService>();
-            services.AddScoped<AccountsReceivable.SalesOrderDeliveryAddressService>();
+            services.AddScoped<AccountsReceivable.ISalesOrderCopyService, AccountsReceivable.SalesOrderCopyService>();
+            services.AddScoped<FluentValidation.IValidator<AccountsReceivable.SalesOrderCopyRequest>, AccountsReceivable.SalesOrderCopyValidator>();
+            services.AddScoped<AccountsReceivable.ISalesOrderLookupService, AccountsReceivable.SalesOrderLookupService>();
+            services.AddScoped<AccountsReceivable.ISalesOrderReadService, AccountsReceivable.SalesOrderReadService>();
+            services.AddScoped<AccountsReceivable.ISalesOrderCancellationService, AccountsReceivable.SalesOrderCancellationService>();
+            services.AddScoped<AccountsReceivable.ISalesOrderDeliveryAddressService, AccountsReceivable.SalesOrderDeliveryAddressService>();
             services.AddScoped<AccountsReceivable.SalesOrderValidationService>();
-            services.AddScoped<AccountsReceivable.SalesOrderHeaderService>();
-            services.AddScoped<AccountsReceivable.SalesOrderQuickCreateService>();
-            services.AddScoped<AccountsReceivable.SalesOrderDiscountService>();
-            services.AddScoped<AccountsReceivable.SalesOrderLineService>();
+            services.AddScoped<AccountsReceivable.ISalesOrderHeaderService, AccountsReceivable.SalesOrderHeaderService>();
+            services.AddScoped<AccountsReceivable.ISalesOrderQuickCreateService, AccountsReceivable.SalesOrderQuickCreateService>();
+            services.AddScoped<AccountsReceivable.ISalesOrderDiscountService, AccountsReceivable.SalesOrderDiscountService>();
+            services.AddScoped<AccountsReceivable.ISalesOrderLineService, AccountsReceivable.SalesOrderLineService>();
             services.AddScoped<AccountsReceivable.SalesUnitConversionService>();
             services.AddScoped<AccountsReceivable.PriceDisc.IPriceDiscTableService, AccountsReceivable.PriceDisc.PriceDiscTableService>();
             services.AddScoped<AccountsReceivable.PriceDisc.IPriceDiscGroupService, AccountsReceivable.PriceDisc.PriceDiscGroupService>();
@@ -93,7 +96,8 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<Foundation.Occupations.IHcmOccupationService, Foundation.Occupations.HcmOccupationService>();
             services.AddScoped<Foundation.Departments.IHcmDepartmentService, Foundation.Departments.HcmDepartmentService>();
             services.AddScoped<Foundation.HcmShowrooms.IHcmShowroomService, Foundation.HcmShowrooms.HcmShowroomService>();
-            services.AddScoped<Foundation.HcmWorkers.IHcmWorkerService, Foundation.HcmWorkers.HcmWorkerService>();            services.AddScoped<Foundation.Structure.OrganizationStructureService>();
+            services.AddScoped<Foundation.HcmWorkers.IHcmWorkerService, Foundation.HcmWorkers.HcmWorkerService>();
+            services.AddScoped<Foundation.Structure.OrganizationStructureService>();
             services.AddScoped<Foundation.Structure.IOrganizationStructureService>(provider => provider.GetRequiredService<Foundation.Structure.OrganizationStructureService>());
             services.AddScoped<IAX.IXApi.Shared.Application.Organization.IOrganizationDirectory,
                 Foundation.Structure.OrganizationStructureService>();

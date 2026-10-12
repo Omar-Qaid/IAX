@@ -47,6 +47,15 @@ public sealed class InventoryArchitectureTests
         Assert.True(created.Location.WorkflowApproval);
         Assert.True(created.Location.WhsEnabled);
         Assert.Equal("Available", created.Location.DefaultStatusId);
+        var lookupJson = JsonSerializer.SerializeToElement(await service.LookupsAsync(default));
+        Assert.Equal(new[] { "sites", "warehouses" }, lookupJson.EnumerateObject().Select(x => x.Name).OrderBy(x => x, StringComparer.Ordinal));
+        var siteLookup = Assert.Single(lookupJson.GetProperty("sites").EnumerateArray());
+        Assert.Equal(new[] { "code", "id", "name" }, siteLookup.EnumerateObject().Select(x => x.Name).OrderBy(x => x, StringComparer.Ordinal));
+        Assert.Equal("S1", siteLookup.GetProperty("id").GetString());
+        Assert.Equal(2, lookupJson.GetProperty("warehouses").GetArrayLength());
+        var warehouseLookup = lookupJson.GetProperty("warehouses").EnumerateArray().Single(x => x.GetProperty("id").GetString() == "MAIN");
+        Assert.Equal(new[] { "code", "id", "name", "siteId" }, warehouseLookup.EnumerateObject().Select(x => x.Name).OrderBy(x => x, StringComparer.Ordinal));
+        Assert.Equal("S1", warehouseLookup.GetProperty("siteId").GetString());
         Assert.Equal(created.Location.RecId.ToString(), created.Location.Id);
         Assert.Equal(LocationOperationStatus.Duplicate, (await service.CreateAsync(input, default)).Status);
         Assert.Equal(LocationOperationStatus.Referenced, await service.DeleteAsync(21, default));

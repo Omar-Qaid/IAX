@@ -17,6 +17,43 @@ namespace IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 
 public class HcmWorkerService : BaseService<HcmWorker>, IHcmWorkerService
 {
+    public async Task<HcmWorkerDto> CreateFromDtoAsync(HcmWorkerDto dto, CancellationToken cancellationToken = default)
+    {
+        var worker = dto.Adapt<HcmWorker>();
+        var created = await AddWorkerAsync(
+            worker,
+            dto.Name ?? string.Empty,
+            dto.NameAlias,
+            dto.InitialPositionId,
+            cancellationToken);
+        var result = await GetByIdAsync(created.RecId, new[] { "Party", "Gender", "Nationality", "WorkerOrganizationAssignmentsV1", "WorkerShowroomAssignments" }, cancellationToken: cancellationToken) ?? created;
+        await SaveAssignmentChangesAsync(created.RecId, dto, cancellationToken);
+        result = await GetByIdAsync(created.RecId, new[] { "Party", "Gender", "Nationality", "WorkerOrganizationAssignmentsV1", "WorkerShowroomAssignments" }, cancellationToken: cancellationToken) ?? result;
+        return result.Adapt<HcmWorkerDto>();
+    }
+
+    public async Task<HcmWorkerDto?> UpdateFromDtoAsync(string id, HcmWorkerDto dto, CancellationToken cancellationToken = default)
+    {
+        var existing = await GetByIdAsync(id, cancellationToken);
+        if (existing == null)
+            return null;
+
+        var currentOrganization = (await GetOrganizationAssignmentsV1Async(existing.RecId, cancellationToken))
+            .FirstOrDefault(assignment => assignment.IsPrimary);
+        var currentShowroom = (await GetShowroomAssignmentsAsync(existing.RecId, cancellationToken))
+            .FirstOrDefault(assignment => assignment.IsPrimary);
+        dto.Adapt(existing);
+        var updated = await UpdateWorkerAsync(
+            existing,
+            dto.Name ?? string.Empty,
+            dto.NameAlias,
+            cancellationToken);
+        await SaveAssignmentChangesAsync(existing.RecId, dto, cancellationToken, currentOrganization, currentShowroom);
+        var result = await GetByIdAsync(id, new[] { "Party", "Gender", "Nationality", "WorkerOrganizationAssignmentsV1", "WorkerShowroomAssignments" }, cancellationToken: cancellationToken) ?? updated;
+        return result.Adapt<HcmWorkerDto>();
+    }
+
+
     private readonly ISysNumberSequenceService _numberSequenceService;
     private DbContext _dbContext => _unitOfWork.Context;
 

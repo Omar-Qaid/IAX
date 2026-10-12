@@ -47,7 +47,7 @@ public sealed class TaxOperationMapping : IRegister
             UseTax = s.Line.UseTax,
             IntracomVat = s.Line.IntracomVat,
             ReverseCharge_W = s.Line.ReverseCharge_W,
-            TaxCodeName = s.Line.TaxTable?.TaxName,
+            TaxCodeName = GetTaxCodeName(s.Line.TaxTable),
             TaxValue = s.Value
         });
         config.NewConfig<TaxItemGroupReadSource, TaxItemGroupDto>().MapWith(s => new TaxItemGroupDto
@@ -66,7 +66,7 @@ public sealed class TaxOperationMapping : IRegister
             TaxItemGroup = s.Line.TaxItemGroup,
             TaxCode = s.Line.TaxCode,
             TaxExemptCode = s.Line.TaxExemptCode,
-            TaxCodeName = s.Line.TaxTable?.TaxName,
+            TaxCodeName = GetTaxCodeName(s.Line.TaxTable),
             TaxValue = s.Value
         });
         config.NewConfig<TaxGroupLineWriteSource, TaxGroupData>().IgnoreNonMapped(true)
@@ -92,4 +92,5 @@ public sealed class TaxOperationMapping : IRegister
             .Map(d => d.TaxCode, s => s.Line.TaxCode)
             .Map(d => d.TaxExemptCode, s => string.IsNullOrWhiteSpace(s.Line.TaxExemptCode) ? "NONE" : s.Line.TaxExemptCode);
     }
+    private static string? GetTaxCodeName(TaxTable? taxCode) => taxCode?.TaxName;
 }

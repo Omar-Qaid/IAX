@@ -11,6 +11,7 @@ using IAX.IXApi.Modules.Finance.Foundation.Structure;
 using IAX.IXApi.Modules.Finance.Foundation.WorkerOrganizationAssignments;
 using IAX.IXApi.Modules.Finance.Foundation.WorkerShowroomAssignments;
 using IAX.IXApi.Modules.Finance.Persistence;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -31,8 +32,9 @@ public sealed class SalesInventoryDemandTests
         await db.Database.EnsureCreatedAsync();
         var financeData = new TestFinanceDataContext(db);
         var numbers = new TestNumbers();
-        var dimensions = new InventDimensionResolver(financeData, numbers);
-        var service = new SalesInventoryDemandService(financeData, numbers, dimensions);
+        var unitOfWork = new TestUnitOfWork(db);
+        var dimensions = new InventDimensionResolver(unitOfWork, numbers);
+        var service = new SalesInventoryDemandService(unitOfWork, numbers, dimensions);
         var order = new SalesTable
         {
             SalesId = "SO-1", CurrencyCode = "USD", DataAreaId = "DAT",
@@ -108,8 +110,9 @@ public sealed class SalesInventoryDemandTests
         await db.Database.EnsureCreatedAsync();
         var financeData = new TestFinanceDataContext(db);
         var numbers = new TestNumbers();
-        var dimensions = new InventDimensionResolver(financeData, numbers);
-        var service = new SalesInventoryDemandService(financeData, numbers, dimensions);
+        var unitOfWork = new TestUnitOfWork(db);
+        var dimensions = new InventDimensionResolver(unitOfWork, numbers);
+        var service = new SalesInventoryDemandService(unitOfWork, numbers, dimensions);
         var firstOrder = new SalesTable { SalesId = "SO-1", CurrencyCode = "USD", DataAreaId = "DAT" };
         var secondOrder = new SalesTable { SalesId = "SO-2", CurrencyCode = "USD", DataAreaId = "DAT" };
         var firstLine = new SalesLine
@@ -183,6 +186,17 @@ public sealed class SalesInventoryDemandTests
         public DbSet<TEntity> Set<TEntity>() where TEntity : class => context.Set<TEntity>();
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) =>
             context.SaveChangesAsync(cancellationToken);
+    }
+
+    private sealed class TestUnitOfWork(DbContext context) : IUnitOfWork
+    {
+        public DbContext Context => context;
+        public Task<int> CompleteAsync(CancellationToken ct = default) => context.SaveChangesAsync(ct);
+        public IGenericRepository<T> Repository<T>() where T : class => throw new NotSupportedException();
+        public Task BeginTransactionAsync(CancellationToken ct = default) => throw new NotSupportedException();
+        public Task CommitTransactionAsync(CancellationToken ct = default) => throw new NotSupportedException();
+        public Task RollbackTransactionAsync(CancellationToken ct = default) => throw new NotSupportedException();
+        public void Dispose() { }
     }
 
     private sealed class TestNumbers : ISalesInventoryNumberService

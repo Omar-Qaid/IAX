@@ -1,3 +1,5 @@
+using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
+using IAX.IXApi.Modules.Finance.Foundation.WorkerOrganizationAssignments;
 using IAX.IXApi.Modules.Finance.Foundation.Tax;
 using System.Reflection;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
@@ -108,6 +110,32 @@ public sealed class FoundationRefactorTests
         Assert.Equal(20, item.RecId);
         Assert.Equal("VAT", item.TaxCode);
         Assert.Equal("NONE", item.TaxExemptCode);
+    }
+
+    [Fact]
+    public void Worker_list_projection_keeps_its_original_field_set_with_detail_mapping_registered()
+    {
+        var config = new TypeAdapterConfig();
+        new HcmWorkerMapping().Register(config);
+        new HcmWorkerQueryMapping().Register(config);
+        var worker = new HcmWorker
+        {
+            RecId = 7, PersonnelNumber = "W7", Person = 8,
+            Gender = new() { Name = "Gender" }, Nationality = new() { Name = "Nationality" },
+            Party = new DirPartyTable { Name = "Worker", NameAlias = "Alias" },
+            WorkerOrganizationAssignmentsV1 = new List<HcmWorkerOrganizationAssignmentV1>
+            {
+                new() { IsPrimary = true, HcmManagerWorkerId = 99, DepartmentId = 3 }
+            }
+        };
+        var list = new[] { worker }.AsQueryable().ProjectToType<HcmWorkerListProjectionDto>(config).Single();
+        Assert.Equal(7, list.RecId);
+        Assert.Equal("Worker", list.Name);
+        Assert.Null(list.ManagerWorkerId);
+        Assert.Null(list.DepartmentId);
+        var detail = worker.Adapt<HcmWorkerDto>(config);
+        Assert.Equal(99, detail.ManagerWorkerId);
+        Assert.Equal((short)3, detail.DepartmentId);
     }
 
     public class EmptyPartyLocations : DispatchProxy

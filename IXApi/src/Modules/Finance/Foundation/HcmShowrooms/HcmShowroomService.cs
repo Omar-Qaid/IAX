@@ -13,6 +13,35 @@ namespace IAX.IXApi.Modules.Finance.Foundation.HcmShowrooms;
 
 public class HcmShowroomService : BaseService<HcmShowroom>, IHcmShowroomService
 {
+    public async Task<HcmShowroomDto> CreateFromDtoAsync(HcmShowroomDto dto, CancellationToken cancellationToken = default)
+    {
+        var entity = dto.Adapt<HcmShowroom>();
+        var created = await AddShowroomAsync(
+            entity,
+            dto.Name ?? string.Empty,
+            dto.NameAlias,
+            cancellationToken);
+        var result = await GetByIdAsync(created.RecId, new[] { "PartyTable" }, cancellationToken: cancellationToken) ?? created;
+        return result.Adapt<HcmShowroomDto>();
+    }
+
+    public async Task<HcmShowroomDto?> UpdateFromDtoAsync(string id, HcmShowroomDto dto, CancellationToken cancellationToken = default)
+    {
+        var existing = await GetByIdAsync(id, cancellationToken);
+        if (existing == null)
+            return null;
+
+        dto.Adapt(existing);
+        var updated = await UpdateShowroomAsync(
+            existing,
+            dto.Name ?? string.Empty,
+            dto.NameAlias,
+            cancellationToken);
+        var result = await GetByIdAsync(id, new[] { "PartyTable" }, cancellationToken: cancellationToken) ?? updated;
+        return result.Adapt<HcmShowroomDto>();
+    }
+
+
     private readonly ISysNumberSequenceService _numberSequenceService;
     private DbContext _dbContext => _unitOfWork.Context;
 

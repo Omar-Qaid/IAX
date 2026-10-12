@@ -65,19 +65,15 @@ public sealed class CustomerService : BaseService<CustTable>, ICustomerService
             orderby link.IsPrimary descending, contact.IsPrimary descending, contact.RecId
             select new { contact.Type, contact.Locator, Primary = link.IsPrimary == NoYes.Yes || contact.IsPrimary == NoYes.Yes }
         ).ToListAsync(cancellationToken);
-        return new CustomerSalesOrderDefaultsDto
-        {
-            Address = addresses.FirstOrDefault()?.Address ?? string.Empty,
-            Addresses = addresses.Select(address => new CustomerSalesOrderAddressDto
-            {
-                Id = address.RecId.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                Address = address.Address, Primary = address.Primary
-            }).ToList(),
-            Contacts = contacts.Select(contact => new CustomerSalesOrderContactDto
-            {
-                Type = contact.Type.ToString(), Number = contact.Locator, Primary = contact.Primary
-            }).ToList()
-        };
+        var mappedAddresses = addresses.Select(address =>
+            new CustomerSalesOrderAddressSource(address.RecId, address.Address, address.Primary)
+                .Adapt<CustomerSalesOrderAddressDto>()).ToList();
+        var mappedContacts = contacts.Select(contact =>
+            new CustomerSalesOrderContactSource(contact.Type, contact.Locator, contact.Primary)
+                .Adapt<CustomerSalesOrderContactDto>()).ToList();
+        return new CustomerSalesOrderDefaultsSource(
+            addresses.FirstOrDefault()?.Address ?? string.Empty, mappedAddresses, mappedContacts)
+            .Adapt<CustomerSalesOrderDefaultsDto>();
     }
 
     public CustomerListDto ToListDto(CustTable customer, DirPartyTable? party)

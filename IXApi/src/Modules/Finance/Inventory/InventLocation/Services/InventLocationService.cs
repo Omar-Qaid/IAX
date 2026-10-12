@@ -34,10 +34,10 @@ public sealed class InventLocationService : BaseService<InventLocation>, IInvent
     public async Task<object> LookupsAsync(CancellationToken ct)
     {
         var sites = await _db.Set<InventSite>().AsNoTracking().OrderBy(x => x.SiteId)
-            .Select(x => new { id = x.SiteId, code = x.SiteId, name = x.Name }).ToListAsync(ct);
+            .ProjectToType<InventSiteLookupDto>().ToListAsync(ct);
         var warehouses = await _db.Set<InventLocation>().AsNoTracking().OrderBy(x => x.InventLocationId)
-            .Select(x => new { id = x.InventLocationId, code = x.InventLocationId, name = x.Name, siteId = x.InventSiteId }).ToListAsync(ct);
-        return new { sites, warehouses };
+            .ProjectToType<InventWarehouseLookupDto>().ToListAsync(ct);
+        return new InventLocationLookupDto { Sites = sites, Warehouses = warehouses };
     }
 
     public async Task<LocationOperationResult> CreateAsync(LocationInputDto input, CancellationToken ct)

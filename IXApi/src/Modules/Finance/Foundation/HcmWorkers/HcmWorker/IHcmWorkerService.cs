@@ -4,6 +4,9 @@ namespace IAX.IXApi.Modules.Finance.Foundation.HcmWorkers
 {
     public interface IHcmWorkerService : IBaseService<HcmWorker>
     {
+    Task<HcmWorkerDto> CreateFromDtoAsync(HcmWorkerDto dto, CancellationToken cancellationToken = default);
+    Task<HcmWorkerDto?> UpdateFromDtoAsync(string id, HcmWorkerDto dto, CancellationToken cancellationToken = default);
+
         Task SaveAssignmentChangesAsync(long workerId, HcmWorkerDto dto, CancellationToken cancellationToken, HcmWorkerOrganizationAssignmentV1Dto? currentOrganization = null, HcmWorkerShowroomAssignmentDto? currentShowroom = null);
         Task<IReadOnlyList<HcmWorkerDto>> GetWorkerListAsync(CancellationToken cancellationToken = default);
         Task<HcmWorkerLookupPageDto> GetWorkerLookupAsync(

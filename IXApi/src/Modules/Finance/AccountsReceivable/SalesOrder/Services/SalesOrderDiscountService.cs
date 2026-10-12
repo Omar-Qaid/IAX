@@ -1,6 +1,6 @@
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
-using IAX.IXApi.Modules.Finance.Persistence;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,12 +10,12 @@ public enum SalesDiscountRecalculationStatus { NotFound, NotOpen, Recalculated }
 public sealed record SalesDiscountRecalculationResult(SalesDiscountRecalculationStatus Status,
     int UpdatedLines = 0, decimal LineDiscount = 0, decimal MultiLineDiscount = 0, decimal TotalDiscountPercent = 0);
 
-public sealed class SalesOrderDiscountService
+public sealed class SalesOrderDiscountService : ISalesOrderDiscountService
 {
-    private readonly IFinanceDataContext _dbContext;
+    private readonly IUnitOfWork _dbContext;
     private readonly ICompanyExecutionContext _company;
 
-    public SalesOrderDiscountService(IFinanceDataContext dbContext, ICompanyExecutionContext company)
+    public SalesOrderDiscountService(IUnitOfWork dbContext, ICompanyExecutionContext company)
     {
         _dbContext = dbContext;
         _company = company;
@@ -23,22 +23,22 @@ public sealed class SalesOrderDiscountService
 
     public async Task<SalesDiscountRecalculationResult> RecalculateAsync(long recId, CancellationToken cancellationToken)
     {
-        var order = await _dbContext.Set<SalesTable>()
+        var order = await _dbContext.Context.Set<SalesTable>()
             .FirstOrDefaultAsync(row => row.RecId == recId, cancellationToken);
         if (order == null || !string.Equals(order.DataAreaId, _company.GetDataAreaId(), StringComparison.OrdinalIgnoreCase))
             return new SalesDiscountRecalculationResult(SalesDiscountRecalculationStatus.NotFound);
         if (order.SalesStatus != SalesStatus.Backorder)
             return new SalesDiscountRecalculationResult(SalesDiscountRecalculationStatus.NotOpen);
 
-        var parameters = await _dbContext.Set<CustParameters>().AsNoTracking()
+        var parameters = await _dbContext.Context.Set<CustParameters>().AsNoTracking()
             .Where(row => row.DataAreaId == order.DataAreaId)
             .OrderBy(row => row.Key)
             .FirstOrDefaultAsync(cancellationToken);
-        var lines = await _dbContext.Set<SalesLine>()
+        var lines = await _dbContext.Context.Set<SalesLine>()
             .Where(line => line.SalesId == order.SalesId && line.DataAreaId == order.DataAreaId
                 && line.SalesStatus == SalesStatus.Backorder)
             .ToListAsync(cancellationToken);
-        var modules = await _dbContext.Set<InventTableModule>().AsNoTracking()
+        var modules = await _dbContext.Context.Set<InventTableModule>().AsNoTracking()
             .Where(module => module.DataAreaId == order.DataAreaId && module.ModuleType == ModuleInventPurchSales.Sales
                 && lines.Select(line => line.ItemId).Contains(module.ItemId))
             .ToListAsync(cancellationToken);
@@ -81,7 +81,7 @@ public sealed class SalesOrderDiscountService
             order.DiscPercent = Math.Clamp(agreement?.Percent1 ?? 0m, 0m, 100m);
         }
 
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _dbContext.Context.SaveChangesAsync(cancellationToken);
         return new SalesDiscountRecalculationResult(SalesDiscountRecalculationStatus.Recalculated,
             lines.Count, lines.Sum(line => line.LineDisc), lines.Sum(line => line.MultiLnDisc), order.DiscPercent);
     }
@@ -91,7 +91,7 @@ public sealed class SalesOrderDiscountService
         PriceType relation, string customerGroup, CancellationToken cancellationToken)
     {
         var pricingDate = order.OrderDate == default ? DateTime.UtcNow.Date : order.OrderDate.Date;
-        var rows = await _dbContext.Set<PriceDiscTable>().AsNoTracking()
+        var rows = await _dbContext.Context.Set<PriceDiscTable>().AsNoTracking()
             .Where(row => row.DataAreaId == order.DataAreaId
                 && row.Module == ModuleInventCustVend.Cust
                 && row.Relation == relation

@@ -1,15 +1,27 @@
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.Entities;
+using IAX.IXApi.Modules.Finance.Common;
 using Mapster;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Customer;
 
 public sealed record CustomerMappingSource(CustTable Customer, DirPartyTable? Party);
+public sealed record CustomerSalesOrderAddressSource(long RecId, string Address, bool Primary);
+public sealed record CustomerSalesOrderContactSource(ElectronicAddressType Type, string Locator, bool Primary);
+public sealed record CustomerSalesOrderDefaultsSource(
+    string Address, List<CustomerSalesOrderAddressDto> Addresses, List<CustomerSalesOrderContactDto> Contacts);
 
 public sealed class CustomerMapping : IRegister
 {
     public void Register(TypeAdapterConfig config)
     {
+        config.NewConfig<CustomerSalesOrderAddressSource, CustomerSalesOrderAddressDto>()
+            .Map(d => d.Id, s => s.RecId.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        config.NewConfig<CustomerSalesOrderContactSource, CustomerSalesOrderContactDto>()
+            .Map(d => d.Type, s => s.Type.ToString())
+            .Map(d => d.Number, s => s.Locator);
+        config.NewConfig<CustomerSalesOrderDefaultsSource, CustomerSalesOrderDefaultsDto>();
+
         config.NewConfig<CustomerMappingSource, CustomerListDto>()
             .Map(d => d.RecId, s => s.Customer.RecId)
             .Map(d => d.Party, s => s.Customer.Party)

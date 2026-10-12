@@ -1,8 +1,4 @@
-using IAX.IXApi.Shared.Domain.Entities;
-using IAX.IXApi.Modules.Finance.Entities;
-using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 using IAX.IXApi.Infrastructure.Persistence.Services;
-using IAX.IXApi.Infrastructure.Persistence;
 
 using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;

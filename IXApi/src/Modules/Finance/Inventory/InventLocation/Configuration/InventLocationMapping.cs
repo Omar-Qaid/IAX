@@ -8,6 +8,17 @@ public sealed class InventLocationMapping : IRegister
 {
     public void Register(TypeAdapterConfig config)
     {
+        config.NewConfig<InventSite, InventSiteLookupDto>()
+            .Map(d => d.Id, s => s.SiteId)
+            .Map(d => d.Code, s => s.SiteId)
+            .Map(d => d.Name, s => s.Name);
+
+        config.NewConfig<InventLocation, InventWarehouseLookupDto>()
+            .Map(d => d.Id, s => s.InventLocationId)
+            .Map(d => d.Code, s => s.InventLocationId)
+            .Map(d => d.Name, s => s.Name)
+            .Map(d => d.SiteId, s => s.InventSiteId);
+
         config.NewConfig<LocationInputDto, InventLocation>().IgnoreNonMapped(true)
             .Map(d => d.Name, i => i.Name.Trim())
             .Map(d => d.InventSiteId, i => i.InventSiteId.Trim())

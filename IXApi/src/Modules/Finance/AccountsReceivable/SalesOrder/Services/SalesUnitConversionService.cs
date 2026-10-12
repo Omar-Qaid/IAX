@@ -1,19 +1,19 @@
 using IAX.IXApi.Modules.Finance.Entities;
-using IAX.IXApi.Modules.Finance.Persistence;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
 
 public sealed class SalesUnitConversionService
 {
-    private readonly IFinanceDataContext _db;
+    private readonly IUnitOfWork _db;
 
-    public SalesUnitConversionService(IFinanceDataContext db) => _db = db;
+    public SalesUnitConversionService(IUnitOfWork db) => _db = db;
 
     public async Task<decimal?> ToInventoryQuantityAsync(InventTable item, string salesUnit,
         decimal salesQuantity, CancellationToken cancellationToken)
     {
-        var inventoryUnit = await _db.Set<InventTableModule>().AsNoTracking()
+        var inventoryUnit = await _db.Context.Set<InventTableModule>().AsNoTracking()
             .Where(row => row.ItemId == item.ItemId && row.DataAreaId == item.DataAreaId
                 && row.ModuleType == IAX.IXApi.Modules.Finance.Common.ModuleInventPurchSales.Inventory)
             .Select(row => row.UnitId)
@@ -23,14 +23,14 @@ public sealed class SalesUnitConversionService
             return salesQuantity;
 
         var symbols = new[] { salesUnit.ToUpperInvariant(), inventoryUnit.ToUpperInvariant() };
-        var units = await _db.Set<UnitOfMeasure>().AsNoTracking()
+        var units = await _db.Context.Set<UnitOfMeasure>().AsNoTracking()
             .Where(row => symbols.Contains(row.Symbol.ToUpper()))
             .ToListAsync(cancellationToken);
         var from = units.FirstOrDefault(row => string.Equals(row.Symbol, salesUnit, StringComparison.OrdinalIgnoreCase));
         var to = units.FirstOrDefault(row => string.Equals(row.Symbol, inventoryUnit, StringComparison.OrdinalIgnoreCase));
         if (from == null || to == null) return null;
 
-        var rules = await _db.Set<UnitOfMeasureConversion>().AsNoTracking()
+        var rules = await _db.Context.Set<UnitOfMeasureConversion>().AsNoTracking()
             .Where(row => (row.Product == item.Product || row.Product == 0)
                 && ((row.FromUnitOfMeasure == from.RecId && row.ToUnitOfMeasure == to.RecId)
                     || (row.FromUnitOfMeasure == to.RecId && row.ToUnitOfMeasure == from.RecId)))

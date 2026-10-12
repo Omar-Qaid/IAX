@@ -18,10 +18,10 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable.PriceDisc
     [DomainPermission("AccountsReceivable", "PriceDiscAdmTables")]
     public class PriceDiscAdmTableController : BaseController<PriceDiscAdmTable, PriceDiscAdmTableDto>
     {
-        private readonly PriceDisc.PriceDiscJournalPostingService _posting;
+        private readonly IPriceDiscJournalPostingService _posting;
 
         public PriceDiscAdmTableController(IPriceDiscAdmTableService service,
-            ILogger<PriceDiscAdmTableController> logger, PriceDisc.PriceDiscJournalPostingService posting)
+            ILogger<PriceDiscAdmTableController> logger, IPriceDiscJournalPostingService posting)
             : base(service, logger)
         {
             _posting = posting;
