@@ -10,8 +10,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
 
 internal static class SalesOrderChargeRefresh
 {
-    private const int SalesTableId = 2002;
-    private const int SalesLineId = 2003;
 
     public static async Task RefreshAsync(DbContext db, SalesTable order, CancellationToken cancellationToken)
     {
@@ -25,8 +23,8 @@ internal static class SalesOrderChargeRefresh
                 && charge.IsDeleted != NoYes.Yes
                 && (charge.ModuleType == MarkupModuleType.Customer || charge.ModuleType == MarkupModuleType.Sales)
                 && ((charge.TransRecId == order.RecId
-                        && (charge.TransTableId == SalesTableId || charge.TransTableId == 0))
-                    || (lineIds.Contains(charge.TransRecId) && charge.TransTableId == SalesLineId)))
+                        && (charge.TransTableId == FinanceTableNumbers.SalesTable || charge.TransTableId == 0))
+                    || (lineIds.Contains(charge.TransRecId) && charge.TransTableId == FinanceTableNumbers.SalesLine)))
             .ToListAsync(cancellationToken);
         var lineAmounts = lines.ToDictionary(line => line.RecId,
             line => (line.SalesQty, Net: Math.Max(0m, line.LineAmount - line.LineDisc - line.MultiLnDisc)));
@@ -34,7 +32,7 @@ internal static class SalesOrderChargeRefresh
         var orderNet = lineAmounts.Values.Sum(line => line.Net);
         foreach (var charge in charges)
         {
-            var basis = charge.TransTableId == SalesLineId
+            var basis = charge.TransTableId == FinanceTableNumbers.SalesLine
                 ? lineAmounts[charge.TransRecId]
                 : (orderQuantity, orderNet);
             charge.CalculatedAmount = MarkupChargeCalculator.CalculateForBase(

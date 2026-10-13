@@ -9,8 +9,6 @@ namespace IAX.IXApi.Modules.Finance.Foundation.Markup;
 
 public sealed class MarkupChargeCalculator : IMarkupChargeCalculator
 {
-    private const int SalesTableId = 2002;
-    private const int SalesLineId = 2003;
     private readonly IUnitOfWork _unitOfWork;
     private DbContext _db => _unitOfWork.Context;
     private readonly ICompanyExecutionContext _company;
@@ -27,7 +25,7 @@ public sealed class MarkupChargeCalculator : IMarkupChargeCalculator
             return charge.Value;
 
         var dataAreaId = _company.GetDataAreaId() ?? "dat";
-        if (charge.TransTableId == SalesLineId)
+        if (charge.TransTableId == FinanceTableNumbers.SalesLine)
         {
             var line = await _db.Set<SalesLine>().AsNoTracking()
                 .Where(x => x.RecId == charge.TransRecId && x.DataAreaId == dataAreaId)
@@ -37,7 +35,7 @@ public sealed class MarkupChargeCalculator : IMarkupChargeCalculator
             return CalculateForBase(charge, line.SalesQty, netAmount);
         }
 
-        if (charge.TransTableId == SalesTableId || charge.TransTableId == 0)
+        if (charge.TransTableId == FinanceTableNumbers.SalesTable || charge.TransTableId == 0)
         {
             var order = await _db.Set<SalesTable>().AsNoTracking()
                 .Where(x => x.RecId == charge.TransRecId && x.DataAreaId == dataAreaId)

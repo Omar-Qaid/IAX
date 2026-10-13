@@ -42,7 +42,10 @@ export function SalesOrderChargesPage(): React.ReactElement {
       defaultTaxGroup={line?.taxGroup}
       defaultTaxItemGroup={line?.taxItemGroup}
       canEdit={canEdit && order.salesStatus.toLowerCase() === 'backorder'}
-      onChanged={() => queryClient.invalidateQueries({ queryKey: ['sales-order-totals', order.id] })}
+      onChanged={() => {
+        void queryClient.invalidateQueries({ queryKey: ['sales-order-totals', order.id] });
+        void queryClient.invalidateQueries({ queryKey: ['accounts-receivable', 'sales-orders'] });
+      }}
       onBack={() => navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrder(order.id))}
     />
   );

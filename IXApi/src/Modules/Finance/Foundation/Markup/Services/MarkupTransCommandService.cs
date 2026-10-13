@@ -29,7 +29,7 @@ public sealed class MarkupTransCommandService : IMarkupTransCommandService
                 && (moduleType == MarkupModuleType.Customer
                     ? x.ModuleType == MarkupModuleType.Customer || x.ModuleType == MarkupModuleType.Sales
                     : x.ModuleType == moduleType)
-                && (x.TransTableId == transTableId || (transTableId == 2002 && x.TransTableId == 0))
+                && (x.TransTableId == transTableId || (transTableId == FinanceTableNumbers.SalesTable && x.TransTableId == 0))
                 && x.DataAreaId == dataAreaId)
             .Select(x => (decimal?)x.LineNum).MaxAsync(ct) ?? 0;
         var entity = new MarkupTrans

@@ -3,6 +3,7 @@ import type { ApiResponse } from '@core/api/apiResponse';
 
 export interface SalesOrderConfirmationSummary {
   id: string;
+  salesId: string;
   confirmId: string;
   confirmDate: string;
   currencyCode: string;
@@ -19,10 +20,19 @@ export interface SalesOrderConfirmationLine {
   itemId: string;
   name: string;
   qty: number;
+  pdsCwQty: number;
+  salesCategory: number;
   salesUnit: string;
   salesPrice: number;
+  priceUnit: number;
+  lineDisc: number;
+  linePercent: number;
+  discPercent: number;
   lineAmount: number;
   taxAmount: number;
+  inventSiteId: string;
+  inventLocationId: string;
+  wmsLocationId: string;
 }
 
 export interface SalesOrderConfirmationDetail {

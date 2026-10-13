@@ -6,6 +6,7 @@ public sealed record ConfirmationResult(int StatusCode, object? Data, string? Me
 public sealed class ConfirmationListItemDto
 {
     public string Id { get; set; } = string.Empty;
+    public string SalesId { get; set; } = string.Empty;
     public string ConfirmId { get; set; } = string.Empty;
     public DateTime ConfirmDate { get; set; }
     public string CurrencyCode { get; set; } = string.Empty;
@@ -49,12 +50,19 @@ public sealed class ConfirmationLineDto
     public string Name { get; set; } = string.Empty;
     public decimal Qty { get; set; }
     public decimal InventQty { get; set; }
+    public decimal PdsCwQty { get; set; }
+    public long SalesCategory { get; set; }
     public string SalesUnit { get; set; } = string.Empty;
     public string InventDimId { get; set; } = string.Empty;
+    public string InventSiteId { get; set; } = string.Empty;
+    public string InventLocationId { get; set; } = string.Empty;
+    public string WmsLocationId { get; set; } = string.Empty;
     public string InventTransId { get; set; } = string.Empty;
     public decimal SalesPrice { get; set; }
     public decimal PriceUnit { get; set; }
     public decimal LineDisc { get; set; }
+    public decimal LinePercent { get; set; }
+    public decimal DiscPercent { get; set; }
     public decimal MultiLnDisc { get; set; }
     public decimal DiscAmount { get; set; }
     public decimal LineAmount { get; set; }

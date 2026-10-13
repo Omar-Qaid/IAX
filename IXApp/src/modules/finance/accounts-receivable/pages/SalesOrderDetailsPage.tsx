@@ -167,8 +167,8 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       id: 'new',
       label: 'New',
       actions: [
-        { id: 'purchase-order', label: 'Purchase order' },
-        { id: 'direct-delivery', label: 'Direct delivery' },
+        { id: 'purchase-order', label: 'Purchase order', disabled: true },
+        { id: 'direct-delivery', label: 'Direct delivery', disabled: true },
       ],
     },
     {
@@ -211,7 +211,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       label: 'View',
       actions: [
         { id: 'totals', label: 'Totals', onClick: () => setTotalsOpen(true) },
-        { id: 'order-events', label: 'Order events' },
+        { id: 'order-events', label: 'Order events', disabled: true },
       ],
     },
     {
@@ -219,17 +219,17 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       label: 'Functions',
       actions: [
         { id: 'sales-order-recap', label: 'Recap', disabled: true },
-        { id: 'order-holds', label: 'Order holds' },
+        { id: 'order-holds', label: 'Order holds', disabled: true },
       ],
     },
-    { id: 'attachments', label: 'Attachments', actions: [{ id: 'notes', label: 'Notes' }] },
+    { id: 'attachments', label: 'Attachments', actions: [{ id: 'notes', label: 'Notes', disabled: true }] },
   ];
 
   const sellRibbonGroups: ActionPaneRibbonGroup[] = [
     {
       id: 'credit-note',
       label: 'Credit note',
-      actions: [{ id: 'credit-note', label: 'Credit note' }],
+      actions: [{ id: 'credit-note', label: 'Credit note', disabled: true }],
     },
     {
       id: 'charges',
@@ -240,19 +240,19 @@ export function SalesOrderDetailsPage(): React.ReactElement {
           label: 'Maintain charges',
           onClick: () => order && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrderCharges(order.id)),
         },
-        { id: 'allocate-charges', label: 'Allocate charges' },
+        { id: 'allocate-charges', label: 'Allocate charges', disabled: true },
       ],
     },
     {
       id: 'tax',
       label: 'Tax',
-      actions: [{ id: 'sales-tax', label: 'Sales tax' }],
+      actions: [{ id: 'sales-tax', label: 'Sales tax', disabled: true }],
     },
     {
       id: 'calculate-delivery',
       label: 'Calculate',
       actions: [
-        { id: 'confirmed-delivery-dates', label: 'Confirmed delivery dates' },
+        { id: 'confirmed-delivery-dates', label: 'Confirmed delivery dates', disabled: true },
         {
           id: 'total-discount',
           label: 'Recalculate discounts',
@@ -265,9 +265,9 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       id: 'calculate-price',
       label: '',
       actions: [
-        { id: 'supplementary-items', label: 'Supplementary items' },
-        { id: 'tiered-charges', label: 'Tiered charges' },
-        { id: 'push-price-and-totals', label: 'Push price and totals' },
+        { id: 'supplementary-items', label: 'Supplementary items', disabled: true },
+        { id: 'tiered-charges', label: 'Tiered charges', disabled: true },
+        { id: 'push-price-and-totals', label: 'Push price and totals', disabled: true },
       ],
     },
     {
@@ -275,7 +275,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       label: 'Generate',
       actions: [
         { id: 'confirmation', label: 'Confirmation', onClick: () => setConfirmationsOpen(true) },
-        { id: 'pro-forma-confirmation', label: 'Pro forma confirmation' },
+        { id: 'pro-forma-confirmation', label: 'Pro forma confirmation', disabled: true },
       ],
     },
     {
@@ -286,13 +286,13 @@ export function SalesOrderDetailsPage(): React.ReactElement {
     {
       id: 'apply',
       label: 'Apply',
-      actions: [{ id: 'service-agreement', label: 'Service agreement' }],
+      actions: [{ id: 'service-agreement', label: 'Service agreement', disabled: true }],
     },
     {
       id: 'journals',
       label: 'Journals',
       actions: [
-        { id: 'sales-order-confirmations', label: 'Sales order confirmations', onClick: () => setConfirmationsOpen(true) },
+        { id: 'sales-order-confirmations', label: 'Sales order confirmations', onClick: () => order && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.custConfirmJournal(order.id)) },
         { id: 'quotation-confirmation-journal', label: 'Quotation confirmation journal', disabled: true },
       ],
     },

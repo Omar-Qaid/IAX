@@ -170,9 +170,15 @@ public sealed class SalesOrderConfirmationTests
         var row = Assert.Single(Assert.IsType<List<ConfirmationListItemDto>>(listResponse.Data));
         Assert.Equal("1", row.Id);
         Assert.Equal("CONF-000001", row.ConfirmId);
+        Assert.Equal("SO1", row.SalesId);
 
         var detail = Assert.IsType<OkObjectResult>(await fixture.Controller.Get(1, 1, default));
-        Assert.NotNull(Assert.IsType<APIResponse<object>>(detail.Value).Data);
+        var detailData = Assert.IsType<APIResponse<object>>(detail.Value).Data!;
+        var detailLines = Assert.IsType<List<ConfirmationLineDto>>(
+            detailData.GetType().GetProperty("lines")!.GetValue(detailData));
+        var detailLine = Assert.Single(detailLines);
+        Assert.Equal("WH-1", detailLine.InventLocationId);
+        Assert.Equal("BIN-1", detailLine.WmsLocationId);
         Assert.IsType<NotFoundObjectResult>(await fixture.Controller.Get(1, 2, default));
         Assert.IsType<NotFoundObjectResult>(await fixture.Controller.List(2, default));
     }
@@ -200,9 +206,14 @@ public sealed class SalesOrderConfirmationTests
                 RecId = 1, DataAreaId = "dat", SalesId = "SO1", LineNum = 1, ItemId = "ITEM-A",
                 SalesQty = 10, QtyOrdered = 10, RemainSalesPhysical = 10, RemainSalesFinancial = 10,
                 SalesUnit = "EA", SalesPrice = 100, PriceUnit = 1, LineAmount = 1000,
+                InventDimId = "DIM-1",
                 LineDisc = 100, SalesStatus = SalesStatus.Backorder, CurrencyCode = "SAR"
             });
             fixture.Db.Set<InventTrans>().Add(new InventTrans { RecId = 1, DataAreaId = "dat", ItemId = "ITEM-A", Qty = -10 });
+            fixture.Db.Set<InventDim>().Add(new InventDim {
+                RecId = 1, DataAreaId = "dat", InventDimId = "DIM-1",
+                InventSiteId = "SITE-1", InventLocationId = "WH-1", WmsLocationId = "BIN-1"
+            });
             await fixture.Db.SaveChangesAsync();
             var sequence = DispatchProxy.Create<ISysNumberSequenceService, TestSequenceProxy>();
             var context = new FinanceContextAdapter(fixture.Db);
@@ -224,6 +235,7 @@ public sealed class SalesOrderConfirmationTests
             {
                 typeof(SalesTable), typeof(SalesLine), typeof(CustTable), typeof(CustParameters),
                 typeof(CustConfirmJour), typeof(CustConfirmTrans), typeof(InventTrans),
+                typeof(InventDim),
                 typeof(MarkupTrans), typeof(TaxGroupData), typeof(TaxOnItem),
                 typeof(TaxData), typeof(InventTableModule), typeof(InventTable),
                 typeof(UnitOfMeasure), typeof(UnitOfMeasureConversion)
@@ -239,6 +251,7 @@ public sealed class SalesOrderConfirmationTests
             Configure<CustConfirmJour>(builder);
             Configure<CustConfirmTrans>(builder);
             Configure<InventTrans>(builder);
+            Configure<InventDim>(builder);
             Configure<MarkupTrans>(builder);
             Configure<TaxGroupData>(builder);
             Configure<TaxOnItem>(builder);

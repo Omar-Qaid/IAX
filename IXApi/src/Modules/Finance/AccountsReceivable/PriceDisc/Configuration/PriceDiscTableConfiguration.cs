@@ -9,6 +9,9 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable.PriceDisc
         {
             builder.ToTable("PriceDiscTable");
             builder.HasIndex(x => new { x.DataAreaId, x.RecId }).IsUnique();
+            builder.HasIndex(x => x.AccountRelation);
+            builder.HasIndex(x => x.ItemRelation);
+            builder.HasIndex(x => x.InventDimId);
 
             builder.Property(x => x.DataAreaId).HasMaxLength(4).HasDefaultValue("dat").IsRequired();
             builder.Property(x => x.AccountRelation).HasMaxLength(20);
@@ -19,23 +22,12 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable.PriceDisc
             builder.Property(x => x.Agreement).HasMaxLength(10);
             builder.Property(x => x.PriceGroup).HasMaxLength(10);
 
-            builder.HasOne(p => p.CustTable)
-                .WithMany()
-                .HasForeignKey(p => p.AccountRelation)
-                .HasPrincipalKey(c => c.AccountNum)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            builder.HasOne(p => p.InventTable)
-                .WithMany()
-                .HasForeignKey(p => p.ItemRelation)
-                .HasPrincipalKey(i => i.ItemId)
-                .OnDelete(DeleteBehavior.NoAction);
-
-            builder.HasOne(p => p.InventDim)
-                .WithMany()
-                .HasForeignKey(p => p.InventDimId)
-                .HasPrincipalKey(d => d.InventDimId)
-                .OnDelete(DeleteBehavior.NoAction);
+            // These are conditional lookup keys. AccountRelation and ItemRelation can
+            // contain a group code or mean "all", so unconditional SQL FKs reject
+            // valid trade agreements. InventDimId is optional and commonly empty.
+            builder.Ignore(p => p.CustTable);
+            builder.Ignore(p => p.InventTable);
+            builder.Ignore(p => p.InventDim);
         }
     }
 }

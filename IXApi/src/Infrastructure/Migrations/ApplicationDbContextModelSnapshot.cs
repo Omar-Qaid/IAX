@@ -25419,36 +25419,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Navigation("PriceDiscTable");
                 });
 
-            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.PriceDiscTable", b =>
-                {
-                    b.HasOne("IAX.IXApi.Modules.Finance.AccountsReceivable.CustTable", "CustTable")
-                        .WithMany()
-                        .HasForeignKey("AccountRelation")
-                        .HasPrincipalKey("AccountNum")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.InventDim", "InventDim")
-                        .WithMany()
-                        .HasForeignKey("InventDimId")
-                        .HasPrincipalKey("InventDimId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.InventTable", "InventTable")
-                        .WithMany()
-                        .HasForeignKey("ItemRelation")
-                        .HasPrincipalKey("ItemId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("CustTable");
-
-                    b.Navigation("InventDim");
-
-                    b.Navigation("InventTable");
-                });
-
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.CompanyInfo", b =>
                 {
                     b.HasOne("IAX.IXApi.Modules.Finance.Entities.FiscalCalendar", "FiscalCalendarTable")

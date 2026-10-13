@@ -15,8 +15,6 @@ public sealed class SalesOrderConfirmationService(
     ICompanyExecutionContext company, IValidator<PostConfirmationRequest> validator) : ISalesOrderConfirmationService
 {
     private DbContext db => unitOfWork.Context;
-    private const int SalesTableDocumentId = 2002;
-    private const int SalesLineDocumentId = 2003;
 
     public async Task<ConfirmationResult> ListAsync(long recId, CancellationToken ct)
     {
@@ -39,7 +37,22 @@ public sealed class SalesOrderConfirmationService(
         var lines = await db.Set<CustConfirmTrans>().AsNoTracking()
             .Where(x => x.DataAreaId == journal.DataAreaId && x.ConfirmId == journal.ConfirmId
                 && x.SalesId == journal.SalesId).ToListAsync(ct);
-        return new(200, new { header = Present(journal), lines = lines.OrderBy(x => x.LineNum).Select(Present) });
+        var dimensionIds = lines.Select(x => x.InventDimId).Where(x => x != "").Distinct().ToList();
+        var dimensions = await db.Set<InventDim>().AsNoTracking()
+            .Where(x => x.DataAreaId == journal.DataAreaId && dimensionIds.Contains(x.InventDimId))
+            .ToDictionaryAsync(x => x.InventDimId, ct);
+        var presentedLines = lines.OrderBy(x => x.LineNum).Select(line =>
+        {
+            var dto = Present(line);
+            if (dimensions.TryGetValue(line.InventDimId, out var dimension))
+            {
+                dto.InventSiteId = dimension.InventSiteId;
+                dto.InventLocationId = dimension.InventLocationId;
+                dto.WmsLocationId = dimension.WmsLocationId;
+            }
+            return dto;
+        }).ToList();
+        return new(200, new { header = Present(journal), lines = presentedLines });
     }
 
     public async Task<ConfirmationResult> PostAsync(long recId, PostConfirmationRequest? request, CancellationToken ct)
@@ -119,8 +132,8 @@ public sealed class SalesOrderConfirmationService(
         var charges = await db.Set<MarkupTrans>().AsNoTracking()
             .Where(x => x.DataAreaId == order.DataAreaId && x.IsDeleted != NoYes.Yes
                 && (x.ModuleType == MarkupModuleType.Customer || x.ModuleType == MarkupModuleType.Sales)
-                && ((x.TransRecId == order.RecId && (x.TransTableId == SalesTableDocumentId || x.TransTableId == 0))
-                    || (lineIds.Contains(x.TransRecId) && x.TransTableId == SalesLineDocumentId)))
+                && ((x.TransRecId == order.RecId && (x.TransTableId == FinanceTableNumbers.SalesTable || x.TransTableId == 0))
+                    || (lineIds.Contains(x.TransRecId) && x.TransTableId == FinanceTableNumbers.SalesLine)))
             .ToListAsync(ct);
         var groupIds = lines.Select(x => x.TaxGroup).Concat(charges.Select(x => x.TaxGroup)).Where(x => x != "").Distinct().ToList();
         var itemGroupIds = lines.Select(x => x.TaxItemGroup).Concat(charges.Select(x => x.TaxItemGroup)).Where(x => x != "").Distinct().ToList();
@@ -170,7 +183,7 @@ public sealed class SalesOrderConfirmationService(
                 ? charge.Value : charge.CalculatedAmount;
             chargeTotal += amount;
             tax += Tax(amount, Rate(charge.TaxGroup, charge.TaxItemGroup));
-            if (charge.TransTableId == SalesLineDocumentId)
+            if (charge.TransTableId == FinanceTableNumbers.SalesLine)
                 lineCharges[charge.TransRecId] = lineCharges.GetValueOrDefault(charge.TransRecId) + amount;
         }
         var gross = lines.Sum(x => x.LineAmount);

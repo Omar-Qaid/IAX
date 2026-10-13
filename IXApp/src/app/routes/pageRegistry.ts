@@ -143,6 +143,15 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'cust-confirm-journal',
+    path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUST_CONFIRM_JOURNAL,
+    permission: PERMISSIONS.SALES_ORDER_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-receivable/pages/CustConfirmJournal'),
+      (module) => module.CustConfirmJournal
+    ),
+  },
+  {
     id: 'inventory-transactions',
     path: ROUTE_PATHS.INVENTORY.TRANSACTIONS,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
