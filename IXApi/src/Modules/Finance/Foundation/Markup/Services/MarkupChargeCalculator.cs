@@ -35,7 +35,7 @@ public sealed class MarkupChargeCalculator : IMarkupChargeCalculator
             return CalculateForBase(charge, line.SalesQty, netAmount);
         }
 
-        if (charge.TransTableId == FinanceTableNumbers.SalesTable || charge.TransTableId == 0)
+        if (charge.TransTableId == FinanceTableNumbers.SalesTable || charge.TransTableId == FinanceTableNumbers.Unspecified)
         {
             var order = await _db.Set<SalesTable>().AsNoTracking()
                 .Where(x => x.RecId == charge.TransRecId && x.DataAreaId == dataAreaId)

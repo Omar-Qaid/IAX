@@ -40,7 +40,7 @@ public sealed class SalesOrderConfirmationTests
         var order = await fixture.Db.Set<SalesTable>().SingleAsync();
         var line = await fixture.Db.Set<SalesLine>().SingleAsync();
         fixture.Db.Set<MarkupTrans>().Add(new MarkupTrans {
-            RecId = 1, DataAreaId = "dat", TransRecId = order.RecId, TransTableId = 2002,
+            RecId = 1, DataAreaId = "dat", TransRecId = order.RecId, TransTableId = FinanceTableNumbers.SalesTable,
             ModuleType = MarkupModuleType.Customer, MarkupCategory = MarkupCategory.Percent,
             Value = 10m, CalculatedAmount = 90m
         });
@@ -143,6 +143,53 @@ public sealed class SalesOrderConfirmationTests
         Assert.Equal(new[] { 900m, 1100m }, journals.Select(x => x.ConfirmAmount));
         Assert.Equal(10m, (await fixture.Db.Set<SalesLine>().SingleAsync()).RemainSalesPhysical);
         Assert.Equal(-10m, (await fixture.Db.Set<InventTrans>().SingleAsync()).Qty);
+    }
+
+    [Fact]
+    public async Task Confirmation_records_taxed_commercial_amount_without_changing_inventory_demand()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var line = await fixture.Db.Set<SalesLine>().SingleAsync();
+        line.LineDisc = 0;
+        line.TaxGroup = "VAT";
+        line.TaxItemGroup = "VAT-ITEM";
+        fixture.Db.Set<TaxGroupData>().Add(new TaxGroupData {
+            RecId = 1, DataAreaId = "dat", TaxGroup = "VAT", TaxCode = "VAT15"
+        });
+        fixture.Db.Set<TaxOnItem>().Add(new TaxOnItem {
+            RecId = 1, DataAreaId = "dat", TaxItemGroup = "VAT-ITEM", TaxCode = "VAT15"
+        });
+        fixture.Db.Set<TaxData>().Add(new TaxData {
+            RecId = 1, DataAreaId = "dat", TaxCode = "VAT15", TaxValue = 15m
+        });
+        await fixture.Db.SaveChangesAsync();
+
+        Assert.IsType<OkObjectResult>(await fixture.Controller.Post(1, new(), default));
+        var first = await fixture.Db.Set<CustConfirmJour>().SingleAsync();
+        var firstLine = await fixture.Db.Set<CustConfirmTrans>().SingleAsync();
+        Assert.Equal(1000m, first.SalesBalance);
+        Assert.Equal(150m, first.SumTax);
+        Assert.Equal(1150m, first.ConfirmAmount);
+        Assert.Equal(150m, firstLine.TaxAmount);
+        Assert.Equal(-10m, (await fixture.Db.Set<InventTrans>().SingleAsync()).Qty);
+        Assert.Equal(10m, line.RemainSalesPhysical);
+        Assert.Equal(10m, line.RemainSalesFinancial);
+
+        line.SalesQty = 12;
+        line.QtyOrdered = 12;
+        line.LineAmount = 1200m;
+        line.RemainSalesPhysical = 12;
+        line.RemainSalesFinancial = 12;
+        (await fixture.Db.Set<InventTrans>().SingleAsync()).Qty = -12;
+        await fixture.Db.SaveChangesAsync();
+        Assert.IsType<OkObjectResult>(await fixture.Controller.Post(1, new(), default));
+
+        var history = await fixture.Db.Set<CustConfirmJour>().OrderBy(x => x.ConfirmId).ToListAsync();
+        Assert.Equal(new[] { 1150m, 1380m }, history.Select(x => x.ConfirmAmount));
+        Assert.Equal(new[] { 10m, 12m }, history.Select(x => x.Qty));
+        Assert.Equal(-12m, (await fixture.Db.Set<InventTrans>().SingleAsync()).Qty);
+        Assert.Equal(12m, line.RemainSalesPhysical);
+        Assert.Equal(12m, line.RemainSalesFinancial);
     }
 
     [Fact]

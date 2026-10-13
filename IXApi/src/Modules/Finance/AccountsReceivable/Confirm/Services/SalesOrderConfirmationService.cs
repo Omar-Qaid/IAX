@@ -132,7 +132,7 @@ public sealed class SalesOrderConfirmationService(
         var charges = await db.Set<MarkupTrans>().AsNoTracking()
             .Where(x => x.DataAreaId == order.DataAreaId && x.IsDeleted != NoYes.Yes
                 && (x.ModuleType == MarkupModuleType.Customer || x.ModuleType == MarkupModuleType.Sales)
-                && ((x.TransRecId == order.RecId && (x.TransTableId == FinanceTableNumbers.SalesTable || x.TransTableId == 0))
+                && ((x.TransRecId == order.RecId && (x.TransTableId == FinanceTableNumbers.SalesTable || x.TransTableId == FinanceTableNumbers.Unspecified))
                     || (lineIds.Contains(x.TransRecId) && x.TransTableId == FinanceTableNumbers.SalesLine)))
             .ToListAsync(ct);
         var groupIds = lines.Select(x => x.TaxGroup).Concat(charges.Select(x => x.TaxGroup)).Where(x => x != "").Distinct().ToList();

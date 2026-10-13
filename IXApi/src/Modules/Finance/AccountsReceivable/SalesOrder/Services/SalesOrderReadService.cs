@@ -110,7 +110,7 @@ public sealed class SalesOrderReadService : ISalesOrderReadService
                 && charge.IsDeleted != NoYes.Yes
                 && (charge.ModuleType == MarkupModuleType.Customer || charge.ModuleType == MarkupModuleType.Sales)
                 && ((charge.TransRecId == order.RecId
-                        && (charge.TransTableId == FinanceTableNumbers.SalesTable || charge.TransTableId == 0))
+                        && (charge.TransTableId == FinanceTableNumbers.SalesTable || charge.TransTableId == FinanceTableNumbers.Unspecified))
                     || (lineRecIds.Contains(charge.TransRecId)
                         && charge.TransTableId == FinanceTableNumbers.SalesLine)))
             .ToListAsync(cancellationToken);

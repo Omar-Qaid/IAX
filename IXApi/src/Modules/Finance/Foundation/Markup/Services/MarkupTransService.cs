@@ -45,7 +45,7 @@ public sealed class MarkupTransService(
                     ? x.ModuleType == MarkupModuleType.Customer || x.ModuleType == MarkupModuleType.Sales
                     : x.ModuleType == moduleType)
                 && (x.TransTableId == transTableId
-                    || (transTableId == FinanceTableNumbers.SalesTable && x.TransTableId == 0))
+                    || (transTableId == FinanceTableNumbers.SalesTable && x.TransTableId == FinanceTableNumbers.Unspecified))
                 && x.DataAreaId == dataAreaId)
             .OrderBy(x => x.LineNum)
             .ToListAsync(cancellationToken);
@@ -210,7 +210,7 @@ public sealed class MarkupTransService(
     {
         (MarkupModuleType.Customer or MarkupModuleType.Sales, "header") => FinanceTableNumbers.SalesTable,
         (MarkupModuleType.Customer or MarkupModuleType.Sales, "line") => FinanceTableNumbers.SalesLine,
-        (MarkupModuleType.Vendor, "header") => 0,
+        (MarkupModuleType.Vendor, "header") => FinanceTableNumbers.Unspecified,
         _ => null
     };
 

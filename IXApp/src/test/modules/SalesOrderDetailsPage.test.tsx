@@ -69,6 +69,10 @@ function openOrder(id: string, listVisible?: boolean) {
             path="/accounts-receivable/sales-orders/:salesOrderId"
             element={<SalesOrderDetailsPage />}
           />
+          <Route
+            path="/accounts-receivable/sales-orders/:salesOrderId/confirmations"
+            element={<div>CustConfirmJour page</div>}
+          />
         </Routes>
       </AppProviders>
     </MemoryRouter>
@@ -80,6 +84,14 @@ it('loads a numeric route ID directly from the API', async () => {
   expect(await screen.findByText('SO-LIVE-001 : Live customer')).toBeDefined();
   expect(screen.queryByText('No sales orders are available.')).toBeNull();
   await waitFor(() => expect(salesOrderLinesApi.totals).toHaveBeenCalledWith('1', expect.anything()));
+});
+
+it('opens CustConfirmJour from Sell > Sales order confirmations', async () => {
+  openOrder('1');
+  await screen.findByText('SO-LIVE-001 : Live customer');
+  fireEvent.click(screen.getByRole('button', { name: 'Sell' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Sales order confirmations' }));
+  expect(await screen.findByText('CustConfirmJour page')).toBeInTheDocument();
 });
 
 it('does not substitute another order for an unknown ID', async () => {

@@ -16,13 +16,13 @@ public sealed class MarkupTests
         var date = new DateTime(2025, 1, 2);
         var entity = new MarkupTrans
         {
-            RecId = 123, DataAreaId = "dat", TransRecId = 456, TransTableId = 2003,
+            RecId = 123, DataAreaId = "dat", TransRecId = 456, TransTableId = FinanceTableNumbers.SalesLine,
             LineNum = 2, TransDate = date, ModuleType = MarkupModuleType.Customer,
             Posted = 17, TaxAmount = 8
         };
         var input = new MarkupTransDto
         {
-            RecId = 999, DataAreaId = "other", TransRecId = 999, TransTableId = 0,
+            RecId = 999, DataAreaId = "other", TransRecId = 999, TransTableId = FinanceTableNumbers.Unspecified,
             LineNum = 99, TransDate = date.AddDays(1), ModuleType = MarkupModuleType.Vendor,
             Posted = 99, TaxAmount = 99, MarkupCode = " FRT ", Txt = " Freight ",
             CurrencyCode = " usd ", TaxGroup = " vat ", TaxItemGroup = " std ",
@@ -32,7 +32,7 @@ public sealed class MarkupTests
         Assert.Equal(123, entity.RecId);
         Assert.Equal("dat", entity.DataAreaId);
         Assert.Equal(456, entity.TransRecId);
-        Assert.Equal(2003, entity.TransTableId);
+        Assert.Equal(FinanceTableNumbers.SalesLine, entity.TransTableId);
         Assert.Equal(2, entity.LineNum);
         Assert.Equal(date, entity.TransDate);
         Assert.Equal(MarkupModuleType.Customer, entity.ModuleType);

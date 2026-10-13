@@ -23,7 +23,7 @@ internal static class SalesOrderChargeRefresh
                 && charge.IsDeleted != NoYes.Yes
                 && (charge.ModuleType == MarkupModuleType.Customer || charge.ModuleType == MarkupModuleType.Sales)
                 && ((charge.TransRecId == order.RecId
-                        && (charge.TransTableId == FinanceTableNumbers.SalesTable || charge.TransTableId == 0))
+                        && (charge.TransTableId == FinanceTableNumbers.SalesTable || charge.TransTableId == FinanceTableNumbers.Unspecified))
                     || (lineIds.Contains(charge.TransRecId) && charge.TransTableId == FinanceTableNumbers.SalesLine)))
             .ToListAsync(cancellationToken);
         var lineAmounts = lines.ToDictionary(line => line.RecId,
