@@ -9,8 +9,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
 
 public sealed class SalesOrderReadService : ISalesOrderReadService
 {
-    private const int SalesTableDocumentId = 2002;
-    private const int SalesLineDocumentId = 2003;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICompanyExecutionContext _company;
 
@@ -64,7 +62,7 @@ public sealed class SalesOrderReadService : ISalesOrderReadService
                 on partyLocation.Location equals address.Location
             join location in _unitOfWork.Context.Set<LogisticsLocation>().AsNoTracking()
                 on partyLocation.Location equals location.RecId
-            where partyLocation.Party == partyId && partyLocation.IsPostalAddress == NoYes.Yes
+            where partyId > 0 && partyLocation.Party == partyId && partyLocation.IsPostalAddress == NoYes.Yes
                 && address.DataAreaId == area && address.ValidFrom <= DateTime.UtcNow
                 && address.ValidTo >= DateTime.UtcNow
             orderby partyLocation.IsPrimary descending, location.Description
@@ -112,9 +110,9 @@ public sealed class SalesOrderReadService : ISalesOrderReadService
                 && charge.IsDeleted != NoYes.Yes
                 && (charge.ModuleType == MarkupModuleType.Customer || charge.ModuleType == MarkupModuleType.Sales)
                 && ((charge.TransRecId == order.RecId
-                        && (charge.TransTableId == SalesTableDocumentId || charge.TransTableId == 0))
+                        && (charge.TransTableId == FinanceTableNumbers.SalesTable || charge.TransTableId == 0))
                     || (lineRecIds.Contains(charge.TransRecId)
-                        && charge.TransTableId == SalesLineDocumentId)))
+                        && charge.TransTableId == FinanceTableNumbers.SalesLine)))
             .ToListAsync(cancellationToken);
         var taxGroups = lines.Select(line => line.TaxGroup)
             .Concat(charges.Select(charge => charge.TaxGroup))

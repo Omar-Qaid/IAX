@@ -15,8 +15,6 @@ public sealed class MarkupTransService(
     IMarkupTransCommandService commands,
     IValidator<MarkupTransDto> validator) : IMarkupTransService
 {
-    private const int SalesTableId = 2002;
-    private const int SalesLineId = 2003;
     private DbContext _db => unitOfWork.Context;
     private readonly ICompanyExecutionContext _company = company;
     private readonly IMarkupTransCommandService _commands = commands;
@@ -47,7 +45,7 @@ public sealed class MarkupTransService(
                     ? x.ModuleType == MarkupModuleType.Customer || x.ModuleType == MarkupModuleType.Sales
                     : x.ModuleType == moduleType)
                 && (x.TransTableId == transTableId
-                    || (transTableId == SalesTableId && x.TransTableId == 0))
+                    || (transTableId == FinanceTableNumbers.SalesTable && x.TransTableId == 0))
                 && x.DataAreaId == dataAreaId)
             .OrderBy(x => x.LineNum)
             .ToListAsync(cancellationToken);
@@ -139,6 +137,20 @@ public sealed class MarkupTransService(
             return new(targetError, true);
         var editError = await ValidateSalesChargeEditable(moduleType, transTableId, documentRecId, dataAreaId, ct);
         if (editError != null) return new(editError);
+        if (isSalesCharge)
+        {
+            var documentCurrency = transTableId == FinanceTableNumbers.SalesLine
+                ? await _db.Set<SalesLine>().AsNoTracking()
+                    .Where(x => x.RecId == documentRecId && x.DataAreaId == dataAreaId)
+                    .Select(x => x.CurrencyCode).SingleAsync(ct)
+                : await _db.Set<SalesTable>().AsNoTracking()
+                    .Where(x => x.RecId == documentRecId && x.DataAreaId == dataAreaId)
+                    .Select(x => x.CurrencyCode).SingleAsync(ct);
+            if (string.IsNullOrWhiteSpace(input.CurrencyCode))
+                input.CurrencyCode = documentCurrency;
+            else if (!string.Equals(input.CurrencyCode.Trim(), documentCurrency, StringComparison.OrdinalIgnoreCase))
+                return new("Sales charges must use the sales order currency.");
+        }
         return null;
     }
 
@@ -146,7 +158,7 @@ public sealed class MarkupTransService(
         long documentRecId, string dataAreaId, CancellationToken ct)
     {
         if (moduleType is not (MarkupModuleType.Customer or MarkupModuleType.Sales)) return null;
-        if (transTableId == SalesLineId)
+        if (transTableId == FinanceTableNumbers.SalesLine)
         {
             var line = await _db.Set<SalesLine>().AsNoTracking().SingleOrDefaultAsync(
                 x => x.RecId == documentRecId && x.DataAreaId == dataAreaId, ct);
@@ -173,7 +185,7 @@ public sealed class MarkupTransService(
     {
         if (moduleType is not (MarkupModuleType.Customer or MarkupModuleType.Sales)) return null;
 
-        if (transTableId == SalesLineId)
+        if (transTableId == FinanceTableNumbers.SalesLine)
             return await _db.Set<SalesLine>().AsNoTracking().AnyAsync(
                 x => x.RecId == documentRecId && x.DataAreaId == dataAreaId,
                 ct)
@@ -196,8 +208,8 @@ public sealed class MarkupTransService(
 
     private static int? ResolveTransTableId(MarkupModuleType moduleType, string level) => (moduleType, level.ToLowerInvariant()) switch
     {
-        (MarkupModuleType.Customer or MarkupModuleType.Sales, "header") => SalesTableId,
-        (MarkupModuleType.Customer or MarkupModuleType.Sales, "line") => SalesLineId,
+        (MarkupModuleType.Customer or MarkupModuleType.Sales, "header") => FinanceTableNumbers.SalesTable,
+        (MarkupModuleType.Customer or MarkupModuleType.Sales, "line") => FinanceTableNumbers.SalesLine,
         (MarkupModuleType.Vendor, "header") => 0,
         _ => null
     };

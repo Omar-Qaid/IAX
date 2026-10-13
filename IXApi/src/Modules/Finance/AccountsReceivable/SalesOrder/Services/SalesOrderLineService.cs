@@ -215,7 +215,7 @@ public sealed class SalesOrderLineService : ISalesOrderLineService
                     previousAddressId, line.DataAreaId, line.RecId, 0, cancellationToken);
                 var lineCharges = await _dbContext.Context.Set<MarkupTrans>()
                     .Where(charge => charge.DataAreaId == line.DataAreaId
-                        && charge.TransRecId == line.RecId && charge.TransTableId == 2003
+                        && charge.TransRecId == line.RecId && charge.TransTableId == FinanceTableNumbers.SalesLine
                         && (charge.ModuleType == MarkupModuleType.Customer
                             || charge.ModuleType == MarkupModuleType.Sales))
                     .ToListAsync(cancellationToken);
@@ -488,30 +488,34 @@ public sealed class SalesOrderLineService : ISalesOrderLineService
         if (custParameters?.PriceDiscSearchPrice == NoYes.No)
             return null;
 
-        var today = DateTime.UtcNow.Date;
+        var pricingDate = order.OrderDate == default ? DateTime.UtcNow.Date : order.OrderDate.Date;
         var agreements = await _dbContext.Context.Set<PriceDiscTable>().AsNoTracking()
             .Where(row => row.DataAreaId == order.DataAreaId
                 && row.Module == ModuleInventCustVend.Cust
                 && row.Relation == PriceType.PriceSales
-                && row.Currency == order.CurrencyCode
+                && (row.Currency == order.CurrencyCode || row.GenericCurrency != 0)
                 && (row.UnitId == unitId || row.UnitAppliesToAll != 0)
                 && (string.IsNullOrEmpty(row.PriceGroup)
                     || (!string.IsNullOrEmpty(order.PriceGroupId)
                         && row.PriceGroup == order.PriceGroupId))
                 && (string.IsNullOrEmpty(row.InventDimId)
                     || row.InventDimId == inventDimId)
-                && (row.FromDate == default || row.FromDate <= today)
-                && (row.ToDate == default || row.ToDate >= today)
+                && (row.FromDate == default || row.FromDate <= pricingDate)
+                && (row.ToDate == default || row.ToDate >= pricingDate)
                 && (row.QuantityAmountFrom <= 0 || row.QuantityAmountFrom <= quantity)
                 && (row.QuantityAmountTo <= 0 || row.QuantityAmountTo >= quantity)
                 && ((row.ItemCode == PriceDiscProductCodeType.Table && row.ItemRelation == itemId)
                     || row.ItemCode == PriceDiscProductCodeType.All)
                 && ((row.AccountCode == PriceDiscPartyCodeType.Table && row.AccountRelation == order.CustAccount)
+                    || (row.AccountCode == PriceDiscPartyCodeType.GroupId
+                        && !string.IsNullOrEmpty(order.PriceGroupId)
+                        && row.AccountRelation == order.PriceGroupId)
                     || row.AccountCode == PriceDiscPartyCodeType.All))
             .ToListAsync(cancellationToken);
 
         var agreement = agreements
-            .OrderByDescending(row => row.AccountCode == PriceDiscPartyCodeType.Table)
+            .OrderByDescending(row => row.AccountCode == PriceDiscPartyCodeType.Table ? 3
+                : row.AccountCode == PriceDiscPartyCodeType.GroupId ? 2 : 1)
             .ThenByDescending(row => row.ItemCode == PriceDiscProductCodeType.Table)
             .ThenByDescending(row => !string.IsNullOrEmpty(row.PriceGroup))
             .ThenByDescending(row => !string.IsNullOrEmpty(row.InventDimId))
