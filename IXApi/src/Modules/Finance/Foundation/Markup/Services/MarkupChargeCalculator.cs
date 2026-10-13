@@ -33,11 +33,8 @@ public sealed class MarkupChargeCalculator : IMarkupChargeCalculator
                 .Where(x => x.RecId == charge.TransRecId && x.DataAreaId == dataAreaId)
                 .Select(x => new { x.SalesQty, x.LineAmount, x.LineDisc, x.MultiLnDisc })
                 .SingleAsync(ct);
-            if (charge.MarkupCategory == MarkupCategory.Pcs)
-                return decimal.Round(charge.Value * line.SalesQty, 2, MidpointRounding.AwayFromZero);
-
             var netAmount = Math.Max(0m, line.LineAmount - line.LineDisc - line.MultiLnDisc);
-            return decimal.Round(netAmount * charge.Value / 100m, 2, MidpointRounding.AwayFromZero);
+            return CalculateForBase(charge, line.SalesQty, netAmount);
         }
 
         if (charge.TransTableId == SalesTableId || charge.TransTableId == 0)
@@ -50,14 +47,19 @@ public sealed class MarkupChargeCalculator : IMarkupChargeCalculator
                 .Where(x => x.SalesId == order && x.DataAreaId == dataAreaId)
                 .Select(x => new { x.SalesQty, x.LineAmount, x.LineDisc, x.MultiLnDisc })
                 .ToListAsync(ct);
-            if (charge.MarkupCategory == MarkupCategory.Pcs)
-                return decimal.Round(charge.Value * lines.Sum(x => x.SalesQty), 2, MidpointRounding.AwayFromZero);
-
             var netAmount = lines.Sum(x => Math.Max(0m, x.LineAmount - x.LineDisc - x.MultiLnDisc));
-            return decimal.Round(netAmount * charge.Value / 100m, 2, MidpointRounding.AwayFromZero);
+            return CalculateForBase(charge, lines.Sum(x => x.SalesQty), netAmount);
         }
 
         return charge.Value;
     }
+
+    internal static decimal CalculateForBase(MarkupTrans charge, decimal quantity, decimal netAmount) =>
+        charge.MarkupCategory switch
+        {
+            MarkupCategory.Fixed => charge.Value,
+            MarkupCategory.Pcs => decimal.Round(charge.Value * quantity, 2, MidpointRounding.AwayFromZero),
+            _ => decimal.Round(netAmount * charge.Value / 100m, 2, MidpointRounding.AwayFromZero)
+        };
 
 }

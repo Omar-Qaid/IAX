@@ -138,6 +138,17 @@ public sealed class SalesOrderCopyService : ISalesOrderCopyService
             if (destination.SalesStatus != SalesStatus.Backorder)
                 return new SalesOrderCopyResult(SalesOrderCopyStatus.DestinationClosed);
 
+            var hasDifferentCurrency = request.Mode.Equals("fromJournal", StringComparison.OrdinalIgnoreCase)
+                ? await _unitOfWork.Context.Set<CustConfirmTrans>().AsNoTracking().AnyAsync(
+                    x => lineIds.Contains(x.RecId) && x.DataAreaId == area
+                        && x.CurrencyCode != destination.CurrencyCode, ct)
+                : await _unitOfWork.Context.Set<SalesLine>().AsNoTracking().AnyAsync(
+                    x => lineIds.Contains(x.RecId) && x.DataAreaId == area
+                        && x.CurrencyCode != destination.CurrencyCode, ct);
+            if (hasDifferentCurrency)
+                return new SalesOrderCopyResult(SalesOrderCopyStatus.InvalidRequest,
+                    Error: "Source and destination currencies must match when copying sales lines.");
+
             List<CopySourceLine> sources;
             if (request.Mode.Equals("fromJournal", StringComparison.OrdinalIgnoreCase))
             {
@@ -218,6 +229,8 @@ public sealed class SalesOrderCopyService : ISalesOrderCopyService
                 destination.SmmSalesAmountTotal += line.LineAmount;
                 created++;
             }
+            await _unitOfWork.Context.SaveChangesAsync(ct);
+            await SalesOrderChargeRefresh.RefreshAsync(_unitOfWork.Context, destination, ct);
             await _unitOfWork.Context.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
             return new SalesOrderCopyResult(SalesOrderCopyStatus.Success, created);

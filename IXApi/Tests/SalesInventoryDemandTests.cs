@@ -152,6 +152,14 @@ public sealed class SalesInventoryDemandTests
             item => item.InventTransOrigin == db.Set<InventTransOrigin>()
                 .Where(origin => origin.InventTransId == secondLine.InventTransId)
                 .Select(origin => origin.RecId).Single())).Qty);
+
+        // A stale aggregate must not be reduced below zero while cancelling the other order.
+        (await db.Set<InventSum>().SingleAsync()).OnOrder = 6;
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CancelRemainingAsync(secondLine));
+        Assert.Equal(-7, (await db.Set<InventTrans>().SingleAsync(
+            item => item.InventTransOrigin == db.Set<InventTransOrigin>()
+                .Where(origin => origin.InventTransId == secondLine.InventTransId)
+                .Select(origin => origin.RecId).Single())).Qty);
     }
 
     private sealed class InventoryContext(DbContextOptions<InventoryContext> options) : DbContext(options)

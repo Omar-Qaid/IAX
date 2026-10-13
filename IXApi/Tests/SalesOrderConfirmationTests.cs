@@ -34,6 +34,34 @@ public sealed class SalesOrderConfirmationTests
     }
 
     [Fact]
+    public async Task Percentage_charge_follows_line_net_and_zero_does_not_fall_back_to_rate()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var order = await fixture.Db.Set<SalesTable>().SingleAsync();
+        var line = await fixture.Db.Set<SalesLine>().SingleAsync();
+        fixture.Db.Set<MarkupTrans>().Add(new MarkupTrans {
+            RecId = 1, DataAreaId = "dat", TransRecId = order.RecId, TransTableId = 2002,
+            ModuleType = MarkupModuleType.Customer, MarkupCategory = MarkupCategory.Percent,
+            Value = 10m, CalculatedAmount = 90m
+        });
+        await fixture.Db.SaveChangesAsync();
+
+        line.LineAmount = 500m;
+        await fixture.Db.SaveChangesAsync();
+        await SalesOrderChargeRefresh.RefreshAsync(fixture.Db, order, default);
+        await fixture.Db.SaveChangesAsync();
+        Assert.Equal(40m, (await fixture.Db.Set<MarkupTrans>().SingleAsync()).CalculatedAmount);
+
+        line.LineAmount = line.LineDisc;
+        await fixture.Db.SaveChangesAsync();
+        await SalesOrderChargeRefresh.RefreshAsync(fixture.Db, order, default);
+        await fixture.Db.SaveChangesAsync();
+        Assert.Equal(0m, (await fixture.Db.Set<MarkupTrans>().SingleAsync()).CalculatedAmount);
+        Assert.IsType<OkObjectResult>(await fixture.Controller.Post(1, new(), default));
+        Assert.Equal(0m, (await fixture.Db.Set<CustConfirmJour>().SingleAsync()).ConfirmAmount);
+    }
+
+    [Fact]
     public async Task Sales_unit_conversion_uses_product_rule_and_rejects_missing_unit()
     {
         await using var fixture = await Fixture.CreateAsync();

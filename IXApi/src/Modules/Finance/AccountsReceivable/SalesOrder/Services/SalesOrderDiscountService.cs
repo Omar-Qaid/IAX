@@ -23,6 +23,10 @@ public sealed class SalesOrderDiscountService : ISalesOrderDiscountService
 
     public async Task<SalesDiscountRecalculationResult> RecalculateAsync(long recId, CancellationToken cancellationToken)
     {
+        return await _dbContext.Context.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+        await using var transaction = await _dbContext.Context.Database.BeginTransactionAsync(
+            System.Data.IsolationLevel.Serializable, cancellationToken);
         var order = await _dbContext.Context.Set<SalesTable>()
             .FirstOrDefaultAsync(row => row.RecId == recId, cancellationToken);
         if (order == null || !string.Equals(order.DataAreaId, _company.GetDataAreaId(), StringComparison.OrdinalIgnoreCase))
@@ -82,8 +86,12 @@ public sealed class SalesOrderDiscountService : ISalesOrderDiscountService
         }
 
         await _dbContext.Context.SaveChangesAsync(cancellationToken);
+        await SalesOrderChargeRefresh.RefreshAsync(_dbContext.Context, order, cancellationToken);
+        await _dbContext.Context.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
         return new SalesDiscountRecalculationResult(SalesDiscountRecalculationStatus.Recalculated,
             lines.Count, lines.Sum(line => line.LineDisc), lines.Sum(line => line.MultiLnDisc), order.DiscPercent);
+        });
     }
 
     private async Task<PriceDiscTable?> FindSalesDiscountAsync(SalesTable order,

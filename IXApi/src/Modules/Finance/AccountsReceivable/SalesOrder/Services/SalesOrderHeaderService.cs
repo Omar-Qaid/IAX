@@ -106,6 +106,7 @@ public sealed class SalesOrderHeaderService : ISalesOrderHeaderService
                 && (!long.TryParse(input.DeliveryPostalAddress, out deliveryAddressId)
                     || !await _validation.IsDeliveryAddressAvailableForOrderAsync(order, deliveryAddressId, cancellationToken)))
                 return new SalesHeaderUpdateResult(SalesHeaderUpdateStatus.Invalid, "The selected delivery address does not belong to this customer.");
+            var previousAddressId = order.DeliveryPostalAddress;
             order.DeliveryName = deliveryName;
             order.DeliveryPostalAddress = deliveryAddressId;
             order.ShippingDateConfirmed = input.ShippingDateConfirmed?.Date ?? default;
@@ -149,6 +150,9 @@ public sealed class SalesOrderHeaderService : ISalesOrderHeaderService
             order.IntercompanyOrigin = input.IntercompanyOrigin;
             order.IntercompanyAllowIndirectCreation = input.IntercompanyAllowIndirectCreation;
             order.Reservation = input.Reservation;
+            if (previousAddressId != order.DeliveryPostalAddress)
+                await SalesDeliveryAddressCleanup.CleanupAsync(_dbContext.Context,
+                    previousAddressId, order.DataAreaId, 0, order.RecId, cancellationToken);
             await _dbContext.Context.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return new SalesHeaderUpdateResult(SalesHeaderUpdateStatus.Saved);

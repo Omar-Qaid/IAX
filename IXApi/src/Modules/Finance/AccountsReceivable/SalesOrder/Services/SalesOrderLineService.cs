@@ -180,6 +180,8 @@ public sealed class SalesOrderLineService : ISalesOrderLineService
             _dbContext.Context.Set<SalesLine>().Add(line);
             order.SmmSalesAmountTotal += line.LineAmount;
             await _dbContext.Context.SaveChangesAsync(cancellationToken);
+            await SalesOrderChargeRefresh.RefreshAsync(_dbContext.Context, order, cancellationToken);
+            await _dbContext.Context.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return new SalesLineWriteResult(SalesLineWriteStatus.Success,
                 Data: SalesOrderLinePresenter.Record(line, inventSiteId, inventLocationId,
@@ -204,10 +206,20 @@ public sealed class SalesOrderLineService : ISalesOrderLineService
             if (input != null && input.ItemNumber != line.ItemId)
                 return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, "The item number cannot be changed.");
             var previousAmount = line.LineAmount;
+            var previousAddressId = line.DeliveryPostalAddress;
             string? responseSiteId = null;
             string? responseLocationId = null;
             if (input == null) {
                 await _inventoryDemand.DeleteAsync(line, cancellationToken);
+                await SalesDeliveryAddressCleanup.CleanupAsync(_dbContext.Context,
+                    previousAddressId, line.DataAreaId, line.RecId, 0, cancellationToken);
+                var lineCharges = await _dbContext.Context.Set<MarkupTrans>()
+                    .Where(charge => charge.DataAreaId == line.DataAreaId
+                        && charge.TransRecId == line.RecId && charge.TransTableId == 2003
+                        && (charge.ModuleType == MarkupModuleType.Customer
+                            || charge.ModuleType == MarkupModuleType.Sales))
+                    .ToListAsync(cancellationToken);
+                _dbContext.Context.Set<MarkupTrans>().RemoveRange(lineCharges);
                 _dbContext.Context.Set<SalesLine>().Remove(line);
             }
             else {
@@ -414,7 +426,12 @@ public sealed class SalesOrderLineService : ISalesOrderLineService
                 responseSiteId = inventSiteId;
                 responseLocationId = inventLocationId;
             }
+            if (input != null && previousAddressId != line.DeliveryPostalAddress)
+                await SalesDeliveryAddressCleanup.CleanupAsync(_dbContext.Context,
+                    previousAddressId, line.DataAreaId, line.RecId, 0, cancellationToken);
             order.SmmSalesAmountTotal += (input == null ? 0 : line.LineAmount) - previousAmount;
+            await _dbContext.Context.SaveChangesAsync(cancellationToken);
+            await SalesOrderChargeRefresh.RefreshAsync(_dbContext.Context, order, cancellationToken);
             await _dbContext.Context.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return new SalesLineWriteResult(SalesLineWriteStatus.Success,
@@ -429,7 +446,6 @@ public sealed class SalesOrderLineService : ISalesOrderLineService
                             .Select(item => item.NameAlias).FirstOrDefaultAsync(cancellationToken)));
         });
     }
-
 
     private static string? NormalizeAndValidateLineDiscount(SalesLineInputDto input)
     {

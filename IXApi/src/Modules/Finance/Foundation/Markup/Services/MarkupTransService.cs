@@ -42,6 +42,7 @@ public sealed class MarkupTransService(
         var entities = await _db.Set<MarkupTrans>()
             .AsNoTracking()
             .Where(x => x.TransRecId == documentRecId
+                && x.IsDeleted != NoYes.Yes
                 && (moduleType == MarkupModuleType.Customer
                     ? x.ModuleType == MarkupModuleType.Customer || x.ModuleType == MarkupModuleType.Sales
                     : x.ModuleType == moduleType)
@@ -97,7 +98,7 @@ public sealed class MarkupTransService(
     {
         var dataAreaId = _company.GetDataAreaId() ?? "dat";
         var entity = await _db.Set<MarkupTrans>().FirstOrDefaultAsync(
-            x => x.RecId == id && x.DataAreaId == dataAreaId,
+            x => x.RecId == id && x.DataAreaId == dataAreaId && x.IsDeleted != NoYes.Yes,
             cancellationToken);
         if (entity == null) return new(default, new("Charge transaction not found.", true));
         var validation = await ValidateInput(entity.ModuleType, entity.TransTableId, entity.TransRecId, input, cancellationToken);
@@ -110,9 +111,12 @@ public sealed class MarkupTransService(
     {
         var dataAreaId = _company.GetDataAreaId() ?? "dat";
         var entity = await _db.Set<MarkupTrans>().FirstOrDefaultAsync(
-            x => x.RecId == id && x.DataAreaId == dataAreaId,
+            x => x.RecId == id && x.DataAreaId == dataAreaId && x.IsDeleted != NoYes.Yes,
             cancellationToken);
         if (entity == null) return new(default, new("Charge transaction not found.", true));
+        var editError = await ValidateSalesChargeEditable(entity.ModuleType, entity.TransTableId,
+            entity.TransRecId, dataAreaId, cancellationToken);
+        if (editError != null) return new(default, new(editError));
         await _commands.DeleteAsync(entity, cancellationToken);
         return new(true);
     }
@@ -133,7 +137,31 @@ public sealed class MarkupTransService(
         var targetError = await ValidateTarget(moduleType, transTableId, documentRecId, dataAreaId, ct);
         if (targetError != null)
             return new(targetError, true);
+        var editError = await ValidateSalesChargeEditable(moduleType, transTableId, documentRecId, dataAreaId, ct);
+        if (editError != null) return new(editError);
         return null;
+    }
+
+    private async Task<string?> ValidateSalesChargeEditable(MarkupModuleType moduleType, int transTableId,
+        long documentRecId, string dataAreaId, CancellationToken ct)
+    {
+        if (moduleType is not (MarkupModuleType.Customer or MarkupModuleType.Sales)) return null;
+        if (transTableId == SalesLineId)
+        {
+            var line = await _db.Set<SalesLine>().AsNoTracking().SingleOrDefaultAsync(
+                x => x.RecId == documentRecId && x.DataAreaId == dataAreaId, ct);
+            if (line == null) return "Sales order line not found.";
+            if (line.SalesStatus != SalesStatus.Backorder)
+                return "Only open sales order lines can change charges.";
+            var orderOpen = await _db.Set<SalesTable>().AsNoTracking().AnyAsync(
+                x => x.SalesId == line.SalesId && x.DataAreaId == dataAreaId
+                    && x.SalesStatus == SalesStatus.Backorder, ct);
+            return orderOpen ? null : "Only open sales orders can change charges.";
+        }
+        var headerOpen = await _db.Set<SalesTable>().AsNoTracking().AnyAsync(
+            x => x.RecId == documentRecId && x.DataAreaId == dataAreaId
+                && x.SalesStatus == SalesStatus.Backorder, ct);
+        return headerOpen ? null : "Only open sales orders can change charges.";
     }
 
     private async Task<string?> ValidateTarget(

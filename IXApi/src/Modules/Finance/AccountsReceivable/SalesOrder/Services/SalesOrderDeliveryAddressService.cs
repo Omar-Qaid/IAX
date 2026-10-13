@@ -54,11 +54,16 @@ public sealed class SalesOrderDeliveryAddressService : ISalesOrderDeliveryAddres
                     return new SalesDeliveryAddressResult(SalesDeliveryAddressStatus.ProcessedLine);
             }
 
+            var previousAddressId = line?.DeliveryPostalAddress ?? order.DeliveryPostalAddress;
             var location = await _locationService.CreateLocationAsync(address.Description.Trim(), true, cancellationToken);
             var postalAddress = await _postalAddressService.CreatePostalAddressAsync(location.RecId, address, cancellationToken);
             postalAddress.DataAreaId = order.DataAreaId;
             if (line == null) order.DeliveryPostalAddress = postalAddress.RecId;
             else line.DeliveryPostalAddress = postalAddress.RecId;
+            if (previousAddressId != postalAddress.RecId)
+                await SalesDeliveryAddressCleanup.CleanupAsync(_dbContext.Context,
+                    previousAddressId, order.DataAreaId, line?.RecId ?? 0,
+                    line == null ? order.RecId : 0, cancellationToken);
             await _dbContext.Context.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return new SalesDeliveryAddressResult(SalesDeliveryAddressStatus.Created,

@@ -228,9 +228,11 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
             var demandToCancel = Math.Min(remainingDemand, Math.Max(0m, openTransactionDemand));
             var inventorySummary = await _dbContext.Context.Set<InventSum>().SingleOrDefaultAsync(item =>
                 item.DataAreaId == line.DataAreaId && item.ItemId == line.ItemId
-                && item.InventDimId == line.InventDimId, cancellationToken);
-            if (inventorySummary != null)
-                inventorySummary.OnOrder -= demandToCancel;
+                && item.InventDimId == line.InventDimId, cancellationToken)
+                ?? throw new InvalidOperationException("The sales line inventory summary was not found.");
+            if (inventorySummary.OnOrder < demandToCancel)
+                throw new InvalidOperationException("The inventory summary has less open demand than this sales line.");
+            inventorySummary.OnOrder -= demandToCancel;
             foreach (var transaction in transactions)
             {
                 transaction.Qty = 0;

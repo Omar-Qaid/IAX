@@ -166,7 +166,8 @@ public sealed class SalesOrderConfirmationService(
         }
         foreach (var charge in charges)
         {
-            var amount = charge.CalculatedAmount != 0m ? charge.CalculatedAmount : charge.Value;
+            var amount = charge.MarkupCategory == MarkupCategory.Fixed && charge.CalculatedAmount == 0m
+                ? charge.Value : charge.CalculatedAmount;
             chargeTotal += amount;
             tax += Tax(amount, Rate(charge.TaxGroup, charge.TaxItemGroup));
             if (charge.TransTableId == SalesLineDocumentId)

@@ -182,7 +182,8 @@ public sealed class SalesOrderReadService : ISalesOrderReadService
 
         foreach (var charge in charges)
         {
-            var chargeAmount = charge.CalculatedAmount != 0m ? charge.CalculatedAmount : charge.Value;
+            var chargeAmount = charge.MarkupCategory == MarkupCategory.Fixed && charge.CalculatedAmount == 0m
+                ? charge.Value : charge.CalculatedAmount;
             totalCharges += chargeAmount;
             var applicableCodes = groupRows
                 .Where(row => row.TaxGroup == charge.TaxGroup && row.ExemptTax != NoYes.Yes)

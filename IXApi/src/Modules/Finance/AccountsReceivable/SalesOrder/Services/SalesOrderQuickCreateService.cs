@@ -47,6 +47,8 @@ public sealed class SalesOrderQuickCreateService : ISalesOrderQuickCreateService
         if (!string.IsNullOrWhiteSpace(input.DeliveryPostalAddressId)
             && (!long.TryParse(input.DeliveryPostalAddressId, out deliveryPostalAddress) || deliveryPostalAddress <= 0))
             return new SalesOrderQuickCreateResult(null, "The selected delivery address is invalid.");
+        if (deliveryPostalAddress != 0 && customer.Party <= 0)
+            return new SalesOrderQuickCreateResult(null, "The selected delivery address does not belong to this customer.");
         var taxGroupId = string.IsNullOrWhiteSpace(input.TaxGroupId) ? customer.TaxGroupId : input.TaxGroupId.Trim();
         if (!string.IsNullOrWhiteSpace(taxGroupId)
             && !await _dbContext.Context.Set<TaxGroupHeading>().AsNoTracking()
