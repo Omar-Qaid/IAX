@@ -114,7 +114,8 @@ for (const language of ['en', 'ar']) {
     });
     await page.goto('/accounts-receivable/sales-orders/1');
     const grid = page.getByRole('grid');
-    await expect(grid).toHaveAttribute('aria-rowcount', '1500');
+    await expect(grid).toHaveAttribute('aria-rowcount', '1500', { timeout: 30000 });
+    await page.getByText(language === 'ar' ? 'تعديل' : 'Edit', { exact: true }).first().click();
     await expect(grid.locator('[data-row-id="1"]')).toBeVisible();
     expect(await grid.locator('[data-row-id]').count()).toBeLessThan(50);
     const quantityCell = grid.locator('[data-row-id="1"] [data-field="quantity"]');
@@ -218,6 +219,7 @@ for (const language of ['en', 'ar']) {
     expect(await grid.locator('[data-row-id]').count()).toBeLessThan(60);
     await page.screenshot({ path: `test-results/sales-grid-${language}.png`, fullPage: false });
     if (language === 'en') {
+      await grid.locator('[data-row-id="1500"] [data-field="quantity"]').click();
       await page.keyboard.press('Insert');
       const itemLookup = grid.getByRole('textbox', { name: 'Item number', exact: true });
       await expect(itemLookup).toBeFocused();

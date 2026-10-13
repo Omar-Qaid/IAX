@@ -39,7 +39,7 @@ export function SalesOrderListPage(): React.ReactElement {
         field: 'salesStatus',
         headerName: 'common.status',
         width: 115,
-        renderCell: ({ row }) => <StatusBadge status={row.salesStatus.toLocaleLowerCase()} />,
+        renderCell: ({ row }) => <StatusBadge status={row.salesStatus} />,
       },
     ],
     []

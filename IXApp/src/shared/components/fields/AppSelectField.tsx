@@ -49,7 +49,7 @@ export function AppSelectField<TFieldValues extends FieldValues = FieldValues>({
         size="small"
         variant={variant}
         value={value ?? ''}
-        sx={{ ...lookupValueSx(value), '& .app-select-placeholder': { color: 'text.disabled' } }}
+        sx={[lookupValueSx(value), { '& .app-select-placeholder': { color: 'text.disabled' } }]}
         slotProps={{ select: { displayEmpty: true, renderValue: (selected) => selectValue(selected, options) } }}
         onChange={(e) => onChange?.(e.target.value)}
       >
@@ -78,7 +78,7 @@ export function AppSelectField<TFieldValues extends FieldValues = FieldValues>({
           fullWidth={fullWidth}
           size="small"
           value={field.value ?? ''}
-          sx={{ ...lookupValueSx(field.value), '& .app-select-placeholder': { color: 'text.disabled' } }}
+          sx={[lookupValueSx(field.value), { '& .app-select-placeholder': { color: 'text.disabled' } }]}
           slotProps={{ select: { displayEmpty: true, renderValue: (selected) => selectValue(selected, options) } }}
         >
           {options.map((opt) => (

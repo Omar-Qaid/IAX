@@ -30,7 +30,7 @@ import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRou
 import { FOUNDATION_ROUTE_PATHS } from '@modules/finance/foundation/routes/foundationRoutePaths';
 import { INVENTORY_ROUTE_PATHS } from '@modules/finance/inventory/routes/inventoryRoutePaths';
 import { LoadingState } from '@shared/components/feedback/LoadingState';
-import { salesOrderListApi, type SalesOrderHeaderInput } from '../api/salesOrderListApi';
+import { salesOrderListApi, type SalesOrderHeaderInput, type SalesOrderListRecord } from '../api/salesOrderListApi';
 import { customerQuickCreateApi } from '../api/customerQuickCreateApi';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { LookupField } from '@shared/components/lookups/LookupField';
@@ -50,7 +50,7 @@ import { SalesOrderLinesProvider } from './SalesOrderLineState';
 
 type DetailLine = SalesOrderLineRecord;
 
-const headerMasterRoutes: Partial<Record<keyof SalesOrderHeaderInput, string>> = {
+const headerMasterRoutes: Partial<Record<keyof SalesOrderListRecord, string>> = {
   customerAccount: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMERS,
   invoiceAccount: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMERS,
   customerGroup: ACCOUNTS_RECEIVABLE_ROUTE_PATHS.CUSTOMER_GROUPS,
@@ -1296,7 +1296,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
           const next = {
             ...lineDetailDraft,
             ledgerDimension: Number(value ?? 0),
-            ledgerDimensionDisplay: option?.name ?? '',
+            ledgerDimensionDisplay: Array.isArray(option) ? option[0]?.name ?? '' : option?.name ?? '',
           };
           setLineDetailDraft(next);
           void saveLineDetail(next);
@@ -1317,7 +1317,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
             }}
           >
             <Box>
-              <Typography variant="overline" fontWeight={700}>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>
                 {t('salesOrder.generalGroups.orderLine', 'Order line')}
               </Typography>
               <Box sx={{ display: 'grid', gap: 1.5 }}>
@@ -1325,7 +1325,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
               </Box>
             </Box>
             <Box>
-              <Typography variant="overline" fontWeight={700}>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>
                 {t('salesOrder.generalGroups.productName', 'Product name')}
               </Typography>
               <Box sx={{ display: 'grid', gap: 1.5 }}>
@@ -1334,7 +1334,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
               </Box>
             </Box>
             <Box>
-              <Typography variant="overline" fontWeight={700}>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>
                 {t('salesOrder.generalGroups.externalReferences', 'External references')}
               </Typography>
               <Box sx={{ display: 'grid', gap: 1.5 }}>
@@ -1345,7 +1345,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
               </Box>
             </Box>
             <Box>
-              <Typography variant="overline" fontWeight={700}>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>
                 {t('salesOrder.generalGroups.intercompany', 'Intercompany')}
               </Typography>
               {lineEnumField('intercompanyOrigin', t('salesOrder.intercompanyOrigin', 'Origin (intercompany orders)'), [
@@ -1353,7 +1353,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
                 { value: 1, label: t('salesOrder.intercompanyOutbound', 'Outbound') },
                 { value: 2, label: t('salesOrder.intercompanyInbound', 'Inbound') },
               ])}
-              <Typography variant="overline" fontWeight={700} sx={{ mt: 1.5 }}>
+              <Typography variant="overline" sx={{ fontWeight: 700, mt: 1.5 }}>
                 {t('salesOrder.generalGroups.status', 'Status')}
               </Typography>
               {lineValue('salesStatus', t('salesOrder.lineStatus', 'Line status'))}
@@ -1368,7 +1368,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
               </Box>
             </Box>
             <Box>
-              <Typography variant="overline" fontWeight={700}>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>
                 {t('salesOrder.generalGroups.fulfillment', 'Fulfillment')}
               </Typography>
               <Box sx={{ display: 'grid', gap: 1.5 }}>
@@ -1388,7 +1388,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
             }}
           >
             <Box>
-              <Typography variant="overline" fontWeight={700}>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>
                 {t('salesOrder.setupGroups.inventory', 'Inventory')}
               </Typography>
               <Box sx={{ display: 'grid', gap: 1.5 }}>
@@ -1413,7 +1413,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
               </Box>
             </Box>
             <Box>
-              <Typography variant="overline" fontWeight={700}>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>
                 {t('salesOrder.setupGroups.returnedOrder', 'Returned order')}
               </Typography>
               <Box sx={{ display: 'grid', gap: 1.5 }}>
@@ -1423,13 +1423,13 @@ export function SalesOrderDetailsPage(): React.ReactElement {
               </Box>
             </Box>
             <Box>
-              <Typography variant="overline" fontWeight={700}>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>
                 {t('salesOrder.setupGroups.posting', 'Posting')}
               </Typography>
               {mainAccountField()}
             </Box>
             <Box>
-              <Typography variant="overline" fontWeight={700}>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>
                 {t('salesOrder.setupGroups.salesTax', 'Sales tax')}
               </Typography>
               <Box sx={{ display: 'grid', gap: 1.5 }}>
@@ -1438,13 +1438,13 @@ export function SalesOrderDetailsPage(): React.ReactElement {
               </Box>
             </Box>
             <Box>
-              <Typography variant="overline" fontWeight={700}>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>
                 {t('salesOrder.setupGroups.commission', 'Commission')}
               </Typography>
               {lineDetailField('salesGroup', t('salesOrder.salesGroup', 'Sales group'))}
             </Box>
             <Box>
-              <Typography variant="overline" fontWeight={700}>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>
                 {t('salesOrder.setupGroups.dateTime', 'Date and time')}
               </Typography>
               {field(
@@ -1460,7 +1460,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         return (
           <Box sx={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 220px))', gap: 3 }}>
             <Box>
-              <Typography variant="overline" fontWeight={700}>DELIVERY ADDRESS</Typography>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>DELIVERY ADDRESS</Typography>
               <Box sx={{ display: 'grid', gap: 1.5, mt: 1 }}>
                 {lineMultilineField('deliveryName', 'Name')}
                 {deliveryAddressField()}
@@ -1479,7 +1479,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
             }}
           >
             <Box>
-              <Typography variant="overline" fontWeight={700}>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>
                 {t('salesOrder.sourcingGroups.tracking', 'أبعاد التتبع')}
               </Typography>
               <Box sx={{ display: 'grid', gap: 1.5 }}>
@@ -1493,7 +1493,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
               </Box>
             </Box>
             <Box>
-              <Typography variant="overline" fontWeight={700}>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>
                 {t('salesOrder.sourcingGroups.storage', 'أبعاد التخزين')}
               </Typography>
               <Box sx={{ display: 'grid', gap: 1.5 }}>
@@ -1509,7 +1509,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
               </Box>
             </Box>
             <Box>
-              <Typography variant="overline" fontWeight={700}>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>
                 {t('salesOrder.sourcingGroups.itemReference', 'مرجع الصنف')}
               </Typography>
               <Box sx={{ display: 'grid', gap: 1.5 }}>
@@ -1541,7 +1541,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
             }}
           >
             <Box>
-              <Typography variant="overline" fontWeight={700}>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>
                 {t('salesOrder.packingGroups.material', 'مواد التعبئة')}
               </Typography>
               <Box sx={{ display: 'grid', gap: 1.5 }}>
@@ -1560,14 +1560,14 @@ export function SalesOrderDetailsPage(): React.ReactElement {
           <>
             <Box sx={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 3 }}>
               <Box>
-                <Typography variant="overline" fontWeight={700}>DELIVERY DATE</Typography>
+                <Typography variant="overline" sx={{ fontWeight: 700 }}>DELIVERY DATE</Typography>
                 <Box sx={{ display: 'grid', gap: 1.5 }}>
                   {lineDetailField('shippingDateRequested', 'Requested ship date', 'date')}
                   {lineDetailField('deliveryDate', 'Requested receipt date', 'date')}
                 </Box>
               </Box>
               <Box>
-                <Typography variant="overline" fontWeight={700}>CONFIRMED DATES</Typography>
+                <Typography variant="overline" sx={{ fontWeight: 700 }}>CONFIRMED DATES</Typography>
                 <Box sx={{ display: 'grid', gap: 1.5 }}>
                   {lineDetailField('shippingDateConfirmed', 'Confirmed ship date', 'date')}
                   {lineDetailField('receiptDateConfirmed', 'Confirmed receipt date', 'date')}
@@ -1575,7 +1575,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
                 </Box>
               </Box>
               <Box>
-                <Typography variant="overline" fontWeight={700}>PLANNING</Typography>
+                <Typography variant="overline" sx={{ fontWeight: 700 }}>PLANNING</Typography>
                 <Box sx={{ display: 'grid', gap: 1.5 }}>
                   {lineEnumField('mpsFullRunCtpStatus', 'Batch CTP status', ctpStatusOptions)}
                   {lineDetailField('planningPriority', 'Planning priority', 'number')}
@@ -1583,7 +1583,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
                 </Box>
               </Box>
               <Box>
-                <Typography variant="overline" fontWeight={700}>DELIVERY</Typography>
+                <Typography variant="overline" sx={{ fontWeight: 700 }}>DELIVERY</Typography>
                 <Box sx={{ display: 'grid', gap: 1.5 }}>
                   {lineDetailField('overDeliveryPercent', 'Overdelivery', 'number')}
                   {lineDetailField('underDeliveryPercent', 'Underdelivery', 'number')}
@@ -1592,19 +1592,19 @@ export function SalesOrderDetailsPage(): React.ReactElement {
                 </Box>
               </Box>
               <Box>
-                <Typography variant="overline" fontWeight={700}>DIRECT DELIVERY</Typography>
+                <Typography variant="overline" sx={{ fontWeight: 700 }}>DIRECT DELIVERY</Typography>
                 <Box sx={{ display: 'grid', gap: 1.5 }}>
                   {lineBooleanField('directDelivery', 'Direct delivery')}
                 </Box>
               </Box>
               <Box>
-                <Typography variant="overline" fontWeight={700}>CARRIER INFORMATION</Typography>
+                <Typography variant="overline" sx={{ fontWeight: 700 }}>CARRIER INFORMATION</Typography>
                 <Box sx={{ display: 'grid', gap: 1.5 }}>
                   {lineEnumField('shipCarrierDlvType', 'Carrier service', carrierServiceOptions)}
                 </Box>
               </Box>
               <Box>
-                <Typography variant="overline" fontWeight={700}>STORAGE LOCATION</Typography>
+                <Typography variant="overline" sx={{ fontWeight: 700 }}>STORAGE LOCATION</Typography>
                 <Box sx={{ display: 'grid', gap: 1.5 }}>
                   {dimensionField('site', t('salesOrderQuickCreate.site', 'Site'))}
                   {dimensionField('warehouse', t('salesOrderQuickCreate.warehouse', 'Warehouse'))}
@@ -1631,7 +1631,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
             <Box sx={{ display: 'grid', gap: 1.5 }}>{dimensionField('site', 'Sourcing site')}</Box>
             <Box sx={{ display: 'grid', gap: 1.5 }}>
               {dimensionField('warehouse', 'Sourcing warehouse')}
-              <Typography variant="overline" fontWeight={700}>MASTER PLANNING</Typography>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>MASTER PLANNING</Typography>
               {lineBooleanField('excludeFromMasterPlanning', 'Exclude from master planning')}
             </Box>
           </Box>
@@ -1639,7 +1639,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         return (
           <Box sx={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 3 }}>
             <Box>
-              <Typography variant="overline" fontWeight={700}>DISCOUNT</Typography>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>DISCOUNT</Typography>
               <Box sx={{ display: 'grid', gap: 1.5 }}>
                 {lineDetailField('lineDiscount', 'Discount', 'number')}
                 {lineDetailField('lineDiscountPercent', 'Discount percent', 'number')}
@@ -1652,14 +1652,14 @@ export function SalesOrderDetailsPage(): React.ReactElement {
               </Box>
             </Box>
             <Box>
-              <Typography variant="overline" fontWeight={700}>PRICES</Typography>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>PRICES</Typography>
               <Box sx={{ display: 'grid', gap: 1.5 }}>
                 {lineDetailField('priceUnit', 'Price unit', 'number')}
                 {lineDetailField('salesMarkup', 'Sales charges', 'number')}
               </Box>
             </Box>
             <Box>
-              <Typography variant="overline" fontWeight={700}>REBATES</Typography>
+              <Typography variant="overline" sx={{ fontWeight: 700 }}>REBATES</Typography>
               <Box sx={{ display: 'grid', gap: 1.5 }}>
                 {lineBooleanField('excludeFromRebate', 'Exclude from rebate')}
                 {lineBooleanField('excludeFromRebateManagement', 'Exclude from rebate management')}

@@ -21,6 +21,10 @@ public sealed class SalesOrderCopyValidatorTests
 
         var invalidFactor = validator.Validate(new SalesOrderCopyRequest("fromAll", ["123"], 0));
         Assert.Equal("Quantity factor must be greater than zero.", invalidFactor.Errors[0].ErrorMessage);
+
+        var reverseSign = validator.Validate(new SalesOrderCopyRequest("fromAll", ["123"], InvertSign: true));
+        Assert.Equal("Reverse-sign copying requires a return-order flow and is not supported for sales orders.",
+            reverseSign.Errors[0].ErrorMessage);
     }
 
     [Fact]

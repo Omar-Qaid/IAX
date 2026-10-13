@@ -262,6 +262,55 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             }
             #endregion
 
+            #region Sample item packaging conversions
+            // These pack sizes belong to the sample items above. CTN -> BTL cannot be
+            // global: ITM-1001 contains 24 bottles, while ITM-1005 contains 12.
+            var packagingSeeds = new (string ItemId, string From, string To, decimal Factor)[]
+            {
+                ("ITM-1001", "CTN", "BTL", 24m),
+                ("ITM-1002", "BOX", "PCK", 5m),
+                ("ITM-1004", "DOZ", "PCS", 12m),
+                ("ITM-1005", "CTN", "BTL", 12m),
+            };
+            var packagingItemIds = packagingSeeds.Select(seed => seed.ItemId).ToArray();
+            var packagingItems = await db.InventTables.IgnoreQueryFilters()
+                .Where(item => item.DataAreaId == "dat" && packagingItemIds.Contains(item.ItemId))
+                .ToDictionaryAsync(item => item.ItemId, ct);
+            var packagingSymbols = packagingSeeds.SelectMany(seed => new[] { seed.From, seed.To }).Distinct().ToArray();
+            var packagingUnits = await db.UnitOfMeasures.IgnoreQueryFilters()
+                .Where(unit => packagingSymbols.Contains(unit.Symbol))
+                .ToDictionaryAsync(unit => unit.Symbol, ct);
+            var existingPackagingRules = await db.UnitOfMeasureConversions.IgnoreQueryFilters()
+                .Select(rule => new { rule.Product, rule.FromUnitOfMeasure, rule.ToUnitOfMeasure })
+                .ToListAsync(ct);
+            foreach (var seed in packagingSeeds)
+            {
+                if (!packagingItems.TryGetValue(seed.ItemId, out var item)
+                    || !packagingUnits.TryGetValue(seed.From, out var from)
+                    || !packagingUnits.TryGetValue(seed.To, out var to))
+                    continue;
+                var productScope = item.Product != 0 ? item.Product : item.RecId;
+                if (productScope == 0 || existingPackagingRules.Any(rule => rule.Product == productScope
+                    && ((rule.FromUnitOfMeasure == from.RecId && rule.ToUnitOfMeasure == to.RecId)
+                        || (rule.FromUnitOfMeasure == to.RecId && rule.ToUnitOfMeasure == from.RecId))))
+                    continue;
+                db.UnitOfMeasureConversions.Add(new UnitOfMeasureConversion
+                {
+                    Product = productScope,
+                    FromUnitOfMeasure = from.RecId,
+                    ToUnitOfMeasure = to.RecId,
+                    Factor = seed.Factor,
+                    Numerator = 1,
+                    Denominator = 1,
+                    DataAreaId = item.DataAreaId,
+                    IsActive = true,
+                    CreatedBy = createdBy,
+                    OwnerAccountId = createdBy,
+                });
+            }
+            await db.SaveChangesAsync(ct);
+            #endregion
+
             #region Sample Customers & Vendors (AX CustTable / VendTable)
             var customerSeeds = new[]
             {

@@ -16,13 +16,13 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
     color = 'success';
   } else if (s === 'onhold' || s === 'warning' || s === 'pending') {
     color = 'warning';
-  } else if (s === 'blocked' || s === 'cancelled' || s === 'error') {
+  } else if (s === 'blocked' || s === 'cancelled' || s === 'canceled' || s === 'error') {
     color = 'error';
   } else if (s === 'open' || s === 'draft') {
     color = 'info';
   }
 
-  const label = t(`common.${s}`) || status;
+  const label = t(`common.${s}`, status);
 
   return (
     <Chip

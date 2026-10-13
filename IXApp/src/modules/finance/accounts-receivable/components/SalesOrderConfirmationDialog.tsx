@@ -69,26 +69,26 @@ export function SalesOrderConfirmationDialog({ open, orderId, salesId, canPost, 
           {error && <Alert severity="error">{error}</Alert>}
           {listQuery.error instanceof Error && <Alert severity="error">{listQuery.error.message}</Alert>}
           {canPost && (
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, alignItems: 'center' }}>
               <TextField label="Confirmation date" type="date" size="small" value={confirmationDate}
                 onChange={(event) => setConfirmationDate(event.target.value)}
                 slotProps={{ inputLabel: { shrink: true } }} />
               <Button variant="contained" disabled={posting || !confirmationDate} onClick={() => void post()}>
                 {posting ? 'Posting…' : 'Post confirmation'}
               </Button>
-            </Stack>
+            </Box>
           )}
           <Typography variant="subtitle2">Posted confirmations</Typography>
           {listQuery.isLoading && <CircularProgress size={24} />}
           {!listQuery.isLoading && !listQuery.data?.length && <Typography variant="body2">No confirmations posted yet.</Typography>}
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
             {listQuery.data?.map((item) => (
               <Button key={item.id} size="small" variant={selectedId === item.id ? 'contained' : 'outlined'}
                 onClick={() => setSelectedId(item.id)}>
                 {item.confirmId} · {item.confirmDate.slice(0, 10)}
               </Button>
             ))}
-          </Stack>
+          </Box>
           {detailQuery.isLoading && <CircularProgress size={24} />}
           {detailQuery.error instanceof Error && <Alert severity="error">{detailQuery.error.message}</Alert>}
           {detail && (
@@ -101,10 +101,10 @@ export function SalesOrderConfirmationDialog({ open, orderId, salesId, canPost, 
               <Typography variant="subtitle1" sx={{ mt: 1 }}>Confirmed total: {money(detail.header.confirmAmount, detail.header.currencyCode)}</Typography>
               <Divider sx={{ my: 2 }} />
               {detail.lines.map((line) => (
-                <Stack key={line.id} direction="row" justifyContent="space-between" spacing={2} sx={{ py: 0.5 }}>
+                <Box key={line.id} sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, py: 0.5 }}>
                   <Typography variant="body2">{line.lineNum}. {line.itemId} · {line.name} · {line.qty} {line.salesUnit}</Typography>
                   <Typography variant="body2">{money(line.lineAmount, detail.header.currencyCode)}</Typography>
-                </Stack>
+                </Box>
               ))}
             </Box>
           )}

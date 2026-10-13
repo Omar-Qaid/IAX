@@ -61,6 +61,9 @@ public sealed class ArchitectureTests
 
         Assert.NotEmpty(context.Model.GetEntityTypes());
         Assert.NotNull(context.Model.FindEntityType(typeof(UnitOfMeasureConversion)));
+        Assert.NotNull(context.Model.FindEntityType(typeof(UnitOfMeasureBaseUnit)));
+        Assert.NotNull(context.Model.FindEntityType(typeof(UnitOfMeasureInternalCode)));
+        Assert.NotNull(context.Model.FindEntityType(typeof(UnitOfMeasureConversionCache)));
     }
 }
 

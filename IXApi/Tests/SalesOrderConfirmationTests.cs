@@ -64,6 +64,30 @@ public sealed class SalesOrderConfirmationTests
     }
 
     [Fact]
+    public async Task Sales_unit_conversion_uses_item_rule_when_product_is_unassigned()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        fixture.Db.Set<InventTable>().AddRange(
+            new InventTable { RecId = 10, DataAreaId = "dat", ItemId = "WATER", Product = 0 },
+            new InventTable { RecId = 11, DataAreaId = "dat", ItemId = "OIL", Product = 0 });
+        fixture.Db.Set<InventTableModule>().AddRange(
+            new InventTableModule { RecId = 10, DataAreaId = "dat", ItemId = "WATER", ModuleType = ModuleInventPurchSales.Inventory, UnitId = "BTL" },
+            new InventTableModule { RecId = 11, DataAreaId = "dat", ItemId = "OIL", ModuleType = ModuleInventPurchSales.Inventory, UnitId = "BTL" });
+        fixture.Db.Set<UnitOfMeasure>().AddRange(
+            new UnitOfMeasure { RecId = 1, Symbol = "BTL", DecimalPrecision = 0 },
+            new UnitOfMeasure { RecId = 2, Symbol = "CTN", DecimalPrecision = 0 });
+        fixture.Db.Set<UnitOfMeasureConversion>().AddRange(
+            new UnitOfMeasureConversion { RecId = 1, Product = 10, FromUnitOfMeasure = 2, ToUnitOfMeasure = 1, Factor = 24 },
+            new UnitOfMeasureConversion { RecId = 2, Product = 11, FromUnitOfMeasure = 2, ToUnitOfMeasure = 1, Factor = 12 });
+        await fixture.Db.SaveChangesAsync();
+
+        var service = new SalesUnitConversionService(new TestUnitOfWork(fixture.Db));
+        var items = await fixture.Db.Set<InventTable>().ToDictionaryAsync(item => item.ItemId);
+        Assert.Equal(48m, await service.ToInventoryQuantityAsync(items["WATER"], "CTN", 2m, default));
+        Assert.Equal(24m, await service.ToInventoryQuantityAsync(items["OIL"], "CTN", 2m, default));
+    }
+
+    [Fact]
     public async Task Confirmation_and_reconfirmation_keep_separate_snapshots_without_consuming_inventory()
     {
         await using var fixture = await Fixture.CreateAsync();

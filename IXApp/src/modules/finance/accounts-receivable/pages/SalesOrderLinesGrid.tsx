@@ -335,9 +335,10 @@ export function SalesOrderLinesGrid({
     }),
     [order.deliveryDate]
   );
+  const hasNewDraft = activeDraft?.id === 'new-sales-line';
   const gridRows = useMemo(
-    () => (activeDraft?.id === 'new-sales-line' ? [...lines, newRow] : lines),
-    [lines, newRow, activeDraft?.id]
+    () => (hasNewDraft ? [...lines, newRow] : lines),
+    [lines, newRow, hasNewDraft]
   );
   const editableFields = new Set([
     'lineType',

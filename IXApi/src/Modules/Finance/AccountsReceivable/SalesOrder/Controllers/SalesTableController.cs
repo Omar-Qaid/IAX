@@ -140,6 +140,7 @@ public sealed class SalesTableController : ControllerBase
     }
 
     [HttpPost("{recId:long}/recalculate-discounts")]
+    [DomainPermission("AccountsReceivable", "SalesOrders", "Edit")]
     public async Task<IActionResult> RecalculateDiscounts(long recId, CancellationToken cancellationToken = default)
     {
         var result = await _discounts.RecalculateAsync(recId, cancellationToken);

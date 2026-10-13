@@ -37,6 +37,13 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
         };
         _dbContext.Context.Set<InventTransOrigin>().Add(origin);
         await _dbContext.Context.SaveChangesAsync(cancellationToken);
+        _dbContext.Context.Set<InventTransOriginSalesLine>().Add(new InventTransOriginSalesLine
+        {
+            InventTransOrigin = origin.RecId,
+            SalesLineDataAreaId = line.DataAreaId,
+            SalesLineInventTransId = transactionId,
+            DataAreaId = order.DataAreaId
+        });
 
         line.InventDimId = dimension.InventDimId;
         line.InventTransId = transactionId;
@@ -90,6 +97,18 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
             item.DataAreaId == line.DataAreaId && item.InventTransId == line.InventTransId,
             cancellationToken);
         if (origin == null) throw new InvalidOperationException("The sales line inventory origin was not found.");
+        if (!await _dbContext.Context.Set<InventTransOriginSalesLine>().AnyAsync(item =>
+                item.DataAreaId == line.DataAreaId && item.InventTransOrigin == origin.RecId,
+                cancellationToken))
+        {
+            _dbContext.Context.Set<InventTransOriginSalesLine>().Add(new InventTransOriginSalesLine
+            {
+                InventTransOrigin = origin.RecId,
+                SalesLineDataAreaId = line.DataAreaId,
+                SalesLineInventTransId = line.InventTransId,
+                DataAreaId = line.DataAreaId
+            });
+        }
         var transaction = await _dbContext.Context.Set<InventTrans>().SingleOrDefaultAsync(item =>
             item.DataAreaId == line.DataAreaId && item.InventTransOrigin == origin.RecId, cancellationToken);
         if (transaction == null) throw new InvalidOperationException("The sales line inventory transaction was not found.");
@@ -177,6 +196,10 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
             && item.InventDimId == line.InventDimId, cancellationToken)
             ?? throw new InvalidOperationException("The sales line inventory summary was not found.");
         inventorySummary.OnOrder -= demandQuantity;
+        var salesLineLinks = await _dbContext.Context.Set<InventTransOriginSalesLine>()
+            .Where(item => item.DataAreaId == line.DataAreaId && item.InventTransOrigin == origin.RecId)
+            .ToListAsync(cancellationToken);
+        _dbContext.Context.Set<InventTransOriginSalesLine>().RemoveRange(salesLineLinks);
         _dbContext.Context.Set<InventTrans>().RemoveRange(transactions);
         _dbContext.Context.Set<InventTransOrigin>().Remove(origin);
     }

@@ -18,5 +18,7 @@ public sealed class SalesOrderCopyValidator : AbstractValidator<SalesOrderCopyRe
             .When(request => request.LineIds is { Count: > 0 });
         RuleFor(request => request.QuantityFactor)
             .GreaterThan(0).WithMessage("Quantity factor must be greater than zero.");
+        RuleFor(request => request.InvertSign)
+            .Equal(false).WithMessage("Reverse-sign copying requires a return-order flow and is not supported for sales orders.");
     }
 }

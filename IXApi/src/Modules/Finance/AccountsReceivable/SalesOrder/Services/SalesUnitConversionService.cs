@@ -30,12 +30,16 @@ public sealed class SalesUnitConversionService
         var to = units.FirstOrDefault(row => string.Equals(row.Symbol, inventoryUnit, StringComparison.OrdinalIgnoreCase));
         if (from == null || to == null) return null;
 
+        // Seeded released items can have no global Product record yet. In that case
+        // their InventTable RecId scopes the rule to the item instead of making a
+        // packaging conversion global to every item using the same two units.
+        var productScope = item.Product != 0 ? item.Product : item.RecId;
         var rules = await _db.Context.Set<UnitOfMeasureConversion>().AsNoTracking()
-            .Where(row => (row.Product == item.Product || row.Product == 0)
+            .Where(row => (row.Product == productScope || row.Product == 0)
                 && ((row.FromUnitOfMeasure == from.RecId && row.ToUnitOfMeasure == to.RecId)
                     || (row.FromUnitOfMeasure == to.RecId && row.ToUnitOfMeasure == from.RecId)))
             .ToListAsync(cancellationToken);
-        var rule = rules.OrderByDescending(row => row.Product == item.Product)
+        var rule = rules.OrderByDescending(row => row.Product == productScope)
             .ThenByDescending(row => row.FromUnitOfMeasure == from.RecId)
             .FirstOrDefault();
         if (rule == null) return null;

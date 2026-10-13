@@ -14,7 +14,7 @@ import { markupTransApi, type ChargeDocumentType, type ChargeLevel, type MarkupT
 export interface DocumentChargesPageProps {
   documentType: ChargeDocumentType;
   level?: ChargeLevel;
-  documentRecId: number;
+  documentRecId: string | number;
   documentNumber: string;
   documentName?: string;
   onBack: () => void;

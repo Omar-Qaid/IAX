@@ -18,7 +18,7 @@ export const salesLineGrossAmount = (line: DiscountableSalesLine) =>
 
 export const synchronizeSalesLineDiscount = <T extends DiscountableSalesLine>(
   line: T,
-  field: 'quantity' | 'unitPrice' | 'lineDiscount' | 'lineDiscountPercent',
+  field: 'quantity' | 'unitPrice' | 'priceUnit' | 'lineDiscount' | 'lineDiscountPercent',
   value: number
 ): T => {
   const next = { ...line, [field]: Number.isFinite(value) ? value : 0 };

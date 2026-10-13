@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list/SimpleListPage';
+import { SimpleListPage, type EnterpriseListConfig, type EnterpriseListSearchField } from '@patterns/simple-list/SimpleListPage';
 import type { ColumnDef } from '@shared/components/data-grid/types';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { PERMISSIONS } from '@core/permissions/permissions';
@@ -17,7 +17,13 @@ import {
   type TradeAgreementJournalName,
 } from '../api/priceDiscSetupApi';
 
-type SetupRecord = TradeAgreementJournal | PriceDiscountGroup | TradeAgreementJournalName;
+type SetupRecord = (TradeAgreementJournal | PriceDiscountGroup | TradeAgreementJournalName) & {
+  journalNum?: string;
+  journalName?: string;
+  groupId?: string;
+  posted?: number;
+  priceDiscPriceAttributeEnable?: number;
+};
 type SetupKind = 'journals' | 'groups' | 'names';
 
 const relationOptions = [
@@ -34,9 +40,18 @@ export function PriceDiscSetupListPage({ kind }: { kind: SetupKind }): React.Rea
   const { notifyError, notifySuccess } = useNotifications();
   const queryKey = ['accounts-receivable', 'price-disc-setup', kind] as const;
   const api = kind === 'journals' ? tradeAgreementJournalApi : kind === 'groups' ? priceDiscountGroupApi : tradeAgreementJournalNameApi;
-  const query = useQuery({ queryKey, queryFn: ({ signal }) => api.list(signal) });
-  const isPostedJournal = (record: SetupRecord): boolean =>
-    kind === 'journals' && (record as TradeAgreementJournal).posted === 1;
+  const query = useQuery<SetupRecord[]>({
+    queryKey,
+    queryFn: async ({ signal }) => {
+      if (kind === 'journals') return tradeAgreementJournalApi.list(signal);
+      if (kind === 'groups') return priceDiscountGroupApi.list(signal);
+      return tradeAgreementJournalNameApi.list(signal);
+    },
+  });
+  const isPostedJournal = useCallback(
+    (record: SetupRecord): boolean => kind === 'journals' && record.posted === 1,
+    [kind]
+  );
 
   const columns = useMemo<ColumnDef<SetupRecord>[]>(() => {
     if (kind === 'journals') return [
@@ -61,13 +76,17 @@ export function PriceDiscSetupListPage({ kind }: { kind: SetupKind }): React.Rea
       { field: 'defaultRelation', headerName: 'Default relation', width: 180, type: 'singleSelect', valueOptions: relationOptions, editable: true },
       { field: 'priceDiscPriceAttributeEnable', headerName: 'Price attributes enabled', width: 190, type: 'boolean', valueGetter: ({ row }) => row.priceDiscPriceAttributeEnable === 1, editable: true, renderEditCell: ({ value, onChange, disabled }) => <input aria-label="Price attributes enabled" type="checkbox" checked={value === true || Number(value) === 1} disabled={disabled} onChange={(event) => onChange(event.target.checked ? 1 : 0)} /> },
     ];
-  }, [kind]);
+  }, [kind, isPostedJournal]);
 
   const labels = kind === 'journals'
     ? { title: 'Trade agreement journals', table: 'PriceDiscAdmTable', permission: [PERMISSIONS.TRADE_AGREEMENT_JOURNAL_VIEW, PERMISSIONS.TRADE_AGREEMENT_JOURNAL_CREATE, PERMISSIONS.TRADE_AGREEMENT_JOURNAL_EDIT, PERMISSIONS.TRADE_AGREEMENT_JOURNAL_DELETE] as const }
     : kind === 'groups'
       ? { title: 'Price/discount groups', table: 'PriceDiscGroup', permission: [PERMISSIONS.PRICE_DISCOUNT_GROUP_VIEW, PERMISSIONS.PRICE_DISCOUNT_GROUP_CREATE, PERMISSIONS.PRICE_DISCOUNT_GROUP_EDIT, PERMISSIONS.PRICE_DISCOUNT_GROUP_DELETE] as const }
       : { title: 'Trade agreement journal names', table: 'PriceDiscAdmName', permission: [PERMISSIONS.TRADE_AGREEMENT_JOURNAL_NAME_VIEW, PERMISSIONS.TRADE_AGREEMENT_JOURNAL_NAME_CREATE, PERMISSIONS.TRADE_AGREEMENT_JOURNAL_NAME_EDIT, PERMISSIONS.TRADE_AGREEMENT_JOURNAL_NAME_DELETE] as const };
+
+  const searchFields: EnterpriseListSearchField<SetupRecord>[] = kind === 'groups'
+    ? [{ field: 'groupId', label: 'Group ID' }, { field: 'name', label: 'Description' }]
+    : [{ field: 'journalName', label: 'Journal name' }, { field: 'name', label: 'Description' }, ...(kind === 'journals' ? [{ field: 'journalNum' as const, label: 'Journal number' }] : [])];
 
   const config: EnterpriseListConfig<SetupRecord> = {
     recordTableName: labels.table,
@@ -76,9 +95,7 @@ export function PriceDiscSetupListPage({ kind }: { kind: SetupKind }): React.Rea
     filterLabel: t('actions.filter'),
     informationLabel: t('common.information'),
     searchMode: 'quick',
-    searchFields: kind === 'groups'
-      ? [{ field: 'groupId', label: 'Group ID' }, { field: 'name', label: 'Description' }]
-      : [{ field: 'journalName', label: 'Journal name' }, { field: 'name', label: 'Description' }, ...(kind === 'journals' ? [{ field: 'journalNum', label: 'Journal number' }] : [])],
+    searchFields,
     locale: currentLanguage.code,
     crud: {
       editLabel: t('actions.edit'), newLabel: t('actions.new'), deleteLabel: t('actions.delete'),

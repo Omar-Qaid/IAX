@@ -35,7 +35,7 @@ export function SalesOrderChargesPage(): React.ReactElement {
     <DocumentChargesPage
       documentType="sales"
       level={line ? 'line' : 'header'}
-      documentRecId={line ? Number(line.id) : order.recId}
+      documentRecId={line ? line.id : order.recId}
       documentNumber={line ? `${order.salesId} / ${line.lineNumber}` : order.salesId}
       documentName={line ? `${line.itemNumber} - ${line.description}` : order.customerName}
       defaultCurrencyCode={line?.currencyCode || order.currencyCode}

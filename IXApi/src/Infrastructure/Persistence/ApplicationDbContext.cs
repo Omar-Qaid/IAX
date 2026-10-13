@@ -296,6 +296,9 @@ namespace IAX.IXApi.Infrastructure.Persistence
         public DbSet<InventTrans> InventTrans => Set<InventTrans>();
         public DbSet<UnitOfMeasure> UnitOfMeasures => Set<UnitOfMeasure>();
         public DbSet<UnitOfMeasureConversion> UnitOfMeasureConversions => Set<UnitOfMeasureConversion>();
+        public DbSet<UnitOfMeasureBaseUnit> UnitOfMeasureBaseUnits => Set<UnitOfMeasureBaseUnit>();
+        public DbSet<UnitOfMeasureInternalCode> UnitOfMeasureInternalCodes => Set<UnitOfMeasureInternalCode>();
+        public DbSet<UnitOfMeasureConversionCache> UnitOfMeasureConversionCaches => Set<UnitOfMeasureConversionCache>();
         public DbSet<InventTransOrigin> InventTransOrigins => Set<InventTransOrigin>();
         public DbSet<InventTransOriginSalesLine> InventTransOriginSalesLines => Set<InventTransOriginSalesLine>();
         public DbSet<InventSum> InventSums => Set<InventSum>();

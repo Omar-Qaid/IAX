@@ -52,6 +52,7 @@ public sealed class SalesInventoryDemandTests
 
         var dimension = await db.Set<InventDim>().SingleAsync();
         var origin = await db.Set<InventTransOrigin>().SingleAsync();
+        var salesLineLink = await db.Set<InventTransOriginSalesLine>().SingleAsync();
         var transaction = await db.Set<InventTrans>().SingleAsync();
         var inventorySummary = await db.Set<InventSum>().SingleAsync();
         Assert.Equal("DIM-000001", dimension.InventDimId);
@@ -60,6 +61,9 @@ public sealed class SalesInventoryDemandTests
         Assert.Equal(dimension.InventDimId, line.InventDimId);
         Assert.Equal(origin.InventTransId, line.InventTransId);
         Assert.Equal(origin.RecId, transaction.InventTransOrigin);
+        Assert.Equal(origin.RecId, salesLineLink.InventTransOrigin);
+        Assert.Equal(line.InventTransId, salesLineLink.SalesLineInventTransId);
+        Assert.Equal(line.DataAreaId, salesLineLink.SalesLineDataAreaId);
         Assert.Equal(-10, transaction.Qty);
         Assert.Equal(10, line.RemainSalesPhysical);
         Assert.Equal(10, line.RemainSalesFinancial);
@@ -80,6 +84,10 @@ public sealed class SalesInventoryDemandTests
         Assert.Equal(0, inventorySummary.PostedValue);
         Assert.Equal(0, inventorySummary.PhysicalValue);
 
+        // Editing a line created before the link was populated repairs its origin relationship.
+        db.Set<InventTransOriginSalesLine>().Remove(salesLineLink);
+        await financeData.SaveChangesAsync();
+
         var sameDimension = await dimensions.ResolveAsync("DAT", "1", "11");
         Assert.Equal(dimension.RecId, sameDimension.RecId);
         Assert.Equal(1, numbers.DimensionCalls);
@@ -89,6 +97,7 @@ public sealed class SalesInventoryDemandTests
         line.RemainInventPhysical = 12;
         await service.UpdateAsync(line, "1", "11");
         await financeData.SaveChangesAsync();
+        Assert.Equal(origin.RecId, (await db.Set<InventTransOriginSalesLine>().SingleAsync()).InventTransOrigin);
         Assert.Equal(-12, (await db.Set<InventTrans>().SingleAsync()).Qty);
         Assert.Equal(12, (await db.Set<InventSum>().SingleAsync()).OnOrder);
 
@@ -96,6 +105,7 @@ public sealed class SalesInventoryDemandTests
         await financeData.SaveChangesAsync();
         Assert.Empty(await db.Set<InventTrans>().ToListAsync());
         Assert.Empty(await db.Set<InventTransOrigin>().ToListAsync());
+        Assert.Empty(await db.Set<InventTransOriginSalesLine>().ToListAsync());
         Assert.Single(await db.Set<InventDim>().ToListAsync());
         Assert.Equal(0, (await db.Set<InventSum>().SingleAsync()).OnOrder);
     }
@@ -150,6 +160,7 @@ public sealed class SalesInventoryDemandTests
         {
             Configure<InventDim>(builder);
             Configure<InventTransOrigin>(builder);
+            Configure<InventTransOriginSalesLine>(builder);
             Configure<InventTrans>(builder);
             Configure<InventSum>(builder);
         }

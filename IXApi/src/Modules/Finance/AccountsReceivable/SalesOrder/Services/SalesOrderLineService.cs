@@ -247,7 +247,12 @@ public sealed class SalesOrderLineService : ISalesOrderLineService
                 var item = await _dbContext.Context.Set<InventTable>().AsNoTracking()
                     .FirstOrDefaultAsync(row => row.ItemId == line.ItemId && row.DataAreaId == order.DataAreaId, cancellationToken);
                 if (item == null) return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, "Item was not found.");
-                var inventoryQuantity = await _units.ToInventoryQuantityAsync(item, requestedUnit, input.Quantity, cancellationToken);
+                // Preserve the posted inventory quantity when this edit does not change the
+                // sales quantity or unit. Older lines may predate unit conversion setup.
+                var inventoryQuantity = input.Quantity == line.SalesQty
+                    && string.Equals(requestedUnit, line.SalesUnit, StringComparison.OrdinalIgnoreCase)
+                    ? line.QtyOrdered
+                    : await _units.ToInventoryQuantityAsync(item, requestedUnit, input.Quantity, cancellationToken);
                 if (inventoryQuantity == null)
                     return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, "A conversion from the sales unit to the item's inventory unit is required.");
                 var requestedPriceUnit = input.PriceUnit.GetValueOrDefault() > 0 ? input.PriceUnit!.Value :

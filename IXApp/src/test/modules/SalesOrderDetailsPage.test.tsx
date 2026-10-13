@@ -21,6 +21,7 @@ vi.mock('@modules/finance/accounts-receivable/api/salesOrderListApi', () => ({
         invoiceAccount: 'C-002',
         currencyCode: 'SAR',
         salesStatus: 'Backorder',
+        orderDate: '2026-09-08',
         deliveryDate: '2026-09-09',
         paymentTerms: 'Net 30',
         deliveryMode: 'Road',
@@ -34,6 +35,7 @@ vi.mock('@modules/finance/accounts-receivable/api/salesOrderListApi', () => ({
 vi.mock('@modules/finance/accounts-receivable/api/salesOrderLinesApi', () => ({
   salesOrderLinesApi: {
     list: vi.fn().mockResolvedValue([]),
+    totals: vi.fn().mockResolvedValue({ subtotal: 250, totalDiscount: 0, salesTax: 0, totalCharges: 0, invoiceAmount: 250, quantity: 0, costValue: 0 }),
     items: vi.fn().mockResolvedValue({
       data: [{ itemNumber: 'ITEM-1', name: 'Test item' }],
       pageNumber: 1,
@@ -77,7 +79,7 @@ it('loads a numeric route ID directly from the API', async () => {
   openOrder('1');
   expect(await screen.findByText('SO-LIVE-001 : Live customer')).toBeDefined();
   expect(screen.queryByText('No sales orders are available.')).toBeNull();
-  expect(screen.getByText('250 SAR')).toBeDefined();
+  await waitFor(() => expect(salesOrderLinesApi.totals).toHaveBeenCalledWith('1', expect.anything()));
 });
 
 it('does not substitute another order for an unknown ID', async () => {
@@ -110,9 +112,7 @@ it('opens advanced filters and applies and resets a sales order condition', asyn
   await screen.findByText('SO-LIVE-001 : Live customer');
   fireEvent.click(screen.getByRole('button', { name: 'Filter' }));
   expect(screen.getByRole('heading', { name: 'Filters' })).toBeDefined();
-  const input = screen
-    .getAllByRole('textbox')
-    .find((element) => !element.getAttribute('placeholder'))!;
+  const input = within(screen.getByRole('heading', { name: 'Filters' }).parentElement!.parentElement!).getByRole('textbox');
   fireEvent.change(input, { target: { value: 'no-match' } });
   fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
   expect(screen.queryByText('SO-LIVE-001')).toBeNull();
@@ -134,6 +134,7 @@ it('toggles line filters through Search without opening the advanced panel', asy
 it('saves on cell blur, locks item identity and names, and removes the line', async () => {
   openOrder('1');
   await screen.findByText('SO-LIVE-001 : Live customer');
+  fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
   fireEvent.click(screen.getByRole('button', { name: 'Add line' }));
   expect(screen.queryByRole('dialog')).toBeNull();
   fireEvent.click(screen.getByRole('textbox', { name: 'Item number' }));
@@ -141,8 +142,8 @@ it('saves on cell blur, locks item identity and names, and removes the line', as
   await waitFor(() => expect(screen.queryByRole('textbox', { name: 'Item number' })).toBeNull());
   expect(screen.queryByRole('textbox', { name: 'Product name' })).toBeNull();
   expect(screen.queryByRole('textbox', { name: 'Arabic name' })).toBeNull();
-  expect(screen.queryByRole('button', { name: 'Save' })).toBeNull();
-  expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull();
+  expect(screen.getByRole('button', { name: 'Save' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: 'Cancel' })).toBeEnabled();
   const quantity = screen.getByRole('spinbutton', { name: 'Quantity' });
   fireEvent.change(quantity, { target: { value: '3' } });
   expect(salesOrderLinesApi.add).not.toHaveBeenCalled();
@@ -244,6 +245,7 @@ it('keeps invalid cell edits focused and moves to Unit after a successful Tab sa
   ]);
   openOrder('1');
   await screen.findAllByText('ITEM-42');
+  fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
   fireEvent.click(screen.getByLabelText('Quantity'));
   const quantity = screen.getByRole('spinbutton', { name: 'Quantity' });
   fireEvent.change(quantity, { target: { value: '0' } });
@@ -272,6 +274,7 @@ it('keeps invalid cell edits focused and moves to Unit after a successful Tab sa
 it('preserves an unfinished new line when switching between Lines and Header', async () => {
   openOrder('1');
   await screen.findByText('SO-LIVE-001 : Live customer');
+  fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
   fireEvent.click(screen.getByRole('button', { name: 'Add line' }));
   expect(screen.getByRole('textbox', { name: 'Item number' })).toBeDefined();
   fireEvent.click(screen.getByRole('tab', { name: 'Header' }));

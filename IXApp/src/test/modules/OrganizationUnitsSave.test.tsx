@@ -17,7 +17,10 @@ it('sends the chosen parent when saving an existing unit', async () => {
   render(<OrganizationUnitsPage />);
   await screen.findAllByText('Child unit');
   fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Open' }));
+  const parentLookup = screen.getByRole('combobox', { name: 'Parent organization unit' })
+    .closest('.MuiAutocomplete-root');
+  expect(parentLookup).not.toBeNull();
+  fireEvent.click(within(parentLookup as HTMLElement).getByRole('button', { name: 'Open' }));
   const list = await screen.findByRole('listbox');
   fireEvent.click(within(list).getByText('Parent unit'));
   fireEvent.click(screen.getByRole('button', { name: 'Save' }));

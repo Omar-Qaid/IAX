@@ -46,7 +46,7 @@ const toRecord = (dto: MarkupTransDto): MarkupTransRecord => ({ ...dto, id: Stri
 const toDto = ({ id: _id, ...record }: MarkupTransRecord): MarkupTransDto => record;
 
 export const markupTransApi = {
-  async list(documentType: ChargeDocumentType, documentRecId: number, level: ChargeLevel, signal?: AbortSignal) {
+  async list(documentType: ChargeDocumentType, documentRecId: string | number, level: ChargeLevel, signal?: AbortSignal) {
     const response = await apiClient.get<ApiResponse<MarkupTransDto[]>>(
       `/v1/MarkupTrans/document/${documentType}/${documentRecId}`,
       { params: { level }, signal }
@@ -60,7 +60,7 @@ export const markupTransApi = {
     );
     return requireData(response.data, 'The charges codes could not be loaded.');
   },
-  async create(documentType: ChargeDocumentType, documentRecId: number, level: ChargeLevel, record: MarkupTransRecord) {
+  async create(documentType: ChargeDocumentType, documentRecId: string | number, level: ChargeLevel, record: MarkupTransRecord) {
     const response = await apiClient.post<ApiResponse<MarkupTransDto>>(
       `/v1/MarkupTrans/document/${documentType}/${documentRecId}`,
       toDto(record),

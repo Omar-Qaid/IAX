@@ -43,7 +43,7 @@ export interface TradeAgreementJournalName {
 }
 
 type WithoutId<T> = Omit<T, 'id'>;
-const recordAdapter = <T extends { recId: number }>() => ({
+const recordAdapter = <T extends { id: string; recId: number }>() => ({
   toRecord: (dto: WithoutId<T>): T => ({ ...dto, id: String(dto.recId) }) as T,
   toDto: ({ id: _id, ...dto }: T): WithoutId<T> => dto as WithoutId<T>,
 });

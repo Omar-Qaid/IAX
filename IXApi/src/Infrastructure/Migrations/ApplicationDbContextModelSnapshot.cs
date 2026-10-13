@@ -19599,6 +19599,281 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("UnitOfMeasure");
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.UnitOfMeasureBaseUnit", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<long>("UnitOfMeasure")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("UnitOfMeasureClass")
+                        .HasColumnType("int");
+
+                    b.HasKey("RecId");
+
+                    b.ToTable("UnitOfMeasureBaseUnit");
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.UnitOfMeasureConversion", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<int>("Denominator")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Factor")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<long>("FromUnitOfMeasure")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("InnerOffset")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Numerator")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("OuterOffset")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("Product")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Rounding")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<long>("ToUnitOfMeasure")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("RecId");
+
+                    b.ToTable("UnitOfMeasureConversion");
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.UnitOfMeasureConversionCache", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<int>("ConversionExists")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<int>("Denominator")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Factor")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("FactorDenominator")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<long>("FromUnitOfMeasure")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("InnerOffset")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Numerator")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("OuterOffset")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("Product")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Rounding")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<long>("ToUnitOfMeasure")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("RecId");
+
+                    b.ToTable("UnitOfMeasureConversionCache");
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.UnitOfMeasureInternalCode", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<int>("CodeSymbol")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<long>("UnitOfMeasure")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("RecId");
+
+                    b.ToTable("UnitOfMeasureInternalCode");
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.VendGroup", b =>
                 {
                     b.Property<long>("RecId")
