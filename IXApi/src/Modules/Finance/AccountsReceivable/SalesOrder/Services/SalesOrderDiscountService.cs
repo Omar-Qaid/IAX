@@ -56,6 +56,7 @@ public sealed class SalesOrderDiscountService : ISalesOrderDiscountService
                     line.SalesQty, line.SalesUnit, line.InventDimId,
                     PriceType.LineDiscSales, order.LineDisc, cancellationToken);
                 var gross = Math.Max(0m, line.LineAmount);
+                var availableForLineDiscount = Math.Max(0m, gross - Math.Max(0m, line.MultiLnDisc));
                 if (agreement == null)
                 {
                     line.LineDisc = 0m;
@@ -67,7 +68,8 @@ public sealed class SalesOrderDiscountService : ISalesOrderDiscountService
                 var discount = discountPercent > 0m
                     ? gross * discountPercent / 100m
                     : Math.Min(gross, Math.Max(0m, agreement.Amount * line.SalesQty));
-                line.LineDisc = decimal.Round(discount, 2, MidpointRounding.AwayFromZero);
+                line.LineDisc = Math.Min(availableForLineDiscount,
+                    decimal.Round(discount, 2, MidpointRounding.AwayFromZero));
                 line.LinePercent = gross > 0m
                     ? decimal.Round(line.LineDisc / gross * 100m, 4, MidpointRounding.AwayFromZero)
                     : 0m;

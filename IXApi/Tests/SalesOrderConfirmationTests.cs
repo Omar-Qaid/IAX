@@ -36,6 +36,32 @@ public sealed class SalesOrderConfirmationTests
     }
 
     [Fact]
+    public async Task Discount_recalculation_does_not_exceed_value_after_multiline_discount()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var line = await fixture.Db.Set<SalesLine>().SingleAsync();
+        line.MultiLnDisc = 800m;
+        fixture.Db.Set<InventTableModule>().Add(new InventTableModule {
+            RecId = 10, DataAreaId = "dat", ItemId = "ITEM-A",
+            ModuleType = ModuleInventPurchSales.Sales, LineDisc = "GROUP"
+        });
+        fixture.Db.Set<PriceDiscTable>().Add(new PriceDiscTable {
+            RecId = 10, DataAreaId = "dat", Module = ModuleInventCustVend.Cust,
+            Relation = PriceType.LineDiscSales, AccountCode = PriceDiscPartyCodeType.All,
+            ItemCode = PriceDiscProductCodeType.GroupId, ItemRelation = "GROUP",
+            Currency = "SAR", Percent1 = 50m, UnitAppliesToAll = 1
+        });
+        await fixture.Db.SaveChangesAsync();
+
+        var result = await new SalesOrderDiscountService(new TestUnitOfWork(fixture.Db), new TestCompany())
+            .RecalculateAsync(1, default);
+
+        Assert.Equal(SalesDiscountRecalculationStatus.Recalculated, result.Status);
+        Assert.Equal(200m, line.LineDisc);
+        Assert.IsType<OkObjectResult>(await fixture.Controller.Post(1, new(), default));
+    }
+
+    [Fact]
     public async Task Percentage_charge_follows_line_net_and_zero_does_not_fall_back_to_rate()
     {
         await using var fixture = await Fixture.CreateAsync();
@@ -658,7 +684,7 @@ public sealed class SalesOrderConfirmationTests
                 typeof(InventDim),
                 typeof(MarkupTrans), typeof(TaxGroupData), typeof(TaxOnItem),
                 typeof(TaxData), typeof(InventTableModule), typeof(InventTable),
-                typeof(UnitOfMeasure), typeof(UnitOfMeasureConversion)
+                typeof(UnitOfMeasure), typeof(UnitOfMeasureConversion), typeof(PriceDiscTable)
             };
             foreach (var type in typeof(SalesTable).Assembly.GetTypes()
                 .Where(type => type.IsClass && !type.IsAbstract
@@ -682,6 +708,7 @@ public sealed class SalesOrderConfirmationTests
             Configure<InventTable>(builder);
             Configure<UnitOfMeasure>(builder);
             Configure<UnitOfMeasureConversion>(builder);
+            Configure<PriceDiscTable>(builder);
         }
 
         private static void Configure<TEntity>(ModelBuilder builder) where TEntity : Entity<long>
