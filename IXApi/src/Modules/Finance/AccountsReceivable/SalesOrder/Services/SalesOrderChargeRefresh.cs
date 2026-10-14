@@ -38,5 +38,9 @@ internal static class SalesOrderChargeRefresh
             charge.CalculatedAmount = MarkupChargeCalculator.CalculateForBase(
                 charge, basis.Item1, basis.Item2);
         }
+        db.ChangeTracker.DetectChanges();
+        if (order.DocumentStatus == DocumentStatus.Confirmation
+            && charges.Any(charge => db.Entry(charge).Property(x => x.CalculatedAmount).IsModified))
+            order.DocumentStatus = DocumentStatus.None;
     }
 }

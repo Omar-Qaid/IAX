@@ -6,6 +6,7 @@ import { queryClient } from '@core/api/queryClient';
 import { AppProviders } from '@app/providers/AppProviders';
 import { salesOrderListApi } from '@modules/finance/accounts-receivable/api/salesOrderListApi';
 import { salesOrderLinesApi } from '@modules/finance/accounts-receivable/api/salesOrderLinesApi';
+import { salesOrderConfirmationApi } from '@modules/finance/accounts-receivable/api/salesOrderConfirmationApi';
 import { SalesOrderDetailsPage } from '@modules/finance/accounts-receivable/pages/SalesOrderDetailsPage';
 
 vi.mock('@modules/finance/accounts-receivable/api/salesOrderListApi', () => ({
@@ -54,7 +55,19 @@ vi.mock('@modules/finance/accounts-receivable/api/salesOrderLinesApi', () => ({
   },
 }));
 
+vi.mock('@modules/finance/accounts-receivable/api/salesOrderConfirmationApi', () => ({
+  salesOrderConfirmationApi: {
+    preview: vi.fn().mockResolvedValue({
+      header: { currencyCode: 'SAR', qty: 1, salesBalance: 100, sumTax: 15, confirmAmount: 115 },
+      lines: [{ id: '1', lineNum: 1, itemId: 'ITEM-1', name: 'Test item', qty: 1,
+        inventLocationId: 'MAIN', wmsLocationId: '', salesPrice: 100, lineAmount: 100 }],
+    }),
+    post: vi.fn().mockResolvedValue({ id: '10' }),
+  },
+}));
+
 beforeEach(() => {
+  vi.clearAllMocks();
   globalThis.localStorage.setItem('ixapp.sales-order.list-visible', 'true');
 });
 
@@ -92,6 +105,48 @@ it('opens CustConfirmJour from Sell > Sales order confirmations', async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Sell' }));
   fireEvent.click(screen.getByRole('button', { name: 'Sales order confirmations' }));
   expect(await screen.findByText('CustConfirmJour page')).toBeInTheDocument();
+});
+
+it('previews pro forma without posting', async () => {
+  openOrder('1');
+  await screen.findByText('SO-LIVE-001 : Live customer');
+  fireEvent.click(screen.getByRole('button', { name: 'Sell' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Pro forma confirmation' }));
+  expect(await screen.findByRole('dialog', { name: /Pro forma confirmation/ })).toBeInTheDocument();
+  expect(await screen.findByRole('table', { name: 'Confirmation overview' })).toBeInTheDocument();
+  expect(salesOrderConfirmationApi.post).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Close preview' }));
+});
+
+it('confirms immediately without opening a dialog', async () => {
+  openOrder('1');
+  await screen.findByText('SO-LIVE-001 : Live customer');
+  fireEvent.click(screen.getByRole('button', { name: 'Sell' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Confirm now' }));
+  await waitFor(() => expect(salesOrderConfirmationApi.post).toHaveBeenCalledWith(
+    '1', expect.any(String), expect.any(String)
+  ));
+  expect(screen.queryByRole('dialog')).toBeNull();
+});
+
+it('reviews the confirmation and only posts when Posting is enabled', async () => {
+  openOrder('1');
+  await screen.findByText('SO-LIVE-001 : Live customer');
+  fireEvent.click(screen.getByRole('button', { name: 'Sell' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Confirmation' }));
+  expect(await screen.findByRole('table', { name: 'Confirmation overview' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Lines' }));
+  expect(screen.getByRole('table', { name: 'Confirmation lines' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('switch', { name: 'Posting' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Close preview' }));
+  expect(salesOrderConfirmationApi.post).not.toHaveBeenCalled();
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  fireEvent.click(screen.getByRole('button', { name: 'Sell' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Confirmation' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'OK' }));
+  await waitFor(() => expect(salesOrderConfirmationApi.post).toHaveBeenCalledWith(
+    '1', expect.any(String), expect.any(String)
+  ));
 });
 
 it('does not substitute another order for an unknown ID', async () => {

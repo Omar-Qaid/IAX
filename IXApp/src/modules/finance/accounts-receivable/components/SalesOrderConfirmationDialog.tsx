@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import {
   Alert, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent,
-  DialogTitle, Divider, Stack, TextField, Typography,
+  DialogTitle, FormControlLabel, Stack, Switch, Table, TableBody,
+  TableCell, TableContainer, TableHead, TableRow, TextField, Typography,
 } from '@mui/material';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { salesOrderConfirmationApi } from '../api/salesOrderConfirmationApi';
 
 interface Props {
   open: boolean;
+  mode: 'confirmation' | 'proForma';
   orderId: string;
   salesId: string;
+  customerName: string;
   canPost: boolean;
   onClose: () => void;
   onPosted: () => Promise<void>;
@@ -17,100 +20,85 @@ interface Props {
 
 const money = (value: number, currency: string) => `${value.toFixed(2)} ${currency}`;
 
-export function SalesOrderConfirmationDialog({ open, orderId, salesId, canPost, onClose, onPosted }: Props): React.ReactElement {
+export function SalesOrderConfirmationDialog({ open, mode, orderId, salesId, customerName, canPost, onClose, onPosted }: Props): React.ReactElement {
   const queryClient = useQueryClient();
   const [confirmationDate, setConfirmationDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [selectedId, setSelectedId] = useState<string>();
   const [posting, setPosting] = useState(false);
   const [pendingRequestId, setPendingRequestId] = useState<string>();
   const [error, setError] = useState('');
-  const listQuery = useQuery({
-    queryKey: ['sales-order-confirmations', orderId],
-    queryFn: ({ signal }) => salesOrderConfirmationApi.list(orderId, signal),
+  const [postingEnabled, setPostingEnabled] = useState(true);
+  const [view, setView] = useState<'overview' | 'lines'>('overview');
+  const previewQuery = useQuery({
+    queryKey: ['sales-order-confirmation-preview', orderId],
+    queryFn: ({ signal }) => salesOrderConfirmationApi.preview(orderId, signal),
     enabled: open && Boolean(orderId),
+    staleTime: 0,
   });
   useEffect(() => {
     if (!open) return;
-    setSelectedId(undefined);
     setError('');
     setPendingRequestId(undefined);
-  }, [open, orderId]);
-  const detailQuery = useQuery({
-    queryKey: ['sales-order-confirmation', orderId, selectedId],
-    queryFn: ({ signal }) => salesOrderConfirmationApi.get(orderId, selectedId!, signal),
-    enabled: open && Boolean(selectedId),
-  });
+    setPostingEnabled(mode === 'confirmation');
+    setView('overview');
+  }, [open, mode, orderId]);
   const post = async () => {
+    if (mode === 'proForma' || !postingEnabled) { onClose(); return; }
     if (!canPost || posting || !confirmationDate) return;
     setPosting(true);
     setError('');
     try {
       const requestId = pendingRequestId ?? crypto.randomUUID();
       setPendingRequestId(requestId);
-      const journal = await salesOrderConfirmationApi.post(orderId, confirmationDate, requestId);
+      await salesOrderConfirmationApi.post(orderId, confirmationDate, requestId);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['sales-order-confirmations', orderId] }),
         onPosted(),
       ]);
-      setSelectedId(journal.id);
       setPendingRequestId(undefined);
+      onClose();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'The sales order could not be confirmed.');
     } finally {
       setPosting(false);
     }
   };
-  const detail = detailQuery.data;
   return (
     <Dialog open={open} onClose={posting ? undefined : onClose} maxWidth="md" fullWidth>
-      <DialogTitle>Sales order confirmations · {salesId}</DialogTitle>
+      <DialogTitle>{mode === 'proForma' ? 'Pro forma confirmation' : 'Confirm sales order'} · {salesId}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2}>
           {error && <Alert severity="error">{error}</Alert>}
-          {listQuery.error instanceof Error && <Alert severity="error">{listQuery.error.message}</Alert>}
-          {canPost && (
-            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, alignItems: 'center' }}>
-              <TextField label="Confirmation date" type="date" size="small" value={confirmationDate}
-                onChange={(event) => setConfirmationDate(event.target.value)}
-                slotProps={{ inputLabel: { shrink: true } }} />
-              <Button variant="contained" disabled={posting || !confirmationDate} onClick={() => void post()}>
-                {posting ? 'Posting…' : 'Post confirmation'}
-              </Button>
-            </Box>
-          )}
-          <Typography variant="subtitle2">Posted confirmations</Typography>
-          {listQuery.isLoading && <CircularProgress size={24} />}
-          {!listQuery.isLoading && !listQuery.data?.length && <Typography variant="body2">No confirmations posted yet.</Typography>}
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            {listQuery.data?.map((item) => (
-              <Button key={item.id} size="small" variant={selectedId === item.id ? 'contained' : 'outlined'}
-                onClick={() => setSelectedId(item.id)}>
-                {item.confirmId} · {item.confirmDate.slice(0, 10)}
-              </Button>
-            ))}
+          {previewQuery.error instanceof Error && <Alert severity="error">{previewQuery.error.message}</Alert>}
+          {mode === 'proForma' && <Alert severity="info">Preview only. No confirmation journal or order status change will be posted.</Alert>}
+          <Typography variant="subtitle2">Parameters</Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
+            <TextField label="Confirmation date" type="date" size="small" value={confirmationDate}
+              disabled={mode === 'proForma'} onChange={(event) => setConfirmationDate(event.target.value)}
+              slotProps={{ inputLabel: { shrink: true } }} />
+            {mode === 'confirmation' && <FormControlLabel label="Posting" control={
+              <Switch checked={postingEnabled} onChange={(event) => setPostingEnabled(event.target.checked)} />
+            } />}
+            <Typography variant="body2">Quantity: All</Typography>
           </Box>
-          {detailQuery.isLoading && <CircularProgress size={24} />}
-          {detailQuery.error instanceof Error && <Alert severity="error">{detailQuery.error.message}</Alert>}
-          {detail && (
-            <Box>
-              <Divider sx={{ mb: 2 }} />
-              <Typography variant="h6">{detail.header.confirmId}</Typography>
-              <Typography variant="body2">Customer: {detail.header.orderAccount} · Invoice account: {detail.header.invoiceAccount}</Typography>
-              <Typography variant="body2">Quantity: {detail.header.qty} · Merchandise: {money(detail.header.salesBalance, detail.header.currencyCode)}</Typography>
-              <Typography variant="body2">Charges: {money(detail.header.sumMarkup, detail.header.currencyCode)} · Tax: {money(detail.header.sumTax, detail.header.currencyCode)}</Typography>
-              <Typography variant="subtitle1" sx={{ mt: 1 }}>Confirmed total: {money(detail.header.confirmAmount, detail.header.currencyCode)}</Typography>
-              <Divider sx={{ my: 2 }} />
-              {detail.lines.map((line) => (
-                <Box key={line.id} sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, py: 0.5 }}>
-                  <Typography variant="body2">{line.lineNum}. {line.itemId} · {line.name} · {line.qty} {line.salesUnit}</Typography>
-                  <Typography variant="body2">{money(line.lineAmount, detail.header.currencyCode)}</Typography>
-                </Box>
-              ))}
-            </Box>
-          )}
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button variant={view === 'overview' ? 'contained' : 'text'} onClick={() => setView('overview')}>Overview</Button>
+            <Button variant={view === 'lines' ? 'contained' : 'text'} onClick={() => setView('lines')}>Lines</Button>
+          </Box>
+          {previewQuery.isLoading && <CircularProgress size={24} />}
+          {previewQuery.data && view === 'overview' && <TableContainer><Table size="small" aria-label="Confirmation overview">
+            <TableHead><TableRow><TableCell>Update</TableCell><TableCell>Sales order</TableCell><TableCell>Name</TableCell><TableCell>Currency</TableCell><TableCell align="right">Quantity</TableCell><TableCell align="right">Net amount</TableCell><TableCell align="right">Tax</TableCell><TableCell align="right">Total</TableCell></TableRow></TableHead>
+            <TableBody><TableRow><TableCell>Confirmation</TableCell><TableCell>{salesId}</TableCell><TableCell>{customerName}</TableCell><TableCell>{previewQuery.data.header.currencyCode}</TableCell><TableCell align="right">{previewQuery.data.header.qty}</TableCell><TableCell align="right">{money(previewQuery.data.header.salesBalance, previewQuery.data.header.currencyCode)}</TableCell><TableCell align="right">{money(previewQuery.data.header.sumTax, previewQuery.data.header.currencyCode)}</TableCell><TableCell align="right">{money(previewQuery.data.header.confirmAmount, previewQuery.data.header.currencyCode)}</TableCell></TableRow></TableBody>
+          </Table></TableContainer>}
+          {previewQuery.data && view === 'lines' && <TableContainer><Table size="small" aria-label="Confirmation lines">
+            <TableHead><TableRow><TableCell>Sales order</TableCell><TableCell>Item number</TableCell><TableCell>Description</TableCell><TableCell>Warehouse</TableCell><TableCell>Location</TableCell><TableCell align="right">Update</TableCell><TableCell align="right">Unit price</TableCell><TableCell align="right">Net amount</TableCell></TableRow></TableHead>
+            <TableBody>{previewQuery.data.lines.map((line) => <TableRow key={`${line.lineNum}-${line.itemId}`}><TableCell>{salesId}</TableCell><TableCell>{line.itemId}</TableCell><TableCell>{line.name}</TableCell><TableCell>{line.inventLocationId}</TableCell><TableCell>{line.wmsLocationId}</TableCell><TableCell align="right">{line.qty}</TableCell><TableCell align="right">{money(line.salesPrice, previewQuery.data.header.currencyCode)}</TableCell><TableCell align="right">{money(line.lineAmount, previewQuery.data.header.currencyCode)}</TableCell></TableRow>)}</TableBody>
+          </Table></TableContainer>}
         </Stack>
       </DialogContent>
-      <DialogActions><Button onClick={onClose} disabled={posting}>Close</Button></DialogActions>
+      <DialogActions><Button onClick={onClose} disabled={posting}>Cancel</Button><Button variant="contained" onClick={() => void post()}
+        disabled={posting || previewQuery.isLoading || !previewQuery.data || (mode === 'confirmation' && postingEnabled && (!canPost || !confirmationDate))}>
+        {posting ? 'Posting…' : mode === 'proForma' || !postingEnabled ? 'Close preview' : 'OK'}
+      </Button></DialogActions>
     </Dialog>
   );
 }

@@ -2,6 +2,7 @@ using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.EntityFrameworkCore;
 using FluentValidation;
 
@@ -19,14 +20,17 @@ public sealed class SalesOrderCopyService : ISalesOrderCopyService
     private readonly ISalesInventoryDemandService _inventoryDemand;
     private readonly SalesUnitConversionService _units;
     private readonly IValidator<SalesOrderCopyRequest> _validator;
+    private readonly ICompanyExecutionContext _company;
 
     public SalesOrderCopyService(IUnitOfWork unitOfWork, ISalesInventoryDemandService inventoryDemand,
-        SalesUnitConversionService units, IValidator<SalesOrderCopyRequest> validator)
+        SalesUnitConversionService units, IValidator<SalesOrderCopyRequest> validator,
+        ICompanyExecutionContext company)
     {
         _unitOfWork = unitOfWork;
         _inventoryDemand = inventoryDemand;
         _units = units;
         _validator = validator;
+        _company = company;
     }
 
     public async Task<SalesOrderCopyLookupResult> GetSalesOrdersAsync(long destinationRecId, CancellationToken ct)
@@ -59,12 +63,13 @@ public sealed class SalesOrderCopyService : ISalesOrderCopyService
         if (source == null) return new(404, Error: "Source sales order was not found.");
         var lines = await _unitOfWork.Context.Set<SalesLine>().AsNoTracking()
             .Where(x => x.SalesId == source.SalesId && x.DataAreaId == area)
-            .OrderBy(x => x.LineNum).ToListAsync(ct);
+            .ToListAsync(ct);
+        lines = lines.OrderBy(x => x.LineNum).ToList();
         return new(200, await PresentLinesAsync(lines.Select(x => new CopySourceLine(
             x.RecId, x.ItemId, x.Name, x.SalesQty, x.SalesUnit, x.SalesPrice, x.PriceUnit,
             x.LineDisc, x.LinePercent, x.MultiLnDisc, x.MultiLnPercent, x.LineAmount,
             x.InventDimId, x.TaxGroup, x.TaxItemGroup, x.DlvMode, x.DlvTerm,
-            x.ReceiptDateRequested, x.ShippingDateRequested, x.SalesCategory)).ToList(), area, ct));
+            x.ReceiptDateRequested, x.ShippingDateRequested, x.SalesCategory, x.SalesMarkup)).ToList(), area, ct));
     }
 
     public async Task<SalesOrderCopyLookupResult> GetJournalsAsync(long destinationRecId, CancellationToken ct)
@@ -75,7 +80,8 @@ public sealed class SalesOrderCopyService : ISalesOrderCopyService
         var area = destination.DataAreaId;
         var rows = await _unitOfWork.Context.Set<CustConfirmJour>().AsNoTracking()
             .Where(x => x.DataAreaId == area
-                && _unitOfWork.Context.Set<CustConfirmTrans>().Any(line => line.DataAreaId == area && line.ConfirmId == x.ConfirmId))
+                && _unitOfWork.Context.Set<CustConfirmTrans>().Any(line => line.DataAreaId == area
+                    && line.ConfirmId == x.ConfirmId && line.SalesId == x.SalesId))
             .OrderByDescending(x => x.ConfirmDate)
             .Select(x => new { id = x.RecId.ToString(), documentNumber = x.ConfirmId, account = x.OrderAccount,
                 accountName = x.DeliveryName, createdAt = x.ConfirmDate, currencyCode = x.CurrencyCode,
@@ -94,13 +100,15 @@ public sealed class SalesOrderCopyService : ISalesOrderCopyService
             .SingleOrDefaultAsync(x => x.RecId == sourceRecId && x.DataAreaId == area, ct);
         if (journal == null) return new(404, Error: "Confirmation journal was not found.");
         var lines = await _unitOfWork.Context.Set<CustConfirmTrans>().AsNoTracking()
-            .Where(x => x.ConfirmId == journal.ConfirmId && x.DataAreaId == area)
-            .OrderBy(x => x.LineNum).ToListAsync(ct);
+            .Where(x => x.ConfirmId == journal.ConfirmId && x.SalesId == journal.SalesId
+                && x.DataAreaId == area)
+            .ToListAsync(ct);
+        lines = lines.OrderBy(x => x.LineNum).ToList();
         return new(200, await PresentLinesAsync(lines.Select(x => new CopySourceLine(
             x.RecId, x.ItemId, x.Name, x.Qty, x.SalesUnit, x.SalesPrice, x.PriceUnit,
             x.LineDisc, x.LinePercent, x.MultiLnDisc, x.MultiLnPercent, x.LineAmount,
             x.InventDimId, x.TaxGroup, x.TaxItemGroup, string.Empty, x.DlvTerm,
-            x.DlvDate, default, x.SalesCategory)).ToList(), area, ct));
+            x.DlvDate, default, x.SalesCategory, x.SalesMarkup)).ToList(), area, ct));
     }
 
     private async Task<object> PresentLinesAsync(List<CopySourceLine> lines, string area, CancellationToken ct)
@@ -117,7 +125,7 @@ public sealed class SalesOrderCopyService : ISalesOrderCopyService
 
     private Task<SalesTable?> FindDestinationAsync(long destinationRecId, CancellationToken ct)
         => _unitOfWork.Context.Set<SalesTable>().AsNoTracking().SingleOrDefaultAsync(
-            x => x.RecId == destinationRecId, ct);
+            x => x.RecId == destinationRecId && x.DataAreaId == _company.GetDataAreaId(), ct);
 
     public async Task<SalesOrderCopyResult> CopyAsync(long destinationRecId, SalesOrderCopyRequest? request, CancellationToken ct)
     {
@@ -132,7 +140,7 @@ public sealed class SalesOrderCopyService : ISalesOrderCopyService
         {
             await using var transaction = await _unitOfWork.Context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, ct);
             var destination = await _unitOfWork.Context.Set<SalesTable>().SingleOrDefaultAsync(
-                x => x.RecId == destinationRecId, ct);
+                x => x.RecId == destinationRecId && x.DataAreaId == _company.GetDataAreaId(), ct);
             if (destination == null) return new SalesOrderCopyResult(SalesOrderCopyStatus.DestinationNotFound);
             var area = destination.DataAreaId;
             if (destination.SalesStatus != SalesStatus.Backorder)
@@ -153,22 +161,27 @@ public sealed class SalesOrderCopyService : ISalesOrderCopyService
             if (request.Mode.Equals("fromJournal", StringComparison.OrdinalIgnoreCase))
             {
                 sources = await _unitOfWork.Context.Set<CustConfirmTrans>().AsNoTracking()
-                    .Where(x => lineIds.Contains(x.RecId) && x.DataAreaId == area)
+                    .Where(x => lineIds.Contains(x.RecId) && x.DataAreaId == area
+                        && _unitOfWork.Context.Set<CustConfirmJour>().Any(journal =>
+                            journal.DataAreaId == area && journal.ConfirmId == x.ConfirmId
+                            && journal.SalesId == x.SalesId))
                     .Select(x => new CopySourceLine(x.RecId, x.ItemId, x.Name, x.Qty, x.SalesUnit,
                         x.SalesPrice, x.PriceUnit, x.LineDisc, x.LinePercent, x.MultiLnDisc,
                         x.MultiLnPercent, x.LineAmount, x.InventDimId, x.TaxGroup, x.TaxItemGroup,
-                        string.Empty, x.DlvTerm, x.DlvDate, default, x.SalesCategory)).ToListAsync(ct);
+                        string.Empty, x.DlvTerm, x.DlvDate, default, x.SalesCategory, x.SalesMarkup)).ToListAsync(ct);
             }
             else
             {
                 sources = await _unitOfWork.Context.Set<SalesLine>().AsNoTracking()
                     .Where(x => lineIds.Contains(x.RecId) && x.DataAreaId == area
-                        && x.SalesId != destination.SalesId)
+                        && x.SalesId != destination.SalesId
+                        && _unitOfWork.Context.Set<SalesTable>().Any(order =>
+                            order.DataAreaId == area && order.SalesId == x.SalesId))
                     .Select(x => new CopySourceLine(x.RecId, x.ItemId, x.Name, x.SalesQty, x.SalesUnit,
                         x.SalesPrice, x.PriceUnit, x.LineDisc, x.LinePercent, x.MultiLnDisc,
                         x.MultiLnPercent, x.LineAmount, x.InventDimId, x.TaxGroup, x.TaxItemGroup,
                         x.DlvMode, x.DlvTerm, x.ReceiptDateRequested, x.ShippingDateRequested,
-                        x.SalesCategory)).ToListAsync(ct);
+                        x.SalesCategory, x.SalesMarkup)).ToListAsync(ct);
             }
             if (sources.Count != lineIds.Count)
                 return new SalesOrderCopyResult(SalesOrderCopyStatus.SourceLinesNotFound);
@@ -177,8 +190,10 @@ public sealed class SalesOrderCopyService : ISalesOrderCopyService
             var dimensions = await _unitOfWork.Context.Set<InventDim>().AsNoTracking()
                 .Where(x => x.DataAreaId == area && dimensionIds.Contains(x.InventDimId))
                 .ToDictionaryAsync(x => x.InventDimId, ct);
-            var nextLine = await _unitOfWork.Context.Set<SalesLine>().Where(x => x.SalesId == destination.SalesId && x.DataAreaId == area)
-                .MaxAsync(x => (decimal?)x.LineNum, ct) ?? 0;
+            var existingLineNumbers = await _unitOfWork.Context.Set<SalesLine>()
+                .Where(x => x.SalesId == destination.SalesId && x.DataAreaId == area)
+                .Select(x => x.LineNum).ToListAsync(ct);
+            var nextLine = existingLineNumbers.Count == 0 ? 0m : existingLineNumbers.Max();
             var created = 0;
             foreach (var source in sources.OrderBy(x => x.Id))
             {
@@ -214,6 +229,7 @@ public sealed class SalesOrderCopyService : ISalesOrderCopyService
                     LinePercent = request.CopyPrecisely ? source.LineDiscountPercent : 0,
                     MultiLnDisc = request.CopyPrecisely ? source.MultiLineDiscount * request.QuantityFactor * sign : 0,
                     MultiLnPercent = request.CopyPrecisely ? source.MultiLineDiscountPercent : 0,
+                    SalesMarkup = request.CopyPrecisely ? source.SalesMarkup * request.QuantityFactor : 0,
                     TaxGroup = source.TaxGroup, TaxItemGroup = source.TaxItemGroup,
                     DlvMode = source.DeliveryMode, DlvTerm = source.DeliveryTerms,
                     ReceiptDateRequested = source.DeliveryDate == default ? destination.ReceiptDateRequested : source.DeliveryDate,
@@ -229,6 +245,8 @@ public sealed class SalesOrderCopyService : ISalesOrderCopyService
                 destination.SmmSalesAmountTotal += line.LineAmount;
                 created++;
             }
+            if (created > 0 && destination.DocumentStatus == DocumentStatus.Confirmation)
+                destination.DocumentStatus = DocumentStatus.None;
             await _unitOfWork.Context.SaveChangesAsync(ct);
             await SalesOrderChargeRefresh.RefreshAsync(_unitOfWork.Context, destination, ct);
             await _unitOfWork.Context.SaveChangesAsync(ct);
@@ -243,4 +261,4 @@ internal sealed record CopySourceLine(long Id, string ItemId, string Name, decim
         decimal LineDiscountPercent, decimal MultiLineDiscount, decimal MultiLineDiscountPercent,
         decimal LineAmount, string InventDimId, string TaxGroup, string TaxItemGroup,
         string DeliveryMode, string DeliveryTerms, DateTime DeliveryDate, DateTime ShippingDate,
-        long SalesCategory);
+        long SalesCategory, decimal SalesMarkup);

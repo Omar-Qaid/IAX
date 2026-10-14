@@ -101,6 +101,35 @@ public sealed class SalesInventoryDemandTests
         Assert.Equal(-12, (await db.Set<InventTrans>().SingleAsync()).Qty);
         Assert.Equal(12, (await db.Set<InventSum>().SingleAsync()).OnOrder);
 
+        // A legacy link with the right origin but wrong sales-line identity is repaired.
+        var wrongLink = await db.Set<InventTransOriginSalesLine>().SingleAsync();
+        wrongLink.SalesLineInventTransId = "WRONG-TRANS";
+        await financeData.SaveChangesAsync();
+        await service.UpdateAsync(line, "1", "11");
+        await financeData.SaveChangesAsync();
+        Assert.Equal(line.InventTransId,
+            (await db.Set<InventTransOriginSalesLine>().SingleAsync()).SalesLineInventTransId);
+
+        line.RemainInventPhysical = 11;
+        inventorySummary.OnOrder = 0;
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.UpdateAsync(line, "1", "11"));
+        Assert.Equal(-12, transaction.Qty);
+        Assert.Equal(0, inventorySummary.OnOrder);
+        line.RemainInventPhysical = 12;
+        inventorySummary.OnOrder = 12;
+
+        // A stale summary or a processed transaction must not be removed with the line.
+        transaction.StatusIssue = StatusIssue.Sold;
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.DeleteAsync(line));
+        Assert.Equal(12, inventorySummary.OnOrder);
+        Assert.Single(await db.Set<InventTransOrigin>().ToListAsync());
+        transaction.StatusIssue = StatusIssue.Ordered;
+        inventorySummary.OnOrder = 11;
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.DeleteAsync(line));
+        Assert.Equal(11, inventorySummary.OnOrder);
+        Assert.Single(await db.Set<InventTrans>().ToListAsync());
+        inventorySummary.OnOrder = 12;
+
         await service.DeleteAsync(line);
         await financeData.SaveChangesAsync();
         Assert.Empty(await db.Set<InventTrans>().ToListAsync());
@@ -160,6 +189,54 @@ public sealed class SalesInventoryDemandTests
             item => item.InventTransOrigin == db.Set<InventTransOrigin>()
                 .Where(origin => origin.InventTransId == secondLine.InventTransId)
                 .Select(origin => origin.RecId).Single())).Qty);
+    }
+
+    [Fact]
+    public async Task Mismatched_origin_and_duplicate_links_cannot_change_another_sales_lines_demand()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>()
+            .UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        var work = new TestUnitOfWork(db);
+        var numbers = new TestNumbers();
+        var service = new SalesInventoryDemandService(work, numbers, new InventDimensionResolver(work, numbers));
+        var order = new SalesTable { SalesId = "SO-1", CurrencyCode = "USD", DataAreaId = "DAT" };
+        var line = new SalesLine {
+            SalesId = order.SalesId, ItemId = "A0001", SalesQty = 10, QtyOrdered = 10,
+            RemainInventPhysical = 10, RemainSalesPhysical = 10, RemainSalesFinancial = 10,
+            DataAreaId = order.DataAreaId
+        };
+        await service.CreateAsync(order, line, "1", "11");
+        await db.SaveChangesAsync();
+        var origin = await db.Set<InventTransOrigin>().SingleAsync();
+        var summary = await db.Set<InventSum>().SingleAsync();
+
+        origin.ReferenceId = "SO-OTHER";
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.UpdateAsync(line, "1", "11"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.DeleteAsync(line));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CancelRemainingAsync(line));
+        Assert.Equal(10m, summary.OnOrder);
+        Assert.Equal(-10m, (await db.Set<InventTrans>().SingleAsync()).Qty);
+
+        origin.ReferenceId = order.SalesId;
+        var transaction = await db.Set<InventTrans>().SingleAsync();
+        transaction.ItemId = "OTHER-ITEM";
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.UpdateAsync(line, "1", "11"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.DeleteAsync(line));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CancelRemainingAsync(line));
+        Assert.Equal(10m, summary.OnOrder);
+        transaction.ItemId = line.ItemId;
+        db.Set<InventTransOriginSalesLine>().Add(new InventTransOriginSalesLine {
+            InventTransOrigin = origin.RecId, DataAreaId = order.DataAreaId,
+            SalesLineDataAreaId = order.DataAreaId, SalesLineInventTransId = "OTHER-TRANS"
+        });
+        await db.SaveChangesAsync();
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.UpdateAsync(line, "1", "11"));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.DeleteAsync(line));
+        Assert.Equal(2, await db.Set<InventTransOriginSalesLine>().CountAsync());
+        Assert.Equal(10m, summary.OnOrder);
     }
 
     private sealed class InventoryContext(DbContextOptions<InventoryContext> options) : DbContext(options)

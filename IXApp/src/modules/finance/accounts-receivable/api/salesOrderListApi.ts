@@ -121,7 +121,6 @@ export type SalesOrderHeaderInput = Pick<
   | 'exportReason'
   | 'shippingCarrier'
   | 'carrierId'
-  | 'carrierGroup'
   | 'brokerId'
   | 'transportMode'
   | 'carrierService'

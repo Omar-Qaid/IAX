@@ -60,6 +60,8 @@ public sealed class SalesOrderDeliveryAddressService : ISalesOrderDeliveryAddres
             postalAddress.DataAreaId = order.DataAreaId;
             if (line == null) order.DeliveryPostalAddress = postalAddress.RecId;
             else line.DeliveryPostalAddress = postalAddress.RecId;
+            if (order.DocumentStatus == DocumentStatus.Confirmation)
+                order.DocumentStatus = DocumentStatus.None;
             if (previousAddressId != postalAddress.RecId)
                 await SalesDeliveryAddressCleanup.CleanupAsync(_dbContext.Context,
                     previousAddressId, order.DataAreaId, line?.RecId ?? 0,

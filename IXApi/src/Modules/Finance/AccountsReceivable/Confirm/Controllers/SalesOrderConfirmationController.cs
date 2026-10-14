@@ -17,6 +17,10 @@ public sealed class SalesOrderConfirmationController(ISalesOrderConfirmationServ
     public async Task<IActionResult> Get(long recId, long confirmationRecId, CancellationToken ct) =>
         Present(await service.GetAsync(recId, confirmationRecId, ct));
 
+    [HttpGet("preview")]
+    public async Task<IActionResult> Preview(long recId, CancellationToken ct) =>
+        Present(await service.PreviewAsync(recId, ct));
+
     [HttpPost]
     [DomainPermission("AccountsReceivable", "SalesOrders", "Edit")]
     public async Task<IActionResult> Post(long recId, [FromBody] PostConfirmationRequest? request, CancellationToken ct) =>

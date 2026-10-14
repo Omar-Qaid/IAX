@@ -1,0 +1,50 @@
+# Sales Order and confirmation impact audit
+
+Audited the IXApi SalesOrder and Confirm services and the IXApp Sales Order list, details, charges, copy, and confirmation journal paths. This records code and focused test evidence; it is not a trace of a running production database.
+
+| Operation | Tables written by the current code | Relationship and effect |
+| --- | --- | --- |
+| Create order | `SalesTable`; number sequence state | `DataAreaId` + `SalesId` identifies the order. Starts open with `DocumentStatus.None`. |
+| Add stocked line | `SalesLine`, `InventDim` when needed, `InventTransOrigin`, `InventTransOriginSalesLine`, `InventTrans`, `InventSum` | `SalesLine.InventTransId` identifies its origin; `InventTrans.InventTransOrigin` uses the origin `RecId`; the sales-line link uses its company and `InventTransId`; `InventSum.OnOrder` reflects demand. No physical issue is posted. |
+| Edit or remove line | `SalesLine`, related inventory demand/summary and charge records as applicable | Updates or removes that line's demand. A changed confirmed order returns to `DocumentStatus.None`; historical confirmations remain. |
+| Edit header, delivery address, discounts, copy lines, or charges | Live order and relevant supporting records | A changed confirmed order returns to `DocumentStatus.None`; later document statuses remain intact. |
+| Cancel an unprocessed order | `SalesTable`, `SalesLine`, open `InventTrans`, `InventSum` | Clears remaining demand and marks the order and lines canceled. Posted confirmation history is retained. |
+| Pro forma preview | None | Reads the current order, lines, dimensions, charges, and tax setup; calculates a read-only preview. |
+| Confirmation / Confirm now | `CustConfirmJour`, `CustConfirmTrans`, `SalesTable.DocumentStatus` when applicable, number sequence state | Confirmation lines are selected by company, `ConfirmId`, and source `SalesId`. First confirmation sets document status to Confirmation; sales fulfillment status and inventory demand are unchanged. |
+| Read confirmation history | None | Journal list uses company + `SalesId`; detail uses company + `SalesId` + `ConfirmId` and looks up `InventDim` by company + `InventDimId`. |
+
+Confirmation code does not create packing slips, invoices, customer transactions, posted tax transactions, or general-ledger entries. `SalesParm*` and `CustConfirmSalesLink` entities are not present in this project; no schema was added. `TaxJournalTrans` exists but is not written by this confirmation flow. Advanced WHS behavior is outside this implementation.
+
+The audit fixed selected-company filtering for Sales Order list, lines, totals, copy, and cancellation; and cleared the current Confirmation document status after successful copy, discount, delivery-address, and sales-charge changes. The posted journal remains immutable. No entity fields or database schema changed.
+
+Copy-from-journal line reads now match company, `ConfirmId`, and source `SalesId`, as confirmation detail reads do. Inventory demand updates repair an existing `InventTransOriginSalesLine` whose origin is right but sales-line identity is wrong.
+
+Line edits and deletes now reject a stale `InventSum.OnOrder` that cannot cover the line's existing open demand. Line deletion also rejects a non-`Ordered` `InventTrans`; it leaves the origin and sales-line link in place rather than removing processed inventory history. Focused tests cover both rejection paths and a valid deletion.
+
+`SalesTable.MarkupGroup` is the Charges group in the current entity. The previous API mapping also exposed it as Carrier group, and the header save briefly assigned it from Carrier group before overwriting it with Charges group. The unsupported Carrier group control is removed from the Sales Order page; the response property remains empty for API compatibility. No carrier-group column was added.
+
+For tax-inclusive orders, merchandise tax is removed from the merchandise subtotal and tax embedded in a taxable charge is removed from the charge amount. Both tax portions remain in total sales tax. The Sales Order totals and posted confirmation now use the same allocation; a focused test covers the header amounts and grand total.
+
+The existing editable `SalesLine.SalesMarkup` sales-charge amount also contributes to Sales Order totals and to `CustConfirmJour.SumMarkup` and `ConfirmAmount`. A separate `MarkupTrans` charge is added once; the confirmation line retains both in its `SalesMarkup` snapshot. Copying a line preserves its sales-charge amount when precise copy is selected, scaled by the requested quantity factor. The copy flow loads destination line numbers before taking their decimal maximum so the relationship check and copy scenario can run against the SQLite test provider.
+
+Verification: 30 selected backend Sales Order, confirmation, inventory, and markup tests; Sales Order details and confirmation journal page tests; IXApp typecheck and static audit; and `git diff --check`. Live database side effects, printing, credit configuration, and later-stage packing-slip/invoice workflows require a separate authenticated environment test.
+
+The frontend's confirmation `requestId` is now stored in the existing `CustConfirmJour.ParmId` posting-run field. A repeat request for the same company and sales order returns that journal without another confirmation line, status write, or number sequence allocation. A new request ID still creates a new confirmation snapshot. Requests without a request ID retain the existing behavior. No entity or database column was added; concurrent retries still depend on database serializable isolation because `ParmId` has no unique constraint.
+
+Automatic charge refresh now clears `SalesTable.DocumentStatus` from Confirmation when it changes a `MarkupTrans.CalculatedAmount`. This covers recalculation after line, discount, and copy changes through the shared refresh helper, while an unchanged charge leaves the confirmation status intact. The regression test covers both outcomes; the focused confirmation test class passes (19 tests).
+
+Latest regression run: the complete IXApi test project passed 252 tests with 2 skipped, and the Sales Order details and confirmation journal page suites passed 15 tests. These tests use isolated fixtures and mocked page APIs; they do not establish live database or printing behavior.
+
+Live verification attempt: IXApp responded on `localhost:5173`, but the configured IXApi ports `33319` and `33318` were initially unavailable. A temporary IXApi process was started with `DatabaseInitialization:Enabled=false`; it could not reach the configured SQL Server because SqlClient reported that the server requires encryption and the execution machine does not support it. The temporary API process and log were stopped and removed. No live sales-order write or database-table comparison was performed in that attempt.
+
+Further inventory-origin review found that edit, delete, and cancel relied on company and `InventTransId` without checking the origin's sales-order reference and item. They now require `InventTransOrigin.ReferenceCategory=SalesTable`, matching `ReferenceId=SalesLine.SalesId` and `ItemId=SalesLine.ItemId`; linked `InventTrans.ItemId` must also match. Edit and delete reject duplicate `InventTransOriginSalesLine` rows for one origin. Delete checks duplicate links before changing `InventSum.OnOrder`, so a rejected delete leaves tracked demand unchanged. A regression test covers wrong order, wrong item, and duplicate links. The complete backend suite now passes 253 tests with 2 skipped.
+
+`PriceType.MultilineDiscSales`, `CustParameters.PriceDiscSearchMultilineDisc`, and `SalesTable.MultiLineDisc` exist, but the current `InventTableModule` entity has no item-side multiline discount-group field. The recalculation service currently handles line and end discounts and preserves any existing `SalesLine.MultiLnDisc`; it does not calculate a new multiline trade-agreement discount. No substitute item-group mapping or schema was invented for this gap.
+
+Copy-from-all now requires each selected `SalesLine` to have a `SalesTable` with the same company and `SalesId`. Copy-from-journal requires each selected `CustConfirmTrans` to have a `CustConfirmJour` with the same company, `ConfirmId`, and `SalesId`. This makes the write path enforce the relationships already used by its lookup path and prevents orphan source lines from creating destination inventory demand. A regression test covers both orphan cases. The complete backend suite passes 254 tests with 2 skipped.
+
+Manual sales-line charge create, update, and delete now reject a partially processed `SalesLine`, even when its status remains Backorder. This matches the sales-line edit guard and prevents changing charges on quantities that have already entered later inventory stages. The focused regression test verifies that the charge row remains intact. The complete backend suite passes 255 tests with 2 skipped.
+
+`MarkupAutoTable` and `MarkupAutoLine` are mapped but are intentionally outside this Sales Order implementation, as requested. Order creation and line addition do not read or write those setup tables or generate `MarkupTrans` from their rules. Sales Order charges remain the existing manual `MarkupTrans` flow.
+
+Discount validation now rejects negative multiline discounts, multiline discount percentages outside 0–100, and combined line discounts above the gross line amount during line save. Header save rejects total discount percentages outside 0–100. Confirmation also checks stored line discount amounts and header discount percentage before writing a journal, so older invalid records cannot produce a confirmation whose total disagrees with its lines. The focused confirmation suite passed 22 tests; the complete IXApi suite passed 256 tests with 2 skipped. This was a code and isolated-test verification; live SQL Server validation remains unavailable because of the connection failure described above.

@@ -44,6 +44,7 @@ public sealed class MarkupTransCommandService : IMarkupTransCommandService
         input.Adapt<MarkupTransDto, MarkupTrans>(entity);
         entity.CalculatedAmount = await _calculator.CalculateAmount(entity, ct);
         await _db.Set<MarkupTrans>().AddAsync(entity, ct);
+        await ResetSalesConfirmationAsync(entity, ct);
         await _unitOfWork.CompleteAsync(ct);
         return entity;
     }
@@ -52,6 +53,7 @@ public sealed class MarkupTransCommandService : IMarkupTransCommandService
     {
         input.Adapt<MarkupTransDto, MarkupTrans>(entity);
         entity.CalculatedAmount = await _calculator.CalculateAmount(entity, ct);
+        await ResetSalesConfirmationAsync(entity, ct);
         await _unitOfWork.CompleteAsync(ct);
         return entity;
     }
@@ -59,7 +61,29 @@ public sealed class MarkupTransCommandService : IMarkupTransCommandService
     public async Task DeleteAsync(MarkupTrans entity, CancellationToken ct)
     {
         _db.Set<MarkupTrans>().Remove(entity);
+        await ResetSalesConfirmationAsync(entity, ct);
         await _unitOfWork.CompleteAsync(ct);
+    }
+
+    private async Task ResetSalesConfirmationAsync(MarkupTrans charge, CancellationToken ct)
+    {
+        if (charge.ModuleType is not (MarkupModuleType.Customer or MarkupModuleType.Sales)) return;
+        SalesTable? order;
+        if (charge.TransTableId == FinanceTableNumbers.SalesLine)
+        {
+            var line = await _db.Set<SalesLine>().AsNoTracking().SingleOrDefaultAsync(
+                x => x.RecId == charge.TransRecId && x.DataAreaId == charge.DataAreaId, ct);
+            order = line == null ? null : await _db.Set<SalesTable>().SingleOrDefaultAsync(
+                x => x.SalesId == line.SalesId && x.DataAreaId == charge.DataAreaId, ct);
+        }
+        else if (charge.TransTableId is FinanceTableNumbers.SalesTable or FinanceTableNumbers.Unspecified)
+        {
+            order = await _db.Set<SalesTable>().SingleOrDefaultAsync(
+                x => x.RecId == charge.TransRecId && x.DataAreaId == charge.DataAreaId, ct);
+        }
+        else return;
+        if (order?.DocumentStatus == DocumentStatus.Confirmation)
+            order.DocumentStatus = DocumentStatus.None;
     }
 
 }

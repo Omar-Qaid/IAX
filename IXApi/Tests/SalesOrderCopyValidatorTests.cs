@@ -30,7 +30,7 @@ public sealed class SalesOrderCopyValidatorTests
     [Fact]
     public async Task Copy_service_rejects_missing_request_before_data_access()
     {
-        var service = new SalesOrderCopyService(null!, null!, null!, validator);
+        var service = new SalesOrderCopyService(null!, null!, null!, validator, null!);
         var result = await service.CopyAsync(1, null, CancellationToken.None);
 
         Assert.Equal(SalesOrderCopyStatus.InvalidRequest, result.Status);

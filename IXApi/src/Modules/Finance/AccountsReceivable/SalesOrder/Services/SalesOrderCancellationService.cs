@@ -2,6 +2,7 @@ using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
@@ -12,11 +13,14 @@ public sealed class SalesOrderCancellationService : ISalesOrderCancellationServi
 {
     private readonly IUnitOfWork _dbContext;
     private readonly ISalesInventoryDemandService _inventoryDemand;
+    private readonly ICompanyExecutionContext _company;
 
-    public SalesOrderCancellationService(IUnitOfWork dbContext, ISalesInventoryDemandService inventoryDemand)
+    public SalesOrderCancellationService(IUnitOfWork dbContext, ISalesInventoryDemandService inventoryDemand,
+        ICompanyExecutionContext company)
     {
         _dbContext = dbContext;
         _inventoryDemand = inventoryDemand;
+        _company = company;
     }
 
     public async Task<SalesOrderCancelStatus> CancelAsync(long recId, CancellationToken cancellationToken)
@@ -26,7 +30,7 @@ public sealed class SalesOrderCancellationService : ISalesOrderCancellationServi
             await using var transaction = await _dbContext.Context.Database.BeginTransactionAsync(
                 System.Data.IsolationLevel.Serializable, cancellationToken);
             var order = await _dbContext.Context.Set<SalesTable>().FirstOrDefaultAsync(
-                row => row.RecId == recId, cancellationToken);
+                row => row.RecId == recId && row.DataAreaId == _company.GetDataAreaId(), cancellationToken);
             if (order == null) return SalesOrderCancelStatus.NotFound;
             if (order.SalesStatus != SalesStatus.Backorder)
                 return SalesOrderCancelStatus.NotOpen;

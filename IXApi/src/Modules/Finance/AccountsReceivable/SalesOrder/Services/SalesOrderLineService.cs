@@ -179,6 +179,8 @@ public sealed class SalesOrderLineService : ISalesOrderLineService
                 inventSiteId, inventLocationId, cancellationToken, dimensionTemplate);
             _dbContext.Context.Set<SalesLine>().Add(line);
             order.SmmSalesAmountTotal += line.LineAmount;
+            if (order.DocumentStatus == DocumentStatus.Confirmation)
+                order.DocumentStatus = DocumentStatus.None;
             await _dbContext.Context.SaveChangesAsync(cancellationToken);
             await SalesOrderChargeRefresh.RefreshAsync(_dbContext.Context, order, cancellationToken);
             await _dbContext.Context.SaveChangesAsync(cancellationToken);
@@ -430,6 +432,8 @@ public sealed class SalesOrderLineService : ISalesOrderLineService
                 await SalesDeliveryAddressCleanup.CleanupAsync(_dbContext.Context,
                     previousAddressId, line.DataAreaId, line.RecId, 0, cancellationToken);
             order.SmmSalesAmountTotal += (input == null ? 0 : line.LineAmount) - previousAmount;
+            if (order.DocumentStatus == DocumentStatus.Confirmation)
+                order.DocumentStatus = DocumentStatus.None;
             await _dbContext.Context.SaveChangesAsync(cancellationToken);
             await SalesOrderChargeRefresh.RefreshAsync(_dbContext.Context, order, cancellationToken);
             await _dbContext.Context.SaveChangesAsync(cancellationToken);
@@ -466,6 +470,11 @@ public sealed class SalesOrderLineService : ISalesOrderLineService
 
         if (input.LineDiscount > grossAmount)
             return "The line discount cannot exceed the gross line amount.";
+
+        if (input.MultiLineDiscount < 0 || input.MultiLineDiscountPercent is < 0 or > 100)
+            return "The multiline discount must be nonnegative and its percentage must be between 0 and 100.";
+        if (input.LineDiscount + input.MultiLineDiscount > grossAmount)
+            return "The combined line discounts cannot exceed the gross line amount.";
 
         var expectedAmount = decimal.Round(
             grossAmount * input.LineDiscountPercent / 100m,

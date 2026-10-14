@@ -58,6 +58,11 @@ function unwrap<T>(response: ApiResponse<T>): T {
 }
 
 export const salesOrderConfirmationApi = {
+  async preview(orderId: string, signal?: AbortSignal): Promise<SalesOrderConfirmationDetail> {
+    return unwrap((await apiClient.get<ApiResponse<SalesOrderConfirmationDetail>>(
+      `/v1/SalesTable/${encodeURIComponent(orderId)}/confirmations/preview`, { signal }
+    )).data);
+  },
   async list(orderId: string, signal?: AbortSignal): Promise<SalesOrderConfirmationSummary[]> {
     return unwrap((await apiClient.get<ApiResponse<SalesOrderConfirmationSummary[]>>(
       `/v1/SalesTable/${encodeURIComponent(orderId)}/confirmations`, { signal }

@@ -35,6 +35,9 @@ public sealed class SalesOrderHeaderService : ISalesOrderHeaderService
                 return new SalesHeaderUpdateResult(SalesHeaderUpdateStatus.NotFound, "Sales order was not found in the selected company.");
             if (order.SalesStatus != SalesStatus.Backorder)
                 return new SalesHeaderUpdateResult(SalesHeaderUpdateStatus.Invalid, "Only open sales orders can be changed.");
+            if (input.TotalDiscountPercent is < 0 or > 100)
+                return new SalesHeaderUpdateResult(SalesHeaderUpdateStatus.Invalid,
+                    "The total discount percentage must be between 0 and 100.");
             var invoiceAccount = string.IsNullOrWhiteSpace(input.InvoiceAccount) ? order.InvoiceAccount : input.InvoiceAccount.Trim();
             if (!await _dbContext.Context.Set<CustTable>().AnyAsync(row => row.AccountNum == invoiceAccount && row.DataAreaId == order.DataAreaId, cancellationToken))
                 return new SalesHeaderUpdateResult(SalesHeaderUpdateStatus.Invalid, "Invoice account was not found.");
@@ -120,7 +123,6 @@ public sealed class SalesOrderHeaderService : ISalesOrderHeaderService
             order.ExportReason = input.ExportReason.Trim();
             order.ShipCarrierName = input.ShippingCarrier.Trim();
             order.ShipCarrierId = input.CarrierId.Trim();
-            order.MarkupGroup = input.CarrierGroup.Trim();
             order.ShipCarrierAccountCode = input.BrokerId.Trim();
             order.Transport = input.TransportMode.Trim();
             order.ShipCarrierDlvType = input.CarrierService;
@@ -150,6 +152,10 @@ public sealed class SalesOrderHeaderService : ISalesOrderHeaderService
             order.IntercompanyOrigin = input.IntercompanyOrigin;
             order.IntercompanyAllowIndirectCreation = input.IntercompanyAllowIndirectCreation;
             order.Reservation = input.Reservation;
+            _dbContext.Context.ChangeTracker.DetectChanges();
+            if (order.DocumentStatus == DocumentStatus.Confirmation
+                && _dbContext.Context.Entry(order).Properties.Any(property => property.IsModified))
+                order.DocumentStatus = DocumentStatus.None;
             if (previousAddressId != order.DeliveryPostalAddress)
                 await SalesDeliveryAddressCleanup.CleanupAsync(_dbContext.Context,
                     previousAddressId, order.DataAreaId, 0, order.RecId, cancellationToken);

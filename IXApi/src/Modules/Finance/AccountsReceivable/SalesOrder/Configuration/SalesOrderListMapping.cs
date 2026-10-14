@@ -60,7 +60,7 @@ public sealed class SalesOrderListMapping : IRegister
             .Map(d => d.ExportReason, s => s.Order.ExportReason)
             .Map(d => d.ShippingCarrier, s => s.Order.ShipCarrierName)
             .Map(d => d.CarrierId, s => s.Order.ShipCarrierId)
-            .Map(d => d.CarrierGroup, s => s.Order.MarkupGroup)
+            .Map(d => d.CarrierGroup, s => string.Empty)
             .Map(d => d.BrokerId, s => s.Order.ShipCarrierAccountCode)
             .Map(d => d.TransportMode, s => s.Order.Transport)
             .Map(d => d.CarrierService, s => (int)s.Order.ShipCarrierDlvType)

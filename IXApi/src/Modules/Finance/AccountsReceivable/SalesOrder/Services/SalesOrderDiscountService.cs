@@ -85,6 +85,11 @@ public sealed class SalesOrderDiscountService : ISalesOrderDiscountService
             order.DiscPercent = Math.Clamp(agreement?.Percent1 ?? 0m, 0m, 100m);
         }
 
+        _dbContext.Context.ChangeTracker.DetectChanges();
+        var discountChanged = _dbContext.Context.Entry(order).Properties.Any(property => property.IsModified)
+            || lines.Any(line => _dbContext.Context.Entry(line).Properties.Any(property => property.IsModified));
+        if (discountChanged && order.DocumentStatus == DocumentStatus.Confirmation)
+            order.DocumentStatus = DocumentStatus.None;
         await _dbContext.Context.SaveChangesAsync(cancellationToken);
         await SalesOrderChargeRefresh.RefreshAsync(_dbContext.Context, order, cancellationToken);
         await _dbContext.Context.SaveChangesAsync(cancellationToken);

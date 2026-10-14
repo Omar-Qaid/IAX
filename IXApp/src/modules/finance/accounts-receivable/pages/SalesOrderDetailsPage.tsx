@@ -3,6 +3,7 @@ import {
   Alert,
   Box,
   IconButton,
+  Snackbar,
   Stack,
   Switch,
   Tab,
@@ -44,6 +45,7 @@ import {
 import { DocumentCopyDrawer } from '@patterns/document/DocumentCopyDrawer';
 import { salesOrderCopyApi, type SalesOrderCopyMode } from '../api/salesOrderCopyApi';
 import { SalesOrderConfirmationDialog } from '../components/SalesOrderConfirmationDialog';
+import { salesOrderConfirmationApi } from '../api/salesOrderConfirmationApi';
 
 import { SalesOrderLinesGrid } from './SalesOrderLinesGrid';
 import { SalesOrderLinesProvider } from './SalesOrderLineState';
@@ -133,6 +135,9 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   const [savingLineDetail, setSavingLineDetail] = useState(false);
   const [totalsOpen, setTotalsOpen] = useState(false);
   const [confirmationsOpen, setConfirmationsOpen] = useState(false);
+  const [confirmationMode, setConfirmationMode] = useState<'confirmation' | 'proForma'>('confirmation');
+  const [confirmNowBusy, setConfirmNowBusy] = useState(false);
+  const [confirmNowError, setConfirmNowError] = useState('');
   const [copyMode, setCopyMode] = useState<SalesOrderCopyMode>();
   const [copySourceId, setCopySourceId] = useState<string>();
   const [copyBusy, setCopyBusy] = useState(false);
@@ -274,14 +279,30 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       id: 'generate',
       label: 'Generate',
       actions: [
-        { id: 'confirmation', label: 'Confirmation', onClick: () => setConfirmationsOpen(true) },
-        { id: 'pro-forma-confirmation', label: 'Pro forma confirmation', disabled: true },
+        { id: 'confirmation', label: 'Confirmation', onClick: () => { setConfirmationMode('confirmation'); setConfirmationsOpen(true); } },
+        { id: 'pro-forma-confirmation', label: 'Pro forma confirmation', onClick: () => { setConfirmationMode('proForma'); setConfirmationsOpen(true); } },
       ],
     },
     {
       id: 'actions',
       label: 'Actions',
-      actions: [{ id: 'confirm-now', label: 'Confirm now', disabled: !canEditHeader || Boolean(activeHeader), onClick: () => setConfirmationsOpen(true) }],
+      actions: [{ id: 'confirm-now', label: 'Confirm now', disabled: !canEditHeader || Boolean(activeHeader) || confirmNowBusy, onClick: async () => {
+        if (!order || !canEditHeader || activeHeader || confirmNowBusy) return;
+        setConfirmNowBusy(true);
+        setConfirmNowError('');
+        try {
+          await salesOrderConfirmationApi.post(order.id, new Date().toISOString().slice(0, 10), crypto.randomUUID());
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ['accounts-receivable', 'sales-orders'] }),
+            queryClient.invalidateQueries({ queryKey: ['sales-order-totals', order.id] }),
+            queryClient.invalidateQueries({ queryKey: ['sales-order-confirmations', order.id] }),
+          ]);
+        } catch (cause) {
+          setConfirmNowError(cause instanceof Error ? cause.message : 'The sales order could not be confirmed.');
+        } finally {
+          setConfirmNowBusy(false);
+        }
+      } }],
     },
     {
       id: 'apply',
@@ -369,7 +390,6 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       exportReason: order.exportReason,
       shippingCarrier: order.shippingCarrier,
       carrierId: order.carrierId,
-      carrierGroup: order.carrierGroup,
       brokerId: order.brokerId,
       transportMode: order.transportMode,
       carrierService: order.carrierService,
@@ -2062,7 +2082,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         { id: 'planning', title: 'PLANNING', fields: [headerField('mpsFullRunCtpStatus', 'Batch CTP status')] },
         { id: 'delivery-details', title: 'DETAILS', fields: [headerField('blindShipment', 'Blind shipment'), headerField('deliveryReason', 'Delivery reason'), headerField('exportReason', 'Reason for export')] },
         { id: 'delivery-mode', title: 'MISC. DELIVERY INFO', fields: [headerField('deliveryMode', 'Mode of delivery'), headerField('deliveryTerms', 'Delivery terms')] },
-        { id: 'carrier', title: 'CARRIER INFORMATION', fields: [headerField('residentialDestination', 'Residential destination'), headerField('shippingCarrier', 'Shipping carrier'), headerField('carrierId', 'Carrier ID'), headerField('carrierService', 'Carrier service'), headerField('carrierGroup', 'Carrier group'), headerField('brokerId', 'Broker ID'), headerField('transportMode', 'Mode')] },
+        { id: 'carrier', title: 'CARRIER INFORMATION', fields: [headerField('residentialDestination', 'Residential destination'), headerField('shippingCarrier', 'Shipping carrier'), headerField('carrierId', 'Carrier ID'), headerField('carrierService', 'Carrier service'), headerField('brokerId', 'Broker ID'), headerField('transportMode', 'Mode')] },
       ],
     },
     {
@@ -2415,10 +2435,16 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         sections={totalsSections}
         okLabel={t('common.ok', 'OK')}
       />
+      <Snackbar open={Boolean(confirmNowError)} onClose={() => setConfirmNowError('')}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
+        <Alert severity="error" onClose={() => setConfirmNowError('')}>{confirmNowError}</Alert>
+      </Snackbar>
       <SalesOrderConfirmationDialog
         open={confirmationsOpen}
+        mode={confirmationMode}
         orderId={order.id}
         salesId={order.salesId}
+        customerName={order.customerName}
         canPost={Boolean(canEditHeader) && !activeHeader}
         onClose={() => setConfirmationsOpen(false)}
         onPosted={async () => {

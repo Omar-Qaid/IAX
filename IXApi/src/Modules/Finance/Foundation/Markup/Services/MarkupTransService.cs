@@ -163,8 +163,10 @@ public sealed class MarkupTransService(
             var line = await _db.Set<SalesLine>().AsNoTracking().SingleOrDefaultAsync(
                 x => x.RecId == documentRecId && x.DataAreaId == dataAreaId, ct);
             if (line == null) return "Sales order line not found.";
-            if (line.SalesStatus != SalesStatus.Backorder)
-                return "Only open sales order lines can change charges.";
+            if (line.SalesStatus != SalesStatus.Backorder
+                || line.RemainSalesPhysical != line.SalesQty
+                || line.RemainSalesFinancial != line.SalesQty)
+                return "Processed sales order lines cannot change charges.";
             var orderOpen = await _db.Set<SalesTable>().AsNoTracking().AnyAsync(
                 x => x.SalesId == line.SalesId && x.DataAreaId == dataAreaId
                     && x.SalesStatus == SalesStatus.Backorder, ct);

@@ -55,6 +55,35 @@ public sealed class SalesOrderConfirmationService(
         return new(200, new { header = Present(journal), lines = presentedLines });
     }
 
+    public async Task<ConfirmationResult> PreviewAsync(long recId, CancellationToken ct)
+    {
+        var order = await FindOrderAsync(recId, ct);
+        if (order == null) return new(404, null, "Sales order was not found in the selected company.");
+        var lines = await db.Set<SalesLine>().AsNoTracking()
+            .Where(x => x.DataAreaId == order.DataAreaId && x.SalesId == order.SalesId)
+            .ToListAsync(ct);
+        lines = lines.OrderBy(x => x.LineNum).ToList();
+        var totals = await CalculateAsync(order, lines, ct);
+        var invoiceAccount = string.IsNullOrWhiteSpace(order.InvoiceAccount) ? order.CustAccount : order.InvoiceAccount;
+        var header = Present(CreateJournal(order, lines, totals, string.Empty, DateTime.UtcNow.Date, invoiceAccount));
+        var dimensionIds = lines.Select(x => x.InventDimId).Where(x => x != "").Distinct().ToList();
+        var dimensions = await db.Set<InventDim>().AsNoTracking()
+            .Where(x => x.DataAreaId == order.DataAreaId && dimensionIds.Contains(x.InventDimId))
+            .ToDictionaryAsync(x => x.InventDimId, ct);
+        var previewLines = lines.Select(line =>
+        {
+            var dto = Present(CreateLine(order, line, totals, string.Empty, DateTime.UtcNow.Date));
+            if (dimensions.TryGetValue(line.InventDimId, out var dimension))
+            {
+                dto.InventSiteId = dimension.InventSiteId;
+                dto.InventLocationId = dimension.InventLocationId;
+                dto.WmsLocationId = dimension.WmsLocationId;
+            }
+            return dto;
+        }).ToList();
+        return new(200, new { header, lines = previewLines });
+    }
+
     public async Task<ConfirmationResult> PostAsync(long recId, PostConfirmationRequest? request, CancellationToken ct)
     {
         var validation = await validator.ValidateAsync(request ?? new PostConfirmationRequest(), ct);
@@ -66,6 +95,16 @@ public sealed class SalesOrderConfirmationService(
             await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
             var order = await FindOrderAsync(recId, ct);
             if (order == null) return new ConfirmationResult(404, null, "Sales order was not found in the selected company.");
+            var requestId = request?.RequestId;
+            if (requestId != null)
+            {
+                var previous = await db.Set<CustConfirmJour>().AsNoTracking()
+                    .Where(x => x.DataAreaId == order.DataAreaId && x.SalesId == order.SalesId
+                        && x.ParmId == requestId)
+                    .OrderByDescending(x => x.RecId).FirstOrDefaultAsync(ct);
+                if (previous != null)
+                    return new ConfirmationResult(200, Present(previous), "Sales order confirmed.");
+            }
             if (order.SalesStatus != SalesStatus.Backorder)
                 return new ConfirmationResult(422, null, "Only an open sales order can be confirmed.");
             if (string.IsNullOrWhiteSpace(order.CustAccount) || string.IsNullOrWhiteSpace(order.CurrencyCode))
@@ -94,13 +133,19 @@ public sealed class SalesOrderConfirmationService(
                 || x.SalesQty <= 0 || x.PriceUnit <= 0 || x.LineAmount < 0))
                 return new ConfirmationResult(422, null,
                     "Confirmation requires open lines with valid quantity, price unit, and amount.");
+            if (order.DiscPercent is < 0 or > 100 || lines.Any(x => x.LineDisc < 0
+                || x.MultiLnDisc < 0 || x.LineDisc + x.MultiLnDisc > x.LineAmount))
+                return new ConfirmationResult(422, null,
+                    "Confirmation requires discounts within the sales line and order amounts.");
             var calculated = await CalculateAsync(order, lines, ct);
             var confirmId = await NextAvailableConfirmIdAsync(order.DataAreaId, ct);
             var journal = CreateJournal(order, lines, calculated, confirmId, confirmationDate, invoiceAccount);
+            journal.ParmId = requestId ?? string.Empty;
             db.Set<CustConfirmJour>().Add(journal);
             foreach (var line in lines)
                 db.Set<CustConfirmTrans>().Add(CreateLine(order, line, calculated, confirmId, confirmationDate));
-            order.DocumentStatus = DocumentStatus.Confirmation;
+            if (order.DocumentStatus is DocumentStatus.None or DocumentStatus.Confirmation)
+                order.DocumentStatus = DocumentStatus.Confirmation;
             await unitOfWork.CompleteAsync(ct);
             await transaction.CommitAsync(ct);
             return new ConfirmationResult(200, Present(journal), "Sales order confirmed.");
@@ -152,7 +197,7 @@ public sealed class SalesOrderConfirmationService(
         var eligibleNet = lines.Where(x => eligible.Contains(x.RecId))
             .Sum(x => Math.Max(0m, x.LineAmount - x.LineDisc - x.MultiLnDisc));
         var orderDiscount = eligibleNet * order.DiscPercent / 100m;
-        decimal tax = 0, chargeTotal = 0;
+        decimal tax = 0, lineTaxTotal = 0, chargeTotal = lines.Sum(x => x.SalesMarkup);
         var lineTax = new Dictionary<long, decimal>();
         var lineDiscount = new Dictionary<long, decimal>();
         var lineCharges = new Dictionary<long, decimal>();
@@ -176,20 +221,23 @@ public sealed class SalesOrderConfirmationService(
             var amount = Tax(Math.Max(0m, net - allocated), Rate(line.TaxGroup, line.TaxItemGroup));
             lineTax[line.RecId] = amount;
             tax += amount;
+            lineTaxTotal += amount;
         }
         foreach (var charge in charges)
         {
             var amount = charge.MarkupCategory == MarkupCategory.Fixed && charge.CalculatedAmount == 0m
                 ? charge.Value : charge.CalculatedAmount;
-            chargeTotal += amount;
-            tax += Tax(amount, Rate(charge.TaxGroup, charge.TaxItemGroup));
+            var chargeTax = Tax(amount, Rate(charge.TaxGroup, charge.TaxItemGroup));
+            var netCharge = amount - (order.InclTax ? chargeTax : 0m);
+            chargeTotal += netCharge;
+            tax += chargeTax;
             if (charge.TransTableId == FinanceTableNumbers.SalesLine)
-                lineCharges[charge.TransRecId] = lineCharges.GetValueOrDefault(charge.TransRecId) + amount;
+                lineCharges[charge.TransRecId] = lineCharges.GetValueOrDefault(charge.TransRecId) + netCharge;
         }
         var gross = lines.Sum(x => x.LineAmount);
         var lineDisc = lines.Sum(x => x.LineDisc);
         var multiDisc = lines.Sum(x => x.MultiLnDisc);
-        var subtotal = gross - lineDisc - multiDisc - orderDiscount - (order.InclTax ? tax : 0m);
+        var subtotal = gross - lineDisc - multiDisc - orderDiscount - (order.InclTax ? lineTaxTotal : 0m);
         return new Calculation(gross, lineDisc, multiDisc, orderDiscount, subtotal,
             chargeTotal, tax, subtotal + chargeTotal + tax, lineTax, lineDiscount, lineCharges);
     }

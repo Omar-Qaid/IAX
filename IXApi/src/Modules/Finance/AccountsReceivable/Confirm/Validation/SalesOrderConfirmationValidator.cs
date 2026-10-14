@@ -12,5 +12,9 @@ public sealed class SalesOrderConfirmationValidator : AbstractValidator<PostConf
         RuleFor(request => request.ConfirmationDate)
             .Must(date => !date.HasValue || date.Value.Year >= 1900)
             .WithMessage("Confirmation date is outside the supported range.");
+        RuleFor(request => request.RequestId)
+            .Must(value => value == null || (!string.IsNullOrWhiteSpace(value)
+                && value.Length <= IAX.IXApi.Modules.Finance.Common.FieldLengths.ParmId))
+            .WithMessage("The confirmation request ID is invalid.");
     }
 }

@@ -20,7 +20,8 @@ public sealed class SalesOrderReadService : ISalesOrderReadService
 
     public async Task<object?> LinesAsync(long recId, CancellationToken cancellationToken = default)
     {
-        var order = await _unitOfWork.Context.Set<SalesTable>().AsNoTracking().FirstOrDefaultAsync(row => row.RecId == recId, cancellationToken);
+        var order = await _unitOfWork.Context.Set<SalesTable>().AsNoTracking().FirstOrDefaultAsync(
+            row => row.RecId == recId && row.DataAreaId == _company.GetDataAreaId(), cancellationToken);
         if (order == null) return null;
         var lines = await _unitOfWork.Context.Set<SalesLine>().AsNoTracking()
             .Where(line => line.SalesId == order.SalesId && line.DataAreaId == order.DataAreaId)
@@ -98,7 +99,7 @@ public sealed class SalesOrderReadService : ISalesOrderReadService
     public async Task<object?> TotalsAsync(long recId, CancellationToken cancellationToken = default)
     {
         var order = await _unitOfWork.Context.Set<SalesTable>().AsNoTracking()
-            .FirstOrDefaultAsync(row => row.RecId == recId, cancellationToken);
+            .FirstOrDefaultAsync(row => row.RecId == recId && row.DataAreaId == _company.GetDataAreaId(), cancellationToken);
         if (order == null) return null;
 
         var lines = await _unitOfWork.Context.Set<SalesLine>().AsNoTracking()
@@ -135,7 +136,8 @@ public sealed class SalesOrderReadService : ISalesOrderReadService
         decimal lineDiscount = 0;
         decimal multiLineDiscount = 0;
         decimal salesTax = 0;
-        decimal totalCharges = 0;
+        decimal lineTaxTotal = 0;
+        decimal totalCharges = lines.Sum(line => line.SalesMarkup);
         var salesModules = await _unitOfWork.Context.Set<InventTableModule>().AsNoTracking()
             .Where(module => module.DataAreaId == order.DataAreaId
                 && module.ModuleType == ModuleInventPurchSales.Sales
@@ -173,16 +175,17 @@ public sealed class SalesOrderReadService : ISalesOrderReadService
                     .FirstOrDefault();
                 return effectiveRate?.TaxValue ?? 0m;
             });
-            salesTax += order.InclTax && combinedRate > 0
+            var lineTax = order.InclTax && combinedRate > 0
                 ? taxableAmount * combinedRate / (100m + combinedRate)
                 : taxableAmount * combinedRate / 100m;
+            salesTax += lineTax;
+            lineTaxTotal += lineTax;
         }
 
         foreach (var charge in charges)
         {
             var chargeAmount = charge.MarkupCategory == MarkupCategory.Fixed && charge.CalculatedAmount == 0m
                 ? charge.Value : charge.CalculatedAmount;
-            totalCharges += chargeAmount;
             var applicableCodes = groupRows
                 .Where(row => row.TaxGroup == charge.TaxGroup && row.ExemptTax != NoYes.Yes)
                 .Select(row => row.TaxCode)
@@ -197,13 +200,15 @@ public sealed class SalesOrderReadService : ISalesOrderReadService
                     .FirstOrDefault();
                 return effectiveRate?.TaxValue ?? 0m;
             });
-            salesTax += order.InclTax && combinedRate > 0
+            var chargeTax = order.InclTax && combinedRate > 0
                 ? chargeAmount * combinedRate / (100m + combinedRate)
                 : chargeAmount * combinedRate / 100m;
+            totalCharges += chargeAmount - (order.InclTax ? chargeTax : 0m);
+            salesTax += chargeTax;
         }
 
         var totalDiscount = lineDiscount + multiLineDiscount + orderDiscount;
-        var subtotal = grossAmount - totalDiscount - (order.InclTax ? salesTax : 0m);
+        var subtotal = grossAmount - totalDiscount - (order.InclTax ? lineTaxTotal : 0m);
         return (new
         {
             currencyCode = order.CurrencyCode,
@@ -223,15 +228,17 @@ public sealed class SalesOrderReadService : ISalesOrderReadService
     public async Task<IEnumerable<SalesOrderListDto>> GetListAsync(
         CancellationToken cancellationToken = default)
     {
+        var area = _company.GetDataAreaId();
         var orders = await _unitOfWork.Context.Set<SalesTable>()
             .AsNoTracking()
+            .Where(order => order.DataAreaId == area)
             .OrderByDescending(order => order.RecId)
             .ToListAsync(cancellationToken);
 
         var customerAccounts = orders.Select(order => order.CustAccount).Where(account => account != string.Empty).Distinct().ToList();
         var customers = await _unitOfWork.Context.Set<CustTable>()
             .AsNoTracking()
-            .Where(customer => customerAccounts.Contains(customer.AccountNum))
+            .Where(customer => customer.DataAreaId == area && customerAccounts.Contains(customer.AccountNum))
             .Select(customer => new { customer.AccountNum, customer.Party })
             .ToListAsync(cancellationToken);
         var partyIds = customers.Select(customer => customer.Party).Where(id => id > 0).Distinct().ToList();
@@ -244,7 +251,7 @@ public sealed class SalesOrderReadService : ISalesOrderReadService
             customer => parties.GetValueOrDefault(customer.Party) ?? customer.AccountNum);
         var postalAddressIds = orders.Select(order => order.DeliveryPostalAddress).Where(id => id > 0).Distinct().ToList();
         var postalAddresses = await _unitOfWork.Context.Set<LogisticsPostalAddress>().AsNoTracking()
-            .Where(address => postalAddressIds.Contains(address.RecId))
+            .Where(address => address.DataAreaId == area && postalAddressIds.Contains(address.RecId))
             .ToDictionaryAsync(address => address.RecId, address => address.Address, cancellationToken);
 
         var result = orders.Select(order => new SalesOrderListMappingSource(

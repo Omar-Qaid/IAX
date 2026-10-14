@@ -1,6 +1,7 @@
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Confirm;
 
-public sealed record PostConfirmationRequest(DateTime? ConfirmationDate = null, bool Posting = true);
+public sealed record PostConfirmationRequest(DateTime? ConfirmationDate = null, bool Posting = true,
+    string? RequestId = null);
 public sealed record ConfirmationResult(int StatusCode, object? Data, string? Message = null);
 
 public sealed class ConfirmationListItemDto

@@ -97,9 +97,14 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
             item.DataAreaId == line.DataAreaId && item.InventTransId == line.InventTransId,
             cancellationToken);
         if (origin == null) throw new InvalidOperationException("The sales line inventory origin was not found.");
-        if (!await _dbContext.Context.Set<InventTransOriginSalesLine>().AnyAsync(item =>
-                item.DataAreaId == line.DataAreaId && item.InventTransOrigin == origin.RecId,
-                cancellationToken))
+        ValidateOrigin(line, origin);
+        var salesLineLinks = await _dbContext.Context.Set<InventTransOriginSalesLine>().Where(item =>
+                item.DataAreaId == line.DataAreaId && item.InventTransOrigin == origin.RecId)
+            .ToListAsync(cancellationToken);
+        if (salesLineLinks.Count > 1)
+            throw new InvalidOperationException("The sales line inventory origin has multiple sales-line links.");
+        var salesLineLink = salesLineLinks.SingleOrDefault();
+        if (salesLineLink == null)
         {
             _dbContext.Context.Set<InventTransOriginSalesLine>().Add(new InventTransOriginSalesLine
             {
@@ -109,12 +114,21 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
                 DataAreaId = line.DataAreaId
             });
         }
+        else
+        {
+            salesLineLink.SalesLineDataAreaId = line.DataAreaId;
+            salesLineLink.SalesLineInventTransId = line.InventTransId;
+        }
         var transaction = await _dbContext.Context.Set<InventTrans>().SingleOrDefaultAsync(item =>
             item.DataAreaId == line.DataAreaId && item.InventTransOrigin == origin.RecId, cancellationToken);
         if (transaction == null) throw new InvalidOperationException("The sales line inventory transaction was not found.");
+        if (transaction.ItemId != line.ItemId)
+            throw new InvalidOperationException("The inventory transaction item does not match this sales line.");
         if (transaction.StatusIssue != StatusIssue.Ordered)
             throw new InvalidOperationException("Processed inventory demand cannot be changed through sales line editing.");
         var previousDemand = -transaction.Qty;
+        if (previousDemand < 0)
+            throw new InvalidOperationException("The sales line inventory demand quantity is invalid.");
         var previousDimensionId = line.InventDimId;
         var previousDimension = await _dbContext.Context.Set<InventDim>().AsNoTracking()
             .FirstOrDefaultAsync(item => item.DataAreaId == line.DataAreaId
@@ -126,21 +140,25 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
         var dimension = await _dimensions.ResolveAsync(line.DataAreaId, inventSiteId,
             inventLocationId, cancellationToken, nextDimensionTemplate);
         var nextOpenDemand = Math.Max(0m, line.RemainInventPhysical);
-        transaction.Qty = -nextOpenDemand;
-        transaction.DateExpected = line.ReceiptDateRequested;
         var previousSummary = await _dbContext.Context.Set<InventSum>().SingleOrDefaultAsync(item =>
             item.DataAreaId == line.DataAreaId && item.ItemId == line.ItemId
             && item.InventDimId == previousDimensionId, cancellationToken)
             ?? throw new InvalidOperationException("The sales line inventory summary was not found.");
         if (previousDimensionId == dimension.InventDimId)
         {
+            if (previousSummary.OnOrder < previousDemand)
+                throw new InvalidOperationException("The inventory summary has less open demand than this sales line.");
             previousSummary.OnOrder += nextOpenDemand - previousDemand;
             previousSummary.LastUpdDateExpected = line.ReceiptDateRequested;
             origin.ItemInventDimId = dimension.InventDimId;
+            transaction.Qty = -nextOpenDemand;
+            transaction.DateExpected = line.ReceiptDateRequested;
             transaction.InventDimId = dimension.InventDimId;
             return;
         }
 
+        if (previousSummary.OnOrder < previousDemand)
+            throw new InvalidOperationException("The inventory summary has less open demand than this sales line.");
         previousSummary.OnOrder -= previousDemand;
         var nextSummary = await GetOrCreateInventorySummaryAsync(
             line.DataAreaId, line.ItemId, dimension, cancellationToken);
@@ -148,6 +166,8 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
         nextSummary.LastUpdDateExpected = line.ReceiptDateRequested;
         line.InventDimId = dimension.InventDimId;
         origin.ItemInventDimId = dimension.InventDimId;
+        transaction.Qty = -nextOpenDemand;
+        transaction.DateExpected = line.ReceiptDateRequested;
         transaction.InventDimId = dimension.InventDimId;
     }
 
@@ -187,18 +207,29 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
         var origin = await _dbContext.Context.Set<InventTransOrigin>().SingleOrDefaultAsync(item =>
             item.DataAreaId == line.DataAreaId && item.InventTransId == line.InventTransId, cancellationToken);
         if (origin == null) throw new InvalidOperationException("The sales line inventory origin was not found.");
+        ValidateOrigin(line, origin);
         var transactions = await _dbContext.Context.Set<InventTrans>()
             .Where(item => item.DataAreaId == line.DataAreaId && item.InventTransOrigin == origin.RecId)
             .ToListAsync(cancellationToken);
+        if (transactions.Count == 0 || transactions.Any(item => item.StatusIssue != StatusIssue.Ordered))
+            throw new InvalidOperationException("Processed inventory transactions cannot be deleted with an open sales line.");
+        if (transactions.Any(item => item.ItemId != line.ItemId))
+            throw new InvalidOperationException("The inventory transaction item does not match this sales line.");
         var demandQuantity = -transactions.Sum(item => item.Qty);
+        if (demandQuantity < 0)
+            throw new InvalidOperationException("The sales line inventory demand quantity is invalid.");
+        var salesLineLinks = await _dbContext.Context.Set<InventTransOriginSalesLine>()
+            .Where(item => item.DataAreaId == line.DataAreaId && item.InventTransOrigin == origin.RecId)
+            .ToListAsync(cancellationToken);
+        if (salesLineLinks.Count > 1)
+            throw new InvalidOperationException("The sales line inventory origin has multiple sales-line links.");
         var inventorySummary = await _dbContext.Context.Set<InventSum>().SingleOrDefaultAsync(item =>
             item.DataAreaId == line.DataAreaId && item.ItemId == line.ItemId
             && item.InventDimId == line.InventDimId, cancellationToken)
             ?? throw new InvalidOperationException("The sales line inventory summary was not found.");
+        if (inventorySummary.OnOrder < demandQuantity)
+            throw new InvalidOperationException("The inventory summary has less open demand than this sales line.");
         inventorySummary.OnOrder -= demandQuantity;
-        var salesLineLinks = await _dbContext.Context.Set<InventTransOriginSalesLine>()
-            .Where(item => item.DataAreaId == line.DataAreaId && item.InventTransOrigin == origin.RecId)
-            .ToListAsync(cancellationToken);
         _dbContext.Context.Set<InventTransOriginSalesLine>().RemoveRange(salesLineLinks);
         _dbContext.Context.Set<InventTrans>().RemoveRange(transactions);
         _dbContext.Context.Set<InventTransOrigin>().Remove(origin);
@@ -213,11 +244,14 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
                 item.DataAreaId == line.DataAreaId && item.InventTransId == line.InventTransId,
                 cancellationToken);
             if (origin == null) throw new InvalidOperationException("The sales line inventory origin was not found.");
+            ValidateOrigin(line, origin);
             var transactions = await _dbContext.Context.Set<InventTrans>()
                 .Where(item => item.DataAreaId == line.DataAreaId
                     && item.InventTransOrigin == origin.RecId
                     && item.StatusIssue == StatusIssue.Ordered)
                 .ToListAsync(cancellationToken);
+            if (transactions.Any(item => item.ItemId != line.ItemId))
+                throw new InvalidOperationException("The inventory transaction item does not match this sales line.");
             if (transactions.Count == 0 && remainingDemand > 0)
                 throw new InvalidOperationException(
                     "The open sales line has no On order inventory demand to cancel.");
@@ -248,6 +282,13 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
         line.SalesDeliverNow = 0;
         line.InventDeliverNow = 0;
         line.SalesStatus = SalesStatus.Canceled;
+    }
+
+    private static void ValidateOrigin(SalesLine line, InventTransOrigin origin)
+    {
+        if (origin.ReferenceCategory != InventRefType.SalesTable
+            || origin.ReferenceId != line.SalesId || origin.ItemId != line.ItemId)
+            throw new InvalidOperationException("The inventory origin does not belong to this sales line.");
     }
 
     private async Task<InventSum> GetOrCreateInventorySummaryAsync(
