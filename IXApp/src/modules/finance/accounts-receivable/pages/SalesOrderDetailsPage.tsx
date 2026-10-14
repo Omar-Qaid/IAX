@@ -45,6 +45,7 @@ import {
 import { DocumentCopyDrawer } from '@patterns/document/DocumentCopyDrawer';
 import { salesOrderCopyApi, type SalesOrderCopyMode } from '../api/salesOrderCopyApi';
 import { SalesOrderConfirmationDialog } from '../components/SalesOrderConfirmationDialog';
+import { SalesOrderPackingSlipPostingDialog } from '../components/SalesOrderPackingSlipPostingDialog';
 import { salesOrderConfirmationApi } from '../api/salesOrderConfirmationApi';
 
 import { SalesOrderLinesGrid } from './SalesOrderLinesGrid';
@@ -135,6 +136,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
   const [savingLineDetail, setSavingLineDetail] = useState(false);
   const [totalsOpen, setTotalsOpen] = useState(false);
   const [confirmationsOpen, setConfirmationsOpen] = useState(false);
+  const [packingSlipPostingOpen, setPackingSlipPostingOpen] = useState(false);
   const [confirmationMode, setConfirmationMode] = useState<'confirmation' | 'proForma'>('confirmation');
   const [confirmNowBusy, setConfirmNowBusy] = useState(false);
   const [confirmNowError, setConfirmNowError] = useState('');
@@ -284,6 +286,18 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       ],
     },
     {
+      id: 'pick-and-pack',
+      label: 'Pick and pack',
+      actions: [
+        {
+          id: 'post-packing-slip',
+          label: 'Packing slip',
+          disabled: !canEditHeader || Boolean(activeHeader),
+          onClick: () => setPackingSlipPostingOpen(true),
+        },
+      ],
+    },
+    {
       id: 'actions',
       label: 'Actions',
       actions: [{ id: 'confirm-now', label: 'Confirm now', disabled: !canEditHeader || Boolean(activeHeader) || confirmNowBusy, onClick: async () => {
@@ -314,6 +328,7 @@ export function SalesOrderDetailsPage(): React.ReactElement {
       label: 'Journals',
       actions: [
         { id: 'sales-order-confirmations', label: 'Sales order confirmations', onClick: () => order && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.custConfirmJournal(order.id)) },
+        { id: 'sales-order-packing-slips', label: 'Packing slip journal', onClick: () => order && navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.custPackingSlipJournal(order.id)) },
         { id: 'quotation-confirmation-journal', label: 'Quotation confirmation journal', disabled: true },
       ],
     },
@@ -2450,6 +2465,20 @@ export function SalesOrderDetailsPage(): React.ReactElement {
         onPosted={async () => {
           await Promise.all([
             queryClient.invalidateQueries({ queryKey: ['accounts-receivable', 'sales-orders'] }),
+            queryClient.invalidateQueries({ queryKey: ['sales-order-totals', order.id] }),
+          ]);
+        }}
+      />
+      <SalesOrderPackingSlipPostingDialog
+        open={packingSlipPostingOpen}
+        orderId={order.id}
+        salesId={order.salesId}
+        canPost={Boolean(canEditHeader) && !activeHeader}
+        onClose={() => setPackingSlipPostingOpen(false)}
+        onPosted={async () => {
+          await Promise.all([
+            queryClient.invalidateQueries({ queryKey: ['accounts-receivable', 'sales-orders'] }),
+            queryClient.invalidateQueries({ queryKey: ['sales-order-lines', order.id] }),
             queryClient.invalidateQueries({ queryKey: ['sales-order-totals', order.id] }),
           ]);
         }}

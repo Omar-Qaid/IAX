@@ -22,7 +22,7 @@ import { DataGrid } from '@shared/components/data-grid/DataGrid';
 import type { ColumnDef, DataGridHandle } from '@shared/components/data-grid/types';
 import { ErrorState } from '@shared/components/feedback/ErrorState';
 import { LookupGridField } from '@shared/components/lookups/LookupGridField';
-import { LookupField } from '@shared/components/lookups/LookupField';
+import { DataGridLookupField } from '@shared/components/lookups/DataGridLookupField';
 import { SalesLineValueField } from './SalesLineValueField';
 import { SalesLineGridSurface } from './SalesLineGridSurface';
 import { SalesLineCell, SalesLineCellProvider } from './SalesLineCell';
@@ -112,13 +112,14 @@ export function SalesOrderLinesGrid({
     totalsRefreshTimerRef,
   } = useSalesOrderLineState();
   const newRowFocusFrame = useRef<number | null>(null);
+  const lineEditEnabled = editing || draftLine?.orderId === order.id;
   useEffect(() => {
-    if (editing) return;
+    if (editing || draftLine?.orderId === order.id) return;
     setDraftLine(null);
     setLineBaseline(null);
     setActiveField('');
     setLineError('');
-  }, [editing, setActiveField, setDraftLine, setLineBaseline, setLineError]);
+  }, [editing, draftLine?.orderId, order.id, setActiveField, setDraftLine, setLineBaseline, setLineError]);
   useEffect(
     () => () => {
       if (newRowFocusFrame.current != null) cancelAnimationFrame(newRowFocusFrame.current);
@@ -203,7 +204,7 @@ export function SalesOrderLinesGrid({
   const dimensionsQuery = useQuery({
     queryKey: ['sales-order-inventory-dimensions'],
     queryFn: ({ signal }) => salesOrderLinesApi.inventoryDimensions(signal),
-    enabled: editing,
+    enabled: lineEditEnabled,
     staleTime: 5 * 60 * 1000,
   });
   const lines = linesQuery.data ?? EMPTY_LINES;
@@ -298,7 +299,7 @@ export function SalesOrderLinesGrid({
       if (savingLine || (activeDraftId === 'new-sales-line' && line.id !== activeDraftId))
         return;
       setSelectedLineId(line.id);
-      if (editing && canEditLines && order.salesStatus.toLowerCase() === 'backorder') {
+      if (lineEditEnabled && canEditLines && order.salesStatus.toLowerCase() === 'backorder') {
         setLineBaseline(line);
         setDraftLine({
           ...line,
@@ -312,12 +313,40 @@ export function SalesOrderLinesGrid({
       savingLine,
       setSelectedLineId,
       canEditLines,
-      editing,
+      lineEditEnabled,
       order.salesStatus,
       order.id,
       setLineBaseline,
       setDraftLine,
     ]
+  );
+  const handleRowDoubleClick = useCallback(
+    (line: DetailLine) => {
+      const cell = (document.activeElement as HTMLElement | null)?.closest<HTMLElement>(
+        '[role="gridcell"]'
+      );
+      const field = cell?.dataset.field ?? '';
+      const editableFields = new Set([
+        'lineType', 'itemNumber', 'description', 'quantity', 'unit', 'unitPrice',
+        'lineDiscount', 'lineDiscountPercent', 'deliveryDate', 'deliveryType', 'site', 'warehouse',
+      ]);
+      if (
+        !cell ||
+        !editableFields.has(field) ||
+        savingLine ||
+        !canEditLines ||
+        order.salesStatus.toLowerCase() !== 'backorder'
+      ) return;
+      setSelectedLineId(line.id);
+      setLineBaseline(line);
+      setDraftLine({
+        ...line,
+        deliveryDate: line.deliveryDate?.slice(0, 10),
+        orderId: order.id,
+      });
+      setActiveField(field);
+    },
+    [canEditLines, order.id, order.salesStatus, savingLine, setActiveField, setDraftLine, setLineBaseline, setSelectedLineId]
   );
   const newRow = useMemo<DetailLine>(
     () => ({
@@ -460,7 +489,7 @@ export function SalesOrderLinesGrid({
             if (selectedLineId !== row.id) setSelectedLineId(row.id);
             if (
               !editable ||
-              !editing ||
+              !lineEditEnabled ||
               !canEditLines ||
               (savingLine && row.id !== activeDraft?.id) ||
               order?.salesStatus.toLowerCase() !== 'backorder'
@@ -546,33 +575,33 @@ export function SalesOrderLinesGrid({
             (warehouse) => !row.site || warehouse.siteId === row.site
           );
       return (
-        <LookupField
-          name={column.field}
-          masterRoute={isSite ? INVENTORY_ROUTE_PATHS.SITES : INVENTORY_ROUTE_PATHS.WAREHOUSES}
-          label={t(column.headerName)}
-          value={String(value ?? '')}
-          options={options}
-          displayMode="select"
-          searchable
-          lazyLoading={false}
-          disabled={savingLine || dimensionsQuery.isLoading}
-          onChange={(nextValue) => {
-            const next = {
-              ...row,
-              [column.field]: String(nextValue ?? ''),
-              ...(isSite &&
-              row.warehouse &&
-              !dimensionsQuery.data?.warehouses.some(
-                (warehouse) =>
-                  warehouse.id === row.warehouse && warehouse.siteId === String(nextValue ?? '')
-              )
-                ? { warehouse: '' }
-                : {}),
-            };
-            setDraftLine({ ...next, orderId: order.id });
-            if (next.itemNumber) void saveLine({ ...next, orderId: order.id });
-          }}
-        />
+        <Box sx={{ width: '100%', minWidth: 0, height: 28, display: 'flex', alignItems: 'center' }}>
+          <DataGridLookupField
+            name={column.field}
+            label={t(column.headerName)}
+            value={String(value ?? '')}
+            options={options}
+            searchable
+            lazyLoading={false}
+            disabled={savingLine || dimensionsQuery.isLoading}
+            onChange={(nextValue) => {
+              const next = {
+                ...row,
+                [column.field]: String(nextValue ?? ''),
+                ...(isSite &&
+                row.warehouse &&
+                !dimensionsQuery.data?.warehouses.some(
+                  (warehouse) =>
+                    warehouse.id === row.warehouse && warehouse.siteId === String(nextValue ?? '')
+                )
+                  ? { warehouse: '' }
+                  : {}),
+              };
+              setDraftLine({ ...next, orderId: order.id });
+              if (next.itemNumber) void saveLine({ ...next, orderId: order.id });
+            }}
+          />
+        </Box>
       );
     }
     if (column.field === 'lineType' || column.field === 'deliveryType') {
@@ -819,7 +848,7 @@ export function SalesOrderLinesGrid({
           disabled={
             savingLine ||
             activeDraft?.id === 'new-sales-line' ||
-            !editing ||
+            !lineEditEnabled ||
             !canEditLines ||
             order.salesStatus.toLowerCase() !== 'backorder'
           }
@@ -856,7 +885,7 @@ export function SalesOrderLinesGrid({
         <Button
           disabled={
             savingLine ||
-            !editing ||
+            !lineEditEnabled ||
             !canEditLines ||
             order.salesStatus.toLowerCase() !== 'backorder' ||
             !(selectedLineId ?? activeDraft?.id)
@@ -983,6 +1012,7 @@ export function SalesOrderLinesGrid({
             onSelectionChange={handleSelectionChange}
             selectedIds={selectedLineIds}
             onRowClick={handleRowClick}
+            onRowDoubleClick={handleRowDoubleClick}
             columns={gridColumns}
             height={232}
             rowHeight={24}

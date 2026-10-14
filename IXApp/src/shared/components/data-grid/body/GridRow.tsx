@@ -83,7 +83,7 @@ export const GridRow = memo(function GridRowInner<T>({
       : 'background.paper';
 
   const hoverBg = isSelected
-    ? alpha(theme.palette.primary.main, theme.palette.mode === 'light' ? 0.18 : 0.28)
+    ? rowBg
     : theme.palette.mode === 'light'
       ? '#f3f6fa'
       : alpha(theme.palette.action.hover, 0.1);

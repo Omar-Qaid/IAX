@@ -16,12 +16,15 @@ export const ACCOUNTS_RECEIVABLE_ROUTE_PATHS = {
   SALES_ORDER_DETAILS: '/accounts-receivable/sales-orders/:salesOrderId',
   SALES_ORDER_CHARGES: '/accounts-receivable/sales-orders/:salesOrderId/charges',
   CUST_CONFIRM_JOURNAL: '/accounts-receivable/sales-orders/:salesOrderId/confirmations',
+  CUST_PACKING_SLIP_JOURNAL: '/accounts-receivable/sales-orders/:salesOrderId/packing-slips',
   salesOrder: (salesOrderId: string) =>
     `/accounts-receivable/sales-orders/${encodeURIComponent(salesOrderId)}`,
   salesOrderCharges: (salesOrderId: string) =>
     `/accounts-receivable/sales-orders/${encodeURIComponent(salesOrderId)}/charges`,
   custConfirmJournal: (salesOrderId: string) =>
     `/accounts-receivable/sales-orders/${encodeURIComponent(salesOrderId)}/confirmations`,
+  custPackingSlipJournal: (salesOrderId: string) =>
+    `/accounts-receivable/sales-orders/${encodeURIComponent(salesOrderId)}/packing-slips`,
   salesOrderLineCharges: (salesOrderId: string, lineId: string) =>
     `/accounts-receivable/sales-orders/${encodeURIComponent(salesOrderId)}/charges?lineId=${encodeURIComponent(lineId)}`,
 } as const;

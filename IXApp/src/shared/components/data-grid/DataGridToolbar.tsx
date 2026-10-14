@@ -77,42 +77,38 @@ export const DataGridToolbar = memo(function DataGridToolbar({
             value={globalSearch}
             onChange={(val) => setGlobalSearch(String(val ?? ''))}
             sx={{
-              width: { sm: 200, md: 240 },
-              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+              width: { sm: 220, md: 270 },
+              maxWidth: '100%',
+              mt: '4px',
               '& .MuiOutlinedInput-root': {
-                height: uiDensity.controlHeight,
-                borderRadius: '2px',
-                bgcolor: '#ffffff',
-                fontSize: '13px',
-                color: '#323130',
-                '& fieldset': { 
-                  borderColor: '#a6a6a6',
-                  borderWidth: '1px',
-                  transition: 'all 0.2s',
+                boxSizing: 'border-box',
+                height: uiDensity.toolbarHeight,
+                borderRadius: 1,
+                bgcolor: 'background.paper',
+                fontSize: '0.8125rem',
+                color: 'text.primary',
+                '& fieldset': {
+                  borderColor: 'divider',
+                  borderWidth: 1,
                 },
                 '&:hover fieldset': {
-                  borderColor: '#323130',
+                  borderColor: 'text.secondary',
                 },
                 '&.Mui-focused fieldset': {
-                  borderWidth: '1px',
+                  borderWidth: 1,
                   borderColor: 'primary.main',
                 },
                 '& .MuiInputBase-input::placeholder': {
-                  color: '#8A9BB2',
+                  color: 'text.secondary',
                   opacity: 1,
-                }
+                },
               },
             }}
             slotProps={{
               input: {
                 startAdornment: (
                   <InputAdornment position="start" sx={{ marginInlineEnd: 0.5 }}>
-                    <SearchIcon 
-                      sx={{ 
-                        fontSize: 18, 
-                        color: '#605E5C',
-                      }} 
-                    />
+                    <SearchIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
                   </InputAdornment>
                 ),
                 endAdornment: globalSearch ? (

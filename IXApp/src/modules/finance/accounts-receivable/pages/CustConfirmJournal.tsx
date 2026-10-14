@@ -10,7 +10,7 @@ import { salesOrderListApi } from '../api/salesOrderListApi';
 import { salesOrderConfirmationApi, type SalesOrderConfirmationLine, type SalesOrderConfirmationSummary } from '../api/salesOrderConfirmationApi';
 import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
 
-type GridRow = { id: string; journal?: SalesOrderConfirmationSummary; line?: SalesOrderConfirmationLine };
+type GridRow = { id: string; salesOrderId: string; journal?: SalesOrderConfirmationSummary; line?: SalesOrderConfirmationLine };
 const amount = (value: number | undefined) => (value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const date = (value: string) => value ? new Date(value).toLocaleDateString() : '';
 const overviewColumns: ColumnDef<GridRow>[] = [
@@ -21,7 +21,7 @@ const overviewColumns: ColumnDef<GridRow>[] = [
   { field: 'confirmAmount', headerName: 'Amount', width: 150, align: 'right', valueGetter: ({ row }) => row.journal?.confirmAmount, renderCell: ({ row }) => amount(row.journal?.confirmAmount) },
 ];
 const lineColumns: ColumnDef<GridRow>[] = [
-  { field: 'salesId', headerName: 'Sales order', width: 170, valueGetter: ({ row }) => row.line?.salesId },
+  { field: 'salesId', headerName: 'Sales order', width: 170, valueGetter: ({ row }) => row.salesOrderId },
   { field: 'itemId', headerName: 'Item', width: 150, valueGetter: ({ row }) => row.line?.itemId },
   { field: 'salesCategory', headerName: 'Sales category', width: 150, valueGetter: ({ row }) => row.line?.salesCategory || '' },
   { field: 'name', headerName: 'Description', minWidth: 220, flex: 1, valueGetter: ({ row }) => row.line?.name },
@@ -48,7 +48,10 @@ export function CustConfirmJournal(): React.ReactElement {
   const journals = journalsQuery.data ?? [];
   const activeId = journals.some((row) => row.id === selectedId) ? selectedId : journals[0]?.id;
   const detailQuery = useQuery({ queryKey: ['sales-order-confirmation', salesOrderId, activeId], queryFn: ({ signal }) => salesOrderConfirmationApi.get(salesOrderId!, activeId!, signal), enabled: Boolean(salesOrderId && activeId && tab === 'lines') });
-  const rows = useMemo<GridRow[]>(() => tab === 'overview' ? journals.map((journal) => ({ id: journal.id, journal })) : (detailQuery.data?.lines ?? []).map((line) => ({ id: line.id, line })), [tab, journals, detailQuery.data?.lines]);
+  const rows = useMemo<GridRow[]>(() => tab === 'overview'
+    ? journals.map((journal) => ({ id: journal.id, salesOrderId: journal.salesId, journal }))
+    : (detailQuery.data?.lines ?? []).map((line) => ({ id: line.id, salesOrderId: order?.salesId ?? '', line })),
+  [tab, journals, detailQuery.data?.lines, order?.salesId]);
   if (!salesOrderId) return <ErrorState message="Sales order is missing." />;
   if (ordersQuery.isLoading || journalsQuery.isLoading) return <LoadingState />;
   if (ordersQuery.error || journalsQuery.error) return <ErrorState message={(ordersQuery.error || journalsQuery.error)?.message ?? 'Unable to load confirmations.'} />;

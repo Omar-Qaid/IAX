@@ -152,6 +152,15 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'cust-packing-slip-journal',
+    path: ROUTE_PATHS.ACCOUNTS_RECEIVABLE.CUST_PACKING_SLIP_JOURNAL,
+    permission: PERMISSIONS.SALES_ORDER_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/accounts-receivable/pages/CustPackingSlipJournal'),
+      (module) => module.CustPackingSlipJournal
+    ),
+  },
+  {
     id: 'inventory-transactions',
     path: ROUTE_PATHS.INVENTORY.TRANSACTIONS,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,

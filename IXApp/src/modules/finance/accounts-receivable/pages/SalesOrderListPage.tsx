@@ -7,7 +7,6 @@ import type { ColumnDef } from '@shared/components/data-grid/types';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { salesOrderListApi, type SalesOrderListRecord } from '../api/salesOrderListApi';
 import { useNavigate } from 'react-router-dom';
-import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
 import { SalesOrderQuickCreate } from '../components/SalesOrderQuickCreate';
 
 export function SalesOrderListPage(): React.ReactElement {
@@ -66,7 +65,6 @@ export function SalesOrderListPage(): React.ReactElement {
       newLabel: t('actions.new'),
       deleteLabel: t('actions.delete'),
       onNew: () => setQuickCreateOpen(true),
-      onEdit: (order) => navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrder(order.id)),
     },
     commands: commandIds.map((id) => ({
       id,
@@ -161,8 +159,7 @@ export function SalesOrderListPage(): React.ReactElement {
       onRetry={() => orderQuery.refetch()}
       dataGridProps={{
         storageKey: 'accounts-receivable.sales-orders.reference-view',
-        onRowDoubleClick: (order) =>
-          navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrder(order.id)),
+        selectionMode: 'multiple',
       }}
       dialogs={
         <SalesOrderQuickCreate
@@ -171,7 +168,6 @@ export function SalesOrderListPage(): React.ReactElement {
           onSave={async (order) => {
             setQuickCreateOpen(false);
             await orderQuery.refetch();
-            navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrder(order.id));
           }}
         />
       }

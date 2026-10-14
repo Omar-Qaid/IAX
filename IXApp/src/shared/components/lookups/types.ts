@@ -162,6 +162,8 @@ export interface LookupFieldProps<TFieldValues extends FieldValues = FieldValues
   loading?: boolean;
   placeholder?: string;
   fullWidth?: boolean;
+  /** Use a shorter, tighter control when the lookup is embedded in a data-grid cell. */
+  compact?: boolean;
   control?: Control<TFieldValues>;
   displayMode?: 'dialog' | 'select';
   variant?: 'standard' | 'outlined';

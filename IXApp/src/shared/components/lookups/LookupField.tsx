@@ -50,6 +50,50 @@ const compactOutlinedLookupSx = {
   },
 } as const;
 
+const compactGridLookupSx = {
+  width: '100%',
+  minWidth: 0,
+  '& .MuiAutocomplete-inputRoot': {
+    boxSizing: 'border-box',
+    minWidth: 0,
+    height: 28,
+    minHeight: 28,
+    paddingInlineEnd: '42px !important',
+  },
+  '& .MuiAutocomplete-inputRoot.MuiOutlinedInput-root': {
+    height: 28,
+    minHeight: 28,
+    paddingBlock: '0 !important',
+  },
+  '& .MuiAutocomplete-inputRoot.MuiOutlinedInput-root .MuiAutocomplete-input': {
+    boxSizing: 'border-box',
+    height: '28px !important',
+    minWidth: 0,
+    padding: '4px 3px !important',
+    paddingInlineEnd: '0 !important',
+  },
+  '& .MuiAutocomplete-input': {
+    minWidth: 0,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  '& .MuiAutocomplete-endAdornment': {
+    display: 'flex',
+    alignItems: 'center',
+    insetInlineEnd: 2,
+    top: '50%',
+    transform: 'translateY(-50%)',
+  },
+  '& .MuiAutocomplete-clearIndicator': {
+    marginInlineEnd: 0,
+    padding: '2px',
+  },
+  '& .MuiAutocomplete-popupIndicator': {
+    padding: '2px',
+  },
+} as const;
+
 type ServerLookupDialogProps = Pick<
   LookupFieldProps,
   | 'fetchPage'
@@ -137,6 +181,7 @@ function SelectLookup({
   helperText,
   placeholder,
   fullWidth = true,
+  compact = false,
   searchable = true,
   sideMode = 'server',
   lazyLoading = true,
@@ -221,7 +266,12 @@ function SelectLookup({
 
   return (
     <Autocomplete<LookupOption, false, boolean, false>
-      sx={{ ...standardLookupSx, ...(variant === 'outlined' ? compactOutlinedLookupSx : {}), ...lookupValueSx(scalarValue) }}
+      sx={{
+        ...standardLookupSx,
+        ...(variant === 'outlined' ? compactOutlinedLookupSx : {}),
+        ...(compact ? compactGridLookupSx : {}),
+        ...lookupValueSx(scalarValue),
+      }}
       open={open}
       onOpen={() => setOpen(true)}
       onClose={() => {
@@ -303,6 +353,7 @@ export function LookupField<TFieldValues extends FieldValues = FieldValues>({
   loading = false,
   placeholder,
   fullWidth = true,
+  compact = false,
   displayMode = 'select',
   searchable = true,
   sideMode = 'server',
