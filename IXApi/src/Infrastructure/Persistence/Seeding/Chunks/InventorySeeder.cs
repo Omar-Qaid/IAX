@@ -16,11 +16,13 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks;
 public sealed class InventorySeeder : ISeeder
 {
     private const string Company = "dat";
-    private const string ProductNumber = "BATH-001";
-    private const string ItemGroup = "BAT-ACC";
-    private const string ModelGroup = "STD";
-    private const string StorageGroup = "SWL";
+    private const string ProductNumber = "ITEM-001";
+    private const string ItemGroup = "FURNITURE";
+    private const string ModelGroup = "FIFO";
+    private const string StorageGroup = "SW";
     private const string TrackingGroup = "NONE";
+    private const string Unit = "PCS";
+    private const string DefaultDimension = "ITEM001-JED-1";
 
     public async Task SeedAsync(
         ApplicationDbContext db,
@@ -43,7 +45,7 @@ public sealed class InventorySeeder : ISeeder
             {
                 DataAreaId = Company,
                 ItemGroupId = ItemGroup,
-                Name = "Bathroom accessories",
+                Name = "Furniture",
                 TaxItemGroupIdSales = "VAT15",
                 TaxItemGroupIdPurch = "VAT15"
             });
@@ -56,8 +58,8 @@ public sealed class InventorySeeder : ISeeder
             {
                 DataAreaId = Company,
                 ModelGroupId = ModelGroup,
-                Name = "Standard stocked items",
-                InventModel = InventModel.WeightedAvg_Date,
+                Name = "FIFO stocked items",
+                InventModel = InventModel.FIFO,
                 StockedProduct = NoYes.Yes,
                 PostOnHandPhysical = NoYes.Yes,
                 PostOnHandFinancial = NoYes.Yes,
@@ -73,10 +75,10 @@ public sealed class InventorySeeder : ISeeder
             db.Add(new EcoResStorageDimensionGroup
             {
                 StorageDimensionGroupId = StorageGroup,
-                Name = "Site, warehouse and location",
+                Name = "Site and warehouse",
                 UseSite = true,
                 UseWarehouse = true,
-                UseLocation = true
+                UseLocation = false
             });
         }
 
@@ -103,7 +105,7 @@ public sealed class InventorySeeder : ISeeder
             product = new EcoResProduct
             {
                 DisplayProductNumber = ProductNumber,
-                SearchName = "Bathroom towel",
+                SearchName = "Office Chair",
                 ProductType = ItemType.Item,
                 ProductSubtype = EcoResProductSubtype.Product
             };
@@ -114,7 +116,7 @@ public sealed class InventorySeeder : ISeeder
         if (!await db.Set<EcoResDistinctProduct>().IgnoreQueryFilters().AnyAsync(x => x.RecId == product.RecId, ct))
             db.Add(new EcoResDistinctProduct { RecId = product.RecId });
 
-        await AddTranslationAsync(db, product.RecId, "en-us", "Bathroom towel", "Standard bathroom towel", ct);
+        await AddTranslationAsync(db, product.RecId, "en-us", "Office Chair", "Basic stocked office chair", ct);
         await AddTranslationAsync(db, product.RecId, "ar", "منشفة حمام", "منشفة حمام قياسية", ct);
         await db.SaveChangesAsync(ct);
         return product.RecId;
@@ -146,17 +148,17 @@ public sealed class InventorySeeder : ISeeder
                 DataAreaId = Company,
                 ItemId = ProductNumber,
                 Product = productId,
-                Name = "Bathroom towel",
+                Name = "Office Chair",
                 NameAlias = "منشفة حمام",
                 Sku = ProductNumber,
                 ItemType = ItemType.Item,
-                BomUnitId = "EA"
+                BomUnitId = Unit
             });
         }
 
-        await AddModuleAsync(db, ModuleInventPurchSales.Inventory, 25m, string.Empty, ct);
-        await AddModuleAsync(db, ModuleInventPurchSales.Purchase, 30m, "VAT15", ct);
-        await AddModuleAsync(db, ModuleInventPurchSales.Sales, 45m, "VAT15", ct);
+        await AddModuleAsync(db, ModuleInventPurchSales.Inventory, 0m, string.Empty, ct);
+        await AddModuleAsync(db, ModuleInventPurchSales.Purchase, 100m, "VAT15", ct);
+        await AddModuleAsync(db, ModuleInventPurchSales.Sales, 150m, "VAT15", ct);
 
         if (!await db.Set<InventItemGroupItem>().IgnoreQueryFilters().AnyAsync(
                 x => x.ItemDataAreaId == Company && x.ItemId == ProductNumber, ct))
@@ -174,26 +176,42 @@ public sealed class InventorySeeder : ISeeder
                 x => x.ItemDataAreaId == Company && x.ItemId == ProductNumber, ct))
             db.Add(new EcoResTrackingDimensionGroupItem { ItemId = ProductNumber, ItemDataAreaId = Company, TrackingDimensionGroupId = TrackingGroup });
 
+        await EnsureDefaultDimensionAsync(db, ct);
         await AddOrderSetupAsync<InventItemPurchSetup>(db, () => new InventItemPurchSetup
         {
             ItemId = ProductNumber, ItemDataAreaId = Company, InventDimId = string.Empty,
-            StandardQty = 1, MultipleQty = 1, LeadTime = 2, Stopped = 0
+            InventDimIdDefault = DefaultDimension, LowestQty = 1, StandardQty = 10, MultipleQty = 1, LeadTime = 5, Stopped = 0
         }, ct);
         await AddOrderSetupAsync<InventItemSalesSetup>(db, () => new InventItemSalesSetup
         {
             ItemId = ProductNumber, ItemDataAreaId = Company, InventDimId = string.Empty,
-            StandardQty = 1, MultipleQty = 1, LeadTime = 1, Stopped = 0
+            InventDimIdDefault = DefaultDimension, LowestQty = 1, StandardQty = 1, MultipleQty = 1, LeadTime = 0, Stopped = 0
         }, ct);
         await AddOrderSetupAsync<InventItemInventSetup>(db, () => new InventItemInventSetup
         {
             ItemId = ProductNumber, ItemDataAreaId = Company, InventDimId = string.Empty,
-            StandardQty = 1, MultipleQty = 1, Stopped = 0
+            InventDimIdDefault = DefaultDimension, LowestQty = 1, StandardQty = 1, MultipleQty = 1, Stopped = 0
         }, ct);
 
         if (!await db.Set<InventItemSetupSupplyType>().IgnoreQueryFilters().AnyAsync(
                 x => x.ItemDataAreaId == Company && x.ItemId == ProductNumber, ct))
             db.Add(new InventItemSetupSupplyType { ItemId = ProductNumber, ItemDataAreaId = Company, DefaultOrderType = 1 });
 
+        await db.SaveChangesAsync(ct);
+    }
+
+    private static async Task EnsureDefaultDimensionAsync(ApplicationDbContext db, CancellationToken ct)
+    {
+        if (await db.Set<InventDim>().IgnoreQueryFilters().AnyAsync(
+                x => x.DataAreaId == Company && x.InventDimId == DefaultDimension, ct)) return;
+
+        db.Add(new InventDim
+        {
+            DataAreaId = Company,
+            InventDimId = DefaultDimension,
+            InventSiteId = "JED",
+            InventLocationId = "JED-1"
+        });
         await db.SaveChangesAsync(ct);
     }
 
@@ -208,7 +226,7 @@ public sealed class InventorySeeder : ISeeder
                 DataAreaId = Company,
                 ItemId = ProductNumber,
                 ModuleType = type,
-                UnitId = "EA",
+                UnitId = Unit,
                 Price = price,
                 PriceUnit = 1,
                 PriceDate = DateTime.UtcNow,

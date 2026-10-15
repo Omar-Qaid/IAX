@@ -295,9 +295,11 @@ export function EcoResProductDetailsPage(): React.ReactElement {
         config={config}
       />
       <Snackbar open={validation !== null || validationError !== null} autoHideDuration={validation?.isValid ? 6000 : null} onClose={() => { setValidation(null); setValidationError(null); }} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
-        <Alert severity={validationError || (validation && !validation.isValid) ? 'error' : 'success'} onClose={() => { setValidation(null); setValidationError(null); }} sx={{ whiteSpace: 'pre-line', maxWidth: 720 }}>
+        <Alert severity={validationError || (validation && !validation.isValid) ? 'error' : validation?.warnings.length ? 'warning' : 'success'} onClose={() => { setValidation(null); setValidationError(null); }} sx={{ whiteSpace: 'pre-line', maxWidth: 720 }}>
           {validationError ?? (validation?.isValid
-            ? t('releasedProduct.validation.ready', 'The released item is ready for purchase and sales order entry.')
+            ? validation.warnings.length
+              ? `${t('releasedProduct.validation.readyWithWarnings', 'The released item setup is complete, with posting warnings:')}\n${validation.warnings.map((message) => `\u2022 ${message}`).join('\n')}`
+              : t('releasedProduct.validation.ready', 'The released item is ready for purchase and sales order entry.')
             : validation?.errors.map((message) => `\u2022 ${message}`).join('\n'))}
         </Alert>
       </Snackbar>

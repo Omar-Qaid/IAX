@@ -270,6 +270,7 @@ public sealed class ReleasedProductListService(
         var item = await Db.Set<ReleasedItem>().AsNoTracking().FirstOrDefaultAsync(x => x.RecId == recId && x.DataAreaId == companyId, ct);
         if (item is null) return null;
         var errors = new List<string>();
+        var warnings = new List<string>();
         var product = await Db.Set<EcoResProduct>().AsNoTracking().FirstOrDefaultAsync(x => x.RecId == item.Product, ct);
         if (product is null) errors.Add("The released item does not reference an existing shared product.");
         else
@@ -331,8 +332,26 @@ public sealed class ReleasedProductListService(
         if (inventorySetup is null) errors.Add("Inventory default order settings are required.");
         else await ValidatePersistedOrderSettingsAsync("Inventory", companyId, inventorySetup.InventDimIdDefault, inventorySetup.LowestQty, inventorySetup.HighestQty, inventorySetup.MultipleQty, inventorySetup.StandardQty, inventorySetup.LeadTime, inventorySetup.Stopped, errors, ct);
         if (!await Db.Set<InventItemSetupSupplyType>().AnyAsync(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId, ct)) errors.Add("Default order type is required.");
-        return new ReleasedProductValidationDto { Errors = errors };
+        if (!await HasApplicablePostingRuleAsync(companyId, item.ItemId, itemGroupId,
+                [InventAccountType.PurchPackingSlip, InventAccountType.PurchReceipt], ct))
+            warnings.Add("No general purchase inventory posting rule was found for this item, its item group, or all items.");
+        if (!await HasApplicablePostingRuleAsync(companyId, item.ItemId, itemGroupId,
+                [InventAccountType.SalesPackingSlip, InventAccountType.SalesIssue, InventAccountType.SalesRevenue], ct))
+            warnings.Add("No general sales inventory posting rule was found for this item, its item group, or all items.");
+        return new ReleasedProductValidationDto { Errors = errors, Warnings = warnings };
     }
+
+    private async Task<bool> HasApplicablePostingRuleAsync(string companyId, string itemId, string? itemGroupId,
+        IReadOnlyCollection<InventAccountType> accountTypes, CancellationToken ct) =>
+        await (from posting in Db.Set<InventPosting>().AsNoTracking()
+               join ledger in Db.Set<DimensionAttributeValueCombination>().AsNoTracking()
+                   on posting.LedgerDimension equals ledger.RecId
+               where posting.DataAreaId == companyId && ledger.DataAreaId == companyId &&
+                     posting.CustVendCode == TableGroupAll.All && accountTypes.Contains(posting.InventAccountType) &&
+                     (posting.ItemCode == TableGroupAll.All ||
+                      posting.ItemCode == TableGroupAll.Table && posting.ItemRelation == itemId ||
+                      posting.ItemCode == TableGroupAll.Group && posting.ItemRelation == itemGroupId)
+               select posting.RecId).AnyAsync(ct);
 
     private async Task ValidatePersistedOrderSettingsAsync(string label, string companyId, string? defaultDimensionId,
         decimal? minimum, decimal? maximum, decimal? multiple, decimal? standard, int? leadTime, int? stopped,

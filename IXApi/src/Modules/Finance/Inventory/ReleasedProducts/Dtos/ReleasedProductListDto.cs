@@ -118,6 +118,7 @@ public sealed class ReleasedProductValidationDto
 {
     public bool IsValid => Errors.Count == 0;
     public List<string> Errors { get; init; } = [];
+    public List<string> Warnings { get; init; } = [];
 }
 
 public sealed class CreateReleasedProductDto

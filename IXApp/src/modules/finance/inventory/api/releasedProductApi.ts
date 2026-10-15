@@ -93,6 +93,7 @@ export interface ReleasedProductDefaultOrderSettings {
 export interface ReleasedProductValidation {
   isValid: boolean;
   errors: string[];
+  warnings: string[];
 }
 export interface ReleasedProductLookupOption { value: string; label: string }
 export interface ReleasedProductLookups {

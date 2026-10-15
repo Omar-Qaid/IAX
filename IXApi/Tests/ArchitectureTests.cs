@@ -67,6 +67,8 @@ public sealed class ArchitectureTests
         Assert.NotNull(context.Model.FindEntityType(typeof(UnitOfMeasureConversionCache)));
         Assert.NotNull(context.Model.FindEntityType(typeof(EcoResDistinctProduct)));
         Assert.NotNull(context.Model.FindEntityType(typeof(InventItemSetupSupplyType)));
+        Assert.DoesNotContain(context.Model.GetEntityTypes(), entity =>
+            entity.GetTableName() == "InventItemGroupForm");
 
         var releasedItem = Assert.IsAssignableFrom<Microsoft.EntityFrameworkCore.Metadata.IReadOnlyEntityType>(
             context.Model.FindEntityType(typeof(InventTable)));
