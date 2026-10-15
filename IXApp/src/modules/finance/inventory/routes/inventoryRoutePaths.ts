@@ -1,6 +1,20 @@
 export const INVENTORY_ROUTE_PATHS = {
   ROOT: '/inventory',
   TRANSACTIONS: '/inventory/transactions',
+  PRODUCTS: '/inventory/products',
+  PRODUCT_DETAILS: '/inventory/products/:productId',
+  distinctProductDetails: (productId: string | number) =>
+    `/inventory/products/${encodeURIComponent(String(productId))}`,
+  RELEASED_PRODUCTS: '/inventory/released-products',
+  RELEASED_PRODUCT_DETAILS: '/inventory/released-products/:productId',
+  PRODUCT_RELEASE: '/inventory/product-release',
+  STORAGE_DIMENSION_GROUPS: '/inventory/storage-dimension-groups',
+  TRACKING_DIMENSION_GROUPS: '/inventory/tracking-dimension-groups',
+  MODEL_GROUPS: '/inventory/model-groups',
+  ITEM_GROUPS: '/inventory/item-groups',
+  POSTING: '/inventory/posting',
+  releasedProductDetails: (productId: string | number) =>
+    `/inventory/released-products/${encodeURIComponent(String(productId))}`,
   SITES: '/inventory/sites',
   WAREHOUSES: '/inventory/warehouses',
 } as const;

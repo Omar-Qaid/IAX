@@ -56,6 +56,9 @@ using IAX.IXApi.Modules.Finance.Inventory;
 using IAX.IXApi.Modules.Finance.GeneralLedger;
 using IAX.IXApi.Shared.Application.Identity;
 using IAX.IXApi.Modules.Finance.Foundation.Occupations;
+using IAX.IXApi.Modules.Finance.Inventory.InventTable;
+using IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities;
+using IAX.IXApi.Modules.Finance.Entities;
 
 namespace IAX.IXApi.Infrastructure.Persistence
 {
@@ -289,8 +292,23 @@ namespace IAX.IXApi.Infrastructure.Persistence
         public DbSet<CustPaymModeTable> CustPaymModeTables => Set<CustPaymModeTable>();
         #endregion
         #region InventoryManagement
+        public DbSet<EcoResProduct> EcoResProducts => Set<EcoResProduct>();
+        public DbSet<EcoResDistinctProduct> EcoResDistinctProducts => Set<EcoResDistinctProduct>();
+        public DbSet<EcoResProductTranslation> EcoResProductTranslations => Set<EcoResProductTranslation>();
+        public DbSet<EcoResCategory> EcoResCategories => Set<EcoResCategory>();
+        public DbSet<EcoResStorageDimensionGroup> EcoResStorageDimensionGroups => Set<EcoResStorageDimensionGroup>();
+        public DbSet<EcoResStorageDimensionGroupItem> EcoResStorageDimensionGroupItems => Set<EcoResStorageDimensionGroupItem>();
+        public DbSet<EcoResTrackingDimensionGroup> EcoResTrackingDimensionGroups => Set<EcoResTrackingDimensionGroup>();
+        public DbSet<EcoResTrackingDimensionGroupItem> EcoResTrackingDimensionGroupItems => Set<EcoResTrackingDimensionGroupItem>();
         public DbSet<InventTable> InventTables => Set<InventTable>();
         public DbSet<InventItemGroup> InventItemGroups => Set<InventItemGroup>();
+        public DbSet<InventItemGroupItem> InventItemGroupItems => Set<InventItemGroupItem>();
+        public DbSet<InventItemPurchSetup> InventItemPurchSetups => Set<InventItemPurchSetup>();
+        public DbSet<InventItemSalesSetup> InventItemSalesSetups => Set<InventItemSalesSetup>();
+        public DbSet<InventItemInventSetup> InventItemInventSetups => Set<InventItemInventSetup>();
+        public DbSet<InventItemSetupSupplyType> InventItemSetupSupplyTypes => Set<InventItemSetupSupplyType>();
+        public DbSet<InventModelGroup> InventModelGroups => Set<InventModelGroup>();
+        public DbSet<InventModelGroupItem> InventModelGroupItems => Set<InventModelGroupItem>();
         public DbSet<InventItemBarcode> InventItemBarcodes => Set<InventItemBarcode>();
         public DbSet<InventItemPrice> InventItemPrices => Set<InventItemPrice>();
         public DbSet<InventTrans> InventTrans => Set<InventTrans>();

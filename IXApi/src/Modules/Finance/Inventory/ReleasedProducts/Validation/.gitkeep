@@ -1,0 +1,1 @@
+Command validation remains in ReleasedProductListService to preserve its current contract.

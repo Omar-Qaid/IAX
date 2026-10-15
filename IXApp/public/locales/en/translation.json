@@ -2716,6 +2716,71 @@
       "code": "Code"
     }
   },
+  "product": {
+    "title": "Products",
+    "createTitle": "New product",
+    "detailsTitle": "Product details",
+    "fields": {
+      "productNumber": "Product number",
+      "productName": "Product name",
+      "name": "Product name",
+      "nameAlias": "Arabic name",
+      "arabicName": "Arabic name",
+      "searchName": "Search name",
+      "description": "Description",
+      "productType": "Product type",
+      "productSubtype": "Product subtype"
+    },
+    "sections": { "general": "General" },
+    "groups": { "identification": "IDENTIFICATION", "classification": "CLASSIFICATION" },
+    "options": { "item": "Item", "product": "Product" }
+  },
+  "storageDimensionGroup": {
+    "title": "Storage dimension groups",
+    "fields": {
+      "name": "Name",
+      "description": "Description",
+      "dimension": "Storage dimension",
+      "active": "Active"
+    },
+    "sections": { "dimensions": "Storage dimensions" },
+    "dimensions": { "site": "Site", "warehouse": "Warehouse", "location": "Location" }
+  },
+  "trackingDimensionGroup": {
+    "title": "Tracking dimension groups",
+    "fields": {
+      "name": "Name",
+      "description": "Description",
+      "dimension": "Tracking dimension",
+      "active": "Active"
+    },
+    "sections": { "dimensions": "Tracking dimensions" },
+    "dimensions": { "batchNumber": "Batch number", "serialNumber": "Serial number" }
+  },
+  "inventModelGroup": {
+    "title": "Item model groups",
+    "fields": { "id": "Item model group", "name": "Name" },
+    "sections": { "costing": "Costing method & cost recognition", "policies": "Inventory policies" }
+  },
+  "inventItemGroup": {
+    "title": "Item groups",
+    "fields": { "id": "Item group", "name": "Name" },
+    "sections": { "sales": "Sales order", "purchase": "Purchase order", "inventory": "Inventory" }
+  },
+  "inventPosting": { "title": "Posting", "select": "Select" },
+  "releasedProduct": {
+    "title": "Released products",
+    "fields": {
+      "itemNumber": "Item number",
+      "productName": "Product name",
+      "arabicName": "Arabic name",
+      "productType": "Product type",
+      "productSubtype": "Product subtype",
+      "salesPrice": "Sales price",
+      "purchasePrice": "Purchase price",
+      "costPrice": "Cost price"
+    }
+  },
   "inventTrans": {
     "transactionFilter": "Transaction filter",
     "fields": {

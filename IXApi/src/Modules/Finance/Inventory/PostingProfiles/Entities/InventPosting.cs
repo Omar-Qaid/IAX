@@ -42,6 +42,10 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // Basic Properties
         public long LedgerDimension { get; set; } // Financial Main Account Combination reference anchor
 
+        [Required]
+        [StringLength(FieldLengths.TaxGroupId)]
+        public string TaxGroupId { get; set; } = string.Empty;
+
         // Enum Properties
         public InventPostingCostCode CostCode { get; set; }
 

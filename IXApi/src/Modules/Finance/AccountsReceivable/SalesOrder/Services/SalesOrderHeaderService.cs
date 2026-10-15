@@ -159,7 +159,7 @@ public sealed class SalesOrderHeaderService : ISalesOrderHeaderService
             if (previousAddressId != order.DeliveryPostalAddress)
                 await SalesDeliveryAddressCleanup.CleanupAsync(_dbContext.Context,
                     previousAddressId, order.DataAreaId, 0, order.RecId, cancellationToken);
-            await _dbContext.Context.SaveChangesAsync(cancellationToken);
+            await _dbContext.CompleteAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return new SalesHeaderUpdateResult(SalesHeaderUpdateStatus.Saved);
         });

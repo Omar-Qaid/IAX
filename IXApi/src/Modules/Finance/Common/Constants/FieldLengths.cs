@@ -293,6 +293,8 @@ namespace IAX.IXApi.Modules.Finance.Common
         public const int ForeignVoucher = 100;
         public const int InventBatchId = 20;
         public const int ItemId = 20;
+        public const int ProductNumber = 20;
+        public const int ProductSearchName = 20;
         public const int PdsDispositionCode = 10;
         public const int PdsVendBatchId = 20;
         public const int PeriodCode = 10;
@@ -309,6 +311,8 @@ namespace IAX.IXApi.Modules.Finance.Common
         public const int InventSerialId = 20;
         public const int InventStatusId = 10;
         public const int ItemGroupId = 10;
+        public const int StorageDimensionGroupId = 10;
+        public const int TrackingDimensionGroupId = 10;
         public const int ItemDataAreaId = 4;
         public const int ItemGroupDataAreaId = 4;
         public const int WmsLocationIdDefaultReceipt = 10;

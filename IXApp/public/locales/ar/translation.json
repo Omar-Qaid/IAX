@@ -98,29 +98,29 @@
     "intercompanyInbound": "وارد",
     "lineStatus": "حالة السطر",
     "stopped": "متوقف",
-  "preventPartialDelivery": "منع التسليم الجزئي",
-  "sourcingGroups": {
-    "tracking": "أبعاد التتبع",
-    "storage": "أبعاد التخزين",
-    "itemReference": "مرجع الصنف"
-  },
-  "batchNumber": "رقم التشغيلة",
-  "serialNumber": "الرقم التسلسلي",
-  "location": "الموقع",
-  "inventoryStatus": "حالة المخزون",
-  "licensePlate": "لوحة الترخيص",
-  "referenceType": "نوع المرجع",
-  "referenceNumber": "رقم المرجع",
-  "referenceLot": "تشغيلة المرجع",
-  "returnCostPrice": "سعر تكلفة الإرجاع",
-  "text": "نص",
-  "fulfillmentStatus": "حالة التنفيذ",
-  "unknown": "غير معروف",
-  "packingUnit": "وحدة التعبئة",
-  "packingUnitQuantity": "كمية وحدة التعبئة",
-  "packingGroups": {
-    "material": "مواد التعبئة"
-  }
+    "preventPartialDelivery": "منع التسليم الجزئي",
+    "sourcingGroups": {
+      "tracking": "أبعاد التتبع",
+      "storage": "أبعاد التخزين",
+      "itemReference": "مرجع الصنف"
+    },
+    "batchNumber": "رقم التشغيلة",
+    "serialNumber": "الرقم التسلسلي",
+    "location": "الموقع",
+    "inventoryStatus": "حالة المخزون",
+    "licensePlate": "لوحة الترخيص",
+    "referenceType": "نوع المرجع",
+    "referenceNumber": "رقم المرجع",
+    "referenceLot": "تشغيلة المرجع",
+    "returnCostPrice": "سعر تكلفة الإرجاع",
+    "text": "نص",
+    "fulfillmentStatus": "حالة التنفيذ",
+    "unknown": "غير معروف",
+    "packingUnit": "وحدة التعبئة",
+    "packingUnitQuantity": "كمية وحدة التعبئة",
+    "packingGroups": {
+      "material": "مواد التعبئة"
+    }
   },
   "accessibility": {
     "skipToContent": "الانتقال إلى المحتوى الرئيسي",
@@ -2716,6 +2716,71 @@
     "title": "الأقسام",
     "fields": {
       "code": "الكود"
+    }
+  },
+  "product": {
+    "title": "المنتجات",
+    "createTitle": "منتج جديد",
+    "detailsTitle": "تفاصيل المنتج",
+    "fields": {
+      "productNumber": "رقم المنتج",
+      "productName": "اسم المنتج",
+      "name": "اسم المنتج",
+      "nameAlias": "الاسم بالعربية",
+      "arabicName": "الاسم بالعربية",
+      "searchName": "اسم البحث",
+      "description": "الوصف",
+      "productType": "نوع المنتج",
+      "productSubtype": "النوع الفرعي للمنتج"
+    },
+    "sections": { "general": "عام" },
+    "groups": { "identification": "التعريف", "classification": "التصنيف" },
+    "options": { "item": "صنف", "product": "منتج" }
+  },
+  "storageDimensionGroup": {
+    "title": "مجموعات أبعاد التخزين",
+    "fields": {
+      "name": "الاسم",
+      "description": "الوصف",
+      "dimension": "بُعد التخزين",
+      "active": "نشط"
+    },
+    "sections": { "dimensions": "أبعاد التخزين" },
+    "dimensions": { "site": "الموقع", "warehouse": "المستودع", "location": "المكان" }
+  },
+  "trackingDimensionGroup": {
+    "title": "مجموعات أبعاد التعقب",
+    "fields": {
+      "name": "الاسم",
+      "description": "الوصف",
+      "dimension": "بُعد التعقب",
+      "active": "نشط"
+    },
+    "sections": { "dimensions": "أبعاد التعقب" },
+    "dimensions": { "batchNumber": "رقم الدفعة", "serialNumber": "الرقم التسلسلي" }
+  },
+  "inventModelGroup": {
+    "title": "مجموعات نماذج الأصناف",
+    "fields": { "id": "مجموعة نموذج الصنف", "name": "الاسم" },
+    "sections": { "costing": "طريقة التكلفة والاعتراف بالتكلفة", "policies": "سياسات المخزون" }
+  },
+  "inventItemGroup": {
+    "title": "مجموعات الأصناف",
+    "fields": { "id": "مجموعة الصنف", "name": "الاسم" },
+    "sections": { "sales": "أمر المبيعات", "purchase": "أمر الشراء", "inventory": "المخزون" }
+  },
+  "inventPosting": { "title": "الترحيل", "select": "تحديد" },
+  "releasedProduct": {
+    "title": "المنتجات الصادرة",
+    "fields": {
+      "itemNumber": "رقم الصنف",
+      "productName": "اسم المنتج",
+      "arabicName": "الاسم بالعربية",
+      "productType": "نوع المنتج",
+      "productSubtype": "النوع الفرعي للمنتج",
+      "salesPrice": "سعر البيع",
+      "purchasePrice": "سعر الشراء",
+      "costPrice": "سعر التكلفة"
     }
   },
   "inventTrans": {

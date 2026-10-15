@@ -39,8 +39,43 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
         title: 'nav.setup',
         links: [
           {
+            label: 'product.title',
+            path: ROUTE_PATHS.INVENTORY.PRODUCTS,
+            permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+          },
+          {
+            label: 'releasedProduct.title',
+            path: ROUTE_PATHS.INVENTORY.RELEASED_PRODUCTS,
+            permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+          },
+          {
             label: 'inventSite.title',
             path: ROUTE_PATHS.INVENTORY.SITES,
+            permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+          },
+          {
+            label: 'storageDimensionGroup.title',
+            path: ROUTE_PATHS.INVENTORY.STORAGE_DIMENSION_GROUPS,
+            permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+          },
+          {
+            label: 'trackingDimensionGroup.title',
+            path: ROUTE_PATHS.INVENTORY.TRACKING_DIMENSION_GROUPS,
+            permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+          },
+          {
+            label: 'inventModelGroup.title',
+            path: ROUTE_PATHS.INVENTORY.MODEL_GROUPS,
+            permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+          },
+          {
+            label: 'inventItemGroup.title',
+            path: ROUTE_PATHS.INVENTORY.ITEM_GROUPS,
+            permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+          },
+          {
+            label: 'inventPosting.title',
+            path: ROUTE_PATHS.INVENTORY.POSTING,
             permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
           },
           {

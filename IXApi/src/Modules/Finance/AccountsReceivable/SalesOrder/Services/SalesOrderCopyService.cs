@@ -247,9 +247,9 @@ public sealed class SalesOrderCopyService : ISalesOrderCopyService
             }
             if (created > 0 && destination.DocumentStatus == DocumentStatus.Confirmation)
                 destination.DocumentStatus = DocumentStatus.None;
-            await _unitOfWork.Context.SaveChangesAsync(ct);
+            await _unitOfWork.CompleteAsync(ct);
             await SalesOrderChargeRefresh.RefreshAsync(_unitOfWork.Context, destination, ct);
-            await _unitOfWork.Context.SaveChangesAsync(ct);
+            await _unitOfWork.CompleteAsync(ct);
             await transaction.CommitAsync(ct);
             return new SalesOrderCopyResult(SalesOrderCopyStatus.Success, created);
         });

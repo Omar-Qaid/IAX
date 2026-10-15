@@ -946,6 +946,13 @@ namespace IAX.IXApi.Modules.Finance.Common
         BOM     = 2
     }
 
+    /// <summary>Shared product subtype: a distinct product or a product master for variants.</summary>
+    public enum EcoResProductSubtype
+    {
+        Product = 0,
+        ProductMaster = 1
+    }
+
     // ==== AccountsReceivable additions ====
 
     /// <summary>Main account selection scope used by posting-account setup tables (CustLedgerAccounts.AccountCode).</summary>

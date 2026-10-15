@@ -36,7 +36,7 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
             DataAreaId = order.DataAreaId
         };
         _dbContext.Context.Set<InventTransOrigin>().Add(origin);
-        await _dbContext.Context.SaveChangesAsync(cancellationToken);
+        await _dbContext.CompleteAsync(cancellationToken);
         _dbContext.Context.Set<InventTransOriginSalesLine>().Add(new InventTransOriginSalesLine
         {
             InventTransOrigin = origin.RecId,

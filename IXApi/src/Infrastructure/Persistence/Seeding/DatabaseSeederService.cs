@@ -51,6 +51,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding
                 new InventorySiteWarehouseSeeder(),
                 new VendSeeder(),
                 new TaxSeeder(),
+                new InventorySeeder(),
                 new CustLedgerSeeder(),
                 new OthersDBOrganizationEmployeeSeeder(_seedDbConnectionString),
                 new OrganizationStructureSeeder(),

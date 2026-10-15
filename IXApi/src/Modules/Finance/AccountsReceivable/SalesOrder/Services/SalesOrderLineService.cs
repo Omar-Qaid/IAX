@@ -181,9 +181,9 @@ public sealed class SalesOrderLineService : ISalesOrderLineService
             order.SmmSalesAmountTotal += line.LineAmount;
             if (order.DocumentStatus == DocumentStatus.Confirmation)
                 order.DocumentStatus = DocumentStatus.None;
-            await _dbContext.Context.SaveChangesAsync(cancellationToken);
+            await _dbContext.CompleteAsync(cancellationToken);
             await SalesOrderChargeRefresh.RefreshAsync(_dbContext.Context, order, cancellationToken);
-            await _dbContext.Context.SaveChangesAsync(cancellationToken);
+            await _dbContext.CompleteAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return new SalesLineWriteResult(SalesLineWriteStatus.Success,
                 Data: SalesOrderLinePresenter.Record(line, inventSiteId, inventLocationId,
@@ -434,9 +434,9 @@ public sealed class SalesOrderLineService : ISalesOrderLineService
             order.SmmSalesAmountTotal += (input == null ? 0 : line.LineAmount) - previousAmount;
             if (order.DocumentStatus == DocumentStatus.Confirmation)
                 order.DocumentStatus = DocumentStatus.None;
-            await _dbContext.Context.SaveChangesAsync(cancellationToken);
+            await _dbContext.CompleteAsync(cancellationToken);
             await SalesOrderChargeRefresh.RefreshAsync(_dbContext.Context, order, cancellationToken);
-            await _dbContext.Context.SaveChangesAsync(cancellationToken);
+            await _dbContext.CompleteAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return new SalesLineWriteResult(SalesLineWriteStatus.Success,
                 Data: input == null

@@ -61,6 +61,16 @@ builder.Services.AddCustomAuthorization();
 
 // 3. API & Middleware Services
 builder.Services.AddApiServices();
+// Finance and the other feature controllers live in referenced module assemblies,
+// not in the API host assembly. Register them as MVC application parts so their
+// attribute routes are available to the running API.
+builder.Services.AddControllers()
+    .AddApplicationPart(typeof(FinanceModule).Assembly)
+    .AddApplicationPart(typeof(WorkflowModule).Assembly)
+    .AddApplicationPart(typeof(CommunicationModule).Assembly)
+    .AddApplicationPart(typeof(AdministrationModule).Assembly)
+    .AddApplicationPart(typeof(IdentityModule).Assembly)
+    .AddApplicationPart(typeof(OrganizationModule).Assembly);
 builder.Services.AddDomainServices();
 builder.Services.AddCustomRateLimiter();
 builder.Services.AddOutputCache(o =>

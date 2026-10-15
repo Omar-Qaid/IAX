@@ -44,7 +44,7 @@ public sealed class SalesOrderCancellationService : ISalesOrderCancellationServi
             foreach (var line in lines)
                 await _inventoryDemand.CancelRemainingAsync(line, cancellationToken);
             order.SalesStatus = SalesStatus.Canceled;
-            await _dbContext.Context.SaveChangesAsync(cancellationToken);
+            await _dbContext.CompleteAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return SalesOrderCancelStatus.Cancelled;
         });

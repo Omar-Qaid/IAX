@@ -19,6 +19,7 @@ Patterns are reusable page-level compositions. A folder may be implemented, part
 | Setup             | Implemented                                             | [README](setup/README.md)             |
 | Simple List       | Implemented                                             | [README](simple-list/README.md)       |
 | Tabbed Details    | Implemented                                             | [README](tabbed-details/README.md)    |
+| Tabbed Choice Grid | Implemented generic tab, choice rail, and datagrid page | [README](tabbed-choice-grid/README.md) |
 | Tree Details      | Navigation implemented; page scaffold incomplete        | [README](tree-details/README.md)      |
 | Workspace         | Implemented                                             | [README](workspace/README.md)         |
 

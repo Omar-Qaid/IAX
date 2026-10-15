@@ -20,7 +20,7 @@ export function setupInterceptors(axiosInstance: AxiosInstance): void {
         config.headers['X-Correlation-ID'] = traceId;
         try {
           const company = globalThis.localStorage?.getItem(STORAGE_KEYS.COMPANY);
-          if (company) config.headers['X-Company'] = company;
+          if (company && !config.headers['X-Company']) config.headers['X-Company'] = company;
         } catch {
           // Company selection is optional when browser storage is unavailable.
         }

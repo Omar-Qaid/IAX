@@ -92,9 +92,9 @@ public sealed class SalesOrderDiscountService : ISalesOrderDiscountService
             || lines.Any(line => _dbContext.Context.Entry(line).Properties.Any(property => property.IsModified));
         if (discountChanged && order.DocumentStatus == DocumentStatus.Confirmation)
             order.DocumentStatus = DocumentStatus.None;
-        await _dbContext.Context.SaveChangesAsync(cancellationToken);
+        await _dbContext.CompleteAsync(cancellationToken);
         await SalesOrderChargeRefresh.RefreshAsync(_dbContext.Context, order, cancellationToken);
-        await _dbContext.Context.SaveChangesAsync(cancellationToken);
+        await _dbContext.CompleteAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return new SalesDiscountRecalculationResult(SalesDiscountRecalculationStatus.Recalculated,
             lines.Count, lines.Sum(line => line.LineDisc), lines.Sum(line => line.MultiLnDisc), order.DiscPercent);

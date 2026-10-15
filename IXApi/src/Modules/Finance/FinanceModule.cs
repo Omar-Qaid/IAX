@@ -68,6 +68,16 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<Foundation.Tax.ITaxPeriodService, Foundation.Tax.TaxPeriodService>();
             services.AddScoped<Foundation.Tax.ITaxAuthorityAddressService, Foundation.Tax.TaxAuthorityAddressService>();
             services.AddScoped<Inventory.IInventSiteService, Inventory.InventSiteService>();
+            services.AddScoped<Inventory.IReleasedProductListService, Inventory.ReleasedProductListService>();
+            services.AddScoped<Inventory.IEcoResProductService, Inventory.EcoResProductService>();
+            services.AddScoped<FluentValidation.IValidator<Inventory.EcoResProductInputDto>, Inventory.EcoResProductInputValidator>();
+            services.AddScoped<Inventory.IStorageDimensionGroupService, Inventory.StorageDimensionGroupService>();
+            services.AddScoped<Inventory.ITrackingDimensionGroupService, Inventory.TrackingDimensionGroupService>();
+            services.AddScoped<FluentValidation.IValidator<Inventory.StorageDimensionGroupInputDto>, Inventory.StorageDimensionGroupInputValidator>();
+            services.AddScoped<FluentValidation.IValidator<Inventory.TrackingDimensionGroupInputDto>, Inventory.TrackingDimensionGroupInputValidator>();
+            services.AddScoped<Inventory.IInventModelGroupService, Inventory.InventModelGroupService>();
+            services.AddScoped<Inventory.IInventItemGroupService, Inventory.InventItemGroupService>();
+            services.AddScoped<Inventory.IInventPostingService, Inventory.InventPostingService>();
             services.AddScoped<FluentValidation.IValidator<Inventory.InventSiteUpdateValidation>, Inventory.InventSiteUpdateValidator>();
             services.AddScoped<Inventory.IInventLocationService, Inventory.InventLocationService>();
             services.AddScoped<Inventory.IInventTransService, Inventory.InventTransService>();

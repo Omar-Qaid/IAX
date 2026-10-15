@@ -66,7 +66,7 @@ public sealed class SalesOrderDeliveryAddressService : ISalesOrderDeliveryAddres
                 await SalesDeliveryAddressCleanup.CleanupAsync(_dbContext.Context,
                     previousAddressId, order.DataAreaId, line?.RecId ?? 0,
                     line == null ? order.RecId : 0, cancellationToken);
-            await _dbContext.Context.SaveChangesAsync(cancellationToken);
+            await _dbContext.CompleteAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return new SalesDeliveryAddressResult(SalesDeliveryAddressStatus.Created,
                 postalAddress.RecId, location.Description, postalAddress.Address);

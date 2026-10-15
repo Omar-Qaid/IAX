@@ -170,7 +170,7 @@ public sealed class SalesOrderQuickCreateService : ISalesOrderQuickCreateService
         };
 
         _dbContext.Context.Set<SalesTable>().Add(order);
-        await _dbContext.Context.SaveChangesAsync(cancellationToken);
+        await _dbContext.CompleteAsync(cancellationToken);
 
         return new SalesOrderQuickCreateResult(
             new SalesOrderQuickCreateMappingSource(order, party?.Name ?? order.SalesName)

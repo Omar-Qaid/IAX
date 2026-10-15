@@ -1,0 +1,286 @@
+using IAX.IXApi.Modules.Finance.Common;
+using IAX.IXApi.Modules.Finance.Entities;
+using IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities;
+using IAX.IXApi.Modules.Finance.Inventory.InventTable;
+using IAX.IXApi.Modules.Identity.Roles;
+using IAX.IXApi.Modules.Identity.Users;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+
+namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks;
+
+/// <summary>
+/// Seeds a repeatable, end-to-end D365-style inventory setup example.
+/// This is master/setup data only; it creates no stock movement or accounting voucher.
+/// </summary>
+public sealed class InventorySeeder : ISeeder
+{
+    private const string Company = "dat";
+    private const string ProductNumber = "BATH-001";
+    private const string ItemGroup = "BAT-ACC";
+    private const string ModelGroup = "STD";
+    private const string StorageGroup = "SWL";
+    private const string TrackingGroup = "NONE";
+
+    public async Task SeedAsync(
+        ApplicationDbContext db,
+        RoleManager<AspNetRole> roles,
+        UserManager<AspNetUser> users,
+        CancellationToken ct)
+    {
+        await SeedSetupGroupsAsync(db, ct);
+        var productId = await SeedSharedProductAsync(db, ct);
+        await SeedReleasedProductAsync(db, productId, ct);
+        await SeedPostingRulesAsync(db, ct);
+    }
+
+    private static async Task SeedSetupGroupsAsync(ApplicationDbContext db, CancellationToken ct)
+    {
+        if (!await db.Set<InventItemGroup>().IgnoreQueryFilters().AnyAsync(
+                x => x.DataAreaId == Company && x.ItemGroupId == ItemGroup, ct))
+        {
+            db.Add(new InventItemGroup
+            {
+                DataAreaId = Company,
+                ItemGroupId = ItemGroup,
+                Name = "Bathroom accessories",
+                TaxItemGroupIdSales = "VAT15",
+                TaxItemGroupIdPurch = "VAT15"
+            });
+        }
+
+        if (!await db.Set<InventModelGroup>().IgnoreQueryFilters().AnyAsync(
+                x => x.DataAreaId == Company && x.ModelGroupId == ModelGroup, ct))
+        {
+            db.Add(new InventModelGroup
+            {
+                DataAreaId = Company,
+                ModelGroupId = ModelGroup,
+                Name = "Standard stocked items",
+                InventModel = InventModel.WeightedAvg_Date,
+                StockedProduct = NoYes.Yes,
+                PostOnHandPhysical = NoYes.Yes,
+                PostOnHandFinancial = NoYes.Yes,
+                MandatoryReceive = NoYes.Yes,
+                NegativeFinancial = NoYes.Yes,
+                PdsDispositionCode = string.Empty
+            });
+        }
+
+        if (!await db.Set<EcoResStorageDimensionGroup>().IgnoreQueryFilters().AnyAsync(
+                x => x.StorageDimensionGroupId == StorageGroup, ct))
+        {
+            db.Add(new EcoResStorageDimensionGroup
+            {
+                StorageDimensionGroupId = StorageGroup,
+                Name = "Site, warehouse and location",
+                UseSite = true,
+                UseWarehouse = true,
+                UseLocation = true
+            });
+        }
+
+        if (!await db.Set<EcoResTrackingDimensionGroup>().IgnoreQueryFilters().AnyAsync(
+                x => x.TrackingDimensionGroupId == TrackingGroup, ct))
+        {
+            db.Add(new EcoResTrackingDimensionGroup
+            {
+                TrackingDimensionGroupId = TrackingGroup,
+                Name = "No tracking dimensions"
+            });
+        }
+
+        await db.SaveChangesAsync(ct);
+    }
+
+    private static async Task<long> SeedSharedProductAsync(ApplicationDbContext db, CancellationToken ct)
+    {
+        var product = await db.Set<EcoResProduct>().IgnoreQueryFilters()
+            .FirstOrDefaultAsync(x => x.DisplayProductNumber == ProductNumber, ct);
+
+        if (product is null)
+        {
+            product = new EcoResProduct
+            {
+                DisplayProductNumber = ProductNumber,
+                SearchName = "Bathroom towel",
+                ProductType = ItemType.Item,
+                ProductSubtype = EcoResProductSubtype.Product
+            };
+            db.Add(product);
+            await db.SaveChangesAsync(ct);
+        }
+
+        if (!await db.Set<EcoResDistinctProduct>().IgnoreQueryFilters().AnyAsync(x => x.RecId == product.RecId, ct))
+            db.Add(new EcoResDistinctProduct { RecId = product.RecId });
+
+        await AddTranslationAsync(db, product.RecId, "en-us", "Bathroom towel", "Standard bathroom towel", ct);
+        await AddTranslationAsync(db, product.RecId, "ar", "منشفة حمام", "منشفة حمام قياسية", ct);
+        await db.SaveChangesAsync(ct);
+        return product.RecId;
+    }
+
+    private static async Task AddTranslationAsync(
+        ApplicationDbContext db, long productId, string language, string name, string description, CancellationToken ct)
+    {
+        if (!await db.Set<EcoResProductTranslation>().IgnoreQueryFilters().AnyAsync(
+                x => x.Product == productId && x.LanguageId == language, ct))
+        {
+            db.Add(new EcoResProductTranslation
+            {
+                Product = productId,
+                LanguageId = language,
+                Name = name,
+                Description = description
+            });
+        }
+    }
+
+    private static async Task SeedReleasedProductAsync(ApplicationDbContext db, long productId, CancellationToken ct)
+    {
+        if (!await db.Set<InventTable>().IgnoreQueryFilters().AnyAsync(
+                x => x.DataAreaId == Company && x.ItemId == ProductNumber, ct))
+        {
+            db.Add(new InventTable
+            {
+                DataAreaId = Company,
+                ItemId = ProductNumber,
+                Product = productId,
+                Name = "Bathroom towel",
+                NameAlias = "منشفة حمام",
+                Sku = ProductNumber,
+                ItemType = ItemType.Item,
+                BomUnitId = "EA"
+            });
+        }
+
+        await AddModuleAsync(db, ModuleInventPurchSales.Inventory, 25m, string.Empty, ct);
+        await AddModuleAsync(db, ModuleInventPurchSales.Purchase, 30m, "VAT15", ct);
+        await AddModuleAsync(db, ModuleInventPurchSales.Sales, 45m, "VAT15", ct);
+
+        if (!await db.Set<InventItemGroupItem>().IgnoreQueryFilters().AnyAsync(
+                x => x.ItemDataAreaId == Company && x.ItemId == ProductNumber, ct))
+            db.Add(new InventItemGroupItem { ItemId = ProductNumber, ItemGroupId = ItemGroup, ItemDataAreaId = Company, ItemGroupDataAreaId = Company });
+
+        if (!await db.Set<InventModelGroupItem>().IgnoreQueryFilters().AnyAsync(
+                x => x.ItemDataAreaId == Company && x.ItemId == ProductNumber, ct))
+            db.Add(new InventModelGroupItem { ItemId = ProductNumber, ModelGroupId = ModelGroup, ItemDataAreaId = Company, ModelGroupDataAreaId = Company });
+
+        if (!await db.Set<EcoResStorageDimensionGroupItem>().IgnoreQueryFilters().AnyAsync(
+                x => x.ItemDataAreaId == Company && x.ItemId == ProductNumber, ct))
+            db.Add(new EcoResStorageDimensionGroupItem { ItemId = ProductNumber, ItemDataAreaId = Company, StorageDimensionGroupId = StorageGroup });
+
+        if (!await db.Set<EcoResTrackingDimensionGroupItem>().IgnoreQueryFilters().AnyAsync(
+                x => x.ItemDataAreaId == Company && x.ItemId == ProductNumber, ct))
+            db.Add(new EcoResTrackingDimensionGroupItem { ItemId = ProductNumber, ItemDataAreaId = Company, TrackingDimensionGroupId = TrackingGroup });
+
+        await AddOrderSetupAsync<InventItemPurchSetup>(db, () => new InventItemPurchSetup
+        {
+            ItemId = ProductNumber, ItemDataAreaId = Company, InventDimId = string.Empty,
+            StandardQty = 1, MultipleQty = 1, LeadTime = 2, Stopped = 0
+        }, ct);
+        await AddOrderSetupAsync<InventItemSalesSetup>(db, () => new InventItemSalesSetup
+        {
+            ItemId = ProductNumber, ItemDataAreaId = Company, InventDimId = string.Empty,
+            StandardQty = 1, MultipleQty = 1, LeadTime = 1, Stopped = 0
+        }, ct);
+        await AddOrderSetupAsync<InventItemInventSetup>(db, () => new InventItemInventSetup
+        {
+            ItemId = ProductNumber, ItemDataAreaId = Company, InventDimId = string.Empty,
+            StandardQty = 1, MultipleQty = 1, Stopped = 0
+        }, ct);
+
+        if (!await db.Set<InventItemSetupSupplyType>().IgnoreQueryFilters().AnyAsync(
+                x => x.ItemDataAreaId == Company && x.ItemId == ProductNumber, ct))
+            db.Add(new InventItemSetupSupplyType { ItemId = ProductNumber, ItemDataAreaId = Company, DefaultOrderType = 1 });
+
+        await db.SaveChangesAsync(ct);
+    }
+
+    private static async Task AddModuleAsync(
+        ApplicationDbContext db, ModuleInventPurchSales type, decimal price, string taxGroup, CancellationToken ct)
+    {
+        if (!await db.Set<InventTableModule>().IgnoreQueryFilters().AnyAsync(
+                x => x.DataAreaId == Company && x.ItemId == ProductNumber && x.ModuleType == type, ct))
+        {
+            db.Add(new InventTableModule
+            {
+                DataAreaId = Company,
+                ItemId = ProductNumber,
+                ModuleType = type,
+                UnitId = "EA",
+                Price = price,
+                PriceUnit = 1,
+                PriceDate = DateTime.UtcNow,
+                TaxItemGroupId = taxGroup
+            });
+        }
+    }
+
+    private static async Task AddOrderSetupAsync<T>(ApplicationDbContext db, Func<T> create, CancellationToken ct)
+        where T : class
+    {
+        var exists = typeof(T) switch
+        {
+            var type when type == typeof(InventItemPurchSetup) => await db.Set<InventItemPurchSetup>().IgnoreQueryFilters().AnyAsync(x => x.ItemDataAreaId == Company && x.ItemId == ProductNumber && x.InventDimId == string.Empty, ct),
+            var type when type == typeof(InventItemSalesSetup) => await db.Set<InventItemSalesSetup>().IgnoreQueryFilters().AnyAsync(x => x.ItemDataAreaId == Company && x.ItemId == ProductNumber && x.InventDimId == string.Empty, ct),
+            _ => await db.Set<InventItemInventSetup>().IgnoreQueryFilters().AnyAsync(x => x.ItemDataAreaId == Company && x.ItemId == ProductNumber && x.InventDimId == string.Empty, ct)
+        };
+        if (!exists) db.Add(create());
+    }
+
+    private static async Task SeedPostingRulesAsync(ApplicationDbContext db, CancellationToken ct)
+    {
+        var accountIds = new[] { "50010000", "40010000" };
+        var accounts = await db.Set<MainAccount>().IgnoreQueryFilters()
+            .Where(x => accountIds.Contains(x.MainAccountId))
+            .ToDictionaryAsync(x => x.MainAccountId, ct);
+        if (accounts.Count != accountIds.Length) return;
+
+        foreach (var account in accounts.Values)
+        {
+            if (!await db.Set<DimensionAttributeValueCombination>().IgnoreQueryFilters().AnyAsync(
+                    x => x.DataAreaId == Company && x.MainAccount == account.RecId, ct))
+            {
+                db.Add(new DimensionAttributeValueCombination
+                {
+                    DataAreaId = Company,
+                    DisplayValue = account.MainAccountId,
+                    MainAccount = account.RecId,
+                    MainAccountValue = account.MainAccountId
+                });
+            }
+        }
+        await db.SaveChangesAsync(ct);
+
+        var dimensions = await db.Set<DimensionAttributeValueCombination>().IgnoreQueryFilters()
+            .Where(x => x.DataAreaId == Company && accountIds.Contains(x.MainAccountValue))
+            .ToDictionaryAsync(x => x.MainAccountValue, x => x.RecId, ct);
+
+        await AddPostingAsync(db, InventAccountType.PurchPackingSlip, dimensions["50010000"], ct);
+        await AddPostingAsync(db, InventAccountType.SalesPackingSlip, dimensions["50010000"], ct);
+        await AddPostingAsync(db, InventAccountType.SalesRevenue, dimensions["40010000"], ct);
+        await db.SaveChangesAsync(ct);
+    }
+
+    private static async Task AddPostingAsync(
+        ApplicationDbContext db, InventAccountType type, long ledgerDimension, CancellationToken ct)
+    {
+        if (!await db.Set<InventPosting>().IgnoreQueryFilters().AnyAsync(
+                x => x.DataAreaId == Company && x.InventAccountType == type &&
+                     x.ItemCode == TableGroupAll.All && x.CustVendCode == TableGroupAll.All, ct))
+        {
+            db.Add(new InventPosting
+            {
+                DataAreaId = Company,
+                InventAccountType = type,
+                ItemCode = TableGroupAll.All,
+                ItemRelation = string.Empty,
+                CustVendCode = TableGroupAll.All,
+                CustVendRelation = string.Empty,
+                LedgerDimension = ledgerDimension,
+                TaxGroupId = string.Empty
+            });
+        }
+    }
+}

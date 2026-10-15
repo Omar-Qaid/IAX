@@ -4,6 +4,7 @@ using IAX.IXApi.Modules.Identity.Authentication;
 using IAX.IXApi.Modules.Organization;
 using IAX.IXApi.Modules.Finance;
 using IAX.IXApi.Modules.Finance.Entities;
+using IAX.IXApi.Modules.Finance.Inventory.InventTable;
 using IAX.IXApi.Modules.Communication;
 using IAX.IXApi.Modules.Workflow;
 using IAX.IXApi.Infrastructure.Persistence;
@@ -64,6 +65,24 @@ public sealed class ArchitectureTests
         Assert.NotNull(context.Model.FindEntityType(typeof(UnitOfMeasureBaseUnit)));
         Assert.NotNull(context.Model.FindEntityType(typeof(UnitOfMeasureInternalCode)));
         Assert.NotNull(context.Model.FindEntityType(typeof(UnitOfMeasureConversionCache)));
+        Assert.NotNull(context.Model.FindEntityType(typeof(EcoResDistinctProduct)));
+        Assert.NotNull(context.Model.FindEntityType(typeof(InventItemSetupSupplyType)));
+
+        var releasedItem = Assert.IsAssignableFrom<Microsoft.EntityFrameworkCore.Metadata.IReadOnlyEntityType>(
+            context.Model.FindEntityType(typeof(InventTable)));
+        Assert.Contains(releasedItem.GetIndexes(), index => index.IsUnique &&
+            index.Properties.Select(property => property.Name).SequenceEqual(new[] { "DataAreaId", "ItemId" }));
+        Assert.Contains(releasedItem.GetIndexes(), index => index.IsUnique &&
+            index.Properties.Select(property => property.Name).SequenceEqual(new[] { "DataAreaId", "Product" }));
+        Assert.Contains(releasedItem.GetForeignKeys(), foreignKey =>
+            foreignKey.Properties.Select(property => property.Name).SequenceEqual(new[] { "Product" }) &&
+            foreignKey.PrincipalEntityType.ClrType == typeof(EcoResProduct));
+
+        var module = Assert.IsAssignableFrom<Microsoft.EntityFrameworkCore.Metadata.IReadOnlyEntityType>(
+            context.Model.FindEntityType(typeof(InventTableModule)));
+        Assert.Contains(module.GetIndexes(), index => index.IsUnique &&
+            index.Properties.Select(property => property.Name)
+                .SequenceEqual(new[] { "DataAreaId", "ItemId", "ModuleType" }));
     }
 }
 

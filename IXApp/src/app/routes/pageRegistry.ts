@@ -170,12 +170,102 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'products',
+    path: ROUTE_PATHS.INVENTORY.PRODUCTS,
+    permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/inventory/pages/EcoResDistinctProductListPage'),
+      (module) => module.EcoResDistinctProductListPage
+    ),
+  },
+  {
+    id: 'product-details',
+    path: ROUTE_PATHS.INVENTORY.PRODUCT_DETAILS,
+    permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/inventory/pages/EcoResDistinctProductDetailsPage'),
+      (module) => module.EcoResDistinctProductDetailsPage
+    ),
+  },
+  {
+    id: 'released-products',
+    path: ROUTE_PATHS.INVENTORY.RELEASED_PRODUCTS,
+    permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/inventory/pages/EcoResProductListPage'),
+      (module) => module.EcoResProductListPage
+    ),
+  },
+  {
+    id: 'product-release',
+    path: ROUTE_PATHS.INVENTORY.PRODUCT_RELEASE,
+    permission: PERMISSIONS.INVENTORY_TRANSACTION_CREATE,
+    component: lazyPage(
+      () => import('@modules/finance/inventory/pages/EcoResProductReleasePage'),
+      (module) => module.EcoResProductReleasePage
+    ),
+  },
+  {
+    id: 'released-product-details',
+    path: ROUTE_PATHS.INVENTORY.RELEASED_PRODUCT_DETAILS,
+    permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/inventory/pages/EcoResProductDetailsPage'),
+      (module) => module.EcoResProductDetailsPage
+    ),
+  },
+  {
     id: 'inventory-sites',
     path: ROUTE_PATHS.INVENTORY.SITES,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
     component: lazyPage(
       () => import('@modules/finance/inventory/pages/InventSitePage'),
       (module) => module.InventSitePage
+    ),
+  },
+  {
+    id: 'storage-dimension-groups',
+    path: ROUTE_PATHS.INVENTORY.STORAGE_DIMENSION_GROUPS,
+    permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/inventory/pages/EcoResStorageDimensionGroupPage'),
+      (module) => module.EcoResStorageDimensionGroupPage
+    ),
+  },
+  {
+    id: 'tracking-dimension-groups',
+    path: ROUTE_PATHS.INVENTORY.TRACKING_DIMENSION_GROUPS,
+    permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/inventory/pages/EcoResTrackingDimensionGroupPage'),
+      (module) => module.EcoResTrackingDimensionGroupPage
+    ),
+  },
+  {
+    id: 'inventory-model-groups',
+    path: ROUTE_PATHS.INVENTORY.MODEL_GROUPS,
+    permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/inventory/pages/InventModelGroupPage'),
+      (module) => module.InventModelGroupPage
+    ),
+  },
+  {
+    id: 'inventory-item-groups',
+    path: ROUTE_PATHS.INVENTORY.ITEM_GROUPS,
+    permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/inventory/pages/InventItemGroupPage'),
+      (module) => module.InventItemGroupPage
+    ),
+  },
+  {
+    id: 'inventory-posting',
+    path: ROUTE_PATHS.INVENTORY.POSTING,
+    permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/inventory/pages/InventPostingPage'),
+      (module) => module.InventPostingPage
     ),
   },
   {
