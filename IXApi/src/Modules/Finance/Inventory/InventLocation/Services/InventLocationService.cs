@@ -26,31 +26,35 @@ public sealed class InventLocationService : BaseService<InventLocation>, IInvent
 
     public async Task<List<InventLocationResponseDto>> ListAsync(CancellationToken ct)
     {
+        var companyId = RequireCompany();
         var locations = await _db.Set<InventLocation>().AsNoTracking()
+            .Where(x => x.DataAreaId == companyId)
             .OrderBy(x => x.InventLocationId).ToListAsync(ct);
         return locations.Adapt<List<InventLocationResponseDto>>();
     }
 
     public async Task<object> LookupsAsync(CancellationToken ct)
     {
-        var sites = await _db.Set<InventSite>().AsNoTracking().OrderBy(x => x.SiteId)
+        var companyId = RequireCompany();
+        var sites = await _db.Set<InventSite>().AsNoTracking().Where(x => x.DataAreaId == companyId).OrderBy(x => x.SiteId)
             .ProjectToType<InventSiteLookupDto>().ToListAsync(ct);
-        var warehouses = await _db.Set<InventLocation>().AsNoTracking().OrderBy(x => x.InventLocationId)
+        var warehouses = await _db.Set<InventLocation>().AsNoTracking().Where(x => x.DataAreaId == companyId).OrderBy(x => x.InventLocationId)
             .ProjectToType<InventWarehouseLookupDto>().ToListAsync(ct);
         return new InventLocationLookupDto { Sites = sites, Warehouses = warehouses };
     }
 
     public async Task<LocationOperationResult> CreateAsync(LocationInputDto input, CancellationToken ct)
     {
+        var companyId = RequireCompany();
         var code = input.InventLocationId.Trim().ToUpperInvariant();
         Normalize(input);
-        if (await _db.Set<InventLocation>().AnyAsync(x => x.InventLocationId == code, ct))
+        if (await _db.Set<InventLocation>().AnyAsync(x => x.DataAreaId == companyId && x.InventLocationId == code, ct))
             return new(null, LocationOperationStatus.Duplicate);
-        if (!await _db.Set<InventSite>().AnyAsync(x => x.SiteId == input.InventSiteId, ct))
+        if (!await _db.Set<InventSite>().AnyAsync(x => x.DataAreaId == companyId && x.SiteId == input.InventSiteId, ct))
             return new(null, LocationOperationStatus.SiteNotFound);
         var referenceError = await ValidateWarehouseReferences(input, code, ct);
         if (referenceError != null) return new(null, LocationOperationStatus.InvalidReference, referenceError);
-        var location = new InventLocation { InventLocationId = code, DataAreaId = _company.GetDataAreaId() ?? "dat" };
+        var location = new InventLocation { InventLocationId = code, DataAreaId = companyId };
         input.Adapt<LocationInputDto, InventLocation>(location);
         _db.Set<InventLocation>().Add(location);
         await _unitOfWork.CompleteAsync(ct);
@@ -59,12 +63,13 @@ public sealed class InventLocationService : BaseService<InventLocation>, IInvent
 
     public async Task<LocationOperationResult> UpdateAsync(long recId, LocationInputDto input, CancellationToken ct)
     {
-        var location = await _db.Set<InventLocation>().FirstOrDefaultAsync(x => x.RecId == recId, ct);
+        var companyId = RequireCompany();
+        var location = await _db.Set<InventLocation>().FirstOrDefaultAsync(x => x.DataAreaId == companyId && x.RecId == recId, ct);
         if (location == null) return new(null, LocationOperationStatus.NotFound);
         Normalize(input);
         if (!(await _updateValidator.ValidateAsync(new InventLocationUpdateValidation(location.InventLocationId, input), ct)).IsValid)
             return new(null, LocationOperationStatus.CodeChanged);
-        if (!await _db.Set<InventSite>().AnyAsync(x => x.SiteId == input.InventSiteId, ct))
+        if (!await _db.Set<InventSite>().AnyAsync(x => x.DataAreaId == companyId && x.SiteId == input.InventSiteId, ct))
             return new(null, LocationOperationStatus.SiteNotFound);
         var referenceError = await ValidateWarehouseReferences(input, location.InventLocationId, ct);
         if (referenceError != null) return new(null, LocationOperationStatus.InvalidReference, referenceError);
@@ -75,10 +80,11 @@ public sealed class InventLocationService : BaseService<InventLocation>, IInvent
 
     public async Task<LocationOperationStatus> DeleteAsync(long recId, CancellationToken ct)
     {
-        var location = await _db.Set<InventLocation>().FirstOrDefaultAsync(x => x.RecId == recId, ct);
+        var companyId = RequireCompany();
+        var location = await _db.Set<InventLocation>().FirstOrDefaultAsync(x => x.DataAreaId == companyId && x.RecId == recId, ct);
         if (location == null) return LocationOperationStatus.NotFound;
         var code = location.InventLocationId;
-        if (await _db.Set<InventLocation>().AnyAsync(x => x.RecId != recId &&
+        if (await _db.Set<InventLocation>().AnyAsync(x => x.DataAreaId == companyId && x.RecId != recId &&
             (x.InventLocationIdTransit == code || x.InventLocationIdQuarantine == code ||
              x.InventLocationIdReqMain == code || x.ItmInventLocationIdGit == code ||
              x.ItmInventLocationIdUnder == code), ct))
@@ -100,6 +106,7 @@ public sealed class InventLocationService : BaseService<InventLocation>, IInvent
 
     private async Task<string?> ValidateWarehouseReferences(LocationInputDto input, string currentCode, CancellationToken ct)
     {
+        var companyId = RequireCompany();
         var references = new[]
         {
             input.InventLocationIdTransit,
@@ -114,10 +121,13 @@ public sealed class InventLocationService : BaseService<InventLocation>, IInvent
         if (references.Length == 0) return null;
 
         var existing = await _db.Set<InventLocation>().AsNoTracking()
-            .Where(x => references.Contains(x.InventLocationId) && x.InventSiteId == input.InventSiteId)
+            .Where(x => x.DataAreaId == companyId && references.Contains(x.InventLocationId) && x.InventSiteId == input.InventSiteId)
             .Select(x => x.InventLocationId).ToListAsync(ct);
         var missing = references.Except(existing, StringComparer.OrdinalIgnoreCase).FirstOrDefault();
         return missing == null ? null : $"Warehouse '{missing}' was not found in site '{input.InventSiteId}'.";
     }
+
+    private string RequireCompany() => _company.GetDataAreaId()
+        ?? throw new InvalidOperationException("A company must be selected.");
 
 }

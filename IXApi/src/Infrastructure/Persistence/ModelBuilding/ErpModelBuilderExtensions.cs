@@ -45,7 +45,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.ModelBuilding
             modelBuilder.Entity<InventTransOrigin>().HasAlternateKey(ito => ito.InventTransId);
             modelBuilder.Entity<MainAccount>().HasAlternateKey(ma => ma.MainAccountId);
             modelBuilder.Entity<LedgerJournalName>().HasAlternateKey(ljn => ljn.JournalName);
-            modelBuilder.Entity<InventJournalName>().HasAlternateKey(ijn => ijn.JournalNameId);
+            modelBuilder.Entity<InventJournalName>().HasAlternateKey(ijn => new { ijn.DataAreaId, ijn.JournalNameId });
             modelBuilder.Entity<InventJournalTable>().HasAlternateKey(ijt => ijt.JournalId);
 
             modelBuilder.Entity<CustTable>().HasAlternateKey(c => c.AccountNum);

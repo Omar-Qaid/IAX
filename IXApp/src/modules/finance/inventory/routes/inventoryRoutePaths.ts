@@ -1,6 +1,7 @@
 export const INVENTORY_ROUTE_PATHS = {
   ROOT: '/inventory',
   TRANSACTIONS: '/inventory/transactions',
+  ON_HAND: '/inventory/on-hand',
   PRODUCTS: '/inventory/products',
   PRODUCT_DETAILS: '/inventory/products/:productId',
   distinctProductDetails: (productId: string | number) =>
@@ -17,4 +18,7 @@ export const INVENTORY_ROUTE_PATHS = {
     `/inventory/released-products/${encodeURIComponent(String(productId))}`,
   SITES: '/inventory/sites',
   WAREHOUSES: '/inventory/warehouses',
+  UNITS_OF_MEASURE: '/inventory/units-of-measure',
+  PARAMETERS: '/inventory/parameters',
+  JOURNAL_NAMES: '/inventory/journal-names',
 } as const;

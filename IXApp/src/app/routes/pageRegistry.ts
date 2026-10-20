@@ -170,6 +170,15 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'inventory-on-hand',
+    path: ROUTE_PATHS.INVENTORY.ON_HAND,
+    permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/inventory/pages/InventOnHandPage'),
+      (module) => module.InventOnHandPage
+    ),
+  },
+  {
     id: 'products',
     path: ROUTE_PATHS.INVENTORY.PRODUCTS,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
@@ -215,12 +224,39 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'inventory-parameters',
+    path: ROUTE_PATHS.INVENTORY.PARAMETERS,
+    permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/inventory/pages/InventParametersPage'),
+      (module) => module.InventParametersPage
+    ),
+  },
+  {
     id: 'inventory-sites',
     path: ROUTE_PATHS.INVENTORY.SITES,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
     component: lazyPage(
       () => import('@modules/finance/inventory/pages/InventSitePage'),
       (module) => module.InventSitePage
+    ),
+  },
+  {
+    id: 'inventory-journal-names',
+    path: ROUTE_PATHS.INVENTORY.JOURNAL_NAMES,
+    permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/inventory/pages/InventJournalNamePage'),
+      (module) => module.InventJournalNamePage
+    ),
+  },
+  {
+    id: 'inventory-units-of-measure',
+    path: ROUTE_PATHS.INVENTORY.UNITS_OF_MEASURE,
+    permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/inventory/pages/UnitOfMeasurePage'),
+      (module) => module.UnitOfMeasurePage
     ),
   },
   {

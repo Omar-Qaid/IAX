@@ -81,6 +81,11 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<FluentValidation.IValidator<Inventory.InventSiteUpdateValidation>, Inventory.InventSiteUpdateValidator>();
             services.AddScoped<Inventory.IInventLocationService, Inventory.InventLocationService>();
             services.AddScoped<Inventory.IInventTransService, Inventory.InventTransService>();
+            services.AddScoped<Inventory.IInventOnHandService, Inventory.InventOnHandService>();
+            services.AddScoped<Inventory.IUnitOfMeasureService, Inventory.UnitOfMeasureService>();
+            services.AddScoped<Inventory.IInventParametersService, Inventory.InventParametersService>();
+            services.AddScoped<Inventory.IInventJournalNameService, Inventory.InventJournalNameService>();
+            services.AddScoped<FluentValidation.IValidator<Inventory.InventJournalNameInputDto>, Inventory.InventJournalNameInputValidator>();
             services.AddScoped<FluentValidation.IValidator<Inventory.InventLocationUpdateValidation>, Inventory.InventLocationUpdateValidator>();
 
             services.AddScoped<Foundation.LogisticsAddresses.IAddressBookQueryService, Foundation.LogisticsAddresses.AddressBookQueryService>();

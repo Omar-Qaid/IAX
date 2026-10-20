@@ -39,6 +39,16 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
         title: 'nav.setup',
         links: [
           {
+            label: 'inventParameters.title',
+            path: ROUTE_PATHS.INVENTORY.PARAMETERS,
+            permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+          },
+          {
+            label: 'inventJournalName.title',
+            path: ROUTE_PATHS.INVENTORY.JOURNAL_NAMES,
+            permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+          },
+          {
             label: 'product.title',
             path: ROUTE_PATHS.INVENTORY.PRODUCTS,
             permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
@@ -51,6 +61,11 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
           {
             label: 'inventSite.title',
             path: ROUTE_PATHS.INVENTORY.SITES,
+            permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+          },
+          {
+            label: 'unitOfMeasure.title',
+            path: ROUTE_PATHS.INVENTORY.UNITS_OF_MEASURE,
             permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
           },
           {
@@ -89,6 +104,11 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
         id: 'inquiries',
         title: 'nav.inquiries',
         links: [
+          {
+            label: 'inventOnHand.title',
+            path: ROUTE_PATHS.INVENTORY.ON_HAND,
+            permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+          },
           {
             label: 'nav.inventoryTransactions',
             path: ROUTE_PATHS.INVENTORY.TRANSACTIONS,

@@ -273,43 +273,6 @@ export function InventLocationPage(): React.ReactElement {
                   },
                 ],
               },
-              {
-                id: 'related',
-                fields: [
-                  lookupField(
-                    'inventLocationIdQuarantine',
-                    'Quarantine warehouse',
-                    'warehouses',
-                    record
-                  ),
-                  lookupField('inventLocationIdTransit', 'Transit warehouse', 'warehouses', record),
-                ],
-              },
-              {
-                id: 'delivery',
-                fields: [
-                  lookupField(
-                    'itmInventLocationIdGit',
-                    'Goods in transit warehouse',
-                    'warehouses',
-                    record
-                  ),
-                  lookupField(
-                    'itmInventLocationIdUnder',
-                    'Under delivery warehouse',
-                    'warehouses',
-                    record
-                  ),
-                ],
-              },
-              {
-                id: 'reference',
-                title: 'Reference',
-                fields: [
-                  { name: 'vendAccount', label: 'Vendor account' },
-                  { name: 'workflowApproval', label: 'Active approval workflow', type: 'boolean' },
-                ],
-              },
             ],
           },
           {
@@ -575,7 +538,7 @@ export function InventLocationPage(): React.ReactElement {
               },
             ],
           },
-        ] as DetailSectionConfig[],
+        ].filter((section) => section.id === 'general' || section.id === 'hierarchy') as DetailSectionConfig[],
       permissions: {
         view: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
         create: PERMISSIONS.INVENTORY_TRANSACTION_CREATE,

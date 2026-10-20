@@ -2781,6 +2781,63 @@
       "costPrice": "Cost price"
     }
   },
+  "inventParameters": {
+    "title": "Inventory and warehouse management parameters",
+    "saved": "Inventory parameters saved.",
+    "navigation": { "general": "General", "journalNames": "Journal names" },
+    "sections": { "general": "General", "journalNames": "Journal names" },
+    "fields": {
+      "defaultUnit": "Default unit",
+      "defaultSite": "Default site",
+      "defaultWarehouse": "Default warehouse",
+      "reserveOnOrdered": "Reserve ordered items",
+      "mandatoryItemTaxGroup": "Mandatory item sales tax group",
+      "movementJournal": "Movement",
+      "adjustmentJournal": "Inventory adjustment",
+      "transferJournal": "Transfer",
+      "countingJournal": "Counting"
+    }
+  },
+  "unitOfMeasure": {
+    "title": "Units of measure",
+    "symbol": "Symbol",
+    "unitClass": "Unit class",
+    "system": "System of units",
+    "precision": "Decimal precision",
+    "conversions": "Unit conversions",
+    "noConversions": "No conversions",
+    "symbolRequired": "Symbol is required.",
+    "precisionRange": "Precision must be between 0 and 6.",
+    "newConversion": "New unit conversion",
+    "editConversion": "Edit unit conversion",
+    "fromUnit": "From unit",
+    "toUnit": "To unit",
+    "productScope": "Product scope",
+    "standardConversion": "Standard",
+    "factor": "Factor",
+    "numerator": "Numerator",
+    "denominator": "Denominator",
+    "innerOffset": "Inner offset",
+    "outerOffset": "Outer offset",
+    "rounding": "Rounding",
+    "roundingNone": "None",
+    "roundingUp": "Up",
+    "roundingDown": "Down",
+    "roundingNearest": "Nearest",
+    "conversionRequired": "To unit and a positive factor are required.",
+    "deleteConversionConfirm": "Delete this unit conversion?"
+  },
+  "inventOnHand": {
+    "title": "On-hand inventory",
+    "physicalInventory": "Physical inventory",
+    "physicalReserved": "Physical reserved",
+    "availablePhysical": "Available physical",
+    "orderedReceipts": "Ordered receipts",
+    "orderedIssues": "Ordered issues",
+    "availableOrdered": "Total available",
+    "postedValue": "Posted value",
+    "physicalValue": "Physical value"
+  },
   "inventTrans": {
     "transactionFilter": "Transaction filter",
     "fields": {
@@ -2823,5 +2880,20 @@
       "receipts": "Receipt rows",
       "issues": "Issue rows"
     }
+  },
+  "inventJournalName": {
+    "title": "Inventory journal names",
+    "fields": {
+      "id": "Name",
+      "description": "Description",
+      "type": "Journal type",
+      "voucherSequence": "Voucher number sequence",
+      "detailSummary": "Detail level",
+      "deletePostedLines": "Delete lines after posting",
+      "reservation": "Reservation"
+    },
+    "types": { "movement": "Movement", "adjustment": "Inventory adjustment", "counting": "Counting", "transfer": "Transfer" },
+    "detail": { "detail": "Detail", "summary": "Summary" },
+    "reservation": { "automatic": "Automatic" }
   }
 }

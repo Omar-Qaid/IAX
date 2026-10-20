@@ -2783,6 +2783,63 @@
       "costPrice": "سعر التكلفة"
     }
   },
+  "inventParameters": {
+    "title": "معلمات إدارة المخزون والمستودعات",
+    "saved": "تم حفظ معلمات المخزون.",
+    "navigation": { "general": "عام", "journalNames": "أسماء دفاتر اليومية" },
+    "sections": { "general": "عام", "journalNames": "أسماء دفاتر اليومية" },
+    "fields": {
+      "defaultUnit": "الوحدة الافتراضية",
+      "defaultSite": "الموقع الافتراضي",
+      "defaultWarehouse": "المستودع الافتراضي",
+      "reserveOnOrdered": "حجز الأصناف المطلوبة",
+      "mandatoryItemTaxGroup": "مجموعة ضريبة مبيعات الصنف إلزامية",
+      "movementJournal": "الحركة",
+      "adjustmentJournal": "تسوية المخزون",
+      "transferJournal": "التحويل",
+      "countingJournal": "الجرد"
+    }
+  },
+  "unitOfMeasure": {
+    "title": "وحدات القياس",
+    "symbol": "الرمز",
+    "unitClass": "فئة الوحدة",
+    "system": "نظام الوحدات",
+    "precision": "الدقة العشرية",
+    "conversions": "تحويلات الوحدات",
+    "noConversions": "لا توجد تحويلات",
+    "symbolRequired": "الرمز مطلوب.",
+    "precisionRange": "يجب أن تكون الدقة بين 0 و6.",
+    "newConversion": "تحويل وحدة جديد",
+    "editConversion": "تعديل تحويل الوحدة",
+    "fromUnit": "من وحدة",
+    "toUnit": "إلى وحدة",
+    "productScope": "نطاق المنتج",
+    "standardConversion": "قياسي",
+    "factor": "المعامل",
+    "numerator": "البسط",
+    "denominator": "المقام",
+    "innerOffset": "الإزاحة الداخلية",
+    "outerOffset": "الإزاحة الخارجية",
+    "rounding": "التقريب",
+    "roundingNone": "بدون",
+    "roundingUp": "لأعلى",
+    "roundingDown": "لأسفل",
+    "roundingNearest": "إلى الأقرب",
+    "conversionRequired": "وحدة التحويل والمعامل الموجب مطلوبان.",
+    "deleteConversionConfirm": "هل تريد حذف تحويل الوحدة؟"
+  },
+  "inventOnHand": {
+    "title": "المخزون الفعلي",
+    "physicalInventory": "المخزون الفعلي",
+    "physicalReserved": "المحجوز فعلياً",
+    "availablePhysical": "المتاح فعلياً",
+    "orderedReceipts": "الاستلامات المطلوبة",
+    "orderedIssues": "عمليات الصرف المطلوبة",
+    "availableOrdered": "إجمالي المتاح",
+    "postedValue": "القيمة المرحلة",
+    "physicalValue": "القيمة الفعلية"
+  },
   "inventTrans": {
     "transactionFilter": "عامل تصفية الحركة",
     "fields": {
@@ -2825,5 +2882,20 @@
       "receipts": "صفوف الاستلام",
       "issues": "صفوف الصرف"
     }
+  },
+  "inventJournalName": {
+    "title": "أسماء دفاتر يومية المخزون",
+    "fields": {
+      "id": "الاسم",
+      "description": "الوصف",
+      "type": "نوع دفتر اليومية",
+      "voucherSequence": "التسلسل الرقمي للقسيمة",
+      "detailSummary": "مستوى التفاصيل",
+      "deletePostedLines": "حذف البنود بعد الترحيل",
+      "reservation": "الحجز"
+    },
+    "types": { "movement": "حركة", "adjustment": "تسوية مخزون", "counting": "جرد", "transfer": "تحويل" },
+    "detail": { "detail": "تفصيلي", "summary": "ملخص" },
+    "reservation": { "automatic": "تلقائي" }
   }
 }

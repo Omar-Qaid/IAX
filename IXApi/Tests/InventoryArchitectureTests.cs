@@ -13,6 +13,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
+using ReleasedItem = IAX.IXApi.Modules.Finance.Entities.InventTable;
+using SharedProduct = IAX.IXApi.Modules.Finance.Inventory.InventTable.EcoResProduct;
 
 namespace IAX.IXApi.Tests;
 
@@ -112,6 +114,118 @@ public sealed class InventoryArchitectureTests
         Assert.IsType<BadRequestObjectResult>((await new InventTransController(service).GetList()).Result);
     }
 
+    [Fact]
+    public async Task On_hand_query_returns_basic_dimensions_and_standard_summary_buckets_for_selected_company()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.AddRange(
+            new ReleasedItem { RecId = 1, DataAreaId = "dat", ItemId = "ITEM-001", Name = "Office Chair" },
+            new ReleasedItem { RecId = 2, DataAreaId = "other", ItemId = "ITEM-001", Name = "Hidden Chair" },
+            new InventDim { RecId = 3, DataAreaId = "dat", InventDimId = "DIM-1", InventSiteId = "JED", InventLocationId = "MAIN" },
+            new InventDim { RecId = 4, DataAreaId = "other", InventDimId = "DIM-1", InventSiteId = "DXB", InventLocationId = "MAIN" },
+            new InventSum
+            {
+                RecId = 5, DataAreaId = "dat", ItemId = "ITEM-001", InventDimId = "DIM-1",
+                PhysicalInvent = 10, ReservPhysical = 2, AvailPhysical = 8,
+                Ordered = 4, OnOrder = 3, AvailOrdered = 9, PostedValue = 700, PhysicalValue = 100
+            },
+            new InventSum { RecId = 6, DataAreaId = "other", ItemId = "ITEM-001", InventDimId = "DIM-1", PhysicalInvent = 99 });
+        await db.SaveChangesAsync();
+
+        var identity = new TestIdentity();
+        var rows = (await new InventOnHandService(new TestUnitOfWork(db), identity).ListAsync())!;
+
+        var row = Assert.Single(rows);
+        Assert.Equal("ITEM-001", row.ItemNumber);
+        Assert.Equal("Office Chair", row.ProductName);
+        Assert.Equal("JED", row.Site);
+        Assert.Equal("MAIN", row.Warehouse);
+        Assert.Equal(10, row.PhysicalInventory);
+        Assert.Equal(2, row.PhysicalReserved);
+        Assert.Equal(8, row.AvailablePhysical);
+        Assert.Equal(4, row.OrderedReceipts);
+        Assert.Equal(3, row.OrderedIssues);
+        Assert.Equal(9, row.AvailableOrdered);
+        Assert.Equal(700, row.PostedValue);
+        Assert.Equal(100, row.PhysicalValue);
+
+        identity.DataAreaId = null;
+        Assert.Null(await new InventOnHandService(new TestUnitOfWork(db), identity).ListAsync());
+    }
+
+    [Fact]
+    public async Task Inventory_parameters_are_company_scoped_and_validate_basic_D365_dependencies()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.AddRange(
+            new UnitOfMeasure { RecId = 1, Symbol = "pcs" },
+            new InventSite { RecId = 2, DataAreaId = "dat", SiteId = "JED", Name = "Jeddah" },
+            new InventSite { RecId = 3, DataAreaId = "other", SiteId = "DXB", Name = "Dubai" },
+            new InventLocation { RecId = 4, DataAreaId = "dat", InventLocationId = "MAIN", InventSiteId = "JED", Name = "Main" },
+            new InventLocation { RecId = 5, DataAreaId = "dat", InventLocationId = "WRONG", InventSiteId = "OTHER", Name = "Wrong site" },
+            new InventJournalName { RecId = 6, DataAreaId = "dat", JournalNameId = "MOV", Description = "Movement", JournalType = InventJournalType.Movement },
+            new InventJournalName { RecId = 7, DataAreaId = "dat", JournalNameId = "COUNT", Description = "Counting", JournalType = InventJournalType.Counting },
+            new InventJournalName { RecId = 8, DataAreaId = "other", JournalNameId = "HIDDEN", Description = "Hidden", JournalType = InventJournalType.Movement });
+        await db.SaveChangesAsync();
+        var identity = new TestIdentity();
+        var service = new InventParametersService(new TestUnitOfWork(db), identity);
+
+        var invalidWarehouse = await service.SaveAsync(new InventParametersDto { DefaultUnitId = "pcs", MultiSiteDefaultInventSiteId = "JED", MultiSiteDefaultInventLocationId = "WRONG" });
+        Assert.Contains("must belong", invalidWarehouse.Error);
+        var invalidJournal = await service.SaveAsync(new InventParametersDto { MovementJournalNameId = "COUNT" });
+        Assert.Contains("does not exist for Movement", invalidJournal.Error);
+
+        var saved = await service.SaveAsync(new InventParametersDto
+        {
+            DefaultUnitId = "pcs", MultiSiteDefaultInventSiteId = "jed", MultiSiteDefaultInventLocationId = "main",
+            MovementJournalNameId = "MOV", CountJournalNameId = "COUNT", ReserveOnOrdered = true, MandatoryItemTaxGroup = true,
+        });
+        Assert.Null(saved.Error);
+        Assert.Equal("JED", saved.Value!.MultiSiteDefaultInventSiteId);
+        Assert.Equal("MAIN", saved.Value.MultiSiteDefaultInventLocationId);
+        Assert.True(saved.Value.ReserveOnOrdered);
+        var lookup = (await service.GetLookupsAsync())!;
+        Assert.Single(lookup.Sites);
+        Assert.Equal(2, lookup.Warehouses.Count);
+        Assert.Equal(2, lookup.JournalNames.Count);
+        Assert.DoesNotContain(lookup.JournalNames, x => x.Id == "HIDDEN");
+        Assert.Single(await db.Set<InventParameters>().ToListAsync());
+    }
+
+    [Fact]
+    public async Task Unit_setup_validates_duplicates_conversions_and_used_unit_restrictions()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.Add(new SharedProduct { RecId = 100, DisplayProductNumber = "ITEM-001", ProductType = ItemType.Item });
+        await db.SaveChangesAsync();
+        var service = new UnitOfMeasureService(new TestUnitOfWork(db));
+        var pcs = await service.CreateAsync(new UnitOfMeasureInputDto { Symbol = "pcs", UnitOfMeasureClass = 0, SystemOfUnits = 0, DecimalPrecision = 0 });
+        var box = await service.CreateAsync(new UnitOfMeasureInputDto { Symbol = "box", UnitOfMeasureClass = 0, SystemOfUnits = 0, DecimalPrecision = 0 });
+        Assert.NotNull(pcs.Unit);
+        Assert.NotNull(box.Unit);
+        Assert.NotNull((await service.CreateAsync(new UnitOfMeasureInputDto { Symbol = "pcs" })).Error);
+        var conversion = await service.SaveConversionAsync(null, new UnitOfMeasureConversionInputDto
+        { FromUnitOfMeasure = box.Unit!.RecId, ToUnitOfMeasure = pcs.Unit!.RecId, Product = 100, Factor = 4 });
+        Assert.Equal(4, conversion.Conversion!.Factor);
+        Assert.Equal("ITEM-001", conversion.Conversion.ProductNumber);
+        Assert.NotNull((await service.SaveConversionAsync(null, new UnitOfMeasureConversionInputDto
+        { FromUnitOfMeasure = box.Unit.RecId, ToUnitOfMeasure = pcs.Unit.RecId, Product = 100, Factor = 4 })).Error);
+        db.Add(new InventTableModule { RecId = 200, DataAreaId = "dat", ItemId = "ITEM-001", UnitId = "pcs", ModuleType = ModuleInventPurchSales.Inventory });
+        await db.SaveChangesAsync();
+        Assert.NotNull((await service.UpdateAsync(pcs.Unit.RecId, new UnitOfMeasureInputDto { Symbol = "ea", UnitOfMeasureClass = 0, SystemOfUnits = 0 })).Error);
+        Assert.NotNull(await service.DeleteAsync(pcs.Unit.RecId));
+        Assert.Null(await service.DeleteConversionAsync(conversion.Conversion.RecId));
+    }
+
     private sealed class InventoryContext(DbContextOptions<InventoryContext> options) : DbContext(options)
     {
         protected override void OnModelCreating(ModelBuilder builder)
@@ -122,6 +236,14 @@ public sealed class InventoryArchitectureTests
             Configure<InventTransOrigin>(builder);
             Configure<InventDim>(builder);
             Configure<SalesLine>(builder);
+            Configure<ReleasedItem>(builder);
+            Configure<InventSum>(builder);
+            Configure<UnitOfMeasure>(builder);
+            Configure<UnitOfMeasureConversion>(builder);
+            Configure<InventTableModule>(builder);
+            Configure<SharedProduct>(builder);
+            Configure<InventParameters>(builder);
+            Configure<InventJournalName>(builder);
             builder.Entity<InventSite>().HasQueryFilter(x => x.DataAreaId == "dat");
             builder.Entity<InventLocation>().HasQueryFilter(x => x.DataAreaId == "dat");
         }

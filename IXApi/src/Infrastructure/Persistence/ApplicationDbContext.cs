@@ -337,6 +337,7 @@ namespace IAX.IXApi.Infrastructure.Persistence
         // INVENT* extended entities
         public DbSet<InventCountJour> InventCountJours => Set<InventCountJour>();
         public DbSet<InventJournalName> InventJournalNames => Set<InventJournalName>();
+        public DbSet<InventParameters> InventParameters => Set<InventParameters>();
         public DbSet<InventItemLocation> InventItemLocations => Set<InventItemLocation>();
         public DbSet<InventTableModule> InventTableModules => Set<InventTableModule>();
         #endregion

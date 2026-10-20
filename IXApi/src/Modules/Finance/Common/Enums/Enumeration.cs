@@ -574,7 +574,8 @@ namespace IAX.IXApi.Modules.Finance.Common
     {
         Movement = 0,
         Adjustment = 1,
-        Counting = 2
+        Counting = 2,
+        Transfer = 3
     }
     public enum NoYes
     {
