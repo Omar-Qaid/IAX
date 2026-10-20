@@ -16,7 +16,5 @@ public sealed class EcoResTrackingDimensionGroupItem : Entity<long>
     [StringLength(FieldLengths.CompanyId)]
     public string ItemDataAreaId { get; set; } = string.Empty;
 
-    [Required]
-    [StringLength(FieldLengths.TrackingDimensionGroupId)]
-    public string TrackingDimensionGroupId { get; set; } = string.Empty;
+    public long TrackingDimensionGroup { get; set; }
 }

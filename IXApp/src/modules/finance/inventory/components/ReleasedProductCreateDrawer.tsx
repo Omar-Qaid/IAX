@@ -7,7 +7,7 @@ import { releasedProductApi, type ConfigureReleasedProductInput, type ReleasedPr
 import { useCompanyStore } from '@core/company/useCompanyStore';
 
 interface Props { open: boolean; onClose: () => void; onCreated: (product: ReleasedProductRecord) => void | Promise<void> }
-const initialValues = (): Record<string, FastTabValue> => ({ productType: 'Item', productSubtype: 'Product', productNumber: '', name: '', nameAlias: '', searchName: '', itemNumber: '', itemNameAlias: '', sku: '', buyerGroupId: '', inventoryUnit: '', purchaseUnit: '', salesUnit: '', purchaseToInventoryFactor: 1, salesToInventoryFactor: 1, bomUnit: '', itemGroupId: '', modelGroupId: '', storageDimensionGroupId: '', trackingDimensionGroupId: '', salesTaxItemGroupId: '', purchaseTaxItemGroupId: '', vendorAccount: '', purchasePrice: 0, salesPrice: 0, inventoryPrice: 0, defaultOrderType: 1, purchaseSiteId: '', purchaseWarehouseId: '', purchaseMinimumQuantity: 0, purchaseMaximumQuantity: 0, purchaseMultipleQuantity: 1, salesSiteId: '', salesWarehouseId: '', salesMinimumQuantity: 0, salesMaximumQuantity: 0, salesMultipleQuantity: 1, inventorySiteId: '', inventoryWarehouseId: '', inventoryMinimumQuantity: 0, inventoryMaximumQuantity: 0, inventoryMultipleQuantity: 1 });
+const initialValues = (): Record<string, FastTabValue> => ({ productType: 'Item', productSubtype: 'Product', productNumber: '', name: '', nameAlias: '', searchName: '', itemNumber: '', itemNameAlias: '', inventoryUnit: '', purchaseUnit: '', salesUnit: '', purchaseToInventoryFactor: 1, salesToInventoryFactor: 1, itemGroupId: '', modelGroupId: '', storageDimensionGroupId: '', trackingDimensionGroupId: '', salesTaxItemGroupId: '', purchaseTaxItemGroupId: '', purchasePrice: 0, salesPrice: 0, inventoryPrice: 0, defaultOrderType: 1, purchaseSiteId: '', purchaseWarehouseId: '', purchaseMinimumQuantity: 0, purchaseMaximumQuantity: 0, purchaseMultipleQuantity: 1, salesSiteId: '', salesWarehouseId: '', salesMinimumQuantity: 0, salesMaximumQuantity: 0, salesMultipleQuantity: 1, inventorySiteId: '', inventoryWarehouseId: '', inventoryMinimumQuantity: 0, inventoryMaximumQuantity: 0, inventoryMultipleQuantity: 1 });
 const setupFields = ['modelGroupId', 'itemGroupId', 'storageDimensionGroupId', 'trackingDimensionGroupId', 'inventoryUnit', 'purchaseUnit', 'salesUnit'] as const;
 const optionalSetupFields = ['salesTaxItemGroupId', 'purchaseTaxItemGroupId', 'purchaseSiteId', 'purchaseWarehouseId', 'salesSiteId', 'salesWarehouseId', 'inventorySiteId', 'inventoryWarehouseId'] as const;
 
@@ -32,7 +32,6 @@ export function ReleasedProductCreateDrawer({ open, onClose, onCreated }: Props)
       { name: 'productNumber', label: t('product.fields.productNumber'), required: true }, { name: 'name', label: t('product.fields.productName'), required: true },
       { name: 'nameAlias', label: t('product.fields.arabicName') }, { name: 'searchName', label: t('product.fields.searchName') },
       { name: 'itemNumber', label: t('releasedProduct.fields.itemNumber'), required: true }, { name: 'itemNameAlias', label: t('releasedProduct.fields.companyArabicName', 'Company search name') },
-      { name: 'sku', label: 'SKU' }, { name: 'buyerGroupId', label: t('releasedProduct.fields.buyerGroup', 'Buyer group') },
     ] },
     { id: 'groups', title: t('releasedProduct.create.referenceGroups', 'REFERENCE GROUPS'), fields: [
       { name: 'modelGroupId', label: t('releasedProduct.fields.modelGroup', 'Item model group'), type: 'select', options: options?.modelGroups ?? [] },
@@ -46,12 +45,10 @@ export function ReleasedProductCreateDrawer({ open, onClose, onCreated }: Props)
       { name: 'purchaseToInventoryFactor', label: t('releasedProduct.fields.purchaseConversionFactor', 'Purchase-to-inventory factor'), type: 'number' },
       { name: 'salesUnit', label: t('releasedProduct.fields.salesUnit', 'Sales unit'), type: 'select', options: options?.units ?? [] },
       { name: 'salesToInventoryFactor', label: t('releasedProduct.fields.salesConversionFactor', 'Sales-to-inventory factor'), type: 'number' },
-      { name: 'bomUnit', label: t('releasedProduct.fields.bomUnit', 'BOM unit'), type: 'select', options: options?.units ?? [] },
     ] },
-    { id: 'tax-vendor-price', title: t('releasedProduct.create.commercial', 'TAX, VENDOR AND PRICES'), fields: [
+    { id: 'tax-price', title: t('releasedProduct.create.commercial', 'TAX AND PRICES'), fields: [
       { name: 'salesTaxItemGroupId', label: t('releasedProduct.fields.salesTaxItemGroup', 'Sales item tax group'), type: 'select', options: options?.taxItemGroups ?? [] },
       { name: 'purchaseTaxItemGroupId', label: t('releasedProduct.fields.purchaseTaxItemGroup', 'Purchase item tax group'), type: 'select', options: options?.taxItemGroups ?? [] },
-      { name: 'vendorAccount', label: t('releasedProduct.fields.vendor', 'Vendor'), type: 'select', options: options?.vendors ?? [] },
       { name: 'purchasePrice', label: t('releasedProduct.fields.purchasePrice'), type: 'number' }, { name: 'salesPrice', label: t('releasedProduct.fields.salesPrice'), type: 'number' },
       { name: 'inventoryPrice', label: t('releasedProduct.fields.inventoryPrice', 'Inventory price'), type: 'number' },
     ] },
@@ -94,6 +91,6 @@ export function ReleasedProductCreateDrawer({ open, onClose, onCreated }: Props)
       }
       return errors;
     }}
-    onSubmit={async (v) => onCreated(await releasedProductApi.create({ productNumber: String(v.productNumber), name: String(v.name), nameAlias: String(v.nameAlias), searchName: String(v.searchName), itemNumber: String(v.itemNumber), itemNameAlias: String(v.itemNameAlias), sku: String(v.sku), buyerGroupId: String(v.buyerGroupId), vendorAccount: String(v.vendorAccount), bomUnit: String(v.bomUnit), configuration: buildConfiguration(v) }))}
+    onSubmit={async (v) => onCreated(await releasedProductApi.create({ productNumber: String(v.productNumber), name: String(v.name), nameAlias: String(v.nameAlias), searchName: String(v.searchName), itemNumber: String(v.itemNumber), itemNameAlias: String(v.itemNameAlias), configuration: buildConfiguration(v) }))}
     saveLabel={t('actions.save')} cancelLabel={t('actions.cancel')} closeLabel={t('actions.close')} helpLabel={t('common.help')} onCancel={onClose} />;
 }

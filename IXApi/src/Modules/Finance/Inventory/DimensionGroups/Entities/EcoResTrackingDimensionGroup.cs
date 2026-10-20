@@ -9,13 +9,9 @@ namespace IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities;
 public sealed class EcoResTrackingDimensionGroup : SharedEntity<long>
 {
     [Required]
-    [StringLength(FieldLengths.TrackingDimensionGroupId)]
-    public string TrackingDimensionGroupId { get; set; } = string.Empty;
-
-    [Required]
     [StringLength(FieldLengths.Name)]
     public string Name { get; set; } = string.Empty;
 
-    public bool UseBatchNumber { get; set; }
-    public bool UseSerialNumber { get; set; }
+    [StringLength(FieldLengths.Description)]
+    public string Description { get; set; } = string.Empty;
 }

@@ -9,14 +9,9 @@ namespace IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities;
 public sealed class EcoResStorageDimensionGroup : SharedEntity<long>
 {
     [Required]
-    [StringLength(FieldLengths.StorageDimensionGroupId)]
-    public string StorageDimensionGroupId { get; set; } = string.Empty;
-
-    [Required]
     [StringLength(FieldLengths.Name)]
     public string Name { get; set; } = string.Empty;
 
-    public bool UseSite { get; set; }
-    public bool UseWarehouse { get; set; }
-    public bool UseLocation { get; set; }
+    [StringLength(FieldLengths.Description)]
+    public string Description { get; set; } = string.Empty;
 }

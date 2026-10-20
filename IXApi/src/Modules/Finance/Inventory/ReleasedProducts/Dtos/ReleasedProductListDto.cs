@@ -129,10 +129,6 @@ public sealed class CreateReleasedProductDto
     public string SearchName { get; init; } = string.Empty;
     public string ItemNumber { get; init; } = string.Empty;
     public string ItemNameAlias { get; init; } = string.Empty;
-    public string Sku { get; init; } = string.Empty;
-    public string BuyerGroupId { get; init; } = string.Empty;
-    public string VendorAccount { get; init; } = string.Empty;
-    public string BomUnit { get; init; } = string.Empty;
     public ConfigureReleasedProductDto? Configuration { get; init; }
 }
 
@@ -144,7 +140,6 @@ public sealed class ReleasedProductLookupDto
     public List<ReleasedProductLookupOptionDto> StorageDimensionGroups { get; init; } = [];
     public List<ReleasedProductLookupOptionDto> TrackingDimensionGroups { get; init; } = [];
     public List<ReleasedProductLookupOptionDto> TaxItemGroups { get; init; } = [];
-    public List<ReleasedProductLookupOptionDto> Vendors { get; init; } = [];
     public List<ReleasedProductLookupOptionDto> Sites { get; init; } = [];
     public List<ReleasedProductLookupOptionDto> Warehouses { get; init; } = [];
 }

@@ -16,7 +16,5 @@ public sealed class EcoResStorageDimensionGroupItem : Entity<long>
     [StringLength(FieldLengths.CompanyId)]
     public string ItemDataAreaId { get; set; } = string.Empty;
 
-    [Required]
-    [StringLength(FieldLengths.StorageDimensionGroupId)]
-    public string StorageDimensionGroupId { get; set; } = string.Empty;
+    public long StorageDimensionGroup { get; set; }
 }

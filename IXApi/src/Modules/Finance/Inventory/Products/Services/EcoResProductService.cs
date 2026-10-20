@@ -40,7 +40,7 @@ public sealed class EcoResProductService : BaseService<EcoResProduct>, IEcoResPr
         await _unitOfWork.BeginTransactionAsync(ct);
         try
         {
-            var product = new EcoResProduct { DisplayProductNumber = number, SearchName = Clean(input.SearchName), ProductType = ItemType.Item, ProductSubtype = EcoResProductSubtype.Product };
+            var product = new EcoResProduct { DisplayProductNumber = number, SearchName = Clean(input.SearchName), ProductType = ItemType.Item };
             Db.Add(product);
             await _unitOfWork.CompleteAsync(ct);
             Db.Add(new EcoResDistinctProduct { RecId = product.RecId });

@@ -32,9 +32,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         public string Name { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(FieldLengths.Sku)]
-        public string Sku { get; set; } = string.Empty;
-
         // Enum Properties
         public ItemType ItemType { get; set; } // Service, Item, Product, etc.
         public UseAltItemId UseAltItemId { get; set; }

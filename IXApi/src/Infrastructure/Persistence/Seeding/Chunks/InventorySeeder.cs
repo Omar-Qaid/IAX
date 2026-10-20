@@ -69,28 +69,40 @@ public sealed class InventorySeeder : ISeeder
             });
         }
 
-        if (!await db.Set<EcoResStorageDimensionGroup>().IgnoreQueryFilters().AnyAsync(
-                x => x.StorageDimensionGroupId == StorageGroup, ct))
+        var storageGroup = await db.Set<EcoResStorageDimensionGroup>().IgnoreQueryFilters()
+            .FirstOrDefaultAsync(x => x.Name == StorageGroup, ct);
+        if (storageGroup is null)
         {
-            db.Add(new EcoResStorageDimensionGroup
+            storageGroup = new EcoResStorageDimensionGroup
             {
-                StorageDimensionGroupId = StorageGroup,
-                Name = "Site and warehouse",
-                UseSite = true,
-                UseWarehouse = true,
-                UseLocation = false
-            });
+                Name = StorageGroup,
+                Description = "Site and warehouse"
+            };
+            db.Add(storageGroup);
+            await db.SaveChangesAsync(ct);
         }
+        if (!await db.Set<EcoResStorageDimensionGroupFldSetup>().IgnoreQueryFilters().AnyAsync(x => x.StorageDimensionGroup == storageGroup.RecId, ct))
+            db.AddRange(
+                new EcoResStorageDimensionGroupFldSetup { StorageDimensionGroup = storageGroup.RecId, DimensionFieldId = InventDimensionFields.Site, LineNumber = 1, IsActive = true },
+                new EcoResStorageDimensionGroupFldSetup { StorageDimensionGroup = storageGroup.RecId, DimensionFieldId = InventDimensionFields.Warehouse, LineNumber = 2, IsActive = true },
+                new EcoResStorageDimensionGroupFldSetup { StorageDimensionGroup = storageGroup.RecId, DimensionFieldId = InventDimensionFields.Location, LineNumber = 3 });
 
-        if (!await db.Set<EcoResTrackingDimensionGroup>().IgnoreQueryFilters().AnyAsync(
-                x => x.TrackingDimensionGroupId == TrackingGroup, ct))
+        var trackingGroup = await db.Set<EcoResTrackingDimensionGroup>().IgnoreQueryFilters()
+            .FirstOrDefaultAsync(x => x.Name == TrackingGroup, ct);
+        if (trackingGroup is null)
         {
-            db.Add(new EcoResTrackingDimensionGroup
+            trackingGroup = new EcoResTrackingDimensionGroup
             {
-                TrackingDimensionGroupId = TrackingGroup,
-                Name = "No tracking dimensions"
-            });
+                Name = TrackingGroup,
+                Description = "No tracking dimensions"
+            };
+            db.Add(trackingGroup);
+            await db.SaveChangesAsync(ct);
         }
+        if (!await db.Set<EcoResTrackingDimensionGroupFldSetup>().IgnoreQueryFilters().AnyAsync(x => x.TrackingDimensionGroup == trackingGroup.RecId, ct))
+            db.AddRange(
+                new EcoResTrackingDimensionGroupFldSetup { TrackingDimensionGroup = trackingGroup.RecId, DimensionFieldId = InventDimensionFields.BatchNumber, LineNumber = 1 },
+                new EcoResTrackingDimensionGroupFldSetup { TrackingDimensionGroup = trackingGroup.RecId, DimensionFieldId = InventDimensionFields.SerialNumber, LineNumber = 2 });
 
         await db.SaveChangesAsync(ct);
     }
@@ -106,8 +118,7 @@ public sealed class InventorySeeder : ISeeder
             {
                 DisplayProductNumber = ProductNumber,
                 SearchName = "Office Chair",
-                ProductType = ItemType.Item,
-                ProductSubtype = EcoResProductSubtype.Product
+                ProductType = ItemType.Item
             };
             db.Add(product);
             await db.SaveChangesAsync(ct);
@@ -150,7 +161,6 @@ public sealed class InventorySeeder : ISeeder
                 Product = productId,
                 Name = "Office Chair",
                 NameAlias = "منشفة حمام",
-                Sku = ProductNumber,
                 ItemType = ItemType.Item,
                 BomUnitId = Unit
             });
@@ -170,11 +180,13 @@ public sealed class InventorySeeder : ISeeder
 
         if (!await db.Set<EcoResStorageDimensionGroupItem>().IgnoreQueryFilters().AnyAsync(
                 x => x.ItemDataAreaId == Company && x.ItemId == ProductNumber, ct))
-            db.Add(new EcoResStorageDimensionGroupItem { ItemId = ProductNumber, ItemDataAreaId = Company, StorageDimensionGroupId = StorageGroup });
+            db.Add(new EcoResStorageDimensionGroupItem { ItemId = ProductNumber, ItemDataAreaId = Company,
+                StorageDimensionGroup = await db.Set<EcoResStorageDimensionGroup>().IgnoreQueryFilters().Where(x => x.Name == StorageGroup).Select(x => x.RecId).SingleAsync(ct) });
 
         if (!await db.Set<EcoResTrackingDimensionGroupItem>().IgnoreQueryFilters().AnyAsync(
                 x => x.ItemDataAreaId == Company && x.ItemId == ProductNumber, ct))
-            db.Add(new EcoResTrackingDimensionGroupItem { ItemId = ProductNumber, ItemDataAreaId = Company, TrackingDimensionGroupId = TrackingGroup });
+            db.Add(new EcoResTrackingDimensionGroupItem { ItemId = ProductNumber, ItemDataAreaId = Company,
+                TrackingDimensionGroup = await db.Set<EcoResTrackingDimensionGroup>().IgnoreQueryFilters().Where(x => x.Name == TrackingGroup).Select(x => x.RecId).SingleAsync(ct) });
 
         await EnsureDefaultDimensionAsync(db, ct);
         await AddOrderSetupAsync<InventItemPurchSetup>(db, () => new InventItemPurchSetup

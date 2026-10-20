@@ -297,8 +297,10 @@ namespace IAX.IXApi.Infrastructure.Persistence
         public DbSet<EcoResProductTranslation> EcoResProductTranslations => Set<EcoResProductTranslation>();
         public DbSet<EcoResCategory> EcoResCategories => Set<EcoResCategory>();
         public DbSet<EcoResStorageDimensionGroup> EcoResStorageDimensionGroups => Set<EcoResStorageDimensionGroup>();
+        public DbSet<EcoResStorageDimensionGroupFldSetup> EcoResStorageDimensionGroupFldSetups => Set<EcoResStorageDimensionGroupFldSetup>();
         public DbSet<EcoResStorageDimensionGroupItem> EcoResStorageDimensionGroupItems => Set<EcoResStorageDimensionGroupItem>();
         public DbSet<EcoResTrackingDimensionGroup> EcoResTrackingDimensionGroups => Set<EcoResTrackingDimensionGroup>();
+        public DbSet<EcoResTrackingDimensionGroupFldSetup> EcoResTrackingDimensionGroupFldSetups => Set<EcoResTrackingDimensionGroupFldSetup>();
         public DbSet<EcoResTrackingDimensionGroupItem> EcoResTrackingDimensionGroupItems => Set<EcoResTrackingDimensionGroupItem>();
         public DbSet<InventTable> InventTables => Set<InventTable>();
         public DbSet<InventItemGroup> InventItemGroups => Set<InventItemGroup>();

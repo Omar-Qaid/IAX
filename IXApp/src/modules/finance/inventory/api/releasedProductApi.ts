@@ -100,13 +100,11 @@ export interface ReleasedProductLookups {
   units: ReleasedProductLookupOption[]; itemGroups: ReleasedProductLookupOption[];
   modelGroups: ReleasedProductLookupOption[]; storageDimensionGroups: ReleasedProductLookupOption[];
   trackingDimensionGroups: ReleasedProductLookupOption[]; taxItemGroups: ReleasedProductLookupOption[];
-  vendors: ReleasedProductLookupOption[]; sites: ReleasedProductLookupOption[];
-  warehouses: ReleasedProductLookupOption[];
+  sites: ReleasedProductLookupOption[]; warehouses: ReleasedProductLookupOption[];
 }
 export interface CreateReleasedProductInput {
   productNumber: string; name: string; nameAlias: string; searchName: string;
-  itemNumber: string; itemNameAlias: string; sku: string; buyerGroupId: string;
-  vendorAccount: string; bomUnit: string; configuration?: ConfigureReleasedProductInput;
+  itemNumber: string; itemNameAlias: string; configuration?: ConfigureReleasedProductInput;
 }
 export interface ReleaseCompanyRecord { id: string; code: string; name: string; nameAlias: string }
 

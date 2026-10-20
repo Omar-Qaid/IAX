@@ -20,6 +20,6 @@ public sealed class EcoResProductMapping : IRegister
             .Map(d => d.Description, s => s.English != null ? s.English.Description : string.Empty)
             .Map(d => d.SearchName, s => s.Product.SearchName)
             .Map(d => d.ProductType, s => s.Product.ProductType.ToString())
-            .Map(d => d.ProductSubtype, s => s.Product.ProductSubtype.ToString());
+            .Map(d => d.ProductSubtype, _ => "Product");
     }
 }

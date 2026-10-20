@@ -14,8 +14,6 @@ namespace IAX.IXApi.Modules.Finance.Inventory.InventTable
 
         public ItemType ProductType { get; set; } = ItemType.Item;
 
-        public EcoResProductSubtype ProductSubtype { get; set; } = EcoResProductSubtype.Product;
-
         [StringLength(FieldLengths.ProductSearchName)]
         public string SearchName { get; set; } = string.Empty;
     }

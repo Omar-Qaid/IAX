@@ -15224,11 +15224,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
-                    b.Property<string>("Sku")
-                        .IsRequired()
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
-
                     b.Property<int>("SortCode")
                         .HasColumnType("int");
 
@@ -22428,6 +22423,11 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasMaxLength(4)
                         .HasColumnType("nvarchar(4)");
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -22457,26 +22457,98 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
-                    b.Property<string>("StorageDimensionGroupId")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<bool>("UseLocation")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("UseSite")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("UseWarehouse")
-                        .HasColumnType("bit");
-
                     b.HasKey("RecId");
 
-                    b.HasIndex("StorageDimensionGroupId")
+                    b.HasIndex("Name")
                         .IsUnique();
 
                     b.ToTable("EcoResStorageDimensionGroup");
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities.EcoResStorageDimensionGroupFldSetup", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<int>("DimensionFieldId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsAllowBlankIssueEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsAllowBlankReceiptEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsCoveragePlanByDimensionEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsFinancialInventoryEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPhysicalInventoryEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPurchPriceSearchEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSalesPriceSearchEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("LineNumber")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<long>("StorageDimensionGroup")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("StorageDimensionGroup", "DimensionFieldId")
+                        .IsUnique();
+
+                    b.HasIndex("StorageDimensionGroup", "LineNumber")
+                        .IsUnique();
+
+                    b.ToTable("EcoResStorageDimensionGroupFldSetup");
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities.EcoResStorageDimensionGroupItem", b =>
@@ -22533,14 +22605,12 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
-                    b.Property<string>("StorageDimensionGroupId")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
+                    b.Property<long>("StorageDimensionGroup")
+                        .HasColumnType("bigint");
 
                     b.HasKey("RecId");
 
-                    b.HasIndex("StorageDimensionGroupId");
+                    b.HasIndex("StorageDimensionGroup");
 
                     b.HasIndex("ItemId", "ItemDataAreaId")
                         .IsUnique();
@@ -22567,6 +22637,11 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(4)
                         .HasColumnType("nvarchar(4)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -22597,23 +22672,104 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
-                    b.Property<string>("TrackingDimensionGroupId")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<bool>("UseBatchNumber")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("UseSerialNumber")
-                        .HasColumnType("bit");
-
                     b.HasKey("RecId");
 
-                    b.HasIndex("TrackingDimensionGroupId")
+                    b.HasIndex("Name")
                         .IsUnique();
 
                     b.ToTable("EcoResTrackingDimensionGroup");
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities.EcoResTrackingDimensionGroupFldSetup", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<int>("DimensionFieldId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsAllowBlankIssueEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsAllowBlankReceiptEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsCoveragePlanByDimensionEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsFinancialInventoryEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPhysicalInventoryEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPrimaryStockingEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPurchPriceSearchEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSalesPriceSearchEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSalesProcessActivated")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("LineNumber")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<long>("TrackingDimensionGroup")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("TrackingDimensionGroup", "DimensionFieldId")
+                        .IsUnique();
+
+                    b.HasIndex("TrackingDimensionGroup", "LineNumber")
+                        .IsUnique();
+
+                    b.ToTable("EcoResTrackingDimensionGroupFldSetup");
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities.EcoResTrackingDimensionGroupItem", b =>
@@ -22670,14 +22826,12 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
-                    b.Property<string>("TrackingDimensionGroupId")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
+                    b.Property<long>("TrackingDimensionGroup")
+                        .HasColumnType("bigint");
 
                     b.HasKey("RecId");
 
-                    b.HasIndex("TrackingDimensionGroupId");
+                    b.HasIndex("TrackingDimensionGroup");
 
                     b.HasIndex("ItemId", "ItemDataAreaId")
                         .IsUnique();
@@ -22770,9 +22924,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ProductSubtype")
-                        .HasColumnType("int");
 
                     b.Property<int>("ProductType")
                         .HasColumnType("int");

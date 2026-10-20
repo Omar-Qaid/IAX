@@ -9,18 +9,22 @@ public sealed class DimensionGroupMapping : IRegister
     {
         config.NewConfig<EcoResStorageDimensionGroup, StorageDimensionGroupDto>()
             .Map(d => d.Id, s => s.RecId.ToString())
-            .Map(d => d.GroupId, s => s.StorageDimensionGroupId);
+            .Map(d => d.GroupId, s => s.Name)
+            .Map(d => d.Name, s => s.Description)
+            .Ignore(d => d.UseSite).Ignore(d => d.UseWarehouse).Ignore(d => d.UseLocation);
         config.NewConfig<StorageDimensionGroupInputDto, EcoResStorageDimensionGroup>()
             .Ignore(d => d.RecId)
-            .Ignore(d => d.StorageDimensionGroupId)
-            .Map(d => d.Name, s => s.Name.Trim());
+            .Ignore(d => d.Name)
+            .Map(d => d.Description, s => s.Name.Trim());
 
         config.NewConfig<EcoResTrackingDimensionGroup, TrackingDimensionGroupDto>()
             .Map(d => d.Id, s => s.RecId.ToString())
-            .Map(d => d.GroupId, s => s.TrackingDimensionGroupId);
+            .Map(d => d.GroupId, s => s.Name)
+            .Map(d => d.Name, s => s.Description)
+            .Ignore(d => d.UseBatchNumber).Ignore(d => d.UseSerialNumber);
         config.NewConfig<TrackingDimensionGroupInputDto, EcoResTrackingDimensionGroup>()
             .Ignore(d => d.RecId)
-            .Ignore(d => d.TrackingDimensionGroupId)
-            .Map(d => d.Name, s => s.Name.Trim());
+            .Ignore(d => d.Name)
+            .Map(d => d.Description, s => s.Name.Trim());
     }
 }

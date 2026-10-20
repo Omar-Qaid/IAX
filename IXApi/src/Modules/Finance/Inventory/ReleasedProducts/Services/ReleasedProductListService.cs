@@ -39,7 +39,7 @@ public sealed class ReleasedProductListService(
         if (ownsTransaction) await unitOfWork.BeginTransactionAsync(ct);
         try
         {
-            var product = new EcoResProduct { DisplayProductNumber = number, SearchName = input.SearchName.Trim(), ProductType = ItemType.Item, ProductSubtype = EcoResProductSubtype.Product };
+            var product = new EcoResProduct { DisplayProductNumber = number, SearchName = input.SearchName.Trim(), ProductType = ItemType.Item };
             Db.Add(product);
             await unitOfWork.CompleteAsync(ct);
             Db.Add(new EcoResDistinctProduct { RecId = product.RecId });
@@ -53,7 +53,7 @@ public sealed class ReleasedProductListService(
                 string.Empty,
                 product.SearchName,
                 product.ProductType.ToString(),
-                product.ProductSubtype.ToString(),
+                "Product",
                 0,
                 0).Adapt<ReleasedProductListDto>(), null);
         }
@@ -82,7 +82,7 @@ public sealed class ReleasedProductListService(
             return (null, "The item number or product is already released to this company with different values.");
         }
         var name = await Db.Set<EcoResProductTranslation>().Where(x => x.Product == productId).OrderBy(x => x.LanguageId == "en-us" ? 0 : 1).Select(x => x.Name).FirstOrDefaultAsync(ct) ?? product.DisplayProductNumber;
-        var item = new ReleasedItem { DataAreaId = companyId, ItemId = itemId, Product = productId, Name = name, NameAlias = string.IsNullOrWhiteSpace(input.NameAlias) ? product.SearchName : input.NameAlias.Trim(), Sku = itemId, ItemType = product.ProductType };
+        var item = new ReleasedItem { DataAreaId = companyId, ItemId = itemId, Product = productId, Name = name, NameAlias = string.IsNullOrWhiteSpace(input.NameAlias) ? product.SearchName : input.NameAlias.Trim(), ItemType = product.ProductType };
         Db.Add(item);
         foreach (var type in new[] { ModuleInventPurchSales.Inventory, ModuleInventPurchSales.Purchase, ModuleInventPurchSales.Sales }) Db.Add(new InventTableModule { DataAreaId = companyId, ItemId = itemId, ModuleType = type, PriceUnit = 1 });
         await unitOfWork.CompleteAsync(ct);
@@ -115,8 +115,10 @@ public sealed class ReleasedProductListService(
         SetModule(modules, item.ItemId, companyId, ModuleInventPurchSales.Sales, input.SalesUnit, input.SalesPrice, input.PriceUnit, input.SalesTaxItemGroupId);
         await UpsertAsync<InventItemGroupItem>(x => x.ItemId == item.ItemId && x.ItemDataAreaId == companyId, () => new() { ItemId = item.ItemId, ItemDataAreaId = companyId, ItemGroupDataAreaId = companyId }, x => x.ItemGroupId = input.ItemGroupId.Trim(), ct);
         await UpsertAsync<InventModelGroupItem>(x => x.ItemId == item.ItemId && x.ItemDataAreaId == companyId, () => new() { ItemId = item.ItemId, ItemDataAreaId = companyId, ModelGroupDataAreaId = companyId }, x => x.ModelGroupId = input.ModelGroupId.Trim(), ct);
-        await UpsertAsync<EcoResStorageDimensionGroupItem>(x => x.ItemId == item.ItemId && x.ItemDataAreaId == companyId, () => new() { ItemId = item.ItemId, ItemDataAreaId = companyId }, x => x.StorageDimensionGroupId = input.StorageDimensionGroupId.Trim(), ct);
-        await UpsertAsync<EcoResTrackingDimensionGroupItem>(x => x.ItemId == item.ItemId && x.ItemDataAreaId == companyId, () => new() { ItemId = item.ItemId, ItemDataAreaId = companyId }, x => x.TrackingDimensionGroupId = input.TrackingDimensionGroupId.Trim(), ct);
+        var storageGroup = await Db.Set<EcoResStorageDimensionGroup>().SingleAsync(x => x.Name == input.StorageDimensionGroupId.Trim(), ct);
+        var trackingGroup = await Db.Set<EcoResTrackingDimensionGroup>().SingleAsync(x => x.Name == input.TrackingDimensionGroupId.Trim(), ct);
+        await UpsertAsync<EcoResStorageDimensionGroupItem>(x => x.ItemId == item.ItemId && x.ItemDataAreaId == companyId, () => new() { ItemId = item.ItemId, ItemDataAreaId = companyId }, x => x.StorageDimensionGroup = storageGroup.RecId, ct);
+        await UpsertAsync<EcoResTrackingDimensionGroupItem>(x => x.ItemId == item.ItemId && x.ItemDataAreaId == companyId, () => new() { ItemId = item.ItemId, ItemDataAreaId = companyId }, x => x.TrackingDimensionGroup = trackingGroup.RecId, ct);
         var conversions = await Db.Set<UnitOfMeasureConversion>().Where(x => x.Product == item.Product).ToListAsync(ct);
         SetConversion(conversions, unitRows, item.Product, input.PurchaseUnit, input.InventoryUnit, input.PurchaseToInventoryFactor);
         SetConversion(conversions, unitRows, item.Product, input.SalesUnit, input.InventoryUnit, input.SalesToInventoryFactor);
@@ -137,14 +139,16 @@ public sealed class ReleasedProductListService(
             return (null, "Item, model, storage, and tracking groups are required.");
         if (!await Db.Set<InventItemGroup>().AnyAsync(x => x.DataAreaId == companyId && x.ItemGroupId == input.ItemGroupId.Trim(), ct) ||
             !await Db.Set<InventModelGroupEntity>().AnyAsync(x => x.DataAreaId == companyId && x.ModelGroupId == input.ModelGroupId.Trim(), ct) ||
-            !await Db.Set<EcoResStorageDimensionGroup>().AnyAsync(x => x.StorageDimensionGroupId == input.StorageDimensionGroupId.Trim(), ct) ||
-            !await Db.Set<EcoResTrackingDimensionGroup>().AnyAsync(x => x.TrackingDimensionGroupId == input.TrackingDimensionGroupId.Trim(), ct))
+            !await Db.Set<EcoResStorageDimensionGroup>().AnyAsync(x => x.Name == input.StorageDimensionGroupId.Trim(), ct) ||
+            !await Db.Set<EcoResTrackingDimensionGroup>().AnyAsync(x => x.Name == input.TrackingDimensionGroupId.Trim(), ct))
             return (null, "One or more selected groups do not reference existing setup records.");
 
         await UpsertAsync<InventItemGroupItem>(x => x.ItemId == item.ItemId && x.ItemDataAreaId == companyId, () => new() { ItemId = item.ItemId, ItemDataAreaId = companyId, ItemGroupDataAreaId = companyId }, x => x.ItemGroupId = input.ItemGroupId.Trim(), ct);
         await UpsertAsync<InventModelGroupItem>(x => x.ItemId == item.ItemId && x.ItemDataAreaId == companyId, () => new() { ItemId = item.ItemId, ItemDataAreaId = companyId, ModelGroupDataAreaId = companyId }, x => x.ModelGroupId = input.ModelGroupId.Trim(), ct);
-        await UpsertAsync<EcoResStorageDimensionGroupItem>(x => x.ItemId == item.ItemId && x.ItemDataAreaId == companyId, () => new() { ItemId = item.ItemId, ItemDataAreaId = companyId }, x => x.StorageDimensionGroupId = input.StorageDimensionGroupId.Trim(), ct);
-        await UpsertAsync<EcoResTrackingDimensionGroupItem>(x => x.ItemId == item.ItemId && x.ItemDataAreaId == companyId, () => new() { ItemId = item.ItemId, ItemDataAreaId = companyId }, x => x.TrackingDimensionGroupId = input.TrackingDimensionGroupId.Trim(), ct);
+        var storageGroup = await Db.Set<EcoResStorageDimensionGroup>().SingleAsync(x => x.Name == input.StorageDimensionGroupId.Trim(), ct);
+        var trackingGroup = await Db.Set<EcoResTrackingDimensionGroup>().SingleAsync(x => x.Name == input.TrackingDimensionGroupId.Trim(), ct);
+        await UpsertAsync<EcoResStorageDimensionGroupItem>(x => x.ItemId == item.ItemId && x.ItemDataAreaId == companyId, () => new() { ItemId = item.ItemId, ItemDataAreaId = companyId }, x => x.StorageDimensionGroup = storageGroup.RecId, ct);
+        await UpsertAsync<EcoResTrackingDimensionGroupItem>(x => x.ItemId == item.ItemId && x.ItemDataAreaId == companyId, () => new() { ItemId = item.ItemId, ItemDataAreaId = companyId }, x => x.TrackingDimensionGroup = trackingGroup.RecId, ct);
         await unitOfWork.CompleteAsync(ct);
         return ((await LoadAsync(companyId, recId, ct)).Single(), null);
     }
@@ -177,13 +181,15 @@ public sealed class ReleasedProductListService(
             if (string.IsNullOrWhiteSpace(groups.ItemGroupId) || string.IsNullOrWhiteSpace(groups.ModelGroupId) || string.IsNullOrWhiteSpace(groups.StorageDimensionGroupId) || string.IsNullOrWhiteSpace(groups.TrackingDimensionGroupId) ||
                 !await Db.Set<InventItemGroup>().AnyAsync(x => x.DataAreaId == companyId && x.ItemGroupId == groups.ItemGroupId.Trim(), ct) ||
                 !await Db.Set<InventModelGroupEntity>().AnyAsync(x => x.DataAreaId == companyId && x.ModelGroupId == groups.ModelGroupId.Trim(), ct) ||
-                !await Db.Set<EcoResStorageDimensionGroup>().AnyAsync(x => x.StorageDimensionGroupId == groups.StorageDimensionGroupId.Trim(), ct) ||
-                !await Db.Set<EcoResTrackingDimensionGroup>().AnyAsync(x => x.TrackingDimensionGroupId == groups.TrackingDimensionGroupId.Trim(), ct))
+                !await Db.Set<EcoResStorageDimensionGroup>().AnyAsync(x => x.Name == groups.StorageDimensionGroupId.Trim(), ct) ||
+                !await Db.Set<EcoResTrackingDimensionGroup>().AnyAsync(x => x.Name == groups.TrackingDimensionGroupId.Trim(), ct))
                 return (null, "One or more selected groups do not reference existing setup records.");
             await UpsertAsync<InventItemGroupItem>(x => x.ItemId == item.ItemId && x.ItemDataAreaId == companyId, () => new() { ItemId = item.ItemId, ItemDataAreaId = companyId, ItemGroupDataAreaId = companyId }, x => x.ItemGroupId = groups.ItemGroupId.Trim(), ct);
             await UpsertAsync<InventModelGroupItem>(x => x.ItemId == item.ItemId && x.ItemDataAreaId == companyId, () => new() { ItemId = item.ItemId, ItemDataAreaId = companyId, ModelGroupDataAreaId = companyId }, x => x.ModelGroupId = groups.ModelGroupId.Trim(), ct);
-            await UpsertAsync<EcoResStorageDimensionGroupItem>(x => x.ItemId == item.ItemId && x.ItemDataAreaId == companyId, () => new() { ItemId = item.ItemId, ItemDataAreaId = companyId }, x => x.StorageDimensionGroupId = groups.StorageDimensionGroupId.Trim(), ct);
-            await UpsertAsync<EcoResTrackingDimensionGroupItem>(x => x.ItemId == item.ItemId && x.ItemDataAreaId == companyId, () => new() { ItemId = item.ItemId, ItemDataAreaId = companyId }, x => x.TrackingDimensionGroupId = groups.TrackingDimensionGroupId.Trim(), ct);
+            var storageGroup = await Db.Set<EcoResStorageDimensionGroup>().SingleAsync(x => x.Name == groups.StorageDimensionGroupId.Trim(), ct);
+            var trackingGroup = await Db.Set<EcoResTrackingDimensionGroup>().SingleAsync(x => x.Name == groups.TrackingDimensionGroupId.Trim(), ct);
+            await UpsertAsync<EcoResStorageDimensionGroupItem>(x => x.ItemId == item.ItemId && x.ItemDataAreaId == companyId, () => new() { ItemId = item.ItemId, ItemDataAreaId = companyId }, x => x.StorageDimensionGroup = storageGroup.RecId, ct);
+            await UpsertAsync<EcoResTrackingDimensionGroupItem>(x => x.ItemId == item.ItemId && x.ItemDataAreaId == companyId, () => new() { ItemId = item.ItemId, ItemDataAreaId = companyId }, x => x.TrackingDimensionGroup = trackingGroup.RecId, ct);
         }
         if (input.Commercial is not null)
         {
@@ -215,12 +221,6 @@ public sealed class ReleasedProductListService(
         if (string.IsNullOrWhiteSpace(companyId)) return (null, "A company must be selected.");
         if (string.IsNullOrWhiteSpace(input.ProductNumber) || string.IsNullOrWhiteSpace(input.ItemNumber) || string.IsNullOrWhiteSpace(input.Name))
             return (null, "Product number, item number, and product name are required.");
-        if (!string.IsNullOrWhiteSpace(input.VendorAccount) && !await Db.Set<VendTable>().AnyAsync(
-                x => x.DataAreaId == companyId && x.AccountNum == input.VendorAccount.Trim(), ct))
-            return (null, "Vendor account is invalid for the selected company.");
-        if (!string.IsNullOrWhiteSpace(input.BomUnit) && !await Db.Set<UnitOfMeasure>().AnyAsync(
-                x => x.Symbol == input.BomUnit.Trim(), ct))
-            return (null, "BOM unit must reference an existing unit of measure.");
         await unitOfWork.BeginTransactionAsync(ct);
         try
         {
@@ -236,8 +236,6 @@ public sealed class ReleasedProductListService(
                 if (configured.Product is null) { await unitOfWork.RollbackTransactionAsync(ct); return configured; }
             }
             var item = await Db.Set<ReleasedItem>().SingleAsync(x => x.RecId == long.Parse(released.Product.Id, CultureInfo.InvariantCulture) && x.DataAreaId == companyId, ct);
-            item.Sku = string.IsNullOrWhiteSpace(input.Sku) ? item.ItemId : input.Sku.Trim();
-            item.ItemBuyerGroupId = input.BuyerGroupId.Trim(); item.PrimaryVendorID = input.VendorAccount.Trim(); item.BomUnitId = input.BomUnit.Trim();
             await unitOfWork.CompleteAsync(ct);
             await unitOfWork.CommitTransactionAsync(ct);
             return ((await LoadAsync(companyId, item.RecId, ct)).Single(), null);
@@ -254,10 +252,9 @@ public sealed class ReleasedProductListService(
             Units = await Db.Set<UnitOfMeasure>().AsNoTracking().OrderBy(x => x.Symbol).Select(x => new ReleasedProductLookupOptionDto(x.Symbol, x.Symbol)).ToListAsync(ct),
             ItemGroups = await Db.Set<InventItemGroup>().AsNoTracking().Where(x => x.DataAreaId == companyId).OrderBy(x => x.ItemGroupId).Select(x => new ReleasedProductLookupOptionDto(x.ItemGroupId, x.ItemGroupId + " - " + x.Name)).ToListAsync(ct),
             ModelGroups = await Db.Set<InventModelGroupEntity>().AsNoTracking().Where(x => x.DataAreaId == companyId).OrderBy(x => x.ModelGroupId).Select(x => new ReleasedProductLookupOptionDto(x.ModelGroupId, x.ModelGroupId + " - " + x.Name)).ToListAsync(ct),
-            StorageDimensionGroups = await Db.Set<EcoResStorageDimensionGroup>().AsNoTracking().OrderBy(x => x.StorageDimensionGroupId).Select(x => new ReleasedProductLookupOptionDto(x.StorageDimensionGroupId, x.StorageDimensionGroupId + " - " + x.Name)).ToListAsync(ct),
-            TrackingDimensionGroups = await Db.Set<EcoResTrackingDimensionGroup>().AsNoTracking().OrderBy(x => x.TrackingDimensionGroupId).Select(x => new ReleasedProductLookupOptionDto(x.TrackingDimensionGroupId, x.TrackingDimensionGroupId + " - " + x.Name)).ToListAsync(ct),
+            StorageDimensionGroups = await Db.Set<EcoResStorageDimensionGroup>().AsNoTracking().OrderBy(x => x.Name).Select(x => new ReleasedProductLookupOptionDto(x.Name, x.Name + " - " + x.Description)).ToListAsync(ct),
+            TrackingDimensionGroups = await Db.Set<EcoResTrackingDimensionGroup>().AsNoTracking().OrderBy(x => x.Name).Select(x => new ReleasedProductLookupOptionDto(x.Name, x.Name + " - " + x.Description)).ToListAsync(ct),
             TaxItemGroups = await Db.Set<TaxItemGroupHeading>().AsNoTracking().Where(x => x.DataAreaId == companyId).OrderBy(x => x.TaxItemGroup).Select(x => new ReleasedProductLookupOptionDto(x.TaxItemGroup, x.TaxItemGroup + " - " + x.Name)).ToListAsync(ct),
-            Vendors = await Db.Set<VendTable>().AsNoTracking().Where(x => x.DataAreaId == companyId).OrderBy(x => x.AccountNum).Select(x => new ReleasedProductLookupOptionDto(x.AccountNum, x.AccountNum)).ToListAsync(ct),
             Sites = await Db.Set<InventSite>().AsNoTracking().Where(x => x.DataAreaId == companyId).OrderBy(x => x.SiteId).Select(x => new ReleasedProductLookupOptionDto(x.SiteId, x.SiteId + " - " + x.Name)).ToListAsync(ct),
             Warehouses = await Db.Set<InventLocation>().AsNoTracking().Where(x => x.DataAreaId == companyId).OrderBy(x => x.InventLocationId).Select(x => new ReleasedProductLookupOptionDto(x.InventLocationId, x.InventLocationId + " - " + x.Name)).ToListAsync(ct),
         };
@@ -276,7 +273,6 @@ public sealed class ReleasedProductListService(
         else
         {
             if (product.ProductType != ItemType.Item) errors.Add("Product type must be Item.");
-            if (product.ProductSubtype != EcoResProductSubtype.Product) errors.Add("Product subtype must be Product for an item without variants.");
             if (!await Db.Set<EcoResDistinctProduct>().AnyAsync(x => x.RecId == product.RecId, ct))
                 errors.Add("The distinct-product record is missing.");
             if (!await Db.Set<EcoResProductTranslation>().AnyAsync(x => x.Product == product.RecId && x.Name != string.Empty, ct))
@@ -314,12 +310,12 @@ public sealed class ReleasedProductListService(
         if (string.IsNullOrWhiteSpace(itemGroupId)) errors.Add("Item group is required.");
         else if (!await Db.Set<InventItemGroup>().AnyAsync(x => x.DataAreaId == companyId && x.ItemGroupId == itemGroupId, ct)) errors.Add("Item group does not reference an existing setup record.");
         if (!await Db.Set<InventModelGroupItem>().AnyAsync(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId, ct)) errors.Add("Item model group is required.");
-        var storageGroupId = await Db.Set<EcoResStorageDimensionGroupItem>().AsNoTracking().Where(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId).Select(x => x.StorageDimensionGroupId).FirstOrDefaultAsync(ct);
-        if (string.IsNullOrWhiteSpace(storageGroupId)) errors.Add("Storage dimension group is required.");
-        else if (!await Db.Set<EcoResStorageDimensionGroup>().AnyAsync(x => x.StorageDimensionGroupId == storageGroupId, ct)) errors.Add("Storage dimension group does not reference an existing setup record.");
-        var trackingGroupId = await Db.Set<EcoResTrackingDimensionGroupItem>().AsNoTracking().Where(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId).Select(x => x.TrackingDimensionGroupId).FirstOrDefaultAsync(ct);
-        if (string.IsNullOrWhiteSpace(trackingGroupId)) errors.Add("Tracking dimension group is required.");
-        else if (!await Db.Set<EcoResTrackingDimensionGroup>().AnyAsync(x => x.TrackingDimensionGroupId == trackingGroupId, ct)) errors.Add("Tracking dimension group does not reference an existing setup record.");
+        var storageGroupId = await Db.Set<EcoResStorageDimensionGroupItem>().AsNoTracking().Where(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId).Select(x => x.StorageDimensionGroup).FirstOrDefaultAsync(ct);
+        if (storageGroupId == 0) errors.Add("Storage dimension group is required.");
+        else if (!await Db.Set<EcoResStorageDimensionGroup>().AnyAsync(x => x.RecId == storageGroupId, ct)) errors.Add("Storage dimension group does not reference an existing setup record.");
+        var trackingGroupId = await Db.Set<EcoResTrackingDimensionGroupItem>().AsNoTracking().Where(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId).Select(x => x.TrackingDimensionGroup).FirstOrDefaultAsync(ct);
+        if (trackingGroupId == 0) errors.Add("Tracking dimension group is required.");
+        else if (!await Db.Set<EcoResTrackingDimensionGroup>().AnyAsync(x => x.RecId == trackingGroupId, ct)) errors.Add("Tracking dimension group does not reference an existing setup record.");
         var modelGroupId = await Db.Set<InventModelGroupItem>().AsNoTracking().Where(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId).Select(x => x.ModelGroupId).FirstOrDefaultAsync(ct);
         if (!string.IsNullOrWhiteSpace(modelGroupId) && !await Db.Set<InventModelGroupEntity>().AnyAsync(x => x.DataAreaId == companyId && x.ModelGroupId == modelGroupId && x.StockedProduct == NoYes.Yes, ct)) errors.Add("The item model group must be configured as a stocked product.");
         var purchaseSetup = await Db.Set<InventItemPurchSetup>().AsNoTracking().FirstOrDefaultAsync(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId && x.InventDimId == string.Empty, ct);
@@ -382,15 +378,15 @@ public sealed class ReleasedProductListService(
 
     private async Task<List<ReleasedProductListDto>> LoadAsync(string companyId, long? itemRecId, CancellationToken ct)
     {
-        var rows = await (from item in Db.Set<ReleasedItem>().AsNoTracking() join product in Db.Set<EcoResProduct>().AsNoTracking() on item.Product equals product.RecId where item.DataAreaId == companyId && (!itemRecId.HasValue || item.RecId == itemRecId) orderby item.ItemId select new { ItemRecId = item.RecId, item.ItemId, item.Name, item.NameAlias, ProductRecId = product.RecId, product.ProductType, product.ProductSubtype }).ToListAsync(ct);
+        var rows = await (from item in Db.Set<ReleasedItem>().AsNoTracking() join product in Db.Set<EcoResProduct>().AsNoTracking() on item.Product equals product.RecId where item.DataAreaId == companyId && (!itemRecId.HasValue || item.RecId == itemRecId) orderby item.ItemId select new { ItemRecId = item.RecId, item.ItemId, item.Name, item.NameAlias, ProductRecId = product.RecId, product.ProductType }).ToListAsync(ct);
         var productIds = rows.Select(x => x.ProductRecId).Distinct().ToList();
         var itemIds = rows.Select(x => x.ItemId).ToList();
         var translations = await Db.Set<EcoResProductTranslation>().AsNoTracking().Where(x => productIds.Contains(x.Product)).ToListAsync(ct);
         var modules = await Db.Set<InventTableModule>().AsNoTracking().Where(x => x.DataAreaId == companyId && itemIds.Contains(x.ItemId)).ToListAsync(ct);
         var itemGroups = await Db.Set<InventItemGroupItem>().AsNoTracking().Where(x => x.ItemDataAreaId == companyId && itemIds.Contains(x.ItemId)).ToDictionaryAsync(x => x.ItemId, x => x.ItemGroupId, ct);
         var modelGroups = await Db.Set<InventModelGroupItem>().AsNoTracking().Where(x => x.ItemDataAreaId == companyId && itemIds.Contains(x.ItemId)).ToDictionaryAsync(x => x.ItemId, x => x.ModelGroupId, ct);
-        var storageGroups = await Db.Set<EcoResStorageDimensionGroupItem>().AsNoTracking().Where(x => x.ItemDataAreaId == companyId && itemIds.Contains(x.ItemId)).ToDictionaryAsync(x => x.ItemId, x => x.StorageDimensionGroupId, ct);
-        var trackingGroups = await Db.Set<EcoResTrackingDimensionGroupItem>().AsNoTracking().Where(x => x.ItemDataAreaId == companyId && itemIds.Contains(x.ItemId)).ToDictionaryAsync(x => x.ItemId, x => x.TrackingDimensionGroupId, ct);
+        var storageGroups = await (from assignment in Db.Set<EcoResStorageDimensionGroupItem>().AsNoTracking() join dimGroup in Db.Set<EcoResStorageDimensionGroup>().AsNoTracking() on assignment.StorageDimensionGroup equals dimGroup.RecId where assignment.ItemDataAreaId == companyId && itemIds.Contains(assignment.ItemId) select new { assignment.ItemId, dimGroup.Name }).ToDictionaryAsync(x => x.ItemId, x => x.Name, ct);
+        var trackingGroups = await (from assignment in Db.Set<EcoResTrackingDimensionGroupItem>().AsNoTracking() join dimGroup in Db.Set<EcoResTrackingDimensionGroup>().AsNoTracking() on assignment.TrackingDimensionGroup equals dimGroup.RecId where assignment.ItemDataAreaId == companyId && itemIds.Contains(assignment.ItemId) select new { assignment.ItemId, dimGroup.Name }).ToDictionaryAsync(x => x.ItemId, x => x.Name, ct);
         var unitRows = await Db.Set<UnitOfMeasure>().AsNoTracking().ToListAsync(ct);
         var conversions = await Db.Set<UnitOfMeasureConversion>().AsNoTracking().Where(x => productIds.Contains(x.Product)).ToListAsync(ct);
         var purchaseSetups = await Db.Set<InventItemPurchSetup>().AsNoTracking().Where(x => x.ItemDataAreaId == companyId && itemIds.Contains(x.ItemId) && x.InventDimId == string.Empty).ToListAsync(ct);
@@ -406,7 +402,7 @@ public sealed class ReleasedProductListService(
                 translations.FirstOrDefault(t => t.Product == x.ProductRecId && t.LanguageId.StartsWith("ar"))?.Name ?? string.Empty,
                 x.NameAlias,
                 x.ProductType.ToString(),
-                x.ProductSubtype.ToString(),
+                "Product",
                 Price(modules, x.ItemId, ModuleInventPurchSales.Sales),
                 Price(modules, x.ItemId, ModuleInventPurchSales.Purchase),
                 Price(modules, x.ItemId, ModuleInventPurchSales.Inventory),
@@ -458,8 +454,8 @@ public sealed class ReleasedProductListService(
         !string.IsNullOrWhiteSpace(input.StorageDimensionGroupId) && !string.IsNullOrWhiteSpace(input.TrackingDimensionGroupId) &&
         await Db.Set<InventItemGroup>().AnyAsync(x => x.DataAreaId == companyId && x.ItemGroupId == input.ItemGroupId.Trim(), ct) &&
         await Db.Set<InventModelGroupEntity>().AnyAsync(x => x.DataAreaId == companyId && x.ModelGroupId == input.ModelGroupId.Trim(), ct) &&
-        await Db.Set<EcoResStorageDimensionGroup>().AnyAsync(x => x.StorageDimensionGroupId == input.StorageDimensionGroupId.Trim(), ct) &&
-        await Db.Set<EcoResTrackingDimensionGroup>().AnyAsync(x => x.TrackingDimensionGroupId == input.TrackingDimensionGroupId.Trim(), ct);
+        await Db.Set<EcoResStorageDimensionGroup>().AnyAsync(x => x.Name == input.StorageDimensionGroupId.Trim(), ct) &&
+        await Db.Set<EcoResTrackingDimensionGroup>().AnyAsync(x => x.Name == input.TrackingDimensionGroupId.Trim(), ct);
     private async Task UpsertAsync<T>(System.Linq.Expressions.Expression<Func<T, bool>> predicate, Func<T> create, Action<T> update, CancellationToken ct) where T : class { var row = await Db.Set<T>().FirstOrDefaultAsync(predicate, ct) ?? create(); update(row); if (Db.Entry(row).State == EntityState.Detached) Db.Add(row); }
 
     private async Task<bool> TaxGroupsExistAsync(string companyId, ConfigureReleasedProductDto input, CancellationToken ct)

@@ -9,7 +9,6 @@ public sealed class EcoResProductConfiguration : IEntityTypeConfiguration<EcoRes
     {
         builder.HasIndex(product => product.DisplayProductNumber).IsUnique();
         builder.Property(product => product.ProductType).HasConversion<int>();
-        builder.Property(product => product.ProductSubtype).HasConversion<int>();
     }
 }
 
