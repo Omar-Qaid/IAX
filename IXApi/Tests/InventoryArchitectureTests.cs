@@ -4,6 +4,7 @@ using IAX.IXApi.Modules.Finance.Common;
 using System.Text.Json;
 using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Inventory;
 using IAX.IXApi.Shared.Application.Contracts;
@@ -226,6 +227,42 @@ public sealed class InventoryArchitectureTests
         Assert.Null(await service.DeleteConversionAsync(conversion.Conversion.RecId));
     }
 
+    [Fact]
+    public async Task Inventory_journal_names_are_company_scoped_and_protect_used_setup()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.AddRange(
+            new SysNumberSequence { RecId = 10, DataAreaId = "dat", NumberSequence = "InventJournalVoucher", Txt = "Inventory voucher", Format = "IV-#####", AnnotatedFormat = "IV-{SEQ}", InUse = 1, IsActive = true },
+            new SysNumberSequence { RecId = 11, DataAreaId = "other", NumberSequence = "Hidden", Txt = "Hidden", Format = "H-#####", AnnotatedFormat = "H-{SEQ}", InUse = 1, IsActive = true },
+            new InventJournalName { RecId = 20, DataAreaId = "other", JournalNameId = "HIDDEN", Description = "Hidden", JournalType = InventJournalType.Movement });
+        await db.SaveChangesAsync();
+        var identity = new TestIdentity();
+        var service = new InventJournalNameService(new TestUnitOfWork(db), identity, new InventJournalNameInputValidator());
+
+        var created = await service.CreateAsync(new InventJournalNameInputDto
+        {
+            JournalNameId = " mov ", Description = " Movement ", JournalType = InventJournalType.Movement,
+            VoucherNumberSequenceTable = 10, DetailSummary = DetailSummary.Detail
+        }, default);
+        Assert.Null(created.Error);
+        Assert.Equal("MOV", created.JournalName!.JournalNameId);
+        Assert.Equal("InventJournalVoucher", created.JournalName.VoucherNumberSequenceCode);
+        Assert.Single(await service.ListAsync(default));
+        Assert.Single((await service.LookupsAsync(default)).NumberSequences);
+        Assert.NotNull((await service.CreateAsync(new InventJournalNameInputDto
+        { JournalNameId = "MOV", Description = "Duplicate", JournalType = InventJournalType.Movement }, default)).Error);
+
+        db.Add(new InventJournalTable { RecId = 30, DataAreaId = "dat", JournalId = "J0001", JournalNameId = "MOV", Description = "Used" });
+        await db.SaveChangesAsync();
+        Assert.Equal(InventJournalNameDeleteResult.InUse, await service.DeleteAsync(created.JournalName.RecId, default));
+        var changedType = await service.UpdateAsync(created.JournalName.RecId, new InventJournalNameInputDto
+        { JournalNameId = "MOV", Description = "Movement", JournalType = InventJournalType.Counting, VoucherNumberSequenceTable = 10 }, default);
+        Assert.Contains("cannot be changed", changedType.Error);
+    }
+
     private sealed class InventoryContext(DbContextOptions<InventoryContext> options) : DbContext(options)
     {
         protected override void OnModelCreating(ModelBuilder builder)
@@ -244,6 +281,8 @@ public sealed class InventoryArchitectureTests
             Configure<SharedProduct>(builder);
             Configure<InventParameters>(builder);
             Configure<InventJournalName>(builder);
+            Configure<InventJournalTable>(builder);
+            Configure<SysNumberSequence>(builder);
             builder.Entity<InventSite>().HasQueryFilter(x => x.DataAreaId == "dat");
             builder.Entity<InventLocation>().HasQueryFilter(x => x.DataAreaId == "dat");
         }
