@@ -1,10 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using IAX.IXApi.Modules.Finance.Common;
+using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.Entities;
 
 [Table("WMSLocation")]
+[Index(nameof(DataAreaId), nameof(InventLocationId), nameof(WMSLocationId), IsUnique = true)]
 public sealed class WMSLocation : Entity<long>
 {
     [Required, StringLength(FieldLengths.InventLocationId)]
