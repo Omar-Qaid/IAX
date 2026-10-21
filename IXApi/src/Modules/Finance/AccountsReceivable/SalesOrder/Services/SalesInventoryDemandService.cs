@@ -23,6 +23,21 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
     public async Task CreateAsync(SalesTable order, SalesLine line, string inventSiteId,
         string inventLocationId, CancellationToken cancellationToken = default, InventDim? dimensionTemplate = null)
     {
+        if (!await IsStockedProductAsync(order.DataAreaId, line.ItemId, cancellationToken))
+        {
+            // D365 uses the item model group's Stocked product setting to decide whether
+            // sales demand participates in inventory transactions, independently of Item/Service type.
+            line.StockedProduct = NoYes.No;
+            line.InventDimId = string.Empty;
+            line.InventTransId = string.Empty;
+            line.InventRefId = string.Empty;
+            line.InventRefTransId = string.Empty;
+            line.InventRefType = InventRefType.None;
+            line.RemainInventPhysical = 0;
+            line.RemainInventFinancial = 0;
+            return;
+        }
+
         var dimension = await _dimensions.ResolveAsync(order.DataAreaId, inventSiteId,
             inventLocationId, cancellationToken, dimensionTemplate);
         var transactionId = await _numbers.NextInventTransIdAsync(cancellationToken);
@@ -50,6 +65,7 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
         line.InventRefId = order.SalesId;
         line.InventRefTransId = transactionId;
         line.InventRefType = InventRefType.SalesTable;
+        line.StockedProduct = NoYes.Yes;
         line.RemainInventPhysical = line.QtyOrdered;
         line.RemainInventFinancial = line.QtyOrdered;
 
@@ -78,6 +94,18 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
         string inventLocationId, CancellationToken cancellationToken = default,
         string? batchNumber = null, string? serialNumber = null, InventDim? dimensionTemplate = null)
     {
+        if (!await IsStockedProductAsync(line.DataAreaId, line.ItemId, cancellationToken))
+        {
+            if (!string.IsNullOrWhiteSpace(line.InventTransId))
+                throw new InvalidOperationException("A sales line with existing inventory demand cannot be changed to a non-stocked model group.");
+            line.StockedProduct = NoYes.No;
+            line.InventDimId = string.Empty;
+            line.RemainInventPhysical = 0;
+            line.RemainInventFinancial = 0;
+            return;
+        }
+        line.StockedProduct = NoYes.Yes;
+
         // Preserve update support for sales lines created before inventory-demand integration.
         if (string.IsNullOrWhiteSpace(line.InventTransId))
         {
@@ -289,6 +317,23 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
         if (origin.ReferenceCategory != InventRefType.SalesTable
             || origin.ReferenceId != line.SalesId || origin.ItemId != line.ItemId)
             throw new InvalidOperationException("The inventory origin does not belong to this sales line.");
+    }
+
+    private async Task<bool> IsStockedProductAsync(
+        string dataAreaId, string itemId, CancellationToken cancellationToken)
+    {
+        var assignment = await _dbContext.Context.Set<InventModelGroupItem>().AsNoTracking()
+            .FirstOrDefaultAsync(item => item.ItemDataAreaId == dataAreaId && item.ItemId == itemId,
+                cancellationToken);
+        // Preserve compatibility for existing sales flows that predate model-group assignment.
+        if (assignment is null) return true;
+
+        var modelGroup = await _dbContext.Context.Set<InventModelGroup>().AsNoTracking()
+            .FirstOrDefaultAsync(group => group.DataAreaId == assignment.ModelGroupDataAreaId
+                && group.ModelGroupId == assignment.ModelGroupId, cancellationToken);
+        if (modelGroup is null)
+            throw new InvalidOperationException("The assigned item model group was not found in its company.");
+        return modelGroup.StockedProduct == NoYes.Yes;
     }
 
     private async Task<InventSum> GetOrCreateInventorySummaryAsync(

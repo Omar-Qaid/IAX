@@ -338,7 +338,7 @@ public sealed class ReleasedProductListService(
         if (trackingGroupId == 0) errors.Add("Tracking dimension group is required.");
         else if (!await Db.Set<EcoResTrackingDimensionGroup>().AnyAsync(x => x.RecId == trackingGroupId, ct)) errors.Add("Tracking dimension group does not reference an existing setup record.");
         var modelGroupId = await Db.Set<InventModelGroupItem>().AsNoTracking().Where(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId).Select(x => x.ModelGroupId).FirstOrDefaultAsync(ct);
-        if (!string.IsNullOrWhiteSpace(modelGroupId) && !await Db.Set<InventModelGroupEntity>().AnyAsync(x => x.DataAreaId == companyId && x.ModelGroupId == modelGroupId && x.StockedProduct == NoYes.Yes, ct)) errors.Add("The item model group must be configured as a stocked product.");
+        if (!string.IsNullOrWhiteSpace(modelGroupId) && !await Db.Set<InventModelGroupEntity>().AnyAsync(x => x.DataAreaId == companyId && x.ModelGroupId == modelGroupId, ct)) errors.Add("The item model group does not reference an existing setup record.");
         var purchaseSetup = await Db.Set<InventItemPurchSetup>().AsNoTracking().FirstOrDefaultAsync(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId && x.InventDimId == string.Empty, ct);
         var salesSetup = await Db.Set<InventItemSalesSetup>().AsNoTracking().FirstOrDefaultAsync(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId && x.InventDimId == string.Empty, ct);
         var inventorySetup = await Db.Set<InventItemInventSetup>().AsNoTracking().FirstOrDefaultAsync(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId && x.InventDimId == string.Empty, ct);

@@ -23,6 +23,52 @@ namespace IAX.IXApi.Tests;
 public sealed class SalesInventoryDemandTests
 {
     [Fact]
+    public async Task Non_stocked_model_group_does_not_create_sales_inventory_demand()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>()
+            .UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        var financeData = new TestFinanceDataContext(db);
+        var numbers = new TestNumbers();
+        var unitOfWork = new TestUnitOfWork(db);
+        var dimensions = new InventDimensionResolver(unitOfWork, numbers);
+        var service = new SalesInventoryDemandService(unitOfWork, numbers, dimensions);
+        db.Set<InventModelGroup>().Add(new InventModelGroup
+        {
+            DataAreaId = "DAT", ModelGroupId = "SERVICE", StockedProduct = NoYes.No
+        });
+        db.Set<InventModelGroupItem>().Add(new InventModelGroupItem
+        {
+            ItemId = "SERVICE-001", ItemDataAreaId = "DAT",
+            ModelGroupId = "SERVICE", ModelGroupDataAreaId = "DAT"
+        });
+        await financeData.SaveChangesAsync();
+
+        var order = new SalesTable { SalesId = "SO-SERVICE", CurrencyCode = "USD", DataAreaId = "DAT" };
+        var line = new SalesLine
+        {
+            SalesId = order.SalesId, ItemId = "SERVICE-001", SalesQty = 3, QtyOrdered = 3,
+            RemainSalesPhysical = 3, RemainSalesFinancial = 3,
+            RemainInventPhysical = 3, RemainInventFinancial = 3, DataAreaId = "DAT"
+        };
+
+        await service.CreateAsync(order, line, "", "");
+        await financeData.SaveChangesAsync();
+
+        Assert.Equal(NoYes.No, line.StockedProduct);
+        Assert.Empty(line.InventTransId);
+        Assert.Empty(line.InventDimId);
+        Assert.Equal(0, line.RemainInventPhysical);
+        Assert.Equal(0, line.RemainInventFinancial);
+        Assert.Empty(await db.Set<InventTrans>().ToListAsync());
+        Assert.Empty(await db.Set<InventTransOrigin>().ToListAsync());
+        Assert.Empty(await db.Set<InventSum>().ToListAsync());
+        Assert.Equal(0, numbers.DimensionCalls);
+    }
+
+    [Fact]
     public async Task Creation_reuses_dimensions_and_keeps_demand_in_sync()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
@@ -248,6 +294,8 @@ public sealed class SalesInventoryDemandTests
             Configure<InventTransOriginSalesLine>(builder);
             Configure<InventTrans>(builder);
             Configure<InventSum>(builder);
+            Configure<InventModelGroup>(builder);
+            Configure<InventModelGroupItem>(builder);
         }
 
         private static void Configure<TEntity>(ModelBuilder builder) where TEntity : IAX.IXApi.Shared.Domain.Entities.Entity<long>
