@@ -56,6 +56,10 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
 
             var requiresLedger = header.JournalType != InventJournalType.Transfer;
             var ledgerContext = requiresLedger ? await LoadLedgerContextAsync(companyId, lines, ct) : null;
+            var inventoryCurrency = ledgerContext?.Ledger.AccountingCurrency ?? await Db.Set<Ledger>().AsNoTracking()
+                .Where(x => x.DataAreaId == companyId).Select(x => x.AccountingCurrency).FirstOrDefaultAsync(ct) ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(inventoryCurrency))
+                throw new PostingValidationException("The ledger accounting currency is required.");
             var result = new InventJournalPostResultDto { JournalId = header.JournalId, PostedDateTime = DateTime.UtcNow };
 
             foreach (var line in lines)
@@ -75,16 +79,25 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
                 }
                 else signedQty = header.JournalType == InventJournalType.Transfer ? -Math.Abs(inventoryQty) : inventoryQty;
 
-                await ValidateTrackingDimensionsAsync(item, fromDim, signedQty < 0, ct);
+                await ValidateTrackingDimensionsAsync(item, fromDim, signedQty, ct);
 
                 if (signedQty < 0 && fromSum.PhysicalInvent + signedQty < 0 && item.Model.NegativePhysical != NoYes.Yes)
                     throw new PostingValidationException($"Line {line.LineNum} would create negative physical inventory for item '{item.ItemId}'.");
 
-                var unitCost = line.CostPrice;
-                if (header.JournalType == InventJournalType.Transfer && unitCost <= 0)
-                    unitCost = fromSum.PhysicalInvent == 0 ? 0 : Math.Abs(fromSum.PostedValue / fromSum.PhysicalInvent);
-                if (signedQty != 0 && unitCost <= 0)
-                    throw new PostingValidationException($"A positive cost price is required for item '{item.ItemId}' on line {line.LineNum}.");
+                if (signedQty == 0)
+                {
+                    line.Voucher = string.Empty;
+                    continue;
+                }
+                var unitCost = header.JournalType == InventJournalType.Transfer || signedQty < 0 || header.JournalType == InventJournalType.Counting
+                    ? GetRunningAverageCost(fromSum)
+                    : line.CostPrice;
+                if (unitCost <= 0 && signedQty < 0 && item.Model.NegativePhysical == NoYes.Yes)
+                    unitCost = await GetDefaultItemCostAsync(item.ItemId, line.TransDate, ct);
+                if (unitCost <= 0 && signedQty > 0 && header.JournalType == InventJournalType.Counting)
+                    unitCost = await GetDefaultItemCostAsync(item.ItemId, line.TransDate, ct);
+                if (unitCost < 0 || (signedQty > 0 && unitCost == 0 && header.JournalType != InventJournalType.Transfer))
+                    throw new PostingValidationException($"A valid receipt cost is required for item '{item.ItemId}' on line {line.LineNum}.");
                 var voucher = (await _numbers.NextAsync(voucherSequence.NumberSequence, companyId, ct)).Code;
                 result.Vouchers.Add(voucher);
 
@@ -94,11 +107,11 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
                     var toDim = await Db.Set<InventDim>().FirstOrDefaultAsync(x => x.DataAreaId == companyId && x.InventDimId == line.ToInventDimId, ct)
                         ?? throw new PostingValidationException($"Destination inventory dimension '{line.ToInventDimId}' was not found.");
                     if (toDim.InventDimId == fromDim.InventDimId) throw new PostingValidationException("Transfer source and destination dimensions must be different.");
-                    await ValidateTrackingDimensionsAsync(item, toDim, false, ct);
+                    await ValidateTrackingDimensionsAsync(item, toDim, Math.Abs(inventoryQty), ct);
                     var toSum = await GetOrCreateSummaryAsync(companyId, item.ItemId, toDim, ct);
                     var transferQty = Math.Abs(inventoryQty);
-                    await CreateInventoryTransactionAsync(companyId, header, line, item.ItemId, fromDim.InventDimId, -transferQty, unitCost, voucher, ct);
-                    await CreateInventoryTransactionAsync(companyId, header, line, item.ItemId, toDim.InventDimId, transferQty, unitCost, voucher, ct);
+                    await CreateInventoryTransactionAsync(companyId, header, line, item.ItemId, fromDim.InventDimId, -transferQty, unitCost, inventoryCurrency, voucher, ct);
+                    await CreateInventoryTransactionAsync(companyId, header, line, item.ItemId, toDim.InventDimId, transferQty, unitCost, inventoryCurrency, voucher, ct);
                     ApplySummary(fromSum, -transferQty, unitCost);
                     ApplySummary(toSum, transferQty, unitCost);
                     line.CostAmount = transferQty * unitCost;
@@ -107,7 +120,7 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
                 else if (signedQty != 0)
                 {
                     var costAmount = signedQty * unitCost;
-                    await CreateInventoryTransactionAsync(companyId, header, line, item.ItemId, fromDim.InventDimId, signedQty, unitCost, voucher, ct);
+                    await CreateInventoryTransactionAsync(companyId, header, line, item.ItemId, fromDim.InventDimId, signedQty, unitCost, inventoryCurrency, voucher, ct);
                     ApplySummary(fromSum, signedQty, unitCost);
                     line.CostAmount = costAmount;
                     var accounts = await ResolveAccountsAsync(companyId, item.ItemId, signedQty, line.LedgerDimension, header.JournalType, ct);
@@ -154,7 +167,7 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
         return new ReadyItem(item.ItemId, item.Product, model, tracking.TrackingDimensionGroup);
     }
 
-    private async Task ValidateTrackingDimensionsAsync(ReadyItem item, InventDim dim, bool isIssue, CancellationToken ct)
+    private async Task ValidateTrackingDimensionsAsync(ReadyItem item, InventDim dim, decimal signedQty, CancellationToken ct)
     {
         var setup = await Db.Set<EcoResTrackingDimensionGroupFldSetup>().AsNoTracking()
             .Where(x => x.TrackingDimensionGroup == item.TrackingDimensionGroup &&
@@ -164,6 +177,7 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
         var serial = setup.FirstOrDefault(x => x.DimensionFieldId == InventDimensionFields.SerialNumber);
         var batchId = dim.InventBatchId.Trim();
         var serialId = dim.InventSerialId.Trim();
+        var isIssue = signedQty < 0;
         if (batch?.IsPhysicalInventoryEnabled == true && batchId.Length == 0 &&
             !(isIssue ? batch.IsAllowBlankIssueEnabled : batch.IsAllowBlankReceiptEnabled))
             throw new PostingValidationException($"A batch number is required for item '{item.ItemId}'.");
@@ -174,8 +188,9 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
             throw new PostingValidationException($"Batch '{batchId}' is not defined for item '{item.ItemId}'.");
         if (serialId.Length > 0 && !await Db.Set<InventSerial>().AnyAsync(x => x.ItemId == item.ItemId && x.InventSerialId == serialId, ct))
             throw new PostingValidationException($"Serial number '{serialId}' is not defined for item '{item.ItemId}'.");
-        if (serial?.IsPhysicalInventoryEnabled == true && (decimal.Truncate(Math.Abs(dim.InventSerialId.Length == 0 ? 0m : 1m)) != 1m))
-            throw new PostingValidationException($"Serial-tracked item '{item.ItemId}' requires a serial dimension.");
+        if (serial?.IsPhysicalInventoryEnabled == true && signedQty != 0 &&
+            (serialId.Length == 0 || Math.Abs(signedQty) != 1m))
+            throw new PostingValidationException($"Each journal line for serial-tracked item '{item.ItemId}' must identify one serial-numbered unit.");
     }
 
     private async Task<decimal> ConvertToInventoryUnitAsync(long product, string itemId, string fromSymbol, decimal qty, CancellationToken ct)
@@ -232,7 +247,7 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
     }
 
     private async Task CreateInventoryTransactionAsync(string companyId, InventJournalTable header, InventJournalTrans line,
-        string itemId, string dimId, decimal qty, decimal unitCost, string voucher, CancellationToken ct)
+        string itemId, string dimId, decimal qty, decimal unitCost, string currency, string voucher, CancellationToken ct)
     {
         var transId = await _inventoryNumbers.NextInventTransIdAsync(ct);
         var origin = new InventTransOrigin
@@ -245,7 +260,7 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
         Db.Add(new InventTrans
         {
             DataAreaId = companyId, ItemId = itemId, InventDimId = dimId, InventTransOrigin = origin.RecId,
-            Qty = qty, QtySettled = 0, CostAmountPosted = qty * unitCost, CurrencyCode = string.Empty,
+            Qty = qty, QtySettled = 0, CostAmountPosted = qty * unitCost, CurrencyCode = currency,
             Voucher = voucher, VoucherPhysical = voucher, InvoiceId = string.Empty, PackingSlipId = string.Empty,
             StatusReceipt = qty > 0 ? StatusReceipt.Purchased : StatusReceipt.None,
             StatusIssue = qty < 0 ? StatusIssue.Sold : StatusIssue.None,
@@ -256,6 +271,15 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
         });
         if (string.IsNullOrEmpty(line.InventTransId)) line.InventTransId = transId; else line.ToInventTransId = transId;
     }
+
+    private static decimal GetRunningAverageCost(InventSum sum) =>
+        sum.PhysicalInvent == 0 ? 0m : Math.Abs((sum.PostedValue + sum.PhysicalValue) / sum.PhysicalInvent);
+
+    private async Task<decimal> GetDefaultItemCostAsync(string itemId, DateTime transDate, CancellationToken ct) =>
+        await Db.Set<InventItemPrice>().AsNoTracking()
+            .Where(x => x.ItemId == itemId && x.PriceType == PreferredPriceType.CostPrice &&
+                x.CostingType == CostingType.StandardCost && x.ActivationDate <= transDate)
+            .OrderByDescending(x => x.ActivationDate).Select(x => (decimal?)x.Price).FirstOrDefaultAsync(ct) ?? 0m;
 
     private static void ApplySummary(InventSum sum, decimal qty, decimal unitCost)
     {

@@ -311,6 +311,7 @@ public sealed class InventJournalService : IInventJournalService
             InventSiteId = from?.InventSiteId ?? string.Empty, InventLocationId = from?.InventLocationId ?? string.Empty,
             ToInventSiteId = to?.InventSiteId ?? string.Empty, ToInventLocationId = to?.InventLocationId ?? string.Empty,
             Qty = x.Qty, InventOnHand = x.InventOnHand, Counted = x.Counted, Unit = x.Unit,
+            InventBatchId = from?.InventBatchId ?? string.Empty, InventSerialId = from?.InventSerialId ?? string.Empty,
             CostPrice = x.CostPrice, CostAmount = x.CostAmount, LedgerDimension = x.LedgerDimension
         };
     }
