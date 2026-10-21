@@ -71,7 +71,16 @@ public sealed class InventModelGroupService : BaseService<InventModelGroupEntity
     private static NoYes YesNo(bool value) => value ? NoYes.Yes : NoYes.No;
     private static bool Bool(NoYes value) => value == NoYes.Yes;
     private static string? Validate(string id, InventModelGroupRecordDto input) =>
-        id.Length == 0 ? "Item model group is required." : string.IsNullOrWhiteSpace(input.Name) ? "Name is required." : null;
+        id.Length == 0 ? "Item model group is required." :
+        string.IsNullOrWhiteSpace(input.Name) ? "Name is required." :
+        !Enum.IsDefined(typeof(InventModel), input.InventModel) ? "Inventory model is invalid." :
+        input.InventModel is (int)InventModel.FIFO or (int)InventModel.WeightedAvg or (int)InventModel.WeightedAvg_Date
+            ? "FIFO and weighted-average models require inventory close/settlement, which is not implemented in this basic inventory core. Select a supported inventory model or defer this setup."
+            : input.InventModel == (int)InventModel.StandardCost
+                ? "Standard cost requires an active standard-cost record and revaluation process, which are not implemented in this basic inventory core."
+                : input.InventModel != (int)InventModel.MovingAverage
+                    ? "This inventory model is outside the supported basic inventory costing scope."
+                    : null;
 
     private static void Apply(InventModelGroupEntity row, InventModelGroupRecordDto x)
     {

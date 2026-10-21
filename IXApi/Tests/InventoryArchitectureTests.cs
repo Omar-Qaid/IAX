@@ -32,6 +32,69 @@ public sealed class InventoryArchitectureTests
     }
 
     [Fact]
+    public async Task Item_model_group_rejects_costing_methods_without_required_close_or_revaluation_process()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.Set<InventModelGroup>().Add(new InventModelGroup
+        {
+            DataAreaId = "dat", ModelGroupId = "FIFO", Name = "FIFO", InventModel = InventModel.FIFO,
+            StockedProduct = NoYes.Yes
+        });
+        await db.SaveChangesAsync();
+        var service = new InventModelGroupService(new TestUnitOfWork(db), new TestIdentity(), new TestIdentity());
+
+        var fifo = await service.CreateAsync(new InventModelGroupRecordDto
+        { ModelGroupId = "FIFO-NEW", Name = "FIFO", InventModel = (int)InventModel.FIFO }, default);
+        var weightedAverage = await service.CreateAsync(new InventModelGroupRecordDto
+        { ModelGroupId = "AVG-NEW", Name = "Weighted average", InventModel = (int)InventModel.WeightedAvg }, default);
+        var standardCost = await service.CreateAsync(new InventModelGroupRecordDto
+        { ModelGroupId = "STD-NEW", Name = "Standard cost", InventModel = (int)InventModel.StandardCost }, default);
+        var movingAverage = await service.CreateAsync(new InventModelGroupRecordDto
+        { ModelGroupId = "MOV-AVG", Name = "Moving average", InventModel = (int)InventModel.MovingAverage }, default);
+
+        Assert.Contains("inventory close/settlement", fifo.Error);
+        Assert.Contains("inventory close/settlement", weightedAverage.Error);
+        Assert.Contains("active standard-cost record", standardCost.Error);
+        Assert.Null(movingAverage.Error);
+        Assert.Single(await db.Set<InventModelGroup>().Where(x => x.ModelGroupId == "MOV-AVG").ToListAsync());
+    }
+
+    [Fact]
+    public async Task Journal_posting_rejects_periodic_costing_without_inventory_close()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.AddRange(
+            new InventJournalTable { RecId = 1, DataAreaId = "dat", JournalId = "J-1", JournalNameId = "ADJ", JournalType = InventJournalType.Adjustment },
+            new InventJournalTrans { RecId = 2, DataAreaId = "dat", JournalId = "J-1", JournalType = InventJournalType.Adjustment, ItemId = "ITEM-1", InventDimId = "DIM-1", Unit = "pcs", Qty = 1, CostPrice = 10 },
+            new InventJournalName { RecId = 3, DataAreaId = "dat", JournalNameId = "ADJ", JournalType = InventJournalType.Adjustment, VoucherNumberSequenceTable = 4 },
+            new SysNumberSequence { RecId = 4, DataAreaId = "dat", NumberSequence = "INV-VOUCHER", Txt = "Inventory voucher", Format = "IV-#####", AnnotatedFormat = "IV-{SEQ}", InUse = 1, IsActive = true, NextRec = 1, Highest = 99999 },
+            new ReleasedItem { RecId = 5, DataAreaId = "dat", ItemId = "ITEM-1", Product = 6 },
+            new InventModelGroup { RecId = 7, DataAreaId = "dat", ModelGroupId = "FIFO", Name = "FIFO", InventModel = InventModel.FIFO, StockedProduct = NoYes.Yes },
+            new InventModelGroupItem { RecId = 8, DataAreaId = "dat", ItemId = "ITEM-1", ItemDataAreaId = "dat", ModelGroupId = "FIFO", ModelGroupDataAreaId = "dat" },
+            new EcoResTrackingDimensionGroupItem { RecId = 9, DataAreaId = "dat", ItemId = "ITEM-1", ItemDataAreaId = "dat", TrackingDimensionGroup = 10 },
+            new EcoResTrackingDimensionGroup { RecId = 10, Name = "No tracking" },
+            new InventDim { RecId = 11, DataAreaId = "dat", InventDimId = "DIM-1", InventSiteId = "JED", InventLocationId = "MAIN" });
+        await db.SaveChangesAsync();
+        var identity = new TestIdentity();
+        var unitOfWork = new TestUnitOfWork(db);
+        var posting = new InventJournalPostingService(unitOfWork, identity, identity,
+            new SysNumberSequenceService(unitOfWork, identity), new TestSalesInventoryNumbers());
+
+        var result = await posting.PostAsync("J-1", default);
+
+        Assert.Contains("requires inventory close/settlement", result.Error);
+        Assert.Empty(await db.Set<InventTrans>().ToListAsync());
+        Assert.Empty(await db.Set<InventTransOrigin>().ToListAsync());
+        Assert.False((await db.Set<InventJournalTable>().SingleAsync()).Posted == NoYes.Yes);
+    }
+
+    [Fact]
     public async Task Warehouse_create_update_and_delete_preserve_guards_and_company_scope()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
@@ -508,6 +571,7 @@ public sealed class InventoryArchitectureTests
         {
             Configure<InventSite>(builder);
             Configure<InventLocation>(builder);
+            Configure<InventModelGroup>(builder);
             Configure<WMSLocation>(builder);
             Configure<InventTrans>(builder);
             Configure<InventTransOrigin>(builder);

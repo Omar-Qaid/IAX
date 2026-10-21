@@ -89,9 +89,7 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
                     line.Voucher = string.Empty;
                     continue;
                 }
-                var unitCost = header.JournalType == InventJournalType.Transfer || signedQty < 0 || header.JournalType == InventJournalType.Counting
-                    ? GetRunningAverageCost(fromSum)
-                    : line.CostPrice;
+                var unitCost = await ResolveUnitCostAsync(item, fromSum, line, header.JournalType, signedQty, ct);
                 if (unitCost <= 0 && signedQty < 0 && item.Model.NegativePhysical == NoYes.Yes)
                     unitCost = await GetDefaultItemCostAsync(item.ItemId, line.TransDate, ct);
                 if (unitCost <= 0 && signedQty > 0 && header.JournalType == InventJournalType.Counting)
@@ -274,6 +272,29 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
 
     private static decimal GetRunningAverageCost(InventSum sum) =>
         sum.PhysicalInvent == 0 ? 0m : Math.Abs((sum.PostedValue + sum.PhysicalValue) / sum.PhysicalInvent);
+
+    private async Task<decimal> ResolveUnitCostAsync(ReadyItem item, InventSum summary, InventJournalTrans line,
+        InventJournalType journalType, decimal signedQty, CancellationToken ct)
+    {
+        // The current basic journal engine implements moving-average issue valuation only.
+        // FIFO and periodic weighted-average require receipt/issue settlement during inventory close;
+        // treating them as running average would silently produce incorrect cost and ledger values.
+        if (item.Model.InventModel is InventModel.FIFO or InventModel.WeightedAvg or InventModel.WeightedAvg_Date)
+            throw new PostingValidationException(
+                $"Inventory model '{item.Model.InventModel}' requires inventory close/settlement, which is not implemented in this basic journal engine. Select Moving average or defer posting until costing close is supported.");
+
+        if (item.Model.InventModel == InventModel.StandardCost)
+        {
+            var standardCost = await GetDefaultItemCostAsync(item.ItemId, line.TransDate, ct);
+            if (standardCost <= 0)
+                throw new PostingValidationException($"An active standard cost is required for item '{item.ItemId}' on {line.TransDate:d}.");
+            return standardCost;
+        }
+
+        return journalType == InventJournalType.Transfer || signedQty < 0 || journalType == InventJournalType.Counting
+            ? GetRunningAverageCost(summary)
+            : line.CostPrice;
+    }
 
     private async Task<decimal> GetDefaultItemCostAsync(string itemId, DateTime transDate, CancellationToken ct) =>
         await Db.Set<InventItemPrice>().AsNoTracking()
