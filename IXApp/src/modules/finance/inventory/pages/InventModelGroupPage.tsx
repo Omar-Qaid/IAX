@@ -302,12 +302,6 @@ export function InventModelGroupPage(): React.ReactElement {
                   ),
                   type: 'boolean',
                 },
-                {
-                  name: 'quarantineControl',
-                  label: t('inventModelGroup.fields.quarantine', 'Quarantine management'),
-                  type: 'boolean',
-                  sectionTitle: t('inventModelGroup.groups.warehouse', 'WAREHOUSE MANAGEMENT'),
-                },
               ],
             },
             {
@@ -349,80 +343,6 @@ export function InventModelGroupPage(): React.ReactElement {
                   name: 'reserveReversed',
                   label: t('inventModelGroup.fields.backwardShipDate', 'Backward from ship date'),
                   type: 'boolean',
-                },
-                {
-                  name: 'pdsSameLot',
-                  label: t('inventModelGroup.fields.sameBatch', 'Same batch selection'),
-                  type: 'boolean',
-                },
-                {
-                  name: 'pdsConsReq',
-                  label: t('inventModelGroup.fields.consolidate', 'Consolidate requirement'),
-                  type: 'boolean',
-                },
-                {
-                  name: 'pdsCheck',
-                  label: t('inventModelGroup.fields.fefo', 'FEFO date-controlled'),
-                  type: 'boolean',
-                },
-              ],
-            },
-            {
-              id: 'batch',
-              fields: [
-                {
-                  name: 'pdsPickCriteria',
-                  label: t('inventModelGroup.fields.pickCriteria', 'Pick criteria'),
-                  type: 'select',
-                  options: [option(0, 'None'), option(1, 'Expiration date')],
-                },
-                {
-                  name: 'pickingListBatchExpirationDateValidationRule',
-                  label: t(
-                    'inventModelGroup.fields.expirationValidation',
-                    'Validate batch expiration on'
-                  ),
-                  type: 'select',
-                  options: [option(0, 'None'), option(1, 'Production scheduled end date')],
-                },
-                {
-                  name: 'pdsDispositionCode',
-                  label: t('inventModelGroup.fields.dispositionCode', 'Batch disposition code'),
-                },
-              ],
-            },
-            {
-              id: 'vendor',
-              title: t('inventModelGroup.groups.vendorBatch', 'VENDOR BATCH'),
-              fields: [
-                {
-                  name: 'pdsReqVendBatchDetail',
-                  label: t('inventModelGroup.fields.purchaseRegistration', 'Purchase registration'),
-                  type: 'boolean',
-                },
-                {
-                  name: 'pdsVendorCheckItem',
-                  label: t('inventModelGroup.fields.vendorCheck', 'Approved vendor check'),
-                  type: 'boolean',
-                  sectionTitle: t('inventModelGroup.groups.vendorList', 'APPROVED VENDOR LIST'),
-                },
-                {
-                  name: 'itemProdReservationActive',
-                  label: t(
-                    'inventModelGroup.fields.overrideReservation',
-                    'Override item production reservation'
-                  ),
-                  type: 'boolean',
-                  sectionTitle: t(
-                    'inventModelGroup.groups.productionReservation',
-                    'OVERRIDE ITEM PRODUCTION RESERVATION'
-                  ),
-                },
-                {
-                  name: 'itemProdReservation',
-                  label: t('inventModelGroup.fields.reservation', 'Reservation'),
-                  type: 'select',
-                  options: [option(0, 'None'), option(1, 'Automatic')],
                 },
               ],
             },

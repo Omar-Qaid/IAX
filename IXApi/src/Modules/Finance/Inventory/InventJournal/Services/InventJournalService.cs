@@ -63,6 +63,28 @@ public sealed class InventJournalService : IInventJournalService
         };
     }
 
+    public async Task<List<InventJournalLookupDto>> LedgerDimensionsAsync(string? search, CancellationToken ct)
+    {
+        var companyId = RequireCompany();
+        var term = (search ?? string.Empty).Trim();
+        if (term.Length == 0) return [];
+
+        var hasRecId = long.TryParse(term, out var recId);
+        var query = Db.Set<DimensionAttributeValueCombination>().AsNoTracking()
+            .Where(x => x.DataAreaId == companyId && x.MainAccountValue != string.Empty);
+        if (hasRecId)
+            query = query.Where(x => x.RecId == recId || x.MainAccountValue.Contains(term) || x.DisplayValue.Contains(term));
+        else
+            query = query.Where(x => x.MainAccountValue.Contains(term) || x.DisplayValue.Contains(term));
+
+        var orderedQuery = hasRecId
+            ? query.OrderByDescending(x => x.RecId == recId).ThenBy(x => x.MainAccountValue).ThenBy(x => x.RecId)
+            : query.OrderBy(x => x.MainAccountValue).ThenBy(x => x.RecId);
+        return await orderedQuery.Take(50)
+            .Select(x => new InventJournalLookupDto(x.RecId.ToString(), x.DisplayValue))
+            .ToListAsync(ct);
+    }
+
     public async Task<(InventJournalTableDto? Journal, string? Error)> CreateAsync(InventJournalCreateDto input, CancellationToken ct)
     {
         var companyId = RequireCompany();

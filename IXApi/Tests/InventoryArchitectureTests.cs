@@ -338,7 +338,10 @@ public sealed class InventoryArchitectureTests
             new InventLocation { RecId = 6, DataAreaId = "dat", InventLocationId = "SHOW", InventSiteId = "JED", Name = "Showroom" },
             new InventLocation { RecId = 44, DataAreaId = "dat", InventLocationId = "OPEN", InventSiteId = "JED", Name = "Opening stock" },
             new ReleasedItem { RecId = 7, DataAreaId = "dat", ItemId = "ITEM-001", Name = "Office Chair" },
-            new UnitOfMeasure { RecId = 8, DataAreaId = "dat", Symbol = "pcs" },
+            new UnitOfMeasure { RecId = 8, DataAreaId = "dat", Symbol = "pcs", DecimalPrecision = 0 },
+            new UnitOfMeasure { RecId = 45, DataAreaId = "dat", Symbol = "box", DecimalPrecision = 0 },
+            new UnitOfMeasureConversion { RecId = 46, DataAreaId = "dat", FromUnitOfMeasure = 45, ToUnitOfMeasure = 8,
+                Product = 0, Factor = 4, Numerator = 1, Denominator = 1, Rounding = UnitOfMeasureRounding.Nearest },
             new SysNumberSequence { RecId = 9, DataAreaId = "dat", NumberSequence = "InventJournalVoucher", Txt = "Voucher", Format = "IV-#####", AnnotatedFormat = "IV-{SEQ}", InUse = 1, IsActive = true, NextRec = 1, Highest = 99999 },
             new InventModelGroup { RecId = 10, DataAreaId = "dat", ModelGroupId = "FIFO", Name = "FIFO", InventModel = InventModel.FIFO, StockedProduct = NoYes.Yes },
             new InventModelGroupItem { RecId = 11, DataAreaId = "dat", ItemId = "ITEM-001", ItemDataAreaId = "dat", ModelGroupId = "FIFO", ModelGroupDataAreaId = "dat" },
@@ -350,6 +353,7 @@ public sealed class InventoryArchitectureTests
             new MainAccount { RecId = 21, DataAreaId = "dat", MainAccountId = "51010001", Name = "Inventory profit", CurrencyCode = "SAR" },
             new DimensionAttributeValueCombination { RecId = 22, DataAreaId = "dat", MainAccount = 20, MainAccountValue = "11050001", DisplayValue = "11050001" },
             new DimensionAttributeValueCombination { RecId = 23, DataAreaId = "dat", MainAccount = 21, MainAccountValue = "51010001", DisplayValue = "51010001" },
+            new DimensionAttributeValueCombination { RecId = 50, DataAreaId = "other", MainAccountValue = "11050001", DisplayValue = "11050001" },
             new InventPosting { RecId = 24, DataAreaId = "dat", InventAccountType = InventAccountType.InventReceipt, ItemCode = TableGroupAll.All, CustVendCode = TableGroupAll.All, LedgerDimension = 22 },
             new InventPosting { RecId = 25, DataAreaId = "dat", InventAccountType = InventAccountType.InventProfit, ItemCode = TableGroupAll.All, CustVendCode = TableGroupAll.All, LedgerDimension = 23 },
             new InventPosting { RecId = 42, DataAreaId = "dat", InventAccountType = InventAccountType.InventIssue, ItemCode = TableGroupAll.All, CustVendCode = TableGroupAll.All, LedgerDimension = 22 },
@@ -371,6 +375,9 @@ public sealed class InventoryArchitectureTests
         Assert.Equal("TRF", created.Journal!.JournalNameId);
         Assert.Equal(InventJournalType.Transfer, created.Journal.JournalType);
         Assert.DoesNotContain((await service.LookupsAsync(default)).JournalNames, x => x.Code == "HIDDEN");
+        var accountLookup = await service.LedgerDimensionsAsync("11050001", default);
+        Assert.Contains(accountLookup, x => x.Code == "22" && x.Description == "11050001");
+        Assert.DoesNotContain(accountLookup, x => x.Code == "50");
 
         var sameDimension = await service.AddLineAsync(created.Journal.JournalId, new InventJournalLineInputDto
         { ItemId = "ITEM-001", InventSiteId = "JED", InventLocationId = "MAIN", ToInventSiteId = "JED", ToInventLocationId = "MAIN", Unit = "pcs", Qty = 1 }, default);
@@ -382,17 +389,21 @@ public sealed class InventoryArchitectureTests
         Assert.Equal("MAIN", line.InventLocationId);
         Assert.Equal("SHOW", line.ToInventLocationId);
         Assert.Equal(1, added.Journal.NumOfLines);
-        db.Add(new InventSum { RecId = 13, DataAreaId = "dat", ItemId = "ITEM-001", InventDimId = line.InventDimId,
-            InventSiteId = "JED", InventLocationId = "MAIN", PhysicalInvent = 5, PostedQty = 5,
-            AvailPhysical = 5, AvailOrdered = 5, PostedValue = 100 });
-        await db.SaveChangesAsync();
         var posting = new InventJournalPostingService(uow, identity, identity, numbers, new TestSalesInventoryNumbers());
+        var openingMain = await service.CreateAsync(new InventJournalCreateDto
+        { JournalNameId = "MOV", Description = "Initial on-hand", InventSiteId = "JED", InventLocationId = "MAIN" }, default);
+        var openingMainLine = await service.AddLineAsync(openingMain.Journal!.JournalId, new InventJournalLineInputDto
+        { ItemId = "ITEM-001", InventSiteId = "JED", InventLocationId = "MAIN", Unit = "pcs", Qty = 5,
+            CostPrice = 20, LedgerDimension = 22, TransDate = DateTime.Today }, default);
+        Assert.Null(openingMainLine.Error);
+        Assert.Null((await posting.PostAsync(openingMain.Journal.JournalId, default)).Error);
+
         var posted = await posting.PostAsync(created.Journal.JournalId, default);
         Assert.Null(posted.Error);
         Assert.True(posted.Result!.Posted);
         Assert.Equal(2, posted.Result.InventoryTransactionsCreated);
         Assert.Equal(0, posted.Result.LedgerEntriesCreated);
-        Assert.Equal(2, await db.Set<InventTrans>().CountAsync());
+        Assert.Equal(3, await db.Set<InventTrans>().CountAsync());
         Assert.Equal(3, (await db.Set<InventSum>().SingleAsync(x => x.InventDimId == line.InventDimId)).PhysicalInvent);
         Assert.Equal(2, (await db.Set<InventSum>().SingleAsync(x => x.InventDimId == line.ToInventDimId)).PhysicalInvent);
         Assert.NotNull((await posting.PostAsync(created.Journal.JournalId, default)).Error);
@@ -408,7 +419,7 @@ public sealed class InventoryArchitectureTests
         Assert.Null(adjustmentPost.Error);
         Assert.Equal(1, adjustmentPost.Result!.InventoryTransactionsCreated);
         Assert.Equal(1, adjustmentPost.Result.LedgerEntriesCreated);
-        var ledgerEntry = Assert.Single(await db.Set<GeneralJournalEntry>().ToListAsync());
+        var ledgerEntry = await db.Set<GeneralJournalEntry>().SingleAsync(x => x.JournalNumber == adjustment.Journal!.JournalId);
         var accountEntries = await db.Set<GeneralJournalAccountEntry>().Where(x => x.GeneralJournalEntry == ledgerEntry.RecId).ToListAsync();
         Assert.Equal(2, accountEntries.Count);
         Assert.Equal(0, accountEntries.Sum(x => x.AccountingCurrencyAmount));
@@ -419,13 +430,15 @@ public sealed class InventoryArchitectureTests
         var opening = await service.CreateAsync(new InventJournalCreateDto
         { JournalNameId = "MOV", Description = "Opening inventory", InventSiteId = "JED", InventLocationId = "OPEN" }, default);
         var openingLine = await service.AddLineAsync(opening.Journal!.JournalId, new InventJournalLineInputDto
-        { ItemId = "ITEM-001", InventSiteId = "JED", InventLocationId = "OPEN", Unit = "pcs", Qty = 4,
+        { ItemId = "ITEM-001", InventSiteId = "JED", InventLocationId = "OPEN", Unit = "box", Qty = 1,
             CostPrice = 25, LedgerDimension = 22, TransDate = DateTime.Today }, default);
         Assert.Null(openingLine.Error);
         var openingPost = await posting.PostAsync(opening.Journal.JournalId, default);
         Assert.Null(openingPost.Error);
         Assert.Equal(1, openingPost.Result!.InventoryTransactionsCreated);
         Assert.Equal(1, openingPost.Result.LedgerEntriesCreated);
+        Assert.Equal(4, await db.Set<InventTrans>().Where(x => x.InventDimId == Assert.Single(openingLine.Journal!.Lines).InventDimId)
+            .Select(x => x.Qty).SingleAsync());
         Assert.Equal(4, (await db.Set<InventSum>().SingleAsync(x => x.ItemId == "ITEM-001" && x.InventLocationId == "OPEN")).PhysicalInvent);
 
         var issue = await service.CreateAsync(new InventJournalCreateDto
@@ -464,6 +477,29 @@ public sealed class InventoryArchitectureTests
         Assert.Equal(1, countPost.Result.LedgerEntriesCreated);
         Assert.Equal(-1, (await db.Set<InventTrans>().OrderByDescending(x => x.RecId).Select(x => x.Qty).FirstAsync()));
         Assert.Equal(6, (await db.Set<InventSum>().SingleAsync(x => x.InventDimId == line.InventDimId)).PhysicalInvent);
+        Assert.Equal(await db.Set<InventTrans>().Where(x => x.ItemId == "ITEM-001").SumAsync(x => x.Qty),
+            await db.Set<InventSum>().Where(x => x.ItemId == "ITEM-001").SumAsync(x => x.PhysicalInvent));
+        Assert.Equal(0, await db.Set<GeneralJournalAccountEntry>().SumAsync(x => x.AccountingCurrencyAmount));
+
+        var beforeRollbackTransactions = await db.Set<InventTrans>().CountAsync();
+        var beforeRollbackEntries = await db.Set<GeneralJournalEntry>().CountAsync();
+        var beforeRollbackQty = await db.Set<InventSum>().Where(x => x.ItemId == "ITEM-001").SumAsync(x => x.PhysicalInvent);
+        var rollbackJournal = await service.CreateAsync(new InventJournalCreateDto
+        { JournalNameId = "ADJ", Description = "Atomic rollback test", InventSiteId = "JED", InventLocationId = "MAIN" }, default);
+        var rollbackReceipt = await service.AddLineAsync(rollbackJournal.Journal!.JournalId, new InventJournalLineInputDto
+        { ItemId = "ITEM-001", InventSiteId = "JED", InventLocationId = "MAIN", Unit = "pcs", Qty = 1,
+            CostPrice = 10, TransDate = DateTime.Today }, default);
+        var invalidIssue = await service.AddLineAsync(rollbackJournal.Journal.JournalId, new InventJournalLineInputDto
+        { ItemId = "ITEM-001", InventSiteId = "JED", InventLocationId = "MAIN", Unit = "pcs", Qty = -100,
+            TransDate = DateTime.Today }, default);
+        Assert.Null(rollbackReceipt.Error);
+        Assert.Null(invalidIssue.Error);
+        var rollbackResult = await posting.PostAsync(rollbackJournal.Journal.JournalId, default);
+        Assert.Contains("negative physical inventory", rollbackResult.Error);
+        Assert.Equal(beforeRollbackTransactions, await db.Set<InventTrans>().CountAsync());
+        Assert.Equal(beforeRollbackEntries, await db.Set<GeneralJournalEntry>().CountAsync());
+        Assert.Equal(beforeRollbackQty, await db.Set<InventSum>().Where(x => x.ItemId == "ITEM-001").SumAsync(x => x.PhysicalInvent));
+        Assert.False((await service.GetAsync(rollbackJournal.Journal.JournalId, default))!.Posted);
     }
 
     private sealed class InventoryContext(DbContextOptions<InventoryContext> options) : DbContext(options)

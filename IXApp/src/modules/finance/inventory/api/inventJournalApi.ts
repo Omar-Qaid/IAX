@@ -30,6 +30,9 @@ const data = <T,>(response: ApiResponse<T>): T => {
 export const inventJournalApi = {
   async list(signal?: AbortSignal): Promise<InventJournal[]> { return data((await apiClient.get<ApiResponse<InventJournal[]>>(endpoint, { signal })).data); },
   async lookups(signal?: AbortSignal): Promise<InventJournalLookups> { return data((await apiClient.get<ApiResponse<InventJournalLookups>>(`${endpoint}/lookups`, { signal })).data); },
+  async ledgerDimensions(search: string, signal?: AbortSignal): Promise<Array<{ code: string; description: string }>> {
+    return data((await apiClient.get<ApiResponse<Array<{ code: string; description: string }>>>(`${endpoint}/ledger-dimensions`, { params: { search }, signal })).data);
+  },
   async get(id: string, signal?: AbortSignal): Promise<InventJournal> { return data((await apiClient.get<ApiResponse<InventJournal>>(`${endpoint}/${encodeURIComponent(id)}`, { signal })).data); },
   async create(input: { journalNameId: string; description: string; inventSiteId: string; inventLocationId: string }): Promise<InventJournal> { return data((await apiClient.post<ApiResponse<InventJournal>>(endpoint, input)).data); },
   async addLine(id: string, input: InventJournalLineInput): Promise<InventJournal> { return data((await apiClient.post<ApiResponse<InventJournal>>(`${endpoint}/${encodeURIComponent(id)}/lines`, input)).data); },

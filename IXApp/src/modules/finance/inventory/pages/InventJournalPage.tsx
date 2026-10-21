@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
-  Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel,
+  Alert, Autocomplete, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel,
   MenuItem, Paper, Select, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography,
 } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -21,11 +21,17 @@ export function InventJournalPage(): React.ReactElement {
   const [lineOpen, setLineOpen] = useState(false);
   const [editing, setEditing] = useState<InventJournalLine | null>(null);
   const [error, setError] = useState('');
+  const [ledgerSearch, setLedgerSearch] = useState('');
   const [header, setHeader] = useState({ journalNameId: '', description: '', inventSiteId: '', inventLocationId: '' });
   const [line, setLine] = useState<InventJournalLineInput>(blankLine());
   const journals = useQuery({ queryKey: ['inventory-journals'], queryFn: ({ signal }) => inventJournalApi.list(signal) });
   const selected = useQuery({ queryKey: ['inventory-journal', selectedId], queryFn: ({ signal }) => inventJournalApi.get(selectedId, signal), enabled: !!selectedId });
   const lookups = useQuery({ queryKey: ['inventory-journal-lookups'], queryFn: ({ signal }) => inventJournalApi.lookups(signal) });
+  const ledgerDimensions = useQuery({
+    queryKey: ['inventory-journal-ledger-dimensions', ledgerSearch],
+    queryFn: ({ signal }) => inventJournalApi.ledgerDimensions(ledgerSearch, signal),
+    enabled: lineOpen && selected.data?.journalType === 0 && ledgerSearch.trim().length > 0,
+  });
   const warehouseRecords = useQuery({ queryKey: ['inventory-warehouses'], queryFn: ({ signal }) => inventLocationApi.list(signal) });
   const locationRecords = useQuery({ queryKey: ['inventory-basic-locations'], queryFn: ({ signal }) => wmsLocationApi.list(signal) });
   const refresh = async (journal?: InventJournal) => {
@@ -48,6 +54,7 @@ export function InventJournalPage(): React.ReactElement {
     .map((x) => ({ code: x.wmsLocationId, description: x.checkText || x.wmsLocationId })), [locationRecords.data]);
   const openLine = (row?: InventJournalLine) => {
     setEditing(row ?? null);
+    setLedgerSearch(row?.ledgerDimension ? String(row.ledgerDimension) : '');
     setLine(row ? {
       transDate: row.transDate.slice(0, 10), itemId: row.itemId, inventSiteId: row.inventSiteId, inventLocationId: row.inventLocationId,
       inventBatchId: row.inventBatchId, inventSerialId: row.inventSerialId, wmsLocationId: row.wmsLocationId,
@@ -107,7 +114,18 @@ export function InventJournalPage(): React.ReactElement {
       {currentType !== 2 && field('Quantity', line.qty, (v) => setLine({ ...line, qty: Number(v) }), 'number')}
       {currentType === 2 && field('Counted quantity', line.counted, (v) => setLine({ ...line, counted: Number(v) }), 'number')}
       {currentType !== 3 && field('Unit cost', line.costPrice, (v) => setLine({ ...line, costPrice: Number(v) }), 'number')}
-      {(currentType === 0 || currentType === 1) && field('Offset ledger dimension RecId', line.ledgerDimension, (v) => setLine({ ...line, ledgerDimension: Number(v) }), 'number')}
+      {currentType === 0 && <Autocomplete
+        options={ledgerDimensions.data ?? []}
+        value={(ledgerDimensions.data ?? []).find((x) => x.code === String(line.ledgerDimension)) ?? null}
+        inputValue={ledgerSearch}
+        loading={ledgerDimensions.isFetching}
+        filterOptions={(options) => options}
+        getOptionLabel={(option) => `${option.code} — ${option.description}`}
+        isOptionEqualToValue={(option, value) => option.code === value.code}
+        onInputChange={(_, value, reason) => { if (reason === 'input' || reason === 'clear') setLedgerSearch(value); }}
+        onChange={(_, value) => setLine({ ...line, ledgerDimension: value ? Number(value.code) : 0 })}
+        renderInput={(params) => <TextField {...params} size="small" label="Offset ledger account" placeholder="Search account or dimension" />}
+      />}
       {select('Location', line.wmsLocationId, locationOptions(line.inventLocationId), (v) => setLine({ ...line, wmsLocationId: v }))}
       {field('Batch number (when required)', line.inventBatchId, (v) => setLine({ ...line, inventBatchId: v }))}
       {field('Serial number (when required)', line.inventSerialId, (v) => setLine({ ...line, inventSerialId: v }))}

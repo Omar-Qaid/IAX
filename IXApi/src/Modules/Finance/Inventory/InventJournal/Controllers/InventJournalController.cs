@@ -27,6 +27,10 @@ public sealed class InventJournalController : ControllerBase
     [HttpGet("lookups")]
     public async Task<IActionResult> Lookups(CancellationToken ct) => Ok(APIResponse<object>.Ok(await _service.LookupsAsync(ct)));
 
+    [HttpGet("ledger-dimensions")]
+    public async Task<IActionResult> LedgerDimensions([FromQuery] string? search, CancellationToken ct) =>
+        Ok(APIResponse<object>.Ok(await _service.LedgerDimensionsAsync(search, ct)));
+
     [HttpPost]
     public async Task<IActionResult> Create(InventJournalCreateDto input, CancellationToken ct)
     {

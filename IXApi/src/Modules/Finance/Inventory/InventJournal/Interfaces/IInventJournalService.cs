@@ -5,6 +5,7 @@ public interface IInventJournalService
     Task<List<InventJournalTableDto>> ListAsync(CancellationToken ct);
     Task<InventJournalTableDto?> GetAsync(string journalId, CancellationToken ct);
     Task<InventJournalLookupsDto> LookupsAsync(CancellationToken ct);
+    Task<List<InventJournalLookupDto>> LedgerDimensionsAsync(string? search, CancellationToken ct);
     Task<(InventJournalTableDto? Journal, string? Error)> CreateAsync(InventJournalCreateDto input, CancellationToken ct);
     Task<(InventJournalTableDto? Journal, string? Error)> AddLineAsync(string journalId, InventJournalLineInputDto input, CancellationToken ct);
     Task<(InventJournalTableDto? Journal, string? Error)> UpdateLineAsync(string journalId, long lineRecId, InventJournalLineInputDto input, CancellationToken ct);
