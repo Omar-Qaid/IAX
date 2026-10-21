@@ -251,6 +251,15 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     ),
   },
   {
+    id: 'inventory-journals',
+    path: ROUTE_PATHS.INVENTORY.JOURNALS,
+    permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/inventory/pages/InventJournalPage'),
+      (module) => module.InventJournalPage
+    ),
+  },
+  {
     id: 'inventory-units-of-measure',
     path: ROUTE_PATHS.INVENTORY.UNITS_OF_MEASURE,
     permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
@@ -311,6 +320,15 @@ export const APP_PAGE_DEFINITIONS: readonly AppPageDefinition[] = [
     component: lazyPage(
       () => import('@modules/finance/inventory/pages/InventLocationPage'),
       (module) => module.InventLocationPage
+    ),
+  },
+  {
+    id: 'inventory-locations',
+    path: ROUTE_PATHS.INVENTORY.INVENTORY_LOCATIONS,
+    permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+    component: lazyPage(
+      () => import('@modules/finance/inventory/pages/WMSLocationPage'),
+      (module) => module.WMSLocationPage
     ),
   },
   {

@@ -1206,6 +1206,15 @@ namespace IAX.IXApi.Infrastructure.Persistence.ModelBuilding
                     .OnDelete(DeleteBehavior.NoAction);
             });
 
+            // Basic inventory locations are company/warehouse scoped. This is the
+            // non-WHS location master used by InventDim.WmsLocationId.
+            modelBuilder.Entity<WMSLocation>(entity =>
+            {
+                entity.HasIndex(location => new
+                    { location.DataAreaId, location.InventLocationId, location.WMSLocationId })
+                    .IsUnique();
+            });
+
             // --- InventBatch ---
             modelBuilder.Entity<InventBatch>(entity =>
             {

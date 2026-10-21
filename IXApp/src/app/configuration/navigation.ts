@@ -48,6 +48,11 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
             path: ROUTE_PATHS.INVENTORY.JOURNAL_NAMES,
             permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
           },
+            {
+              label: 'Inventory journals',
+              path: ROUTE_PATHS.INVENTORY.JOURNALS,
+              permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+            },
           {
             label: 'product.title',
             path: ROUTE_PATHS.INVENTORY.PRODUCTS,
@@ -96,6 +101,11 @@ export const MODULE_NAV_CONFIGS: Record<string, ModuleNavConfig> = {
           {
             label: 'inventLocation.title',
             path: ROUTE_PATHS.INVENTORY.WAREHOUSES,
+            permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
+          },
+          {
+            label: 'wmsLocation.title',
+            path: ROUTE_PATHS.INVENTORY.INVENTORY_LOCATIONS,
             permission: PERMISSIONS.INVENTORY_TRANSACTION_VIEW,
           },
         ],

@@ -37,6 +37,8 @@ public sealed class InventJournalTransDto
     public string InventLocationId { get; set; } = string.Empty;
     public string InventBatchId { get; set; } = string.Empty;
     public string InventSerialId { get; set; } = string.Empty;
+    public string WmsLocationId { get; set; } = string.Empty;
+    public string ToWmsLocationId { get; set; } = string.Empty;
     public string ToInventSiteId { get; set; } = string.Empty;
     public string ToInventLocationId { get; set; } = string.Empty;
     public decimal Qty { get; set; }
@@ -56,8 +58,10 @@ public sealed class InventJournalLineInputDto
     public string InventLocationId { get; set; } = string.Empty;
     public string InventBatchId { get; set; } = string.Empty;
     public string InventSerialId { get; set; } = string.Empty;
+    public string WmsLocationId { get; set; } = string.Empty;
     public string ToInventSiteId { get; set; } = string.Empty;
     public string ToInventLocationId { get; set; } = string.Empty;
+    public string ToWmsLocationId { get; set; } = string.Empty;
     public decimal Qty { get; set; }
     public decimal Counted { get; set; }
     public string Unit { get; set; } = string.Empty;

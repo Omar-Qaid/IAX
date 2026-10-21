@@ -289,6 +289,37 @@ public sealed class InventoryArchitectureTests
     }
 
     [Fact]
+    public async Task Basic_inventory_locations_are_company_scoped_and_protect_used_dimensions()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.AddRange(
+            new InventLocation { RecId = 1, DataAreaId = "dat", InventLocationId = "MAIN", InventSiteId = "JED", Name = "Main" },
+            new InventLocation { RecId = 2, DataAreaId = "other", InventLocationId = "OTHER", InventSiteId = "JED", Name = "Other" });
+        await db.SaveChangesAsync();
+        var service = new WMSLocationService(new TestUnitOfWork(db), new TestIdentity());
+
+        var invalidWarehouse = await service.CreateAsync(new WMSLocationInputDto { InventLocationId = "OTHER", WMSLocationId = "A-01" }, default);
+        Assert.Contains("current company", invalidWarehouse.Error);
+        var created = await service.CreateAsync(new WMSLocationInputDto { InventLocationId = "MAIN", WMSLocationId = "A-01", CheckText = "Aisle one" }, default);
+        Assert.Null(created.Error);
+        Assert.Equal("Main", created.Location!.WarehouseName);
+        Assert.Single(await service.ListAsync(default));
+        Assert.NotNull((await service.CreateAsync(new WMSLocationInputDto { InventLocationId = "MAIN", WMSLocationId = "A-01" }, default)).Error);
+        var second = await service.CreateAsync(new WMSLocationInputDto { InventLocationId = "MAIN", WMSLocationId = "A-02", InputLocation = "A-01" }, default);
+        Assert.Null(second.Error);
+        Assert.Contains("cannot be changed", (await service.UpdateAsync(created.Location.RecId,
+            new WMSLocationInputDto { InventLocationId = "MAIN", WMSLocationId = "A-03" }, default)).Error);
+
+        db.Add(new InventDim { RecId = 3, DataAreaId = "dat", InventDimId = "D-1", InventLocationId = "MAIN", WmsLocationId = "A-01" });
+        await db.SaveChangesAsync();
+        Assert.Contains("cannot be deleted", await service.DeleteAsync(created.Location.RecId, default));
+        Assert.Null(await service.DeleteAsync(second.Location!.RecId, default));
+    }
+
+    [Fact]
     public async Task Inventory_journal_lifecycle_uses_standard_tables_and_enforces_company_dimensions_and_type_rules()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
@@ -308,6 +339,8 @@ public sealed class InventoryArchitectureTests
             new SysNumberSequence { RecId = 9, DataAreaId = "dat", NumberSequence = "InventJournalVoucher", Txt = "Voucher", Format = "IV-#####", AnnotatedFormat = "IV-{SEQ}", InUse = 1, IsActive = true, NextRec = 1, Highest = 99999 },
             new InventModelGroup { RecId = 10, DataAreaId = "dat", ModelGroupId = "FIFO", Name = "FIFO", InventModel = InventModel.FIFO, StockedProduct = NoYes.Yes },
             new InventModelGroupItem { RecId = 11, DataAreaId = "dat", ItemId = "ITEM-001", ItemDataAreaId = "dat", ModelGroupId = "FIFO", ModelGroupDataAreaId = "dat" },
+            new EcoResTrackingDimensionGroupItem { RecId = 40, DataAreaId = "dat", ItemId = "ITEM-001", ItemDataAreaId = "dat", TrackingDimensionGroup = 41 },
+            new EcoResTrackingDimensionGroup { RecId = 41, Name = "No tracking" },
             new InventTableModule { RecId = 12, DataAreaId = "dat", ItemId = "ITEM-001", ModuleType = ModuleInventPurchSales.Inventory, UnitId = "pcs" },
             new InventItemGroupItem { RecId = 15, DataAreaId = "dat", ItemId = "ITEM-001", ItemDataAreaId = "dat", ItemGroupId = "FURN", ItemGroupDataAreaId = "dat" },
             new MainAccount { RecId = 20, DataAreaId = "dat", MainAccountId = "11050001", Name = "Inventory", CurrencyCode = "SAR" },
@@ -316,6 +349,8 @@ public sealed class InventoryArchitectureTests
             new DimensionAttributeValueCombination { RecId = 23, DataAreaId = "dat", MainAccount = 21, MainAccountValue = "51010001", DisplayValue = "51010001" },
             new InventPosting { RecId = 24, DataAreaId = "dat", InventAccountType = InventAccountType.InventReceipt, ItemCode = TableGroupAll.All, CustVendCode = TableGroupAll.All, LedgerDimension = 22 },
             new InventPosting { RecId = 25, DataAreaId = "dat", InventAccountType = InventAccountType.InventProfit, ItemCode = TableGroupAll.All, CustVendCode = TableGroupAll.All, LedgerDimension = 23 },
+            new InventPosting { RecId = 42, DataAreaId = "dat", InventAccountType = InventAccountType.InventIssue, ItemCode = TableGroupAll.All, CustVendCode = TableGroupAll.All, LedgerDimension = 22 },
+            new InventPosting { RecId = 43, DataAreaId = "dat", InventAccountType = InventAccountType.InventLoss, ItemCode = TableGroupAll.All, CustVendCode = TableGroupAll.All, LedgerDimension = 23 },
             new Ledger { RecId = 26, DataAreaId = "dat", Name = "SA01 ledger", Description = "Ledger", FiscalCalendar = 27, AccountingCurrency = "SAR", ReportingCurrency = "SAR" },
             new FiscalCalendarYear { RecId = 28, DataAreaId = "dat", FiscalCalendar = 27, Name = "Current", StartDate = DateTime.Today.AddMonths(-6), EndDate = DateTime.Today.AddMonths(6) },
             new FiscalCalendarPeriod { RecId = 29, DataAreaId = "dat", FiscalCalendar = 27, FiscalCalendarYear = 28, Name = "Current", ShortName = "CUR", Type = FiscalPeriodType.Operating, StartDate = DateTime.Today.AddDays(-10), EndDate = DateTime.Today.AddDays(10) },
@@ -346,7 +381,7 @@ public sealed class InventoryArchitectureTests
         Assert.Equal(1, added.Journal.NumOfLines);
         db.Add(new InventSum { RecId = 13, DataAreaId = "dat", ItemId = "ITEM-001", InventDimId = line.InventDimId,
             InventSiteId = "JED", InventLocationId = "MAIN", PhysicalInvent = 5, PostedQty = 5,
-            AvailPhysical = 5, AvailOrdered = 5, PostedValue = 50 });
+            AvailPhysical = 5, AvailOrdered = 5, PostedValue = 100 });
         await db.SaveChangesAsync();
         var posting = new InventJournalPostingService(uow, identity, identity, numbers, new TestSalesInventoryNumbers());
         var posted = await posting.PostAsync(created.Journal.JournalId, default);
@@ -376,6 +411,18 @@ public sealed class InventoryArchitectureTests
         Assert.Equal(0, accountEntries.Sum(x => x.AccountingCurrencyAmount));
         Assert.Equal(30, accountEntries.Single(x => x.PostingType == LedgerPostingType.InventReceipt).AccountingCurrencyAmount);
         Assert.Equal(6, (await db.Set<InventSum>().SingleAsync(x => x.InventDimId == line.InventDimId)).PhysicalInvent);
+
+        var issue = await service.CreateAsync(new InventJournalCreateDto
+        { JournalNameId = "ADJ", Description = "Issue at running average", InventSiteId = "JED", InventLocationId = "MAIN" }, default);
+        var issueLine = await service.AddLineAsync(issue.Journal!.JournalId, new InventJournalLineInputDto
+        { ItemId = "ITEM-001", InventSiteId = "JED", InventLocationId = "MAIN", Unit = "pcs", Qty = -1, CostPrice = 999, TransDate = DateTime.Today }, default);
+        Assert.Null(issueLine.Error);
+        var issuePost = await posting.PostAsync(issue.Journal.JournalId, default);
+        Assert.Null(issuePost.Error);
+        Assert.Equal(999, Assert.Single(issueLine.Journal!.Lines).CostPrice);
+        Assert.Equal(-15m,
+            await db.Set<InventTrans>().OrderByDescending(x => x.RecId).Select(x => x.CostAmountPosted).FirstAsync());
+        Assert.Equal(5, (await db.Set<InventSum>().SingleAsync(x => x.InventDimId == line.InventDimId)).PhysicalInvent);
     }
 
     private sealed class InventoryContext(DbContextOptions<InventoryContext> options) : DbContext(options)
@@ -384,6 +431,7 @@ public sealed class InventoryArchitectureTests
         {
             Configure<InventSite>(builder);
             Configure<InventLocation>(builder);
+            Configure<WMSLocation>(builder);
             Configure<InventTrans>(builder);
             Configure<InventTransOrigin>(builder);
             Configure<InventDim>(builder);
@@ -401,7 +449,10 @@ public sealed class InventoryArchitectureTests
             Configure<InventModelGroup>(builder);
             Configure<InventModelGroupItem>(builder);
             Configure<EcoResTrackingDimensionGroupItem>(builder);
+            Configure<EcoResTrackingDimensionGroup>(builder);
             Configure<EcoResTrackingDimensionGroupFldSetup>(builder);
+            Configure<EcoResStorageDimensionGroupItem>(builder);
+            Configure<EcoResStorageDimensionGroupFldSetup>(builder);
             Configure<InventItemGroupItem>(builder);
             Configure<InventPosting>(builder);
             Configure<MainAccount>(builder);

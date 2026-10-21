@@ -166,6 +166,8 @@ public sealed class InventJournalService : IInventJournalService
             return ("The selected released product does not exist in the selected company.", null, null);
         var fromError = await ValidateSiteWarehouseAsync(companyId, input.InventSiteId, input.InventLocationId, true, ct);
         if (fromError != null) return (fromError, null, null);
+        var fromLocationError = await ValidateInventoryLocationAsync(companyId, itemId, input.InventLocationId, input.WmsLocationId, ct);
+        if (fromLocationError != null) return (fromLocationError, null, null);
         if (string.IsNullOrWhiteSpace(input.Unit) || !await Db.Set<UnitOfMeasure>().IgnoreQueryFilters().AnyAsync(x => !x.IsDeleted && x.Symbol == input.Unit.Trim(), ct))
             return ("A valid unit of measure is required.", null, null);
         if (header.JournalType == InventJournalType.Counting)
@@ -186,19 +188,45 @@ public sealed class InventJournalService : IInventJournalService
         {
             var toError = await ValidateSiteWarehouseAsync(companyId, input.ToInventSiteId, input.ToInventLocationId, true, ct);
             if (toError != null) return (toError, null, null);
+            var toLocationError = await ValidateInventoryLocationAsync(companyId, itemId, input.ToInventLocationId, input.ToWmsLocationId, ct);
+            if (toLocationError != null) return (toLocationError, null, null);
             if (Normalize(input.InventSiteId) == Normalize(input.ToInventSiteId) && Normalize(input.InventLocationId) == Normalize(input.ToInventLocationId))
                 return ("Transfer source and destination dimensions must be different.", null, null);
         }
         var trackingTemplate = new InventDim
         {
             InventBatchId = Normalize(input.InventBatchId),
-            InventSerialId = Normalize(input.InventSerialId)
+            InventSerialId = Normalize(input.InventSerialId),
+            WmsLocationId = Normalize(input.WmsLocationId)
         };
         var from = await _dimensions.ResolveAsync(companyId, Normalize(input.InventSiteId), Normalize(input.InventLocationId), ct, trackingTemplate);
         InventDim? to = null;
         if (header.JournalType == InventJournalType.Transfer)
-            to = await _dimensions.ResolveAsync(companyId, Normalize(input.ToInventSiteId), Normalize(input.ToInventLocationId), ct, trackingTemplate);
+        {
+            var toTemplate = new InventDim
+            {
+                InventBatchId = trackingTemplate.InventBatchId,
+                InventSerialId = trackingTemplate.InventSerialId,
+                WmsLocationId = Normalize(input.ToWmsLocationId)
+            };
+            to = await _dimensions.ResolveAsync(companyId, Normalize(input.ToInventSiteId), Normalize(input.ToInventLocationId), ct, toTemplate);
+        }
         return (null, from, to);
+    }
+
+    private async Task<string?> ValidateInventoryLocationAsync(string companyId, string itemId, string warehouseId, string locationId, CancellationToken ct)
+    {
+        locationId = Normalize(locationId);
+        var assignment = await Db.Set<EcoResStorageDimensionGroupItem>().AsNoTracking()
+            .FirstOrDefaultAsync(x => x.ItemDataAreaId == companyId && x.ItemId == itemId, ct);
+        var locationEnabled = assignment != null && await Db.Set<EcoResStorageDimensionGroupFldSetup>().AsNoTracking()
+            .AnyAsync(x => x.StorageDimensionGroup == assignment.StorageDimensionGroup &&
+                x.DimensionFieldId == InventDimensionFields.Location && x.IsPhysicalInventoryEnabled, ct);
+        if (locationEnabled && locationId.Length == 0) return "An inventory location is required by the item's storage dimension group.";
+        if (locationId.Length > 0 && !await Db.Set<WMSLocation>().AnyAsync(x => x.DataAreaId == companyId &&
+            x.InventLocationId == Normalize(warehouseId) && x.WMSLocationId == locationId, ct))
+            return $"Inventory location '{locationId}' does not exist in warehouse '{Normalize(warehouseId)}'.";
+        return null;
     }
 
     private async Task<string?> ValidateTrackingDimensionsAsync(string companyId, string itemId, InventJournalLineInputDto input, CancellationToken ct)
@@ -310,6 +338,7 @@ public sealed class InventJournalService : IInventJournalService
             InventDimId = x.InventDimId, ToInventDimId = x.ToInventDimId,
             InventSiteId = from?.InventSiteId ?? string.Empty, InventLocationId = from?.InventLocationId ?? string.Empty,
             ToInventSiteId = to?.InventSiteId ?? string.Empty, ToInventLocationId = to?.InventLocationId ?? string.Empty,
+            WmsLocationId = from?.WmsLocationId ?? string.Empty, ToWmsLocationId = to?.WmsLocationId ?? string.Empty,
             Qty = x.Qty, InventOnHand = x.InventOnHand, Counted = x.Counted, Unit = x.Unit,
             InventBatchId = from?.InventBatchId ?? string.Empty, InventSerialId = from?.InventSerialId ?? string.Empty,
             CostPrice = x.CostPrice, CostAmount = x.CostAmount, LedgerDimension = x.LedgerDimension
