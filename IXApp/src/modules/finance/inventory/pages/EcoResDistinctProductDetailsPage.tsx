@@ -9,7 +9,7 @@ import { ecoResProductApi, type EcoResProductInput, type EcoResProductRecord } f
 
 const text = (value: DetailValue | undefined): string => String(value ?? '');
 const emptyProduct = (): EcoResProductRecord => ({ id: `new-${crypto.randomUUID()}`, productNumber: '', name: '', nameAlias: '', description: '', searchName: '', productType: 'Item', productSubtype: 'Product' });
-const payload = (record: EcoResProductRecord): EcoResProductInput => ({ productNumber: record.productNumber.trim(), name: record.name.trim(), nameAlias: record.nameAlias.trim(), description: record.description.trim(), searchName: record.searchName.trim() });
+const payload = (record: EcoResProductRecord): EcoResProductInput => ({ productNumber: record.productNumber.trim(), name: record.name.trim(), nameAlias: record.nameAlias.trim(), description: record.description.trim(), searchName: record.searchName.trim(), productType: record.productType === 'Service' ? 'Service' : 'Item' });
 
 export function EcoResDistinctProductDetailsPage(): React.ReactElement {
   const { t, isRtl } = useAppTranslation(); const { productId } = useParams<{ productId: string }>();

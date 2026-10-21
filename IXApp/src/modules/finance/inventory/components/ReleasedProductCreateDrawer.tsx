@@ -27,7 +27,7 @@ export function ReleasedProductCreateDrawer({ open, onClose, onCreated }: Props)
   const options = lookups.data;
   const sections = useMemo<FastTabSection[]>(() => [
     { id: 'identity', title: t('releasedProduct.create.identification', 'IDENTIFICATION'), fields: [
-      { name: 'productType', label: t('releasedProduct.fields.productType'), type: 'select', disabled: true, options: [{ value: 'Item', label: 'Item' }] },
+      { name: 'productType', label: t('releasedProduct.fields.productType'), type: 'select', options: [{ value: 'Item', label: t('product.options.item', 'Item') }, { value: 'Service', label: t('product.options.service', 'Service') }] },
       { name: 'productSubtype', label: t('releasedProduct.fields.productSubtype'), type: 'select', disabled: true, options: [{ value: 'Product', label: 'Product' }] },
       { name: 'productNumber', label: t('product.fields.productNumber'), required: true }, { name: 'name', label: t('product.fields.productName'), required: true },
       { name: 'nameAlias', label: t('product.fields.arabicName') }, { name: 'searchName', label: t('product.fields.searchName') },
@@ -91,6 +91,6 @@ export function ReleasedProductCreateDrawer({ open, onClose, onCreated }: Props)
       }
       return errors;
     }}
-    onSubmit={async (v) => onCreated(await releasedProductApi.create({ productNumber: String(v.productNumber), name: String(v.name), nameAlias: String(v.nameAlias), searchName: String(v.searchName), itemNumber: String(v.itemNumber), itemNameAlias: String(v.itemNameAlias), configuration: buildConfiguration(v) }))}
+    onSubmit={async (v) => onCreated(await releasedProductApi.create({ productNumber: String(v.productNumber), name: String(v.name), nameAlias: String(v.nameAlias), searchName: String(v.searchName), itemNumber: String(v.itemNumber), itemNameAlias: String(v.itemNameAlias), productType: String(v.productType) === 'Service' ? 'Service' : 'Item', configuration: buildConfiguration(v) }))}
     saveLabel={t('actions.save')} cancelLabel={t('actions.cancel')} closeLabel={t('actions.close')} helpLabel={t('common.help')} onCancel={onClose} />;
 }

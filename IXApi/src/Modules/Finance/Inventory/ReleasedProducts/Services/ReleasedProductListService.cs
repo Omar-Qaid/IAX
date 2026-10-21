@@ -34,12 +34,14 @@ public sealed class ReleasedProductListService(
         if (number.Length > FieldLengths.ProductNumber || input.Name.Trim().Length > FieldLengths.Name ||
             input.SearchName.Trim().Length > FieldLengths.ProductSearchName || input.Description.Trim().Length > FieldLengths.Memo)
             return (null, "One or more product fields exceed their allowed length.");
+        if (!Enum.TryParse<ItemType>(input.ProductType, true, out var productType) || productType is not (ItemType.Item or ItemType.Service))
+            return (null, "Product type must be Item or Service. Product masters and BOM products are outside this basic scope.");
         if (await Db.Set<EcoResProduct>().AnyAsync(x => x.DisplayProductNumber == number, ct)) return (null, $"Product number '{number}' already exists.");
         var ownsTransaction = Db.Database.CurrentTransaction is null;
         if (ownsTransaction) await unitOfWork.BeginTransactionAsync(ct);
         try
         {
-            var product = new EcoResProduct { DisplayProductNumber = number, SearchName = input.SearchName.Trim(), ProductType = ItemType.Item };
+            var product = new EcoResProduct { DisplayProductNumber = number, SearchName = input.SearchName.Trim(), ProductType = productType };
             Db.Add(product);
             await unitOfWork.CompleteAsync(ct);
             Db.Add(new EcoResDistinctProduct { RecId = product.RecId });
@@ -234,7 +236,7 @@ public sealed class ReleasedProductListService(
         await unitOfWork.BeginTransactionAsync(ct);
         try
         {
-            var shared = await CreateSharedAsync(new CreateSharedProductDto { ProductNumber = input.ProductNumber, SearchName = input.SearchName, Name = input.Name, LanguageId = "en-us" }, ct);
+            var shared = await CreateSharedAsync(new CreateSharedProductDto { ProductNumber = input.ProductNumber, SearchName = input.SearchName, Name = input.Name, LanguageId = "en-us", ProductType = input.ProductType }, ct);
             if (shared.Product is null) { await unitOfWork.RollbackTransactionAsync(ct); return (null, shared.Error); }
             if (!string.IsNullOrWhiteSpace(input.NameAlias) && long.TryParse(shared.Product.Id, out var productId))
                 Db.Add(new EcoResProductTranslation { Product = productId, LanguageId = "ar", Name = input.NameAlias.Trim() });
@@ -282,7 +284,6 @@ public sealed class ReleasedProductListService(
         if (product is null) errors.Add("The released item does not reference an existing shared product.");
         else
         {
-            if (product.ProductType != ItemType.Item) errors.Add("Product type must be Item.");
             if (!await Db.Set<EcoResDistinctProduct>().AnyAsync(x => x.RecId == product.RecId, ct))
                 errors.Add("The distinct-product record is missing.");
             if (!await Db.Set<EcoResProductTranslation>().AnyAsync(x => x.Product == product.RecId && x.Name != string.Empty, ct))

@@ -65,6 +65,7 @@ public sealed class CreateSharedProductDto
     public string Name { get; init; } = string.Empty;
     public string Description { get; init; } = string.Empty;
     public string LanguageId { get; init; } = "en-us";
+    public string ProductType { get; init; } = "Item";
 }
 
 public sealed class ReleaseProductDto
@@ -129,6 +130,7 @@ public sealed class CreateReleasedProductDto
     public string SearchName { get; init; } = string.Empty;
     public string ItemNumber { get; init; } = string.Empty;
     public string ItemNameAlias { get; init; } = string.Empty;
+    public string ProductType { get; init; } = "Item";
     public ConfigureReleasedProductDto? Configuration { get; init; }
 }
 

@@ -10,7 +10,7 @@ const initialValues = (): Record<string, FastTabValue> => ({ productType: 'Item'
 export function EcoResProductCreateDrawer({ open, onClose, onCreated }: Props): React.ReactElement {
   const { t } = useAppTranslation();
   const sections = useMemo<FastTabSection[]>(() => [{ id: 'identification', title: t('product.groups.identification', 'IDENTIFICATION'), fields: [
-    { name: 'productType', label: t('product.fields.productType', 'Product type'), type: 'select', disabled: true, options: [{ value: 'Item', label: t('product.options.item', 'Item') }] },
+    { name: 'productType', label: t('product.fields.productType', 'Product type'), type: 'select', options: [{ value: 'Item', label: t('product.options.item', 'Item') }, { value: 'Service', label: t('product.options.service', 'Service') }] },
     { name: 'productSubtype', label: t('product.fields.productSubtype', 'Product subtype'), type: 'select', disabled: true, options: [{ value: 'Product', label: t('product.options.product', 'Product') }] },
     { name: 'productNumber', label: t('product.fields.productNumber', 'Product number'), required: true },
     { name: 'name', label: t('product.fields.productName', 'Product name'), required: true },
@@ -20,6 +20,6 @@ export function EcoResProductCreateDrawer({ open, onClose, onCreated }: Props): 
   ] }], [t]);
   return <FastTabsDrawer open={open} resetKey={open ? 'product-open' : 'product-closed'} title={t('product.createTitle', 'New product')} viewLabel={t('common.standardView')} sections={sections} initialValues={initialValues}
     validate={(values) => { const errors: Record<string, string> = {}; for (const field of ['productNumber', 'name', 'nameAlias']) if (!String(values[field] ?? '').trim()) errors[field] = t('validation.required', { field: t(`product.fields.${field}`) }); return errors; }}
-    onSubmit={async (values) => onCreated(await ecoResProductApi.create({ productNumber: String(values.productNumber), name: String(values.name), nameAlias: String(values.nameAlias), searchName: String(values.searchName), description: String(values.description) }))}
+    onSubmit={async (values) => onCreated(await ecoResProductApi.create({ productNumber: String(values.productNumber), name: String(values.name), nameAlias: String(values.nameAlias), searchName: String(values.searchName), description: String(values.description), productType: String(values.productType) === 'Service' ? 'Service' : 'Item' }))}
     saveLabel={t('actions.save')} cancelLabel={t('actions.cancel')} closeLabel={t('actions.close')} helpLabel={t('common.help')} onCancel={onClose} />;
 }

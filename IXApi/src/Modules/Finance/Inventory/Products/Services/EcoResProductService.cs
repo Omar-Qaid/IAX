@@ -40,7 +40,7 @@ public sealed class EcoResProductService : BaseService<EcoResProduct>, IEcoResPr
         await _unitOfWork.BeginTransactionAsync(ct);
         try
         {
-            var product = new EcoResProduct { DisplayProductNumber = number, SearchName = Clean(input.SearchName), ProductType = ItemType.Item };
+            var product = new EcoResProduct { DisplayProductNumber = number, SearchName = Clean(input.SearchName), ProductType = ParseProductType(input.ProductType) };
             Db.Add(product);
             await _unitOfWork.CompleteAsync(ct);
             Db.Add(new EcoResDistinctProduct { RecId = product.RecId });
@@ -66,8 +66,12 @@ public sealed class EcoResProductService : BaseService<EcoResProduct>, IEcoResPr
         if (error is not null) return (null, error);
         if (await Db.Set<EcoResProduct>().AnyAsync(x => x.RecId != recId && x.DisplayProductNumber == number, ct))
             return (null, $"Product number '{number}' already exists.");
+        var requestedType = ParseProductType(input.ProductType);
+        if (requestedType != product.ProductType && await Db.Set<ReleasedItem>().AnyAsync(x => x.Product == recId, ct))
+            return (null, "Product type cannot be changed after the product has been released to a company.");
         product.DisplayProductNumber = number;
         product.SearchName = Clean(input.SearchName);
+        product.ProductType = requestedType;
         var translations = await Db.Set<EcoResProductTranslation>().Where(x => x.Product == recId).ToListAsync(ct);
         UpsertTranslation(translations, product.RecId, "en-us", input.Name, input.Description);
         UpsertTranslation(translations, product.RecId, "ar", input.NameAlias, input.Description);
@@ -112,6 +116,7 @@ public sealed class EcoResProductService : BaseService<EcoResProduct>, IEcoResPr
     }
 
     private static string NormalizeNumber(string? value) => Clean(value).ToUpperInvariant();
+    private static ItemType ParseProductType(string? value) => Enum.TryParse<ItemType>(value, true, out var type) ? type : ItemType.Item;
     private static string Clean(string? value) => value?.Trim() ?? string.Empty;
     private async Task<string?> ValidateAsync(EcoResProductInputDto input, CancellationToken ct) =>
         (await _validator.ValidateAsync(input, ct)).Errors.FirstOrDefault()?.ErrorMessage;

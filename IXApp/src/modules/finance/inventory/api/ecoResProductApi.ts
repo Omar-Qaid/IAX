@@ -19,6 +19,7 @@ export interface EcoResProductInput {
   nameAlias: string;
   description: string;
   searchName: string;
+  productType: 'Item' | 'Service';
 }
 
 const endpoint = '/v1/EcoResProduct';

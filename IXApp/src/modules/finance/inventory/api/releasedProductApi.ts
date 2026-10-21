@@ -51,6 +51,7 @@ export interface CreateSharedProductInput {
   name: string;
   description: string;
   languageId: string;
+  productType: 'Item' | 'Service';
 }
 
 export interface ReleaseProductInput {
@@ -104,7 +105,7 @@ export interface ReleasedProductLookups {
 }
 export interface CreateReleasedProductInput {
   productNumber: string; name: string; nameAlias: string; searchName: string;
-  itemNumber: string; itemNameAlias: string; configuration?: ConfigureReleasedProductInput;
+  itemNumber: string; itemNameAlias: string; productType: 'Item' | 'Service'; configuration?: ConfigureReleasedProductInput;
 }
 export interface ReleaseCompanyRecord { id: string; code: string; name: string; nameAlias: string }
 

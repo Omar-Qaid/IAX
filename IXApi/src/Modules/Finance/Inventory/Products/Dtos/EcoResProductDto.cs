@@ -19,4 +19,5 @@ public sealed class EcoResProductInputDto
     public string NameAlias { get; init; } = string.Empty;
     public string Description { get; init; } = string.Empty;
     public string SearchName { get; init; } = string.Empty;
+    public string ProductType { get; init; } = "Item";
 }
