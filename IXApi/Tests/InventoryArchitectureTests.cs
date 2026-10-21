@@ -1,5 +1,7 @@
 using System.Reflection;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
+using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
+using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Services;
 using IAX.IXApi.Modules.Finance.Common;
 using System.Text.Json;
 using IAX.IXApi.Infrastructure.Identity;
@@ -7,12 +9,14 @@ using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Inventory;
+using IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities;
 using IAX.IXApi.Shared.Application.Contracts;
 using IAX.IXApi.Shared.Application.Identity;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Xunit;
 using ReleasedItem = IAX.IXApi.Modules.Finance.Entities.InventTable;
 using SharedProduct = IAX.IXApi.Modules.Finance.Inventory.InventTable.EcoResProduct;
@@ -228,6 +232,27 @@ public sealed class InventoryArchitectureTests
     }
 
     [Fact]
+    public void Released_product_conversion_prefers_product_specific_rule_and_falls_back_to_standard_rule()
+    {
+        var method = typeof(ReleasedProductListService).GetMethod("ConversionFactor", BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(method);
+        var units = new List<UnitOfMeasure>
+        {
+            new() { RecId = 1, Symbol = "box" },
+            new() { RecId = 2, Symbol = "pcs" }
+        };
+        var conversions = new List<UnitOfMeasureConversion>
+        {
+            new() { RecId = 10, Product = 0, FromUnitOfMeasure = 1, ToUnitOfMeasure = 2, Factor = 4 },
+            new() { RecId = 11, Product = 100, FromUnitOfMeasure = 1, ToUnitOfMeasure = 2, Factor = 6 }
+        };
+
+        Assert.Equal(6m, (decimal)method!.Invoke(null, [conversions, units, 100L, "box", "pcs"])!);
+        Assert.Equal(4m, (decimal)method.Invoke(null, [conversions, units, 200L, "box", "pcs"])!);
+        Assert.Equal(0.25m, (decimal)method.Invoke(null, [conversions, units, 200L, "pcs", "box"])!);
+    }
+
+    [Fact]
     public async Task Inventory_journal_names_are_company_scoped_and_protect_used_setup()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
@@ -263,6 +288,96 @@ public sealed class InventoryArchitectureTests
         Assert.Contains("cannot be changed", changedType.Error);
     }
 
+    [Fact]
+    public async Task Inventory_journal_lifecycle_uses_standard_tables_and_enforces_company_dimensions_and_type_rules()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.AddRange(
+            new SysNumberSequence { RecId = 1, DataAreaId = "dat", NumberSequence = "InventJournalTable", Txt = "Journal", Format = "IJ-#####", AnnotatedFormat = "IJ-{SEQ}", InUse = 1, IsActive = true, NextRec = 1, Highest = 99999 },
+            new InventJournalName { RecId = 2, DataAreaId = "dat", JournalNameId = "TRF", Description = "Transfer", JournalType = InventJournalType.Transfer, VoucherNumberSequenceTable = 9 },
+            new InventJournalName { RecId = 3, DataAreaId = "other", JournalNameId = "HIDDEN", Description = "Hidden", JournalType = InventJournalType.Transfer },
+            new InventJournalName { RecId = 14, DataAreaId = "dat", JournalNameId = "ADJ", Description = "Adjustment", JournalType = InventJournalType.Adjustment, VoucherNumberSequenceTable = 9 },
+            new InventSite { RecId = 4, DataAreaId = "dat", SiteId = "JED", Name = "Jeddah" },
+            new InventLocation { RecId = 5, DataAreaId = "dat", InventLocationId = "MAIN", InventSiteId = "JED", Name = "Main" },
+            new InventLocation { RecId = 6, DataAreaId = "dat", InventLocationId = "SHOW", InventSiteId = "JED", Name = "Showroom" },
+            new ReleasedItem { RecId = 7, DataAreaId = "dat", ItemId = "ITEM-001", Name = "Office Chair" },
+            new UnitOfMeasure { RecId = 8, DataAreaId = "dat", Symbol = "pcs" },
+            new SysNumberSequence { RecId = 9, DataAreaId = "dat", NumberSequence = "InventJournalVoucher", Txt = "Voucher", Format = "IV-#####", AnnotatedFormat = "IV-{SEQ}", InUse = 1, IsActive = true, NextRec = 1, Highest = 99999 },
+            new InventModelGroup { RecId = 10, DataAreaId = "dat", ModelGroupId = "FIFO", Name = "FIFO", InventModel = InventModel.FIFO, StockedProduct = NoYes.Yes },
+            new InventModelGroupItem { RecId = 11, DataAreaId = "dat", ItemId = "ITEM-001", ItemDataAreaId = "dat", ModelGroupId = "FIFO", ModelGroupDataAreaId = "dat" },
+            new InventTableModule { RecId = 12, DataAreaId = "dat", ItemId = "ITEM-001", ModuleType = ModuleInventPurchSales.Inventory, UnitId = "pcs" },
+            new InventItemGroupItem { RecId = 15, DataAreaId = "dat", ItemId = "ITEM-001", ItemDataAreaId = "dat", ItemGroupId = "FURN", ItemGroupDataAreaId = "dat" },
+            new MainAccount { RecId = 20, DataAreaId = "dat", MainAccountId = "11050001", Name = "Inventory", CurrencyCode = "SAR" },
+            new MainAccount { RecId = 21, DataAreaId = "dat", MainAccountId = "51010001", Name = "Inventory profit", CurrencyCode = "SAR" },
+            new DimensionAttributeValueCombination { RecId = 22, DataAreaId = "dat", MainAccount = 20, MainAccountValue = "11050001", DisplayValue = "11050001" },
+            new DimensionAttributeValueCombination { RecId = 23, DataAreaId = "dat", MainAccount = 21, MainAccountValue = "51010001", DisplayValue = "51010001" },
+            new InventPosting { RecId = 24, DataAreaId = "dat", InventAccountType = InventAccountType.InventReceipt, ItemCode = TableGroupAll.All, CustVendCode = TableGroupAll.All, LedgerDimension = 22 },
+            new InventPosting { RecId = 25, DataAreaId = "dat", InventAccountType = InventAccountType.InventProfit, ItemCode = TableGroupAll.All, CustVendCode = TableGroupAll.All, LedgerDimension = 23 },
+            new Ledger { RecId = 26, DataAreaId = "dat", Name = "SA01 ledger", Description = "Ledger", FiscalCalendar = 27, AccountingCurrency = "SAR", ReportingCurrency = "SAR" },
+            new FiscalCalendarYear { RecId = 28, DataAreaId = "dat", FiscalCalendar = 27, Name = "Current", StartDate = DateTime.Today.AddMonths(-6), EndDate = DateTime.Today.AddMonths(6) },
+            new FiscalCalendarPeriod { RecId = 29, DataAreaId = "dat", FiscalCalendar = 27, FiscalCalendarYear = 28, Name = "Current", ShortName = "CUR", Type = FiscalPeriodType.Operating, StartDate = DateTime.Today.AddDays(-10), EndDate = DateTime.Today.AddDays(10) },
+            new LedgerFiscalCalendarPeriod { RecId = 30, DataAreaId = "dat", Ledger = 26, FiscalCalendarPeriod = 29, Status = FiscalPeriodStatus.Open });
+        await db.SaveChangesAsync();
+        var identity = new TestIdentity();
+        var uow = new TestUnitOfWork(db);
+        var numbers = new SysNumberSequenceService(uow, identity);
+        var dimensions = new InventDimensionResolver(uow, new TestSalesInventoryNumbers());
+        var service = new InventJournalService(uow, identity, numbers, dimensions);
+
+        var created = await service.CreateAsync(new InventJournalCreateDto
+        { JournalNameId = "trf", Description = "Warehouse transfer", InventSiteId = "JED", InventLocationId = "MAIN" }, default);
+        Assert.Null(created.Error);
+        Assert.Equal("TRF", created.Journal!.JournalNameId);
+        Assert.Equal(InventJournalType.Transfer, created.Journal.JournalType);
+        Assert.DoesNotContain((await service.LookupsAsync(default)).JournalNames, x => x.Code == "HIDDEN");
+
+        var sameDimension = await service.AddLineAsync(created.Journal.JournalId, new InventJournalLineInputDto
+        { ItemId = "ITEM-001", InventSiteId = "JED", InventLocationId = "MAIN", ToInventSiteId = "JED", ToInventLocationId = "MAIN", Unit = "pcs", Qty = 1 }, default);
+        Assert.Contains("must be different", sameDimension.Error);
+        var added = await service.AddLineAsync(created.Journal.JournalId, new InventJournalLineInputDto
+        { ItemId = "ITEM-001", InventSiteId = "JED", InventLocationId = "MAIN", ToInventSiteId = "JED", ToInventLocationId = "SHOW", Unit = "pcs", Qty = 2 }, default);
+        Assert.Null(added.Error);
+        var line = Assert.Single(added.Journal!.Lines);
+        Assert.Equal("MAIN", line.InventLocationId);
+        Assert.Equal("SHOW", line.ToInventLocationId);
+        Assert.Equal(1, added.Journal.NumOfLines);
+        db.Add(new InventSum { RecId = 13, DataAreaId = "dat", ItemId = "ITEM-001", InventDimId = line.InventDimId,
+            InventSiteId = "JED", InventLocationId = "MAIN", PhysicalInvent = 5, PostedQty = 5,
+            AvailPhysical = 5, AvailOrdered = 5, PostedValue = 50 });
+        await db.SaveChangesAsync();
+        var posting = new InventJournalPostingService(uow, identity, identity, numbers, new TestSalesInventoryNumbers());
+        var posted = await posting.PostAsync(created.Journal.JournalId, default);
+        Assert.Null(posted.Error);
+        Assert.True(posted.Result!.Posted);
+        Assert.Equal(2, posted.Result.InventoryTransactionsCreated);
+        Assert.Equal(0, posted.Result.LedgerEntriesCreated);
+        Assert.Equal(2, await db.Set<InventTrans>().CountAsync());
+        Assert.Equal(3, (await db.Set<InventSum>().SingleAsync(x => x.InventDimId == line.InventDimId)).PhysicalInvent);
+        Assert.Equal(2, (await db.Set<InventSum>().SingleAsync(x => x.InventDimId == line.ToInventDimId)).PhysicalInvent);
+        Assert.NotNull((await posting.PostAsync(created.Journal.JournalId, default)).Error);
+        Assert.False((await service.DeleteAsync(created.Journal.JournalId, default)).Deleted);
+
+        var adjustment = await service.CreateAsync(new InventJournalCreateDto
+        { JournalNameId = "ADJ", Description = "Opening adjustment", InventSiteId = "JED", InventLocationId = "MAIN" }, default);
+        var adjusted = await service.AddLineAsync(adjustment.Journal!.JournalId, new InventJournalLineInputDto
+        { ItemId = "ITEM-001", InventSiteId = "JED", InventLocationId = "MAIN", Unit = "pcs", Qty = 3, CostPrice = 10, TransDate = DateTime.Today }, default);
+        Assert.Null(adjusted.Error);
+        Assert.Equal(line.InventDimId, Assert.Single(adjusted.Journal!.Lines).InventDimId);
+        var adjustmentPost = await posting.PostAsync(adjustment.Journal.JournalId, default);
+        Assert.Null(adjustmentPost.Error);
+        Assert.Equal(1, adjustmentPost.Result!.InventoryTransactionsCreated);
+        Assert.Equal(1, adjustmentPost.Result.LedgerEntriesCreated);
+        var ledgerEntry = Assert.Single(await db.Set<GeneralJournalEntry>().ToListAsync());
+        var accountEntries = await db.Set<GeneralJournalAccountEntry>().Where(x => x.GeneralJournalEntry == ledgerEntry.RecId).ToListAsync();
+        Assert.Equal(2, accountEntries.Count);
+        Assert.Equal(0, accountEntries.Sum(x => x.AccountingCurrencyAmount));
+        Assert.Equal(30, accountEntries.Single(x => x.PostingType == LedgerPostingType.InventReceipt).AccountingCurrencyAmount);
+        Assert.Equal(6, (await db.Set<InventSum>().SingleAsync(x => x.InventDimId == line.InventDimId)).PhysicalInvent);
+    }
+
     private sealed class InventoryContext(DbContextOptions<InventoryContext> options) : DbContext(options)
     {
         protected override void OnModelCreating(ModelBuilder builder)
@@ -282,6 +397,22 @@ public sealed class InventoryArchitectureTests
             Configure<InventParameters>(builder);
             Configure<InventJournalName>(builder);
             Configure<InventJournalTable>(builder);
+            Configure<InventJournalTrans>(builder);
+            Configure<InventModelGroup>(builder);
+            Configure<InventModelGroupItem>(builder);
+            Configure<EcoResTrackingDimensionGroupItem>(builder);
+            Configure<EcoResTrackingDimensionGroupFldSetup>(builder);
+            Configure<InventItemGroupItem>(builder);
+            Configure<InventPosting>(builder);
+            Configure<MainAccount>(builder);
+            Configure<DimensionAttributeValueCombination>(builder);
+            Configure<Ledger>(builder);
+            Configure<FiscalCalendarYear>(builder);
+            Configure<FiscalCalendarPeriod>(builder);
+            Configure<LedgerFiscalCalendarPeriod>(builder);
+            Configure<GeneralJournalEntry>(builder);
+            Configure<GeneralJournalAccountEntry>(builder);
+            Configure<SubledgerVoucherGeneralJournalEntry>(builder);
             Configure<SysNumberSequence>(builder);
             builder.Entity<InventSite>().HasQueryFilter(x => x.DataAreaId == "dat");
             builder.Entity<InventLocation>().HasQueryFilter(x => x.DataAreaId == "dat");
@@ -307,8 +438,21 @@ public sealed class InventoryArchitectureTests
         public bool IsRequestedCompanyAuthorized() => true;
     }
 
-    private sealed class TestUnitOfWork(DbContext context) : IUnitOfWork
+    private sealed class TestSalesInventoryNumbers : ISalesInventoryNumberService
     {
+        private int _dimension;
+        private int _transaction;
+        public Task<string> NextInventDimIdAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult($"DIM-{++_dimension:000}");
+        public Task<string> NextInventTransIdAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult($"TRANS-{++_transaction:000}");
+    }
+
+    private sealed class TestUnitOfWork : IUnitOfWork
+    {
+        private readonly DbContext context;
+        private IDbContextTransaction? transaction;
+        public TestUnitOfWork(DbContext context) => this.context = context;
         public DbContext Context => context;
         public IGenericRepository<T> Repository<T>() where T : class
         {
@@ -317,9 +461,11 @@ public sealed class InventoryArchitectureTests
             return repository;
         }
         public Task<int> CompleteAsync(CancellationToken ct = default) => context.SaveChangesAsync(ct);
-        public Task BeginTransactionAsync(CancellationToken ct = default) => throw new NotSupportedException();
-        public Task CommitTransactionAsync(CancellationToken ct = default) => throw new NotSupportedException();
-        public Task RollbackTransactionAsync(CancellationToken ct = default) => throw new NotSupportedException();
+        public async Task BeginTransactionAsync(CancellationToken ct = default) => transaction ??= await context.Database.BeginTransactionAsync(ct);
+        public async Task CommitTransactionAsync(CancellationToken ct = default)
+        { if (transaction != null) { await transaction.CommitAsync(ct); await transaction.DisposeAsync(); transaction = null; } }
+        public async Task RollbackTransactionAsync(CancellationToken ct = default)
+        { if (transaction != null) { await transaction.RollbackAsync(ct); await transaction.DisposeAsync(); transaction = null; } }
         public void Dispose() { }
     }
 

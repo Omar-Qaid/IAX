@@ -80,3 +80,24 @@ Legal entity -> number sequences/parameters -> UOM -> sites/warehouses/locations
 ## Verification
 
 `Tests/InventoryArchitectureTests.cs` covers warehouse CRUD guards and company isolation, transaction inquiry costs and labels, on-hand standard buckets, and UOM duplicate/conversion/use restrictions. `Tests/InventSiteTests.cs` covers existing site behavior. These SQLite tests do not replace authenticated API checks against the deployed database.
+
+## Persistent implementation checklist
+
+This checklist is the delivery ledger for the basic D365 F&O-aligned inventory core. A phase is marked **Verified** only when its focused automated checks and build pass; database migration and authenticated browser/API checks remain explicitly separate evidence.
+
+| Phase | Scope | Status | Evidence / blocker |
+| --- | --- | --- | --- |
+| 1 | Baseline mapping and gap matrix | Verified | Matrix, dependency order, scope boundaries, and standard-object classifications are recorded above. |
+| 2 | Inventory parameters and number-sequence references | Implemented | Backend/API/UI and migration exist. Applying the migration and shared number-sequence runtime integration are deferred to the final Infrastructure checkpoint by request. |
+| 3 | Units of measure and conversions | Verified | CRUD, duplicate/use restrictions, standard and product-specific conversion precedence, reciprocal conversion, focused tests, Finance build, and frontend typecheck passed. |
+| 4 | Sites, warehouses, and basic locations | In progress | Site and warehouse behavior is covered. Standard `WMSLocation` basic maintenance is still missing; no WHS execution features will be added. |
+| 5 | Item/model/storage/tracking groups and simple product readiness | In progress | Core lifecycle and assignments exist. Dimension-rule and used-record regression coverage is incomplete. |
+| 6 | Inventory journal names | Implemented | Company-scoped CRUD, type restrictions, lookups, UI, and focused service test exist. Infrastructure migration/runtime sequence verification remains final-checkpoint work. |
+| 7 | Journal header/line lifecycle | In progress | Standard persistence tables exist; operational DTOs, validation, API, and UI are not yet complete. |
+| 8 | Atomic journal posting and on-hand reconciliation | Not started | Must post through `InventTransOrigin`, `InventTrans`, and `InventSum`, reject duplicate posting, and enforce negative-inventory/dimension/UOM rules. |
+| 9 | Posting-profile and ledger validation | Not started | `InventPosting` setup exists, but journal posting does not yet resolve accounts or create verified accounting entries. No synthetic voucher behavior will be claimed. |
+| 10 | On-hand and transaction inquiries | Implemented | Company-scoped inquiries exist; reconciliation against posted journals remains part of Phase 8 verification. |
+| 11 | Permissions, used-record restrictions, and cross-company/concurrency tests | In progress | Current permissions are broad and the complete transaction/concurrency suite is pending. |
+| 12 | Infrastructure completion and end-to-end acceptance | Blocked by sequence | Intentionally last: review/apply migrations and model mappings, then run SQL Server, authenticated API/UI, posting, reconciliation, and browser acceptance tests. |
+
+Current exclusions remain Advanced WHS, manufacturing/production, BOM/routes, planning, transportation, Commerce/retail, and product variants. Optional basic batch/serial behavior is conditional on the selected standard tracking dimension group; it is not replaced with a custom flag or entity.

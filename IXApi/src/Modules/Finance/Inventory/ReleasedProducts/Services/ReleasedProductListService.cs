@@ -311,7 +311,8 @@ public sealed class ReleasedProductListService(
             if (product is not null && transactionUnit.Length > 0 && inventoryUnit.Length > 0 &&
                 !string.Equals(transactionUnit, inventoryUnit, StringComparison.OrdinalIgnoreCase))
             {
-                var conversions = await Db.Set<UnitOfMeasureConversion>().AsNoTracking().Where(x => x.Product == product.RecId).ToListAsync(ct);
+                var conversions = await Db.Set<UnitOfMeasureConversion>().AsNoTracking()
+                    .Where(x => x.Product == product.RecId || x.Product == 0).ToListAsync(ct);
                 if (ConversionFactor(conversions, units, product.RecId, transactionUnit, inventoryUnit) <= 0)
                     errors.Add($"A positive {type.ToString().ToLowerInvariant()}-to-inventory unit conversion is required.");
             }
@@ -335,11 +336,6 @@ public sealed class ReleasedProductListService(
         var trackingGroupId = await Db.Set<EcoResTrackingDimensionGroupItem>().AsNoTracking().Where(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId).Select(x => x.TrackingDimensionGroup).FirstOrDefaultAsync(ct);
         if (trackingGroupId == 0) errors.Add("Tracking dimension group is required.");
         else if (!await Db.Set<EcoResTrackingDimensionGroup>().AnyAsync(x => x.RecId == trackingGroupId, ct)) errors.Add("Tracking dimension group does not reference an existing setup record.");
-        else if (await Db.Set<EcoResTrackingDimensionGroupFldSetup>().AsNoTracking().AnyAsync(
-                     x => x.TrackingDimensionGroup == trackingGroupId && x.IsActive &&
-                          (x.DimensionFieldId == InventDimensionFields.BatchNumber ||
-                           x.DimensionFieldId == InventDimensionFields.SerialNumber), ct))
-            errors.Add("The basic product scope requires a tracking dimension group without batch or serial tracking.");
         var modelGroupId = await Db.Set<InventModelGroupItem>().AsNoTracking().Where(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId).Select(x => x.ModelGroupId).FirstOrDefaultAsync(ct);
         if (!string.IsNullOrWhiteSpace(modelGroupId) && !await Db.Set<InventModelGroupEntity>().AnyAsync(x => x.DataAreaId == companyId && x.ModelGroupId == modelGroupId && x.StockedProduct == NoYes.Yes, ct)) errors.Add("The item model group must be configured as a stocked product.");
         var purchaseSetup = await Db.Set<InventItemPurchSetup>().AsNoTracking().FirstOrDefaultAsync(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId && x.InventDimId == string.Empty, ct);
@@ -416,7 +412,8 @@ public sealed class ReleasedProductListService(
         var storageGroups = await (from assignment in Db.Set<EcoResStorageDimensionGroupItem>().AsNoTracking() join dimGroup in Db.Set<EcoResStorageDimensionGroup>().AsNoTracking() on assignment.StorageDimensionGroup equals dimGroup.RecId where assignment.ItemDataAreaId == companyId && itemIds.Contains(assignment.ItemId) select new { assignment.ItemId, dimGroup.Name }).ToDictionaryAsync(x => x.ItemId, x => x.Name, ct);
         var trackingGroups = await (from assignment in Db.Set<EcoResTrackingDimensionGroupItem>().AsNoTracking() join dimGroup in Db.Set<EcoResTrackingDimensionGroup>().AsNoTracking() on assignment.TrackingDimensionGroup equals dimGroup.RecId where assignment.ItemDataAreaId == companyId && itemIds.Contains(assignment.ItemId) select new { assignment.ItemId, dimGroup.Name }).ToDictionaryAsync(x => x.ItemId, x => x.Name, ct);
         var unitRows = await Db.Set<UnitOfMeasure>().AsNoTracking().ToListAsync(ct);
-        var conversions = await Db.Set<UnitOfMeasureConversion>().AsNoTracking().Where(x => productIds.Contains(x.Product)).ToListAsync(ct);
+        var conversions = await Db.Set<UnitOfMeasureConversion>().AsNoTracking()
+            .Where(x => x.Product == 0 || productIds.Contains(x.Product)).ToListAsync(ct);
         var purchaseSetups = await Db.Set<InventItemPurchSetup>().AsNoTracking().Where(x => x.ItemDataAreaId == companyId && itemIds.Contains(x.ItemId) && x.InventDimId == string.Empty).ToListAsync(ct);
         var salesSetups = await Db.Set<InventItemSalesSetup>().AsNoTracking().Where(x => x.ItemDataAreaId == companyId && itemIds.Contains(x.ItemId) && x.InventDimId == string.Empty).ToListAsync(ct);
         var inventorySetups = await Db.Set<InventItemInventSetup>().AsNoTracking().Where(x => x.ItemDataAreaId == companyId && itemIds.Contains(x.ItemId) && x.InventDimId == string.Empty).ToListAsync(ct);
@@ -472,7 +469,12 @@ public sealed class ReleasedProductListService(
         if (string.IsNullOrWhiteSpace(fromSymbol) || string.IsNullOrWhiteSpace(toSymbol) || string.Equals(fromSymbol, toSymbol, StringComparison.OrdinalIgnoreCase)) return 1;
         var from = units.FirstOrDefault(x => string.Equals(x.Symbol, fromSymbol, StringComparison.OrdinalIgnoreCase)); var to = units.FirstOrDefault(x => string.Equals(x.Symbol, toSymbol, StringComparison.OrdinalIgnoreCase));
         if (from is null || to is null) return 0;
-        var row = rows.FirstOrDefault(x => x.Product == product && ((x.FromUnitOfMeasure == from.RecId && x.ToUnitOfMeasure == to.RecId) || (x.FromUnitOfMeasure == to.RecId && x.ToUnitOfMeasure == from.RecId)));
+        var row = rows.Where(x => (x.Product == product || x.Product == 0) &&
+                ((x.FromUnitOfMeasure == from.RecId && x.ToUnitOfMeasure == to.RecId) ||
+                 (x.FromUnitOfMeasure == to.RecId && x.ToUnitOfMeasure == from.RecId)))
+            .OrderByDescending(x => x.Product == product)
+            .ThenByDescending(x => x.RecId)
+            .FirstOrDefault();
         if (row is null) return 0; var factor = row.Factor > 0 ? row.Factor : row.Numerator > 0 && row.Denominator > 0 ? (decimal)row.Numerator / row.Denominator : 0;
         return row.FromUnitOfMeasure == from.RecId ? factor : factor > 0 ? 1 / factor : 0;
     }

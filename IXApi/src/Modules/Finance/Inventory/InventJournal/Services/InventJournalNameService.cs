@@ -38,7 +38,8 @@ public sealed class InventJournalNameService : IInventJournalNameService
     {
         var companyId = RequireCompany();
         var rows = await _unitOfWork.Context.Set<SysNumberSequence>().IgnoreQueryFilters().AsNoTracking()
-            .Where(x => !x.IsDeleted && x.IsActive && x.InUse != 0 && (x.DataAreaId == companyId || x.NumberSequenceScope == null))
+            .Where(x => !x.IsDeleted && x.IsActive && x.InUse != 0 &&
+                (x.DataAreaId == companyId || (x.DataAreaId == string.Empty && x.NumberSequenceScope == null)))
             .OrderByDescending(x => x.DataAreaId == companyId).ThenBy(x => x.NumberSequence).ToListAsync(ct);
         return new InventJournalNameLookupsDto
         {
@@ -103,7 +104,7 @@ public sealed class InventJournalNameService : IInventJournalNameService
         if (recId == 0) return null;
         var valid = await _unitOfWork.Context.Set<SysNumberSequence>().IgnoreQueryFilters().AsNoTracking()
             .AnyAsync(x => x.RecId == recId && !x.IsDeleted && x.IsActive && x.InUse != 0 &&
-                (x.DataAreaId == companyId || x.NumberSequenceScope == null), ct);
+                (x.DataAreaId == companyId || (x.DataAreaId == string.Empty && x.NumberSequenceScope == null)), ct);
         return valid ? null : "The selected voucher number sequence is not available in the selected company.";
     }
 
