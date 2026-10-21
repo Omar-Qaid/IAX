@@ -13,6 +13,7 @@ import { PERMISSIONS } from '@core/permissions/permissions';
 import { localizedName } from '@shared/utilities/localizedName';
 import { releasedProductApi, type ReleasedProductRecord, type ReleasedProductValidation } from '../api/releasedProductApi';
 import { useCompanyStore } from '@core/company/useCompanyStore';
+import { ReleasedProductBarcodesDialog } from '../components/ReleasedProductBarcodesDialog';
 
 const createEmptyProduct = (): ReleasedProductRecord => ({
   id: 'empty',
@@ -53,6 +54,7 @@ export function EcoResProductDetailsPage(): React.ReactElement {
   const [validation, setValidation] = useState<ReleasedProductValidation | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [validating, setValidating] = useState(false);
+  const [barcodeProduct, setBarcodeProduct] = useState<{ id: string; itemNumber: string } | null>(null);
   const lookups = useQuery({
     queryKey: ['inventory', 'released-product-lookups', currentCompany],
     queryFn: ({ signal }) => releasedProductApi.lookups(signal),
@@ -247,6 +249,12 @@ export function EcoResProductDetailsPage(): React.ReactElement {
       },
       permissions: { view: PERMISSIONS.INVENTORY_TRANSACTION_VIEW, edit: PERMISSIONS.INVENTORY_TRANSACTION_EDIT },
       commands: (record) => [{
+        id: 'barcodes',
+        label: t('inventory.barcode.title', 'Barcodes'),
+        requiresSelection: true,
+        disabled: !record,
+        onClick: (selected) => { if (selected) setBarcodeProduct({ id: selected.id, itemNumber: selected.itemNumber }); },
+      }, {
         id: 'validate',
         label: validating ? t('releasedProduct.actions.validating', 'Validating...') : t('releasedProduct.actions.validate', 'Validate'),
         requiresSelection: true,
@@ -294,6 +302,7 @@ export function EcoResProductDetailsPage(): React.ReactElement {
         title={t('releasedProduct.detailsTitle', 'Released product details')}
         config={config}
       />
+      <ReleasedProductBarcodesDialog product={barcodeProduct} units={lookups.data?.units ?? []} onClose={() => setBarcodeProduct(null)} />
       <Snackbar open={validation !== null || validationError !== null} autoHideDuration={validation?.isValid ? 6000 : null} onClose={() => { setValidation(null); setValidationError(null); }} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
         <Alert severity={validationError || (validation && !validation.isValid) ? 'error' : validation?.warnings.length ? 'warning' : 'success'} onClose={() => { setValidation(null); setValidationError(null); }} sx={{ whiteSpace: 'pre-line', maxWidth: 720 }}>
           {validationError ?? (validation?.isValid

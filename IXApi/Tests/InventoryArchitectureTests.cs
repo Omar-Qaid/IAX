@@ -25,6 +25,44 @@ namespace IAX.IXApi.Tests;
 
 public sealed class InventoryArchitectureTests
 {
+    [Fact]
+    public async Task Barcode_maintenance_validates_released_item_unit_uniqueness_and_company_scope()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.AddRange(
+            new ReleasedItem { RecId = 1, DataAreaId = "dat", ItemId = "ITEM-1" },
+            new ReleasedItem { RecId = 2, DataAreaId = "other", ItemId = "ITEM-2" },
+            new ReleasedItem { RecId = 5, DataAreaId = "dat", ItemId = "ITEM-3" },
+            new UnitOfMeasure { RecId = 3, Symbol = "pcs" },
+            new InventItemBarcode { RecId = 4, DataAreaId = "other", ItemId = "ITEM-2", ItemBarcode = "OTHER", UnitId = "pcs", Qty = 1 });
+        await db.SaveChangesAsync();
+        var service = new InventItemBarcodeService(new TestUnitOfWork(db), new TestIdentity());
+        var input = new InventItemBarcodeInputDto("12345", "pcs", 1);
+
+        Assert.NotNull((await service.CreateAsync(2, input, default)).Error);
+        Assert.Contains("unit", (await service.CreateAsync(1, input with { UnitId = "missing" }, default)).Error!, StringComparison.OrdinalIgnoreCase);
+        var created = await service.CreateAsync(1, input, default);
+        Assert.Null(created.Error);
+        Assert.Equal("ITEM-1", created.Row!.ItemId);
+        Assert.Null((await service.CreateAsync(5, input, default)).Error);
+        Assert.Contains("already exists", (await service.CreateAsync(1, input, default)).Error!);
+        Assert.Single((await service.ListAsync(1, default)).Rows!);
+        var stored = await db.Set<InventItemBarcode>().SingleAsync(x => x.RecId == created.Row.RecId);
+        stored.BarcodeSetupId = "LEGACY";
+        stored.RetailVariantId = "LEGACY";
+        await db.SaveChangesAsync();
+        Assert.Null((await service.UpdateAsync(1, created.Row.RecId, input with { Qty = 2, Blocked = true }, default)).Error);
+        Assert.True((await service.ListAsync(1, default)).Rows![0].Blocked);
+        Assert.Equal("LEGACY", stored.BarcodeSetupId);
+        Assert.Equal("LEGACY", stored.RetailVariantId);
+        Assert.False((await service.DeleteAsync(1, 4, default)).Deleted);
+        Assert.True((await service.DeleteAsync(1, created.Row.RecId, default)).Deleted);
+        Assert.Equal(2, await db.Set<InventItemBarcode>().CountAsync());
+    }
+
     static InventoryArchitectureTests()
     {
         new InventLocationMapping().Register(TypeAdapterConfig.GlobalSettings);
@@ -579,6 +617,7 @@ public sealed class InventoryArchitectureTests
             Configure<SalesLine>(builder);
             Configure<ReleasedItem>(builder);
             Configure<InventSum>(builder);
+            Configure<InventItemBarcode>(builder);
             Configure<UnitOfMeasure>(builder);
             Configure<UnitOfMeasureConversion>(builder);
             Configure<InventTableModule>(builder);

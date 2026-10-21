@@ -109,9 +109,34 @@ export interface CreateReleasedProductInput {
 }
 export interface ReleaseCompanyRecord { id: string; code: string; name: string; nameAlias: string }
 
+export interface ItemBarcodeInput {
+  itemBarcode: string; unitId: string; qty: number; description: string; inventDimId: string;
+  useForInput: boolean; useForPrinting: boolean; blocked: boolean;
+}
+export interface ItemBarcodeRecord extends ItemBarcodeInput { recId: number; itemId: string }
+
 const endpoint = '/v1/InventTable/released-products';
 
 export const releasedProductApi = {
+  async barcodes(id: string, signal?: AbortSignal): Promise<ItemBarcodeRecord[]> {
+    const response = await apiClient.get<ApiResponse<ItemBarcodeRecord[]>>(`${endpoint}/${encodeURIComponent(id)}/barcodes`, { signal });
+    if (!response.data.success || !Array.isArray(response.data.data)) throw new ApiError(response.data.message || 'Barcodes could not be loaded.', 400);
+    return response.data.data;
+  },
+  async createBarcode(id: string, input: ItemBarcodeInput): Promise<ItemBarcodeRecord> {
+    const response = await apiClient.post<ApiResponse<ItemBarcodeRecord>>(`${endpoint}/${encodeURIComponent(id)}/barcodes`, input);
+    if (!response.data.success || !response.data.data) throw new ApiError(response.data.message || 'Barcode could not be created.', 400);
+    return response.data.data;
+  },
+  async updateBarcode(id: string, recId: number, input: ItemBarcodeInput): Promise<ItemBarcodeRecord> {
+    const response = await apiClient.put<ApiResponse<ItemBarcodeRecord>>(`${endpoint}/${encodeURIComponent(id)}/barcodes/${recId}`, input);
+    if (!response.data.success || !response.data.data) throw new ApiError(response.data.message || 'Barcode could not be updated.', 400);
+    return response.data.data;
+  },
+  async deleteBarcode(id: string, recId: number): Promise<void> {
+    const response = await apiClient.delete<ApiResponse<boolean>>(`${endpoint}/${encodeURIComponent(id)}/barcodes/${recId}`);
+    if (!response.data.success) throw new ApiError(response.data.message || 'Barcode could not be deleted.', 400);
+  },
   async list(signal?: AbortSignal): Promise<ReleasedProductRecord[]> {
     const response = await apiClient.get<ApiResponse<ReleasedProductRecord[]>>(endpoint, { signal });
     if (!response.data.success || !Array.isArray(response.data.data)) {
