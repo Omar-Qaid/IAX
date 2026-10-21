@@ -1,5 +1,9 @@
 # Inventory backend architecture
 
+## Phase A basic ERP foundation (2026-10-21)
+
+The backend foundation includes shared product category hierarchy and assignment APIs, released-item barcode maintenance, and a simple product lifecycle status assigned on `InventTable` with an optional default on release. The approved EF migration `AddBasicInventoryCategoriesAndProductStatus` is code only and has not been applied to SQL Server. Product and item number-sequence definitions are seeded through the existing shared `SysNumberSequence` service; product creation still accepts manually entered numbers. Warehouse inventory status (`WHSInventStatus`) is excluded from this basic inventory scope. Phase B stocked/service behavior and Sales/Purchase integration are separate checkpoints.
+
 ## Existing feature coverage
 
 | Feature | Architecture |

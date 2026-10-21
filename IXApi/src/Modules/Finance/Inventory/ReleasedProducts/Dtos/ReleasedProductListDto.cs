@@ -8,6 +8,7 @@ public sealed class ReleasedProductListDto
     public string NameAliasLocalized { get; init; } = string.Empty;
     public string NameAlias { get; init; } = string.Empty;
     public string ProductType { get; init; } = string.Empty;
+    public string ProductLifecycleStateId { get; init; } = string.Empty;
     public string ProductSubtype { get; init; } = string.Empty;
     public decimal SalesPrice { get; init; }
     public decimal PurchasePrice { get; init; }

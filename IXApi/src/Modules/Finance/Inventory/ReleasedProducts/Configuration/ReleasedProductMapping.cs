@@ -27,7 +27,8 @@ public sealed record ReleasedProductMappingSource(
     string SalesUnit = "",
     decimal PurchaseToInventoryFactor = 0,
     decimal SalesToInventoryFactor = 0,
-    ReleasedProductDefaultOrderSettingsDto? DefaultOrderSettings = null);
+    ReleasedProductDefaultOrderSettingsDto? DefaultOrderSettings = null,
+    string ProductLifecycleStateId = "");
 
 public sealed class ReleasedProductMapping : IRegister
 {

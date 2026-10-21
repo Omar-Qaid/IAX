@@ -23,6 +23,9 @@ namespace IAX.IXApi.Modules.Finance.Entities
 
         public long Product { get; set; } // Global Product Master Definition Link
 
+        [StringLength(FieldLengths.Name)]
+        public string ProductLifecycleStateId { get; set; } = string.Empty;
+
         [Required]
         [StringLength(FieldLengths.NameAlias)]
         public string NameAlias { get; set; } = string.Empty;

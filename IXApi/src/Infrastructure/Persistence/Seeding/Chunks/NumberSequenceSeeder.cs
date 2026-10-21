@@ -53,6 +53,8 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 // ─── ERP / Inventory ─────────────────────────────────────────────
     
                 ("InventTransId",       "Invent Lot Sequence",       "LOT-######", "{PREFIX}-{SEQ}",       0),
+                ("EcoResProduct",       "Product Number Sequence",   "PRD-######", "{PREFIX}-{SEQ}",       0),
+                ("InventTable",         "Item Number Sequence",      "ITM-######", "{PREFIX}-{SEQ}",       0),
                 ("InventDim",           "Inventory Dimension Seq",   "DIM-######", "{PREFIX}-{SEQ}",       0),
                 ("InventGroup",         "Group Sequence",            "IGRP-######","{PREFIX}-{SEQ}",       0),
                 ("UnitOfMeasure",       "UOM Sequence",              "UOM-######", "{PREFIX}-{SEQ}",       0),

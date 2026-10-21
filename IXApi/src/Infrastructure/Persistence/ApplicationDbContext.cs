@@ -296,6 +296,9 @@ namespace IAX.IXApi.Infrastructure.Persistence
         public DbSet<EcoResDistinctProduct> EcoResDistinctProducts => Set<EcoResDistinctProduct>();
         public DbSet<EcoResProductTranslation> EcoResProductTranslations => Set<EcoResProductTranslation>();
         public DbSet<EcoResCategory> EcoResCategories => Set<EcoResCategory>();
+        public DbSet<IAX.IXApi.Modules.Finance.Inventory.ProductLifecycle.Entities.EcoResProductLifecycleState> EcoResProductLifecycleStates => Set<IAX.IXApi.Modules.Finance.Inventory.ProductLifecycle.Entities.EcoResProductLifecycleState>();
+        public DbSet<IAX.IXApi.Modules.Finance.Inventory.ProductCategories.Entities.EcoResCategoryHierarchy> EcoResCategoryHierarchies => Set<IAX.IXApi.Modules.Finance.Inventory.ProductCategories.Entities.EcoResCategoryHierarchy>();
+        public DbSet<IAX.IXApi.Modules.Finance.Inventory.ProductCategories.Entities.EcoResProductCategory> EcoResProductCategories => Set<IAX.IXApi.Modules.Finance.Inventory.ProductCategories.Entities.EcoResProductCategory>();
         public DbSet<EcoResStorageDimensionGroup> EcoResStorageDimensionGroups => Set<EcoResStorageDimensionGroup>();
         public DbSet<EcoResStorageDimensionGroupFldSetup> EcoResStorageDimensionGroupFldSetups => Set<EcoResStorageDimensionGroupFldSetup>();
         public DbSet<EcoResStorageDimensionGroupItem> EcoResStorageDimensionGroupItems => Set<EcoResStorageDimensionGroupItem>();

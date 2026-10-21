@@ -4,6 +4,7 @@ using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities;
 using IAX.IXApi.Modules.Finance.Inventory.InventTable;
+using IAX.IXApi.Modules.Finance.Inventory.ProductLifecycle.Entities;
 using IAX.IXApi.Shared.Application.Identity;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -84,7 +85,10 @@ public sealed class ReleasedProductListService(
             return (null, "The item number or product is already released to this company with different values.");
         }
         var name = await Db.Set<EcoResProductTranslation>().Where(x => x.Product == productId).OrderBy(x => x.LanguageId == "en-us" ? 0 : 1).Select(x => x.Name).FirstOrDefaultAsync(ct) ?? product.DisplayProductNumber;
-        var item = new ReleasedItem { DataAreaId = companyId, ItemId = itemId, Product = productId, Name = name, NameAlias = string.IsNullOrWhiteSpace(input.NameAlias) ? product.SearchName : input.NameAlias.Trim(), ItemType = product.ProductType };
+        var defaultStatusId = await Db.Set<EcoResProductLifecycleState>().AsNoTracking()
+            .Where(x => x.IsDefaultOnProductRelease == NoYes.Yes)
+            .Select(x => x.StateId).FirstOrDefaultAsync(ct) ?? string.Empty;
+        var item = new ReleasedItem { DataAreaId = companyId, ItemId = itemId, Product = productId, Name = name, NameAlias = string.IsNullOrWhiteSpace(input.NameAlias) ? product.SearchName : input.NameAlias.Trim(), ItemType = product.ProductType, ProductLifecycleStateId = defaultStatusId };
         Db.Add(item);
         foreach (var type in new[] { ModuleInventPurchSales.Inventory, ModuleInventPurchSales.Purchase, ModuleInventPurchSales.Sales }) Db.Add(new InventTableModule { DataAreaId = companyId, ItemId = itemId, ModuleType = type, PriceUnit = 1 });
         await unitOfWork.CompleteAsync(ct);
@@ -403,7 +407,7 @@ public sealed class ReleasedProductListService(
 
     private async Task<List<ReleasedProductListDto>> LoadAsync(string companyId, long? itemRecId, CancellationToken ct)
     {
-        var rows = await (from item in Db.Set<ReleasedItem>().AsNoTracking() join product in Db.Set<EcoResProduct>().AsNoTracking() on item.Product equals product.RecId where item.DataAreaId == companyId && (!itemRecId.HasValue || item.RecId == itemRecId) orderby item.ItemId select new { ItemRecId = item.RecId, item.ItemId, item.Name, item.NameAlias, ProductRecId = product.RecId, product.ProductType }).ToListAsync(ct);
+        var rows = await (from item in Db.Set<ReleasedItem>().AsNoTracking() join product in Db.Set<EcoResProduct>().AsNoTracking() on item.Product equals product.RecId where item.DataAreaId == companyId && (!itemRecId.HasValue || item.RecId == itemRecId) orderby item.ItemId select new { ItemRecId = item.RecId, item.ItemId, item.Name, item.NameAlias, item.ProductLifecycleStateId, ProductRecId = product.RecId, product.ProductType }).ToListAsync(ct);
         var productIds = rows.Select(x => x.ProductRecId).Distinct().ToList();
         var itemIds = rows.Select(x => x.ItemId).ToList();
         var translations = await Db.Set<EcoResProductTranslation>().AsNoTracking().Where(x => productIds.Contains(x.Product)).ToListAsync(ct);
@@ -445,7 +449,8 @@ public sealed class ReleasedProductListService(
                 Unit(modules, x.ItemId, ModuleInventPurchSales.Sales),
                 ConversionFactor(conversions, unitRows, x.ProductRecId, Unit(modules, x.ItemId, ModuleInventPurchSales.Purchase), Unit(modules, x.ItemId, ModuleInventPurchSales.Inventory)),
                 ConversionFactor(conversions, unitRows, x.ProductRecId, Unit(modules, x.ItemId, ModuleInventPurchSales.Sales), Unit(modules, x.ItemId, ModuleInventPurchSales.Inventory)),
-                OrderSettings(x.ItemId, purchaseSetups, salesSetups, inventorySetups, supplyTypes, defaultDimensions)))
+                OrderSettings(x.ItemId, purchaseSetups, salesSetups, inventorySetups, supplyTypes, defaultDimensions),
+                x.ProductLifecycleStateId))
             .Adapt<List<ReleasedProductListDto>>();
     }
 
