@@ -42,6 +42,13 @@ public sealed class ProductCategoryController(IProductCategoryService service) :
         return result.Row is null ? UnprocessableEntity(APIResponse<object>.Fail(result.Error!)) : Ok(APIResponse<object>.Ok(result.Row));
     }
 
+    [HttpGet("categories/{categoryRecId:long}/products")]
+    public async Task<IActionResult> Products(long categoryRecId, CancellationToken ct)
+    {
+        var result = await service.ListProductsAsync(categoryRecId, ct);
+        return result.Rows is null ? NotFound(APIResponse<object>.Fail(result.Error!)) : Ok(APIResponse<object>.Ok(result.Rows));
+    }
+
     [HttpPut("categories/{recId:long}")]
     public async Task<IActionResult> UpdateCategory(long recId, ProductCategoryInputDto input, CancellationToken ct)
     {

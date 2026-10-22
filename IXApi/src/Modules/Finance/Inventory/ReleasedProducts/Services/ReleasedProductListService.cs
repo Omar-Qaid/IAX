@@ -5,6 +5,7 @@ using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities;
 using IAX.IXApi.Modules.Finance.Inventory.InventTable;
 using IAX.IXApi.Modules.Finance.Inventory.ProductLifecycle.Entities;
+using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Shared.Application.Identity;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +18,8 @@ namespace IAX.IXApi.Modules.Finance.Inventory;
 public sealed class ReleasedProductListService(
     IUnitOfWork unitOfWork,
     ICompanyExecutionContext company,
-    IInventDimensionResolver dimensionResolver)
+    IInventDimensionResolver dimensionResolver,
+    ISysNumberSequenceService numberSequences)
     : IReleasedProductListService
 {
     private DbContext Db => unitOfWork.Context;
@@ -31,17 +33,28 @@ public sealed class ReleasedProductListService(
     public async Task<(ReleasedProductListDto? Product, string? Error)> CreateSharedAsync(CreateSharedProductDto input, CancellationToken ct = default)
     {
         var number = input.ProductNumber.Trim().ToUpperInvariant();
-        if (number.Length == 0 || string.IsNullOrWhiteSpace(input.Name)) return (null, "Product number and product name are required.");
+        if (string.IsNullOrWhiteSpace(input.Name)) return (null, "Product name is required.");
         if (number.Length > FieldLengths.ProductNumber || input.Name.Trim().Length > FieldLengths.Name ||
             input.SearchName.Trim().Length > FieldLengths.ProductSearchName || input.Description.Trim().Length > FieldLengths.Memo)
             return (null, "One or more product fields exceed their allowed length.");
         if (!Enum.TryParse<ItemType>(input.ProductType, true, out var productType) || productType is not (ItemType.Item or ItemType.Service))
             return (null, "Product type must be Item or Service. Product masters and BOM products are outside this basic scope.");
-        if (await Db.Set<EcoResProduct>().AnyAsync(x => x.DisplayProductNumber == number, ct)) return (null, $"Product number '{number}' already exists.");
         var ownsTransaction = Db.Database.CurrentTransaction is null;
         if (ownsTransaction) await unitOfWork.BeginTransactionAsync(ct);
         try
         {
+            if (number.Length == 0)
+                number = (await numberSequences.NextAsync("EcoResProduct", cancellationToken: ct)).Code.ToUpperInvariant();
+            if (number.Length > FieldLengths.ProductNumber)
+            {
+                if (ownsTransaction) await unitOfWork.RollbackTransactionAsync(ct);
+                return (null, "Generated product number exceeds its allowed length.");
+            }
+            if (await Db.Set<EcoResProduct>().AnyAsync(x => x.DisplayProductNumber == number, ct))
+            {
+                if (ownsTransaction) await unitOfWork.RollbackTransactionAsync(ct);
+                return (null, $"Product number '{number}' already exists.");
+            }
             var product = new EcoResProduct { DisplayProductNumber = number, SearchName = input.SearchName.Trim(), ProductType = productType };
             Db.Add(product);
             await unitOfWork.CompleteAsync(ct);
@@ -75,24 +88,47 @@ public sealed class ReleasedProductListService(
         var product = await Db.Set<EcoResProduct>().AsNoTracking().FirstOrDefaultAsync(x => x.RecId == productId, ct);
         if (product is null) return (null, "The shared product was not found.");
         var itemId = input.ItemNumber.Trim().ToUpperInvariant();
-        if (itemId.Length == 0) return (null, "Item number is required.");
         var existing = await Db.Set<ReleasedItem>().AsNoTracking().FirstOrDefaultAsync(
-            x => x.DataAreaId == companyId && (x.ItemId == itemId || x.Product == productId), ct);
+            x => x.DataAreaId == companyId && ((itemId.Length > 0 && x.ItemId == itemId) || x.Product == productId), ct);
         if (existing is not null)
         {
-            if (existing.Product == productId && existing.ItemId == itemId)
+            if (existing.Product == productId && (existing.ItemId == itemId || itemId.Length == 0))
                 return ((await LoadAsync(companyId, existing.RecId, ct)).Single(), null);
             return (null, "The item number or product is already released to this company with different values.");
         }
-        var name = await Db.Set<EcoResProductTranslation>().Where(x => x.Product == productId).OrderBy(x => x.LanguageId == "en-us" ? 0 : 1).Select(x => x.Name).FirstOrDefaultAsync(ct) ?? product.DisplayProductNumber;
-        var defaultStatusId = await Db.Set<EcoResProductLifecycleState>().AsNoTracking()
-            .Where(x => x.IsDefaultOnProductRelease == NoYes.Yes)
-            .Select(x => x.StateId).FirstOrDefaultAsync(ct) ?? string.Empty;
-        var item = new ReleasedItem { DataAreaId = companyId, ItemId = itemId, Product = productId, Name = name, NameAlias = string.IsNullOrWhiteSpace(input.NameAlias) ? product.SearchName : input.NameAlias.Trim(), ItemType = product.ProductType, ProductLifecycleStateId = defaultStatusId };
-        Db.Add(item);
-        foreach (var type in new[] { ModuleInventPurchSales.Inventory, ModuleInventPurchSales.Purchase, ModuleInventPurchSales.Sales }) Db.Add(new InventTableModule { DataAreaId = companyId, ItemId = itemId, ModuleType = type, PriceUnit = 1 });
-        await unitOfWork.CompleteAsync(ct);
-        return ((await LoadAsync(companyId, item.RecId, ct)).Single(), null);
+        if (itemId.Length > FieldLengths.ItemId) return (null, "Item number exceeds its allowed length.");
+        var ownsTransaction = Db.Database.CurrentTransaction is null;
+        if (ownsTransaction) await unitOfWork.BeginTransactionAsync(ct);
+        try
+        {
+            if (itemId.Length == 0)
+                itemId = (await numberSequences.NextAsync("InventTable", companyId, ct)).Code.ToUpperInvariant();
+            if (itemId.Length > FieldLengths.ItemId)
+            {
+                if (ownsTransaction) await unitOfWork.RollbackTransactionAsync(ct);
+                return (null, "Generated item number exceeds its allowed length.");
+            }
+            if (await Db.Set<ReleasedItem>().AnyAsync(x => x.DataAreaId == companyId && x.ItemId == itemId, ct))
+            {
+                if (ownsTransaction) await unitOfWork.RollbackTransactionAsync(ct);
+                return (null, $"Item number '{itemId}' already exists in the selected company.");
+            }
+            var name = await Db.Set<EcoResProductTranslation>().Where(x => x.Product == productId).OrderBy(x => x.LanguageId == "en-us" ? 0 : 1).Select(x => x.Name).FirstOrDefaultAsync(ct) ?? product.DisplayProductNumber;
+            var defaultStatusId = await Db.Set<EcoResProductLifecycleState>().AsNoTracking()
+                .Where(x => x.IsDefaultOnProductRelease == NoYes.Yes)
+                .Select(x => x.StateId).FirstOrDefaultAsync(ct) ?? string.Empty;
+            var item = new ReleasedItem { DataAreaId = companyId, ItemId = itemId, Product = productId, Name = name, NameAlias = string.IsNullOrWhiteSpace(input.NameAlias) ? product.SearchName : input.NameAlias.Trim(), ItemType = product.ProductType, ProductLifecycleStateId = defaultStatusId };
+            Db.Add(item);
+            foreach (var type in new[] { ModuleInventPurchSales.Inventory, ModuleInventPurchSales.Purchase, ModuleInventPurchSales.Sales }) Db.Add(new InventTableModule { DataAreaId = companyId, ItemId = itemId, ModuleType = type, PriceUnit = 1 });
+            await unitOfWork.CompleteAsync(ct);
+            if (ownsTransaction) await unitOfWork.CommitTransactionAsync(ct);
+            return ((await LoadAsync(companyId, item.RecId, ct)).Single(), null);
+        }
+        catch
+        {
+            if (ownsTransaction) await unitOfWork.RollbackTransactionAsync(ct);
+            throw;
+        }
     }
 
     public async Task<(ReleasedProductListDto? Product, string? Error)> ConfigureAsync(long recId, ConfigureReleasedProductDto input, CancellationToken ct = default)
@@ -235,8 +271,8 @@ public sealed class ReleasedProductListService(
     {
         var companyId = company.GetDataAreaId();
         if (string.IsNullOrWhiteSpace(companyId)) return (null, "A company must be selected.");
-        if (string.IsNullOrWhiteSpace(input.ProductNumber) || string.IsNullOrWhiteSpace(input.ItemNumber) || string.IsNullOrWhiteSpace(input.Name))
-            return (null, "Product number, item number, and product name are required.");
+        if (string.IsNullOrWhiteSpace(input.Name))
+            return (null, "Product name is required.");
         await unitOfWork.BeginTransactionAsync(ct);
         try
         {

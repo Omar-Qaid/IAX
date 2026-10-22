@@ -13,4 +13,7 @@ public sealed class EcoResProductLifecycleState : SharedEntity<long>
     [StringLength(FieldLengths.Description)]
     public string Description { get; set; } = string.Empty;
     public NoYes IsDefaultOnProductRelease { get; set; }
+    public NoYes BlockSales { get; set; }
+    public NoYes BlockPurchase { get; set; }
+    public NoYes BlockInventory { get; set; }
 }

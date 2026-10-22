@@ -4,6 +4,8 @@ using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities;
+using IAX.IXApi.Modules.Finance.Inventory.InventoryStatus.Entities;
+using IAX.IXApi.Modules.Finance.Inventory.ProductLifecycle;
 using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.EntityFrameworkCore;
 using ReleasedItem = IAX.IXApi.Modules.Finance.Entities.InventTable;
@@ -186,6 +188,9 @@ public sealed class InventJournalService : IInventJournalService
         if (itemId.Length == 0) return ("Item number is required.", null, null);
         if (!await Db.Set<ReleasedItem>().AnyAsync(x => x.DataAreaId == companyId && x.ItemId == itemId, ct))
             return ("The selected released product does not exist in the selected company.", null, null);
+        var lifecycleError = await ProductLifecyclePolicy.ValidateAsync(Db, companyId, itemId,
+            ProductLifecycleProcess.Inventory, ct);
+        if (lifecycleError is not null) return (lifecycleError, null, null);
         var fromError = await ValidateSiteWarehouseAsync(companyId, input.InventSiteId, input.InventLocationId, true, ct);
         if (fromError != null) return (fromError, null, null);
         var fromLocationError = await ValidateInventoryLocationAsync(companyId, itemId, input.InventLocationId, input.WmsLocationId, ct);
@@ -206,6 +211,17 @@ public sealed class InventJournalService : IInventJournalService
         var trackingError = await ValidateTrackingDimensionsAsync(companyId, itemId, input, ct);
         if (trackingError != null) return (trackingError, null, null);
 
+        var statusId = Normalize(input.InventStatusId);
+        if (statusId.Length > 0)
+        {
+            var status = await Db.Set<WHSInventStatus>().AsNoTracking().FirstOrDefaultAsync(
+                x => x.DataAreaId == companyId && x.InventStatusId == statusId, ct);
+            if (status is null) return ("The selected inventory status does not exist in this company.", null, null);
+            if (status.InventStatusBlocking == NoYes.Yes &&
+                (input.Qty < 0 || header.JournalType is InventJournalType.Transfer or InventJournalType.Counting))
+                return ("Blocked inventory status cannot be issued, transferred, or counted.", null, null);
+        }
+
         if (header.JournalType == InventJournalType.Transfer)
         {
             var toError = await ValidateSiteWarehouseAsync(companyId, input.ToInventSiteId, input.ToInventLocationId, true, ct);
@@ -219,6 +235,7 @@ public sealed class InventJournalService : IInventJournalService
         {
             InventBatchId = Normalize(input.InventBatchId),
             InventSerialId = Normalize(input.InventSerialId),
+            InventStatusId = statusId,
             WmsLocationId = Normalize(input.WmsLocationId)
         };
         var from = await _dimensions.ResolveAsync(companyId, Normalize(input.InventSiteId), Normalize(input.InventLocationId), ct, trackingTemplate);
@@ -229,6 +246,7 @@ public sealed class InventJournalService : IInventJournalService
             {
                 InventBatchId = trackingTemplate.InventBatchId,
                 InventSerialId = trackingTemplate.InventSerialId,
+                InventStatusId = trackingTemplate.InventStatusId,
                 WmsLocationId = Normalize(input.ToWmsLocationId)
             };
             to = await _dimensions.ResolveAsync(companyId, Normalize(input.ToInventSiteId), Normalize(input.ToInventLocationId), ct, toTemplate);
@@ -363,6 +381,7 @@ public sealed class InventJournalService : IInventJournalService
             WmsLocationId = from?.WmsLocationId ?? string.Empty, ToWmsLocationId = to?.WmsLocationId ?? string.Empty,
             Qty = x.Qty, InventOnHand = x.InventOnHand, Counted = x.Counted, Unit = x.Unit,
             InventBatchId = from?.InventBatchId ?? string.Empty, InventSerialId = from?.InventSerialId ?? string.Empty,
+            InventStatusId = from?.InventStatusId ?? string.Empty,
             CostPrice = x.CostPrice, CostAmount = x.CostAmount, LedgerDimension = x.LedgerDimension
         };
     }

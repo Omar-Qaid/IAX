@@ -5,6 +5,8 @@ using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities;
+using IAX.IXApi.Modules.Finance.Inventory.InventoryStatus.Entities;
+using IAX.IXApi.Modules.Finance.Inventory.ProductLifecycle;
 using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.EntityFrameworkCore;
 using ReleasedItem = IAX.IXApi.Modules.Finance.Entities.InventTable;
@@ -64,6 +66,9 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
 
             foreach (var line in lines)
             {
+                var lifecycleError = await ProductLifecyclePolicy.ValidateAsync(Db, companyId, line.ItemId,
+                    ProductLifecycleProcess.Inventory, ct);
+                if (lifecycleError is not null) throw new PostingValidationException(lifecycleError);
                 var item = await LoadReadyItemAsync(companyId, line.ItemId, ct);
                 var fromDim = await Db.Set<InventDim>().FirstOrDefaultAsync(x => x.DataAreaId == companyId && x.InventDimId == line.InventDimId, ct)
                     ?? throw new PostingValidationException($"Inventory dimension '{line.InventDimId}' was not found for line {line.LineNum}.");
@@ -78,6 +83,15 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
                     line.Qty = signedQty;
                 }
                 else signedQty = header.JournalType == InventJournalType.Transfer ? -Math.Abs(inventoryQty) : inventoryQty;
+
+                if (fromDim.InventStatusId.Length > 0)
+                {
+                    var status = await Db.Set<WHSInventStatus>().AsNoTracking().FirstOrDefaultAsync(
+                        x => x.DataAreaId == companyId && x.InventStatusId == fromDim.InventStatusId, ct)
+                        ?? throw new PostingValidationException($"Inventory status '{fromDim.InventStatusId}' no longer exists.");
+                    if (status.InventStatusBlocking == NoYes.Yes && signedQty < 0)
+                        throw new PostingValidationException($"Inventory status '{fromDim.InventStatusId}' is blocked for issue.");
+                }
 
                 await ValidateTrackingDimensionsAsync(item, fromDim, signedQty, ct);
 

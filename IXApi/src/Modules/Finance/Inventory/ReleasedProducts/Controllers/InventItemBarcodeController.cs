@@ -9,6 +9,13 @@ namespace IAX.IXApi.Modules.Finance.Inventory;
 [DomainPermission("Inventory", "Transactions")]
 public sealed class InventItemBarcodeController(IInventItemBarcodeService service) : ControllerBase
 {
+    [HttpGet("/api/v1/InventTable/barcodes/lookup")]
+    public async Task<IActionResult> Find([FromQuery] string barcode, CancellationToken ct)
+    {
+        var result = await service.FindAsync(barcode, ct);
+        return result.Rows is null ? UnprocessableEntity(APIResponse<object>.Fail(result.Error!)) : Ok(APIResponse<object>.Ok(result.Rows));
+    }
+
     [HttpGet]
     public async Task<IActionResult> List(long releasedProductRecId, CancellationToken ct)
     {

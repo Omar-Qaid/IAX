@@ -10,6 +10,12 @@ using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Inventory;
 using IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities;
+using IAX.IXApi.Modules.Finance.Inventory.ProductCategories;
+using IAX.IXApi.Modules.Finance.Inventory.ProductCategories.Entities;
+using IAX.IXApi.Modules.Finance.Inventory.InventoryStatus;
+using IAX.IXApi.Modules.Finance.Inventory.InventoryStatus.Entities;
+using IAX.IXApi.Modules.Finance.Inventory.ProductLifecycle;
+using IAX.IXApi.Modules.Finance.Inventory.ProductLifecycle.Entities;
 using IAX.IXApi.Shared.Application.Contracts;
 using IAX.IXApi.Shared.Application.Identity;
 using Mapster;
@@ -25,6 +31,94 @@ namespace IAX.IXApi.Tests;
 
 public sealed class InventoryArchitectureTests
 {
+    [Fact]
+    public async Task Shared_product_creation_consumes_existing_number_sequence_in_its_transaction()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.Add(new SysNumberSequence
+        {
+            NumberSequence = "EcoResProduct", Txt = "Product sequence", DataAreaId = "dat", Format = "PRD-######",
+            AnnotatedFormat = "{PREFIX}-{SEQ}", Lowest = 1, Highest = 999999,
+            NextRec = 1, InUse = 1, Manual = 0
+        });
+        await db.SaveChangesAsync();
+        var identity = new TestIdentity();
+        var work = new TestUnitOfWork(db);
+        var sequences = new SysNumberSequenceService(work, identity);
+        var service = new ReleasedProductListService(work, identity,
+            new InventDimensionResolver(work, new TestSalesInventoryNumbers()), sequences);
+
+        var first = await service.CreateSharedAsync(new CreateSharedProductDto
+            { Name = "First", SearchName = "First", ProductType = "Item" });
+        var second = await service.CreateSharedAsync(new CreateSharedProductDto
+            { Name = "Second", SearchName = "Second", ProductType = "Item" });
+
+        Assert.Null(first.Error);
+        Assert.Null(second.Error);
+        Assert.Equal(new[] { "PRD-000001", "PRD-000002" },
+            await db.Set<SharedProduct>().OrderBy(x => x.DisplayProductNumber)
+                .Select(x => x.DisplayProductNumber).ToArrayAsync());
+        Assert.Equal(3, (await db.Set<SysNumberSequence>().SingleAsync()).NextRec);
+    }
+
+    [Fact]
+    public async Task Basic_product_and_inventory_statuses_block_transactions_and_availability()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        var identity = new TestIdentity();
+        var work = new TestUnitOfWork(db);
+        var lifecycle = new ProductLifecycleService(work, identity);
+        var inventoryStatuses = new InventoryStatusService(work, identity);
+        var state = await lifecycle.SaveAsync(null,
+            new ProductLifecycleStateInputDto("BLOCKED", "Blocked", false, true, false, true), default);
+        Assert.Null(state.Error);
+        var status = await inventoryStatuses.SaveAsync(null,
+            new InventoryStatusInputDto("HOLD", "Quality hold", true), default);
+        Assert.Null(status.Error);
+        db.AddRange(
+            new ReleasedItem { RecId = 810, DataAreaId = "dat", ItemId = "A-810", Name = "Item", ProductLifecycleStateId = "BLOCKED" },
+            new InventDim { RecId = 811, DataAreaId = "dat", InventDimId = "DIM-810", InventStatusId = "HOLD" },
+            new InventSum { RecId = 812, DataAreaId = "dat", ItemId = "A-810", InventDimId = "DIM-810",
+                PhysicalInvent = 5, AvailPhysical = 5, AvailOrdered = 5 });
+        await db.SaveChangesAsync();
+
+        Assert.Contains("blocks sales", await ProductLifecyclePolicy.ValidateAsync(db, "dat", "A-810", ProductLifecycleProcess.Sales, default));
+        Assert.Contains("blocks inventory", await ProductLifecyclePolicy.ValidateAsync(db, "dat", "A-810", ProductLifecycleProcess.Inventory, default));
+        Assert.Null(await ProductLifecyclePolicy.ValidateAsync(db, "dat", "A-810", ProductLifecycleProcess.Purchase, default));
+        var onHand = Assert.Single((await new InventOnHandService(work, identity).ListAsync())!);
+        Assert.Equal(5, onHand.PhysicalInventory);
+        Assert.Equal(0, onHand.AvailablePhysical);
+        Assert.True(onHand.InventoryStatusBlocked);
+        Assert.NotNull(await inventoryStatuses.DeleteAsync(status.Row!.RecId, default));
+    }
+
+    [Fact]
+    public async Task Product_categories_reject_inactive_assignments_and_list_products_by_category()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        var service = new ProductCategoryService(new TestUnitOfWork(db));
+        var hierarchy = await service.SaveHierarchyAsync(null, new("Products"), default);
+        Assert.Null(hierarchy.Error);
+        var category = await service.SaveCategoryAsync(null, new(hierarchy.Row!.RecId, 0, "Tools"), default);
+        Assert.Null(category.Error);
+        db.Set<SharedProduct>().Add(new SharedProduct { RecId = 501, DisplayProductNumber = "TOOL-1" });
+        await db.SaveChangesAsync();
+        Assert.Null((await service.SaveAssignmentAsync(501, null, new(category.Row!.RecId), default)).Error);
+        Assert.Equal("TOOL-1", Assert.Single((await service.ListProductsAsync(category.Row.RecId, default)).Rows!).ProductNumber);
+        Assert.NotNull((await service.SaveAssignmentAsync(501, null, new(category.Row.RecId), default)).Error);
+        Assert.NotNull((await service.SaveCategoryAsync(category.Row.RecId,
+            new(hierarchy.Row.RecId, 0, "Tools", false), default)).Error);
+    }
+
     [Fact]
     public async Task Barcode_maintenance_validates_released_item_unit_uniqueness_and_company_scope()
     {
@@ -50,12 +144,17 @@ public sealed class InventoryArchitectureTests
         Assert.Null((await service.CreateAsync(5, input, default)).Error);
         Assert.Contains("already exists", (await service.CreateAsync(1, input, default)).Error!);
         Assert.Single((await service.ListAsync(1, default)).Rows!);
+        var matches = (await service.FindAsync("12345", default)).Rows!;
+        Assert.Equal(2, matches.Count);
+        Assert.Contains(matches, x => x.ReleasedProductRecId == 1);
+        Assert.DoesNotContain(matches, x => x.Barcode.ItemId == "ITEM-2");
         var stored = await db.Set<InventItemBarcode>().SingleAsync(x => x.RecId == created.Row.RecId);
         stored.BarcodeSetupId = "LEGACY";
         stored.RetailVariantId = "LEGACY";
         await db.SaveChangesAsync();
         Assert.Null((await service.UpdateAsync(1, created.Row.RecId, input with { Qty = 2, Blocked = true }, default)).Error);
         Assert.True((await service.ListAsync(1, default)).Rows![0].Blocked);
+        Assert.Single((await service.FindAsync("12345", default)).Rows!);
         Assert.Equal("LEGACY", stored.BarcodeSetupId);
         Assert.Equal("LEGACY", stored.RetailVariantId);
         Assert.False((await service.DeleteAsync(1, 4, default)).Deleted);
@@ -622,6 +721,13 @@ public sealed class InventoryArchitectureTests
             Configure<UnitOfMeasureConversion>(builder);
             Configure<InventTableModule>(builder);
             Configure<SharedProduct>(builder);
+            Configure<IAX.IXApi.Modules.Finance.Inventory.InventTable.EcoResDistinctProduct>(builder);
+            Configure<IAX.IXApi.Modules.Finance.Inventory.InventTable.EcoResProductTranslation>(builder);
+            Configure<EcoResCategory>(builder);
+            Configure<EcoResCategoryHierarchy>(builder);
+            Configure<EcoResProductCategory>(builder);
+            Configure<EcoResProductLifecycleState>(builder);
+            Configure<WHSInventStatus>(builder);
             Configure<InventParameters>(builder);
             Configure<InventJournalName>(builder);
             Configure<InventJournalTable>(builder);

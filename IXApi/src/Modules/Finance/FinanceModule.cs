@@ -72,6 +72,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<Inventory.IInventItemBarcodeService, Inventory.InventItemBarcodeService>();
             services.AddScoped<Inventory.ProductCategories.IProductCategoryService, Inventory.ProductCategories.ProductCategoryService>();
             services.AddScoped<Inventory.ProductLifecycle.IProductLifecycleService, Inventory.ProductLifecycle.ProductLifecycleService>();
+            services.AddScoped<Inventory.InventoryStatus.IInventoryStatusService, Inventory.InventoryStatus.InventoryStatusService>();
             services.AddScoped<Inventory.IEcoResProductService, Inventory.EcoResProductService>();
             services.AddScoped<FluentValidation.IValidator<Inventory.EcoResProductInputDto>, Inventory.EcoResProductInputValidator>();
             services.AddScoped<Inventory.IStorageDimensionGroupService, Inventory.StorageDimensionGroupService>();

@@ -9,6 +9,8 @@ public sealed class InventOnHandDto
     public string InventDimId { get; init; } = string.Empty;
     public string Site { get; init; } = string.Empty;
     public string Warehouse { get; init; } = string.Empty;
+    public string InventoryStatusId { get; init; } = string.Empty;
+    public bool InventoryStatusBlocked { get; init; }
     public decimal PhysicalInventory { get; init; }
     public decimal PhysicalReserved { get; init; }
     public decimal AvailablePhysical { get; init; }

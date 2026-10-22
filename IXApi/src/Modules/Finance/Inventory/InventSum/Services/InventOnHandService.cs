@@ -1,6 +1,8 @@
 using System.Globalization;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Finance.Entities;
+using IAX.IXApi.Modules.Finance.Common;
+using IAX.IXApi.Modules.Finance.Inventory.InventoryStatus.Entities;
 using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.EntityFrameworkCore;
 using ReleasedItem = IAX.IXApi.Modules.Finance.Entities.InventTable;
@@ -34,12 +36,20 @@ public sealed class InventOnHandService(
                           InventDimId = summary.InventDimId,
                           Site = dimension.InventSiteId,
                           Warehouse = dimension.InventLocationId,
+                          InventoryStatusId = dimension.InventStatusId,
+                          InventoryStatusBlocked = unitOfWork.Context.Set<WHSInventStatus>().Any(status =>
+                              status.DataAreaId == companyId && status.InventStatusId == dimension.InventStatusId &&
+                              status.InventStatusBlocking == NoYes.Yes),
                           PhysicalInventory = summary.PhysicalInvent,
                           PhysicalReserved = summary.ReservPhysical,
-                          AvailablePhysical = summary.AvailPhysical,
+                          AvailablePhysical = unitOfWork.Context.Set<WHSInventStatus>().Any(status =>
+                              status.DataAreaId == companyId && status.InventStatusId == dimension.InventStatusId &&
+                              status.InventStatusBlocking == NoYes.Yes) ? 0m : summary.AvailPhysical,
                           OrderedReceipts = summary.Ordered,
                           OrderedIssues = summary.OnOrder,
-                          AvailableOrdered = summary.AvailOrdered,
+                          AvailableOrdered = unitOfWork.Context.Set<WHSInventStatus>().Any(status =>
+                              status.DataAreaId == companyId && status.InventStatusId == dimension.InventStatusId &&
+                              status.InventStatusBlocking == NoYes.Yes) ? 0m : summary.AvailOrdered,
                           PostedValue = summary.PostedValue,
                           PhysicalValue = summary.PhysicalValue,
                       }).ToListAsync(ct);

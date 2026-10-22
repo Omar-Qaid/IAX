@@ -15,7 +15,8 @@ public sealed class ProductLifecycleService(IUnitOfWork unitOfWork, ICompanyExec
     public async Task<List<ProductLifecycleStateDto>> ListAsync(CancellationToken ct) =>
         await Db.Set<EcoResProductLifecycleState>().AsNoTracking().OrderBy(x => x.StateId)
             .Select(x => new ProductLifecycleStateDto(x.RecId, x.StateId, x.Description,
-                x.IsDefaultOnProductRelease == NoYes.Yes)).ToListAsync(ct);
+                x.IsDefaultOnProductRelease == NoYes.Yes, x.BlockSales == NoYes.Yes,
+                x.BlockPurchase == NoYes.Yes, x.BlockInventory == NoYes.Yes)).ToListAsync(ct);
 
     public async Task<(ProductLifecycleStateDto? Row, string? Error)> SaveAsync(
         long? recId, ProductLifecycleStateInputDto input, CancellationToken ct)
@@ -39,8 +40,12 @@ public sealed class ProductLifecycleService(IUnitOfWork unitOfWork, ICompanyExec
         row.StateId = stateId;
         row.Description = description;
         row.IsDefaultOnProductRelease = input.IsDefaultOnProductRelease ? NoYes.Yes : NoYes.No;
+        row.BlockSales = input.BlockSales ? NoYes.Yes : NoYes.No;
+        row.BlockPurchase = input.BlockPurchase ? NoYes.Yes : NoYes.No;
+        row.BlockInventory = input.BlockInventory ? NoYes.Yes : NoYes.No;
         await unitOfWork.CompleteAsync(ct);
-        return (new(row.RecId, row.StateId, row.Description, input.IsDefaultOnProductRelease), null);
+        return (new(row.RecId, row.StateId, row.Description, input.IsDefaultOnProductRelease,
+            input.BlockSales, input.BlockPurchase, input.BlockInventory), null);
     }
 
     public async Task<string?> DeleteAsync(long recId, CancellationToken ct)

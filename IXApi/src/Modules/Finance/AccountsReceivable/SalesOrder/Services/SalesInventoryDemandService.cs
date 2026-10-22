@@ -2,6 +2,8 @@ using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Modules.Finance.Inventory.InventoryStatus.Entities;
+using IAX.IXApi.Modules.Finance.Inventory.ProductLifecycle;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Services;
@@ -23,6 +25,9 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
     public async Task CreateAsync(SalesTable order, SalesLine line, string inventSiteId,
         string inventLocationId, CancellationToken cancellationToken = default, InventDim? dimensionTemplate = null)
     {
+        var lifecycleError = await ProductLifecyclePolicy.ValidateAsync(_dbContext.Context,
+            order.DataAreaId, line.ItemId, ProductLifecycleProcess.Sales, cancellationToken);
+        if (lifecycleError is not null) throw new InvalidOperationException(lifecycleError);
         if (!await IsStockedProductAsync(order.DataAreaId, line.ItemId, cancellationToken))
         {
             // D365 uses the item model group's Stocked product setting to decide whether
@@ -40,6 +45,7 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
 
         var dimension = await _dimensions.ResolveAsync(order.DataAreaId, inventSiteId,
             inventLocationId, cancellationToken, dimensionTemplate);
+        await EnsureStatusAvailableAsync(order.DataAreaId, dimension.InventStatusId, cancellationToken);
         var transactionId = await _numbers.NextInventTransIdAsync(cancellationToken);
         var origin = new InventTransOrigin
         {
@@ -94,6 +100,9 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
         string inventLocationId, CancellationToken cancellationToken = default,
         string? batchNumber = null, string? serialNumber = null, InventDim? dimensionTemplate = null)
     {
+        var lifecycleError = await ProductLifecyclePolicy.ValidateAsync(_dbContext.Context,
+            line.DataAreaId, line.ItemId, ProductLifecycleProcess.Sales, cancellationToken);
+        if (lifecycleError is not null) throw new InvalidOperationException(lifecycleError);
         if (!await IsStockedProductAsync(line.DataAreaId, line.ItemId, cancellationToken))
         {
             if (!string.IsNullOrWhiteSpace(line.InventTransId))
@@ -118,6 +127,7 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
             if (serialNumber != null) legacyDimension.InventSerialId = serialNumber;
             var resolvedLegacyDimension = await _dimensions.ResolveAsync(line.DataAreaId,
                 inventSiteId, inventLocationId, cancellationToken, legacyDimension);
+            await EnsureStatusAvailableAsync(line.DataAreaId, resolvedLegacyDimension.InventStatusId, cancellationToken);
             line.InventDimId = resolvedLegacyDimension.InventDimId;
             return;
         }
@@ -167,6 +177,7 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
         if (serialNumber != null) nextDimensionTemplate.InventSerialId = serialNumber;
         var dimension = await _dimensions.ResolveAsync(line.DataAreaId, inventSiteId,
             inventLocationId, cancellationToken, nextDimensionTemplate);
+        await EnsureStatusAvailableAsync(line.DataAreaId, dimension.InventStatusId, cancellationToken);
         var nextOpenDemand = Math.Max(0m, line.RemainInventPhysical);
         var previousSummary = await _dbContext.Context.Set<InventSum>().SingleOrDefaultAsync(item =>
             item.DataAreaId == line.DataAreaId && item.ItemId == line.ItemId
@@ -317,6 +328,16 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
         if (origin.ReferenceCategory != InventRefType.SalesTable
             || origin.ReferenceId != line.SalesId || origin.ItemId != line.ItemId)
             throw new InvalidOperationException("The inventory origin does not belong to this sales line.");
+    }
+
+    private async Task EnsureStatusAvailableAsync(string companyId, string statusId, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(statusId)) return;
+        var status = await _dbContext.Context.Set<WHSInventStatus>().AsNoTracking().FirstOrDefaultAsync(
+            x => x.DataAreaId == companyId && x.InventStatusId == statusId, ct);
+        if (status is null) throw new InvalidOperationException($"Inventory status '{statusId}' does not exist in the selected company.");
+        if (status.InventStatusBlocking == NoYes.Yes)
+            throw new InvalidOperationException($"Inventory status '{statusId}' is blocked for sales demand.");
     }
 
     private async Task<bool> IsStockedProductAsync(

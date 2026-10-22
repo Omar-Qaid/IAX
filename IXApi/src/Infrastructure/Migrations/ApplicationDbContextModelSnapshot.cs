@@ -23199,6 +23199,71 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("EcoResProductTranslation");
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Inventory.InventoryStatus.Entities.WHSInventStatus", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<int>("InventStatusBlocking")
+                        .HasColumnType("int");
+
+                    b.Property<string>("InventStatusId")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("DataAreaId", "InventStatusId")
+                        .IsUnique();
+
+                    b.ToTable("WHSInventStatus");
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Inventory.ProductCategories.Entities.EcoResCategoryHierarchy", b =>
                 {
                     b.Property<long>("RecId")
@@ -23332,6 +23397,15 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasColumnName("RECID");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<int>("BlockInventory")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BlockPurchase")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BlockSales")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");

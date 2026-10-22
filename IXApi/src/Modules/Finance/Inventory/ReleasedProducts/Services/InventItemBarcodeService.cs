@@ -21,6 +21,23 @@ public sealed class InventItemBarcodeService(IUnitOfWork unitOfWork, ICompanyExe
         return (rows.Select(Map).ToList(), null);
     }
 
+    public async Task<(List<InventItemBarcodeLookupDto>? Rows, string? Error)> FindAsync(string barcode, CancellationToken ct)
+    {
+        var companyId = company.GetDataAreaId();
+        var code = barcode?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(companyId)) return (null, "A company must be selected.");
+        if (code.Length == 0 || code.Length > FieldLengths.ItemBarcode)
+            return (null, "A valid barcode is required.");
+        var rows = await (from row in Db.Set<InventItemBarcode>().AsNoTracking()
+                          join item in Db.Set<ReleasedItem>().AsNoTracking()
+                              on new { row.DataAreaId, row.ItemId } equals new { item.DataAreaId, item.ItemId }
+                          where row.DataAreaId == companyId && row.ItemBarcode == code &&
+                                row.Blocked == NoYes.No && row.UseForInput == NoYes.Yes
+                          orderby item.ItemId, row.UnitId
+                          select new { ItemRecId = item.RecId, Barcode = row }).ToListAsync(ct);
+        return (rows.Select(x => new InventItemBarcodeLookupDto(x.ItemRecId, Map(x.Barcode))).ToList(), null);
+    }
+
     public async Task<(InventItemBarcodeDto? Row, string? Error)> CreateAsync(long releasedProductRecId, InventItemBarcodeInputDto input, CancellationToken ct)
     {
         var item = await ItemAsync(releasedProductRecId, ct);

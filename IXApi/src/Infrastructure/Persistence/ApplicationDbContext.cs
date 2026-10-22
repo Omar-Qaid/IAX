@@ -297,6 +297,7 @@ namespace IAX.IXApi.Infrastructure.Persistence
         public DbSet<EcoResProductTranslation> EcoResProductTranslations => Set<EcoResProductTranslation>();
         public DbSet<EcoResCategory> EcoResCategories => Set<EcoResCategory>();
         public DbSet<IAX.IXApi.Modules.Finance.Inventory.ProductLifecycle.Entities.EcoResProductLifecycleState> EcoResProductLifecycleStates => Set<IAX.IXApi.Modules.Finance.Inventory.ProductLifecycle.Entities.EcoResProductLifecycleState>();
+        public DbSet<IAX.IXApi.Modules.Finance.Inventory.InventoryStatus.Entities.WHSInventStatus> WHSInventStatuses => Set<IAX.IXApi.Modules.Finance.Inventory.InventoryStatus.Entities.WHSInventStatus>();
         public DbSet<IAX.IXApi.Modules.Finance.Inventory.ProductCategories.Entities.EcoResCategoryHierarchy> EcoResCategoryHierarchies => Set<IAX.IXApi.Modules.Finance.Inventory.ProductCategories.Entities.EcoResCategoryHierarchy>();
         public DbSet<IAX.IXApi.Modules.Finance.Inventory.ProductCategories.Entities.EcoResProductCategory> EcoResProductCategories => Set<IAX.IXApi.Modules.Finance.Inventory.ProductCategories.Entities.EcoResProductCategory>();
         public DbSet<EcoResStorageDimensionGroup> EcoResStorageDimensionGroups => Set<EcoResStorageDimensionGroup>();
