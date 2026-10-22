@@ -23,6 +23,40 @@ namespace IAX.IXApi.Tests;
 public sealed class SalesInventoryDemandTests
 {
     [Fact]
+    public async Task Service_without_model_group_has_no_physical_sales_demand()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>()
+            .UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.Set<InventTable>().Add(new InventTable
+        {
+            DataAreaId = "DAT", ItemId = "SERVICE-002", ItemType = ItemType.Service
+        });
+        await db.SaveChangesAsync();
+        var work = new TestUnitOfWork(db);
+        var numbers = new TestNumbers();
+        var service = new SalesInventoryDemandService(work, numbers,
+            new InventDimensionResolver(work, numbers));
+        var order = new SalesTable { DataAreaId = "DAT", SalesId = "SO-SERVICE-2" };
+        var line = new SalesLine
+        {
+            DataAreaId = "DAT", SalesId = order.SalesId, ItemId = "SERVICE-002",
+            QtyOrdered = 2, RemainSalesPhysical = 2, RemainSalesFinancial = 2
+        };
+
+        await service.CreateAsync(order, line, "", "");
+
+        Assert.Equal(NoYes.No, line.StockedProduct);
+        Assert.Empty(line.InventTransId);
+        Assert.Equal(0, line.RemainInventPhysical);
+        Assert.Equal(2, line.RemainSalesPhysical);
+        Assert.Empty(await db.Set<InventTrans>().ToListAsync());
+        Assert.Empty(await db.Set<InventSum>().ToListAsync());
+    }
+
+    [Fact]
     public async Task Non_stocked_model_group_does_not_create_sales_inventory_demand()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
@@ -296,6 +330,7 @@ public sealed class SalesInventoryDemandTests
             Configure<InventSum>(builder);
             Configure<InventModelGroup>(builder);
             Configure<InventModelGroupItem>(builder);
+            Configure<InventTable>(builder);
         }
 
         private static void Configure<TEntity>(ModelBuilder builder) where TEntity : IAX.IXApi.Shared.Domain.Entities.Entity<long>

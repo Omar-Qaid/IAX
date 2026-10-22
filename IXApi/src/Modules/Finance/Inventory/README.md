@@ -4,7 +4,27 @@
 
 The backend foundation includes shared product category hierarchy and assignment APIs (including reverse category-to-product lookup and inactive-category guards), released-item barcode maintenance and company-scoped reverse lookup, and product lifecycle status on `InventTable` with an optional default on release. Basic sales, purchase, and inventory block flags are configured on the lifecycle state; the shared policy currently enforces sales-demand and inventory-journal restrictions. Purchase order execution is absent from this repository, so the purchase flag is ready for a later purchase flow. The standard `WHSInventStatus` table now supplies company-scoped basic inventory status setup without waves, work templates, or mobile warehouse execution. Blocked status preserves physical quantity while excluding it from available on-hand and preventing sales demand and journal issues. The released-product create flow can generate product and item numbers with the existing `SysNumberSequence` service, in the same transaction as persistence, and continues to accept manual numbers. Both approved EF migrations are code only and have not been applied to SQL Server.
 
-Phase A verification on 2026-10-22: eight focused category, barcode, lifecycle/status, sales-demand, and product-number tests passed; the backend build passed. The broader `InventoryArchitectureTests` run before the latest status work had 11 passes and 2 journal failures: a FIFO lifecycle expectation conflicts with the current guard against periodic costing without inventory close, and a costing rejection test encounters missing voucher sequence setup first. SQL Server was not queried and neither migration was applied. Number-sequence concurrency and live persistence remain unverified.
+Phase A verification on 2026-10-22: focused category, barcode, lifecycle/status, sales-demand, and product-number tests passed; the backend build passed. Journal test fixtures now use supported moving-average costing for the successful lifecycle and provide required setup before testing the FIFO rejection. SQL Server was not queried and neither migration was applied. Number-sequence concurrency and live persistence remain unverified.
+
+## Phase B basic product behavior (2026-10-22)
+
+- Stocked item model groups create sales inventory demand in `InventTrans` and `InventSum`; physical journals require a stocked group and posting checks it again.
+- Nonstocked groups and Services without an assigned group retain sales quantities but create no physical inventory demand. Journal line validation rejects nonstocked products before posting.
+- Sales creation, editing, cancellation, and deletion use the existing demand service. There is no purchase-order execution path in this codebase; `BlockPurchase` is configured but cannot yet be enforced on a purchase document.
+- Focused SQLite coverage validates stocked demand, nonstocked demand, service fallback, journal lifecycle, and unsupported FIFO rejection. Database migration application and authenticated API checks remain separate work.
+
+## Phase C basic inventory engine (2026-10-22)
+
+- Existing journal posting creates `InventTrans` and updates `InventSum` for receipts, issues, adjustments, counting, and paired transfers. The transfer regression now checks equal and opposite quantities and costs; the existing journal test checks on-hand against net transactions and rollback after an invalid line.
+- Sales packing-slip posting now checks current product lifecycle and inventory status before allocating a document number or changing stock. Journal transfer posting also checks that its destination inventory status still exists.
+- Sales and purchase return document execution is not present in this backend. A positive adjustment is an inventory receipt, not a substitute for a return document. Purchase receipts are likewise unavailable without a purchase flow.
+- Focused backend verification passed 21/21 SQLite tests after rebuilding the backend. Full backend regression passed 278 tests with 2 skipped. SQL Server and authenticated API verification remain outside the code-only approval.
+
+## Phase D costing (in progress, 2026-10-22)
+
+- FIFO and periodic weighted-average posting remain blocked because `InventClosing` and `InventSettlement` are persistence types without an inventory-close execution, settlement, reversal, or ledger-adjustment workflow. They must not be presented as completed costing methods.
+- Existing standard-cost journal lookup is now company-scoped, chooses the current dimension before a company-wide fallback, and respects the price unit. Receipt prices that differ from the active standard are rejected until variance accounting is implemented; matching-price posting remains supported for existing standard-cost items.
+- New item-model-group setup still accepts only Moving Average. Standard-cost activation/revaluation and purchase-price variances are absent. SQL Server migrations and live verification remain untouched.
 
 ## Existing feature coverage
 

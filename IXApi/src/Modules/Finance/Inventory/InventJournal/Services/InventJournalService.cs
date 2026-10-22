@@ -9,6 +9,7 @@ using IAX.IXApi.Modules.Finance.Inventory.ProductLifecycle;
 using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.EntityFrameworkCore;
 using ReleasedItem = IAX.IXApi.Modules.Finance.Entities.InventTable;
+using ItemModelGroup = IAX.IXApi.Modules.Finance.Entities.InventModelGroup;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
@@ -191,6 +192,20 @@ public sealed class InventJournalService : IInventJournalService
         var lifecycleError = await ProductLifecyclePolicy.ValidateAsync(Db, companyId, itemId,
             ProductLifecycleProcess.Inventory, ct);
         if (lifecycleError is not null) return (lifecycleError, null, null);
+        var modelGroupId = await Db.Set<InventModelGroupItem>().AsNoTracking()
+            .Where(x => x.ItemDataAreaId == companyId && x.ItemId == itemId)
+            .Select(x => x.ModelGroupId).FirstOrDefaultAsync(ct);
+        if (!string.IsNullOrWhiteSpace(modelGroupId))
+        {
+            var stocked = await Db.Set<ItemModelGroup>().AsNoTracking()
+                .Where(x => x.DataAreaId == companyId && x.ModelGroupId == modelGroupId)
+                .Select(x => (NoYes?)x.StockedProduct).FirstOrDefaultAsync(ct);
+            if (stocked != NoYes.Yes)
+                return ("Physical inventory journals require a stocked item model group.", null, null);
+        }
+        else if (await Db.Set<ReleasedItem>().AnyAsync(x => x.DataAreaId == companyId &&
+                     x.ItemId == itemId && x.ItemType == ItemType.Service, ct))
+            return ("Physical inventory journals require a stocked item model group for services.", null, null);
         var fromError = await ValidateSiteWarehouseAsync(companyId, input.InventSiteId, input.InventLocationId, true, ct);
         if (fromError != null) return (fromError, null, null);
         var fromLocationError = await ValidateInventoryLocationAsync(companyId, itemId, input.InventLocationId, input.WmsLocationId, ct);

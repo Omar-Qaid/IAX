@@ -103,11 +103,11 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
                     line.Voucher = string.Empty;
                     continue;
                 }
-                var unitCost = await ResolveUnitCostAsync(item, fromSum, line, header.JournalType, signedQty, ct);
+                var unitCost = await ResolveUnitCostAsync(companyId, item, fromSum, line, header.JournalType, signedQty, ct);
                 if (unitCost <= 0 && signedQty < 0 && item.Model.NegativePhysical == NoYes.Yes)
-                    unitCost = await GetDefaultItemCostAsync(item.ItemId, line.TransDate, ct);
+                    unitCost = await GetDefaultItemCostAsync(companyId, item.ItemId, line.InventDimId, line.TransDate, ct);
                 if (unitCost <= 0 && signedQty > 0 && header.JournalType == InventJournalType.Counting)
-                    unitCost = await GetDefaultItemCostAsync(item.ItemId, line.TransDate, ct);
+                    unitCost = await GetDefaultItemCostAsync(companyId, item.ItemId, line.InventDimId, line.TransDate, ct);
                 if (unitCost < 0 || (signedQty > 0 && unitCost == 0 && header.JournalType != InventJournalType.Transfer))
                     throw new PostingValidationException($"A valid receipt cost is required for item '{item.ItemId}' on line {line.LineNum}.");
                 var voucher = (await _numbers.NextAsync(voucherSequence.NumberSequence, companyId, ct)).Code;
@@ -119,6 +119,9 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
                     var toDim = await Db.Set<InventDim>().FirstOrDefaultAsync(x => x.DataAreaId == companyId && x.InventDimId == line.ToInventDimId, ct)
                         ?? throw new PostingValidationException($"Destination inventory dimension '{line.ToInventDimId}' was not found.");
                     if (toDim.InventDimId == fromDim.InventDimId) throw new PostingValidationException("Transfer source and destination dimensions must be different.");
+                    if (toDim.InventStatusId.Length > 0 && !await Db.Set<WHSInventStatus>().AnyAsync(x =>
+                            x.DataAreaId == companyId && x.InventStatusId == toDim.InventStatusId, ct))
+                        throw new PostingValidationException($"Destination inventory status '{toDim.InventStatusId}' no longer exists.");
                     await ValidateTrackingDimensionsAsync(item, toDim, Math.Abs(inventoryQty), ct);
                     var toSum = await GetOrCreateSummaryAsync(companyId, item.ItemId, toDim, ct);
                     var transferQty = Math.Abs(inventoryQty);
@@ -287,7 +290,7 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
     private static decimal GetRunningAverageCost(InventSum sum) =>
         sum.PhysicalInvent == 0 ? 0m : Math.Abs((sum.PostedValue + sum.PhysicalValue) / sum.PhysicalInvent);
 
-    private async Task<decimal> ResolveUnitCostAsync(ReadyItem item, InventSum summary, InventJournalTrans line,
+    private async Task<decimal> ResolveUnitCostAsync(string companyId, ReadyItem item, InventSum summary, InventJournalTrans line,
         InventJournalType journalType, decimal signedQty, CancellationToken ct)
     {
         // The current basic journal engine implements moving-average issue valuation only.
@@ -299,9 +302,12 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
 
         if (item.Model.InventModel == InventModel.StandardCost)
         {
-            var standardCost = await GetDefaultItemCostAsync(item.ItemId, line.TransDate, ct);
+            var standardCost = await GetDefaultItemCostAsync(companyId, item.ItemId, line.InventDimId, line.TransDate, ct);
             if (standardCost <= 0)
                 throw new PostingValidationException($"An active standard cost is required for item '{item.ItemId}' on {line.TransDate:d}.");
+            if (signedQty > 0 && line.CostPrice > 0 && line.CostPrice != standardCost)
+                throw new PostingValidationException(
+                    $"Receipt price differs from active standard cost for item '{item.ItemId}'. Standard-cost variance posting is not implemented.");
             return standardCost;
         }
 
@@ -310,11 +316,21 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
             : line.CostPrice;
     }
 
-    private async Task<decimal> GetDefaultItemCostAsync(string itemId, DateTime transDate, CancellationToken ct) =>
-        await Db.Set<InventItemPrice>().AsNoTracking()
-            .Where(x => x.ItemId == itemId && x.PriceType == PreferredPriceType.CostPrice &&
-                x.CostingType == CostingType.StandardCost && x.ActivationDate <= transDate)
-            .OrderByDescending(x => x.ActivationDate).Select(x => (decimal?)x.Price).FirstOrDefaultAsync(ct) ?? 0m;
+    private async Task<decimal> GetDefaultItemCostAsync(string companyId, string itemId, string inventDimId,
+        DateTime transDate, CancellationToken ct)
+    {
+        var price = await Db.Set<InventItemPrice>().AsNoTracking()
+            .Where(x => x.DataAreaId == companyId && x.ItemId == itemId &&
+                x.PriceType == PreferredPriceType.CostPrice &&
+                x.CostingType == CostingType.StandardCost && x.ActivationDate <= transDate &&
+                (x.InventDimId == inventDimId || x.InventDimId == string.Empty))
+            .OrderByDescending(x => x.InventDimId == inventDimId)
+            .ThenByDescending(x => x.ActivationDate)
+            .ThenByDescending(x => x.RecId)
+            .Select(x => new { x.Price, x.PriceUnit })
+            .FirstOrDefaultAsync(ct);
+        return price is null ? 0m : price.Price / (price.PriceUnit > 0 ? price.PriceUnit : 1m);
+    }
 
     private static void ApplySummary(InventSum sum, decimal qty, decimal unitCost)
     {

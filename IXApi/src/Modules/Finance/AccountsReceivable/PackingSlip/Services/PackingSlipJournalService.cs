@@ -6,6 +6,8 @@ using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.PackingSlip.Dtos;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
+using IAX.IXApi.Modules.Finance.Inventory.InventoryStatus.Entities;
+using IAX.IXApi.Modules.Finance.Inventory.ProductLifecycle;
 using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -149,7 +151,8 @@ public sealed class PackingSlipJournalService(
             }
             var lines = await Db.Set<SalesLine>().Where(line => line.DataAreaId == order.DataAreaId
                 && line.SalesId == order.SalesId && requested.Keys.Contains(line.RecId))
-                .OrderBy(line => line.LineNum).ToListAsync(ct);
+                .ToListAsync(ct);
+            lines = lines.OrderBy(line => line.LineNum).ToList();
             if (lines.Count != requested.Count)
                 return new PackingSlipJournalResult(422, null, "A selected sales line no longer belongs to this order.");
             if (lines.Any(line => line.SalesStatus != SalesStatus.Backorder || line.StockedProduct != NoYes.Yes
@@ -161,6 +164,24 @@ public sealed class PackingSlipJournalService(
             if (lines.Any(line => string.IsNullOrWhiteSpace(line.InventTransId)
                 || !dimensions.ContainsKey(line.InventDimId)))
                 return new PackingSlipJournalResult(422, null, "Every selected line must have a valid inventory transaction and dimensions.");
+
+            foreach (var line in lines)
+            {
+                var lifecycleError = await ProductLifecyclePolicy.ValidateAsync(Db, order.DataAreaId,
+                    line.ItemId, ProductLifecycleProcess.Sales, ct);
+                if (lifecycleError is not null)
+                    return new PackingSlipJournalResult(422, null, lifecycleError);
+                var statusId = dimensions[line.InventDimId].InventStatusId;
+                if (string.IsNullOrWhiteSpace(statusId)) continue;
+                var status = await Db.Set<WHSInventStatus>().AsNoTracking().FirstOrDefaultAsync(row =>
+                    row.DataAreaId == order.DataAreaId && row.InventStatusId == statusId, ct);
+                if (status is null)
+                    return new PackingSlipJournalResult(422, null,
+                        $"Inventory status '{statusId}' is no longer configured.");
+                if (status.InventStatusBlocking == NoYes.Yes)
+                    return new PackingSlipJournalResult(422, null,
+                        $"Inventory status '{statusId}' is blocked for issue.");
+            }
 
             var packingSlipId = await NextPackingSlipIdAsync(order.DataAreaId, ct);
             var deliveryDate = request.DeliveryDate?.Date ?? DateTime.UtcNow.Date;

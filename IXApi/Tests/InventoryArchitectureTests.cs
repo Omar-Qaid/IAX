@@ -1,5 +1,7 @@
 using System.Reflection;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
+using IAX.IXApi.Modules.Finance.AccountsReceivable.PackingSlip;
+using IAX.IXApi.Modules.Finance.AccountsReceivable.PackingSlip.Dtos;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Services;
 using IAX.IXApi.Modules.Finance.Common;
@@ -96,6 +98,40 @@ public sealed class InventoryArchitectureTests
         Assert.Equal(0, onHand.AvailablePhysical);
         Assert.True(onHand.InventoryStatusBlocked);
         Assert.NotNull(await inventoryStatuses.DeleteAsync(status.Row!.RecId, default));
+    }
+
+    [Fact]
+    public async Task Sales_issue_rechecks_product_and_inventory_status_before_allocating_a_packing_slip()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.AddRange(
+            new SalesTable { RecId = 901, DataAreaId = "dat", SalesId = "SO-901", SalesStatus = SalesStatus.Backorder },
+            new SalesLine { RecId = 902, DataAreaId = "dat", SalesId = "SO-901", ItemId = "ITEM-901",
+                SalesStatus = SalesStatus.Backorder, StockedProduct = NoYes.Yes, InventDimId = "DIM-901",
+                InventTransId = "TRANS-901", RemainSalesPhysical = 1, RemainInventPhysical = 1 },
+            new ReleasedItem { RecId = 903, DataAreaId = "dat", ItemId = "ITEM-901", ProductLifecycleStateId = "HOLD" },
+            new EcoResProductLifecycleState { RecId = 904, StateId = "HOLD", Description = "Hold", BlockSales = NoYes.Yes },
+            new InventDim { RecId = 905, DataAreaId = "dat", InventDimId = "DIM-901", InventStatusId = "AVAILABLE" },
+            new WHSInventStatus { RecId = 906, DataAreaId = "dat", InventStatusId = "AVAILABLE", Name = "Available" });
+        await db.SaveChangesAsync();
+        var service = new PackingSlipJournalService(new TestUnitOfWork(db), new TestIdentity(), null!);
+        var request = new PostPackingSlipRequest(null, "all", true, "REQUEST-901",
+            [new PackingSlipPostingLineRequest("902", 1)]);
+
+        var productBlocked = await service.PostAsync(901, request, default);
+        Assert.Equal(422, productBlocked.StatusCode);
+        Assert.Contains("blocks sales", productBlocked.Message);
+
+        (await db.Set<ReleasedItem>().SingleAsync()).ProductLifecycleStateId = string.Empty;
+        (await db.Set<WHSInventStatus>().SingleAsync()).InventStatusBlocking = NoYes.Yes;
+        await db.SaveChangesAsync();
+        var inventoryBlocked = await service.PostAsync(901, request, default);
+        Assert.Equal(422, inventoryBlocked.StatusCode);
+        Assert.Contains("blocked for issue", inventoryBlocked.Message);
+        Assert.Empty(await db.Set<CustPackingSlipJour>().ToListAsync());
     }
 
     [Fact]
@@ -207,16 +243,20 @@ public sealed class InventoryArchitectureTests
         await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
         await db.Database.EnsureCreatedAsync();
         db.AddRange(
-            new InventJournalTable { RecId = 1, DataAreaId = "dat", JournalId = "J-1", JournalNameId = "ADJ", JournalType = InventJournalType.Adjustment },
+            new InventJournalTable { RecId = 1, DataAreaId = "dat", JournalId = "J-1", JournalNameId = "ADJ", JournalType = InventJournalType.Adjustment, VoucherNumberSequenceTable = 4 },
             new InventJournalTrans { RecId = 2, DataAreaId = "dat", JournalId = "J-1", JournalType = InventJournalType.Adjustment, ItemId = "ITEM-1", InventDimId = "DIM-1", Unit = "pcs", Qty = 1, CostPrice = 10 },
             new InventJournalName { RecId = 3, DataAreaId = "dat", JournalNameId = "ADJ", JournalType = InventJournalType.Adjustment, VoucherNumberSequenceTable = 4 },
             new SysNumberSequence { RecId = 4, DataAreaId = "dat", NumberSequence = "INV-VOUCHER", Txt = "Inventory voucher", Format = "IV-#####", AnnotatedFormat = "IV-{SEQ}", InUse = 1, IsActive = true, NextRec = 1, Highest = 99999 },
             new ReleasedItem { RecId = 5, DataAreaId = "dat", ItemId = "ITEM-1", Product = 6 },
+            new InventTableModule { RecId = 16, DataAreaId = "dat", ItemId = "ITEM-1", ModuleType = ModuleInventPurchSales.Inventory, UnitId = "pcs" },
             new InventModelGroup { RecId = 7, DataAreaId = "dat", ModelGroupId = "FIFO", Name = "FIFO", InventModel = InventModel.FIFO, StockedProduct = NoYes.Yes },
             new InventModelGroupItem { RecId = 8, DataAreaId = "dat", ItemId = "ITEM-1", ItemDataAreaId = "dat", ModelGroupId = "FIFO", ModelGroupDataAreaId = "dat" },
             new EcoResTrackingDimensionGroupItem { RecId = 9, DataAreaId = "dat", ItemId = "ITEM-1", ItemDataAreaId = "dat", TrackingDimensionGroup = 10 },
             new EcoResTrackingDimensionGroup { RecId = 10, Name = "No tracking" },
-            new InventDim { RecId = 11, DataAreaId = "dat", InventDimId = "DIM-1", InventSiteId = "JED", InventLocationId = "MAIN" });
+            new InventDim { RecId = 11, DataAreaId = "dat", InventDimId = "DIM-1", InventSiteId = "JED", InventLocationId = "MAIN" },
+            new Ledger { RecId = 12, DataAreaId = "dat", FiscalCalendar = 13, AccountingCurrency = "SAR", ReportingCurrency = "SAR" },
+            new FiscalCalendarPeriod { RecId = 14, DataAreaId = "dat", FiscalCalendar = 13, StartDate = DateTime.Today.AddDays(-1), EndDate = DateTime.Today.AddDays(1), Type = FiscalPeriodType.Operating },
+            new LedgerFiscalCalendarPeriod { RecId = 15, DataAreaId = "dat", Ledger = 12, FiscalCalendarPeriod = 14, Status = FiscalPeriodStatus.Open });
         await db.SaveChangesAsync();
         var identity = new TestIdentity();
         var unitOfWork = new TestUnitOfWork(db);
@@ -543,8 +583,8 @@ public sealed class InventoryArchitectureTests
             new UnitOfMeasureConversion { RecId = 46, DataAreaId = "dat", FromUnitOfMeasure = 45, ToUnitOfMeasure = 8,
                 Product = 0, Factor = 4, Numerator = 1, Denominator = 1, Rounding = UnitOfMeasureRounding.Nearest },
             new SysNumberSequence { RecId = 9, DataAreaId = "dat", NumberSequence = "InventJournalVoucher", Txt = "Voucher", Format = "IV-#####", AnnotatedFormat = "IV-{SEQ}", InUse = 1, IsActive = true, NextRec = 1, Highest = 99999 },
-            new InventModelGroup { RecId = 10, DataAreaId = "dat", ModelGroupId = "FIFO", Name = "FIFO", InventModel = InventModel.FIFO, StockedProduct = NoYes.Yes },
-            new InventModelGroupItem { RecId = 11, DataAreaId = "dat", ItemId = "ITEM-001", ItemDataAreaId = "dat", ModelGroupId = "FIFO", ModelGroupDataAreaId = "dat" },
+            new InventModelGroup { RecId = 10, DataAreaId = "dat", ModelGroupId = "MOV-AVG", Name = "Moving average", InventModel = InventModel.MovingAverage, StockedProduct = NoYes.Yes },
+            new InventModelGroupItem { RecId = 11, DataAreaId = "dat", ItemId = "ITEM-001", ItemDataAreaId = "dat", ModelGroupId = "MOV-AVG", ModelGroupDataAreaId = "dat" },
             new EcoResTrackingDimensionGroupItem { RecId = 40, DataAreaId = "dat", ItemId = "ITEM-001", ItemDataAreaId = "dat", TrackingDimensionGroup = 41 },
             new EcoResTrackingDimensionGroup { RecId = 41, Name = "No tracking" },
             new InventTableModule { RecId = 12, DataAreaId = "dat", ItemId = "ITEM-001", ModuleType = ModuleInventPurchSales.Inventory, UnitId = "pcs" },
@@ -604,6 +644,13 @@ public sealed class InventoryArchitectureTests
         Assert.Equal(2, posted.Result.InventoryTransactionsCreated);
         Assert.Equal(0, posted.Result.LedgerEntriesCreated);
         Assert.Equal(3, await db.Set<InventTrans>().CountAsync());
+        var transferTransactions = await db.Set<InventTrans>()
+            .Where(x => x.ItemId == "ITEM-001" && x.Voucher == posted.Result.Vouchers.Single())
+            .ToListAsync();
+        transferTransactions = transferTransactions.OrderBy(x => x.Qty).ToList();
+        Assert.Equal(new decimal[] { -2, 2 }, transferTransactions.Select(x => x.Qty));
+        Assert.Equal(0, transferTransactions.Sum(x => x.Qty));
+        Assert.Equal(0, transferTransactions.Sum(x => x.CostAmountPosted));
         Assert.Equal(3, (await db.Set<InventSum>().SingleAsync(x => x.InventDimId == line.InventDimId)).PhysicalInvent);
         Assert.Equal(2, (await db.Set<InventSum>().SingleAsync(x => x.InventDimId == line.ToInventDimId)).PhysicalInvent);
         Assert.NotNull((await posting.PostAsync(created.Journal.JournalId, default)).Error);
@@ -700,6 +747,41 @@ public sealed class InventoryArchitectureTests
         Assert.Equal(beforeRollbackEntries, await db.Set<GeneralJournalEntry>().CountAsync());
         Assert.Equal(beforeRollbackQty, await db.Set<InventSum>().Where(x => x.ItemId == "ITEM-001").SumAsync(x => x.PhysicalInvent));
         Assert.False((await service.GetAsync(rollbackJournal.Journal.JournalId, default))!.Posted);
+
+        (await db.Set<InventModelGroup>().SingleAsync()).InventModel = InventModel.StandardCost;
+        db.AddRange(
+            new InventItemPrice { DataAreaId = "other", ItemId = "ITEM-001", InventDimId = line.InventDimId,
+                CostingType = CostingType.StandardCost, PriceType = PreferredPriceType.CostPrice,
+                ActivationDate = DateTime.Today.AddDays(-1), Price = 1000, PriceUnit = 1 },
+            new InventItemPrice { DataAreaId = "dat", ItemId = "ITEM-001", InventDimId = "OTHER-DIM",
+                CostingType = CostingType.StandardCost, PriceType = PreferredPriceType.CostPrice,
+                ActivationDate = DateTime.Today.AddDays(-1), Price = 500, PriceUnit = 1 },
+            new InventItemPrice { DataAreaId = "dat", ItemId = "ITEM-001", InventDimId = string.Empty,
+                CostingType = CostingType.StandardCost, PriceType = PreferredPriceType.CostPrice,
+                ActivationDate = DateTime.Today.AddDays(-1), Price = 8, PriceUnit = 1 },
+            new InventItemPrice { DataAreaId = "dat", ItemId = "ITEM-001", InventDimId = line.InventDimId,
+                CostingType = CostingType.StandardCost, PriceType = PreferredPriceType.CostPrice,
+                ActivationDate = DateTime.Today.AddDays(-1), Price = 12, PriceUnit = 2 });
+        await db.SaveChangesAsync();
+        var standardJournal = await service.CreateAsync(new InventJournalCreateDto
+        { JournalNameId = "ADJ", Description = "Existing standard-cost item", InventSiteId = "JED", InventLocationId = "MAIN" }, default);
+        var standardLine = await service.AddLineAsync(standardJournal.Journal!.JournalId, new InventJournalLineInputDto
+        { ItemId = "ITEM-001", InventSiteId = "JED", InventLocationId = "MAIN", Unit = "pcs", Qty = 1,
+            CostPrice = 999, TransDate = DateTime.Today }, default);
+        Assert.Null(standardLine.Error);
+        var beforeVarianceTransactions = await db.Set<InventTrans>().CountAsync();
+        var varianceRejected = await posting.PostAsync(standardJournal.Journal.JournalId, default);
+        Assert.Contains("variance posting is not implemented", varianceRejected.Error);
+        Assert.Equal(beforeVarianceTransactions, await db.Set<InventTrans>().CountAsync());
+        var correctedLine = await service.UpdateLineAsync(standardJournal.Journal.JournalId,
+            Assert.Single(standardLine.Journal!.Lines).RecId, new InventJournalLineInputDto
+            { ItemId = "ITEM-001", InventSiteId = "JED", InventLocationId = "MAIN", Unit = "pcs", Qty = 1,
+                CostPrice = 6, TransDate = DateTime.Today }, default);
+        Assert.Null(correctedLine.Error);
+        var standardPost = await posting.PostAsync(standardJournal.Journal.JournalId, default);
+        Assert.Null(standardPost.Error);
+        Assert.Equal(6, await db.Set<InventTrans>().Where(x => x.Voucher == standardPost.Result!.Vouchers.Single())
+            .Select(x => x.CostAmountPosted).SingleAsync());
     }
 
     private sealed class InventoryContext(DbContextOptions<InventoryContext> options) : DbContext(options)
@@ -714,12 +796,15 @@ public sealed class InventoryArchitectureTests
             Configure<InventTransOrigin>(builder);
             Configure<InventDim>(builder);
             Configure<SalesLine>(builder);
+            Configure<SalesTable>(builder);
+            Configure<CustPackingSlipJour>(builder);
             Configure<ReleasedItem>(builder);
             Configure<InventSum>(builder);
             Configure<InventItemBarcode>(builder);
             Configure<UnitOfMeasure>(builder);
             Configure<UnitOfMeasureConversion>(builder);
             Configure<InventTableModule>(builder);
+            Configure<InventItemPrice>(builder);
             Configure<SharedProduct>(builder);
             Configure<IAX.IXApi.Modules.Finance.Inventory.InventTable.EcoResDistinctProduct>(builder);
             Configure<IAX.IXApi.Modules.Finance.Inventory.InventTable.EcoResProductTranslation>(builder);

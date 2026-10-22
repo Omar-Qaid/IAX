@@ -346,8 +346,15 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
         var assignment = await _dbContext.Context.Set<InventModelGroupItem>().AsNoTracking()
             .FirstOrDefaultAsync(item => item.ItemDataAreaId == dataAreaId && item.ItemId == itemId,
                 cancellationToken);
-        // Preserve compatibility for existing sales flows that predate model-group assignment.
-        if (assignment is null) return true;
+        // Existing unconfigured items retain legacy demand behavior; services default to
+        // non-stocked until a model group explicitly opts them into inventory.
+        if (assignment is null)
+        {
+            var itemType = await _dbContext.Context.Set<InventTable>().AsNoTracking()
+                .Where(item => item.DataAreaId == dataAreaId && item.ItemId == itemId)
+                .Select(item => (ItemType?)item.ItemType).FirstOrDefaultAsync(cancellationToken);
+            return itemType != ItemType.Service;
+        }
 
         var modelGroup = await _dbContext.Context.Set<InventModelGroup>().AsNoTracking()
             .FirstOrDefaultAsync(group => group.DataAreaId == assignment.ModelGroupDataAreaId
