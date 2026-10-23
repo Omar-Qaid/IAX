@@ -179,10 +179,10 @@ export function InventPostingPage(): React.ReactElement {
                     key === 'itemCode' || key === 'custVendCode'
                       ? Number(event.target.value)
                       : event.target.value,
-                  ...(key === 'itemCode' && Number(event.target.value) === 2
+                  ...(key === 'itemCode'
                     ? { itemRelation: '' }
                     : {}),
-                  ...(key === 'custVendCode' && Number(event.target.value) === 2
+                  ...(key === 'custVendCode'
                     ? { custVendRelation: '' }
                     : {}),
                 }
@@ -325,7 +325,7 @@ export function InventPostingPage(): React.ReactElement {
       rows={shownRows}
       columns={columns}
       loading={rules.isLoading}
-      error={error || (rules.isError ? rules.error.message : '')}
+      error={error || (rules.isError ? rules.error.message : '') || (lookups.isError ? lookups.error.message : '')}
       editing={Boolean(draft)}
       saving={saving}
       canCreate={canCreate}

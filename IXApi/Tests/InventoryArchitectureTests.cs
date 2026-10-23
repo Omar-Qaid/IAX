@@ -34,6 +34,36 @@ namespace IAX.IXApi.Tests;
 public sealed class InventoryArchitectureTests
 {
     [Fact]
+    public async Task Posting_profile_normalizes_tax_group_and_rejects_duplicates_and_foreign_updates()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        new InventPostingMapping().Register(TypeAdapterConfig.GlobalSettings);
+        db.AddRange(
+            new MainAccount { RecId = 71, MainAccountId = "1100" },
+            new DimensionAttributeValueCombination { RecId = 72, DataAreaId = "dat", MainAccount = 71, MainAccountValue = "1100" },
+            new TaxGroupHeading { RecId = 73, DataAreaId = "dat", TaxGroup = "VAT" });
+        await db.SaveChangesAsync();
+        var identity = new TestIdentity();
+        var service = new InventPostingService(new TestUnitOfWork(db), identity, identity);
+        var input = new InventPostingRuleDto { InventAccountType = (int)InventAccountType.InventReceipt,
+            ItemCode = (int)TableGroupAll.All, CustVendCode = (int)TableGroupAll.All,
+            LedgerDimension = "72", TaxGroupId = " vat " };
+        var created = await service.CreateAsync(input, default);
+        Assert.Null(created.Error);
+        Assert.Equal("VAT", created.Rule!.TaxGroupId);
+        Assert.NotNull((await service.CreateAsync(input, default)).Error);
+        var id = (await db.Set<InventPosting>().SingleAsync()).RecId;
+        identity.DataAreaId = "other";
+        Assert.Empty((await service.ListAsync(input.InventAccountType, default))!);
+        Assert.NotNull((await service.UpdateAsync(id, input, default)).Error);
+        Assert.False((await service.DeleteAsync(id, default)).Deleted);
+        Assert.Single(await db.Set<InventPosting>().ToListAsync());
+    }
+
+    [Fact]
     public async Task Physical_as_of_report_uses_dated_movements_and_excludes_draft_demand()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
@@ -1067,6 +1097,7 @@ public sealed class InventoryArchitectureTests
             Configure<EcoResStorageDimensionGroupFldSetup>(builder);
             Configure<InventItemGroupItem>(builder);
             Configure<InventPosting>(builder);
+            Configure<TaxGroupHeading>(builder);
             Configure<MainAccount>(builder);
             Configure<DimensionAttributeValueCombination>(builder);
             Configure<Ledger>(builder);

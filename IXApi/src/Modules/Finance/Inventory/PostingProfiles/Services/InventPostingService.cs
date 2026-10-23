@@ -99,7 +99,8 @@ public sealed class InventPostingService : BaseService<InventPostingEntity>, IIn
             ? await Db.Set<Entities.MainAccount>().AnyAsync(x => x.RecId == account.MainAccount, ct)
             : await Db.Set<Entities.MainAccount>().AnyAsync(x => x.MainAccountId == account.MainAccountValue, ct);
         if (!mainAccountExists) return ("The ledger dimension does not reference an existing MainAccount record.", 0, 0, "");
-        if (input.TaxGroupId.Length > 0 && !await Db.Set<Entities.TaxGroupHeading>().AnyAsync(x => x.DataAreaId == companyId && x.TaxGroup == input.TaxGroupId, ct)) return ("Sales tax group is invalid.", 0, 0, "");
+        var taxGroupId = input.TaxGroupId.Trim().ToUpperInvariant();
+        if (taxGroupId.Length > 0 && !await Db.Set<Entities.TaxGroupHeading>().AnyAsync(x => x.DataAreaId == companyId && x.TaxGroup == taxGroupId, ct)) return ("Sales tax group is invalid.", 0, 0, "");
         return (null, category, ledger, account.MainAccountValue);
     }
 
