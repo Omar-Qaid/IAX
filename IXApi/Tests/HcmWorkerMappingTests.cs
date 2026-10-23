@@ -2,7 +2,6 @@ using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Foundation.Genders;
 using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 using IAX.IXApi.Modules.Finance.Foundation.Nationalities;
-using IAX.IXApi.Modules.Finance.Foundation.Occupations;
 using Mapster;
 using Xunit;
 

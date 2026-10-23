@@ -9,14 +9,8 @@ import { useCompanyStore } from '@core/company/useCompanyStore';
 interface Props { open: boolean; onClose: () => void; onCreated: (product: ReleasedProductRecord) => void | Promise<void> }
 const initialValues = (): Record<string, FastTabValue> => ({ productType: 'Item', productSubtype: 'Product', productNumber: '', name: '', nameAlias: '', searchName: '', itemNumber: '', itemNameAlias: '', inventoryUnit: '', purchaseUnit: '', salesUnit: '', purchaseToInventoryFactor: 1, salesToInventoryFactor: 1, itemGroupId: '', modelGroupId: '', storageDimensionGroupId: '', trackingDimensionGroupId: '', salesTaxItemGroupId: '', purchaseTaxItemGroupId: '', purchasePrice: 0, salesPrice: 0, inventoryPrice: 0, defaultOrderType: 1, purchaseSiteId: '', purchaseWarehouseId: '', purchaseMinimumQuantity: 0, purchaseMaximumQuantity: 0, purchaseMultipleQuantity: 1, salesSiteId: '', salesWarehouseId: '', salesMinimumQuantity: 0, salesMaximumQuantity: 0, salesMultipleQuantity: 1, inventorySiteId: '', inventoryWarehouseId: '', inventoryMinimumQuantity: 0, inventoryMaximumQuantity: 0, inventoryMultipleQuantity: 1 });
 const setupFields = ['modelGroupId', 'itemGroupId', 'storageDimensionGroupId', 'trackingDimensionGroupId', 'inventoryUnit', 'purchaseUnit', 'salesUnit'] as const;
-const optionalSetupFields = ['salesTaxItemGroupId', 'purchaseTaxItemGroupId', 'purchaseSiteId', 'purchaseWarehouseId', 'salesSiteId', 'salesWarehouseId', 'inventorySiteId', 'inventoryWarehouseId'] as const;
 
-function hasConfigurationValues(v: Record<string, FastTabValue>): boolean {
-  return setupFields.some((field) => String(v[field] ?? '').trim()) || optionalSetupFields.some((field) => String(v[field] ?? '').trim()) || ['inventoryPrice', 'purchasePrice', 'salesPrice'].some((field) => Number(v[field] ?? 0) !== 0);
-}
-
-function buildConfiguration(v: Record<string, FastTabValue>): ConfigureReleasedProductInput | undefined {
-  if (!hasConfigurationValues(v)) return undefined;
+function buildConfiguration(v: Record<string, FastTabValue>): ConfigureReleasedProductInput {
   return { inventoryUnit: String(v.inventoryUnit), purchaseUnit: String(v.purchaseUnit), salesUnit: String(v.salesUnit), purchaseToInventoryFactor: Number(v.purchaseToInventoryFactor), salesToInventoryFactor: Number(v.salesToInventoryFactor), inventoryPrice: Number(v.inventoryPrice), purchasePrice: Number(v.purchasePrice), salesPrice: Number(v.salesPrice), priceUnit: 1, purchaseTaxItemGroupId: String(v.purchaseTaxItemGroupId), salesTaxItemGroupId: String(v.salesTaxItemGroupId), itemGroupId: String(v.itemGroupId), modelGroupId: String(v.modelGroupId), storageDimensionGroupId: String(v.storageDimensionGroupId), trackingDimensionGroupId: String(v.trackingDimensionGroupId), defaultOrderSettings: { defaultOrderType: Number(v.defaultOrderType), purchase: { siteId: String(v.purchaseSiteId), warehouseId: String(v.purchaseWarehouseId), standardQuantity: 1, minimumQuantity: Number(v.purchaseMinimumQuantity), maximumQuantity: Number(v.purchaseMaximumQuantity), multipleQuantity: Number(v.purchaseMultipleQuantity), leadTimeDays: 0, stopped: false }, sales: { siteId: String(v.salesSiteId), warehouseId: String(v.salesWarehouseId), standardQuantity: 1, minimumQuantity: Number(v.salesMinimumQuantity), maximumQuantity: Number(v.salesMaximumQuantity), multipleQuantity: Number(v.salesMultipleQuantity), leadTimeDays: 0, stopped: false }, inventory: { siteId: String(v.inventorySiteId), warehouseId: String(v.inventoryWarehouseId), standardQuantity: 1, minimumQuantity: Number(v.inventoryMinimumQuantity), maximumQuantity: Number(v.inventoryMaximumQuantity), multipleQuantity: Number(v.inventoryMultipleQuantity), leadTimeDays: 0, stopped: false } } };
 }
 
@@ -27,7 +21,7 @@ export function ReleasedProductCreateDrawer({ open, onClose, onCreated }: Props)
   const options = lookups.data;
   const sections = useMemo<FastTabSection[]>(() => [
     { id: 'identity', title: t('releasedProduct.create.identification', 'IDENTIFICATION'), fields: [
-      { name: 'productType', label: t('releasedProduct.fields.productType'), type: 'select', options: [{ value: 'Item', label: t('product.options.item', 'Item') }, { value: 'Service', label: t('product.options.service', 'Service') }] },
+      { name: 'productType', label: t('releasedProduct.fields.productType'), type: 'display' },
       { name: 'productSubtype', label: t('releasedProduct.fields.productSubtype'), type: 'select', disabled: true, options: [{ value: 'Product', label: 'Product' }] },
       { name: 'productNumber', label: t('product.fields.productNumber'), required: true }, { name: 'name', label: t('product.fields.productName'), required: true },
       { name: 'nameAlias', label: t('product.fields.arabicName') }, { name: 'searchName', label: t('product.fields.searchName') },
@@ -75,7 +69,7 @@ export function ReleasedProductCreateDrawer({ open, onClose, onCreated }: Props)
   return <FastTabsDrawer open={open} resetKey={open ? 'released-open' : 'released-closed'} title={t('releasedProduct.createTitle', 'New released product')} viewLabel={t('common.standardView')} sections={sections} loading={lookups.isLoading} loadError={lookups.error instanceof Error ? lookups.error.message : null} initialValues={initialValues}
     validate={(values) => {
       const errors = required.reduce<Record<string,string>>((result, field) => { if (!String(values[field] ?? '').trim()) result[field] = t('validation.required', { field }); return result; }, {});
-      if (hasConfigurationValues(values)) for (const field of setupFields) if (!String(values[field] ?? '').trim()) errors[field] = t('validation.required', { field });
+      for (const field of setupFields) if (!String(values[field] ?? '').trim()) errors[field] = t('validation.required', { field });
       if (String(values.purchaseUnit) !== String(values.inventoryUnit) && Number(values.purchaseToInventoryFactor) <= 0) errors.purchaseToInventoryFactor = t('releasedProduct.validation.conversionFactor', 'A positive conversion factor is required when units differ.');
       if (String(values.salesUnit) !== String(values.inventoryUnit) && Number(values.salesToInventoryFactor) <= 0) errors.salesToInventoryFactor = t('releasedProduct.validation.conversionFactor', 'A positive conversion factor is required when units differ.');
       for (const prefix of ['purchase', 'sales', 'inventory']) {
@@ -84,6 +78,8 @@ export function ReleasedProductCreateDrawer({ open, onClose, onCreated }: Props)
           errors[siteField] = t('releasedProduct.validation.siteWarehousePair', 'Site and warehouse must be selected together.');
           errors[warehouseField] = t('releasedProduct.validation.siteWarehousePair', 'Site and warehouse must be selected together.');
         }
+        if (!String(values[siteField] ?? '').trim()) errors[siteField] = t('validation.required', { field: siteField });
+        if (!String(values[warehouseField] ?? '').trim()) errors[warehouseField] = t('validation.required', { field: warehouseField });
         const minimum = Number(values[`${prefix}MinimumQuantity`] ?? 0); const maximum = Number(values[`${prefix}MaximumQuantity`] ?? 0); const multiple = Number(values[`${prefix}MultipleQuantity`] ?? 0);
         if (minimum < 0) errors[`${prefix}MinimumQuantity`] = t('validation.nonNegative', 'Value cannot be negative.');
         if (maximum < 0 || (maximum > 0 && minimum > maximum)) errors[`${prefix}MaximumQuantity`] = t('releasedProduct.validation.maximumQuantity', 'Maximum quantity must be zero or greater than or equal to minimum quantity.');

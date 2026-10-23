@@ -15,6 +15,7 @@ export function InventOnHandPage(): React.ReactElement {
     () => [
       { field: 'itemNumber', headerName: t('inventTrans.fields.itemNumber', 'Item number'), width: 145, pinned: 'left' },
       { field: 'productName', headerName: t('product.fields.productName', 'Product name'), width: 210 },
+      { field: 'inventoryUnit', headerName: t('inventOnHand.inventoryUnit', 'Inventory unit'), width: 110 },
       { field: 'site', headerName: t('inventTrans.fields.site', 'Site'), width: 95 },
       { field: 'warehouse', headerName: t('inventTrans.fields.warehouse', 'Warehouse'), width: 115 },
       { field: 'physicalInventory', headerName: t('inventOnHand.physicalInventory', 'Physical inventory'), width: 140, type: 'number', align: 'right' },

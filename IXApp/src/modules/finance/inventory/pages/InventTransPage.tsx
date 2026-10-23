@@ -265,6 +265,10 @@ function InventTransDialog({
             [t('inventTrans.fields.number'), selected.referenceNumber],
             [t('inventTrans.fields.expectedDate'), selected.expectedDate ?? ''],
             [t('inventTrans.fields.voucher'), selected.voucher],
+            [t('inventTrans.fields.physicalVoucher'), selected.physicalVoucher],
+            [t('inventTrans.fields.physicalCostAmount'), selected.physicalCostAmount.toLocaleString()],
+            [t('inventTrans.fields.postedCostAmount'), selected.postedCostAmount.toLocaleString()],
+            [t('inventTrans.fields.costAdjustmentAmount'), selected.costAdjustmentAmount.toLocaleString()],
             [t('fields.currency'), selected.currencyCode],
           ]
         : [

@@ -2831,6 +2831,7 @@
   },
   "inventOnHand": {
     "title": "المخزون الفعلي",
+    "inventoryUnit": "وحدة المخزون",
     "physicalInventory": "المخزون الفعلي",
     "physicalReserved": "المحجوز فعلياً",
     "availablePhysical": "المتاح فعلياً",
@@ -2843,6 +2844,10 @@
   "inventTrans": {
     "transactionFilter": "عامل تصفية الحركة",
     "fields": {
+      "physicalCostAmount": "التكلفة الفعلية",
+      "postedCostAmount": "التكلفة المرحلة",
+      "costAdjustmentAmount": "تعديل التكلفة",
+      "physicalVoucher": "القسيمة الفعلية",
       "itemNumber": "رقم الصنف",
       "physicalDate": "التاريخ الفعلي",
       "financialDate": "التاريخ المالي",

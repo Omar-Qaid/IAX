@@ -7,6 +7,7 @@ export interface InventOnHandRecord {
   recId: number;
   itemNumber: string;
   productName: string;
+  inventoryUnit: string;
   inventDimId: string;
   site: string;
   warehouse: string;

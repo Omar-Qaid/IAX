@@ -51,6 +51,8 @@ public sealed class InventModelGroupService : BaseService<InventModelGroupEntity
         var error = Validate(id, input);
         if (error is not null) return (null, error);
         if (row.ModelGroupId != id) return (null, "Item model group ID cannot be changed after creation.");
+        if (await Db.Set<InventModelGroupItem>().AnyAsync(x => x.ModelGroupDataAreaId == companyId && x.ModelGroupId == id, ct))
+            return (null, "A model group assigned to released products cannot be changed through basic setup.");
         Apply(row, input);
         await _unitOfWork.CompleteAsync(ct);
         return (Map(row), null);
@@ -73,14 +75,13 @@ public sealed class InventModelGroupService : BaseService<InventModelGroupEntity
     private static string? Validate(string id, InventModelGroupRecordDto input) =>
         id.Length == 0 ? "Item model group is required." :
         string.IsNullOrWhiteSpace(input.Name) ? "Name is required." :
-        !Enum.IsDefined(typeof(InventModel), input.InventModel) ? "Inventory model is invalid." :
-        input.InventModel is (int)InventModel.FIFO or (int)InventModel.WeightedAvg or (int)InventModel.WeightedAvg_Date
-            ? "FIFO and weighted-average models require inventory close/settlement, which is not implemented in this basic inventory core. Select a supported inventory model or defer this setup."
-            : input.InventModel == (int)InventModel.StandardCost
-                ? "Standard cost requires an active standard-cost record and revaluation process, which are not implemented in this basic inventory core."
-                : input.InventModel != (int)InventModel.MovingAverage
-                    ? "This inventory model is outside the supported basic inventory costing scope."
-                    : null;
+        input.InventModel != (int)InventModel.FIFO ? "The basic inventory release supports FIFO only." :
+        !input.StockedProduct ? "The basic inventory model group must contain stocked products." :
+        input.NegativePhysical || input.NegativeFinancial ? "Negative physical and financial inventory are disabled in the basic release." :
+        input.InclPhysicalValueInCost ? "Include physical value in cost is disabled in the basic release." :
+        !input.PostOnHandFinancial ? "Financial inventory posting is required in the basic release." :
+        input.StandardCost || input.MandatoryWmsOrder || input.QuarantineControl || input.PdsCheck
+            ? "Standard cost and advanced warehouse controls are outside the basic inventory scope." : null;
 
     private static void Apply(InventModelGroupEntity row, InventModelGroupRecordDto x)
     {

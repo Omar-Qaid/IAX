@@ -17,6 +17,9 @@ export interface InventTransRecord {
   unitPrice: number;
   unitCost: number;
   costAmount: number;
+  physicalCostAmount: number;
+  postedCostAmount: number;
+  costAdjustmentAmount: number;
   currencyCode: string;
   site: string;
   warehouse: string;
@@ -24,6 +27,7 @@ export interface InventTransRecord {
   serialNumber: string;
   expectedDate: string | null;
   voucher: string;
+  physicalVoucher: string;
   dataAreaId: string;
 }
 

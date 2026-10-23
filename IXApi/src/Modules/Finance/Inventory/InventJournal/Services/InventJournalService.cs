@@ -131,6 +131,10 @@ public sealed class InventJournalService : IInventJournalService
         if (header == null) return (null, "The journal was not found or has already been posted.");
         var validation = await ValidateLineAsync(companyId, header, input, ct);
         if (validation.Error != null) return (null, validation.Error);
+        if (header.JournalType == InventJournalType.Counting && await Db.Set<InventJournalTrans>().AnyAsync(x =>
+                x.DataAreaId == companyId && x.JournalId == header.JournalId &&
+                x.ItemId == Normalize(input.ItemId) && x.InventDimId == validation.FromDimension!.InventDimId, ct))
+            return (null, "This item and inventory dimension are already in the counting journal.");
         var lineNumbers = await Db.Set<InventJournalTrans>().AsNoTracking()
             .Where(x => x.DataAreaId == companyId && x.JournalId == header.JournalId)
             .Select(x => x.LineNum).ToListAsync(ct);
@@ -152,6 +156,10 @@ public sealed class InventJournalService : IInventJournalService
         if (line == null) return (null, "The journal line was not found.");
         var validation = await ValidateLineAsync(companyId, header, input, ct);
         if (validation.Error != null) return (null, validation.Error);
+        if (header.JournalType == InventJournalType.Counting && await Db.Set<InventJournalTrans>().AnyAsync(x =>
+                x.DataAreaId == companyId && x.JournalId == header.JournalId && x.RecId != lineRecId &&
+                x.ItemId == Normalize(input.ItemId) && x.InventDimId == validation.FromDimension!.InventDimId, ct))
+            return (null, "This item and inventory dimension are already in the counting journal.");
         ApplyLine(line, header, input, validation.FromDimension!, validation.ToDimension);
         await _unitOfWork.CompleteAsync(ct);
         return (await MapWithLinesAsync(header, companyId, ct), null);
@@ -212,16 +220,46 @@ public sealed class InventJournalService : IInventJournalService
         if (fromLocationError != null) return (fromLocationError, null, null);
         if (string.IsNullOrWhiteSpace(input.Unit) || !await Db.Set<UnitOfMeasure>().IgnoreQueryFilters().AnyAsync(x => !x.IsDeleted && x.Symbol == input.Unit.Trim(), ct))
             return ("A valid unit of measure is required.", null, null);
+        var inventoryUnit = await Db.Set<InventTableModule>().AsNoTracking()
+            .Where(x => x.DataAreaId == companyId && x.ItemId == itemId && x.ModuleType == ModuleInventPurchSales.Inventory)
+            .Select(x => x.UnitId).FirstOrDefaultAsync(ct);
+        if (string.IsNullOrWhiteSpace(inventoryUnit) || !string.Equals(input.Unit.Trim(), inventoryUnit, StringComparison.OrdinalIgnoreCase))
+            return ("Journal quantity must use the item's inventory unit.", null, null);
         if (header.JournalType == InventJournalType.Counting)
         {
             if (input.Counted < 0) return ("Counted quantity cannot be negative.", null, null);
+            if (input.LedgerDimension != 0)
+                return ("Counting journal variance accounts come from inventory posting setup.", null, null);
+            if (Normalize(input.InventBatchId).Length > 0 || Normalize(input.InventSerialId).Length > 0 ||
+                Normalize(input.InventStatusId).Length > 0 || Normalize(input.WmsLocationId).Length > 0)
+                return ("The basic counting journal supports site and warehouse dimensions only.", null, null);
         }
         else if (input.Qty == 0)
             return ("Quantity must not be zero.", null, null);
         if (header.JournalType == InventJournalType.Transfer && input.Qty <= 0)
             return ("Transfer quantity must be greater than zero.", null, null);
+        if (header.JournalType == InventJournalType.Transfer && (input.CostPrice != 0 || input.LedgerDimension != 0))
+            return ("Transfer cost and offset account are determined by inventory posting.", null, null);
+        if (header.JournalType == InventJournalType.Transfer &&
+            (Normalize(input.InventBatchId).Length > 0 || Normalize(input.InventSerialId).Length > 0 ||
+             Normalize(input.InventStatusId).Length > 0 || Normalize(input.WmsLocationId).Length > 0 ||
+             Normalize(input.ToWmsLocationId).Length > 0))
+            return ("The basic transfer journal supports site and warehouse dimensions only.", null, null);
         if (header.JournalType == InventJournalType.Movement && input.LedgerDimension == 0)
-            return ("Movement journal lines require an offset ledger account.", null, null);
+            input.LedgerDimension = await Db.Set<InventJournalName>().AsNoTracking()
+                .Where(x => x.DataAreaId == companyId && x.JournalNameId == header.JournalNameId)
+                .Select(x => x.LedgerDimension).FirstOrDefaultAsync(ct);
+        if (header.JournalType == InventJournalType.Movement &&
+            (input.LedgerDimension == 0 || !await Db.Set<DimensionAttributeValueCombination>().AsNoTracking()
+                .AnyAsync(x => x.DataAreaId == companyId && x.RecId == input.LedgerDimension, ct)))
+            return ("Movement journal lines require a valid offset ledger account.", null, null);
+        if (header.JournalType == InventJournalType.Adjustment && input.LedgerDimension != 0)
+            return ("Adjustment journal offsets come from inventory posting setup.", null, null);
+        if (input.CostPrice < 0)
+            return ("Journal cost cannot be negative.", null, null);
+        if (header.JournalType is InventJournalType.Movement or InventJournalType.Adjustment &&
+            input.Qty > 0 && input.CostPrice == 0)
+            return ("A positive journal line requires an explicit receipt cost.", null, null);
 
         var trackingError = await ValidateTrackingDimensionsAsync(companyId, itemId, input, ct);
         if (trackingError != null) return (trackingError, null, null);
@@ -245,6 +283,8 @@ public sealed class InventJournalService : IInventJournalService
             if (toLocationError != null) return (toLocationError, null, null);
             if (Normalize(input.InventSiteId) == Normalize(input.ToInventSiteId) && Normalize(input.InventLocationId) == Normalize(input.ToInventLocationId))
                 return ("Transfer source and destination dimensions must be different.", null, null);
+            if (Normalize(input.InventSiteId) != Normalize(input.ToInventSiteId))
+                return ("Cross-site transfer requires financial reclassification and is not available yet.", null, null);
         }
         var trackingTemplate = new InventDim
         {

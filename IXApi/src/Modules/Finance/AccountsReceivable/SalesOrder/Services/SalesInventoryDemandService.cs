@@ -25,6 +25,10 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
     public async Task CreateAsync(SalesTable order, SalesLine line, string inventSiteId,
         string inventLocationId, CancellationToken cancellationToken = default, InventDim? dimensionTemplate = null)
     {
+        if (order.SalesType == SalesType.ReturnItem || line.SalesType == SalesType.ReturnItem
+            || !string.IsNullOrWhiteSpace(line.InventTransIdReturn))
+            throw new InvalidOperationException(
+                "Customer returns need a verified original-invoice and cost workflow; ordinary sales demand cannot represent a return receipt.");
         var lifecycleError = await ProductLifecyclePolicy.ValidateAsync(_dbContext.Context,
             order.DataAreaId, line.ItemId, ProductLifecycleProcess.Sales, cancellationToken);
         if (lifecycleError is not null) throw new InvalidOperationException(lifecycleError);

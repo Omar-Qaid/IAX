@@ -37,8 +37,8 @@ public sealed class ReleasedProductListService(
         if (number.Length > FieldLengths.ProductNumber || input.Name.Trim().Length > FieldLengths.Name ||
             input.SearchName.Trim().Length > FieldLengths.ProductSearchName || input.Description.Trim().Length > FieldLengths.Memo)
             return (null, "One or more product fields exceed their allowed length.");
-        if (!Enum.TryParse<ItemType>(input.ProductType, true, out var productType) || productType is not (ItemType.Item or ItemType.Service))
-            return (null, "Product type must be Item or Service. Product masters and BOM products are outside this basic scope.");
+        if (!Enum.TryParse<ItemType>(input.ProductType, true, out var productType) || productType != ItemType.Item)
+            return (null, "The basic inventory release supports distinct Item products only.");
         var ownsTransaction = Db.Database.CurrentTransaction is null;
         if (ownsTransaction) await unitOfWork.BeginTransactionAsync(ct);
         try
@@ -87,6 +87,8 @@ public sealed class ReleasedProductListService(
         if (!long.TryParse(input.ProductId, NumberStyles.None, CultureInfo.InvariantCulture, out var productId)) return (null, "The shared product identifier is invalid.");
         var product = await Db.Set<EcoResProduct>().AsNoTracking().FirstOrDefaultAsync(x => x.RecId == productId, ct);
         if (product is null) return (null, "The shared product was not found.");
+        if (product.ProductType != ItemType.Item || !await Db.Set<EcoResDistinctProduct>().AnyAsync(x => x.RecId == productId, ct))
+            return (null, "Only distinct Item products can be released in the basic inventory scope.");
         var itemId = input.ItemNumber.Trim().ToUpperInvariant();
         var existing = await Db.Set<ReleasedItem>().AsNoTracking().FirstOrDefaultAsync(
             x => x.DataAreaId == companyId && ((itemId.Length > 0 && x.ItemId == itemId) || x.Product == productId), ct);
@@ -138,6 +140,8 @@ public sealed class ReleasedProductListService(
         var item = await Db.Set<ReleasedItem>().FirstOrDefaultAsync(x => x.RecId == recId && x.DataAreaId == companyId, ct);
         if (item is null) return (null, "The released product was not found.");
         if (input.PriceUnit <= 0) return (null, "Price unit must be greater than zero.");
+        var inventoryUnitError = await ValidateInventoryUnitChangeAsync(companyId, item.ItemId, input.InventoryUnit, ct);
+        if (inventoryUnitError is not null) return (null, inventoryUnitError);
         var units = new[] { input.InventoryUnit.Trim(), input.PurchaseUnit.Trim(), input.SalesUnit.Trim() }.Distinct().ToList();
         var unitRows = await Db.Set<UnitOfMeasure>().Where(x => units.Contains(x.Symbol)).ToListAsync(ct);
         if (units.Any(string.IsNullOrWhiteSpace) || unitRows.Count != units.Count) return (null, "All module units must reference existing units of measure.");
@@ -145,6 +149,8 @@ public sealed class ReleasedProductListService(
         if (!string.Equals(input.SalesUnit, input.InventoryUnit, StringComparison.OrdinalIgnoreCase) && input.SalesToInventoryFactor <= 0) return (null, "A positive sales-to-inventory conversion factor is required when the units differ.");
         if (string.Equals(input.PurchaseUnit, input.SalesUnit, StringComparison.OrdinalIgnoreCase) && !string.Equals(input.PurchaseUnit, input.InventoryUnit, StringComparison.OrdinalIgnoreCase) && input.PurchaseToInventoryFactor != input.SalesToInventoryFactor) return (null, "Purchase and sales conversion factors must match when they use the same unit.");
         if (!await AssignmentsExistAsync(companyId, input, ct)) return (null, "Item, model, storage, and tracking groups must reference existing setup records.");
+        var groupError = await ValidateBasicGroupsAsync(companyId, input.ModelGroupId, input.StorageDimensionGroupId, input.TrackingDimensionGroupId, ct);
+        if (groupError is not null) return (null, groupError);
         if (!await TaxGroupsExistAsync(companyId, input, ct)) return (null, "Purchase and sales item tax groups must reference existing setup records.");
         var assignmentChangeError = await ValidateAssignmentChangesAsync(companyId, item.ItemId,
             input.ModelGroupId, input.StorageDimensionGroupId, input.TrackingDimensionGroupId, ct);
@@ -154,6 +160,10 @@ public sealed class ReleasedProductListService(
             var orderSettingsError = await ValidateOrderSettingsAsync(companyId, input.DefaultOrderSettings, ct);
             if (orderSettingsError is not null) return (null, orderSettingsError);
         }
+        var ownsTransaction = Db.Database.CurrentTransaction is null;
+        if (ownsTransaction) await unitOfWork.BeginTransactionAsync(ct);
+        try
+        {
         var modules = await Db.Set<InventTableModule>().Where(x => x.DataAreaId == companyId && x.ItemId == item.ItemId).ToListAsync(ct);
         SetModule(modules, item.ItemId, companyId, ModuleInventPurchSales.Inventory, input.InventoryUnit, input.InventoryPrice, input.PriceUnit, "");
         SetModule(modules, item.ItemId, companyId, ModuleInventPurchSales.Purchase, input.PurchaseUnit, input.PurchasePrice, input.PriceUnit, input.PurchaseTaxItemGroupId);
@@ -170,7 +180,14 @@ public sealed class ReleasedProductListService(
         if (input.DefaultOrderSettings is not null)
             await ApplyOrderSettingsAsync(item.ItemId, companyId, input.DefaultOrderSettings, ct);
         await unitOfWork.CompleteAsync(ct);
+        if (ownsTransaction) await unitOfWork.CommitTransactionAsync(ct);
         return ((await LoadAsync(companyId, recId, ct)).Single(), null);
+        }
+        catch
+        {
+            if (ownsTransaction) await unitOfWork.RollbackTransactionAsync(ct);
+            throw;
+        }
     }
 
     public async Task<(ReleasedProductListDto? Product, string? Error)> AssignGroupsAsync(long recId, ReleasedProductGroupAssignmentDto input, CancellationToken ct = default)
@@ -187,6 +204,9 @@ public sealed class ReleasedProductListService(
             !await Db.Set<EcoResStorageDimensionGroup>().AnyAsync(x => x.Name == input.StorageDimensionGroupId.Trim(), ct) ||
             !await Db.Set<EcoResTrackingDimensionGroup>().AnyAsync(x => x.Name == input.TrackingDimensionGroupId.Trim(), ct))
             return (null, "One or more selected groups do not reference existing setup records.");
+
+        var groupError = await ValidateBasicGroupsAsync(companyId, input.ModelGroupId, input.StorageDimensionGroupId, input.TrackingDimensionGroupId, ct);
+        if (groupError is not null) return (null, groupError);
 
         var assignmentChangeError = await ValidateAssignmentChangesAsync(companyId, item.ItemId,
             input.ModelGroupId, input.StorageDimensionGroupId, input.TrackingDimensionGroupId, ct);
@@ -220,10 +240,9 @@ public sealed class ReleasedProductListService(
             !string.Equals(input.PurchaseUnit, input.InventoryUnit, StringComparison.OrdinalIgnoreCase) &&
             input.PurchaseToInventoryFactor != input.SalesToInventoryFactor)
             return (null, "Purchase and sales conversion factors must match when they use the same unit.");
+        var inventoryUnitError = await ValidateInventoryUnitChangeAsync(companyId, item.ItemId, input.InventoryUnit, ct);
+        if (inventoryUnitError is not null) return (null, inventoryUnitError);
         var modules = await Db.Set<InventTableModule>().Where(x => x.DataAreaId == companyId && x.ItemId == item.ItemId).ToListAsync(ct);
-        SetUnit(modules, item.ItemId, companyId, ModuleInventPurchSales.Inventory, input.InventoryUnit);
-        SetUnit(modules, item.ItemId, companyId, ModuleInventPurchSales.Purchase, input.PurchaseUnit);
-        SetUnit(modules, item.ItemId, companyId, ModuleInventPurchSales.Sales, input.SalesUnit);
         if (input.Groups is not null)
         {
             var groups = input.Groups;
@@ -233,6 +252,8 @@ public sealed class ReleasedProductListService(
                 !await Db.Set<EcoResStorageDimensionGroup>().AnyAsync(x => x.Name == groups.StorageDimensionGroupId.Trim(), ct) ||
                 !await Db.Set<EcoResTrackingDimensionGroup>().AnyAsync(x => x.Name == groups.TrackingDimensionGroupId.Trim(), ct))
                 return (null, "One or more selected groups do not reference existing setup records.");
+            var groupError = await ValidateBasicGroupsAsync(companyId, groups.ModelGroupId, groups.StorageDimensionGroupId, groups.TrackingDimensionGroupId, ct);
+            if (groupError is not null) return (null, groupError);
             var assignmentChangeError = await ValidateAssignmentChangesAsync(companyId, item.ItemId,
                 groups.ModelGroupId, groups.StorageDimensionGroupId, groups.TrackingDimensionGroupId, ct);
             if (assignmentChangeError is not null) return (null, assignmentChangeError);
@@ -243,6 +264,9 @@ public sealed class ReleasedProductListService(
             await UpsertAsync<EcoResStorageDimensionGroupItem>(x => x.ItemId == item.ItemId && x.ItemDataAreaId == companyId, () => new() { ItemId = item.ItemId, ItemDataAreaId = companyId }, x => x.StorageDimensionGroup = storageGroup.RecId, ct);
             await UpsertAsync<EcoResTrackingDimensionGroupItem>(x => x.ItemId == item.ItemId && x.ItemDataAreaId == companyId, () => new() { ItemId = item.ItemId, ItemDataAreaId = companyId }, x => x.TrackingDimensionGroup = trackingGroup.RecId, ct);
         }
+        SetUnit(modules, item.ItemId, companyId, ModuleInventPurchSales.Inventory, input.InventoryUnit);
+        SetUnit(modules, item.ItemId, companyId, ModuleInventPurchSales.Purchase, input.PurchaseUnit);
+        SetUnit(modules, item.ItemId, companyId, ModuleInventPurchSales.Sales, input.SalesUnit);
         if (input.Commercial is not null)
         {
             var commercial = input.Commercial;
@@ -273,6 +297,12 @@ public sealed class ReleasedProductListService(
         if (string.IsNullOrWhiteSpace(companyId)) return (null, "A company must be selected.");
         if (string.IsNullOrWhiteSpace(input.Name))
             return (null, "Product name is required.");
+        if (input.Configuration is null || input.Configuration.DefaultOrderSettings is null)
+            return (null, "Create and release requires group, unit, and default-order configuration. Use the separate release operation for an explicit draft.");
+        var defaults = input.Configuration.DefaultOrderSettings;
+        if (new[] { defaults.Purchase, defaults.Sales, defaults.Inventory }.Any(x =>
+                string.IsNullOrWhiteSpace(x.SiteId) || string.IsNullOrWhiteSpace(x.WarehouseId)))
+            return (null, "Create and release requires a site and warehouse for purchase, sales, and inventory defaults.");
         await unitOfWork.BeginTransactionAsync(ct);
         try
         {
@@ -324,6 +354,8 @@ public sealed class ReleasedProductListService(
         if (product is null) errors.Add("The released item does not reference an existing shared product.");
         else
         {
+            if (product.ProductType != ItemType.Item)
+                errors.Add("Only distinct Item products are supported in the basic inventory scope.");
             if (!await Db.Set<EcoResDistinctProduct>().AnyAsync(x => x.RecId == product.RecId, ct))
                 errors.Add("The distinct-product record is missing.");
             if (!await Db.Set<EcoResProductTranslation>().AnyAsync(x => x.Product == product.RecId && x.Name != string.Empty, ct))
@@ -373,12 +405,18 @@ public sealed class ReleasedProductListService(
             if (!activeStorageDimensions.Contains(InventDimensionFields.Site) ||
                 !activeStorageDimensions.Contains(InventDimensionFields.Warehouse))
                 errors.Add("The storage dimension group must activate Site and Warehouse for a basic stocked item.");
+            if (activeStorageDimensions.Any(x => x != InventDimensionFields.Site && x != InventDimensionFields.Warehouse))
+                errors.Add("Location and advanced storage dimensions are outside the basic inventory scope.");
         }
         var trackingGroupId = await Db.Set<EcoResTrackingDimensionGroupItem>().AsNoTracking().Where(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId).Select(x => x.TrackingDimensionGroup).FirstOrDefaultAsync(ct);
         if (trackingGroupId == 0) errors.Add("Tracking dimension group is required.");
         else if (!await Db.Set<EcoResTrackingDimensionGroup>().AnyAsync(x => x.RecId == trackingGroupId, ct)) errors.Add("Tracking dimension group does not reference an existing setup record.");
+        else if (await Db.Set<EcoResTrackingDimensionGroupFldSetup>().AnyAsync(x => x.TrackingDimensionGroup == trackingGroupId && x.IsActive, ct))
+            errors.Add("Batch and serial tracking are outside the basic inventory scope.");
         var modelGroupId = await Db.Set<InventModelGroupItem>().AsNoTracking().Where(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId).Select(x => x.ModelGroupId).FirstOrDefaultAsync(ct);
-        if (!string.IsNullOrWhiteSpace(modelGroupId) && !await Db.Set<InventModelGroupEntity>().AnyAsync(x => x.DataAreaId == companyId && x.ModelGroupId == modelGroupId, ct)) errors.Add("The item model group does not reference an existing setup record.");
+        if (!string.IsNullOrWhiteSpace(modelGroupId) && !await Db.Set<InventModelGroupEntity>().AnyAsync(x => x.DataAreaId == companyId && x.ModelGroupId == modelGroupId
+                && x.StockedProduct == NoYes.Yes && x.InventModel == InventModel.FIFO && x.NegativePhysical == NoYes.No && x.NegativeFinancial == NoYes.No, ct))
+            errors.Add("The item model group must be stocked FIFO with negative inventory disabled.");
         var purchaseSetup = await Db.Set<InventItemPurchSetup>().AsNoTracking().FirstOrDefaultAsync(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId && x.InventDimId == string.Empty, ct);
         var salesSetup = await Db.Set<InventItemSalesSetup>().AsNoTracking().FirstOrDefaultAsync(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId && x.InventDimId == string.Empty, ct);
         var inventorySetup = await Db.Set<InventItemInventSetup>().AsNoTracking().FirstOrDefaultAsync(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId && x.InventDimId == string.Empty, ct);
@@ -396,6 +434,139 @@ public sealed class ReleasedProductListService(
                 [InventAccountType.SalesPackingSlip, InventAccountType.SalesIssue, InventAccountType.SalesRevenue], ct))
             warnings.Add("No general sales inventory posting rule was found for this item, its item group, or all items.");
         return new ReleasedProductValidationDto { Errors = errors, Warnings = warnings };
+    }
+
+    public async Task<ReleasedItemReadinessDto?> GetReadinessAsync(long recId, CancellationToken ct = default)
+    {
+        var companyId = company.GetDataAreaId();
+        if (string.IsNullOrWhiteSpace(companyId)) return null;
+        var item = await Db.Set<ReleasedItem>().AsNoTracking()
+            .FirstOrDefaultAsync(x => x.RecId == recId && x.DataAreaId == companyId, ct);
+        if (item is null) return null;
+
+        var issues = new List<ReleasedItemReadinessIssueDto>();
+        void Add(string code, string message) => issues.Add(new(code, message));
+        var product = await Db.Set<EcoResProduct>().AsNoTracking().FirstOrDefaultAsync(x => x.RecId == item.Product, ct);
+        var commonReady = product is not null && product.ProductType == ItemType.Item
+            && await Db.Set<EcoResDistinctProduct>().AnyAsync(x => x.RecId == item.Product, ct);
+        if (!commonReady) Add("UNSUPPORTED_PRODUCT", "A distinct Item product is required.");
+        var itemGroupId = await Db.Set<InventItemGroupItem>().AsNoTracking()
+            .Where(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId).Select(x => x.ItemGroupId).FirstOrDefaultAsync(ct);
+        var modelGroupId = await Db.Set<InventModelGroupItem>().AsNoTracking()
+            .Where(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId).Select(x => x.ModelGroupId).FirstOrDefaultAsync(ct);
+        var storageId = await (from assignment in Db.Set<EcoResStorageDimensionGroupItem>().AsNoTracking()
+                               join storageGroupRow in Db.Set<EcoResStorageDimensionGroup>().AsNoTracking()
+                                   on assignment.StorageDimensionGroup equals storageGroupRow.RecId
+                               where assignment.ItemDataAreaId == companyId && assignment.ItemId == item.ItemId
+                               select storageGroupRow.Name).FirstOrDefaultAsync(ct);
+        var trackingId = await (from assignment in Db.Set<EcoResTrackingDimensionGroupItem>().AsNoTracking()
+                                join trackingGroupRow in Db.Set<EcoResTrackingDimensionGroup>().AsNoTracking()
+                                    on assignment.TrackingDimensionGroup equals trackingGroupRow.RecId
+                                where assignment.ItemDataAreaId == companyId && assignment.ItemId == item.ItemId
+                                select trackingGroupRow.Name).FirstOrDefaultAsync(ct);
+        if (string.IsNullOrWhiteSpace(itemGroupId) || !await Db.Set<InventItemGroup>().AnyAsync(x => x.DataAreaId == companyId && x.ItemGroupId == itemGroupId, ct))
+        {
+            Add("MISSING_ITEM_GROUP", "Assign an existing item group.");
+            commonReady = false;
+        }
+        var groupError = string.IsNullOrWhiteSpace(modelGroupId) || string.IsNullOrWhiteSpace(storageId) || string.IsNullOrWhiteSpace(trackingId)
+            ? "Model, storage, and tracking groups are required."
+            : await ValidateBasicGroupsAsync(companyId, modelGroupId, storageId, trackingId, ct);
+        if (groupError is not null) { Add("UNSUPPORTED_GROUP_SETUP", groupError); commonReady = false; }
+
+        var modules = await Db.Set<InventTableModule>().AsNoTracking()
+            .Where(x => x.DataAreaId == companyId && x.ItemId == item.ItemId).ToListAsync(ct);
+        var inventoryUnit = modules.FirstOrDefault(x => x.ModuleType == ModuleInventPurchSales.Inventory)?.UnitId ?? string.Empty;
+        var units = await Db.Set<UnitOfMeasure>().AsNoTracking().ToListAsync(ct);
+        if (inventoryUnit.Length == 0 || !units.Any(x => x.Symbol == inventoryUnit))
+        {
+            Add("MISSING_INVENTORY_UNIT", "Configure an existing inventory unit.");
+            commonReady = false;
+        }
+        var inventorySetup = await Db.Set<InventItemInventSetup>().AsNoTracking()
+            .FirstOrDefaultAsync(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId && x.InventDimId == string.Empty, ct);
+        var journalReady = commonReady;
+        if (inventorySetup is null || inventorySetup.Stopped == 1)
+        {
+            Add(inventorySetup is null ? "MISSING_INVENTORY_DEFAULTS" : "INVENTORY_STOPPED",
+                inventorySetup is null ? "Configure inventory default order settings." : "Inventory transactions are stopped for this item.");
+            journalReady = false;
+        }
+        else if (!await DefaultDimensionValidAsync(companyId, inventorySetup.InventDimIdDefault, ct))
+        {
+            Add("INVALID_INVENTORY_DEFAULTS", "Inventory default warehouse must belong to its site.");
+            journalReady = false;
+        }
+        var purchaseReady = commonReady;
+        var salesReady = commonReady;
+        foreach (var type in new[] { ModuleInventPurchSales.Purchase, ModuleInventPurchSales.Sales })
+        {
+            var module = modules.FirstOrDefault(x => x.ModuleType == type);
+            var operationReady = module is not null && !string.IsNullOrWhiteSpace(module.UnitId) && units.Any(x => x.Symbol == module.UnitId);
+            if (!operationReady) Add($"MISSING_{type.ToString().ToUpperInvariant()}_UNIT", $"Configure an existing {type} unit.");
+            else if (product is not null && !string.Equals(module!.UnitId, inventoryUnit, StringComparison.OrdinalIgnoreCase))
+            {
+                var conversions = await Db.Set<UnitOfMeasureConversion>().AsNoTracking()
+                    .Where(x => x.Product == product.RecId || x.Product == 0).ToListAsync(ct);
+                if (ConversionFactor(conversions, units, product.RecId, module.UnitId, inventoryUnit) <= 0)
+                {
+                    Add($"MISSING_{type.ToString().ToUpperInvariant()}_CONVERSION", $"Configure a {type}-to-inventory unit conversion.");
+                    operationReady = false;
+                }
+            }
+            var setup = type == ModuleInventPurchSales.Purchase
+                ? await Db.Set<InventItemPurchSetup>().AsNoTracking().Where(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId && x.InventDimId == string.Empty)
+                    .Select(x => new { x.InventDimIdDefault, x.Stopped }).FirstOrDefaultAsync(ct)
+                : await Db.Set<InventItemSalesSetup>().AsNoTracking().Where(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId && x.InventDimId == string.Empty)
+                    .Select(x => new { x.InventDimIdDefault, x.Stopped }).FirstOrDefaultAsync(ct);
+            if (setup is null || string.IsNullOrWhiteSpace(setup.InventDimIdDefault))
+            {
+                Add($"MISSING_{type.ToString().ToUpperInvariant()}_DEFAULTS", $"Configure {type} site and warehouse defaults.");
+                operationReady = false;
+            }
+            else if (setup.Stopped == 1)
+            {
+                Add($"{type.ToString().ToUpperInvariant()}_STOPPED", $"{type} transactions are stopped for this item.");
+                operationReady = false;
+            }
+            else if (!await DefaultDimensionValidAsync(companyId, setup.InventDimIdDefault, ct))
+            {
+                Add($"INVALID_{type.ToString().ToUpperInvariant()}_DEFAULTS", $"{type} default warehouse must belong to its site.");
+                operationReady = false;
+            }
+            if (type == ModuleInventPurchSales.Purchase) purchaseReady &= operationReady;
+            else salesReady &= operationReady;
+        }
+        foreach (var type in new[] { InventAccountType.InventReceipt, InventAccountType.InventIssue, InventAccountType.InventProfit, InventAccountType.InventLoss })
+            if (!await HasApplicablePostingRuleAsync(companyId, item.ItemId, itemGroupId, [type], ct))
+            {
+                Add($"MISSING_{type.ToString().ToUpperInvariant()}_ACCOUNT", $"Configure the {type} account for this item.");
+                journalReady = false;
+            }
+        foreach (var type in new[] { InventAccountType.PurchPackingSlip, InventAccountType.PurchReceipt })
+            if (!await HasApplicablePostingRuleAsync(companyId, item.ItemId, itemGroupId, [type], ct))
+            {
+                Add($"MISSING_{type.ToString().ToUpperInvariant()}_ACCOUNT", $"Configure the {type} account for this item.");
+                purchaseReady = false;
+            }
+        foreach (var type in new[] { InventAccountType.SalesPackingSlip, InventAccountType.SalesIssue, InventAccountType.SalesRevenue })
+            if (!await HasApplicablePostingRuleAsync(companyId, item.ItemId, itemGroupId, [type], ct))
+            {
+                Add($"MISSING_{type.ToString().ToUpperInvariant()}_ACCOUNT", $"Configure the {type} account for this item.");
+                salesReady = false;
+            }
+        return new ReleasedItemReadinessDto(item.ItemId, companyId, purchaseReady, salesReady, journalReady, issues);
+    }
+
+    private async Task<bool> DefaultDimensionValidAsync(string companyId, string? dimensionId, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(dimensionId)) return false;
+        var dimension = await Db.Set<InventDim>().AsNoTracking()
+            .FirstOrDefaultAsync(x => x.DataAreaId == companyId && x.InventDimId == dimensionId, ct);
+        return dimension is not null && !string.IsNullOrWhiteSpace(dimension.InventSiteId)
+            && !string.IsNullOrWhiteSpace(dimension.InventLocationId)
+            && await Db.Set<InventLocation>().AnyAsync(x => x.DataAreaId == companyId
+                && x.InventSiteId == dimension.InventSiteId && x.InventLocationId == dimension.InventLocationId, ct);
     }
 
     private async Task<bool> HasApplicablePostingRuleAsync(string companyId, string itemId, string? itemGroupId,
@@ -528,6 +699,30 @@ public sealed class ReleasedProductListService(
         await Db.Set<InventModelGroupEntity>().AnyAsync(x => x.DataAreaId == companyId && x.ModelGroupId == input.ModelGroupId.Trim(), ct) &&
         await Db.Set<EcoResStorageDimensionGroup>().AnyAsync(x => x.Name == input.StorageDimensionGroupId.Trim(), ct) &&
         await Db.Set<EcoResTrackingDimensionGroup>().AnyAsync(x => x.Name == input.TrackingDimensionGroupId.Trim(), ct);
+
+    private async Task<string?> ValidateBasicGroupsAsync(string companyId, string modelId, string storageId, string trackingId, CancellationToken ct)
+    {
+        if (!await Db.Set<InventModelGroupEntity>().AnyAsync(x => x.DataAreaId == companyId && x.ModelGroupId == modelId.Trim()
+                && x.StockedProduct == NoYes.Yes && x.InventModel == InventModel.FIFO
+                && x.NegativePhysical == NoYes.No && x.NegativeFinancial == NoYes.No, ct))
+            return "The item model group must be stocked FIFO with negative inventory disabled.";
+        var storage = await Db.Set<EcoResStorageDimensionGroup>().AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Name == storageId.Trim(), ct);
+        if (storage is null) return "Storage dimension group was not found.";
+        var storageFields = await Db.Set<EcoResStorageDimensionGroupFldSetup>().AsNoTracking()
+            .Where(x => x.StorageDimensionGroup == storage.RecId).ToListAsync(ct);
+        if (!storageFields.Any(x => x.DimensionFieldId == InventDimensionFields.Site && x.IsActive && x.IsPhysicalInventoryEnabled && x.IsFinancialInventoryEnabled)
+            || !storageFields.Any(x => x.DimensionFieldId == InventDimensionFields.Warehouse && x.IsActive && x.IsPhysicalInventoryEnabled && !x.IsFinancialInventoryEnabled)
+            || storageFields.Any(x => x.IsActive && x.DimensionFieldId != InventDimensionFields.Site && x.DimensionFieldId != InventDimensionFields.Warehouse))
+            return "Storage dimensions must use site and warehouse only, with site financially tracked.";
+        var tracking = await Db.Set<EcoResTrackingDimensionGroup>().AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Name == trackingId.Trim(), ct);
+        if (tracking is null) return "Tracking dimension group was not found.";
+        if (await Db.Set<EcoResTrackingDimensionGroupFldSetup>().AsNoTracking()
+            .AnyAsync(x => x.TrackingDimensionGroup == tracking.RecId && x.IsActive, ct))
+            return "Batch and serial tracking are outside the basic inventory scope.";
+        return null;
+    }
     private async Task UpsertAsync<T>(System.Linq.Expressions.Expression<Func<T, bool>> predicate, Func<T> create, Action<T> update, CancellationToken ct) where T : class { var row = await Db.Set<T>().FirstOrDefaultAsync(predicate, ct) ?? create(); update(row); if (Db.Entry(row).State == EntityState.Detached) Db.Add(row); }
 
     private async Task<bool> TaxGroupsExistAsync(string companyId, ConfigureReleasedProductDto input, CancellationToken ct)
@@ -640,6 +835,18 @@ public sealed class ReleasedProductListService(
             return "Storage dimension group cannot be changed after inventory transactions exist.";
         if (!string.Equals(currentTrackingGroup, trackingGroupId.Trim(), StringComparison.OrdinalIgnoreCase))
             return "Tracking dimension group cannot be changed after inventory transactions exist.";
+        return null;
+    }
+
+    private async Task<string?> ValidateInventoryUnitChangeAsync(string companyId, string itemId, string requestedUnit, CancellationToken ct)
+    {
+        var currentUnit = await Db.Set<InventTableModule>().AsNoTracking()
+            .Where(x => x.DataAreaId == companyId && x.ItemId == itemId && x.ModuleType == ModuleInventPurchSales.Inventory)
+            .Select(x => x.UnitId).FirstOrDefaultAsync(ct);
+        if (!string.IsNullOrWhiteSpace(currentUnit) &&
+            !string.Equals(currentUnit, requestedUnit.Trim(), StringComparison.OrdinalIgnoreCase) &&
+            await Db.Set<InventTrans>().AsNoTracking().AnyAsync(x => x.DataAreaId == companyId && x.ItemId == itemId, ct))
+            return "Inventory unit cannot be changed after inventory transactions exist.";
         return null;
     }
 

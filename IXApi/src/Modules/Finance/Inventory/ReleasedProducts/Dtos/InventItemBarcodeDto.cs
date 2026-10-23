@@ -8,5 +8,6 @@ public sealed record InventItemBarcodeDto(long RecId, string ItemBarcode, string
     string UnitId, decimal Qty, string Description, string InventDimId,
     bool UseForInput, bool UseForPrinting, bool Blocked);
 
-public sealed record InventItemBarcodeLookupDto(long ReleasedProductRecId, InventItemBarcodeDto Barcode);
+public sealed record InventItemBarcodeLookupDto(long ReleasedProductRecId, InventItemBarcodeDto Barcode,
+    string InventoryUnit, decimal InventoryQuantity);
 

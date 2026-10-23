@@ -74,7 +74,8 @@ public sealed class EcoResProductService : BaseService<EcoResProduct>, IEcoResPr
         product.ProductType = requestedType;
         var translations = await Db.Set<EcoResProductTranslation>().Where(x => x.Product == recId).ToListAsync(ct);
         UpsertTranslation(translations, product.RecId, "en-us", input.Name, input.Description);
-        UpsertTranslation(translations, product.RecId, "ar", input.NameAlias, input.Description);
+        if (!string.IsNullOrWhiteSpace(input.NameAlias))
+            UpsertTranslation(translations, product.RecId, "ar", input.NameAlias, input.Description);
         await _unitOfWork.CompleteAsync(ct);
         return (Map(product, translations), null);
     }
@@ -101,11 +102,16 @@ public sealed class EcoResProductService : BaseService<EcoResProduct>, IEcoResPr
         row.Name = Clean(name); row.Description = Clean(description);
     }
 
-    private static List<EcoResProductTranslation> CreateTranslations(long productId, EcoResProductInputDto input) =>
-    [
-        new() { Product = productId, LanguageId = "en-us", Name = Clean(input.Name), Description = Clean(input.Description) },
-        new() { Product = productId, LanguageId = "ar", Name = Clean(input.NameAlias), Description = Clean(input.Description) },
-    ];
+    private static List<EcoResProductTranslation> CreateTranslations(long productId, EcoResProductInputDto input)
+    {
+        var rows = new List<EcoResProductTranslation>
+        {
+            new() { Product = productId, LanguageId = "en-us", Name = Clean(input.Name), Description = Clean(input.Description) }
+        };
+        if (!string.IsNullOrWhiteSpace(input.NameAlias))
+            rows.Add(new() { Product = productId, LanguageId = "ar", Name = Clean(input.NameAlias), Description = Clean(input.Description) });
+        return rows;
+    }
 
     private static EcoResProductDto Map(EcoResProduct product, IEnumerable<EcoResProductTranslation> translations)
     {

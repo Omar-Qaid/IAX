@@ -35,7 +35,14 @@ public sealed class InventItemBarcodeService(IUnitOfWork unitOfWork, ICompanyExe
                                 row.Blocked == NoYes.No && row.UseForInput == NoYes.Yes
                           orderby item.ItemId, row.UnitId
                           select new { ItemRecId = item.RecId, Barcode = row }).ToListAsync(ct);
-        return (rows.Select(x => new InventItemBarcodeLookupDto(x.ItemRecId, Map(x.Barcode))).ToList(), null);
+        if (rows.Count > 1) return (null, "The barcode resolves to more than one released item or unit in this company.");
+        if (rows.Count == 0) return ([], null);
+        var selected = rows[0];
+        var releasedItem = await ItemAsync(selected.ItemRecId, ct);
+        if (releasedItem is null) return (null, "The barcode does not reference a released item in this company.");
+        var converted = await ConvertToInventoryUnitAsync(releasedItem, selected.Barcode.UnitId, selected.Barcode.Qty, ct);
+        if (converted is null) return (null, "The barcode unit has no supported conversion to the item's inventory unit.");
+        return ([new InventItemBarcodeLookupDto(selected.ItemRecId, Map(selected.Barcode), converted.Value.Unit, converted.Value.Quantity)], null);
     }
 
     public async Task<(InventItemBarcodeDto? Row, string? Error)> CreateAsync(long releasedProductRecId, InventItemBarcodeInputDto input, CancellationToken ct)
@@ -98,13 +105,50 @@ public sealed class InventItemBarcodeService(IUnitOfWork unitOfWork, ICompanyExe
             return "Barcode description or inventory dimension exceeds its allowed length.";
         if (input.Qty <= 0) return "Barcode quantity must be greater than zero.";
         if (!await Db.Set<UnitOfMeasure>().AnyAsync(x => x.Symbol == unit, ct)) return "The selected unit of measure does not exist.";
+        if (await ConvertToInventoryUnitAsync(item, unit, input.Qty, ct) is null)
+            return "The barcode unit has no supported conversion to the item's inventory unit.";
         if (dimension.Length > 0 && !await Db.Set<InventDim>().AnyAsync(x => x.DataAreaId == item.DataAreaId && x.InventDimId == dimension, ct))
             return "The selected inventory dimension does not exist in this company.";
         if (await Db.Set<InventItemBarcode>().AnyAsync(x => x.DataAreaId == item.DataAreaId &&
-            x.ItemId == item.ItemId && x.ItemBarcode == code && x.UnitId == unit &&
-            x.InventDimId == dimension && x.RecId != existingRecId, ct))
-            return "The barcode association already exists for this item, unit, and dimension.";
+            x.ItemBarcode == code && x.RecId != existingRecId, ct))
+            return "The barcode already maps to a released item or unit in this company.";
         return null;
+    }
+
+    private async Task<(string Unit, decimal Quantity)?> ConvertToInventoryUnitAsync(ReleasedItem item, string fromUnit, decimal quantity, CancellationToken ct)
+    {
+        var inventoryUnit = await Db.Set<InventTableModule>().AsNoTracking()
+            .Where(x => x.DataAreaId == item.DataAreaId && x.ItemId == item.ItemId && x.ModuleType == ModuleInventPurchSales.Inventory)
+            .Select(x => x.UnitId).FirstOrDefaultAsync(ct);
+        if (string.IsNullOrWhiteSpace(inventoryUnit)) return null;
+        if (string.Equals(fromUnit, inventoryUnit, StringComparison.OrdinalIgnoreCase)) return (inventoryUnit, quantity);
+        var units = await Db.Set<UnitOfMeasure>().AsNoTracking()
+            .Where(x => x.Symbol == fromUnit || x.Symbol == inventoryUnit).ToListAsync(ct);
+        var from = units.FirstOrDefault(x => x.Symbol == fromUnit);
+        var to = units.FirstOrDefault(x => x.Symbol == inventoryUnit);
+        if (from is null || to is null) return null;
+        var conversion = await Db.Set<UnitOfMeasureConversion>().AsNoTracking()
+            .Where(x => (x.Product == item.Product || x.Product == 0)
+                && (x.FromUnitOfMeasure == from.RecId && x.ToUnitOfMeasure == to.RecId
+                    || x.FromUnitOfMeasure == to.RecId && x.ToUnitOfMeasure == from.RecId))
+            .OrderByDescending(x => x.Product == item.Product)
+            .ThenByDescending(x => x.FromUnitOfMeasure == from.RecId)
+            .ThenByDescending(x => x.RecId).FirstOrDefaultAsync(ct);
+        if (conversion is null) return null;
+        var factor = conversion.Factor * (conversion.Numerator > 0 && conversion.Denominator > 0
+            ? (decimal)conversion.Numerator / conversion.Denominator : 1m);
+        if (factor <= 0) return null;
+        var converted = conversion.FromUnitOfMeasure == from.RecId
+            ? (quantity + conversion.InnerOffset) * factor + conversion.OuterOffset
+            : (quantity - conversion.OuterOffset) / factor - conversion.InnerOffset;
+        var scale = (decimal)Math.Pow(10, to.DecimalPrecision);
+        converted = conversion.Rounding switch
+        {
+            UnitOfMeasureRounding.Up => Math.Ceiling(converted * scale) / scale,
+            UnitOfMeasureRounding.Down => Math.Floor(converted * scale) / scale,
+            _ => Math.Round(converted, to.DecimalPrecision, MidpointRounding.AwayFromZero)
+        };
+        return converted > 0 ? (inventoryUnit, converted) : null;
     }
 
     private static void Apply(InventItemBarcode row, InventItemBarcodeInputDto input)

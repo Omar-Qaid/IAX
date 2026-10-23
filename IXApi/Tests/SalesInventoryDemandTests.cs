@@ -319,6 +319,27 @@ public sealed class SalesInventoryDemandTests
         Assert.Equal(10m, summary.OnOrder);
     }
 
+    [Fact]
+    public async Task Resolving_a_new_dimension_does_not_require_platform_sha3_support()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>()
+            .UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        var work = new TestUnitOfWork(db);
+        var dimensions = new InventDimensionResolver(work, new TestNumbers());
+
+        // Must not throw PlatformNotSupportedException on hosts without SHA-3 (e.g. Windows
+        // builds before 11 24H2). The SHA-1 hash is always populated; SHA-3 only when supported.
+        var dimension = await dimensions.ResolveAsync("DAT", "1", "11");
+        await db.SaveChangesAsync();
+
+        Assert.Equal(40, dimension.Sha1HashHex.Length);
+        Assert.Equal(System.Security.Cryptography.SHA3_384.IsSupported
+            ? 96 : 0, dimension.Sha3HashHex.Length);
+    }
+
     private sealed class InventoryContext(DbContextOptions<InventoryContext> options) : DbContext(options)
     {
         protected override void OnModelCreating(ModelBuilder builder)

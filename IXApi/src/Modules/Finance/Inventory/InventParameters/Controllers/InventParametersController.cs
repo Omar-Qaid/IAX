@@ -7,5 +7,6 @@ public sealed class InventParametersController(IInventParametersService service)
 {
     [HttpGet] public async Task<IActionResult> Get(CancellationToken ct) { var value = await service.GetAsync(ct); return value is null ? BadRequest(APIResponse<object>.Fail("A company must be selected.")) : Ok(APIResponse<InventParametersDto>.Ok(value)); }
     [HttpGet("lookups")] public async Task<IActionResult> Lookups(CancellationToken ct) { var value = await service.GetLookupsAsync(ct); return value is null ? BadRequest(APIResponse<object>.Fail("A company must be selected.")) : Ok(APIResponse<InventParametersLookupsDto>.Ok(value)); }
+    [HttpGet("readiness")] public async Task<IActionResult> Readiness(CancellationToken ct) { var value = await service.GetReadinessAsync(ct); return value is null ? BadRequest(APIResponse<object>.Fail("A company must be selected.")) : Ok(APIResponse<InventoryReadinessDto>.Ok(value)); }
     [HttpPut] public async Task<IActionResult> Save(InventParametersDto input, CancellationToken ct) { var result = await service.SaveAsync(input, ct); return result.Value is null ? UnprocessableEntity(APIResponse<object>.Fail(result.Error!)) : Ok(APIResponse<InventParametersDto>.Ok(result.Value)); }
 }

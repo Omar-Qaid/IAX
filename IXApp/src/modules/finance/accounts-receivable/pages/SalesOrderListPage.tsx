@@ -8,6 +8,7 @@ import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { salesOrderListApi, type SalesOrderListRecord } from '../api/salesOrderListApi';
 import { useNavigate } from 'react-router-dom';
 import { SalesOrderQuickCreate } from '../components/SalesOrderQuickCreate';
+import { ACCOUNTS_RECEIVABLE_ROUTE_PATHS } from '../routes/accountsReceivableRoutePaths';
 
 export function SalesOrderListPage(): React.ReactElement {
   const { t, currentLanguage } = useAppTranslation();
@@ -64,6 +65,7 @@ export function SalesOrderListPage(): React.ReactElement {
       editLabel: t('actions.edit'),
       newLabel: t('actions.new'),
       deleteLabel: t('actions.delete'),
+      onEdit: (order) => navigate(ACCOUNTS_RECEIVABLE_ROUTE_PATHS.salesOrder(order.id)),
       onNew: () => setQuickCreateOpen(true),
     },
     commands: commandIds.map((id) => ({

@@ -9,6 +9,9 @@ using IAX.IXApi.Modules.Finance.Inventory.InventoryStatus.Entities;
 using IAX.IXApi.Modules.Finance.Inventory.ProductLifecycle;
 using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using System.Security.Cryptography;
+using System.Text;
 using ReleasedItem = IAX.IXApi.Modules.Finance.Entities.InventTable;
 using ItemModelGroup = IAX.IXApi.Modules.Finance.Entities.InventModelGroup;
 
@@ -40,13 +43,51 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
         await _unitOfWork.BeginTransactionAsync(ct);
         try
         {
+            await LockPostingKeyAsync($"InventJournal:{companyId}:{Normalize(journalId)}", ct);
             var header = await Db.Set<InventJournalTable>().FirstOrDefaultAsync(x => x.DataAreaId == companyId && x.JournalId == Normalize(journalId), ct)
                 ?? throw new PostingValidationException("Inventory journal was not found.");
-            if (header.Posted == NoYes.Yes) throw new PostingValidationException("The inventory journal has already been posted.");
+            if (header.Posted == NoYes.Yes)
+            {
+                var priorVouchers = await Db.Set<InventJournalTrans>().AsNoTracking()
+                    .Where(x => x.DataAreaId == companyId && x.JournalId == header.JournalId && x.Voucher != string.Empty)
+                    .OrderBy(x => x.LineNum).Select(x => x.Voucher).ToListAsync(ct);
+                await _unitOfWork.CommitTransactionAsync(ct);
+                return (new InventJournalPostResultDto
+                {
+                    JournalId = header.JournalId, Posted = true, PostedDateTime = header.PostedDateTime,
+                    Vouchers = priorVouchers
+                }, null);
+            }
+            if (header.JournalType == InventJournalType.Counting)
+                throw new PostingValidationException(
+                    "Counting posting requires a confirmed count and durable movement freeze. The current journal has neither verified control, so posting is blocked.");
             var lines = (await Db.Set<InventJournalTrans>().Where(x => x.DataAreaId == companyId && x.JournalId == header.JournalId).ToListAsync(ct))
                 .OrderBy(x => x.LineNum).ToList();
             if (lines.Count == 0) throw new PostingValidationException("The inventory journal has no lines.");
             if (lines.Any(x => x.JournalType != header.JournalType)) throw new PostingValidationException("A journal line type does not match the journal header.");
+            foreach (var key in lines.Select(x => $"InventStock:{companyId}:{x.ItemId}:{x.InventDimId}")
+                         .Concat(lines.Where(x => x.ToInventDimId.Length > 0)
+                             .Select(x => $"InventStock:{companyId}:{x.ItemId}:{x.ToInventDimId}"))
+                         .Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal))
+                await LockPostingKeyAsync(key, ct);
+            if (header.JournalType == InventJournalType.Transfer)
+            {
+                foreach (var group in lines.GroupBy(x => new { x.ItemId, x.InventDimId }))
+                {
+                    if (group.Any(x => x.Qty <= 0))
+                        throw new PostingValidationException("Transfer quantities must be positive.");
+                    var inventoryUnit = await Db.Set<InventTableModule>().AsNoTracking()
+                        .Where(x => x.DataAreaId == companyId && x.ItemId == group.Key.ItemId && x.ModuleType == ModuleInventPurchSales.Inventory)
+                        .Select(x => x.UnitId).FirstOrDefaultAsync(ct);
+                    if (string.IsNullOrWhiteSpace(inventoryUnit) || group.Any(x => !string.Equals(x.Unit, inventoryUnit, StringComparison.OrdinalIgnoreCase)))
+                        throw new PostingValidationException($"Transfer lines for item '{group.Key.ItemId}' must use the inventory unit.");
+                    var initial = await Db.Set<InventSum>().AsNoTracking().FirstOrDefaultAsync(x =>
+                        x.DataAreaId == companyId && x.ItemId == group.Key.ItemId && x.InventDimId == group.Key.InventDimId, ct);
+                    var available = (initial?.PhysicalInvent ?? 0m) - (initial?.ReservPhysical ?? 0m);
+                    if (group.Sum(x => x.Qty) > available)
+                        throw new PostingValidationException($"Transfer lines exceed available stock for item '{group.Key.ItemId}' and dimension '{group.Key.InventDimId}'.");
+                }
+            }
 
             var name = await Db.Set<InventJournalName>().AsNoTracking().FirstOrDefaultAsync(x => x.DataAreaId == companyId && x.JournalNameId == header.JournalNameId, ct)
                 ?? throw new PostingValidationException("The journal name setup no longer exists.");
@@ -56,10 +97,8 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
                     (x.DataAreaId == companyId || (x.DataAreaId == string.Empty && x.NumberSequenceScope == null)), ct)
                 ?? throw new PostingValidationException("A valid voucher number sequence is required before posting.");
 
-            var requiresLedger = header.JournalType != InventJournalType.Transfer;
-            var ledgerContext = requiresLedger ? await LoadLedgerContextAsync(companyId, lines, ct) : null;
-            var inventoryCurrency = ledgerContext?.Ledger.AccountingCurrency ?? await Db.Set<Ledger>().AsNoTracking()
-                .Where(x => x.DataAreaId == companyId).Select(x => x.AccountingCurrency).FirstOrDefaultAsync(ct) ?? string.Empty;
+            var ledgerContext = await LoadLedgerContextAsync(companyId, lines, ct);
+            var inventoryCurrency = ledgerContext.Ledger.AccountingCurrency;
             if (string.IsNullOrWhiteSpace(inventoryCurrency))
                 throw new PostingValidationException("The ledger accounting currency is required.");
             var result = new InventJournalPostResultDto { JournalId = header.JournalId, PostedDateTime = DateTime.UtcNow };
@@ -95,8 +134,8 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
 
                 await ValidateTrackingDimensionsAsync(item, fromDim, signedQty, ct);
 
-                if (signedQty < 0 && fromSum.PhysicalInvent + signedQty < 0 && item.Model.NegativePhysical != NoYes.Yes)
-                    throw new PostingValidationException($"Line {line.LineNum} would create negative physical inventory for item '{item.ItemId}'.");
+                if (signedQty < 0 && fromSum.PhysicalInvent - fromSum.ReservPhysical + signedQty < 0)
+                    throw new PostingValidationException($"Line {line.LineNum} exceeds available physical inventory for item '{item.ItemId}'.");
 
                 if (signedQty == 0)
                 {
@@ -108,8 +147,8 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
                     unitCost = await GetDefaultItemCostAsync(companyId, item.ItemId, line.InventDimId, line.TransDate, ct);
                 if (unitCost <= 0 && signedQty > 0 && header.JournalType == InventJournalType.Counting)
                     unitCost = await GetDefaultItemCostAsync(companyId, item.ItemId, line.InventDimId, line.TransDate, ct);
-                if (unitCost < 0 || (signedQty > 0 && unitCost == 0 && header.JournalType != InventJournalType.Transfer))
-                    throw new PostingValidationException($"A valid receipt cost is required for item '{item.ItemId}' on line {line.LineNum}.");
+                if (unitCost <= 0 && header.JournalType != InventJournalType.Transfer)
+                    throw new PostingValidationException($"A positive inventory cost is required for item '{item.ItemId}' on line {line.LineNum}.");
                 var voucher = (await _numbers.NextAsync(voucherSequence.NumberSequence, companyId, ct)).Code;
                 result.Vouchers.Add(voucher);
 
@@ -119,10 +158,16 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
                     var toDim = await Db.Set<InventDim>().FirstOrDefaultAsync(x => x.DataAreaId == companyId && x.InventDimId == line.ToInventDimId, ct)
                         ?? throw new PostingValidationException($"Destination inventory dimension '{line.ToInventDimId}' was not found.");
                     if (toDim.InventDimId == fromDim.InventDimId) throw new PostingValidationException("Transfer source and destination dimensions must be different.");
+                    if (toDim.InventSiteId != fromDim.InventSiteId)
+                        throw new PostingValidationException("Cross-site transfer requires financial reclassification and is not available yet.");
+                    if (!IsBasicTransferDimension(fromDim) || !IsBasicTransferDimension(toDim))
+                        throw new PostingValidationException("The basic transfer journal supports site and warehouse dimensions only.");
                     if (toDim.InventStatusId.Length > 0 && !await Db.Set<WHSInventStatus>().AnyAsync(x =>
                             x.DataAreaId == companyId && x.InventStatusId == toDim.InventStatusId, ct))
                         throw new PostingValidationException($"Destination inventory status '{toDim.InventStatusId}' no longer exists.");
                     await ValidateTrackingDimensionsAsync(item, toDim, Math.Abs(inventoryQty), ct);
+                    if (unitCost <= 0)
+                        throw new PostingValidationException($"A positive source inventory cost is required for transfer line {line.LineNum}.");
                     var toSum = await GetOrCreateSummaryAsync(companyId, item.ItemId, toDim, ct);
                     var transferQty = Math.Abs(inventoryQty);
                     await CreateInventoryTransactionAsync(companyId, header, line, item.ItemId, fromDim.InventDimId, -transferQty, unitCost, inventoryCurrency, voucher, ct);
@@ -290,13 +335,18 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
     private static decimal GetRunningAverageCost(InventSum sum) =>
         sum.PhysicalInvent == 0 ? 0m : Math.Abs((sum.PostedValue + sum.PhysicalValue) / sum.PhysicalInvent);
 
+    private static bool IsBasicTransferDimension(InventDim dim) =>
+        dim.InventSiteId.Length > 0 && dim.InventLocationId.Length > 0 &&
+        dim.ConfigId.Length == 0 && dim.InventSizeId.Length == 0 &&
+        dim.InventColorId.Length == 0 && dim.InventStyleId.Length == 0 &&
+        dim.InventVersionId.Length == 0 && dim.InventBatchId.Length == 0 &&
+        dim.InventSerialId.Length == 0 && dim.InventStatusId.Length == 0 &&
+        dim.WmsLocationId.Length == 0 && dim.LicensePlateId.Length == 0;
+
     private async Task<decimal> ResolveUnitCostAsync(string companyId, ReadyItem item, InventSum summary, InventJournalTrans line,
         InventJournalType journalType, decimal signedQty, CancellationToken ct)
     {
-        // The current basic journal engine implements moving-average issue valuation only.
-        // FIFO and periodic weighted-average require receipt/issue settlement during inventory close;
-        // treating them as running average would silently produce incorrect cost and ledger values.
-        if (item.Model.InventModel is InventModel.FIFO or InventModel.WeightedAvg or InventModel.WeightedAvg_Date)
+        if (item.Model.InventModel is InventModel.WeightedAvg or InventModel.WeightedAvg_Date)
             throw new PostingValidationException(
                 $"Inventory model '{item.Model.InventModel}' requires inventory close/settlement, which is not implemented in this basic journal engine. Select Moving average or defer posting until costing close is supported.");
 
@@ -311,9 +361,36 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
             return standardCost;
         }
 
-        return journalType == InventJournalType.Transfer || signedQty < 0 || journalType == InventJournalType.Counting
-            ? GetRunningAverageCost(summary)
-            : line.CostPrice;
+        if (journalType == InventJournalType.Transfer || signedQty < 0 || journalType == InventJournalType.Counting)
+        {
+            if (item.Model.InventModel != InventModel.FIFO) return GetRunningAverageCost(summary);
+            var site = await Db.Set<InventDim>().AsNoTracking()
+                .Where(x => x.DataAreaId == companyId && x.InventDimId == line.InventDimId)
+                .Select(x => x.InventSiteId).FirstOrDefaultAsync(ct);
+            if (string.IsNullOrEmpty(site)) throw new PostingValidationException("The inventory site is required for FIFO cost estimation.");
+            var balances = await Db.Set<InventSum>().AsNoTracking()
+                .Where(x => x.DataAreaId == companyId && x.ItemId == item.ItemId && x.InventSiteId == site)
+                .Select(x => new { x.PhysicalInvent, x.PostedValue, x.PhysicalValue }).ToListAsync(ct);
+            var quantity = balances.Sum(x => x.PhysicalInvent);
+            var value = balances.Sum(x => x.PostedValue + x.PhysicalValue);
+            return quantity <= 0 ? 0m : Math.Abs(value / quantity);
+        }
+        return line.CostPrice;
+    }
+
+    private async Task LockPostingKeyAsync(string key, CancellationToken ct)
+    {
+        if (Db.Database.ProviderName?.Contains("SqlServer", StringComparison.OrdinalIgnoreCase) != true) return;
+        var resource = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(key)));
+        await using var command = Db.Database.GetDbConnection().CreateCommand();
+        command.Transaction = Db.Database.CurrentTransaction!.GetDbTransaction();
+        command.CommandText = "DECLARE @result int; EXEC @result = sys.sp_getapplock @Resource = @resource, @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 10000; SELECT @result;";
+        var parameter = command.CreateParameter();
+        parameter.ParameterName = "@resource";
+        parameter.Value = "InventJournal:" + resource;
+        command.Parameters.Add(parameter);
+        if (await command.ExecuteScalarAsync(ct) is not int code || code < 0)
+            throw new PostingValidationException("Inventory posting could not acquire its concurrency lock.");
     }
 
     private async Task<decimal> GetDefaultItemCostAsync(string companyId, string itemId, string inventDimId,

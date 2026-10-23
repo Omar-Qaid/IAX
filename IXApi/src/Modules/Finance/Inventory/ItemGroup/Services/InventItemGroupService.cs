@@ -92,8 +92,9 @@ public sealed class InventItemGroupService : BaseService<InventItemGroupEntity>,
         if (row is null) return (false, "Item group was not found.");
         if (await Db.Set<InventItemGroupItemEntity>().AnyAsync(x => x.ItemGroupDataAreaId == companyId && x.ItemGroupId == row.ItemGroupId, ct))
             return (false, "The group is assigned to one or more released products.");
-        var postings = await Db.Set<InventPostingEntity>().Where(x => x.DataAreaId == companyId && x.ItemCode == TableGroupAll.Group && x.ItemRelation == row.ItemGroupId).ToListAsync(ct);
-        Db.RemoveRange(postings); Db.Remove(row); await _unitOfWork.CompleteAsync(ct); return (true, null);
+        if (await Db.Set<InventPostingEntity>().AnyAsync(x => x.DataAreaId == companyId && x.ItemCode == TableGroupAll.Group && x.ItemRelation == row.ItemGroupId, ct))
+            return (false, "The group is referenced by inventory posting setup.");
+        Db.Remove(row); await _unitOfWork.CompleteAsync(ct); return (true, null);
     }
 
     private async Task<string?> SyncPostingsAsync(string companyId, string itemGroupId, List<InventItemGroupPostingDto> input, CancellationToken ct)

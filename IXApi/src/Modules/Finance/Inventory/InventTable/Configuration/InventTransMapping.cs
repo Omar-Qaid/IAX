@@ -20,6 +20,9 @@ public sealed class InventTransMapping : IRegister
             .Map(d => d.UnitPrice, s => s.UnitPrice)
             .Map(d => d.UnitCost, s => s.Transaction.Qty == 0 ? 0 : Math.Abs(s.CostAmount / s.Transaction.Qty))
             .Map(d => d.CostAmount, s => s.CostAmount)
+            .Map(d => d.PhysicalCostAmount, s => s.Transaction.CostAmountPhysical)
+            .Map(d => d.PostedCostAmount, s => s.Transaction.CostAmountPosted)
+            .Map(d => d.CostAdjustmentAmount, s => s.Transaction.CostAmountAdjustment)
             .Map(d => d.CurrencyCode, s => s.Transaction.CurrencyCode)
             .Map(d => d.Site, s => (s.Dimension == null ? string.Empty : s.Dimension.InventSiteId ?? string.Empty))
             .Map(d => d.Warehouse, s => (s.Dimension == null ? string.Empty : s.Dimension.InventLocationId ?? string.Empty))
@@ -27,6 +30,7 @@ public sealed class InventTransMapping : IRegister
             .Map(d => d.SerialNumber, s => (s.Dimension == null ? string.Empty : s.Dimension.InventSerialId ?? string.Empty))
             .Map(d => d.ExpectedDate, s => AsPostedDate(s.Transaction.DateExpected))
             .Map(d => d.Voucher, s => s.Transaction.Voucher)
+            .Map(d => d.PhysicalVoucher, s => s.Transaction.VoucherPhysical)
             .Map(d => d.DataAreaId, s => s.Transaction.DataAreaId);
     }
 

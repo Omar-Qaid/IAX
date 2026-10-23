@@ -34,6 +34,69 @@ namespace IAX.IXApi.Tests;
 public sealed class InventoryArchitectureTests
 {
     [Fact]
+    public async Task Physical_reconciliation_reports_differences_and_unclassified_states_without_writing_stock()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>()
+            .UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.AddRange(
+            new InventDim { RecId = 801, DataAreaId = "dat", InventDimId = "DIM-1", InventSiteId = "JED", InventLocationId = "MAIN" },
+            new InventSum { RecId = 802, DataAreaId = "dat", ItemId = "PAPER", InventDimId = "DIM-1", PhysicalInvent = 12 },
+            new InventTrans { RecId = 803, DataAreaId = "dat", ItemId = "PAPER", InventDimId = "DIM-1", Qty = 10, StatusReceipt = StatusReceipt.Purchased },
+            new InventTrans { RecId = 804, DataAreaId = "dat", ItemId = "PAPER", InventDimId = "DIM-1", Qty = 3, StatusReceipt = StatusReceipt.Registered },
+            new InventTrans { RecId = 805, DataAreaId = "other", ItemId = "PAPER", InventDimId = "DIM-1", Qty = 100, StatusReceipt = StatusReceipt.Purchased });
+        await db.SaveChangesAsync();
+
+        var result = (await new InventPhysicalReconciliationService(new TestUnitOfWork(db), new TestIdentity())
+            .CheckAsync("PAPER", "JED", "MAIN"))!;
+
+        Assert.Equal(1, result.ComparedKeys);
+        Assert.Equal(1, result.DifferenceCount);
+        Assert.Equal(1, result.UnclassifiedTransactionCount);
+        Assert.False(result.Complete);
+        var row = Assert.Single(result.Rows);
+        Assert.Equal(10, row.TransactionPhysical);
+        Assert.Equal(12, row.SummaryPhysical);
+        Assert.Equal(2, row.Difference);
+        Assert.Equal(12, (await db.Set<InventSum>().SingleAsync(x => x.DataAreaId == "dat")).PhysicalInvent);
+    }
+
+    [Fact]
+    public async Task Fifo_preview_allocates_financial_journal_receipts_by_site_without_writing_adjustments()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>()
+            .UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        var date = new DateTime(2026, 9, 30);
+        db.AddRange(
+            new InventModelGroup { RecId = 501, DataAreaId = "dat", ModelGroupId = "FIFO", InventModel = InventModel.FIFO },
+            new InventModelGroupItem { RecId = 502, DataAreaId = "dat", ItemDataAreaId = "dat", ItemId = "PAPER", ModelGroupDataAreaId = "dat", ModelGroupId = "FIFO" },
+            new InventDim { RecId = 503, DataAreaId = "dat", InventDimId = "DIM-A", InventSiteId = "JED", InventLocationId = "MAIN" },
+            new InventDim { RecId = 504, DataAreaId = "dat", InventDimId = "DIM-B", InventSiteId = "JED", InventLocationId = "SHOP" },
+            new InventTransOrigin { RecId = 505, DataAreaId = "dat", InventTransId = "R-A", ItemId = "PAPER", ReferenceCategory = InventRefType.InventoryJournal },
+            new InventTransOrigin { RecId = 506, DataAreaId = "dat", InventTransId = "R-B", ItemId = "PAPER", ReferenceCategory = InventRefType.InventoryJournal },
+            new InventTransOrigin { RecId = 507, DataAreaId = "dat", InventTransId = "ISS", ItemId = "PAPER", ReferenceCategory = InventRefType.InventoryJournal },
+            new InventTrans { RecId = 508, DataAreaId = "dat", InventTransOrigin = 505, ItemId = "PAPER", InventDimId = "DIM-A", Qty = 100, CostAmountPosted = 1000, StatusReceipt = StatusReceipt.Purchased, DateFinancial = date },
+            new InventTrans { RecId = 509, DataAreaId = "dat", InventTransOrigin = 506, ItemId = "PAPER", InventDimId = "DIM-B", Qty = 100, CostAmountPosted = 1400, StatusReceipt = StatusReceipt.Purchased, DateFinancial = date },
+            new InventTrans { RecId = 510, DataAreaId = "dat", InventTransOrigin = 507, ItemId = "PAPER", InventDimId = "DIM-A", Qty = -150, CostAmountPosted = -1800, StatusIssue = StatusIssue.Sold, DateFinancial = date });
+        await db.SaveChangesAsync();
+
+        var result = await new FifoCostPreviewService(new TestUnitOfWork(db), new TestIdentity())
+            .PreviewAsync(date);
+
+        var issue = Assert.Single(result.Issues);
+        Assert.Equal(-1700, issue.FifoCost);
+        Assert.Equal(100, issue.RemainingAdjustment);
+        Assert.Equal(new decimal[] { 100, 50 }, issue.Allocations.Select(x => x.Quantity));
+        Assert.False(result.CanExecute);
+        Assert.Equal(0, await db.Set<InventSettlement>().CountAsync());
+    }
+
+    [Fact]
     public async Task Shared_product_creation_consumes_existing_number_sequence_in_its_transaction()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
@@ -131,6 +194,22 @@ public sealed class InventoryArchitectureTests
         var inventoryBlocked = await service.PostAsync(901, request, default);
         Assert.Equal(422, inventoryBlocked.StatusCode);
         Assert.Contains("blocked for issue", inventoryBlocked.Message);
+
+        (await db.Set<WHSInventStatus>().SingleAsync()).InventStatusBlocking = NoYes.No;
+        var salesLine = await db.Set<SalesLine>().SingleAsync();
+        salesLine.SalesQty = 1;
+        salesLine.QtyOrdered = 1;
+        db.Add(new InventSum { DataAreaId = "dat", ItemId = "ITEM-901", InventDimId = "DIM-901",
+            PhysicalInvent = 10, ReservPhysical = 10, AvailPhysical = 0 });
+        await db.SaveChangesAsync();
+        var reservedStock = await service.PostAsync(901, request, default);
+        Assert.Equal(422, reservedStock.StatusCode);
+        Assert.Contains("other reservations", reservedStock.Message);
+        (await db.Set<SalesTable>().SingleAsync()).SalesType = SalesType.ReturnItem;
+        await db.SaveChangesAsync();
+        var returnAsDelivery = await service.PostAsync(901, request, default);
+        Assert.Equal(422, returnAsDelivery.StatusCode);
+        Assert.Contains("return receipts", returnAsDelivery.Message);
         Assert.Empty(await db.Set<CustPackingSlipJour>().ToListAsync());
     }
 
@@ -653,8 +732,24 @@ public sealed class InventoryArchitectureTests
         Assert.Equal(0, transferTransactions.Sum(x => x.CostAmountPosted));
         Assert.Equal(3, (await db.Set<InventSum>().SingleAsync(x => x.InventDimId == line.InventDimId)).PhysicalInvent);
         Assert.Equal(2, (await db.Set<InventSum>().SingleAsync(x => x.InventDimId == line.ToInventDimId)).PhysicalInvent);
-        Assert.NotNull((await posting.PostAsync(created.Journal.JournalId, default)).Error);
+        var repeated = await posting.PostAsync(created.Journal.JournalId, default);
+        Assert.Null(repeated.Error);
+        Assert.Equal(posted.Result.Vouchers, repeated.Result!.Vouchers);
+        Assert.Equal(3, await db.Set<InventTrans>().CountAsync());
         Assert.False((await service.DeleteAsync(created.Journal.JournalId, default)).Deleted);
+
+        var excessive = await service.CreateAsync(new InventJournalCreateDto
+        { JournalNameId = "TRF", Description = "Too much stock", InventSiteId = "JED", InventLocationId = "MAIN" }, default);
+        for (var i = 0; i < 2; i++)
+        {
+            var draft = await service.AddLineAsync(excessive.Journal!.JournalId, new InventJournalLineInputDto
+            { ItemId = "ITEM-001", InventSiteId = "JED", InventLocationId = "MAIN", ToInventSiteId = "JED",
+                ToInventLocationId = "SHOW", Unit = "pcs", Qty = 2, TransDate = DateTime.Today }, default);
+            Assert.Null(draft.Error);
+        }
+        Assert.Contains("exceed available stock", (await posting.PostAsync(excessive.Journal!.JournalId, default)).Error);
+        Assert.Equal(3, await db.Set<InventTrans>().CountAsync());
+        Assert.Equal(3, (await db.Set<InventSum>().SingleAsync(x => x.InventDimId == line.InventDimId)).PhysicalInvent);
 
         var adjustment = await service.CreateAsync(new InventJournalCreateDto
         { JournalNameId = "ADJ", Description = "Opening adjustment", InventSiteId = "JED", InventLocationId = "MAIN" }, default);
@@ -718,12 +813,14 @@ public sealed class InventoryArchitectureTests
         { ItemId = "ITEM-001", InventSiteId = "JED", InventLocationId = "MAIN", Unit = "pcs", Counted = 6,
             TransDate = DateTime.Today }, default);
         Assert.Null(countLine.Error);
+        var duplicateCount = await service.AddLineAsync(counting.Journal.JournalId, new InventJournalLineInputDto
+        { ItemId = "ITEM-001", InventSiteId = "JED", InventLocationId = "MAIN", Unit = "pcs", Counted = 0,
+            TransDate = DateTime.Today }, default);
+        Assert.Contains("already in the counting journal", duplicateCount.Error);
         var countPost = await posting.PostAsync(counting.Journal.JournalId, default);
-        Assert.Null(countPost.Error);
-        Assert.Equal(1, countPost.Result!.InventoryTransactionsCreated);
-        Assert.Equal(1, countPost.Result.LedgerEntriesCreated);
-        Assert.Equal(-1, (await db.Set<InventTrans>().OrderByDescending(x => x.RecId).Select(x => x.Qty).FirstAsync()));
-        Assert.Equal(6, (await db.Set<InventSum>().SingleAsync(x => x.InventDimId == line.InventDimId)).PhysicalInvent);
+        Assert.Contains("durable movement freeze", countPost.Error);
+        Assert.Null(countPost.Result);
+        Assert.Equal(7, (await db.Set<InventSum>().SingleAsync(x => x.InventDimId == line.InventDimId)).PhysicalInvent);
         Assert.Equal(await db.Set<InventTrans>().Where(x => x.ItemId == "ITEM-001").SumAsync(x => x.Qty),
             await db.Set<InventSum>().Where(x => x.ItemId == "ITEM-001").SumAsync(x => x.PhysicalInvent));
         Assert.Equal(0, await db.Set<GeneralJournalAccountEntry>().SumAsync(x => x.AccountingCurrencyAmount));
@@ -742,7 +839,7 @@ public sealed class InventoryArchitectureTests
         Assert.Null(rollbackReceipt.Error);
         Assert.Null(invalidIssue.Error);
         var rollbackResult = await posting.PostAsync(rollbackJournal.Journal.JournalId, default);
-        Assert.Contains("negative physical inventory", rollbackResult.Error);
+        Assert.Contains("available physical inventory", rollbackResult.Error);
         Assert.Equal(beforeRollbackTransactions, await db.Set<InventTrans>().CountAsync());
         Assert.Equal(beforeRollbackEntries, await db.Set<GeneralJournalEntry>().CountAsync());
         Assert.Equal(beforeRollbackQty, await db.Set<InventSum>().Where(x => x.ItemId == "ITEM-001").SumAsync(x => x.PhysicalInvent));

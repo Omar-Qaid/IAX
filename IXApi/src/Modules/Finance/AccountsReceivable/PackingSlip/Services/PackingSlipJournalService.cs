@@ -1,5 +1,7 @@
 using System.Globalization;
 using System.Data;
+using System.Security.Cryptography;
+using System.Text;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
@@ -10,6 +12,7 @@ using IAX.IXApi.Modules.Finance.Inventory.InventoryStatus.Entities;
 using IAX.IXApi.Modules.Finance.Inventory.ProductLifecycle;
 using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable.PackingSlip;
 
@@ -83,6 +86,8 @@ public sealed class PackingSlipJournalService(
             return new(400, null, "Quantity must be All, Deliver now, or Picked.");
         var order = await FindOrderAsync(salesOrderRecId, ct);
         if (order is null) return new(404, null, "Sales order was not found in the selected company.");
+        if (order.SalesType == SalesType.ReturnItem)
+            return new(422, null, "Customer return receipts require a supported return workflow.");
         if (order.SalesStatus != SalesStatus.Backorder)
             return new(422, null, "Only an open sales order can be shipped.");
 
@@ -132,8 +137,12 @@ public sealed class PackingSlipJournalService(
         return await Db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
             await using var transaction = await Db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+            await LockPostingKeyAsync($"PackingSlip:{company.GetDataAreaId()}:{salesOrderRecId}", ct);
             var order = await FindOrderAsync(salesOrderRecId, ct);
             if (order is null) return new PackingSlipJournalResult(404, null, "Sales order was not found in the selected company.");
+            if (order.SalesType == SalesType.ReturnItem)
+                return new PackingSlipJournalResult(422, null,
+                    "Customer return receipts require a supported return workflow and cannot use sales delivery posting.");
             var previous = await Db.Set<CustPackingSlipJour>().AsNoTracking().SingleOrDefaultAsync(
                 row => row.DataAreaId == order.DataAreaId && row.SalesId == order.SalesId && row.ParmId == request.RequestId, ct);
             if (previous is not null)
@@ -155,6 +164,10 @@ public sealed class PackingSlipJournalService(
             lines = lines.OrderBy(line => line.LineNum).ToList();
             if (lines.Count != requested.Count)
                 return new PackingSlipJournalResult(422, null, "A selected sales line no longer belongs to this order.");
+            if (lines.Any(line => line.SalesType == SalesType.ReturnItem ||
+                    !string.IsNullOrWhiteSpace(line.InventTransIdReturn)))
+                return new PackingSlipJournalResult(422, null,
+                    "Customer return lines cannot use sales delivery posting.");
             if (lines.Any(line => line.SalesStatus != SalesStatus.Backorder || line.StockedProduct != NoYes.Yes
                 || line.RemainSalesPhysical <= 0 || requested[line.RecId] > line.RemainSalesPhysical))
                 return new PackingSlipJournalResult(422, null,
@@ -164,6 +177,9 @@ public sealed class PackingSlipJournalService(
             if (lines.Any(line => string.IsNullOrWhiteSpace(line.InventTransId)
                 || !dimensions.ContainsKey(line.InventDimId)))
                 return new PackingSlipJournalResult(422, null, "Every selected line must have a valid inventory transaction and dimensions.");
+            foreach (var key in lines.Select(line => $"InventStock:{order.DataAreaId}:{line.ItemId}:{line.InventDimId}")
+                         .Distinct(StringComparer.Ordinal).OrderBy(key => key, StringComparer.Ordinal))
+                await LockPostingKeyAsync(key, ct);
 
             foreach (var line in lines)
             {
@@ -181,6 +197,22 @@ public sealed class PackingSlipJournalService(
                 if (status.InventStatusBlocking == NoYes.Yes)
                     return new PackingSlipJournalResult(422, null,
                         $"Inventory status '{statusId}' is blocked for issue.");
+            }
+
+            foreach (var group in lines.GroupBy(line => new { line.ItemId, line.InventDimId }))
+            {
+                var required = group.Sum(line => ToInventoryQuantity(line, requested[line.RecId]));
+                if (group.Any(line => ToInventoryQuantity(line, requested[line.RecId]) <= 0
+                        || ToInventoryQuantity(line, requested[line.RecId]) > line.RemainInventPhysical))
+                    return new PackingSlipJournalResult(422, null,
+                        $"Delivery quantity exceeds remaining inventory demand for item {group.Key.ItemId}.");
+                var available = await Db.Set<InventSum>().AsNoTracking()
+                    .Where(row => row.DataAreaId == order.DataAreaId && row.ItemId == group.Key.ItemId
+                        && row.InventDimId == group.Key.InventDimId)
+                    .Select(row => (decimal?)(row.PhysicalInvent - row.ReservPhysical)).SingleOrDefaultAsync(ct) ?? 0m;
+                if (required > available)
+                    return new PackingSlipJournalResult(422, null,
+                        $"Available physical stock excluding other reservations is insufficient for item {group.Key.ItemId}.");
             }
 
             var packingSlipId = await NextPackingSlipIdAsync(order.DataAreaId, ct);
@@ -218,8 +250,9 @@ public sealed class PackingSlipJournalService(
                     && row.ItemId == line.ItemId && row.InventDimId == line.InventDimId, ct);
                 if (inventory is null)
                     return new PackingSlipJournalResult(422, null, $"Inventory summary is missing for item {line.ItemId}.");
-                if (inventory.PhysicalInvent < inventQuantity)
-                    return new PackingSlipJournalResult(422, null, $"Physical on-hand is insufficient for item {line.ItemId}.");
+                if (inventory.PhysicalInvent - inventory.ReservPhysical < inventQuantity)
+                    return new PackingSlipJournalResult(422, null,
+                        $"Available physical stock excluding other reservations is insufficient for item {line.ItemId}.");
                 if (line.Complete != 0 && salesQuantity != line.RemainSalesPhysical)
                     return new PackingSlipJournalResult(422, null, $"Item {line.ItemId} requires complete delivery on this order line.");
 
@@ -282,7 +315,7 @@ public sealed class PackingSlipJournalService(
                     inventory.PdscwDeducted += catchWeightForPosting;
                     inventory.PhysicalInvent -= postingQuantity;
                     inventory.PdscwPhysicalInvent -= catchWeightForPosting;
-                    inventory.AvailPhysical -= postingQuantity;
+                    inventory.AvailPhysical = inventory.PhysicalInvent - inventory.ReservPhysical;
                     inventory.PdscwAvailPhysical -= catchWeightForPosting;
                     inventory.LastUpdDatePhysical = deliveryDate;
                     postedCatchWeightQuantity += catchWeightForPosting;
@@ -476,6 +509,21 @@ public sealed class PackingSlipJournalService(
     private Task<SalesTable?> FindOrderAsync(long recId, CancellationToken ct) =>
         Db.Set<SalesTable>().AsNoTracking().SingleOrDefaultAsync(
             row => row.RecId == recId && row.DataAreaId == company.GetDataAreaId(), ct);
+
+    private async Task LockPostingKeyAsync(string key, CancellationToken ct)
+    {
+        if (Db.Database.ProviderName?.Contains("SqlServer", StringComparison.OrdinalIgnoreCase) != true) return;
+        var resource = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(key)));
+        await using var command = Db.Database.GetDbConnection().CreateCommand();
+        command.Transaction = Db.Database.CurrentTransaction!.GetDbTransaction();
+        command.CommandText = "DECLARE @result int; EXEC @result = sys.sp_getapplock @Resource = @resource, @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 10000; SELECT @result;";
+        var parameter = command.CreateParameter();
+        parameter.ParameterName = "@resource";
+        parameter.Value = "InventJournal:" + resource;
+        command.Parameters.Add(parameter);
+        if (await command.ExecuteScalarAsync(ct) is not int code || code < 0)
+            throw new InvalidOperationException("Sales delivery could not acquire its inventory concurrency lock.");
+    }
 
     private static PackingSlipJournalSummaryDto ToSummary(CustPackingSlipJour row) => new()
     {

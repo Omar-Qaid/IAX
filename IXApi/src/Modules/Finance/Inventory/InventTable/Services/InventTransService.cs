@@ -10,14 +10,41 @@ namespace IAX.IXApi.Modules.Finance.Inventory;
 public sealed class InventTransService(IUnitOfWork unitOfWork, ICompanyExecutionContext company) : IInventTransService
 {
     public async Task<List<InventTransListDto>?> GetListAsync(CancellationToken cancellationToken = default)
+        => await SearchAsync(null, null, null, null, cancellationToken);
+
+    public async Task<List<InventTransListDto>?> SearchAsync(string? itemId, string? sourceInventTransId,
+        string? siteId, string? warehouseId, CancellationToken cancellationToken = default)
     {
         var dataAreaId = company.GetDataAreaId();
         if (string.IsNullOrWhiteSpace(dataAreaId))
             return null;
 
-        var transactions = await unitOfWork.Context.Set<InventTrans>()
+        var query = unitOfWork.Context.Set<InventTrans>()
             .AsNoTracking()
-            .Where(transaction => transaction.DataAreaId == dataAreaId)
+            .Where(transaction => transaction.DataAreaId == dataAreaId);
+        if (!string.IsNullOrWhiteSpace(itemId))
+            query = query.Where(transaction => transaction.ItemId == itemId.Trim());
+        if (!string.IsNullOrWhiteSpace(sourceInventTransId))
+        {
+            var sourceId = sourceInventTransId.Trim();
+            var originId = await unitOfWork.Context.Set<InventTransOrigin>().AsNoTracking()
+                .Where(origin => origin.DataAreaId == dataAreaId && origin.InventTransId == sourceId)
+                .Select(origin => (long?)origin.RecId).FirstOrDefaultAsync(cancellationToken);
+            if (originId is null) return [];
+            query = query.Where(transaction => transaction.InventTransOrigin == originId.Value);
+        }
+        if (!string.IsNullOrWhiteSpace(siteId) || !string.IsNullOrWhiteSpace(warehouseId))
+        {
+            var site = siteId?.Trim();
+            var warehouse = warehouseId?.Trim();
+            var matchingDimensionIds = unitOfWork.Context.Set<InventDim>().AsNoTracking()
+                .Where(dimension => dimension.DataAreaId == dataAreaId
+                    && (site == null || site == "" || dimension.InventSiteId == site)
+                    && (warehouse == null || warehouse == "" || dimension.InventLocationId == warehouse))
+                .Select(dimension => dimension.InventDimId);
+            query = query.Where(transaction => matchingDimensionIds.Contains(transaction.InventDimId));
+        }
+        var transactions = await query
             .OrderByDescending(transaction => transaction.DateStatus)
             .ThenByDescending(transaction => transaction.RecId)
             .ToListAsync(cancellationToken);

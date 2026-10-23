@@ -101,7 +101,7 @@ public sealed class InventJournalNameService : IInventJournalNameService
 
     private async Task<string?> ValidateNumberSequenceAsync(long recId, string companyId, CancellationToken ct)
     {
-        if (recId == 0) return null;
+        if (recId == 0) return "A voucher number sequence is required for inventory journal names.";
         var valid = await _unitOfWork.Context.Set<SysNumberSequence>().IgnoreQueryFilters().AsNoTracking()
             .AnyAsync(x => x.RecId == recId && !x.IsDeleted && x.IsActive && x.InUse != 0 &&
                 (x.DataAreaId == companyId || (x.DataAreaId == string.Empty && x.NumberSequenceScope == null)), ct);

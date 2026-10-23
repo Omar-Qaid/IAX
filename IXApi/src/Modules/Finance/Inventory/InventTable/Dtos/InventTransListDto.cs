@@ -15,6 +15,9 @@ public sealed class InventTransListDto
     public decimal UnitPrice { get; init; }
     public decimal UnitCost { get; init; }
     public decimal CostAmount { get; init; }
+    public decimal PhysicalCostAmount { get; init; }
+    public decimal PostedCostAmount { get; init; }
+    public decimal CostAdjustmentAmount { get; init; }
     public string CurrencyCode { get; init; } = string.Empty;
     public string Site { get; init; } = string.Empty;
     public string Warehouse { get; init; } = string.Empty;
@@ -22,5 +25,6 @@ public sealed class InventTransListDto
     public string SerialNumber { get; init; } = string.Empty;
     public DateTime? ExpectedDate { get; init; }
     public string Voucher { get; init; } = string.Empty;
+    public string PhysicalVoucher { get; init; } = string.Empty;
     public string DataAreaId { get; init; } = string.Empty;
 }

@@ -51,7 +51,7 @@ public sealed class InventSiteController : ControllerBase
         return result switch
         {
             InventSiteDeleteResult.NotFound => NotFound(APIResponse<object>.Fail("Site was not found.")),
-            InventSiteDeleteResult.HasWarehouses => Conflict(APIResponse<object>.Fail("Delete the site's warehouses before deleting the site.")),
+            InventSiteDeleteResult.HasWarehouses => Conflict(APIResponse<object>.Fail("The site is referenced by warehouses or inventory dimensions.")),
             _ => Ok(APIResponse<bool>.Ok(true))
         };
     }

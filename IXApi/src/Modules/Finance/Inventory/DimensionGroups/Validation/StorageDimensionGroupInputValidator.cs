@@ -9,7 +9,8 @@ public sealed class StorageDimensionGroupInputValidator : BaseValidator<StorageD
     {
         RuleFor(x => x.GroupId).NotEmpty().WithMessage("Group ID is required.");
         RuleFor(x => x.Name).NotEmpty().WithMessage("Name is required.");
-        RuleFor(x => x).Must(x => !x.UseLocation || x.UseWarehouse).WithMessage("Location requires Warehouse.");
-        RuleFor(x => x).Must(x => !x.UseWarehouse || x.UseSite).WithMessage("Warehouse requires Site.");
+        RuleFor(x => x.UseSite).Equal(true).WithMessage("Site is required in the basic inventory scope.");
+        RuleFor(x => x.UseWarehouse).Equal(true).WithMessage("Warehouse is required in the basic inventory scope.");
+        RuleFor(x => x.UseLocation).Equal(false).WithMessage("Location tracking is outside the basic inventory scope.");
     }
 }

@@ -123,6 +123,10 @@ public sealed class ReleasedProductValidationDto
     public List<string> Warnings { get; init; } = [];
 }
 
+public sealed record ReleasedItemReadinessIssueDto(string Code, string Message);
+public sealed record ReleasedItemReadinessDto(string ItemId, string Company, bool CanPurchase, bool CanSell,
+    bool CanUseInventoryJournals, List<ReleasedItemReadinessIssueDto> Issues);
+
 public sealed class CreateReleasedProductDto
 {
     public string ProductNumber { get; init; } = string.Empty;

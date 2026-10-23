@@ -56,7 +56,7 @@ public sealed class InventLocationController : ControllerBase
         return status switch
         {
             LocationOperationStatus.NotFound => NotFound(APIResponse<object>.Fail("Warehouse was not found.")),
-            LocationOperationStatus.Referenced => Conflict(APIResponse<object>.Fail("This warehouse is referenced by another warehouse.")),
+            LocationOperationStatus.Referenced => Conflict(APIResponse<object>.Fail("This warehouse is referenced by inventory setup or documents.")),
             _ => Ok(APIResponse<bool>.Ok(true))
         };
     }

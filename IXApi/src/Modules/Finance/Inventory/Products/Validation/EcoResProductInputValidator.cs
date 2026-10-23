@@ -12,12 +12,11 @@ public sealed class EcoResProductInputValidator : BaseValidator<EcoResProductInp
             .MaximumLength(FieldLengths.ProductNumber);
         RuleFor(x => x.Name).NotEmpty().WithMessage("Product name is required.")
             .MaximumLength(FieldLengths.Name);
-        RuleFor(x => x.NameAlias).NotEmpty().WithMessage("Arabic name is required.")
-            .MaximumLength(FieldLengths.Name);
+        RuleFor(x => x.NameAlias).MaximumLength(FieldLengths.Name);
         RuleFor(x => x.SearchName).MaximumLength(FieldLengths.ProductSearchName);
         RuleFor(x => x.Description).MaximumLength(FieldLengths.Memo);
         RuleFor(x => x.ProductType).Must(value =>
-            Enum.TryParse<ItemType>(value, true, out var type) && type is ItemType.Item or ItemType.Service)
-            .WithMessage("Product type must be Item or Service. Product masters and BOM products are outside this basic scope.");
+            Enum.TryParse<ItemType>(value, true, out var type) && type == ItemType.Item)
+            .WithMessage("The basic inventory release supports distinct Item products only.");
     }
 }

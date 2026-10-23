@@ -34,8 +34,18 @@ public sealed class TrackingDimensionGroupService : BaseService<EcoResTrackingDi
             return (null, $"Tracking dimension group '{id}' already exists.");
         var row = input.Adapt<EcoResTrackingDimensionGroup>();
         row.Name = id;
-        await AddAsync(row, ct);
-        await ReplaceSetupAsync(row.RecId, input, ct);
+        await _unitOfWork.BeginTransactionAsync(ct);
+        try
+        {
+            await AddAsync(row, ct);
+            await ReplaceSetupAsync(row.RecId, input, ct);
+            await _unitOfWork.CommitTransactionAsync(ct);
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync(ct);
+            throw;
+        }
         return (Map(row, await LoadSetupAsync(row.RecId, ct)), null);
     }
 
@@ -47,9 +57,21 @@ public sealed class TrackingDimensionGroupService : BaseService<EcoResTrackingDi
         if (error is not null) return (null, error);
         if (row.Name != NormalizeId(input.GroupId))
             return (null, "Tracking dimension group ID cannot be changed after creation.");
+        if (await Db.Set<EcoResTrackingDimensionGroupItem>().AnyAsync(x => x.TrackingDimensionGroup == recId, ct))
+            return (null, "A tracking dimension group assigned to released products cannot be changed through basic setup.");
         input.Adapt(row);
-        await base.UpdateAsync(row, ct);
-        await ReplaceSetupAsync(row.RecId, input, ct);
+        await _unitOfWork.BeginTransactionAsync(ct);
+        try
+        {
+            await base.UpdateAsync(row, ct);
+            await ReplaceSetupAsync(row.RecId, input, ct);
+            await _unitOfWork.CommitTransactionAsync(ct);
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync(ct);
+            throw;
+        }
         return (Map(row, await LoadSetupAsync(row.RecId, ct)), null);
     }
 
@@ -82,7 +104,9 @@ public sealed class TrackingDimensionGroupService : BaseService<EcoResTrackingDi
     }
 
     private static EcoResTrackingDimensionGroupFldSetup Setup(long id, int fieldId, decimal line, bool active) =>
-        new() { TrackingDimensionGroup = id, DimensionFieldId = fieldId, LineNumber = line, IsActive = active };
+        new() { TrackingDimensionGroup = id, DimensionFieldId = fieldId, LineNumber = line, IsActive = active,
+            IsPhysicalInventoryEnabled = active, IsFinancialInventoryEnabled = active,
+            IsAllowBlankReceiptEnabled = !active, IsAllowBlankIssueEnabled = !active };
 
     private static TrackingDimensionGroupDto Map(EcoResTrackingDimensionGroup row, IEnumerable<EcoResTrackingDimensionGroupFldSetup> setup) =>
         new() { Id = row.RecId.ToString(), GroupId = row.Name, Name = row.Description,

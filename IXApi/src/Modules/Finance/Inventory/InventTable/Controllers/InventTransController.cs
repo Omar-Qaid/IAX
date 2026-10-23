@@ -12,9 +12,11 @@ public sealed class InventTransController(
 {
     [HttpGet("list")]
     public async Task<ActionResult<APIResponse<IEnumerable<InventTransListDto>>>> GetList(
+        [FromQuery] string? itemId = null, [FromQuery] string? sourceInventTransId = null,
+        [FromQuery] string? siteId = null, [FromQuery] string? warehouseId = null,
         CancellationToken cancellationToken = default)
     {
-        var result = await service.GetListAsync(cancellationToken);
+        var result = await service.SearchAsync(itemId, sourceInventTransId, siteId, warehouseId, cancellationToken);
         if (result == null)
             return BadRequest(APIResponse<IEnumerable<InventTransListDto>>.Fail(
                 "A company must be selected to view inventory transactions."));

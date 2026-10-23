@@ -2829,6 +2829,7 @@
   },
   "inventOnHand": {
     "title": "On-hand inventory",
+    "inventoryUnit": "Inventory unit",
     "physicalInventory": "Physical inventory",
     "physicalReserved": "Physical reserved",
     "availablePhysical": "Available physical",
@@ -2841,6 +2842,10 @@
   "inventTrans": {
     "transactionFilter": "Transaction filter",
     "fields": {
+      "physicalCostAmount": "Physical cost",
+      "postedCostAmount": "Posted cost",
+      "costAdjustmentAmount": "Cost adjustment",
+      "physicalVoucher": "Physical voucher",
       "itemNumber": "Item number",
       "physicalDate": "Physical date",
       "financialDate": "Financial date",

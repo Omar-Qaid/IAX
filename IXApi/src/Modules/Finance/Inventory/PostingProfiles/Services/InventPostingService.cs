@@ -51,6 +51,8 @@ public sealed class InventPostingService : BaseService<InventPostingEntity>, IIn
         var companyId = company.GetDataAreaId();
         if (string.IsNullOrWhiteSpace(companyId)) return (null, "A legal entity must be selected.");
         var validation = await ValidateAsync(companyId, input, ct); if (validation.Error is not null) return (null, validation.Error);
+        if (await ConflictsAsync(companyId, input, 0, validation.Category, ct))
+            return (null, "An inventory posting rule already exists for this type and relation.");
         var row = new InventPostingEntity { DataAreaId = companyId }; Apply(row, input, validation.Category, validation.Ledger);
         Db.Add(row); await _unitOfWork.CompleteAsync(ct); return (Map(row, validation.MainAccount), null);
     }
@@ -62,6 +64,8 @@ public sealed class InventPostingService : BaseService<InventPostingEntity>, IIn
         if (row is null) return (null, "Inventory posting rule was not found.");
         if ((int)row.InventAccountType != input.InventAccountType) return (null, "Posting type cannot be changed after creation.");
         var validation = await ValidateAsync(companyId!, input, ct); if (validation.Error is not null) return (null, validation.Error);
+        if (await ConflictsAsync(companyId!, input, recId, validation.Category, ct))
+            return (null, "An inventory posting rule already exists for this type and relation.");
         Apply(row, input, validation.Category, validation.Ledger); await _unitOfWork.CompleteAsync(ct); return (Map(row, validation.MainAccount), null);
     }
 
@@ -97,6 +101,16 @@ public sealed class InventPostingService : BaseService<InventPostingEntity>, IIn
         if (!mainAccountExists) return ("The ledger dimension does not reference an existing MainAccount record.", 0, 0, "");
         if (input.TaxGroupId.Length > 0 && !await Db.Set<Entities.TaxGroupHeading>().AnyAsync(x => x.DataAreaId == companyId && x.TaxGroup == input.TaxGroupId, ct)) return ("Sales tax group is invalid.", 0, 0, "");
         return (null, category, ledger, account.MainAccountValue);
+    }
+
+    private Task<bool> ConflictsAsync(string companyId, InventPostingRuleDto input, long excludeRecId, long category, CancellationToken ct)
+    {
+        var itemRelation = input.ItemCode == (int)TableGroupAll.All ? string.Empty : input.ItemRelation.Trim();
+        var accountRelation = input.CustVendCode == (int)TableGroupAll.All ? string.Empty : input.CustVendRelation.Trim();
+        return Db.Set<InventPostingEntity>().AnyAsync(x => x.DataAreaId == companyId && x.RecId != excludeRecId
+            && (int)x.InventAccountType == input.InventAccountType && (int)x.ItemCode == input.ItemCode
+            && x.ItemRelation == itemRelation && x.CategoryRelation == category && (int)x.CustVendCode == input.CustVendCode
+            && x.CustVendRelation == accountRelation && x.TaxGroupId == input.TaxGroupId.Trim().ToUpper(), ct);
     }
 
     private async Task<string?> ValidateAccountRelationAsync(string companyId, InventPostingRuleDto input, CancellationToken ct)

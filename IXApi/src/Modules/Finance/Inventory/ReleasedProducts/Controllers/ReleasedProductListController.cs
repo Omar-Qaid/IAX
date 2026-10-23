@@ -87,4 +87,13 @@ public sealed class ReleasedProductListController(IReleasedProductListService se
             ? NotFound(APIResponse<ReleasedProductValidationDto>.Fail("The released product was not found."))
             : Ok(APIResponse<ReleasedProductValidationDto>.Ok(result));
     }
+
+    [HttpGet("{recId:long}/readiness")]
+    public async Task<IActionResult> Readiness(long recId, CancellationToken cancellationToken)
+    {
+        var result = await service.GetReadinessAsync(recId, cancellationToken);
+        return result is null
+            ? NotFound(APIResponse<object>.Fail("The released product was not found in the selected company."))
+            : Ok(APIResponse<ReleasedItemReadinessDto>.Ok(result));
+    }
 }

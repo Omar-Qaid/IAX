@@ -48,6 +48,8 @@ public sealed class InventLocationService : BaseService<InventLocation>, IInvent
         var companyId = RequireCompany();
         var code = input.InventLocationId.Trim().ToUpperInvariant();
         Normalize(input);
+        if (UsesAdvancedWarehouse(input))
+            return new(null, LocationOperationStatus.InvalidReference, "Advanced warehouse options are outside the basic inventory scope.");
         if (await _db.Set<InventLocation>().AnyAsync(x => x.DataAreaId == companyId && x.InventLocationId == code, ct))
             return new(null, LocationOperationStatus.Duplicate);
         if (!await _db.Set<InventSite>().AnyAsync(x => x.DataAreaId == companyId && x.SiteId == input.InventSiteId, ct))
@@ -67,8 +69,12 @@ public sealed class InventLocationService : BaseService<InventLocation>, IInvent
         var location = await _db.Set<InventLocation>().FirstOrDefaultAsync(x => x.DataAreaId == companyId && x.RecId == recId, ct);
         if (location == null) return new(null, LocationOperationStatus.NotFound);
         Normalize(input);
+        if (UsesAdvancedWarehouse(input))
+            return new(null, LocationOperationStatus.InvalidReference, "Advanced warehouse options are outside the basic inventory scope.");
         if (!(await _updateValidator.ValidateAsync(new InventLocationUpdateValidation(location.InventLocationId, input), ct)).IsValid)
             return new(null, LocationOperationStatus.CodeChanged);
+        if (location.InventSiteId != input.InventSiteId && await _db.Set<InventDim>().AnyAsync(x => x.DataAreaId == companyId && x.InventLocationId == location.InventLocationId, ct))
+            return new(null, LocationOperationStatus.InvalidReference, "Warehouse site cannot be changed after inventory dimensions reference it.");
         if (!await _db.Set<InventSite>().AnyAsync(x => x.DataAreaId == companyId && x.SiteId == input.InventSiteId, ct))
             return new(null, LocationOperationStatus.SiteNotFound);
         var referenceError = await ValidateWarehouseReferences(input, location.InventLocationId, ct);
@@ -89,6 +95,10 @@ public sealed class InventLocationService : BaseService<InventLocation>, IInvent
              x.InventLocationIdReqMain == code || x.ItmInventLocationIdGit == code ||
              x.ItmInventLocationIdUnder == code), ct))
             return LocationOperationStatus.Referenced;
+        if (await _db.Set<InventDim>().AnyAsync(x => x.DataAreaId == companyId && x.InventLocationId == code, ct)
+            || await _db.Set<InventSum>().AnyAsync(x => x.DataAreaId == companyId && x.InventLocationId == code, ct)
+            || await _db.Set<InventJournalTable>().AnyAsync(x => x.DataAreaId == companyId && x.InventLocationId == code, ct))
+            return LocationOperationStatus.Referenced;
         _db.Set<InventLocation>().Remove(location);
         await _unitOfWork.CompleteAsync(ct);
         return LocationOperationStatus.Success;
@@ -103,6 +113,12 @@ public sealed class InventLocationService : BaseService<InventLocation>, IInvent
         input.ItmInventLocationIdGit = input.ItmInventLocationIdGit.Trim().ToUpperInvariant();
         input.ItmInventLocationIdUnder = input.ItmInventLocationIdUnder.Trim().ToUpperInvariant();
     }
+
+    private static bool UsesAdvancedWarehouse(LocationInputDto input) =>
+        input.WhsEnabled || input.UseWmsOrders || input.EnableExternalWarehouse ||
+        input.WmsAisleNameActive || input.WmsRackNameActive || input.WmsLevelNameActive || input.WmsPositionNameActive ||
+        input.WmsLocationIdDefaultReceipt.Length > 0 || input.WmsLocationIdDefaultIssue.Length > 0 ||
+        input.InventLocationIdTransit.Length > 0 || input.InventLocationIdQuarantine.Length > 0;
 
     private async Task<string?> ValidateWarehouseReferences(LocationInputDto input, string currentCode, CancellationToken ct)
     {

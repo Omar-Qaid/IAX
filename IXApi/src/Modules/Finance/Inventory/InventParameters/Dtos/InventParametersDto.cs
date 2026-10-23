@@ -25,3 +25,7 @@ public sealed class InventParametersLookupsDto
 public sealed record InventParametersLookupDto(string Id, string Name);
 public sealed record InventParametersWarehouseLookupDto(string Id, string Name, string SiteId);
 public sealed record InventParametersJournalLookupDto(string Id, string Name, int JournalType);
+
+public sealed record InventoryReadinessIssueDto(string Code, string Message);
+public sealed record InventoryReadinessDto(bool ReadyForItemSetup, bool ReadyForFuturePosting,
+    List<InventoryReadinessIssueDto> Issues);

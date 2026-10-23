@@ -15,14 +15,14 @@ Phase A verification on 2026-10-22: focused category, barcode, lifecycle/status,
 
 ## Phase C basic inventory engine (2026-10-22)
 
-- Existing journal posting creates `InventTrans` and updates `InventSum` for receipts, issues, adjustments, counting, and paired transfers. The transfer regression now checks equal and opposite quantities and costs; the existing journal test checks on-hand against net transactions and rollback after an invalid line.
+- Existing journal posting creates `InventTrans` and updates `InventSum` for receipts, issues, adjustments, and paired transfers. Counting posting is now blocked until confirmed-count and durable movement-freeze controls are verified. The transfer regression checks equal and opposite quantities and costs; the journal test checks on-hand against net transactions and rollback after an invalid line.
 - Sales packing-slip posting now checks current product lifecycle and inventory status before allocating a document number or changing stock. Journal transfer posting also checks that its destination inventory status still exists.
 - Sales and purchase return document execution is not present in this backend. A positive adjustment is an inventory receipt, not a substitute for a return document. Purchase receipts are likewise unavailable without a purchase flow.
 - Focused backend verification passed 21/21 SQLite tests after rebuilding the backend. Full backend regression passed 278 tests with 2 skipped. SQL Server and authenticated API verification remain outside the code-only approval.
 
 ## Phase D costing (in progress, 2026-10-22)
 
-- FIFO and periodic weighted-average posting remain blocked because `InventClosing` and `InventSettlement` are persistence types without an inventory-close execution, settlement, reversal, or ledger-adjustment workflow. They must not be presented as completed costing methods.
+- FIFO journal issues now receive a provisional same-site running-average cost. Final FIFO costing, inventory close, settlement, reversal, and ledger adjustment remain unimplemented. Periodic weighted-average journal posting remains blocked.
 - Existing standard-cost journal lookup is now company-scoped, chooses the current dimension before a company-wide fallback, and respects the price unit. Receipt prices that differ from the active standard are rejected until variance accounting is implemented; matching-price posting remains supported for existing standard-cost items.
 - New item-model-group setup still accepts only Moving Average. Standard-cost activation/revaluation and purchase-price variances are absent. SQL Server migrations and live verification remain untouched.
 

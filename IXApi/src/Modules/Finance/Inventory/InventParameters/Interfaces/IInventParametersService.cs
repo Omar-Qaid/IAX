@@ -4,4 +4,5 @@ public interface IInventParametersService
     Task<InventParametersDto?> GetAsync(CancellationToken ct = default);
     Task<InventParametersLookupsDto?> GetLookupsAsync(CancellationToken ct = default);
     Task<(InventParametersDto? Value, string? Error)> SaveAsync(InventParametersDto input, CancellationToken ct = default);
+    Task<InventoryReadinessDto?> GetReadinessAsync(CancellationToken ct = default);
 }

@@ -6,6 +6,7 @@ public sealed class InventOnHandDto
     public long RecId { get; init; }
     public string ItemNumber { get; init; } = string.Empty;
     public string ProductName { get; init; } = string.Empty;
+    public string InventoryUnit { get; init; } = string.Empty;
     public string InventDimId { get; init; } = string.Empty;
     public string Site { get; init; } = string.Empty;
     public string Warehouse { get; init; } = string.Empty;

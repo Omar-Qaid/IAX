@@ -41,6 +41,10 @@ public sealed class SalesOrderLineService : ISalesOrderLineService
             var dataAreaId = _company.GetDataAreaId();
             if (!string.Equals(order.DataAreaId, dataAreaId, StringComparison.OrdinalIgnoreCase))
                 return new SalesLineWriteResult(SalesLineWriteStatus.NotFound, "Sales order was not found in the selected company.");
+            if (order.SalesType == SalesType.ReturnItem || input.LineType == SalesType.ReturnItem
+                || !string.IsNullOrWhiteSpace(input.ReturnLotId))
+                return new SalesLineWriteResult(SalesLineWriteStatus.Invalid,
+                    "Customer returns require an original invoiced line and a supported return workflow, which is not available yet.");
             long deliveryAddressId = order.DeliveryPostalAddress;
             if (!string.IsNullOrWhiteSpace(input.DeliveryPostalAddress))
             {
@@ -84,14 +88,6 @@ public sealed class SalesOrderLineService : ISalesOrderLineService
             var taxValidationError = await _validation.ValidateTaxSetupAsync(lineTaxGroup, lineTaxItemGroup, cancellationToken);
             if (taxValidationError != null)
                 return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, taxValidationError);
-            if (!string.IsNullOrWhiteSpace(input.ReturnLotId))
-            {
-                var returnLotExists = await _dbContext.Context.Set<InventTransOrigin>().AnyAsync(origin =>
-                    origin.DataAreaId == order.DataAreaId && origin.ItemId == item.ItemId
-                    && origin.InventTransId == input.ReturnLotId.Trim(), cancellationToken);
-                if (!returnLotExists)
-                    return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, "The selected return lot does not belong to this item.");
-            }
             if (input.LedgerDimension.HasValue && input.LedgerDimension.Value != 0
                 && !await _dbContext.Context.Set<DimensionAttributeValueCombination>().AnyAsync(dimension =>
                     dimension.DataAreaId == order.DataAreaId
@@ -203,6 +199,11 @@ public sealed class SalesOrderLineService : ISalesOrderLineService
                 return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, "Only open sales orders can be changed.");
             var line = await _dbContext.Context.Set<SalesLine>().FirstOrDefaultAsync(row => row.RecId == lineId && row.SalesId == order.SalesId && row.DataAreaId == order.DataAreaId, cancellationToken);
             if (line == null) return new SalesLineWriteResult(SalesLineWriteStatus.NotFound, "Sales line was not found.");
+            if (order.SalesType == SalesType.ReturnItem || line.SalesType == SalesType.ReturnItem
+                || !string.IsNullOrWhiteSpace(line.InventTransIdReturn)
+                || input?.LineType == SalesType.ReturnItem || !string.IsNullOrWhiteSpace(input?.ReturnLotId))
+                return new SalesLineWriteResult(SalesLineWriteStatus.Invalid,
+                    "Customer returns require an original invoiced line and a supported return workflow, which is not available yet.");
             if (line.SalesStatus != SalesStatus.Backorder || line.RemainSalesPhysical != line.SalesQty || line.RemainSalesFinancial != line.SalesQty)
                 return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, "Processed sales lines cannot be changed.");
             if (input != null && input.ItemNumber != line.ItemId)
@@ -338,20 +339,6 @@ public sealed class SalesOrderLineService : ISalesOrderLineService
                     return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, "The selected delivery address does not belong to this customer.");
                 else
                     line.DeliveryPostalAddress = deliveryAddressId;
-                if (!string.IsNullOrWhiteSpace(input.ReturnLotId))
-                {
-                    var returnLotId = input.ReturnLotId.Trim();
-                    var returnLotExists = await _dbContext.Context.Set<InventTransOrigin>().AnyAsync(origin =>
-                        origin.DataAreaId == line.DataAreaId && origin.ItemId == line.ItemId
-                        && origin.InventTransId == returnLotId, cancellationToken);
-                    if (!returnLotExists)
-                        return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, "The selected return lot does not belong to this item.");
-                    line.InventTransIdReturn = returnLotId;
-                }
-                else if (input.ReturnLotId != null)
-                {
-                    line.InventTransIdReturn = string.Empty;
-                }
                 if (input.LedgerDimension.HasValue)
                 {
                     var ledgerDimensionExists = input.LedgerDimension.Value == 0 ||

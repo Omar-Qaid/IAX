@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("IXApi.Tests")]
+[assembly: InternalsVisibleTo("SalesOrderConfirmation.Tests")]
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
 

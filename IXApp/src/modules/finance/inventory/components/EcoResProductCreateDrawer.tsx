@@ -10,7 +10,7 @@ const initialValues = (): Record<string, FastTabValue> => ({ productType: 'Item'
 export function EcoResProductCreateDrawer({ open, onClose, onCreated }: Props): React.ReactElement {
   const { t } = useAppTranslation();
   const sections = useMemo<FastTabSection[]>(() => [{ id: 'identification', title: t('product.groups.identification', 'IDENTIFICATION'), fields: [
-    { name: 'productType', label: t('product.fields.productType', 'Product type'), type: 'select', options: [{ value: 'Item', label: t('product.options.item', 'Item') }, { value: 'Service', label: t('product.options.service', 'Service') }] },
+    { name: 'productType', label: t('product.fields.productType', 'Product type'), type: 'display' },
     { name: 'productSubtype', label: t('product.fields.productSubtype', 'Product subtype'), type: 'select', disabled: true, options: [{ value: 'Product', label: t('product.options.product', 'Product') }] },
     { name: 'productNumber', label: t('product.fields.productNumber', 'Product number'), required: true },
     { name: 'name', label: t('product.fields.productName', 'Product name'), required: true },

@@ -34,8 +34,18 @@ public sealed class StorageDimensionGroupService : BaseService<EcoResStorageDime
             return (null, $"Storage dimension group '{id}' already exists.");
         var row = input.Adapt<EcoResStorageDimensionGroup>();
         row.Name = id;
-        await AddAsync(row, ct);
-        await ReplaceSetupAsync(row.RecId, input, ct);
+        await _unitOfWork.BeginTransactionAsync(ct);
+        try
+        {
+            await AddAsync(row, ct);
+            await ReplaceSetupAsync(row.RecId, input, ct);
+            await _unitOfWork.CommitTransactionAsync(ct);
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync(ct);
+            throw;
+        }
         return (Map(row, await LoadSetupAsync(row.RecId, ct)), null);
     }
 
@@ -47,9 +57,21 @@ public sealed class StorageDimensionGroupService : BaseService<EcoResStorageDime
         if (error is not null) return (null, error);
         if (row.Name != NormalizeId(input.GroupId))
             return (null, "Storage dimension group ID cannot be changed after creation.");
+        if (await Db.Set<EcoResStorageDimensionGroupItem>().AnyAsync(x => x.StorageDimensionGroup == recId, ct))
+            return (null, "A storage dimension group assigned to released products cannot be changed through basic setup.");
         input.Adapt(row);
-        await base.UpdateAsync(row, ct);
-        await ReplaceSetupAsync(row.RecId, input, ct);
+        await _unitOfWork.BeginTransactionAsync(ct);
+        try
+        {
+            await base.UpdateAsync(row, ct);
+            await ReplaceSetupAsync(row.RecId, input, ct);
+            await _unitOfWork.CommitTransactionAsync(ct);
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync(ct);
+            throw;
+        }
         return (Map(row, await LoadSetupAsync(row.RecId, ct)), null);
     }
 
@@ -76,14 +98,16 @@ public sealed class StorageDimensionGroupService : BaseService<EcoResStorageDime
     {
         Db.RemoveRange(await LoadSetupAsync(id, ct));
         Db.AddRange(
-            Setup(id, InventDimensionFields.Site, 1, input.UseSite),
-            Setup(id, InventDimensionFields.Warehouse, 2, input.UseWarehouse),
-            Setup(id, InventDimensionFields.Location, 3, input.UseLocation));
+            Setup(id, InventDimensionFields.Site, 1, input.UseSite, true),
+            Setup(id, InventDimensionFields.Warehouse, 2, input.UseWarehouse, false),
+            Setup(id, InventDimensionFields.Location, 3, input.UseLocation, false));
         await _unitOfWork.CompleteAsync(ct);
     }
 
-    private static EcoResStorageDimensionGroupFldSetup Setup(long id, int fieldId, decimal line, bool active) =>
-        new() { StorageDimensionGroup = id, DimensionFieldId = fieldId, LineNumber = line, IsActive = active };
+    private static EcoResStorageDimensionGroupFldSetup Setup(long id, int fieldId, decimal line, bool active, bool financial) =>
+        new() { StorageDimensionGroup = id, DimensionFieldId = fieldId, LineNumber = line, IsActive = active,
+            IsPhysicalInventoryEnabled = active, IsFinancialInventoryEnabled = active && financial,
+            IsAllowBlankReceiptEnabled = !active, IsAllowBlankIssueEnabled = !active };
 
     private static StorageDimensionGroupDto Map(EcoResStorageDimensionGroup row, IEnumerable<EcoResStorageDimensionGroupFldSetup> setup) =>
         new() { Id = row.RecId.ToString(), GroupId = row.Name, Name = row.Description,
