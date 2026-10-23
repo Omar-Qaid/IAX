@@ -2831,6 +2831,9 @@
   },
   "inventOnHand": {
     "title": "المخزون الفعلي",
+    "itemGroup": "مجموعة الأصناف",
+    "includeZero": "تضمين الأرصدة الصفرية",
+    "matchingRows": "الصفوف المطابقة",
     "inventoryUnit": "وحدة المخزون",
     "physicalInventory": "المخزون الفعلي",
     "physicalReserved": "المحجوز فعلياً",

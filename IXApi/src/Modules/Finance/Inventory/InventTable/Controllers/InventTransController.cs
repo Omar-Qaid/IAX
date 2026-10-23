@@ -22,4 +22,24 @@ public sealed class InventTransController(
                 "A company must be selected to view inventory transactions."));
         return Ok(APIResponse<IEnumerable<InventTransListDto>>.Ok(result));
     }
+
+    [HttpGet("paged")]
+    public async Task<ActionResult<APIResponse<InventTransPageDto>>> Paged(
+        [FromQuery] string? itemId, [FromQuery] string? sourceInventTransId,
+        [FromQuery] string? siteId, [FromQuery] string? warehouseId,
+        [FromQuery] DateTime? physicalFrom, [FromQuery] DateTime? physicalTo,
+        [FromQuery] DateTime? financialFrom, [FromQuery] DateTime? financialTo,
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 50,
+        CancellationToken cancellationToken = default)
+    {
+        if (page < 1 || pageSize is < 1 or > 200)
+            return BadRequest(APIResponse<InventTransPageDto>.Fail("Page must be positive and page size must be 1 through 200."));
+        if (physicalFrom > physicalTo || financialFrom > financialTo)
+            return BadRequest(APIResponse<InventTransPageDto>.Fail("The date range start must not follow its end."));
+        var result = await service.SearchPageAsync(itemId, sourceInventTransId, siteId, warehouseId,
+            physicalFrom, physicalTo, financialFrom, financialTo, page, pageSize, cancellationToken);
+        if (result is null)
+            return BadRequest(APIResponse<InventTransPageDto>.Fail("A company must be selected to view inventory transactions."));
+        return Ok(APIResponse<InventTransPageDto>.Ok(result));
+    }
 }

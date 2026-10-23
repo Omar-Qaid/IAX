@@ -55,7 +55,7 @@ public sealed class InventoryArchitectureTests
         Assert.Equal(1, result.ComparedKeys);
         Assert.Equal(1, result.DifferenceCount);
         Assert.Equal(1, result.UnclassifiedTransactionCount);
-        Assert.False(result.Complete);
+        Assert.False(result.NoReportedIssues);
         var row = Assert.Single(result.Rows);
         Assert.Equal(10, row.TransactionPhysical);
         Assert.Equal(12, row.SummaryPhysical);
@@ -412,7 +412,8 @@ public sealed class InventoryArchitectureTests
         await db.Database.EnsureCreatedAsync();
         db.AddRange(
             new InventTrans { RecId = 1, DataAreaId = "dat", ItemId = "ITEM", InventTransOrigin = 10, InventDimId = "DIM", Qty = -2,
-                CostAmountPosted = -20, CostAmountPhysical = -4, CostAmountAdjustment = 2, StatusIssue = StatusIssue.Ordered },
+                CostAmountPosted = -20, CostAmountPhysical = -4, CostAmountAdjustment = 2, StatusIssue = StatusIssue.Ordered,
+                DatePhysical = new DateTime(2026, 10, 23, 14, 0, 0), DateFinancial = new DateTime(2026, 10, 24, 9, 0, 0) },
             new InventTrans { RecId = 2, DataAreaId = "other", ItemId = "HIDDEN" },
             new InventTrans { RecId = 3, DataAreaId = "dat", ItemId = "EMPTY", Qty = 0 },
             new InventTransOrigin { RecId = 10, DataAreaId = "dat", InventTransId = "TX", ReferenceCategory = InventRefType.SalesTable, ReferenceId = "SO1" },
@@ -433,6 +434,14 @@ public sealed class InventoryArchitectureTests
         Assert.Equal("Sales order", rows[1].Reference);
         Assert.Equal("SO1", rows[1].ReferenceNumber);
         Assert.Equal("W1", rows[1].Warehouse);
+        var dated = (await service.SearchPageAsync("ITEM", "TX", "S1", "W1",
+            new DateTime(2026, 10, 23), new DateTime(2026, 10, 23),
+            new DateTime(2026, 10, 24), new DateTime(2026, 10, 24), 1, 1))!;
+        Assert.Equal(1, dated.TotalCount);
+        Assert.Equal(1, Assert.Single(dated.Rows).RecId);
+        Assert.Equal(-4, dated.Rows[0].PhysicalCostAmount);
+        Assert.Equal(-20, dated.Rows[0].PostedCostAmount);
+        Assert.Equal(2, dated.Rows[0].CostAdjustmentAmount);
         identity.DataAreaId = null;
         Assert.Null(await service.GetListAsync());
         Assert.IsType<BadRequestObjectResult>((await new InventTransController(service).GetList()).Result);
@@ -478,6 +487,35 @@ public sealed class InventoryArchitectureTests
 
         identity.DataAreaId = null;
         Assert.Null(await new InventOnHandService(new TestUnitOfWork(db), identity).ListAsync());
+    }
+
+    [Fact]
+    public async Task On_hand_page_filters_group_and_zero_rows_before_counting_and_paging()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.AddRange(
+            new ReleasedItem { RecId = 901, DataAreaId = "dat", ItemId = "A", Name = "A" },
+            new ReleasedItem { RecId = 902, DataAreaId = "dat", ItemId = "B", Name = "B" },
+            new InventDim { RecId = 903, DataAreaId = "dat", InventDimId = "D1", InventSiteId = "JED", InventLocationId = "MAIN" },
+            new InventItemGroupItem { RecId = 904, ItemDataAreaId = "dat", ItemGroupDataAreaId = "dat", ItemId = "A", ItemGroupId = "TRADE" },
+            new InventItemGroupItem { RecId = 905, ItemDataAreaId = "dat", ItemGroupDataAreaId = "dat", ItemId = "B", ItemGroupId = "TRADE" },
+            new InventTableModule { RecId = 906, DataAreaId = "dat", ItemId = "A", ModuleType = ModuleInventPurchSales.Inventory, UnitId = "EA" },
+            new InventSum { RecId = 907, DataAreaId = "dat", ItemId = "A", InventDimId = "D1", PhysicalInvent = 4 },
+            new InventSum { RecId = 908, DataAreaId = "dat", ItemId = "B", InventDimId = "D1", PhysicalInvent = 0 });
+        await db.SaveChangesAsync();
+
+        var service = new InventOnHandService(new TestUnitOfWork(db), new TestIdentity());
+        var nonzero = (await service.SearchPageAsync(null, "TRADE", "JED", "MAIN", false, 1, 1))!;
+        Assert.Equal(1, nonzero.TotalCount);
+        Assert.Equal("A", Assert.Single(nonzero.Rows).ItemNumber);
+        Assert.Equal("EA", nonzero.Rows[0].InventoryUnit);
+        var all = (await service.SearchPageAsync(null, "TRADE", "JED", "MAIN", true, 2, 1))!;
+        Assert.Equal(2, all.TotalCount);
+        Assert.Equal("B", Assert.Single(all.Rows).ItemNumber);
+        Assert.Equal(0, all.Rows[0].PhysicalInventory);
     }
 
     [Fact]

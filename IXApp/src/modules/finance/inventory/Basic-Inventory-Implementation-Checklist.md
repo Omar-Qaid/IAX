@@ -2,6 +2,8 @@
 
 Updated 2026-10-23. The checked-in C# entities and EF configurations are the working model requested by the user. They do **not** establish the deployed SQL Server schema or stored enum values. The connected `ERMOld` database contains workflow tables, not inventory tables. No production migration or cutover has been performed.
 
+The user has deferred missing purchase, vendor invoice, posting-link, and reservation-enum definitions until after inventory core and the existing sales integration work. Those dependencies remain open and are not treated as implemented.
+
 | Phase | Current result | Next release gate |
 | --- | --- | --- |
 | 0 — Baseline | Partial | Compare the copied inventory database with the read-only schema audit and EF model. Verify status enums, keys, financial dimensions, posting links, and company scope. |
@@ -21,7 +23,9 @@ See `Basic-Inventory-Phase-0-Assessment.md` and the individual `Basic-Inventory-
 
 ## Latest independent work
 
-- Current on-hand paging and item-group/zero filters; inventory-unit display.
+- Current on-hand paging and item-group/zero filters, with frontend controls and inventory-unit display.
 - Physical transaction-to-summary diagnostic with mismatch and unclassified-state output; no repair behavior.
 - Separate physical, posted, and adjustment cost fields in transaction details.
-- Finance module build: passed with zero errors. Frontend typecheck: passed. Focused SQLite test: added, execution stalled and was interrupted. SQL Server verification: not run.
+- A paged inventory-transaction API with item/source/dimension and inclusive physical/financial date filters. The existing list API remains available.
+- Finance module build: passed with zero errors. Frontend typecheck: passed. Focused SQLite test: added; test-project build did not finish, so no test result is claimed. SQL Server verification: not run.
+- A focused transaction date/source/paging test assertion was added; its test-project run also did not finish. No SQL Server or end-to-end result is claimed.

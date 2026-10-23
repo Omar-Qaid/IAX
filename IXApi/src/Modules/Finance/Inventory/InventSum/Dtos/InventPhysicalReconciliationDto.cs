@@ -8,4 +8,4 @@ public sealed record InventPhysicalReconciliationRowDto(
 public sealed record InventPhysicalReconciliationDto(
     string CompanyId, int ComparedKeys, int DifferenceCount, int UnclassifiedTransactionCount,
     int MissingDimensionKeyCount,
-    bool Complete, List<InventPhysicalReconciliationRowDto> Rows);
+    bool NoReportedIssues, List<InventPhysicalReconciliationRowDto> Rows);

@@ -2829,6 +2829,9 @@
   },
   "inventOnHand": {
     "title": "On-hand inventory",
+    "itemGroup": "Item group",
+    "includeZero": "Include zero balances",
+    "matchingRows": "Matching rows",
     "inventoryUnit": "Inventory unit",
     "physicalInventory": "Physical inventory",
     "physicalReserved": "Physical reserved",

@@ -19,6 +19,55 @@ public sealed class InventTransService(IUnitOfWork unitOfWork, ICompanyExecution
         if (string.IsNullOrWhiteSpace(dataAreaId))
             return null;
 
+        var transactions = await BuildQuery(dataAreaId, itemId, sourceInventTransId, siteId, warehouseId)
+            .OrderByDescending(transaction => transaction.DateStatus)
+            .ThenByDescending(transaction => transaction.RecId)
+            .ToListAsync(cancellationToken);
+        return await MapAsync(dataAreaId, transactions, cancellationToken);
+    }
+
+    public async Task<InventTransPageDto?> SearchPageAsync(string? itemId, string? sourceInventTransId,
+        string? siteId, string? warehouseId, DateTime? physicalFrom, DateTime? physicalTo,
+        DateTime? financialFrom, DateTime? financialTo, int page, int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var dataAreaId = company.GetDataAreaId();
+        if (string.IsNullOrWhiteSpace(dataAreaId)) return null;
+        var query = BuildQuery(dataAreaId, itemId, sourceInventTransId, siteId, warehouseId);
+        if (physicalFrom.HasValue)
+            query = query.Where(transaction => transaction.DatePhysical >= physicalFrom.Value.Date);
+        if (physicalTo.HasValue)
+        {
+            if (physicalTo.Value.Date < DateTime.MaxValue.Date)
+            {
+                var end = physicalTo.Value.Date.AddDays(1);
+                query = query.Where(transaction => transaction.DatePhysical < end && transaction.DatePhysical != default);
+            }
+            else query = query.Where(transaction => transaction.DatePhysical != default);
+        }
+        if (financialFrom.HasValue)
+            query = query.Where(transaction => transaction.DateFinancial >= financialFrom.Value.Date);
+        if (financialTo.HasValue)
+        {
+            if (financialTo.Value.Date < DateTime.MaxValue.Date)
+            {
+                var end = financialTo.Value.Date.AddDays(1);
+                query = query.Where(transaction => transaction.DateFinancial < end && transaction.DateFinancial != default);
+            }
+            else query = query.Where(transaction => transaction.DateFinancial != default);
+        }
+        var totalCount = await query.CountAsync(cancellationToken);
+        var transactions = await query.OrderByDescending(transaction => transaction.DateStatus)
+            .ThenByDescending(transaction => transaction.RecId)
+            .Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
+        var rows = await MapAsync(dataAreaId, transactions, cancellationToken);
+        return new InventTransPageDto(page, pageSize, totalCount, rows);
+    }
+
+    private IQueryable<InventTrans> BuildQuery(string dataAreaId, string? itemId,
+        string? sourceInventTransId, string? siteId, string? warehouseId)
+    {
+
         var query = unitOfWork.Context.Set<InventTrans>()
             .AsNoTracking()
             .Where(transaction => transaction.DataAreaId == dataAreaId);
@@ -27,11 +76,10 @@ public sealed class InventTransService(IUnitOfWork unitOfWork, ICompanyExecution
         if (!string.IsNullOrWhiteSpace(sourceInventTransId))
         {
             var sourceId = sourceInventTransId.Trim();
-            var originId = await unitOfWork.Context.Set<InventTransOrigin>().AsNoTracking()
+            var matchingOrigins = unitOfWork.Context.Set<InventTransOrigin>().AsNoTracking()
                 .Where(origin => origin.DataAreaId == dataAreaId && origin.InventTransId == sourceId)
-                .Select(origin => (long?)origin.RecId).FirstOrDefaultAsync(cancellationToken);
-            if (originId is null) return [];
-            query = query.Where(transaction => transaction.InventTransOrigin == originId.Value);
+                .Select(origin => origin.RecId);
+            query = query.Where(transaction => matchingOrigins.Contains(transaction.InventTransOrigin));
         }
         if (!string.IsNullOrWhiteSpace(siteId) || !string.IsNullOrWhiteSpace(warehouseId))
         {
@@ -44,11 +92,12 @@ public sealed class InventTransService(IUnitOfWork unitOfWork, ICompanyExecution
                 .Select(dimension => dimension.InventDimId);
             query = query.Where(transaction => matchingDimensionIds.Contains(transaction.InventDimId));
         }
-        var transactions = await query
-            .OrderByDescending(transaction => transaction.DateStatus)
-            .ThenByDescending(transaction => transaction.RecId)
-            .ToListAsync(cancellationToken);
+        return query;
+    }
 
+    private async Task<List<InventTransListDto>> MapAsync(string dataAreaId,
+        List<InventTrans> transactions, CancellationToken cancellationToken)
+    {
         var originIds = transactions.Select(transaction => transaction.InventTransOrigin).Distinct().ToList();
         var origins = await unitOfWork.Context.Set<InventTransOrigin>()
             .AsNoTracking()
