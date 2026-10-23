@@ -50,12 +50,12 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
             {
                 var priorVouchers = await Db.Set<InventJournalTrans>().AsNoTracking()
                     .Where(x => x.DataAreaId == companyId && x.JournalId == header.JournalId && x.Voucher != string.Empty)
-                    .OrderBy(x => x.LineNum).Select(x => x.Voucher).ToListAsync(ct);
+                    .ToListAsync(ct);
                 await _unitOfWork.CommitTransactionAsync(ct);
                 return (new InventJournalPostResultDto
                 {
                     JournalId = header.JournalId, Posted = true, PostedDateTime = header.PostedDateTime,
-                    Vouchers = priorVouchers
+                    Vouchers = priorVouchers.OrderBy(x => x.LineNum).Select(x => x.Voucher).ToList()
                 }, null);
             }
             if (header.JournalType == InventJournalType.Counting)
@@ -276,14 +276,17 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
         if (direct != null)
         {
             var factor = EffectiveFactor(direct);
-            converted = (qty + direct.InnerOffset) * factor + direct.OuterOffset;
+            if (factor <= 0 || direct.InnerOffset != 0 || direct.OuterOffset != 0)
+                throw new PostingValidationException("Only positive linear unit conversions are supported for basic inventory.");
+            converted = qty * factor;
             rounding = direct.Rounding;
         }
         else
         {
             var factor = EffectiveFactor(reverse!);
-            if (factor == 0) throw new PostingValidationException("The reverse unit conversion factor cannot be zero.");
-            converted = ((qty - reverse!.OuterOffset) / factor) - reverse.InnerOffset;
+            if (factor <= 0 || reverse!.InnerOffset != 0 || reverse.OuterOffset != 0)
+                throw new PostingValidationException("Only positive linear unit conversions are supported for basic inventory.");
+            converted = qty / factor;
             rounding = reverse.Rounding;
         }
         return Round(converted, to.DecimalPrecision, rounding);
@@ -525,8 +528,9 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
     };
 
     private static decimal EffectiveFactor(UnitOfMeasureConversion conversion) =>
-        conversion.Factor * (conversion.Numerator > 0 && conversion.Denominator > 0
-            ? (decimal)conversion.Numerator / conversion.Denominator : 1m);
+        conversion.Factor > 0 ? conversion.Factor :
+        conversion.Numerator > 0 && conversion.Denominator > 0
+            ? (decimal)conversion.Numerator / conversion.Denominator : 0m;
 
     private static decimal Round(decimal value, int precision, UnitOfMeasureRounding rounding)
     {

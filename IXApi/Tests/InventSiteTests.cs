@@ -107,6 +107,7 @@ public sealed class InventSiteTests
         {
             Configure<InventSite>(builder);
             Configure<InventLocation>(builder);
+            Configure<InventDim>(builder);
             builder.Entity<InventSite>().HasQueryFilter(x => x.DataAreaId == "dat");
             builder.Entity<InventLocation>().HasQueryFilter(x => x.DataAreaId == "dat");
         }

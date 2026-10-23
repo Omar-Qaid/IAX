@@ -7,11 +7,11 @@ public sealed class EcoResProductInputValidatorTests
 {
     [Theory]
     [InlineData("Item", true)]
-    [InlineData("Service", true)]
+    [InlineData("Service", false)]
     [InlineData("BOM", false)]
     [InlineData("ProductMaster", false)]
     [InlineData("unknown", false)]
-    public void Product_type_is_limited_to_basic_item_and_service(string productType, bool expectedValid)
+    public void Product_type_is_limited_to_basic_distinct_item(string productType, bool expectedValid)
     {
         var input = new EcoResProductInputDto
         {

@@ -2,6 +2,8 @@
 
 Phase 8 is **in progress**. Sales order creation already creates `InventTransOrigin`, sales-line origin links, `InventTrans` demand in `StatusIssue.Ordered`, and `InventSum.OnOrder` without changing physical inventory. Packing-slip posting already creates posted delivery evidence, splits partial demand, moves the processed portion to `StatusIssue.Deducted`, and decreases physical inventory in a transaction.
 
+The partial packing-slip split now calculates catch-weight quantity from the original open transaction before reducing that transaction. The previous order of operations applied the partial ratio twice. A focused catch-weight posting integration fixture remains to be added; this correction does not complete sales invoicing or reservation.
+
 ## Implemented in this pass
 
 - SQL Server packing-slip posting now takes a transaction-scoped order lock and the same item/dimension stock locks used by inventory journals, in a stable order. This protects the supported journal and delivery paths from overselling each other's unreserved stock.

@@ -14,7 +14,8 @@ public class DateBoundRuleTests
     [InlineData("today+10000y", null)]
     public void Resolves_bounds_without_rolling_invalid_calendar_dates(string expression, string? expected)
     {
-        Assert.Equal(expected, DateBoundRule.Resolve(expression, new DateOnly(2024, 2, 29))?.ToString("yyyy-MM-dd"));
+        Assert.Equal(expected, DateBoundRule.Resolve(expression, new DateOnly(2024, 2, 29))?
+            .ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
     }
 
     [Fact]

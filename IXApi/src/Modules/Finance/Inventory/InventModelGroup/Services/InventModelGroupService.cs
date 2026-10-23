@@ -80,8 +80,15 @@ public sealed class InventModelGroupService : BaseService<InventModelGroupEntity
         input.NegativePhysical || input.NegativeFinancial ? "Negative physical and financial inventory are disabled in the basic release." :
         input.InclPhysicalValueInCost ? "Include physical value in cost is disabled in the basic release." :
         !input.PostOnHandFinancial ? "Financial inventory posting is required in the basic release." :
-        input.StandardCost || input.MandatoryWmsOrder || input.QuarantineControl || input.PdsCheck
-            ? "Standard cost and advanced warehouse controls are outside the basic inventory scope." : null;
+        input.StandardCost || input.MandatoryWmsOrder || input.QuarantineControl || input.PdsCheck ||
+        input.MandatoryRegister || input.MandatoryReceive || input.MandatoryPick || input.MandatoryDeduct ||
+        input.IncludePhysicalValueForAverage || input.ItemProdReservationActive ||
+        input.ItemProdReservation != (int)ItemProdReservation.None || input.ReserveByDate ||
+        input.ReserveReversed || input.McrReservation || !string.IsNullOrWhiteSpace(input.PdsDispositionCode) ||
+        input.PdsConsReq || input.PdsReqVendBatchDetail || input.PdsSameLot || input.PdsVendorCheckItem ||
+        input.PdsPickCriteria != (int)PdsPickCriteria.None ||
+        input.PickingListBatchExpirationDateValidationRule != (int)PickingListBatchExpirationDateValidationRule.None
+            ? "Advanced reservation, warehouse, production, and batch controls are outside the basic inventory scope." : null;
 
     private static void Apply(InventModelGroupEntity row, InventModelGroupRecordDto x)
     {

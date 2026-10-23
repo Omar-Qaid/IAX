@@ -278,22 +278,20 @@ public sealed class PackingSlipJournalService(
                     if (sourceQuantity <= 0) continue;
                     var postingQuantity = Math.Min(sourceQuantity, quantityLeft);
                     var priorStatus = source.StatusIssue;
+                    var catchWeightForPosting = sourceQuantity > 0 && source.PdscwQty > 0
+                        ? source.PdscwQty * postingQuantity / sourceQuantity : 0m;
                     if (priorStatus == StatusIssue.Ordered && inventory.OnOrder < postingQuantity
                         || priorStatus == StatusIssue.Picked && inventory.Picked < postingQuantity)
                         return new PackingSlipJournalResult(422, null, $"Inventory summary does not match open demand for item {line.ItemId}.");
                     if (postingQuantity < sourceQuantity)
                     {
-                        var originalCatchWeight = source.PdscwQty;
                         var remaining = CopyOpenTransaction(source, sourceQuantity - postingQuantity);
-                        if (sourceQuantity > 0 && originalCatchWeight > 0)
+                        if (source.PdscwQty > 0)
                         {
-                            remaining.PdscwQty = originalCatchWeight * (sourceQuantity - postingQuantity) / sourceQuantity;
-                            source.PdscwQty = originalCatchWeight * postingQuantity / sourceQuantity;
+                            remaining.PdscwQty = source.PdscwQty - catchWeightForPosting;
                         }
                         Db.Set<InventTrans>().Add(remaining);
                     }
-                    var catchWeightForPosting = sourceQuantity > 0 && source.PdscwQty > 0
-                        ? source.PdscwQty * postingQuantity / sourceQuantity : 0m;
                     source.Qty = -postingQuantity;
                     source.StatusIssue = StatusIssue.Deducted;
                     source.DateStatus = deliveryDate;

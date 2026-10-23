@@ -340,7 +340,32 @@ public sealed class InventoryArchitectureTests
     }
 
     [Fact]
-    public async Task Item_model_group_rejects_costing_methods_without_required_close_or_revaluation_process()
+    public async Task Basic_item_model_group_rejects_advanced_controls()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        var service = new InventModelGroupService(new TestUnitOfWork(db), new TestIdentity(), new TestIdentity());
+
+        var valid = new InventModelGroupRecordDto
+        {
+            ModelGroupId = "FIFO-BASIC", Name = "Basic FIFO", InventModel = (int)InventModel.FIFO,
+            StockedProduct = true, PostOnHandFinancial = true
+        };
+        var advanced = new InventModelGroupRecordDto
+        {
+            ModelGroupId = "FIFO-ADV", Name = "Advanced FIFO", InventModel = (int)InventModel.FIFO,
+            StockedProduct = true, PostOnHandFinancial = true, MandatoryPick = true
+        };
+
+        Assert.Null((await service.CreateAsync(valid, default)).Error);
+        Assert.Contains("outside the basic inventory scope", (await service.CreateAsync(advanced, default)).Error);
+        Assert.Equal(1, await db.Set<InventModelGroup>().CountAsync());
+    }
+
+    [Fact]
+    public async Task Item_model_group_supports_only_basic_stocked_fifo()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
@@ -355,7 +380,8 @@ public sealed class InventoryArchitectureTests
         var service = new InventModelGroupService(new TestUnitOfWork(db), new TestIdentity(), new TestIdentity());
 
         var fifo = await service.CreateAsync(new InventModelGroupRecordDto
-        { ModelGroupId = "FIFO-NEW", Name = "FIFO", InventModel = (int)InventModel.FIFO }, default);
+        { ModelGroupId = "FIFO-NEW", Name = "FIFO", InventModel = (int)InventModel.FIFO,
+            StockedProduct = true, PostOnHandFinancial = true }, default);
         var weightedAverage = await service.CreateAsync(new InventModelGroupRecordDto
         { ModelGroupId = "AVG-NEW", Name = "Weighted average", InventModel = (int)InventModel.WeightedAvg }, default);
         var standardCost = await service.CreateAsync(new InventModelGroupRecordDto
@@ -363,15 +389,15 @@ public sealed class InventoryArchitectureTests
         var movingAverage = await service.CreateAsync(new InventModelGroupRecordDto
         { ModelGroupId = "MOV-AVG", Name = "Moving average", InventModel = (int)InventModel.MovingAverage }, default);
 
-        Assert.Contains("inventory close/settlement", fifo.Error);
-        Assert.Contains("inventory close/settlement", weightedAverage.Error);
-        Assert.Contains("active standard-cost record", standardCost.Error);
-        Assert.Null(movingAverage.Error);
-        Assert.Single(await db.Set<InventModelGroup>().Where(x => x.ModelGroupId == "MOV-AVG").ToListAsync());
+        Assert.Null(fifo.Error);
+        Assert.Contains("FIFO only", weightedAverage.Error);
+        Assert.Contains("FIFO only", standardCost.Error);
+        Assert.Contains("FIFO only", movingAverage.Error);
+        Assert.Single(await db.Set<InventModelGroup>().Where(x => x.ModelGroupId == "FIFO-NEW").ToListAsync());
     }
 
     [Fact]
-    public async Task Journal_posting_rejects_periodic_costing_without_inventory_close()
+    public async Task Journal_posting_rejects_missing_inventory_posting_accounts()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
@@ -400,7 +426,7 @@ public sealed class InventoryArchitectureTests
 
         var result = await posting.PostAsync("J-1", default);
 
-        Assert.Contains("requires inventory close/settlement", result.Error);
+        Assert.Contains("Inventory posting setup is missing", result.Error);
         Assert.Empty(await db.Set<InventTrans>().ToListAsync());
         Assert.Empty(await db.Set<InventTransOrigin>().ToListAsync());
         Assert.False((await db.Set<InventJournalTable>().SingleAsync()).Posted == NoYes.Yes);
@@ -420,14 +446,14 @@ public sealed class InventoryArchitectureTests
         var identity = new TestIdentity();
         var service = new InventLocationService(new TestUnitOfWork(db), identity, identity, new InventLocationUpdateValidator());
         var input = new LocationInputDto { InventLocationId = " main ", InventSiteId = " s1 ", Name = " Main ",
-            InventLocationIdTransit = " ref ", WorkflowApproval = true, WhsEnabled = true, DefaultStatusId = " Available " };
+            InventLocationIdReqMain = " ref ", WorkflowApproval = true, DefaultStatusId = " Available " };
         var created = await service.CreateAsync(input, default);
         Assert.Equal(LocationOperationStatus.Success, created.Status);
         Assert.Equal("MAIN", created.Location!.InventLocationId);
         Assert.Equal("Main", created.Location.Name);
-        Assert.Equal("REF", created.Location.InventLocationIdTransit);
+        Assert.Equal("REF", created.Location.InventLocationIdReqMain);
         Assert.True(created.Location.WorkflowApproval);
-        Assert.True(created.Location.WhsEnabled);
+        Assert.False(created.Location.WhsEnabled);
         Assert.Equal("Available", created.Location.DefaultStatusId);
         var lookupJson = JsonSerializer.SerializeToElement(await service.LookupsAsync(default));
         Assert.Equal(new[] { "sites", "warehouses" }, lookupJson.EnumerateObject().Select(x => x.Name).OrderBy(x => x, StringComparer.Ordinal));
@@ -446,12 +472,12 @@ public sealed class InventoryArchitectureTests
         input.InventLocationId = "NEW";
         Assert.Equal(LocationOperationStatus.CodeChanged, (await service.UpdateAsync(created.Location.RecId, input, default)).Status);
         input.InventLocationId = "MAIN";
-        input.InventLocationIdTransit = "MAIN";
+        input.InventLocationIdReqMain = "MAIN";
         var invalid = await service.UpdateAsync(created.Location.RecId, input, default);
         Assert.Equal("A warehouse cannot reference itself.", invalid.Error);
-        input.InventLocationIdTransit = "MISSING";
+        input.InventLocationIdReqMain = "MISSING";
         Assert.Equal("Warehouse 'MISSING' was not found in site 'S1'.", (await service.UpdateAsync(created.Location.RecId, input, default)).Error);
-        input.InventLocationIdTransit = "";
+        input.InventLocationIdReqMain = "";
         input.Name = " Updated ";
         Assert.Equal("Updated", (await service.UpdateAsync(created.Location.RecId, input, default)).Location!.Name);
         Assert.Equal(LocationOperationStatus.Success, await service.DeleteAsync(created.Location.RecId, default));
@@ -598,16 +624,18 @@ public sealed class InventoryArchitectureTests
         Assert.Contains("must belong", invalidWarehouse.Error);
         var invalidJournal = await service.SaveAsync(new InventParametersDto { MovementJournalNameId = "COUNT" });
         Assert.Contains("does not exist for Movement", invalidJournal.Error);
+        var orderedReservation = await service.SaveAsync(new InventParametersDto { ReserveOnOrdered = true });
+        Assert.Contains("disabled in the basic inventory scope", orderedReservation.Error);
 
         var saved = await service.SaveAsync(new InventParametersDto
         {
             DefaultUnitId = "pcs", MultiSiteDefaultInventSiteId = "jed", MultiSiteDefaultInventLocationId = "main",
-            MovementJournalNameId = "MOV", CountJournalNameId = "COUNT", ReserveOnOrdered = true, MandatoryItemTaxGroup = true,
+            MovementJournalNameId = "MOV", CountJournalNameId = "COUNT", MandatoryItemTaxGroup = true,
         });
         Assert.Null(saved.Error);
         Assert.Equal("JED", saved.Value!.MultiSiteDefaultInventSiteId);
         Assert.Equal("MAIN", saved.Value.MultiSiteDefaultInventLocationId);
-        Assert.True(saved.Value.ReserveOnOrdered);
+        Assert.False(saved.Value.ReserveOnOrdered);
         var lookup = (await service.GetLookupsAsync())!;
         Assert.Single(lookup.Sites);
         Assert.Equal(2, lookup.Warehouses.Count);
@@ -775,8 +803,8 @@ public sealed class InventoryArchitectureTests
             new UnitOfMeasureConversion { RecId = 46, DataAreaId = "dat", FromUnitOfMeasure = 45, ToUnitOfMeasure = 8,
                 Product = 0, Factor = 4, Numerator = 1, Denominator = 1, Rounding = UnitOfMeasureRounding.Nearest },
             new SysNumberSequence { RecId = 9, DataAreaId = "dat", NumberSequence = "InventJournalVoucher", Txt = "Voucher", Format = "IV-#####", AnnotatedFormat = "IV-{SEQ}", InUse = 1, IsActive = true, NextRec = 1, Highest = 99999 },
-            new InventModelGroup { RecId = 10, DataAreaId = "dat", ModelGroupId = "MOV-AVG", Name = "Moving average", InventModel = InventModel.MovingAverage, StockedProduct = NoYes.Yes },
-            new InventModelGroupItem { RecId = 11, DataAreaId = "dat", ItemId = "ITEM-001", ItemDataAreaId = "dat", ModelGroupId = "MOV-AVG", ModelGroupDataAreaId = "dat" },
+            new InventModelGroup { RecId = 10, DataAreaId = "dat", ModelGroupId = "FIFO", Name = "FIFO", InventModel = InventModel.FIFO, StockedProduct = NoYes.Yes, PostOnHandFinancial = NoYes.Yes },
+            new InventModelGroupItem { RecId = 11, DataAreaId = "dat", ItemId = "ITEM-001", ItemDataAreaId = "dat", ModelGroupId = "FIFO", ModelGroupDataAreaId = "dat" },
             new EcoResTrackingDimensionGroupItem { RecId = 40, DataAreaId = "dat", ItemId = "ITEM-001", ItemDataAreaId = "dat", TrackingDimensionGroup = 41 },
             new EcoResTrackingDimensionGroup { RecId = 41, Name = "No tracking" },
             new InventTableModule { RecId = 12, DataAreaId = "dat", ItemId = "ITEM-001", ModuleType = ModuleInventPurchSales.Inventory, UnitId = "pcs" },
@@ -885,7 +913,7 @@ public sealed class InventoryArchitectureTests
         var opening = await service.CreateAsync(new InventJournalCreateDto
         { JournalNameId = "MOV", Description = "Opening inventory", InventSiteId = "JED", InventLocationId = "OPEN" }, default);
         var openingLine = await service.AddLineAsync(opening.Journal!.JournalId, new InventJournalLineInputDto
-        { ItemId = "ITEM-001", InventSiteId = "JED", InventLocationId = "OPEN", Unit = "box", Qty = 1,
+        { ItemId = "ITEM-001", InventSiteId = "JED", InventLocationId = "OPEN", Unit = "pcs", Qty = 4,
             CostPrice = 25, LedgerDimension = 22, TransDate = DateTime.Today }, default);
         Assert.Null(openingLine.Error);
         var openingPost = await posting.PostAsync(opening.Journal.JournalId, default);
@@ -904,7 +932,8 @@ public sealed class InventoryArchitectureTests
         var issuePost = await posting.PostAsync(issue.Journal.JournalId, default);
         Assert.Null(issuePost.Error);
         Assert.Equal(999, Assert.Single(issueLine.Journal!.Lines).CostPrice);
-        Assert.Equal(-15m,
+        // FIFO uses the same-site provisional average across all three warehouses until close.
+        Assert.Equal(-(230m / 12m),
             await db.Set<InventTrans>().OrderByDescending(x => x.RecId).Select(x => x.CostAmountPosted).FirstAsync());
         Assert.Equal(5, (await db.Set<InventSum>().SingleAsync(x => x.InventDimId == line.InventDimId)).PhysicalInvent);
 
@@ -1004,6 +1033,8 @@ public sealed class InventoryArchitectureTests
             Configure<WMSLocation>(builder);
             Configure<InventTrans>(builder);
             Configure<InventTransOrigin>(builder);
+            Configure<InventSettlement>(builder);
+            Configure<InventClosing>(builder);
             Configure<InventDim>(builder);
             Configure<SalesLine>(builder);
             Configure<SalesTable>(builder);

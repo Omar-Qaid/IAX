@@ -1,5 +1,7 @@
 # Phase 4 implementation status
 
+Latest verification note (2026-10-23): duplicate-posting voucher inquiry now sorts after materialization, and legacy journal unit conversion rejects offsets while using a positive factor or fraction. The focused inventory/sales-demand/site SQLite suite passed 30/30; SQL Server posting and the remaining Phase 4 acceptance cases are still open.
+
 Phase 4 is **in progress**. Existing inventory journal header, line, posting, inventory transaction, summary, and ledger code supplies a starting point. This pass tightened that path for movement and adjustment journals.
 
 ## Implemented in this pass

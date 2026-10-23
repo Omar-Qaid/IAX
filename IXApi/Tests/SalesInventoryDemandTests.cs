@@ -344,6 +344,16 @@ public sealed class SalesInventoryDemandTests
     {
         protected override void OnModelCreating(ModelBuilder builder)
         {
+            Configure<InventSite>(builder);
+            Configure<InventLocation>(builder);
+            builder.Entity<InventSite>().HasData(new InventSite
+            {
+                RecId = 1001, DataAreaId = "DAT", SiteId = "1", Name = "Test site"
+            });
+            builder.Entity<InventLocation>().HasData(new InventLocation
+            {
+                RecId = 1002, DataAreaId = "DAT", InventSiteId = "1", InventLocationId = "11", Name = "Test warehouse"
+            });
             Configure<InventDim>(builder);
             Configure<InventTransOrigin>(builder);
             Configure<InventTransOriginSalesLine>(builder);
@@ -390,12 +400,26 @@ public sealed class SalesInventoryDemandTests
 
     private sealed class TestUnitOfWork(DbContext context) : IUnitOfWork
     {
+        private Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? _transaction;
         public DbContext Context => context;
         public Task<int> CompleteAsync(CancellationToken ct = default) => context.SaveChangesAsync(ct);
         public IGenericRepository<T> Repository<T>() where T : class => throw new NotSupportedException();
-        public Task BeginTransactionAsync(CancellationToken ct = default) => throw new NotSupportedException();
-        public Task CommitTransactionAsync(CancellationToken ct = default) => throw new NotSupportedException();
-        public Task RollbackTransactionAsync(CancellationToken ct = default) => throw new NotSupportedException();
+        public async Task BeginTransactionAsync(CancellationToken ct = default) =>
+            _transaction = await context.Database.BeginTransactionAsync(ct);
+        public async Task CommitTransactionAsync(CancellationToken ct = default)
+        {
+            if (_transaction is null) return;
+            await _transaction.CommitAsync(ct);
+            await _transaction.DisposeAsync();
+            _transaction = null;
+        }
+        public async Task RollbackTransactionAsync(CancellationToken ct = default)
+        {
+            if (_transaction is null) return;
+            await _transaction.RollbackAsync(ct);
+            await _transaction.DisposeAsync();
+            _transaction = null;
+        }
         public void Dispose() { }
     }
 

@@ -58,7 +58,7 @@ public sealed class AdministrationCharacterizationTests
         var code = SysNumberSequenceService.FormatCode(sequence, 42);
         var today = DateTime.UtcNow;
 
-        Assert.Equal($"DOC-{today:yyyyMMdd}-00042", code);
+        Assert.Equal($"DOC-{today.ToString("yyyyMMdd", System.Globalization.CultureInfo.InvariantCulture)}-00042", code);
     }
 
     [Fact]
