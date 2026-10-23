@@ -27,5 +27,6 @@ See `Basic-Inventory-Phase-0-Assessment.md` and the individual `Basic-Inventory-
 - Physical transaction-to-summary diagnostic with mismatch and unclassified-state output; no repair behavior.
 - Separate physical, posted, and adjustment cost fields in transaction details.
 - A paged inventory-transaction API with item/source/dimension and inclusive physical/financial date filters. The existing list API remains available.
+- A read-only physical as-of quantity API based on dated signed transaction portions, with a focused SQLite fixture added but not yet executed. Historical financial value remains open.
 - Finance module build: passed with zero errors. Frontend typecheck: passed. Focused SQLite test: added; test-project build did not finish, so no test result is claimed. SQL Server verification: not run.
 - A focused transaction date/source/paging test assertion was added; its test-project run also did not finish. No SQL Server or end-to-end result is claimed.

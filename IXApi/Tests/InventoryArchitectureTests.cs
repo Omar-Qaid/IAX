@@ -34,6 +34,35 @@ namespace IAX.IXApi.Tests;
 public sealed class InventoryArchitectureTests
 {
     [Fact]
+    public async Task Physical_as_of_report_uses_dated_movements_and_excludes_draft_demand()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>()
+            .UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.AddRange(
+            new InventDim { RecId = 1001, DataAreaId = "dat", InventDimId = "D1", InventSiteId = "JED", InventLocationId = "MAIN" },
+            new InventTrans { RecId = 1002, DataAreaId = "dat", ItemId = "PAPER", InventDimId = "D1", Qty = 100,
+                StatusReceipt = StatusReceipt.Purchased, DatePhysical = new DateTime(2026, 10, 1, 10, 0, 0) },
+            new InventTrans { RecId = 1003, DataAreaId = "dat", ItemId = "PAPER", InventDimId = "D1", Qty = -40,
+                StatusIssue = StatusIssue.Deducted, DatePhysical = new DateTime(2026, 10, 2, 16, 0, 0) },
+            new InventTrans { RecId = 1004, DataAreaId = "dat", ItemId = "PAPER", InventDimId = "D1", Qty = -10,
+                StatusIssue = StatusIssue.Ordered },
+            new InventTrans { RecId = 1005, DataAreaId = "other", ItemId = "PAPER", InventDimId = "D1", Qty = 999,
+                StatusReceipt = StatusReceipt.Purchased, DatePhysical = new DateTime(2026, 10, 1) });
+        await db.SaveChangesAsync();
+
+        var service = new InventPhysicalAsOfService(new TestUnitOfWork(db), new TestIdentity());
+        var beforeIssue = (await service.SearchAsync(new DateOnly(2026, 10, 1), "PAPER", "JED", "MAIN", 1, 50))!;
+        Assert.Equal(100, Assert.Single(beforeIssue.Rows).PhysicalQuantity);
+        var afterIssue = (await service.SearchAsync(new DateOnly(2026, 10, 2), "PAPER", "JED", "MAIN", 1, 50))!;
+        Assert.Equal(60, Assert.Single(afterIssue.Rows).PhysicalQuantity);
+        Assert.Equal(0, afterIssue.Rows[0].UnverifiedStateCount);
+        Assert.True(afterIssue.Rows[0].DimensionFound);
+    }
+
+    [Fact]
     public async Task Physical_reconciliation_reports_differences_and_unclassified_states_without_writing_stock()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");

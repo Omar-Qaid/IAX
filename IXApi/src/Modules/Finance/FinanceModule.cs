@@ -87,6 +87,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<Inventory.IInventTransService, Inventory.InventTransService>();
             services.AddScoped<Inventory.IInventOnHandService, Inventory.InventOnHandService>();
             services.AddScoped<Inventory.IInventPhysicalReconciliationService, Inventory.InventPhysicalReconciliationService>();
+            services.AddScoped<Inventory.IInventPhysicalAsOfService, Inventory.InventPhysicalAsOfService>();
             services.AddScoped<Inventory.IUnitOfMeasureService, Inventory.UnitOfMeasureService>();
             services.AddScoped<Inventory.IInventParametersService, Inventory.InventParametersService>();
             services.AddScoped<Inventory.IInventJournalNameService, Inventory.InventJournalNameService>();
