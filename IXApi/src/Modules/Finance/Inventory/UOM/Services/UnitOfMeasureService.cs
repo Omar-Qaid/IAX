@@ -32,7 +32,8 @@ public sealed class UnitOfMeasureService(IUnitOfWork unitOfWork) : IUnitOfMeasur
         var error = ValidateUnit(input);
         if (error is not null) return (null, error);
         var symbol = input.Symbol.Trim();
-        if (await Db.Set<UnitOfMeasure>().AnyAsync(x => x.Symbol == symbol, ct)) return (null, $"Unit '{symbol}' already exists.");
+        var normalizedSymbol = symbol.ToUpperInvariant();
+        if (await Db.Set<UnitOfMeasure>().AnyAsync(x => x.Symbol.ToUpper() == normalizedSymbol, ct)) return (null, $"Unit '{symbol}' already exists.");
         var row = new UnitOfMeasure();
         Apply(row, input);
         Db.Add(row);
@@ -47,10 +48,14 @@ public sealed class UnitOfMeasureService(IUnitOfWork unitOfWork) : IUnitOfMeasur
         var row = await Db.Set<UnitOfMeasure>().FirstOrDefaultAsync(x => x.RecId == recId, ct);
         if (row is null) return (null, "Unit of measure was not found.");
         var symbol = input.Symbol.Trim();
-        if (!string.Equals(row.Symbol, symbol, StringComparison.OrdinalIgnoreCase) &&
-            await Db.Set<InventTableModule>().AnyAsync(x => x.UnitId == row.Symbol, ct))
-            return (null, "The unit symbol cannot be changed after it is assigned to a released product.");
-        if (await Db.Set<UnitOfMeasure>().AnyAsync(x => x.RecId != recId && x.Symbol == symbol, ct)) return (null, $"Unit '{symbol}' already exists.");
+        var used = await IsUsedAsync(row, ct);
+        if (used && (!string.Equals(row.Symbol, symbol, StringComparison.OrdinalIgnoreCase)
+            || row.UnitOfMeasureClass != (UnitOfMeasureClass)input.UnitOfMeasureClass
+            || row.SystemOfUnits != (SystemOfUnits)input.SystemOfUnits
+            || row.DecimalPrecision != input.DecimalPrecision))
+            return (null, "A referenced unit's symbol, class, system, and precision cannot be changed.");
+        var normalizedSymbol = symbol.ToUpperInvariant();
+        if (await Db.Set<UnitOfMeasure>().AnyAsync(x => x.RecId != recId && x.Symbol.ToUpper() == normalizedSymbol, ct)) return (null, $"Unit '{symbol}' already exists.");
         Apply(row, input);
         await unitOfWork.CompleteAsync(ct);
         return (Map(row), null);
@@ -60,9 +65,8 @@ public sealed class UnitOfMeasureService(IUnitOfWork unitOfWork) : IUnitOfMeasur
     {
         var row = await Db.Set<UnitOfMeasure>().FirstOrDefaultAsync(x => x.RecId == recId, ct);
         if (row is null) return "Unit of measure was not found.";
-        if (await Db.Set<InventTableModule>().AnyAsync(x => x.UnitId == row.Symbol, ct) ||
-            await Db.Set<UnitOfMeasureConversion>().AnyAsync(x => x.FromUnitOfMeasure == recId || x.ToUnitOfMeasure == recId, ct))
-            return "The unit cannot be deleted because it is assigned to a product or conversion.";
+        if (await IsUsedAsync(row, ct))
+            return "The unit cannot be deleted because it is referenced by setup or a journal.";
         Db.Remove(row);
         await unitOfWork.CompleteAsync(ct);
         return null;
@@ -72,13 +76,26 @@ public sealed class UnitOfMeasureService(IUnitOfWork unitOfWork) : IUnitOfMeasur
     {
         if (input.FromUnitOfMeasure <= 0 || input.ToUnitOfMeasure <= 0) return (null, "From unit and to unit are required.");
         if (input.FromUnitOfMeasure == input.ToUnitOfMeasure) return (null, "From unit and to unit must be different.");
-        if (input.Factor <= 0) return (null, "Conversion factor must be greater than zero.");
-        if (input.Numerator < 0 || input.Denominator < 0 || (input.Numerator > 0 && input.Denominator == 0)) return (null, "Conversion fraction is invalid.");
+        if (input.Factor < 0 || input.Numerator < 0 || input.Denominator < 0)
+            return (null, "Conversion factor and fraction cannot be negative.");
+        var hasFraction = input.Numerator > 0 || input.Denominator > 0;
+        if (hasFraction && (input.Numerator == 0 || input.Denominator == 0))
+            return (null, "Both conversion fraction values must be positive.");
+        if (input.Factor == 0 && !hasFraction)
+            return (null, "A positive factor or fraction is required.");
+        if (input.Factor > 0 && hasFraction)
+            return (null, "Use either a factor or a fraction, not both.");
+        if (input.InnerOffset != 0 || input.OuterOffset != 0)
+            return (null, "Offset conversions are not supported for basic inventory quantities.");
         if (!Enum.IsDefined(typeof(UnitOfMeasureRounding), input.Rounding)) return (null, "Rounding method is invalid.");
         var units = await Db.Set<UnitOfMeasure>().Where(x => x.RecId == input.FromUnitOfMeasure || x.RecId == input.ToUnitOfMeasure).ToListAsync(ct);
         if (units.Count != 2) return (null, "A selected unit of measure was not found.");
+        if (units[0].UnitOfMeasureClass != units[1].UnitOfMeasureClass)
+            return (null, "The conversion units must belong to the same unit class.");
         if (input.Product != 0 && !await Db.Set<EcoResProduct>().AnyAsync(x => x.RecId == input.Product, ct)) return (null, "The selected shared product was not found.");
-        if (await Db.Set<UnitOfMeasureConversion>().AnyAsync(x => x.RecId != (recId ?? 0) && x.Product == input.Product && x.FromUnitOfMeasure == input.FromUnitOfMeasure && x.ToUnitOfMeasure == input.ToUnitOfMeasure, ct))
+        if (await Db.Set<UnitOfMeasureConversion>().AnyAsync(x => x.RecId != (recId ?? 0) && x.Product == input.Product
+            && ((x.FromUnitOfMeasure == input.FromUnitOfMeasure && x.ToUnitOfMeasure == input.ToUnitOfMeasure)
+                || (x.FromUnitOfMeasure == input.ToUnitOfMeasure && x.ToUnitOfMeasure == input.FromUnitOfMeasure)), ct))
             return (null, "This unit conversion already exists for the selected scope.");
         var row = recId.HasValue ? await Db.Set<UnitOfMeasureConversion>().FirstOrDefaultAsync(x => x.RecId == recId.Value, ct) : null;
         if (recId.HasValue && row is null) return (null, "Unit conversion was not found.");
@@ -108,6 +125,14 @@ public sealed class UnitOfMeasureService(IUnitOfWork unitOfWork) : IUnitOfMeasur
         !Enum.IsDefined(typeof(UnitOfMeasureClass), input.UnitOfMeasureClass) ? "Unit class is invalid." :
         !Enum.IsDefined(typeof(SystemOfUnits), input.SystemOfUnits) ? "System of units is invalid." :
         input.DecimalPrecision is < 0 or > 6 ? "Decimal precision must be between 0 and 6." : null;
+
+    private async Task<bool> IsUsedAsync(UnitOfMeasure row, CancellationToken ct) =>
+        await Db.Set<InventTableModule>().AnyAsync(x => x.UnitId == row.Symbol, ct) ||
+        await Db.Set<InventItemBarcode>().AnyAsync(x => x.UnitId == row.Symbol, ct) ||
+        await Db.Set<InventParameters>().AnyAsync(x => x.DefaultUnitId == row.Symbol, ct) ||
+        await Db.Set<InventJournalTrans>().AnyAsync(x => x.Unit == row.Symbol, ct) ||
+        await Db.Set<UnitOfMeasureConversion>().AnyAsync(
+            x => x.FromUnitOfMeasure == row.RecId || x.ToUnitOfMeasure == row.RecId, ct);
 
     private static void Apply(UnitOfMeasure row, UnitOfMeasureInputDto input)
     { row.Symbol = input.Symbol.Trim(); row.UnitOfMeasureClass = (UnitOfMeasureClass)input.UnitOfMeasureClass; row.SystemOfUnits = (SystemOfUnits)input.SystemOfUnits; row.DecimalPrecision = input.DecimalPrecision; }

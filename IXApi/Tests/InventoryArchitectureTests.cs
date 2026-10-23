@@ -275,6 +275,8 @@ public sealed class InventoryArchitectureTests
             new ReleasedItem { RecId = 2, DataAreaId = "other", ItemId = "ITEM-2" },
             new ReleasedItem { RecId = 5, DataAreaId = "dat", ItemId = "ITEM-3" },
             new UnitOfMeasure { RecId = 3, Symbol = "pcs" },
+            new InventTableModule { RecId = 6, DataAreaId = "dat", ItemId = "ITEM-1", ModuleType = ModuleInventPurchSales.Inventory, UnitId = "pcs" },
+            new InventTableModule { RecId = 7, DataAreaId = "dat", ItemId = "ITEM-3", ModuleType = ModuleInventPurchSales.Inventory, UnitId = "pcs" },
             new InventItemBarcode { RecId = 4, DataAreaId = "other", ItemId = "ITEM-2", ItemBarcode = "OTHER", UnitId = "pcs", Qty = 1 });
         await db.SaveChangesAsync();
         var service = new InventItemBarcodeService(new TestUnitOfWork(db), new TestIdentity());
@@ -285,11 +287,11 @@ public sealed class InventoryArchitectureTests
         var created = await service.CreateAsync(1, input, default);
         Assert.Null(created.Error);
         Assert.Equal("ITEM-1", created.Row!.ItemId);
-        Assert.Null((await service.CreateAsync(5, input, default)).Error);
-        Assert.Contains("already exists", (await service.CreateAsync(1, input, default)).Error!);
+        Assert.Contains("already maps", (await service.CreateAsync(5, input, default)).Error!);
+        Assert.Contains("already maps", (await service.CreateAsync(1, input, default)).Error!);
         Assert.Single((await service.ListAsync(1, default)).Rows!);
         var matches = (await service.FindAsync("12345", default)).Rows!;
-        Assert.Equal(2, matches.Count);
+        Assert.Single(matches);
         Assert.Contains(matches, x => x.ReleasedProductRecId == 1);
         Assert.DoesNotContain(matches, x => x.Barcode.ItemId == "ITEM-2");
         var stored = await db.Set<InventItemBarcode>().SingleAsync(x => x.RecId == created.Row.RecId);
@@ -298,12 +300,37 @@ public sealed class InventoryArchitectureTests
         await db.SaveChangesAsync();
         Assert.Null((await service.UpdateAsync(1, created.Row.RecId, input with { Qty = 2, Blocked = true }, default)).Error);
         Assert.True((await service.ListAsync(1, default)).Rows![0].Blocked);
-        Assert.Single((await service.FindAsync("12345", default)).Rows!);
+        Assert.Empty((await service.FindAsync("12345", default)).Rows!);
         Assert.Equal("LEGACY", stored.BarcodeSetupId);
         Assert.Equal("LEGACY", stored.RetailVariantId);
         Assert.False((await service.DeleteAsync(1, 4, default)).Deleted);
         Assert.True((await service.DeleteAsync(1, created.Row.RecId, default)).Deleted);
-        Assert.Equal(2, await db.Set<InventItemBarcode>().CountAsync());
+        Assert.Equal(1, await db.Set<InventItemBarcode>().CountAsync());
+    }
+
+    [Fact]
+    public async Task Barcode_lookup_preserves_leading_zeros_and_uses_product_fraction_conversion()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.AddRange(
+            new SharedProduct { RecId = 100, DisplayProductNumber = "PAPER", ProductType = ItemType.Item },
+            new ReleasedItem { RecId = 101, DataAreaId = "dat", ItemId = "PAPER", Product = 100 },
+            new UnitOfMeasure { RecId = 102, Symbol = "BOX", UnitOfMeasureClass = UnitOfMeasureClass.Quantity },
+            new UnitOfMeasure { RecId = 103, Symbol = "EA", UnitOfMeasureClass = UnitOfMeasureClass.Quantity },
+            new InventTableModule { RecId = 104, DataAreaId = "dat", ItemId = "PAPER", ModuleType = ModuleInventPurchSales.Inventory, UnitId = "EA" },
+            new UnitOfMeasureConversion { RecId = 105, Product = 100, FromUnitOfMeasure = 102, ToUnitOfMeasure = 103,
+                Numerator = 10, Denominator = 1 });
+        await db.SaveChangesAsync();
+        var service = new InventItemBarcodeService(new TestUnitOfWork(db), new TestIdentity());
+        var created = await service.CreateAsync(101, new InventItemBarcodeInputDto("001234", "BOX", 2), default);
+        Assert.Null(created.Error);
+        var found = Assert.Single((await service.FindAsync("001234", default)).Rows!);
+        Assert.Equal("001234", found.Barcode.ItemBarcode);
+        Assert.Equal("EA", found.InventoryUnit);
+        Assert.Equal(20, found.InventoryQuantity);
     }
 
     static InventoryArchitectureTests()
@@ -604,17 +631,33 @@ public sealed class InventoryArchitectureTests
         Assert.NotNull(pcs.Unit);
         Assert.NotNull(box.Unit);
         Assert.NotNull((await service.CreateAsync(new UnitOfMeasureInputDto { Symbol = "pcs" })).Error);
+        Assert.NotNull((await service.CreateAsync(new UnitOfMeasureInputDto { Symbol = "PCS" })).Error);
         var conversion = await service.SaveConversionAsync(null, new UnitOfMeasureConversionInputDto
         { FromUnitOfMeasure = box.Unit!.RecId, ToUnitOfMeasure = pcs.Unit!.RecId, Product = 100, Factor = 4 });
         Assert.Equal(4, conversion.Conversion!.Factor);
         Assert.Equal("ITEM-001", conversion.Conversion.ProductNumber);
         Assert.NotNull((await service.SaveConversionAsync(null, new UnitOfMeasureConversionInputDto
         { FromUnitOfMeasure = box.Unit.RecId, ToUnitOfMeasure = pcs.Unit.RecId, Product = 100, Factor = 4 })).Error);
+        Assert.NotNull((await service.SaveConversionAsync(null, new UnitOfMeasureConversionInputDto
+        { FromUnitOfMeasure = pcs.Unit.RecId, ToUnitOfMeasure = box.Unit.RecId, Product = 100, Factor = 0.25m })).Error);
+        Assert.NotNull((await service.SaveConversionAsync(null, new UnitOfMeasureConversionInputDto
+        { FromUnitOfMeasure = box.Unit.RecId, ToUnitOfMeasure = pcs.Unit.RecId, Product = 0,
+            Factor = 4, InnerOffset = 1 })).Error);
+        Assert.NotNull((await service.SaveConversionAsync(null, new UnitOfMeasureConversionInputDto
+        { FromUnitOfMeasure = box.Unit.RecId, ToUnitOfMeasure = pcs.Unit.RecId, Product = 0,
+            Factor = 4, Numerator = 4, Denominator = 1 })).Error);
+        var fraction = await service.SaveConversionAsync(null, new UnitOfMeasureConversionInputDto
+        { FromUnitOfMeasure = box.Unit.RecId, ToUnitOfMeasure = pcs.Unit.RecId, Product = 0,
+            Numerator = 10, Denominator = 1 });
+        Assert.NotNull(fraction.Conversion);
         db.Add(new InventTableModule { RecId = 200, DataAreaId = "dat", ItemId = "ITEM-001", UnitId = "pcs", ModuleType = ModuleInventPurchSales.Inventory });
         await db.SaveChangesAsync();
         Assert.NotNull((await service.UpdateAsync(pcs.Unit.RecId, new UnitOfMeasureInputDto { Symbol = "ea", UnitOfMeasureClass = 0, SystemOfUnits = 0 })).Error);
+        Assert.NotNull((await service.UpdateAsync(pcs.Unit.RecId, new UnitOfMeasureInputDto
+        { Symbol = "pcs", UnitOfMeasureClass = 0, SystemOfUnits = 0, DecimalPrecision = 2 })).Error);
         Assert.NotNull(await service.DeleteAsync(pcs.Unit.RecId));
         Assert.Null(await service.DeleteConversionAsync(conversion.Conversion.RecId));
+        Assert.Null(await service.DeleteConversionAsync(fraction.Conversion!.RecId));
     }
 
     [Fact]
@@ -636,6 +679,9 @@ public sealed class InventoryArchitectureTests
         Assert.Equal(6m, (decimal)method!.Invoke(null, [conversions, units, 100L, "box", "pcs"])!);
         Assert.Equal(4m, (decimal)method.Invoke(null, [conversions, units, 200L, "box", "pcs"])!);
         Assert.Equal(0.25m, (decimal)method.Invoke(null, [conversions, units, 200L, "pcs", "box"])!);
+        Assert.Equal(0m, (decimal)method.Invoke(null, [conversions, units, 200L, "", "pcs"])!);
+        conversions[0].InnerOffset = 1;
+        Assert.Equal(0m, (decimal)method.Invoke(null, [conversions, units, 200L, "box", "pcs"])!);
     }
 
     [Fact]

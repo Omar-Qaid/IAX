@@ -135,12 +135,12 @@ public sealed class InventItemBarcodeService(IUnitOfWork unitOfWork, ICompanyExe
             .ThenByDescending(x => x.FromUnitOfMeasure == from.RecId)
             .ThenByDescending(x => x.RecId).FirstOrDefaultAsync(ct);
         if (conversion is null) return null;
-        var factor = conversion.Factor * (conversion.Numerator > 0 && conversion.Denominator > 0
-            ? (decimal)conversion.Numerator / conversion.Denominator : 1m);
-        if (factor <= 0) return null;
+        var factor = conversion.Factor > 0 ? conversion.Factor :
+            conversion.Numerator > 0 && conversion.Denominator > 0
+                ? (decimal)conversion.Numerator / conversion.Denominator : 0m;
+        if (factor <= 0 || conversion.InnerOffset != 0 || conversion.OuterOffset != 0) return null;
         var converted = conversion.FromUnitOfMeasure == from.RecId
-            ? (quantity + conversion.InnerOffset) * factor + conversion.OuterOffset
-            : (quantity - conversion.OuterOffset) / factor - conversion.InnerOffset;
+            ? quantity * factor : quantity / factor;
         var scale = (decimal)Math.Pow(10, to.DecimalPrecision);
         converted = conversion.Rounding switch
         {

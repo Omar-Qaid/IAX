@@ -4,6 +4,10 @@ Date: 2026-10-23. This pass changed product and released-item setup only. It mad
 
 ## Implemented in this pass
 
+- Barcode conversion now applies either a positive factor or a positive fraction consistently with setup validation, rejects legacy offset formulas for basic quantities, and preserves leading zeros in lookup. Released-product conversion readiness no longer treats a missing unit as a valid one-to-one conversion. Existing barcode test expectations were aligned with company-level ambiguity rejection, and a fraction/leading-zero fixture was added.
+
+The finance module build passed with zero errors. The focused unit/conversion and barcode tests passed (3 tests, 0 failures) using SQLite in-memory fixtures. SQL Server setup behavior remains unverified.
+
 - Limited new products and company releases to distinct `Item` products. Shared product and company item numbers remain separate. The combined create-and-release operation now requires group, unit, and order settings; the separate release operation remains an explicit incomplete draft until configured.
 - Kept shared product creation and its first translation in one transaction; made the Arabic translation optional in the direct product API. Existing translation updates still upsert by language.
 - Validated stocked FIFO model assignment, site/warehouse storage dimensions with site-level financial tracking, and inactive batch/serial tracking on configuration and group assignment.

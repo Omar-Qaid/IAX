@@ -679,16 +679,17 @@ public sealed class ReleasedProductListService(
     }
     private static decimal ConversionFactor(List<UnitOfMeasureConversion> rows, List<UnitOfMeasure> units, long product, string fromSymbol, string toSymbol)
     {
-        if (string.IsNullOrWhiteSpace(fromSymbol) || string.IsNullOrWhiteSpace(toSymbol) || string.Equals(fromSymbol, toSymbol, StringComparison.OrdinalIgnoreCase)) return 1;
+        if (string.IsNullOrWhiteSpace(fromSymbol) || string.IsNullOrWhiteSpace(toSymbol)) return 0;
         var from = units.FirstOrDefault(x => string.Equals(x.Symbol, fromSymbol, StringComparison.OrdinalIgnoreCase)); var to = units.FirstOrDefault(x => string.Equals(x.Symbol, toSymbol, StringComparison.OrdinalIgnoreCase));
         if (from is null || to is null) return 0;
+        if (from.RecId == to.RecId) return 1;
         var row = rows.Where(x => (x.Product == product || x.Product == 0) &&
                 ((x.FromUnitOfMeasure == from.RecId && x.ToUnitOfMeasure == to.RecId) ||
                  (x.FromUnitOfMeasure == to.RecId && x.ToUnitOfMeasure == from.RecId)))
             .OrderByDescending(x => x.Product == product)
             .ThenByDescending(x => x.RecId)
             .FirstOrDefault();
-        if (row is null) return 0; var factor = row.Factor > 0 ? row.Factor : row.Numerator > 0 && row.Denominator > 0 ? (decimal)row.Numerator / row.Denominator : 0;
+        if (row is null || row.InnerOffset != 0 || row.OuterOffset != 0) return 0; var factor = row.Factor > 0 ? row.Factor : row.Numerator > 0 && row.Denominator > 0 ? (decimal)row.Numerator / row.Denominator : 0;
         return row.FromUnitOfMeasure == from.RecId ? factor : factor > 0 ? 1 / factor : 0;
     }
     private void SetModule(List<InventTableModule> modules, string itemId, string companyId, ModuleInventPurchSales type, string unit, decimal price, decimal priceUnit, string taxGroup) { var row = modules.SingleOrDefault(x => x.ModuleType == type) ?? new InventTableModule { ItemId = itemId, DataAreaId = companyId, ModuleType = type }; if (Db.Entry(row).State == EntityState.Detached) Db.Add(row); row.UnitId = unit.Trim(); row.Price = price; row.PriceUnit = priceUnit; row.TaxItemGroupId = taxGroup.Trim(); row.PriceDate = DateTime.UtcNow; }

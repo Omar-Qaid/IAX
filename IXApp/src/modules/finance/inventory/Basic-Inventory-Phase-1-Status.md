@@ -4,6 +4,10 @@ Date: 2026-10-23. Phase 1 changes configure metadata only; no stock or ledger po
 
 ## Implemented in this pass
 
+- A later setup-only pass tightened unit conversion entry: the service rejects opposite-direction duplicate rules in the same product/global scope, cross-class conversions, offsets, and conflicting factor/fraction inputs. A positive fraction can now be used as the sole multiplier. Unit symbols are checked case-insensitively, and referenced units cannot change symbol, class, system, or precision. Deletion also checks barcode, inventory-parameter, and journal references. These changes read/write only unit setup tables; they create no stock or ledger effects.
+
+The finance module build passed with zero errors. The focused unit/conversion and barcode tests passed (3 tests, 0 failures) using SQLite in-memory fixtures. No SQL Server result is claimed.
+
 - Restricted new storage groups to site plus warehouse and blocked location; mapped existing field-setup flags so site is financial, warehouse is physical and nonfinancial, and both are required on receipt/issue.
 - Restricted tracking groups to inactive batch and serial; saved group headers and field setup atomically; prevented ordinary changes after item assignment.
 - Restricted model-group setup to stocked FIFO with negative inventory and physical-cost inclusion disabled and financial posting enabled. Assigned groups cannot be edited through basic setup. FIFO journal issues now use provisional same-site running-average cost; final settlement and close remain pending.
