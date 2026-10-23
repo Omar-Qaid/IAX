@@ -15,6 +15,8 @@ Updated 2026-10-23. Scope of this review is configuration and released-item setu
 
 ## Changes in the setup-only pass
 
+- 2026-10-24: shared unit reference checks now inspect all companies before allowing edits or deletion. Referenced unit symbols cannot change case because module and barcode references store the symbol itself. This preserves existing scalar columns and changes no operational balances.
+
 - `UnitOfMeasureService`: validates supported linear factors/fractions and unit classes; protects referenced units during update/delete. Reads `UnitOfMeasure`, `UnitOfMeasureConversion`, `EcoResProduct`, `InventTableModule`, `InventItemBarcode`, `InventParameters`, and `InventJournalTrans`; writes only unit and conversion setup records.
 - `ReleasedProductListService`: conversion readiness requires existing units and a supported linear conversion. This pass is read-only for those checks.
 - `InventItemBarcodeService`: lookup and validation use the same factor-or-fraction interpretation and reject offsets. This pass changes calculation only.

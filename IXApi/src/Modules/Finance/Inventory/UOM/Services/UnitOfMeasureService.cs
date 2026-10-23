@@ -49,7 +49,7 @@ public sealed class UnitOfMeasureService(IUnitOfWork unitOfWork) : IUnitOfMeasur
         if (row is null) return (null, "Unit of measure was not found.");
         var symbol = input.Symbol.Trim();
         var used = await IsUsedAsync(row, ct);
-        if (used && (!string.Equals(row.Symbol, symbol, StringComparison.OrdinalIgnoreCase)
+        if (used && (!string.Equals(row.Symbol, symbol, StringComparison.Ordinal)
             || row.UnitOfMeasureClass != (UnitOfMeasureClass)input.UnitOfMeasureClass
             || row.SystemOfUnits != (SystemOfUnits)input.SystemOfUnits
             || row.DecimalPrecision != input.DecimalPrecision))
@@ -127,11 +127,11 @@ public sealed class UnitOfMeasureService(IUnitOfWork unitOfWork) : IUnitOfMeasur
         input.DecimalPrecision is < 0 or > 6 ? "Decimal precision must be between 0 and 6." : null;
 
     private async Task<bool> IsUsedAsync(UnitOfMeasure row, CancellationToken ct) =>
-        await Db.Set<InventTableModule>().AnyAsync(x => x.UnitId == row.Symbol, ct) ||
-        await Db.Set<InventItemBarcode>().AnyAsync(x => x.UnitId == row.Symbol, ct) ||
-        await Db.Set<InventParameters>().AnyAsync(x => x.DefaultUnitId == row.Symbol, ct) ||
-        await Db.Set<InventJournalTrans>().AnyAsync(x => x.Unit == row.Symbol, ct) ||
-        await Db.Set<UnitOfMeasureConversion>().AnyAsync(
+        await Db.Set<InventTableModule>().IgnoreQueryFilters().AnyAsync(x => x.UnitId == row.Symbol, ct) ||
+        await Db.Set<InventItemBarcode>().IgnoreQueryFilters().AnyAsync(x => x.UnitId == row.Symbol, ct) ||
+        await Db.Set<InventParameters>().IgnoreQueryFilters().AnyAsync(x => x.DefaultUnitId == row.Symbol, ct) ||
+        await Db.Set<InventJournalTrans>().IgnoreQueryFilters().AnyAsync(x => x.Unit == row.Symbol, ct) ||
+        await Db.Set<UnitOfMeasureConversion>().IgnoreQueryFilters().AnyAsync(
             x => x.FromUnitOfMeasure == row.RecId || x.ToUnitOfMeasure == row.RecId, ct);
 
     private static void Apply(UnitOfMeasure row, UnitOfMeasureInputDto input)
