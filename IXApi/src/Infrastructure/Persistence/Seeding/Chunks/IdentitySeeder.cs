@@ -21,6 +21,10 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
         [
             ("AccountsReceivable", "SalesOrders", "Confirm"),
             ("AccountsReceivable", "SalesOrders", "Post"),
+            ("AccountsReceivable", "CustomerPayments", "Post"),
+            ("AccountsReceivable", "ReturnOrders", "Post"),
+            ("AccountsPayable", "PurchaseOrders", "Confirm"),
+            ("AccountsPayable", "PurchaseOrders", "Post"),
             ("System", "DataManagement", "Import"),
             ("System", "DataManagement", "Export"),
             ("System", "BackgroundJobs", "Run"),
@@ -42,6 +46,8 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             ("AccountsReceivable", "PriceDiscAdmNames"),
             ("AccountsReceivable", "SalesOrders"),
             ("AccountsReceivable", "Invoices"),
+            ("AccountsReceivable", "CustomerPayments"),
+            ("AccountsReceivable", "ReturnOrders"),
             ("AccountsReceivable", "DeliveryModes"),
             ("AccountsReceivable", "DeliveryTerms"),
             ("AccountsReceivable", "PaymTerm"),
@@ -50,6 +56,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             // ── Accounts Payable ─────────────────────────────────────────────
             ("AccountsPayable", "Vendors"),
             ("AccountsPayable", "VendorGroups"),
+            ("AccountsPayable", "PurchaseOrders"),
 
             // ── Organization ────────────────────────────────────────────────
             ("Organization", "Departments"),

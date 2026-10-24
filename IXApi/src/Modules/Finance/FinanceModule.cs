@@ -15,7 +15,15 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<AccountsReceivable.PriceDisc.IPriceDiscJournalPostingService, AccountsReceivable.PriceDisc.PriceDiscJournalPostingService>();
             services.AddScoped<AccountsReceivable.Confirm.ISalesOrderConfirmationService, AccountsReceivable.Confirm.SalesOrderConfirmationService>();
             services.AddScoped<AccountsReceivable.PackingSlip.IPackingSlipJournalService, AccountsReceivable.PackingSlip.PackingSlipJournalService>();
-            services.AddScoped<AccountsReceivable.Invoice.ISalesInventoryInvoiceService, AccountsReceivable.Invoice.SalesInventoryInvoiceService>();
+            services.AddScoped<AccountsReceivable.Invoice.ISalesInvoiceService, AccountsReceivable.Invoice.SalesInvoiceService>();
+            services.AddScoped<AccountsReceivable.Payment.ICustPaymentService, AccountsReceivable.Payment.CustPaymentService>();
+            services.AddScoped<AccountsReceivable.Return.ICustReturnService, AccountsReceivable.Return.CustReturnService>();
+            services.AddScoped<AccountsPayable.IPurchInventorySupplyService, AccountsPayable.PurchInventorySupplyService>();
+            services.AddScoped<AccountsPayable.IPurchOrderService, AccountsPayable.PurchOrderService>();
+            services.AddScoped<AccountsPayable.IPurchConfirmationService, AccountsPayable.PurchConfirmationService>();
+            services.AddScoped<AccountsPayable.IProductReceiptService, AccountsPayable.ProductReceiptService>();
+            services.AddScoped<AccountsPayable.IVendorInvoiceService, AccountsPayable.VendorInvoiceService>();
+            services.AddScoped<AccountsPayable.IPurchReturnService, AccountsPayable.PurchReturnService>();
             services.AddScoped<FluentValidation.IValidator<AccountsReceivable.Confirm.PostConfirmationRequest>, AccountsReceivable.Confirm.SalesOrderConfirmationValidator>();
             services.AddScoped<AccountsReceivable.Customer.ICustomerService, AccountsReceivable.Customer.CustomerService>();
             services.AddScoped<AccountsReceivable.Customer.ICustomerGroupService, AccountsReceivable.Customer.CustomerGroupService>();

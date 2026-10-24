@@ -166,7 +166,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         // ==========================================================
         // Return
         // ==========================================================
-        public ReturnStatusHeader ReturnStatus { get; set; } // Changed from int to Enum
+        public ReturnStatusLine ReturnStatus { get; set; } // D365 ReturnStatusLine (int-stored)
         public DateTime ReturnArrivalDate { get; set; }
         public DateTime ReturnDeadline { get; set; }
         public DateTime ReturnClosedDate { get; set; }

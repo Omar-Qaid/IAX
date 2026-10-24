@@ -2,6 +2,14 @@ using System.Reflection;
 using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.NumberSequences;
+using IAX.IXApi.Modules.Finance.AccountsPayable;
+using IAX.IXApi.Modules.Finance.AccountsReceivable;
+using IAX.IXApi.Modules.Finance.AccountsReceivable.Invoice;
+using IAX.IXApi.Modules.Finance.AccountsReceivable.PackingSlip;
+using IAX.IXApi.Modules.Finance.AccountsReceivable.PackingSlip.Dtos;
+using IAX.IXApi.Modules.Finance.AccountsReceivable.Payment;
+using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
+using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Services;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Inventory;
@@ -158,6 +166,289 @@ public sealed class InventoryCycleTests
         Assert.NotNull(backdated.Error);
     }
 
+    // ---- Purchase order Milestone 1 (Purchorder.md §12.2): PO 100 @ 50, receive/invoice 60 + 40 ----
+
+    [Fact]
+    public async Task Purchase_order_partial_receipts_and_invoices_complete_the_cycle()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        await db.SaveChangesAsync();
+        var (orders, confirm, receipts, invoices) = PurchaseServices(db);
+
+        var created = await orders.CreateAsync(new PurchOrderCreateDto("V-0001", null, "SAR", new DateTime(2026, 10, 28), "S01", "WH-01", null), default);
+        Assert.Equal(200, created.StatusCode);
+        var po = await db.Set<PurchTable>().SingleAsync();
+        var added = await orders.AddLineAsync(po.RecId, new PurchLineInputDto("ITEM-001", 100, "PCS", 50, 1, null, null, null, null), default);
+        Assert.Equal(200, added.StatusCode);
+        var line = await db.Set<PurchLine>().SingleAsync();
+
+        // Step 1: approved PO -> ordered inbound 100, no physical stock.
+        var sum = await db.Set<InventSum>().SingleAsync();
+        Assert.Equal(100m, sum.Ordered);
+        Assert.Equal(0m, sum.PhysicalInvent);
+        Assert.Equal(StatusReceipt.Ordered, (await db.Set<InventTrans>().SingleAsync()).StatusReceipt);
+
+        // Step 2: confirmation stores a version, no stock effect.
+        Assert.Equal(200, (await confirm.ConfirmAsync(po.RecId, default)).StatusCode);
+        Assert.Single(await db.Set<VendPurchOrderJour>().ToListAsync());
+        Assert.Equal(0m, (await db.Set<InventSum>().SingleAsync()).PhysicalInvent);
+
+        // Step 3: product receipt 60 -> physical 60, remain physical 40, remain financial 100.
+        Assert.Equal(200, (await receipts.PostAsync(po.RecId, new ProductReceiptPostDto("PR-0001", new DateTime(2026, 10, 28), [new(line.RecId, 60)]), default)).StatusCode);
+        line = await db.Set<PurchLine>().SingleAsync();
+        sum = await db.Set<InventSum>().SingleAsync();
+        Assert.Equal(60m, sum.PhysicalInvent);
+        Assert.Equal(40m, sum.Ordered);
+        Assert.Equal(40m, line.RemainPurchPhysical);
+        Assert.Equal(100m, line.RemainPurchFinancial);
+
+        // Negative: invoice more than received, over-receipt, duplicate receipt number.
+        Assert.Equal(422, (await invoices.PostAsync(po.RecId, new VendorInvoicePostDto("INV-X", new DateTime(2026, 10, 29), [new(line.RecId, 61)]), default)).StatusCode);
+        Assert.Equal(422, (await receipts.PostAsync(po.RecId, new ProductReceiptPostDto("PR-0009", null, [new(line.RecId, 41)]), default)).StatusCode);
+        Assert.Equal(422, (await receipts.PostAsync(po.RecId, new ProductReceiptPostDto("PR-0001", null, [new(line.RecId, 1)]), default)).StatusCode);
+
+        // Step 4: invoice 60 -> no extra physical stock, financial value 3,000, remain financial 40.
+        Assert.Equal(200, (await invoices.PostAsync(po.RecId, new VendorInvoicePostDto("INV-0001", new DateTime(2026, 10, 29), [new(line.RecId, 60)]), default)).StatusCode);
+        sum = await db.Set<InventSum>().SingleAsync();
+        Assert.Equal(60m, sum.PhysicalInvent);
+        Assert.Equal(3000m, sum.PostedValue);
+        Assert.Equal(40m, (await db.Set<PurchLine>().SingleAsync()).RemainPurchFinancial);
+        Assert.Equal(422, (await invoices.PostAsync(po.RecId, new VendorInvoicePostDto("INV-0001", null, [new(line.RecId, 1)]), default)).StatusCode);
+
+        // Steps 5-6: receive and invoice the remaining 40.
+        Assert.Equal(200, (await receipts.PostAsync(po.RecId, new ProductReceiptPostDto("PR-0002", new DateTime(2026, 10, 30), [new(line.RecId, 40)]), default)).StatusCode);
+        Assert.Equal(200, (await invoices.PostAsync(po.RecId, new VendorInvoicePostDto("INV-0002", new DateTime(2026, 10, 31), [new(line.RecId, 40)]), default)).StatusCode);
+
+        line = await db.Set<PurchLine>().SingleAsync();
+        po = await db.Set<PurchTable>().SingleAsync();
+        sum = await db.Set<InventSum>().SingleAsync();
+        Assert.Equal(0m, line.RemainPurchPhysical);
+        Assert.Equal(0m, line.RemainPurchFinancial);
+        Assert.Equal(PurchStatus.Invoiced, po.PurchStatus);
+        Assert.Equal(100m, sum.PhysicalInvent);
+        Assert.Equal(0m, sum.Ordered);
+        Assert.Equal(0m, sum.Received);
+        Assert.Equal(5000m, sum.PostedValue);
+        Assert.Equal(0m, sum.PhysicalValue);
+
+        var trans = await db.Set<InventTrans>().ToListAsync();
+        Assert.All(trans, t => Assert.Equal(StatusReceipt.Purchased, t.StatusReceipt));
+        Assert.Equal(100m, trans.Sum(t => t.Qty));
+        Assert.Equal(5000m, trans.Sum(t => t.CostAmountPosted));
+        Assert.Equal(2, await db.Set<VendPackingSlipJour>().CountAsync());
+        Assert.Equal(2, await db.Set<VendInvoiceJour>().CountAsync());
+        Assert.Equal(-5000m, (await db.Set<VendTrans>().ToListAsync()).Sum(x => x.AmountCur));
+        var ledger = await db.Set<GeneralJournalAccountEntry>().ToListAsync();
+        Assert.Equal(0m, ledger.Sum(x => x.AccountingCurrencyAmount));                     // balanced
+        Assert.Equal(5000m, ledger.Where(x => x.AccountingCurrencyAmount > 0).Sum(x => x.AccountingCurrencyAmount));
+    }
+
+    [Fact]
+    public async Task Purchase_line_rejects_warehouse_from_another_site_and_blocked_vendor()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedPurchaseMasterData(db);
+        db.Set<InventLocation>().Add(new InventLocation { RecId = 2, DataAreaId = "dat", InventLocationId = "WH-03", InventSiteId = "S02" });
+        db.Set<VendTable>().Add(new VendTable { RecId = 2, DataAreaId = "dat", AccountNum = "V-BLOCK", Currency = "SAR", Blocked = CustVendBlocked.All });
+        await db.SaveChangesAsync();
+        var (orders, _, _, _) = PurchaseServices(db);
+
+        Assert.Equal(422, (await orders.CreateAsync(new PurchOrderCreateDto("V-BLOCK", null, "SAR", null, "S01", "WH-01", null), default)).StatusCode);
+        Assert.Equal(422, (await orders.CreateAsync(new PurchOrderCreateDto("V-0001", null, "SAR", null, "S01", "WH-03", null), default)).StatusCode);
+        Assert.Empty(await db.Set<PurchTable>().ToListAsync());
+    }
+
+    // ---- Sales order cycle (CycleSalesorder.md / ARTables.md §14 state table) -------------------
+
+    [Fact]
+    public async Task Sales_order_partial_delivery_partial_invoice_and_payment_reconcile()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        SeedSalesMasterData(db);
+        await db.SaveChangesAsync();
+        var work = new TestUnitOfWork(db);
+        var company = new TestCompany();
+        var numbers = new TestInventNumbers();
+
+        // Stock 100 PCS at 60 through the real purchase cycle.
+        var (orders, _, receipts, vendorInvoices) = PurchaseServices(db, numbers);
+        await orders.CreateAsync(new PurchOrderCreateDto("V-0001", null, "SAR", new DateTime(2026, 10, 1), "S01", "WH-01", null), default);
+        var po = await db.Set<PurchTable>().SingleAsync();
+        await orders.AddLineAsync(po.RecId, new PurchLineInputDto("ITEM-001", 100, "PCS", 60, 1, null, null, null, null), default);
+        var pl = await db.Set<PurchLine>().SingleAsync();
+        await receipts.PostAsync(po.RecId, new ProductReceiptPostDto("PR-1", new DateTime(2026, 10, 2), [new(pl.RecId, 100)]), default);
+        Assert.Equal(200, (await vendorInvoices.PostAsync(po.RecId, new VendorInvoicePostDto("VI-1", new DateTime(2026, 10, 3), [new(pl.RecId, 100)]), default)).StatusCode);
+
+        // SO-0001: 10 PCS at 100, VAT 15%.
+        var order = new SalesTable
+        {
+            DataAreaId = "dat", SalesId = "SO-0001", CustAccount = "C-001", InvoiceAccount = "C-001", CurrencyCode = "SAR",
+            SalesStatus = SalesStatus.Backorder, InventSiteId = "S01", InventLocationId = "WH-01", OrderDate = new DateTime(2026, 10, 5)
+        };
+        db.Set<SalesTable>().Add(order);
+        await db.SaveChangesAsync();
+        var line = new SalesLine
+        {
+            DataAreaId = "dat", SalesId = order.SalesId, LineNum = 1, ItemId = "ITEM-001", SalesQty = 10, QtyOrdered = 10,
+            RemainSalesPhysical = 10, RemainSalesFinancial = 10, SalesUnit = "PCS", SalesPrice = 100, PriceUnit = 1,
+            LineAmount = 1000, SalesStatus = SalesStatus.Backorder, StockedProduct = NoYes.Yes, CurrencyCode = "SAR",
+            TaxGroup = "VAT15", TaxItemGroup = "VAT15", ReceiptDateRequested = new DateTime(2026, 10, 10)
+        };
+        var demand = new SalesInventoryDemandService(work, numbers, new InventDimensionResolver(work, numbers));
+        await demand.CreateAsync(order, line, "S01", "WH-01");
+        db.Set<SalesLine>().Add(line);
+        await db.SaveChangesAsync();
+
+        var reservation = new InventoryReservationService(work, company);
+        Assert.Null((await reservation.ReserveAsync(line.InventTransId, 10m, false, default)).Error);
+        Assert.Equal(10m, (await db.Set<InventSum>().SingleAsync()).ReservPhysical);
+
+        var packingSlips = new PackingSlipJournalService(work, company, Sequence());
+        var invoices = new SalesInvoiceService(work, company, Sequence());
+
+        // Packing slip 6 -> remain physical 4, remain financial 10; reservation consumed.
+        var ps1 = await packingSlips.PostAsync(order.RecId, new PostPackingSlipRequest(new DateTime(2026, 10, 6), "All", true, "ps-1",
+            [new PackingSlipPostingLineRequest(line.RecId.ToString(), 6)]), default);
+        Assert.Equal(200, ps1.StatusCode);
+        line = await db.Set<SalesLine>().SingleAsync();
+        Assert.Equal(4m, line.RemainSalesPhysical);
+        Assert.Equal(10m, line.RemainSalesFinancial);
+        var sum = await db.Set<InventSum>().SingleAsync();
+        Assert.Equal(94m, sum.PhysicalInvent);
+        Assert.Equal(4m, sum.ReservPhysical);
+
+        // Invoice 4 of the 6 delivered -> remain financial 6; invoicing beyond delivered is rejected.
+        var inv1 = await invoices.PostAsync(order.RecId, new SalesInvoicePostDto(new DateTime(2026, 10, 7), "inv-1", [new(line.RecId, 4)]), default);
+        Assert.Equal(200, inv1.StatusCode);
+        line = await db.Set<SalesLine>().SingleAsync();
+        Assert.Equal(4m, line.RemainSalesPhysical);
+        Assert.Equal(6m, line.RemainSalesFinancial);
+        Assert.Equal(422, (await invoices.PostAsync(order.RecId, new SalesInvoicePostDto(null, null, [new(line.RecId, 3)]), default)).StatusCode);
+        Assert.Equal(200, (await invoices.PostAsync(order.RecId, new SalesInvoicePostDto(null, "inv-1", [new(line.RecId, 4)]), default)).StatusCode);
+        Assert.Single(await db.Set<CustInvoiceJour>().ToListAsync()); // idempotent retry
+
+        // Packing slip 4, then invoice the remaining 6 delivered.
+        Assert.Equal(200, (await packingSlips.PostAsync(order.RecId, new PostPackingSlipRequest(new DateTime(2026, 10, 8), "All", true, "ps-2",
+            [new PackingSlipPostingLineRequest(line.RecId.ToString(), 4)]), default)).StatusCode);
+        Assert.Equal(200, (await invoices.PostAsync(order.RecId, new SalesInvoicePostDto(new DateTime(2026, 10, 9), "inv-2"), default)).StatusCode);
+
+        line = await db.Set<SalesLine>().SingleAsync();
+        Assert.Equal(0m, line.RemainSalesPhysical);
+        Assert.Equal(0m, line.RemainSalesFinancial);
+        Assert.Equal(SalesStatus.Invoiced, line.SalesStatus);
+        Assert.Equal(SalesStatus.Invoiced, (await db.Set<SalesTable>().SingleAsync()).SalesStatus);
+
+        var journals = await db.Set<CustInvoiceJour>().ToListAsync();
+        Assert.Equal(1000m, journals.Sum(x => x.SalesBalance));
+        Assert.Equal(150m, journals.Sum(x => x.SumTax));
+        Assert.Equal(1150m, journals.Sum(x => x.InvoiceAmount));
+        Assert.Equal(-150m, (await db.Set<TaxTrans>().ToListAsync()).Sum(x => x.TaxAmount));
+
+        sum = await db.Set<InventSum>().SingleAsync();
+        Assert.Equal(90m, sum.PhysicalInvent);
+        Assert.Equal(90m, sum.PostedQty);
+        Assert.Equal(0m, sum.Deducted);
+        Assert.Equal(0m, sum.ReservPhysical);
+        Assert.Equal(5400m, sum.PostedValue); // 6,000 purchased - 600 COGS (10 x 60)
+        var salesOrigin = await db.Set<InventTransOrigin>().SingleAsync(x => x.ReferenceCategory == InventRefType.SalesTable);
+        var salesTrans = await db.Set<InventTrans>().Where(x => x.InventTransOrigin == salesOrigin.RecId).ToListAsync();
+        Assert.All(salesTrans, x => Assert.Equal(StatusIssue.Sold, x.StatusIssue));
+        Assert.Equal(-10m, salesTrans.Sum(x => x.Qty));
+        Assert.Equal(-600m, salesTrans.Sum(x => x.CostAmountPosted));
+
+        Assert.Equal(1150m, (await db.Set<CustTransOpen>().ToListAsync()).Sum(x => x.AmountCur));
+        Assert.Equal(0m, (await db.Set<GeneralJournalAccountEntry>().ToListAsync()).Sum(x => x.AccountingCurrencyAmount));
+
+        // Customer payment of 1,150 settles both invoices; the open receivable becomes zero.
+        var payments = new CustPaymentService(work, company, Sequence());
+        var paid = await payments.PostAsync(new CustPaymentPostDto("C-001", "BANK-1", 1150m, new DateTime(2026, 10, 15), "BANK", null, "pay-1"), default);
+        Assert.Equal(200, paid.StatusCode);
+        Assert.Empty(await db.Set<CustTransOpen>().ToListAsync());
+        var custTrans = await db.Set<CustTrans>().ToListAsync();
+        Assert.Equal(0m, custTrans.Sum(x => x.AmountCur));
+        Assert.All(custTrans.Where(x => x.TransType == LedgerTransType.Sales), x => Assert.Equal(x.AmountCur, x.SettleAmountCur));
+        Assert.Equal(4, await db.Set<CustSettlement>().CountAsync());
+        Assert.Equal(NoYes.Yes, (await db.Set<LedgerJournalTable>().SingleAsync()).Posted);
+        Assert.Equal(0m, (await db.Set<GeneralJournalAccountEntry>().ToListAsync()).Sum(x => x.AccountingCurrencyAmount));
+        Assert.Equal(200, (await payments.PostAsync(new CustPaymentPostDto("C-001", "BANK-1", 1150m, null, null, null, "pay-1"), default)).StatusCode);
+        Assert.Single(await db.Set<LedgerJournalTable>().ToListAsync()); // idempotent retry
+    }
+
+    private static void SeedSalesMasterData(CycleContext db)
+    {
+        db.Set<CustTable>().Add(new CustTable { RecId = 1, DataAreaId = "dat", AccountNum = "C-001", CustGroupId = "DOM", CurrencyCode = "SAR" });
+        db.Set<MainAccount>().AddRange(
+            new MainAccount { RecId = 4, DataAreaId = "dat", MainAccountId = "220100" },  // output VAT
+            new MainAccount { RecId = 5, DataAreaId = "dat", MainAccountId = "410100" },  // sales revenue
+            new MainAccount { RecId = 6, DataAreaId = "dat", MainAccountId = "120100" },  // accounts receivable
+            new MainAccount { RecId = 7, DataAreaId = "dat", MainAccountId = "110100" }); // bank
+        db.Set<DimensionAttributeValueCombination>().AddRange(
+            new DimensionAttributeValueCombination { RecId = 4, DataAreaId = "dat", MainAccount = 4, DisplayValue = "220100" },
+            new DimensionAttributeValueCombination { RecId = 5, DataAreaId = "dat", MainAccount = 5, DisplayValue = "410100" },
+            new DimensionAttributeValueCombination { RecId = 6, DataAreaId = "dat", MainAccount = 6, DisplayValue = "120100" },
+            new DimensionAttributeValueCombination { RecId = 7, DataAreaId = "dat", MainAccount = 7, DisplayValue = "110100" });
+        db.Set<InventPosting>().AddRange(
+            new InventPosting { RecId = 10, DataAreaId = "dat", InventAccountType = InventAccountType.SalesRevenue, ItemCode = TableGroupAll.All, CustVendCode = TableGroupAll.All, LedgerDimension = 5 },
+            new InventPosting { RecId = 11, DataAreaId = "dat", InventAccountType = InventAccountType.SalesConsump, ItemCode = TableGroupAll.All, CustVendCode = TableGroupAll.All, LedgerDimension = 2 },
+            new InventPosting { RecId = 12, DataAreaId = "dat", InventAccountType = InventAccountType.SalesIssue, ItemCode = TableGroupAll.All, CustVendCode = TableGroupAll.All, LedgerDimension = 1 });
+        db.Set<CustLedgerAccounts>().Add(new CustLedgerAccounts { RecId = 1, DataAreaId = "dat", PostingProfile = "GEN", AccountCode = AccountCode.All, SummaryLedgerDimension = 6 });
+        db.Set<TaxGroupData>().Add(new TaxGroupData { RecId = 1, DataAreaId = "dat", TaxGroup = "VAT15", TaxCode = "VAT15C" });
+        db.Set<TaxOnItem>().Add(new TaxOnItem { RecId = 1, DataAreaId = "dat", TaxItemGroup = "VAT15", TaxCode = "VAT15C" });
+        db.Set<TaxData>().Add(new TaxData { RecId = 1, DataAreaId = "dat", TaxCode = "VAT15C", TaxValue = 15m });
+        db.Set<TaxTable>().Add(new TaxTable { RecId = 1, DataAreaId = "dat", TaxCode = "VAT15C", TaxAccountGroup = "VATG" });
+        db.Set<TaxLedgerAccountGroup>().Add(new TaxLedgerAccountGroup { RecId = 1, DataAreaId = "dat", TaxAccountGroup = "VATG", TaxOutgoingLedgerDimension = 4 });
+        db.Set<BankAccountTable>().Add(new BankAccountTable { RecId = 1, DataAreaId = "dat", AccountId = "BANK-1", LedgerDimension = 7, CurrencyCode = "SAR" });
+    }
+
+    private static void SeedPurchaseMasterData(CycleContext db)
+    {
+        db.Set<VendTable>().Add(new VendTable { RecId = 1, DataAreaId = "dat", AccountNum = "V-0001", Currency = "SAR", VendGroup = "LOCAL" });
+        db.Set<InventSite>().AddRange(
+            new InventSite { RecId = 1, DataAreaId = "dat", SiteId = "S01", Name = "Jeddah Main" },
+            new InventSite { RecId = 2, DataAreaId = "dat", SiteId = "S02", Name = "Riyadh Branch" });
+        db.Set<InventLocation>().Add(new InventLocation { RecId = 1, DataAreaId = "dat", InventLocationId = "WH-01", InventSiteId = "S01" });
+        db.Set<InventTable>().Add(new InventTable { RecId = 1, DataAreaId = "dat", ItemId = "ITEM-001", NameAlias = "Cotton Uniform" });
+        db.Set<InventTableModule>().AddRange(
+            new InventTableModule { RecId = 1, DataAreaId = "dat", ItemId = "ITEM-001", ModuleType = ModuleInventPurchSales.Inventory, UnitId = "PCS" },
+            new InventTableModule { RecId = 2, DataAreaId = "dat", ItemId = "ITEM-001", ModuleType = ModuleInventPurchSales.Purchase, UnitId = "PCS" });
+        db.Set<UnitOfMeasure>().Add(new UnitOfMeasure { RecId = 1, Symbol = "PCS", DecimalPrecision = 0 });
+        if (!db.Set<InventModelGroup>().Local.Any())
+            db.Set<InventModelGroup>().Add(new InventModelGroup { RecId = 1, DataAreaId = "dat", ModelGroupId = "FIFO", InventModel = InventModel.FIFO, StockedProduct = NoYes.Yes });
+        db.Set<InventModelGroupItem>().Add(new InventModelGroupItem { RecId = 1, ItemDataAreaId = "dat", ModelGroupDataAreaId = "dat", ModelGroupId = "FIFO", ItemId = "ITEM-001" });
+        db.Set<InventItemGroupItem>().Add(new InventItemGroupItem { RecId = 1, ItemDataAreaId = "dat", ItemId = "ITEM-001", ItemGroupId = "FINISHED" });
+        // Purchase inventory receipt -> inventory asset 130100; vendor summary -> AP 210100.
+        db.Set<MainAccount>().Add(new MainAccount { RecId = 3, DataAreaId = "dat", MainAccountId = "210100" });
+        db.Set<DimensionAttributeValueCombination>().Add(new DimensionAttributeValueCombination { RecId = 3, DataAreaId = "dat", MainAccount = 3, DisplayValue = "210100" });
+        db.Set<InventPosting>().Add(new InventPosting { RecId = 3, DataAreaId = "dat", InventAccountType = InventAccountType.PurchReceipt, ItemCode = TableGroupAll.All, CustVendCode = TableGroupAll.All, LedgerDimension = 1 });
+        db.Set<VendLedgerAccounts>().Add(new VendLedgerAccounts { RecId = 1, DataAreaId = "dat", PostingProfile = "GEN", AccountCode = AccountCode.All, SummaryLedgerDimension = 3 });
+    }
+
+    private static (PurchOrderService, PurchConfirmationService, ProductReceiptService, VendorInvoiceService) PurchaseServices(CycleContext db, TestInventNumbers? sharedNumbers = null)
+    {
+        var work = new TestUnitOfWork(db);
+        var company = new TestCompany();
+        var numbers = sharedNumbers ?? new TestInventNumbers();
+        var supply = new PurchInventorySupplyService(work, numbers, new InventDimensionResolver(work, numbers));
+        return (new PurchOrderService(work, company, Sequence(), supply, new SalesUnitConversionService(work)),
+            new PurchConfirmationService(work, company, Sequence()),
+            new ProductReceiptService(work, company, Sequence()),
+            new VendorInvoiceService(work, company, Sequence()));
+    }
+
+    internal sealed class TestInventNumbers : ISalesInventoryNumberService
+    {
+        private int _dim, _trans;
+        public Task<string> NextInventDimIdAsync(CancellationToken cancellationToken = default) => Task.FromResult($"DIM-{++_dim:000000}");
+        public Task<string> NextInventTransIdAsync(CancellationToken cancellationToken = default) => Task.FromResult($"LOT-{++_trans:000000}");
+    }
+
     private static void SeedLedgerAndPosting(CycleContext db)
     {
         db.Set<Ledger>().Add(new Ledger { RecId = 1, DataAreaId = "dat", AccountingCurrency = "SAR", FiscalCalendar = 1 });
@@ -205,7 +496,15 @@ public sealed class InventoryCycleTests
             typeof(InventPosting), typeof(DimensionAttributeValueCombination), typeof(MainAccount),
             typeof(Ledger), typeof(FiscalCalendarPeriod), typeof(LedgerFiscalCalendarPeriod),
             typeof(InventSettlement), typeof(InventClosing), typeof(InventJournalTrans),
-            typeof(GeneralJournalEntry), typeof(GeneralJournalAccountEntry), typeof(SubledgerVoucherGeneralJournalEntry)
+            typeof(GeneralJournalEntry), typeof(GeneralJournalAccountEntry), typeof(SubledgerVoucherGeneralJournalEntry),
+            typeof(PurchTable), typeof(PurchLine), typeof(VendPurchOrderJour), typeof(VendPurchOrderTrans),
+            typeof(VendPackingSlipJour), typeof(VendPackingSlipTrans), typeof(VendInvoiceJour), typeof(VendInvoiceTrans),
+            typeof(VendTrans), typeof(VendLedgerAccounts), typeof(InventTransOriginPurchLine), typeof(VendTable),
+            typeof(InventSite), typeof(InventLocation), typeof(InventTable), typeof(InventTableModule), typeof(UnitOfMeasure), typeof(UnitOfMeasureConversion),
+            typeof(SalesTable), typeof(SalesLine), typeof(CustTable), typeof(CustParameters), typeof(CustPackingSlipJour), typeof(CustPackingSlipTrans),
+            typeof(CustInvoiceJour), typeof(CustInvoiceTrans), typeof(CustTrans), typeof(CustTransOpen), typeof(CustSettlement), typeof(CustLedgerAccounts),
+            typeof(TaxGroupData), typeof(TaxOnItem), typeof(TaxData), typeof(TaxTable), typeof(TaxLedgerAccountGroup), typeof(TaxTrans),
+            typeof(InventTransOriginSalesLine), typeof(BankAccountTable), typeof(LedgerJournalTable), typeof(LedgerJournalTrans)
         ];
 
         protected override void OnModelCreating(ModelBuilder builder)

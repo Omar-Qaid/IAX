@@ -1,0 +1,176 @@
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Modules.Administration.NumberSequences;
+using IAX.IXApi.Modules.Finance.Common;
+using IAX.IXApi.Modules.Finance.Entities;
+using IAX.IXApi.Shared.Application.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using System.Security.Cryptography;
+using System.Text;
+
+namespace IAX.IXApi.Modules.Finance.AccountsPayable;
+
+public sealed record PurchPostLineDto(long PurchLineRecId, decimal Qty, decimal? UnitPrice = null);
+public sealed record ProductReceiptPostDto(string PackingSlipId, DateTime? DeliveryDate, List<PurchPostLineDto> Lines);
+
+public interface IProductReceiptService
+{
+    Task<PurchResult> PostAsync(long recId, ProductReceiptPostDto input, CancellationToken ct);
+}
+
+/// <summary>
+/// Product receipt (physical update). Splits each line's Ordered receipt into a Received portion,
+/// increases physical on-hand and physical value, and records VendPackingSlipJour/Trans. Partial
+/// receipts are supported; over-receipt and duplicate product receipt numbers are rejected.
+/// Physical receipt ledger posting (receipt accrual) is not enabled in the basic scope.
+/// </summary>
+public sealed class ProductReceiptService(IUnitOfWork unitOfWork, ICompanyExecutionContext company,
+    ISysNumberSequenceService numbers) : IProductReceiptService
+{
+    private DbContext Db => unitOfWork.Context;
+
+    public Task<PurchResult> PostAsync(long recId, ProductReceiptPostDto input, CancellationToken ct) =>
+        Db.Database.CreateExecutionStrategy().ExecuteAsync(() => PostCoreAsync(recId, input, ct));
+
+    private async Task<PurchResult> PostCoreAsync(long recId, ProductReceiptPostDto input, CancellationToken ct)
+    {
+        var area = company.GetDataAreaId();
+        if (string.IsNullOrWhiteSpace(input.PackingSlipId)) return new(400, null, "A product receipt number is required.");
+        if (input.Lines == null || input.Lines.Count == 0) return new(400, null, "At least one line is required.");
+        var date = (input.DeliveryDate ?? DateTime.UtcNow).Date;
+        await unitOfWork.BeginTransactionAsync(ct);
+        try
+        {
+            var order = await Db.Set<PurchTable>().FirstOrDefaultAsync(x => x.RecId == recId && x.DataAreaId == area, ct);
+            if (order == null) return await Fail(404, "Purchase order was not found in the selected company.", ct);
+            await LockAsync($"PurchReceive:{area}:{order.PurchId}", ct);
+            if (order.PurchStatus == PurchStatus.Canceled) return await Fail(422, "The purchase order is canceled.", ct);
+            if (order.PurchaseType == PurchaseType.ReturnItem)
+                return await Fail(422, "Vendor return orders are shipped through the return order shipment.", ct);
+            var slipId = input.PackingSlipId.Trim();
+            if (await Db.Set<VendPackingSlipJour>().AnyAsync(x => x.DataAreaId == area && x.PurchId == order.PurchId
+                && x.PackingSlipId == slipId, ct))
+                return await Fail(422, $"Product receipt '{slipId}' has already been posted for this purchase order.", ct);
+
+            var internalId = (await numbers.NextAsync("VendPackingSlipJour", area, ct)).Code;
+            var journal = new VendPackingSlipJour
+            {
+                DataAreaId = area, PackingSlipId = slipId, InternalPackingSlipId = internalId, PurchId = order.PurchId,
+                DeliveryDate = date, OrderAccount = order.OrderAccount, InvoiceAccount = order.InvoiceAccount,
+                LedgerVoucher = internalId
+            };
+            Db.Set<VendPackingSlipJour>().Add(journal);
+            await unitOfWork.CompleteAsync(ct);
+
+            foreach (var request in input.Lines)
+            {
+                var line = await Db.Set<PurchLine>().FirstOrDefaultAsync(x => x.RecId == request.PurchLineRecId
+                    && x.DataAreaId == area && x.PurchId == order.PurchId, ct);
+                if (line == null) return await Fail(404, $"Purchase line {request.PurchLineRecId} was not found.", ct);
+                if (request.Qty <= 0) return await Fail(422, "The receipt quantity must be greater than zero.", ct);
+                if (request.Qty > line.RemainPurchPhysical)
+                    return await Fail(422, $"Receipt quantity for item {line.ItemId} exceeds the remaining quantity {line.RemainPurchPhysical}.", ct);
+                var inventQty = request.Qty == line.RemainPurchPhysical
+                    ? line.RemainInventPhysical
+                    : decimal.Round(request.Qty * line.QtyOrdered / line.PurchQty, 6);
+                var unitCost = line.QtyOrdered == 0 ? 0m : line.LineAmount / line.QtyOrdered;
+                var cost = inventQty * unitCost;
+
+                var origin = await Db.Set<InventTransOrigin>().FirstOrDefaultAsync(x => x.DataAreaId == area
+                    && x.InventTransId == line.InventTransId && x.ReferenceId == order.PurchId
+                    && x.ReferenceCategory == InventRefType.PurchaseOrder, ct);
+                if (origin == null) return await Fail(422, $"Inventory origin is missing for item {line.ItemId}.", ct);
+                var ordered = (await Db.Set<InventTrans>().Where(x => x.DataAreaId == area && x.InventTransOrigin == origin.RecId
+                    && x.StatusReceipt == StatusReceipt.Ordered).ToListAsync(ct)).OrderBy(x => x.RecId).ToList();
+                if (ordered.Sum(x => x.Qty) < inventQty)
+                    return await Fail(422, $"Ordered inventory does not cover the receipt for item {line.ItemId}.", ct);
+
+                var left = inventQty;
+                foreach (var source in ordered)
+                {
+                    if (left <= 0) break;
+                    var take = Math.Min(source.Qty, left);
+                    if (take < source.Qty)
+                        Db.Set<InventTrans>().Add(CopyOrdered(source, source.Qty - take));
+                    source.Qty = take;
+                    source.StatusReceipt = StatusReceipt.Received;
+                    source.DatePhysical = date;
+                    source.DateStatus = date;
+                    source.DateInvent = date;
+                    source.PackingSlipId = internalId;
+                    source.VoucherPhysical = internalId;
+                    source.CostAmountPhysical = take * unitCost;
+                    left -= take;
+                }
+
+                var summary = await Db.Set<InventSum>().SingleOrDefaultAsync(x => x.DataAreaId == area
+                    && x.ItemId == line.ItemId && x.InventDimId == line.InventDimId, ct);
+                if (summary == null) return await Fail(422, $"Inventory summary is missing for item {line.ItemId}.", ct);
+                summary.Ordered -= inventQty;
+                summary.Received += inventQty;
+                summary.PhysicalInvent += inventQty;
+                summary.PhysicalValue += cost;
+                summary.AvailPhysical = summary.PhysicalInvent - summary.ReservPhysical;
+                summary.AvailOrdered = summary.AvailPhysical + summary.Ordered - summary.OnOrder - summary.ReservOrdered;
+                summary.LastUpdDatePhysical = date;
+
+                line.RemainPurchPhysical -= request.Qty;
+                line.RemainInventPhysical = Math.Max(0m, line.RemainInventPhysical - inventQty);
+                if (line.RemainPurchPhysical <= 0) line.PurchStatus = PurchStatus.Received;
+
+                Db.Set<VendPackingSlipTrans>().Add(new VendPackingSlipTrans
+                {
+                    DataAreaId = area, PackingSlipId = slipId, InternalPackingSlipId = internalId, OrigPurchId = order.PurchId,
+                    VendPackingSlipJour = journal.RecId, DeliveryDate = date, LineNum = line.LineNumber, ItemId = line.ItemId,
+                    Name = line.Name, Qty = request.Qty, InventQty = inventQty, Ordered = line.PurchQty,
+                    Remain = line.RemainPurchPhysical, RemainInvent = line.RemainInventPhysical, ValueMst = cost,
+                    PurchUnit = line.PurchUnit, InventTransId = line.InventTransId, InventDimId = line.InventDimId
+                });
+                journal.Qty += request.Qty;
+            }
+
+            var lines = await Db.Set<PurchLine>().Where(x => x.DataAreaId == area && x.PurchId == order.PurchId
+                && x.PurchStatus != PurchStatus.Canceled).ToListAsync(ct);
+            if (lines.All(x => x.RemainPurchPhysical <= 0)) order.PurchStatus = PurchStatus.Received;
+            order.DocumentStatus = DocumentStatus.PackingSlip;
+            await unitOfWork.CompleteAsync(ct);
+            await unitOfWork.CommitTransactionAsync(ct);
+            return new(200, journal, "Product receipt posted.");
+        }
+        catch
+        {
+            await unitOfWork.RollbackTransactionAsync(ct);
+            Db.ChangeTracker.Clear();
+            throw;
+        }
+    }
+
+    private static InventTrans CopyOrdered(InventTrans source, decimal qty) => new()
+    {
+        DataAreaId = source.DataAreaId, InventTransOrigin = source.InventTransOrigin, ItemId = source.ItemId,
+        InventDimId = source.InventDimId, Qty = qty, StatusReceipt = StatusReceipt.Ordered, StatusIssue = StatusIssue.None,
+        ValueOpen = InventTransOpen.Yes, CurrencyCode = source.CurrencyCode, DateExpected = source.DateExpected
+    };
+
+    private async Task LockAsync(string key, CancellationToken ct)
+    {
+        if (Db.Database.ProviderName?.Contains("SqlServer", StringComparison.OrdinalIgnoreCase) != true) return;
+        var resource = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(key)));
+        await using var command = Db.Database.GetDbConnection().CreateCommand();
+        command.Transaction = Db.Database.CurrentTransaction!.GetDbTransaction();
+        command.CommandText = "DECLARE @result int; EXEC @result = sys.sp_getapplock @Resource = @resource, @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 10000; SELECT @result;";
+        var parameter = command.CreateParameter();
+        parameter.ParameterName = "@resource";
+        parameter.Value = "PurchReceive:" + resource;
+        command.Parameters.Add(parameter);
+        if (await command.ExecuteScalarAsync(ct) is not int code || code < 0)
+            throw new InvalidOperationException("Product receipt could not acquire its concurrency lock.");
+    }
+
+    private async Task<PurchResult> Fail(int status, string message, CancellationToken ct)
+    {
+        await unitOfWork.RollbackTransactionAsync(ct);
+        Db.ChangeTracker.Clear();
+        return new(status, null, message);
+    }
+}

@@ -147,7 +147,7 @@ public sealed class InventCloseService : IInventCloseService
                         // FIFO close moves value between COGS and remaining inventory.
                         // adjustment d>0 => provisional COGS overstated: credit COGS, debit inventory.
                         await AdjustInventorySummaryAsync(companyId, trans.ItemId, trans.InventDimId, adjustment, ct);
-                        await CreateLedgerCorrectionAsync(companyId, voucher, trans, inventTransId, pool.ItemGroupId, adjustment, context, ct);
+                        await CreateLedgerCorrectionAsync(companyId, voucher, trans, inventTransId, row.Category, pool.ItemGroupId, adjustment, context, ct);
                         ledgerEntriesCreated++;
                     }
                 }
@@ -213,7 +213,7 @@ public sealed class InventCloseService : IInventCloseService
             .Where(x => x.ItemDataAreaId == companyId).ToListAsync(ct))
             .GroupBy(x => x.ItemId).ToDictionary(x => x.Key, x => x.First().ItemGroupId);
 
-        var rows = new List<(InventTrans Transaction, string Site, string ItemGroupId, string InventTransId)>();
+        var rows = new List<(InventTrans Transaction, string Site, string ItemGroupId, string InventTransId, InventRefType Category)>();
         foreach (var transaction in transactions)
         {
             if (!dimensions.TryGetValue(transaction.InventDimId, out var dim) || string.IsNullOrWhiteSpace(dim.InventSiteId))
@@ -222,7 +222,8 @@ public sealed class InventCloseService : IInventCloseService
             // are excluded because their paired cost relationship is handled separately.
             var sourceSupported = origins.TryGetValue(transaction.InventTransOrigin, out var origin)
                 && (origin.ReferenceCategory == InventRefType.InventoryJournal
-                    || origin.ReferenceCategory == InventRefType.SalesTable)
+                    || origin.ReferenceCategory == InventRefType.SalesTable
+                    || origin.ReferenceCategory == InventRefType.PurchaseOrder)
                 && !transferSet.Contains(origin.InventTransId);
             if (!sourceSupported)
                 throw new PostingValidationException(
@@ -231,13 +232,13 @@ public sealed class InventCloseService : IInventCloseService
             if (assignment is null || !models.TryGetValue(assignment.ModelGroupId, out var model) || model.InventModel != InventModel.FIFO)
                 throw new PostingValidationException($"Item {transaction.ItemId} does not have a verified FIFO model group.");
             rows.Add((transaction, dim.InventSiteId,
-                itemGroups.GetValueOrDefault(transaction.ItemId, string.Empty), origin!.InventTransId));
+                itemGroups.GetValueOrDefault(transaction.ItemId, string.Empty), origin!.InventTransId, origin.ReferenceCategory));
         }
 
         return rows.GroupBy(x => (x.Transaction.ItemId, x.Site))
             .Select(g => new Pool(g.Key.ItemId, g.Key.Site, g.First().ItemGroupId,
                 g.OrderBy(x => x.Transaction.DateFinancial).ThenBy(x => x.Transaction.RecId)
-                    .Select(x => (x.Transaction, x.InventTransId)).ToList()))
+                    .Select(x => (x.Transaction, x.InventTransId, x.Category)).ToList()))
             .ToList();
     }
 
@@ -251,10 +252,15 @@ public sealed class InventCloseService : IInventCloseService
     }
 
     private async Task CreateLedgerCorrectionAsync(string companyId, string voucher, InventTrans issue,
-        string inventTransId, string itemGroupId, decimal adjustment, LedgerContext context, CancellationToken ct)
+        string inventTransId, InventRefType category, string itemGroupId, decimal adjustment, LedgerContext context, CancellationToken ct)
     {
-        var inventory = await ResolvePostingDimensionAsync(companyId, issue.ItemId, itemGroupId, InventAccountType.InventReceipt, ct);
-        var cogs = await ResolvePostingDimensionAsync(companyId, issue.ItemId, itemGroupId, InventAccountType.InventIssue, ct);
+        // The adjustment follows the issue's original posting: sales issues use the sales inventory-issue
+        // and cost-of-units-invoiced accounts; journal issues keep the inventory journal accounts.
+        var isSale = category == InventRefType.SalesTable;
+        var inventoryType = isSale ? InventAccountType.SalesIssue : InventAccountType.InventReceipt;
+        var costType = isSale ? InventAccountType.SalesConsump : InventAccountType.InventIssue;
+        var inventory = await ResolvePostingDimensionAsync(companyId, issue.ItemId, itemGroupId, inventoryType, ct);
+        var cogs = await ResolvePostingDimensionAsync(companyId, issue.ItemId, itemGroupId, costType, ct);
         var entry = new GeneralJournalEntry
         {
             DataAreaId = companyId, JournalNumber = voucher, Ledger = context.Ledger.RecId,
@@ -266,8 +272,8 @@ public sealed class InventCloseService : IInventCloseService
         Db.Add(entry);
         await _unitOfWork.CompleteAsync(ct);
         Db.AddRange(
-            AccountEntry(companyId, entry.RecId, inventory, LedgerPostingType.InventReceipt, adjustment, issue, inventTransId, context.Ledger.AccountingCurrency),
-            AccountEntry(companyId, entry.RecId, cogs, LedgerPostingType.InventIssue, -adjustment, issue, inventTransId, context.Ledger.AccountingCurrency));
+            AccountEntry(companyId, entry.RecId, inventory, isSale ? LedgerPostingType.SalesIssue : LedgerPostingType.InventReceipt, adjustment, issue, inventTransId, context.Ledger.AccountingCurrency),
+            AccountEntry(companyId, entry.RecId, cogs, isSale ? LedgerPostingType.SalesConsump : LedgerPostingType.InventIssue, -adjustment, issue, inventTransId, context.Ledger.AccountingCurrency));
         Db.Add(new SubledgerVoucherGeneralJournalEntry
         {
             DataAreaId = companyId, GeneralJournalEntry = entry.RecId, Voucher = voucher,
@@ -354,7 +360,7 @@ public sealed class InventCloseService : IInventCloseService
     }
 
     private sealed record Pool(string ItemId, string Site, string ItemGroupId,
-        List<(InventTrans Transaction, string InventTransId)> Rows);
+        List<(InventTrans Transaction, string InventTransId, InventRefType Category)> Rows);
 
     private sealed record LedgerContext(Ledger Ledger, FiscalCalendarPeriod Period, DateTime AccountingDate);
     private sealed class PostingValidationException(string message) : Exception(message);

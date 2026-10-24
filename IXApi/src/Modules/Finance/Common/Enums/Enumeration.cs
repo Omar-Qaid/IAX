@@ -129,6 +129,26 @@ namespace IAX.IXApi.Modules.Finance.Common
         Prepayment = 7
     }
 
+    /// <summary>Purchase order type (D365 PurchaseType); ReturnItem marks a vendor return order.</summary>
+    public enum PurchaseType
+    {
+        Journal = 0,
+        Quotation = 1,
+        Subscription = 2,
+        Purch = 3,
+        ReturnItem = 4,
+        Blanket = 5
+    }
+
+    public enum PurchStatus
+    {
+        None = 0,
+        Backorder = 1,
+        Received = 2,
+        Invoiced = 3,
+        Canceled = 4
+    }
+
     public enum SalesStatus
     {
         None = 0,
@@ -144,6 +164,28 @@ namespace IAX.IXApi.Modules.Finance.Common
         Open = 2,
         Canceled = 3,
         Closed = 4
+    }
+    /// <summary>Return order line status (D365 ReturnStatusLine).</summary>
+    public enum ReturnStatusLine
+    {
+        None = 0,
+        Awaiting = 1,
+        Registered = 2,
+        Quarantine = 3,
+        Received = 4,
+        Invoiced = 5,
+        Canceled = 6
+    }
+    /// <summary>Return disposition action (D365 DispositionAction).</summary>
+    public enum DispositionAction
+    {
+        None = 0,
+        Credit = 1,
+        CreditOnly = 2,
+        Scrap = 3,
+        ReplaceCredit = 4,
+        ReplaceScrap = 5,
+        ReturnToCust = 6
     }
     public enum AddressType : int
     {

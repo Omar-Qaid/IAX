@@ -23,6 +23,7 @@ namespace IAX.IXApi.Modules.Finance.Common
     
         public const int ConfirmId = 20;
         public const int SalesId = 20;
+        public const int PurchId = 20;
         public const int LanguageId = 7;
         public const int PostingProfile = 10;
         // InvoiceId defined below

@@ -272,6 +272,8 @@ namespace IAX.IXApi.Infrastructure.Persistence
         public DbSet<LedgerJournalTrans> LedgerJournalTrans => Set<LedgerJournalTrans>();
         public DbSet<CustPackingSlipJour> CustPackingSlipJours => Set<CustPackingSlipJour>();
         public DbSet<CustPackingSlipTrans> CustPackingSlipTrans => Set<CustPackingSlipTrans>();
+        public DbSet<ReturnDispositionCode> ReturnDispositionCodes => Set<ReturnDispositionCode>();
+        public DbSet<ReturnReasonCode> ReturnReasonCodes => Set<ReturnReasonCode>();
 
         public DbSet<SalesPool> SalesPools => Set<SalesPool>();
      
@@ -325,6 +327,19 @@ namespace IAX.IXApi.Infrastructure.Persistence
         public DbSet<UnitOfMeasureConversionCache> UnitOfMeasureConversionCaches => Set<UnitOfMeasureConversionCache>();
         public DbSet<InventTransOrigin> InventTransOrigins => Set<InventTransOrigin>();
         public DbSet<InventTransOriginSalesLine> InventTransOriginSalesLines => Set<InventTransOriginSalesLine>();
+        public DbSet<InventTransOriginPurchLine> InventTransOriginPurchLines => Set<InventTransOriginPurchLine>();
+
+        // AccountsPayable — purchase order cycle
+        public DbSet<IAX.IXApi.Modules.Finance.AccountsPayable.PurchTable> PurchTables => Set<IAX.IXApi.Modules.Finance.AccountsPayable.PurchTable>();
+        public DbSet<IAX.IXApi.Modules.Finance.AccountsPayable.PurchLine> PurchLines => Set<IAX.IXApi.Modules.Finance.AccountsPayable.PurchLine>();
+        public DbSet<IAX.IXApi.Modules.Finance.AccountsPayable.VendPurchOrderJour> VendPurchOrderJours => Set<IAX.IXApi.Modules.Finance.AccountsPayable.VendPurchOrderJour>();
+        public DbSet<IAX.IXApi.Modules.Finance.AccountsPayable.VendPurchOrderTrans> VendPurchOrderTrans => Set<IAX.IXApi.Modules.Finance.AccountsPayable.VendPurchOrderTrans>();
+        public DbSet<IAX.IXApi.Modules.Finance.AccountsPayable.VendPackingSlipJour> VendPackingSlipJours => Set<IAX.IXApi.Modules.Finance.AccountsPayable.VendPackingSlipJour>();
+        public DbSet<IAX.IXApi.Modules.Finance.AccountsPayable.VendPackingSlipTrans> VendPackingSlipTrans => Set<IAX.IXApi.Modules.Finance.AccountsPayable.VendPackingSlipTrans>();
+        public DbSet<IAX.IXApi.Modules.Finance.AccountsPayable.VendInvoiceJour> VendInvoiceJours => Set<IAX.IXApi.Modules.Finance.AccountsPayable.VendInvoiceJour>();
+        public DbSet<IAX.IXApi.Modules.Finance.AccountsPayable.VendInvoiceTrans> VendInvoiceTrans => Set<IAX.IXApi.Modules.Finance.AccountsPayable.VendInvoiceTrans>();
+        public DbSet<IAX.IXApi.Modules.Finance.AccountsPayable.VendTrans> VendTrans => Set<IAX.IXApi.Modules.Finance.AccountsPayable.VendTrans>();
+        public DbSet<IAX.IXApi.Modules.Finance.AccountsPayable.VendLedgerAccounts> VendLedgerAccounts => Set<IAX.IXApi.Modules.Finance.AccountsPayable.VendLedgerAccounts>();
         public DbSet<InventSum> InventSums => Set<InventSum>();
         public DbSet<InventDim> InventDims => Set<InventDim>();
         public DbSet<InventSettlement> InventSettlements => Set<InventSettlement>();

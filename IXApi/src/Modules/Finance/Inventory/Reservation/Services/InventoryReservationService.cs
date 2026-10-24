@@ -131,6 +131,7 @@ public sealed class InventoryReservationService : IInventoryReservationService
     private void MoveToReserved(string companyId, InventTransOrigin origin,
         List<InventTrans> ordered, List<InventTrans> reservedRows, decimal delta)
     {
+        var template = ordered[0];
         var remaining = delta;
         foreach (var row in ordered)
         {
@@ -140,10 +141,15 @@ public sealed class InventoryReservationService : IInventoryReservationService
             row.Qty += take; // toward zero
             remaining -= take;
         }
+        // A fully reserved Ordered portion no longer represents any demand; don't keep empty transactions.
+        foreach (var empty in ordered.Where(x => x.Qty == 0).ToList())
+        {
+            Db.Remove(empty);
+            ordered.Remove(empty);
+        }
         var reserved = reservedRows.FirstOrDefault();
         if (reserved == null)
         {
-            var template = ordered[0];
             reserved = new InventTrans
             {
                 DataAreaId = companyId, ItemId = origin.ItemId, InventDimId = template.InventDimId,
@@ -190,6 +196,8 @@ public sealed class InventoryReservationService : IInventoryReservationService
                 DateExpected = template.DateExpected, ShippingDateRequested = template.ShippingDateRequested
             });
         }
+        foreach (var empty in reservedRows.Where(x => x.Qty == 0).ToList())
+            Db.Remove(empty);
     }
 
     private static ReservationResultDto Result(string inventTransId, string itemId,
