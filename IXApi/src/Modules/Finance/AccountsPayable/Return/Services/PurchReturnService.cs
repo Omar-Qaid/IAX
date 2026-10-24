@@ -8,18 +8,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 
-public sealed record PurchReturnLineDto(long VendInvoiceTransRecId, decimal Qty);
-public sealed record PurchReturnCreateDto(string VendInvoiceId, string? ReturnItemNum, List<PurchReturnLineDto> Lines);
-public sealed record PurchReturnShipDto(string PackingSlipId, DateTime? ShipDate, List<PurchPostLineDto> Lines);
-public sealed record VendCreditNoteDto(string InvoiceId, DateTime? InvoiceDate = null);
-
-public interface IPurchReturnService
-{
-    Task<PurchResult> CreateAsync(PurchReturnCreateDto input, CancellationToken ct);
-    Task<PurchResult> ShipAsync(long returnRecId, PurchReturnShipDto input, CancellationToken ct);
-    Task<PurchResult> CreditAsync(long returnRecId, VendCreditNoteDto input, CancellationToken ct);
-}
-
 /// <summary>
 /// Vendor returns (Purchorder.md Phase 8). A return is a purchase order with PurchaseType =
 /// ReturnItem and negative lines linked to the original invoiced receipt (InventTransIdReturn).

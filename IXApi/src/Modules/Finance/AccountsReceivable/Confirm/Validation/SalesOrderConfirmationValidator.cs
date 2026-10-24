@@ -1,8 +1,9 @@
 using FluentValidation;
+using IAX.IXApi.Shared.Application.Validation;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Confirm;
 
-public sealed class SalesOrderConfirmationValidator : AbstractValidator<PostConfirmationRequest>
+public sealed class SalesOrderConfirmationValidator : BaseValidator<PostConfirmationRequest>
 {
     public SalesOrderConfirmationValidator()
     {

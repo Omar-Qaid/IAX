@@ -7,13 +7,6 @@ using ReleasedItem = IAX.IXApi.Modules.Finance.Entities.InventTable;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public sealed record ItemGroupAssignmentInputDto(string ItemGroupId);
-
-public interface IItemGroupAssignmentService
-{
-    Task<(ItemGroupAssignmentRecordDto? Assignment, string? Error)> AssignAsync(string itemId, ItemGroupAssignmentInputDto input, CancellationToken ct);
-}
-
 public sealed class ItemGroupAssignmentService(IUnitOfWork unitOfWork, ICompanyExecutionContext company) : IItemGroupAssignmentService
 {
     public async Task<(ItemGroupAssignmentRecordDto? Assignment, string? Error)> AssignAsync(string itemId, ItemGroupAssignmentInputDto input, CancellationToken ct)

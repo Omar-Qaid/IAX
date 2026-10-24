@@ -10,14 +10,6 @@ using System.Text;
 
 namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 
-public sealed record PurchPostLineDto(long PurchLineRecId, decimal Qty, decimal? UnitPrice = null);
-public sealed record ProductReceiptPostDto(string PackingSlipId, DateTime? DeliveryDate, List<PurchPostLineDto> Lines);
-
-public interface IProductReceiptService
-{
-    Task<PurchResult> PostAsync(long recId, ProductReceiptPostDto input, CancellationToken ct);
-}
-
 /// <summary>
 /// Product receipt (physical update). Splits each line's Ordered receipt into a Received portion,
 /// increases physical on-hand and physical value, and records VendPackingSlipJour/Trans. Partial

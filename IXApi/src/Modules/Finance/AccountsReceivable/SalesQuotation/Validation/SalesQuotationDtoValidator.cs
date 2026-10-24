@@ -1,8 +1,8 @@
-using FluentValidation;
+using IAX.IXApi.Shared.Application.Validation;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable.SalesQuotation
 {
-    public class SalesQuotationDtoValidator : AbstractValidator<SalesQuotationTableDto>
+    public class SalesQuotationDtoValidator : BaseValidator<SalesQuotationTableDto>
     {
         public SalesQuotationDtoValidator()
         {

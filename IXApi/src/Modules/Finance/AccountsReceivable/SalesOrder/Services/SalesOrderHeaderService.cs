@@ -6,9 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
 
-public enum SalesHeaderUpdateStatus { NotFound, Invalid, Saved }
-public sealed record SalesHeaderUpdateResult(SalesHeaderUpdateStatus Status, string? Error = null);
-
 public sealed class SalesOrderHeaderService : ISalesOrderHeaderService
 {
     private readonly IUnitOfWork _dbContext;

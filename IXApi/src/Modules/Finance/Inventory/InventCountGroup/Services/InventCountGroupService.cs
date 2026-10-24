@@ -6,20 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public sealed record InventCountGroupRecordDto(long RecId, string CountGroupId, string Name,
-    InventCountCode CountCode, int CountPeriod);
-public sealed record InventCountGroupInputDto(string CountGroupId, string Name,
-    InventCountCode CountCode, int CountPeriod);
-
-public interface IInventCountGroupService
-{
-    Task<IReadOnlyList<InventCountGroupRecordDto>> ListAsync(CancellationToken ct);
-    Task<InventCountGroupRecordDto?> GetAsync(long recId, CancellationToken ct);
-    Task<(InventCountGroupRecordDto? Group, string? Error)> CreateAsync(InventCountGroupInputDto input, CancellationToken ct);
-    Task<(InventCountGroupRecordDto? Group, string? Error)> UpdateAsync(long recId, InventCountGroupInputDto input, CancellationToken ct);
-    Task<string?> DeleteAsync(long recId, CancellationToken ct);
-}
-
 public sealed class InventCountGroupService(IUnitOfWork unitOfWork, ICompanyExecutionContext company) : IInventCountGroupService
 {
     private DbContext Db => unitOfWork.Context;

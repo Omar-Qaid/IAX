@@ -7,17 +7,6 @@ using ReleasedItem = IAX.IXApi.Modules.Finance.Entities.InventTable;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public sealed record InventSerialRecordDto(long RecId, string ItemId, string InventSerialId, DateTime? ProdDate);
-public sealed record InventSerialInputDto(string ItemId, string InventSerialId, DateTime? ProdDate);
-
-public interface IInventSerialService
-{
-    Task<IReadOnlyList<InventSerialRecordDto>> ListAsync(string? itemId, CancellationToken ct);
-    Task<(InventSerialRecordDto? Serial, string? Error)> CreateAsync(InventSerialInputDto input, CancellationToken ct);
-    Task<(InventSerialRecordDto? Serial, string? Error)> UpdateAsync(long recId, InventSerialInputDto input, CancellationToken ct);
-    Task<string?> DeleteAsync(long recId, CancellationToken ct);
-}
-
 public sealed class InventSerialService(IUnitOfWork unitOfWork, ICompanyExecutionContext company) : IInventSerialService
 {
     private DbContext Db => unitOfWork.Context;

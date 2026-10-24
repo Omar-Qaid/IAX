@@ -1,8 +1,9 @@
 using FluentValidation;
+using IAX.IXApi.Shared.Application.Validation;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
 
-public sealed class SalesOrderCopyValidator : AbstractValidator<SalesOrderCopyRequest>
+public sealed class SalesOrderCopyValidator : BaseValidator<SalesOrderCopyRequest>
 {
     public SalesOrderCopyValidator()
     {

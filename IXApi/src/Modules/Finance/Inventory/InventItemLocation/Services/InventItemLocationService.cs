@@ -7,16 +7,6 @@ using ReleasedItem = IAX.IXApi.Modules.Finance.Entities.InventTable;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public sealed record InventItemLocationInputDto(string ItemId, string InventDimId,
-    decimal PickingLocationMaxQty, decimal PickingLocationRefillMin, string? CountGroupId = null);
-
-public interface IInventItemLocationService
-{
-    Task<(ItemLocationRecordDto? Location, string? Error)> CreateAsync(InventItemLocationInputDto input, CancellationToken ct);
-    Task<(ItemLocationRecordDto? Location, string? Error)> UpdateAsync(long recId, InventItemLocationInputDto input, CancellationToken ct);
-    Task<string?> DeleteAsync(long recId, CancellationToken ct);
-}
-
 public sealed class InventItemLocationService(IUnitOfWork unitOfWork, ICompanyExecutionContext company) : IInventItemLocationService
 {
     private DbContext Db => unitOfWork.Context;

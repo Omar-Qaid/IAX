@@ -7,15 +7,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Invoice;
 
-public sealed record SalesInvoiceLineDto(long SalesLineRecId, decimal Qty);
-public sealed record SalesInvoicePostDto(DateTime? InvoiceDate = null, string? RequestId = null, List<SalesInvoiceLineDto>? Lines = null);
-public sealed record SalesInvoiceResult(int StatusCode, object? Data = null, string? Message = null);
-
-public interface ISalesInvoiceService
-{
-    Task<SalesInvoiceResult> PostAsync(long salesRecId, SalesInvoicePostDto input, CancellationToken ct);
-}
-
 /// <summary>
 /// Sales invoice posting (CycleSalesorder.md Phase 8 / ARTables.md §8). Invoices delivered,
 /// uninvoiced quantities only (packing-slip-based policy) and supports partial invoicing.

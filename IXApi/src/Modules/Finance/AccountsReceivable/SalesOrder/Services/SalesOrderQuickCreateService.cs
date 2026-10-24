@@ -8,8 +8,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
 
-public sealed record SalesOrderQuickCreateResult(SalesOrderListDto? Order, string? Error = null);
-
 public sealed class SalesOrderQuickCreateService : ISalesOrderQuickCreateService
 {
     private readonly IUnitOfWork _dbContext;

@@ -9,9 +9,6 @@ using Mapster;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Customer;
 
-public enum CustomerQuickUpdateStatus { CustomerNotFound, PartyNotFound, Updated }
-public sealed record CustomerQuickUpdateResult(CustomerQuickUpdateStatus Status, CustTable? Customer = null, DirPartyTable? Party = null);
-
 public sealed class CustomerQuickService : ICustomerQuickService
 {
     private readonly ICustomerService _service;

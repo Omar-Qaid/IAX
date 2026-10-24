@@ -6,12 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 
-public interface IPurchInventorySupplyService
-{
-    /// <summary>Creates the ordered inventory receipt for a new purchase line (no physical stock).</summary>
-    Task CreateAsync(PurchTable order, PurchLine line, string inventSiteId, string inventLocationId, CancellationToken ct = default);
-}
-
 /// <summary>
 /// Purchase-side counterpart of SalesInventoryDemandService: a PO line gets a stable inventory
 /// origin and an Ordered receipt transaction; InventSum.Ordered tracks expected supply.

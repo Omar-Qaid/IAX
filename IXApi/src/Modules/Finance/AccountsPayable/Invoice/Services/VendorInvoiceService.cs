@@ -7,13 +7,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 
-public sealed record VendorInvoicePostDto(string InvoiceId, DateTime? InvoiceDate, List<PurchPostLineDto> Lines);
-
-public interface IVendorInvoiceService
-{
-    Task<PurchResult> PostAsync(long recId, VendorInvoicePostDto input, CancellationToken ct);
-}
-
 /// <summary>
 /// Vendor invoice (financial update). Received receipt portions become Purchased at the invoiced
 /// cost, the vendor liability is recorded in VendTrans, and the voucher debits the purchase

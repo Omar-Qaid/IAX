@@ -1,8 +1,8 @@
-using FluentValidation;
+using IAX.IXApi.Shared.Application.Validation;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable
 {
-    public class CustTransDtoValidator : AbstractValidator<CustTransDto>
+    public class CustTransDtoValidator : BaseValidator<CustTransDto>
     {
         public CustTransDtoValidator()
         {

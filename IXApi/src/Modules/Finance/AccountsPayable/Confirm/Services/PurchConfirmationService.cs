@@ -6,11 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 
-public interface IPurchConfirmationService
-{
-    Task<PurchResult> ConfirmAsync(long recId, CancellationToken ct);
-}
-
 /// <summary>
 /// Purchase order confirmation: stores an immutable VendPurchOrderJour/Trans snapshot per version.
 /// Confirmation never receives stock (D365: no physical or financial inventory effect).

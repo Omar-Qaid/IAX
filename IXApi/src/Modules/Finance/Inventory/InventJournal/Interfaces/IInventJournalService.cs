@@ -12,8 +12,3 @@ public interface IInventJournalService
     Task<(bool Deleted, string? Error)> DeleteLineAsync(string journalId, long lineRecId, CancellationToken ct);
     Task<(bool Deleted, string? Error)> DeleteAsync(string journalId, CancellationToken ct);
 }
-
-public interface IInventJournalPostingService
-{
-    Task<(InventJournalPostResultDto? Result, string? Error)> PostAsync(string journalId, CancellationToken ct);
-}

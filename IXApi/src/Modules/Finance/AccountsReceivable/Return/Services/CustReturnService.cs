@@ -9,20 +9,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Return;
 
-public sealed record CustReturnLineDto(long CustInvoiceTransRecId, decimal Qty, string DispositionCodeId);
-public sealed record CustReturnCreateDto(string InvoiceId, string? ReturnReasonCodeId, List<CustReturnLineDto> Lines);
-public sealed record CustReturnReceiptLineDto(long SalesLineRecId, decimal Qty);
-public sealed record CustReturnReceiptDto(string RequestId, DateTime? ReceiptDate, List<CustReturnReceiptLineDto> Lines);
-public sealed record CustCreditNoteDto(DateTime? InvoiceDate = null, string? RequestId = null);
-public sealed record CustReturnResult(int StatusCode, object? Data = null, string? Message = null);
-
-public interface ICustReturnService
-{
-    Task<CustReturnResult> CreateAsync(CustReturnCreateDto input, CancellationToken ct);
-    Task<CustReturnResult> ReceiveAsync(long returnRecId, CustReturnReceiptDto input, CancellationToken ct);
-    Task<CustReturnResult> CreditAsync(long returnRecId, CustCreditNoteDto input, CancellationToken ct);
-}
-
 /// <summary>
 /// Customer return orders (CycleSalesorder.md Phase 10.3). A return order is a SalesTable with
 /// SalesType = ReturnItem and an RMA number; each line is linked to the original invoiced line

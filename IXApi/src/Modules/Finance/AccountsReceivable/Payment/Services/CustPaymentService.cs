@@ -7,15 +7,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Payment;
 
-public sealed record CustPaymentPostDto(string CustAccount, string BankAccountId, decimal Amount,
-    DateTime? PaymentDate = null, string? PaymMode = null, string? SettleInvoiceId = null, string? RequestId = null);
-public sealed record CustPaymentResult(int StatusCode, object? Data = null, string? Message = null);
-
-public interface ICustPaymentService
-{
-    Task<CustPaymentResult> PostAsync(CustPaymentPostDto input, CancellationToken ct);
-}
-
 /// <summary>
 /// Customer payment journal (CycleSalesorder.md Phase 9 / ARTables.md §10). Posts a CustPayment
 /// LedgerJournalTable/Trans, the customer credit (CustTrans), Dr Bank / Cr Customer summary, and

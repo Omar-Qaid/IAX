@@ -6,12 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public interface IInventClosingQueryService
-{
-    Task<IReadOnlyList<InventClosingRecordDto>> ListAsync(CancellationToken ct);
-    Task<InventClosingRecordDto?> GetAsync(long recId, CancellationToken ct);
-}
-
 public sealed class InventClosingQueryService(IUnitOfWork unitOfWork, ICompanyExecutionContext company)
     : IInventClosingQueryService
 {

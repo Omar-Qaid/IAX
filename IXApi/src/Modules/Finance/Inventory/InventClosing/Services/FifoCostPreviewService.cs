@@ -7,18 +7,6 @@ using ItemModelGroup = IAX.IXApi.Modules.Finance.Entities.InventModelGroup;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public sealed record FifoCostAllocationDto(long ReceiptRecId, decimal Quantity, decimal UnitCost, decimal Cost);
-public sealed record FifoCostIssueDto(long IssueRecId, string ItemId, string SiteId, DateTime FinancialDate,
-    decimal Quantity, decimal RecognizedCost, decimal FifoCost, decimal RemainingAdjustment,
-    IReadOnlyList<FifoCostAllocationDto> Allocations);
-public sealed record FifoCostPreviewDto(DateTime Cutoff, bool CanExecute, IReadOnlyList<string> Problems,
-    IReadOnlyList<FifoCostIssueDto> Issues);
-
-public interface IFifoCostPreviewService
-{
-    Task<FifoCostPreviewDto> PreviewAsync(DateTime cutoff, CancellationToken ct = default);
-}
-
 public sealed class FifoCostPreviewService(IUnitOfWork unitOfWork, ICompanyExecutionContext company)
     : IFifoCostPreviewService
 {

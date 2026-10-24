@@ -6,20 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public sealed record InventPackagingGroupRecordDto(long RecId, string PackagingGroupId, string Name);
-public sealed record InventPackagingGroupInputDto(string PackagingGroupId, string Name);
-public sealed record InventPackagingUnitRecordDto(long RecId, TableGroupAll ItemCode, string InventDimId,
-    string Unit, decimal Factor);
-
-public interface IInventPackagingService
-{
-    Task<IReadOnlyList<InventPackagingGroupRecordDto>> GroupsAsync(CancellationToken ct);
-    Task<IReadOnlyList<InventPackagingUnitRecordDto>> UnitsAsync(CancellationToken ct);
-    Task<(InventPackagingGroupRecordDto? Group, string? Error)> CreateGroupAsync(InventPackagingGroupInputDto input, CancellationToken ct);
-    Task<(InventPackagingGroupRecordDto? Group, string? Error)> UpdateGroupAsync(long recId, InventPackagingGroupInputDto input, CancellationToken ct);
-    Task<string?> DeleteGroupAsync(long recId, CancellationToken ct);
-}
-
 public sealed class InventPackagingService(IUnitOfWork unitOfWork, ICompanyExecutionContext company)
     : IInventPackagingService
 {
