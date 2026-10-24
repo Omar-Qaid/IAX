@@ -8,6 +8,7 @@ using IAX.IXApi.Modules.Finance.AccountsReceivable.Invoice;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.PackingSlip;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.PackingSlip.Dtos;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.Payment;
+using IAX.IXApi.Modules.Finance.AccountsReceivable.Return;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Services;
 using IAX.IXApi.Modules.Finance.Common;
@@ -381,6 +382,159 @@ public sealed class InventoryCycleTests
         Assert.Single(await db.Set<LedgerJournalTable>().ToListAsync()); // idempotent retry
     }
 
+    // ---- Returns (CycleSalesorder.md 10.3, Purchorder.md 8) ---------------------------------------
+
+    [Fact]
+    public async Task Customer_return_credits_received_goods_at_original_cost_and_credit_only_without_stock()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        SeedSalesMasterData(db);
+        db.Set<ReturnDispositionCode>().AddRange(
+            new ReturnDispositionCode { RecId = 1, DataAreaId = "dat", DispositionCodeId = "CREDIT", DispositionAction = DispositionAction.Credit },
+            new ReturnDispositionCode { RecId = 2, DataAreaId = "dat", DispositionCodeId = "CRONLY", DispositionAction = DispositionAction.CreditOnly },
+            new ReturnDispositionCode { RecId = 3, DataAreaId = "dat", DispositionCodeId = "SCRAP", DispositionAction = DispositionAction.Scrap });
+        db.Set<ReturnReasonCode>().Add(new ReturnReasonCode { RecId = 1, DataAreaId = "dat", ReasonCodeId = "DAMAGED" });
+        await db.SaveChangesAsync();
+        var numbers = new TestInventNumbers();
+        var invoiceId = await StockAndSellTenAsync(db, numbers); // 100 @ 60 bought, 10 @ 100 + 15% VAT sold
+        var sold = await db.Set<CustInvoiceTrans>().SingleAsync();
+        var returns = new CustReturnService(new TestUnitOfWork(db), new TestCompany(), Sequence(), numbers);
+
+        // Unsupported disposition and over-return are rejected.
+        Assert.Equal(422, (await returns.CreateAsync(new CustReturnCreateDto(invoiceId, "DAMAGED", [new(sold.RecId, 1, "SCRAP")]), default)).StatusCode);
+        var created = await returns.CreateAsync(new CustReturnCreateDto(invoiceId, "DAMAGED",
+            [new(sold.RecId, 2, "CREDIT"), new(sold.RecId, 1, "CRONLY")]), default);
+        Assert.Equal(200, created.StatusCode);
+        Assert.Equal(422, (await returns.CreateAsync(new CustReturnCreateDto(invoiceId, null, [new(sold.RecId, 8, "CREDIT")]), default)).StatusCode);
+
+        var rma = await db.Set<SalesTable>().SingleAsync(x => x.SalesType == SalesType.ReturnItem);
+        Assert.False(string.IsNullOrEmpty(rma.ReturnItemNum));
+        var creditLine = await db.Set<SalesLine>().SingleAsync(x => x.SalesId == rma.SalesId && x.ReturnDispositionCodeId == "CREDIT");
+        var creditOnlyLine = await db.Set<SalesLine>().SingleAsync(x => x.SalesId == rma.SalesId && x.ReturnDispositionCodeId == "CRONLY");
+        Assert.Equal(-2m, creditLine.SalesQty);
+        Assert.Equal(sold.InventTransId, creditLine.InventTransIdReturn);
+        Assert.Equal(2m, (await db.Set<InventSum>().SingleAsync()).Ordered); // expected return receipt only for the Credit line
+
+        // Receive the 2 credited units back at the original cost of 60; credit-only lines are not received.
+        Assert.Equal(422, (await returns.ReceiveAsync(rma.RecId, new CustReturnReceiptDto("rr-x", null, [new(creditOnlyLine.RecId, 1)]), default)).StatusCode);
+        Assert.Equal(200, (await returns.ReceiveAsync(rma.RecId, new CustReturnReceiptDto("rr-1", new DateTime(2026, 10, 20), [new(creditLine.RecId, 2)]), default)).StatusCode);
+        var sum = await db.Set<InventSum>().SingleAsync();
+        Assert.Equal(92m, sum.PhysicalInvent);
+        Assert.Equal(2m, sum.Received);
+        Assert.Equal(120m, sum.PhysicalValue);
+
+        // Credit note: revenue 300 + VAT 45 reversed; received goods financially restored at 120.
+        var credit = await returns.CreditAsync(rma.RecId, new CustCreditNoteDto(new DateTime(2026, 10, 21), "cn-1"), default);
+        Assert.Equal(200, credit.StatusCode);
+        var note = await db.Set<CustInvoiceJour>().SingleAsync(x => x.SalesId == rma.SalesId);
+        Assert.Equal(-300m, note.SalesBalance);
+        Assert.Equal(-45m, note.SumTax);
+        Assert.Equal(-345m, note.InvoiceAmount);
+        sum = await db.Set<InventSum>().SingleAsync();
+        Assert.Equal(92m, sum.PhysicalInvent);
+        Assert.Equal(92m, sum.PostedQty);
+        Assert.Equal(0m, sum.Received);
+        Assert.Equal(0m, sum.PhysicalValue);
+        Assert.Equal(5520m, sum.PostedValue); // 6,000 - 600 sold + 120 returned
+        rma = await db.Set<SalesTable>().SingleAsync(x => x.RecId == rma.RecId);
+        Assert.Equal(ReturnStatusHeader.Closed, rma.ReturnStatus);
+        Assert.All(await db.Set<SalesLine>().Where(x => x.SalesId == rma.SalesId).ToListAsync(),
+            x => Assert.Equal(ReturnStatusLine.Invoiced, x.ReturnStatus));
+        Assert.Equal(1150m - 345m, (await db.Set<CustTransOpen>().ToListAsync()).Sum(x => x.AmountCur)); // open balance after credit
+        Assert.Equal(0m, (await db.Set<GeneralJournalAccountEntry>().ToListAsync()).Sum(x => x.AccountingCurrencyAmount));
+        Assert.Equal(200, (await returns.CreditAsync(rma.RecId, new CustCreditNoteDto(null, "cn-1"), default)).StatusCode);
+        Assert.Equal(2, await db.Set<CustInvoiceJour>().CountAsync()); // retry does not post again
+    }
+
+    [Fact]
+    public async Task Vendor_return_ships_at_original_cost_and_vendor_credit_reduces_payable()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        await db.SaveChangesAsync();
+        var numbers = new TestInventNumbers();
+        var (orders, _, receipts, invoices) = PurchaseServices(db, numbers);
+        await orders.CreateAsync(new PurchOrderCreateDto("V-0001", null, "SAR", new DateTime(2026, 10, 1), "S01", "WH-01", null), default);
+        var po = await db.Set<PurchTable>().SingleAsync();
+        await orders.AddLineAsync(po.RecId, new PurchLineInputDto("ITEM-001", 100, "PCS", 60, 1, null, null, null, null), default);
+        var pl = await db.Set<PurchLine>().SingleAsync();
+        await receipts.PostAsync(po.RecId, new ProductReceiptPostDto("PR-1", new DateTime(2026, 10, 2), [new(pl.RecId, 100)]), default);
+        await invoices.PostAsync(po.RecId, new VendorInvoicePostDto("VI-1", new DateTime(2026, 10, 3), [new(pl.RecId, 100)]), default);
+        var invoiced = await db.Set<VendInvoiceTrans>().SingleAsync();
+        var returns = new PurchReturnService(new TestUnitOfWork(db), new TestCompany(), Sequence(), numbers);
+
+        Assert.Equal(422, (await returns.CreateAsync(new PurchReturnCreateDto("VI-1", null, [new(invoiced.RecId, 101)]), default)).StatusCode);
+        Assert.Equal(200, (await returns.CreateAsync(new PurchReturnCreateDto("VI-1", "RMA-V-7", [new(invoiced.RecId, 10)]), default)).StatusCode);
+        var ret = await db.Set<PurchTable>().SingleAsync(x => x.PurchaseType == PurchaseType.ReturnItem);
+        var retLine = await db.Set<PurchLine>().SingleAsync(x => x.PurchId == ret.PurchId);
+        Assert.Equal(-10m, retLine.PurchQty);
+        Assert.Equal(10m, (await db.Set<InventSum>().SingleAsync()).OnOrder);
+        Assert.Equal(422, (await invoices.PostAsync(ret.RecId, new VendorInvoicePostDto("VI-X", null, [new(retLine.RecId, 1)]), default)).StatusCode);
+
+        // Ship back 10 -> physical 90 (issue); then the vendor credit note finalizes it at the original 60.
+        Assert.Equal(200, (await returns.ShipAsync(ret.RecId, new PurchReturnShipDto("RS-1", new DateTime(2026, 10, 5), [new(retLine.RecId, 10)]), default)).StatusCode);
+        var sum = await db.Set<InventSum>().SingleAsync();
+        Assert.Equal(90m, sum.PhysicalInvent);
+        Assert.Equal(10m, sum.Deducted);
+        Assert.Equal(0m, sum.OnOrder);
+        Assert.Equal(200, (await returns.CreditAsync(ret.RecId, new VendCreditNoteDto("VCN-1", new DateTime(2026, 10, 6)), default)).StatusCode);
+
+        sum = await db.Set<InventSum>().SingleAsync();
+        Assert.Equal(90m, sum.PhysicalInvent);
+        Assert.Equal(90m, sum.PostedQty);
+        Assert.Equal(0m, sum.Deducted);
+        Assert.Equal(5400m, sum.PostedValue);
+        Assert.Equal(-5400m, (await db.Set<VendTrans>().ToListAsync()).Sum(x => x.AmountCur)); // payable 6,000 - 600 credit
+        Assert.Equal(PurchStatus.Invoiced, (await db.Set<PurchTable>().SingleAsync(x => x.RecId == ret.RecId)).PurchStatus);
+        Assert.Equal(0m, (await db.Set<GeneralJournalAccountEntry>().ToListAsync()).Sum(x => x.AccountingCurrencyAmount));
+        Assert.Equal(422, (await returns.CreditAsync(ret.RecId, new VendCreditNoteDto("VCN-1"), default)).StatusCode);
+    }
+
+    // Stocks 100 @ 60 through the purchase cycle and sells/ships/invoices 10 @ 100 (+15% VAT); returns the invoice id.
+    private static async Task<string> StockAndSellTenAsync(CycleContext db, TestInventNumbers numbers)
+    {
+        var work = new TestUnitOfWork(db);
+        var company = new TestCompany();
+        var (orders, _, receipts, vendorInvoices) = PurchaseServices(db, numbers);
+        await orders.CreateAsync(new PurchOrderCreateDto("V-0001", null, "SAR", new DateTime(2026, 10, 1), "S01", "WH-01", null), default);
+        var po = await db.Set<PurchTable>().SingleAsync();
+        await orders.AddLineAsync(po.RecId, new PurchLineInputDto("ITEM-001", 100, "PCS", 60, 1, null, null, null, null), default);
+        var pl = await db.Set<PurchLine>().SingleAsync();
+        await receipts.PostAsync(po.RecId, new ProductReceiptPostDto("PR-1", new DateTime(2026, 10, 2), [new(pl.RecId, 100)]), default);
+        await vendorInvoices.PostAsync(po.RecId, new VendorInvoicePostDto("VI-1", new DateTime(2026, 10, 3), [new(pl.RecId, 100)]), default);
+
+        var order = new SalesTable
+        {
+            DataAreaId = "dat", SalesId = "SO-0001", CustAccount = "C-001", InvoiceAccount = "C-001", CurrencyCode = "SAR",
+            SalesStatus = SalesStatus.Backorder, SalesType = SalesType.Sales, InventSiteId = "S01", InventLocationId = "WH-01",
+            OrderDate = new DateTime(2026, 10, 5)
+        };
+        db.Set<SalesTable>().Add(order);
+        await db.SaveChangesAsync();
+        var line = new SalesLine
+        {
+            DataAreaId = "dat", SalesId = order.SalesId, LineNum = 1, ItemId = "ITEM-001", SalesQty = 10, QtyOrdered = 10,
+            RemainSalesPhysical = 10, RemainSalesFinancial = 10, RemainInventPhysical = 10, RemainInventFinancial = 10,
+            SalesUnit = "PCS", SalesPrice = 100, PriceUnit = 1, LineAmount = 1000, SalesStatus = SalesStatus.Backorder,
+            SalesType = SalesType.Sales, StockedProduct = NoYes.Yes, CurrencyCode = "SAR", TaxGroup = "VAT15", TaxItemGroup = "VAT15",
+            ReceiptDateRequested = new DateTime(2026, 10, 10)
+        };
+        await new SalesInventoryDemandService(work, numbers, new InventDimensionResolver(work, numbers)).CreateAsync(order, line, "S01", "WH-01");
+        db.Set<SalesLine>().Add(line);
+        await db.SaveChangesAsync();
+        Assert.Equal(200, (await new PackingSlipJournalService(work, company, Sequence()).PostAsync(order.RecId,
+            new PostPackingSlipRequest(new DateTime(2026, 10, 6), "All", true, "ps-1",
+                [new PackingSlipPostingLineRequest(line.RecId.ToString(), 10)]), default)).StatusCode);
+        Assert.Equal(200, (await new SalesInvoiceService(work, company, Sequence()).PostAsync(order.RecId,
+            new SalesInvoicePostDto(new DateTime(2026, 10, 7), "inv-1"), default)).StatusCode);
+        return (await db.Set<CustInvoiceJour>().SingleAsync()).InvoiceId;
+    }
+
     private static void SeedSalesMasterData(CycleContext db)
     {
         db.Set<CustTable>().Add(new CustTable { RecId = 1, DataAreaId = "dat", AccountNum = "C-001", CustGroupId = "DOM", CurrencyCode = "SAR" });
@@ -504,7 +658,8 @@ public sealed class InventoryCycleTests
             typeof(SalesTable), typeof(SalesLine), typeof(CustTable), typeof(CustParameters), typeof(CustPackingSlipJour), typeof(CustPackingSlipTrans),
             typeof(CustInvoiceJour), typeof(CustInvoiceTrans), typeof(CustTrans), typeof(CustTransOpen), typeof(CustSettlement), typeof(CustLedgerAccounts),
             typeof(TaxGroupData), typeof(TaxOnItem), typeof(TaxData), typeof(TaxTable), typeof(TaxLedgerAccountGroup), typeof(TaxTrans),
-            typeof(InventTransOriginSalesLine), typeof(BankAccountTable), typeof(LedgerJournalTable), typeof(LedgerJournalTrans)
+            typeof(InventTransOriginSalesLine), typeof(BankAccountTable), typeof(LedgerJournalTable), typeof(LedgerJournalTrans),
+            typeof(ReturnDispositionCode), typeof(ReturnReasonCode)
         ];
 
         protected override void OnModelCreating(ModelBuilder builder)
