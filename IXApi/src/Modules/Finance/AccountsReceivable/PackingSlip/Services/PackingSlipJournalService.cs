@@ -250,9 +250,6 @@ public sealed class PackingSlipJournalService(
                     && row.ItemId == line.ItemId && row.InventDimId == line.InventDimId, ct);
                 if (inventory is null)
                     return new PackingSlipJournalResult(422, null, $"Inventory summary is missing for item {line.ItemId}.");
-                if (inventory.PhysicalInvent - inventory.ReservPhysical < inventQuantity)
-                    return new PackingSlipJournalResult(422, null,
-                        $"Available physical stock excluding other reservations is insufficient for item {line.ItemId}.");
                 if (line.Complete != 0 && salesQuantity != line.RemainSalesPhysical)
                     return new PackingSlipJournalResult(422, null, $"Item {line.ItemId} requires complete delivery on this order line.");
 
@@ -261,13 +258,21 @@ public sealed class PackingSlipJournalService(
                     && row.ReferenceCategory == InventRefType.SalesTable, ct);
                 if (origin is null || origin.ItemId != line.ItemId || origin.ItemInventDimId != line.InventDimId)
                     return new PackingSlipJournalResult(422, null, $"Inventory origin is invalid for item {line.ItemId}.");
-                var sourceTransactions = await Db.Set<InventTrans>().Where(row => row.DataAreaId == order.DataAreaId
+                // Deliver the line's own reservation first, then its open (Ordered/Picked) demand.
+                var sourceTransactions = (await Db.Set<InventTrans>().Where(row => row.DataAreaId == order.DataAreaId
                     && row.InventTransOrigin == origin.RecId
-                    && (row.StatusIssue == StatusIssue.Ordered || row.StatusIssue == StatusIssue.Picked))
-                    .OrderBy(row => row.RecId).ToListAsync(ct);
+                    && (row.StatusIssue == StatusIssue.ReservPhysical
+                        || row.StatusIssue == StatusIssue.Ordered || row.StatusIssue == StatusIssue.Picked))
+                    .ToListAsync(ct))
+                    .OrderBy(row => row.StatusIssue == StatusIssue.ReservPhysical ? 0 : 1).ThenBy(row => row.RecId).ToList();
                 if (sourceTransactions.Any(row => row.ItemId != line.ItemId || row.InventDimId != line.InventDimId)
                     || sourceTransactions.Sum(row => -row.Qty) < inventQuantity)
                     return new PackingSlipJournalResult(422, null, $"Open inventory demand does not cover the delivery quantity for item {line.ItemId}.");
+                // Available to this source = free stock plus this source's own physical reservation.
+                var ownReserved = sourceTransactions.Where(row => row.StatusIssue == StatusIssue.ReservPhysical).Sum(row => -row.Qty);
+                if (inventory.PhysicalInvent - inventory.ReservPhysical + ownReserved < inventQuantity)
+                    return new PackingSlipJournalResult(422, null,
+                        $"Available physical stock excluding other reservations is insufficient for item {line.ItemId}.");
 
                 var quantityLeft = inventQuantity;
                 decimal postedCatchWeightQuantity = 0;
@@ -281,7 +286,8 @@ public sealed class PackingSlipJournalService(
                     var catchWeightForPosting = sourceQuantity > 0 && source.PdscwQty > 0
                         ? source.PdscwQty * postingQuantity / sourceQuantity : 0m;
                     if (priorStatus == StatusIssue.Ordered && inventory.OnOrder < postingQuantity
-                        || priorStatus == StatusIssue.Picked && inventory.Picked < postingQuantity)
+                        || priorStatus == StatusIssue.Picked && inventory.Picked < postingQuantity
+                        || priorStatus == StatusIssue.ReservPhysical && inventory.ReservPhysical < postingQuantity)
                         return new PackingSlipJournalResult(422, null, $"Inventory summary does not match open demand for item {line.ItemId}.");
                     if (postingQuantity < sourceQuantity)
                     {
@@ -303,6 +309,12 @@ public sealed class PackingSlipJournalService(
                     {
                         inventory.OnOrder -= postingQuantity;
                         inventory.PdscwOnOrder -= catchWeightForPosting;
+                    }
+                    else if (priorStatus == StatusIssue.ReservPhysical)
+                    {
+                        // Delivering the line's own reservation releases it as the stock leaves.
+                        inventory.ReservPhysical -= postingQuantity;
+                        inventory.PdscwReservPhysical -= catchWeightForPosting;
                     }
                     else
                     {

@@ -618,9 +618,10 @@ namespace IAX.IXApi.Modules.Finance.Common
         Picked = 3,
         Deducted = 4,
         Sold = 5,
-        Released = 6
+        Released = 6,
+        ReservPhysical = 7
     }
- 
+
     public enum StatusReceipt : byte
     {
         None = 0,

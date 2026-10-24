@@ -51,8 +51,8 @@ public sealed class InventModelGroupService : BaseService<InventModelGroupEntity
         var error = Validate(id, input);
         if (error is not null) return (null, error);
         if (row.ModelGroupId != id) return (null, "Item model group ID cannot be changed after creation.");
-        if (await Db.Set<InventModelGroupItem>().AnyAsync(x => x.ModelGroupDataAreaId == companyId && x.ModelGroupId == id, ct))
-            return (null, "A model group assigned to released products cannot be changed through basic setup.");
+        if (await HasInventoryTransactionsAsync(companyId, id, ct))
+            return (null, "A model group whose items have inventory transactions cannot be changed; its valuation and dimensions are locked once stock has moved.");
         Apply(row, input);
         await _unitOfWork.CompleteAsync(ct);
         return (Map(row), null);
@@ -65,9 +65,23 @@ public sealed class InventModelGroupService : BaseService<InventModelGroupEntity
         if (row is null) return (false, "Item model group was not found.");
         if (await Db.Set<InventModelGroupItem>().AnyAsync(x => x.ModelGroupDataAreaId == companyId && x.ModelGroupId == row.ModelGroupId, ct))
             return (false, "The group is assigned to one or more released products.");
+        if (await HasInventoryTransactionsAsync(companyId, row.ModelGroupId, ct))
+            return (false, "The group has items with inventory transactions and cannot be deleted.");
         Db.Remove(row);
         await _unitOfWork.CompleteAsync(ct);
         return (true, null);
+    }
+
+    // A configuration is protected once the inventory it governs has moved, per D365 F&O:
+    // items carrying this model group must have no InventTrans/InventSum before setup edits.
+    private async Task<bool> HasInventoryTransactionsAsync(string companyId, string modelGroupId, CancellationToken ct)
+    {
+        var itemIds = await Db.Set<InventModelGroupItem>().AsNoTracking()
+            .Where(x => x.ModelGroupDataAreaId == companyId && x.ModelGroupId == modelGroupId)
+            .Select(x => x.ItemId).Distinct().ToListAsync(ct);
+        if (itemIds.Count == 0) return false;
+        return await Db.Set<InventTrans>().AnyAsync(x => x.DataAreaId == companyId && itemIds.Contains(x.ItemId), ct)
+            || await Db.Set<InventSum>().AnyAsync(x => x.DataAreaId == companyId && itemIds.Contains(x.ItemId), ct);
     }
 
     private static NoYes YesNo(bool value) => value ? NoYes.Yes : NoYes.No;

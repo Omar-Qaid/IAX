@@ -2,6 +2,7 @@ using FluentValidation;
 using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Infrastructure.Persistence.Services;
+using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
@@ -64,8 +65,8 @@ public sealed class StorageDimensionGroupService : BaseService<EcoResStorageDime
         if (error is not null) return (null, error);
         if (row.Name != NormalizeId(input.GroupId))
             return (null, "Storage dimension group ID cannot be changed after creation.");
-        if (await Db.Set<EcoResStorageDimensionGroupItem>().AnyAsync(x => x.StorageDimensionGroup == recId, ct))
-            return (null, "A storage dimension group assigned to released products cannot be changed through basic setup.");
+        if (await HasInventoryTransactionsAsync(recId, ct))
+            return (null, "A storage dimension group whose items have inventory transactions cannot be changed; active dimensions are locked once stock has moved.");
         input.Adapt(row);
         await _unitOfWork.BeginTransactionAsync(ct);
         try
@@ -90,6 +91,8 @@ public sealed class StorageDimensionGroupService : BaseService<EcoResStorageDime
         if (await _unitOfWork.Repository<EcoResStorageDimensionGroupItem>().GetQueryable()
             .AnyAsync(x => x.StorageDimensionGroup == row.RecId, ct))
             return (false, "The group is assigned to one or more released products.");
+        if (await HasInventoryTransactionsAsync(row.RecId, ct))
+            return (false, "The group has items with inventory transactions and cannot be deleted.");
         Db.RemoveRange(await LoadSetupAsync(row.RecId, ct));
         await RemoveAsync(row, ct);
         return (true, null);
@@ -97,6 +100,20 @@ public sealed class StorageDimensionGroupService : BaseService<EcoResStorageDime
 
     private async Task<string?> ValidateAsync(StorageDimensionGroupInputDto input, CancellationToken ct) =>
         (await _validator.ValidateAsync(input, ct)).Errors.FirstOrDefault()?.ErrorMessage;
+
+    // A configuration is protected once the inventory it governs has moved, per D365 F&O:
+    // items carrying this storage dimension group must have no InventTrans/InventSum before edits.
+    private async Task<bool> HasInventoryTransactionsAsync(long groupRecId, CancellationToken ct)
+    {
+        var items = await Db.Set<EcoResStorageDimensionGroupItem>().AsNoTracking()
+            .Where(x => x.StorageDimensionGroup == groupRecId)
+            .Select(x => new { x.ItemId, x.ItemDataAreaId }).Distinct().ToListAsync(ct);
+        if (items.Count == 0) return false;
+        var itemIds = items.Select(x => x.ItemId).Distinct().ToList();
+        var areas = items.Select(x => x.ItemDataAreaId).Distinct().ToList();
+        return await Db.Set<InventTrans>().AnyAsync(x => areas.Contains(x.DataAreaId) && itemIds.Contains(x.ItemId), ct)
+            || await Db.Set<InventSum>().AnyAsync(x => areas.Contains(x.DataAreaId) && itemIds.Contains(x.ItemId), ct);
+    }
     private static string NormalizeId(string value) => value.Trim().ToUpperInvariant();
 
     private Task<List<EcoResStorageDimensionGroupFldSetup>> LoadSetupAsync(long id, CancellationToken ct) =>

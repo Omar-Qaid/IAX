@@ -218,15 +218,20 @@ public sealed class InventCloseService : IInventCloseService
         {
             if (!dimensions.TryGetValue(transaction.InventDimId, out var dim) || string.IsNullOrWhiteSpace(dim.InventSiteId))
                 throw new PostingValidationException($"Transaction {transaction.RecId} has no valid financial site dimension.");
-            if (!origins.TryGetValue(transaction.InventTransOrigin, out var origin) ||
-                origin.ReferenceCategory != InventRefType.InventoryJournal || transferSet.Contains(origin.InventTransId))
+            // Receipts and issues may originate from inventory journals or sales orders; transfers
+            // are excluded because their paired cost relationship is handled separately.
+            var sourceSupported = origins.TryGetValue(transaction.InventTransOrigin, out var origin)
+                && (origin.ReferenceCategory == InventRefType.InventoryJournal
+                    || origin.ReferenceCategory == InventRefType.SalesTable)
+                && !transferSet.Contains(origin.InventTransId);
+            if (!sourceSupported)
                 throw new PostingValidationException(
-                    $"Transaction {transaction.RecId} needs a verified journal source or transfer cost relationship before close.");
+                    $"Transaction {transaction.RecId} needs a verified journal or sales source before close.");
             var assignment = assignments.FirstOrDefault(x => x.ItemId == transaction.ItemId);
             if (assignment is null || !models.TryGetValue(assignment.ModelGroupId, out var model) || model.InventModel != InventModel.FIFO)
                 throw new PostingValidationException($"Item {transaction.ItemId} does not have a verified FIFO model group.");
             rows.Add((transaction, dim.InventSiteId,
-                itemGroups.GetValueOrDefault(transaction.ItemId, string.Empty), origin.InventTransId));
+                itemGroups.GetValueOrDefault(transaction.ItemId, string.Empty), origin!.InventTransId));
         }
 
         return rows.GroupBy(x => (x.Transaction.ItemId, x.Site))

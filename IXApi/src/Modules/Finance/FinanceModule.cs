@@ -15,6 +15,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<AccountsReceivable.PriceDisc.IPriceDiscJournalPostingService, AccountsReceivable.PriceDisc.PriceDiscJournalPostingService>();
             services.AddScoped<AccountsReceivable.Confirm.ISalesOrderConfirmationService, AccountsReceivable.Confirm.SalesOrderConfirmationService>();
             services.AddScoped<AccountsReceivable.PackingSlip.IPackingSlipJournalService, AccountsReceivable.PackingSlip.PackingSlipJournalService>();
+            services.AddScoped<AccountsReceivable.Invoice.ISalesInventoryInvoiceService, AccountsReceivable.Invoice.SalesInventoryInvoiceService>();
             services.AddScoped<FluentValidation.IValidator<AccountsReceivable.Confirm.PostConfirmationRequest>, AccountsReceivable.Confirm.SalesOrderConfirmationValidator>();
             services.AddScoped<AccountsReceivable.Customer.ICustomerService, AccountsReceivable.Customer.CustomerService>();
             services.AddScoped<AccountsReceivable.Customer.ICustomerGroupService, AccountsReceivable.Customer.CustomerGroupService>();
@@ -96,6 +97,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<Inventory.IFifoCostPreviewService, Inventory.FifoCostPreviewService>();
             services.AddScoped<Inventory.IInventClosingQueryService, Inventory.InventClosingQueryService>();
             services.AddScoped<Inventory.IInventCloseService, Inventory.InventCloseService>();
+            services.AddScoped<Inventory.IInventoryReservationService, Inventory.InventoryReservationService>();
             services.AddScoped<Inventory.IInventoryRecordQueryService, Inventory.InventoryRecordQueryService>();
             services.AddScoped<Inventory.IItemGroupAssignmentService, Inventory.ItemGroupAssignmentService>();
             services.AddScoped<Inventory.IInventItemLocationService, Inventory.InventItemLocationService>();
