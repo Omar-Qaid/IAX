@@ -43,20 +43,22 @@ export function InventJournalNamePage(): React.ReactElement {
           { value: '2', label: t('inventJournalName.types.counting', 'Counting') },
           { value: '3', label: t('inventJournalName.types.transfer', 'Transfer') }] },
         { name: 'voucherNumberSequenceTable', label: t('inventJournalName.fields.voucherSequence', 'Voucher number sequence'), type: 'select',
-          options: [{ value: '0', label: t('common.none', 'None') }, ...(lookups.data?.numberSequences ?? []).map((x) => ({ value: String(x.recId), label: `${x.numberSequence} - ${x.description}` }))] },
+          options: [{ value: '0', label: t('inventJournalName.fields.selectVoucherSequence', 'Select a voucher sequence') }, ...(lookups.data?.numberSequences ?? []).map((x) => ({ value: String(x.recId), label: `${x.numberSequence} - ${x.description}` }))] },
       ] },
       { id: 'posting', fields: [
         { name: 'detailSummary', label: t('inventJournalName.fields.detailSummary', 'Detail level'), type: 'select', options: [
-          { value: '0', label: t('inventJournalName.detail.detail', 'Detail') }, { value: '1', label: t('inventJournalName.detail.summary', 'Summary') }] },
-        { name: 'deletePostedLines', label: t('inventJournalName.fields.deletePostedLines', 'Delete lines after posting'), type: 'boolean' },
+          { value: '0', label: t('inventJournalName.detail.detail', 'Detail') }], disabled: true },
+        { name: 'deletePostedLines', label: t('inventJournalName.fields.deletePostedLines', 'Delete lines after posting'), type: 'boolean', disabled: true },
         { name: 'reservation', label: t('inventJournalName.fields.reservation', 'Reservation'), type: 'select', options: [
-          { value: '0', label: t('common.none', 'None') }, { value: '1', label: t('inventJournalName.reservation.automatic', 'Automatic') }] },
+          { value: '0', label: t('common.none', 'None') }], disabled: true },
       ] },
     ] }],
     permissions: { view: PERMISSIONS.INVENTORY_TRANSACTION_VIEW, create: PERMISSIONS.INVENTORY_TRANSACTION_CREATE,
       edit: PERMISSIONS.INVENTORY_TRANSACTION_EDIT, delete: PERMISSIONS.INVENTORY_TRANSACTION_DELETE },
     validate: (x) => ({ ...(!x.journalNameId.trim() ? { journalNameId: t('validation.required', { field: t('inventJournalName.fields.id', 'Name') }) } : {}),
-      ...(!x.description.trim() ? { description: t('validation.required', { field: t('inventJournalName.fields.description', 'Description') }) } : {}) }),
+      ...(!x.description.trim() ? { description: t('validation.required', { field: t('inventJournalName.fields.description', 'Description') }) } : {}),
+      ...(x.voucherNumberSequenceTable <= 0 ? { voucherNumberSequenceTable: 'A voucher number sequence is required.' } : {}),
+      ...(x.detailSummary !== 0 || x.deletePostedLines || x.reservation !== 0 ? { detailSummary: 'Basic journals require detail posting, retained lines, and no automatic reservation.' } : {}) }),
     presentation: { mode: 'list', listWidth: 275, listResizable: true },
   }), [lookups.data, t]);
   return <ListDetailsPage variant="enterprise" title={t('inventJournalName.title', 'Inventory journal names')} config={config} />;

@@ -14,6 +14,17 @@ const num = (value: DetailValue | undefined): number => Number(value) || 0;
 const str = (value: DetailValue | undefined): string => String(value ?? '');
 const option = (value: number, label: string) => ({ value: String(value), label });
 
+const isBasicFifo = (x: InventModelGroupRecord): boolean =>
+  x.inventModel === 0 && x.stockedProduct && x.postOnHandFinancial &&
+  !x.negativePhysical && !x.negativeFinancial && !x.inclPhysicalValueInCost &&
+  !x.standardCost && !x.mandatoryWmsOrder && !x.quarantineControl && !x.pdsCheck &&
+  !x.mandatoryRegister && !x.mandatoryReceive && !x.mandatoryPick && !x.mandatoryDeduct &&
+  !x.includePhysicalValueForAverage && !x.itemProdReservationActive &&
+  x.itemProdReservation === 0 && !x.reserveByDate && !x.reserveReversed &&
+  !x.mcrReservation && !x.pdsDispositionCode.trim() && !x.pdsConsReq &&
+  !x.pdsReqVendBatchDetail && !x.pdsSameLot && !x.pdsVendorCheckItem &&
+  x.pdsPickCriteria === 0 && x.pickingListBatchExpirationDateValidationRule === 0;
+
 const emptyGroup = (): InventModelGroupRecord => ({
   id: `new-${crypto.randomUUID()}`,
   modelGroupId: '',
@@ -21,7 +32,7 @@ const emptyGroup = (): InventModelGroupRecord => ({
   inventModel: 0,
   stockedProduct: true,
   postOnHandPhysical: false,
-  postOnHandFinancial: false,
+  postOnHandFinancial: true,
   postPhysicalRevenue: false,
   postPhysicalPurchase: false,
   standardCost: false,
@@ -86,15 +97,7 @@ const valueKeys: Array<keyof InventModelGroupRecord> = [
 export function InventModelGroupPage(): React.ReactElement {
   const { t } = useAppTranslation();
   const config = useMemo<EnterpriseListDetailsConfig<InventModelGroupRecord>>(() => {
-    const modelOptions = [
-      option(0, 'FIFO'),
-      option(1, 'LIFO'),
-      option(2, 'LIFO date'),
-      option(3, 'Weighted average'),
-      option(4, 'Weighted avg. date'),
-      option(5, 'Standard cost'),
-      option(6, 'Moving average'),
-    ];
+    const modelOptions = [option(0, 'FIFO')];
     const getValues = (record: InventModelGroupRecord): DetailValues => {
       const values: DetailValues = {};
       for (const key of valueKeys) values[key] = record[key] as DetailValue;
@@ -194,12 +197,14 @@ export function InventModelGroupPage(): React.ReactElement {
                   name: 'stockedProduct',
                   label: t('inventModelGroup.fields.stockedProduct', 'Stocked product'),
                   type: 'boolean',
+                  disabled: true,
                 },
                 {
                   name: 'inventModel',
                   label: t('inventModelGroup.fields.inventModel', 'Inventory model'),
                   type: 'select',
                   options: modelOptions,
+                  disabled: true,
                 },
               ],
             },
@@ -214,11 +219,13 @@ export function InventModelGroupPage(): React.ReactElement {
                     'Include physical value'
                   ),
                   type: 'boolean',
+                  disabled: true,
                 },
                 {
                   name: 'standardCost',
                   label: t('inventModelGroup.fields.fixedReceiptPrice', 'Fixed receipt price'),
                   type: 'boolean',
+                  disabled: true,
                 },
                 {
                   name: 'includePhysicalValueForAverage',
@@ -227,6 +234,7 @@ export function InventModelGroupPage(): React.ReactElement {
                     'Include physical value in weighted average recalculation'
                   ),
                   type: 'boolean',
+                  disabled: true,
                 },
               ],
             },
@@ -249,6 +257,7 @@ export function InventModelGroupPage(): React.ReactElement {
                     'Post financial inventory'
                   ),
                   type: 'boolean',
+                  disabled: true,
                 },
               ],
             },
@@ -293,6 +302,7 @@ export function InventModelGroupPage(): React.ReactElement {
                     'Physical negative inventory'
                   ),
                   type: 'boolean',
+                  disabled: true,
                 },
                 {
                   name: 'negativeFinancial',
@@ -301,6 +311,7 @@ export function InventModelGroupPage(): React.ReactElement {
                     'Financial negative inventory'
                   ),
                   type: 'boolean',
+                  disabled: true,
                 },
               ],
             },
@@ -312,26 +323,31 @@ export function InventModelGroupPage(): React.ReactElement {
                   name: 'mandatoryRegister',
                   label: t('inventModelGroup.fields.registration', 'Registration requirements'),
                   type: 'boolean',
+                  disabled: true,
                 },
                 {
                   name: 'mandatoryReceive',
                   label: t('inventModelGroup.fields.receiving', 'Receiving requirements'),
                   type: 'boolean',
+                  disabled: true,
                 },
                 {
                   name: 'mandatoryPick',
                   label: t('inventModelGroup.fields.picking', 'Picking requirements'),
                   type: 'boolean',
+                  disabled: true,
                 },
                 {
                   name: 'mandatoryDeduct',
                   label: t('inventModelGroup.fields.deduction', 'Deduction requirements'),
                   type: 'boolean',
+                  disabled: true,
                 },
                 {
                   name: 'reserveByDate',
                   label: t('inventModelGroup.fields.fifoDate', 'FIFO date-controlled'),
                   type: 'boolean',
+                  disabled: true,
                   sectionTitle: t('inventModelGroup.groups.reservation', 'RESERVATION'),
                 },
               ],
@@ -343,6 +359,7 @@ export function InventModelGroupPage(): React.ReactElement {
                   name: 'reserveReversed',
                   label: t('inventModelGroup.fields.backwardShipDate', 'Backward from ship date'),
                   type: 'boolean',
+                  disabled: true,
                 },
               ],
             },
@@ -365,6 +382,9 @@ export function InventModelGroupPage(): React.ReactElement {
           : {}),
         ...(!record.name.trim()
           ? { name: t('validation.required', { field: t('inventModelGroup.fields.name', 'Name') }) }
+          : {}),
+        ...(!isBasicFifo(record)
+          ? { inventModel: 'Basic inventory requires stocked FIFO, financial posting, and no advanced or negative inventory controls.' }
           : {}),
       }),
       presentation: { mode: 'list', listWidth: 275, listResizable: true },

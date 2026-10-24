@@ -54,9 +54,9 @@ export const inventItemGroupApi = {
     );
   },
   async delete(record: InventItemGroupRecord): Promise<void> {
-    requireData(
+    if (requireData(
       (await apiClient.delete<ApiResponse<boolean>>(`${endpoint}/${encodeURIComponent(record.id)}`))
         .data
-    );
+    ) !== true) throw new ApiError('The item group could not be deleted.', 400);
   },
 };

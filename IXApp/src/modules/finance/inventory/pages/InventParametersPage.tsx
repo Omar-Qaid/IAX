@@ -31,7 +31,7 @@ export function InventParametersPage(): React.ReactElement {
           { name: 'defaultUnitId', label: t('inventParameters.fields.defaultUnit', 'Default unit'), type: 'select', options: [{ value: '', label: '' }, ...(lookups.data?.units.map((x) => option(x.id, x.name)) ?? [])] },
           { name: 'multiSiteDefaultInventSiteId', label: t('inventParameters.fields.defaultSite', 'Default site'), type: 'select', options: [{ value: '', label: '' }, ...(lookups.data?.sites.map((x) => option(x.id, x.name)) ?? [])] },
           { name: 'multiSiteDefaultInventLocationId', label: t('inventParameters.fields.defaultWarehouse', 'Default warehouse'), type: 'select', options: [{ value: '', label: '' }, ...(lookups.data?.warehouses.map((x) => option(x.id, x.name, ` (${x.siteId})`)) ?? [])] },
-          { name: 'reserveOnOrdered', label: t('inventParameters.fields.reserveOnOrdered', 'Reserve ordered items'), type: 'boolean' },
+          { name: 'reserveOnOrdered', label: t('inventParameters.fields.reserveOnOrdered', 'Reserve ordered items'), type: 'boolean', disabled: true },
           { name: 'mandatoryItemTaxGroup', label: t('inventParameters.fields.mandatoryItemTaxGroup', 'Mandatory item sales tax group'), type: 'boolean' },
         ],
       },
@@ -52,6 +52,11 @@ export function InventParametersPage(): React.ReactElement {
 
   const initialValues: SetupValues = { ...parameters.data };
   return <SetupPage key={`${company}-${parameters.data.recId}`} title={t('inventParameters.title', 'Inventory and warehouse management parameters')} viewLabel={t('common.standardView', 'Standard view')} navigationItems={navigationItems} sections={sections} initialValues={initialValues} saveLabel={t('actions.save')} optionsLabel={t('customerCommands.options')} yesLabel={t('common.yes', 'Yes')} noLabel={t('common.no', 'No')} savedMessage={t('inventParameters.saved', 'Inventory parameters saved.')} onSave={async (values) => {
+    const siteId = String(values.multiSiteDefaultInventSiteId ?? '');
+    const warehouseId = String(values.multiSiteDefaultInventLocationId ?? '');
+    if (values.reserveOnOrdered === true) throw new Error('Reservation against ordered supply is disabled in basic inventory.');
+    if (warehouseId && !lookups.data.warehouses.some((x) => x.id === warehouseId && x.siteId === siteId))
+      throw new Error('The default warehouse must belong to the selected default site.');
     const saved = await inventParametersApi.save(values as unknown as InventParametersRecord);
     queryClient.setQueryData(queryKey, saved);
   }} />;

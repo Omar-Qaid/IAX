@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Alert, Box, Button, Checkbox, Dialog, DialogActions, DialogContent, DialogTitle, FormControlLabel, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
@@ -16,6 +16,11 @@ export function ReleasedProductBarcodesDialog({ product, units, onClose }: {
   const [form, setForm] = useState<ItemBarcodeInput>(emptyBarcode);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    setEditing(null);
+    setForm(emptyBarcode());
+    setError(null);
+  }, [product?.id]);
   const rows = useQuery({
     queryKey: ['inventory', 'released-product-barcodes', product?.id],
     queryFn: ({ signal }) => releasedProductApi.barcodes(product!.id, signal),
@@ -28,6 +33,10 @@ export function ReleasedProductBarcodesDialog({ product, units, onClose }: {
   };
   const save = async () => {
     if (!product) return;
+    if (!form.itemBarcode.trim() || !form.unitId || !Number.isFinite(form.qty) || form.qty <= 0) {
+      setError(t('inventory.barcode.validInput', 'Enter a barcode, unit, and positive quantity.'));
+      return;
+    }
     setBusy(true); setError(null);
     try {
       if (editing === null) await releasedProductApi.createBarcode(product.id, form);
@@ -75,7 +84,7 @@ export function ReleasedProductBarcodesDialog({ product, units, onClose }: {
     <DialogActions>
       {editing !== null && <Button disabled={busy} onClick={() => { setEditing(null); setForm(emptyBarcode()); }}>{t('actions.cancel', 'Cancel edit')}</Button>}
       <Button disabled={busy} onClick={onClose}>{t('actions.close', 'Close')}</Button>
-      <Button variant="contained" disabled={busy || !form.itemBarcode.trim() || !form.unitId || form.qty <= 0} onClick={() => void save()}>{t('actions.save', 'Save')}</Button>
+      <Button variant="contained" disabled={busy || !form.itemBarcode.trim() || !form.unitId || !Number.isFinite(form.qty) || form.qty <= 0} onClick={() => void save()}>{t('actions.save', 'Save')}</Button>
     </DialogActions>
   </Dialog>;
 }

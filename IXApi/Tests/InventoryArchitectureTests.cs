@@ -34,6 +34,44 @@ namespace IAX.IXApi.Tests;
 public sealed class InventoryArchitectureTests
 {
     [Fact]
+    public void Journal_name_rejects_unsupported_policies()
+    {
+        var validator = new InventJournalNameInputValidator();
+        var valid = new InventJournalNameInputDto
+        { JournalNameId = "COUNT", Description = "Count", JournalType = InventJournalType.Counting };
+        Assert.True(validator.Validate(valid).IsValid);
+        valid.DetailSummary = DetailSummary.Summary;
+        Assert.False(validator.Validate(valid).IsValid);
+        valid.DetailSummary = DetailSummary.Detail;
+        valid.DeletePostedLines = true;
+        Assert.False(validator.Validate(valid).IsValid);
+        valid.DeletePostedLines = false;
+        valid.Reservation = ItemReservation.Automatic;
+        Assert.False(validator.Validate(valid).IsValid);
+    }
+
+    [Fact]
+    public async Task Inventory_readiness_rejects_blocked_voucher_sequence_on_selected_journal()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.Add(new SysNumberSequence { RecId = 1, DataAreaId = "dat", NumberSequence = "VOUCHER", Txt = "Voucher",
+            Format = "V-{SEQ}", AnnotatedFormat = "V-{SEQ}", InUse = 1, IsActive = true, Blocked = 1,
+            NextRec = 1, Highest = 99999 });
+        db.Add(new InventJournalName { RecId = 2, DataAreaId = "dat", JournalNameId = "MOV",
+            Description = "Movement", JournalType = InventJournalType.Movement, VoucherNumberSequenceTable = 1 });
+        db.Add(new InventParameters { RecId = 3, DataAreaId = "dat", MovementJournalNameId = "MOV" });
+        await db.SaveChangesAsync();
+        var identity = new TestIdentity();
+        var service = new InventParametersService(new TestUnitOfWork(db), identity);
+        var readiness = (await service.GetReadinessAsync())!;
+        Assert.Contains(readiness.Issues, x => x.Code == "MISSING_MOVEMENT_JOURNAL");
+        var journalNames = new InventJournalNameService(new TestUnitOfWork(db), identity, new InventJournalNameInputValidator());
+        Assert.Empty((await journalNames.LookupsAsync(default)).NumberSequences);
+    }
+    [Fact]
     public async Task Released_product_rejects_incomplete_creation_and_invalid_release_without_writes()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
@@ -417,6 +455,44 @@ public sealed class InventoryArchitectureTests
     }
 
     [Fact]
+    public async Task Item_group_rejects_invalid_posting_accounts_without_partial_changes()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        new InventItemGroupMapping().Register(TypeAdapterConfig.GlobalSettings);
+        var identity = new TestIdentity();
+        var service = new InventItemGroupService(new TestUnitOfWork(db), identity, identity);
+        var invalid = new InventItemGroupRecordDto { ItemGroupId = "TRADE", Name = "Trading",
+            Postings = [new InventItemGroupPostingDto { AccountType = 9, LedgerDimension = "999" }] };
+        Assert.NotNull((await service.CreateAsync(invalid, default)).Error);
+        Assert.Empty(await db.Set<InventItemGroup>().ToListAsync());
+        var created = await service.CreateAsync(new InventItemGroupRecordDto
+            { ItemGroupId = "TRADE", Name = "Trading" }, default);
+        Assert.Null(created.Error);
+        var update = await service.UpdateAsync(long.Parse(created.Group!.Id), new InventItemGroupRecordDto
+            { ItemGroupId = "TRADE", Name = "Changed", Postings = invalid.Postings }, default);
+        Assert.NotNull(update.Error);
+        Assert.Equal("Trading", (await db.Set<InventItemGroup>().SingleAsync()).Name);
+        Assert.Empty(await db.Set<InventPosting>().Where(x => x.ItemRelation == "TRADE").ToListAsync());
+    }
+
+    [Fact]
+    public async Task Item_group_create_rolls_back_when_posting_sync_fails()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        var identity = new TestIdentity();
+        var service = new InventItemGroupService(new TestUnitOfWork(db, failOnComplete: 2), identity, identity);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateAsync(
+            new InventItemGroupRecordDto { ItemGroupId = "TRADE", Name = "Trading" }, default));
+        Assert.Empty(await db.Set<InventItemGroup>().AsNoTracking().ToListAsync());
+    }
+
+    [Fact]
     public async Task Item_model_group_supports_only_basic_stocked_fifo()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
@@ -532,9 +608,36 @@ public sealed class InventoryArchitectureTests
         input.InventLocationIdReqMain = "";
         input.Name = " Updated ";
         Assert.Equal("Updated", (await service.UpdateAsync(created.Location.RecId, input, default)).Location!.Name);
+        db.Add(new InventSite { RecId = 2, DataAreaId = "dat", SiteId = "S2", Name = "Second" });
+        db.Add(new InventJournalTable { RecId = 30, DataAreaId = "dat", JournalId = "J-1", JournalNameId = "MOV",
+            Description = "Draft", InventSiteId = "S1", InventLocationId = "MAIN" });
+        await db.SaveChangesAsync();
+        input.InventSiteId = "S2";
+        Assert.Equal(LocationOperationStatus.InvalidReference,
+            (await service.UpdateAsync(created.Location.RecId, input, default)).Status);
+        Assert.Equal(LocationOperationStatus.Referenced, await service.DeleteAsync(created.Location.RecId, default));
+        db.Remove(await db.Set<InventJournalTable>().SingleAsync(x => x.JournalId == "J-1"));
+        await db.SaveChangesAsync();
         Assert.Equal(LocationOperationStatus.Success, await service.DeleteAsync(created.Location.RecId, default));
         Assert.Single(await service.ListAsync(default));
         Assert.Equal(2, await db.Set<InventLocation>().IgnoreQueryFilters().CountAsync());
+    }
+
+    [Fact]
+    public async Task Site_with_draft_journal_cannot_be_deleted()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.Add(new InventSite { RecId = 1, DataAreaId = "dat", SiteId = "S1", Name = "Site" });
+        db.Add(new InventJournalTable { RecId = 2, DataAreaId = "dat", JournalId = "J-1", JournalNameId = "MOV",
+            Description = "Draft", InventSiteId = "S1", InventLocationId = "" });
+        await db.SaveChangesAsync();
+        var identity = new TestIdentity();
+        var service = new InventSiteService(new TestUnitOfWork(db), identity, identity, new InventSiteUpdateValidator());
+        Assert.Equal(InventSiteDeleteResult.HasWarehouses, await service.DeleteAsync(1, default));
+        Assert.NotNull(await db.Set<InventSite>().SingleOrDefaultAsync(x => x.RecId == 1));
     }
 
     [Fact]
@@ -619,6 +722,17 @@ public sealed class InventoryArchitectureTests
         Assert.Equal(700, row.PostedValue);
         Assert.Equal(100, row.PhysicalValue);
 
+        db.Add(new InventDim { RecId = 7, DataAreaId = "dat", InventDimId = "DIM-VALUE", InventSiteId = "JED", InventLocationId = "MAIN" });
+        db.Add(new InventDim { RecId = 8, DataAreaId = "dat", InventDimId = "DIM-ZERO", InventSiteId = "JED", InventLocationId = "MAIN" });
+        db.Add(new InventSum { RecId = 9, DataAreaId = "dat", ItemId = "ITEM-001", InventDimId = "DIM-VALUE", PostedValue = 25 });
+        db.Add(new InventSum { RecId = 10, DataAreaId = "dat", ItemId = "ITEM-001", InventDimId = "DIM-ZERO" });
+        await db.SaveChangesAsync();
+        var nonzeroPage = (await new InventOnHandService(new TestUnitOfWork(db), identity)
+            .SearchPageAsync(null, null, null, null, false, 1, 50))!;
+        Assert.Equal(2, nonzeroPage.TotalCount);
+        Assert.Contains(nonzeroPage.Rows, x => x.InventDimId == "DIM-VALUE" && x.PostedValue == 25);
+        Assert.DoesNotContain(nonzeroPage.Rows, x => x.InventDimId == "DIM-ZERO");
+
         identity.DataAreaId = null;
         Assert.Null(await new InventOnHandService(new TestUnitOfWork(db), identity).ListAsync());
     }
@@ -682,11 +796,13 @@ public sealed class InventoryArchitectureTests
         var saved = await service.SaveAsync(new InventParametersDto
         {
             DefaultUnitId = "pcs", MultiSiteDefaultInventSiteId = "jed", MultiSiteDefaultInventLocationId = "main",
-            MovementJournalNameId = "MOV", CountJournalNameId = "COUNT", MandatoryItemTaxGroup = true,
+            MovementJournalNameId = " mov ", CountJournalNameId = " count ", MandatoryItemTaxGroup = true,
         });
         Assert.Null(saved.Error);
         Assert.Equal("JED", saved.Value!.MultiSiteDefaultInventSiteId);
         Assert.Equal("MAIN", saved.Value.MultiSiteDefaultInventLocationId);
+        Assert.Equal("MOV", saved.Value.MovementJournalNameId);
+        Assert.Equal("COUNT", saved.Value.CountJournalNameId);
         Assert.False(saved.Value.ReserveOnOrdered);
         var lookup = (await service.GetLookupsAsync())!;
         Assert.Single(lookup.Sites);
@@ -1119,6 +1235,7 @@ public sealed class InventoryArchitectureTests
             Configure<EcoResStorageDimensionGroupItem>(builder);
             Configure<EcoResStorageDimensionGroupFldSetup>(builder);
             Configure<InventItemGroupItem>(builder);
+            Configure<InventItemGroup>(builder);
             Configure<InventPosting>(builder);
             Configure<TaxGroupHeading>(builder);
             Configure<MainAccount>(builder);
@@ -1168,8 +1285,11 @@ public sealed class InventoryArchitectureTests
     private sealed class TestUnitOfWork : IUnitOfWork
     {
         private readonly DbContext context;
+        private readonly int failOnComplete;
+        private int completeCount;
         private IDbContextTransaction? transaction;
-        public TestUnitOfWork(DbContext context) => this.context = context;
+        public TestUnitOfWork(DbContext context, int failOnComplete = 0)
+        { this.context = context; this.failOnComplete = failOnComplete; }
         public DbContext Context => context;
         public IGenericRepository<T> Repository<T>() where T : class
         {
@@ -1177,7 +1297,11 @@ public sealed class InventoryArchitectureTests
             ((RepositoryProxy<T>)(object)repository).Context = context;
             return repository;
         }
-        public Task<int> CompleteAsync(CancellationToken ct = default) => context.SaveChangesAsync(ct);
+        public Task<int> CompleteAsync(CancellationToken ct = default)
+        {
+            if (++completeCount == failOnComplete) throw new InvalidOperationException("Injected save failure.");
+            return context.SaveChangesAsync(ct);
+        }
         public async Task BeginTransactionAsync(CancellationToken ct = default) => transaction ??= await context.Database.BeginTransactionAsync(ct);
         public async Task CommitTransactionAsync(CancellationToken ct = default)
         { if (transaction != null) { await transaction.CommitAsync(ct); await transaction.DisposeAsync(); transaction = null; } }

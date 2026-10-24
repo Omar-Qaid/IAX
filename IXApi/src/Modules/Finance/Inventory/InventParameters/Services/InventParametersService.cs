@@ -55,13 +55,29 @@ public sealed class InventParametersService(IUnitOfWork unitOfWork, ICompanyExec
             string.IsNullOrWhiteSpace(parameters.TransferJournalNameId) || string.IsNullOrWhiteSpace(parameters.CountJournalNameId))
             Add("MISSING_INVENTORY_PARAMETERS", "Set all basic journal defaults and disable ordered reservation.");
         var journalNames = await Db.Set<InventJournalName>().AsNoTracking().Where(x => x.DataAreaId == companyId).ToListAsync(ct);
-        foreach (var type in new[] { InventJournalType.Movement, InventJournalType.Adjustment, InventJournalType.Transfer, InventJournalType.Counting })
-            if (!journalNames.Any(x => x.JournalType == type && x.VoucherNumberSequenceTable != 0))
-                Add($"MISSING_{type.ToString().ToUpperInvariant()}_JOURNAL", $"Configure a {type} journal name with voucher numbering.");
+        var sequences = await Db.Set<SysNumberSequence>().IgnoreQueryFilters().AsNoTracking()
+            .Where(x => x.DataAreaId == companyId || x.DataAreaId == string.Empty && x.NumberSequenceScope == null)
+            .ToListAsync(ct);
+        var usableSequenceIds = sequences.Where(InventoryNumberSequencePolicy.CanAllocate)
+            .Select(x => x.RecId).ToHashSet();
+        foreach (var (type, selectedName) in new[]
+        {
+            (InventJournalType.Movement, parameters?.MovementJournalNameId),
+            (InventJournalType.Adjustment, parameters?.LossProfitJournalNameId),
+            (InventJournalType.Transfer, parameters?.TransferJournalNameId),
+            (InventJournalType.Counting, parameters?.CountJournalNameId)
+        })
+            if (!journalNames.Any(x => x.JournalType == type && x.JournalNameId == selectedName &&
+                    usableSequenceIds.Contains(x.VoucherNumberSequenceTable)))
+                Add($"MISSING_{type.ToString().ToUpperInvariant()}_JOURNAL",
+                    $"Select a {type} journal name with an allocatable voucher sequence.");
         foreach (var code in new[] { nameof(InventJournalTable), "InventTransId", "InventDim" })
-            if (!await Db.Set<SysNumberSequence>().IgnoreQueryFilters().AsNoTracking().AnyAsync(x => x.NumberSequence == code
-                    && !x.IsDeleted && x.IsActive && x.InUse != 0 && (x.DataAreaId == companyId || x.DataAreaId == string.Empty), ct))
+        {
+            var selectedSequence = sequences.Where(x => x.NumberSequence == code && !x.IsDeleted)
+                .OrderByDescending(x => x.DataAreaId == companyId).FirstOrDefault();
+            if (selectedSequence is null || !InventoryNumberSequencePolicy.CanAllocate(selectedSequence))
                 Add("MISSING_NUMBER_SEQUENCE", $"Configure an active {code} number sequence.");
+        }
         var postingTypes = await Db.Set<InventPosting>().AsNoTracking().Where(x => x.DataAreaId == companyId && x.LedgerDimension != 0
                 && x.CustVendCode == TableGroupAll.All && (x.ItemCode == TableGroupAll.All
                     || x.ItemCode == TableGroupAll.Group && x.ItemRelation == "TRADE"))
@@ -94,16 +110,20 @@ public sealed class InventParametersService(IUnitOfWork unitOfWork, ICompanyExec
         var companyId = company.GetDataAreaId(); if (string.IsNullOrWhiteSpace(companyId)) return (null, "A company must be selected.");
         if (input.ReserveOnOrdered) return (null, "Reservation against ordered supply is disabled in the basic inventory scope.");
         input.DefaultUnitId = input.DefaultUnitId.Trim(); input.MultiSiteDefaultInventSiteId = input.MultiSiteDefaultInventSiteId.Trim().ToUpperInvariant(); input.MultiSiteDefaultInventLocationId = input.MultiSiteDefaultInventLocationId.Trim().ToUpperInvariant();
+        input.MovementJournalNameId = input.MovementJournalNameId.Trim().ToUpperInvariant();
+        input.LossProfitJournalNameId = input.LossProfitJournalNameId.Trim().ToUpperInvariant();
+        input.TransferJournalNameId = input.TransferJournalNameId.Trim().ToUpperInvariant();
+        input.CountJournalNameId = input.CountJournalNameId.Trim().ToUpperInvariant();
         if (input.DefaultUnitId.Length > 0 && !await Db.Set<UnitOfMeasure>().AnyAsync(x => x.Symbol == input.DefaultUnitId, ct)) return (null, "Default unit was not found.");
         if (input.MultiSiteDefaultInventSiteId.Length > 0 && !await Db.Set<InventSite>().AnyAsync(x => x.DataAreaId == companyId && x.SiteId == input.MultiSiteDefaultInventSiteId, ct)) return (null, "Default site was not found in the selected company.");
         if (input.MultiSiteDefaultInventLocationId.Length > 0 && !await Db.Set<InventLocation>().AnyAsync(x => x.DataAreaId == companyId && x.InventLocationId == input.MultiSiteDefaultInventLocationId && x.InventSiteId == input.MultiSiteDefaultInventSiteId, ct)) return (null, "Default warehouse must belong to the default site in the selected company.");
         var journals = new[] { (input.MovementJournalNameId, InventJournalType.Movement), (input.LossProfitJournalNameId, InventJournalType.Adjustment), (input.TransferJournalNameId, InventJournalType.Transfer), (input.CountJournalNameId, InventJournalType.Counting) };
         foreach (var (id, type) in journals.Where(x => !string.IsNullOrWhiteSpace(x.Item1)))
-            if (!await Db.Set<InventJournalName>().AnyAsync(x => x.DataAreaId == companyId && x.JournalNameId == id.Trim() && x.JournalType == type, ct)) return (null, $"Journal name '{id}' does not exist for {type} in the selected company.");
+            if (!await Db.Set<InventJournalName>().AnyAsync(x => x.DataAreaId == companyId && x.JournalNameId == id && x.JournalType == type, ct)) return (null, $"Journal name '{id}' does not exist for {type} in the selected company.");
         var row = await Db.Set<InventParameters>().SingleOrDefaultAsync(x => x.DataAreaId == companyId, ct) ?? new InventParameters { DataAreaId = companyId };
         if (row.RecId == 0) Db.Add(row);
         row.DefaultUnitId = input.DefaultUnitId; row.MultiSiteDefaultInventSiteId = input.MultiSiteDefaultInventSiteId; row.MultiSiteDefaultInventLocationId = input.MultiSiteDefaultInventLocationId;
-        row.MovementJournalNameId = input.MovementJournalNameId.Trim(); row.LossProfitJournalNameId = input.LossProfitJournalNameId.Trim(); row.TransferJournalNameId = input.TransferJournalNameId.Trim(); row.CountJournalNameId = input.CountJournalNameId.Trim();
+        row.MovementJournalNameId = input.MovementJournalNameId; row.LossProfitJournalNameId = input.LossProfitJournalNameId; row.TransferJournalNameId = input.TransferJournalNameId; row.CountJournalNameId = input.CountJournalNameId;
         row.ReserveOnOrdered = input.ReserveOnOrdered ? NoYes.Yes : NoYes.No; row.MandatoryItemTaxGroup = input.MandatoryItemTaxGroup ? NoYes.Yes : NoYes.No;
         await unitOfWork.CompleteAsync(ct); return (Map(row), null);
     }

@@ -54,6 +54,7 @@ export const inventSiteApi = {
   },
   async delete(site: InventSiteRecord): Promise<void> {
     const response = await apiClient.delete<ApiResponse<boolean>>(`${endpoint}/${site.recId}`);
-    requireData(response.data);
+    if (requireData(response.data) !== true)
+      throw new ApiError('The site could not be deleted.', 400);
   },
 };

@@ -11,6 +11,8 @@ export interface InventOnHandRecord {
   inventDimId: string;
   site: string;
   warehouse: string;
+  inventoryStatusId: string;
+  inventoryStatusBlocked: boolean;
   physicalInventory: number;
   physicalReserved: number;
   availablePhysical: number;

@@ -66,9 +66,9 @@ export const inventModelGroupApi = {
     );
   },
   async delete(input: InventModelGroupRecord): Promise<void> {
-    requireData(
+    if (requireData(
       (await apiClient.delete<ApiResponse<boolean>>(`${endpoint}/${encodeURIComponent(input.id)}`))
         .data
-    );
+    ) !== true) throw new ApiError('The item model group could not be deleted.', 400);
   },
 };

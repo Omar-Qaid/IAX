@@ -11,7 +11,11 @@ public sealed class InventJournalNameInputValidator : BaseValidator<InventJourna
         RuleFor(x => x.JournalNameId).NotEmpty().MaximumLength(FieldLengths.JournalNameId);
         RuleFor(x => x.Description).NotEmpty().MaximumLength(FieldLengths.Description);
         RuleFor(x => x.JournalType).IsInEnum();
-        RuleFor(x => x.DetailSummary).IsInEnum();
-        RuleFor(x => x.Reservation).IsInEnum();
+        RuleFor(x => x.DetailSummary).Equal(DetailSummary.Detail)
+            .WithMessage("Basic inventory journals require detail posting.");
+        RuleFor(x => x.DeletePostedLines).Equal(false)
+            .WithMessage("Basic inventory journals must retain posted lines for audit.");
+        RuleFor(x => x.Reservation).Equal(ItemReservation.None)
+            .WithMessage("Automatic journal reservation is outside the basic inventory scope.");
     }
 }

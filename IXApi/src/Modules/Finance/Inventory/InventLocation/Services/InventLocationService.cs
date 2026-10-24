@@ -73,8 +73,11 @@ public sealed class InventLocationService : BaseService<InventLocation>, IInvent
             return new(null, LocationOperationStatus.InvalidReference, "Advanced warehouse options are outside the basic inventory scope.");
         if (!(await _updateValidator.ValidateAsync(new InventLocationUpdateValidation(location.InventLocationId, input), ct)).IsValid)
             return new(null, LocationOperationStatus.CodeChanged);
-        if (location.InventSiteId != input.InventSiteId && await _db.Set<InventDim>().AnyAsync(x => x.DataAreaId == companyId && x.InventLocationId == location.InventLocationId, ct))
-            return new(null, LocationOperationStatus.InvalidReference, "Warehouse site cannot be changed after inventory dimensions reference it.");
+        if (location.InventSiteId != input.InventSiteId &&
+            (await _db.Set<InventDim>().AnyAsync(x => x.DataAreaId == companyId && x.InventLocationId == location.InventLocationId, ct)
+             || await _db.Set<InventSum>().AnyAsync(x => x.DataAreaId == companyId && x.InventLocationId == location.InventLocationId, ct)
+             || await _db.Set<InventJournalTable>().AnyAsync(x => x.DataAreaId == companyId && x.InventLocationId == location.InventLocationId, ct)))
+            return new(null, LocationOperationStatus.InvalidReference, "Warehouse site cannot be changed after inventory dimensions, balances, or journals reference it.");
         if (!await _db.Set<InventSite>().AnyAsync(x => x.DataAreaId == companyId && x.SiteId == input.InventSiteId, ct))
             return new(null, LocationOperationStatus.SiteNotFound);
         var referenceError = await ValidateWarehouseReferences(input, location.InventLocationId, ct);

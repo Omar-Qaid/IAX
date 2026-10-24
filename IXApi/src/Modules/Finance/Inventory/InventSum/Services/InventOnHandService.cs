@@ -57,7 +57,8 @@ public sealed class InventOnHandService(
                           && (siteId == null || siteId == "" || dimension.InventSiteId == siteId)
                           && (warehouseId == null || warehouseId == "" || dimension.InventLocationId == warehouseId)
                           && (includeZero || summary.PhysicalInvent != 0 || summary.ReservPhysical != 0
-                              || summary.Ordered != 0 || summary.OnOrder != 0 || summary.ReservOrdered != 0)
+                              || summary.Ordered != 0 || summary.OnOrder != 0 || summary.ReservOrdered != 0
+                              || summary.PostedValue != 0 || summary.PhysicalValue != 0)
                       orderby summary.ItemId, dimension.InventSiteId, dimension.InventLocationId, summary.RecId
                       select new InventOnHandDto
                       {

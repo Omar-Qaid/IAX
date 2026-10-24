@@ -62,10 +62,24 @@ public sealed class InventItemGroupService : BaseService<InventItemGroupEntity>,
         error = await ValidatePostingsAsync(companyId, input.Postings, ct);
         if (error is not null) return (null, error);
         var row = new InventItemGroupEntity { ItemGroupId = id, Name = input.Name.Trim(), DataAreaId = companyId };
-        Db.Add(row);
-        await _unitOfWork.CompleteAsync(ct);
-        error = await SyncPostingsAsync(companyId, id, input.Postings, ct);
-        if (error is not null) return (null, error);
+        await _unitOfWork.BeginTransactionAsync(ct);
+        try
+        {
+            Db.Add(row);
+            await _unitOfWork.CompleteAsync(ct);
+            error = await SyncPostingsAsync(companyId, id, input.Postings, ct);
+            if (error is not null)
+            {
+                await _unitOfWork.RollbackTransactionAsync(ct);
+                return (null, error);
+            }
+            await _unitOfWork.CommitTransactionAsync(ct);
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync(ct);
+            throw;
+        }
         return await LoadOneAsync(row, companyId, ct);
     }
 
@@ -78,10 +92,25 @@ public sealed class InventItemGroupService : BaseService<InventItemGroupEntity>,
         var error = Validate(id, input);
         if (error is not null) return (null, error);
         if (row.ItemGroupId != id) return (null, "Item group ID cannot be changed after creation.");
-        row.Name = input.Name.Trim();
-        error = await SyncPostingsAsync(companyId!, id, input.Postings, ct);
+        error = await ValidatePostingsAsync(companyId!, input.Postings, ct);
         if (error is not null) return (null, error);
-        await _unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.BeginTransactionAsync(ct);
+        try
+        {
+            row.Name = input.Name.Trim();
+            error = await SyncPostingsAsync(companyId!, id, input.Postings, ct);
+            if (error is not null)
+            {
+                await _unitOfWork.RollbackTransactionAsync(ct);
+                return (null, error);
+            }
+            await _unitOfWork.CommitTransactionAsync(ct);
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync(ct);
+            throw;
+        }
         return await LoadOneAsync(row, companyId!, ct);
     }
 

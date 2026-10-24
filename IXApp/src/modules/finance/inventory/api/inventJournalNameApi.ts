@@ -49,6 +49,7 @@ export const inventJournalNameApi = {
     return requireData((await apiClient.put<ApiResponse<InventJournalNameRecord>>(`${endpoint}/${x.recId}`, payload(x))).data);
   },
   async delete(x: InventJournalNameRecord): Promise<void> {
-    requireData((await apiClient.delete<ApiResponse<boolean>>(`${endpoint}/${x.recId}`)).data);
+    if (requireData((await apiClient.delete<ApiResponse<boolean>>(`${endpoint}/${x.recId}`)).data) !== true)
+      throw new ApiError('The journal name could not be deleted.', 400);
   },
 };

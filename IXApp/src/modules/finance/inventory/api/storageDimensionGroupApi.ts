@@ -10,5 +10,5 @@ export const storageDimensionGroupApi = {
   async list(signal?: AbortSignal): Promise<StorageDimensionGroupRecord[]> { return requireData((await apiClient.get<ApiResponse<StorageDimensionGroupRecord[]>>(endpoint, { signal })).data); },
   async create(input: StorageDimensionGroupInput): Promise<StorageDimensionGroupRecord> { return requireData((await apiClient.post<ApiResponse<StorageDimensionGroupRecord>>(endpoint, input)).data); },
   async update(id: string, input: StorageDimensionGroupInput): Promise<StorageDimensionGroupRecord> { return requireData((await apiClient.put<ApiResponse<StorageDimensionGroupRecord>>(`${endpoint}/${encodeURIComponent(id)}`, input)).data); },
-  async delete(id: string): Promise<void> { requireData((await apiClient.delete<ApiResponse<boolean>>(`${endpoint}/${encodeURIComponent(id)}`)).data); },
+  async delete(id: string): Promise<void> { if (requireData((await apiClient.delete<ApiResponse<boolean>>(`${endpoint}/${encodeURIComponent(id)}`)).data) !== true) throw new ApiError('The storage dimension group could not be deleted.', 400); },
 };

@@ -69,7 +69,7 @@ export function EcoResTrackingDimensionGroupPage(): React.ReactElement {
           setValue: (record, value) => ({ ...record, name: text(value) }),
         },
       ],
-      sections: ({ record, editing, onRecordChange }) => {
+      sections: ({ record }) => {
         const rows: DimensionRow[] = [
           {
             id: 'batch-number',
@@ -99,14 +99,7 @@ export function EcoResTrackingDimensionGroupPage(): React.ReactElement {
               <Switch
                 size="small"
                 checked={row.active}
-                disabled={!editing}
-                onChange={(_, checked) =>
-                  onRecordChange(
-                    row.id === 'batch-number'
-                      ? { ...record, useBatchNumber: checked }
-                      : { ...record, useSerialNumber: checked }
-                  )
-                }
+                disabled
               />
             ),
           },
@@ -150,6 +143,9 @@ export function EcoResTrackingDimensionGroupPage(): React.ReactElement {
                 field: t('trackingDimensionGroup.fields.description'),
               }),
             }
+          : {}),
+        ...(record.useBatchNumber || record.useSerialNumber
+          ? { useBatchNumber: 'Batch and serial tracking are outside basic inventory.' }
           : {}),
       }),
       presentation: { mode: 'list', listWidth: 315, listResizable: true },

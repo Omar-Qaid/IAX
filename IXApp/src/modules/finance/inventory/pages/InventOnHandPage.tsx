@@ -27,6 +27,8 @@ export function InventOnHandPage(): React.ReactElement {
       { field: 'inventoryUnit', headerName: t('inventOnHand.inventoryUnit', 'Inventory unit'), width: 110 },
       { field: 'site', headerName: t('inventTrans.fields.site', 'Site'), width: 95 },
       { field: 'warehouse', headerName: t('inventTrans.fields.warehouse', 'Warehouse'), width: 115 },
+      { field: 'inventoryStatusId', headerName: t('inventOnHand.inventoryStatus', 'Inventory status'), width: 140 },
+      { field: 'inventoryStatusBlocked', headerName: t('inventOnHand.statusBlocked', 'Status blocked'), width: 120, type: 'boolean' },
       { field: 'physicalInventory', headerName: t('inventOnHand.physicalInventory', 'Physical inventory'), width: 140, type: 'number', align: 'right' },
       { field: 'physicalReserved', headerName: t('inventOnHand.physicalReserved', 'Physical reserved'), width: 140, type: 'number', align: 'right' },
       { field: 'availablePhysical', headerName: t('inventOnHand.availablePhysical', 'Available physical'), width: 140, type: 'number', align: 'right' },

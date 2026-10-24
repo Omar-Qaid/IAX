@@ -67,7 +67,9 @@ public sealed class InventSiteService : BaseService<InventSite>, IInventSiteServ
         if (site == null) return InventSiteDeleteResult.NotFound;
         if (await _unitOfWork.Repository<InventLocation>().GetQueryable().AnyAsync(x => x.DataAreaId == companyId && x.InventSiteId == site.SiteId, ct))
             return InventSiteDeleteResult.HasWarehouses;
-        if (await _unitOfWork.Context.Set<InventDim>().AnyAsync(x => x.DataAreaId == companyId && x.InventSiteId == site.SiteId, ct))
+        if (await _unitOfWork.Context.Set<InventDim>().AnyAsync(x => x.DataAreaId == companyId && x.InventSiteId == site.SiteId, ct)
+            || await _unitOfWork.Context.Set<InventSum>().AnyAsync(x => x.DataAreaId == companyId && x.InventSiteId == site.SiteId, ct)
+            || await _unitOfWork.Context.Set<InventJournalTable>().AnyAsync(x => x.DataAreaId == companyId && x.InventSiteId == site.SiteId, ct))
             return InventSiteDeleteResult.HasWarehouses;
         await RemoveAsync(site, ct);
         return InventSiteDeleteResult.Deleted;

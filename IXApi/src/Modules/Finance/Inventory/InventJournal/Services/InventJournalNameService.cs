@@ -43,7 +43,8 @@ public sealed class InventJournalNameService : IInventJournalNameService
             .OrderByDescending(x => x.DataAreaId == companyId).ThenBy(x => x.NumberSequence).ToListAsync(ct);
         return new InventJournalNameLookupsDto
         {
-            NumberSequences = rows.Select(x => new InventJournalNumberSequenceLookupDto(x.RecId, x.NumberSequence, x.Txt)).ToList()
+            NumberSequences = rows.Where(InventoryNumberSequencePolicy.CanAllocate)
+                .Select(x => new InventJournalNumberSequenceLookupDto(x.RecId, x.NumberSequence, x.Txt)).ToList()
         };
     }
 
@@ -102,10 +103,11 @@ public sealed class InventJournalNameService : IInventJournalNameService
     private async Task<string?> ValidateNumberSequenceAsync(long recId, string companyId, CancellationToken ct)
     {
         if (recId == 0) return "A voucher number sequence is required for inventory journal names.";
-        var valid = await _unitOfWork.Context.Set<SysNumberSequence>().IgnoreQueryFilters().AsNoTracking()
-            .AnyAsync(x => x.RecId == recId && !x.IsDeleted && x.IsActive && x.InUse != 0 &&
+        var sequence = await _unitOfWork.Context.Set<SysNumberSequence>().IgnoreQueryFilters().AsNoTracking()
+            .FirstOrDefaultAsync(x => x.RecId == recId &&
                 (x.DataAreaId == companyId || (x.DataAreaId == string.Empty && x.NumberSequenceScope == null)), ct);
-        return valid ? null : "The selected voucher number sequence is not available in the selected company.";
+        return sequence is not null && InventoryNumberSequencePolicy.CanAllocate(sequence)
+            ? null : "The selected voucher number sequence cannot allocate a code in the selected company.";
     }
 
     private Task<bool> IsUsedAsync(string companyId, string journalNameId, CancellationToken ct) =>
