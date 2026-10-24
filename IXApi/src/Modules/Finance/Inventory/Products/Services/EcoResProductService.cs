@@ -34,27 +34,32 @@ public sealed class EcoResProductService : BaseService<EcoResProduct>, IEcoResPr
         var number = NormalizeNumber(input.ProductNumber);
         var error = await ValidateAsync(input, ct);
         if (error is not null) return (null, error);
-        if (await Db.Set<EcoResProduct>().AnyAsync(x => x.DisplayProductNumber == number, ct))
+        if (await Db.Set<EcoResProduct>().IgnoreQueryFilters().AnyAsync(x => x.DisplayProductNumber == number, ct))
             return (null, $"Product number '{number}' already exists.");
 
-        await _unitOfWork.BeginTransactionAsync(ct);
-        try
+        var strategy = Db.Database.CreateExecutionStrategy();
+        return await strategy.ExecuteAsync(async () =>
         {
-            var product = new EcoResProduct { DisplayProductNumber = number, SearchName = Clean(input.SearchName), ProductType = ParseProductType(input.ProductType) };
-            Db.Add(product);
-            await _unitOfWork.CompleteAsync(ct);
-            Db.Add(new EcoResDistinctProduct { RecId = product.RecId });
-            var translations = CreateTranslations(product.RecId, input);
-            Db.AddRange(translations);
-            await _unitOfWork.CompleteAsync(ct);
-            await _unitOfWork.CommitTransactionAsync(ct);
-            return (Map(product, translations), null);
-        }
-        catch
-        {
-            await _unitOfWork.RollbackTransactionAsync(ct);
-            throw;
-        }
+            await _unitOfWork.BeginTransactionAsync(ct);
+            try
+            {
+                var product = new EcoResProduct { DisplayProductNumber = number, SearchName = Clean(input.SearchName), ProductType = ParseProductType(input.ProductType) };
+                Db.Add(product);
+                await _unitOfWork.CompleteAsync(ct);
+                Db.Add(new EcoResDistinctProduct { RecId = product.RecId });
+                var translations = CreateTranslations(product.RecId, input);
+                Db.AddRange(translations);
+                await _unitOfWork.CompleteAsync(ct);
+                await _unitOfWork.CommitTransactionAsync(ct);
+                return (Map(product, translations), (string?)null);
+            }
+            catch
+            {
+                await _unitOfWork.RollbackTransactionAsync(ct);
+                Db.ChangeTracker.Clear();
+                throw;
+            }
+        });
     }
 
     public async Task<(EcoResProductDto? Product, string? Error)> UpdateAsync(long recId, EcoResProductInputDto input, CancellationToken ct = default)
@@ -64,7 +69,7 @@ public sealed class EcoResProductService : BaseService<EcoResProduct>, IEcoResPr
         var number = NormalizeNumber(input.ProductNumber);
         var error = await ValidateAsync(input, ct);
         if (error is not null) return (null, error);
-        if (await Db.Set<EcoResProduct>().AnyAsync(x => x.RecId != recId && x.DisplayProductNumber == number, ct))
+        if (await Db.Set<EcoResProduct>().IgnoreQueryFilters().AnyAsync(x => x.RecId != recId && x.DisplayProductNumber == number, ct))
             return (null, $"Product number '{number}' already exists.");
         var requestedType = ParseProductType(input.ProductType);
         if (requestedType != product.ProductType && await Db.Set<ReleasedItem>().AnyAsync(x => x.Product == recId, ct))

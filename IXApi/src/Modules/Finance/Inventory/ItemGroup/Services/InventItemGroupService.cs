@@ -50,7 +50,10 @@ public sealed class InventItemGroupService : BaseService<InventItemGroupEntity>,
             }).ToListAsync(ct);
     }
 
-    public async Task<(InventItemGroupRecordDto? Group, string? Error)> CreateAsync(InventItemGroupRecordDto input, CancellationToken ct)
+    public Task<(InventItemGroupRecordDto? Group, string? Error)> CreateAsync(InventItemGroupRecordDto input, CancellationToken ct) =>
+        Db.Database.CreateExecutionStrategy().ExecuteAsync(() => CreateCoreAsync(input, ct));
+
+    private async Task<(InventItemGroupRecordDto? Group, string? Error)> CreateCoreAsync(InventItemGroupRecordDto input, CancellationToken ct)
     {
         var companyId = company.GetDataAreaId();
         if (string.IsNullOrWhiteSpace(companyId)) return (null, "A legal entity must be selected.");
@@ -71,6 +74,7 @@ public sealed class InventItemGroupService : BaseService<InventItemGroupEntity>,
             if (error is not null)
             {
                 await _unitOfWork.RollbackTransactionAsync(ct);
+                Db.ChangeTracker.Clear();
                 return (null, error);
             }
             await _unitOfWork.CommitTransactionAsync(ct);
@@ -78,12 +82,16 @@ public sealed class InventItemGroupService : BaseService<InventItemGroupEntity>,
         catch
         {
             await _unitOfWork.RollbackTransactionAsync(ct);
+            Db.ChangeTracker.Clear();
             throw;
         }
         return await LoadOneAsync(row, companyId, ct);
     }
 
-    public async Task<(InventItemGroupRecordDto? Group, string? Error)> UpdateAsync(long recId, InventItemGroupRecordDto input, CancellationToken ct)
+    public Task<(InventItemGroupRecordDto? Group, string? Error)> UpdateAsync(long recId, InventItemGroupRecordDto input, CancellationToken ct) =>
+        Db.Database.CreateExecutionStrategy().ExecuteAsync(() => UpdateCoreAsync(recId, input, ct));
+
+    private async Task<(InventItemGroupRecordDto? Group, string? Error)> UpdateCoreAsync(long recId, InventItemGroupRecordDto input, CancellationToken ct)
     {
         var companyId = company.GetDataAreaId();
         var row = await Db.Set<InventItemGroupEntity>().FirstOrDefaultAsync(x => x.RecId == recId && x.DataAreaId == companyId, ct);
@@ -102,6 +110,7 @@ public sealed class InventItemGroupService : BaseService<InventItemGroupEntity>,
             if (error is not null)
             {
                 await _unitOfWork.RollbackTransactionAsync(ct);
+                Db.ChangeTracker.Clear();
                 return (null, error);
             }
             await _unitOfWork.CommitTransactionAsync(ct);
@@ -109,6 +118,7 @@ public sealed class InventItemGroupService : BaseService<InventItemGroupEntity>,
         catch
         {
             await _unitOfWork.RollbackTransactionAsync(ct);
+            Db.ChangeTracker.Clear();
             throw;
         }
         return await LoadOneAsync(row, companyId!, ct);

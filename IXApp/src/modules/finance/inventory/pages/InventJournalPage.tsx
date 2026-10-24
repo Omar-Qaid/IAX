@@ -5,15 +5,11 @@ import {
 } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { inventJournalApi, type InventJournal, type InventJournalLine, type InventJournalLineInput } from '../api/inventJournalApi';
+import { canPostJournal, createJournalLineDraft } from '../components/inventJournalDraft';
 import { inventLocationApi } from '../api/inventLocationApi';
 import { wmsLocationApi } from '../api/wmsLocationApi';
 
 const journalTypes = ['Movement', 'Inventory adjustment', 'Counting', 'Transfer'];
-const blankLine = (): InventJournalLineInput => ({
-  transDate: new Date().toISOString().slice(0, 10), itemId: '', inventSiteId: '', inventLocationId: '', inventBatchId: '', inventSerialId: '',
-  wmsLocationId: '', toInventSiteId: '', toInventLocationId: '', toWmsLocationId: '', qty: 1, counted: 0, unit: '', costPrice: 0, ledgerDimension: 0,
-});
-
 export function InventJournalPage(): React.ReactElement {
   const qc = useQueryClient();
   const [selectedId, setSelectedId] = useState('');
@@ -23,7 +19,7 @@ export function InventJournalPage(): React.ReactElement {
   const [error, setError] = useState('');
   const [ledgerSearch, setLedgerSearch] = useState('');
   const [header, setHeader] = useState({ journalNameId: '', description: '', inventSiteId: '', inventLocationId: '' });
-  const [line, setLine] = useState<InventJournalLineInput>(blankLine());
+  const [line, setLine] = useState<InventJournalLineInput>(createJournalLineDraft());
   const journals = useQuery({ queryKey: ['inventory-journals'], queryFn: ({ signal }) => inventJournalApi.list(signal) });
   const selected = useQuery({ queryKey: ['inventory-journal', selectedId], queryFn: ({ signal }) => inventJournalApi.get(selectedId, signal), enabled: !!selectedId });
   const lookups = useQuery({ queryKey: ['inventory-journal-lookups'], queryFn: ({ signal }) => inventJournalApi.lookups(signal) });
@@ -60,7 +56,7 @@ export function InventJournalPage(): React.ReactElement {
       inventBatchId: row.inventBatchId, inventSerialId: row.inventSerialId, wmsLocationId: row.wmsLocationId,
       toInventSiteId: row.toInventSiteId, toInventLocationId: row.toInventLocationId, toWmsLocationId: row.toWmsLocationId,
       qty: row.qty, counted: row.counted, unit: row.unit, costPrice: row.costPrice, ledgerDimension: row.ledgerDimension,
-    } : blankLine());
+    } : createJournalLineDraft(current));
     setError(''); setLineOpen(true);
   };
   const field = (label: string, value: string | number, onChange: (v: string) => void, type = 'text', disabled = false) =>
@@ -86,10 +82,11 @@ export function InventJournalPage(): React.ReactElement {
         <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', gap: 1, flexWrap: 'wrap', mb: 2 }}>
           <Box><Typography variant="h5">{current.journalId}</Typography><Typography color="text.secondary">{current.description} · {current.journalNameId} · {journalTypes[current.journalType] ?? 'Unknown'}</Typography></Box>
           <Stack direction="row" sx={{ gap: 1 }}>
-            {!current.posted && <><Button onClick={() => openLine()} disabled={lookups.isLoading}>New line</Button><Button color="error" onClick={() => removeJournal.mutate(current.journalId)}>Delete</Button><Button variant="contained" onClick={() => postJournal.mutate(current.journalId)}>Post</Button></>}
+            {!current.posted && <><Button onClick={() => openLine()} disabled={lookups.isLoading}>New line</Button><Button color="error" onClick={() => removeJournal.mutate(current.journalId)}>Delete</Button>{canPostJournal(current) && <Button variant="contained" disabled={postJournal.isPending} onClick={() => postJournal.mutate(current.journalId)}>Post</Button>}</>}
           </Stack>
         </Stack>
         {error && <Alert severity="error" sx={{ mb: 1 }} onClose={() => setError('')}>{error}</Alert>}
+        {currentType === 2 && !current.posted && <Alert severity="warning" sx={{ mb: 1 }}>Counting journals cannot be posted until durable movement protection and count confirmation are implemented.</Alert>}
         <Table size="small"><TableHead><TableRow><TableCell>Line</TableCell><TableCell>Item</TableCell><TableCell>Site / warehouse</TableCell><TableCell>Quantity</TableCell><TableCell>Counted</TableCell><TableCell>Unit</TableCell><TableCell>Cost / amount</TableCell><TableCell /></TableRow></TableHead><TableBody>
           {(current.lines ?? []).map((x) => <TableRow key={x.recId}><TableCell>{x.lineNum}</TableCell><TableCell>{x.itemId}</TableCell><TableCell>{x.inventSiteId} / {x.inventLocationId}{currentType === 3 ? ` → ${x.toInventSiteId} / ${x.toInventLocationId}` : ''}</TableCell><TableCell>{x.qty}</TableCell><TableCell>{currentType === 2 ? x.counted : ''}</TableCell><TableCell>{x.unit}</TableCell><TableCell>{x.costPrice} / {x.costAmount}</TableCell><TableCell>{!current.posted && <Stack direction="row"><Button size="small" onClick={() => openLine(x)}>Edit</Button><Button size="small" color="error" onClick={() => removeLine.mutate(x.recId)}>Delete</Button></Stack>}</TableCell></TableRow>)}
         </TableBody></Table>

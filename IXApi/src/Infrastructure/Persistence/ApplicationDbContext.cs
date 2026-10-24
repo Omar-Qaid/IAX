@@ -336,6 +336,8 @@ namespace IAX.IXApi.Infrastructure.Persistence
         public DbSet<WMSLocation> WMSLocations => Set<WMSLocation>();
         public DbSet<InventBatch> InventBatches => Set<InventBatch>();
         public DbSet<IAX.IXApi.Modules.Finance.Entities.InventSerial> InventSerials => Set<IAX.IXApi.Modules.Finance.Entities.InventSerial>();
+        public DbSet<InventPackagingGroup> InventPackagingGroups => Set<InventPackagingGroup>();
+        public DbSet<InventPackagingUnit> InventPackagingUnits => Set<InventPackagingUnit>();
         
 
 
@@ -344,6 +346,7 @@ namespace IAX.IXApi.Infrastructure.Persistence
         public DbSet<InventJournalName> InventJournalNames => Set<InventJournalName>();
         public DbSet<InventParameters> InventParameters => Set<InventParameters>();
         public DbSet<InventItemLocation> InventItemLocations => Set<InventItemLocation>();
+        public DbSet<InventCountGroup> InventCountGroups => Set<InventCountGroup>();
         public DbSet<InventTableModule> InventTableModules => Set<InventTableModule>();
         #endregion
 

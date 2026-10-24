@@ -30,7 +30,10 @@ public sealed class ReleasedProductListService(
         return string.IsNullOrWhiteSpace(companyId) ? null : await LoadAsync(companyId, null, ct);
     }
 
-    public async Task<(ReleasedProductListDto? Product, string? Error)> CreateSharedAsync(CreateSharedProductDto input, CancellationToken ct = default)
+    public Task<(ReleasedProductListDto? Product, string? Error)> CreateSharedAsync(CreateSharedProductDto input, CancellationToken ct = default) =>
+        ExecuteWithStrategyAsync(() => CreateSharedCoreAsync(input, ct));
+
+    private async Task<(ReleasedProductListDto? Product, string? Error)> CreateSharedCoreAsync(CreateSharedProductDto input, CancellationToken ct)
     {
         var number = input.ProductNumber.Trim().ToUpperInvariant();
         if (string.IsNullOrWhiteSpace(input.Name)) return (null, "Product name is required.");
@@ -76,11 +79,15 @@ public sealed class ReleasedProductListService(
         catch
         {
             if (ownsTransaction) await unitOfWork.RollbackTransactionAsync(ct);
+            if (ownsTransaction) Db.ChangeTracker.Clear();
             throw;
         }
     }
 
-    public async Task<(ReleasedProductListDto? Product, string? Error)> ReleaseAsync(ReleaseProductDto input, CancellationToken ct = default)
+    public Task<(ReleasedProductListDto? Product, string? Error)> ReleaseAsync(ReleaseProductDto input, CancellationToken ct = default) =>
+        ExecuteWithStrategyAsync(() => ReleaseCoreAsync(input, ct));
+
+    private async Task<(ReleasedProductListDto? Product, string? Error)> ReleaseCoreAsync(ReleaseProductDto input, CancellationToken ct)
     {
         var companyId = company.GetDataAreaId();
         if (string.IsNullOrWhiteSpace(companyId)) return (null, "A company must be selected.");
@@ -129,11 +136,15 @@ public sealed class ReleasedProductListService(
         catch
         {
             if (ownsTransaction) await unitOfWork.RollbackTransactionAsync(ct);
+            if (ownsTransaction) Db.ChangeTracker.Clear();
             throw;
         }
     }
 
-    public async Task<(ReleasedProductListDto? Product, string? Error)> ConfigureAsync(long recId, ConfigureReleasedProductDto input, CancellationToken ct = default)
+    public Task<(ReleasedProductListDto? Product, string? Error)> ConfigureAsync(long recId, ConfigureReleasedProductDto input, CancellationToken ct = default) =>
+        ExecuteWithStrategyAsync(() => ConfigureCoreAsync(recId, input, ct));
+
+    private async Task<(ReleasedProductListDto? Product, string? Error)> ConfigureCoreAsync(long recId, ConfigureReleasedProductDto input, CancellationToken ct)
     {
         var companyId = company.GetDataAreaId();
         if (string.IsNullOrWhiteSpace(companyId)) return (null, "A company must be selected.");
@@ -186,6 +197,7 @@ public sealed class ReleasedProductListService(
         catch
         {
             if (ownsTransaction) await unitOfWork.RollbackTransactionAsync(ct);
+            if (ownsTransaction) Db.ChangeTracker.Clear();
             throw;
         }
     }
@@ -291,7 +303,10 @@ public sealed class ReleasedProductListService(
         return ((await LoadAsync(companyId, recId, ct)).Single(), null);
     }
 
-    public async Task<(ReleasedProductListDto? Product, string? Error)> CreateReleasedAsync(CreateReleasedProductDto input, CancellationToken ct = default)
+    public Task<(ReleasedProductListDto? Product, string? Error)> CreateReleasedAsync(CreateReleasedProductDto input, CancellationToken ct = default) =>
+        ExecuteWithStrategyAsync(() => CreateReleasedCoreAsync(input, ct));
+
+    private async Task<(ReleasedProductListDto? Product, string? Error)> CreateReleasedCoreAsync(CreateReleasedProductDto input, CancellationToken ct)
     {
         var companyId = company.GetDataAreaId();
         if (string.IsNullOrWhiteSpace(companyId)) return (null, "A company must be selected.");
@@ -322,8 +337,13 @@ public sealed class ReleasedProductListService(
             await unitOfWork.CommitTransactionAsync(ct);
             return ((await LoadAsync(companyId, item.RecId, ct)).Single(), null);
         }
-        catch { await unitOfWork.RollbackTransactionAsync(ct); throw; }
+        catch { await unitOfWork.RollbackTransactionAsync(ct); Db.ChangeTracker.Clear(); throw; }
     }
+
+    private Task<T> ExecuteWithStrategyAsync<T>(Func<Task<T>> operation) =>
+        Db.Database.CurrentTransaction is not null
+            ? operation()
+            : Db.Database.CreateExecutionStrategy().ExecuteAsync(operation);
 
     public async Task<ReleasedProductLookupDto?> GetLookupsAsync(CancellationToken ct = default)
     {
@@ -333,7 +353,10 @@ public sealed class ReleasedProductListService(
         {
             Units = await Db.Set<UnitOfMeasure>().AsNoTracking().OrderBy(x => x.Symbol).Select(x => new ReleasedProductLookupOptionDto(x.Symbol, x.Symbol)).ToListAsync(ct),
             ItemGroups = await Db.Set<InventItemGroup>().AsNoTracking().Where(x => x.DataAreaId == companyId).OrderBy(x => x.ItemGroupId).Select(x => new ReleasedProductLookupOptionDto(x.ItemGroupId, x.ItemGroupId + " - " + x.Name)).ToListAsync(ct),
-            ModelGroups = await Db.Set<InventModelGroupEntity>().AsNoTracking().Where(x => x.DataAreaId == companyId).OrderBy(x => x.ModelGroupId).Select(x => new ReleasedProductLookupOptionDto(x.ModelGroupId, x.ModelGroupId + " - " + x.Name)).ToListAsync(ct),
+            ModelGroups = (await Db.Set<InventModelGroupEntity>().AsNoTracking().Where(x => x.DataAreaId == companyId)
+                .OrderBy(x => x.ModelGroupId).ToListAsync(ct))
+                .Select(x => new ReleasedProductLookupOptionDto(x.ModelGroupId,
+                    x.ModelGroupId + " - " + x.Name + (BasicModelGroupProblem(x) is null ? "" : " (setup required)"))).ToList(),
             StorageDimensionGroups = await Db.Set<EcoResStorageDimensionGroup>().AsNoTracking().OrderBy(x => x.Name).Select(x => new ReleasedProductLookupOptionDto(x.Name, x.Name + " - " + x.Description)).ToListAsync(ct),
             TrackingDimensionGroups = await Db.Set<EcoResTrackingDimensionGroup>().AsNoTracking().OrderBy(x => x.Name).Select(x => new ReleasedProductLookupOptionDto(x.Name, x.Name + " - " + x.Description)).ToListAsync(ct),
             TaxItemGroups = await Db.Set<TaxItemGroupHeading>().AsNoTracking().Where(x => x.DataAreaId == companyId).OrderBy(x => x.TaxItemGroup).Select(x => new ReleasedProductLookupOptionDto(x.TaxItemGroup, x.TaxItemGroup + " - " + x.Name)).ToListAsync(ct),
@@ -703,10 +726,12 @@ public sealed class ReleasedProductListService(
 
     private async Task<string?> ValidateBasicGroupsAsync(string companyId, string modelId, string storageId, string trackingId, CancellationToken ct)
     {
-        if (!await Db.Set<InventModelGroupEntity>().AnyAsync(x => x.DataAreaId == companyId && x.ModelGroupId == modelId.Trim()
-                && x.StockedProduct == NoYes.Yes && x.InventModel == InventModel.FIFO
-                && x.NegativePhysical == NoYes.No && x.NegativeFinancial == NoYes.No, ct))
-            return "The item model group must be stocked FIFO with negative inventory disabled.";
+        var modelGroup = await Db.Set<InventModelGroupEntity>().AsNoTracking()
+            .FirstOrDefaultAsync(x => x.DataAreaId == companyId && x.ModelGroupId == modelId.Trim(), ct);
+        if (modelGroup is null) return $"Item model group '{modelId.Trim()}' was not found in the selected company.";
+        var modelProblem = BasicModelGroupProblem(modelGroup);
+        if (modelProblem is not null)
+            return $"Item model group '{modelGroup.ModelGroupId}' needs setup: {modelProblem} Open Inventory > Item model groups and use a valid stocked FIFO group.";
         var storage = await Db.Set<EcoResStorageDimensionGroup>().AsNoTracking()
             .FirstOrDefaultAsync(x => x.Name == storageId.Trim(), ct);
         if (storage is null) return "Storage dimension group was not found.";
@@ -723,6 +748,16 @@ public sealed class ReleasedProductListService(
             .AnyAsync(x => x.TrackingDimensionGroup == tracking.RecId && x.IsActive, ct))
             return "Batch and serial tracking are outside the basic inventory scope.";
         return null;
+    }
+    private static string? BasicModelGroupProblem(InventModelGroupEntity group)
+    {
+        var problems = new List<string>();
+        if (group.StockedProduct != NoYes.Yes) problems.Add("Stocked product must be Yes");
+        if (group.InventModel != InventModel.FIFO) problems.Add("Inventory model must be FIFO");
+        if (group.NegativePhysical != NoYes.No) problems.Add("Negative physical inventory must be No");
+        if (group.NegativeFinancial != NoYes.No) problems.Add("Negative financial inventory must be No");
+        if (group.PostOnHandFinancial != NoYes.Yes) problems.Add("Post financial inventory must be Yes");
+        return problems.Count == 0 ? null : string.Join("; ", problems) + ".";
     }
     private async Task UpsertAsync<T>(System.Linq.Expressions.Expression<Func<T, bool>> predicate, Func<T> create, Action<T> update, CancellationToken ct) where T : class { var row = await Db.Set<T>().FirstOrDefaultAsync(predicate, ct) ?? create(); update(row); if (Db.Entry(row).State == EntityState.Detached) Db.Add(row); }
 

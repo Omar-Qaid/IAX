@@ -19,6 +19,7 @@ import { SimpleListPage, type EnterpriseListConfig } from '@patterns/simple-list
 import type { ColumnDef } from '@shared/components/data-grid/types';
 import { useAppTranslation } from '@core/localization/useAppTranslation';
 import { inventTransApi, type InventTransRecord } from '../api/inventTransApi';
+import { summarizeInventTransRows } from '../components/summarizeInventTransRows';
 
 type TransactionFilter = 'all' | 'receipts' | 'issues' | 'open';
 type DialogMode = 'details' | 'dimensions' | 'summary' | null;
@@ -241,15 +242,7 @@ function InventTransDialog({
   onClose: () => void;
 }): React.ReactElement {
   const { t } = useAppTranslation();
-  const summary = useMemo(
-    () => ({
-      quantity: rows.reduce((total, row) => total + row.quantity, 0),
-      costAmount: rows.reduce((total, row) => total + row.costAmount, 0),
-      receipts: rows.filter(hasReceipt).length,
-      issues: rows.filter(hasIssue).length,
-    }),
-    [rows]
-  );
+  const summary = useMemo(() => summarizeInventTransRows(rows), [rows]);
   const values =
     mode === 'dimensions' && selected
       ? [
@@ -275,8 +268,10 @@ function InventTransDialog({
             [t('inventTrans.summary.transactions'), String(rows.length)],
             [t('inventTrans.summary.receipts'), String(summary.receipts)],
             [t('inventTrans.summary.issues'), String(summary.issues)],
-            [t('inventTrans.fields.quantity'), summary.quantity.toLocaleString()],
-            [t('inventTrans.fields.costAmount'), summary.costAmount.toLocaleString()],
+            [t('inventTrans.fields.quantity'), summary.quantity === null
+              ? t('inventTrans.summary.multipleItems', 'Multiple items') : summary.quantity.toLocaleString()],
+            [t('inventTrans.fields.costAmount'), summary.costAmount === null
+              ? t('inventTrans.summary.multipleCurrencies', 'Multiple currencies') : summary.costAmount.toLocaleString()],
           ];
   const title =
     mode === 'dimensions'

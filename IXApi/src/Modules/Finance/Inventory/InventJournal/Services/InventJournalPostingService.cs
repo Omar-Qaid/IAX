@@ -36,7 +36,10 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
         _inventoryNumbers = inventoryNumbers;
     }
 
-    public async Task<(InventJournalPostResultDto? Result, string? Error)> PostAsync(string journalId, CancellationToken ct)
+    public Task<(InventJournalPostResultDto? Result, string? Error)> PostAsync(string journalId, CancellationToken ct) =>
+        Db.Database.CreateExecutionStrategy().ExecuteAsync(() => PostCoreAsync(journalId, ct));
+
+    private async Task<(InventJournalPostResultDto? Result, string? Error)> PostCoreAsync(string journalId, CancellationToken ct)
     {
         var companyId = _company.GetDataAreaId();
         if (string.IsNullOrWhiteSpace(companyId)) return (null, "A company must be selected.");
@@ -111,12 +114,12 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
                 var item = await LoadReadyItemAsync(companyId, line.ItemId, ct);
                 var fromDim = await Db.Set<InventDim>().FirstOrDefaultAsync(x => x.DataAreaId == companyId && x.InventDimId == line.InventDimId, ct)
                     ?? throw new PostingValidationException($"Inventory dimension '{line.InventDimId}' was not found for line {line.LineNum}.");
-                var inventoryQty = await ConvertToInventoryUnitAsync(item.Product, item.ItemId, line.Unit, line.Qty, ct);
+                var inventoryQty = await ConvertToInventoryUnitAsync(companyId, item.Product, item.ItemId, line.Unit, line.Qty, ct);
                 var fromSum = await GetOrCreateSummaryAsync(companyId, item.ItemId, fromDim, ct);
                 decimal signedQty;
                 if (header.JournalType == InventJournalType.Counting)
                 {
-                    var counted = await ConvertToInventoryUnitAsync(item.Product, item.ItemId, line.Unit, line.Counted, ct);
+                    var counted = await ConvertToInventoryUnitAsync(companyId, item.Product, item.ItemId, line.Unit, line.Counted, ct);
                     line.InventOnHand = fromSum.PhysicalInvent;
                     signedQty = counted - fromSum.PhysicalInvent;
                     line.Qty = signedQty;
@@ -253,9 +256,9 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
             throw new PostingValidationException($"Each journal line for serial-tracked item '{item.ItemId}' must identify one serial-numbered unit.");
     }
 
-    private async Task<decimal> ConvertToInventoryUnitAsync(long product, string itemId, string fromSymbol, decimal qty, CancellationToken ct)
+    private async Task<decimal> ConvertToInventoryUnitAsync(string companyId, long product, string itemId, string fromSymbol, decimal qty, CancellationToken ct)
     {
-        var inventoryUnit = await Db.Set<InventTableModule>().AsNoTracking().Where(x => x.ItemId == itemId && x.ModuleType == ModuleInventPurchSales.Inventory)
+        var inventoryUnit = await Db.Set<InventTableModule>().AsNoTracking().Where(x => x.DataAreaId == companyId && x.ItemId == itemId && x.ModuleType == ModuleInventPurchSales.Inventory)
             .Select(x => x.UnitId).FirstOrDefaultAsync(ct);
         if (string.IsNullOrWhiteSpace(inventoryUnit)) throw new PostingValidationException($"Inventory unit is required for item '{itemId}'.");
         if (string.Equals(fromSymbol, inventoryUnit, StringComparison.OrdinalIgnoreCase)) return qty;

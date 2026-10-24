@@ -34,6 +34,66 @@ namespace IAX.IXApi.Tests;
 public sealed class InventoryArchitectureTests
 {
     [Fact]
+    public async Task Shared_product_creation_persists_distinct_product_and_translations()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        new EcoResProductMapping().Register(TypeAdapterConfig.GlobalSettings);
+        var service = new EcoResProductService(new TestUnitOfWork(db), new TestIdentity(), new EcoResProductInputValidator());
+
+        var result = await service.CreateAsync(new EcoResProductInputDto
+        {
+            ProductNumber = "paper-a4", Name = "Paper A4", NameAlias = "ورق A4",
+            SearchName = "Paper", ProductType = "Item"
+        });
+
+        Assert.Null(result.Error);
+        Assert.Equal("PAPER-A4", result.Product!.ProductNumber);
+        Assert.Equal("Paper A4", result.Product.Name);
+        Assert.Single(await db.Set<IAX.IXApi.Modules.Finance.Inventory.InventTable.EcoResDistinctProduct>().ToListAsync());
+        Assert.Equal(2, await db.Set<IAX.IXApi.Modules.Finance.Inventory.InventTable.EcoResProductTranslation>().CountAsync());
+    }
+
+    [Fact]
+    public async Task Shared_product_creation_rejects_soft_deleted_duplicate_number()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.Add(new SharedProduct { RecId = 1, DisplayProductNumber = "PAPER-A4", IsDeleted = true });
+        await db.SaveChangesAsync();
+        var service = new EcoResProductService(new TestUnitOfWork(db), new TestIdentity(), new EcoResProductInputValidator());
+
+        var result = await service.CreateAsync(new EcoResProductInputDto
+        { ProductNumber = "paper-a4", Name = "Paper A4", ProductType = "Item" });
+
+        Assert.Null(result.Product);
+        Assert.Contains("already exists", result.Error);
+        Assert.Single(await db.Set<SharedProduct>().IgnoreQueryFilters().ToListAsync());
+    }
+
+    [Fact]
+    public async Task Shared_product_creation_rolls_back_all_rows_when_translation_save_fails()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        var service = new EcoResProductService(new TestUnitOfWork(db, failOnComplete: 2),
+            new TestIdentity(), new EcoResProductInputValidator());
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateAsync(new EcoResProductInputDto
+        { ProductNumber = "PAPER-A4", Name = "Paper A4", ProductType = "Item" }));
+
+        Assert.Empty(await db.Set<SharedProduct>().ToListAsync());
+        Assert.Empty(await db.Set<IAX.IXApi.Modules.Finance.Inventory.InventTable.EcoResDistinctProduct>().ToListAsync());
+        Assert.Empty(await db.Set<IAX.IXApi.Modules.Finance.Inventory.InventTable.EcoResProductTranslation>().ToListAsync());
+    }
+
+    [Fact]
     public void Journal_name_rejects_unsupported_policies()
     {
         var validator = new InventJournalNameInputValidator();
@@ -91,6 +151,279 @@ public sealed class InventoryArchitectureTests
         Assert.Empty(await db.Set<ReleasedItem>().ToListAsync());
         Assert.Empty(await db.Set<InventTableModule>().ToListAsync());
         Assert.Empty(await db.Set<InventTrans>().ToListAsync());
+    }
+
+    [Fact]
+    public async Task Released_product_lookup_identifies_legacy_fifo_group_that_needs_setup()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.AddRange(
+            new InventModelGroup { RecId = 1, DataAreaId = "dat", ModelGroupId = "FIFO", Name = "FIFO stocked items",
+                InventModel = InventModel.FIFO, StockedProduct = NoYes.Yes },
+            new InventModelGroup { RecId = 2, DataAreaId = "dat", ModelGroupId = "FIFO-READY", Name = "Ready",
+                InventModel = InventModel.FIFO, StockedProduct = NoYes.Yes, PostOnHandFinancial = NoYes.Yes },
+            new InventModelGroup { RecId = 3, DataAreaId = "other", ModelGroupId = "HIDDEN", Name = "Other company" });
+        await db.SaveChangesAsync();
+        var service = new ReleasedProductListService(new TestUnitOfWork(db), new TestIdentity(), null!, null!);
+
+        var groups = (await service.GetLookupsAsync())!.ModelGroups;
+
+        Assert.Contains(groups, x => x.Value == "FIFO" && x.Label.Contains("setup required"));
+        Assert.Contains(groups, x => x.Value == "FIFO-READY" && !x.Label.Contains("setup required"));
+        Assert.DoesNotContain(groups, x => x.Value == "HIDDEN");
+    }
+
+    [Fact]
+    public async Task Invent_batch_master_is_company_scoped_and_preserves_copied_fields()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.AddRange(
+            new ReleasedItem { RecId = 1, DataAreaId = "dat", ItemId = "ITEM-1" },
+            new ReleasedItem { RecId = 2, DataAreaId = "other", ItemId = "ITEM-1" },
+            new InventBatch { RecId = 3, DataAreaId = "other", ItemId = "ITEM-1", InventBatchId = "LOT-1" });
+        await db.SaveChangesAsync();
+        var identity = new TestIdentity();
+        var service = new InventBatchService(new TestUnitOfWork(db), identity);
+
+        Assert.Contains("released", (await service.CreateAsync(new InventBatchInputDto
+            { ItemId = "MISSING", InventBatchId = "LOT-1" }, default)).Error);
+        Assert.Contains("precede", (await service.CreateAsync(new InventBatchInputDto
+            { ItemId = "ITEM-1", InventBatchId = "LOT-1", ProdDate = new DateTime(2026, 2, 2),
+                ExpDate = new DateTime(2026, 2, 1) }, default)).Error);
+
+        var created = await service.CreateAsync(new InventBatchInputDto
+        {
+            ItemId = " item-1 ", InventBatchId = " lot-1 ", ProdDate = new DateTime(2026, 2, 1),
+            ExpDate = new DateTime(2027, 2, 1)
+        }, default);
+        Assert.Null(created.Error);
+        Assert.Equal("LOT-1", created.Batch!.InventBatchId);
+        Assert.Single(await service.ListAsync("item-1", default));
+        Assert.Contains("already exists", (await service.CreateAsync(new InventBatchInputDto
+            { ItemId = "ITEM-1", InventBatchId = "LOT-1" }, default)).Error);
+        var row = await db.Set<InventBatch>().SingleAsync(x => x.RecId == created.Batch.RecId);
+        row.PdsVendBatchId = "VENDOR-LOT";
+        await db.SaveChangesAsync();
+        var updated = await service.UpdateAsync(row.RecId, new InventBatchInputDto
+        {
+            ItemId = "ITEM-1", InventBatchId = "LOT-1", ProdDate = new DateTime(2026, 3, 1),
+            ExpDate = new DateTime(2027, 3, 1)
+        }, default);
+        Assert.Null(updated.Error);
+        Assert.Equal("VENDOR-LOT", (await db.Set<InventBatch>().SingleAsync(x => x.RecId == row.RecId)).PdsVendBatchId);
+        Assert.Contains("cannot be changed", (await service.UpdateAsync(row.RecId,
+            new InventBatchInputDto { ItemId = "ITEM-1", InventBatchId = "DIFFERENT" }, default)).Error);
+        Assert.Null(await service.GetAsync(3, default));
+
+        db.Add(new InventDim { DataAreaId = "dat", InventDimId = "D-1", InventBatchId = "LOT-1" });
+        await db.SaveChangesAsync();
+        Assert.Contains("referenced", await service.DeleteAsync(row.RecId, default));
+        Assert.Equal(2, await db.Set<InventBatch>().CountAsync());
+    }
+
+    [Fact]
+    public async Task Inventory_closing_history_is_read_only_and_company_scoped()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.AddRange(
+            new InventClosing { RecId = 1, DataAreaId = "dat", Voucher = "C-1", PeriodCode = "2026-10",
+                TransDate = new DateTime(2026, 10, 1), RunNum = 1, InventCostStatus = InventCostStatus.Finished },
+            new InventClosing { RecId = 2, DataAreaId = "other", Voucher = "C-2", PeriodCode = "2026-10",
+                TransDate = new DateTime(2026, 10, 2), RunNum = 2, InventCostStatus = InventCostStatus.Finished });
+        await db.SaveChangesAsync();
+        var service = new InventClosingQueryService(new TestUnitOfWork(db), new TestIdentity());
+
+        var listed = await service.ListAsync(default);
+
+        Assert.Single(listed);
+        Assert.Equal("C-1", listed[0].Voucher);
+        Assert.Null(await service.GetAsync(2, default));
+        Assert.Equal("2026-10", (await service.GetAsync(1, default))!.PeriodCode);
+    }
+
+    [Fact]
+    public async Task Inventory_record_inquiries_are_company_scoped_and_do_not_write()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.AddRange(
+            new InventDim { RecId = 1, DataAreaId = "dat", InventDimId = "D-1", InventSiteId = "JED", InventLocationId = "MAIN" },
+            new InventDim { RecId = 2, DataAreaId = "other", InventDimId = "D-2", InventSiteId = "JED", InventLocationId = "MAIN" },
+            new InventItemGroupItem { RecId = 3, DataAreaId = "dat", ItemDataAreaId = "dat", ItemGroupDataAreaId = "dat", ItemId = "PAPER", ItemGroupId = "OFFICE" },
+            new InventItemGroupItem { RecId = 4, DataAreaId = "other", ItemDataAreaId = "other", ItemGroupDataAreaId = "other", ItemId = "PAPER", ItemGroupId = "OTHER" },
+            new InventItemLocation { RecId = 5, DataAreaId = "dat", ItemId = "PAPER", InventDimId = "D-1", PickingLocationMaxQty = 10 },
+            new InventItemLocation { RecId = 6, DataAreaId = "other", ItemId = "PAPER", InventDimId = "D-2" },
+            new InventSettlement { RecId = 7, DataAreaId = "dat", ItemId = "PAPER", Voucher = "C-1", QtySettled = 2 },
+            new InventSettlement { RecId = 8, DataAreaId = "other", ItemId = "PAPER", Voucher = "C-2", QtySettled = 3 });
+        await db.SaveChangesAsync();
+        var service = new InventoryRecordQueryService(new TestUnitOfWork(db), new TestIdentity());
+
+        Assert.Equal("D-1", Assert.Single(await service.DimensionsAsync("JED", "MAIN", default)).InventDimId);
+        Assert.Equal("OFFICE", Assert.Single(await service.ItemGroupsAsync("PAPER", default)).ItemGroupId);
+        Assert.Equal(10, Assert.Single(await service.ItemLocationsAsync("PAPER", default)).PickingLocationMaxQty);
+        Assert.Equal("C-1", Assert.Single(await service.SettlementsAsync("PAPER", "C-1", default)).Voucher);
+        Assert.Empty(await service.SettlementsAsync("PAPER", "C-2", default));
+    }
+
+    [Fact]
+    public async Task Item_group_assignment_upserts_for_released_item_in_selected_company()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.AddRange(new ReleasedItem { DataAreaId = "dat", ItemId = "PAPER" },
+            new InventItemGroup { DataAreaId = "dat", ItemGroupId = "OFFICE" },
+            new InventItemGroup { DataAreaId = "dat", ItemGroupId = "SUPPLIES" },
+            new InventItemGroup { DataAreaId = "other", ItemGroupId = "OTHER" });
+        await db.SaveChangesAsync();
+        var service = new ItemGroupAssignmentService(new TestUnitOfWork(db), new TestIdentity());
+
+        Assert.Contains("released", (await service.AssignAsync("MISSING", new("OFFICE"), default)).Error);
+        Assert.Contains("does not exist", (await service.AssignAsync("PAPER", new("OTHER"), default)).Error);
+        Assert.Null((await service.AssignAsync(" paper ", new(" office "), default)).Error);
+        Assert.Null((await service.AssignAsync("PAPER", new("SUPPLIES"), default)).Error);
+        var row = Assert.Single(await db.Set<InventItemGroupItem>().ToListAsync());
+        Assert.Equal("SUPPLIES", row.ItemGroupId);
+        Assert.Equal("dat", row.ItemDataAreaId);
+        Assert.Equal("dat", row.ItemGroupDataAreaId);
+    }
+
+    [Fact]
+    public async Task Item_location_setup_checks_dimension_and_preserves_advanced_fields()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.AddRange(new ReleasedItem { DataAreaId = "dat", ItemId = "PAPER" },
+            new InventDim { DataAreaId = "dat", InventDimId = "D-1", InventSiteId = "JED", InventLocationId = "MAIN" },
+            new InventDim { DataAreaId = "dat", InventDimId = "D-2", InventSiteId = "JED", InventLocationId = "MAIN", InventBatchId = "B-1" },
+            new InventLocation { DataAreaId = "dat", InventSiteId = "JED", InventLocationId = "MAIN" });
+        await db.SaveChangesAsync();
+        var service = new InventItemLocationService(new TestUnitOfWork(db), new TestIdentity());
+
+        Assert.Contains("only a site and warehouse", (await service.CreateAsync(new("PAPER", "D-2", 10, 2), default)).Error);
+        Assert.Contains("negative", (await service.CreateAsync(new("PAPER", "D-1", -1, 0), default)).Error);
+        var created = await service.CreateAsync(new(" paper ", " d-1 ", 10, 2), default);
+        Assert.Null(created.Error);
+        Assert.Contains("already exists", (await service.CreateAsync(new("PAPER", "D-1", 10, 2), default)).Error);
+        var row = await db.Set<InventItemLocation>().SingleAsync();
+        row.CountGroupId = "LEGACY";
+        await db.SaveChangesAsync();
+        Assert.Null((await service.UpdateAsync(created.Location!.RecId, new("PAPER", "D-1", 20, 3), default)).Error);
+        Assert.Equal("LEGACY", (await db.Set<InventItemLocation>().SingleAsync()).CountGroupId);
+        Assert.Null(await service.DeleteAsync(created.Location.RecId, default));
+        Assert.Empty(await db.Set<InventItemLocation>().ToListAsync());
+    }
+
+    [Fact]
+    public async Task Count_group_setup_validates_policy_and_prevents_deleting_assigned_group()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        var service = new InventCountGroupService(new TestUnitOfWork(db), new TestIdentity());
+
+        Assert.Contains("positive interval", (await service.CreateAsync(new("C1", "Cycle", InventCountCode.Period, 0), default)).Error);
+        Assert.Contains("only valid", (await service.CreateAsync(new("C1", "Cycle", InventCountCode.Manual, 2), default)).Error);
+        Assert.Contains("invalid", (await service.CreateAsync(new("C1", "Cycle", (InventCountCode)99, 0), default)).Error);
+        var created = await service.CreateAsync(new(" c1 ", " Cycle ", InventCountCode.Period, 30), default);
+        Assert.Null(created.Error);
+        Assert.Equal("C1", created.Group!.CountGroupId);
+        db.Add(new InventCountGroup { DataAreaId = "other", CountGroupId = "C2", Name = "Other" });
+        await db.SaveChangesAsync();
+        Assert.Null(await service.GetAsync((await db.Set<InventCountGroup>().SingleAsync(x => x.DataAreaId == "other")).RecId, default));
+        Assert.Contains("already exists", (await service.CreateAsync(new("C1", "Cycle", InventCountCode.Period, 30), default)).Error);
+        Assert.Contains("cannot be changed", (await service.UpdateAsync(created.Group.RecId,
+            new("C2", "Cycle", InventCountCode.Manual, 0), default)).Error);
+        Assert.Null((await service.UpdateAsync(created.Group.RecId,
+            new("C1", "Manual", InventCountCode.Manual, 0), default)).Error);
+        db.Add(new InventItemLocation { DataAreaId = "dat", ItemId = "PAPER", InventDimId = "D1", CountGroupId = "C1" });
+        await db.SaveChangesAsync();
+        Assert.Contains("assigned", await service.DeleteAsync(created.Group.RecId, default));
+        Assert.Single(await service.ListAsync(default));
+    }
+
+    [Fact]
+    public async Task Item_location_rejects_unknown_count_group_and_accepts_configured_group()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.AddRange(new ReleasedItem { DataAreaId = "dat", ItemId = "PAPER" },
+            new InventDim { DataAreaId = "dat", InventDimId = "D-1", InventSiteId = "JED", InventLocationId = "MAIN" },
+            new InventLocation { DataAreaId = "dat", InventSiteId = "JED", InventLocationId = "MAIN" },
+            new InventCountGroup { DataAreaId = "dat", CountGroupId = "C1", Name = "Cycle" },
+            new InventCountGroup { DataAreaId = "other", CountGroupId = "C2", Name = "Other" });
+        await db.SaveChangesAsync();
+        var service = new InventItemLocationService(new TestUnitOfWork(db), new TestIdentity());
+
+        Assert.Contains("does not exist", (await service.CreateAsync(new("PAPER", "D-1", 0, 0, "C2"), default)).Error);
+        var created = await service.CreateAsync(new("PAPER", "D-1", 0, 0, " c1 "), default);
+        Assert.Null(created.Error);
+        Assert.Equal("C1", created.Location!.CountGroupId);
+    }
+
+    [Fact]
+    public async Task Invent_serial_master_validates_item_and_references()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.Add(new ReleasedItem { RecId = 1, DataAreaId = "dat", ItemId = "PAPER" });
+        await db.SaveChangesAsync();
+        var service = new InventSerialService(new TestUnitOfWork(db), new TestIdentity());
+
+        Assert.Contains("released", (await service.CreateAsync(new InventSerialInputDto("MISSING", "S-1", null), default)).Error);
+        var created = await service.CreateAsync(new InventSerialInputDto(" paper ", " s-1 ", new DateTime(2026, 1, 1)), default);
+        Assert.Null(created.Error);
+        Assert.Contains("already exists", (await service.CreateAsync(new InventSerialInputDto("PAPER", "S-1", null), default)).Error);
+        Assert.Contains("cannot be changed", (await service.UpdateAsync(created.Serial!.RecId,
+            new InventSerialInputDto("PAPER", "S-2", null), default)).Error);
+        db.Add(new InventDim { DataAreaId = "dat", InventDimId = "D-1", InventSerialId = "S-1" });
+        await db.SaveChangesAsync();
+        Assert.Contains("referenced", await service.DeleteAsync(created.Serial.RecId, default));
+    }
+
+    [Fact]
+    public async Task Packaging_group_master_is_company_scoped_and_units_are_inquiry_only()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.AddRange(
+            new InventPackagingGroup { RecId = 1, DataAreaId = "other", PackagingGroupId = "BOX", Name = "Other" },
+            new InventPackagingUnit { RecId = 2, DataAreaId = "dat", Unit = "EA", Factor = 5 },
+            new InventPackagingUnit { RecId = 3, DataAreaId = "other", Unit = "EA", Factor = 8 });
+        await db.SaveChangesAsync();
+        var service = new InventPackagingService(new TestUnitOfWork(db), new TestIdentity());
+
+        Assert.Equal(5, Assert.Single(await service.UnitsAsync(default)).Factor);
+        var created = await service.CreateGroupAsync(new InventPackagingGroupInputDto(" box ", "Boxes"), default);
+        Assert.Null(created.Error);
+        Assert.Single(await service.GroupsAsync(default));
+        Assert.Contains("already exists", (await service.CreateGroupAsync(
+            new InventPackagingGroupInputDto("BOX", "Duplicate"), default)).Error);
+        Assert.Contains("cannot be changed", (await service.UpdateGroupAsync(created.Group!.RecId,
+            new InventPackagingGroupInputDto("CASE", "Cases"), default)).Error);
+        Assert.Null(await service.DeleteGroupAsync(created.Group.RecId, default));
+        Assert.Empty(await service.GroupsAsync(default));
     }
 
     [Fact]
@@ -246,6 +579,36 @@ public sealed class InventoryArchitectureTests
             await db.Set<SharedProduct>().OrderBy(x => x.DisplayProductNumber)
                 .Select(x => x.DisplayProductNumber).ToArrayAsync());
         Assert.Equal(3, (await db.Set<SysNumberSequence>().SingleAsync()).NextRec);
+    }
+
+    [Fact]
+    public async Task Release_product_creates_one_company_item_with_three_module_rows_and_is_idempotent()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.AddRange(new SharedProduct { RecId = 1, DisplayProductNumber = "PAPER-A4", ProductType = ItemType.Item },
+            new IAX.IXApi.Modules.Finance.Inventory.InventTable.EcoResDistinctProduct { RecId = 1 },
+            new IAX.IXApi.Modules.Finance.Inventory.InventTable.EcoResProductTranslation
+                { RecId = 2, Product = 1, LanguageId = "en-us", Name = "Paper A4" });
+        await db.SaveChangesAsync();
+        new ReleasedProductMapping().Register(TypeAdapterConfig.GlobalSettings);
+        var identity = new TestIdentity();
+        var work = new TestUnitOfWork(db);
+        var service = new ReleasedProductListService(work, identity,
+            new InventDimensionResolver(work, new TestSalesInventoryNumbers()),
+            new SysNumberSequenceService(work, identity));
+
+        var first = await service.ReleaseAsync(new ReleaseProductDto { ProductId = "1", ItemNumber = "PAPER-A4" });
+        var repeated = await service.ReleaseAsync(new ReleaseProductDto { ProductId = "1", ItemNumber = "PAPER-A4" });
+
+        Assert.Null(first.Error);
+        Assert.Null(repeated.Error);
+        Assert.Equal(first.Product!.Id, repeated.Product!.Id);
+        Assert.Equal("PAPER-A4", first.Product.ItemNumber);
+        Assert.Single(await db.Set<ReleasedItem>().Where(x => x.DataAreaId == "dat").ToListAsync());
+        Assert.Equal(3, await db.Set<InventTableModule>().CountAsync(x => x.DataAreaId == "dat" && x.ItemId == "PAPER-A4"));
     }
 
     [Fact]
@@ -976,6 +1339,7 @@ public sealed class InventoryArchitectureTests
             new InventModelGroupItem { RecId = 11, DataAreaId = "dat", ItemId = "ITEM-001", ItemDataAreaId = "dat", ModelGroupId = "FIFO", ModelGroupDataAreaId = "dat" },
             new EcoResTrackingDimensionGroupItem { RecId = 40, DataAreaId = "dat", ItemId = "ITEM-001", ItemDataAreaId = "dat", TrackingDimensionGroup = 41 },
             new EcoResTrackingDimensionGroup { RecId = 41, Name = "No tracking" },
+            new InventTableModule { RecId = 2, DataAreaId = "other", ItemId = "ITEM-001", ModuleType = ModuleInventPurchSales.Inventory, UnitId = "box" },
             new InventTableModule { RecId = 12, DataAreaId = "dat", ItemId = "ITEM-001", ModuleType = ModuleInventPurchSales.Inventory, UnitId = "pcs" },
             new InventItemGroupItem { RecId = 15, DataAreaId = "dat", ItemId = "ITEM-001", ItemDataAreaId = "dat", ItemGroupId = "FURN", ItemGroupDataAreaId = "dat" },
             new MainAccount { RecId = 20, DataAreaId = "dat", MainAccountId = "11050001", Name = "Inventory", CurrencyCode = "SAR" },
@@ -1026,6 +1390,7 @@ public sealed class InventoryArchitectureTests
             CostPrice = 20, LedgerDimension = 22, TransDate = DateTime.Today }, default);
         Assert.Null(openingMainLine.Error);
         Assert.Null((await posting.PostAsync(openingMain.Journal.JournalId, default)).Error);
+        Assert.Equal(5, (await db.Set<InventSum>().SingleAsync(x => x.DataAreaId == "dat" && x.InventLocationId == "MAIN")).PhysicalInvent);
 
         var posted = await posting.PostAsync(created.Journal.JournalId, default);
         Assert.Null(posted.Error);
@@ -1199,6 +1564,12 @@ public sealed class InventoryArchitectureTests
             Configure<InventSite>(builder);
             Configure<InventLocation>(builder);
             Configure<InventModelGroup>(builder);
+            Configure<InventBatch>(builder);
+            Configure<InventSerial>(builder);
+            Configure<InventItemLocation>(builder);
+            Configure<InventCountGroup>(builder);
+            Configure<InventPackagingGroup>(builder);
+            Configure<InventPackagingUnit>(builder);
             Configure<WMSLocation>(builder);
             Configure<InventTrans>(builder);
             Configure<InventTransOrigin>(builder);
@@ -1214,8 +1585,13 @@ public sealed class InventoryArchitectureTests
             Configure<UnitOfMeasure>(builder);
             Configure<UnitOfMeasureConversion>(builder);
             Configure<InventTableModule>(builder);
+            Configure<InventItemPurchSetup>(builder);
+            Configure<InventItemSalesSetup>(builder);
+            Configure<InventItemInventSetup>(builder);
+            Configure<InventItemSetupSupplyType>(builder);
             Configure<InventItemPrice>(builder);
             Configure<SharedProduct>(builder);
+            builder.Entity<SharedProduct>().HasQueryFilter(x => !x.IsDeleted);
             Configure<IAX.IXApi.Modules.Finance.Inventory.InventTable.EcoResDistinctProduct>(builder);
             Configure<IAX.IXApi.Modules.Finance.Inventory.InventTable.EcoResProductTranslation>(builder);
             Configure<EcoResCategory>(builder);
@@ -1232,12 +1608,14 @@ public sealed class InventoryArchitectureTests
             Configure<EcoResTrackingDimensionGroupItem>(builder);
             Configure<EcoResTrackingDimensionGroup>(builder);
             Configure<EcoResTrackingDimensionGroupFldSetup>(builder);
+            Configure<EcoResStorageDimensionGroup>(builder);
             Configure<EcoResStorageDimensionGroupItem>(builder);
             Configure<EcoResStorageDimensionGroupFldSetup>(builder);
             Configure<InventItemGroupItem>(builder);
             Configure<InventItemGroup>(builder);
             Configure<InventPosting>(builder);
             Configure<TaxGroupHeading>(builder);
+            Configure<TaxItemGroupHeading>(builder);
             Configure<MainAccount>(builder);
             Configure<DimensionAttributeValueCombination>(builder);
             Configure<Ledger>(builder);

@@ -36,7 +36,14 @@ Phase A verification on 2026-10-22: focused category, barcode, lifecycle/status,
 | ItemGroup and InventTable DTO validators | Existing validators relocated from Dtos to Validation without changing rules or namespaces. |
 | InventSum on-hand | Read-only company-scoped inquiry joins `InventSum`, `InventTable`, and `InventDim`; exposes basic site/warehouse quantities and values. |
 | UnitOfMeasure / UnitOfMeasureConversion | Shared UOM setup supports master CRUD plus global or product-specific conversion CRUD, duplicate validation, positive factors, and used-record restrictions. |
-| InventBatch, InventClosing, InventCountGroup, InventItemLocation, InventJournal, InventPackaging, InventSerial and InventSettlement | Persistence types only. They are not treated as working business processes until services, posting logic, permissions, forms, and executed tests exist. |
+| InventBatch | Backend master CRUD with company and released-item checks; batch tracking in transactions remains deferred. |
+| InventClosing | Read-only company-scoped closing history and a diagnostic FIFO preview. Settlement posting, close, recalculation, and reversal remain deferred. |
+| InventDim, InventSettlement | Company-scoped read-only inquiries. Dimension creation remains owned by the inventory engine; settlement posting remains deferred. |
+| InventItemGroupItem | Company-scoped inquiry and validated item-group assignment for released items. Historical postings are unchanged. |
+| InventItemLocation | Company-scoped inquiry and basic setup CRUD for released items at existing site/warehouse dimensions. Picking quantities are stored as setup only; warehouse picking automation is outside this release. |
+| InventSerial | Backend serial master CRUD with released-item checks and deletion guards; serial tracking in stock transactions remains deferred. |
+| InventPackaging | Company-scoped packaging group CRUD and packaging unit inquiry. The unit entity has no item/group relation key, so assignment and usage remain deferred. |
+| InventCountGroup | Company-scoped setup CRUD and optional validated assignment on item locations. Count policy is stored; automatic count scheduling is not implemented. |
 
 Controllers retain their existing custom routes and response contracts. The shared BaseController introduces additional generic routes and different CRUD contracts, so these existing custom controllers continue to use ControllerBase. Warehouse and site services reuse BaseService/IBaseService. All Inventory service persistence now flows through IUnitOfWork.
 

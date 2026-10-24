@@ -25,7 +25,10 @@ public sealed class StorageDimensionGroupService : BaseService<EcoResStorageDime
         return groups.Select(x => Map(x, setup)).ToList();
     }
 
-    public async Task<(StorageDimensionGroupDto? Group, string? Error)> CreateAsync(StorageDimensionGroupInputDto input, CancellationToken ct)
+    public Task<(StorageDimensionGroupDto? Group, string? Error)> CreateAsync(StorageDimensionGroupInputDto input, CancellationToken ct) =>
+        Db.Database.CreateExecutionStrategy().ExecuteAsync(() => CreateCoreAsync(input, ct));
+
+    private async Task<(StorageDimensionGroupDto? Group, string? Error)> CreateCoreAsync(StorageDimensionGroupInputDto input, CancellationToken ct)
     {
         var error = await ValidateAsync(input, ct);
         if (error is not null) return (null, error);
@@ -44,12 +47,16 @@ public sealed class StorageDimensionGroupService : BaseService<EcoResStorageDime
         catch
         {
             await _unitOfWork.RollbackTransactionAsync(ct);
+            Db.ChangeTracker.Clear();
             throw;
         }
         return (Map(row, await LoadSetupAsync(row.RecId, ct)), null);
     }
 
-    public async Task<(StorageDimensionGroupDto? Group, string? Error)> UpdateAsync(long recId, StorageDimensionGroupInputDto input, CancellationToken ct)
+    public Task<(StorageDimensionGroupDto? Group, string? Error)> UpdateAsync(long recId, StorageDimensionGroupInputDto input, CancellationToken ct) =>
+        Db.Database.CreateExecutionStrategy().ExecuteAsync(() => UpdateCoreAsync(recId, input, ct));
+
+    private async Task<(StorageDimensionGroupDto? Group, string? Error)> UpdateCoreAsync(long recId, StorageDimensionGroupInputDto input, CancellationToken ct)
     {
         var row = await _repository.GetQueryable().FirstOrDefaultAsync(x => x.RecId == recId, ct);
         if (row is null) return (null, "Storage dimension group was not found.");
@@ -70,6 +77,7 @@ public sealed class StorageDimensionGroupService : BaseService<EcoResStorageDime
         catch
         {
             await _unitOfWork.RollbackTransactionAsync(ct);
+            Db.ChangeTracker.Clear();
             throw;
         }
         return (Map(row, await LoadSetupAsync(row.RecId, ct)), null);
