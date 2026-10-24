@@ -34,6 +34,28 @@ namespace IAX.IXApi.Tests;
 public sealed class InventoryArchitectureTests
 {
     [Fact]
+    public async Task Released_product_rejects_incomplete_creation_and_invalid_release_without_writes()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        var identity = new TestIdentity();
+        var service = new ReleasedProductListService(new TestUnitOfWork(db), identity, null!, null!);
+        var incomplete = await service.CreateReleasedAsync(new CreateReleasedProductDto { Name = "Paper" });
+        Assert.Contains("configuration", incomplete.Error);
+        var invalid = await service.ReleaseAsync(new ReleaseProductDto { ProductId = "invalid" });
+        Assert.Contains("identifier", invalid.Error);
+        identity.DataAreaId = null;
+        var noCompany = await service.ReleaseAsync(new ReleaseProductDto { ProductId = "1" });
+        Assert.Contains("company", noCompany.Error);
+        Assert.Empty(await db.Set<SharedProduct>().ToListAsync());
+        Assert.Empty(await db.Set<ReleasedItem>().ToListAsync());
+        Assert.Empty(await db.Set<InventTableModule>().ToListAsync());
+        Assert.Empty(await db.Set<InventTrans>().ToListAsync());
+    }
+
+    [Fact]
     public async Task Posting_profile_normalizes_tax_group_and_rejects_duplicates_and_foreign_updates()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
@@ -711,6 +733,7 @@ public sealed class InventoryArchitectureTests
         db.Add(new InventTableModule { RecId = 200, DataAreaId = "dat", ItemId = "ITEM-001", UnitId = "pcs", ModuleType = ModuleInventPurchSales.Inventory });
         await db.SaveChangesAsync();
         Assert.NotNull((await service.UpdateAsync(pcs.Unit.RecId, new UnitOfMeasureInputDto { Symbol = "ea", UnitOfMeasureClass = 0, SystemOfUnits = 0 })).Error);
+        Assert.NotNull((await service.UpdateAsync(pcs.Unit.RecId, new UnitOfMeasureInputDto { Symbol = "PCS", UnitOfMeasureClass = 0, SystemOfUnits = 0 })).Error);
         Assert.NotNull((await service.UpdateAsync(pcs.Unit.RecId, new UnitOfMeasureInputDto
         { Symbol = "pcs", UnitOfMeasureClass = 0, SystemOfUnits = 0, DecimalPrecision = 2 })).Error);
         Assert.NotNull(await service.DeleteAsync(pcs.Unit.RecId));

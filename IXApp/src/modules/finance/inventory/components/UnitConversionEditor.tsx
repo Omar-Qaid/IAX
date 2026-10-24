@@ -19,10 +19,10 @@ export function UnitConversionEditor({ unit }: { unit: UnitOfMeasureRecord }): R
   const [values, setValues] = useState<UnitConversionInput>(empty(unit.recId));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const options = useMemo(() => units.data?.filter((x) => x.recId !== unit.recId) ?? [], [unit.recId, units.data]);
+  const options = useMemo(() => units.data?.filter((x) => x.recId !== unit.recId && x.unitOfMeasureClass === unit.unitOfMeasureClass) ?? [], [unit.recId, unit.unitOfMeasureClass, units.data]);
   const open = (row?: UnitConversionRecord) => {
     setEditing(row ?? null);
-    setValues(row ? { fromUnitOfMeasure: row.fromUnitOfMeasure, toUnitOfMeasure: row.toUnitOfMeasure, product: row.product, factor: row.factor, numerator: row.numerator, denominator: row.denominator, innerOffset: row.innerOffset, outerOffset: row.outerOffset, rounding: row.rounding } : empty(unit.recId));
+    setValues(row ? { fromUnitOfMeasure: row.fromUnitOfMeasure, toUnitOfMeasure: row.toUnitOfMeasure, product: row.product, factor: row.factor, numerator: row.numerator, denominator: row.denominator, innerOffset: 0, outerOffset: 0, rounding: row.rounding } : empty(unit.recId));
     setError(null);
   };
   const refresh = async () => Promise.all([
@@ -30,7 +30,14 @@ export function UnitConversionEditor({ unit }: { unit: UnitOfMeasureRecord }): R
     queryClient.invalidateQueries({ queryKey: ['unit-conversion-lookups', 'units'] }),
   ]);
   const save = async () => {
-    if (!values.toUnitOfMeasure || values.factor <= 0) { setError(t('unitOfMeasure.conversionRequired', 'To unit and a positive factor are required.')); return; }
+    const hasFactor = values.factor > 0;
+    const hasFraction = values.numerator > 0 && values.denominator > 0;
+    if (!values.toUnitOfMeasure || hasFactor === hasFraction || values.factor < 0 ||
+        values.numerator < 0 || values.denominator < 0 ||
+        (values.numerator > 0) !== (values.denominator > 0)) {
+      setError(t('unitOfMeasure.conversionRequired', 'Select a to unit and enter either a positive factor or a complete positive fraction.'));
+      return;
+    }
     setSaving(true); setError(null);
     try {
       if (editing) await unitOfMeasureApi.updateConversion(editing.recId, values); else await unitOfMeasureApi.createConversion(values);
@@ -50,7 +57,7 @@ export function UnitConversionEditor({ unit }: { unit: UnitOfMeasureRecord }): R
     <Stack spacing={0.25} sx={{ mt: 0.5 }}>
       {unit.conversions.length === 0 && <Typography color="text.secondary" sx={{ fontSize: '0.75rem' }}>{t('unitOfMeasure.noConversions', 'No conversions')}</Typography>}
       {unit.conversions.map((row) => <Box key={row.id} sx={{ display: 'grid', gridTemplateColumns: 'minmax(180px, 1fr) auto', alignItems: 'center', borderBottom: 1, borderColor: 'divider', py: 0.25 }}>
-        <Typography sx={{ fontSize: '0.75rem' }}>{row.fromSymbol} × {row.factor} = {row.toSymbol}{row.productNumber ? ` (${row.productNumber})` : ` (${t('unitOfMeasure.standardConversion', 'Standard')})`}</Typography>
+        <Typography sx={{ fontSize: '0.75rem' }}>{row.fromSymbol} × {row.factor > 0 ? row.factor : `${row.numerator}/${row.denominator}`} = {row.toSymbol}{row.productNumber ? ` (${row.productNumber})` : ` (${t('unitOfMeasure.standardConversion', 'Standard')})`}</Typography>
         <Box><Tooltip title={t('actions.edit', 'Edit')}><IconButton size="small" onClick={() => open(row)}><EditOutlinedIcon fontSize="inherit" /></IconButton></Tooltip><Tooltip title={t('actions.delete', 'Delete')}><IconButton size="small" color="error" onClick={() => remove(row)}><DeleteOutlineIcon fontSize="inherit" /></IconButton></Tooltip></Box>
       </Box>)}
     </Stack>
@@ -60,11 +67,9 @@ export function UnitConversionEditor({ unit }: { unit: UnitOfMeasureRecord }): R
         <TextField label={t('unitOfMeasure.fromUnit', 'From unit')} value={unit.symbol} disabled size="small" />
         <TextField select label={t('unitOfMeasure.toUnit', 'To unit')} value={values.toUnitOfMeasure || ''} onChange={(e) => setValues((v) => ({ ...v, toUnitOfMeasure: Number(e.target.value) }))} size="small">{options.map((x) => <MenuItem key={x.recId} value={x.recId}>{x.symbol}</MenuItem>)}</TextField>
         <TextField select label={t('unitOfMeasure.productScope', 'Product scope')} value={values.product} onChange={(e) => setValues((v) => ({ ...v, product: Number(e.target.value) }))} size="small"><MenuItem value={0}>{t('unitOfMeasure.standardConversion', 'Standard')}</MenuItem>{products.data?.map((x) => <MenuItem key={x.id} value={Number(x.id)}>{x.productNumber} - {x.name}</MenuItem>)}</TextField>
-        <TextField label={t('unitOfMeasure.factor', 'Factor')} type="number" value={values.factor} onChange={(e) => setValues((v) => ({ ...v, factor: Number(e.target.value) }))} size="small" />
-        <TextField label={t('unitOfMeasure.numerator', 'Numerator')} type="number" value={values.numerator} onChange={(e) => setValues((v) => ({ ...v, numerator: Number(e.target.value) }))} size="small" />
-        <TextField label={t('unitOfMeasure.denominator', 'Denominator')} type="number" value={values.denominator} onChange={(e) => setValues((v) => ({ ...v, denominator: Number(e.target.value) }))} size="small" />
-        <TextField label={t('unitOfMeasure.innerOffset', 'Inner offset')} type="number" value={values.innerOffset} onChange={(e) => setValues((v) => ({ ...v, innerOffset: Number(e.target.value) }))} size="small" />
-        <TextField label={t('unitOfMeasure.outerOffset', 'Outer offset')} type="number" value={values.outerOffset} onChange={(e) => setValues((v) => ({ ...v, outerOffset: Number(e.target.value) }))} size="small" />
+        <TextField label={t('unitOfMeasure.factor', 'Factor')} type="number" value={values.factor} onChange={(e) => setValues((v) => ({ ...v, factor: Number(e.target.value), numerator: 0, denominator: 0 }))} size="small" />
+        <TextField label={t('unitOfMeasure.numerator', 'Numerator')} type="number" value={values.numerator} onChange={(e) => setValues((v) => ({ ...v, factor: 0, numerator: Number(e.target.value) }))} size="small" />
+        <TextField label={t('unitOfMeasure.denominator', 'Denominator')} type="number" value={values.denominator} onChange={(e) => setValues((v) => ({ ...v, factor: 0, denominator: Number(e.target.value) }))} size="small" />
         <TextField select label={t('unitOfMeasure.rounding', 'Rounding')} value={values.rounding} onChange={(e) => setValues((v) => ({ ...v, rounding: Number(e.target.value) }))} size="small"><MenuItem value={0}>{t('unitOfMeasure.roundingNone', 'None')}</MenuItem><MenuItem value={1}>{t('unitOfMeasure.roundingUp', 'Up')}</MenuItem><MenuItem value={2}>{t('unitOfMeasure.roundingDown', 'Down')}</MenuItem><MenuItem value={3}>{t('unitOfMeasure.roundingNearest', 'Nearest')}</MenuItem></TextField>
         {error && <Alert severity="error" sx={{ gridColumn: '1 / -1' }}>{error}</Alert>}
       </DialogContent>

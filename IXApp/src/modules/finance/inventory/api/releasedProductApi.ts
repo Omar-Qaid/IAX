@@ -135,7 +135,7 @@ export const releasedProductApi = {
   },
   async deleteBarcode(id: string, recId: number): Promise<void> {
     const response = await apiClient.delete<ApiResponse<boolean>>(`${endpoint}/${encodeURIComponent(id)}/barcodes/${recId}`);
-    if (!response.data.success) throw new ApiError(response.data.message || 'Barcode could not be deleted.', 400);
+    if (!response.data.success || response.data.data !== true) throw new ApiError(response.data.message || 'Barcode could not be deleted.', 400);
   },
   async list(signal?: AbortSignal): Promise<ReleasedProductRecord[]> {
     const response = await apiClient.get<ApiResponse<ReleasedProductRecord[]>>(endpoint, { signal });

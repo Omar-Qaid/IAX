@@ -7,6 +7,11 @@ vi.mock('@core/api/apiClient', () => ({
 }));
 beforeEach(() => vi.clearAllMocks());
 
+it('rejects a barcode deletion that the server did not perform', async () => {
+  vi.mocked(apiClient.delete).mockResolvedValue({ data: { success: true, data: false } });
+  await expect(releasedProductApi.deleteBarcode('42', 7)).rejects.toThrow('Barcode could not be deleted.');
+});
+
 it('releases the shared product to the explicitly selected company', async () => {
   const input = { productId: '123', itemNumber: 'PAPER', nameAlias: '' };
   const record = { id: '456', itemNumber: 'PAPER' };
