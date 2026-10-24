@@ -75,9 +75,13 @@ public sealed class InventBatchService(IUnitOfWork unitOfWork, ICompanyExecution
         var companyId = RequireCompany();
         var row = await Db.Set<InventBatch>().FirstOrDefaultAsync(x => x.DataAreaId == companyId && x.RecId == recId, ct);
         if (row is null) return "Batch was not found.";
-        if (await Db.Set<InventDim>().AnyAsync(x => x.DataAreaId == companyId && x.InventBatchId == row.InventBatchId, ct)
-            || await Db.Set<InventSum>().AnyAsync(x => x.DataAreaId == companyId && x.ItemId == row.ItemId && x.InventBatchId == row.InventBatchId, ct))
-            return "Batch is referenced by inventory dimensions or balances and cannot be deleted.";
+        var usedByTransaction = await Db.Set<InventTrans>().AnyAsync(trans =>
+            trans.DataAreaId == companyId && trans.ItemId == row.ItemId
+            && Db.Set<InventDim>().Any(dim => dim.DataAreaId == companyId
+                && dim.InventDimId == trans.InventDimId && dim.InventBatchId == row.InventBatchId), ct);
+        if (usedByTransaction || await Db.Set<InventSum>().AnyAsync(x => x.DataAreaId == companyId
+            && x.ItemId == row.ItemId && x.InventBatchId == row.InventBatchId, ct))
+            return "Batch is referenced by inventory transactions or balances and cannot be deleted.";
         Db.Remove(row);
         await unitOfWork.CompleteAsync(ct);
         return null;

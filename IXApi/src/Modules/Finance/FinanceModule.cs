@@ -95,6 +95,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<Inventory.IInventJournalPostingService, Inventory.InventJournalPostingService>();
             services.AddScoped<Inventory.IFifoCostPreviewService, Inventory.FifoCostPreviewService>();
             services.AddScoped<Inventory.IInventClosingQueryService, Inventory.InventClosingQueryService>();
+            services.AddScoped<Inventory.IInventCloseService, Inventory.InventCloseService>();
             services.AddScoped<Inventory.IInventoryRecordQueryService, Inventory.InventoryRecordQueryService>();
             services.AddScoped<Inventory.IItemGroupAssignmentService, Inventory.ItemGroupAssignmentService>();
             services.AddScoped<Inventory.IInventItemLocationService, Inventory.InventItemLocationService>();

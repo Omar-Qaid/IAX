@@ -223,8 +223,32 @@ public sealed class InventoryArchitectureTests
 
         db.Add(new InventDim { DataAreaId = "dat", InventDimId = "D-1", InventBatchId = "LOT-1" });
         await db.SaveChangesAsync();
+        // An unused dimension does not establish an item-specific stock reference.
+        db.Add(new InventTrans { DataAreaId = "dat", ItemId = "ITEM-1", InventDimId = "D-1" });
+        await db.SaveChangesAsync();
         Assert.Contains("referenced", await service.DeleteAsync(row.RecId, default));
         Assert.Equal(2, await db.Set<InventBatch>().CountAsync());
+    }
+
+    [Fact]
+    public async Task Invent_batch_deletion_checks_references_for_the_same_item_only()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        db.AddRange(
+            new ReleasedItem { DataAreaId = "dat", ItemId = "ITEM-1" },
+            new ReleasedItem { DataAreaId = "dat", ItemId = "ITEM-2" },
+            new InventBatch { DataAreaId = "dat", ItemId = "ITEM-1", InventBatchId = "LOT-1" },
+            new InventDim { DataAreaId = "dat", InventDimId = "D-1", InventBatchId = "LOT-1" },
+            new InventTrans { DataAreaId = "dat", ItemId = "ITEM-2", InventDimId = "D-1" });
+        await db.SaveChangesAsync();
+        var service = new InventBatchService(new TestUnitOfWork(db), new TestIdentity());
+        var batch = await db.Set<InventBatch>().SingleAsync();
+
+        Assert.Null(await service.DeleteAsync(batch.RecId, default));
+        Assert.Empty(await db.Set<InventBatch>().ToListAsync());
     }
 
     [Fact]
