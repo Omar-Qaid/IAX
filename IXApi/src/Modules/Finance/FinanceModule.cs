@@ -15,6 +15,47 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<FluentValidation.IValidator<GeneralLedger.FiscalCalendarYearDto>, GeneralLedger.FiscalCalendar.Validation.FiscalCalendarYearDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<GeneralLedger.FiscalCalendarPeriodDto>, GeneralLedger.FiscalCalendar.Validation.FiscalCalendarPeriodDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<GeneralLedger.LedgerFiscalCalendarPeriodDto>, GeneralLedger.FiscalCalendar.Validation.LedgerFiscalCalendarPeriodDtoValidator>();
+
+            // GeneralLedger - Bank
+            services.AddScoped<GeneralLedger.Bank.IBankAccountTableService, GeneralLedger.Bank.BankAccountTableService>();
+            services.AddScoped<GeneralLedger.Bank.IBankGroupService, GeneralLedger.Bank.BankGroupService>();
+            services.AddScoped<GeneralLedger.Bank.IBankTransTypeService, GeneralLedger.Bank.BankTransTypeService>();
+            services.AddScoped<GeneralLedger.Bank.IBankAccountTransService, GeneralLedger.Bank.BankAccountTransService>();
+            services.AddScoped<GeneralLedger.Bank.IBankAccountStatementService, GeneralLedger.Bank.BankAccountStatementService>();
+            services.AddScoped<FluentValidation.IValidator<GeneralLedger.BankAccountTableDto>, GeneralLedger.Bank.Validation.BankAccountTableDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<GeneralLedger.BankGroupDto>, GeneralLedger.Bank.Validation.BankGroupDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<GeneralLedger.BankTransTypeDto>, GeneralLedger.Bank.Validation.BankTransTypeDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<GeneralLedger.BankAccountTransDto>, GeneralLedger.Bank.Validation.BankAccountTransDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<GeneralLedger.BankAccountStatementDto>, GeneralLedger.Bank.Validation.BankAccountStatementDtoValidator>();
+
+            // GeneralLedger - Ledger
+            services.AddScoped<GeneralLedger.Ledger.ILedgerService, GeneralLedger.Ledger.LedgerService>();
+            services.AddScoped<FluentValidation.IValidator<GeneralLedger.LedgerDto>, GeneralLedger.Ledger.Validation.LedgerDtoValidator>();
+
+            // GeneralLedger - LedgerJournalTable
+            services.AddScoped<GeneralLedger.LedgerJournalTable.ILedgerJournalTableService, GeneralLedger.LedgerJournalTable.LedgerJournalTableService>();
+            services.AddScoped<GeneralLedger.LedgerJournalTable.ILedgerJournalTransService, GeneralLedger.LedgerJournalTable.LedgerJournalTransService>();
+            services.AddScoped<GeneralLedger.LedgerJournalTable.ILedgerJournalNameService, GeneralLedger.LedgerJournalTable.LedgerJournalNameService>();
+            services.AddScoped<FluentValidation.IValidator<GeneralLedger.LedgerJournalTableDto>, GeneralLedger.LedgerJournalTable.Validation.LedgerJournalTableDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<GeneralLedger.LedgerJournalTransDto>, GeneralLedger.LedgerJournalTable.Validation.LedgerJournalTransDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<GeneralLedger.LedgerJournalNameDto>, GeneralLedger.LedgerJournalTable.Validation.LedgerJournalNameDtoValidator>();
+
+            // GeneralLedger - LedgerAccount
+            services.AddScoped<GeneralLedger.LedgerAccount.IMainAccountService, GeneralLedger.LedgerAccount.MainAccountService>();
+            services.AddScoped<GeneralLedger.LedgerAccount.IMainAccountCategoryService, GeneralLedger.LedgerAccount.MainAccountCategoryService>();
+            services.AddScoped<GeneralLedger.LedgerAccount.ILedgerChartOfAccountsService, GeneralLedger.LedgerAccount.LedgerChartOfAccountsService>();
+            services.AddScoped<FluentValidation.IValidator<GeneralLedger.MainAccountDto>, GeneralLedger.LedgerAccount.Validation.MainAccountDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<GeneralLedger.MainAccountCategoryDto>, GeneralLedger.LedgerAccount.Validation.MainAccountCategoryDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<GeneralLedger.LedgerChartOfAccountsDto>, GeneralLedger.LedgerAccount.Validation.LedgerChartOfAccountsDtoValidator>();
+
+            // GeneralLedger - JournalEntry
+            services.AddScoped<GeneralLedger.JournalEntry.IGeneralJournalEntryService, GeneralLedger.JournalEntry.GeneralJournalEntryService>();
+            services.AddScoped<GeneralLedger.JournalEntry.IGeneralJournalAccountEntryService, GeneralLedger.JournalEntry.GeneralJournalAccountEntryService>();
+            services.AddScoped<GeneralLedger.JournalEntry.ISubledgerVoucherGeneralJournalEntryService, GeneralLedger.JournalEntry.SubledgerVoucherGeneralJournalEntryService>();
+            services.AddScoped<FluentValidation.IValidator<GeneralLedger.GeneralJournalEntryDto>, GeneralLedger.JournalEntry.Validation.GeneralJournalEntryDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<GeneralLedger.GeneralJournalAccountEntryDto>, GeneralLedger.JournalEntry.Validation.GeneralJournalAccountEntryDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<GeneralLedger.SubledgerVoucherGeneralJournalEntryDto>, GeneralLedger.JournalEntry.Validation.SubledgerVoucherGeneralJournalEntryDtoValidator>();
+
             services.AddScoped<AccountsReceivable.PostingProfile.Interfaces.ICustPostingProfileService, AccountsReceivable.PostingProfile.Services.CustPostingProfileService>();
             services.AddScoped<AccountsReceivable.PriceDisc.IPriceDiscJournalPostingService, AccountsReceivable.PriceDisc.PriceDiscJournalPostingService>();
             services.AddScoped<AccountsReceivable.Confirm.ISalesOrderConfirmationService, AccountsReceivable.Confirm.SalesOrderConfirmationService>();

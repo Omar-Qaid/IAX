@@ -2,8 +2,18 @@ using FluentValidation;
 using IAX.IXApi.Api.Controllers;
 using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Finance;
+using IAX.IXApi.Modules.Finance.GeneralLedger.Bank;
+using IAX.IXApi.Modules.Finance.GeneralLedger.Bank.Validation;
 using IAX.IXApi.Modules.Finance.GeneralLedger.FiscalCalendar;
 using IAX.IXApi.Modules.Finance.GeneralLedger.FiscalCalendar.Validation;
+using IAX.IXApi.Modules.Finance.GeneralLedger.JournalEntry;
+using IAX.IXApi.Modules.Finance.GeneralLedger.JournalEntry.Validation;
+using IAX.IXApi.Modules.Finance.GeneralLedger.Ledger;
+using IAX.IXApi.Modules.Finance.GeneralLedger.Ledger.Validation;
+using IAX.IXApi.Modules.Finance.GeneralLedger.LedgerAccount;
+using IAX.IXApi.Modules.Finance.GeneralLedger.LedgerAccount.Validation;
+using IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable;
+using IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable.Validation;
 using IAX.IXApi.Shared.Application.Validation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,7 +24,7 @@ namespace IAX.IXApi.Tests;
 public sealed class GeneralLedgerGenericArchitectureTests
 {
     [Fact]
-    public void Fiscal_calendar_crud_controllers_use_registered_generic_services()
+    public void General_ledger_crud_controllers_use_registered_generic_services()
     {
         var services = new ServiceCollection();
         services.AddFinanceModule(new ConfigurationBuilder().Build());
@@ -23,7 +33,22 @@ public sealed class GeneralLedgerGenericArchitectureTests
             typeof(FiscalCalendarController),
             typeof(FiscalCalendarYearController),
             typeof(FiscalCalendarPeriodController),
-            typeof(LedgerFiscalCalendarPeriodController)
+            typeof(LedgerFiscalCalendarPeriodController),
+            typeof(BankAccountTableController),
+            typeof(BankGroupController),
+            typeof(BankTransTypeController),
+            typeof(BankAccountTransController),
+            typeof(BankAccountStatementController),
+            typeof(LedgerController),
+            typeof(LedgerJournalTableController),
+            typeof(LedgerJournalTransController),
+            typeof(LedgerJournalNameController),
+            typeof(MainAccountController),
+            typeof(MainAccountCategoryController),
+            typeof(LedgerChartOfAccountsController),
+            typeof(GeneralJournalEntryController),
+            typeof(GeneralJournalAccountEntryController),
+            typeof(SubledgerVoucherGeneralJournalEntryController)
         };
 
         foreach (var controller in controllers)
@@ -33,7 +58,8 @@ public sealed class GeneralLedgerGenericArchitectureTests
 
             var entity = controller.BaseType!.GetGenericArguments()[0];
             var serviceContract = typeof(IBaseService<>).MakeGenericType(entity);
-            var serviceParameter = controller.GetConstructors().Single().GetParameters()[0].ParameterType;
+            var primaryCtor = controller.GetConstructors().OrderByDescending(c => c.GetParameters().Length).First();
+            var serviceParameter = primaryCtor.GetParameters()[0].ParameterType;
             Assert.True(serviceContract.IsAssignableFrom(serviceParameter), controller.FullName);
 
             var registration = Assert.Single(services, descriptor => descriptor.ServiceType == serviceParameter);
@@ -52,7 +78,22 @@ public sealed class GeneralLedgerGenericArchitectureTests
             typeof(FiscalCalendarDtoValidator),
             typeof(FiscalCalendarYearDtoValidator),
             typeof(FiscalCalendarPeriodDtoValidator),
-            typeof(LedgerFiscalCalendarPeriodDtoValidator)
+            typeof(LedgerFiscalCalendarPeriodDtoValidator),
+            typeof(BankAccountTableDtoValidator),
+            typeof(BankGroupDtoValidator),
+            typeof(BankTransTypeDtoValidator),
+            typeof(BankAccountTransDtoValidator),
+            typeof(BankAccountStatementDtoValidator),
+            typeof(LedgerDtoValidator),
+            typeof(LedgerJournalTableDtoValidator),
+            typeof(LedgerJournalTransDtoValidator),
+            typeof(LedgerJournalNameDtoValidator),
+            typeof(MainAccountDtoValidator),
+            typeof(MainAccountCategoryDtoValidator),
+            typeof(LedgerChartOfAccountsDtoValidator),
+            typeof(GeneralJournalEntryDtoValidator),
+            typeof(GeneralJournalAccountEntryDtoValidator),
+            typeof(SubledgerVoucherGeneralJournalEntryDtoValidator)
         };
 
         foreach (var validator in validators)
@@ -89,4 +130,3 @@ public sealed class GeneralLedgerGenericArchitectureTests
         }
     }
 }
-
