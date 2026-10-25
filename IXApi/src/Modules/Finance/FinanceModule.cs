@@ -306,6 +306,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<Foundation.DeliveryModes.IDlvModeService, Foundation.DeliveryModes.DlvModeService>();
             services.AddScoped<Foundation.DeliveryTerms.IDlvTermService, Foundation.DeliveryTerms.DlvTermService>();
             services.AddScoped<Foundation.LegalEntities.ICompanyInfoService, Foundation.LegalEntities.CompanyInfoService>();
+            services.AddScoped<Foundation.LogisticsAddresses.IContactPersonService, Foundation.LogisticsAddresses.ContactPersonService>();
             services.AddScoped<Foundation.LogisticsAddresses.IElectronicAddressService, Foundation.LogisticsAddresses.ElectronicAddressService>();
             services.AddScoped<Foundation.LogisticsAddresses.IGlobalAddressBookService, Foundation.LogisticsAddresses.GlobalAddressBookService>();
             services.AddScoped<Foundation.LogisticsAddresses.ILocationService, Foundation.LogisticsAddresses.LocationService>();

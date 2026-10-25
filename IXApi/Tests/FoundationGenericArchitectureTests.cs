@@ -49,6 +49,7 @@ public sealed class FoundationGenericArchitectureTests
             typeof(LegacyOccupationController),
             typeof(HcmWorkerController),
             typeof(CompanyInfoController),
+            typeof(ContactPersonController),
             typeof(MarkupTableController),
             typeof(PaymSchedController),
             typeof(PaymSchedLineController),
@@ -129,6 +130,8 @@ public sealed class FoundationGenericArchitectureTests
         Assert.Contains(services, d => d.ServiceType == typeof(IValidator<HcmNationalityDto>));
         Assert.Contains(services, d => d.ServiceType == typeof(IValidator<HcmOccupationDto>));
         Assert.Contains(services, d => d.ServiceType == typeof(IValidator<HcmWorkerDto>));
+        Assert.Contains(services, d => d.ServiceType == typeof(IContactPersonService));
+        Assert.Contains(services, d => d.ServiceType == typeof(IValidator<ContactPersonDto>));
         Assert.Contains(services, d => d.ServiceType == typeof(IValidator<MarkupTableDto>));
         Assert.Contains(services, d => d.ServiceType == typeof(IValidator<MarkupTransDto>));
         Assert.Contains(services, d => d.ServiceType == typeof(IValidator<TaxTableDto>));
