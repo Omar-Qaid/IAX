@@ -10,7 +10,8 @@ namespace IAX.IXApi.Modules.Finance.Foundation.Genders
 [DomainPermission("Organization", "Genders")]
     public class GenderController : BaseController<Gender, GenderDto>
     {
-        public GenderController(IGenderService service, ILogger<GenderController> logger) : base(service, logger)
+        public GenderController(IGenderService service, ILogger<GenderController>? logger = null)
+            : base(service, logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<GenderController>.Instance)
         {
         }
     }

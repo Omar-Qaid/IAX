@@ -12,7 +12,8 @@ namespace IAX.IXApi.Modules.Finance.Foundation.HcmWorkers
     {
         private readonly IHcmWorkerService _workerService;
 
-        public HcmWorkerController(IHcmWorkerService service, ILogger<HcmWorkerController> logger) : base(service, logger)
+        public HcmWorkerController(IHcmWorkerService service, ILogger<HcmWorkerController>? logger = null)
+            : base(service, logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<HcmWorkerController>.Instance)
         {
             _workerService = service;
         }

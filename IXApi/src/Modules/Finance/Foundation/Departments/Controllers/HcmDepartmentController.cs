@@ -10,7 +10,8 @@ namespace IAX.IXApi.Modules.Finance.Foundation.Departments
     [DomainPermission("Organization", "Departments")]
     public class HcmDepartmentController : BaseController<HcmDepartment, HcmDepartmentDto>
     {
-        public HcmDepartmentController(IHcmDepartmentService service, ILogger<HcmDepartmentController> logger) : base(service, logger)
+        public HcmDepartmentController(IHcmDepartmentService service, ILogger<HcmDepartmentController>? logger = null)
+            : base(service, logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<HcmDepartmentController>.Instance)
         {
         }
     }
@@ -20,7 +21,8 @@ namespace IAX.IXApi.Modules.Finance.Foundation.Departments
     [DomainPermission("Organization", "Departments")]
     public class LegacyDepartmentController : BaseController<HcmDepartment, HcmDepartmentDto>
     {
-        public LegacyDepartmentController(IHcmDepartmentService service, ILogger<LegacyDepartmentController> logger) : base(service, logger)
+        public LegacyDepartmentController(IHcmDepartmentService service, ILogger<LegacyDepartmentController>? logger = null)
+            : base(service, logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<LegacyDepartmentController>.Instance)
         {
         }
     }

@@ -12,7 +12,8 @@ namespace IAX.IXApi.Modules.Finance.Foundation.HcmShowrooms
     {
         private readonly IHcmShowroomService _showroomService;
 
-        public HcmShowroomController(IHcmShowroomService service, ILogger<HcmShowroomController> logger) : base(service, logger)
+        public HcmShowroomController(IHcmShowroomService service, ILogger<HcmShowroomController>? logger = null)
+            : base(service, logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<HcmShowroomController>.Instance)
         {
             _showroomService = service;
         }

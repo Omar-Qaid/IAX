@@ -47,6 +47,12 @@ public class HcmShowroomService : BaseService<HcmShowroom>, IHcmShowroomService
 
     public HcmShowroomService(
         IUnitOfWork unitOfWork,
+        ISysNumberSequenceService numberSequenceService) : this(unitOfWork, NullCurrentUserService.Instance, numberSequenceService)
+    {
+    }
+
+    public HcmShowroomService(
+        IUnitOfWork unitOfWork,
         ICurrentUserService currentUser,
         ISysNumberSequenceService numberSequenceService) : base(unitOfWork, currentUser)
     {

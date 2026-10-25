@@ -6,6 +6,10 @@ namespace IAX.IXApi.Modules.Finance.Foundation.Departments
 {
     public class HcmDepartmentService : BaseService<HcmDepartment>, IHcmDepartmentService
     {
+        public HcmDepartmentService(IUnitOfWork unitOfWork) : this(unitOfWork, NullCurrentUserService.Instance)
+        {
+        }
+
         public HcmDepartmentService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)
         {
         }

@@ -264,6 +264,39 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<Foundation.Structure.IOrganizationStructureService>(provider => provider.GetRequiredService<Foundation.Structure.OrganizationStructureService>());
             services.AddScoped<IAX.IXApi.Shared.Application.Organization.IOrganizationDirectory,
                 Foundation.Structure.OrganizationStructureService>();
+
+            // Foundation Validators
+            services.AddScoped<FluentValidation.IValidator<Foundation.Currency.CurrencyDto>, Foundation.Currency.CurrencyDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.Currency.ExchangeRateTypeDto>, Foundation.Currency.ExchangeRateTypeDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.Currency.ExchangeRateCurrencyPairDto>, Foundation.Currency.ExchangeRateCurrencyPairDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.Currency.ExchangeRateDto>, Foundation.Currency.ExchangeRateDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.Currency.BulkExchangeRatePairDto>, Foundation.Currency.BulkExchangeRatePairDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.DeliveryModes.DlvModeDto>, Foundation.DeliveryModes.DlvModeDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.DeliveryTerms.DlvTermDto>, Foundation.DeliveryTerms.DlvTermDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.LegalEntities.CompanyInfoDto>, Foundation.LegalEntities.CompanyInfoDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.LogisticsAddresses.AddressInfoDto>, Foundation.LogisticsAddresses.AddressInfoDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.LogisticsAddresses.ContactInfoDto>, Foundation.LogisticsAddresses.ContactInfoDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.LogisticsAddresses.ContactPersonDto>, Foundation.LogisticsAddresses.ContactPersonDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.PaymentSchedules.PaymSchedDto>, Foundation.PaymentSchedules.PaymSchedDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.PaymentSchedules.PaymSchedLineDto>, Foundation.PaymentSchedules.PaymSchedLineDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.PaymentTerms.PaymTermDto>, Foundation.PaymentTerms.PaymTermDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.Genders.GenderDto>, Foundation.Genders.GenderDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.Nationalities.HcmNationalityDto>, Foundation.Nationalities.HcmNationalityDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.Occupations.HcmOccupationDto>, Foundation.Occupations.HcmOccupationDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.Departments.HcmDepartmentDto>, Foundation.Departments.HcmDepartmentDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.HcmShowrooms.HcmShowroomDto>, Foundation.HcmShowrooms.HcmShowroomDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.HcmWorkers.HcmWorkerDto>, Foundation.HcmWorkers.HcmWorkerDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.Tax.TaxTableDto>, Foundation.Tax.Validation.TaxTableDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.Tax.TaxAuthorityAddressDto>, Foundation.Tax.Validation.TaxAuthorityAddressDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.Tax.TaxExemptCodeDto>, Foundation.Tax.Validation.TaxExemptCodeDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.Tax.TaxGroupDto>, Foundation.Tax.Validation.TaxGroupDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.Tax.TaxItemGroupDto>, Foundation.Tax.Validation.TaxItemGroupDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.Tax.TaxLedgerAccountGroupDto>, Foundation.Tax.Validation.TaxLedgerAccountGroupDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.Tax.TaxPeriodHeadDto>, Foundation.Tax.Validation.TaxPeriodHeadDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.Tax.TaxDataDto>, Foundation.Tax.Validation.TaxDataDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.Tax.TaxGroupDataDto>, Foundation.Tax.Validation.TaxGroupDataDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.Tax.TaxOnItemDto>, Foundation.Tax.Validation.TaxOnItemDtoValidator>();
+
             return services;
         }
     }

@@ -7,6 +7,10 @@ namespace IAX.IXApi.Modules.Finance.Foundation.Genders
 {
     public class GenderService : BaseService<Gender>, IGenderService
     {
+        public GenderService(IUnitOfWork unitOfWork) : this(unitOfWork, NullCurrentUserService.Instance)
+        {
+        }
+
         public GenderService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)
         {
         }

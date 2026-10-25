@@ -9,7 +9,8 @@ namespace IAX.IXApi.Modules.Finance.Foundation.Nationalities
     [DomainPermission("Organization", "Nationalities")]
     public class HcmNationalityController : BaseController<HcmNationality, HcmNationalityDto>
     {
-        public HcmNationalityController(IHcmNationalityService service, ILogger<HcmNationalityController> logger) : base(service, logger)
+        public HcmNationalityController(IHcmNationalityService service, ILogger<HcmNationalityController>? logger = null)
+            : base(service, logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<HcmNationalityController>.Instance)
         {
         }
     }
@@ -19,7 +20,8 @@ namespace IAX.IXApi.Modules.Finance.Foundation.Nationalities
     [DomainPermission("Organization", "Nationalities")]
     public class LegacyNationalityController : BaseController<HcmNationality, HcmNationalityDto>
     {
-        public LegacyNationalityController(IHcmNationalityService service, ILogger<LegacyNationalityController> logger) : base(service, logger)
+        public LegacyNationalityController(IHcmNationalityService service, ILogger<LegacyNationalityController>? logger = null)
+            : base(service, logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<LegacyNationalityController>.Instance)
         {
         }
     }

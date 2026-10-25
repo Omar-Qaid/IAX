@@ -10,7 +10,8 @@ namespace IAX.IXApi.Modules.Finance.Foundation.Occupations
     [DomainPermission("Organization", "Occupations")]
     public class HcmOccupationController : BaseController<HcmOccupation, HcmOccupationDto>
     {
-        public HcmOccupationController(IHcmOccupationService service, ILogger<HcmOccupationController> logger) : base(service, logger)
+        public HcmOccupationController(IHcmOccupationService service, ILogger<HcmOccupationController>? logger = null)
+            : base(service, logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<HcmOccupationController>.Instance)
         {
         }
     }
@@ -20,7 +21,8 @@ namespace IAX.IXApi.Modules.Finance.Foundation.Occupations
     [DomainPermission("Organization", "Occupations")]
     public class LegacyOccupationController : BaseController<HcmOccupation, HcmOccupationDto>
     {
-        public LegacyOccupationController(IHcmOccupationService service, ILogger<LegacyOccupationController> logger) : base(service, logger)
+        public LegacyOccupationController(IHcmOccupationService service, ILogger<LegacyOccupationController>? logger = null)
+            : base(service, logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<LegacyOccupationController>.Instance)
         {
         }
     }

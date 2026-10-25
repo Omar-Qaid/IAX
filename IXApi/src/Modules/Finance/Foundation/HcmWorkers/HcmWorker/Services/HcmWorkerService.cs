@@ -59,6 +59,12 @@ public class HcmWorkerService : BaseService<HcmWorker>, IHcmWorkerService
 
     public HcmWorkerService(
         IUnitOfWork unitOfWork,
+        ISysNumberSequenceService numberSequenceService) : this(unitOfWork, NullCurrentUserService.Instance, numberSequenceService)
+    {
+    }
+
+    public HcmWorkerService(
+        IUnitOfWork unitOfWork,
         ICurrentUserService currentUser,
         ISysNumberSequenceService numberSequenceService) : base(unitOfWork, currentUser)
     {

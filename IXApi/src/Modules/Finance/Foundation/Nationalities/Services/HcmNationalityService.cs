@@ -7,6 +7,10 @@ namespace IAX.IXApi.Modules.Finance.Foundation.Nationalities
 {
     public class HcmNationalityService : BaseService<HcmNationality>, IHcmNationalityService
     {
+        public HcmNationalityService(IUnitOfWork unitOfWork) : this(unitOfWork, NullCurrentUserService.Instance)
+        {
+        }
+
         public HcmNationalityService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)
         {
         }
