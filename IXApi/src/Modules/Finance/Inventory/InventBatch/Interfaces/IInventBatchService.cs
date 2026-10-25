@@ -1,6 +1,9 @@
+using IAX.IXApi.Infrastructure.Persistence.Services;
+using IAX.IXApi.Modules.Finance.Entities;
+
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public interface IInventBatchService
+public interface IInventBatchService : IBaseService<InventBatch>
 {
     Task<IReadOnlyList<InventBatchDto>> ListAsync(string? itemId, CancellationToken ct);
     Task<InventBatchDto?> GetAsync(long recId, CancellationToken ct);

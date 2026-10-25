@@ -1,4 +1,6 @@
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Shared.Application.Identity;
@@ -7,9 +9,22 @@ using ReleasedItem = IAX.IXApi.Modules.Finance.Entities.InventTable;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public sealed class InventBatchService(IUnitOfWork unitOfWork, ICompanyExecutionContext company) : IInventBatchService
+public sealed class InventBatchService : BaseService<InventBatch>, IInventBatchService
 {
-    private DbContext Db => unitOfWork.Context;
+    private readonly ICompanyExecutionContext _company;
+
+    public InventBatchService(IUnitOfWork unitOfWork, ICurrentUserService currentUser, ICompanyExecutionContext company)
+        : base(unitOfWork, currentUser)
+    {
+        _company = company;
+    }
+
+    public InventBatchService(IUnitOfWork unitOfWork, ICompanyExecutionContext company)
+        : this(unitOfWork, new NullCurrentUserService(company), company)
+    {
+    }
+
+    private DbContext Db => _unitOfWork.Context;
 
     public async Task<IReadOnlyList<InventBatchDto>> ListAsync(string? itemId, CancellationToken ct)
     {
@@ -49,7 +64,7 @@ public sealed class InventBatchService(IUnitOfWork unitOfWork, ICompanyExecution
             ProdDate = input.ProdDate?.Date ?? default, ExpDate = input.ExpDate?.Date ?? default
         };
         Db.Add(row);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return (Map(row), null);
     }
 
@@ -66,7 +81,7 @@ public sealed class InventBatchService(IUnitOfWork unitOfWork, ICompanyExecution
         if (error is not null) return (null, error);
         row.ProdDate = input.ProdDate?.Date ?? default;
         row.ExpDate = input.ExpDate?.Date ?? default;
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return (Map(row), null);
     }
 
@@ -83,7 +98,7 @@ public sealed class InventBatchService(IUnitOfWork unitOfWork, ICompanyExecution
             && x.ItemId == row.ItemId && x.InventBatchId == row.InventBatchId, ct))
             return "Batch is referenced by inventory transactions or balances and cannot be deleted.";
         Db.Remove(row);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return null;
     }
 
@@ -104,6 +119,13 @@ public sealed class InventBatchService(IUnitOfWork unitOfWork, ICompanyExecution
         ExpDate = row.ExpDate == default ? null : row.ExpDate
     };
 
-    private string RequireCompany() => company.GetDataAreaId()
+    private string RequireCompany() => _company.GetDataAreaId()
         ?? throw new InvalidOperationException("A company must be selected.");
+
+    private sealed class NullCurrentUserService(ICompanyExecutionContext company) : ICurrentUserService
+    {
+        public string GetCurrentUserId() => string.Empty;
+        public string GetOwnerAccountId() => string.Empty;
+        public string GetDataAreaId() => company.GetDataAreaId();
+    }
 }
