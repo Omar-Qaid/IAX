@@ -1,4 +1,6 @@
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Shared.Application.Identity;
@@ -7,10 +9,23 @@ using ReleasedItem = IAX.IXApi.Modules.Finance.Entities.InventTable;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public sealed class InventSerialService(IUnitOfWork unitOfWork, ICompanyExecutionContext company) : IInventSerialService
+public sealed class InventSerialService : BaseService<InventSerial>, IInventSerialService
 {
-    private DbContext Db => unitOfWork.Context;
-    private string Area => company.GetDataAreaId() ?? throw new InvalidOperationException("A company must be selected.");
+    private readonly ICompanyExecutionContext _company;
+
+    public InventSerialService(IUnitOfWork unitOfWork, ICurrentUserService currentUser, ICompanyExecutionContext company)
+        : base(unitOfWork, currentUser)
+    {
+        _company = company;
+    }
+
+    public InventSerialService(IUnitOfWork unitOfWork, ICompanyExecutionContext company)
+        : this(unitOfWork, new NullCurrentUserService(company), company)
+    {
+    }
+
+    private DbContext Db => _unitOfWork.Context;
+    private string Area => _company.GetDataAreaId() ?? throw new InvalidOperationException("A company must be selected.");
     private static string Normalize(string? value) => (value ?? string.Empty).Trim().ToUpperInvariant();
     private static InventSerialRecordDto Map(InventSerial row) => new(row.RecId, row.ItemId,
         row.InventSerialId, row.ProdDate == default ? null : row.ProdDate);
@@ -39,7 +54,7 @@ public sealed class InventSerialService(IUnitOfWork unitOfWork, ICompanyExecutio
         var row = new InventSerial { DataAreaId = area, ItemId = item, InventSerialId = serial,
             ProdDate = input.ProdDate?.Date ?? default };
         Db.Add(row);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return (Map(row), null);
     }
 
@@ -51,7 +66,7 @@ public sealed class InventSerialService(IUnitOfWork unitOfWork, ICompanyExecutio
         if (Normalize(input.ItemId) != row.ItemId || Normalize(input.InventSerialId) != row.InventSerialId)
             return (null, "Item and serial IDs cannot be changed after creation.");
         row.ProdDate = input.ProdDate?.Date ?? default;
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return (Map(row), null);
     }
 
@@ -64,7 +79,7 @@ public sealed class InventSerialService(IUnitOfWork unitOfWork, ICompanyExecutio
             || await Db.Set<InventSum>().AnyAsync(x => x.DataAreaId == area && x.ItemId == row.ItemId && x.InventSerialId == row.InventSerialId, ct))
             return "Serial is referenced by inventory dimensions or balances and cannot be deleted.";
         Db.Remove(row);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return null;
     }
 
@@ -73,4 +88,11 @@ public sealed class InventSerialService(IUnitOfWork unitOfWork, ICompanyExecutio
         item.Length > FieldLengths.ItemId ? $"Item ID cannot exceed {FieldLengths.ItemId} characters." :
         serial.Length == 0 ? "Serial ID is required." :
         serial.Length > FieldLengths.InventSerialId ? $"Serial ID cannot exceed {FieldLengths.InventSerialId} characters." : null;
+
+    private sealed class NullCurrentUserService(ICompanyExecutionContext company) : ICurrentUserService
+    {
+        public string GetCurrentUserId() => string.Empty;
+        public string GetOwnerAccountId() => string.Empty;
+        public string GetDataAreaId() => company.GetDataAreaId();
+    }
 }

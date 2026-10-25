@@ -1,17 +1,23 @@
+using IAX.IXApi.Api.Controllers;
+using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Identity.Permissions;
 using IAX.IXApi.Shared.Application.Contracts;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
 [ApiController]
 [Route("api/v1/InventSite")]
 [DomainPermission("Inventory", "Transactions")]
-public sealed class InventSiteController : ControllerBase
+public sealed class InventSiteController : BaseController<InventSite, InventSiteDto>
 {
     private readonly IInventSiteService _sites;
 
-    public InventSiteController(IInventSiteService sites)
+    public InventSiteController(
+        IInventSiteService sites,
+        ILogger<InventSiteController>? logger = null)
+        : base(sites, logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<InventSiteController>.Instance)
     {
         _sites = sites;
     }
@@ -56,4 +62,27 @@ public sealed class InventSiteController : ControllerBase
         };
     }
 
+    [NonAction]
+    public override Task<ActionResult<APIResponse<IEnumerable<InventSiteDto>>>> GetAll(CancellationToken cancellationToken = default) =>
+        base.GetAll(cancellationToken);
+
+    [NonAction]
+    public override Task<ActionResult<APIResponse<IEnumerable<InventSiteDto>>>> GetPaged([FromQuery] QueryFilterDto paginationParams, CancellationToken cancellationToken = default) =>
+        base.GetPaged(paginationParams, cancellationToken);
+
+    [NonAction]
+    public override Task<ActionResult<APIResponse<InventSiteDto>>> GetById(string id, CancellationToken cancellationToken = default) =>
+        base.GetById(id, cancellationToken);
+
+    [NonAction]
+    public override Task<ActionResult<APIResponse<InventSiteDto>>> Create(InventSiteDto dto, CancellationToken cancellationToken = default) =>
+        base.Create(dto, cancellationToken);
+
+    [NonAction]
+    public override Task<ActionResult<APIResponse<InventSiteDto>>> Update(string id, InventSiteDto dto, CancellationToken cancellationToken = default) =>
+        base.Update(id, dto, cancellationToken);
+
+    [NonAction]
+    public override Task<ActionResult<APIResponse<bool>>> Delete(string id, CancellationToken cancellationToken = default) =>
+        base.Delete(id, cancellationToken);
 }

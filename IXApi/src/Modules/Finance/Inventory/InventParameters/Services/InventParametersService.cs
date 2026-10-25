@@ -1,19 +1,36 @@
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities;
 using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.EntityFrameworkCore;
+using InventParametersEntity = IAX.IXApi.Modules.Finance.Entities.InventParameters;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public sealed class InventParametersService(IUnitOfWork unitOfWork, ICompanyExecutionContext company) : IInventParametersService
+public sealed class InventParametersService : BaseService<InventParametersEntity>, IInventParametersService
 {
-    private DbContext Db => unitOfWork.Context;
+    private readonly ICompanyExecutionContext _company;
+
+    public InventParametersService(IUnitOfWork unitOfWork, ICurrentUserService currentUser, ICompanyExecutionContext company)
+        : base(unitOfWork, currentUser)
+    {
+        _company = company;
+    }
+
+    public InventParametersService(IUnitOfWork unitOfWork, ICompanyExecutionContext company)
+        : this(unitOfWork, new NullCurrentUserService(company), company)
+    {
+    }
+
+    private DbContext Db => _unitOfWork.Context;
+
     public async Task<InventoryReadinessDto?> GetReadinessAsync(CancellationToken ct = default)
     {
-        var companyId = company.GetDataAreaId();
+        var companyId = _company.GetDataAreaId();
         if (string.IsNullOrWhiteSpace(companyId)) return null;
         var issues = new List<InventoryReadinessIssueDto>();
         void Add(string code, string message) => issues.Add(new(code, message));
@@ -89,13 +106,13 @@ public sealed class InventParametersService(IUnitOfWork unitOfWork, ICompanyExec
     }
     public async Task<InventParametersDto?> GetAsync(CancellationToken ct = default)
     {
-        var companyId = company.GetDataAreaId(); if (string.IsNullOrWhiteSpace(companyId)) return null;
+        var companyId = _company.GetDataAreaId(); if (string.IsNullOrWhiteSpace(companyId)) return null;
         var row = await Db.Set<InventParameters>().AsNoTracking().SingleOrDefaultAsync(x => x.DataAreaId == companyId, ct);
         return row is null ? new InventParametersDto() : Map(row);
     }
     public async Task<InventParametersLookupsDto?> GetLookupsAsync(CancellationToken ct = default)
     {
-        var companyId = company.GetDataAreaId();
+        var companyId = _company.GetDataAreaId();
         if (string.IsNullOrWhiteSpace(companyId)) return null;
         var sequences = await Db.Set<SysNumberSequence>().IgnoreQueryFilters().AsNoTracking()
             .Where(x => !x.IsDeleted && x.IsActive && x.InUse != 0 &&
@@ -112,7 +129,7 @@ public sealed class InventParametersService(IUnitOfWork unitOfWork, ICompanyExec
     }
     public async Task<(InventParametersDto? Value, string? Error)> SaveAsync(InventParametersDto input, CancellationToken ct = default)
     {
-        var companyId = company.GetDataAreaId(); if (string.IsNullOrWhiteSpace(companyId)) return (null, "A company must be selected.");
+        var companyId = _company.GetDataAreaId(); if (string.IsNullOrWhiteSpace(companyId)) return (null, "A company must be selected.");
         if (input.ReserveOnOrdered) return (null, "Reservation against ordered supply is disabled in the basic inventory scope.");
         input.DefaultUnitId = input.DefaultUnitId.Trim(); input.MultiSiteDefaultInventSiteId = input.MultiSiteDefaultInventSiteId.Trim().ToUpperInvariant(); input.MultiSiteDefaultInventLocationId = input.MultiSiteDefaultInventLocationId.Trim().ToUpperInvariant();
         input.MovementJournalNameId = input.MovementJournalNameId.Trim().ToUpperInvariant();
@@ -130,7 +147,14 @@ public sealed class InventParametersService(IUnitOfWork unitOfWork, ICompanyExec
         row.DefaultUnitId = input.DefaultUnitId; row.MultiSiteDefaultInventSiteId = input.MultiSiteDefaultInventSiteId; row.MultiSiteDefaultInventLocationId = input.MultiSiteDefaultInventLocationId;
         row.MovementJournalNameId = input.MovementJournalNameId; row.LossProfitJournalNameId = input.LossProfitJournalNameId; row.TransferJournalNameId = input.TransferJournalNameId; row.CountJournalNameId = input.CountJournalNameId;
         row.ReserveOnOrdered = input.ReserveOnOrdered ? NoYes.Yes : NoYes.No; row.MandatoryItemTaxGroup = input.MandatoryItemTaxGroup ? NoYes.Yes : NoYes.No;
-        await unitOfWork.CompleteAsync(ct); return (Map(row), null);
+        await _unitOfWork.CompleteAsync(ct); return (Map(row), null);
     }
     private static InventParametersDto Map(InventParameters x) => new() { RecId = x.RecId, DefaultUnitId = x.DefaultUnitId, MultiSiteDefaultInventSiteId = x.MultiSiteDefaultInventSiteId, MultiSiteDefaultInventLocationId = x.MultiSiteDefaultInventLocationId, MovementJournalNameId = x.MovementJournalNameId, LossProfitJournalNameId = x.LossProfitJournalNameId, TransferJournalNameId = x.TransferJournalNameId, CountJournalNameId = x.CountJournalNameId, ReserveOnOrdered = x.ReserveOnOrdered == NoYes.Yes, MandatoryItemTaxGroup = x.MandatoryItemTaxGroup == NoYes.Yes };
+
+    private sealed class NullCurrentUserService(ICompanyExecutionContext company) : ICurrentUserService
+    {
+        public string GetCurrentUserId() => string.Empty;
+        public string GetOwnerAccountId() => string.Empty;
+        public string GetDataAreaId() => company.GetDataAreaId();
+    }
 }

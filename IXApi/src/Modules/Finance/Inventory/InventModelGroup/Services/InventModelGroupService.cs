@@ -18,6 +18,18 @@ public sealed class InventModelGroupService : BaseService<InventModelGroupEntity
     public InventModelGroupService(IUnitOfWork unitOfWork, ICurrentUserService currentUser,
         ICompanyExecutionContext company) : base(unitOfWork, currentUser) => this.company = company;
 
+    public InventModelGroupService(IUnitOfWork unitOfWork, ICompanyExecutionContext company)
+        : this(unitOfWork, new NullCurrentUserService(company), company)
+    {
+    }
+
+    private sealed class NullCurrentUserService(ICompanyExecutionContext company) : ICurrentUserService
+    {
+        public string GetCurrentUserId() => string.Empty;
+        public string GetOwnerAccountId() => string.Empty;
+        public string GetDataAreaId() => company.GetDataAreaId();
+    }
+
     public async Task<List<InventModelGroupRecordDto>?> ListAsync(CancellationToken ct)
     {
         var companyId = company.GetDataAreaId();

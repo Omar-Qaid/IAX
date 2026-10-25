@@ -24,6 +24,19 @@ public sealed class InventLocationService : BaseService<InventLocation>, IInvent
         _updateValidator = updateValidator;
     }
 
+    public InventLocationService(IUnitOfWork unitOfWork, ICompanyExecutionContext company,
+        IValidator<InventLocationUpdateValidation> updateValidator)
+        : this(unitOfWork, new NullCurrentUserService(company), company, updateValidator)
+    {
+    }
+
+    private sealed class NullCurrentUserService(ICompanyExecutionContext company) : ICurrentUserService
+    {
+        public string GetCurrentUserId() => string.Empty;
+        public string GetOwnerAccountId() => string.Empty;
+        public string GetDataAreaId() => company.GetDataAreaId();
+    }
+
     public async Task<List<InventLocationResponseDto>> ListAsync(CancellationToken ct)
     {
         var companyId = RequireCompany();

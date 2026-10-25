@@ -22,6 +22,19 @@ public sealed class InventSiteService : BaseService<InventSite>, IInventSiteServ
         _updateValidator = updateValidator;
     }
 
+    public InventSiteService(IUnitOfWork unitOfWork, ICompanyExecutionContext company,
+        IValidator<InventSiteUpdateValidation> updateValidator)
+        : this(unitOfWork, new NullCurrentUserService(company), company, updateValidator)
+    {
+    }
+
+    private sealed class NullCurrentUserService(ICompanyExecutionContext company) : ICurrentUserService
+    {
+        public string GetCurrentUserId() => string.Empty;
+        public string GetOwnerAccountId() => string.Empty;
+        public string GetDataAreaId() => company.GetDataAreaId();
+    }
+
     public async Task<List<InventSiteDto>> ListAsync(CancellationToken ct)
     {
         var companyId = RequireCompany();

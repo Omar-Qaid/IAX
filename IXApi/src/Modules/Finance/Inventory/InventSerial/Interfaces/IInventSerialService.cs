@@ -1,6 +1,9 @@
+using IAX.IXApi.Infrastructure.Persistence.Services;
+using IAX.IXApi.Modules.Finance.Entities;
+
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public interface IInventSerialService
+public interface IInventSerialService : IBaseService<InventSerial>
 {
     Task<IReadOnlyList<InventSerialRecordDto>> ListAsync(string? itemId, CancellationToken ct);
     Task<(InventSerialRecordDto? Serial, string? Error)> CreateAsync(InventSerialInputDto input, CancellationToken ct);

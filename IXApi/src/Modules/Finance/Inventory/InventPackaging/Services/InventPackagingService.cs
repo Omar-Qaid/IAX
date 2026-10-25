@@ -1,4 +1,6 @@
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Shared.Application.Identity;
@@ -6,11 +8,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public sealed class InventPackagingService(IUnitOfWork unitOfWork, ICompanyExecutionContext company)
-    : IInventPackagingService
+public sealed class InventPackagingService : BaseService<InventPackagingGroup>, IInventPackagingService
 {
-    private DbContext Db => unitOfWork.Context;
-    private string Area => company.GetDataAreaId() ?? throw new InvalidOperationException("A company must be selected.");
+    private readonly ICompanyExecutionContext _company;
+
+    public InventPackagingService(IUnitOfWork unitOfWork, ICurrentUserService currentUser, ICompanyExecutionContext company)
+        : base(unitOfWork, currentUser)
+    {
+        _company = company;
+    }
+
+    public InventPackagingService(IUnitOfWork unitOfWork, ICompanyExecutionContext company)
+        : this(unitOfWork, new NullCurrentUserService(company), company)
+    {
+    }
+
+    private DbContext Db => _unitOfWork.Context;
+    private string Area => _company.GetDataAreaId() ?? throw new InvalidOperationException("A company must be selected.");
     private static string Normalize(string? value) => (value ?? string.Empty).Trim().ToUpperInvariant();
     private static InventPackagingGroupRecordDto Map(InventPackagingGroup row) =>
         new(row.RecId, row.PackagingGroupId, row.Name);
@@ -42,7 +56,7 @@ public sealed class InventPackagingService(IUnitOfWork unitOfWork, ICompanyExecu
             return (null, $"Packaging group '{id}' already exists.");
         var row = new InventPackagingGroup { DataAreaId = area, PackagingGroupId = id, Name = name };
         Db.Add(row);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return (Map(row), null);
     }
 
@@ -57,7 +71,7 @@ public sealed class InventPackagingService(IUnitOfWork unitOfWork, ICompanyExecu
         var error = Validate(id, name);
         if (error is not null) return (null, error);
         row.Name = name;
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return (Map(row), null);
     }
 
@@ -67,7 +81,7 @@ public sealed class InventPackagingService(IUnitOfWork unitOfWork, ICompanyExecu
         var row = await Db.Set<InventPackagingGroup>().FirstOrDefaultAsync(x => x.DataAreaId == area && x.RecId == recId, ct);
         if (row is null) return "Packaging group was not found.";
         Db.Remove(row);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return null;
     }
 
@@ -76,4 +90,11 @@ public sealed class InventPackagingService(IUnitOfWork unitOfWork, ICompanyExecu
         id.Length > FieldLengths.PackagingGroupId ? $"Packaging group ID cannot exceed {FieldLengths.PackagingGroupId} characters." :
         name.Length == 0 ? "Packaging group name is required." :
         name.Length > FieldLengths.Name ? $"Packaging group name cannot exceed {FieldLengths.Name} characters." : null;
+
+    private sealed class NullCurrentUserService(ICompanyExecutionContext company) : ICurrentUserService
+    {
+        public string GetCurrentUserId() => string.Empty;
+        public string GetOwnerAccountId() => string.Empty;
+        public string GetDataAreaId() => company.GetDataAreaId();
+    }
 }
