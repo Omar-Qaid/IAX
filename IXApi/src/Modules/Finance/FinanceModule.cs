@@ -39,6 +39,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<FluentValidation.IValidator<AccountsPayable.VendLedgerAccountsDto>, AccountsPayable.VendLedgerAccountsDtoValidator>();
             services.AddScoped<AccountsPayable.IVendTransReadService, AccountsPayable.VendTransReadService>();
             services.AddScoped<FluentValidation.IValidator<AccountsPayable.VendTransQueryDto>, AccountsPayable.VendTransQueryDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<AccountsPayable.PurchTableDto>, AccountsPayable.PurchTableDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsPayable.PurchOrderCreateDto>, AccountsPayable.PurchOrderCreateDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsPayable.PurchLineInputDto>, AccountsPayable.PurchLineInputDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsPayable.ProductReceiptPostDto>, AccountsPayable.ProductReceiptPostDtoValidator>();

@@ -15,7 +15,7 @@ public sealed class AccountsPayableGenericArchitectureTests
     {
         var services = new ServiceCollection();
         services.AddFinanceModule(new ConfigurationBuilder().Build());
-        foreach (var controller in new[] { typeof(VendorController), typeof(VendorGroupController) })
+        foreach (var controller in new[] { typeof(VendorController), typeof(VendorGroupController), typeof(VendLedgerAccountsController), typeof(PurchTableController) })
         {
             Assert.Equal(typeof(BaseController<,>), controller.BaseType?.GetGenericTypeDefinition());
             var entity = controller.BaseType!.GetGenericArguments()[0];
@@ -25,6 +25,31 @@ public sealed class AccountsPayableGenericArchitectureTests
             Assert.NotNull(registration.ImplementationType);
             Assert.True(typeof(BaseService<>).MakeGenericType(entity)
                 .IsAssignableFrom(registration.ImplementationType));
+        }
+    }
+
+    [Fact]
+    public void Accounts_payable_validators_use_existing_base_validator()
+    {
+        var validators = new[]
+        {
+            typeof(VendorDtoValidator),
+            typeof(VendorGroupDtoValidator),
+            typeof(VendLedgerAccountsDtoValidator),
+            typeof(VendTransQueryDtoValidator),
+            typeof(PurchTableDtoValidator),
+            typeof(PurchOrderCreateDtoValidator),
+            typeof(PurchLineInputDtoValidator),
+            typeof(ProductReceiptPostDtoValidator),
+            typeof(VendorInvoicePostDtoValidator),
+            typeof(PurchReturnCreateDtoValidator),
+            typeof(PurchReturnShipDtoValidator),
+            typeof(VendCreditNoteDtoValidator)
+        };
+
+        foreach (var validator in validators)
+        {
+            Assert.Equal(typeof(IAX.IXApi.Shared.Application.Validation.BaseValidator<>), validator.BaseType?.GetGenericTypeDefinition());
         }
     }
 
@@ -45,7 +70,7 @@ public sealed class AccountsPayableGenericArchitectureTests
             Assert.NotNull(registration.ImplementationType);
             Assert.True(contract.IsAssignableFrom(registration.ImplementationType));
         }
-        Assert.Equal(typeof(Microsoft.AspNetCore.Mvc.ControllerBase), typeof(PurchTableController).BaseType);
+        Assert.True(typeof(BaseController<PurchTable, PurchTableDto>).IsAssignableFrom(typeof(PurchTableController)));
         Assert.Equal(typeof(Microsoft.AspNetCore.Mvc.ControllerBase), typeof(PurchReturnController).BaseType);
     }
 }

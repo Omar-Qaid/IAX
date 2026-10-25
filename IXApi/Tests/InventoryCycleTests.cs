@@ -750,10 +750,31 @@ public sealed class InventoryCycleTests
         private IDbContextTransaction? _tx;
         public DbContext Context => context;
         public Task<int> CompleteAsync(CancellationToken ct = default) => context.SaveChangesAsync(ct);
-        public IGenericRepository<T> Repository<T>() where T : class => throw new NotSupportedException();
+        public IGenericRepository<T> Repository<T>() where T : class
+        {
+            var repository = DispatchProxy.Create<IGenericRepository<T>, CycleRepositoryProxy<T>>();
+            ((CycleRepositoryProxy<T>)(object)repository).Context = context;
+            return repository;
+        }
         public async Task BeginTransactionAsync(CancellationToken ct = default) => _tx = await context.Database.BeginTransactionAsync(ct);
         public async Task CommitTransactionAsync(CancellationToken ct = default) { if (_tx != null) await _tx.CommitAsync(ct); }
         public async Task RollbackTransactionAsync(CancellationToken ct = default) { if (_tx != null) await _tx.RollbackAsync(ct); }
         public void Dispose() { }
+    }
+
+    public class CycleRepositoryProxy<T> : DispatchProxy where T : class
+    {
+        public DbContext Context { get; set; } = null!;
+        protected override object? Invoke(MethodInfo? method, object?[]? args)
+        {
+            switch (method?.Name)
+            {
+                case "GetQueryable": return Context.Set<T>().AsQueryable();
+                case "AddAsync": Context.Add((T)args![0]!); return Task.FromResult((T)args[0]!);
+                case "UpdateAsync": return Task.FromResult((T)args![0]!);
+                case "RemoveAsync": Context.Remove((T)args![0]!); return Task.CompletedTask;
+                default: throw new NotSupportedException(method?.Name);
+            }
+        }
     }
 }

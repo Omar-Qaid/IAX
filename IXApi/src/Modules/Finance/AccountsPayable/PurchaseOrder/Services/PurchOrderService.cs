@@ -1,4 +1,6 @@
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.Common;
@@ -13,23 +15,65 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 /// Purchase order header/line maintenance. Adding a line for a stocked item creates its Ordered
 /// inventory receipt (D365: approved PO creates ordered inbound quantity, no physical stock).
 /// </summary>
-public sealed class PurchOrderService(IUnitOfWork unitOfWork, ICompanyExecutionContext company,
-    ISysNumberSequenceService numbers, IPurchInventorySupplyService supply,
-    SalesUnitConversionService units, IValidator<PurchOrderCreateDto>? createValidator = null,
-    IValidator<PurchLineInputDto>? lineValidator = null) : IPurchOrderService
+public sealed class PurchOrderService : BaseService<PurchTable>, IPurchOrderService
 {
-    private DbContext Db => unitOfWork.Context;
+    private readonly ICompanyExecutionContext _company;
+    private readonly ISysNumberSequenceService _numbers;
+    private readonly IPurchInventorySupplyService _supply;
+    private readonly SalesUnitConversionService _units;
+    private readonly IValidator<PurchOrderCreateDto>? _createValidator;
+    private readonly IValidator<PurchLineInputDto>? _lineValidator;
+
+    private DbContext Db => _unitOfWork.Context;
+
+    public PurchOrderService(
+        IUnitOfWork unitOfWork,
+        ICurrentUserService currentUser,
+        ICompanyExecutionContext company,
+        ISysNumberSequenceService numbers,
+        IPurchInventorySupplyService supply,
+        SalesUnitConversionService units,
+        IValidator<PurchOrderCreateDto>? createValidator = null,
+        IValidator<PurchLineInputDto>? lineValidator = null)
+        : base(unitOfWork, currentUser)
+    {
+        _company = company;
+        _numbers = numbers;
+        _supply = supply;
+        _units = units;
+        _createValidator = createValidator;
+        _lineValidator = lineValidator;
+    }
+
+    public PurchOrderService(
+        IUnitOfWork unitOfWork,
+        ICompanyExecutionContext company,
+        ISysNumberSequenceService numbers,
+        IPurchInventorySupplyService supply,
+        SalesUnitConversionService units,
+        IValidator<PurchOrderCreateDto>? createValidator = null,
+        IValidator<PurchLineInputDto>? lineValidator = null)
+        : this(unitOfWork, new NullCurrentUserService(company), company, numbers, supply, units, createValidator, lineValidator)
+    {
+    }
+
+    private sealed class NullCurrentUserService(ICompanyExecutionContext company) : ICurrentUserService
+    {
+        public string GetCurrentUserId() => string.Empty;
+        public string GetOwnerAccountId() => string.Empty;
+        public string GetDataAreaId() => company.GetDataAreaId();
+    }
 
     public async Task<PurchResult> CreateAsync(PurchOrderCreateDto input, CancellationToken ct)
     {
-        var area = company.GetDataAreaId();
+        var area = _company.GetDataAreaId();
         if (string.IsNullOrWhiteSpace(area)) return new(400, null, "A company must be selected.");
         var vendor = await Db.Set<VendTable>().AsNoTracking()
             .FirstOrDefaultAsync(x => x.DataAreaId == area && x.AccountNum == input.OrderAccount, ct);
         if (vendor == null) return new(422, null, "The vendor was not found in the selected company.");
         if (vendor.Blocked == CustVendBlocked.All)
             return new(422, null, "The vendor is blocked for purchasing.");
-        var createValidation = await (createValidator ?? new PurchOrderCreateDtoValidator()).ValidateAsync(input, ct);
+        var createValidation = await (_createValidator ?? new PurchOrderCreateDtoValidator()).ValidateAsync(input, ct);
         if (!createValidation.IsValid) return new(422, null, createValidation.Errors[0].ErrorMessage);
         var siteError = await ValidateSiteWarehouseAsync(area, input.InventSiteId, input.InventLocationId, ct);
         if (siteError != null) return new(422, null, siteError);
@@ -37,7 +81,7 @@ public sealed class PurchOrderService(IUnitOfWork unitOfWork, ICompanyExecutionC
         var order = new PurchTable
         {
             DataAreaId = area,
-            PurchId = (await numbers.NextAsync("PurchTable", area, ct)).Code,
+            PurchId = (await _numbers.NextAsync("PurchTable", area, ct)).Code,
             OrderAccount = vendor.AccountNum,
             InvoiceAccount = string.IsNullOrWhiteSpace(input.InvoiceAccount)
                 ? (string.IsNullOrWhiteSpace(vendor.InvoiceAccount) ? vendor.AccountNum : vendor.InvoiceAccount)
@@ -55,7 +99,7 @@ public sealed class PurchOrderService(IUnitOfWork unitOfWork, ICompanyExecutionC
         if (string.IsNullOrWhiteSpace(order.CurrencyCode))
             return new(422, null, "A currency is required for the purchase order.");
         Db.Set<PurchTable>().Add(order);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return new(200, order, "Purchase order created.");
     }
 
@@ -64,8 +108,8 @@ public sealed class PurchOrderService(IUnitOfWork unitOfWork, ICompanyExecutionC
 
     private async Task<PurchResult> AddLineCoreAsync(long recId, PurchLineInputDto input, CancellationToken ct)
     {
-        var area = company.GetDataAreaId();
-        await unitOfWork.BeginTransactionAsync(ct);
+        var area = _company.GetDataAreaId();
+        await _unitOfWork.BeginTransactionAsync(ct);
         try
         {
             var order = await Db.Set<PurchTable>().FirstOrDefaultAsync(x => x.RecId == recId && x.DataAreaId == area, ct);
@@ -74,7 +118,7 @@ public sealed class PurchOrderService(IUnitOfWork unitOfWork, ICompanyExecutionC
                 return await Fail(422, "Lines can only be added to an open purchase order.", ct);
             if (order.PurchaseType == PurchaseType.ReturnItem)
                 return await Fail(422, "Return order lines are created from the original vendor invoice.", ct);
-            var lineValidation = await (lineValidator ?? new PurchLineInputDtoValidator()).ValidateAsync(input, ct);
+            var lineValidation = await (_lineValidator ?? new PurchLineInputDtoValidator()).ValidateAsync(input, ct);
             if (!lineValidation.IsValid) return await Fail(422, lineValidation.Errors[0].ErrorMessage, ct);
 
             var item = await Db.Set<InventTable>().AsNoTracking()
@@ -91,7 +135,7 @@ public sealed class PurchOrderService(IUnitOfWork unitOfWork, ICompanyExecutionC
                 && x.ItemId == item.ItemId && x.ModuleType == ModuleInventPurchSales.Purchase, ct);
             var unit = string.IsNullOrWhiteSpace(input.PurchUnit) ? purchModule?.UnitId ?? string.Empty : input.PurchUnit.Trim();
             if (string.IsNullOrWhiteSpace(unit)) return await Fail(422, $"A purchase unit is required for item '{item.ItemId}'.", ct);
-            var inventQty = await units.ToInventoryQuantityAsync(item, unit, input.PurchQty, ct);
+            var inventQty = await _units.ToInventoryQuantityAsync(item, unit, input.PurchQty, ct);
             if (inventQty == null || inventQty <= 0)
                 return await Fail(422, "A conversion from the purchase unit to the item's inventory unit is required.", ct);
 
@@ -117,16 +161,16 @@ public sealed class PurchOrderService(IUnitOfWork unitOfWork, ICompanyExecutionC
                 PurchStatus = PurchStatus.Backorder,
                 DeliveryDate = (input.DeliveryDate ?? order.DeliveryDate).Date
             };
-            await supply.CreateAsync(order, line, site, warehouse, ct);
+            await _supply.CreateAsync(order, line, site, warehouse, ct);
             Db.Set<PurchLine>().Add(line);
             if (order.DocumentStatus == DocumentStatus.PurchaseOrder) order.DocumentStatus = DocumentStatus.None;
-            await unitOfWork.CompleteAsync(ct);
-            await unitOfWork.CommitTransactionAsync(ct);
+            await _unitOfWork.CompleteAsync(ct);
+            await _unitOfWork.CommitTransactionAsync(ct);
             return new(200, line, "Purchase line added.");
         }
         catch
         {
-            await unitOfWork.RollbackTransactionAsync(ct);
+            await _unitOfWork.RollbackTransactionAsync(ct);
             Db.ChangeTracker.Clear();
             throw;
         }
@@ -134,7 +178,7 @@ public sealed class PurchOrderService(IUnitOfWork unitOfWork, ICompanyExecutionC
 
     public async Task<PurchResult> GetAsync(long recId, CancellationToken ct)
     {
-        var area = company.GetDataAreaId();
+        var area = _company.GetDataAreaId();
         var order = await Db.Set<PurchTable>().AsNoTracking().FirstOrDefaultAsync(x => x.RecId == recId && x.DataAreaId == area, ct);
         if (order == null) return new(404, null, "Purchase order was not found in the selected company.");
         var lines = await Db.Set<PurchLine>().AsNoTracking()
@@ -155,7 +199,7 @@ public sealed class PurchOrderService(IUnitOfWork unitOfWork, ICompanyExecutionC
 
     private async Task<PurchResult> Fail(int status, string message, CancellationToken ct)
     {
-        await unitOfWork.RollbackTransactionAsync(ct);
+        await _unitOfWork.RollbackTransactionAsync(ct);
         Db.ChangeTracker.Clear();
         return new(status, null, message);
     }
