@@ -127,4 +127,50 @@ public sealed class FoundationGenericArchitectureTests
         Assert.Contains(services, d => d.ServiceType == typeof(IValidator<HcmWorkerDto>));
         Assert.Contains(services, d => d.ServiceType == typeof(IValidator<TaxTableDto>));
     }
+
+    [Fact]
+    public void Foundation_features_adhere_to_seven_folder_layout()
+    {
+        var candidatePaths = new[]
+        {
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "src", "Modules", "Finance", "Foundation"),
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "IXApi", "src", "Modules", "Finance", "Foundation"),
+            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../IXApi/src/Modules/Finance/Foundation"))
+        };
+
+        var foundationPath = candidatePaths.FirstOrDefault(Directory.Exists);
+        if (foundationPath != null)
+        {
+            var expectedFolders = new[] { "Configuration", "Controllers", "Dtos", "Entities", "Interfaces", "Services", "Validation" };
+
+            // Check top-level features (excluding container folders Dimensions and HcmWorkers)
+            var topLevelFeatures = Directory.GetDirectories(foundationPath)
+                .Where(d => !Path.GetFileName(d).Equals("Dimensions", StringComparison.OrdinalIgnoreCase)
+                         && !Path.GetFileName(d).Equals("HcmWorkers", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            // Check nested features in Dimensions and HcmWorkers
+            var nestedFeatures = new List<string>();
+            var dimensionsDir = Path.Combine(foundationPath, "Dimensions");
+            if (Directory.Exists(dimensionsDir))
+                nestedFeatures.AddRange(Directory.GetDirectories(dimensionsDir));
+
+            var hcmWorkersDir = Path.Combine(foundationPath, "HcmWorkers");
+            if (Directory.Exists(hcmWorkersDir))
+                nestedFeatures.AddRange(Directory.GetDirectories(hcmWorkersDir));
+
+            var allFeatures = topLevelFeatures.Concat(nestedFeatures).ToList();
+            Assert.NotEmpty(allFeatures);
+
+            foreach (var dir in allFeatures)
+            {
+                var subdirs = Directory.GetDirectories(dir).Select(Path.GetFileName).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                foreach (var expected in expectedFolders)
+                {
+                    Assert.True(subdirs.Contains(expected), $"Feature '{Path.GetFileName(dir)}' in '{dir}' is missing folder '{expected}'.");
+                }
+            }
+        }
+    }
 }
+
