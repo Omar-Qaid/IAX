@@ -20,21 +20,49 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Invoice;
 /// inventory portions, and the line's financial remainders. COGS is the provisional running
 /// average; the FIFO inventory close settles it to actual cost.
 /// </summary>
-public sealed class SalesInvoiceService(IUnitOfWork unitOfWork, ICompanyExecutionContext company,
-    ISysNumberSequenceService numbers) : ISalesInvoiceService
+public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesInvoiceService
 {
-    private DbContext Db => unitOfWork.Context;
+    private readonly ICompanyExecutionContext _company;
+    private readonly ISysNumberSequenceService _numbers;
+
+    private DbContext Db => _unitOfWork.Context;
+
+    public SalesInvoiceService(
+        IUnitOfWork unitOfWork,
+        ICurrentUserService currentUser,
+        ICompanyExecutionContext company,
+        ISysNumberSequenceService numbers)
+        : base(unitOfWork, currentUser)
+    {
+        _company = company;
+        _numbers = numbers;
+    }
+
+    public SalesInvoiceService(
+        IUnitOfWork unitOfWork,
+        ICompanyExecutionContext company,
+        ISysNumberSequenceService numbers)
+        : this(unitOfWork, new NullCurrentUserService(company), company, numbers)
+    {
+    }
+
+    private sealed class NullCurrentUserService(ICompanyExecutionContext company) : ICurrentUserService
+    {
+        public string GetCurrentUserId() => string.Empty;
+        public string GetOwnerAccountId() => string.Empty;
+        public string GetDataAreaId() => company.GetDataAreaId();
+    }
 
     public Task<SalesInvoiceResult> PostAsync(long salesRecId, SalesInvoicePostDto input, CancellationToken ct) =>
         Db.Database.CreateExecutionStrategy().ExecuteAsync(() => PostCoreAsync(salesRecId, input, ct));
 
     private async Task<SalesInvoiceResult> PostCoreAsync(long salesRecId, SalesInvoicePostDto input, CancellationToken ct)
     {
-        var area = company.GetDataAreaId();
+        var area = _company.GetDataAreaId();
         if (string.IsNullOrWhiteSpace(area)) return new(400, null, "A company must be selected.");
         var date = (input.InvoiceDate ?? DateTime.UtcNow).Date;
         var support = new SubledgerPostingSupport(Db);
-        await unitOfWork.BeginTransactionAsync(ct);
+        await _unitOfWork.BeginTransactionAsync(ct);
         try
         {
             var order = await Db.Set<SalesTable>().FirstOrDefaultAsync(x => x.RecId == salesRecId && x.DataAreaId == area, ct);
@@ -49,7 +77,7 @@ public sealed class SalesInvoiceService(IUnitOfWork unitOfWork, ICompanyExecutio
                     && x.SalesId == order.SalesId && x.ParmId == input.RequestId, ct);
                 if (previous != null)
                 {
-                    await unitOfWork.CommitTransactionAsync(ct);
+                    await _unitOfWork.CommitTransactionAsync(ct);
                     return new(200, Summary(previous), "Sales invoice already posted for this request.");
                 }
             }
@@ -85,10 +113,10 @@ public sealed class SalesInvoiceService(IUnitOfWork unitOfWork, ICompanyExecutio
 
             var ledger = await support.LoadLedgerContextAsync(area, date, ct);
             var customerAccount = await support.ResolveCustomerSummaryAsync(area, order.PostingProfile, customer, ct);
-            var invoiceId = (await numbers.NextAsync("CustInvoiceJour", area, ct)).Code;
+            var invoiceId = (await _numbers.NextAsync("CustInvoiceJour", area, ct)).Code;
             var entry = support.NewEntry(area, invoiceId, invoiceId, date, ledger);
             Db.Add(entry);
-            await unitOfWork.CompleteAsync(ct);
+            await _unitOfWork.CompleteAsync(ct);
             var currency = ledger.Ledger.AccountingCurrency;
 
             decimal totalRevenue = 0, totalTax = 0, totalQty = 0;
@@ -180,8 +208,8 @@ public sealed class SalesInvoiceService(IUnitOfWork unitOfWork, ICompanyExecutio
             if (lines.All(x => x.SalesStatus == SalesStatus.Invoiced || x.SalesStatus == SalesStatus.Canceled))
                 order.SalesStatus = SalesStatus.Invoiced;
             order.DocumentStatus = DocumentStatus.Invoice;
-            await unitOfWork.CompleteAsync(ct);
-            await unitOfWork.CommitTransactionAsync(ct);
+            await _unitOfWork.CompleteAsync(ct);
+            await _unitOfWork.CommitTransactionAsync(ct);
             return new(200, Summary(journal), "Sales invoice posted.");
         }
         catch (SubledgerPostingException ex)
@@ -190,7 +218,7 @@ public sealed class SalesInvoiceService(IUnitOfWork unitOfWork, ICompanyExecutio
         }
         catch
         {
-            await unitOfWork.RollbackTransactionAsync(ct);
+            await _unitOfWork.RollbackTransactionAsync(ct);
             Db.ChangeTracker.Clear();
             throw;
         }
@@ -272,7 +300,7 @@ public sealed class SalesInvoiceService(IUnitOfWork unitOfWork, ICompanyExecutio
             PostingProfile = order.PostingProfile, DefaultDimension = order.DefaultDimension
         };
         Db.Set<CustTrans>().Add(custTrans);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         Db.Set<CustTransOpen>().Add(new CustTransOpen
         {
             DataAreaId = area, AccountNum = invoiceAccount, RefRecId = custTrans.RecId, TransDate = date,
@@ -297,7 +325,7 @@ public sealed class SalesInvoiceService(IUnitOfWork unitOfWork, ICompanyExecutio
 
     private async Task<SalesInvoiceResult> Fail(int status, string message, CancellationToken ct)
     {
-        await unitOfWork.RollbackTransactionAsync(ct);
+        await _unitOfWork.RollbackTransactionAsync(ct);
         Db.ChangeTracker.Clear();
         return new(status, null, message);
     }

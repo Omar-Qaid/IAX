@@ -753,11 +753,32 @@ public sealed class SalesOrderConfirmationTests
     {
         public DbContext Context => context;
         public Task<int> CompleteAsync(CancellationToken ct = default) => context.SaveChangesAsync(ct);
-        public IGenericRepository<T> Repository<T>() where T : class => throw new NotSupportedException();
+        public IGenericRepository<T> Repository<T>() where T : class
+        {
+            var repository = DispatchProxy.Create<IGenericRepository<T>, ConfirmationRepositoryProxy<T>>();
+            ((ConfirmationRepositoryProxy<T>)(object)repository).Context = context;
+            return repository;
+        }
         public Task BeginTransactionAsync(CancellationToken ct = default) => throw new NotSupportedException();
         public Task CommitTransactionAsync(CancellationToken ct = default) => throw new NotSupportedException();
         public Task RollbackTransactionAsync(CancellationToken ct = default) => throw new NotSupportedException();
         public void Dispose() { }
+    }
+
+    public class ConfirmationRepositoryProxy<T> : DispatchProxy where T : class
+    {
+        public DbContext Context { get; set; } = null!;
+        protected override object? Invoke(MethodInfo? method, object?[]? args)
+        {
+            switch (method?.Name)
+            {
+                case "GetQueryable": return Context.Set<T>().AsQueryable();
+                case "AddAsync": Context.Add((T)args![0]!); return Task.FromResult((T)args[0]!);
+                case "UpdateAsync": return Task.FromResult((T)args![0]!);
+                case "RemoveAsync": Context.Remove((T)args![0]!); return Task.CompletedTask;
+                default: throw new NotSupportedException(method?.Name);
+            }
+        }
     }
 
     private sealed class FinanceContextAdapter(DbContext context) : IFinanceDataContext

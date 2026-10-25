@@ -2,6 +2,7 @@ using IAX.IXApi.Api.Controllers;
 using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Finance;
 using IAX.IXApi.Modules.Finance.AccountsPayable;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -15,7 +16,17 @@ public sealed class AccountsPayableGenericArchitectureTests
     {
         var services = new ServiceCollection();
         services.AddFinanceModule(new ConfigurationBuilder().Build());
-        foreach (var controller in new[] { typeof(VendorController), typeof(VendorGroupController), typeof(VendLedgerAccountsController), typeof(PurchTableController) })
+        foreach (var controller in new[]
+        {
+            typeof(VendorController),
+            typeof(VendorGroupController),
+            typeof(VendLedgerAccountsController),
+            typeof(PurchTableController),
+            typeof(PurchConfirmationController),
+            typeof(VendorInvoiceController),
+            typeof(ProductReceiptController),
+            typeof(VendTransController)
+        })
         {
             Assert.Equal(typeof(BaseController<,>), controller.BaseType?.GetGenericTypeDefinition());
             var entity = controller.BaseType!.GetGenericArguments()[0];
@@ -36,12 +47,16 @@ public sealed class AccountsPayableGenericArchitectureTests
             typeof(VendorDtoValidator),
             typeof(VendorGroupDtoValidator),
             typeof(VendLedgerAccountsDtoValidator),
+            typeof(VendTransDtoValidator),
             typeof(VendTransQueryDtoValidator),
             typeof(PurchTableDtoValidator),
+            typeof(VendPurchOrderJourDtoValidator),
             typeof(PurchOrderCreateDtoValidator),
             typeof(PurchLineInputDtoValidator),
             typeof(ProductReceiptPostDtoValidator),
+            typeof(VendPackingSlipJourDtoValidator),
             typeof(VendorInvoicePostDtoValidator),
+            typeof(VendInvoiceJourDtoValidator),
             typeof(PurchReturnCreateDtoValidator),
             typeof(PurchReturnShipDtoValidator),
             typeof(VendCreditNoteDtoValidator)
@@ -71,6 +86,26 @@ public sealed class AccountsPayableGenericArchitectureTests
             Assert.True(contract.IsAssignableFrom(registration.ImplementationType));
         }
         Assert.True(typeof(BaseController<PurchTable, PurchTableDto>).IsAssignableFrom(typeof(PurchTableController)));
+        Assert.True(typeof(BaseController<VendPurchOrderJour, VendPurchOrderJourDto>).IsAssignableFrom(typeof(PurchConfirmationController)));
+        Assert.True(typeof(BaseController<VendPackingSlipJour, VendPackingSlipJourDto>).IsAssignableFrom(typeof(ProductReceiptController)));
+        Assert.True(typeof(BaseController<VendInvoiceJour, VendInvoiceJourDto>).IsAssignableFrom(typeof(VendorInvoiceController)));
         Assert.Equal(typeof(Microsoft.AspNetCore.Mvc.ControllerBase), typeof(PurchReturnController).BaseType);
+    }
+
+    [Fact]
+    public void Purchase_journal_controllers_disable_generic_mutations()
+    {
+        foreach (var controller in new[]
+        {
+            typeof(PurchConfirmationController),
+            typeof(VendorInvoiceController),
+            typeof(ProductReceiptController)
+        })
+        {
+            foreach (var action in new[] { "Create", "Update", "Delete" })
+            {
+                Assert.True(controller.GetMethod(action)!.IsDefined(typeof(NonActionAttribute), inherit: false));
+            }
+        }
     }
 }

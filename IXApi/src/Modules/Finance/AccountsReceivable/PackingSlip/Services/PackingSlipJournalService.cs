@@ -2,8 +2,10 @@ using System.Globalization;
 using System.Data;
 using System.Security.Cryptography;
 using System.Text;
-using IAX.IXApi.Modules.Administration.NumberSequences;
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
+using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.PackingSlip.Dtos;
 using IAX.IXApi.Modules.Finance.Common;
@@ -16,12 +18,38 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable.PackingSlip;
 
-public sealed class PackingSlipJournalService(
-    IUnitOfWork unitOfWork,
-    ICompanyExecutionContext company,
-    ISysNumberSequenceService numberSequences) : IPackingSlipJournalService
+public sealed class PackingSlipJournalService : BaseService<CustPackingSlipJour>, IPackingSlipJournalService
 {
-    private DbContext Db => unitOfWork.Context;
+    private readonly ICompanyExecutionContext _company;
+    private readonly ISysNumberSequenceService _numberSequences;
+
+    private DbContext Db => _unitOfWork.Context;
+
+    public PackingSlipJournalService(
+        IUnitOfWork unitOfWork,
+        ICurrentUserService currentUser,
+        ICompanyExecutionContext company,
+        ISysNumberSequenceService numberSequences)
+        : base(unitOfWork, currentUser)
+    {
+        _company = company;
+        _numberSequences = numberSequences;
+    }
+
+    public PackingSlipJournalService(
+        IUnitOfWork unitOfWork,
+        ICompanyExecutionContext company,
+        ISysNumberSequenceService numberSequences)
+        : this(unitOfWork, new NullCurrentUserService(company), company, numberSequences)
+    {
+    }
+
+    private sealed class NullCurrentUserService(ICompanyExecutionContext company) : ICurrentUserService
+    {
+        public string GetCurrentUserId() => string.Empty;
+        public string GetOwnerAccountId() => string.Empty;
+        public string GetDataAreaId() => company.GetDataAreaId();
+    }
 
     public async Task<PackingSlipJournalResult> ListAsync(long salesOrderRecId, CancellationToken ct)
     {
@@ -137,7 +165,7 @@ public sealed class PackingSlipJournalService(
         return await Db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
             await using var transaction = await Db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
-            await LockPostingKeyAsync($"PackingSlip:{company.GetDataAreaId()}:{salesOrderRecId}", ct);
+            await LockPostingKeyAsync($"PackingSlip:{_company.GetDataAreaId()}:{salesOrderRecId}", ct);
             var order = await FindOrderAsync(salesOrderRecId, ct);
             if (order is null) return new PackingSlipJournalResult(404, null, "Sales order was not found in the selected company.");
             if (order.SalesType == SalesType.ReturnItem)
@@ -385,7 +413,7 @@ public sealed class PackingSlipJournalService(
             if (!otherOpenLinesRemain && lines.All(line => line.RemainSalesPhysical <= 0))
                 order.SalesStatus = SalesStatus.Delivered;
             order.DocumentStatus = DocumentStatus.PackingSlip;
-            await unitOfWork.CompleteAsync(ct);
+            await _unitOfWork.CompleteAsync(ct);
             await transaction.CommitAsync(ct);
             return new PackingSlipJournalResult(200, ToSummary(journal), "Packing slip posted.");
         });
@@ -459,7 +487,7 @@ public sealed class PackingSlipJournalService(
     {
         for (var attempt = 0; attempt < 1000; attempt++)
         {
-            var candidate = (await numberSequences.NextAsync("CustPackingSlipJour", area, ct)).Code;
+            var candidate = (await _numberSequences.NextAsync("CustPackingSlipJour", area, ct)).Code;
             if (!await Db.Set<CustPackingSlipJour>().IgnoreQueryFilters().AsNoTracking()
                 .AnyAsync(row => row.DataAreaId == area && row.PackingSlipId == candidate, ct)) return candidate;
         }
@@ -518,7 +546,7 @@ public sealed class PackingSlipJournalService(
 
     private Task<SalesTable?> FindOrderAsync(long recId, CancellationToken ct) =>
         Db.Set<SalesTable>().AsNoTracking().SingleOrDefaultAsync(
-            row => row.RecId == recId && row.DataAreaId == company.GetDataAreaId(), ct);
+            row => row.RecId == recId && row.DataAreaId == _company.GetDataAreaId(), ct);
 
     private async Task LockPostingKeyAsync(string key, CancellationToken ct)
     {

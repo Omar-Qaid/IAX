@@ -1,4 +1,6 @@
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
@@ -15,22 +17,54 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 /// Receipt-before-invoice is enforced. Tax, charges and receipt-accrual reversal are outside the
 /// basic milestone.
 /// </summary>
-public sealed class VendorInvoiceService(IUnitOfWork unitOfWork, ICompanyExecutionContext company,
-    ISysNumberSequenceService numbers, IValidator<VendorInvoicePostDto>? validator = null) : IVendorInvoiceService
+public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendorInvoiceService
 {
-    private DbContext Db => unitOfWork.Context;
+    private readonly ICompanyExecutionContext _company;
+    private readonly ISysNumberSequenceService _numbers;
+    private readonly IValidator<VendorInvoicePostDto>? _validator;
+
+    private DbContext Db => _unitOfWork.Context;
+
+    public VendorInvoiceService(
+        IUnitOfWork unitOfWork,
+        ICurrentUserService currentUser,
+        ICompanyExecutionContext company,
+        ISysNumberSequenceService numbers,
+        IValidator<VendorInvoicePostDto>? validator = null)
+        : base(unitOfWork, currentUser)
+    {
+        _company = company;
+        _numbers = numbers;
+        _validator = validator;
+    }
+
+    public VendorInvoiceService(
+        IUnitOfWork unitOfWork,
+        ICompanyExecutionContext company,
+        ISysNumberSequenceService numbers,
+        IValidator<VendorInvoicePostDto>? validator = null)
+        : this(unitOfWork, new NullCurrentUserService(company), company, numbers, validator)
+    {
+    }
+
+    private sealed class NullCurrentUserService(ICompanyExecutionContext company) : ICurrentUserService
+    {
+        public string GetCurrentUserId() => string.Empty;
+        public string GetOwnerAccountId() => string.Empty;
+        public string GetDataAreaId() => company.GetDataAreaId();
+    }
 
     public Task<PurchResult> PostAsync(long recId, VendorInvoicePostDto input, CancellationToken ct) =>
         Db.Database.CreateExecutionStrategy().ExecuteAsync(() => PostCoreAsync(recId, input, ct));
 
     private async Task<PurchResult> PostCoreAsync(long recId, VendorInvoicePostDto input, CancellationToken ct)
     {
-        var area = company.GetDataAreaId();
-        var validation = await (validator ?? new VendorInvoicePostDtoValidator()).ValidateAsync(input, ct);
+        var area = _company.GetDataAreaId();
+        var validation = await (_validator ?? new VendorInvoicePostDtoValidator()).ValidateAsync(input, ct);
         if (!validation.IsValid) return new(400, null, validation.Errors[0].ErrorMessage);
         var date = (input.InvoiceDate ?? DateTime.UtcNow).Date;
         var support = new SubledgerPostingSupport(Db);
-        await unitOfWork.BeginTransactionAsync(ct);
+        await _unitOfWork.BeginTransactionAsync(ct);
         try
         {
             var order = await Db.Set<PurchTable>().FirstOrDefaultAsync(x => x.RecId == recId && x.DataAreaId == area, ct);
@@ -51,11 +85,11 @@ public sealed class VendorInvoiceService(IUnitOfWork unitOfWork, ICompanyExecuti
 
             var context = await support.LoadLedgerContextAsync(area, date, ct);
             var vendorAccount = await support.ResolveVendorSummaryAsync(area, vendor, ct);
-            var internalId = (await numbers.NextAsync("VendInvoiceJour", area, ct)).Code;
+            var internalId = (await _numbers.NextAsync("VendInvoiceJour", area, ct)).Code;
             var entry = support.NewEntry(area, internalId, internalId, date, context);
             entry.DocumentNumber = vendorInvoiceId;
             Db.Add(entry);
-            await unitOfWork.CompleteAsync(ct);
+            await _unitOfWork.CompleteAsync(ct);
 
             decimal total = 0m, totalQty = 0m;
             foreach (var request in input.Lines)
@@ -170,8 +204,8 @@ public sealed class VendorInvoiceService(IUnitOfWork unitOfWork, ICompanyExecuti
             if (lines.All(x => x.RemainPurchFinancial <= 0 && x.RemainPurchPhysical <= 0))
                 order.PurchStatus = PurchStatus.Invoiced;
             order.DocumentStatus = DocumentStatus.Invoice;
-            await unitOfWork.CompleteAsync(ct);
-            await unitOfWork.CommitTransactionAsync(ct);
+            await _unitOfWork.CompleteAsync(ct);
+            await _unitOfWork.CommitTransactionAsync(ct);
             return new(200, new { invoiceId = vendorInvoiceId, voucher = internalId, amount = total, qty = totalQty },
                 "Vendor invoice posted.");
         }
@@ -181,7 +215,7 @@ public sealed class VendorInvoiceService(IUnitOfWork unitOfWork, ICompanyExecuti
         }
         catch
         {
-            await unitOfWork.RollbackTransactionAsync(ct);
+            await _unitOfWork.RollbackTransactionAsync(ct);
             Db.ChangeTracker.Clear();
             throw;
         }
@@ -189,7 +223,7 @@ public sealed class VendorInvoiceService(IUnitOfWork unitOfWork, ICompanyExecuti
 
     private async Task<PurchResult> Fail(int status, string message, CancellationToken ct)
     {
-        await unitOfWork.RollbackTransactionAsync(ct);
+        await _unitOfWork.RollbackTransactionAsync(ct);
         Db.ChangeTracker.Clear();
         return new(status, null, message);
     }

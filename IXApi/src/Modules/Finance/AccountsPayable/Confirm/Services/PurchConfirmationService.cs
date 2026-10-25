@@ -1,4 +1,6 @@
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Shared.Application.Identity;
@@ -10,14 +12,42 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 /// Purchase order confirmation: stores an immutable VendPurchOrderJour/Trans snapshot per version.
 /// Confirmation never receives stock (D365: no physical or financial inventory effect).
 /// </summary>
-public sealed class PurchConfirmationService(IUnitOfWork unitOfWork, ICompanyExecutionContext company,
-    ISysNumberSequenceService numbers) : IPurchConfirmationService
+public sealed class PurchConfirmationService : BaseService<VendPurchOrderJour>, IPurchConfirmationService
 {
-    private DbContext Db => unitOfWork.Context;
+    private readonly ICompanyExecutionContext _company;
+    private readonly ISysNumberSequenceService _numbers;
+
+    private DbContext Db => _unitOfWork.Context;
+
+    public PurchConfirmationService(
+        IUnitOfWork unitOfWork,
+        ICurrentUserService currentUser,
+        ICompanyExecutionContext company,
+        ISysNumberSequenceService numbers)
+        : base(unitOfWork, currentUser)
+    {
+        _company = company;
+        _numbers = numbers;
+    }
+
+    public PurchConfirmationService(
+        IUnitOfWork unitOfWork,
+        ICompanyExecutionContext company,
+        ISysNumberSequenceService numbers)
+        : this(unitOfWork, new NullCurrentUserService(company), company, numbers)
+    {
+    }
+
+    private sealed class NullCurrentUserService(ICompanyExecutionContext company) : ICurrentUserService
+    {
+        public string GetCurrentUserId() => string.Empty;
+        public string GetOwnerAccountId() => string.Empty;
+        public string GetDataAreaId() => company.GetDataAreaId();
+    }
 
     public async Task<PurchResult> ConfirmAsync(long recId, CancellationToken ct)
     {
-        var area = company.GetDataAreaId();
+        var area = _company.GetDataAreaId();
         var order = await Db.Set<PurchTable>().FirstOrDefaultAsync(x => x.RecId == recId && x.DataAreaId == area, ct);
         if (order == null) return new(404, null, "Purchase order was not found in the selected company.");
         if (order.PurchStatus == PurchStatus.Canceled)
@@ -26,7 +56,7 @@ public sealed class PurchConfirmationService(IUnitOfWork unitOfWork, ICompanyExe
             && x.PurchStatus != PurchStatus.Canceled).ToListAsync(ct);
         if (lines.Count == 0) return new(422, null, "The purchase order has no lines to confirm.");
 
-        var docNum = (await numbers.NextAsync("VendPurchOrderJour", area, ct)).Code;
+        var docNum = (await _numbers.NextAsync("VendPurchOrderJour", area, ct)).Code;
         var journal = new VendPurchOrderJour
         {
             DataAreaId = area, PurchId = order.PurchId, PurchOrderDocNum = docNum, PurchOrderDate = DateTime.UtcNow.Date,
@@ -44,7 +74,7 @@ public sealed class PurchConfirmationService(IUnitOfWork unitOfWork, ICompanyExe
             });
         if (order.DocumentStatus is DocumentStatus.None or DocumentStatus.PurchaseOrder)
             order.DocumentStatus = DocumentStatus.PurchaseOrder;
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return new(200, journal, "Purchase order confirmed.");
     }
 }

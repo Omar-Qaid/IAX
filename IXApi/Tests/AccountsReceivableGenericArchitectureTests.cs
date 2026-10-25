@@ -29,7 +29,8 @@ public sealed class AccountsReceivableGenericArchitectureTests
             "CustomerController", "CustomerGroupController", "SalesPoolController",
             "CustParametersController", "CustPaymModeController", "CustLedgerController",
             "CustLedgerAccountsController", "PriceDiscTableController", "PriceDiscGroupController",
-            "PriceDiscAdmTableController", "PriceDiscAdmTransController", "PriceDiscAdmNameController"
+            "PriceDiscAdmTableController", "PriceDiscAdmTransController", "PriceDiscAdmNameController",
+            "SalesTableController", "SalesOrderConfirmationController"
         };
         Assert.Empty(expectedControllers.Except(controllers.Select(type => type.Name)));
         foreach (var controller in controllers)
@@ -59,8 +60,16 @@ public sealed class AccountsReceivableGenericArchitectureTests
 
         var expectedValidators = new[]
         {
+            "CustomerDtoValidator", "CustGroupDtoValidator",
             "CustTransDtoValidator", "CustInvoiceJourDtoValidator", "CustSettlementDtoValidator",
-            "SalesQuotationDtoValidator", "SalesOrderCopyValidator", "SalesOrderConfirmationValidator"
+            "SalesQuotationDtoValidator", "SalesOrderCopyValidator", "SalesOrderConfirmationValidator",
+            "SalesTableDtoValidator", "SalesLineDtoValidator",
+            "CustConfirmJourDtoValidator", "CustConfirmTransDtoValidator",
+            "SalesPoolDtoValidator", "CustPaymModeDtoValidator",
+            "CustParametersDtoValidator", "CustLedgerDtoValidator",
+            "CustLedgerAccountsDtoValidator", "PriceDiscTableDtoValidator",
+            "PriceDiscGroupDtoValidator", "PriceDiscAdmTableDtoValidator",
+            "PriceDiscAdmTransDtoValidator", "PriceDiscAdmNameDtoValidator"
         };
         Assert.Empty(expectedValidators.Except(validators.Select(type => type.Name)));
         foreach (var validator in validators)

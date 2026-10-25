@@ -1,17 +1,19 @@
+using IAX.IXApi.Api.Controllers;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
 using IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses;
 using IAX.IXApi.Modules.Identity.Permissions;
 using IAX.IXApi.Shared.Application.Contracts;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
 
 [ApiController]
 [Route("api/v1/SalesTable")]
 [DomainPermission("AccountsReceivable", "SalesOrders", "View")]
-public sealed class SalesTableController : ControllerBase
+public sealed class SalesTableController : BaseController<SalesTable, SalesTableDto>
 {
-
+    private readonly ISalesTableService _salesTableService;
     private readonly ISalesOrderLookupService _lookups;
     private readonly ISalesOrderReadService _reads;
     private readonly ISalesOrderQuickCreateService _quickCreate;
@@ -22,6 +24,8 @@ public sealed class SalesTableController : ControllerBase
     private readonly ISalesOrderLineService _lineWrites;
 
     public SalesTableController(
+        ISalesTableService service,
+        ILogger<SalesTableController> logger,
         ISalesOrderLookupService lookups,
         ISalesOrderReadService reads,
         ISalesOrderQuickCreateService quickCreate,
@@ -30,7 +34,9 @@ public sealed class SalesTableController : ControllerBase
         ISalesOrderHeaderService header,
         ISalesOrderDiscountService discounts,
         ISalesOrderLineService lineWrites)
+        : base(service, logger)
     {
+        _salesTableService = service;
         _lookups = lookups;
         _reads = reads;
         _quickCreate = quickCreate;

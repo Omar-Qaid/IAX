@@ -1,8 +1,10 @@
 using System.Data;
+using IAX.IXApi.Infrastructure.Identity;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
-using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Shared.Application.Identity;
 using FluentValidation;
 using Mapster;
@@ -10,11 +12,42 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Confirm;
 
-public sealed class SalesOrderConfirmationService(
-    IUnitOfWork unitOfWork, ISysNumberSequenceService numberSequences,
-    ICompanyExecutionContext company, IValidator<PostConfirmationRequest> validator) : ISalesOrderConfirmationService
+public sealed class SalesOrderConfirmationService : BaseService<CustConfirmJour>, ISalesOrderConfirmationService
 {
-    private DbContext db => unitOfWork.Context;
+    private readonly ISysNumberSequenceService _numberSequences;
+    private readonly ICompanyExecutionContext _company;
+    private readonly IValidator<PostConfirmationRequest> _validator;
+
+    private DbContext db => _unitOfWork.Context;
+
+    public SalesOrderConfirmationService(
+        IUnitOfWork unitOfWork,
+        ICurrentUserService currentUser,
+        ISysNumberSequenceService numberSequences,
+        ICompanyExecutionContext company,
+        IValidator<PostConfirmationRequest> validator)
+        : base(unitOfWork, currentUser)
+    {
+        _numberSequences = numberSequences;
+        _company = company;
+        _validator = validator;
+    }
+
+    public SalesOrderConfirmationService(
+        IUnitOfWork unitOfWork,
+        ISysNumberSequenceService numberSequences,
+        ICompanyExecutionContext company,
+        IValidator<PostConfirmationRequest> validator)
+        : this(unitOfWork, new NullCurrentUserService(company), numberSequences, company, validator)
+    {
+    }
+
+    private sealed class NullCurrentUserService(ICompanyExecutionContext company) : ICurrentUserService
+    {
+        public string GetCurrentUserId() => string.Empty;
+        public string GetOwnerAccountId() => string.Empty;
+        public string GetDataAreaId() => company.GetDataAreaId();
+    }
 
     public async Task<ConfirmationResult> ListAsync(long recId, CancellationToken ct)
     {
@@ -86,7 +119,7 @@ public sealed class SalesOrderConfirmationService(
 
     public async Task<ConfirmationResult> PostAsync(long recId, PostConfirmationRequest? request, CancellationToken ct)
     {
-        var validation = await validator.ValidateAsync(request ?? new PostConfirmationRequest(), ct);
+        var validation = await _validator.ValidateAsync(request ?? new PostConfirmationRequest(), ct);
         if (!validation.IsValid)
             return new(400, null, validation.Errors[0].ErrorMessage);
         var confirmationDate = request?.ConfirmationDate?.Date ?? DateTime.UtcNow.Date;
@@ -146,20 +179,20 @@ public sealed class SalesOrderConfirmationService(
                 db.Set<CustConfirmTrans>().Add(CreateLine(order, line, calculated, confirmId, confirmationDate));
             if (order.DocumentStatus is DocumentStatus.None or DocumentStatus.Confirmation)
                 order.DocumentStatus = DocumentStatus.Confirmation;
-            await unitOfWork.CompleteAsync(ct);
+            await _unitOfWork.CompleteAsync(ct);
             await transaction.CommitAsync(ct);
             return new ConfirmationResult(200, Present(journal), "Sales order confirmed.");
         });
     }
 
     private Task<SalesTable?> FindOrderAsync(long recId, CancellationToken ct) => db.Set<SalesTable>()
-        .SingleOrDefaultAsync(x => x.RecId == recId && x.DataAreaId == company.GetDataAreaId(), ct);
+        .SingleOrDefaultAsync(x => x.RecId == recId && x.DataAreaId == _company.GetDataAreaId(), ct);
 
     private async Task<string> NextAvailableConfirmIdAsync(string area, CancellationToken ct)
     {
         for (var attempt = 0; attempt < 10_000; attempt++)
         {
-            var code = (await numberSequences.NextAsync("CustConfirmJour", area, ct)).Code;
+            var code = (await _numberSequences.NextAsync("CustConfirmJour", area, ct)).Code;
             if (!await db.Set<CustConfirmJour>().IgnoreQueryFilters().AsNoTracking()
                 .AnyAsync(x => x.ConfirmId == code, ct)) return code;
         }

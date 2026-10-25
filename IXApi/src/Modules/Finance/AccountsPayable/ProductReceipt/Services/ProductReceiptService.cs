@@ -1,4 +1,6 @@
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
@@ -17,21 +19,53 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 /// receipts are supported; over-receipt and duplicate product receipt numbers are rejected.
 /// Physical receipt ledger posting (receipt accrual) is not enabled in the basic scope.
 /// </summary>
-public sealed class ProductReceiptService(IUnitOfWork unitOfWork, ICompanyExecutionContext company,
-    ISysNumberSequenceService numbers, IValidator<ProductReceiptPostDto>? validator = null) : IProductReceiptService
+public sealed class ProductReceiptService : BaseService<VendPackingSlipJour>, IProductReceiptService
 {
-    private DbContext Db => unitOfWork.Context;
+    private readonly ICompanyExecutionContext _company;
+    private readonly ISysNumberSequenceService _numbers;
+    private readonly IValidator<ProductReceiptPostDto>? _validator;
+
+    private DbContext Db => _unitOfWork.Context;
+
+    public ProductReceiptService(
+        IUnitOfWork unitOfWork,
+        ICurrentUserService currentUser,
+        ICompanyExecutionContext company,
+        ISysNumberSequenceService numbers,
+        IValidator<ProductReceiptPostDto>? validator = null)
+        : base(unitOfWork, currentUser)
+    {
+        _company = company;
+        _numbers = numbers;
+        _validator = validator;
+    }
+
+    public ProductReceiptService(
+        IUnitOfWork unitOfWork,
+        ICompanyExecutionContext company,
+        ISysNumberSequenceService numbers,
+        IValidator<ProductReceiptPostDto>? validator = null)
+        : this(unitOfWork, new NullCurrentUserService(company), company, numbers, validator)
+    {
+    }
+
+    private sealed class NullCurrentUserService(ICompanyExecutionContext company) : ICurrentUserService
+    {
+        public string GetCurrentUserId() => string.Empty;
+        public string GetOwnerAccountId() => string.Empty;
+        public string GetDataAreaId() => company.GetDataAreaId();
+    }
 
     public Task<PurchResult> PostAsync(long recId, ProductReceiptPostDto input, CancellationToken ct) =>
         Db.Database.CreateExecutionStrategy().ExecuteAsync(() => PostCoreAsync(recId, input, ct));
 
     private async Task<PurchResult> PostCoreAsync(long recId, ProductReceiptPostDto input, CancellationToken ct)
     {
-        var area = company.GetDataAreaId();
-        var validation = await (validator ?? new ProductReceiptPostDtoValidator()).ValidateAsync(input, ct);
+        var area = _company.GetDataAreaId();
+        var validation = await (_validator ?? new ProductReceiptPostDtoValidator()).ValidateAsync(input, ct);
         if (!validation.IsValid) return new(400, null, validation.Errors[0].ErrorMessage);
         var date = (input.DeliveryDate ?? DateTime.UtcNow).Date;
-        await unitOfWork.BeginTransactionAsync(ct);
+        await _unitOfWork.BeginTransactionAsync(ct);
         try
         {
             var order = await Db.Set<PurchTable>().FirstOrDefaultAsync(x => x.RecId == recId && x.DataAreaId == area, ct);
@@ -45,7 +79,7 @@ public sealed class ProductReceiptService(IUnitOfWork unitOfWork, ICompanyExecut
                 && x.PackingSlipId == slipId, ct))
                 return await Fail(422, $"Product receipt '{slipId}' has already been posted for this purchase order.", ct);
 
-            var internalId = (await numbers.NextAsync("VendPackingSlipJour", area, ct)).Code;
+            var internalId = (await _numbers.NextAsync("VendPackingSlipJour", area, ct)).Code;
             var journal = new VendPackingSlipJour
             {
                 DataAreaId = area, PackingSlipId = slipId, InternalPackingSlipId = internalId, PurchId = order.PurchId,
@@ -53,7 +87,7 @@ public sealed class ProductReceiptService(IUnitOfWork unitOfWork, ICompanyExecut
                 LedgerVoucher = internalId
             };
             Db.Set<VendPackingSlipJour>().Add(journal);
-            await unitOfWork.CompleteAsync(ct);
+            await _unitOfWork.CompleteAsync(ct);
 
             foreach (var request in input.Lines)
             {
@@ -126,13 +160,13 @@ public sealed class ProductReceiptService(IUnitOfWork unitOfWork, ICompanyExecut
                 && x.PurchStatus != PurchStatus.Canceled).ToListAsync(ct);
             if (lines.All(x => x.RemainPurchPhysical <= 0)) order.PurchStatus = PurchStatus.Received;
             order.DocumentStatus = DocumentStatus.PackingSlip;
-            await unitOfWork.CompleteAsync(ct);
-            await unitOfWork.CommitTransactionAsync(ct);
+            await _unitOfWork.CompleteAsync(ct);
+            await _unitOfWork.CommitTransactionAsync(ct);
             return new(200, journal, "Product receipt posted.");
         }
         catch
         {
-            await unitOfWork.RollbackTransactionAsync(ct);
+            await _unitOfWork.RollbackTransactionAsync(ct);
             Db.ChangeTracker.Clear();
             throw;
         }
@@ -162,7 +196,7 @@ public sealed class ProductReceiptService(IUnitOfWork unitOfWork, ICompanyExecut
 
     private async Task<PurchResult> Fail(int status, string message, CancellationToken ct)
     {
-        await unitOfWork.RollbackTransactionAsync(ct);
+        await _unitOfWork.RollbackTransactionAsync(ct);
         Db.ChangeTracker.Clear();
         return new(status, null, message);
     }
