@@ -171,6 +171,8 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<Inventory.IInventBatchService, Inventory.InventBatchService>();
             services.AddScoped<FluentValidation.IValidator<Inventory.InventBatchDto>, Inventory.Validation.InventBatchDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<Inventory.InventBatchInputDto>, Inventory.Validation.InventBatchInputDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Inventory.InventClosingRecordDto>, Inventory.Validation.InventClosingRecordDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Inventory.InventCloseController.CloseRequest>, Inventory.Validation.CloseRequestValidator>();
             services.AddScoped<FluentValidation.IValidator<Inventory.InventJournalNameInputDto>, Inventory.InventJournalNameInputValidator>();
             services.AddScoped<FluentValidation.IValidator<Inventory.InventLocationUpdateValidation>, Inventory.InventLocationUpdateValidator>();
 

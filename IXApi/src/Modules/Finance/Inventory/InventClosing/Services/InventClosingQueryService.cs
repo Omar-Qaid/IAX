@@ -1,4 +1,6 @@
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Shared.Application.Identity;
@@ -6,13 +8,25 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public sealed class InventClosingQueryService(IUnitOfWork unitOfWork, ICompanyExecutionContext company)
-    : IInventClosingQueryService
+public sealed class InventClosingQueryService : BaseService<InventClosing>, IInventClosingQueryService
 {
+    private readonly ICompanyExecutionContext _company;
+
+    public InventClosingQueryService(IUnitOfWork unitOfWork, ICurrentUserService currentUser, ICompanyExecutionContext company)
+        : base(unitOfWork, currentUser)
+    {
+        _company = company;
+    }
+
+    public InventClosingQueryService(IUnitOfWork unitOfWork, ICompanyExecutionContext company)
+        : this(unitOfWork, new NullCurrentUserService(company), company)
+    {
+    }
+
     public async Task<IReadOnlyList<InventClosingRecordDto>> ListAsync(CancellationToken ct)
     {
         var area = RequireCompany();
-        var rows = await unitOfWork.Context.Set<InventClosing>().AsNoTracking()
+        var rows = await _unitOfWork.Context.Set<InventClosing>().AsNoTracking()
             .Where(x => x.DataAreaId == area)
             .OrderByDescending(x => x.TransDate).ThenByDescending(x => x.RunNum).ThenByDescending(x => x.RecId)
             .ToListAsync(ct);
@@ -22,7 +36,7 @@ public sealed class InventClosingQueryService(IUnitOfWork unitOfWork, ICompanyEx
     public async Task<InventClosingRecordDto?> GetAsync(long recId, CancellationToken ct)
     {
         var area = RequireCompany();
-        var row = await unitOfWork.Context.Set<InventClosing>().AsNoTracking()
+        var row = await _unitOfWork.Context.Set<InventClosing>().AsNoTracking()
             .FirstOrDefaultAsync(x => x.DataAreaId == area && x.RecId == recId, ct);
         return row is null ? null : Map(row);
     }
@@ -37,6 +51,13 @@ public sealed class InventClosingQueryService(IUnitOfWork unitOfWork, ICompanyEx
         RunRecalculation = row.RunRecalculation == NoYes.Yes, Notes = row.Notes
     };
 
-    private string RequireCompany() => company.GetDataAreaId()
+    private string RequireCompany() => _company.GetDataAreaId()
         ?? throw new InvalidOperationException("A company must be selected.");
+
+    private sealed class NullCurrentUserService(ICompanyExecutionContext company) : ICurrentUserService
+    {
+        public string GetCurrentUserId() => string.Empty;
+        public string GetOwnerAccountId() => string.Empty;
+        public string GetDataAreaId() => company.GetDataAreaId();
+    }
 }
