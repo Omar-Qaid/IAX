@@ -276,6 +276,25 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<FluentValidation.IValidator<Inventory.InventJournalNameInputDto>, Inventory.InventJournalNameInputValidator>();
             services.AddScoped<FluentValidation.IValidator<Inventory.InventLocationUpdateValidation>, Inventory.InventLocationUpdateValidator>();
 
+            services.AddScoped<Inventory.IInventSettlementService, Inventory.InventSettlementService>();
+            services.AddScoped<FluentValidation.IValidator<Inventory.InventSettlementDto>, Inventory.InventSettlementDtoValidator>();
+            services.AddScoped<Inventory.IInventItemInventSetupService, Inventory.InventItemInventSetupService>();
+            services.AddScoped<FluentValidation.IValidator<Inventory.InventItemInventSetupDto>, Inventory.InventItemInventSetupDtoValidator>();
+            services.AddScoped<Inventory.IInventItemPurchSetupService, Inventory.InventItemPurchSetupService>();
+            services.AddScoped<FluentValidation.IValidator<Inventory.InventItemPurchSetupDto>, Inventory.InventItemPurchSetupDtoValidator>();
+            services.AddScoped<Inventory.IInventItemSalesSetupService, Inventory.InventItemSalesSetupService>();
+            services.AddScoped<FluentValidation.IValidator<Inventory.InventItemSalesSetupDto>, Inventory.InventItemSalesSetupDtoValidator>();
+            services.AddScoped<Inventory.IInventItemSetupSupplyTypeService, Inventory.InventItemSetupSupplyTypeService>();
+            services.AddScoped<FluentValidation.IValidator<Inventory.InventItemSetupSupplyTypeDto>, Inventory.InventItemSetupSupplyTypeDtoValidator>();
+            services.AddScoped<Inventory.IInventCountJourService, Inventory.InventCountJourService>();
+            services.AddScoped<FluentValidation.IValidator<Inventory.InventCountJourDto>, Inventory.InventCountJourDtoValidator>();
+            services.AddScoped<Inventory.IInventModelGroupItemService, Inventory.InventModelGroupItemService>();
+            services.AddScoped<FluentValidation.IValidator<Inventory.InventModelGroupItemDto>, Inventory.InventModelGroupItemDtoValidator>();
+            services.AddScoped<Inventory.IInventTableService, Inventory.InventTableService>();
+            services.AddScoped<FluentValidation.IValidator<Inventory.InventTableDto>, Inventory.InventTableDtoValidator>();
+            services.AddScoped<Inventory.IInventTableModuleService, Inventory.InventTableModuleService>();
+            services.AddScoped<FluentValidation.IValidator<Inventory.InventTableModuleDto>, Inventory.InventTableModuleDtoValidator>();
+
             services.AddScoped<Foundation.LogisticsAddresses.IAddressBookQueryService, Foundation.LogisticsAddresses.AddressBookQueryService>();
 
             // Explicit Finance registrations

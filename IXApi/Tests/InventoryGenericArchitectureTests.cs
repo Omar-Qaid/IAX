@@ -2,6 +2,9 @@ using FluentValidation;
 using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Finance;
 using IAX.IXApi.Modules.Finance.Inventory;
+using IAX.IXApi.Modules.Finance.Inventory.InventoryStatus;
+using IAX.IXApi.Modules.Finance.Inventory.ProductCategories;
+using IAX.IXApi.Modules.Finance.Inventory.ProductLifecycle;
 using IAX.IXApi.Shared.Application.Validation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -22,7 +25,12 @@ public sealed class InventoryGenericArchitectureTests
             typeof(IEcoResProductService), typeof(IInventItemGroupService),
             typeof(IInventModelGroupService), typeof(IInventLocationService),
             typeof(IInventSiteService), typeof(IInventPostingService),
-            typeof(IStorageDimensionGroupService), typeof(ITrackingDimensionGroupService)
+            typeof(IStorageDimensionGroupService), typeof(ITrackingDimensionGroupService),
+            typeof(IInventSettlementService), typeof(IInventItemInventSetupService),
+            typeof(IInventItemPurchSetupService), typeof(IInventItemSalesSetupService),
+            typeof(IInventItemSetupSupplyTypeService), typeof(IInventCountJourService),
+            typeof(IInventModelGroupItemService), typeof(IInventTableService),
+            typeof(IInventTableModuleService)
         };
 
         foreach (var contract in contracts)
@@ -77,19 +85,53 @@ public sealed class InventoryGenericArchitectureTests
             typeof(InventCountGroupController),
             typeof(InventClosingController),
             typeof(InventSerialController),
-            typeof(InventPackagingController)
+            typeof(InventPackagingController),
+            typeof(InventSettlementController),
+            typeof(InventItemInventSetupController),
+            typeof(InventItemPurchSetupController),
+            typeof(InventItemSalesSetupController),
+            typeof(InventItemSetupSupplyTypeController),
+            typeof(InventCountJourController),
+            typeof(InventModelGroupItemController),
+            typeof(InventTableController),
+            typeof(InventTableModuleController),
+            typeof(EcoResStorageDimensionGroupController),
+            typeof(EcoResTrackingDimensionGroupController),
+            typeof(InventoryRecordController),
+            typeof(ItemGroupAssignmentController),
+            typeof(InventItemLocationController),
+            typeof(InventJournalController),
+            typeof(InventJournalNameController),
+            typeof(InventLocationController),
+            typeof(InventModelGroupController),
+            typeof(InventoryStatusController),
+            typeof(InventParametersController),
+            typeof(InventSiteController),
+            typeof(InventOnHandController),
+            typeof(InventTransController),
+            typeof(InventItemGroupController),
+            typeof(InventPostingController),
+            typeof(ProductCategoryController),
+            typeof(ProductLifecycleController),
+            typeof(EcoResProductController),
+            typeof(InventItemBarcodeController),
+            typeof(ReleasedProductListController),
+            typeof(InventoryReservationController),
+            typeof(UnitOfMeasureController),
+            typeof(WMSLocationController)
         };
 
         foreach (var controller in controllers)
         {
             Assert.Equal(typeof(IAX.IXApi.Api.Controllers.BaseController<,>), controller.BaseType?.GetGenericTypeDefinition());
             var entity = controller.BaseType!.GetGenericArguments()[0];
-            var contract = controller.GetConstructors().First().GetParameters()[0].ParameterType;
-            Assert.True(typeof(IBaseService<>).MakeGenericType(entity).IsAssignableFrom(contract));
+            var primaryCtor = controller.GetConstructors().OrderByDescending(c => c.GetParameters().Length).First();
+            var contract = primaryCtor.GetParameters()[0].ParameterType;
+            Assert.True(typeof(IBaseService<>).MakeGenericType(entity).IsAssignableFrom(contract), $"{controller.Name}: {contract.Name} should assign to IBaseService<{entity.Name}>");
             var registration = Assert.Single(services, descriptor => descriptor.ServiceType == contract);
             Assert.NotNull(registration.ImplementationType);
             Assert.True(typeof(BaseService<>).MakeGenericType(entity)
-                .IsAssignableFrom(registration.ImplementationType));
+                .IsAssignableFrom(registration.ImplementationType), $"{controller.Name}: {registration.ImplementationType.Name} should assign to BaseService<{entity.Name}>");
         }
     }
 
@@ -121,4 +163,3 @@ public sealed class InventoryGenericArchitectureTests
         }
     }
 }
-
