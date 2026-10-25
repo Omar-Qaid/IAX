@@ -50,6 +50,25 @@ public sealed class VendTransController : BaseController<VendTrans, VendTransDto
     }
 
     [NonAction]
+    public override Task<ActionResult<APIResponse<VendTransDto>>> Create(
+        VendTransDto dto,
+        CancellationToken cancellationToken = default) =>
+        base.Create(dto, cancellationToken);
+
+    [NonAction]
+    public override Task<ActionResult<APIResponse<VendTransDto>>> Update(
+        string id,
+        VendTransDto dto,
+        CancellationToken cancellationToken = default) =>
+        base.Update(id, dto, cancellationToken);
+
+    [NonAction]
+    public override Task<ActionResult<APIResponse<bool>>> Delete(
+        string id,
+        CancellationToken cancellationToken = default) =>
+        base.Delete(id, cancellationToken);
+
+    [NonAction]
     public override Task<ActionResult<APIResponse<IEnumerable<VendTransDto>>>> GetPaged(
         [FromQuery] QueryFilterDto paginationParams, CancellationToken cancellationToken = default) =>
         base.GetPaged(paginationParams, cancellationToken);

@@ -1,5 +1,4 @@
 using IAX.IXApi.Api.Controllers;
-using IAX.IXApi.Modules.Finance.AccountsReceivable.Invoice.Dtos;
 using IAX.IXApi.Modules.Identity.Permissions;
 using IAX.IXApi.Shared.Application.Contracts;
 using Microsoft.AspNetCore.Mvc;
@@ -12,21 +11,21 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Invoice;
 [DomainPermission("AccountsReceivable", "SalesOrders", "View")]
 public sealed class SalesInvoiceController : BaseController<CustInvoiceJour, CustInvoiceJourDto>
 {
-    private readonly ISalesInvoiceService _service;
+    private readonly ISalesInvoiceService _salesInvoiceService;
 
     public SalesInvoiceController(
         ISalesInvoiceService service,
         ILogger<SalesInvoiceController>? logger = null)
         : base(service, logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<SalesInvoiceController>.Instance)
     {
-        _service = service;
+        _salesInvoiceService = service;
     }
 
     [HttpPost]
     [DomainPermission("AccountsReceivable", "SalesOrders", "Post")]
     public async Task<IActionResult> Post(long salesOrderRecId, [FromBody] SalesInvoicePostDto? request, CancellationToken ct)
     {
-        var result = await _service.PostAsync(salesOrderRecId, request ?? new SalesInvoicePostDto(), ct);
+        var result = await _salesInvoiceService.PostAsync(salesOrderRecId, request ?? new SalesInvoicePostDto(), ct);
         return result.StatusCode switch
         {
             200 => Ok(APIResponse<object>.Ok(result.Data!, result.Message ?? string.Empty)),

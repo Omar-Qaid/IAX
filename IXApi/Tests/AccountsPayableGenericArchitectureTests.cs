@@ -97,6 +97,7 @@ public sealed class AccountsPayableGenericArchitectureTests
     {
         foreach (var controller in new[]
         {
+            typeof(VendTransController),
             typeof(PurchConfirmationController),
             typeof(VendorInvoiceController),
             typeof(ProductReceiptController)

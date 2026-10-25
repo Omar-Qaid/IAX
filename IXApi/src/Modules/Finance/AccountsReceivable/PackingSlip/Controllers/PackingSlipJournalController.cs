@@ -12,19 +12,19 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable.PackingSlip;
 [DomainPermission("AccountsReceivable", "SalesOrders", "View")]
 public sealed class PackingSlipJournalController : BaseController<CustPackingSlipJour, CustPackingSlipJourDto>
 {
-    private readonly IPackingSlipJournalService _service;
+    private readonly IPackingSlipJournalService _journalService;
 
     public PackingSlipJournalController(
         IPackingSlipJournalService service,
         ILogger<PackingSlipJournalController>? logger = null)
         : base(service, logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<PackingSlipJournalController>.Instance)
     {
-        _service = service;
+        _journalService = service;
     }
 
     [HttpGet]
     public async Task<IActionResult> List(long salesOrderRecId, CancellationToken ct) =>
-        Present(await _service.ListAsync(salesOrderRecId, ct));
+        Present(await _journalService.ListAsync(salesOrderRecId, ct));
 
     [NonAction]
     public override Task<ActionResult<APIResponse<IEnumerable<CustPackingSlipJourDto>>>> GetAll(CancellationToken cancellationToken = default) =>
@@ -33,11 +33,11 @@ public sealed class PackingSlipJournalController : BaseController<CustPackingSli
     [HttpGet("posting-preview")]
     public async Task<IActionResult> PreviewPosting(long salesOrderRecId, [FromQuery] string quantityMode = "all",
         CancellationToken ct = default) =>
-        Present(await _service.PreviewPostingAsync(salesOrderRecId, quantityMode, ct));
+        Present(await _journalService.PreviewPostingAsync(salesOrderRecId, quantityMode, ct));
 
     [HttpGet("{packingSlipRecId:long}")]
     public async Task<IActionResult> Get(long salesOrderRecId, long packingSlipRecId, CancellationToken ct) =>
-        Present(await _service.GetAsync(salesOrderRecId, packingSlipRecId, ct));
+        Present(await _journalService.GetAsync(salesOrderRecId, packingSlipRecId, ct));
 
     [NonAction]
     public override Task<ActionResult<APIResponse<CustPackingSlipJourDto>>> GetById(string id, CancellationToken cancellationToken = default) =>
@@ -50,7 +50,7 @@ public sealed class PackingSlipJournalController : BaseController<CustPackingSli
     [HttpPost]
     [DomainPermission("AccountsReceivable", "SalesOrders", "Edit")]
     public async Task<IActionResult> Post(long salesOrderRecId, [FromBody] PostPackingSlipRequest? request,
-        CancellationToken ct) => Present(await _service.PostAsync(salesOrderRecId, request, ct));
+        CancellationToken ct) => Present(await _journalService.PostAsync(salesOrderRecId, request, ct));
 
     [NonAction]
     public override Task<ActionResult<APIResponse<CustPackingSlipJourDto>>> Create(CustPackingSlipJourDto dto, CancellationToken cancellationToken = default) =>

@@ -16,8 +16,16 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<AccountsReceivable.Confirm.ISalesOrderConfirmationService, AccountsReceivable.Confirm.SalesOrderConfirmationService>();
             services.AddScoped<AccountsReceivable.PackingSlip.IPackingSlipJournalService, AccountsReceivable.PackingSlip.PackingSlipJournalService>();
             services.AddScoped<AccountsReceivable.Invoice.ISalesInvoiceService, AccountsReceivable.Invoice.SalesInvoiceService>();
+            services.AddScoped<AccountsReceivable.ICustTransService, AccountsReceivable.CustTransService>();
             services.AddScoped<AccountsReceivable.Payment.ICustPaymentService, AccountsReceivable.Payment.CustPaymentService>();
             services.AddScoped<AccountsReceivable.Return.ICustReturnService, AccountsReceivable.Return.CustReturnService>();
+            services.AddScoped<FluentValidation.IValidator<AccountsReceivable.PackingSlip.CustPackingSlipJourDto>, AccountsReceivable.PackingSlip.CustPackingSlipJourDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<AccountsReceivable.PackingSlip.CustPackingSlipTransDto>, AccountsReceivable.PackingSlip.CustPackingSlipTransDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<AccountsReceivable.Invoice.CustInvoiceJourDto>, AccountsReceivable.Invoice.CustInvoiceJourDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<AccountsReceivable.Invoice.CustInvoiceTableDto>, AccountsReceivable.Invoice.CustInvoiceTableDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<AccountsReceivable.Invoice.CustInvoiceTransDto>, AccountsReceivable.Invoice.CustInvoiceTransDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<AccountsReceivable.CustTransDto>, AccountsReceivable.CustTransDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<AccountsReceivable.CustTransOpenDto>, AccountsReceivable.CustTransOpenDtoValidator>();
             services.AddScoped<AccountsPayable.IPurchInventorySupplyService, AccountsPayable.PurchInventorySupplyService>();
             services.AddScoped<AccountsPayable.IPurchOrderService, AccountsPayable.PurchOrderService>();
             services.AddScoped<AccountsPayable.IPurchConfirmationService, AccountsPayable.PurchConfirmationService>();
@@ -186,4 +194,3 @@ namespace IAX.IXApi.Modules.Finance
         }
     }
 }
-

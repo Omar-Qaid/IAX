@@ -1,5 +1,4 @@
 using IAX.IXApi.Infrastructure.Persistence.Services;
-using IAX.IXApi.Modules.Finance.AccountsReceivable.Invoice.Dtos;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Invoice;
 

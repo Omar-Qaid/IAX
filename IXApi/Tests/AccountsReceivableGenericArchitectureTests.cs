@@ -2,8 +2,10 @@ using FluentValidation;
 using IAX.IXApi.Api.Controllers;
 using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Finance;
+using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.Customer;
 using IAX.IXApi.Shared.Application.Validation;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -30,7 +32,8 @@ public sealed class AccountsReceivableGenericArchitectureTests
             "CustParametersController", "CustPaymModeController", "CustLedgerController",
             "CustLedgerAccountsController", "PriceDiscTableController", "PriceDiscGroupController",
             "PriceDiscAdmTableController", "PriceDiscAdmTransController", "PriceDiscAdmNameController",
-            "SalesTableController", "SalesOrderConfirmationController"
+            "SalesTableController", "SalesOrderConfirmationController",
+            "PackingSlipJournalController", "SalesInvoiceController", "CustTransController"
         };
         Assert.Empty(expectedControllers.Except(controllers.Select(type => type.Name)));
         foreach (var controller in controllers)
@@ -61,10 +64,13 @@ public sealed class AccountsReceivableGenericArchitectureTests
         var expectedValidators = new[]
         {
             "CustomerDtoValidator", "CustGroupDtoValidator",
-            "CustTransDtoValidator", "CustInvoiceJourDtoValidator", "CustSettlementDtoValidator",
+            "CustTransDtoValidator", "CustTransOpenDtoValidator",
+            "CustInvoiceJourDtoValidator", "CustInvoiceTableDtoValidator", "CustInvoiceTransDtoValidator",
+            "CustSettlementDtoValidator",
             "SalesQuotationDtoValidator", "SalesOrderCopyValidator", "SalesOrderConfirmationValidator",
             "SalesTableDtoValidator", "SalesLineDtoValidator",
             "CustConfirmJourDtoValidator", "CustConfirmTransDtoValidator",
+            "CustPackingSlipJourDtoValidator", "CustPackingSlipTransDtoValidator",
             "SalesPoolDtoValidator", "CustPaymModeDtoValidator",
             "CustParametersDtoValidator", "CustLedgerDtoValidator",
             "CustLedgerAccountsDtoValidator", "PriceDiscTableDtoValidator",
@@ -74,5 +80,13 @@ public sealed class AccountsReceivableGenericArchitectureTests
         Assert.Empty(expectedValidators.Except(validators.Select(type => type.Name)));
         foreach (var validator in validators)
             Assert.Equal(typeof(BaseValidator<>), validator.BaseType?.GetGenericTypeDefinition());
+    }
+
+    [Fact]
+    public void Customer_transaction_controller_disables_generic_mutations()
+    {
+        foreach (var action in new[] { "Create", "Update", "Delete" })
+            Assert.True(typeof(CustTransController).GetMethod(action)!
+                .IsDefined(typeof(NonActionAttribute), inherit: false));
     }
 }
