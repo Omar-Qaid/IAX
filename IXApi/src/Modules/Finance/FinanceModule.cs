@@ -11,6 +11,10 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<GeneralLedger.FiscalCalendar.IFiscalCalendarService, GeneralLedger.FiscalCalendar.FiscalCalendarService>();
             services.AddScoped<GeneralLedger.FiscalCalendar.IFiscalCalendarYearService, GeneralLedger.FiscalCalendar.FiscalCalendarYearService>();
             services.AddScoped<GeneralLedger.FiscalCalendar.IFiscalCalendarPeriodService, GeneralLedger.FiscalCalendar.FiscalCalendarPeriodService>();
+            services.AddScoped<FluentValidation.IValidator<GeneralLedger.FiscalCalendarDto>, GeneralLedger.FiscalCalendar.Validation.FiscalCalendarDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<GeneralLedger.FiscalCalendarYearDto>, GeneralLedger.FiscalCalendar.Validation.FiscalCalendarYearDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<GeneralLedger.FiscalCalendarPeriodDto>, GeneralLedger.FiscalCalendar.Validation.FiscalCalendarPeriodDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<GeneralLedger.LedgerFiscalCalendarPeriodDto>, GeneralLedger.FiscalCalendar.Validation.LedgerFiscalCalendarPeriodDtoValidator>();
             services.AddScoped<AccountsReceivable.PostingProfile.Interfaces.ICustPostingProfileService, AccountsReceivable.PostingProfile.Services.CustPostingProfileService>();
             services.AddScoped<AccountsReceivable.PriceDisc.IPriceDiscJournalPostingService, AccountsReceivable.PriceDisc.PriceDiscJournalPostingService>();
             services.AddScoped<AccountsReceivable.Confirm.ISalesOrderConfirmationService, AccountsReceivable.Confirm.SalesOrderConfirmationService>();
@@ -26,6 +30,13 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<FluentValidation.IValidator<AccountsReceivable.Invoice.CustInvoiceTransDto>, AccountsReceivable.Invoice.CustInvoiceTransDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsReceivable.CustTransDto>, AccountsReceivable.CustTransDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsReceivable.CustTransOpenDto>, AccountsReceivable.CustTransOpenDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<AccountsReceivable.SalesQuotation.CustQuotationJourDto>, AccountsReceivable.SalesQuotation.CustQuotationJourDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<AccountsReceivable.SalesQuotation.SalesQuotationTableDto>, AccountsReceivable.SalesQuotation.SalesQuotationDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<AccountsReceivable.Settlement.SpecTransDto>, AccountsReceivable.Settlement.SpecTransDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<AccountsReceivable.Payment.CustPaymentPostDto>, AccountsReceivable.Payment.CustPaymentPostDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<AccountsReceivable.Return.CustReturnCreateDto>, AccountsReceivable.Return.CustReturnCreateDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<AccountsReceivable.Return.CustReturnReceiptDto>, AccountsReceivable.Return.CustReturnReceiptDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<AccountsReceivable.Return.CustCreditNoteDto>, AccountsReceivable.Return.CustCreditNoteDtoValidator>();
             services.AddScoped<AccountsPayable.IPurchInventorySupplyService, AccountsPayable.PurchInventorySupplyService>();
             services.AddScoped<AccountsPayable.IPurchOrderService, AccountsPayable.PurchOrderService>();
             services.AddScoped<AccountsPayable.IPurchConfirmationService, AccountsPayable.PurchConfirmationService>();
