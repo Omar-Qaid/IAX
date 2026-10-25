@@ -28,7 +28,8 @@ public sealed class AccountsPayableGenericArchitectureTests
             typeof(PurchConfirmationController),
             typeof(VendorInvoiceController),
             typeof(ProductReceiptController),
-            typeof(VendTransController)
+            typeof(VendTransController),
+            typeof(PurchReturnController)
         })
         {
             Assert.Equal(typeof(BaseController<,>), controller.BaseType?.GetGenericTypeDefinition());
@@ -62,7 +63,8 @@ public sealed class AccountsPayableGenericArchitectureTests
             typeof(VendInvoiceJourDtoValidator),
             typeof(PurchReturnCreateDtoValidator),
             typeof(PurchReturnShipDtoValidator),
-            typeof(VendCreditNoteDtoValidator)
+            typeof(VendCreditNoteDtoValidator),
+            typeof(PurchReturnDtoValidator)
         };
 
         foreach (var validator in validators)
@@ -92,7 +94,7 @@ public sealed class AccountsPayableGenericArchitectureTests
         Assert.True(typeof(BaseController<VendPurchOrderJour, VendPurchOrderJourDto>).IsAssignableFrom(typeof(PurchConfirmationController)));
         Assert.True(typeof(BaseController<VendPackingSlipJour, VendPackingSlipJourDto>).IsAssignableFrom(typeof(ProductReceiptController)));
         Assert.True(typeof(BaseController<VendInvoiceJour, VendInvoiceJourDto>).IsAssignableFrom(typeof(VendorInvoiceController)));
-        Assert.Equal(typeof(Microsoft.AspNetCore.Mvc.ControllerBase), typeof(PurchReturnController).BaseType);
+        Assert.Equal(typeof(BaseController<PurchTable, PurchReturnDto>), typeof(PurchReturnController).BaseType);
     }
 
     [Fact]
@@ -104,7 +106,8 @@ public sealed class AccountsPayableGenericArchitectureTests
             typeof(VendTransController),
             typeof(PurchConfirmationController),
             typeof(VendorInvoiceController),
-            typeof(ProductReceiptController)
+            typeof(ProductReceiptController),
+            typeof(PurchReturnController)
         })
         {
             foreach (var action in new[] { "Create", "Update", "Delete" })
@@ -114,6 +117,18 @@ public sealed class AccountsPayableGenericArchitectureTests
                     && candidate.GetBaseDefinition().DeclaringType != controller);
                 Assert.True(method.IsDefined(typeof(NonActionAttribute), inherit: false));
             }
+        }
+    }
+
+    [Fact]
+    public void Vendor_return_controller_disables_unfiltered_generic_reads()
+    {
+        foreach (var action in new[] { "GetAll", "GetPaged", "GetById", "GetNumberSequence" })
+        {
+            var method = Assert.Single(typeof(PurchReturnController).GetMethods(), candidate =>
+                candidate.Name == action && candidate.DeclaringType == typeof(PurchReturnController)
+                && candidate.GetBaseDefinition().DeclaringType != typeof(PurchReturnController));
+            Assert.True(method.IsDefined(typeof(NonActionAttribute), inherit: false));
         }
     }
 

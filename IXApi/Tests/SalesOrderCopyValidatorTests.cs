@@ -1,4 +1,7 @@
+using IAX.IXApi.Infrastructure.Persistence;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace IAX.IXApi.Tests;
@@ -30,7 +33,11 @@ public sealed class SalesOrderCopyValidatorTests
     [Fact]
     public async Task Copy_service_rejects_missing_request_before_data_access()
     {
-        var service = new SalesOrderCopyService(null!, null!, null!, validator, null!);
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseSqlite("Data Source=:memory:")
+            .Options;
+        await using var db = new ApplicationDbContext(options);
+        var service = new SalesOrderCopyService(new UnitOfWork(db), null!, null!, validator, null!);
         var result = await service.CopyAsync(1, null, CancellationToken.None);
 
         Assert.Equal(SalesOrderCopyStatus.InvalidRequest, result.Status);

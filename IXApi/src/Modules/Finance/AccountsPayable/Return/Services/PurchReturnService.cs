@@ -7,6 +7,9 @@ using IAX.IXApi.Shared.Application.Identity;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
+using IAX.IXApi.Infrastructure.Identity;
+using IAX.IXApi.Infrastructure.Persistence.Services;
+
 namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 
 /// <summary>
@@ -17,13 +20,61 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 /// receipt cost and the vendor is debited (VendTrans) — Dr Vendor summary / Cr inventory receipt.
 /// Returned quantity cannot exceed the invoiced quantity not already returned, nor available stock.
 /// </summary>
-public sealed class PurchReturnService(IUnitOfWork unitOfWork, ICompanyExecutionContext company,
-    ISysNumberSequenceService numbers, ISalesInventoryNumberService inventoryNumbers,
-    IValidator<PurchReturnCreateDto>? createValidator = null,
-    IValidator<PurchReturnShipDto>? shipValidator = null,
-    IValidator<VendCreditNoteDto>? creditValidator = null) : IPurchReturnService
+public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnService
 {
-    private DbContext Db => unitOfWork.Context;
+    private readonly ICompanyExecutionContext _company;
+    private readonly ISysNumberSequenceService _numbers;
+    private readonly ISalesInventoryNumberService _inventoryNumbers;
+    private readonly IValidator<PurchReturnCreateDto>? _createValidator;
+    private readonly IValidator<PurchReturnShipDto>? _shipValidator;
+    private readonly IValidator<VendCreditNoteDto>? _creditValidator;
+
+    public PurchReturnService(
+        IUnitOfWork unitOfWork,
+        ICurrentUserService currentUser,
+        ICompanyExecutionContext company,
+        ISysNumberSequenceService numbers,
+        ISalesInventoryNumberService inventoryNumbers,
+        IValidator<PurchReturnCreateDto>? createValidator = null,
+        IValidator<PurchReturnShipDto>? shipValidator = null,
+        IValidator<VendCreditNoteDto>? creditValidator = null)
+        : base(unitOfWork, currentUser)
+    {
+        _company = company;
+        _numbers = numbers;
+        _inventoryNumbers = inventoryNumbers;
+        _createValidator = createValidator;
+        _shipValidator = shipValidator;
+        _creditValidator = creditValidator;
+    }
+
+    public PurchReturnService(
+        IUnitOfWork unitOfWork,
+        ICompanyExecutionContext company,
+        ISysNumberSequenceService numbers,
+        ISalesInventoryNumberService inventoryNumbers,
+        IValidator<PurchReturnCreateDto>? createValidator = null,
+        IValidator<PurchReturnShipDto>? shipValidator = null,
+        IValidator<VendCreditNoteDto>? creditValidator = null)
+        : this(unitOfWork, new NullCurrentUserService(company), company, numbers, inventoryNumbers, createValidator, shipValidator, creditValidator)
+    {
+    }
+
+    private sealed class NullCurrentUserService(ICompanyExecutionContext company) : ICurrentUserService
+    {
+        public string GetCurrentUserId() => string.Empty;
+        public string GetOwnerAccountId() => string.Empty;
+        public string GetDataAreaId() => company.GetDataAreaId();
+    }
+
+    private DbContext Db => _unitOfWork.Context;
+    private IUnitOfWork unitOfWork => _unitOfWork;
+    private ICompanyExecutionContext company => _company;
+    private ISysNumberSequenceService numbers => _numbers;
+    private ISalesInventoryNumberService inventoryNumbers => _inventoryNumbers;
+    private IValidator<PurchReturnCreateDto>? createValidator => _createValidator;
+    private IValidator<PurchReturnShipDto>? shipValidator => _shipValidator;
+    private IValidator<VendCreditNoteDto>? creditValidator => _creditValidator;
 
     // ---------------------------------------------------------------- Create return order
 
