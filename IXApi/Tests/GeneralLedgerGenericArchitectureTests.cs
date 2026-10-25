@@ -60,4 +60,33 @@ public sealed class GeneralLedgerGenericArchitectureTests
             Assert.Equal(typeof(BaseValidator<>), validator.BaseType?.GetGenericTypeDefinition());
         }
     }
+
+    [Fact]
+    public void General_ledger_features_adhere_to_seven_folder_layout()
+    {
+        var candidatePaths = new[]
+        {
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "src", "Modules", "Finance", "GeneralLedger"),
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "IXApi", "src", "Modules", "Finance", "GeneralLedger"),
+            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../IXApi/src/Modules/Finance/GeneralLedger"))
+        };
+
+        var glPath = candidatePaths.FirstOrDefault(Directory.Exists);
+        if (glPath != null)
+        {
+            var expectedFolders = new[] { "Configuration", "Controllers", "Dtos", "Entities", "Interfaces", "Services", "Validation" };
+            var featureDirs = Directory.GetDirectories(glPath);
+
+            Assert.NotEmpty(featureDirs);
+            foreach (var dir in featureDirs)
+            {
+                var subdirs = Directory.GetDirectories(dir).Select(Path.GetFileName).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                foreach (var expected in expectedFolders)
+                {
+                    Assert.True(subdirs.Contains(expected), $"Feature '{Path.GetFileName(dir)}' is missing folder '{expected}'.");
+                }
+            }
+        }
+    }
 }
+
