@@ -6,25 +6,48 @@ using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.EntityFrameworkCore;
 using FluentValidation;
 
+using IAX.IXApi.Infrastructure.Identity;
+using IAX.IXApi.Infrastructure.Persistence.Services;
+
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
 
-public sealed class SalesOrderCopyService : ISalesOrderCopyService
+public sealed class SalesOrderCopyService : BaseService<SalesTable>, ISalesOrderCopyService
 {
-    private readonly IUnitOfWork _unitOfWork;
     private readonly ISalesInventoryDemandService _inventoryDemand;
     private readonly SalesUnitConversionService _units;
     private readonly IValidator<SalesOrderCopyRequest> _validator;
     private readonly ICompanyExecutionContext _company;
 
-    public SalesOrderCopyService(IUnitOfWork unitOfWork, ISalesInventoryDemandService inventoryDemand,
-        SalesUnitConversionService units, IValidator<SalesOrderCopyRequest> validator,
+    public SalesOrderCopyService(
+        IUnitOfWork unitOfWork,
+        ICurrentUserService currentUser,
+        ISalesInventoryDemandService inventoryDemand,
+        SalesUnitConversionService units,
+        IValidator<SalesOrderCopyRequest> validator,
         ICompanyExecutionContext company)
+        : base(unitOfWork, currentUser)
     {
-        _unitOfWork = unitOfWork;
         _inventoryDemand = inventoryDemand;
         _units = units;
         _validator = validator;
         _company = company;
+    }
+
+    public SalesOrderCopyService(
+        IUnitOfWork unitOfWork,
+        ISalesInventoryDemandService inventoryDemand,
+        SalesUnitConversionService units,
+        IValidator<SalesOrderCopyRequest> validator,
+        ICompanyExecutionContext company)
+        : this(unitOfWork, new NullCurrentUserService(company), inventoryDemand, units, validator, company)
+    {
+    }
+
+    private sealed class NullCurrentUserService(ICompanyExecutionContext company) : ICurrentUserService
+    {
+        public string GetCurrentUserId() => string.Empty;
+        public string GetOwnerAccountId() => string.Empty;
+        public string GetDataAreaId() => company.GetDataAreaId();
     }
 
     public async Task<SalesOrderCopyLookupResult> GetSalesOrdersAsync(long destinationRecId, CancellationToken ct)

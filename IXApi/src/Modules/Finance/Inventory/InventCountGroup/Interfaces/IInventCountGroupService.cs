@@ -1,6 +1,9 @@
+using IAX.IXApi.Infrastructure.Persistence.Services;
+using IAX.IXApi.Modules.Finance.Entities;
+
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public interface IInventCountGroupService
+public interface IInventCountGroupService : IBaseService<InventCountGroup>
 {
     Task<IReadOnlyList<InventCountGroupRecordDto>> ListAsync(CancellationToken ct);
     Task<InventCountGroupRecordDto?> GetAsync(long recId, CancellationToken ct);

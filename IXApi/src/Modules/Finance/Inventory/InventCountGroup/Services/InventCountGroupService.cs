@@ -1,4 +1,6 @@
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Shared.Application.Identity;
@@ -6,10 +8,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public sealed class InventCountGroupService(IUnitOfWork unitOfWork, ICompanyExecutionContext company) : IInventCountGroupService
+public sealed class InventCountGroupService : BaseService<InventCountGroup>, IInventCountGroupService
 {
-    private DbContext Db => unitOfWork.Context;
-    private string Area => company.GetDataAreaId() ?? throw new InvalidOperationException("A company must be selected.");
+    private readonly ICompanyExecutionContext _company;
+
+    public InventCountGroupService(IUnitOfWork unitOfWork, ICurrentUserService currentUser, ICompanyExecutionContext company)
+        : base(unitOfWork, currentUser)
+    {
+        _company = company;
+    }
+
+    public InventCountGroupService(IUnitOfWork unitOfWork, ICompanyExecutionContext company)
+        : this(unitOfWork, new NullCurrentUserService(company), company)
+    {
+    }
+
+    private DbContext Db => _unitOfWork.Context;
+    private string Area => _company.GetDataAreaId() ?? throw new InvalidOperationException("A company must be selected.");
     private static string Normalize(string? value) => (value ?? string.Empty).Trim().ToUpperInvariant();
     private static InventCountGroupRecordDto Map(InventCountGroup row) =>
         new(row.RecId, row.CountGroupId, row.Name, row.CountCode, row.CountPeriod);
@@ -41,7 +56,7 @@ public sealed class InventCountGroupService(IUnitOfWork unitOfWork, ICompanyExec
         var row = new InventCountGroup { DataAreaId = area, CountGroupId = id,
             Name = name, CountCode = input.CountCode, CountPeriod = input.CountPeriod };
         Db.Add(row);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return (Map(row), null);
     }
 
@@ -58,7 +73,7 @@ public sealed class InventCountGroupService(IUnitOfWork unitOfWork, ICompanyExec
         row.Name = name;
         row.CountCode = input.CountCode;
         row.CountPeriod = input.CountPeriod;
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return (Map(row), null);
     }
 
@@ -70,7 +85,7 @@ public sealed class InventCountGroupService(IUnitOfWork unitOfWork, ICompanyExec
         if (await Db.Set<InventItemLocation>().AnyAsync(x => x.DataAreaId == area && x.CountGroupId == row.CountGroupId, ct))
             return "Count group is assigned to an item location and cannot be deleted.";
         Db.Remove(row);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return null;
     }
 
@@ -80,4 +95,11 @@ public sealed class InventCountGroupService(IUnitOfWork unitOfWork, ICompanyExec
         !Enum.IsDefined(input.CountCode) ? "Count code is invalid." :
         input.CountCode == InventCountCode.Period && input.CountPeriod <= 0 ? "Period counting requires a positive interval in days." :
         input.CountCode != InventCountCode.Period && input.CountPeriod != 0 ? "Count period is only valid for Period counting." : null;
+
+    private sealed class NullCurrentUserService(ICompanyExecutionContext company) : ICurrentUserService
+    {
+        public string GetCurrentUserId() => string.Empty;
+        public string GetOwnerAccountId() => string.Empty;
+        public string GetDataAreaId() => company.GetDataAreaId();
+    }
 }

@@ -1,3 +1,4 @@
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.Invoice;
@@ -6,6 +7,7 @@ using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.EntityFrameworkCore;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Return;
 
@@ -18,10 +20,46 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Return;
 /// already returned. The credit note reverses revenue, tax and — for received goods — cost of goods
 /// sold, and credits the customer through CustTrans/CustTransOpen.
 /// </summary>
-public sealed class CustReturnService(IUnitOfWork unitOfWork, ICompanyExecutionContext company,
-    ISysNumberSequenceService numbers, ISalesInventoryNumberService inventoryNumbers) : ICustReturnService
+public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnService
 {
-    private DbContext Db => unitOfWork.Context;
+    private readonly ICompanyExecutionContext _company;
+    private readonly ISysNumberSequenceService _numbers;
+    private readonly ISalesInventoryNumberService _inventoryNumbers;
+
+    public CustReturnService(
+        IUnitOfWork unitOfWork,
+        ICurrentUserService currentUser,
+        ICompanyExecutionContext company,
+        ISysNumberSequenceService numbers,
+        ISalesInventoryNumberService inventoryNumbers)
+        : base(unitOfWork, currentUser)
+    {
+        _company = company;
+        _numbers = numbers;
+        _inventoryNumbers = inventoryNumbers;
+    }
+
+    public CustReturnService(
+        IUnitOfWork unitOfWork,
+        ICompanyExecutionContext company,
+        ISysNumberSequenceService numbers,
+        ISalesInventoryNumberService inventoryNumbers)
+        : this(unitOfWork, new NullCurrentUserService(company), company, numbers, inventoryNumbers)
+    {
+    }
+
+    private sealed class NullCurrentUserService(ICompanyExecutionContext company) : ICurrentUserService
+    {
+        public string GetCurrentUserId() => string.Empty;
+        public string GetOwnerAccountId() => string.Empty;
+        public string GetDataAreaId() => company.GetDataAreaId();
+    }
+
+    private DbContext Db => _unitOfWork.Context;
+    private IUnitOfWork unitOfWork => _unitOfWork;
+    private ICompanyExecutionContext company => _company;
+    private ISysNumberSequenceService numbers => _numbers;
+    private ISalesInventoryNumberService inventoryNumbers => _inventoryNumbers;
 
     // ---------------------------------------------------------------- Create return order
 

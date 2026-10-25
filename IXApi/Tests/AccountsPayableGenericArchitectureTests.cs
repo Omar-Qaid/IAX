@@ -5,6 +5,9 @@ using IAX.IXApi.Modules.Finance.AccountsPayable;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
+using IAX.IXApi.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace IAX.IXApi.Tests;
@@ -97,6 +100,7 @@ public sealed class AccountsPayableGenericArchitectureTests
     {
         foreach (var controller in new[]
         {
+            typeof(PurchTableController),
             typeof(VendTransController),
             typeof(PurchConfirmationController),
             typeof(VendorInvoiceController),
@@ -105,8 +109,39 @@ public sealed class AccountsPayableGenericArchitectureTests
         {
             foreach (var action in new[] { "Create", "Update", "Delete" })
             {
-                Assert.True(controller.GetMethod(action)!.IsDefined(typeof(NonActionAttribute), inherit: false));
+                var method = Assert.Single(controller.GetMethods(), candidate =>
+                    candidate.Name == action && candidate.DeclaringType == controller
+                    && candidate.GetBaseDefinition().DeclaringType != controller);
+                Assert.True(method.IsDefined(typeof(NonActionAttribute), inherit: false));
             }
         }
+    }
+
+    [Fact]
+    public void Vendor_posting_configuration_preserves_existing_table_shape()
+    {
+        using var db = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseSqlServer("Server=localhost;Database=ModelOnly;Integrated Security=true;TrustServerCertificate=true").Options);
+        var entity = db.Model.FindEntityType(typeof(VendLedgerAccounts))!;
+        Assert.Equal("VendLedgerAccounts", entity.GetTableName());
+        Assert.Equal(4, entity.FindProperty(nameof(VendLedgerAccounts.DataAreaId))!.GetMaxLength());
+        Assert.Equal(10, entity.FindProperty(nameof(VendLedgerAccounts.PostingProfile))!.GetMaxLength());
+        Assert.Equal(20, entity.FindProperty(nameof(VendLedgerAccounts.Num))!.GetMaxLength());
+        Assert.Empty(entity.GetIndexes());
+        Assert.Empty(entity.GetForeignKeys());
+        Assert.False(db.Database.HasPendingModelChanges());
+    }
+
+    [Fact]
+    public async Task Generic_vendor_controllers_run_their_dto_validators()
+    {
+        var vendor = new VendorController(null!, NullLogger<VendorController>.Instance, new VendorDtoValidator());
+        var group = new VendorGroupController(null!, NullLogger<VendorGroupController>.Instance, new VendorGroupDtoValidator());
+        var profile = new VendLedgerAccountsController(null!, NullLogger<VendLedgerAccountsController>.Instance,
+            new VendLedgerAccountsDtoValidator());
+
+        Assert.IsType<BadRequestObjectResult>((await vendor.Create(new VendorDto())).Result);
+        Assert.IsType<BadRequestObjectResult>((await group.Create(new VendorGroupDto())).Result);
+        Assert.IsType<BadRequestObjectResult>((await profile.Create(new VendLedgerAccountsDto())).Result);
     }
 }

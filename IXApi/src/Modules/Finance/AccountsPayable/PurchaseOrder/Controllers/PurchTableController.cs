@@ -47,6 +47,16 @@ public sealed class PurchTableController : BaseController<PurchTable, PurchTable
     public override Task<ActionResult<APIResponse<PurchTableDto>>> GetById(string id, CancellationToken cancellationToken = default) =>
         base.GetById(id, cancellationToken);
 
+    [NonAction]
+    public override Task<ActionResult<APIResponse<PurchTableDto>>> Update(
+        string id, PurchTableDto dto, CancellationToken cancellationToken = default) =>
+        base.Update(id, dto, cancellationToken);
+
+    [NonAction]
+    public override Task<ActionResult<APIResponse<bool>>> Delete(
+        string id, CancellationToken cancellationToken = default) =>
+        base.Delete(id, cancellationToken);
+
     [HttpPost("{recId:long}/lines")]
     [DomainPermission("AccountsPayable", "PurchaseOrders", "Edit")]
     public async Task<IActionResult> AddLine(long recId, [FromBody] PurchLineInputDto input, CancellationToken ct) =>

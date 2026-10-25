@@ -23,6 +23,8 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<AccountsReceivable.ICustTransService, AccountsReceivable.CustTransService>();
             services.AddScoped<AccountsReceivable.Payment.ICustPaymentService, AccountsReceivable.Payment.CustPaymentService>();
             services.AddScoped<AccountsReceivable.Return.ICustReturnService, AccountsReceivable.Return.CustReturnService>();
+            services.AddScoped<AccountsReceivable.IReturnDispositionCodeService, AccountsReceivable.ReturnDispositionCodeService>();
+            services.AddScoped<AccountsReceivable.IReturnReasonCodeService, AccountsReceivable.ReturnReasonCodeService>();
             services.AddScoped<FluentValidation.IValidator<AccountsReceivable.PackingSlip.CustPackingSlipJourDto>, AccountsReceivable.PackingSlip.CustPackingSlipJourDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsReceivable.PackingSlip.CustPackingSlipTransDto>, AccountsReceivable.PackingSlip.CustPackingSlipTransDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsReceivable.Invoice.CustInvoiceJourDto>, AccountsReceivable.Invoice.CustInvoiceJourDtoValidator>();
@@ -37,6 +39,9 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<FluentValidation.IValidator<AccountsReceivable.Return.CustReturnCreateDto>, AccountsReceivable.Return.CustReturnCreateDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsReceivable.Return.CustReturnReceiptDto>, AccountsReceivable.Return.CustReturnReceiptDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsReceivable.Return.CustCreditNoteDto>, AccountsReceivable.Return.CustCreditNoteDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<AccountsReceivable.ReturnDispositionCodeDto>, AccountsReceivable.ReturnDispositionCodeDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<AccountsReceivable.ReturnReasonCodeDto>, AccountsReceivable.ReturnReasonCodeDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<AccountsReceivable.Return.CustReturnDto>, AccountsReceivable.Return.CustReturnDtoValidator>();
             services.AddScoped<AccountsPayable.IPurchInventorySupplyService, AccountsPayable.PurchInventorySupplyService>();
             services.AddScoped<AccountsPayable.IPurchOrderService, AccountsPayable.PurchOrderService>();
             services.AddScoped<AccountsPayable.IPurchConfirmationService, AccountsPayable.PurchConfirmationService>();
@@ -85,6 +90,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<AccountsReceivable.SalesOrder.Interfaces.ISalesInventoryDemandService, AccountsReceivable.SalesOrder.Services.SalesInventoryDemandService>();
             services.AddScoped<AccountsReceivable.ISalesOrderCopyService, AccountsReceivable.SalesOrderCopyService>();
             services.AddScoped<FluentValidation.IValidator<AccountsReceivable.SalesOrderCopyRequest>, AccountsReceivable.SalesOrderCopyValidator>();
+            services.AddScoped<FluentValidation.IValidator<AccountsReceivable.SalesOrderCopyDto>, AccountsReceivable.SalesOrderCopyDtoValidator>();
             services.AddScoped<AccountsReceivable.ISalesOrderLookupService, AccountsReceivable.SalesOrderLookupService>();
             services.AddScoped<AccountsReceivable.ISalesOrderReadService, AccountsReceivable.SalesOrderReadService>();
             services.AddScoped<AccountsReceivable.ISalesOrderCancellationService, AccountsReceivable.SalesOrderCancellationService>();
@@ -173,6 +179,9 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<FluentValidation.IValidator<Inventory.InventBatchInputDto>, Inventory.Validation.InventBatchInputDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<Inventory.InventClosingRecordDto>, Inventory.Validation.InventClosingRecordDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<Inventory.InventCloseController.CloseRequest>, Inventory.Validation.CloseRequestValidator>();
+            services.AddScoped<FluentValidation.IValidator<Inventory.InventCountGroupDto>, Inventory.Validation.InventCountGroupDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Inventory.InventCountGroupInputDto>, Inventory.Validation.InventCountGroupInputDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Inventory.InventCountGroupRecordDto>, Inventory.Validation.InventCountGroupRecordDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<Inventory.InventJournalNameInputDto>, Inventory.InventJournalNameInputValidator>();
             services.AddScoped<FluentValidation.IValidator<Inventory.InventLocationUpdateValidation>, Inventory.InventLocationUpdateValidator>();
 

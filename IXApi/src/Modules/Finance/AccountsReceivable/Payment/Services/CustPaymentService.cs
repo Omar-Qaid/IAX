@@ -5,6 +5,9 @@ using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.EntityFrameworkCore;
 
+using IAX.IXApi.Infrastructure.Identity;
+using IAX.IXApi.Infrastructure.Persistence.Services;
+
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Payment;
 
 /// <summary>
@@ -14,10 +17,41 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Payment;
 /// CustSettlement and CustTransOpen. Any unsettled remainder stays open on the payment.
 /// Settlement changes the open receivable only — never invoiced sales quantities.
 /// </summary>
-public sealed class CustPaymentService(IUnitOfWork unitOfWork, ICompanyExecutionContext company,
-    ISysNumberSequenceService numbers) : ICustPaymentService
+public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentService
 {
-    private DbContext Db => unitOfWork.Context;
+    private readonly ICompanyExecutionContext _company;
+    private readonly ISysNumberSequenceService _numbers;
+
+    public CustPaymentService(
+        IUnitOfWork unitOfWork,
+        ICurrentUserService currentUser,
+        ICompanyExecutionContext company,
+        ISysNumberSequenceService numbers)
+        : base(unitOfWork, currentUser)
+    {
+        _company = company;
+        _numbers = numbers;
+    }
+
+    public CustPaymentService(
+        IUnitOfWork unitOfWork,
+        ICompanyExecutionContext company,
+        ISysNumberSequenceService numbers)
+        : this(unitOfWork, new NullCurrentUserService(company), company, numbers)
+    {
+    }
+
+    private sealed class NullCurrentUserService(ICompanyExecutionContext company) : ICurrentUserService
+    {
+        public string GetCurrentUserId() => string.Empty;
+        public string GetOwnerAccountId() => string.Empty;
+        public string GetDataAreaId() => company.GetDataAreaId();
+    }
+
+    private DbContext Db => _unitOfWork.Context;
+    private IUnitOfWork unitOfWork => _unitOfWork;
+    private ICompanyExecutionContext company => _company;
+    private ISysNumberSequenceService numbers => _numbers;
 
     public Task<CustPaymentResult> PostAsync(CustPaymentPostDto input, CancellationToken ct) =>
         Db.Database.CreateExecutionStrategy().ExecuteAsync(() => PostCoreAsync(input, ct));

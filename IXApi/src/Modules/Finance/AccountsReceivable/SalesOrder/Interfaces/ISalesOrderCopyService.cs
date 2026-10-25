@@ -1,6 +1,9 @@
+using IAX.IXApi.Infrastructure.Persistence.Services;
+using IAX.IXApi.Modules.Finance.Entities;
+
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
 
-public interface ISalesOrderCopyService
+public interface ISalesOrderCopyService : IBaseService<SalesTable>
 {
     Task<SalesOrderCopyLookupResult> GetSalesOrdersAsync(long destinationRecId, CancellationToken ct);
     Task<SalesOrderCopyLookupResult> GetSalesOrderLinesAsync(long destinationRecId, long sourceRecId, CancellationToken ct);
