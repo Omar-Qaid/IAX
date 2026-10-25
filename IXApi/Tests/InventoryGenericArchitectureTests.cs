@@ -64,4 +64,61 @@ public sealed class InventoryGenericArchitectureTests
         })
             Assert.True(typeof(ControllerBase).IsAssignableFrom(controller));
     }
+
+    [Fact]
+    public void Specialized_inventory_controllers_inherit_base_controller_and_use_registered_base_services()
+    {
+        var services = new ServiceCollection();
+        services.AddFinanceModule(new ConfigurationBuilder().Build());
+
+        var controllers = new[]
+        {
+            typeof(InventBatchController),
+            typeof(InventCountGroupController),
+            typeof(InventClosingController),
+            typeof(InventSerialController),
+            typeof(InventPackagingController)
+        };
+
+        foreach (var controller in controllers)
+        {
+            Assert.Equal(typeof(IAX.IXApi.Api.Controllers.BaseController<,>), controller.BaseType?.GetGenericTypeDefinition());
+            var entity = controller.BaseType!.GetGenericArguments()[0];
+            var contract = controller.GetConstructors().First().GetParameters()[0].ParameterType;
+            Assert.True(typeof(IBaseService<>).MakeGenericType(entity).IsAssignableFrom(contract));
+            var registration = Assert.Single(services, descriptor => descriptor.ServiceType == contract);
+            Assert.NotNull(registration.ImplementationType);
+            Assert.True(typeof(BaseService<>).MakeGenericType(entity)
+                .IsAssignableFrom(registration.ImplementationType));
+        }
+    }
+
+    [Fact]
+    public void Inventory_features_adhere_to_seven_folder_layout()
+    {
+        var candidatePaths = new[]
+        {
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "src", "Modules", "Finance", "Inventory"),
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "IXApi", "src", "Modules", "Finance", "Inventory"),
+            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../IXApi/src/Modules/Finance/Inventory"))
+        };
+
+        var inventoryPath = candidatePaths.FirstOrDefault(Directory.Exists);
+        if (inventoryPath != null)
+        {
+            var expectedFolders = new[] { "Configuration", "Controllers", "Dtos", "Entities", "Interfaces", "Services", "Validation" };
+            var featureDirs = Directory.GetDirectories(inventoryPath);
+
+            Assert.NotEmpty(featureDirs);
+            foreach (var dir in featureDirs)
+            {
+                var subdirs = Directory.GetDirectories(dir).Select(Path.GetFileName).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                foreach (var expected in expectedFolders)
+                {
+                    Assert.True(subdirs.Contains(expected), $"Feature '{Path.GetFileName(dir)}' is missing folder '{expected}'.");
+                }
+            }
+        }
+    }
 }
+
