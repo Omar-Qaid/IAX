@@ -322,6 +322,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<Foundation.Departments.IHcmDepartmentService, Foundation.Departments.HcmDepartmentService>();
             services.AddScoped<Foundation.HcmShowrooms.IHcmShowroomService, Foundation.HcmShowrooms.HcmShowroomService>();
             services.AddScoped<Foundation.HcmWorkers.IHcmWorkerService, Foundation.HcmWorkers.HcmWorkerService>();
+            services.AddScoped<Foundation.OrganizationUnits.IOrganizationUnitService, Foundation.OrganizationUnits.OrganizationUnitService>();
             services.AddScoped<Foundation.Structure.OrganizationStructureService>();
             services.AddScoped<Foundation.Structure.IOrganizationStructureService>(provider => provider.GetRequiredService<Foundation.Structure.OrganizationStructureService>());
             services.AddScoped<IAX.IXApi.Shared.Application.Organization.IOrganizationDirectory,
@@ -339,6 +340,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<FluentValidation.IValidator<Foundation.LogisticsAddresses.AddressInfoDto>, Foundation.LogisticsAddresses.AddressInfoDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<Foundation.LogisticsAddresses.ContactInfoDto>, Foundation.LogisticsAddresses.ContactInfoDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<Foundation.LogisticsAddresses.ContactPersonDto>, Foundation.LogisticsAddresses.ContactPersonDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.OrganizationUnits.OrganizationUnitDto>, Foundation.OrganizationUnits.OrganizationUnitDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<Foundation.PaymentSchedules.PaymSchedDto>, Foundation.PaymentSchedules.PaymSchedDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<Foundation.PaymentSchedules.PaymSchedLineDto>, Foundation.PaymentSchedules.PaymSchedLineDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<Foundation.PaymentTerms.PaymTermDto>, Foundation.PaymentTerms.PaymTermDtoValidator>();

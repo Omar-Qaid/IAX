@@ -14,6 +14,7 @@ using IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses;
 using IAX.IXApi.Modules.Finance.Foundation.Markup;
 using IAX.IXApi.Modules.Finance.Foundation.Nationalities;
 using IAX.IXApi.Modules.Finance.Foundation.Occupations;
+using IAX.IXApi.Modules.Finance.Foundation.OrganizationUnits;
 using IAX.IXApi.Modules.Finance.Foundation.PaymentSchedules;
 using IAX.IXApi.Modules.Finance.Foundation.PaymentTerms;
 using IAX.IXApi.Modules.Finance.Foundation.Tax;
@@ -51,6 +52,7 @@ public sealed class FoundationGenericArchitectureTests
             typeof(CompanyInfoController),
             typeof(ContactPersonController),
             typeof(MarkupTableController),
+            typeof(OrganizationUnitController),
             typeof(PaymSchedController),
             typeof(PaymSchedLineController),
             typeof(PaymTermController),
@@ -88,6 +90,7 @@ public sealed class FoundationGenericArchitectureTests
             typeof(ContactPersonDtoValidator),
             typeof(MarkupTableDtoValidator),
             typeof(MarkupTransValidator),
+            typeof(OrganizationUnitDtoValidator),
             typeof(PaymSchedDtoValidator),
             typeof(PaymSchedLineDtoValidator),
             typeof(PaymTermDtoValidator),
@@ -132,6 +135,8 @@ public sealed class FoundationGenericArchitectureTests
         Assert.Contains(services, d => d.ServiceType == typeof(IValidator<HcmWorkerDto>));
         Assert.Contains(services, d => d.ServiceType == typeof(IContactPersonService));
         Assert.Contains(services, d => d.ServiceType == typeof(IValidator<ContactPersonDto>));
+        Assert.Contains(services, d => d.ServiceType == typeof(IOrganizationUnitService));
+        Assert.Contains(services, d => d.ServiceType == typeof(IValidator<OrganizationUnitDto>));
         Assert.Contains(services, d => d.ServiceType == typeof(IValidator<MarkupTableDto>));
         Assert.Contains(services, d => d.ServiceType == typeof(IValidator<MarkupTransDto>));
         Assert.Contains(services, d => d.ServiceType == typeof(IValidator<TaxTableDto>));
