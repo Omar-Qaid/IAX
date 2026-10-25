@@ -1,3 +1,5 @@
+using System.IO;
+using System.Linq;
 using IAX.IXApi.Api.Controllers;
 using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Finance;
@@ -158,5 +160,33 @@ public sealed class AccountsPayableGenericArchitectureTests
         Assert.IsType<BadRequestObjectResult>((await vendor.Create(new VendorDto())).Result);
         Assert.IsType<BadRequestObjectResult>((await group.Create(new VendorGroupDto())).Result);
         Assert.IsType<BadRequestObjectResult>((await profile.Create(new VendLedgerAccountsDto())).Result);
+    }
+
+    [Fact]
+    public void Accounts_payable_features_adhere_to_seven_folder_layout()
+    {
+        var candidatePaths = new[]
+        {
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "src", "Modules", "Finance", "AccountsPayable"),
+            Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "IXApi", "src", "Modules", "Finance", "AccountsPayable"),
+            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../IXApi/src/Modules/Finance/AccountsPayable"))
+        };
+
+        var apPath = candidatePaths.FirstOrDefault(Directory.Exists);
+        if (apPath != null)
+        {
+            var expectedFolders = new[] { "Configuration", "Controllers", "Dtos", "Entities", "Interfaces", "Services", "Validation" };
+            var featureDirs = Directory.GetDirectories(apPath);
+
+            Assert.NotEmpty(featureDirs);
+            foreach (var dir in featureDirs)
+            {
+                var subdirs = Directory.GetDirectories(dir).Select(Path.GetFileName).ToHashSet(StringComparer.OrdinalIgnoreCase);
+                foreach (var expected in expectedFolders)
+                {
+                    Assert.True(subdirs.Contains(expected), $"Feature '{Path.GetFileName(dir)}' is missing folder '{expected}'.");
+                }
+            }
+        }
     }
 }
