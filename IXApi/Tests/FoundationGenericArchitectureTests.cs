@@ -11,6 +11,7 @@ using IAX.IXApi.Modules.Finance.Foundation.HcmShowrooms;
 using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 using IAX.IXApi.Modules.Finance.Foundation.LegalEntities;
 using IAX.IXApi.Modules.Finance.Foundation.LogisticsAddresses;
+using IAX.IXApi.Modules.Finance.Foundation.Markup;
 using IAX.IXApi.Modules.Finance.Foundation.Nationalities;
 using IAX.IXApi.Modules.Finance.Foundation.Occupations;
 using IAX.IXApi.Modules.Finance.Foundation.PaymentSchedules;
@@ -48,6 +49,7 @@ public sealed class FoundationGenericArchitectureTests
             typeof(LegacyOccupationController),
             typeof(HcmWorkerController),
             typeof(CompanyInfoController),
+            typeof(MarkupTableController),
             typeof(PaymSchedController),
             typeof(PaymSchedLineController),
             typeof(PaymTermController),
@@ -83,6 +85,8 @@ public sealed class FoundationGenericArchitectureTests
             typeof(AddressInfoDtoValidator),
             typeof(ContactInfoDtoValidator),
             typeof(ContactPersonDtoValidator),
+            typeof(MarkupTableDtoValidator),
+            typeof(MarkupTransValidator),
             typeof(PaymSchedDtoValidator),
             typeof(PaymSchedLineDtoValidator),
             typeof(PaymTermDtoValidator),
@@ -125,6 +129,8 @@ public sealed class FoundationGenericArchitectureTests
         Assert.Contains(services, d => d.ServiceType == typeof(IValidator<HcmNationalityDto>));
         Assert.Contains(services, d => d.ServiceType == typeof(IValidator<HcmOccupationDto>));
         Assert.Contains(services, d => d.ServiceType == typeof(IValidator<HcmWorkerDto>));
+        Assert.Contains(services, d => d.ServiceType == typeof(IValidator<MarkupTableDto>));
+        Assert.Contains(services, d => d.ServiceType == typeof(IValidator<MarkupTransDto>));
         Assert.Contains(services, d => d.ServiceType == typeof(IValidator<TaxTableDto>));
     }
 

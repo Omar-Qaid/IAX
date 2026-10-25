@@ -164,6 +164,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<Foundation.Markup.IMarkupTransService, Foundation.Markup.MarkupTransService>();
             services.AddScoped<FluentValidation.IValidator<Foundation.Markup.MarkupTransDto>, Foundation.Markup.MarkupTransValidator>();
             services.AddScoped<Foundation.Markup.IMarkupTableService, Foundation.Markup.MarkupTableService>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.Markup.MarkupTableDto>, Foundation.Markup.MarkupTableDtoValidator>();
             services.AddScoped<Foundation.Tax.ITaxTableService, Foundation.Tax.TaxTableService>();
             services.AddScoped<Foundation.Tax.ITaxGroupService, Foundation.Tax.TaxGroupService>();
             services.AddScoped<Foundation.Tax.ITaxItemGroupService, Foundation.Tax.TaxItemGroupService>();
