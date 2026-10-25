@@ -4,6 +4,7 @@ using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Shared.Application.Identity;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.AccountsPayable;
@@ -14,7 +15,8 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 /// </summary>
 public sealed class PurchOrderService(IUnitOfWork unitOfWork, ICompanyExecutionContext company,
     ISysNumberSequenceService numbers, IPurchInventorySupplyService supply,
-    SalesUnitConversionService units) : IPurchOrderService
+    SalesUnitConversionService units, IValidator<PurchOrderCreateDto>? createValidator = null,
+    IValidator<PurchLineInputDto>? lineValidator = null) : IPurchOrderService
 {
     private DbContext Db => unitOfWork.Context;
 
@@ -27,6 +29,8 @@ public sealed class PurchOrderService(IUnitOfWork unitOfWork, ICompanyExecutionC
         if (vendor == null) return new(422, null, "The vendor was not found in the selected company.");
         if (vendor.Blocked == CustVendBlocked.All)
             return new(422, null, "The vendor is blocked for purchasing.");
+        var createValidation = await (createValidator ?? new PurchOrderCreateDtoValidator()).ValidateAsync(input, ct);
+        if (!createValidation.IsValid) return new(422, null, createValidation.Errors[0].ErrorMessage);
         var siteError = await ValidateSiteWarehouseAsync(area, input.InventSiteId, input.InventLocationId, ct);
         if (siteError != null) return new(422, null, siteError);
 
@@ -70,8 +74,8 @@ public sealed class PurchOrderService(IUnitOfWork unitOfWork, ICompanyExecutionC
                 return await Fail(422, "Lines can only be added to an open purchase order.", ct);
             if (order.PurchaseType == PurchaseType.ReturnItem)
                 return await Fail(422, "Return order lines are created from the original vendor invoice.", ct);
-            if (input.PurchQty <= 0) return await Fail(422, "The purchase quantity must be greater than zero.", ct);
-            if (input.PurchPrice < 0) return await Fail(422, "The purchase price cannot be negative.", ct);
+            var lineValidation = await (lineValidator ?? new PurchLineInputDtoValidator()).ValidateAsync(input, ct);
+            if (!lineValidation.IsValid) return await Fail(422, lineValidation.Errors[0].ErrorMessage, ct);
 
             var item = await Db.Set<InventTable>().AsNoTracking()
                 .FirstOrDefaultAsync(x => x.DataAreaId == area && x.ItemId == input.ItemId, ct);

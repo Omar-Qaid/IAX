@@ -72,6 +72,40 @@ public sealed class InventorySiteWarehouseSeeder : ISeeder
             await db.InventLocations.AddRangeAsync(warehousesToAdd, ct);
             await db.SaveChangesAsync(ct);
         }
+
+        var wmsLocationSeeds = new[]
+        {
+            new WMSLocation { DataAreaId = DataAreaId, InventLocationId = "JED-1", WMSLocationId = "RECEIPT", CheckText = "Inbound Receipt Dock", LocationType = 1 },
+            new WMSLocation { DataAreaId = DataAreaId, InventLocationId = "JED-1", WMSLocationId = "ISSUE", CheckText = "Outbound Shipping Dock", LocationType = 2 },
+            new WMSLocation { DataAreaId = DataAreaId, InventLocationId = "JED-1", WMSLocationId = "BULK-01", CheckText = "Bulk Storage 01", LocationType = 0 },
+            new WMSLocation { DataAreaId = DataAreaId, InventLocationId = "JED-1", WMSLocationId = "PICK-01", CheckText = "Picking Location 01", LocationType = 3 },
+
+            new WMSLocation { DataAreaId = DataAreaId, InventLocationId = "RIY-1", WMSLocationId = "RECEIPT", CheckText = "Inbound Receipt Dock", LocationType = 1 },
+            new WMSLocation { DataAreaId = DataAreaId, InventLocationId = "RIY-1", WMSLocationId = "ISSUE", CheckText = "Outbound Shipping Dock", LocationType = 2 },
+            new WMSLocation { DataAreaId = DataAreaId, InventLocationId = "RIY-1", WMSLocationId = "BULK-01", CheckText = "Bulk Storage 01", LocationType = 0 },
+            new WMSLocation { DataAreaId = DataAreaId, InventLocationId = "RIY-1", WMSLocationId = "PICK-01", CheckText = "Picking Location 01", LocationType = 3 },
+
+            new WMSLocation { DataAreaId = DataAreaId, InventLocationId = "DMM-1", WMSLocationId = "RECEIPT", CheckText = "Inbound Receipt Dock", LocationType = 1 },
+            new WMSLocation { DataAreaId = DataAreaId, InventLocationId = "DMM-1", WMSLocationId = "ISSUE", CheckText = "Outbound Shipping Dock", LocationType = 2 },
+            new WMSLocation { DataAreaId = DataAreaId, InventLocationId = "DMM-1", WMSLocationId = "BULK-01", CheckText = "Bulk Storage 01", LocationType = 0 },
+            new WMSLocation { DataAreaId = DataAreaId, InventLocationId = "DMM-1", WMSLocationId = "PICK-01", CheckText = "Picking Location 01", LocationType = 3 },
+        };
+
+        var existingWmsLocations = await db.Set<WMSLocation>()
+            .IgnoreQueryFilters()
+            .Where(x => x.DataAreaId == DataAreaId)
+            .Select(x => new { x.InventLocationId, x.WMSLocationId })
+            .ToListAsync(ct);
+
+        var wmsToAdd = wmsLocationSeeds
+            .Where(x => !existingWmsLocations.Any(e => e.InventLocationId == x.InventLocationId && e.WMSLocationId == x.WMSLocationId))
+            .ToList();
+
+        if (wmsToAdd.Count > 0)
+        {
+            await db.Set<WMSLocation>().AddRangeAsync(wmsToAdd, ct);
+            await db.SaveChangesAsync(ct);
+        }
     }
 
     private static InventLocation MainWarehouse(

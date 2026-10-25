@@ -4,6 +4,7 @@ using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Shared.Application.Identity;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.AccountsPayable;
@@ -17,7 +18,10 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 /// Returned quantity cannot exceed the invoiced quantity not already returned, nor available stock.
 /// </summary>
 public sealed class PurchReturnService(IUnitOfWork unitOfWork, ICompanyExecutionContext company,
-    ISysNumberSequenceService numbers, ISalesInventoryNumberService inventoryNumbers) : IPurchReturnService
+    ISysNumberSequenceService numbers, ISalesInventoryNumberService inventoryNumbers,
+    IValidator<PurchReturnCreateDto>? createValidator = null,
+    IValidator<PurchReturnShipDto>? shipValidator = null,
+    IValidator<VendCreditNoteDto>? creditValidator = null) : IPurchReturnService
 {
     private DbContext Db => unitOfWork.Context;
 
@@ -29,7 +33,8 @@ public sealed class PurchReturnService(IUnitOfWork unitOfWork, ICompanyExecution
     private async Task<PurchResult> CreateCoreAsync(PurchReturnCreateDto input, CancellationToken ct)
     {
         var area = company.GetDataAreaId();
-        if (input.Lines == null || input.Lines.Count == 0) return new(400, null, "At least one return line is required.");
+        var createValidation = await (createValidator ?? new PurchReturnCreateDtoValidator()).ValidateAsync(input, ct);
+        if (!createValidation.IsValid) return new(400, null, createValidation.Errors[0].ErrorMessage);
         await unitOfWork.BeginTransactionAsync(ct);
         try
         {
@@ -144,8 +149,8 @@ public sealed class PurchReturnService(IUnitOfWork unitOfWork, ICompanyExecution
     private async Task<PurchResult> ShipCoreAsync(long returnRecId, PurchReturnShipDto input, CancellationToken ct)
     {
         var area = company.GetDataAreaId();
-        if (string.IsNullOrWhiteSpace(input.PackingSlipId)) return new(400, null, "A return shipment number is required.");
-        if (input.Lines == null || input.Lines.Count == 0) return new(400, null, "At least one line is required.");
+        var shipValidation = await (shipValidator ?? new PurchReturnShipDtoValidator()).ValidateAsync(input, ct);
+        if (!shipValidation.IsValid) return new(400, null, shipValidation.Errors[0].ErrorMessage);
         var date = (input.ShipDate ?? DateTime.UtcNow).Date;
         var support = new SubledgerPostingSupport(Db);
         await unitOfWork.BeginTransactionAsync(ct);
@@ -261,7 +266,8 @@ public sealed class PurchReturnService(IUnitOfWork unitOfWork, ICompanyExecution
     private async Task<PurchResult> CreditCoreAsync(long returnRecId, VendCreditNoteDto input, CancellationToken ct)
     {
         var area = company.GetDataAreaId();
-        if (string.IsNullOrWhiteSpace(input.InvoiceId)) return new(400, null, "A vendor credit note number is required.");
+        var creditValidation = await (creditValidator ?? new VendCreditNoteDtoValidator()).ValidateAsync(input, ct);
+        if (!creditValidation.IsValid) return new(400, null, creditValidation.Errors[0].ErrorMessage);
         var date = (input.InvoiceDate ?? DateTime.UtcNow).Date;
         var support = new SubledgerPostingSupport(Db);
         await unitOfWork.BeginTransactionAsync(ct);

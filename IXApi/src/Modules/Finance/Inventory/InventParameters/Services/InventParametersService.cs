@@ -97,12 +97,17 @@ public sealed class InventParametersService(IUnitOfWork unitOfWork, ICompanyExec
     {
         var companyId = company.GetDataAreaId();
         if (string.IsNullOrWhiteSpace(companyId)) return null;
+        var sequences = await Db.Set<SysNumberSequence>().IgnoreQueryFilters().AsNoTracking()
+            .Where(x => !x.IsDeleted && x.IsActive && x.InUse != 0 &&
+                (x.DataAreaId == companyId || (x.DataAreaId == string.Empty && x.NumberSequenceScope == null)))
+            .OrderByDescending(x => x.DataAreaId == companyId).ThenBy(x => x.NumberSequence).ToListAsync(ct);
         return new InventParametersLookupsDto
         {
             Units = await Db.Set<UnitOfMeasure>().AsNoTracking().OrderBy(x => x.Symbol).Select(x => new InventParametersLookupDto(x.Symbol, x.Symbol)).ToListAsync(ct),
             Sites = await Db.Set<InventSite>().AsNoTracking().Where(x => x.DataAreaId == companyId).OrderBy(x => x.SiteId).Select(x => new InventParametersLookupDto(x.SiteId, x.Name)).ToListAsync(ct),
             Warehouses = await Db.Set<InventLocation>().AsNoTracking().Where(x => x.DataAreaId == companyId).OrderBy(x => x.InventLocationId).Select(x => new InventParametersWarehouseLookupDto(x.InventLocationId, x.Name, x.InventSiteId)).ToListAsync(ct),
             JournalNames = await Db.Set<InventJournalName>().AsNoTracking().Where(x => x.DataAreaId == companyId).OrderBy(x => x.JournalNameId).Select(x => new InventParametersJournalLookupDto(x.JournalNameId, x.Description, (int)x.JournalType)).ToListAsync(ct),
+            NumberSequences = sequences.Select(x => new InventParametersNumberSequenceLookupDto(x.RecId, x.NumberSequence, x.Txt)).ToList(),
         };
     }
     public async Task<(InventParametersDto? Value, string? Error)> SaveAsync(InventParametersDto input, CancellationToken ct = default)

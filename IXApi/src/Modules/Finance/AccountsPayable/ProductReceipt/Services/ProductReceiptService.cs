@@ -3,6 +3,7 @@ using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Shared.Application.Identity;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Security.Cryptography;
@@ -17,7 +18,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 /// Physical receipt ledger posting (receipt accrual) is not enabled in the basic scope.
 /// </summary>
 public sealed class ProductReceiptService(IUnitOfWork unitOfWork, ICompanyExecutionContext company,
-    ISysNumberSequenceService numbers) : IProductReceiptService
+    ISysNumberSequenceService numbers, IValidator<ProductReceiptPostDto>? validator = null) : IProductReceiptService
 {
     private DbContext Db => unitOfWork.Context;
 
@@ -27,8 +28,8 @@ public sealed class ProductReceiptService(IUnitOfWork unitOfWork, ICompanyExecut
     private async Task<PurchResult> PostCoreAsync(long recId, ProductReceiptPostDto input, CancellationToken ct)
     {
         var area = company.GetDataAreaId();
-        if (string.IsNullOrWhiteSpace(input.PackingSlipId)) return new(400, null, "A product receipt number is required.");
-        if (input.Lines == null || input.Lines.Count == 0) return new(400, null, "At least one line is required.");
+        var validation = await (validator ?? new ProductReceiptPostDtoValidator()).ValidateAsync(input, ct);
+        if (!validation.IsValid) return new(400, null, validation.Errors[0].ErrorMessage);
         var date = (input.DeliveryDate ?? DateTime.UtcNow).Date;
         await unitOfWork.BeginTransactionAsync(ct);
         try

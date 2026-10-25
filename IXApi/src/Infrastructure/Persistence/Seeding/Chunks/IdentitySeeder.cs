@@ -57,6 +57,8 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             ("AccountsPayable", "Vendors"),
             ("AccountsPayable", "VendorGroups"),
             ("AccountsPayable", "PurchaseOrders"),
+            ("AccountsPayable", "PostingProfiles"),
+            ("AccountsPayable", "Transactions"),
 
             // ── Organization ────────────────────────────────────────────────
             ("Organization", "Departments"),

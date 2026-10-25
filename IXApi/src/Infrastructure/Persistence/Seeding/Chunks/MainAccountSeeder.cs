@@ -57,6 +57,17 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 },
                 new MainAccount
                 {
+                    MainAccountId = "14010000",
+                    Name = "Inventory - Finished Goods",
+                    Type = MainAccountType.Asset,
+                    CurrencyCode = "SAR",
+                    ConsolidationMainAccount = "14010000",
+                    GroupLevel01 = "Assets",
+                    GroupLevel02 = "Current Assets",
+                    GroupLevel03 = "Inventory"
+                },
+                new MainAccount
+                {
                     MainAccountId = "11020005",
                     Name = "Trade Accounts Receivable - Local",
                     Type = MainAccountType.Asset,
@@ -193,6 +204,17 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     GroupLevel02 = "Operating Revenue",
                     GroupLevel03 = "Sales"
                 },
+                new MainAccount
+                {
+                    MainAccountId = "40910000",
+                    Name = "Inventory Gain / Profit",
+                    Type = MainAccountType.Revenue,
+                    CurrencyCode = "SAR",
+                    ConsolidationMainAccount = "40910000",
+                    GroupLevel01 = "Revenue",
+                    GroupLevel02 = "Operating Revenue",
+                    GroupLevel03 = "Inventory Adjustments"
+                },
 
                 // ── Expenses ───────────────────────────────────────────────────────
                 new MainAccount
@@ -205,6 +227,17 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                     GroupLevel01 = "Expenses",
                     GroupLevel02 = "Direct Costs",
                     GroupLevel03 = "COGS"
+                },
+                new MainAccount
+                {
+                    MainAccountId = "50910000",
+                    Name = "Inventory Loss / Shrinkage",
+                    Type = MainAccountType.Expense,
+                    CurrencyCode = "SAR",
+                    ConsolidationMainAccount = "50910000",
+                    GroupLevel01 = "Expenses",
+                    GroupLevel02 = "Direct Costs",
+                    GroupLevel03 = "Inventory Adjustments"
                 },
                 new MainAccount
                 {

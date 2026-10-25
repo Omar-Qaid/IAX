@@ -20,6 +20,7 @@ public sealed class InventParametersLookupsDto
     public List<InventParametersLookupDto> Sites { get; set; } = [];
     public List<InventParametersWarehouseLookupDto> Warehouses { get; set; } = [];
     public List<InventParametersJournalLookupDto> JournalNames { get; set; } = [];
+    public List<InventParametersNumberSequenceLookupDto> NumberSequences { get; set; } = [];
 }
 
 public sealed record InventParametersLookupDto(string Id, string Name);
@@ -29,3 +30,4 @@ public sealed record InventParametersJournalLookupDto(string Id, string Name, in
 public sealed record InventoryReadinessIssueDto(string Code, string Message);
 public sealed record InventoryReadinessDto(bool ReadyForItemSetup, bool ReadyForFuturePosting,
     List<InventoryReadinessIssueDto> Issues);
+public sealed record InventParametersNumberSequenceLookupDto(long RecId, string NumberSequence, string Description);

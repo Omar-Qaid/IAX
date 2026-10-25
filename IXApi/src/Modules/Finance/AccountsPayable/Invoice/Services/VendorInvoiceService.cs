@@ -3,6 +3,7 @@ using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Shared.Application.Identity;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.AccountsPayable;
@@ -15,7 +16,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 /// basic milestone.
 /// </summary>
 public sealed class VendorInvoiceService(IUnitOfWork unitOfWork, ICompanyExecutionContext company,
-    ISysNumberSequenceService numbers) : IVendorInvoiceService
+    ISysNumberSequenceService numbers, IValidator<VendorInvoicePostDto>? validator = null) : IVendorInvoiceService
 {
     private DbContext Db => unitOfWork.Context;
 
@@ -25,8 +26,8 @@ public sealed class VendorInvoiceService(IUnitOfWork unitOfWork, ICompanyExecuti
     private async Task<PurchResult> PostCoreAsync(long recId, VendorInvoicePostDto input, CancellationToken ct)
     {
         var area = company.GetDataAreaId();
-        if (string.IsNullOrWhiteSpace(input.InvoiceId)) return new(400, null, "A vendor invoice number is required.");
-        if (input.Lines == null || input.Lines.Count == 0) return new(400, null, "At least one line is required.");
+        var validation = await (validator ?? new VendorInvoicePostDtoValidator()).ValidateAsync(input, ct);
+        if (!validation.IsValid) return new(400, null, validation.Errors[0].ErrorMessage);
         var date = (input.InvoiceDate ?? DateTime.UtcNow).Date;
         var support = new SubledgerPostingSupport(Db);
         await unitOfWork.BeginTransactionAsync(ct);

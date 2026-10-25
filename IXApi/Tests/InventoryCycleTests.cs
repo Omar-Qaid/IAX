@@ -25,6 +25,41 @@ namespace IAX.IXApi.Tests;
 
 public sealed class InventoryCycleTests
 {
+    [Fact]
+    public async Task Vendor_transactions_are_read_only_and_company_scoped()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        fixture.Db.Set<VendTrans>().AddRange(
+            new VendTrans { RecId = 1, DataAreaId = "dat", AccountNum = "V001", TransDate = new DateTime(2026, 1, 1), AmountCur = -100 },
+            new VendTrans { RecId = 2, DataAreaId = "usmf", AccountNum = "V001", TransDate = new DateTime(2026, 1, 2), AmountCur = -200 });
+        await fixture.Db.SaveChangesAsync();
+
+        var service = new VendTransReadService(new TestUnitOfWork(fixture.Db), new TestCompany());
+        var page = await service.SearchAsync(new VendTransQueryDto { AccountNum = " V001 " }, default);
+
+        Assert.Equal(1, page.TotalCount);
+        Assert.Equal(1, Assert.Single(page.Rows).RecId);
+        Assert.Null(await service.GetAsync(2, default));
+        Assert.Equal(-100m, (await service.GetAsync(1, default))!.AmountCur);
+    }
+
+    [Fact]
+    public async Task Vendor_return_request_validation_preserves_errors_before_posting()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var service = new PurchReturnService(new TestUnitOfWork(fixture.Db), new TestCompany(),
+            Sequence(), new TestInventNumbers());
+
+        var create = await service.CreateAsync(new PurchReturnCreateDto("VI-1", null, []), default);
+        var ship = await service.ShipAsync(1, new PurchReturnShipDto("", null, []), default);
+        var credit = await service.CreditAsync(1, new VendCreditNoteDto(""), default);
+
+        Assert.Equal((400, "At least one return line is required."), (create.StatusCode, create.Message));
+        Assert.Equal((400, "A return shipment number is required."), (ship.StatusCode, ship.Message));
+        Assert.Equal((400, "A vendor credit note number is required."), (credit.StatusCode, credit.Message));
+        Assert.Empty(await fixture.Db.Set<PurchTable>().ToListAsync());
+    }
+
     // ---- Reservation engine (Phase 3 §7–8) --------------------------------------------------
 
     [Fact]
