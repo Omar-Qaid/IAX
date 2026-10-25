@@ -1,6 +1,9 @@
+using IAX.IXApi.Infrastructure.Persistence.Services;
+using IAX.IXApi.Modules.Finance.Entities;
+
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public interface IInventOnHandService
+public interface IInventOnHandService : IBaseService<InventSum>
 {
     Task<List<InventOnHandDto>?> ListAsync(CancellationToken ct = default);
     Task<List<InventOnHandDto>?> SearchAsync(string? itemId, string? siteId, string? warehouseId,

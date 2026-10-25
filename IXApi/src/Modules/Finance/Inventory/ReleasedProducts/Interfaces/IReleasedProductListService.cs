@@ -1,6 +1,9 @@
+using IAX.IXApi.Infrastructure.Persistence.Services;
+using ReleasedItem = IAX.IXApi.Modules.Finance.Entities.InventTable;
+
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public interface IReleasedProductListService
+public interface IReleasedProductListService : IBaseService<ReleasedItem>
 {
     Task<List<ReleasedProductListDto>?> ListAsync(CancellationToken cancellationToken = default);
     Task<(ReleasedProductListDto? Product, string? Error)> CreateSharedAsync(CreateSharedProductDto input, CancellationToken cancellationToken = default);

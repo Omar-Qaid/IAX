@@ -1,6 +1,9 @@
+using IAX.IXApi.Infrastructure.Persistence.Services;
+using IAX.IXApi.Modules.Finance.Entities;
+
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public interface IInventItemBarcodeService
+public interface IInventItemBarcodeService : IBaseService<InventItemBarcode>
 {
     Task<(List<InventItemBarcodeDto>? Rows, string? Error)> ListAsync(long releasedProductRecId, CancellationToken ct);
     Task<(List<InventItemBarcodeLookupDto>? Rows, string? Error)> FindAsync(string barcode, CancellationToken ct);

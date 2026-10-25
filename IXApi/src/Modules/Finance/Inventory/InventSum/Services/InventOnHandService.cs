@@ -1,5 +1,7 @@
 using System.Globalization;
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Inventory.InventoryStatus.Entities;
@@ -9,10 +11,22 @@ using ReleasedItem = IAX.IXApi.Modules.Finance.Entities.InventTable;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public sealed class InventOnHandService(
-    IUnitOfWork unitOfWork,
-    ICompanyExecutionContext company) : IInventOnHandService
+public sealed class InventOnHandService : BaseService<InventSum>, IInventOnHandService
 {
+    private readonly ICompanyExecutionContext company;
+    private IUnitOfWork unitOfWork => _unitOfWork;
+
+    public InventOnHandService(IUnitOfWork unitOfWork, ICurrentUserService currentUser, ICompanyExecutionContext company)
+        : base(unitOfWork, currentUser)
+    {
+        this.company = company;
+    }
+
+    public InventOnHandService(IUnitOfWork unitOfWork, ICompanyExecutionContext company)
+        : this(unitOfWork, NullCurrentUserService.Instance, company)
+    {
+    }
+
     public async Task<List<InventOnHandDto>?> ListAsync(CancellationToken ct = default)
         => await SearchAsync(null, null, null, ct);
 

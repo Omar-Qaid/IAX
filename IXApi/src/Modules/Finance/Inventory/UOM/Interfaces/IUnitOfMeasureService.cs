@@ -1,6 +1,9 @@
+using IAX.IXApi.Infrastructure.Persistence.Services;
+using IAX.IXApi.Modules.Finance.Entities;
+
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public interface IUnitOfMeasureService
+public interface IUnitOfMeasureService : IBaseService<UnitOfMeasure>
 {
     Task<List<UnitOfMeasureDto>> ListAsync(CancellationToken ct = default);
     Task<(UnitOfMeasureDto? Unit, string? Error)> CreateAsync(UnitOfMeasureInputDto input, CancellationToken ct = default);

@@ -1,6 +1,9 @@
+using IAX.IXApi.Infrastructure.Persistence.Services;
+using IAX.IXApi.Modules.Finance.Entities;
+
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public interface IInventTransService
+public interface IInventTransService : IBaseService<InventTrans>
 {
     Task<List<InventTransListDto>?> GetListAsync(CancellationToken cancellationToken = default);
     Task<List<InventTransListDto>?> SearchAsync(string? itemId, string? sourceInventTransId,

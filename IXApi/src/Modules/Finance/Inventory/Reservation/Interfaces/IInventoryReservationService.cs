@@ -1,3 +1,6 @@
+using IAX.IXApi.Infrastructure.Persistence.Services;
+using IAX.IXApi.Modules.Finance.Entities;
+
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
 public sealed record ReservationResultDto(
@@ -7,7 +10,7 @@ public sealed record ReservationResultDto(
     decimal Reserved,
     decimal AvailablePhysical);
 
-public interface IInventoryReservationService
+public interface IInventoryReservationService : IBaseService<InventTrans>
 {
     /// <summary>
     /// Sets a source's physical reservation to <paramref name="targetQuantity"/> (idempotent, D365

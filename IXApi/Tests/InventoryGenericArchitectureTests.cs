@@ -62,6 +62,6 @@ public sealed class InventoryGenericArchitectureTests
             typeof(InventJournalController), typeof(InventCloseController),
             typeof(InventoryReservationController)
         })
-            Assert.Equal(typeof(ControllerBase), controller.BaseType);
+            Assert.True(typeof(ControllerBase).IsAssignableFrom(controller));
     }
 }

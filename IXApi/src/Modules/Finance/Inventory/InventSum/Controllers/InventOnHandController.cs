@@ -1,20 +1,59 @@
+using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Identity.Permissions;
+using IAX.IXApi.Api.Controllers;
 using IAX.IXApi.Shared.Application.Contracts;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
 [ApiController]
 [Route("api/v1/InventOnHand")]
 [DomainPermission("Inventory", "Transactions", "View")]
-public sealed class InventOnHandController(IInventOnHandService service) : ControllerBase
+public sealed class InventOnHandController
+    : BaseController<InventSum, InventOnHandDto>
 {
+    private readonly IInventOnHandService _onHandService;
+
+    public InventOnHandController(
+        IInventOnHandService service,
+        ILogger<InventOnHandController> logger)
+        : base(service, logger)
+    {
+        _onHandService = service;
+    }
+
+    [NonAction]
+    public override Task<ActionResult<APIResponse<IEnumerable<InventOnHandDto>>>> GetAll(CancellationToken cancellationToken = default) =>
+        base.GetAll(cancellationToken);
+
+    [NonAction]
+    public override Task<ActionResult<APIResponse<IEnumerable<InventOnHandDto>>>> GetPaged(
+        QueryFilterDto paginationParams, CancellationToken cancellationToken = default) =>
+        base.GetPaged(paginationParams, cancellationToken);
+
+    [NonAction]
+    public override Task<ActionResult<APIResponse<InventOnHandDto>>> GetById(string id, CancellationToken cancellationToken = default) =>
+        base.GetById(id, cancellationToken);
+
+    [NonAction]
+    public override Task<ActionResult<APIResponse<InventOnHandDto>>> Create(InventOnHandDto dto, CancellationToken cancellationToken = default) =>
+        base.Create(dto, cancellationToken);
+
+    [NonAction]
+    public override Task<ActionResult<APIResponse<InventOnHandDto>>> Update(string id, InventOnHandDto dto, CancellationToken cancellationToken = default) =>
+        base.Update(id, dto, cancellationToken);
+
+    [NonAction]
+    public override Task<ActionResult<APIResponse<bool>>> Delete(string id, CancellationToken cancellationToken = default) =>
+        base.Delete(id, cancellationToken);
+
     [HttpGet]
     public async Task<ActionResult<APIResponse<IEnumerable<InventOnHandDto>>>> List(
         [FromQuery] string? itemId = null, [FromQuery] string? siteId = null,
         [FromQuery] string? warehouseId = null, CancellationToken ct = default)
     {
-        var rows = await service.SearchAsync(itemId, siteId, warehouseId, ct);
+        var rows = await _onHandService.SearchAsync(itemId, siteId, warehouseId, ct);
         if (rows is null)
             return BadRequest(APIResponse<IEnumerable<InventOnHandDto>>.Fail(
                 "A company must be selected to view on-hand inventory."));
@@ -29,7 +68,7 @@ public sealed class InventOnHandController(IInventOnHandService service) : Contr
     {
         if (page < 1 || pageSize is < 1 or > 200)
             return BadRequest(APIResponse<InventOnHandPageDto>.Fail("Page must be positive and page size must be 1 through 200."));
-        var result = await service.SearchPageAsync(itemId, itemGroupId, siteId, warehouseId,
+        var result = await _onHandService.SearchPageAsync(itemId, itemGroupId, siteId, warehouseId,
             includeZero, page, pageSize, ct);
         if (result is null)
             return BadRequest(APIResponse<InventOnHandPageDto>.Fail("A company must be selected to view on-hand inventory."));

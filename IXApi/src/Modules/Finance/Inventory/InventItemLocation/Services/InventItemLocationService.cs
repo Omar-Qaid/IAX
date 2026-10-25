@@ -1,4 +1,6 @@
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Shared.Application.Identity;
@@ -7,11 +9,23 @@ using ReleasedItem = IAX.IXApi.Modules.Finance.Entities.InventTable;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public sealed class InventItemLocationService(IUnitOfWork unitOfWork, ICompanyExecutionContext company) : IInventItemLocationService
+public sealed class InventItemLocationService : BaseService<InventItemLocation>, IInventItemLocationService
 {
-    private DbContext Db => unitOfWork.Context;
-    private string Area => company.GetDataAreaId() ?? throw new InvalidOperationException("A company must be selected.");
+    private readonly ICompanyExecutionContext _company;
+    private DbContext Db => _unitOfWork.Context;
+    private string Area => _company.GetDataAreaId() ?? throw new InvalidOperationException("A company must be selected.");
     private static string Normalize(string? value) => (value ?? string.Empty).Trim().ToUpperInvariant();
+
+    public InventItemLocationService(IUnitOfWork unitOfWork, ICurrentUserService currentUser, ICompanyExecutionContext company)
+        : base(unitOfWork, currentUser)
+    {
+        _company = company;
+    }
+
+    public InventItemLocationService(IUnitOfWork unitOfWork, ICompanyExecutionContext company)
+        : this(unitOfWork, NullCurrentUserService.Instance, company)
+    {
+    }
 
     public async Task<(ItemLocationRecordDto? Location, string? Error)> CreateAsync(InventItemLocationInputDto input, CancellationToken ct)
     {
@@ -26,7 +40,7 @@ public sealed class InventItemLocationService(IUnitOfWork unitOfWork, ICompanyEx
             PickingLocationMaxQty = input.PickingLocationMaxQty, PickingLocationRefillMin = input.PickingLocationRefillMin,
             CountGroupId = Normalize(input.CountGroupId) };
         Db.Add(row);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return (Map(row), null);
     }
 
@@ -44,7 +58,7 @@ public sealed class InventItemLocationService(IUnitOfWork unitOfWork, ICompanyEx
         row.PickingLocationMaxQty = input.PickingLocationMaxQty;
         row.PickingLocationRefillMin = input.PickingLocationRefillMin;
         if (input.CountGroupId is not null) row.CountGroupId = Normalize(input.CountGroupId);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return (Map(row), null);
     }
 
@@ -54,7 +68,7 @@ public sealed class InventItemLocationService(IUnitOfWork unitOfWork, ICompanyEx
         var row = await Db.Set<InventItemLocation>().FirstOrDefaultAsync(x => x.DataAreaId == area && x.RecId == recId, ct);
         if (row is null) return "Item location was not found.";
         Db.Remove(row);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return null;
     }
 

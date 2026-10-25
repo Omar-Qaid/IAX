@@ -1,5 +1,7 @@
 using System.Globalization;
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities;
@@ -15,14 +17,35 @@ using InventModelGroupEntity = IAX.IXApi.Modules.Finance.Entities.InventModelGro
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public sealed class ReleasedProductListService(
-    IUnitOfWork unitOfWork,
-    ICompanyExecutionContext company,
-    IInventDimensionResolver dimensionResolver,
-    ISysNumberSequenceService numberSequences)
-    : IReleasedProductListService
+public sealed class ReleasedProductListService : BaseService<ReleasedItem>, IReleasedProductListService
 {
-    private DbContext Db => unitOfWork.Context;
+    private readonly ICompanyExecutionContext company;
+    private readonly IInventDimensionResolver dimensionResolver;
+    private readonly ISysNumberSequenceService numberSequences;
+    private IUnitOfWork unitOfWork => _unitOfWork;
+    private DbContext Db => _unitOfWork.Context;
+
+    public ReleasedProductListService(
+        IUnitOfWork unitOfWork,
+        ICurrentUserService currentUser,
+        ICompanyExecutionContext company,
+        IInventDimensionResolver dimensionResolver,
+        ISysNumberSequenceService numberSequences)
+        : base(unitOfWork, currentUser)
+    {
+        this.company = company;
+        this.dimensionResolver = dimensionResolver;
+        this.numberSequences = numberSequences;
+    }
+
+    public ReleasedProductListService(
+        IUnitOfWork unitOfWork,
+        ICompanyExecutionContext company,
+        IInventDimensionResolver dimensionResolver,
+        ISysNumberSequenceService numberSequences)
+        : this(unitOfWork, NullCurrentUserService.Instance, company, dimensionResolver, numberSequences)
+    {
+    }
 
     public async Task<List<ReleasedProductListDto>?> ListAsync(CancellationToken ct = default)
     {

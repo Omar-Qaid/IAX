@@ -7,20 +7,32 @@ using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.EntityFrameworkCore;
 
+using IAX.IXApi.Infrastructure.Persistence.Services;
+
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public sealed class InventJournalNameService : IInventJournalNameService
+public sealed class InventJournalNameService : BaseService<InventJournalName>, IInventJournalNameService
 {
-    private readonly IUnitOfWork _unitOfWork;
     private readonly ICompanyExecutionContext _company;
     private readonly IValidator<InventJournalNameInputDto> _validator;
 
-    public InventJournalNameService(IUnitOfWork unitOfWork, ICompanyExecutionContext company,
+    public InventJournalNameService(
+        IUnitOfWork unitOfWork,
+        ICurrentUserService currentUser,
+        ICompanyExecutionContext company,
         IValidator<InventJournalNameInputDto> validator)
+        : base(unitOfWork, currentUser)
     {
-        _unitOfWork = unitOfWork;
         _company = company;
         _validator = validator;
+    }
+
+    public InventJournalNameService(
+        IUnitOfWork unitOfWork,
+        ICompanyExecutionContext company,
+        IValidator<InventJournalNameInputDto> validator)
+        : this(unitOfWork, NullCurrentUserService.Instance, company, validator)
+    {
     }
 
     public async Task<List<InventJournalNameDto>> ListAsync(CancellationToken ct)

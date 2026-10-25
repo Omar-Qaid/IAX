@@ -1,4 +1,6 @@
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Shared.Application.Identity;
@@ -6,12 +8,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public sealed class InventoryRecordQueryService(IUnitOfWork unitOfWork, ICompanyExecutionContext company)
-    : IInventoryRecordQueryService
+public sealed class InventoryRecordQueryService : BaseService<InventDim>, IInventoryRecordQueryService
 {
-    private DbContext Db => unitOfWork.Context;
-    private string Area => company.GetDataAreaId() ?? throw new InvalidOperationException("A company must be selected.");
+    private readonly ICompanyExecutionContext _company;
+    private DbContext Db => _unitOfWork.Context;
+    private string Area => _company.GetDataAreaId() ?? throw new InvalidOperationException("A company must be selected.");
     private static string Normalize(string? value) => (value ?? string.Empty).Trim().ToUpperInvariant();
+
+    public InventoryRecordQueryService(IUnitOfWork unitOfWork, ICurrentUserService currentUser, ICompanyExecutionContext company)
+        : base(unitOfWork, currentUser)
+    {
+        _company = company;
+    }
+
+    public InventoryRecordQueryService(IUnitOfWork unitOfWork, ICompanyExecutionContext company)
+        : this(unitOfWork, NullCurrentUserService.Instance, company)
+    {
+    }
 
     public async Task<IReadOnlyList<InventoryDimensionRecordDto>> DimensionsAsync(string? siteId, string? warehouseId, CancellationToken ct)
     {

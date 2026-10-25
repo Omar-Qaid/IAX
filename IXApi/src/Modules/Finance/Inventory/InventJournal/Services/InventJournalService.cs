@@ -1,4 +1,6 @@
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
 using IAX.IXApi.Modules.Finance.Common;
@@ -13,20 +15,32 @@ using ItemModelGroup = IAX.IXApi.Modules.Finance.Entities.InventModelGroup;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public sealed class InventJournalService : IInventJournalService
+public sealed class InventJournalService : BaseService<InventJournalTable>, IInventJournalService
 {
-    private readonly IUnitOfWork _unitOfWork;
     private readonly ICompanyExecutionContext _company;
     private readonly ISysNumberSequenceService _numbers;
     private readonly IInventDimensionResolver _dimensions;
 
-    public InventJournalService(IUnitOfWork unitOfWork, ICompanyExecutionContext company,
-        ISysNumberSequenceService numbers, IInventDimensionResolver dimensions)
+    public InventJournalService(
+        IUnitOfWork unitOfWork,
+        ICurrentUserService currentUser,
+        ICompanyExecutionContext company,
+        ISysNumberSequenceService numbers,
+        IInventDimensionResolver dimensions)
+        : base(unitOfWork, currentUser)
     {
-        _unitOfWork = unitOfWork;
         _company = company;
         _numbers = numbers;
         _dimensions = dimensions;
+    }
+
+    public InventJournalService(
+        IUnitOfWork unitOfWork,
+        ICompanyExecutionContext company,
+        ISysNumberSequenceService numbers,
+        IInventDimensionResolver dimensions)
+        : this(unitOfWork, NullCurrentUserService.Instance, company, numbers, dimensions)
+    {
     }
 
     private DbContext Db => _unitOfWork.Context;

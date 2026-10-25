@@ -17,6 +17,9 @@ public sealed class TrackingDimensionGroupService : BaseService<EcoResTrackingDi
     public TrackingDimensionGroupService(IUnitOfWork unitOfWork, ICurrentUserService currentUser,
         IValidator<TrackingDimensionGroupInputDto> validator) : base(unitOfWork, currentUser) => _validator = validator;
 
+    public TrackingDimensionGroupService(IUnitOfWork unitOfWork,
+        IValidator<TrackingDimensionGroupInputDto> validator) : this(unitOfWork, NullCurrentUserService.Instance, validator) { }
+
     public async Task<List<TrackingDimensionGroupDto>> ListAsync(CancellationToken ct)
     {
         var groups = await _repository.GetQueryable().AsNoTracking().OrderBy(x => x.Name).ToListAsync(ct);

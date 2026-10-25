@@ -1,4 +1,6 @@
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Shared.Application.Identity;
@@ -6,9 +8,21 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public sealed class WMSLocationService(IUnitOfWork unitOfWork, ICompanyExecutionContext company) : IWMSLocationService
+public sealed class WMSLocationService : BaseService<WMSLocation>, IWMSLocationService
 {
-    private DbContext Db => unitOfWork.Context;
+    private readonly ICompanyExecutionContext _company;
+    private DbContext Db => _unitOfWork.Context;
+
+    public WMSLocationService(IUnitOfWork unitOfWork, ICurrentUserService currentUser, ICompanyExecutionContext company)
+        : base(unitOfWork, currentUser)
+    {
+        _company = company;
+    }
+
+    public WMSLocationService(IUnitOfWork unitOfWork, ICompanyExecutionContext company)
+        : this(unitOfWork, NullCurrentUserService.Instance, company)
+    {
+    }
 
     public async Task<List<WMSLocationDto>> ListAsync(CancellationToken ct)
     {
@@ -40,7 +54,7 @@ public sealed class WMSLocationService(IUnitOfWork unitOfWork, ICompanyExecution
             SortCode = input.SortCode, ManualName = NoYes.No
         };
         Db.Add(entity);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return (await MapAsync(entity, companyId, ct), null);
     }
 
@@ -58,7 +72,7 @@ public sealed class WMSLocationService(IUnitOfWork unitOfWork, ICompanyExecution
         entity.CheckText = input.CheckText;
         entity.LocationType = input.LocationType;
         entity.SortCode = input.SortCode;
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return (await MapAsync(entity, companyId, ct), null);
     }
 
@@ -71,7 +85,7 @@ public sealed class WMSLocationService(IUnitOfWork unitOfWork, ICompanyExecution
             x.InventLocationId == entity.InventLocationId && x.WmsLocationId == entity.WMSLocationId, ct))
             return "This inventory location is referenced by inventory dimensions and cannot be deleted.";
         Db.Remove(entity);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return null;
     }
 
@@ -111,5 +125,5 @@ public sealed class WMSLocationService(IUnitOfWork unitOfWork, ICompanyExecution
         input.CheckText = (input.CheckText ?? string.Empty).Trim();
     }
 
-    private string RequireCompany() => company.GetDataAreaId() ?? throw new InvalidOperationException("A company must be selected.");
+    private string RequireCompany() => _company.GetDataAreaId() ?? throw new InvalidOperationException("A company must be selected.");
 }

@@ -1,6 +1,9 @@
+using IAX.IXApi.Infrastructure.Persistence.Services;
+using IAX.IXApi.Modules.Finance.Entities;
+
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public interface IInventJournalService
+public interface IInventJournalService : IBaseService<InventJournalTable>
 {
     Task<List<InventJournalTableDto>> ListAsync(CancellationToken ct);
     Task<InventJournalTableDto?> GetAsync(string journalId, CancellationToken ct);

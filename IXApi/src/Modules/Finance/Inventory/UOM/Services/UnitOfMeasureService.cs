@@ -1,4 +1,6 @@
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Inventory.InventTable;
@@ -6,9 +8,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public sealed class UnitOfMeasureService(IUnitOfWork unitOfWork) : IUnitOfMeasureService
+public sealed class UnitOfMeasureService : BaseService<UnitOfMeasure>, IUnitOfMeasureService
 {
-    private DbContext Db => unitOfWork.Context;
+    private DbContext Db => _unitOfWork.Context;
+
+    public UnitOfMeasureService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
+        : base(unitOfWork, currentUser)
+    {
+    }
+
+    public UnitOfMeasureService(IUnitOfWork unitOfWork)
+        : this(unitOfWork, NullCurrentUserService.Instance)
+    {
+    }
 
     public async Task<List<UnitOfMeasureDto>> ListAsync(CancellationToken ct = default)
     {
@@ -37,7 +49,7 @@ public sealed class UnitOfMeasureService(IUnitOfWork unitOfWork) : IUnitOfMeasur
         var row = new UnitOfMeasure();
         Apply(row, input);
         Db.Add(row);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return (Map(row), null);
     }
 
@@ -57,7 +69,7 @@ public sealed class UnitOfMeasureService(IUnitOfWork unitOfWork) : IUnitOfMeasur
         var normalizedSymbol = symbol.ToUpperInvariant();
         if (await Db.Set<UnitOfMeasure>().AnyAsync(x => x.RecId != recId && x.Symbol.ToUpper() == normalizedSymbol, ct)) return (null, $"Unit '{symbol}' already exists.");
         Apply(row, input);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return (Map(row), null);
     }
 
@@ -68,7 +80,7 @@ public sealed class UnitOfMeasureService(IUnitOfWork unitOfWork) : IUnitOfMeasur
         if (await IsUsedAsync(row, ct))
             return "The unit cannot be deleted because it is referenced by setup or a journal.";
         Db.Remove(row);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return null;
     }
 
@@ -104,7 +116,7 @@ public sealed class UnitOfMeasureService(IUnitOfWork unitOfWork) : IUnitOfMeasur
         row.FromUnitOfMeasure = input.FromUnitOfMeasure; row.ToUnitOfMeasure = input.ToUnitOfMeasure; row.Product = input.Product;
         row.Factor = input.Factor; row.Numerator = input.Numerator; row.Denominator = input.Denominator;
         row.InnerOffset = input.InnerOffset; row.OuterOffset = input.OuterOffset; row.Rounding = (UnitOfMeasureRounding)input.Rounding;
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         var symbols = units.ToDictionary(x => x.RecId, x => x.Symbol);
         var products = input.Product == 0 ? new Dictionary<long, string>() : await Db.Set<EcoResProduct>().AsNoTracking().Where(x => x.RecId == input.Product).ToDictionaryAsync(x => x.RecId, x => x.DisplayProductNumber, ct);
         return (Map(row, symbols, products), null);
@@ -115,7 +127,7 @@ public sealed class UnitOfMeasureService(IUnitOfWork unitOfWork) : IUnitOfMeasur
         var row = await Db.Set<UnitOfMeasureConversion>().FirstOrDefaultAsync(x => x.RecId == recId, ct);
         if (row is null) return "Unit conversion was not found.";
         Db.Remove(row);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return null;
     }
 

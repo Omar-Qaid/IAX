@@ -7,6 +7,9 @@ using Microsoft.EntityFrameworkCore.Storage;
 using System.Security.Cryptography;
 using System.Text;
 
+using IAX.IXApi.Infrastructure.Identity;
+using IAX.IXApi.Infrastructure.Persistence.Services;
+
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
 /// <summary>
@@ -15,16 +18,20 @@ namespace IAX.IXApi.Modules.Finance.Inventory;
 /// ReservPhysical states, and maintaining InventSum.ReservPhysical. It never changes physical
 /// on-hand, inventory value or the ledger (per D365 — reservation affects availability only).
 /// </summary>
-public sealed class InventoryReservationService : IInventoryReservationService
+public sealed class InventoryReservationService : BaseService<InventTrans>, IInventoryReservationService
 {
-    private readonly IUnitOfWork _unitOfWork;
     private readonly ICompanyExecutionContext _company;
     private DbContext Db => _unitOfWork.Context;
 
-    public InventoryReservationService(IUnitOfWork unitOfWork, ICompanyExecutionContext company)
+    public InventoryReservationService(IUnitOfWork unitOfWork, ICurrentUserService currentUser, ICompanyExecutionContext company)
+        : base(unitOfWork, currentUser)
     {
-        _unitOfWork = unitOfWork;
         _company = company;
+    }
+
+    public InventoryReservationService(IUnitOfWork unitOfWork, ICompanyExecutionContext company)
+        : this(unitOfWork, NullCurrentUserService.Instance, company)
+    {
     }
 
     public Task<(ReservationResultDto? Result, string? Error)> ReserveAsync(

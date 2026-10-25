@@ -1,4 +1,6 @@
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Shared.Application.Identity;
@@ -7,9 +9,21 @@ using ReleasedItem = IAX.IXApi.Modules.Finance.Entities.InventTable;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public sealed class InventItemBarcodeService(IUnitOfWork unitOfWork, ICompanyExecutionContext company) : IInventItemBarcodeService
+public sealed class InventItemBarcodeService : BaseService<InventItemBarcode>, IInventItemBarcodeService
 {
-    private DbContext Db => unitOfWork.Context;
+    private readonly ICompanyExecutionContext _company;
+    private DbContext Db => _unitOfWork.Context;
+
+    public InventItemBarcodeService(IUnitOfWork unitOfWork, ICurrentUserService currentUser, ICompanyExecutionContext company)
+        : base(unitOfWork, currentUser)
+    {
+        _company = company;
+    }
+
+    public InventItemBarcodeService(IUnitOfWork unitOfWork, ICompanyExecutionContext company)
+        : this(unitOfWork, NullCurrentUserService.Instance, company)
+    {
+    }
 
     public async Task<(List<InventItemBarcodeDto>? Rows, string? Error)> ListAsync(long releasedProductRecId, CancellationToken ct)
     {
@@ -23,7 +37,7 @@ public sealed class InventItemBarcodeService(IUnitOfWork unitOfWork, ICompanyExe
 
     public async Task<(List<InventItemBarcodeLookupDto>? Rows, string? Error)> FindAsync(string barcode, CancellationToken ct)
     {
-        var companyId = company.GetDataAreaId();
+        var companyId = _company.GetDataAreaId();
         var code = barcode?.Trim() ?? string.Empty;
         if (string.IsNullOrWhiteSpace(companyId)) return (null, "A company must be selected.");
         if (code.Length == 0 || code.Length > FieldLengths.ItemBarcode)
@@ -54,7 +68,7 @@ public sealed class InventItemBarcodeService(IUnitOfWork unitOfWork, ICompanyExe
         var row = new InventItemBarcode { DataAreaId = item.DataAreaId, ItemId = item.ItemId };
         Apply(row, input);
         Db.Add(row);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return (Map(row), null);
     }
 
@@ -68,7 +82,7 @@ public sealed class InventItemBarcodeService(IUnitOfWork unitOfWork, ICompanyExe
         var error = await ValidateAsync(item, input, row.RecId, ct);
         if (error is not null) return (null, error);
         Apply(row, input);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return (Map(row), null);
     }
 
@@ -80,13 +94,13 @@ public sealed class InventItemBarcodeService(IUnitOfWork unitOfWork, ICompanyExe
             x => x.RecId == barcodeRecId && x.DataAreaId == item.DataAreaId && x.ItemId == item.ItemId, ct);
         if (row is null) return (false, "The barcode was not found for this released product.");
         Db.Remove(row);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return (true, null);
     }
 
     private Task<ReleasedItem?> ItemAsync(long recId, CancellationToken ct)
     {
-        var companyId = company.GetDataAreaId();
+        var companyId = _company.GetDataAreaId();
         return string.IsNullOrWhiteSpace(companyId)
             ? Task.FromResult<ReleasedItem?>(null)
             : Db.Set<ReleasedItem>().AsNoTracking().FirstOrDefaultAsync(x => x.RecId == recId && x.DataAreaId == companyId, ct);

@@ -1,14 +1,29 @@
+using IAX.IXApi.Infrastructure.Identity;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
-using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.EntityFrameworkCore;
 using Mapster;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public sealed class InventTransService(IUnitOfWork unitOfWork, ICompanyExecutionContext company) : IInventTransService
+public sealed class InventTransService : BaseService<InventTrans>, IInventTransService
 {
+    private readonly ICompanyExecutionContext company;
+    private IUnitOfWork unitOfWork => _unitOfWork;
+
+    public InventTransService(IUnitOfWork unitOfWork, ICurrentUserService currentUser, ICompanyExecutionContext company)
+        : base(unitOfWork, currentUser)
+    {
+        this.company = company;
+    }
+
+    public InventTransService(IUnitOfWork unitOfWork, ICompanyExecutionContext company)
+        : this(unitOfWork, NullCurrentUserService.Instance, company)
+    {
+    }
     public async Task<List<InventTransListDto>?> GetListAsync(CancellationToken cancellationToken = default)
         => await SearchAsync(null, null, null, null, cancellationToken);
 

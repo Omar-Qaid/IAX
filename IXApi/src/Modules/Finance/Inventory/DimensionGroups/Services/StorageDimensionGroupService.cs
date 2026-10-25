@@ -17,6 +17,9 @@ public sealed class StorageDimensionGroupService : BaseService<EcoResStorageDime
     public StorageDimensionGroupService(IUnitOfWork unitOfWork, ICurrentUserService currentUser,
         IValidator<StorageDimensionGroupInputDto> validator) : base(unitOfWork, currentUser) => _validator = validator;
 
+    public StorageDimensionGroupService(IUnitOfWork unitOfWork,
+        IValidator<StorageDimensionGroupInputDto> validator) : this(unitOfWork, NullCurrentUserService.Instance, validator) { }
+
     public async Task<List<StorageDimensionGroupDto>> ListAsync(CancellationToken ct)
     {
         var groups = await _repository.GetQueryable().AsNoTracking().OrderBy(x => x.Name).ToListAsync(ct);

@@ -1,8 +1,11 @@
+using IAX.IXApi.Infrastructure.Persistence.Services;
+using IAX.IXApi.Modules.Finance.Entities;
+
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
 public enum InventJournalNameDeleteResult { Deleted, NotFound, InUse }
 
-public interface IInventJournalNameService
+public interface IInventJournalNameService : IBaseService<InventJournalName>
 {
     Task<List<InventJournalNameDto>> ListAsync(CancellationToken ct);
     Task<InventJournalNameLookupsDto> LookupsAsync(CancellationToken ct);
