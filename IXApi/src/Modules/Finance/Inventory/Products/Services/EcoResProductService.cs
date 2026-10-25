@@ -19,6 +19,18 @@ public sealed class EcoResProductService : BaseService<EcoResProduct>, IEcoResPr
     public EcoResProductService(IUnitOfWork unitOfWork, ICurrentUserService currentUser,
         IValidator<EcoResProductInputDto> validator) : base(unitOfWork, currentUser) => _validator = validator;
 
+    public EcoResProductService(IUnitOfWork unitOfWork, IValidator<EcoResProductInputDto> validator)
+        : this(unitOfWork, new NullCurrentUserService(), validator)
+    {
+    }
+
+    private sealed class NullCurrentUserService : ICurrentUserService
+    {
+        public string GetCurrentUserId() => string.Empty;
+        public string GetOwnerAccountId() => string.Empty;
+        public string GetDataAreaId() => string.Empty;
+    }
+
     public async Task<List<EcoResProductDto>> ListAsync(CancellationToken ct = default)
     {
         var products = await Db.Set<EcoResProduct>().AsNoTracking()

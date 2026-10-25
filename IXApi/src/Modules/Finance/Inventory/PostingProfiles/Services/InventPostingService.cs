@@ -18,6 +18,18 @@ public sealed class InventPostingService : BaseService<InventPostingEntity>, IIn
 
     public InventPostingService(IUnitOfWork unitOfWork, ICurrentUserService currentUser,
         ICompanyExecutionContext company) : base(unitOfWork, currentUser) => this.company = company;
+
+    public InventPostingService(IUnitOfWork unitOfWork, ICompanyExecutionContext company)
+        : this(unitOfWork, new NullCurrentUserService(company), company)
+    {
+    }
+
+    private sealed class NullCurrentUserService(ICompanyExecutionContext company) : ICurrentUserService
+    {
+        public string GetCurrentUserId() => string.Empty;
+        public string GetOwnerAccountId() => string.Empty;
+        public string GetDataAreaId() => company.GetDataAreaId();
+    }
     public async Task<List<InventPostingRuleDto>?> ListAsync(int accountType, CancellationToken ct)
     {
         var companyId = company.GetDataAreaId();

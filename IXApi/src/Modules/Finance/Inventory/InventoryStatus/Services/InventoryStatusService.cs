@@ -1,4 +1,6 @@
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Inventory.InventoryStatus.Entities;
@@ -7,13 +9,26 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.Inventory.InventoryStatus;
 
-public sealed class InventoryStatusService(IUnitOfWork unitOfWork, ICompanyExecutionContext company) : IInventoryStatusService
+public sealed class InventoryStatusService : BaseService<WHSInventStatus>, IInventoryStatusService
 {
-    private DbContext Db => unitOfWork.Context;
+    private readonly ICompanyExecutionContext _company;
+
+    public InventoryStatusService(IUnitOfWork unitOfWork, ICurrentUserService currentUser, ICompanyExecutionContext company)
+        : base(unitOfWork, currentUser)
+    {
+        _company = company;
+    }
+
+    public InventoryStatusService(IUnitOfWork unitOfWork, ICompanyExecutionContext company)
+        : this(unitOfWork, new NullCurrentUserService(company), company)
+    {
+    }
+
+    private DbContext Db => _unitOfWork.Context;
 
     public async Task<List<InventoryStatusDto>?> ListAsync(CancellationToken ct)
     {
-        var companyId = company.GetDataAreaId();
+        var companyId = _company.GetDataAreaId();
         if (string.IsNullOrWhiteSpace(companyId)) return null;
         return await Db.Set<WHSInventStatus>().AsNoTracking().Where(x => x.DataAreaId == companyId)
             .OrderBy(x => x.InventStatusId)
@@ -23,7 +38,7 @@ public sealed class InventoryStatusService(IUnitOfWork unitOfWork, ICompanyExecu
 
     public async Task<(InventoryStatusDto? Row, string? Error)> SaveAsync(long? recId, InventoryStatusInputDto input, CancellationToken ct)
     {
-        var companyId = company.GetDataAreaId();
+        var companyId = _company.GetDataAreaId();
         if (string.IsNullOrWhiteSpace(companyId)) return (null, "A company must be selected.");
         var statusId = input.InventStatusId?.Trim().ToUpperInvariant() ?? string.Empty;
         var name = input.Name?.Trim() ?? string.Empty;
@@ -42,13 +57,13 @@ public sealed class InventoryStatusService(IUnitOfWork unitOfWork, ICompanyExecu
         row.InventStatusId = statusId;
         row.Name = name;
         row.InventStatusBlocking = input.Blocked ? NoYes.Yes : NoYes.No;
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return (new(row.RecId, row.InventStatusId, row.Name, input.Blocked), null);
     }
 
     public async Task<string?> DeleteAsync(long recId, CancellationToken ct)
     {
-        var companyId = company.GetDataAreaId();
+        var companyId = _company.GetDataAreaId();
         if (string.IsNullOrWhiteSpace(companyId)) return "A company must be selected.";
         var row = await Db.Set<WHSInventStatus>().FirstOrDefaultAsync(x => x.DataAreaId == companyId && x.RecId == recId, ct);
         if (row is null) return "Inventory status was not found in the selected company.";
@@ -57,7 +72,14 @@ public sealed class InventoryStatusService(IUnitOfWork unitOfWork, ICompanyExecu
             await Db.Set<InventSite>().AnyAsync(x => x.DataAreaId == companyId && x.DefaultInventStatusID == row.InventStatusId, ct))
             return "An inventory status used by a dimension or site cannot be deleted.";
         Db.Remove(row);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return null;
+    }
+
+    private sealed class NullCurrentUserService(ICompanyExecutionContext company) : ICurrentUserService
+    {
+        public string GetCurrentUserId() => string.Empty;
+        public string GetOwnerAccountId() => string.Empty;
+        public string GetDataAreaId() => company.GetDataAreaId();
     }
 }

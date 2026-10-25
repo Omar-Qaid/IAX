@@ -1,4 +1,6 @@
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Inventory.ProductLifecycle.Entities;
@@ -8,9 +10,22 @@ using ReleasedItem = IAX.IXApi.Modules.Finance.Entities.InventTable;
 
 namespace IAX.IXApi.Modules.Finance.Inventory.ProductLifecycle;
 
-public sealed class ProductLifecycleService(IUnitOfWork unitOfWork, ICompanyExecutionContext company) : IProductLifecycleService
+public sealed class ProductLifecycleService : BaseService<EcoResProductLifecycleState>, IProductLifecycleService
 {
-    private DbContext Db => unitOfWork.Context;
+    private readonly ICompanyExecutionContext _company;
+
+    public ProductLifecycleService(IUnitOfWork unitOfWork, ICurrentUserService currentUser, ICompanyExecutionContext company)
+        : base(unitOfWork, currentUser)
+    {
+        _company = company;
+    }
+
+    public ProductLifecycleService(IUnitOfWork unitOfWork, ICompanyExecutionContext company)
+        : this(unitOfWork, new NullCurrentUserService(company), company)
+    {
+    }
+
+    private DbContext Db => _unitOfWork.Context;
 
     public async Task<List<ProductLifecycleStateDto>> ListAsync(CancellationToken ct) =>
         await Db.Set<EcoResProductLifecycleState>().AsNoTracking().OrderBy(x => x.StateId)
@@ -43,7 +58,7 @@ public sealed class ProductLifecycleService(IUnitOfWork unitOfWork, ICompanyExec
         row.BlockSales = input.BlockSales ? NoYes.Yes : NoYes.No;
         row.BlockPurchase = input.BlockPurchase ? NoYes.Yes : NoYes.No;
         row.BlockInventory = input.BlockInventory ? NoYes.Yes : NoYes.No;
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return (new(row.RecId, row.StateId, row.Description, input.IsDefaultOnProductRelease,
             input.BlockSales, input.BlockPurchase, input.BlockInventory), null);
     }
@@ -55,14 +70,14 @@ public sealed class ProductLifecycleService(IUnitOfWork unitOfWork, ICompanyExec
         if (await Db.Set<ReleasedItem>().AnyAsync(x => x.ProductLifecycleStateId == row.StateId, ct))
             return "A product status assigned to released products cannot be deleted.";
         Db.Remove(row);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return null;
     }
 
     public async Task<(ReleasedProductLifecycleDto? Item, string? Error)> AssignAsync(
         long releasedProductRecId, string stateId, CancellationToken ct)
     {
-        var companyId = company.GetDataAreaId();
+        var companyId = _company.GetDataAreaId();
         if (string.IsNullOrWhiteSpace(companyId)) return (null, "A company must be selected.");
         var item = await Db.Set<ReleasedItem>().FirstOrDefaultAsync(
             x => x.RecId == releasedProductRecId && x.DataAreaId == companyId, ct);
@@ -72,7 +87,14 @@ public sealed class ProductLifecycleService(IUnitOfWork unitOfWork, ICompanyExec
                 .AnyAsync(x => x.StateId == normalizedStateId, ct))
             return (null, "Product status was not found.");
         item.ProductLifecycleStateId = normalizedStateId;
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return (new(item.RecId, item.ItemId, item.ProductLifecycleStateId), null);
+    }
+
+    private sealed class NullCurrentUserService(ICompanyExecutionContext company) : ICurrentUserService
+    {
+        public string GetCurrentUserId() => string.Empty;
+        public string GetOwnerAccountId() => string.Empty;
+        public string GetDataAreaId() => company.GetDataAreaId();
     }
 }

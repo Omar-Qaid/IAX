@@ -1,6 +1,9 @@
+using IAX.IXApi.Infrastructure.Persistence.Services;
+using IAX.IXApi.Modules.Finance.Inventory.ProductCategories.Entities;
+
 namespace IAX.IXApi.Modules.Finance.Inventory.ProductCategories;
 
-public interface IProductCategoryService
+public interface IProductCategoryService : IBaseService<EcoResCategoryHierarchy>
 {
     Task<List<CategoryHierarchyDto>> ListHierarchiesAsync(CancellationToken ct);
     Task<(CategoryHierarchyDto? Row, string? Error)> SaveHierarchyAsync(long? recId, CategoryHierarchyInputDto input, CancellationToken ct);

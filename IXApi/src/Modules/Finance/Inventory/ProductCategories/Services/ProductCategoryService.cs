@@ -1,4 +1,6 @@
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Inventory.InventTable;
@@ -7,9 +9,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.Inventory.ProductCategories;
 
-public sealed class ProductCategoryService(IUnitOfWork unitOfWork) : IProductCategoryService
+public sealed class ProductCategoryService : BaseService<EcoResCategoryHierarchy>, IProductCategoryService
 {
-    private DbContext Db => unitOfWork.Context;
+    public ProductCategoryService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
+        : base(unitOfWork, currentUser)
+    {
+    }
+
+    public ProductCategoryService(IUnitOfWork unitOfWork)
+        : this(unitOfWork, new NullCurrentUserService())
+    {
+    }
+
+    private DbContext Db => _unitOfWork.Context;
 
     public async Task<List<CategoryHierarchyDto>> ListHierarchiesAsync(CancellationToken ct) =>
         await Db.Set<EcoResCategoryHierarchy>().AsNoTracking().OrderBy(x => x.Name)
@@ -30,7 +42,7 @@ public sealed class ProductCategoryService(IUnitOfWork unitOfWork) : IProductCat
         if (!recId.HasValue) Db.Add(row);
         row.Name = name;
         row.IsActive = input.IsActive;
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return (new(row.RecId, row.Name, row.IsActive), null);
     }
 
@@ -42,7 +54,7 @@ public sealed class ProductCategoryService(IUnitOfWork unitOfWork) : IProductCat
             await Db.Set<EcoResProductCategory>().AnyAsync(x => x.CategoryHierarchy == recId, ct))
             return "A category hierarchy with categories or product assignments cannot be deleted.";
         Db.Remove(row);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return null;
     }
 
@@ -72,7 +84,7 @@ public sealed class ProductCategoryService(IUnitOfWork unitOfWork) : IProductCat
         row.ParentCategory = input.ParentCategory;
         row.Name = name;
         row.IsActive = input.IsActive;
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return (new(row.RecId, row.CategoryHierarchy, row.ParentCategory, row.Name, row.IsActive), null);
     }
 
@@ -84,7 +96,7 @@ public sealed class ProductCategoryService(IUnitOfWork unitOfWork) : IProductCat
             await Db.Set<EcoResProductCategory>().AnyAsync(x => x.Category == recId, ct))
             return "A category with children or product assignments cannot be deleted.";
         Db.Remove(row);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return null;
     }
 
@@ -137,7 +149,7 @@ public sealed class ProductCategoryService(IUnitOfWork unitOfWork) : IProductCat
         row.Category = category.RecId;
         row.CategoryHierarchy = hierarchy.RecId;
         row.DisplayOrder = input.DisplayOrder;
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return (new(row.RecId, row.Product, row.Category, row.CategoryHierarchy,
             category.Name, hierarchy.Name, row.DisplayOrder), null);
     }
@@ -148,7 +160,7 @@ public sealed class ProductCategoryService(IUnitOfWork unitOfWork) : IProductCat
             .FirstOrDefaultAsync(x => x.RecId == recId && x.Product == productRecId, ct);
         if (row is null) return "Product category assignment was not found.";
         Db.Remove(row);
-        await unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CompleteAsync(ct);
         return null;
     }
 
@@ -167,5 +179,12 @@ public sealed class ProductCategoryService(IUnitOfWork unitOfWork) : IProductCat
             current = parent.ParentCategory;
         }
         return null;
+    }
+
+    private sealed class NullCurrentUserService : ICurrentUserService
+    {
+        public string GetCurrentUserId() => string.Empty;
+        public string GetOwnerAccountId() => string.Empty;
+        public string GetDataAreaId() => string.Empty;
     }
 }
