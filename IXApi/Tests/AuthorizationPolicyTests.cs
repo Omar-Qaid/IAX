@@ -4,9 +4,13 @@ using IAX.IXApi.Bootstrap.Extensions;
 using IAX.IXApi.Modules.Identity.Permissions;
 using IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks;
 using IAX.IXApi.Modules.Administration.BackgroundJobs;
+using IAX.IXApi.Modules.Administration.BackgroundJobs.Controllers;
 using IAX.IXApi.Modules.Administration.AuditLogs;
+using IAX.IXApi.Modules.Administration.AuditLogs.Controllers;
 using IAX.IXApi.Modules.Administration.DataManagement;
+using IAX.IXApi.Modules.Administration.DataManagement.Controllers;
 using IAX.IXApi.Modules.Administration.Settings;
+using IAX.IXApi.Modules.Administration.Settings.Controllers;
 using IAX.IXApi.Modules.Communication.Chat;
 using IAX.IXApi.Modules.Communication.Chat.Controllers;
 using IAX.IXApi.Modules.Communication.Chat.Services;
@@ -287,7 +291,9 @@ public sealed class AuthorizationPolicyTests
     {
         var target = methodName is null
             ? (System.Reflection.MemberInfo)controllerType
-            : controllerType.GetMethods().Single(method => method.Name == methodName);
+            : controllerType.GetMethods()
+                .Where(method => method.Name == methodName)
+                .Single(method => method.IsDefined(typeof(DomainPermissionAttribute), true));
         var data = target.CustomAttributes.Single(attribute => attribute.AttributeType == typeof(DomainPermissionAttribute));
         var arguments = data.ConstructorArguments.Select(argument => argument.Value as string).ToArray();
 
@@ -298,7 +304,8 @@ public sealed class AuthorizationPolicyTests
 
     private static void AssertNoDomainPermission(Type controllerType, string methodName)
     {
-        var method = controllerType.GetMethods().Single(candidate => candidate.Name == methodName);
+        var method = controllerType.GetMethods()
+            .Single(candidate => candidate.Name == methodName && candidate.DeclaringType == controllerType);
         Assert.DoesNotContain(method.CustomAttributes, attribute => attribute.AttributeType == typeof(DomainPermissionAttribute));
     }
 }

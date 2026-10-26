@@ -2,6 +2,7 @@ using IAX.IXApi.Modules.Administration.BackgroundJobs.Entities;
 using IAX.IXApi.Modules.Administration.BackgroundJobs.Services;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Administration.Settings;
+using IAX.IXApi.Modules.Administration.Settings.Controllers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;

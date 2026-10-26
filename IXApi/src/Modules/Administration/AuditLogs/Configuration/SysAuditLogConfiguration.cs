@@ -10,12 +10,6 @@ namespace IAX.IXApi.Modules.Administration.AuditLogs.Configuration
         {
             builder.ToTable("SysAuditLogs");
             builder.HasKey(x => x.RecId);
-            builder.Property(x => x.TableName).HasMaxLength(128).IsRequired();
-            builder.Property(x => x.RecordId).HasMaxLength(128).IsRequired();
-            builder.Property(x => x.ColumnName).HasMaxLength(128).IsRequired();
-            builder.Property(x => x.ChangedBy).HasMaxLength(256).IsRequired();
-            builder.Property(x => x.Operation).HasMaxLength(32).IsRequired();
-            builder.HasIndex(x => new { x.TableName, x.RecordId });
         }
     }
 }

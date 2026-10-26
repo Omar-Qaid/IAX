@@ -35,7 +35,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Controllers
 
         [HttpPost]
         [DomainPermission("System", "BackgroundJobs", "Create")]
-        public async Task<IActionResult> CreateGroup([FromBody] SysBackgroundJobGroupDto dto, CancellationToken ct)
+        public override async Task<ActionResult<APIResponse<SysBackgroundJobGroupDto>>> Create([FromBody] SysBackgroundJobGroupDto dto, CancellationToken ct = default)
         {
             var result = await _groupsService.CreateAsync(dto, ct);
             return result.Status == BatchSetupStatus.Conflict
@@ -68,10 +68,6 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Controllers
                 _ => Ok(APIResponse<bool>.Ok(true, "Batch group deleted."))
             };
         }
-
-        [NonAction]
-        public override Task<ActionResult<APIResponse<SysBackgroundJobGroupDto>>> Create(SysBackgroundJobGroupDto dto, CancellationToken cancellationToken = default) =>
-            base.Create(dto, cancellationToken);
 
         [NonAction]
         public override Task<ActionResult<APIResponse<IEnumerable<SysBackgroundJobGroupDto>>>> GetAll(CancellationToken cancellationToken = default) =>

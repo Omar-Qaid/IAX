@@ -1,5 +1,6 @@
 using IAX.IXApi.Modules.Administration.BackgroundJobs;
 using IAX.IXApi.Modules.Administration.BackgroundJobs.Configuration;
+using IAX.IXApi.Modules.Administration.BackgroundJobs.Dtos;
 using IAX.IXApi.Modules.Administration.BackgroundJobs.Entities;
 using Mapster;
 using Xunit;

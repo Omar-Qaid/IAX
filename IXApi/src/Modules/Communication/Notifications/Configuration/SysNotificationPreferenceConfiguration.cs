@@ -10,7 +10,6 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Configuration
         {
             builder.ToTable("SysNotificationPreferences");
             builder.HasKey(x => x.RecId);
-            builder.HasIndex(x => new { x.UserId, x.Category }).IsUnique();
         }
     }
 }

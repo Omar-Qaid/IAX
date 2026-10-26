@@ -35,7 +35,7 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Controllers
 
         [HttpPost]
         [DomainPermission("System", "BackgroundJobs", "Create")]
-        public async Task<IActionResult> CreatePeriod([FromBody] BatchJobActivePeriodDto dto, CancellationToken ct)
+        public override async Task<ActionResult<APIResponse<BatchJobActivePeriodDto>>> Create([FromBody] BatchJobActivePeriodDto dto, CancellationToken ct = default)
         {
             var result = await _periodService.CreateAsync(dto, ct);
             return result.Status == BatchSetupStatus.Conflict
@@ -68,10 +68,6 @@ namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Controllers
                 _ => Ok(APIResponse<bool>.Ok(true, "Active period deleted."))
             };
         }
-
-        [NonAction]
-        public override Task<ActionResult<APIResponse<BatchJobActivePeriodDto>>> Create(BatchJobActivePeriodDto dto, CancellationToken cancellationToken = default) =>
-            base.Create(dto, cancellationToken);
 
         [NonAction]
         public override Task<ActionResult<APIResponse<IEnumerable<BatchJobActivePeriodDto>>>> GetAll(CancellationToken cancellationToken = default) =>

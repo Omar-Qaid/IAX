@@ -18,7 +18,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Services
         {
             _unitOfWork = unitOfWork;
             _currentUser = currentUser;
-            _repository = _unitOfWork.Repository<T>();
+            _repository = _unitOfWork?.Repository<T>()!;
         }
 
         public virtual async Task<IEnumerable<T>> GetAllAsync(Func<IQueryable<T>, IIncludableQueryable<T, object>>? include = null, CancellationToken cancellationToken = default)
