@@ -101,9 +101,14 @@ public sealed class WorkflowRequestTrackingSeeder : IAX.IXApi.Infrastructure.Per
         _ = roles;
         var createdBy = (await users.FindByNameAsync("sys"))?.Id ?? "sys";
 
-        await SeedExecutionAsync(db, createdBy, ct);
+        // The imported request snapshot belongs to legacy process 662. The
+        // normal demo path may run without that optional legacy import.
+        if (await db.WfProcesses.IgnoreQueryFilters().AnyAsync(x => x.RecId == ProcessId, ct))
+        {
+            await SeedExecutionAsync(db, createdBy, ct);
+            await SeedPrintTemplateAsync(db, createdBy, ct);
+        }
         await SeedRequestForEveryProcessAsync(db, createdBy, ct);
-        await SeedPrintTemplateAsync(db, createdBy, ct);
         await SeedPrintTemplateForEveryProcessAsync(db, createdBy, ct);
     }
 
