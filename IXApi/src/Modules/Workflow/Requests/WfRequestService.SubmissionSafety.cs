@@ -1,6 +1,6 @@
 using System.Text.Json;
 using IAX.IXApi.Modules.Organization.DocumentManagement.Entities;
-using IAX.IXApi.Modules.Organization.DocumentManagement.Models;
+using IAX.IXApi.Modules.Organization.DocumentManagement.Dtos;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Workflow.Requests;

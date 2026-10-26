@@ -1,7 +1,7 @@
 using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Modules.Organization.DocumentManagement.Entities;
-using IAX.IXApi.Modules.Organization.DocumentManagement.Models;
-using IAX.IXApi.Modules.Organization.DocumentManagement.Storage;
+using IAX.IXApi.Modules.Organization.DocumentManagement.Dtos;
+using IAX.IXApi.Modules.Organization.DocumentManagement.Interfaces;
 using IAX.IXApi.Modules.Organization.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;

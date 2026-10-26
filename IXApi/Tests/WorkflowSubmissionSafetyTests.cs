@@ -5,7 +5,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using System.Data.Common;
-using IAX.IXApi.Modules.Organization.DocumentManagement.Storage;
+using IAX.IXApi.Modules.Organization.DocumentManagement.Interfaces;
 using Xunit;
 
 namespace IAX.IXApi.Tests;

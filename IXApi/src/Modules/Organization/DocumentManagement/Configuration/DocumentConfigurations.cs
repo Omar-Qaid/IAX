@@ -1,8 +1,9 @@
+using IAX.IXApi.Modules.Organization.DocumentManagement.Entities;
 using IAX.IXApi.Shared.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace IAX.IXApi.Modules.Organization.DocumentManagement.Entities;
+namespace IAX.IXApi.Modules.Organization.DocumentManagement.Configuration;
 
 public sealed class DocuTypeConfiguration : IEntityTypeConfiguration<DocuType>
 {

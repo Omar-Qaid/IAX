@@ -1,4 +1,4 @@
-namespace IAX.IXApi.Modules.Organization.DocumentManagement.Storage;
+namespace IAX.IXApi.Modules.Organization.DocumentManagement.Interfaces;
 
 public sealed class DocumentStorageOptions
 {

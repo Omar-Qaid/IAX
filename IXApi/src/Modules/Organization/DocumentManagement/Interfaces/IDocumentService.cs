@@ -1,6 +1,6 @@
-using IAX.IXApi.Modules.Organization.DocumentManagement.Models;
+using IAX.IXApi.Modules.Organization.DocumentManagement.Dtos;
 
-namespace IAX.IXApi.Modules.Organization.DocumentManagement.Services;
+namespace IAX.IXApi.Modules.Organization.DocumentManagement.Interfaces;
 
 public interface IDocumentService
 {

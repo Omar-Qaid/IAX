@@ -29,10 +29,10 @@ namespace IAX.IXApi.Modules.Workflow.Requests
         private readonly IWorkflowDataContext _context;
         private readonly ISysNotificationService _notifications;
         private readonly IAppPermissionService _permissions;
-        private readonly IAX.IXApi.Modules.Organization.DocumentManagement.Services.IDocumentService _documents;
-        private readonly IAX.IXApi.Modules.Organization.DocumentManagement.Storage.IFileStorageProvider _fileStorage;
+        private readonly IAX.IXApi.Modules.Organization.DocumentManagement.Interfaces.IDocumentService _documents;
+        private readonly IAX.IXApi.Modules.Organization.DocumentManagement.Interfaces.IFileStorageProvider _fileStorage;
 
-        public WfRequestService(IUnitOfWork unitOfWork, ICurrentUserService currentUser, ISysNumberSequenceService sequences, IWorkflowDataContext context, ISysNotificationService notifications, IAppPermissionService permissions, IAX.IXApi.Modules.Organization.DocumentManagement.Services.IDocumentService documents, IAX.IXApi.Modules.Organization.DocumentManagement.Storage.IFileStorageProvider fileStorage) : base(unitOfWork, currentUser)
+        public WfRequestService(IUnitOfWork unitOfWork, ICurrentUserService currentUser, ISysNumberSequenceService sequences, IWorkflowDataContext context, ISysNotificationService notifications, IAppPermissionService permissions, IAX.IXApi.Modules.Organization.DocumentManagement.Interfaces.IDocumentService documents, IAX.IXApi.Modules.Organization.DocumentManagement.Interfaces.IFileStorageProvider fileStorage) : base(unitOfWork, currentUser)
         {
             _sequences = sequences;
             _context = context;

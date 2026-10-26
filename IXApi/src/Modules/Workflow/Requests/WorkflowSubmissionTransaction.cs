@@ -1,4 +1,4 @@
-using IAX.IXApi.Modules.Organization.DocumentManagement.Storage;
+using IAX.IXApi.Modules.Organization.DocumentManagement.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Workflow.Requests;

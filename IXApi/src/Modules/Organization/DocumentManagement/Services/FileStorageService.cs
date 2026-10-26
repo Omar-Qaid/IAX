@@ -1,4 +1,4 @@
-using IAX.IXApi.Modules.Organization.DocumentManagement.Storage;
+using IAX.IXApi.Modules.Organization.DocumentManagement.Interfaces;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using System.Security.Cryptography;
