@@ -1,8 +1,9 @@
 using FluentValidation;
+using IAX.IXApi.Shared.Application.Validation;
 
 namespace IAX.IXApi.Modules.Workflow.PrintTemplates;
 
-public sealed class CreatePrintTemplateDtoValidator : AbstractValidator<CreatePrintTemplateDto>
+public sealed class CreatePrintTemplateDtoValidator : BaseValidator<CreatePrintTemplateDto>
 {
     public CreatePrintTemplateDtoValidator()
     {
@@ -18,7 +19,7 @@ public sealed class CreatePrintTemplateDtoValidator : AbstractValidator<CreatePr
     }
 }
 
-public sealed class UpdatePrintTemplateDtoValidator : AbstractValidator<UpdatePrintTemplateDto>
+public sealed class UpdatePrintTemplateDtoValidator : BaseValidator<UpdatePrintTemplateDto>
 {
     public UpdatePrintTemplateDtoValidator()
     {

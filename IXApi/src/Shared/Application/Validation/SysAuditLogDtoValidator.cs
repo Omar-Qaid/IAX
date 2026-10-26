@@ -2,7 +2,7 @@ using FluentValidation;
 
 namespace IAX.IXApi.Shared.Application.Validation
 {
-    public class SysAuditLogDtoValidator : AbstractValidator<IAX.IXApi.Shared.Application.Contracts.SysAuditLogDto>
+    public class SysAuditLogDtoValidator : BaseValidator<IAX.IXApi.Shared.Application.Contracts.SysAuditLogDto>
     {
         public SysAuditLogDtoValidator()
         {
