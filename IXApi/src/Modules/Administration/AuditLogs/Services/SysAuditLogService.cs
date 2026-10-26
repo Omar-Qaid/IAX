@@ -1,11 +1,9 @@
-using IAX.IXApi.Shared.Application.Attributes;
-using IAX.IXApi.Shared.Domain.Entities;
-using IAX.IXApi.Modules.Administration.AuditLogs.Entities;
-using IAX.IXApi.Modules.Administration.DataManagement.Contracts;
-using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Infrastructure.Identity;
+using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Infrastructure.Persistence.Services;
-using IAX.IXApi.Shared.Application.Contracts;
+using IAX.IXApi.Modules.Administration.AuditLogs.Dtos;
+using IAX.IXApi.Modules.Administration.AuditLogs.Entities;
+using IAX.IXApi.Modules.Administration.AuditLogs.Interfaces;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 
@@ -48,5 +46,3 @@ namespace IAX.IXApi.Modules.Administration.AuditLogs.Services
         }
     }
 }
-
-

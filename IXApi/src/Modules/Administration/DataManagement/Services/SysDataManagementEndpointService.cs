@@ -1,6 +1,8 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
 using IAX.IXApi.Modules.Administration.DataManagement.Contracts;
+using IAX.IXApi.Modules.Administration.DataManagement.Dtos;
+using IAX.IXApi.Modules.Administration.DataManagement.Interfaces;
 using IAX.IXApi.Shared.Application.Contracts;
 using IAX.IXApi.Shared.Domain.Entities;
 

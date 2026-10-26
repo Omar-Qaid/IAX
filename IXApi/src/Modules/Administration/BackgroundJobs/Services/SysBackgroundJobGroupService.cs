@@ -1,13 +1,16 @@
 using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
+using IAX.IXApi.Modules.Administration.BackgroundJobs.Dtos;
 using IAX.IXApi.Modules.Administration.BackgroundJobs.Entities;
+using IAX.IXApi.Modules.Administration.BackgroundJobs.Interfaces;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services;
 
 public sealed class SysBackgroundJobGroupService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
-    : ISysBackgroundJobGroupService
+    : BaseService<SysBackgroundJobGroup>(unitOfWork, currentUser), ISysBackgroundJobGroupService
 {
     public async Task<List<SysBackgroundJobGroupDto>> GetAsync(CancellationToken cancellationToken)
     {

@@ -1,10 +1,14 @@
+using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Administration.BackgroundJobs.Entities;
+using IAX.IXApi.Modules.Administration.BackgroundJobs.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Administration.BackgroundJobs.Services;
 
-public sealed class BatchSettingsService(IUnitOfWork unitOfWork) : IBatchSettingsService
+public sealed class BatchSettingsService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
+    : BaseService<BatchSettings>(unitOfWork, currentUser), IBatchSettingsService
 {
     public async Task<BatchSettings> GetAsync(CancellationToken cancellationToken) =>
         await unitOfWork.Context.Set<BatchSettings>().AsNoTracking()

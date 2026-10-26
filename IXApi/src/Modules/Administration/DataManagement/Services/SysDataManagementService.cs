@@ -2,6 +2,8 @@ using IAX.IXApi.Shared.Application.Attributes;
 using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Administration.AuditLogs.Entities;
 using IAX.IXApi.Modules.Administration.DataManagement.Contracts;
+using IAX.IXApi.Modules.Administration.DataManagement.Dtos;
+using IAX.IXApi.Modules.Administration.DataManagement.Interfaces;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
