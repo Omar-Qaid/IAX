@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Persistence;
+﻿using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Modules.Identity.Authentication;
 using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Identity.Roles;
@@ -38,8 +38,19 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
     /// Retains the original synthetic organization dataset for explicit demo use.
     /// It is not part of the normal database seed pipeline.
     /// </summary>
-    public class OrganizationDemoSeeder : ISeeder
+    public class OrganizationDemoSeeder : IAX.IXApi.Infrastructure.Persistence.Seeding.Core.BaseModuleSeeder
     {
+        public override string Id => "Finance.Foundation.OrgDemo";
+        public override int Version => 1;
+        public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory Category => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory.Demo;
+        public override System.Collections.Generic.IReadOnlyCollection<string> DependsOn => new[] { "Finance.Foundation.Structure" };
+        public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy Policy => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy.Repeatable;
+        public override string Scope => "dat";
+
+        public override System.Threading.Tasks.Task SeedAsync(IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeedingContext context, System.Threading.CancellationToken cancellationToken)
+        {
+            return SeedAsync(context.Db, context.Roles!, context.Users!, cancellationToken);
+        }
         public async Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles, UserManager<AspNetUser> users, CancellationToken ct)
         {
             var sysUser = await users.FindByNameAsync("sys");

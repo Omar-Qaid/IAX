@@ -7,6 +7,8 @@ using IAX.IXApi.Modules.Identity.Roles;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
+using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
+
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
 {
     /// <summary>
@@ -14,8 +16,19 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
     /// NumberSequence must match the value passed to ISysNumberSequenceService.NextAsync
     /// (or AutoCodeExtensions.EnsureCodeAsync) from the corresponding service.
     /// </summary>
-    public class NumberSequenceSeeder : ISeeder
+    public class NumberSequenceSeeder : BaseModuleSeeder
     {
+        public override string Id => "Administration.NumberSequences";
+        public override int Version => 1;
+        public override SeederCategory Category => SeederCategory.Required;
+        public override SeederExecutionPolicy Policy => SeederExecutionPolicy.Repeatable;
+        public override string Scope => "global";
+
+        public override Task SeedAsync(SeedingContext context, CancellationToken cancellationToken)
+        {
+            return SeedAsync(context.Db, context.Roles!, context.Users!, cancellationToken);
+        }
+
         public async Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles, UserManager<AspNetUser> users, CancellationToken ct)
         {
             var sysUser = await users.FindByNameAsync("sys");

@@ -10,10 +10,24 @@ using IAX.IXApi.Modules.Identity.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
+using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
+
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
 {
-    public class CustPaymModeSeeder : ISeeder
+    public class CustPaymModeSeeder : BaseModuleSeeder
     {
+        public override string Id => "Finance.AccountsReceivable.PaymModes";
+        public override int Version => 1;
+        public override SeederCategory Category => SeederCategory.Reference;
+        public override IReadOnlyCollection<string> DependsOn => new[] { "Finance.Foundation.CompanyInfo" };
+        public override SeederExecutionPolicy Policy => SeederExecutionPolicy.Repeatable;
+        public override string Scope => "dat";
+
+        public override Task SeedAsync(SeedingContext context, CancellationToken cancellationToken)
+        {
+            return SeedAsync(context.Db, context.Roles!, context.Users!, cancellationToken);
+        }
+
         public async Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles, UserManager<AspNetUser> users, CancellationToken ct)
         {
             var seeds = new[]

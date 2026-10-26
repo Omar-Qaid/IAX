@@ -1,3 +1,4 @@
+﻿using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Api.Filters;
 using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Infrastructure.Persistence.Interceptors;
@@ -72,6 +73,7 @@ namespace IAX.IXApi.Bootstrap.Extensions
             services.AddHealthChecks();
             services.AddResponseCompression();
             services.AddRequestDecompression();
+            services.AddSeedingCore(configuration);
 
             return services;
         }

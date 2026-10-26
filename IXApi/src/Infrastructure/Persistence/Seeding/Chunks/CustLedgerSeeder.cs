@@ -1,3 +1,4 @@
+﻿using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Modules.Identity.Authentication;
 using IAX.IXApi.Modules.Identity.Users;
@@ -10,8 +11,19 @@ using IAX.IXApi.Modules.Finance.Common;
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
 {
     /// <summary>Seeds CustLedger posting profiles and their account lines.</summary>
-    public class CustLedgerSeeder : ISeeder
+    public  class CustLedgerSeeder : IAX.IXApi.Infrastructure.Persistence.Seeding.Core.BaseModuleSeeder
+{
+    public override string Id => "Finance.AccountsReceivable.CustLedger";
+    public override int Version => 1;
+    public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory Category => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory.Reference;
+    public override System.Collections.Generic.IReadOnlyCollection<string> DependsOn => new[] { "Finance.Foundation.CompanyInfo" };
+    public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy Policy => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy.Repeatable;
+    public override string Scope => "dat";
+
+    public override System.Threading.Tasks.Task SeedAsync(IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeedingContext context, System.Threading.CancellationToken cancellationToken)
     {
+        return SeedAsync(context.Db, context.Roles!, context.Users!, cancellationToken);
+    }
         public async Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles, UserManager<AspNetUser> users, CancellationToken ct)
         {
             // ── CustLedger profiles ─────────────────────────────────────────────

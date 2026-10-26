@@ -2,12 +2,24 @@ using IAX.IXApi.Modules.Identity.Roles;
 using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Organization.DocumentManagement.Entities;
 using Microsoft.AspNetCore.Identity;
+using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks;
 
-public sealed class DocumentManagementSeeder : ISeeder
+public sealed class DocumentManagementSeeder : BaseModuleSeeder
 {
+    public override string Id => "Organization.DocumentManagement";
+    public override int Version => 1;
+    public override SeederCategory Category => SeederCategory.Required;
+    public override SeederExecutionPolicy Policy => SeederExecutionPolicy.Repeatable;
+    public override string Scope => "global";
+
+    public override Task SeedAsync(SeedingContext context, CancellationToken cancellationToken)
+    {
+        return SeedAsync(context.Db, context.Roles!, context.Users!, cancellationToken);
+    }
+
     public async Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles, UserManager<AspNetUser> users, CancellationToken ct)
     {
         var existing = await db.DocuTypes.IgnoreQueryFilters().Select(x => x.TypeId).ToListAsync(ct);

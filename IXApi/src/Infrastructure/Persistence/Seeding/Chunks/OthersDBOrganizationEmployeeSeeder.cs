@@ -1,4 +1,5 @@
 using DocumentFormat.OpenXml.Spreadsheet;
+using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Foundation.Genders;
@@ -26,6 +27,18 @@ public sealed class OthersDBOrganizationEmployeeSeeder : OthersDBSeedData
     public OthersDBOrganizationEmployeeSeeder(string? seedDbConnectionString = null)
         : base(seedDbConnectionString)
     {
+    }
+
+    public override string Id => "Finance.Foundation.LegacyEmployees";
+    public override int Version => 1;
+    public override SeederCategory Category => SeederCategory.LegacyImport;
+    public override IReadOnlyCollection<string> DependsOn => new[] { "Finance.Foundation.CompanyInfo" };
+    public override SeederExecutionPolicy Policy => SeederExecutionPolicy.RunOnce;
+    public override string Scope => "dat";
+
+    public override Task SeedAsync(SeedingContext context, CancellationToken cancellationToken)
+    {
+        return SeedAsync(context.Db, context.Roles!, context.Users!, cancellationToken);
     }
 
     public override async Task SeedAsync(ApplicationDbContext db,RoleManager<AspNetRole> roles,UserManager<AspNetUser> users,CancellationToken ct)
@@ -57,7 +70,7 @@ public sealed class OthersDBOrganizationEmployeeSeeder : OthersDBSeedData
     private static async Task UpsertGendersAsync(ApplicationDbContext db,LookupByte[] rows,string owner,CancellationToken ct)
     {
         var existing=await db.Genders.IgnoreQueryFilters().ToDictionaryAsync(x=>x.RecId,ct);
-        foreach(var row in rows){if(existing.TryGetValue(row.Id,out var value)){Apply(value,row.Name,row.Description,true);}else db.Genders.Add(new Modules.Finance.Foundation.Genders.Gender { RecId=row.Id,Code=$"GEN{row.Id}",Name=Text(row.Name,255),Description=Text(row.Description,1000),IsActive=true,CreatedBy=owner,OwnerAccountId=owner});}
+        foreach(var row in rows){if(existing.TryGetValue(row.Id,out var value)){Apply(value,row.Name,row.Description,true);}else db.Genders.Add(new IAX.IXApi.Modules.Finance.Foundation.Genders.Gender { RecId=row.Id,Code=$"GEN{row.Id}",Name=Text(row.Name,255),Description=Text(row.Description,1000),IsActive=true,CreatedBy=owner,OwnerAccountId=owner});}
         await SaveWithOptionalIdentityAsync(db,"Genders",ct);
     }
 
@@ -102,9 +115,8 @@ public sealed class OthersDBOrganizationEmployeeSeeder : OthersDBSeedData
     {
         var hasAdded=db.ChangeTracker.Entries().Any(x=>x.State==EntityState.Added&&string.Equals(x.Metadata.GetTableName(),table,StringComparison.OrdinalIgnoreCase));
         if(!hasAdded){await db.SaveChangesAsync(ct);return;}
-        await db.Database.OpenConnectionAsync(ct);
-        try{await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT "+table+" ON",ct);await db.SaveChangesAsync(ct);await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT "+table+" OFF",ct);}
-        finally{await db.Database.CloseConnectionAsync();}
+        var helper = new IdentityInsertHelper();
+        await helper.ExecuteWithIdentityInsertAsync(db, table, () => Task.CompletedTask, ct);
     }
 
     private async Task<Data> ReadAsync(CancellationToken ct)

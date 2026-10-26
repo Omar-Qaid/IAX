@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,11 +14,23 @@ using IAX.IXApi.Modules.Identity.Roles;
 using IAX.IXApi.Modules.Identity.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
 {
-    public class MarkupTableSeeder : ISeeder
+    public class MarkupTableSeeder : IAX.IXApi.Infrastructure.Persistence.Seeding.Core.BaseModuleSeeder
     {
+        public override string Id => "Finance.AccountsReceivable.Markup";
+        public override int Version => 1;
+        public override SeederCategory Category => SeederCategory.Reference;
+        public override IReadOnlyCollection<string> DependsOn => new[] { "Finance.Foundation.CompanyInfo" };
+        public override SeederExecutionPolicy Policy => SeederExecutionPolicy.Repeatable;
+        public override string Scope => "dat";
+
+        public override Task SeedAsync(IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeedingContext context, CancellationToken cancellationToken)
+        {
+            return SeedAsync(context.Db, context.Roles!, context.Users!, cancellationToken);
+        }
         public async Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles, UserManager<AspNetUser> users, CancellationToken ct)
         {
             var seeds = new[]

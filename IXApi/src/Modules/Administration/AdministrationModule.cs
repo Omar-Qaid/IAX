@@ -102,7 +102,6 @@ public static class AdministrationModule
         services.AddScoped<IValidator<BatchJobActivePeriodDto>, BatchJobActivePeriodDtoValidator>();
         services.AddScoped<IValidator<BatchSettingsDto>, BatchSettingsDtoValidator>();
         services.AddScoped<IValidator<SysExportRequest>, SysExportRequestValidator>();
-
         return services;
     }
 }

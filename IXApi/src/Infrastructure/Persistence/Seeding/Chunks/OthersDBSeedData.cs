@@ -1,3 +1,4 @@
+using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Modules.Identity.Roles;
 using IAX.IXApi.Modules.Identity.Users;
 using Microsoft.AspNetCore.Identity;
@@ -10,7 +11,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks;
 /// Base class for seeders that read sanitized data from the database configured
 /// by <c>ConnectionStrings:SeedDbConnString</c>.
 /// </summary>
-public abstract class OthersDBSeedData : ISeeder
+public abstract class OthersDBSeedData : BaseModuleSeeder
 {
     protected OthersDBSeedData(string? seedDbConnectionString)
     {
@@ -44,10 +45,4 @@ public abstract class OthersDBSeedData : ISeeder
 
         return json.ToString();
     }
-
-    public abstract Task SeedAsync(
-        ApplicationDbContext db,
-        RoleManager<AspNetRole> roles,
-        UserManager<AspNetUser> users,
-        CancellationToken ct);
 }

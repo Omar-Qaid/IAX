@@ -15,12 +15,24 @@ using IAX.IXApi.Modules.Communication.Notifications.Entities;
 using IAX.IXApi.Modules.Identity.Roles;
 using IAX.IXApi.Modules.Identity.Users;
 using Microsoft.AspNetCore.Identity;
+using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
 {
-    public partial class SettingsSeeder : ISeeder
+    public partial class SettingsSeeder : BaseModuleSeeder
     {
+        public override string Id => "Administration.Settings";
+        public override int Version => 1;
+        public override SeederCategory Category => SeederCategory.Required;
+        public override SeederExecutionPolicy Policy => SeederExecutionPolicy.Repeatable;
+        public override string Scope => "global";
+
+        public override Task SeedAsync(SeedingContext context, CancellationToken cancellationToken)
+        {
+            return SeedAsync(context.Db, context.Roles!, context.Users!, cancellationToken);
+        }
+
         public async Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles, UserManager<AspNetUser> users, CancellationToken ct)
         {
             var already = await db.SysSettings.AnyAsync(ct);

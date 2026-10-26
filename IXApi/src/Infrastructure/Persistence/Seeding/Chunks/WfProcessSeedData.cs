@@ -1,3 +1,4 @@
+﻿using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Infrastructure.Persistence.Seeding.Processes.Process590;
 using IAX.IXApi.Infrastructure.Persistence.Seeding.Processes.Process603;
@@ -13,8 +14,19 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks;
 /// Runtime requests and history are intentionally not seeded. Add new simple
 /// forms to the form catalog instead of duplicating seeding logic.
 /// </summary>
-public sealed partial class WfProcessSeedData : ISeeder
+public sealed partial  class WfProcessSeedData : IAX.IXApi.Infrastructure.Persistence.Seeding.Core.BaseModuleSeeder
 {
+    public override string Id => "Workflow.ProcessMaster";
+    public override int Version => 1;
+    public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory Category => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory.Required;
+    public override System.Collections.Generic.IReadOnlyCollection<string> DependsOn => new[] { "Identity.MasterData" };
+    public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy Policy => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy.Repeatable;
+    public override string Scope => "global";
+
+    public override System.Threading.Tasks.Task SeedAsync(IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeedingContext context, System.Threading.CancellationToken cancellationToken)
+    {
+        return SeedAsync(context.Db, context.Roles!, context.Users!, cancellationToken);
+    }
     private const string ProcessCode = "PAYMENT_REQUEST";
     private const string RequiredRule = "{\"validations\":[{\"type\":\"required\",\"active\":true}]}";
 

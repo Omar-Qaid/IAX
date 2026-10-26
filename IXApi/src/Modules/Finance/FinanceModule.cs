@@ -360,7 +360,6 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<FluentValidation.IValidator<Foundation.Tax.TaxDataDto>, Foundation.Tax.Validation.TaxDataDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<Foundation.Tax.TaxGroupDataDto>, Foundation.Tax.Validation.TaxGroupDataDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<Foundation.Tax.TaxOnItemDto>, Foundation.Tax.Validation.TaxOnItemDtoValidator>();
-
             return services;
         }
     }

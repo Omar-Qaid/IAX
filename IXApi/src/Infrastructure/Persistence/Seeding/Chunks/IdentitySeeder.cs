@@ -9,12 +9,27 @@ using IAX.IXApi.Modules.Identity.Permissions;
 using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Identity.Roles;
 using Microsoft.AspNetCore.Identity;
+using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
 {
-    public class IdentitySeeder : ISeeder
+    public class IdentitySeeder : BaseModuleSeeder
     {
+        public override string Id => "Identity.MasterData";
+        public override int Version => 1;
+        public override SeederCategory Category => SeederCategory.Required;
+        public override IReadOnlyCollection<string> DependsOn => new[] { "Administration.Settings" };
+        public override SeederExecutionPolicy Policy => SeederExecutionPolicy.Repeatable;
+        public override string Scope => "global";
+
+        public override async Task SeedAsync(SeedingContext context, CancellationToken cancellationToken)
+        {
+            if (context.Roles != null) await SeedRolesAsync(context.Roles);
+            if (context.Users != null) await SeedUsersAsync(context.Users);
+            await SeedPermissionsAsync(context.Db, cancellationToken);
+            if (context.Roles != null) await AssignAllPermissionsToAdminAsync(context.Db, context.Roles, cancellationToken);
+        }
         private static readonly string[] Actions = ["View", "Create", "Edit", "Delete"];
 
         private static readonly (string Module, string Resource, string Action)[] AdditionalPermissions =

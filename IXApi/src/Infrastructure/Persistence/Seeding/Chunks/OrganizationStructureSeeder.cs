@@ -1,3 +1,4 @@
+﻿using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Modules.Identity.Roles;
 using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Finance.Foundation.OrganizationUnits;
@@ -10,8 +11,19 @@ using Microsoft.EntityFrameworkCore;
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks;
 
 /// <summary>Repeatable example structure shared by all modules.</summary>
-public sealed class OrganizationStructureSeeder : ISeeder
+public sealed  class OrganizationStructureSeeder : IAX.IXApi.Infrastructure.Persistence.Seeding.Core.BaseModuleSeeder
 {
+    public override string Id => "Finance.Foundation.Structure";
+    public override int Version => 1;
+    public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory Category => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory.Reference;
+    public override System.Collections.Generic.IReadOnlyCollection<string> DependsOn => new[] { "Finance.Foundation.CompanyInfo" };
+    public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy Policy => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy.Repeatable;
+    public override string Scope => "dat";
+
+    public override System.Threading.Tasks.Task SeedAsync(IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeedingContext context, System.Threading.CancellationToken cancellationToken)
+    {
+        return SeedAsync(context.Db, context.Roles!, context.Users!, cancellationToken);
+    }
     public const string SeedCompany = "dat";
     public static readonly DateOnly EffectiveFrom = new(2026, 1, 1);
 

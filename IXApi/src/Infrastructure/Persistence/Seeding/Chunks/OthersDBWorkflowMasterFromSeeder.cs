@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text.Json;
+using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Modules.Identity.Roles;
 using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Workflow.Activities;
@@ -28,6 +29,18 @@ public sealed class OthersDBWorkflowMasterFromSeeder : OthersDBSeedData
     public OthersDBWorkflowMasterFromSeeder(string? seedDbConnectionString = null)
         : base(seedDbConnectionString)
     {
+    }
+
+    public override string Id => "Workflow.LegacyMaster";
+    public override int Version => 1;
+    public override SeederCategory Category => SeederCategory.LegacyImport;
+    public override IReadOnlyCollection<string> DependsOn => new[] { "Identity.MasterData" };
+    public override SeederExecutionPolicy Policy => SeederExecutionPolicy.RunOnce;
+    public override string Scope => "global";
+
+    public override Task SeedAsync(SeedingContext context, CancellationToken cancellationToken)
+    {
+        return SeedAsync(context.Db, context.Roles!, context.Users!, cancellationToken);
     }
 
     public override async Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles, UserManager<AspNetUser> users, CancellationToken ct)
@@ -256,24 +269,15 @@ public sealed class OthersDBWorkflowMasterFromSeeder : OthersDBSeedData
     private static bool IsZeroKey(object value)=>value is byte b?b==0:value is short s?s==0:value is int i?i==0:value is long l&&l==0;
     private static async Task SaveIdentityAsync(ApplicationDbContext db,string table,CancellationToken ct)
     {
-        await db.Database.OpenConnectionAsync(ct);
-        try
-        {
-            await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT "+table+" ON",ct);
-            await db.SaveChangesAsync(ct);
-            await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT "+table+" OFF",ct);
-        }
-        finally
-        {
-            await db.Database.CloseConnectionAsync();
-        }
+        var helper = new IdentityInsertHelper();
+        await helper.ExecuteWithIdentityInsertAsync(db, table, () => Task.CompletedTask, ct);
     }
 
-    private sealed class SeedData { public BasicByte[] DataTypes{get;set;}=[];public Control[] Controls{get;set;}=[];public BasicByte[] ActivityTypes{get;set;}=[];public ActiveByte[] Operators{get;set;}=[];public Category[] Categories{get;set;}=[];public Performer[] Performers{get;set;}=[];public Process[] Processes{get;set;}=[];public Step[] Steps{get;set;}=[];public Variable[] Variables{get;set;}=[];public RequestControl[] RequestControls{get;set;}=[];public Activity[] Activities{get;set;}=[];public ActivityControl[] ActivityControls{get;set;}=[];public Mapping[] ActivityMappings{get;set;}=[];public RequestMapping[] RequestMappings{get;set;}=[];public Transition[] Transitions{get;set;}=[];public PerformerUser[] PerformerUsers{get;set;}=[];public UsersProcess[] UsersProcesses{get;set;}=[]; }
+    private sealed class SeedData { public BasicByte[] DataTypes{get;set;}=[];public Control[] Controls{get;set;}=[];public BasicByte[] ActivityTypes{get;set;}=[];public ActiveByte[] Operators{get;set;}=[];public LegacyCategory[] Categories{get;set;}=[];public Performer[] Performers{get;set;}=[];public Process[] Processes{get;set;}=[];public Step[] Steps{get;set;}=[];public Variable[] Variables{get;set;}=[];public RequestControl[] RequestControls{get;set;}=[];public Activity[] Activities{get;set;}=[];public ActivityControl[] ActivityControls{get;set;}=[];public Mapping[] ActivityMappings{get;set;}=[];public RequestMapping[] RequestMappings{get;set;}=[];public Transition[] Transitions{get;set;}=[];public PerformerUser[] PerformerUsers{get;set;}=[];public UsersProcess[] UsersProcesses{get;set;}=[]; }
     private class BasicByte {public byte Id{get;set;}public string? Name{get;set;}public string? NameAlias{get;set;}public string? Description{get;set;}}
     private sealed class Control:BasicByte {public string? Code{get;set;}public string? ControlType{get;set;}}
     private sealed class ActiveByte:BasicByte {public bool Active{get;set;}}
-    private sealed class Category {public short Id{get;set;}public string? Name{get;set;}public string? NameAlias{get;set;}public string? Description{get;set;}public bool Active{get;set;}public bool IsSystemDefined{get;set;}}
+    private sealed class LegacyCategory {public short Id{get;set;}public string? Name{get;set;}public string? NameAlias{get;set;}public string? Description{get;set;}public bool Active{get;set;}public bool IsSystemDefined{get;set;}}
     private sealed class Performer {public long Id{get;set;}public string? Name{get;set;}public string? NameAlias{get;set;}public string? Description{get;set;}public bool Active{get;set;}public long? RelatedField{get;set;}public bool IsEmployee{get;set;}public bool IsManager1{get;set;}public bool IsManager2{get;set;}public bool IsManager3{get;set;}public bool IsManager4{get;set;}}
     private sealed class Process {public long Id{get;set;}public string? Name{get;set;}public string? Description{get;set;}public short CategoryId{get;set;}public bool Active{get;set;}public bool IsRepeatable{get;set;}public byte RepeatIntervalHours{get;set;}public bool MandatoryDocuments{get;set;}public bool IsSystemDefined{get;set;}public byte PriorityId{get;set;}public decimal Score{get;set;}public byte ProcessTypeId{get;set;}}
     private sealed class Step {public long Id{get;set;}public long ProcessId{get;set;}public string? Name{get;set;}public string? Description{get;set;}public byte SortOrder{get;set;}public bool IsSystemDefined{get;set;}public bool Active{get;set;}public bool MustCompleteAll{get;set;}public decimal Score{get;set;}}

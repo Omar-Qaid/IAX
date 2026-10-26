@@ -1,3 +1,4 @@
+﻿using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.Common;
@@ -9,8 +10,19 @@ using Microsoft.EntityFrameworkCore;
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks;
 
 /// <summary>Seeds repeatable starter setup for sales price and discount journals.</summary>
-public sealed class PriceDiscSeeder : ISeeder
+public sealed  class PriceDiscSeeder : IAX.IXApi.Infrastructure.Persistence.Seeding.Core.BaseModuleSeeder
 {
+    public override string Id => "Finance.AccountsReceivable.PriceDisc";
+    public override int Version => 1;
+    public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory Category => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory.Reference;
+    public override System.Collections.Generic.IReadOnlyCollection<string> DependsOn => new[] { "Finance.AccountsReceivable.CustGroups" };
+    public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy Policy => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy.Repeatable;
+    public override string Scope => "dat";
+
+    public override System.Threading.Tasks.Task SeedAsync(IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeedingContext context, System.Threading.CancellationToken cancellationToken)
+    {
+        return SeedAsync(context.Db, context.Roles!, context.Users!, cancellationToken);
+    }
     private const string DataAreaId = "dat";
 
     public async Task SeedAsync(

@@ -36,7 +36,6 @@ namespace IAX.IXApi.Modules.Organization
             services.AddScoped<IValidator<DocumentDto>, DocumentDtoValidator>();
             services.AddScoped<IValidator<CreateDocumentForm>, CreateDocumentFormValidator>();
             services.AddScoped<IValidator<UpdateDocumentRequest>, UpdateDocumentRequestValidator>();
-
             return services;
         }
     }

@@ -1,3 +1,4 @@
+﻿using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,8 +32,19 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
     /// - TaxGroupData (Tax Group <-> Tax Code Mapping)
     /// - TaxOnItem (Item Tax Group <-> Tax Code Mapping)
     /// </summary>
-    public class TaxSeeder : ISeeder
+    public  class TaxSeeder : IAX.IXApi.Infrastructure.Persistence.Seeding.Core.BaseModuleSeeder
+{
+    public override string Id => "Finance.GeneralLedger.Tax";
+    public override int Version => 1;
+    public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory Category => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory.Reference;
+    public override System.Collections.Generic.IReadOnlyCollection<string> DependsOn => new[] { "Finance.Foundation.CompanyInfo" };
+    public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy Policy => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy.Repeatable;
+    public override string Scope => "dat";
+
+    public override System.Threading.Tasks.Task SeedAsync(IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeedingContext context, System.Threading.CancellationToken cancellationToken)
     {
+        return SeedAsync(context.Db, context.Roles!, context.Users!, cancellationToken);
+    }
         private const string DataAreaId = "dat";
 
         public async Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles, UserManager<AspNetUser> users, CancellationToken ct)

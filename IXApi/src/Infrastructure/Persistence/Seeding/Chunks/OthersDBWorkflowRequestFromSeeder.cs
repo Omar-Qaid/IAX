@@ -1,4 +1,4 @@
-using System.Xml.Linq;
+﻿using System.Xml.Linq;
 using System.Text.Json;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
@@ -26,8 +26,19 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks;
 /// Seeds a synthetic execution and guarantees that every workflow process has a
 /// representative request and a published print template.
 /// </summary>
-public sealed class WorkflowRequestTrackingSeeder : ISeeder
+public sealed class WorkflowRequestTrackingSeeder : IAX.IXApi.Infrastructure.Persistence.Seeding.Core.BaseModuleSeeder
 {
+    public override string Id => "Workflow.DemoRequestTracking";
+    public override int Version => 1;
+    public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory Category => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory.Demo;
+    public override System.Collections.Generic.IReadOnlyCollection<string> DependsOn => new[] { "Workflow.ProcessMaster" };
+    public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy Policy => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy.Repeatable;
+    public override string Scope => "dat";
+
+    public override System.Threading.Tasks.Task SeedAsync(IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeedingContext context, System.Threading.CancellationToken cancellationToken)
+    {
+        return SeedAsync(context.Db, context.Roles!, context.Users!, cancellationToken);
+    }
     private const long ProcessId = 662;
 
     private const string Signature = "data:image/svg+xml;base64,PHN2Zy8+";
@@ -885,8 +896,7 @@ public sealed class WorkflowRequestTrackingSeeder : ISeeder
 
     private static async System.Threading.Tasks.Task SaveIdentityAsync(ApplicationDbContext db, string table, CancellationToken ct)
     {
-        await db.Database.OpenConnectionAsync(ct);
-        try { await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT " + table + " ON", ct); await db.SaveChangesAsync(ct); await db.Database.ExecuteSqlRawAsync("SET IDENTITY_INSERT " + table + " OFF", ct); }
-        finally { await db.Database.CloseConnectionAsync(); }
+        await new IAX.IXApi.Infrastructure.Persistence.Seeding.Core.IdentityInsertHelper().ExecuteWithIdentityInsertAsync(
+            db, table, () => db.SaveChangesAsync(ct), ct);
     }
 }

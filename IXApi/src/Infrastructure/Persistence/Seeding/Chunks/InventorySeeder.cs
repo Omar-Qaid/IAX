@@ -1,3 +1,4 @@
+﻿using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities;
@@ -13,8 +14,19 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks;
 /// Seeds a repeatable, end-to-end D365-style inventory setup example.
 /// This is master/setup data only; it creates no stock movement or accounting voucher.
 /// </summary>
-public sealed class InventorySeeder : ISeeder
+public sealed  class InventorySeeder : IAX.IXApi.Infrastructure.Persistence.Seeding.Core.BaseModuleSeeder
 {
+    public override string Id => "Finance.Inventory.Setup";
+    public override int Version => 1;
+    public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory Category => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory.Reference;
+    public override System.Collections.Generic.IReadOnlyCollection<string> DependsOn => new[] { "Finance.Inventory.UnitOfMeasure" };
+    public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy Policy => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy.Repeatable;
+    public override string Scope => "dat";
+
+    public override System.Threading.Tasks.Task SeedAsync(IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeedingContext context, System.Threading.CancellationToken cancellationToken)
+    {
+        return SeedAsync(context.Db, context.Roles!, context.Users!, cancellationToken);
+    }
     private const string Company = "dat";
     private const string ProductNumber = "ITEM-001";
     private const string ItemGroup = "FURNITURE";
