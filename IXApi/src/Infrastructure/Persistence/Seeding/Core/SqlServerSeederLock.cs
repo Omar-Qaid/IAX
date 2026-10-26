@@ -29,7 +29,8 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Core
 
         public async Task<IAsyncDisposable> AcquireLockAsync(int timeoutSeconds, CancellationToken cancellationToken)
         {
-            var timeoutMs = Math.Max(1, timeoutSeconds) * 1000;
+            var waitSeconds = Math.Clamp(timeoutSeconds, 1, int.MaxValue / 1000);
+            var timeoutMs = waitSeconds * 1000;
 
             // 1. In-process serialization first
             var acquiredProcessLock = await ProcessLock.WaitAsync(timeoutMs, cancellationToken);
@@ -58,6 +59,9 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Core
                 await connection.OpenAsync(cancellationToken);
 
                 await using var cmd = connection.CreateCommand();
+                // ADO.NET defaults to 30 seconds, which can expire before sp_getapplock's
+                // configured wait (120 seconds by default) has finished.
+                cmd.CommandTimeout = waitSeconds + 5;
                 cmd.CommandText = @"
                     DECLARE @result INT;
                     EXEC @result = sp_getapplock
@@ -88,6 +92,12 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Core
                 // -999: Parameter validation or other error.
                 if (resultCode < 0)
                 {
+                    if (resultCode == -1)
+                    {
+                        throw new TimeoutException(
+                            $"Timed out waiting {waitSeconds} seconds for distributed SQL Server application lock '{LockResourceName}'. Another API instance may be seeding.");
+                    }
+
                     throw new InvalidOperationException(
                         $"Failed to acquire distributed SQL Server application lock '{LockResourceName}'. Result code: {resultCode}.");
                 }
