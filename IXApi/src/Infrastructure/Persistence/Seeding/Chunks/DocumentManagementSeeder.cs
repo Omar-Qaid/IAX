@@ -20,7 +20,7 @@ public sealed class DocumentManagementSeeder : BaseModuleSeeder
         return SeedAsync(context.Db, context.Roles!, context.Users!, cancellationToken);
     }
 
-    public async Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles, UserManager<AspNetUser> users, CancellationToken ct)
+    public override async Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles, UserManager<AspNetUser> users, CancellationToken ct)
     {
         var existing = await db.DocuTypes.IgnoreQueryFilters().Select(x => x.TypeId).ToListAsync(ct);
         var existingIds = existing.ToHashSet(StringComparer.OrdinalIgnoreCase);

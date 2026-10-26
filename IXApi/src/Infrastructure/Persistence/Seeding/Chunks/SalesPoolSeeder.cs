@@ -27,7 +27,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             return SeedAsync(context.Db, context.Roles!, context.Users!, cancellationToken);
         }
 
-        public async Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles, UserManager<AspNetUser> users, CancellationToken ct)
+        public override async Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles, UserManager<AspNetUser> users, CancellationToken ct)
         {
             var seeds = new[]
             {

@@ -25,6 +25,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Core
         public IServiceProvider? ServiceProvider { get; }
         public string CurrentCompany { get; }
         public IIdentityInsertService IdentityInsert { get; }
+        public SeedingOptions Options { get; }
 
         public SeedingContext(
             ApplicationDbContext db,
@@ -35,7 +36,8 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Core
             ILogger? logger,
             IServiceProvider? serviceProvider,
             string currentCompany = "dat",
-            IIdentityInsertService? identityInsert = null)
+            IIdentityInsertService? identityInsert = null,
+            SeedingOptions? options = null)
         {
             Db = db ?? throw new ArgumentNullException(nameof(db));
             Roles = roles;
@@ -46,6 +48,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Core
             ServiceProvider = serviceProvider;
             CurrentCompany = string.IsNullOrWhiteSpace(currentCompany) ? "dat" : currentCompany;
             IdentityInsert = identityInsert ?? new IdentityInsertHelper();
+            Options = options ?? new SeedingOptions();
         }
 
         public static SeedingContext CreateDefault(

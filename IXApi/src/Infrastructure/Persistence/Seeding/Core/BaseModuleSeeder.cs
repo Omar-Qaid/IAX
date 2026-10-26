@@ -33,7 +33,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Core
             UserManager<AspNetUser> users,
             CancellationToken ct)
         {
-            return Task.CompletedTask;
+            throw new NotImplementedException($"Seeder {GetType().Name} must override a SeedAsync overload.");
         }
     }
 }

@@ -36,6 +36,8 @@ public sealed partial class WfProcess603SeedData
             .IgnoreQueryFilters()
             .Select(x => x.RecId)
             .ToHashSetAsync(ct);
+        var validOccupationIds = await db.HcmOccupations.IgnoreQueryFilters()
+            .Select(x => x.RecId).ToHashSetAsync(ct);
 
         foreach (var item in items)
         {
@@ -51,7 +53,8 @@ public sealed partial class WfProcess603SeedData
                 {
                     RecId = item.RecId,
                     ProcessId = item.ProcessId,
-                    OccupationId = item.OccupationId,
+                    OccupationId = item.OccupationId.HasValue && validOccupationIds.Contains(item.OccupationId.Value)
+                        ? item.OccupationId : null,
                     EmployeeId = validEmployeeId,
                     CreatedBy = owner,
                     OwnerAccountId = owner

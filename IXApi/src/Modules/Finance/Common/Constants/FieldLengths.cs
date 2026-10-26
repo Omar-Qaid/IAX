@@ -256,7 +256,7 @@ namespace IAX.IXApi.Modules.Finance.Common
         public const int ConsolidationMainAccount = 10;
         public const int GroupLevel01 = 20;
         public const int GroupLevel02 = 20;
-        public const int GroupLevel03 = 20;
+        public const int GroupLevel03 = 32;
         public const int AccountCategory = 20;
         public const int ApproveGroupId = 10;
         public const int Configuration = 100;

@@ -47,7 +47,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
     }
         private const string DataAreaId = "dat";
 
-        public async Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles, UserManager<AspNetUser> users, CancellationToken ct)
+        public override async Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles, UserManager<AspNetUser> users, CancellationToken ct)
         {
             var sysUser = await users.FindByNameAsync("sys");
             var createdBy = sysUser?.Id ?? "sys";

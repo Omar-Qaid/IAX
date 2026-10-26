@@ -80,18 +80,14 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding
             _logger.LogInformation("Resolved {Count} eligible seeders in deterministic dependency order.", orderedSeeders.Count);
 
             // 2. Fetch existing successful seed executions
-            var completedLogs = await _db.SysDataSeedLogs
-                .AsNoTracking()
+            var completedLogs = await _db.SysDataSeedLogs.AsNoTracking()
+                .Where(l => l.Outcome == "Success")
                 .ToListAsync(ct);
 
             var completedTuples = completedLogs
                 .Where(l => !string.IsNullOrEmpty(l.SeederId))
-                .Select(l => (l.SeederId!, l.Version, l.Scope ?? "global"))
+                .Select(l => (l.SeederId!, l.Version, l.Scope))
                 .ToHashSet();
-
-            var completedTableNames = completedLogs
-                .Select(l => l.TableName)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             var context = new SeedingContext(
                 _db,
@@ -102,9 +98,11 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding
                 _logger,
                 _serviceProvider,
                 _options.DefaultCompany,
-                _identityInsert);
+                _identityInsert,
+                _options);
 
             var failedSeederIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var failures = new List<Exception>();
 
             // 3. Execute seeders sequentially in validated topological order
             foreach (var seeder in orderedSeeders)
@@ -117,7 +115,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding
                 {
                     _logger.LogWarning("Skipping seeder '{SeederId}' because prerequisite dependency '{FailedDep}' failed.", seeder.Id, failedDep);
                     failedSeederIds.Add(seeder.Id);
-                    await RecordLogAsync(seeder.Id, seeder.Version, seeder.Scope, "Skipped", 0, $"Skipped due to prerequisite failure: {failedDep}", ct);
+                    await RecordLogAsync(seeder.Id, seeder.Version, seeder.Scope, seeder.Policy.ToString(), "Skipped", 0, $"Skipped due to prerequisite failure: {failedDep}", ct);
                     continue;
                 }
 
@@ -125,8 +123,9 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding
                 if (seeder.Policy == SeederExecutionPolicy.RunOnce)
                 {
                     var isCompleted = completedTuples.Contains((seeder.Id, seeder.Version, seeder.Scope))
-                        || completedTableNames.Contains(seeder.Id)
-                        || completedTableNames.Contains($"{seeder.Id}:v{seeder.Version}:{seeder.Scope}");
+                        || completedLogs.Any(l => l.SeederId == null &&
+                            (string.Equals(l.TableName, seeder.Id, StringComparison.OrdinalIgnoreCase)
+                             || string.Equals(l.TableName, $"{seeder.Id}:v{seeder.Version}:{seeder.Scope}", StringComparison.OrdinalIgnoreCase)));
 
                     if (isCompleted)
                     {
@@ -138,26 +137,35 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding
                 _logger.LogInformation("Executing seeder '{SeederId}' (v{Version}, Category: {Category}, Scope: {Scope})...", seeder.Id, seeder.Version, seeder.Category, seeder.Scope);
                 var sw = Stopwatch.StartNew();
 
-                // Transaction management: use relational transaction if supported
-                var canUseTransaction = _db.Database.IsRelational() && !_db.Database.ProviderName!.Contains("InMemory", StringComparison.OrdinalIgnoreCase);
-                Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? tx = null;
-
-                if (canUseTransaction)
-                {
-                    tx = await _db.Database.BeginTransactionAsync(ct);
-                }
-
                 try
                 {
-                    await seeder.SeedAsync(context, ct);
-
-                    // Commit seeder execution history atomically with seeded data
-                    await RecordLogAsync(seeder.Id, seeder.Version, seeder.Scope, "Success", sw.ElapsedMilliseconds, null, ct);
-
-                    if (tx != null)
+                    var strategy = _db.Database.CreateExecutionStrategy();
+                    await strategy.ExecuteAsync(async () =>
                     {
-                        await tx.CommitAsync(ct);
-                    }
+                        // The transaction must be created inside the execution strategy.
+                        await using var tx = _db.Database.IsRelational()
+                            ? await _db.Database.BeginTransactionAsync(ct)
+                            : null;
+                        try
+                        {
+                            await seeder.SeedAsync(context, ct);
+                            // Commit execution history atomically with seeded data.
+                            await RecordLogAsync(seeder.Id, seeder.Version, seeder.Scope,
+                                seeder.Policy.ToString(), "Success", sw.ElapsedMilliseconds, null, ct);
+                            if (tx != null)
+                                await tx.CommitAsync(ct);
+                        }
+                        catch
+                        {
+                            if (tx != null)
+                                await tx.RollbackAsync(CancellationToken.None);
+                            _db.ChangeTracker.Clear();
+                            throw;
+                        }
+                    });
+
+                    if (seeder.Policy == SeederExecutionPolicy.RunOnce)
+                        completedTuples.Add((seeder.Id, seeder.Version, seeder.Scope));
 
                     sw.Stop();
                     _logger.LogInformation("Completed seeder '{SeederId}' in {ElapsedMs} ms.", seeder.Id, sw.ElapsedMilliseconds);
@@ -167,17 +175,20 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding
                     sw.Stop();
                     _logger.LogError(ex, "Seeder '{SeederId}' failed after {ElapsedMs} ms.", seeder.Id, sw.ElapsedMilliseconds);
 
-                    if (tx != null)
-                    {
-                        await tx.RollbackAsync(ct);
-                    }
-
                     _db.ChangeTracker.Clear();
 
                     // Record failure after rollback without marking incomplete work as successful
-                    await RecordLogAsync(seeder.Id, seeder.Version, seeder.Scope, "Failed", sw.ElapsedMilliseconds, ex.ToString(), CancellationToken.None);
+                    try
+                    {
+                        await RecordLogAsync(seeder.Id, seeder.Version, seeder.Scope, seeder.Policy.ToString(), "Failed", sw.ElapsedMilliseconds, ex.ToString(), CancellationToken.None);
+                    }
+                    catch (Exception logException)
+                    {
+                        _logger.LogError(logException, "Could not record failure of seeder {SeederId}", seeder.Id);
+                    }
 
                     failedSeederIds.Add(seeder.Id);
+                    failures.Add(new InvalidOperationException($"Seeder '{seeder.Id}' failed.", ex));
 
                     // If seeder is required, stop startup immediately
                     if (seeder.Category == SeederCategory.Required)
@@ -185,36 +196,32 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding
                         throw new InvalidOperationException($"Required seeder '{seeder.Id}' failed: {ex.Message}", ex);
                     }
                 }
-                finally
-                {
-                    if (tx != null)
-                    {
-                        await tx.DisposeAsync();
-                    }
-                }
             }
 
             _logger.LogInformation("Database seeding completed. {SuccessCount} succeeded, {FailedCount} failed.",
                 orderedSeeders.Count - failedSeederIds.Count,
                 failedSeederIds.Count);
+
+            if (failures.Count > 0)
+                throw new AggregateException("One or more seeders failed; database initialization is incomplete.", failures);
         }
 
         private async Task RecordLogAsync(
             string seederId,
             int version,
             string scope,
+            string policy,
             string outcome,
             long durationMs,
             string? error,
             CancellationToken ct)
         {
-            try
-            {
                 var log = new SysDataSeedLog
                 {
                     SeederId = seederId,
                     Version = version,
                     Scope = scope,
+                    Policy = policy,
                     Outcome = outcome,
                     DurationMs = durationMs,
                     Error = error,
@@ -224,33 +231,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding
 
                 _db.SysDataSeedLogs.Add(log);
                 await _db.SaveChangesAsync(ct);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to persist execution log for seeder {SeederId}", seederId);
-            }
         }
 
-        /// <summary>
-        /// Utility to run a block of code only once based on a persistent log. Preserved for backward compatibility.
-        /// </summary>
-        public async Task RunOnceAsync(string seedName, Func<Task> action, CancellationToken ct = default)
-        {
-            var already = await _db.SysDataSeedLogs.AnyAsync(s => s.TableName == seedName, ct);
-            if (already) return;
-
-            await action();
-
-            _db.SysDataSeedLogs.Add(new SysDataSeedLog
-            {
-                TableName = seedName,
-                SeederId = seedName,
-                Version = 1,
-                Scope = "global",
-                Outcome = "Success",
-                CreatedAt = DateTime.UtcNow
-            });
-            await _db.SaveChangesAsync(ct);
-        }
     }
 }

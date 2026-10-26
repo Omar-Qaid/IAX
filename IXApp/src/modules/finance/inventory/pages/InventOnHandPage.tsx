@@ -80,7 +80,7 @@ export function InventOnHandPage(): React.ReactElement {
           });
           setPage(1);
         }} sx={{ mx: { xs: 1, sm: 2.5 }, mb: 1 }}>
-          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
+          <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: 'wrap', alignItems: 'center' }}>
             {([
               ['itemId', t('inventTrans.fields.itemNumber', 'Item number')],
               ['itemGroupId', t('inventOnHand.itemGroup', 'Item group')],
@@ -105,7 +105,7 @@ export function InventOnHandPage(): React.ReactElement {
       onRetry={() => query.refetch()}
       dataGridProps={{ storageKey: 'inventory.on-hand.standard-view' }}
       belowGridContent={
-        <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between" sx={{ py: 1, flexWrap: 'wrap' }}>
+        <Stack direction="row" spacing={2} sx={{ py: 1, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
           <Typography variant="body2">
             {t('inventOnHand.matchingRows', 'Matching rows')}: {query.data?.totalCount ?? 0}
           </Typography>

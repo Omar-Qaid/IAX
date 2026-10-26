@@ -10,9 +10,9 @@ namespace IAX.IXApi.Modules.Administration.DataManagement.Services;
 
 public sealed class SysDataManagementEndpointService : ISysDataManagementEndpointService
 {
-    private readonly ISysDataManagementService _dataManagement;
+    private readonly Interfaces.ISysDataManagementService _dataManagement;
 
-    public SysDataManagementEndpointService(ISysDataManagementService dataManagement)
+    public SysDataManagementEndpointService(Interfaces.ISysDataManagementService dataManagement)
     {
         _dataManagement = dataManagement;
     }

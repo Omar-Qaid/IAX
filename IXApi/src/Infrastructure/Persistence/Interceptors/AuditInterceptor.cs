@@ -19,12 +19,12 @@ namespace IAX.IXApi.Infrastructure.Persistence.Interceptors
     public class AuditInterceptor : SaveChangesInterceptor
     {
         private readonly ICurrentUserService _currentUser;
-        private readonly ISysAuditService _auditService;
+        private readonly IAX.IXApi.Modules.Administration.AuditLogs.Interfaces.ISysAuditService _auditService;
         private readonly List<PendingAudit> _pendingAudits = new();
         private bool _buildingAudit;
         private bool _suppressAudit;
 
-        public AuditInterceptor(ICurrentUserService currentUser, ISysAuditService auditService)
+        public AuditInterceptor(ICurrentUserService currentUser, IAX.IXApi.Modules.Administration.AuditLogs.Interfaces.ISysAuditService auditService)
         {
             _currentUser = currentUser;
             _auditService = auditService;

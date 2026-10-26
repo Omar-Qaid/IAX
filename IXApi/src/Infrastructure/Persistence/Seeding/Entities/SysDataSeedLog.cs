@@ -18,22 +18,18 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Entities
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [NotMapped]
         public string? SeederId { get; set; }
 
-        [NotMapped]
         public int Version { get; set; } = 1;
 
-        [NotMapped]
-        public string? Scope { get; set; }
+        public string Scope { get; set; } = "global";
 
-        [NotMapped]
         public string Outcome { get; set; } = "Success"; // "Success", "Failed", "Skipped"
 
-        [NotMapped]
+        public string Policy { get; set; } = "Legacy";
+
         public long DurationMs { get; set; }
 
-        [NotMapped]
         public string? Error { get; set; }
     }
 }

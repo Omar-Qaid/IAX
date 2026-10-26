@@ -27,7 +27,7 @@ public sealed  class InventorySiteWarehouseSeeder : IAX.IXApi.Infrastructure.Per
     }
     private const string DataAreaId = "dat";
 
-    public async Task SeedAsync(
+    public override async Task SeedAsync(
         ApplicationDbContext db,
         RoleManager<AspNetRole> roles,
         UserManager<AspNetUser> users,

@@ -25,7 +25,7 @@ public sealed  class PriceDiscSeeder : IAX.IXApi.Infrastructure.Persistence.Seed
     }
     private const string DataAreaId = "dat";
 
-    public async Task SeedAsync(
+    public override async Task SeedAsync(
         ApplicationDbContext db,
         RoleManager<AspNetRole> roles,
         UserManager<AspNetUser> users,

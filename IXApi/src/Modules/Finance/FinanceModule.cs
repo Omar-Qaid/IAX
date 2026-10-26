@@ -61,7 +61,10 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<AccountsReceivable.Confirm.ISalesOrderConfirmationService, AccountsReceivable.Confirm.SalesOrderConfirmationService>();
             services.AddScoped<AccountsReceivable.PackingSlip.IPackingSlipJournalService, AccountsReceivable.PackingSlip.PackingSlipJournalService>();
             services.AddScoped<AccountsReceivable.Invoice.ISalesInvoiceService, AccountsReceivable.Invoice.SalesInvoiceService>();
-            services.AddScoped<AccountsReceivable.ICustTransService, AccountsReceivable.CustTransService>();
+            services.AddScoped<AccountsReceivable.ICustTransService>(provider =>
+                new AccountsReceivable.CustTransService(
+                    provider.GetRequiredService<Infrastructure.Persistence.Repositories.IUnitOfWork>(),
+                    provider.GetRequiredService<Infrastructure.Identity.ICurrentUserService>()));
             services.AddScoped<AccountsReceivable.Payment.ICustPaymentService, AccountsReceivable.Payment.CustPaymentService>();
             services.AddScoped<AccountsReceivable.Return.ICustReturnService, AccountsReceivable.Return.CustReturnService>();
             services.AddScoped<AccountsReceivable.IReturnDispositionCodeService, AccountsReceivable.ReturnDispositionCodeService>();

@@ -25,7 +25,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Core
         /// <summary>
         /// When true, embedded snapshot fixtures can be used as fallback when external connection is absent.
         /// </summary>
-        public bool EnableEmbeddedFixtures { get; set; } = true;
+        public bool EnableEmbeddedFixtures { get; set; } = false;
 
         /// <summary>
         /// Concurrency lock acquisition timeout in seconds.

@@ -156,7 +156,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             ("Application", "Dashboard"),
         ];
 
-        public async Task SeedAsync(
+        public override async Task SeedAsync(
             ApplicationDbContext db,
             RoleManager<AspNetRole> roles,
             UserManager<AspNetUser> users,

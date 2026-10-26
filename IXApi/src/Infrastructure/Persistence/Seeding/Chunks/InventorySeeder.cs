@@ -36,7 +36,7 @@ public sealed  class InventorySeeder : IAX.IXApi.Infrastructure.Persistence.Seed
     private const string Unit = "PCS";
     private const string DefaultDimension = "ITEM001-JED-1";
 
-    public async Task SeedAsync(
+    public override async Task SeedAsync(
         ApplicationDbContext db,
         RoleManager<AspNetRole> roles,
         UserManager<AspNetUser> users,
