@@ -224,5 +224,173 @@ namespace IXApi.Tests
             Assert.Equal("Parent.Demo", ex.ExcludedDependencyId);
             Assert.Equal(SeederCategory.Demo, ex.ExcludedCategory);
         }
+
+        [Fact]
+        public async Task ScopeIsolation_RunOnceExecutesSeparatelyPerScope()
+        {
+            var (connection, db) = await CreateSqliteDbAsync();
+            await using var _ = connection;
+            await using var __ = db;
+
+            var seederDat = new MockSeeder
+            {
+                Id = "Test.ScopedSeeder",
+                Version = 1,
+                Scope = "DAT",
+                Policy = SeederExecutionPolicy.RunOnce
+            };
+            var seederUsmf = new MockSeeder
+            {
+                Id = "Test.ScopedSeeder",
+                Version = 1,
+                Scope = "USMF",
+                Policy = SeederExecutionPolicy.RunOnce
+            };
+
+            var options = Options.Create(new SeedingOptions { Enabled = true });
+            var config = new ConfigurationBuilder().Build();
+
+            // Run for DAT
+            var service1 = new DatabaseSeederService(
+                db,
+                new[] { seederDat },
+                new SeederDependencyGraph(),
+                new NullSeederLock(),
+                options,
+                config,
+                NullLogger<DatabaseSeederService>.Instance,
+                new Microsoft.Extensions.DependencyInjection.ServiceCollection().BuildServiceProvider());
+
+            await service1.SeedAsync();
+            Assert.Equal(1, seederDat.ExecutionCount);
+
+            // Run for USMF (same ID and version, different scope)
+            var service2 = new DatabaseSeederService(
+                db,
+                new[] { seederUsmf },
+                new SeederDependencyGraph(),
+                new NullSeederLock(),
+                options,
+                config,
+                NullLogger<DatabaseSeederService>.Instance,
+                new Microsoft.Extensions.DependencyInjection.ServiceCollection().BuildServiceProvider());
+
+            await service2.SeedAsync();
+            Assert.Equal(1, seederUsmf.ExecutionCount);
+
+            // Run again for DAT - should be skipped
+            await service1.SeedAsync();
+            Assert.Equal(1, seederDat.ExecutionCount);
+
+            var logs = await db.Set<SysDataSeedLog>().ToListAsync();
+            Assert.Equal(2, logs.Count);
+            Assert.Contains(logs, l => l.TableName == "Test.ScopedSeeder:v1:DAT");
+            Assert.Contains(logs, l => l.TableName == "Test.ScopedSeeder:v1:USMF");
+        }
+
+        [Fact]
+        public async Task RetryAfterFailure_SucceedsAndRunsDownstreamSeeders()
+        {
+            var (connection, db) = await CreateSqliteDbAsync();
+            await using var _ = connection;
+            await using var __ = db;
+
+            bool shouldFail = true;
+            var parent = new MockSeeder
+            {
+                Id = "Retry.Parent",
+                Version = 1,
+                Category = SeederCategory.Reference,
+                Action = () =>
+                {
+                    if (shouldFail) throw new InvalidOperationException("First attempt transient failure");
+                    return Task.CompletedTask;
+                }
+            };
+
+            var child = new MockSeeder
+            {
+                Id = "Retry.Child",
+                Version = 1,
+                Category = SeederCategory.Reference,
+                DependsOn = new[] { "Retry.Parent" }
+            };
+
+            var options = Options.Create(new SeedingOptions { Enabled = true });
+            var config = new ConfigurationBuilder().Build();
+            var service = new DatabaseSeederService(
+                db,
+                new[] { parent, child },
+                new SeederDependencyGraph(),
+                new NullSeederLock(),
+                options,
+                config,
+                NullLogger<DatabaseSeederService>.Instance,
+                new Microsoft.Extensions.DependencyInjection.ServiceCollection().BuildServiceProvider());
+
+            // Run 1: Failure occurs
+            await service.SeedAsync();
+            Assert.Equal(1, parent.ExecutionCount);
+            Assert.Equal(0, child.ExecutionCount); // Child skipped
+
+            // Run 2: Transient issue resolved
+            shouldFail = false;
+            await service.SeedAsync();
+            Assert.Equal(2, parent.ExecutionCount); // Retried
+            Assert.Equal(1, child.ExecutionCount); // Child now successfully executes!
+        }
+
+        [Fact]
+        public async Task ConcurrentLockCoordination_SerializesExecution()
+        {
+            var (connection, db) = await CreateSqliteDbAsync();
+            await using var _ = connection;
+            await using var __ = db;
+
+            var lockProvider1 = new SqlServerSeederLock(db, NullLogger<SqlServerSeederLock>.Instance);
+            var lockProvider2 = new SqlServerSeederLock(db, NullLogger<SqlServerSeederLock>.Instance);
+
+            int concurrentCount = 0;
+            int maxConcurrentObserved = 0;
+
+            async Task Worker(ISeederLock locker)
+            {
+                await using var handle = await locker.AcquireLockAsync(10, CancellationToken.None);
+                var current = Interlocked.Increment(ref concurrentCount);
+                lock (locker)
+                {
+                    if (current > maxConcurrentObserved) maxConcurrentObserved = current;
+                }
+                await Task.Delay(50);
+                Interlocked.Decrement(ref concurrentCount);
+            }
+
+            var task1 = Task.Run(() => Worker(lockProvider1));
+            var task2 = Task.Run(() => Worker(lockProvider2));
+
+            await Task.WhenAll(task1, task2);
+
+            Assert.Equal(1, maxConcurrentObserved);
+        }
+
+        [Fact]
+        public async Task IdentityInsertHelper_PropagatesActionException_OnNonSqlServer()
+        {
+            var (connection, db) = await CreateSqliteDbAsync();
+            await using var _ = connection;
+            await using var __ = db;
+
+            var helper = new IdentityInsertHelper();
+
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            {
+                await helper.ExecuteWithIdentityInsertAsync(db, "CustTable", () =>
+                {
+                    throw new InvalidOperationException("Insert error");
+                });
+            });
+
+            Assert.Equal("Insert error", ex.Message);
+        }
     }
 }
