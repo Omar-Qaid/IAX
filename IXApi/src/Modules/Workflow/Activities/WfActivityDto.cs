@@ -1,5 +1,6 @@
 using IAX.IXApi.Shared.Application.Contracts;
-using IAX.IXApi.Modules.Communication.Notifications;
+using IAX.IXApi.Modules.Communication.Notifications.Dtos;
+
 
 namespace IAX.IXApi.Modules.Workflow.Activities
 {

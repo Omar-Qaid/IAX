@@ -18,10 +18,10 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
     /// Handles recipient resolution, notification persistence, template rendering,
     /// and real-time push via the generic ISysRealtimeManager.
     /// </summary>
-    public class SysNotificationService : ISysNotificationService
+    public class SysNotificationService : IAX.IXApi.Infrastructure.Persistence.Services.BaseService<SysNotification>, ISysNotificationService
     {
         private readonly IUnitOfWork _db;
-        private readonly ICurrentUserService _currentUser;
+
         private readonly ISysRealtimeManager _realtime;
         private readonly IEnumerable<Channels.ISysNotificationChannelSender> _channelSenders;
         private readonly ILogger<SysNotificationService> _logger;
@@ -31,10 +31,10 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
             ICurrentUserService currentUser,
             ISysRealtimeManager realtime,
             IEnumerable<Channels.ISysNotificationChannelSender> channelSenders,
-            ILogger<SysNotificationService> logger)
+            ILogger<SysNotificationService> logger) : base(db, currentUser)
         {
             _db = db;
-            _currentUser = currentUser;
+
             _realtime = realtime;
             _channelSenders = channelSenders;
             _logger = logger;

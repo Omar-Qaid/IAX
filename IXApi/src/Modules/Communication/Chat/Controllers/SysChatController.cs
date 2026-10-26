@@ -1,22 +1,29 @@
-﻿using IAX.IXApi.Shared.Application.Contracts;
-using IAX.IXApi.Modules.Communication.Chat.Services;
+using IAX.IXApi.Api.Controllers;
 using IAX.IXApi.Infrastructure.Identity;
+using IAX.IXApi.Modules.Communication.Chat.Entities;
+using IAX.IXApi.Modules.Communication.Chat.Services;
+using IAX.IXApi.Shared.Application.Contracts;
+using IAX.IXApi.Shared.Application.NumberSequences;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
-namespace IAX.IXApi.Modules.Communication.Chat
+namespace IAX.IXApi.Modules.Communication.Chat.Controllers
 {
     [ApiController]
-    [Authorize]
     [Route("api/v1/[controller]")]
-    public class SysChatController : ControllerBase
+    public class SysChatController : BaseController<SysChatMessage, SysChatMessageDto>
     {
         private readonly ISysChatService _chat;
         private readonly ICurrentUserService _currentUser;
 
-        public SysChatController(ISysChatService chat, ICurrentUserService currentUser)
+        public SysChatController(
+            ISysChatService service,
+            ILogger<SysChatController> logger,
+            ICurrentUserService currentUser)
+            : base(service, logger)
         {
-            _chat = chat;
+            _chat = service;
             _currentUser = currentUser;
         }
 
@@ -77,5 +84,45 @@ namespace IAX.IXApi.Modules.Communication.Chat
             var dto = await _chat.SendAsync(roomId, senderId, request.Content, ct);
             return Ok(APIResponse<SysChatMessageDto>.Ok(dto));
         }
+
+        [NonAction]
+        public override Task<ActionResult<APIResponse<IEnumerable<SysChatMessageDto>>>> GetAll(CancellationToken cancellationToken = default) =>
+            base.GetAll(cancellationToken);
+
+        [NonAction]
+        public override Task<ActionResult<APIResponse<IEnumerable<SysChatMessageDto>>>> GetPaged(QueryFilterDto paginationParams, CancellationToken cancellationToken = default) =>
+            base.GetPaged(paginationParams, cancellationToken);
+
+        [NonAction]
+        public override Task<ActionResult<APIResponse<SysChatMessageDto>>> GetById(string id, CancellationToken cancellationToken = default) =>
+            base.GetById(id, cancellationToken);
+
+        [NonAction]
+        public override Task<ActionResult<APIResponse<SysChatMessageDto>>> Create(SysChatMessageDto dto, CancellationToken cancellationToken = default) =>
+            base.Create(dto, cancellationToken);
+
+        [NonAction]
+        public override Task<ActionResult<APIResponse<SysChatMessageDto>>> Update(string id, SysChatMessageDto dto, CancellationToken cancellationToken = default) =>
+            base.Update(id, dto, cancellationToken);
+
+        [NonAction]
+        public override Task<ActionResult<APIResponse<bool>>> Delete(string id, CancellationToken cancellationToken = default) =>
+            base.Delete(id, cancellationToken);
+
+        [NonAction]
+        public override Task<ActionResult<APIResponse<IEnumerable<SysChatMessageDto>>>> CreateRange(IEnumerable<SysChatMessageDto> dtos, CancellationToken cancellationToken = default) =>
+            base.CreateRange(dtos, cancellationToken);
+
+        [NonAction]
+        public override Task<ActionResult<APIResponse<IEnumerable<SysChatMessageDto>>>> UpdateRange(IEnumerable<SysChatMessageDto> dtos, CancellationToken cancellationToken = default) =>
+            base.UpdateRange(dtos, cancellationToken);
+
+        [NonAction]
+        public override Task<ActionResult<APIResponse<bool>>> DeleteRange(IEnumerable<string> ids, CancellationToken cancellationToken = default) =>
+            base.DeleteRange(ids, cancellationToken);
+
+        [NonAction]
+        public override Task<ActionResult<APIResponse<NumberSequenceMetadataDto>>> GetNumberSequence(CancellationToken cancellationToken = default) =>
+            base.GetNumberSequence(cancellationToken);
     }
 }

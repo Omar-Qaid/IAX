@@ -1,7 +1,14 @@
+using IAX.IXApi.Infrastructure.Persistence.Services;
+using IAX.IXApi.Modules.Administration.BackgroundJobs.Services.Handlers;
+using IAX.IXApi.Modules.Communication.Chat.Entities;
+using IAX.IXApi.Modules.Communication.Chat.Services;
+using IAX.IXApi.Modules.Communication.Chat.Validation;
+using IAX.IXApi.Modules.Communication.Notifications.Entities;
+using IAX.IXApi.Modules.Communication.Notifications.Interfaces;
+using IAX.IXApi.Modules.Communication.Notifications.Jobs;
 using IAX.IXApi.Modules.Communication.Notifications.Services;
 using IAX.IXApi.Modules.Communication.Notifications.Services.Channels;
-using IAX.IXApi.Modules.Administration.BackgroundJobs.Services.Handlers;
-using IAX.IXApi.Modules.Communication.Notifications.Jobs;
+using IAX.IXApi.Modules.Communication.Notifications.Validation;
 using IAX.IXApi.Shared.Application.Batch;
 
 namespace IAX.IXApi.Modules.Communication;
@@ -31,9 +38,28 @@ public static class CommunicationModule
         services.AddScoped<ISysNotificationChannelSender, SysWebhookNotificationChannelSender>();
 
         // Explicit Communication services
-        services.AddScoped<Chat.Services.ISysChatService, Chat.Services.SysChatService>();
-        services.AddScoped<Notifications.Services.ISysNotificationService, Notifications.Services.SysNotificationService>();
-        services.AddScoped<Notifications.Services.ISysNotificationPreferenceService, Notifications.Services.SysNotificationPreferenceService>();
+        services.AddScoped<ISysChatService, SysChatService>();
+        services.AddScoped<ISysNotificationService, SysNotificationService>();
+        services.AddScoped<ISysNotificationPreferenceService, SysNotificationPreferenceService>();
+        services.AddScoped<ISysNotificationTemplateService, SysNotificationTemplateService>();
+        services.AddScoped<ISysNotificationRecipientService, SysNotificationRecipientService>();
+
+        // Generic IBaseService registrations for architecture resolution
+        services.AddScoped<IBaseService<SysChatMessage>>(sp => sp.GetRequiredService<ISysChatService>());
+        services.AddScoped<IBaseService<SysNotification>>(sp => sp.GetRequiredService<ISysNotificationService>());
+        services.AddScoped<IBaseService<SysNotificationPreference>>(sp => sp.GetRequiredService<ISysNotificationPreferenceService>());
+        services.AddScoped<IBaseService<SysNotificationTemplate>>(sp => sp.GetRequiredService<ISysNotificationTemplateService>());
+        services.AddScoped<IBaseService<SysNotificationRecipient>>(sp => sp.GetRequiredService<ISysNotificationRecipientService>());
+
+        // Validators
+        services.AddScoped<SysChatMessageDtoValidator>();
+        services.AddScoped<SendChatMessageRequestValidator>();
+        services.AddScoped<SysNotificationDtoValidator>();
+        services.AddScoped<CreateSysNotificationDtoValidator>();
+        services.AddScoped<SysNotificationTemplateDtoValidator>();
+        services.AddScoped<SysNotificationPreferenceDtoValidator>();
+        services.AddScoped<SysNotificationRecipientDtoValidator>();
+
         services.AddScoped<ISysBackgroundJobHandler, CleanupExpiredNotificationsJobHandler>();
 
         return services;

@@ -1,7 +1,8 @@
+using IAX.IXApi.Modules.Communication.Chat.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace IAX.IXApi.Modules.Communication.Chat.Entities
+namespace IAX.IXApi.Modules.Communication.Chat.Configuration
 {
     public class SysChatMessageConfiguration : IEntityTypeConfiguration<SysChatMessage>
     {

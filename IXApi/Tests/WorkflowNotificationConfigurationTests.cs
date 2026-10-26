@@ -1,5 +1,6 @@
 using System.Reflection;
 using IAX.IXApi.Modules.Communication.Notifications;
+using IAX.IXApi.Modules.Communication.Notifications.Dtos;
 using IAX.IXApi.Modules.Communication.Notifications.Entities;
 using IAX.IXApi.Modules.Communication.Notifications.Services;
 using IAX.IXApi.Modules.Workflow.Activities;

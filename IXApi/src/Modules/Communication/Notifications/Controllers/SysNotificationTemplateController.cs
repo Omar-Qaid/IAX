@@ -1,10 +1,11 @@
 using IAX.IXApi.Api.Controllers;
 using IAX.IXApi.Modules.Communication.Notifications.Entities;
-using IAX.IXApi.Infrastructure.Persistence.Services;
+using IAX.IXApi.Modules.Communication.Notifications.Interfaces;
 using IAX.IXApi.Modules.Identity.Permissions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
-namespace IAX.IXApi.Modules.Communication.Notifications
+namespace IAX.IXApi.Modules.Communication.Notifications.Controllers
 {
     /// <summary>
     /// Standard CRUD controller for notification templates.
@@ -16,7 +17,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications
     public class SysNotificationTemplateController : BaseController<SysNotificationTemplate, SysNotificationTemplateDto>
     {
         public SysNotificationTemplateController(
-            IBaseService<SysNotificationTemplate> service,
+            ISysNotificationTemplateService service,
             ILogger<SysNotificationTemplateController> logger)
             : base(service, logger)
         {

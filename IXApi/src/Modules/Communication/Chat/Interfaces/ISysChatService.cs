@@ -1,6 +1,9 @@
-﻿namespace IAX.IXApi.Modules.Communication.Chat.Services
+using IAX.IXApi.Infrastructure.Persistence.Services;
+using IAX.IXApi.Modules.Communication.Chat.Entities;
+
+namespace IAX.IXApi.Modules.Communication.Chat.Services
 {
-    public interface ISysChatService
+    public interface ISysChatService : IBaseService<SysChatMessage>
     {
         /// <summary>Checks whether a user is a participant in a supported chat room.</summary>
         bool CanAccessRoom(string? userId, string roomId);

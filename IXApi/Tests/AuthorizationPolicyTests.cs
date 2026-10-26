@@ -8,8 +8,10 @@ using IAX.IXApi.Modules.Administration.AuditLogs;
 using IAX.IXApi.Modules.Administration.DataManagement;
 using IAX.IXApi.Modules.Administration.Settings;
 using IAX.IXApi.Modules.Communication.Chat;
+using IAX.IXApi.Modules.Communication.Chat.Controllers;
 using IAX.IXApi.Modules.Communication.Chat.Services;
 using IAX.IXApi.Modules.Communication.Notifications;
+using IAX.IXApi.Modules.Communication.Notifications.Controllers;
 using IAX.IXApi.Modules.Workflow.Activities;
 using IAX.IXApi.Modules.Workflow.DataExchange;
 using IAX.IXApi.Modules.Workflow.Requests;
@@ -158,7 +160,7 @@ public sealed class AuthorizationPolicyTests
     [Fact]
     public void Chat_room_access_requires_exact_participation()
     {
-        var service = new SysChatService(null!, null!);
+        var service = new SysChatService(null!, null!, null!);
 
         Assert.True(service.CanAccessRoom("user-1", "general"));
         Assert.True(service.CanAccessRoom("user-1", "dm:user-1:user-2"));

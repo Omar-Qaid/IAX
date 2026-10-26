@@ -1,16 +1,17 @@
-using IAX.IXApi.Modules.Communication.Notifications;
-using IAX.IXApi.Shared.Domain.Entities;
+using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Communication.Notifications.Entities;
+using IAX.IXApi.Shared.Domain.Entities;
 
 namespace IAX.IXApi.Modules.Communication.Notifications.Services
 {
     /// <summary>
     /// Central notification service interface.
     /// Any module in the system can inject this service to send notifications.
+    /// Inherits from IBaseService&lt;SysNotification&gt; for generic repository and query capabilities.
     /// </summary>
-    public interface ISysNotificationService
+    public interface ISysNotificationService : IBaseService<SysNotification>
     {
-        // â”€â”€ Send Methods â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Send Methods ─────────────────────────────────────────────────────
 
         /// <summary>
         /// Creates and sends a notification using the full DTO (supports all recipient types).
@@ -75,7 +76,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
             SysNotificationPriority priority = SysNotificationPriority.Medium,
             CancellationToken ct = default);
 
-        // â”€â”€ Template-based â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Template-based ────────────────────────────────────────────────────
 
         /// <summary>
         /// Sends a notification generated from a template with dynamic placeholder substitution.
@@ -89,7 +90,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
             SysNotificationPriority? priorityOverride = null,
             CancellationToken ct = default);
 
-        // â”€â”€ Read Operations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Read Operations ───────────────────────────────────────────────────
 
         /// <summary>
         /// Gets paged notifications for a specific user.
@@ -107,7 +108,7 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
         /// </summary>
         Task<int> GetUnreadCountAsync(string userId, CancellationToken ct = default);
 
-        // â”€â”€ Status Mutations â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        // ── Status Mutations ─────────────────────────────────────────────────
 
         /// <summary>
         /// Marks a specific notification as read for a user.
@@ -130,4 +131,3 @@ namespace IAX.IXApi.Modules.Communication.Notifications.Services
         Task DeleteAsync(long notificationId, string userId, CancellationToken ct = default);
     }
 }
-

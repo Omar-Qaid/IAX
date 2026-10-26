@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using IAX.IXApi.Modules.Workflow.Persistence;
 using IAX.IXApi.Shared.Domain.Events;
 using IAX.IXApi.Modules.Communication.Notifications;
+using IAX.IXApi.Modules.Communication.Notifications.Dtos;
 using IAX.IXApi.Modules.Communication.Notifications.Entities;
 using IAX.IXApi.Modules.Communication.Notifications.Services;
 using Microsoft.EntityFrameworkCore;

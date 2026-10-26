@@ -1,5 +1,6 @@
 using IAX.IXApi.Modules.Communication.Notifications;
 using IAX.IXApi.Modules.Communication.Notifications.Configuration;
+using IAX.IXApi.Modules.Communication.Notifications.Dtos;
 using IAX.IXApi.Modules.Communication.Notifications.Entities;
 using Mapster;
 using Xunit;

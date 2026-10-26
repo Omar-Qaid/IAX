@@ -1,6 +1,7 @@
 using IAX.IXApi.Shared.Application.Attributes;
 using IAX.IXApi.Modules.Workflow.Persistence;
 using IAX.IXApi.Modules.Communication.Notifications;
+using IAX.IXApi.Modules.Communication.Notifications.Dtos;
 using IAX.IXApi.Modules.Communication.Notifications.Entities;
 using IAX.IXApi.Modules.Communication.Notifications.Services;
 using Microsoft.EntityFrameworkCore;

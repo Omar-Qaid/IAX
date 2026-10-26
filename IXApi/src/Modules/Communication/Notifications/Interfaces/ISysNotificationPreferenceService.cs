@@ -1,0 +1,11 @@
+using IAX.IXApi.Infrastructure.Persistence.Services;
+using IAX.IXApi.Modules.Communication.Notifications.Entities;
+
+namespace IAX.IXApi.Modules.Communication.Notifications.Services
+{
+    public interface ISysNotificationPreferenceService : IBaseService<SysNotificationPreference>
+    {
+        Task<IReadOnlyList<SysNotificationPreferenceDto>> GetMyPreferencesAsync(string userId, CancellationToken cancellationToken = default);
+        Task SavePreferencesAsync(string userId, IEnumerable<SysNotificationPreferenceDto> preferences, CancellationToken cancellationToken = default);
+    }
+}
