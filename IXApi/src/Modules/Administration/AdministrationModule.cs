@@ -17,7 +17,7 @@ using IAX.IXApi.Modules.Administration.DataManagement.Services;
 using IAX.IXApi.Modules.Administration.DataManagement.Validation;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Administration.Settings.Dtos;
-using IAX.IXApi.Modules.Administration.Settings.Entities;
+using IAX.IXApi.Modules.Administration.Settings;
 using IAX.IXApi.Modules.Administration.Settings.Interfaces;
 using IAX.IXApi.Modules.Administration.Settings.Services;
 using IAX.IXApi.Modules.Administration.Settings.Validation;

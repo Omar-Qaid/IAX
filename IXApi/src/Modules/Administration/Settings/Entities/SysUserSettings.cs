@@ -4,7 +4,7 @@ using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Shared.Application.Attributes;
 using IAX.IXApi.Shared.Domain.Entities;
 
-namespace IAX.IXApi.Modules.Administration.Settings.Entities
+namespace IAX.IXApi.Modules.Administration.Settings
 {
     [Table("SysUserSettings")]
     [DataManagement]

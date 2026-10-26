@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using IAX.IXApi.Shared.Application.Attributes;
 using IAX.IXApi.Shared.Domain.Entities;
 
-namespace IAX.IXApi.Modules.Administration.Settings.Entities
+namespace IAX.IXApi.Modules.Administration.Settings
 {
     [Table("SysSettings")]
     [DataManagement]

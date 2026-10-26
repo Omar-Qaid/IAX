@@ -1,10 +1,8 @@
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata;
 using System.Collections.Generic;
-using IAX.IXApi.Infrastructure.Persistence.Services;
-using IAX.IXApi.Modules.Administration.AuditLogs.Entities;
 
-namespace IAX.IXApi.Modules.Administration.AuditLogs.Interfaces
+namespace IAX.IXApi.Modules.Administration.AuditLogs.Services
 {
     public interface ISysAuditService
     {
@@ -12,5 +10,13 @@ namespace IAX.IXApi.Modules.Administration.AuditLogs.Interfaces
         bool ShouldSkip(PropertyEntry prop);
         bool ValuesEqual(object? a, object? b);
         string? SafeToString(object? value, int maxLen = 4000);
+    }
+}
+
+namespace IAX.IXApi.Modules.Administration.AuditLogs.Interfaces
+{
+    // Alias for callers expecting the interface in Interfaces namespace
+    public interface ISysAuditService : Services.ISysAuditService
+    {
     }
 }

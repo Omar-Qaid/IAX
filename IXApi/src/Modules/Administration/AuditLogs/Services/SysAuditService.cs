@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace IAX.IXApi.Modules.Administration.AuditLogs.Services
 {
-    public class SysAuditService : ISysAuditService
+    public class SysAuditService : ISysAuditService, Interfaces.ISysAuditService
     {
         public (IReadOnlyList<IProperty> PkProps, string? RecordId, bool IsTemporary) GetPkInfo(EntityEntry entry)
         {
