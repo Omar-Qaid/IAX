@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Logging;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
@@ -26,19 +27,23 @@ namespace IAX.IXApi.Modules.Administration.DataManagement.Controllers
     {
         private readonly ISysDataManagementEndpointService _dataManagementService;
         private readonly ISysDataManagementEntityProvider _entityProvider;
+        private readonly ILogger<SysDataManagementController> _logger;
 
         public SysDataManagementController(
             ISysDataManagementEndpointService dataManagementService,
-            ISysDataManagementEntityProvider entityProvider)
+            ISysDataManagementEntityProvider entityProvider,
+            ILogger<SysDataManagementController> logger)
         {
             _dataManagementService = dataManagementService;
             _entityProvider = entityProvider;
+            _logger = logger;
         }
 
         [HttpPost("{entityName}/import")]
         [DomainPermission("System", "DataManagement", "Import")]
         public async Task<ActionResult<APIResponse<SysImportResult>>> Import(string entityName, IFormFile file, CancellationToken cancellationToken)
         {
+            _logger.LogInformation("[DataManagement] - Importing data for entity {EntityName}", entityName);
             var entityType = _entityProvider.GetEntityType(entityName);
             if (entityType == null)
                 return NotFound(APIResponse<SysImportResult>.Fail($"Entity '{entityName}' is not allowed for data management."));
@@ -58,6 +63,7 @@ namespace IAX.IXApi.Modules.Administration.DataManagement.Controllers
         [DomainPermission("System", "DataManagement", "Export")]
         public async Task<IActionResult> Export(string entityName, CancellationToken cancellationToken)
         {
+            _logger.LogInformation("[DataManagement] - Exporting data for entity {EntityName}", entityName);
             var entityType = _entityProvider.GetEntityType(entityName);
             if (entityType == null)
                 return NotFound(new { message = $"Entity '{entityName}' is not allowed for data management." });
@@ -77,6 +83,7 @@ namespace IAX.IXApi.Modules.Administration.DataManagement.Controllers
         [DomainPermission("System", "DataManagement", "Export")]
         public async Task<IActionResult> ExportView(string entityName, [FromBody] SysExportRequest request, CancellationToken cancellationToken)
         {
+            _logger.LogInformation("[DataManagement] - Exporting view for entity {EntityName}", entityName);
             var entityType = _entityProvider.GetEntityType(entityName);
             if (entityType == null)
                 return NotFound(new { message = $"Entity '{entityName}' is not allowed for data management." });
@@ -97,6 +104,7 @@ namespace IAX.IXApi.Modules.Administration.DataManagement.Controllers
         [DomainPermission("System", "DataManagement", "View")]
         public async Task<IActionResult> GetTemplate(string entityName, CancellationToken cancellationToken)
         {
+            _logger.LogInformation("[DataManagement] - Generating template for entity {EntityName}", entityName);
             var entityType = _entityProvider.GetEntityType(entityName);
             if (entityType == null)
                 return NotFound(new { message = $"Entity '{entityName}' is not allowed for data management." });
@@ -111,6 +119,7 @@ namespace IAX.IXApi.Modules.Administration.DataManagement.Controllers
         [DomainPermission("System", "DataManagement", "View")]
         public ActionResult<APIResponse<IEnumerable<string>>> GetAllowedEntities()
         {
+            _logger.LogInformation("[DataManagement] - Fetching allowed entities");
             return Ok(APIResponse<IEnumerable<string>>.Ok(_entityProvider.GetAllowedEntities().Keys));
         }
 
@@ -122,6 +131,7 @@ namespace IAX.IXApi.Modules.Administration.DataManagement.Controllers
         [DomainPermission("System", "DataManagement", "View")]
         public ActionResult<APIResponse<IEnumerable<object>>> GetFields(string entityName)
         {
+            _logger.LogInformation("[DataManagement] - Fetching fields for entity {EntityName}", entityName);
             var entityType = _entityProvider.GetEntityType(entityName);
             if (entityType == null)
                 return NotFound(APIResponse<IEnumerable<object>>.Fail($"Entity '{entityName}' is not allowed for data management."));

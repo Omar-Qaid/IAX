@@ -8,15 +8,21 @@ using IAX.IXApi.Shared.Domain.Entities;
 
 namespace IAX.IXApi.Modules.Administration.DataManagement.Services;
 
-public sealed class SysDataManagementEndpointService(ISysDataManagementService dataManagement)
-    : ISysDataManagementEndpointService
+public sealed class SysDataManagementEndpointService : ISysDataManagementEndpointService
 {
+    private readonly ISysDataManagementService _dataManagement;
+
+    public SysDataManagementEndpointService(ISysDataManagementService dataManagement)
+    {
+        _dataManagement = dataManagement;
+    }
+
     public async Task<SysImportResult?> ImportAsync(Type entityType, Stream stream, CancellationToken cancellationToken)
     {
         var method = typeof(ISysDataManagementService).GetMethod(nameof(ISysDataManagementService.ImportAsync))
             ?.MakeGenericMethod(entityType);
         if (method == null) return null;
-        var task = (Task<SysImportResult>)method.Invoke(dataManagement, [stream, cancellationToken])!;
+        var task = (Task<SysImportResult>)method.Invoke(_dataManagement, [stream, cancellationToken])!;
         return await task;
     }
 
@@ -26,7 +32,7 @@ public sealed class SysDataManagementEndpointService(ISysDataManagementService d
             .GetMethod(nameof(ISysDataManagementService.ExportAsync), [typeof(CancellationToken)])
             ?.MakeGenericMethod(entityType);
         if (method == null) return null;
-        var task = (Task<Stream>)method.Invoke(dataManagement, [cancellationToken])!;
+        var task = (Task<Stream>)method.Invoke(_dataManagement, [cancellationToken])!;
         return await task;
     }
 
@@ -36,7 +42,7 @@ public sealed class SysDataManagementEndpointService(ISysDataManagementService d
         var method = typeof(ISysDataManagementService).GetMethod(nameof(ISysDataManagementService.ExportAsync),
             [typeof(SysExportRequest), typeof(Stream), typeof(CancellationToken)])?.MakeGenericMethod(entityType);
         if (method == null) return false;
-        var task = (Task)method.Invoke(dataManagement, [request, output, cancellationToken])!;
+        var task = (Task)method.Invoke(_dataManagement, [request, output, cancellationToken])!;
         await task;
         return true;
     }
@@ -46,7 +52,7 @@ public sealed class SysDataManagementEndpointService(ISysDataManagementService d
         var method = typeof(ISysDataManagementService).GetMethod(nameof(ISysDataManagementService.GenerateTemplateAsync))
             ?.MakeGenericMethod(entityType);
         if (method == null) return null;
-        var task = (Task<Stream>)method.Invoke(dataManagement, [cancellationToken])!;
+        var task = (Task<Stream>)method.Invoke(_dataManagement, [cancellationToken])!;
         return await task;
     }
 
