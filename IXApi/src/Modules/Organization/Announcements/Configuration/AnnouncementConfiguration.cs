@@ -15,11 +15,8 @@ namespace IAX.IXApi.Modules.Organization.Announcements
                 .HasColumnName("RecId")
                 .ValueGeneratedOnAdd();
 
-
             builder.Property(x => x.PhotoURL)
                 .HasMaxLength(250);
-
-   
         }
     }
 }
