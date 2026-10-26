@@ -12,10 +12,10 @@ namespace IAX.IXApi.Modules.Administration.DataManagement.Services
 {
     public class SysDataManagementService : ISysDataManagementService
     {
-        private readonly ISysExcelService _excelService;
+        private readonly Interfaces.ISysExcelService _excelService;
         private readonly IUnitOfWork _unitOfWork;
 
-        public SysDataManagementService(ISysExcelService excelService, IUnitOfWork unitOfWork)
+        public SysDataManagementService(Interfaces.ISysExcelService excelService, IUnitOfWork unitOfWork)
         {
             _excelService = excelService;
             _unitOfWork = unitOfWork;

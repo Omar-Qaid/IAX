@@ -36,6 +36,8 @@ namespace IXApi.Tests
                     e.ToTable("SysDataSeedLogs");
                     e.HasKey(x => x.RecId);
                     e.Property(x => x.TableName).IsRequired();
+                    e.HasIndex(x => new { x.SeederId, x.Version, x.Scope }).IsUnique()
+                        .HasFilter("[SeederId] IS NOT NULL AND [Policy] = 'RunOnce' AND [Outcome] = 'Success'");
                 });
             }
         }
@@ -59,6 +61,23 @@ namespace IXApi.Tests
                 {
                     await Action();
                 }
+            }
+        }
+
+        private sealed class LegacyBridgeSeeder : BaseModuleSeeder
+        {
+            public override string Id => "Test.LegacyBridge";
+            public override SeederCategory Category => SeederCategory.Required;
+            public int Calls { get; private set; }
+
+            public override Task SeedAsync(
+                ApplicationDbContext db,
+                Microsoft.AspNetCore.Identity.RoleManager<IAX.IXApi.Modules.Identity.Roles.AspNetRole> roles,
+                Microsoft.AspNetCore.Identity.UserManager<IAX.IXApi.Modules.Identity.Users.AspNetUser> users,
+                CancellationToken ct)
+            {
+                Calls++;
+                return Task.CompletedTask;
             }
         }
 
@@ -87,6 +106,38 @@ namespace IXApi.Tests
             var db = new TestAppDbContext(options);
             await db.Database.EnsureCreatedAsync();
             return (connection, db);
+        }
+
+        [Fact]
+        public async Task LegacyBridge_InvokesTheConcreteSeeder()
+        {
+            var (connection, db) = await CreateSqliteDbAsync();
+            await using var _ = connection;
+            await using var __ = db;
+            var seeder = new LegacyBridgeSeeder();
+
+            await seeder.SeedAsync(SeedingContext.CreateDefault(db), CancellationToken.None);
+
+            Assert.Equal(1, seeder.Calls);
+        }
+
+        [Fact]
+        public void LegacySeedMethods_DoNotHideTheBaseImplementation()
+        {
+            var methods = typeof(BaseModuleSeeder).Assembly.GetTypes()
+                .Where(type => type.IsClass && !type.IsAbstract && type.IsSubclassOf(typeof(BaseModuleSeeder)))
+                .Select(type => type.GetMethod("SeedAsync", new[]
+                {
+                    typeof(ApplicationDbContext),
+                    typeof(Microsoft.AspNetCore.Identity.RoleManager<IAX.IXApi.Modules.Identity.Roles.AspNetRole>),
+                    typeof(Microsoft.AspNetCore.Identity.UserManager<IAX.IXApi.Modules.Identity.Users.AspNetUser>),
+                    typeof(CancellationToken)
+                }))
+                .Where(method => method is not null && method.DeclaringType != typeof(BaseModuleSeeder))
+                .ToList();
+
+            Assert.All(methods, method =>
+                Assert.Equal(typeof(BaseModuleSeeder), method!.GetBaseDefinition().DeclaringType));
         }
 
         [Fact]
@@ -122,6 +173,11 @@ namespace IXApi.Tests
             var logs = await db.Set<SysDataSeedLog>().ToListAsync();
             Assert.Single(logs);
             Assert.Equal("Test.RunOnce:v1:global", logs[0].TableName);
+            Assert.Equal("Test.RunOnce", logs[0].SeederId);
+            Assert.Equal(1, logs[0].Version);
+            Assert.Equal("global", logs[0].Scope);
+            Assert.Equal("RunOnce", logs[0].Policy);
+            Assert.Equal("Success", logs[0].Outcome);
 
             // Run 2 (no version change)
             await service.SeedAsync();
@@ -199,13 +255,76 @@ namespace IXApi.Tests
                 NullLogger<DatabaseSeederService>.Instance,
                 new Microsoft.Extensions.DependencyInjection.ServiceCollection().BuildServiceProvider());
 
-            await service.SeedAsync();
-
+            var error = await Record.ExceptionAsync(() => service.SeedAsync());
             Assert.Equal(1, failingSeeder.ExecutionCount);
+            Assert.True(error is AggregateException,
+                $"Unexpected error: {error}; logs: {string.Join(",", (await db.SysDataSeedLogs.ToListAsync()).Select(x => x.Outcome))}");
             Assert.Equal(0, dependentSeeder.ExecutionCount); // Skipped because parent failed
 
             var logs = await db.Set<SysDataSeedLog>().ToListAsync();
             Assert.Contains(logs, l => l.TableName.Contains("Parent.Fail"));
+        }
+
+        [Fact]
+        public async Task FailedSeeder_RollsBackItsRowsAndCanRetry()
+        {
+            var (connection, db) = await CreateSqliteDbAsync();
+            await using var _ = connection;
+            await using var __ = db;
+            var shouldFail = true;
+            var seeder = new MockSeeder
+            {
+                Id = "Test.Retry",
+                Category = SeederCategory.Reference,
+                Policy = SeederExecutionPolicy.RunOnce,
+                Action = async () =>
+                {
+                    db.SysDataSeedLogs.Add(new SysDataSeedLog { TableName = "partial-data" });
+                    await db.SaveChangesAsync();
+                    if (shouldFail) throw new InvalidOperationException("failed after saving");
+                }
+            };
+            var service = new DatabaseSeederService(db, new[] { seeder }, new SeederDependencyGraph(),
+                new NullSeederLock(), Options.Create(new SeedingOptions { Enabled = true }),
+                new ConfigurationBuilder().Build(), NullLogger<DatabaseSeederService>.Instance,
+                new ServiceCollection().BuildServiceProvider());
+
+            var error = await Record.ExceptionAsync(() => service.SeedAsync());
+            Assert.Equal(1, seeder.ExecutionCount);
+            Assert.True(error is AggregateException,
+                $"Unexpected error: {error}; logs: {string.Join(",", (await db.SysDataSeedLogs.ToListAsync()).Select(x => x.Outcome))}");
+            Assert.False(await db.SysDataSeedLogs.AnyAsync(x => x.TableName == "partial-data"));
+            Assert.Equal(1, await db.SysDataSeedLogs.CountAsync(x => x.Outcome == "Failed"));
+
+            shouldFail = false;
+            await service.SeedAsync();
+            Assert.Equal(2, seeder.ExecutionCount);
+            Assert.True(await db.SysDataSeedLogs.AnyAsync(x => x.TableName == "partial-data"));
+            Assert.Equal(1, await db.SysDataSeedLogs.CountAsync(x => x.SeederId == "Test.Retry" && x.Outcome == "Success"));
+        }
+
+        [Fact]
+        public async Task RunOnceSuccess_HasDatabaseUniquenessProtection()
+        {
+            var (connection, db) = await CreateSqliteDbAsync();
+            await using var _ = connection;
+            await using var __ = db;
+            Assert.Contains(db.Model.FindEntityType(typeof(SysDataSeedLog))!.GetIndexes(),
+                index => index.IsUnique && index.Properties.Count == 3);
+
+            db.SysDataSeedLogs.Add(new SysDataSeedLog
+            {
+                TableName = "first", SeederId = "Test.Unique", Version = 1,
+                Scope = "dat", Policy = "RunOnce", Outcome = "Success"
+            });
+            await db.SaveChangesAsync();
+            db.SysDataSeedLogs.Add(new SysDataSeedLog
+            {
+                TableName = "second", SeederId = "Test.Unique", Version = 1,
+                Scope = "dat", Policy = "RunOnce", Outcome = "Success"
+            });
+
+            await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
         }
 
         [Fact]

@@ -40,6 +40,10 @@ public sealed class OthersDBWorkflowMasterFromSeeder : OthersDBSeedData
 
     public override Task SeedAsync(SeedingContext context, CancellationToken cancellationToken)
     {
+        if (SeedDbConnectionString is null &&
+            !context.Options.EnableEmbeddedFixtures)
+            throw new InvalidOperationException(
+                "Enable Seeding:EnableEmbeddedFixtures or configure ConnectionStrings:SeedDbConnString before importing workflow data.");
         return SeedAsync(context.Db, context.Roles!, context.Users!, cancellationToken);
     }
 

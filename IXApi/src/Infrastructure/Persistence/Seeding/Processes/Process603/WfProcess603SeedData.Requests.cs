@@ -3,6 +3,7 @@ using IAX.IXApi.Modules.Workflow.Requests;
 using IAX.IXApi.Modules.Workflow.Variables;
 using IAX.IXApi.Modules.Workflow.Processes;
 using IAX.IXApi.Modules.Workflow.Activities;
+using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Processes.Process603;
@@ -29,7 +30,8 @@ public sealed partial class WfProcess603SeedData
             var request = new WfRequest
             {
                 RecId = 129252L,
-                EmployeeId = 156144L,
+                EmployeeId = await db.Set<HcmWorker>().IgnoreQueryFilters()
+                    .AnyAsync(x => x.RecId == 156144L, ct) ? 156144L : null,
                 ProcessId = 603L,
                 RequestDate = new DateTime(2026, 4, 6, 23, 35, 46, 213),
                 RequestDetails = requestDetailsXml,

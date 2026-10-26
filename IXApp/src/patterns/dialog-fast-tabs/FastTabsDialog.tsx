@@ -14,7 +14,7 @@ export interface FastTabField {
   name: string;
   label: string;
   masterRoute?: string;
-  type?: 'text' | 'select' | 'multiline' | 'date' | 'number';
+  type?: 'text' | 'select' | 'multiline' | 'date' | 'number' | 'display';
   required?: boolean;
   disabled?: boolean;
   options?: FastTabOption[];
@@ -97,7 +97,7 @@ export function FastTabsDialog<TValues extends Record<string, FastTabValue>>({ o
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, columnGap: 5.75, rowGap: 1.05 }}>
             {section.fields.map((field) => <Box key={field.name} sx={{ minWidth: 0 }}>
               <Typography sx={{ mb: 0.2, display: 'flex', gap: 0.5, fontSize: '0.6875rem', color: 'text.secondary' }}>{field.type === 'select' ? <LookupNavigationLabel label={field.label} masterRoute={field.masterRoute} /> : field.label}{field.required && <Box component="span" sx={{ marginInlineStart: 'auto', color: 'error.main', fontSize: '0.9rem' }}>*</Box>}</Typography>
-              <TextField type={field.type === 'date' || field.type === 'number' ? field.type : undefined} select={field.type === 'select'} multiline={field.type === 'multiline'} rows={field.type === 'multiline' ? (field.rows ?? 4) : undefined} value={field.valueGetter?.(values) ?? values[field.name] ?? ''} disabled={saving || field.disabled} error={Boolean(errors[field.name])} helperText={errors[field.name]} slotProps={{ input: { 'aria-label': field.label, 'aria-required': field.required } }} onChange={(event) => changeValue(field.name, field.type === 'number' && event.target.value !== '' ? Number(event.target.value) : event.target.value)} sx={{ width: { xs: '100%', sm: field.width ?? '100%' }, maxWidth: '100%', '& .MuiInputBase-root': { minHeight: field.type === 'multiline' ? 112 : 29, borderRadius: 0.5, fontSize: '0.75rem' }, '& .MuiInputBase-input': { px: 0.75, py: 0.5 }, '& .MuiFormHelperText-root': { mx: 0, fontSize: '0.65rem' }, ...lookupValueSx(field.type === 'select' ? field.valueGetter?.(values) ?? values[field.name] : '') }}>
+              <TextField type={field.type === 'date' || field.type === 'number' ? field.type : undefined} select={field.type === 'select'} multiline={field.type === 'multiline'} rows={field.type === 'multiline' ? (field.rows ?? 4) : undefined} value={field.valueGetter?.(values) ?? values[field.name] ?? ''} disabled={saving || field.disabled || field.type === 'display'} error={Boolean(errors[field.name])} helperText={errors[field.name]} slotProps={{ input: { 'aria-label': field.label, 'aria-required': field.required } }} onChange={(event) => changeValue(field.name, field.type === 'number' && event.target.value !== '' ? Number(event.target.value) : event.target.value)} sx={{ width: { xs: '100%', sm: field.width ?? '100%' }, maxWidth: '100%', '& .MuiInputBase-root': { minHeight: field.type === 'multiline' ? 112 : 29, borderRadius: 0.5, fontSize: '0.75rem' }, '& .MuiInputBase-input': { px: 0.75, py: 0.5 }, '& .MuiFormHelperText-root': { mx: 0, fontSize: '0.65rem' }, ...lookupValueSx(field.type === 'select' ? field.valueGetter?.(values) ?? values[field.name] : '') }}>
                 {(field.optionsGetter?.(values) ?? field.options ?? []).map((option) => <MenuItem key={String(option.value)} value={option.value} sx={{ fontSize: '0.78rem' }}>{option.label}</MenuItem>)}
               </TextField>
             </Box>)}

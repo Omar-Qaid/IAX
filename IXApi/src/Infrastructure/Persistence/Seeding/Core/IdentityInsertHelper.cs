@@ -97,29 +97,30 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Core
             }
             finally
             {
-                if (identityTurnedOn)
+                try
                 {
-                    try
+                    if (identityTurnedOn)
                     {
-                        await db.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT {safeTable} OFF", ct);
-                    }
-                    catch (Exception cleanupEx)
-                    {
-                        _logger?.LogError(cleanupEx, "Failed to disable IDENTITY_INSERT on {Table}", safeTable);
-                        if (executionException != null)
+                        try
                         {
-                            throw new AggregateException(
-                                $"Execution failed and subsequent IDENTITY_INSERT OFF cleanup on {safeTable} also failed.",
-                                executionException,
-                                cleanupEx);
+                            await db.Database.ExecuteSqlRawAsync($"SET IDENTITY_INSERT {safeTable} OFF", CancellationToken.None);
                         }
-                        throw;
+                        catch (Exception cleanupEx)
+                        {
+                            _logger?.LogError(cleanupEx, "Failed to disable IDENTITY_INSERT on {Table}", safeTable);
+                            if (executionException != null)
+                                throw new AggregateException(
+                                    $"Execution failed and subsequent IDENTITY_INSERT OFF cleanup on {safeTable} also failed.",
+                                    executionException,
+                                    cleanupEx);
+                            throw;
+                        }
                     }
                 }
-
-                if (openedLocally && db.Database.CurrentTransaction == null)
+                finally
                 {
-                    await db.Database.CloseConnectionAsync();
+                    if (openedLocally && db.Database.CurrentTransaction == null)
+                        await db.Database.CloseConnectionAsync();
                 }
             }
         }

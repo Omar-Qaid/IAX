@@ -57,13 +57,14 @@ public sealed partial class WfProcessSeedData
         if (missingControls.Length > 0)
             throw Missing($"WfControls {string.Join(", ", missingControls)}");
 
-        var executionStrategy = db.Database.CreateExecutionStrategy();
-        await executionStrategy.ExecuteAsync(async () =>
+        async Task SeedCoreAsync()
         {
             // A retry must start with a clean tracker because the previous attempt may
             // have generated identity values before its transaction was rolled back.
             db.ChangeTracker.Clear();
-            await using var transaction = await db.Database.BeginTransactionAsync(ct);
+            await using var transaction = db.Database.CurrentTransaction is null
+                ? await db.Database.BeginTransactionAsync(ct)
+                : null;
             try
             {
             var process = new WfProcess
@@ -260,14 +261,21 @@ public sealed partial class WfProcessSeedData
             }));
 
                 await db.SaveChangesAsync(ct);
-                await transaction.CommitAsync(ct);
+                if (transaction is not null)
+                    await transaction.CommitAsync(ct);
             }
             catch
             {
-                await transaction.RollbackAsync(ct);
+                if (transaction is not null)
+                    await transaction.RollbackAsync(CancellationToken.None);
                 throw;
             }
-        });
+        }
+
+        if (db.Database.CurrentTransaction is null)
+            await db.Database.CreateExecutionStrategy().ExecuteAsync(SeedCoreAsync);
+        else
+            await SeedCoreAsync();
 
         var seededProcess = await db.WfProcesses.IgnoreQueryFilters()
             .SingleAsync(x => x.Code == ProcessCode, ct);

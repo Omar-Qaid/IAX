@@ -30,7 +30,7 @@ public sealed partial  class WfProcessSeedData : IAX.IXApi.Infrastructure.Persis
     private const string ProcessCode = "PAYMENT_REQUEST";
     private const string RequiredRule = "{\"validations\":[{\"type\":\"required\",\"active\":true}]}";
 
-    public async Task SeedAsync(
+    public override async Task SeedAsync(
         ApplicationDbContext db,
         RoleManager<AspNetRole> roles,
         UserManager<AspNetUser> users,
@@ -40,13 +40,15 @@ public sealed partial  class WfProcessSeedData : IAX.IXApi.Infrastructure.Persis
         var owner = (await users.FindByNameAsync("sys"))?.Id ?? "sys";
 
         await SeedMasterDataAsync(db, owner, ct);
-        await SeedPaymentRequestExampleAsync(db, owner, ct);
         await SeedPerformersAsync(db, owner, ct);
         await SeedPerformerUsersAsync(db, owner, ct);
 
         await WfProcess590SeedData.SeedAsync(db, owner, ct);
         await WfProcess603SeedData.SeedAsync(db, owner, ct);
         await WfProcess651SeedData.SeedAsync(db, owner, ct);
+
+        // Insert fixed workflow IDs before examples that allocate identity values.
+        await SeedPaymentRequestExampleAsync(db, owner, ct);
 
         foreach (var form in AdditionalForms())
             await SeedFormAsync(db, form, owner, ct);

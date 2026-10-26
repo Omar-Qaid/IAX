@@ -31,7 +31,7 @@ public sealed class WorkflowRequestTrackingSeeder : IAX.IXApi.Infrastructure.Per
     public override string Id => "Workflow.DemoRequestTracking";
     public override int Version => 1;
     public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory Category => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory.Demo;
-    public override System.Collections.Generic.IReadOnlyCollection<string> DependsOn => new[] { "Workflow.ProcessMaster" };
+    public override System.Collections.Generic.IReadOnlyCollection<string> DependsOn => new[] { "Workflow.ProcessMaster", "Finance.Foundation.HcmExamples" };
     public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy Policy => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy.Repeatable;
     public override string Scope => "dat";
 
@@ -96,7 +96,7 @@ public sealed class WorkflowRequestTrackingSeeder : IAX.IXApi.Infrastructure.Per
         new(384135, 313322, 321463, 10, 0, "The transaction was processed.", "تم تمرير المعاملة", "تم تمرير المعاملة آلياً", 0, "تم تمرير المعاملة آلياً", "The transaction was processed automatically."),
     ];
 
-    public async System.Threading.Tasks.Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles, UserManager<AspNetUser> users, CancellationToken ct)
+    public override async System.Threading.Tasks.Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles, UserManager<AspNetUser> users, CancellationToken ct)
     {
         _ = roles;
         var createdBy = (await users.FindByNameAsync("sys"))?.Id ?? "sys";
@@ -135,6 +135,12 @@ public sealed class WorkflowRequestTrackingSeeder : IAX.IXApi.Infrastructure.Per
             })
             .ToList();
         var detailOptions = await LoadRequestOptionsAsync(db, details, ct);
+        var employeeId = await db.HcmWorkers.IgnoreQueryFilters()
+            .Where(worker => worker.RecId == 157424L ||
+                (worker.DataAreaId == "dat" && worker.PersonnelNumber == "DEMO-DIRECTOR"))
+            .OrderBy(worker => worker.RecId == 157424L ? 0 : 1)
+            .Select(worker => (long?)worker.RecId)
+            .FirstOrDefaultAsync(ct);
 
         foreach (var request in Requests.Where(request => request.Id == requestId))
         {
@@ -148,7 +154,7 @@ public sealed class WorkflowRequestTrackingSeeder : IAX.IXApi.Infrastructure.Per
             seededRequest.Code = request.Id.ToString();
             seededRequest.Name = $"Daily fund closing - {request.Date:yyyy-MM-dd}";
             seededRequest.ProcessId = ProcessId;
-            seededRequest.EmployeeId = 157424;
+            seededRequest.EmployeeId = employeeId;
             seededRequest.RequestDate = request.Date;
             seededRequest.RequestDetails = BuildXml(
                 details.Where(detail => detail.RequestId == request.Id), detailOptions);

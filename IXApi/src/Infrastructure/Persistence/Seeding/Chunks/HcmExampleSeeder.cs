@@ -34,7 +34,7 @@ public sealed  class HcmExampleSeeder : IAX.IXApi.Infrastructure.Persistence.See
     public const string Company = "dat";
     public static readonly DateOnly EffectiveFrom = new(2026, 1, 1);
 
-    public Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles,
+    public override Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles,
         UserManager<AspNetUser> users, CancellationToken ct) => SeedExamplesAsync(db, ct);
 
     public async Task SeedExamplesAsync(DbContext db, CancellationToken ct = default)

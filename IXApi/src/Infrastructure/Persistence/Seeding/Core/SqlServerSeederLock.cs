@@ -49,16 +49,13 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Core
             }
 
             // 3. SQL Server distributed application lock (Session-scoped)
-            DbConnection connection = _db.Database.GetDbConnection();
-            bool openedLocally = false;
+            // Keep the application lock on a dedicated connection. Legacy seeders may
+            // close the DbContext connection while saving identity-valued rows.
+            DbConnection connection = new SqlConnection(_db.Database.GetConnectionString());
 
             try
             {
-                if (connection.State != ConnectionState.Open)
-                {
-                    await connection.OpenAsync(cancellationToken);
-                    openedLocally = true;
-                }
+                await connection.OpenAsync(cancellationToken);
 
                 await using var cmd = connection.CreateCommand();
                 cmd.CommandText = @"
@@ -118,20 +115,14 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Core
                     }
                     finally
                     {
-                        if (openedLocally && connection.State == ConnectionState.Open)
-                        {
-                            await connection.CloseAsync();
-                        }
+                        await connection.DisposeAsync();
                         ProcessLock.Release();
                     }
                 });
             }
             catch
             {
-                if (openedLocally && connection.State == ConnectionState.Open)
-                {
-                    await connection.CloseAsync();
-                }
+                await connection.DisposeAsync();
                 ProcessLock.Release();
                 throw;
             }

@@ -27,7 +27,7 @@ public sealed  class OrganizationStructureSeeder : IAX.IXApi.Infrastructure.Pers
     public const string SeedCompany = "dat";
     public static readonly DateOnly EffectiveFrom = new(2026, 1, 1);
 
-    public Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles,
+    public override Task SeedAsync(ApplicationDbContext db, RoleManager<AspNetRole> roles,
         UserManager<AspNetUser> users, CancellationToken ct) => SeedStructureAsync(db, ct);
 
     public async Task SeedStructureAsync(IFinanceDataContext db, CancellationToken ct = default)

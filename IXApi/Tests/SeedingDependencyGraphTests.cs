@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace IXApi.Tests
@@ -20,6 +22,23 @@ namespace IXApi.Tests
             public string Scope { get; set; } = "global";
 
             public Task SeedAsync(SeedingContext context, CancellationToken cancellationToken) => Task.CompletedTask;
+        }
+
+        [Fact]
+        public void RegisteredSeeders_ResolveAndFormAValidDefaultGraph()
+        {
+            var services = new ServiceCollection();
+            services.AddLogging();
+            services.AddSeedingCore(new ConfigurationBuilder().Build());
+            using var provider = services.BuildServiceProvider();
+
+            var registered = provider.GetServices<IModuleSeeder>().ToList();
+            var ordered = new SeederDependencyGraph().GetExecutionOrder(registered, new SeedingOptions());
+
+            Assert.NotEmpty(ordered);
+            Assert.Contains(ordered, seeder => seeder.Id == "Finance.Inventory.Setup");
+            Assert.DoesNotContain(ordered, seeder => seeder.Category == SeederCategory.Demo);
+            Assert.DoesNotContain(ordered, seeder => seeder.Category == SeederCategory.LegacyImport);
         }
 
         [Fact]
