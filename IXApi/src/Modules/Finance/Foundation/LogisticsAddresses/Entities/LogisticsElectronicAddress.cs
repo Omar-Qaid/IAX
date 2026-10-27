@@ -76,7 +76,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
 
 
         //LogisticsElectronicAddress.PrivateForParty == DirPartyTable.RecId
-        [ForeignKey(nameof(PrivateForParty))]
         public virtual DirPartyTable? DirPartyTable { get; set; }
 
         #endregion

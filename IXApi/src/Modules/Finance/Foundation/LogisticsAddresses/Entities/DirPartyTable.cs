@@ -236,7 +236,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
 
 
         //DirPartyTable.PrimaryContactURL == LogisticsElectronicAddress.RecId
-        [ForeignKey(nameof(PrimaryContactUrl))]
         public virtual LogisticsElectronicAddress? LogisticsElectronicAddress_Url { get; set; }
 
 
