@@ -49,14 +49,14 @@ public sealed class PriceDiscJournalPostingService : IPriceDiscJournalPostingSer
                     var relation = EffectiveRelation(header, line);
                     if (line.MustBeDeleted != 0)
                     {
-                        var existing = line.PriceDiscTableRef == 0 ? null : await _db.Context.Set<PriceDiscTable>()
+                        var existing = line.PriceDiscTableRef is null or 0 ? null : await _db.Context.Set<PriceDiscTable>()
                             .FirstOrDefaultAsync(row => row.DataAreaId == header.DataAreaId
                                 && row.RecId == line.PriceDiscTableRef, cancellationToken);
                         if (existing != null) _db.Context.Set<PriceDiscTable>().Remove(existing);
                         continue;
                     }
 
-                    var posted = line.PriceDiscTableRef == 0 ? null : await _db.Context.Set<PriceDiscTable>()
+                    var posted = line.PriceDiscTableRef is null or 0 ? null : await _db.Context.Set<PriceDiscTable>()
                         .FirstOrDefaultAsync(row => row.DataAreaId == header.DataAreaId
                             && row.RecId == line.PriceDiscTableRef, cancellationToken);
                     var isNewRule = posted == null;

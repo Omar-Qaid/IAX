@@ -448,7 +448,7 @@ namespace IXApi.Tests
                 new Microsoft.Extensions.DependencyInjection.ServiceCollection().BuildServiceProvider());
 
             // Run 1: Failure occurs
-            await service.SeedAsync();
+            await Assert.ThrowsAsync<AggregateException>(() => service.SeedAsync());
             Assert.Equal(1, parent.ExecutionCount);
             Assert.Equal(0, child.ExecutionCount); // Child skipped
 

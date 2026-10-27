@@ -113,7 +113,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("SysAuditLogs");
+                    b.ToTable("SysAuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Administration.AuditLogs.Entities.SysExceptionLog", b =>
@@ -217,7 +217,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("SysExceptionLogs");
+                    b.ToTable("SysExceptionLogs", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Administration.BackgroundJobs.Entities.BatchSettings", b =>
@@ -1497,7 +1497,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("SysNotificationPreferences");
+                    b.ToTable("SysNotificationPreferences", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Communication.Notifications.Entities.SysNotificationRecipient", b =>
@@ -2300,7 +2300,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.ToTable("VendLedgerAccounts");
+                    b.ToTable("VendLedgerAccounts", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsPayable.VendPackingSlipJour", b =>
@@ -7805,7 +7805,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<long>("PriceComponentCombination")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("PriceDiscTableRef")
+                    b.Property<long?>("PriceDiscTableRef")
                         .HasColumnType("bigint");
 
                     b.Property<string>("PriceGroup")
@@ -20354,6 +20354,84 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("PaymTerm");
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.SubledgerVoucherGeneralJournalEntry", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<DateTime>("AccountingDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<long>("GeneralJournalEntry")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<long>("SubledgerJournalEntry")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("SysDataStateCode")
+                        .HasColumnType("int");
+
+                    b.Property<long>("TransferId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Voucher")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("VoucherDataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("GeneralJournalEntry");
+
+                    b.HasIndex("VoucherDataAreaId", "Voucher", "AccountingDate");
+
+                    b.ToTable("SubledgerVoucherGeneralJournalEntry");
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.TaxAuthorityAddress", b =>
                 {
                     b.Property<long>("RecId")
@@ -27834,10 +27912,12 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
             modelBuilder.Entity("IAX.IXApi.Modules.Workflow.Requests.WfRequestVariable", b =>
                 {
-                    b.Property<long>("RequestId")
+                    b.Property<long>("RecId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .HasColumnName("RequestId");
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
 
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -27865,15 +27945,12 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<long>("RecId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("RECID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
-
                     b.Property<int>("RecVersion")
                         .HasColumnType("int");
+
+                    b.Property<long>("RequestId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("RequestId");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -27887,9 +27964,12 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<string>("VariableValue")
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("RequestId");
+                    b.HasKey("RecId");
 
                     b.HasIndex("VariableId");
+
+                    b.HasIndex("RequestId", "VariableId")
+                        .IsUnique();
 
                     b.ToTable("WfRequestVariables", (string)null);
                 });
@@ -28725,8 +28805,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.HasOne("IAX.IXApi.Modules.Finance.AccountsReceivable.PriceDiscTable", "PriceDiscTable")
                         .WithMany()
                         .HasForeignKey("PriceDiscTableRef")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("CustTable");
 
@@ -29249,6 +29328,15 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("PaymSchedTable");
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.SubledgerVoucherGeneralJournalEntry", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.GeneralJournalEntry", null)
+                        .WithMany()
+                        .HasForeignKey("GeneralJournalEntry")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.TaxAuthorityAddress", b =>

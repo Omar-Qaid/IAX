@@ -1,6 +1,7 @@
 ﻿using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
+using IAX.IXApi.Modules.Finance.Inventory.InventoryStatus.Entities;
 using IAX.IXApi.Modules.Identity.Roles;
 using IAX.IXApi.Modules.Identity.Users;
 using Microsoft.AspNetCore.Identity;
@@ -33,6 +34,10 @@ public sealed  class InventorySiteWarehouseSeeder : IAX.IXApi.Infrastructure.Per
         UserManager<AspNetUser> users,
         CancellationToken ct)
     {
+        foreach (var (code, name, blocked) in new[] { ("AVAILABLE", "Available", NoYes.No), ("BLOCKED", "Blocked for inspection", NoYes.Yes) })
+            if (!await db.Set<WHSInventStatus>().IgnoreQueryFilters().AnyAsync(x => x.DataAreaId == DataAreaId && x.InventStatusId == code, ct))
+                db.Add(new WHSInventStatus { DataAreaId = DataAreaId, InventStatusId = code, Name = name, InventStatusBlocking = blocked });
+        await db.SaveChangesAsync(ct);
         var siteSeeds = new[]
         {
             new InventSite { SiteId = "RIY", Name = "Riyadh", DefaultInventStatusID = "AVAILABLE", TimeZone = Timezone.Local, DataAreaId = DataAreaId },

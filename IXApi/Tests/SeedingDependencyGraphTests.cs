@@ -42,6 +42,29 @@ namespace IXApi.Tests
         }
 
         [Fact]
+        public void RegisteredSeeders_OrderReferencedSetupBeforeDependents()
+        {
+            var services = new ServiceCollection();
+            services.AddLogging();
+            services.AddSeedingCore(new ConfigurationBuilder().Build());
+            using var provider = services.BuildServiceProvider();
+            var ordered = new SeederDependencyGraph().GetExecutionOrder(provider.GetServices<IModuleSeeder>().ToList(),
+                new SeedingOptions { EnableDemoData = true }).Select(x => x.Id).ToList();
+            foreach (var (parent, child) in new[]
+            {
+                ("Finance.AccountsReceivable.DeliverySetup", "Finance.AccountsPayable.Vendors"),
+                ("Finance.GeneralLedger.Currencies", "Finance.AccountsPayable.Vendors"),
+                ("Finance.AccountsPayable.Vendors", "Finance.GeneralLedger.Tax"),
+                ("Finance.Inventory.UnitOfMeasure", "Finance.GeneralLedger.Tax"),
+                ("Finance.Inventory.SitesAndWarehouses", "Finance.Inventory.Setup"),
+                ("Finance.GeneralLedger.MainAccounts", "Finance.Inventory.Setup"),
+                ("Finance.GeneralLedger.Tax", "Finance.Inventory.DemoProducts"),
+                ("Finance.GeneralLedger.Tax", "Finance.AccountsReceivable.DemoCustVend")
+            })
+                Assert.True(ordered.IndexOf(parent) >= 0 && ordered.IndexOf(parent) < ordered.IndexOf(child), $"{parent} must precede {child}");
+        }
+
+        [Fact]
         public void GetExecutionOrder_DeterministicTopologicalSort_Succeeds()
         {
             var seeders = new List<IModuleSeeder>

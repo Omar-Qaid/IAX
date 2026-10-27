@@ -15,6 +15,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Registrations
 
             // Demo Workflow Request Tracking
             services.AddScoped<IModuleSeeder, WorkflowRequestTrackingSeeder>();
+            services.AddScoped<IModuleSeeder, WorkflowVariableExampleSeeder>();
 
             // Legacy External DB Imports
             services.AddScoped<IModuleSeeder>(sp =>

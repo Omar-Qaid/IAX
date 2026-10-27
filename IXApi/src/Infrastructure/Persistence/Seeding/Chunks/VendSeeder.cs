@@ -1,4 +1,4 @@
-﻿using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
+using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,7 +27,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
     public override string Id => "Finance.AccountsPayable.Vendors";
     public override int Version => 1;
     public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory Category => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory.Reference;
-    public override System.Collections.Generic.IReadOnlyCollection<string> DependsOn => new[] { "Finance.Foundation.CompanyInfo" };
+    public override System.Collections.Generic.IReadOnlyCollection<string> DependsOn => new[] { "Finance.AccountsReceivable.DeliverySetup", "Finance.GeneralLedger.Currencies", "Finance.AccountsReceivable.PaymModes" };
     public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy Policy => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy.Repeatable;
     public override string Scope => "dat";
 
@@ -42,7 +42,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
 
             // Lookup default ExchangeRateType if seeded by ErpSeeder
             var defaultExchType = await db.Set<ExchangeRateType>()
-                .IgnoreQueryFilters()
+                .IgnoreQueryFilters().Where(x => x.DataAreaId == "dat")
                 .FirstOrDefaultAsync(e => e.Name == "Default", ct);
             long? defaultExchTypeId = defaultExchType?.RecId;
 
@@ -172,7 +172,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             };
 
             var existingVendGroupCodes = await db.Set<VendGroup>()
-                .IgnoreQueryFilters()
+                .IgnoreQueryFilters().Where(x => x.DataAreaId == "dat")
                 .Select(g => g.VendGroupCode)
                 .ToListAsync(ct);
 
@@ -194,13 +194,13 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             };
 
             var existingVendors = await db.Set<VendTable>()
-                .IgnoreQueryFilters()
+                .IgnoreQueryFilters().Where(x => x.DataAreaId == "dat")
                 .Where(v => v.DataAreaId == "dat")
                 .ToDictionaryAsync(v => v.AccountNum, StringComparer.OrdinalIgnoreCase, ct);
 
             var vendorPartyNumbers = vendorSeeds.Select(x => x.PartyNumber).ToArray();
             var vendorParties = await db.Set<DirPartyTable>()
-                .IgnoreQueryFilters()
+                .IgnoreQueryFilters().Where(x => x.DataAreaId == "dat")
                 .Where(x => vendorPartyNumbers.Contains(x.PartyNumber))
                 .ToDictionaryAsync(x => x.PartyNumber, StringComparer.OrdinalIgnoreCase, ct);
 

@@ -1,4 +1,4 @@
-﻿using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
+using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities;
@@ -19,7 +19,7 @@ public sealed  class InventorySeeder : IAX.IXApi.Infrastructure.Persistence.Seed
     public override string Id => "Finance.Inventory.Setup";
     public override int Version => 1;
     public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory Category => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory.Reference;
-    public override System.Collections.Generic.IReadOnlyCollection<string> DependsOn => new[] { "Finance.Inventory.UnitOfMeasure" };
+    public override System.Collections.Generic.IReadOnlyCollection<string> DependsOn => new[] { "Finance.Inventory.UnitOfMeasure", "Finance.Inventory.SitesAndWarehouses", "Finance.GeneralLedger.MainAccounts", "Finance.GeneralLedger.Tax" };
     public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy Policy => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy.Repeatable;
     public override string Scope => "dat";
 
@@ -46,6 +46,18 @@ public sealed  class InventorySeeder : IAX.IXApi.Infrastructure.Persistence.Seed
         var productId = await SeedSharedProductAsync(db, ct);
         await SeedReleasedProductAsync(db, productId, ct);
         await SeedPostingRulesAsync(db, ct);
+        // Repair only the exact invalid values emitted by earlier versions.
+        var released = await db.Set<InventTable>().IgnoreQueryFilters()
+            .SingleAsync(x => x.DataAreaId == Company && x.ItemId == ProductNumber, ct);
+        if (released.Name == "Office Chair" && released.NameAlias == "منشفة حمام") released.NameAlias = "كرسي مكتب";
+        var translation = await db.Set<EcoResProductTranslation>().IgnoreQueryFilters()
+            .SingleOrDefaultAsync(x => x.Product == productId && x.LanguageId == "ar", ct);
+        if (translation?.Name == "منشفة حمام")
+        {
+            translation.Name = "كرسي مكتب";
+            if (translation.Description == "منشفة حمام قياسية") translation.Description = "كرسي مكتب قياسي";
+        }
+        await db.SaveChangesAsync(ct);
     }
 
     private static async Task SeedSetupGroupsAsync(ApplicationDbContext db, CancellationToken ct)
@@ -196,7 +208,7 @@ public sealed  class InventorySeeder : IAX.IXApi.Infrastructure.Persistence.Seed
             db.Add(new EcoResDistinctProduct { RecId = product.RecId });
 
         await AddTranslationAsync(db, product.RecId, "en-us", "Office Chair", "Basic stocked office chair", ct);
-        await AddTranslationAsync(db, product.RecId, "ar", "منشفة حمام", "منشفة حمام قياسية", ct);
+        await AddTranslationAsync(db, product.RecId, "ar", "كرسي مكتب", "كرسي مكتب قياسي", ct);
         await db.SaveChangesAsync(ct);
         return product.RecId;
     }
@@ -228,7 +240,7 @@ public sealed  class InventorySeeder : IAX.IXApi.Infrastructure.Persistence.Seed
                 ItemId = ProductNumber,
                 Product = productId,
                 Name = "Office Chair",
-                NameAlias = "منشفة حمام",
+                NameAlias = "كرسي مكتب",
                 ItemType = ItemType.Item,
                 BomUnitId = Unit
             });
@@ -331,7 +343,7 @@ public sealed  class InventorySeeder : IAX.IXApi.Infrastructure.Persistence.Seed
     {
         var accountIds = new[] { "50010000", "40010000", "14010000", "40910000", "50910000" };
         var accounts = await db.Set<MainAccount>().IgnoreQueryFilters()
-            .Where(x => accountIds.Contains(x.MainAccountId))
+            .Where(x => x.DataAreaId == Company && accountIds.Contains(x.MainAccountId))
             .ToDictionaryAsync(x => x.MainAccountId, ct);
         if (accounts.Count == 0) return;
 
@@ -359,6 +371,7 @@ public sealed  class InventorySeeder : IAX.IXApi.Infrastructure.Persistence.Seed
         {
             await AddPostingAsync(db, InventAccountType.PurchPackingSlip, dimensions["50010000"], ct);
             await AddPostingAsync(db, InventAccountType.SalesPackingSlip, dimensions["50010000"], ct);
+            await AddPostingAsync(db, InventAccountType.SalesConsump, dimensions["50010000"], ct);
         }
         if (dimensions.ContainsKey("40010000"))
         {
@@ -366,6 +379,8 @@ public sealed  class InventorySeeder : IAX.IXApi.Infrastructure.Persistence.Seed
         }
         if (dimensions.ContainsKey("14010000"))
         {
+            await AddPostingAsync(db, InventAccountType.PurchReceipt, dimensions["14010000"], ct);
+            await AddPostingAsync(db, InventAccountType.SalesIssue, dimensions["14010000"], ct);
             await AddPostingAsync(db, InventAccountType.InventIssue, dimensions["14010000"], ct);
             await AddPostingAsync(db, InventAccountType.InventReceipt, dimensions["14010000"], ct);
         }

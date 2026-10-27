@@ -196,7 +196,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             };
 
             var existingCodes = await db.CustPaymModeTables
-                .IgnoreQueryFilters()
+                .IgnoreQueryFilters().Where(x => x.DataAreaId == "dat")
                 .Select(p => p.PaymMode)
                 .ToListAsync(ct);
 

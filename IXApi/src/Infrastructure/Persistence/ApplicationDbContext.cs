@@ -369,6 +369,7 @@ namespace IAX.IXApi.Infrastructure.Persistence
         public DbSet<MainAccount> MainAccounts => Set<MainAccount>();
         public DbSet<GeneralJournalEntry> GeneralJournalEntries => Set<GeneralJournalEntry>();
         public DbSet<GeneralJournalAccountEntry> GeneralJournalAccountEntries => Set<GeneralJournalAccountEntry>();
+        public DbSet<SubledgerVoucherGeneralJournalEntry> SubledgerVoucherGeneralJournalEntries => Set<SubledgerVoucherGeneralJournalEntry>();
         public DbSet<FiscalCalendar> FiscalCalendars => Set<FiscalCalendar>();
         public DbSet<FiscalCalendarYear> FiscalCalendarYears => Set<FiscalCalendarYear>();
         public DbSet<FiscalCalendarPeriod> FiscalCalendarPeriods => Set<FiscalCalendarPeriod>();

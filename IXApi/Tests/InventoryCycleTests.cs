@@ -60,7 +60,7 @@ public sealed class InventoryCycleTests
         Assert.Empty(await fixture.Db.Set<PurchTable>().ToListAsync());
     }
 
-    // ---- Reservation engine (Phase 3 §7–8) --------------------------------------------------
+    // ---- Reservation engine (Phase 3 Â§7â€“8) --------------------------------------------------
 
     [Fact]
     public async Task Reserve_and_release_track_ownership_and_availability()
@@ -93,7 +93,7 @@ public sealed class InventoryCycleTests
         // Cannot reserve above remaining demand (30).
         Assert.NotNull((await service.ReserveAsync("SO-L1", 40m, false, default)).Error);
 
-        // Release 5 → reserved 15, available 85.
+        // Release 5 â†’ reserved 15, available 85.
         var (released, releaseError) = await service.ReleaseAsync("SO-L1", 5m, default);
         Assert.Null(releaseError);
         Assert.Equal(15m, released!.Reserved);
@@ -202,7 +202,7 @@ public sealed class InventoryCycleTests
         Assert.NotNull(backdated.Error);
     }
 
-    // ---- Purchase order Milestone 1 (Purchorder.md §12.2): PO 100 @ 50, receive/invoice 60 + 40 ----
+    // ---- Purchase order Milestone 1 (Purchorder.md Â§12.2): PO 100 @ 50, receive/invoice 60 + 40 ----
 
     [Fact]
     public async Task Purchase_order_partial_receipts_and_invoices_complete_the_cycle()
@@ -211,6 +211,8 @@ public sealed class InventoryCycleTests
         var db = fixture.Db;
         SeedLedgerAndPosting(db);
         SeedPurchaseMasterData(db);
+        db.Set<PaymTerm>().Add(new PaymTerm { DataAreaId = "dat", PaymTermId = "Monthly", NumOfMonths = 1, PaymMethod = PaymMethod.Net });
+        db.Set<VendTable>().Local.Single().PaymTermId = "Monthly";
         await db.SaveChangesAsync();
         var (orders, confirm, receipts, invoices) = PurchaseServices(db);
 
@@ -277,6 +279,7 @@ public sealed class InventoryCycleTests
         Assert.Equal(2, await db.Set<VendPackingSlipJour>().CountAsync());
         Assert.Equal(2, await db.Set<VendInvoiceJour>().CountAsync());
         Assert.Equal(-5000m, (await db.Set<VendTrans>().ToListAsync()).Sum(x => x.AmountCur));
+        Assert.All(await db.Set<VendTrans>().ToListAsync(), row => Assert.Equal(row.TransDate.AddMonths(1), row.DueDate));
         var ledger = await db.Set<GeneralJournalAccountEntry>().ToListAsync();
         Assert.Equal(0m, ledger.Sum(x => x.AccountingCurrencyAmount));                     // balanced
         Assert.Equal(5000m, ledger.Where(x => x.AccountingCurrencyAmount > 0).Sum(x => x.AccountingCurrencyAmount));
@@ -298,7 +301,7 @@ public sealed class InventoryCycleTests
         Assert.Empty(await db.Set<PurchTable>().ToListAsync());
     }
 
-    // ---- Sales order cycle (CycleSalesorder.md / ARTables.md §14 state table) -------------------
+    // ---- Sales order cycle (CycleSalesorder.md / ARTables.md Â§14 state table) -------------------
 
     [Fact]
     public async Task Sales_order_partial_delivery_partial_invoice_and_payment_reconcile()
@@ -688,7 +691,7 @@ public sealed class InventoryCycleTests
             typeof(GeneralJournalEntry), typeof(GeneralJournalAccountEntry), typeof(SubledgerVoucherGeneralJournalEntry),
             typeof(PurchTable), typeof(PurchLine), typeof(VendPurchOrderJour), typeof(VendPurchOrderTrans),
             typeof(VendPackingSlipJour), typeof(VendPackingSlipTrans), typeof(VendInvoiceJour), typeof(VendInvoiceTrans),
-            typeof(VendTrans), typeof(VendLedgerAccounts), typeof(InventTransOriginPurchLine), typeof(VendTable),
+            typeof(PaymTerm), typeof(VendTrans), typeof(VendLedgerAccounts), typeof(InventTransOriginPurchLine), typeof(VendTable),
             typeof(InventSite), typeof(InventLocation), typeof(InventTable), typeof(InventTableModule), typeof(UnitOfMeasure), typeof(UnitOfMeasureConversion),
             typeof(SalesTable), typeof(SalesLine), typeof(CustTable), typeof(CustParameters), typeof(CustPackingSlipJour), typeof(CustPackingSlipTrans),
             typeof(CustInvoiceJour), typeof(CustInvoiceTrans), typeof(CustTrans), typeof(CustTransOpen), typeof(CustSettlement), typeof(CustLedgerAccounts),

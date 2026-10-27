@@ -118,7 +118,13 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public decimal SubBillFlatTierPrice { get; set; }
 
         //----------------------------------------- Reference Keys
-        public long PriceDiscTableRef { get; set; }
+        private long? _priceDiscTableRef;
+        // An unposted line has no published rule. Preserve the API's legacy zero sentinel.
+        public long? PriceDiscTableRef
+        {
+            get => _priceDiscTableRef;
+            set => _priceDiscTableRef = value == 0 ? null : value;
+        }
 
         public long AgreementHeaderExt_Ru { get; set; }
 

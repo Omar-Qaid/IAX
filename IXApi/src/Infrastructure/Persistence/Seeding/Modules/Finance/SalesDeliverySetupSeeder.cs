@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,7 +24,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
             var createdBy = "sys";
 
             // 1. Modes of Delivery (DlvMode)
-            var existingDlvModes = await db.Set<DlvMode>().IgnoreQueryFilters().Select(x => x.Code).ToListAsync(cancellationToken);
+            var existingDlvModes = await db.Set<DlvMode>().IgnoreQueryFilters().Where(x => x.DataAreaId == "dat").Select(x => x.Code).ToListAsync(cancellationToken);
             var dlvModeSeeds = new[]
             {
                 new DlvMode { Code = "DHL", Txt = "DHL Express", DisplayOrder = 1, ShipCarrierDlvType = WHSShipCarrierDlvType.Ground, MarkupGroup = "", McrExpedite = "", DomPriority = 1, IsActive = true, CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat" },
@@ -40,7 +40,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
             await db.SaveChangesAsync(cancellationToken);
 
             // 2. Delivery Terms (DlvTerm)
-            var existingDlvTerms = await db.Set<DlvTerm>().IgnoreQueryFilters().Select(x => x.Code).ToListAsync(cancellationToken);
+            var existingDlvTerms = await db.Set<DlvTerm>().IgnoreQueryFilters().Where(x => x.DataAreaId == "dat").Select(x => x.Code).ToListAsync(cancellationToken);
             var dlvTermSeeds = new[]
             {
                 new DlvTerm { Code = "FOB", Txt = "Free on Board", ShipCarrierFreeMinimum = 0, FreightChargeTerm = 0, TaxLocationRole = 0, ItmGoodsInTransitControl = NoYes.No, ItmPortMandatory = NoYes.No, IsActive = true, CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat" },
@@ -56,7 +56,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
             await db.SaveChangesAsync(cancellationToken);
 
             // 3. Payment Terms (PaymTerm)
-            var existingPaymTerms = await db.Set<PaymTerm>().IgnoreQueryFilters().Select(x => x.PaymTermId).ToListAsync(cancellationToken);
+            var existingPaymTerms = await db.Set<PaymTerm>().IgnoreQueryFilters().Where(x => x.DataAreaId == "dat").Select(x => x.PaymTermId).ToListAsync(cancellationToken);
             var paymTermSeeds = new[]
             {
                 new PaymTerm { PaymTermId = "Net 30", Description = "Net 30 Days", NumOfMonths = 0, NumOfDays = 30, PaymMethod = PaymMethod.Net, Cash = NoYes.No, PostOffsettingAr = NoYes.No, CustomerUpdateDueDate = NoYes.Yes, VendorUpdateDueDate = NoYes.Yes, IsActive = true, CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat" },
@@ -73,7 +73,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
             await db.SaveChangesAsync(cancellationToken);
 
             // 4. Payment Schedules (PaymSched & PaymSchedLine)
-            var existingPaymScheds = await db.Set<PaymSched>().IgnoreQueryFilters().Select(x => x.Name).ToListAsync(cancellationToken);
+            var existingPaymScheds = await db.Set<PaymSched>().IgnoreQueryFilters().Where(x => x.DataAreaId == "dat").Select(x => x.Name).ToListAsync(cancellationToken);
             if (!existingPaymScheds.Contains("3 Instal"))
             {
                 var sched = new PaymSched
@@ -93,14 +93,19 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
                 };
                 await db.Set<PaymSched>().AddAsync(sched, cancellationToken);
                 await db.SaveChangesAsync(cancellationToken);
+            }
 
+            {
+                var existingLines = await db.Set<PaymSchedLine>().IgnoreQueryFilters()
+                    .Where(x => x.DataAreaId == "dat" && x.Name == "3 Instal")
+                    .Select(x => x.LineNum).ToListAsync(cancellationToken);
                 var lines = new[]
                 {
                     new PaymSchedLine { Name = "3 Instal", LineNum = 1, Qty = 0, PercentAmount = 34, Value = 0, CfmPrepayment = NoYes.Yes, McrShipping = NoYes.Yes, IsActive = true, CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat" },
                     new PaymSchedLine { Name = "3 Instal", LineNum = 2, Qty = 1, PercentAmount = 33, Value = 0, CfmPrepayment = NoYes.No, McrShipping = NoYes.No, IsActive = true, CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat" },
                     new PaymSchedLine { Name = "3 Instal", LineNum = 3, Qty = 2, PercentAmount = 33, Value = 0, CfmPrepayment = NoYes.No, McrShipping = NoYes.No, IsActive = true, CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat" }
                 };
-                await db.Set<PaymSchedLine>().AddRangeAsync(lines, cancellationToken);
+                await db.Set<PaymSchedLine>().AddRangeAsync(lines.Where(x => !existingLines.Contains(x.LineNum)), cancellationToken);
                 await db.SaveChangesAsync(cancellationToken);
             }
         }

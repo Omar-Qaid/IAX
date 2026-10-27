@@ -58,6 +58,8 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 ("InventTransOriginId", "Lot Origin Sequence",       "ORG-######", "{PREFIX}-{SEQ}",       0),
                 ("LedgerJournalTable",  "Ledger Journal Sequence",   "LJT-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
                 ("InventJournalTable",  "Inventory Journal Sequence","IJRN-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
+                ("InventClosing",       "Inventory Close Sequence",  "ICLS-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
+                ("SettleTransId",       "Inventory Settlement Sequence", "ISET-######", "{PREFIX}-{SEQ}", 0),
                 ("PurchTable",          "Purchase Order Sequence",   "PO-######",  "{PREFIX}-{YYYY}-{SEQ}", 1),
                 ("VendPurchOrderJour",  "PO Confirm Sequence",       "PCONF-######","{PREFIX}-{YYYY}-{SEQ}", 0),
                 ("VendPackingSlipJour", "Product Receipt Sequence",  "PR-######",  "{PREFIX}-{YYYY}-{SEQ}", 1),

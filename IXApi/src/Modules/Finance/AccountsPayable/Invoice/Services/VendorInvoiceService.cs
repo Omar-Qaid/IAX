@@ -83,6 +83,15 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
             if (vendor.Blocked is CustVendBlocked.All or CustVendBlocked.Invoicing)
                 return await Fail(422, "The vendor is blocked for invoicing.", ct);
 
+            var dueDate = date;
+            if (!string.IsNullOrWhiteSpace(order.Payment))
+            {
+                var term = await Db.Set<PaymTerm>().AsNoTracking()
+                    .SingleOrDefaultAsync(x => x.DataAreaId == area && x.PaymTermId == order.Payment, ct);
+                if (term == null) return await Fail(422, "The purchase order payment terms were not found in this company.", ct);
+                try { dueDate = IAX.IXApi.Modules.Finance.Foundation.PaymentTerms.PaymentDueDateCalculator.Calculate(date, term); }
+                catch (InvalidOperationException ex) { return await Fail(422, ex.Message, ct); }
+            }
             var context = await support.LoadLedgerContextAsync(area, date, ct);
             var vendorAccount = await support.ResolveVendorSummaryAsync(area, vendor, ct);
             var internalId = (await _numbers.NextAsync("VendInvoiceJour", area, ct)).Code;
@@ -189,7 +198,7 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
             {
                 DataAreaId = area, AccountNum = order.InvoiceAccount, TransDate = date, Voucher = internalId,
                 Invoice = vendorInvoiceId, Txt = $"Purchase {order.PurchId}", CurrencyCode = order.CurrencyCode,
-                AmountCur = -total, AmountMst = -total, DueDate = date, TransType = LedgerTransType.Purch
+                AmountCur = -total, AmountMst = -total, DueDate = dueDate, TransType = LedgerTransType.Purch
             });
             Db.Set<VendInvoiceJour>().Add(new VendInvoiceJour
             {

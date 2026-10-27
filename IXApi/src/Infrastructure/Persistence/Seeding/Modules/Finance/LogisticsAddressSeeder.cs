@@ -1,189 +1,123 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
+namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance;
+
+public class LogisticsAddressSeeder : BaseModuleSeeder
 {
-    public class LogisticsAddressSeeder : BaseModuleSeeder
+    public override string Id => "Finance.Foundation.Logistics";
+    public override int Version => 1;
+    public override SeederCategory Category => SeederCategory.Reference;
+    public override IReadOnlyCollection<string> DependsOn => new[] { "Finance.Foundation.CompanyInfo" };
+    public override SeederExecutionPolicy Policy => SeederExecutionPolicy.Repeatable;
+    public override string Scope => "dat";
+    public override Task SeedAsync(SeedingContext context, CancellationToken ct) => SeedDataAsync(context.Db, ct);
+
+    public async Task SeedDataAsync(DbContext db, CancellationToken ct = default)
     {
-        public override string Id => "Finance.Foundation.Logistics";
-        public override int Version => 1;
-        public override SeederCategory Category => SeederCategory.Reference;
-        public override IReadOnlyCollection<string> DependsOn => new[] { "Finance.Foundation.CompanyInfo" };
-        public override SeederExecutionPolicy Policy => SeederExecutionPolicy.Repeatable;
-        public override string Scope => "dat";
+        foreach (var (name, contact) in new[] { ("Business", NoYes.Yes), ("Delivery", NoYes.No), ("Invoice", NoYes.No), ("Home", NoYes.Yes), ("Remit-to", NoYes.No) })
+            await EnsureAsync(db, (LogisticsLocationRole x) => x.Name == name,
+                new LogisticsLocationRole { Name = name, IsPostalAddress = NoYes.Yes, IsContactInfo = contact }, ct);
+        await EnsureAsync(db, (LogisticsAddressCountryRegion x) => x.CountryRegionId == "SA",
+            new LogisticsAddressCountryRegion { CountryRegionId = "SA", IsoCode = "SA", AddrFormat = "SAU" }, ct);
 
-        public override async Task SeedAsync(SeedingContext context, CancellationToken cancellationToken)
+        // Real geography with illustrative building/unit numbers, not verified company premises.
+        var examples = new[] {
+            (Company: "DAT", Region: "MAK", RegionName: "Makkah", County: "JED", City: "Jeddah", CityKey: "SA-MAK-JED",
+                District: "Al Rawdah", Zip: "23431", Street: "Prince Sultan Street", Building: "4100", Additional: "2100", Phone: "+966120000000", Email: "info@dat.com"),
+            (Company: "HBMC", Region: "RIY", RegionName: "Riyadh", County: "RUH", City: "Riyadh", CityKey: "SA-RIY-RUH",
+                District: "Al Amal", Zip: "12643", Street: "King Abdul Aziz Road", Building: "4200", Additional: "2200", Phone: "+966112345678", Email: "info@hbmc.com.sa")
+        };
+        foreach (var example in examples)
         {
-            var db = context.Db;
-            var createdBy = "sys";
-
-            // 0. Location Roles
-            var rolesToSeed = new[] {
-                new LogisticsLocationRole { Name = "Business", IsPostalAddress = NoYes.Yes, IsContactInfo = NoYes.Yes },
-                new LogisticsLocationRole { Name = "Delivery", IsPostalAddress = NoYes.Yes, IsContactInfo = NoYes.No },
-                new LogisticsLocationRole { Name = "Invoice", IsPostalAddress = NoYes.Yes, IsContactInfo = NoYes.No },
-                new LogisticsLocationRole { Name = "Home", IsPostalAddress = NoYes.Yes, IsContactInfo = NoYes.Yes },
-                new LogisticsLocationRole { Name = "Remit-to", IsPostalAddress = NoYes.Yes, IsContactInfo = NoYes.No }
-            };
-
-            foreach (var r in rolesToSeed)
+            await EnsureAsync(db, (LogisticsAddressState x) => x.CountryRegionId == "SA" && x.StateId == example.Region,
+                new LogisticsAddressState { CountryRegionId = "SA", StateId = example.Region, Name = example.RegionName }, ct);
+            await EnsureAsync(db, (LogisticsAddressCounty x) => x.CountryRegionId == "SA" && x.StateId == example.Region && x.CountyId == example.County,
+                new LogisticsAddressCounty { CountryRegionId = "SA", StateId = example.Region, CountyId = example.County, Name = example.City }, ct);
+            var city = await EnsureAsync(db, (LogisticsAddressCity x) => x.CityKey == example.CityKey,
+                new LogisticsAddressCity { CityKey = example.CityKey, Name = example.City, Description = example.City + " City",
+                    CountryRegionId = "SA", StateId = example.Region, CountyId = example.County }, ct);
+            // Fill only the original Riyadh seed's missing governorate.
+            if (city.CreatedBy == "sys" && city.OwnerAccountId == "sys" && city.Name == "Riyadh" && city.Description == "Riyadh City"
+                && city.CountryRegionId == "SA" && city.StateId == "RIY" && city.CountyId == "") city.CountyId = example.County;
+            if (city.Name != example.City || city.CountryRegionId != "SA" || city.StateId != example.Region || city.CountyId != example.County)
+                throw new InvalidOperationException("Existing example city geography differs; customized records were preserved.");
+            var district = await EnsureAsync(db, (LogisticsAddressDistrict x) => x.Name == example.District,
+                new LogisticsAddressDistrict { Name = example.District, Description = example.District + " district", City = city.RecId }, ct);
+            if (district.City != city.RecId)
+                throw new InvalidOperationException("Existing district belongs to another city; customized records were preserved.");
+            var zip = await EnsureAsync(db, (LogisticsAddressZipCode x) => x.ZipCode == example.Zip,
+                new LogisticsAddressZipCode { ZipCode = example.Zip, CountryRegionId = "SA", State = example.Region, County = example.County,
+                    City = example.City, CityAlias = example.County, CityRecId = city.RecId, District = district.RecId, DistrictName = district.Name }, ct);
+            if (zip.CountryRegionId != "SA" || zip.State != example.Region || zip.City != example.City || zip.County != example.County
+                || zip.CityRecId != city.RecId || zip.District != district.RecId || zip.DistrictName != district.Name)
+                throw new InvalidOperationException("Example postal codes belong to different geography; existing postal codes were preserved.");
+            var locationCode = example.Company + "-LOC-1";
+            var location = await EnsureAsync(db, (LogisticsLocation x) => x.LocationId == locationCode,
+                new LogisticsLocation { LocationId = locationCode, Description = example.Company + " Headquarters", IsPostalAddress = NoYes.Yes }, ct);
+            var address = await db.Set<LogisticsPostalAddress>().IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Location == location.RecId, ct);
+            if (address == null || IsOriginalExample(address, example.Company))
             {
-                var existingRole = await db.Set<LogisticsLocationRole>().IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Name == r.Name, cancellationToken);
-                if (existingRole == null)
+                if (address == null)
                 {
-                    r.CreatedBy = createdBy;
-                    r.OwnerAccountId = createdBy;
-                    r.DataAreaId = "dat";
-                    r.IsActive = true;
-                    await db.Set<LogisticsLocationRole>().AddAsync(r, cancellationToken);
+                    address = new LogisticsPostalAddress { Location = location.RecId, CreatedBy = "sys", OwnerAccountId = "sys", DataAreaId = "dat",
+                        IsActive = true, ValidFrom = new DateTime(2026, 1, 1), ValidTo = new DateTime(2154, 12, 31) };
+                    db.Add(address);
                 }
+                address.CountryRegionId = "SA";
+                address.State = example.Region;
+                address.County = example.County;
+                address.City = city.Name;
+                address.CityRecId = city.RecId;
+                address.District = district.RecId;
+                address.DistrictName = district.Name;
+                address.ZipCode = zip.ZipCode;
+                address.ZipCodeRecId = zip.RecId;
+                address.Street = example.Street;
+                address.StreetNumber = example.Building;
+                // No dedicated additional-number/unit fields exist in this entity.
+                address.BuildingCompliment = "Unit 1; Additional number " + example.Additional;
+                address.Address = $"{example.Building} {example.Street}, Unit 1\n{district.Name}\n{city.Name} {zip.ZipCode} - {example.Additional}\n{example.RegionName} Region, Saudi Arabia";
             }
-            await db.SaveChangesAsync(cancellationToken);
-
-            // 1. Countries
-            var countryUS = await db.Set<LogisticsAddressCountryRegion>().IgnoreQueryFilters().FirstOrDefaultAsync(c => c.CountryRegionId == "US", cancellationToken);
-            if (countryUS == null)
-            {
-                countryUS = new LogisticsAddressCountryRegion { CountryRegionId = "US", IsoCode = "US", AddrFormat = "USA", CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat", IsActive = true };
-                await db.Set<LogisticsAddressCountryRegion>().AddAsync(countryUS, cancellationToken);
-            }
-            var countrySA = await db.Set<LogisticsAddressCountryRegion>().IgnoreQueryFilters().FirstOrDefaultAsync(c => c.CountryRegionId == "SA", cancellationToken);
-            if (countrySA == null)
-            {
-                countrySA = new LogisticsAddressCountryRegion { CountryRegionId = "SA", IsoCode = "SA", AddrFormat = "SAU", CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat", IsActive = true };
-                await db.Set<LogisticsAddressCountryRegion>().AddAsync(countrySA, cancellationToken);
-            }
-            await db.SaveChangesAsync(cancellationToken);
-
-            // 2. States
-            var stateCA = await db.Set<LogisticsAddressState>().IgnoreQueryFilters().FirstOrDefaultAsync(s => s.StateId == "CA", cancellationToken);
-            if (stateCA == null)
-            {
-                stateCA = new LogisticsAddressState { StateId = "CA", Name = "California", CountryRegionId = "US", CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat", IsActive = true };
-                await db.Set<LogisticsAddressState>().AddAsync(stateCA, cancellationToken);
-            }
-            var stateRIY = await db.Set<LogisticsAddressState>().IgnoreQueryFilters().FirstOrDefaultAsync(s => s.StateId == "RIY", cancellationToken);
-            if (stateRIY == null)
-            {
-                stateRIY = new LogisticsAddressState { StateId = "RIY", Name = "Riyadh", CountryRegionId = "SA", CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat", IsActive = true };
-                await db.Set<LogisticsAddressState>().AddAsync(stateRIY, cancellationToken);
-            }
-            await db.SaveChangesAsync(cancellationToken);
-
-            // 2.5. Counties
-            var countyCA = await db.Set<LogisticsAddressCounty>().IgnoreQueryFilters().FirstOrDefaultAsync(c => c.CountryRegionId == "US" && c.StateId == "CA" && c.CountyId == "", cancellationToken);
-            if (countyCA == null)
-            {
-                countyCA = new LogisticsAddressCounty { CountryRegionId = "US", StateId = "CA", CountyId = "", Name = "", CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat", IsActive = true };
-                await db.Set<LogisticsAddressCounty>().AddAsync(countyCA, cancellationToken);
-            }
-            var countyRIY = await db.Set<LogisticsAddressCounty>().IgnoreQueryFilters().FirstOrDefaultAsync(c => c.CountryRegionId == "SA" && c.StateId == "RIY" && c.CountyId == "", cancellationToken);
-            if (countyRIY == null)
-            {
-                countyRIY = new LogisticsAddressCounty { CountryRegionId = "SA", StateId = "RIY", CountyId = "", Name = "", CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat", IsActive = true };
-                await db.Set<LogisticsAddressCounty>().AddAsync(countyRIY, cancellationToken);
-            }
-            await db.SaveChangesAsync(cancellationToken);
-
-            // 3. Cities
-            var cityLA = await db.Set<LogisticsAddressCity>().IgnoreQueryFilters().FirstOrDefaultAsync(c => c.CityKey == "US-CA-LA", cancellationToken);
-            if (cityLA == null)
-            {
-                cityLA = new LogisticsAddressCity { CityKey = "US-CA-LA", Name = "Los Angeles", Description = "Los Angeles City", CountryRegionId = "US", StateId = "CA", CountyId = "", CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat", IsActive = true };
-                await db.Set<LogisticsAddressCity>().AddAsync(cityLA, cancellationToken);
-            }
-            var cityRuh = await db.Set<LogisticsAddressCity>().IgnoreQueryFilters().FirstOrDefaultAsync(c => c.CityKey == "SA-RIY-RUH", cancellationToken);
-            if (cityRuh == null)
-            {
-                cityRuh = new LogisticsAddressCity { CityKey = "SA-RIY-RUH", Name = "Riyadh", Description = "Riyadh City", CountryRegionId = "SA", StateId = "RIY", CountyId = "", CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat", IsActive = true };
-                await db.Set<LogisticsAddressCity>().AddAsync(cityRuh, cancellationToken);
-            }
-            await db.SaveChangesAsync(cancellationToken);
-
-            // 3.5. Fallbacks and Auxiliaries (ZipCodes, Districts)
-            var zipLA = await db.Set<LogisticsAddressZipCode>().IgnoreQueryFilters().FirstOrDefaultAsync(z => z.ZipCode == "90001", cancellationToken);
-            if (zipLA == null)
-            {
-                zipLA = new LogisticsAddressZipCode { ZipCode = "90001", CountryRegionId = "US", State = "CA", County = "", City = "Los Angeles", CityAlias = "LA", DistrictName = "", CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat", IsActive = true };
-                await db.Set<LogisticsAddressZipCode>().AddAsync(zipLA, cancellationToken);
-            }
-            var zipRuh = await db.Set<LogisticsAddressZipCode>().IgnoreQueryFilters().FirstOrDefaultAsync(z => z.ZipCode == "12211", cancellationToken);
-            if (zipRuh == null)
-            {
-                zipRuh = new LogisticsAddressZipCode { ZipCode = "12211", CountryRegionId = "SA", State = "RIY", County = "", City = "Riyadh", CityAlias = "RUH", DistrictName = "", CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat", IsActive = true };
-                await db.Set<LogisticsAddressZipCode>().AddAsync(zipRuh, cancellationToken);
-            }
-
-            var districtFallback = await db.Set<LogisticsAddressDistrict>().IgnoreQueryFilters().FirstOrDefaultAsync(d => d.Name == "", cancellationToken);
-            if (districtFallback == null)
-            {
-                districtFallback = new LogisticsAddressDistrict { Name = "", Description = "Default Fallback", City = cityLA.RecId, CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat", IsActive = true };
-                await db.Set<LogisticsAddressDistrict>().AddAsync(districtFallback, cancellationToken);
-            }
-            await db.SaveChangesAsync(cancellationToken);
-
-            // 4. Locations
-            var locDat = await db.Set<LogisticsLocation>().IgnoreQueryFilters().FirstOrDefaultAsync(l => l.LocationId == "DAT-LOC-1", cancellationToken);
-            if (locDat == null)
-            {
-                locDat = new LogisticsLocation { LocationId = "DAT-LOC-1", Description = "DAT Headquarters", IsPostalAddress = NoYes.Yes, CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat", IsActive = true };
-                await db.Set<LogisticsLocation>().AddAsync(locDat, cancellationToken);
-            }
-            var locHbmc = await db.Set<LogisticsLocation>().IgnoreQueryFilters().FirstOrDefaultAsync(l => l.LocationId == "HBMC-LOC-1", cancellationToken);
-            if (locHbmc == null)
-            {
-                locHbmc = new LogisticsLocation { LocationId = "HBMC-LOC-1", Description = "HBMC Headquarters", IsPostalAddress = NoYes.Yes, CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat", IsActive = true };
-                await db.Set<LogisticsLocation>().AddAsync(locHbmc, cancellationToken);
-            }
-            await db.SaveChangesAsync(cancellationToken);
-
-            // 5. Postal Addresses
-            var postalDat = await db.Set<LogisticsPostalAddress>().IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Location == locDat.RecId, cancellationToken);
-            if (postalDat == null)
-            {
-                postalDat = new LogisticsPostalAddress { Location = locDat.RecId, Address = "123 Main St\nLos Angeles, CA 90001\nUSA", Street = "Main St", StreetNumber = "123", City = "Los Angeles", CityRecId = cityLA.RecId, State = "CA", County = "", CountryRegionId = "US", ZipCode = "90001", ZipCodeRecId = zipLA.RecId, DistrictName = "", District = districtFallback.RecId, ValidFrom = DateTime.UtcNow, ValidTo = DateTime.UtcNow.AddYears(100), CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat", IsActive = true };
-                await db.Set<LogisticsPostalAddress>().AddAsync(postalDat, cancellationToken);
-            }
-            var postalHbmc = await db.Set<LogisticsPostalAddress>().IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Location == locHbmc.RecId, cancellationToken);
-            if (postalHbmc == null)
-            {
-                postalHbmc = new LogisticsPostalAddress { Location = locHbmc.RecId, Address = "King Fahd Rd\nRiyadh, RIY 12211\nSaudi Arabia", Street = "King Fahd Rd", StreetNumber = "1", City = "Riyadh", CityRecId = cityRuh.RecId, State = "RIY", County = "", CountryRegionId = "SA", ZipCode = "12211", ZipCodeRecId = zipRuh.RecId, DistrictName = "", District = districtFallback.RecId, ValidFrom = DateTime.UtcNow, ValidTo = DateTime.UtcNow.AddYears(100), CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat", IsActive = true };
-                await db.Set<LogisticsPostalAddress>().AddAsync(postalHbmc, cancellationToken);
-            }
-            await db.SaveChangesAsync(cancellationToken);
-
-            // 6. Electronic Addresses (Email, Phone)
-            var emailDat = await db.Set<LogisticsElectronicAddress>().IgnoreQueryFilters().FirstOrDefaultAsync(e => e.ElectronicAddressId == "DAT-EML-1", cancellationToken);
-            if (emailDat == null)
-            {
-                emailDat = new LogisticsElectronicAddress { ElectronicAddressId = "DAT-EML-1", Location = locDat.RecId, Description = "Primary Email", Type = ElectronicAddressType.Email, Locator = "info@dat.com", IsPrimary = NoYes.Yes, CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat", IsActive = true };
-                await db.Set<LogisticsElectronicAddress>().AddAsync(emailDat, cancellationToken);
-            }
-            var phoneDat = await db.Set<LogisticsElectronicAddress>().IgnoreQueryFilters().FirstOrDefaultAsync(e => e.ElectronicAddressId == "DAT-PHN-1", cancellationToken);
-            if (phoneDat == null)
-            {
-                phoneDat = new LogisticsElectronicAddress { ElectronicAddressId = "DAT-PHN-1", Location = locDat.RecId, Description = "Primary Phone", Type = ElectronicAddressType.Phone, Locator = "+15551234567", IsPrimary = NoYes.Yes, CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat", IsActive = true };
-                await db.Set<LogisticsElectronicAddress>().AddAsync(phoneDat, cancellationToken);
-            }
-            var emailHbmc = await db.Set<LogisticsElectronicAddress>().IgnoreQueryFilters().FirstOrDefaultAsync(e => e.ElectronicAddressId == "HBMC-EML-1", cancellationToken);
-            if (emailHbmc == null)
-            {
-                emailHbmc = new LogisticsElectronicAddress { ElectronicAddressId = "HBMC-EML-1", Location = locHbmc.RecId, Description = "Primary Email", Type = ElectronicAddressType.Email, Locator = "info@hbmc.com.sa", IsPrimary = NoYes.Yes, CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat", IsActive = true };
-                await db.Set<LogisticsElectronicAddress>().AddAsync(emailHbmc, cancellationToken);
-            }
-            var phoneHbmc = await db.Set<LogisticsElectronicAddress>().IgnoreQueryFilters().FirstOrDefaultAsync(e => e.ElectronicAddressId == "HBMC-PHN-1", cancellationToken);
-            if (phoneHbmc == null)
-            {
-                phoneHbmc = new LogisticsElectronicAddress { ElectronicAddressId = "HBMC-PHN-1", Location = locHbmc.RecId, Description = "Primary Phone", Type = ElectronicAddressType.Phone, Locator = "+966112345678", IsPrimary = NoYes.Yes, CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat", IsActive = true };
-                await db.Set<LogisticsElectronicAddress>().AddAsync(phoneHbmc, cancellationToken);
-            }
-            await db.SaveChangesAsync(cancellationToken);
+            var emailCode = example.Company + "-EML-1";
+            await EnsureAsync(db, (LogisticsElectronicAddress x) => x.ElectronicAddressId == emailCode,
+                new LogisticsElectronicAddress { ElectronicAddressId = emailCode, Location = location.RecId, Description = "Primary Email",
+                    Type = ElectronicAddressType.Email, Locator = example.Email, IsPrimary = NoYes.Yes }, ct);
+            var phoneCode = example.Company + "-PHN-1";
+            var phone = await EnsureAsync(db, (LogisticsElectronicAddress x) => x.ElectronicAddressId == phoneCode,
+                new LogisticsElectronicAddress { ElectronicAddressId = phoneCode, Location = location.RecId, Description = "Primary Phone",
+                    Type = ElectronicAddressType.Phone, Locator = example.Phone, IsPrimary = NoYes.Yes }, ct);
+            if (example.Company == "DAT" && phone.CreatedBy == "sys" && phone.OwnerAccountId == "sys" && phone.Locator == "+15551234567"
+                && phone.Location == location.RecId && phone.Type == ElectronicAddressType.Phone) phone.Locator = example.Phone;
+            await db.SaveChangesAsync(ct);
         }
+    }
+
+    private static bool IsOriginalExample(LogisticsPostalAddress address, string company)
+    {
+        if (address.CreatedBy != "sys" || address.OwnerAccountId != "sys" || address.DataAreaId != "dat"
+            || address.BuildingCompliment != "" || address.PostBox != "" || address.County != "") return false;
+        return company == "DAT"
+            ? address.Address == "123 Main St\nLos Angeles, CA 90001\nUSA" && address.Street == "Main St" && address.StreetNumber == "123"
+                && address.City == "Los Angeles" && address.State == "CA" && address.CountryRegionId == "US" && address.ZipCode == "90001" && address.DistrictName == ""
+            : address.Address == "King Fahd Rd\nRiyadh, RIY 12211\nSaudi Arabia" && address.Street == "King Fahd Rd" && address.StreetNumber == "1"
+                && address.City == "Riyadh" && address.State == "RIY" && address.CountryRegionId == "SA" && address.ZipCode == "12211"
+                && (address.DistrictName == "" || address.DistrictName == "Riyadh HQ example");
+    }
+
+    private static async Task<T> EnsureAsync<T>(DbContext db, Expression<Func<T, bool>> key, T row, CancellationToken ct) where T : class
+    {
+        var existing = await db.Set<T>().IgnoreQueryFilters().SingleOrDefaultAsync(key, ct);
+        if (existing != null) return existing;
+        var entry = db.Add(row);
+        entry.Property("CreatedBy").CurrentValue = "sys";
+        entry.Property("OwnerAccountId").CurrentValue = "sys";
+        entry.Property("DataAreaId").CurrentValue = "dat";
+        entry.Property("IsActive").CurrentValue = true;
+        await db.SaveChangesAsync(ct);
+        return row;
     }
 }

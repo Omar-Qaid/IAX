@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -32,7 +32,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
                 new Currency { CurrencyCode = "AED", Symbol = "د.إ", RoundingPrecision = 0.01m, IsActive = true, CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat" }
             };
 
-            var existingCurrencyCodes = await db.Currencies.IgnoreQueryFilters().Select(c => c.CurrencyCode).ToListAsync(cancellationToken);
+            var existingCurrencyCodes = await db.Currencies.IgnoreQueryFilters().Where(x => x.DataAreaId == "dat").Select(c => c.CurrencyCode).ToListAsync(cancellationToken);
             var currenciesToAdd = currencySeeds.Where(c => !existingCurrencyCodes.Contains(c.CurrencyCode)).ToList();
             if (currenciesToAdd.Any())
             {
@@ -68,7 +68,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
                 new ExchangeRateType { Name = "Market", Description = "Open market rate", IsActive = true, CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat" }
             };
 
-            var existingTypeNames = await db.Set<ExchangeRateType>().IgnoreQueryFilters().Select(t => t.Name).ToListAsync(cancellationToken);
+            var existingTypeNames = await db.Set<ExchangeRateType>().IgnoreQueryFilters().Where(x => x.DataAreaId == "dat").Select(t => t.Name).ToListAsync(cancellationToken);
             var typesToAdd = typeSeeds.Where(t => !existingTypeNames.Contains(t.Name)).ToList();
             if (typesToAdd.Any())
             {
@@ -76,13 +76,13 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
                 await db.SaveChangesAsync(cancellationToken);
             }
 
-            var allTypes = await db.Set<ExchangeRateType>().IgnoreQueryFilters().ToListAsync(cancellationToken);
+            var allTypes = await db.Set<ExchangeRateType>().IgnoreQueryFilters().Where(x => x.DataAreaId == "dat").ToListAsync(cancellationToken);
             var pairsToAdd = new List<ExchangeRateCurrencyPair>();
             var ratesToAdd = new List<ExchangeRate>();
 
-            var existingPairs = await db.Set<ExchangeRateCurrencyPair>().IgnoreQueryFilters()
+            var existingPairs = await db.Set<ExchangeRateCurrencyPair>().IgnoreQueryFilters().Where(x => x.DataAreaId == "dat")
                 .Select(p => new { p.FromCurrencyCode, p.ToCurrencyCode, p.ExchangeRateType }).ToListAsync(cancellationToken);
-            var existingRates = await db.Set<ExchangeRate>().IgnoreQueryFilters()
+            var existingRates = await db.Set<ExchangeRate>().IgnoreQueryFilters().Where(x => x.DataAreaId == "dat")
                 .Select(r => r.ExchangeRateCurrencyPair).ToListAsync(cancellationToken);
 
             foreach (var t in allTypes)
@@ -111,8 +111,8 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
             }
 
             // Seed ExchangeRates for all pairs that don't have them
-            var updatedPairs = await db.Set<ExchangeRateCurrencyPair>().IgnoreQueryFilters().ToListAsync(cancellationToken);
-            foreach (var pair in updatedPairs)
+            var updatedPairs = await db.Set<ExchangeRateCurrencyPair>().IgnoreQueryFilters().Where(x => x.DataAreaId == "dat").ToListAsync(cancellationToken);
+            foreach (var pair in updatedPairs.Where(p => p.ToCurrencyCode == "SAR" && (p.FromCurrencyCode == "USD" || p.FromCurrencyCode == "EUR" || p.FromCurrencyCode == "AED")))
             {
                 if (!existingRates.Contains(pair.RecId) && !ratesToAdd.Any(r => r.ExchangeRateCurrencyPair == pair.RecId))
                 {

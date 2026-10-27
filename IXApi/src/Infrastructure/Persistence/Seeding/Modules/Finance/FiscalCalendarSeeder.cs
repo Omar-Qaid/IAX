@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -19,13 +19,15 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
         public override SeederExecutionPolicy Policy => SeederExecutionPolicy.Repeatable;
         public override string Scope => "dat";
 
-        public override async Task SeedAsync(SeedingContext context, CancellationToken cancellationToken)
+        public override Task SeedAsync(SeedingContext context, CancellationToken cancellationToken)
+            => SeedDataAsync(context.Db, cancellationToken);
+
+        public async Task SeedDataAsync(DbContext db, CancellationToken cancellationToken = default)
         {
-            var db = context.Db;
             var createdBy = "sys";
 
             // Seed Fiscal Calendar: HBMC
-            var existingCalendar = await db.Set<FiscalCalendar>().IgnoreQueryFilters().FirstOrDefaultAsync(c => c.CalendarId == "HBMC", cancellationToken);
+            var existingCalendar = await db.Set<FiscalCalendar>().IgnoreQueryFilters().FirstOrDefaultAsync(c => c.DataAreaId == "dat" && c.CalendarId == "HBMC", cancellationToken);
             if (existingCalendar == null)
             {
                 existingCalendar = new FiscalCalendar { CalendarId = "HBMC", Description = "HBMC Default calendar", IsActive = true, CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat" };
@@ -44,7 +46,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
 
             // Seed Fiscal Calendar Periods
             var existingPeriods = await db.Set<FiscalCalendarPeriod>().IgnoreQueryFilters().Where(p => p.FiscalCalendar == existingCalendar.RecId && p.FiscalCalendarYear == existingYear.RecId).ToListAsync(cancellationToken);
-            if (!existingPeriods.Any())
+
             {
                 var periods = new List<FiscalCalendarPeriod>
                 {
@@ -63,11 +65,14 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
                     new FiscalCalendarPeriod { FiscalCalendar = existingCalendar.RecId, FiscalCalendarYear = existingYear.RecId, Name = "Period 12", ShortName = "P12", Type = FiscalPeriodType.Operating, StartDate = new DateTime(2026, 12, 1, 0, 0, 0, DateTimeKind.Utc), EndDate = new DateTime(2026, 12, 31, 0, 0, 0, DateTimeKind.Utc), Month = 12, Quarter = 4, IsActive = true, CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat" },
                     new FiscalCalendarPeriod { FiscalCalendar = existingCalendar.RecId, FiscalCalendarYear = existingYear.RecId, Name = "Period 13", ShortName = "P13", Type = FiscalPeriodType.Closing, StartDate = new DateTime(2026, 12, 31, 0, 0, 0, DateTimeKind.Utc), EndDate = new DateTime(2026, 12, 31, 0, 0, 0, DateTimeKind.Utc), Month = 12, Quarter = 4, IsActive = true, CreatedBy = createdBy, OwnerAccountId = createdBy, DataAreaId = "dat" }
                 };
-                await db.Set<FiscalCalendarPeriod>().AddRangeAsync(periods, cancellationToken);
+                // A customized date range is still the same named period. Do not
+                // insert a second period over it when repairing a partial seed.
+                await db.Set<FiscalCalendarPeriod>().AddRangeAsync(periods.Where(p => !existingPeriods.Any(e =>
+                    e.Name == p.Name || (e.Type == p.Type && e.StartDate == p.StartDate && e.EndDate == p.EndDate))), cancellationToken);
                 await db.SaveChangesAsync(cancellationToken);
             }
 
-            var existingLedger = await db.Set<Ledger>().IgnoreQueryFilters().FirstOrDefaultAsync(cancellationToken);
+            var existingLedger = await db.Set<Ledger>().IgnoreQueryFilters().FirstOrDefaultAsync(x => x.DataAreaId == "dat" && x.FiscalCalendar == existingCalendar.RecId, cancellationToken);
             if (existingLedger != null)
             {
                 var ledgerYear = await db.Set<LedgerFiscalCalendarYear>().IgnoreQueryFilters().FirstOrDefaultAsync(y => y.Ledger == existingLedger.RecId && y.FiscalCalendarYear == existingYear.RecId, cancellationToken);

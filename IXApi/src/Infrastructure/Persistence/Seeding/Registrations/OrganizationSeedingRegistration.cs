@@ -10,6 +10,8 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Registrations
         public static IServiceCollection AddOrganizationSeeding(this IServiceCollection services)
         {
             services.AddScoped<IModuleSeeder, DocumentManagementSeeder>();
+            services.AddScoped<IModuleSeeder, CollaborationExampleSeeder>();
+            services.AddScoped<IModuleSeeder, DocumentExampleSeeder>();
             return services;
         }
     }

@@ -19,7 +19,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
         public override IReadOnlyCollection<string> DependsOn => new[]
         {
             "Finance.AccountsReceivable.CustGroups",
-            "Finance.Foundation.Logistics"
+            "Finance.Foundation.Logistics", "Finance.GeneralLedger.Currencies", "Finance.GeneralLedger.Tax"
         };
         public override SeederExecutionPolicy Policy => SeederExecutionPolicy.Repeatable;
         public override string Scope => "dat";

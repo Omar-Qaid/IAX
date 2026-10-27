@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
+using IAX.IXApi.Modules.Finance.Inventory.InventTable;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
@@ -17,21 +18,24 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
         public override IReadOnlyCollection<string> DependsOn => new[]
         {
             "Finance.Inventory.ItemGroups",
-            "Finance.Inventory.UnitOfMeasure"
+            "Finance.Inventory.UnitOfMeasure",
+            "Finance.GeneralLedger.Tax"
         };
         public override SeederExecutionPolicy Policy => SeederExecutionPolicy.Repeatable;
         public override string Scope => "dat";
 
-        public override async Task SeedAsync(SeedingContext context, CancellationToken cancellationToken)
+        public override Task SeedAsync(SeedingContext context, CancellationToken cancellationToken)
+            => SeedDataAsync(context.Db, cancellationToken);
+
+        public async Task SeedDataAsync(DbContext db, CancellationToken cancellationToken = default)
         {
-            var db = context.Db;
             var createdBy = "sys";
 
             var groupCodes = new[] { "RAW", "FIN", "CONS", "SPR" };
-            var orderedGroups = await db.InventItemGroups.IgnoreQueryFilters().OrderBy(g => g.RecId).Take(groupCodes.Length).ToListAsync(cancellationToken);
-            var groupIdByCode = groupCodes.Zip(orderedGroups, (code, g) => (code, g.RecId)).ToDictionary(x => x.code, x => x.RecId);
-            var uomIdByCode = await db.UnitOfMeasures.IgnoreQueryFilters().ToDictionaryAsync(u => u.Symbol, u => u.RecId, cancellationToken);
-            var existingItemCodes = await db.InventTables.IgnoreQueryFilters().Select(i => i.ItemId).ToListAsync(cancellationToken);
+            var groupIdByCode = await db.Set<InventItemGroup>().IgnoreQueryFilters()
+                .Where(g => g.DataAreaId == "dat" && groupCodes.Contains(g.ItemGroupId))
+                .ToDictionaryAsync(g => g.ItemGroupId, g => g.RecId, cancellationToken);
+            var uomIdByCode = await db.Set<UnitOfMeasure>().IgnoreQueryFilters().ToDictionaryAsync(u => u.Symbol, u => u.RecId, cancellationToken);
 
             var itemSeeds = new[]
             {
@@ -59,7 +63,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
                     Uoms = new (string Uom, decimal Pack, string? Barcode, bool Buy, bool Sell, bool Inv)[]
                     {
                         ("M", 1m, "6280001000055", false, true, true),
-                        ("TON", 1000m, "6280001000062", true, false, false),
+                        ("M", 1m, "6280001000062", true, false, false),
                     }
                 },
                 new
@@ -82,12 +86,10 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
                 },
             };
 
-            var itemsToAdd = new List<InventTable>();
             var modulesToAdd = new List<InventTableModule>();
 
             foreach (var seed in itemSeeds)
             {
-                if (existingItemCodes.Contains(seed.Code)) continue;
                 if (!groupIdByCode.TryGetValue(seed.Group, out var groupId)) continue;
 
                 var uomRows = seed.Uoms
@@ -102,14 +104,32 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
                 var buyRow = uomRows.FirstOrDefault(u => u.Buy);
                 if (buyRow == default) buyRow = baseRow;
 
-                var item = new InventTable
+                var item = await db.Set<InventTable>().IgnoreQueryFilters()
+                    .SingleOrDefaultAsync(x => x.DataAreaId == "dat" && x.ItemId == seed.Code, cancellationToken);
+                var product = item == null || item.Product == 0 ? null : await db.Set<EcoResProduct>()
+                    .IgnoreQueryFilters().SingleOrDefaultAsync(x => x.RecId == item.Product, cancellationToken);
+                product ??= await db.Set<EcoResProduct>().IgnoreQueryFilters()
+                    .SingleOrDefaultAsync(x => x.DisplayProductNumber == seed.Code, cancellationToken);
+                if (product == null)
                 {
-                    ItemId = seed.Code,
-                    IsActive = true,
-                    CreatedBy = createdBy,
-                    OwnerAccountId = createdBy,
-                };
-                itemsToAdd.Add(item);
+                    product = new EcoResProduct { DisplayProductNumber = seed.Code, SearchName = seed.Name, ProductType = ItemType.Item };
+                    db.Add(product);
+                    await db.SaveChangesAsync(cancellationToken);
+                }
+                if (!await db.Set<EcoResDistinctProduct>().IgnoreQueryFilters().AnyAsync(x => x.RecId == product.RecId, cancellationToken))
+                    db.Add(new EcoResDistinctProduct { RecId = product.RecId });
+                if (!await db.Set<EcoResProductTranslation>().IgnoreQueryFilters().AnyAsync(x => x.Product == product.RecId && x.LanguageId == "en-us", cancellationToken))
+                    db.Add(new EcoResProductTranslation { Product = product.RecId, LanguageId = "en-us", Name = seed.Name, Description = seed.Description });
+                if (item == null)
+                {
+                    item = new InventTable { ItemId = seed.Code, DataAreaId = "dat", IsActive = true,
+                        CreatedBy = createdBy, OwnerAccountId = createdBy, BomUnitId = baseRow.Uom };
+                    db.Add(item);
+                }
+                item.Product = product.RecId;
+                if (string.IsNullOrWhiteSpace(item.Name)) item.Name = seed.Name;
+                if (!await db.Set<InventItemGroupItem>().IgnoreQueryFilters().AnyAsync(x => x.ItemDataAreaId == "dat" && x.ItemId == seed.Code, cancellationToken))
+                    db.Add(new InventItemGroupItem { ItemId = seed.Code, ItemGroupId = seed.Group, ItemDataAreaId = "dat", ItemGroupDataAreaId = "dat" });
 
                 modulesToAdd.Add(new InventTableModule
                 {
@@ -154,12 +174,14 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
                 });
             }
 
-            if (itemsToAdd.Any())
+            var existingModules = await db.Set<InventTableModule>().IgnoreQueryFilters()
+                .Where(x => x.DataAreaId == "dat").Select(x => new { x.ItemId, x.ModuleType }).ToListAsync(cancellationToken);
+            foreach (var module in modulesToAdd.Where(x => !existingModules.Any(e => e.ItemId == x.ItemId && e.ModuleType == x.ModuleType)))
             {
-                await db.InventTables.AddRangeAsync(itemsToAdd, cancellationToken);
-                await db.InventTableModules.AddRangeAsync(modulesToAdd, cancellationToken);
-                await db.SaveChangesAsync(cancellationToken);
+                module.DataAreaId = "dat";
+                db.Add(module);
             }
+            await db.SaveChangesAsync(cancellationToken);
 
             // Packaging conversions
             var packagingSeeds = new (string ItemId, string From, string To, decimal Factor)[]
@@ -170,14 +192,14 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
                 ("ITM-1005", "CTN", "BTL", 12m),
             };
             var packagingItemIds = packagingSeeds.Select(seed => seed.ItemId).ToArray();
-            var packagingItems = await db.InventTables.IgnoreQueryFilters()
+            var packagingItems = await db.Set<InventTable>().IgnoreQueryFilters()
                 .Where(item => item.DataAreaId == "dat" && packagingItemIds.Contains(item.ItemId))
                 .ToDictionaryAsync(item => item.ItemId, cancellationToken);
             var packagingSymbols = packagingSeeds.SelectMany(seed => new[] { seed.From, seed.To }).Distinct().ToArray();
-            var packagingUnits = await db.UnitOfMeasures.IgnoreQueryFilters()
+            var packagingUnits = await db.Set<UnitOfMeasure>().IgnoreQueryFilters()
                 .Where(unit => packagingSymbols.Contains(unit.Symbol))
                 .ToDictionaryAsync(unit => unit.Symbol, cancellationToken);
-            var existingPackagingRules = await db.UnitOfMeasureConversions.IgnoreQueryFilters()
+            var existingPackagingRules = await db.Set<UnitOfMeasureConversion>().IgnoreQueryFilters()
                 .Select(rule => new { rule.Product, rule.FromUnitOfMeasure, rule.ToUnitOfMeasure })
                 .ToListAsync(cancellationToken);
 
@@ -188,13 +210,13 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
                     || !packagingUnits.TryGetValue(seed.To, out var to))
                     continue;
 
-                var productScope = item.Product != 0 ? item.Product : item.RecId;
+                var productScope = item.Product;
                 if (productScope == 0 || existingPackagingRules.Any(rule => rule.Product == productScope
                     && ((rule.FromUnitOfMeasure == from.RecId && rule.ToUnitOfMeasure == to.RecId)
                         || (rule.FromUnitOfMeasure == to.RecId && rule.ToUnitOfMeasure == from.RecId))))
                     continue;
 
-                db.UnitOfMeasureConversions.Add(new UnitOfMeasureConversion
+                db.Set<UnitOfMeasureConversion>().Add(new UnitOfMeasureConversion
                 {
                     Product = productScope,
                     FromUnitOfMeasure = from.RecId,

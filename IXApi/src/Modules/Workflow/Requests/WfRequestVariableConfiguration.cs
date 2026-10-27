@@ -9,11 +9,12 @@ namespace IAX.IXApi.Modules.Workflow.Requests
         {
             builder.ToTable("WfRequestVariables");
 
-            builder.HasKey(x => x.RequestId);
+            builder.HasKey(x => x.RecId);
+            builder.HasIndex(x => new { x.RequestId, x.VariableId }).IsUnique();
 
             builder.Property(x => x.RequestId)
                 .HasColumnName("RequestId")
-                .ValueGeneratedOnAdd();
+                .ValueGeneratedNever();
 
             // Configure relationships
             builder.HasOne(x => x.Request)

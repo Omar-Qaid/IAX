@@ -1888,3 +1888,6 @@ Microsoft's primary documentation relevant to the implementation:
 - [Inventory posting profiles and statuses](https://learn.microsoft.com/en-us/dynamics365/finance/general-ledger/inventory-posting-profiles?utm_source=chatgpt.com)
 - [Inventory on-hand list](https://learn.microsoft.com/en-us/dynamics365/supply-chain/inventory/inventory-on-hand-list?utm_source=chatgpt.com)
 -
+
+
+add aslo Weighted average

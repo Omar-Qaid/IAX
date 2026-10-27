@@ -1,4 +1,4 @@
-﻿using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
+using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Modules.Identity.Authentication;
 using IAX.IXApi.Modules.Identity.Users;
@@ -16,7 +16,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
     public override string Id => "Finance.AccountsReceivable.CustLedger";
     public override int Version => 1;
     public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory Category => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory.Reference;
-    public override System.Collections.Generic.IReadOnlyCollection<string> DependsOn => new[] { "Finance.Foundation.CompanyInfo" };
+    public override System.Collections.Generic.IReadOnlyCollection<string> DependsOn => new[] { "Finance.AccountsReceivable.CustGroups" };
     public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy Policy => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy.Repeatable;
     public override string Scope => "dat";
 
@@ -68,7 +68,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             };
 
             var existingProfiles = await db.CustLedgers
-                .IgnoreQueryFilters()
+                .IgnoreQueryFilters().Where(x => x.DataAreaId == "dat")
                 .Select(p => p.PostingProfile)
                 .ToListAsync(ct);
 
@@ -309,7 +309,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             };
 
             var existingKeys = await db.CustLedgerAccounts
-                .IgnoreQueryFilters()
+                .IgnoreQueryFilters().Where(x => x.DataAreaId == "dat")
                 .Select(a => new { a.PostingProfile, a.AccountCode, a.Num })
                 .ToListAsync(ct);
 
