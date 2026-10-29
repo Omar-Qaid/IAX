@@ -1553,6 +1553,7 @@ public sealed class InventoryArchitectureTests
         var transferInput = new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransferCreateDto(
             "TR-DEMO", "JED", "MAIN", "TRANSIT", "SHOW", DateTime.Today, DateTime.Today,
             [new("ITEM-001", "pcs", 2m)]);
+        var destinationBefore = await db.Set<InventSum>().Where(x => x.InventLocationId == "SHOW").SumAsync(x => x.PhysicalInvent);
         Assert.Null((await transfers.CreateAsync(transferInput, default)).Error);
         // A transfer identifier belongs to one order.
         Assert.NotNull((await transfers.CreateAsync(transferInput, default)).Error);
@@ -1592,7 +1593,7 @@ public sealed class InventoryArchitectureTests
         Assert.NotEqual(string.Empty, finished.Lines[0].InventTransIdTransitFrom);
         Assert.NotEqual(string.Empty, finished.Lines[0].InventTransIdReceive);
         // Source, transit and destination reconcile: the two units left MAIN and arrived at SHOW.
-        Assert.Equal(2m, await db.Set<InventSum>().Where(x => x.InventLocationId == "SHOW").SumAsync(x => x.PhysicalInvent));
+        Assert.Equal(destinationBefore + 2m, await db.Set<InventSum>().Where(x => x.InventLocationId == "SHOW").SumAsync(x => x.PhysicalInvent));
         // Transfers never post through an inventory journal.
         Assert.False(await db.Set<InventJournalTable>().AnyAsync(x => x.Description!.Contains("TR-DEMO")));
 
