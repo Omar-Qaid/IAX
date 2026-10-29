@@ -146,10 +146,12 @@ public sealed class InventoryFullCycleSeeder : BaseModuleSeeder
         await Journal("FIFO115-DAMAGE", "IJ-MOV", -5);
         await Journal("FIFO115-COUNT", "IJ-CNT", 0, counted: 98);
 
-        var transfers = new InventTransferOrderService(work, actor, journals, posting);
-        Require((await transfers.CreateAsync(new("FIFO115-TRANSIT", Item, "PCS", 40, "JED", From, Transit, To, "IJ-TRF"), ct)).Error);
-        Require((await transfers.PostAsync("FIFO115-TRANSIT", new("SHIP", 40, date), false, ct)).Error);
-        Require((await transfers.PostAsync("FIFO115-TRANSIT", new("RECEIVE", 40, date), true, ct)).Error);
+        var transfers = new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransferOrderService(
+            work, actor, resolver, inventoryNumbers);
+        Require((await transfers.CreateAsync(new("FIFO115-TRANSIT", "JED", From, Transit, To, date, date,
+            [new(Item, "PCS", 40)]), ct)).Error);
+        Require((await transfers.ShipAsync("FIFO115-TRANSIT", new("SHIP", date, new Dictionary<decimal, decimal> { [1m] = 40m }), ct)).Error);
+        Require((await transfers.ReceiveAsync("FIFO115-TRANSIT", new("RECEIVE", date, new Dictionary<decimal, decimal> { [1m] = 40m }), ct)).Error);
 
         var customerReturns = new CustReturnService(work, actor, numbers, inventoryNumbers);
         var returnLine = await db.Set<SalesLine>().SingleOrDefaultAsync(x => x.DataAreaId == "dat" && x.InventTransIdReturn == sl.InventTransId && x.SalesType == SalesType.ReturnItem, ct);

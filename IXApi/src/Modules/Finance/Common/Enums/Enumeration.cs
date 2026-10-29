@@ -621,6 +621,27 @@ namespace IAX.IXApi.Modules.Finance.Common
         Financial = 0,
         Physical = 1
     }
+    /// <summary>
+    /// Transfer order document status. Backing values need AOT confirmation against the target
+    /// build; the observed value for a fully received order is 2.
+    /// </summary>
+    public enum InventTransferStatus
+    {
+        Created = 0,
+        Shipped = 1,
+        Received = 2,
+        Cancelled = 3
+    }
+
+    /// <summary>Whether a transfer line still has quantity to ship or receive.</summary>
+    public enum InventTransferRemainStatus
+    {
+        None = 0,
+        Shipped = 1,
+        Received = 2,
+        Cancelled = 3
+    }
+
     public enum InventJournalType : byte
     {
         Movement = 0,

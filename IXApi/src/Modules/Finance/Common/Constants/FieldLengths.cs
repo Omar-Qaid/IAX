@@ -68,6 +68,7 @@ namespace IAX.IXApi.Modules.Finance.Common
         // Inventory
         public const int InventSiteId = 10;
         public const int InventLocationId = 10;
+        public const int TransferId = 20;
 
         // Address
         public const int CountryRegionId = 10;

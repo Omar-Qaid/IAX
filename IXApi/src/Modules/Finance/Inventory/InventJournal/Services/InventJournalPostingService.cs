@@ -24,6 +24,7 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
     private readonly ISalesInventoryNumberService _inventoryNumbers;
     private DbContext Db => _unitOfWork.Context;
     private SubledgerPostingSupport Support => new(Db);
+    private InventoryMovement Movement => new(_unitOfWork, _inventoryNumbers);
 
     public InventJournalPostingService(IUnitOfWork unitOfWork, ICompanyExecutionContext company,
         ICurrentUserService user, ISysNumberSequenceService numbers, ISalesInventoryNumberService inventoryNumbers)
@@ -122,7 +123,7 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
                 var fromDim = await Db.Set<InventDim>().FirstOrDefaultAsync(x => x.DataAreaId == companyId && x.InventDimId == line.InventDimId, ct)
                     ?? throw new PostingValidationException($"Inventory dimension '{line.InventDimId}' was not found for line {line.LineNum}.");
                 var inventoryQty = await ConvertToInventoryUnitAsync(companyId, item.Product, item.ItemId, line.Unit, line.Qty, ct);
-                var fromSum = await GetOrCreateSummaryAsync(companyId, item.ItemId, fromDim, ct);
+                var fromSum = await Movement.GetOrCreateSummaryAsync(companyId, item.ItemId, fromDim, ct);
                 decimal signedQty;
                 if (header.JournalType == InventJournalType.Counting)
                 {
@@ -154,13 +155,6 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
                     continue;
                 }
                 var unitCost = await ResolveUnitCostAsync(companyId, item, fromSum, line, header.JournalType, signedQty, ct);
-                if (header.JournalType == InventJournalType.Transfer && header.Source == "TransferReceipt")
-                {
-                    var operation = await Db.Set<InventTransferPosting>().SingleOrDefaultAsync(x => x.DataAreaId == companyId && x.JournalId == header.JournalId && x.IsReceipt, ct);
-                    if (operation == null || lines.Count != 1 || operation.Quantity != Math.Abs(inventoryQty) || operation.CostAmount <= 0)
-                        throw new PostingValidationException("Transfer receipt must carry the verified cost of its shipment.");
-                    unitCost = operation.CostAmount / operation.Quantity;
-                }
                 if (unitCost <= 0 && signedQty < 0 && item.Model.NegativePhysical == NoYes.Yes)
                     unitCost = await GetDefaultItemCostAsync(companyId, item.ItemId, line.InventDimId, line.TransDate, ct);
                 if (unitCost <= 0 && signedQty > 0 && header.JournalType == InventJournalType.Counting)
@@ -186,20 +180,20 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
                     await ValidateTrackingDimensionsAsync(item, toDim, Math.Abs(inventoryQty), ct);
                     if (unitCost <= 0)
                         throw new PostingValidationException($"A positive source inventory cost is required for transfer line {line.LineNum}.");
-                    var toSum = await GetOrCreateSummaryAsync(companyId, item.ItemId, toDim, ct);
+                    var toSum = await Movement.GetOrCreateSummaryAsync(companyId, item.ItemId, toDim, ct);
                     var transferQty = Math.Abs(inventoryQty);
-                    await CreateInventoryTransactionAsync(companyId, header, line, item.ItemId, fromDim.InventDimId, -transferQty, unitCost, inventoryCurrency, voucher, ct);
-                    await CreateInventoryTransactionAsync(companyId, header, line, item.ItemId, toDim.InventDimId, transferQty, unitCost, inventoryCurrency, voucher, ct);
-                    ApplySummary(fromSum, -transferQty, unitCost);
-                    ApplySummary(toSum, transferQty, unitCost);
+                    await CreateLineTransactionAsync(companyId, header, line, item.ItemId, fromDim.InventDimId, -transferQty, unitCost, inventoryCurrency, voucher, ct);
+                    await CreateLineTransactionAsync(companyId, header, line, item.ItemId, toDim.InventDimId, transferQty, unitCost, inventoryCurrency, voucher, ct);
+                    InventoryMovement.ApplySummary(fromSum, -transferQty, unitCost);
+                    InventoryMovement.ApplySummary(toSum, transferQty, unitCost);
                     line.CostAmount = transferQty * unitCost;
                     result.InventoryTransactionsCreated += 2;
                 }
                 else if (signedQty != 0)
                 {
                     var costAmount = signedQty * unitCost;
-                    await CreateInventoryTransactionAsync(companyId, header, line, item.ItemId, fromDim.InventDimId, signedQty, unitCost, inventoryCurrency, voucher, ct);
-                    ApplySummary(fromSum, signedQty, unitCost);
+                    await CreateLineTransactionAsync(companyId, header, line, item.ItemId, fromDim.InventDimId, signedQty, unitCost, inventoryCurrency, voucher, ct);
+                    InventoryMovement.ApplySummary(fromSum, signedQty, unitCost);
                     line.CostAmount = costAmount;
                     var accounts = await ResolveAccountsAsync(companyId, item.ItemId, signedQty, line.LedgerDimension, header.JournalType, ct);
                     await CreateLedgerEntryAsync(companyId, header, line, voucher, costAmount, accounts, ledgerContext!, ct);
@@ -311,51 +305,14 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
         return Round(converted, to.DecimalPrecision, rounding);
     }
 
-    private async Task<InventSum> GetOrCreateSummaryAsync(string companyId, string itemId, InventDim dim, CancellationToken ct)
-    {
-        var sum = await Db.Set<InventSum>().FirstOrDefaultAsync(x => x.DataAreaId == companyId && x.ItemId == itemId && x.InventDimId == dim.InventDimId, ct);
-        if (sum != null) return sum;
-        sum = new InventSum
-        {
-            DataAreaId = companyId, ItemId = itemId, InventDimId = dim.InventDimId,
-            InventSiteId = dim.InventSiteId, InventLocationId = dim.InventLocationId,
-            WmsLocationId = dim.WmsLocationId, LicensePlateId = dim.LicensePlateId,
-            ConfigId = dim.ConfigId, InventSizeId = dim.InventSizeId, InventColorId = dim.InventColorId,
-            InventStyleId = dim.InventStyleId, InventVersionId = dim.InventVersionId,
-            InventBatchId = dim.InventBatchId, InventSerialId = dim.InventSerialId, InventStatusId = dim.InventStatusId
-        };
-        Db.Add(sum);
-        return sum;
-    }
-
-    private async Task CreateInventoryTransactionAsync(string companyId, InventJournalTable header, InventJournalTrans line,
+    /// <summary>Posts one journal line's movement and keeps the line's inventory references.</summary>
+    private async Task CreateLineTransactionAsync(string companyId, InventJournalTable header, InventJournalTrans line,
         string itemId, string dimId, decimal qty, decimal unitCost, string currency, string voucher, CancellationToken ct)
     {
-        var transId = await _inventoryNumbers.NextInventTransIdAsync(ct);
-        var origin = new InventTransOrigin
-        {
-            DataAreaId = companyId, InventTransId = transId, ItemId = itemId, ItemInventDimId = dimId,
-            ReferenceId = header.JournalId, ReferenceCategory = line.InventRefType
-        };
-        Db.Add(origin);
-        await _unitOfWork.CompleteAsync(ct);
-        Db.Add(new InventTrans
-        {
-            DataAreaId = companyId, ItemId = itemId, InventDimId = dimId, InventTransOrigin = origin.RecId,
-            Qty = qty, QtySettled = 0, CostAmountPosted = qty * unitCost, CurrencyCode = currency,
-            Voucher = voucher, VoucherPhysical = voucher, InvoiceId = string.Empty, PackingSlipId = string.Empty,
-            StatusReceipt = qty > 0 ? StatusReceipt.Purchased : StatusReceipt.None,
-            StatusIssue = qty < 0 ? StatusIssue.Sold : StatusIssue.None,
-            ValueOpen = InventTransOpen.Yes, DateStatus = line.TransDate, DatePhysical = line.TransDate,
-            DateFinancial = line.TransDate, DateInvent = line.TransDate, ProjId = string.Empty,
-            ProjCategoryId = string.Empty, ProjAdjustRefId = string.Empty, PickingRouteId = string.Empty,
-            TransChildRefId = string.Empty
-        });
+        var transId = await Movement.CreateTransactionAsync(companyId, itemId, dimId, qty, unitCost, currency,
+            voucher, line.TransDate, line.InventRefType, header.JournalId, ct);
         if (string.IsNullOrEmpty(line.InventTransId)) line.InventTransId = transId; else line.ToInventTransId = transId;
     }
-
-    private static decimal GetRunningAverageCost(InventSum sum) =>
-        sum.PhysicalInvent == 0 ? 0m : Math.Abs((sum.PostedValue + sum.PhysicalValue) / sum.PhysicalInvent);
 
     private static bool IsBasicTransferDimension(InventDim dim) =>
         dim.InventSiteId.Length > 0 && dim.InventLocationId.Length > 0 &&
@@ -385,7 +342,7 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
 
         if (journalType == InventJournalType.Transfer || signedQty < 0 || journalType == InventJournalType.Counting)
         {
-            if (item.Model.InventModel != InventModel.FIFO) return GetRunningAverageCost(summary);
+            if (item.Model.InventModel != InventModel.FIFO) return InventoryMovement.RunningAverageCost(summary);
             var site = await Db.Set<InventDim>().AsNoTracking()
                 .Where(x => x.DataAreaId == companyId && x.InventDimId == line.InventDimId)
                 .Select(x => x.InventSiteId).FirstOrDefaultAsync(ct);
@@ -414,18 +371,6 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
             .Select(x => new { x.Price, x.PriceUnit })
             .FirstOrDefaultAsync(ct);
         return price is null ? 0m : price.Price / (price.PriceUnit > 0 ? price.PriceUnit : 1m);
-    }
-
-    private static void ApplySummary(InventSum sum, decimal qty, decimal unitCost)
-    {
-        sum.PostedQty += qty;
-        sum.PhysicalInvent += qty;
-        sum.AvailPhysical = sum.PhysicalInvent - sum.ReservPhysical - sum.Picked;
-        sum.AvailOrdered = sum.AvailPhysical + sum.Ordered - sum.OnOrder - sum.ReservOrdered;
-        sum.PostedValue += qty * unitCost;
-        sum.LastUpdDatePhysical = DateTime.UtcNow;
-        sum.Closed = sum.PhysicalInvent == 0 ? NoYes.Yes : NoYes.No;
-        sum.ClosedQty = sum.PhysicalInvent == 0 ? NoYes.Yes : NoYes.No;
     }
 
     private async Task<SubledgerLedgerContext> LoadLedgerContextAsync(string companyId, IReadOnlyCollection<InventJournalTrans> lines, CancellationToken ct)

@@ -253,7 +253,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<FluentValidation.IValidator<Inventory.InventJournalLineInputDto>, Inventory.InventJournalLineInputDtoValidator>();
             services.AddScoped<Inventory.IInventJournalPostingService, Inventory.InventJournalPostingService>();
             services.AddScoped<Inventory.InventTransPosting.IInventTransPostingService, Inventory.InventTransPosting.InventTransPostingService>();
-            services.AddScoped<Inventory.IInventTransferOrderService, Inventory.InventTransferOrderService>();
+            services.AddScoped<Inventory.Transfer.IInventTransferOrderService, Inventory.Transfer.InventTransferOrderService>();
             services.AddScoped<Inventory.IFifoCostPreviewService, Inventory.FifoCostPreviewService>();
             services.AddScoped<Inventory.IInventClosingQueryService, Inventory.InventClosingQueryService>();
             services.AddScoped<Inventory.IInventCloseService, Inventory.InventCloseService>();

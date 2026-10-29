@@ -18015,6 +18015,263 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("InventTransPosting", (string)null);
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.InventTransferLine", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<string>("InventDimId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("InventTransId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("InventTransIdReceive")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("InventTransIdScrap")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("InventTransIdTransitFrom")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("InventTransIdTransitTo")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ItemId")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("LineNum")
+                        .HasPrecision(28, 16)
+                        .HasColumnType("decimal(28,16)");
+
+                    b.Property<decimal>("OverDeliveryPct")
+                        .HasPrecision(28, 6)
+                        .HasColumnType("decimal(28,6)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("QtyReceiveNow")
+                        .HasPrecision(28, 6)
+                        .HasColumnType("decimal(28,6)");
+
+                    b.Property<decimal>("QtyReceived")
+                        .HasPrecision(28, 6)
+                        .HasColumnType("decimal(28,6)");
+
+                    b.Property<decimal>("QtyRemainReceive")
+                        .HasPrecision(28, 6)
+                        .HasColumnType("decimal(28,6)");
+
+                    b.Property<decimal>("QtyRemainShip")
+                        .HasPrecision(28, 6)
+                        .HasColumnType("decimal(28,6)");
+
+                    b.Property<decimal>("QtyScrapped")
+                        .HasPrecision(28, 6)
+                        .HasColumnType("decimal(28,6)");
+
+                    b.Property<decimal>("QtyShipNow")
+                        .HasPrecision(28, 6)
+                        .HasColumnType("decimal(28,6)");
+
+                    b.Property<decimal>("QtyShipped")
+                        .HasPrecision(28, 6)
+                        .HasColumnType("decimal(28,6)");
+
+                    b.Property<decimal>("QtyTransfer")
+                        .HasPrecision(28, 6)
+                        .HasColumnType("decimal(28,6)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ReceiveDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("RemainStatus")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime>("ShipDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TransferId")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<decimal>("UnderDeliveryPct")
+                        .HasPrecision(28, 6)
+                        .HasColumnType("decimal(28,6)");
+
+                    b.Property<string>("UnitId")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("DataAreaId", "TransferId", "LineNum")
+                        .IsUnique();
+
+                    b.ToTable("InventTransferLine", (string)null);
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.InventTransferTable", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<string>("DlvModeId")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("DlvTermId")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("FromAddressName")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<long>("FromPostalAddress")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("InventLocationIdFrom")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("InventLocationIdTo")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("InventLocationIdTransit")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ReceiveDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime>("ShipDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ToAddressName")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<long>("ToPostalAddress")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("TransferId")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("TransferStatus")
+                        .HasColumnType("int");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("DataAreaId", "TransferId")
+                        .IsUnique();
+
+                    b.ToTable("InventTransferTable", (string)null);
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.Ledger", b =>
                 {
                     b.Property<long>("RecId")
@@ -25756,191 +26013,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("EcoResProductTranslation");
                 });
 
-            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Inventory.InventTransferOrder", b =>
-                {
-                    b.Property<long>("RecId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("RECID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
-
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DataAreaId")
-                        .IsRequired()
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)");
-
-                    b.Property<string>("FromWarehouse")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("ItemId")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("JournalNameId")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<DateTime?>("LastModifiedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("LastModifiedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("OwnerAccountId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("Quantity")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<int>("RecVersion")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Received")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<decimal>("Shipped")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<string>("SiteId")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("ToWarehouse")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("TransferId")
-                        .IsRequired()
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
-
-                    b.Property<string>("TransitWarehouse")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("Unit")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.HasKey("RecId");
-
-                    b.HasIndex("DataAreaId", "TransferId")
-                        .IsUnique();
-
-                    b.ToTable("InventTransferOrder", (string)null);
-                });
-
-            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Inventory.InventTransferPosting", b =>
-                {
-                    b.Property<long>("RecId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("RECID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
-
-                    b.Property<decimal>("CostAmount")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DataAreaId")
-                        .IsRequired()
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsReceipt")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("JournalId")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<DateTime?>("LastModifiedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("LastModifiedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("OwnerAccountId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("PostingDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal>("Quantity")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<int>("RecVersion")
-                        .HasColumnType("int");
-
-                    b.Property<string>("RequestId")
-                        .IsRequired()
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<long>("TransferOrderRecId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("RecId");
-
-                    b.HasIndex("TransferOrderRecId");
-
-                    b.HasIndex("DataAreaId", "TransferOrderRecId", "RequestId")
-                        .IsUnique();
-
-                    b.ToTable("InventTransferPosting", (string)null);
-                });
-
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Inventory.InventoryStatus.Entities.WHSInventStatus", b =>
                 {
                     b.Property<long>("RecId")
@@ -31135,15 +31207,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.HasOne("IAX.IXApi.Modules.Finance.Inventory.InventTable.EcoResProduct", null)
                         .WithMany()
                         .HasForeignKey("Product")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Inventory.InventTransferPosting", b =>
-                {
-                    b.HasOne("IAX.IXApi.Modules.Finance.Inventory.InventTransferOrder", null)
-                        .WithMany()
-                        .HasForeignKey("TransferOrderRecId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
