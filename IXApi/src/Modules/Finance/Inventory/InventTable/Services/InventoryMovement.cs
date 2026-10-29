@@ -78,6 +78,23 @@ internal sealed class InventoryMovement(IUnitOfWork unitOfWork, ISalesInventoryN
         sum.ClosedQty = sum.PhysicalInvent == 0 ? NoYes.Yes : NoYes.No;
     }
 
+    /// <summary>
+    /// The provisional cost of an issue: the weighted average of financially posted receipts in
+    /// the item and site pool. The packing slip and the invoice both use it, so the physical and
+    /// the financial posting of one delivery carry the same cost.
+    /// </summary>
+    public static async Task<decimal> ReceiptRunningAverageAsync(DbContext db, string companyId, string itemId, string inventSiteId, CancellationToken ct)
+    {
+        var dimIds = await db.Set<InventDim>().AsNoTracking()
+            .Where(x => x.DataAreaId == companyId && x.InventSiteId == inventSiteId).Select(x => x.InventDimId).ToListAsync(ct);
+        var receipts = await db.Set<InventTrans>().AsNoTracking()
+            .Where(x => x.DataAreaId == companyId && x.ItemId == itemId && dimIds.Contains(x.InventDimId)
+                && x.StatusReceipt == StatusReceipt.Purchased && x.Qty > 0)
+            .Select(x => new { x.Qty, x.CostAmountPosted, x.CostAmountAdjustment }).ToListAsync(ct);
+        var qty = receipts.Sum(x => x.Qty);
+        return qty <= 0 ? 0m : receipts.Sum(x => x.CostAmountPosted + x.CostAmountAdjustment) / qty;
+    }
+
     /// <summary>The running average cost carried by on-hand stock.</summary>
     public static decimal RunningAverageCost(InventSum sum) =>
         sum.PhysicalInvent == 0 ? 0m : Math.Abs((sum.PostedValue + sum.PhysicalValue) / sum.PhysicalInvent);

@@ -154,7 +154,7 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
                     taxByCode[code] = (current.Base + revenue, current.Tax + codeTax, line.TaxGroup, line.TaxItemGroup);
                 }
 
-                var cogs = await IssueInventoryAsync(area, order, line, inventQty, invoiceId, date, ct);
+                var (cogs, physicalCost, inventOrigin) = await IssueInventoryAsync(area, order, line, inventQty, invoiceId, date, ct);
                 var revenueAccount = await support.ResolveInventPostingAsync(area, line.ItemId, InventAccountType.SalesRevenue, ct);
                 Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, revenueAccount, LedgerPostingType.SalesRevenue, -revenue,
                     $"Sales {order.SalesId} item {line.ItemId}", -inventQty, currency));
@@ -168,6 +168,9 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
                         SubledgerPostingSupport.AccountEntry(area, entry.RecId, issueAccount, LedgerPostingType.SalesIssue, -cogs,
                             $"Inventory issue {line.ItemId} invoiced on {invoiceId}", -inventQty, currency));
                 }
+                // The financial update takes over from the delivery, so its physical posting is reversed.
+                await new PackingSlip.PackingSlipPhysicalPosting(Db)
+                    .ReverseAsync(area, inventOrigin, entry.RecId, date, currency, physicalCost, ct);
 
                 Db.Set<CustInvoiceTrans>().Add(new CustInvoiceTrans
                 {
@@ -238,8 +241,8 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
     }
 
     // Financial issue: Deducted -> Sold for the invoiced inventory quantity at provisional running-average cost.
-    private async Task<decimal> IssueInventoryAsync(string area, SalesTable order, SalesLine line, decimal inventQty,
-        string invoiceId, DateTime date, CancellationToken ct)
+    private async Task<(decimal Cogs, decimal PhysicalCost, long InventTransOrigin)> IssueInventoryAsync(
+        string area, SalesTable order, SalesLine line, decimal inventQty, string invoiceId, DateTime date, CancellationToken ct)
     {
         var origin = await Db.Set<InventTransOrigin>().FirstOrDefaultAsync(x => x.DataAreaId == area
             && x.InventTransId == line.InventTransId && x.ReferenceId == order.SalesId
@@ -252,8 +255,9 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
 
         var site = await Db.Set<InventDim>().AsNoTracking().Where(x => x.DataAreaId == area && x.InventDimId == line.InventDimId)
             .Select(x => x.InventSiteId).FirstOrDefaultAsync(ct) ?? string.Empty;
-        var unitCost = await ReceiptRunningAverageAsync(area, line.ItemId, site, ct);
+        var unitCost = await IAX.IXApi.Modules.Finance.Inventory.InventoryMovement.ReceiptRunningAverageAsync(Db, area, line.ItemId, site, ct);
         var left = inventQty;
+        var physicalReleased = 0m;
         foreach (var source in deducted)
         {
             if (left <= 0) break;
@@ -275,6 +279,8 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
             source.InvoiceId = invoiceId;
             source.Voucher = invoiceId;
             source.CostAmountPosted = -decimal.Round(take * unitCost, 2, MidpointRounding.AwayFromZero);
+            physicalReleased += -source.CostAmountPhysical;
+            source.CostAmountPhysical = 0m;
             left -= take;
         }
         var cogs = decimal.Round(inventQty * unitCost, 2, MidpointRounding.AwayFromZero);
@@ -284,22 +290,11 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
         summary.Deducted -= inventQty;   // no longer delivered-not-invoiced
         summary.PostedQty -= inventQty;  // financially issued (physical already reduced at packing slip)
         summary.PostedValue -= cogs;
+        summary.PhysicalValue += physicalReleased; // the delivery's provisional value is handed over
         summary.LastUpdDatePhysical = date;
-        return cogs;
+        return (cogs, physicalReleased, origin.RecId);
     }
 
-    // Provisional issue cost = weighted average of financially posted receipts in the item/site pool.
-    private async Task<decimal> ReceiptRunningAverageAsync(string area, string itemId, string site, CancellationToken ct)
-    {
-        var dimIds = await Db.Set<InventDim>().AsNoTracking()
-            .Where(x => x.DataAreaId == area && x.InventSiteId == site).Select(x => x.InventDimId).ToListAsync(ct);
-        var receipts = await Db.Set<InventTrans>().AsNoTracking()
-            .Where(x => x.DataAreaId == area && x.ItemId == itemId && dimIds.Contains(x.InventDimId)
-                && x.StatusReceipt == StatusReceipt.Purchased && x.Qty > 0)
-            .Select(x => new { x.Qty, x.CostAmountPosted, x.CostAmountAdjustment }).ToListAsync(ct);
-        var qty = receipts.Sum(x => x.Qty);
-        return qty <= 0 ? 0m : receipts.Sum(x => x.CostAmountPosted + x.CostAmountAdjustment) / qty;
-    }
 
     private async Task AddCustomerTransactionAsync(string area, SalesTable order, string invoiceAccount, string invoiceId,
         DateTime date, DateTime dueDate, decimal amount, LedgerTransType type, string text, CancellationToken ct)

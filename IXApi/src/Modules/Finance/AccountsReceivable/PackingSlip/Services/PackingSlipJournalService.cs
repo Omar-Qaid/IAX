@@ -316,6 +316,9 @@ public sealed class PackingSlipJournalService : BaseService<CustPackingSlipJour>
 
                 var quantityLeft = inventQuantity;
                 decimal postedCatchWeightQuantity = 0;
+                var unitCost = await IAX.IXApi.Modules.Finance.Inventory.InventoryMovement
+                    .ReceiptRunningAverageAsync(Db, order.DataAreaId, line.ItemId, dimension.InventSiteId, ct);
+                var physicalCost = 0m;
                 foreach (var source in sourceTransactions)
                 {
                     if (quantityLeft <= 0) break;
@@ -345,6 +348,10 @@ public sealed class PackingSlipJournalService : BaseService<CustPackingSlipJour>
                     source.DateInvent = deliveryDate;
                     source.PackingSlipId = packingSlipId;
                     source.PdscwQty = catchWeightForPosting;
+                    var postingCost = decimal.Round(postingQuantity * unitCost, 2, MidpointRounding.AwayFromZero);
+                    source.CostAmountPhysical = -postingCost;
+                    inventory.PhysicalValue -= postingCost;
+                    physicalCost += postingCost;
                     if (priorStatus == StatusIssue.Ordered)
                     {
                         inventory.OnOrder -= postingQuantity;
@@ -373,6 +380,8 @@ public sealed class PackingSlipJournalService : BaseService<CustPackingSlipJour>
                 }
                 if (quantityLeft > 0)
                     return new PackingSlipJournalResult(422, null, $"Inventory demand could not be allocated for item {line.ItemId}.");
+                await new PackingSlipPhysicalPosting(Db).PostAsync(order.DataAreaId, line.ItemId, origin.RecId,
+                    packingSlipId, deliveryDate, physicalCost, ct);
 
                 var lineAmount = line.PriceUnit > 0 ? salesQuantity * line.SalesPrice / line.PriceUnit : 0m;
                 Db.Set<CustPackingSlipTrans>().Add(new CustPackingSlipTrans
