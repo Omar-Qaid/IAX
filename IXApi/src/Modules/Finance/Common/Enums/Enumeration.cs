@@ -612,6 +612,15 @@ namespace IAX.IXApi.Modules.Finance.Common
         Fiscal = 1,
         Tax = 2
     }
+    /// <summary>
+    /// Whether an inventory posting record covers the physical or the financial update.
+    /// Backing values need AOT confirmation against the target build.
+    /// </summary>
+    public enum InventTransPostingType
+    {
+        Financial = 0,
+        Physical = 1
+    }
     public enum InventJournalType : byte
     {
         Movement = 0,

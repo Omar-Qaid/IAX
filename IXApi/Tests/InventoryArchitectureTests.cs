@@ -1637,6 +1637,7 @@ public sealed class InventoryArchitectureTests
             Configure<InventPackagingUnit>(builder);
             Configure<WMSLocation>(builder);
             Configure<InventTrans>(builder);
+            Configure<IAX.IXApi.Modules.Finance.Entities.InventTransPosting>(builder);
             Configure<InventTransOrigin>(builder);
             Configure<InventSettlement>(builder);
             Configure<InventClosing>(builder);

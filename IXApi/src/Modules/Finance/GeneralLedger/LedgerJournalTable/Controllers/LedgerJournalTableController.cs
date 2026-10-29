@@ -13,6 +13,7 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
     public class LedgerJournalTableController : BaseController<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable, LedgerJournalTableDto>
     {
         private readonly ILedgerJournalTableService _journalService;
+        private readonly ILedgerJournalReversalService _reversalService;
 
         [HttpGet("{recId:long}/setup-check")]
         public async Task<IActionResult> CheckSetup(long recId, CancellationToken ct)
@@ -42,12 +43,23 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
             return error == null ? NotFound() : UnprocessableEntity(new { error });
         }
 
+        [HttpPost("{recId:long}/reverse")]
+        [DomainPermission("GeneralLedger", "Journals", "Edit")]
+        public async Task<IActionResult> Reverse(long recId, [FromQuery] DateTime? reversalDate, CancellationToken ct)
+        {
+            var (result, error) = await _reversalService.ReverseAsync(recId, reversalDate, ct);
+            if (result != null) return Ok(result);
+            return error == null ? NotFound() : UnprocessableEntity(new { error });
+        }
+
         public LedgerJournalTableController(
             ILedgerJournalTableService service,
+            ILedgerJournalReversalService reversalService,
             ILogger<LedgerJournalTableController>? logger = null)
             : base(service, logger ?? NullLogger<LedgerJournalTableController>.Instance)
         {
             _journalService = service;
+            _reversalService = reversalService;
         }
     }
 }

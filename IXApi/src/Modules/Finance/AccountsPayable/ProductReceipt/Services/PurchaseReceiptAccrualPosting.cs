@@ -28,6 +28,13 @@ public sealed class PurchaseReceiptAccrualPosting(DbContext db)
             SubledgerPostingSupport.AccountEntry(area, entry.RecId, liability, LedgerPostingType.LedgerJournal, -receipt.ValueMst, "Purchase receipt accrual", 0, context.Ledger.AccountingCurrency));
         db.Add(new SubledgerVoucherGeneralJournalEntry { DataAreaId = area, GeneralJournalEntry = entry.RecId, Voucher = receipt.InternalPackingSlipId,
             VoucherDataAreaId = area, AccountingDate = receipt.DeliveryDate });
+        var origin = await db.Set<InventTransOrigin>().AsNoTracking()
+            .Where(x => x.DataAreaId == area && x.InventTransId == receipt.InventTransId)
+            .Select(x => x.RecId).FirstOrDefaultAsync(ct);
+        if (origin != 0)
+            db.Add(IAX.IXApi.Modules.Finance.Inventory.InventTransPosting.InventTransPostingService.Record(area, origin, receipt.ItemId, InventTransPostingType.Physical,
+                receipt.DeliveryDate, receipt.InternalPackingSlipId, inventory, LedgerPostingType.PurchReceipt,
+                liability, LedgerPostingType.LedgerJournal));
         db.Add(new PurchReceiptAccrual { DataAreaId = area, PackingSlipTransRecId = receipt.RecId, GeneralJournalEntryRecId = entry.RecId,
             InventoryLedgerDimension = inventory.RecId, AccrualLedgerDimension = liability.RecId, InventQuantity = receipt.InventQty, AmountMst = receipt.ValueMst });
     }

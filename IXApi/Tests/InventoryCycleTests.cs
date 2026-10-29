@@ -888,6 +888,7 @@ public sealed class InventoryCycleTests
         private static readonly Type[] Included =
         [
             typeof(InventDim), typeof(InventTrans), typeof(InventTransOrigin), typeof(InventSum),
+            typeof(IAX.IXApi.Modules.Finance.Entities.InventTransPosting),
             typeof(InventModelGroup), typeof(InventModelGroupItem), typeof(InventItemGroupItem),
             typeof(InventPosting), typeof(DimensionAttributeValueCombination), typeof(MainAccount),
             typeof(Ledger), typeof(FiscalCalendarPeriod), typeof(LedgerFiscalCalendarPeriod),

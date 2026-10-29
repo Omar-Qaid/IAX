@@ -39,9 +39,10 @@ internal sealed class LedgerJournalPosting(DbContext db)
         var arithmetic = LedgerVoucherBalanceCheck.Check(lines);
         if (arithmetic.Count > 0) throw new SubledgerPostingException(arithmetic[0]);
 
-        var accountingCurrency = await db.Set<Entities.Ledger>().AsNoTracking()
-            .Where(x => x.DataAreaId == area).Select(x => x.AccountingCurrency).FirstAsync(ct);
+        var ledger = await db.Set<Entities.Ledger>().AsNoTracking().FirstAsync(x => x.DataAreaId == area, ct);
+        var accountingCurrency = ledger.AccountingCurrency;
         foreach (var line in lines) EnsureInScope(area, header, line, accountingCurrency);
+        await EnsureManualEntryAllowedAsync(area, lines, ct);
 
         var vouchers = 0;
         var accountEntries = 0;
@@ -95,6 +96,31 @@ internal sealed class LedgerJournalPosting(DbContext db)
         header.NumOfLines = lines.Count;
         foreach (var line in lines) line.NoEdit = NoYes.Yes;
         return new(header.JournalNum, vouchers, accountEntries, totalDebit, totalCredit, postedAt);
+    }
+
+    /// <summary>
+    /// A main account the company blocks for manual entry cannot be posted from a general journal.
+    /// The override is keyed by legal entity, so an account open in one company may be blocked here.
+    /// </summary>
+    private async Task EnsureManualEntryAllowedAsync(string area, List<LedgerJournalTrans> lines, CancellationToken ct)
+    {
+        var company = await db.Set<CompanyInfo>().AsNoTracking()
+            .Where(x => x.DataAreaId == area).Select(x => x.RecId).FirstOrDefaultAsync(ct);
+        if (company == 0) return; // No legal-entity record, so no per-company override can apply.
+        var dimensionIds = lines.SelectMany(x => new[] { x.LedgerDimension, x.OffsetLedgerDimension })
+            .Where(x => x > 0).Distinct().ToList();
+        var accounts = await db.Set<DimensionAttributeValueCombination>().AsNoTracking()
+            .Where(x => x.DataAreaId == area && dimensionIds.Contains(x.RecId))
+            .Select(x => new { x.RecId, x.MainAccount, x.DisplayValue, x.MainAccountValue }).ToListAsync(ct);
+        var accountIds = accounts.Select(x => x.MainAccount).Where(x => x > 0).Distinct().ToList();
+        var blocked = await db.Set<MainAccountLegalEntity>().AsNoTracking()
+            .Where(x => x.LegalEntity == company && accountIds.Contains(x.MainAccount)
+                && x.DoNotAllowManualEntry == NoYes.Yes)
+            .Select(x => x.MainAccount).ToListAsync(ct);
+        if (blocked.Count == 0) return;
+        var account = accounts.First(x => blocked.Contains(x.MainAccount));
+        throw new SubledgerPostingException(
+            $"Main account '{(account.DisplayValue.Length == 0 ? account.MainAccountValue : account.DisplayValue)}' does not allow manual entry in this company.");
     }
 
     /// <summary>Rejects what this journal path does not implement, instead of posting an approximation.</summary>

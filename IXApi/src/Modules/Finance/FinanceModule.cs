@@ -34,6 +34,10 @@ namespace IAX.IXApi.Modules.Finance
 
             // GeneralLedger - LedgerJournalTable
             services.AddScoped<GeneralLedger.LedgerJournalTable.ILedgerJournalTableService, GeneralLedger.LedgerJournalTable.LedgerJournalTableService>();
+            services.AddScoped<GeneralLedger.LedgerJournalTable.ILedgerJournalReversalService, GeneralLedger.LedgerJournalTable.LedgerJournalReversalService>();
+            services.AddScoped<GeneralLedger.Settlement.ILedgerSettlementService, GeneralLedger.Settlement.LedgerSettlementService>();
+            services.AddScoped<GeneralLedger.JournalEntry.ILedgerTrialBalanceService, GeneralLedger.JournalEntry.LedgerTrialBalanceService>();
+            services.AddScoped<GeneralLedger.LedgerParameters.ILedgerParametersService, GeneralLedger.LedgerParameters.LedgerParametersService>();
             services.AddScoped<GeneralLedger.LedgerJournalTable.ILedgerJournalTransService, GeneralLedger.LedgerJournalTable.LedgerJournalTransService>();
             services.AddScoped<GeneralLedger.LedgerJournalTable.ILedgerJournalNameService, GeneralLedger.LedgerJournalTable.LedgerJournalNameService>();
             services.AddScoped<FluentValidation.IValidator<GeneralLedger.LedgerJournalTableDto>, GeneralLedger.LedgerJournalTable.Validation.LedgerJournalTableDtoValidator>();
@@ -248,6 +252,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<FluentValidation.IValidator<Inventory.InventJournalCreateDto>, Inventory.InventJournalCreateDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<Inventory.InventJournalLineInputDto>, Inventory.InventJournalLineInputDtoValidator>();
             services.AddScoped<Inventory.IInventJournalPostingService, Inventory.InventJournalPostingService>();
+            services.AddScoped<Inventory.InventTransPosting.IInventTransPostingService, Inventory.InventTransPosting.InventTransPostingService>();
             services.AddScoped<Inventory.IInventTransferOrderService, Inventory.InventTransferOrderService>();
             services.AddScoped<Inventory.IFifoCostPreviewService, Inventory.FifoCostPreviewService>();
             services.AddScoped<Inventory.IInventClosingQueryService, Inventory.InventClosingQueryService>();

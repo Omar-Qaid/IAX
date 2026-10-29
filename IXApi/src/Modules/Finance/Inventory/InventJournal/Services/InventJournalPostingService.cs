@@ -478,6 +478,15 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
             DataAreaId = companyId, GeneralJournalEntry = entry.RecId, Voucher = voucher,
             VoucherDataAreaId = companyId, AccountingDate = line.TransDate
         });
+        // An inventory journal updates physically and financially in one operation, so the
+        // posting record covers the financial update.
+        var origin = await Db.Set<InventTransOrigin>().AsNoTracking()
+            .Where(x => x.DataAreaId == companyId && x.InventTransId == line.InventTransId)
+            .Select(x => x.RecId).FirstOrDefaultAsync(ct);
+        if (origin != 0)
+            Db.Add(IAX.IXApi.Modules.Finance.Inventory.InventTransPosting.InventTransPostingService.Record(companyId, origin, line.ItemId,
+                InventTransPostingType.Financial, line.TransDate, voucher,
+                accounts.Inventory, accounts.InventoryPostingType, accounts.Offset, accounts.OffsetPostingType));
     }
 
     private static decimal EffectiveFactor(UnitOfMeasureConversion conversion) =>
