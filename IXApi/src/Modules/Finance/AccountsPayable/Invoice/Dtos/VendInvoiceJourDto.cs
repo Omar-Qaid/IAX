@@ -14,5 +14,7 @@ public class VendInvoiceJourDto : EntityDto<long>
     public string LedgerVoucher { get; set; } = string.Empty;
     public decimal Qty { get; set; }
     public decimal SalesBalance { get; set; }
+    public decimal SumTax { get; set; }
+    public DateTime? DueDate { get; set; }
     public decimal InvoiceAmount { get; set; }
 }

@@ -31,7 +31,8 @@ public sealed class AccountsPayableGenericArchitectureTests
             typeof(VendorInvoiceController),
             typeof(ProductReceiptController),
             typeof(VendTransController),
-            typeof(PurchReturnController)
+            typeof(PurchReturnController),
+            typeof(VendPaymentController)
         })
         {
             Assert.Equal(typeof(BaseController<,>), controller.BaseType?.GetGenericTypeDefinition());

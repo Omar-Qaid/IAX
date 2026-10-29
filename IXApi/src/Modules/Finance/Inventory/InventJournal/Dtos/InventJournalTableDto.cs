@@ -11,6 +11,8 @@ public sealed class InventJournalTableDto
     public InventJournalType JournalType { get; set; }
     public int NumOfLines { get; set; }
     public bool Posted { get; set; }
+    public bool CountingFrozen { get; set; }
+    public bool CountingConfirmed { get; set; }
     public DateTime? PostedDateTime { get; set; }
     public string InventSiteId { get; set; } = string.Empty;
     public string InventLocationId { get; set; } = string.Empty;

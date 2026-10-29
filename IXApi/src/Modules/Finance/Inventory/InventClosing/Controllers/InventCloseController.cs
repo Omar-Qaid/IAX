@@ -11,6 +11,15 @@ public sealed class InventCloseController(IInventCloseService service) : Control
 {
     public sealed record CloseRequest(DateTime Cutoff);
 
+    [HttpPost("items/{itemId}/close")]
+    [DomainPermission("Inventory", "Transactions", "Edit")]
+    public async Task<IActionResult> CloseItem(string itemId, [FromBody] CloseRequest request, CancellationToken ct)
+    {
+        if (request.Cutoff == default) return BadRequest(APIResponse<object>.Fail("A cutoff date is required."));
+        var (result, error) = await service.CloseItemAsync(itemId, request.Cutoff, ct);
+        return error == null ? Ok(APIResponse<InventCloseResultDto>.Ok(result!)) : UnprocessableEntity(APIResponse<object>.Fail(error));
+    }
+
     [HttpPost("close")]
     [DomainPermission("Inventory", "Transactions", "Edit")]
     public async Task<IActionResult> Close([FromBody] CloseRequest request, CancellationToken ct)

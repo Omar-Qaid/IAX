@@ -91,6 +91,15 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
             if (customer.Blocked is CustVendorBlocked.All or CustVendorBlocked.Invoicing)
                 return await Fail(422, "The invoice customer is blocked for invoicing.", ct);
 
+            var dueDate = date;
+            if (!string.IsNullOrWhiteSpace(order.PaymTerm))
+            {
+                var term = await Db.Set<PaymTerm>().AsNoTracking().SingleOrDefaultAsync(
+                    x => x.DataAreaId == area && x.PaymTermId == order.PaymTerm, ct);
+                if (term == null) return await Fail(422, "The sales order payment terms were not found in this company.", ct);
+                try { dueDate = IAX.IXApi.Modules.Finance.Foundation.PaymentTerms.PaymentDueDateCalculator.Calculate(date, term); }
+                catch (InvalidOperationException ex) { return await Fail(422, ex.Message, ct); }
+            }
             var lines = await Db.Set<SalesLine>().Where(x => x.DataAreaId == area && x.SalesId == order.SalesId).ToListAsync(ct);
             var selection = new List<(SalesLine Line, decimal Qty)>();
             if (input.Lines == null || input.Lines.Count == 0)
@@ -125,6 +134,8 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
             var taxByCode = new Dictionary<string, (decimal Base, decimal Tax, string Group, string ItemGroup)>();
             foreach (var (line, qty) in selection)
             {
+                var boundaryError = await IAX.IXApi.Modules.Finance.Inventory.InventoryFinancialBoundary.CheckAsync(Db, area, line.ItemId, date, ct);
+                if (boundaryError != null) return await Fail(422, boundaryError, ct);
                 var inventQty = qty == line.RemainSalesFinancial
                     ? line.RemainInventFinancial
                     : decimal.Round(qty * line.QtyOrdered / (line.SalesQty == 0 ? 1 : line.SalesQty), 6);
@@ -193,7 +204,7 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
             {
                 DataAreaId = area, GeneralJournalEntry = entry.RecId, Voucher = invoiceId, VoucherDataAreaId = area, AccountingDate = date
             });
-            await AddCustomerTransactionAsync(area, order, invoiceAccount, invoiceId, date, total, LedgerTransType.Sales,
+            await AddCustomerTransactionAsync(area, order, invoiceAccount, invoiceId, date, dueDate, total, LedgerTransType.Sales,
                 $"Sales order {order.SalesId}", ct);
 
             var journal = new CustInvoiceJour
@@ -203,7 +214,7 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
                 CurrencyCode = order.CurrencyCode, LedgerVoucher = invoiceId, ParmId = input.RequestId ?? string.Empty,
                 Qty = totalQty, SalesBalance = totalRevenue, SumTax = totalTax, InvoiceAmount = total,
                 SalesBalanceMst = totalRevenue, SumTaxMst = totalTax, InvoiceAmountMst = total,
-                Payment = order.PaymTerm, PostingProfile = order.PostingProfile, DueDate = date
+                Payment = order.PaymTerm, PostingProfile = order.PostingProfile, DueDate = dueDate
             };
             Db.Set<CustInvoiceJour>().Add(journal);
 
@@ -291,14 +302,14 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
     }
 
     private async Task AddCustomerTransactionAsync(string area, SalesTable order, string invoiceAccount, string invoiceId,
-        DateTime date, decimal amount, LedgerTransType type, string text, CancellationToken ct)
+        DateTime date, DateTime dueDate, decimal amount, LedgerTransType type, string text, CancellationToken ct)
     {
         var custTrans = new CustTrans
         {
             DataAreaId = area, AccountNum = invoiceAccount, OrderAccount = order.CustAccount, TransDate = date,
             Voucher = invoiceId, Invoice = invoiceId, DocumentNum = invoiceId, DocumentDate = date, Txt = text,
             TransType = type, CurrencyCode = order.CurrencyCode, AmountCur = amount, AmountMst = amount,
-            ReportingCurrencyAmount = amount, DueDate = date, PaymTermId = order.PaymTerm, PaymMode = order.PaymMode,
+            ReportingCurrencyAmount = amount, DueDate = dueDate, PaymTermId = order.PaymTerm, PaymMode = order.PaymMode,
             PostingProfile = order.PostingProfile, DefaultDimension = order.DefaultDimension
         };
         Db.Set<CustTrans>().Add(custTrans);
@@ -306,7 +317,7 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
         Db.Set<CustTransOpen>().Add(new CustTransOpen
         {
             DataAreaId = area, AccountNum = invoiceAccount, RefRecId = custTrans.RecId, TransDate = date,
-            DueDate = date, AmountCur = amount, AmountMst = amount, ReportingCurrencyAmount = amount
+            DueDate = dueDate, AmountCur = amount, AmountMst = amount, ReportingCurrencyAmount = amount
         });
     }
 

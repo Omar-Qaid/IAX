@@ -84,6 +84,8 @@ namespace IAX.IXApi.Modules.Finance.Entities
 
         // Enum Properties
         public NoYes Posted { get; set; }
+        public bool CountingFrozen { get; set; }
+        public bool CountingConfirmed { get; set; }
 
         // ==========================================================
         // Operational Parameters & Registration Policies

@@ -32,6 +32,7 @@ namespace IAX.IXApi.Modules.Finance.Entities
 
         public DateTime TransDate { get; set; }
         public long TransRecId { get; set; }
+        public long? ReceiptTransRecId { get; set; }
 
         // ==========================================================
         // Settled Financial Amounts & Quantities

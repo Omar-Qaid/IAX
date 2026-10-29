@@ -26,6 +26,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
             builder.ToTable("PurchLine");
             builder.HasIndex(x => new { x.DataAreaId, x.PurchId, x.LineNumber });
             builder.HasIndex(x => new { x.DataAreaId, x.InventTransId });
+            builder.HasOne<VendInvoiceTrans>().WithMany().HasForeignKey(x => x.OriginalInvoiceTransRecId).OnDelete(DeleteBehavior.Restrict);
             builder.Property(x => x.Name).HasMaxLength(1000);
             builder.Property(x => x.CurrencyCode).HasMaxLength(FieldLengths.CurrencyCode);
             builder.Property(x => x.PurchUnit).HasMaxLength(10);

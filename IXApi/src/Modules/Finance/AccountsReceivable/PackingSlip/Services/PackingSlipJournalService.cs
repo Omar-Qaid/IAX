@@ -3,6 +3,7 @@ using System.Data;
 using System.Security.Cryptography;
 using System.Text;
 using IAX.IXApi.Infrastructure.Identity;
+using IAX.IXApi.Modules.Finance.Inventory;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Administration.NumberSequences;
@@ -215,6 +216,8 @@ public sealed class PackingSlipJournalService : BaseService<CustPackingSlipJour>
                     line.ItemId, ProductLifecycleProcess.Sales, ct);
                 if (lifecycleError is not null)
                     return new PackingSlipJournalResult(422, null, lifecycleError);
+                var countError = await InventoryCountProtection.CheckAsync(Db, order.DataAreaId, line.ItemId, line.InventDimId, ct);
+                if (countError != null) return new PackingSlipJournalResult(422, null, countError);
                 var statusId = dimensions[line.InventDimId].InventStatusId;
                 if (string.IsNullOrWhiteSpace(statusId)) continue;
                 var status = await Db.Set<WHSInventStatus>().AsNoTracking().FirstOrDefaultAsync(row =>
@@ -237,8 +240,15 @@ public sealed class PackingSlipJournalService : BaseService<CustPackingSlipJour>
                 var available = await Db.Set<InventSum>().AsNoTracking()
                     .Where(row => row.DataAreaId == order.DataAreaId && row.ItemId == group.Key.ItemId
                         && row.InventDimId == group.Key.InventDimId)
-                    .Select(row => (decimal?)(row.PhysicalInvent - row.ReservPhysical)).SingleOrDefaultAsync(ct) ?? 0m;
-                if (required > available)
+                    .Select(row => (decimal?)(row.PhysicalInvent - row.ReservPhysical - row.Picked)).SingleOrDefaultAsync(ct) ?? 0m;
+                var selectedTransIds = group.Select(line => line.InventTransId).ToList();
+                var ownedAllocation = await (from trans in Db.Set<InventTrans>()
+                    join origin in Db.Set<InventTransOrigin>() on trans.InventTransOrigin equals origin.RecId
+                    where trans.DataAreaId == order.DataAreaId && origin.DataAreaId == order.DataAreaId
+                        && selectedTransIds.Contains(origin.InventTransId)
+                        && (trans.StatusIssue == StatusIssue.ReservPhysical || trans.StatusIssue == StatusIssue.Picked)
+                    select (decimal?)-trans.Qty).SumAsync(ct) ?? 0m;
+                if (required > available + ownedAllocation)
                     return new PackingSlipJournalResult(422, null,
                         $"Available physical stock excluding other reservations is insufficient for item {group.Key.ItemId}.");
             }
@@ -292,13 +302,15 @@ public sealed class PackingSlipJournalService : BaseService<CustPackingSlipJour>
                     && (row.StatusIssue == StatusIssue.ReservPhysical
                         || row.StatusIssue == StatusIssue.Ordered || row.StatusIssue == StatusIssue.Picked))
                     .ToListAsync(ct))
-                    .OrderBy(row => row.StatusIssue == StatusIssue.ReservPhysical ? 0 : 1).ThenBy(row => row.RecId).ToList();
+                    .Where(row => NormalizeQuantityMode(request.QuantityMode) != "picked" || row.StatusIssue == StatusIssue.Picked)
+                    .OrderBy(row => row.StatusIssue == StatusIssue.Picked ? 0 : row.StatusIssue == StatusIssue.ReservPhysical ? 1 : 2).ThenBy(row => row.RecId).ToList();
                 if (sourceTransactions.Any(row => row.ItemId != line.ItemId || row.InventDimId != line.InventDimId)
                     || sourceTransactions.Sum(row => -row.Qty) < inventQuantity)
                     return new PackingSlipJournalResult(422, null, $"Open inventory demand does not cover the delivery quantity for item {line.ItemId}.");
                 // Available to this source = free stock plus this source's own physical reservation.
+                var ownPicked = sourceTransactions.Where(row => row.StatusIssue == StatusIssue.Picked).Sum(row => -row.Qty);
                 var ownReserved = sourceTransactions.Where(row => row.StatusIssue == StatusIssue.ReservPhysical).Sum(row => -row.Qty);
-                if (inventory.PhysicalInvent - inventory.ReservPhysical + ownReserved < inventQuantity)
+                if (inventory.PhysicalInvent - inventory.ReservPhysical - inventory.Picked + ownReserved + ownPicked < inventQuantity)
                     return new PackingSlipJournalResult(422, null,
                         $"Available physical stock excluding other reservations is insufficient for item {line.ItemId}.");
 
@@ -353,7 +365,7 @@ public sealed class PackingSlipJournalService : BaseService<CustPackingSlipJour>
                     inventory.PdscwDeducted += catchWeightForPosting;
                     inventory.PhysicalInvent -= postingQuantity;
                     inventory.PdscwPhysicalInvent -= catchWeightForPosting;
-                    inventory.AvailPhysical = inventory.PhysicalInvent - inventory.ReservPhysical;
+                    inventory.AvailPhysical = inventory.PhysicalInvent - inventory.ReservPhysical - inventory.Picked;
                     inventory.PdscwAvailPhysical -= catchWeightForPosting;
                     inventory.LastUpdDatePhysical = deliveryDate;
                     postedCatchWeightQuantity += catchWeightForPosting;

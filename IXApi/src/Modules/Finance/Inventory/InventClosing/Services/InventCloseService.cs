@@ -2,13 +2,13 @@ using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.Common;
+using IAX.IXApi.Modules.Finance.AccountsReceivable;
+using IAX.IXApi.Modules.Finance.AccountsPayable;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
-using System.Security.Cryptography;
-using System.Text;
 using ItemModelGroup = IAX.IXApi.Modules.Finance.Entities.InventModelGroup;
+using PostingValidationException = IAX.IXApi.Modules.Finance.Common.SubledgerPostingException;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
@@ -16,8 +16,8 @@ namespace IAX.IXApi.Modules.Finance.Inventory;
 /// Executes a basic FIFO inventory close: deterministic FIFO settlement of financially posted
 /// issues against financially posted receipts within an item/financial-site pool, cost-adjustment
 /// of each issue to its FIFO cost, settlement history, a ledger correction, and a close boundary.
-/// Scope mirrors <see cref="FifoCostPreviewService"/>: journal-sourced FIFO items only. Recalculation,
-/// close reversal, and non-journal source documents are deferred.
+/// Supports journal, purchase and sales sources in financial-site pools. Verified same-site
+/// transfers conserve the pool and do not consume FIFO layers. Close reversal is not supported.
 /// </summary>
 public sealed class InventCloseService : IInventCloseService
 {
@@ -26,6 +26,7 @@ public sealed class InventCloseService : IInventCloseService
     private readonly ICurrentUserService _user;
     private readonly ISysNumberSequenceService _numbers;
     private DbContext Db => _unitOfWork.Context;
+    private SubledgerPostingSupport Support => new(Db);
 
     public InventCloseService(IUnitOfWork unitOfWork, ICompanyExecutionContext company,
         ICurrentUserService user, ISysNumberSequenceService numbers)
@@ -37,9 +38,14 @@ public sealed class InventCloseService : IInventCloseService
     }
 
     public Task<(InventCloseResultDto? Result, string? Error)> CloseAsync(DateTime cutoff, CancellationToken ct) =>
-        Db.Database.CreateExecutionStrategy().ExecuteAsync(() => CloseCoreAsync(cutoff, ct));
+        Db.Database.CreateExecutionStrategy().ExecuteAsync(() => CloseCoreAsync(cutoff, string.Empty, ct));
 
-    private async Task<(InventCloseResultDto? Result, string? Error)> CloseCoreAsync(DateTime cutoff, CancellationToken ct)
+    public Task<(InventCloseResultDto? Result, string? Error)> CloseItemAsync(string itemId, DateTime cutoff, CancellationToken ct = default) =>
+        string.IsNullOrWhiteSpace(itemId)
+            ? Task.FromResult<(InventCloseResultDto?, string?)>((null, "An item is required for scoped close."))
+            : Db.Database.CreateExecutionStrategy().ExecuteAsync(() => CloseCoreAsync(cutoff, itemId.Trim(), ct));
+
+    private async Task<(InventCloseResultDto? Result, string? Error)> CloseCoreAsync(DateTime cutoff, string itemId, CancellationToken ct)
     {
         var companyId = _company.GetDataAreaId();
         if (string.IsNullOrWhiteSpace(companyId)) return (null, "A company must be selected.");
@@ -47,14 +53,16 @@ public sealed class InventCloseService : IInventCloseService
         await _unitOfWork.BeginTransactionAsync(ct);
         try
         {
-            await LockPostingKeyAsync($"InventClose:{companyId}", ct);
+            await Support.LockAsync($"InventClose:{companyId}", ct);
 
             // Idempotency and close-boundary enforcement.
             var closings = await Db.Set<InventClosing>()
                 .Where(x => x.DataAreaId == companyId && x.AdjustmentType == InventAdjustmentType.Closing)
                 .ToListAsync(ct);
+            var runNum = closings.Count == 0 ? 1 : closings.Max(x => x.RunNum) + 1;
+            closings = closings.Where(x => itemId.Length == 0 || x.ScopeItemId == itemId || x.ScopeItemId.Length == 0).ToList();
             var existing = closings
-                .Where(x => x.TransDate.Date == cutoffDate && x.InventCostStatus == InventCostStatus.Finished)
+                .Where(x => x.ScopeItemId == itemId && x.TransDate.Date == cutoffDate && x.InventCostStatus == InventCostStatus.Finished)
                 .OrderByDescending(x => x.RunNum).FirstOrDefault();
             if (existing != null)
             {
@@ -63,13 +71,18 @@ public sealed class InventCloseService : IInventCloseService
                     existing.RunNum, 0, 0, 0, 0m), null);
             }
             var lastRun = closings.Where(x => x.InventCostStatus == InventCostStatus.Finished).ToList();
-            if (lastRun.Any(x => x.TransDate.Date >= cutoffDate))
+            if (lastRun.Any(x => x.TransDate.Date > cutoffDate || (x.TransDate.Date == cutoffDate && x.ScopeItemId.Length == 0)))
                 throw new PostingValidationException(
                     "A later or equal inventory close already exists; backdated close is not supported in the basic scope.");
-            var runNum = (lastRun.Count == 0 ? 0 : lastRun.Max(x => x.RunNum)) + 1;
 
             var context = await LoadLedgerContextAsync(companyId, cutoffDate, ct);
-            var pools = await LoadFifoPoolsAsync(companyId, cutoffDate, ct);
+            var pools = await LoadFifoPoolsAsync(companyId, cutoffDate, itemId, ct);
+            if (itemId.Length > 0 && pools.Count == 0)
+                throw new PostingValidationException("The selected item has no supported financial inventory to close.");
+            var salesReturns = await Db.Set<SalesLine>().AsNoTracking().Where(x => x.DataAreaId == companyId && (itemId == "" || x.ItemId == itemId) && x.InventTransIdReturn != "")
+                .ToDictionaryAsync(x => x.InventTransId, x => x.InventTransIdReturn, ct);
+            var vendorReturns = await Db.Set<PurchLine>().AsNoTracking().Where(x => x.DataAreaId == companyId && (itemId == "" || x.ItemId == itemId) && x.InventTransIdReturn != "")
+                .ToDictionaryAsync(x => x.InventTransId, x => x.InventTransIdReturn, ct);
 
             var voucher = (await _numbers.NextAsync("InventClosing", companyId, ct)).Code;
             var settlementsCreated = 0;
@@ -88,21 +101,48 @@ public sealed class InventCloseService : IInventCloseService
                     if (trans.Qty > 0 && trans.StatusReceipt == StatusReceipt.Purchased)
                     {
                         var receiptValue = trans.CostAmountPosted + trans.CostAmountAdjustment;
+                        if (salesReturns.TryGetValue(inventTransId, out var soldId))
+                        {
+                            var sold = pool.Rows.Where(x => x.InventTransId == soldId && x.Transaction.Qty < 0).Select(x => x.Transaction).ToList();
+                            if (sold.Count == 0 || sold.Any(x => x.ValueOpen != InventTransOpen.No))
+                                throw new PostingValidationException("A customer return requires its original financially settled sales issue in the same pool.");
+                            var targetReceipt = trans.Qty * sold.Sum(x => x.CostAmountPosted + x.CostAmountAdjustment) / sold.Sum(x => x.Qty);
+                            var returnAdjustment = targetReceipt - receiptValue;
+                            if (returnAdjustment != 0)
+                            {
+                                trans.CostAmountAdjustment += returnAdjustment;
+                                await AdjustInventorySummaryAsync(companyId, trans.ItemId, trans.InventDimId, returnAdjustment, ct);
+                                await CreateLedgerCorrectionAsync(companyId, voucher, trans, inventTransId, row.Category, pool.ItemGroupId, returnAdjustment, context, ct);
+                                ledgerEntriesCreated++;
+                                totalAdjustment += returnAdjustment;
+                                receiptValue = targetReceipt;
+                            }
+                        }
                         if (receiptValue <= 0)
                             throw new PostingValidationException(
                                 $"Receipt transaction {trans.RecId} has no positive financial cost.");
-                        layers.AddLast(new Layer { Receipt = trans, Remaining = trans.Qty, UnitCost = receiptValue / trans.Qty });
+                        if (trans.Qty > trans.QtySettled)
+                            layers.AddLast(new Layer { Receipt = trans, Remaining = trans.Qty - trans.QtySettled, UnitCost = receiptValue / trans.Qty });
                         continue;
                     }
                     if (trans.Qty >= 0 || trans.StatusIssue != StatusIssue.Sold)
                         throw new PostingValidationException(
                             $"Transaction {trans.RecId} has an unsupported financial quantity/status combination for close.");
 
+                    if (trans.QtySettled == trans.Qty) continue;
+                    if (trans.QtySettled != 0) throw new PostingValidationException("Partially settled legacy issues require reconciliation before close.");
                     var needed = -trans.Qty;
                     var fifoCost = 0m;
                     while (needed > 0 && layers.Count > 0)
                     {
-                        var layer = layers.First!.Value;
+                        var node = layers.First!;
+                        if (vendorReturns.TryGetValue(inventTransId, out var purchaseId))
+                        {
+                            var receiptIds = pool.Rows.Where(x => x.InventTransId == purchaseId && x.Transaction.Qty > 0).Select(x => x.Transaction.RecId).ToHashSet();
+                            while (node != null && !receiptIds.Contains(node.Value.Receipt.RecId)) node = node.Next;
+                            if (node == null) throw new PostingValidationException("Vendor return exceeds the open quantity of its original purchase receipt.");
+                        }
+                        var layer = node.Value;
                         var quantity = Math.Min(needed, layer.Remaining);
                         var layerCost = quantity * layer.UnitCost;
                         fifoCost += layerCost;
@@ -113,7 +153,7 @@ public sealed class InventCloseService : IInventCloseService
                         {
                             if (layer.Receipt.Qty - layer.Receipt.QtySettled <= 0)
                                 layer.Receipt.ValueOpen = InventTransOpen.No;
-                            layers.RemoveFirst();
+                            layers.Remove(node);
                         }
                         settlementsCreated++;
                         Db.Add(new InventSettlement
@@ -121,6 +161,7 @@ public sealed class InventCloseService : IInventCloseService
                             DataAreaId = companyId, SettleTransId = (await _numbers.NextAsync("SettleTransId", companyId, ct)).Code,
                             InventTransId = inventTransId, ItemId = trans.ItemId, ItemGroupId = pool.ItemGroupId,
                             Voucher = voucher, TransDate = cutoffDate, TransRecId = trans.RecId,
+                            ReceiptTransRecId = layer.Receipt.RecId,
                             QtySettled = -quantity, CostAmountSettled = -layerCost, CostAmountAdjustment = 0m,
                             SettleType = InventSettleType.FinancialClose, SettleModel = InventModel.FIFO,
                             Posted = NoYes.Yes, TransBeginTime = DateTime.UtcNow
@@ -156,6 +197,7 @@ public sealed class InventCloseService : IInventCloseService
             var closing = new InventClosing
             {
                 DataAreaId = companyId, Voucher = voucher, TransDate = cutoffDate,
+                ScopeItemId = itemId,
                 PeriodCode = Truncate(context.Period.Name, FieldLengths.PeriodCode),
                 RunNum = runNum, NextRunNum = runNum + 1,
                 AdjustmentType = InventAdjustmentType.Closing, AdjustmentSpec = InventAdjustmentSpec.Total,
@@ -183,11 +225,11 @@ public sealed class InventCloseService : IInventCloseService
         }
     }
 
-    private async Task<List<Pool>> LoadFifoPoolsAsync(string companyId, DateTime cutoffDate, CancellationToken ct)
+    private async Task<List<Pool>> LoadFifoPoolsAsync(string companyId, DateTime cutoffDate, string itemId, CancellationToken ct)
     {
         var end = cutoffDate.AddDays(1);
         var transactions = (await Db.Set<InventTrans>()
-            .Where(x => x.DataAreaId == companyId && x.DateFinancial < end &&
+            .Where(x => x.DataAreaId == companyId && (itemId == "" || x.ItemId == itemId) && x.DateFinancial < end &&
                 (x.StatusReceipt == StatusReceipt.Purchased || x.StatusIssue == StatusIssue.Sold))
             .ToListAsync(ct))
             .OrderBy(x => x.DateFinancial).ThenBy(x => x.RecId).ToList();
@@ -201,10 +243,22 @@ public sealed class InventCloseService : IInventCloseService
         var origins = await Db.Set<InventTransOrigin>().AsNoTracking()
             .Where(x => x.DataAreaId == companyId && originIds.Contains(x.RecId))
             .ToDictionaryAsync(x => x.RecId, ct);
-        var transferSet = (await Db.Set<InventJournalTrans>().AsNoTracking()
+        var transferLines = await Db.Set<InventJournalTrans>().AsNoTracking()
             .Where(x => x.DataAreaId == companyId && x.JournalType == InventJournalType.Transfer)
-            .Select(x => new { x.InventTransId, x.ToInventTransId }).ToListAsync(ct))
-            .SelectMany(x => new[] { x.InventTransId, x.ToInventTransId }).ToHashSet(StringComparer.Ordinal);
+            .ToListAsync(ct);
+        var transferSet = transferLines.SelectMany(x => new[] { x.InventTransId, x.ToInventTransId }).Where(x => x.Length > 0).ToHashSet(StringComparer.Ordinal);
+        foreach (var transfer in transferLines)
+        {
+            var pair = transactions.Where(x => origins.TryGetValue(x.InventTransOrigin, out var o)
+                && (o.InventTransId == transfer.InventTransId || o.InventTransId == transfer.ToInventTransId)).ToList();
+            if (pair.Count == 0) continue;
+            if (pair.Count != 2 || pair.Sum(x => x.Qty) != 0 || pair.Sum(x => x.CostAmountPosted + x.CostAmountAdjustment) != 0
+                || pair.Select(x => x.ItemId).Distinct().Count() != 1 || pair.Any(x => !dimensions.ContainsKey(x.InventDimId))
+                || pair.Select(x => dimensions[x.InventDimId].InventSiteId).Distinct().Count() != 1
+                || pair.Count(x => x.Qty < 0 && x.StatusIssue == StatusIssue.Sold) != 1
+                || pair.Count(x => x.Qty > 0 && x.StatusReceipt == StatusReceipt.Purchased) != 1)
+                throw new PostingValidationException("A transfer must have balanced financial issue/receipt legs in the same item/site pool before close.");
+        }
         var assignments = await Db.Set<InventModelGroupItem>().AsNoTracking()
             .Where(x => x.ItemDataAreaId == companyId).ToListAsync(ct);
         var models = await Db.Set<ItemModelGroup>().AsNoTracking()
@@ -218,10 +272,11 @@ public sealed class InventCloseService : IInventCloseService
         {
             if (!dimensions.TryGetValue(transaction.InventDimId, out var dim) || string.IsNullOrWhiteSpace(dim.InventSiteId))
                 throw new PostingValidationException($"Transaction {transaction.RecId} has no valid financial site dimension.");
-            // Receipts and issues may originate from inventory journals or sales orders; transfers
-            // are excluded because their paired cost relationship is handled separately.
+            if (origins.TryGetValue(transaction.InventTransOrigin, out var transferOrigin) && transferSet.Contains(transferOrigin.InventTransId))
+                continue; // Verified internal movement does not consume or create a site-level FIFO layer.
             var sourceSupported = origins.TryGetValue(transaction.InventTransOrigin, out var origin)
                 && (origin.ReferenceCategory == InventRefType.InventoryJournal
+                    || origin.ReferenceCategory == InventRefType.PhysicalinventoryCount
                     || origin.ReferenceCategory == InventRefType.SalesTable
                     || origin.ReferenceCategory == InventRefType.PurchaseOrder)
                 && !transferSet.Contains(origin.InventTransId);
@@ -259,21 +314,27 @@ public sealed class InventCloseService : IInventCloseService
         var isSale = category == InventRefType.SalesTable;
         var inventoryType = isSale ? InventAccountType.SalesIssue : InventAccountType.InventReceipt;
         var costType = isSale ? InventAccountType.SalesConsump : InventAccountType.InventIssue;
-        var inventory = await ResolvePostingDimensionAsync(companyId, issue.ItemId, itemGroupId, inventoryType, ct);
-        var cogs = await ResolvePostingDimensionAsync(companyId, issue.ItemId, itemGroupId, costType, ct);
-        var entry = new GeneralJournalEntry
+        var inventory = await Support.ResolveInventPostingAsync(companyId, issue.ItemId, inventoryType, ct, itemGroupId);
+        var cogs = await Support.ResolveInventPostingAsync(companyId, issue.ItemId, costType, ct, itemGroupId);
+        var journalLine = category is InventRefType.InventoryJournal or InventRefType.PhysicalinventoryCount
+            ? await Db.Set<InventJournalTrans>().AsNoTracking().SingleOrDefaultAsync(x => x.DataAreaId == companyId && x.InventTransId == inventTransId, ct)
+            : null;
+        if (journalLine != null)
         {
-            DataAreaId = companyId, JournalNumber = voucher, Ledger = context.Ledger.RecId,
-            JournalCategory = LedgerJournalCategory.General, PostingLayer = CurrentToOperationsPostingLayer.Current,
-            SubledgerVoucher = voucher, SubledgerVoucherDataAreaId = companyId, DocumentNumber = voucher,
-            AccountingDate = context.AccountingDate, DocumentDate = context.AccountingDate,
-            FiscalCalendarPeriod = context.Period.RecId, FiscalCalendarYear = context.Period.FiscalCalendarYear
-        };
+            inventory = await Support.ResolveInventPostingAsync(companyId, issue.ItemId, InventAccountType.InventIssue, ct, itemGroupId);
+            cogs = journalLine.JournalType == InventJournalType.Movement
+                ? await Db.Set<DimensionAttributeValueCombination>().SingleAsync(x => x.DataAreaId == companyId && x.RecId == journalLine.LedgerDimension, ct)
+                : await Support.ResolveInventPostingAsync(companyId, issue.ItemId, InventAccountType.InventLoss, ct, itemGroupId);
+        }
+        var entry = Support.NewEntry(companyId, voucher, voucher, context.AccountingDate,
+            new SubledgerLedgerContext(context.Ledger, context.Period));
         Db.Add(entry);
         await _unitOfWork.CompleteAsync(ct);
+        var text = $"FIFO close adjustment for issue {inventTransId}";
+        var currency = context.Ledger.AccountingCurrency;
         Db.AddRange(
-            AccountEntry(companyId, entry.RecId, inventory, isSale ? LedgerPostingType.SalesIssue : LedgerPostingType.InventReceipt, adjustment, issue, inventTransId, context.Ledger.AccountingCurrency),
-            AccountEntry(companyId, entry.RecId, cogs, isSale ? LedgerPostingType.SalesConsump : LedgerPostingType.InventIssue, -adjustment, issue, inventTransId, context.Ledger.AccountingCurrency));
+            SubledgerPostingSupport.AccountEntry(companyId, entry.RecId, inventory, isSale ? LedgerPostingType.SalesIssue : journalLine != null ? LedgerPostingType.InventIssue : LedgerPostingType.InventReceipt, adjustment, text, issue.Qty, currency),
+            SubledgerPostingSupport.AccountEntry(companyId, entry.RecId, cogs, isSale ? LedgerPostingType.SalesConsump : journalLine != null ? (journalLine.JournalType == InventJournalType.Movement ? LedgerPostingType.LedgerJournal : LedgerPostingType.InventLoss) : LedgerPostingType.InventIssue, -adjustment, text, issue.Qty, currency));
         Db.Add(new SubledgerVoucherGeneralJournalEntry
         {
             DataAreaId = companyId, GeneralJournalEntry = entry.RecId, Voucher = voucher,
@@ -281,72 +342,13 @@ public sealed class InventCloseService : IInventCloseService
         });
     }
 
-    private static GeneralJournalAccountEntry AccountEntry(string companyId, long entryId,
-        DimensionAttributeValueCombination dimension, LedgerPostingType type, decimal amount,
-        InventTrans issue, string inventTransId, string currency) => new()
-    {
-        DataAreaId = companyId, GeneralJournalEntry = entryId, LedgerDimension = dimension.RecId,
-        MainAccount = dimension.MainAccount,
-        LedgerAccount = dimension.DisplayValue.Length == 0 ? dimension.MainAccountValue : dimension.DisplayValue,
-        Text = $"FIFO close adjustment for issue {inventTransId}", PostingType = type,
-        TransactionCurrencyCode = currency, TransactionCurrencyAmount = amount,
-        AccountingCurrencyAmount = amount, ReportingCurrencyAmount = amount,
-        Quantity = issue.Qty, IsCredit = amount < 0 ? NoYes.Yes : NoYes.No, PaymentReference = string.Empty
-    };
-
-    private async Task<DimensionAttributeValueCombination> ResolvePostingDimensionAsync(string companyId,
-        string itemId, string itemGroupId, InventAccountType accountType, CancellationToken ct)
-    {
-        var rules = await Db.Set<InventPosting>().AsNoTracking()
-            .Where(x => x.DataAreaId == companyId && x.InventAccountType == accountType && x.CustVendCode == TableGroupAll.All)
-            .ToListAsync(ct);
-        var rule = rules.Where(x => x.ItemCode == TableGroupAll.Table && x.ItemRelation == itemId).OrderBy(x => x.RecId).FirstOrDefault()
-            ?? rules.Where(x => x.ItemCode == TableGroupAll.Group && x.ItemRelation == itemGroupId).OrderBy(x => x.RecId).FirstOrDefault()
-            ?? rules.Where(x => x.ItemCode == TableGroupAll.All).OrderBy(x => x.RecId).FirstOrDefault();
-        if (rule == null || rule.LedgerDimension == 0)
-            throw new PostingValidationException($"Inventory posting setup is missing for {accountType} and item '{itemId}'.");
-        var dimension = await Db.Set<DimensionAttributeValueCombination>().AsNoTracking()
-            .FirstOrDefaultAsync(x => x.DataAreaId == companyId && x.RecId == rule.LedgerDimension, ct)
-            ?? throw new PostingValidationException($"The {accountType} posting rule references an invalid ledger dimension.");
-        var valid = dimension.MainAccount > 0
-            ? await Db.Set<MainAccount>().AsNoTracking().AnyAsync(x => x.DataAreaId == companyId && x.RecId == dimension.MainAccount, ct)
-            : await Db.Set<MainAccount>().AsNoTracking().AnyAsync(x => x.DataAreaId == companyId && x.MainAccountId == dimension.MainAccountValue, ct);
-        if (!valid) throw new PostingValidationException($"Ledger dimension '{dimension.DisplayValue}' does not reference a valid main account.");
-        return dimension;
-    }
-
     private async Task<LedgerContext> LoadLedgerContextAsync(string companyId, DateTime date, CancellationToken ct)
     {
-        var ledger = await Db.Set<Ledger>().AsNoTracking().FirstOrDefaultAsync(x => x.DataAreaId == companyId, ct)
-            ?? throw new PostingValidationException("A ledger is required for the selected company.");
-        if (string.IsNullOrWhiteSpace(ledger.AccountingCurrency))
-            throw new PostingValidationException("The ledger accounting currency is required.");
-        if (!string.IsNullOrWhiteSpace(ledger.ReportingCurrency) &&
-            !string.Equals(ledger.ReportingCurrency, ledger.AccountingCurrency, StringComparison.OrdinalIgnoreCase))
+        var context = await Support.LoadLedgerContextAsync(companyId, date, ct);
+        if (!string.IsNullOrWhiteSpace(context.Ledger.ReportingCurrency) &&
+            !string.Equals(context.Ledger.ReportingCurrency, context.Ledger.AccountingCurrency, StringComparison.OrdinalIgnoreCase))
             throw new PostingValidationException("Inventory close with a different reporting currency requires exchange-rate processing, which is not enabled in the basic inventory scope.");
-        var period = await Db.Set<FiscalCalendarPeriod>().AsNoTracking().FirstOrDefaultAsync(
-            x => x.FiscalCalendar == ledger.FiscalCalendar && x.StartDate <= date && x.EndDate >= date && x.Type == FiscalPeriodType.Operating, ct)
-            ?? throw new PostingValidationException($"No operating fiscal period contains {date:d}.");
-        var ledgerPeriod = await Db.Set<LedgerFiscalCalendarPeriod>().AsNoTracking().FirstOrDefaultAsync(
-            x => x.Ledger == ledger.RecId && x.FiscalCalendarPeriod == period.RecId, ct);
-        if (ledgerPeriod == null || ledgerPeriod.Status != FiscalPeriodStatus.Open)
-            throw new PostingValidationException($"The fiscal period for {date:d} is not open.");
-        return new LedgerContext(ledger, period, date);
-    }
-
-    private async Task LockPostingKeyAsync(string key, CancellationToken ct)
-    {
-        if (Db.Database.ProviderName?.Contains("SqlServer", StringComparison.OrdinalIgnoreCase) != true) return;
-        var resource = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(key)));
-        await using var command = Db.Database.GetDbConnection().CreateCommand();
-        command.Transaction = Db.Database.CurrentTransaction!.GetDbTransaction();
-        command.CommandText = "DECLARE @result int; EXEC @result = sys.sp_getapplock @Resource = @resource, @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 10000; SELECT @result;";
-        var parameter = command.CreateParameter();
-        parameter.ParameterName = "@resource";
-        parameter.Value = "InventClose:" + resource;
-        command.Parameters.Add(parameter);
-        if (await command.ExecuteScalarAsync(ct) is not int code || code < 0)
-            throw new PostingValidationException("Inventory close could not acquire its concurrency lock.");
+        return new LedgerContext(context.Ledger, context.Period, date);
     }
 
     private static string Truncate(string value, int max) =>
@@ -363,5 +365,4 @@ public sealed class InventCloseService : IInventCloseService
         List<(InventTrans Transaction, string InventTransId, InventRefType Category)> Rows);
 
     private sealed record LedgerContext(Ledger Ledger, FiscalCalendarPeriod Period, DateTime AccountingDate);
-    private sealed class PostingValidationException(string message) : Exception(message);
 }

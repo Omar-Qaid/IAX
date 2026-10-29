@@ -59,6 +59,23 @@ public class LogisticsAddressSeeder : BaseModuleSeeder
             var location = await EnsureAsync(db, (LogisticsLocation x) => x.LocationId == locationCode,
                 new LogisticsLocation { LocationId = locationCode, Description = example.Company + " Headquarters", IsPostalAddress = NoYes.Yes }, ct);
             var address = await db.Set<LogisticsPostalAddress>().IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Location == location.RecId, ct);
+            // Authorized repair of the observed DAT example: Jeddah street/postcode
+            // retained with Riyadh geography and an empty city. Preserve premises details.
+            if (example.Company == "DAT" && address is not null && address.CountryRegionId == "SA"
+                && address.State == "RIY" && address.County == "RUH" && string.IsNullOrWhiteSpace(address.City)
+                && address.ZipCode == example.Zip && address.Street == example.Street
+                && address.StreetNumber == example.Building
+                && address.BuildingCompliment == "Unit 1; Additional number " + example.Additional)
+            {
+                address.State = example.Region;
+                address.County = example.County;
+                address.City = city.Name;
+                address.CityRecId = city.RecId;
+                address.District = district.RecId;
+                address.DistrictName = district.Name;
+                address.ZipCodeRecId = zip.RecId;
+                address.Address = $"{address.StreetNumber} {address.Street}, Unit 1\n{district.Name}\n{city.Name} {zip.ZipCode} - {example.Additional}\n{example.RegionName} Region, Saudi Arabia";
+            }
             if (address == null || IsOriginalExample(address, example.Company))
             {
                 if (address == null)

@@ -45,6 +45,7 @@ public sealed class InventClosingQueryService : BaseService<InventClosing>, IInv
     {
         RecId = row.RecId, TransDate = row.TransDate, Executed = row.Executed,
         Voucher = row.Voucher, PeriodCode = row.PeriodCode, RunNum = row.RunNum,
+        ScopeItemId = row.ScopeItemId,
         AdjustmentType = row.AdjustmentType, InventCostStatus = row.InventCostStatus,
         Cancellation = row.Cancellation == NoYes.Yes,
         CancelClosing = row.CancelClosing == NoYes.Yes,

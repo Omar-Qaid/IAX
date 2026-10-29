@@ -1,6 +1,7 @@
 using IAX.IXApi.Infrastructure.Persistence;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
+using IAX.IXApi.Modules.Finance.AccountsPayable;
 using IAX.IXApi.Modules.Identity.Authentication;
 using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Identity.Roles;
@@ -49,21 +50,21 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 ("SalesLine",           "Sale Line Sequence",        "SOL-######", "{PREFIX}-{SEQ}",       0),
                 ("PackingSlip",         "Packing Slip Sequence",     "PS-######",  "{PREFIX}-{YYYY}-{SEQ}", 1),
                 ("CustConfirmJour",     "SO Confirm Sequence",       "CONF-######","{PREFIX}-{YYYY}-{SEQ}", 0),
-                ("CustPackingSlipJour", "PS Journal ID Sequence",    "PSJ-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
-                ("CustInvoiceJour",     "Invoice Sequence",          "INV-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
+                ("CustPackingSlipJour", "PS Journal ID Sequence",    "PSJ-######", "{PREFIX}-{YYYY}-{SEQ}", 0),
+                ("CustInvoiceJour",     "Invoice Sequence",          "INV-######", "{PREFIX}-{YYYY}-{SEQ}", 0),
                 ("CustInvoiceTrans",    "Invoice Trans Sequence",    "INVT-######","{PREFIX}-{SEQ}",       0),
                 ("CustTrans",           "Cust Transaction Sequence", "CTRX-######","{PREFIX}-{YYYY}-{SEQ}", 0),
                 ("CustSettlement",      "Cust Settlement Sequence",  "CSET-######","{PREFIX}-{SEQ}",       0),
                 ("ReturnItemNum",       "Return Order RMA Sequence", "RMA-######", "{PREFIX}-{YYYY}-{SEQ}", 0),
                 ("InventTransOriginId", "Lot Origin Sequence",       "ORG-######", "{PREFIX}-{SEQ}",       0),
                 ("LedgerJournalTable",  "Ledger Journal Sequence",   "LJT-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
-                ("InventJournalTable",  "Inventory Journal Sequence","IJRN-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
+                ("InventJournalTable",  "Inventory Journal Sequence","IJRN-######", "{PREFIX}-{YYYY}-{SEQ}", 0),
                 ("InventClosing",       "Inventory Close Sequence",  "ICLS-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
                 ("SettleTransId",       "Inventory Settlement Sequence", "ISET-######", "{PREFIX}-{SEQ}", 0),
-                ("PurchTable",          "Purchase Order Sequence",   "PO-######",  "{PREFIX}-{YYYY}-{SEQ}", 1),
+                ("PurchTable",          "Purchase Order Sequence",   "PO-######",  "{PREFIX}-{YYYY}-{SEQ}", 0),
                 ("VendPurchOrderJour",  "PO Confirm Sequence",       "PCONF-######","{PREFIX}-{YYYY}-{SEQ}", 0),
-                ("VendPackingSlipJour", "Product Receipt Sequence",  "PR-######",  "{PREFIX}-{YYYY}-{SEQ}", 1),
-                ("VendInvoiceJour",     "Vendor Invoice Sequence",   "VINV-######","{PREFIX}-{YYYY}-{SEQ}", 1),
+                ("VendPackingSlipJour", "Product Receipt Sequence",  "PR-######",  "{PREFIX}-{YYYY}-{SEQ}", 0),
+                ("VendInvoiceJour",     "Vendor Invoice Sequence",   "VINV-######","{PREFIX}-{YYYY}-{SEQ}", 0),
                 ("VendTrans",           "Vend Transaction Sequence", "VTRX-######","{PREFIX}-{YYYY}-{SEQ}", 0),
                 ("VendInvoiceRegister", "Vend Invoice Register Seq", "VIR-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
                 ("ExchAdjustment",      "Exch Adjustment Sequence",  "FXA-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
@@ -149,6 +150,34 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 db.SysNumberSequences.AddRange(toAdd);
                 await db.SaveChangesAsync(ct);
             }
+
+            // Sales order IDs include the year but the runtime currently treats every cyclic
+            // Purchase document defaults have the same daily-reset defect. Repair only the
+            // known seeded formats, preserve customized formats, and never lower a counter.
+            foreach (var (key, prefix) in new[] { ("PurchTable", "PO"), ("VendPackingSlipJour", "PR"), ("VendInvoiceJour", "VINV"), ("CustPackingSlipJour", "PSJ"), ("CustInvoiceJour", "INV"), ("InventJournalTable", "IJRN") })
+            {
+                var sequences = await db.SysNumberSequences.IgnoreQueryFilters().Where(x => x.NumberSequence == key
+                    && x.Format == prefix + "-######" && x.AnnotatedFormat == "{PREFIX}-{YYYY}-{SEQ}" && !x.IsDeleted).ToListAsync(ct);
+                foreach (var sequence in sequences)
+                {
+                    var global = string.IsNullOrEmpty(sequence.DataAreaId) && sequence.NumberSequenceScope == null;
+                    var area = sequence.DataAreaId;
+                    var ids = key == "PurchTable"
+                        ? await db.Set<PurchTable>().IgnoreQueryFilters().Where(x => global || x.DataAreaId == area).Select(x => x.PurchId).ToListAsync(ct)
+                        : key == "VendPackingSlipJour"
+                            ? await db.Set<VendPackingSlipJour>().IgnoreQueryFilters().Where(x => global || x.DataAreaId == area).Select(x => x.InternalPackingSlipId).ToListAsync(ct)
+                            : key == "CustPackingSlipJour" ? await db.Set<CustPackingSlipJour>().IgnoreQueryFilters().Where(x => global || x.DataAreaId == area).Select(x => x.PackingSlipId).ToListAsync(ct)
+                            : key == "InventJournalTable" ? await db.Set<IAX.IXApi.Modules.Finance.Entities.InventJournalTable>().IgnoreQueryFilters().Where(x => global || x.DataAreaId == area).Select(x => x.JournalId).ToListAsync(ct)
+                            : key == "CustInvoiceJour" ? await db.Set<CustInvoiceJour>().IgnoreQueryFilters().Where(x => global || x.DataAreaId == area).Select(x => x.InvoiceId).ToListAsync(ct)
+                            : await db.Set<VendInvoiceJour>().IgnoreQueryFilters().Where(x => global || x.DataAreaId == area).Select(x => x.InternalInvoiceId).ToListAsync(ct);
+                    var highest = ids.Select(id => System.Text.RegularExpressions.Regex.Match(id, "^" + prefix + @"-\d{4}-(\d+)$"))
+                        .Where(match => match.Success).Select(match => int.TryParse(match.Groups[1].Value, out var value) ? value : 0)
+                        .DefaultIfEmpty(0).Max();
+                    sequence.Cyclic = 0;
+                    if ((sequence.NextRec ?? 1) <= highest) sequence.NextRec = checked(highest + 1);
+                }
+            }
+            await db.SaveChangesAsync(ct);
 
             // Sales order IDs include the year but the runtime currently treats every cyclic
             // sequence as daily. A daily reset can regenerate an existing SalesId within the

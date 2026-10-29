@@ -1,3 +1,4 @@
+using IAX.IXApi.Modules.Finance.Inventory;
 using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.NumberSequences;
@@ -274,13 +275,15 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
                     left -= take;
                 }
                 var cost = decimal.Round(inventQty * unitCost, 2, MidpointRounding.AwayFromZero);
+                var countError = await InventoryCountProtection.CheckAsync(Db, area, line.ItemId, line.InventDimId, ct);
+                if (countError != null) return await Fail(422, countError, ct);
                 var summary = await Db.Set<InventSum>().SingleAsync(x => x.DataAreaId == area
                     && x.ItemId == line.ItemId && x.InventDimId == line.InventDimId, ct);
                 summary.Ordered -= inventQty;
                 summary.Received += inventQty;
                 summary.PhysicalInvent += inventQty;
                 summary.PhysicalValue += cost;
-                summary.AvailPhysical = summary.PhysicalInvent - summary.ReservPhysical;
+                summary.AvailPhysical = summary.PhysicalInvent - summary.ReservPhysical - summary.Picked;
                 summary.AvailOrdered = summary.AvailPhysical + summary.Ordered - summary.OnOrder - summary.ReservOrdered;
                 summary.LastUpdDatePhysical = date;
 
@@ -376,6 +379,8 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
             var taxByCode = new Dictionary<string, (decimal Base, decimal Tax, string Group, string ItemGroup)>();
             foreach (var (line, qty, physical) in selection)
             {
+                var boundaryError = await InventoryFinancialBoundary.CheckAsync(Db, area, line.ItemId, date, ct);
+                if (boundaryError != null) return await Fail(422, boundaryError, ct);
                 var inventQty = decimal.Round(qty * line.QtyOrdered / line.SalesQty, 6);
                 var revenue = decimal.Round(-line.LineAmount * qty / -line.SalesQty, 2, MidpointRounding.AwayFromZero);
                 var codes = await support.ApplicableTaxCodesAsync(area, line.TaxGroup, line.TaxItemGroup, date, ct);

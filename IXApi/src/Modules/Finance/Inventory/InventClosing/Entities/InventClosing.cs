@@ -11,6 +11,8 @@ namespace IAX.IXApi.Modules.Finance.Entities
         //----------------------------------------- Core Identity & Tracking
         // Basic Properties
         public DateTime TransDate { get; set; }
+        [StringLength(FieldLengths.ItemId)]
+        public string ScopeItemId { get; set; } = string.Empty;
 
         [Required]
         [StringLength(FieldLengths.Voucher)]

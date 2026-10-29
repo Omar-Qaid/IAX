@@ -77,6 +77,8 @@ public sealed class SalesOrderLineService : ISalesOrderLineService
                 priceUnit = listPrice?.PriceUnit ?? (module.PriceUnit > 0 ? module.PriceUnit : 1m);
             input.UnitPrice = effectivePrice;
             input.PriceUnit = priceUnit;
+            var enteredLineDiscount = input.LineDiscount;
+            var enteredLineDiscountPercent = input.LineDiscountPercent;
             var discountValidationError = NormalizeAndValidateLineDiscount(input);
             if (discountValidationError != null)
                 return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, discountValidationError);
@@ -170,6 +172,28 @@ public sealed class SalesOrderLineService : ISalesOrderLineService
             };
             await _inventoryDemand.CreateAsync(order, line,
                 inventSiteId, inventLocationId, cancellationToken, dimensionTemplate);
+            // Dimension-specific agreements cannot be selected before demand resolves InventDimId.
+            if (usePriceAgreement)
+            {
+                var dimensionPrice = await FindSalesPriceAsync(order, item.ItemId, input.Quantity,
+                    salesUnit, line.PriceUnit, line.InventDimId, cancellationToken);
+                if (dimensionPrice != null)
+                {
+                    input.UnitPrice = dimensionPrice.Value.Amount;
+                    input.PriceUnit = dimensionPrice.Value.PriceUnit;
+                    input.LineDiscount = enteredLineDiscount;
+                    input.LineDiscountPercent = enteredLineDiscountPercent;
+                    var priceError = NormalizeAndValidateLineDiscount(input);
+                    if (priceError != null) return new SalesLineWriteResult(SalesLineWriteStatus.Invalid, priceError);
+                    line.SalesPrice = input.UnitPrice;
+                    line.PriceUnit = input.PriceUnit.Value;
+                    line.LineAmount = CalculateGrossLineAmount(input);
+                    line.LineDisc = input.LineDiscount;
+                    line.LinePercent = input.LineDiscountPercent;
+                    line.MultiLnDisc = input.MultiLineDiscount;
+                    line.MultiLnPercent = input.MultiLineDiscountPercent;
+                }
+            }
             _dbContext.Context.Set<SalesLine>().Add(line);
             order.SmmSalesAmountTotal += line.LineAmount;
             if (order.DocumentStatus == DocumentStatus.Confirmation)

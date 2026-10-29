@@ -1,3 +1,4 @@
+using IAX.IXApi.Modules.Finance.Inventory;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
@@ -17,7 +18,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 /// ReturnItem and negative lines linked to the original invoiced receipt (InventTransIdReturn).
 /// Inventory follows the issue direction: created = Ordered (on order), shipped = Deducted
 /// (physical stock decreases), vendor credit note = Sold. The return is valued at the original
-/// receipt cost and the vendor is debited (VendTrans) — Dr Vendor summary / Cr inventory receipt.
+/// receipt cost and the vendor is debited (VendTrans) Ã¢â‚¬â€ Dr Vendor summary / Cr inventory receipt.
 /// Returned quantity cannot exceed the invoiced quantity not already returned, nor available stock.
 /// </summary>
 public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnService
@@ -110,6 +111,7 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
             Db.Set<PurchTable>().Add(order);
             await unitOfWork.CompleteAsync(ct);
 
+            await new SubledgerPostingSupport(Db).LockAsync($"PurchReturnSource:{area}:{invoice.InternalInvoiceId}", ct);
             var lineNumber = 0m;
             foreach (var request in input.Lines)
             {
@@ -127,6 +129,15 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                 if (request.Qty > invoicedQty - alreadyReturned)
                     return await Fail(422, $"Return quantity for item {invoiced.ItemId} exceeds the returnable quantity {invoicedQty - alreadyReturned}.", ct);
 
+                var returnedFromInvoiceLine = -(await Db.Set<PurchLine>().Where(x => x.DataAreaId == area
+                    && x.OriginalInvoiceTransRecId == invoiced.RecId && x.PurchStatus != PurchStatus.Canceled)
+                    .Select(x => x.PurchQty).ToListAsync(ct)).Sum();
+                // Include unsaved lines in this request as well as previous return orders.
+                returnedFromInvoiceLine -= Db.Set<PurchLine>().Local.Where(x => x.OriginalInvoiceTransRecId == invoiced.RecId
+                    && Db.Entry(x).State == EntityState.Added).Sum(x => x.PurchQty);
+                if (request.Qty > invoiced.Qty - returnedFromInvoiceLine)
+                    return await Fail(422, "Return quantity exceeds the remaining quantity of the selected invoice line.", ct);
+
                 var inventQty = decimal.Round(request.Qty * invoiced.InventQty / invoiced.Qty, 6);
                 var line = new PurchLine
                 {
@@ -138,6 +149,7 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                     RemainPurchPhysical = -request.Qty, RemainPurchFinancial = -request.Qty,
                     RemainInventPhysical = -inventQty, RemainInventFinancial = -inventQty,
                     InventDimId = invoiced.InventDimId, InventTransIdReturn = invoiced.InventTransId,
+                    OriginalInvoiceTransRecId = invoiced.RecId, TaxGroup = invoiced.TaxGroup, TaxItemGroup = invoiced.TaxItemGroup,
                     DeliveryDate = order.DeliveryDate
                 };
                 await CreateIssueDemandAsync(area, order, line, inventQty, ct);
@@ -209,7 +221,7 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
         {
             var order = await LoadReturnAsync(area, returnRecId, ct);
             if (order == null) return await Fail(404, "Vendor return order was not found in the selected company.", ct);
-            await support.LockAsync($"PurchReturnShip:{area}:{order.PurchId}", ct);
+            await support.LockAsync($"PurchDocument:{area}:{order.PurchId}", ct);
             var slipId = input.PackingSlipId.Trim();
             if (await Db.Set<VendPackingSlipJour>().AnyAsync(x => x.DataAreaId == area && x.PurchId == order.PurchId && x.PackingSlipId == slipId, ct))
                 return await Fail(422, $"Return shipment '{slipId}' has already been posted for this return order.", ct);
@@ -233,9 +245,11 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                 var inventQty = request.Qty == -line.RemainPurchPhysical
                     ? -line.RemainInventPhysical
                     : decimal.Round(request.Qty * line.QtyOrdered / line.PurchQty, 6);
+                var countError = await InventoryCountProtection.CheckAsync(Db, area, line.ItemId, line.InventDimId, ct);
+                if (countError != null) return await Fail(422, countError, ct);
                 var summary = await Db.Set<InventSum>().SingleAsync(x => x.DataAreaId == area
                     && x.ItemId == line.ItemId && x.InventDimId == line.InventDimId, ct);
-                if (summary.PhysicalInvent - summary.ReservPhysical < inventQty)
+                if (summary.PhysicalInvent - summary.ReservPhysical - summary.Picked < inventQty)
                     return await Fail(422, $"Available physical stock is insufficient to return item {line.ItemId}.", ct);
                 var unitCost = await OriginalReceiptUnitCostAsync(area, line, ct);
 
@@ -272,7 +286,7 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                 summary.OnOrder -= inventQty;
                 summary.Deducted += inventQty;
                 summary.PhysicalInvent -= inventQty;
-                summary.AvailPhysical = summary.PhysicalInvent - summary.ReservPhysical;
+                summary.AvailPhysical = summary.PhysicalInvent - summary.ReservPhysical - summary.Picked;
                 summary.AvailOrdered = summary.AvailPhysical + summary.Ordered - summary.OnOrder - summary.ReservOrdered;
                 summary.LastUpdDatePhysical = date;
 
@@ -326,8 +340,9 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
         {
             var order = await LoadReturnAsync(area, returnRecId, ct);
             if (order == null) return await Fail(404, "Vendor return order was not found in the selected company.", ct);
-            await support.LockAsync($"PurchReturnCredit:{area}:{order.PurchId}", ct);
+            await support.LockAsync($"PurchDocument:{area}:{order.PurchId}", ct);
             var creditNoteId = input.InvoiceId.Trim();
+            await support.LockAsync($"VendInvoice:{area}:{order.InvoiceAccount}:{creditNoteId}".ToUpperInvariant(), ct);
             if (await Db.Set<VendInvoiceJour>().AnyAsync(x => x.DataAreaId == area
                 && x.InvoiceAccount == order.InvoiceAccount && x.InvoiceId == creditNoteId, ct))
                 return await Fail(422, $"Vendor document '{creditNoteId}' has already been posted for this vendor.", ct);
@@ -340,6 +355,9 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
             var selection = lines.Select(x => (Line: x, Qty: x.RemainPurchPhysical - x.RemainPurchFinancial))
                 .Where(x => x.Qty > 0).ToList();
             if (selection.Count == 0) return await Fail(422, "There is no shipped, uncredited return quantity.", ct);
+            foreach (var originalLineId in selection.Where(x => x.Line.OriginalInvoiceTransRecId.HasValue)
+                .Select(x => x.Line.OriginalInvoiceTransRecId!.Value).Distinct().OrderBy(x => x))
+                await support.LockAsync($"PurchTaxCredit:{area}:{originalLineId}", ct);
 
             var context = await support.LoadLedgerContextAsync(area, date, ct);
             var vendorAccount = await support.ResolveVendorSummaryAsync(area, vendor, ct);
@@ -350,9 +368,11 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
             await unitOfWork.CompleteAsync(ct);
             var currency = context.Ledger.AccountingCurrency;
 
-            decimal total = 0m, totalQty = 0m;
+            decimal total = 0m, totalQty = 0m, totalTax = 0m;
             foreach (var (line, qty) in selection)
             {
+                var boundaryError = await InventoryFinancialBoundary.CheckAsync(Db, area, line.ItemId, date, ct);
+                if (boundaryError != null) return await Fail(422, boundaryError, ct);
                 var inventQty = decimal.Round(qty * line.QtyOrdered / line.PurchQty, 6);
                 var amount = decimal.Round(qty * line.PurchPrice / line.PriceUnit, 2, MidpointRounding.AwayFromZero);
                 var unitCost = await OriginalReceiptUnitCostAsync(area, line, ct);
@@ -392,6 +412,8 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                     source.CostAmountPosted = -decimal.Round(take * unitCost, 2, MidpointRounding.AwayFromZero);
                     left -= take;
                 }
+                var countError = await InventoryCountProtection.CheckAsync(Db, area, line.ItemId, line.InventDimId, ct);
+                if (countError != null) return await Fail(422, countError, ct);
                 var summary = await Db.Set<InventSum>().SingleAsync(x => x.DataAreaId == area
                     && x.ItemId == line.ItemId && x.InventDimId == line.InventDimId, ct);
                 summary.Deducted -= inventQty;
@@ -401,13 +423,18 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                 var inventoryAccount = await support.ResolveInventPostingAsync(area, line.ItemId, InventAccountType.PurchReceipt, ct);
                 Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, inventoryAccount, LedgerPostingType.PurchReceipt, -cost,
                     $"Return {order.ReturnItemNum} item {line.ItemId}", -inventQty, currency));
-                Db.Set<VendInvoiceTrans>().Add(new VendInvoiceTrans
+                var creditLine = new VendInvoiceTrans
                 {
                     DataAreaId = area, InvoiceId = creditNoteId, InternalInvoiceId = internalId, InvoiceDate = date,
                     PurchId = order.PurchId, LineNum = line.LineNumber, ItemId = line.ItemId, Qty = -qty, InventQty = -inventQty,
                     PurchUnit = line.PurchUnit, PurchPrice = line.PurchPrice, PriceUnit = line.PriceUnit, LineAmount = -amount,
-                    CurrencyCode = order.CurrencyCode, InventTransId = line.InventTransId, InventDimId = line.InventDimId
-                });
+                    CurrencyCode = order.CurrencyCode, InventTransId = line.InventTransId, InventDimId = line.InventDimId,
+                    TaxGroup = line.TaxGroup, TaxItemGroup = line.TaxItemGroup, OriginalInvoiceTransRecId = line.OriginalInvoiceTransRecId
+                };
+                Db.Add(creditLine);
+                await unitOfWork.CompleteAsync(ct);
+                if (line.OriginalInvoiceTransRecId.HasValue)
+                    totalTax -= await new PurchaseTaxPosting(Db).PostAsync(area, creditLine, entry.RecId, currency, ct, line.OriginalInvoiceTransRecId);
                 line.RemainPurchFinancial += qty;
                 line.RemainInventFinancial = Math.Min(0m, line.RemainInventFinancial + inventQty);
                 if (line.RemainPurchFinancial >= 0 && line.RemainPurchPhysical >= 0) line.PurchStatus = PurchStatus.Invoiced;
@@ -415,30 +442,33 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                 totalQty += qty;
             }
 
-            Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, vendorAccount, LedgerPostingType.VendBalance, total,
+            Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, vendorAccount, LedgerPostingType.VendBalance, total + totalTax,
                 $"Vendor credit note {creditNoteId}", 0m, currency));
             Db.Add(new SubledgerVoucherGeneralJournalEntry
             {
                 DataAreaId = area, GeneralJournalEntry = entry.RecId, Voucher = internalId, VoucherDataAreaId = area, AccountingDate = date
             });
-            Db.Set<VendTrans>().Add(new VendTrans
+            var vendorTransaction = new VendTrans
             {
                 DataAreaId = area, AccountNum = order.InvoiceAccount, TransDate = date, Voucher = internalId,
                 Invoice = creditNoteId, Txt = $"Credit note for return {order.ReturnItemNum}", CurrencyCode = order.CurrencyCode,
-                AmountCur = total, AmountMst = total, DueDate = date, TransType = LedgerTransType.Purch
-            });
+                AmountCur = total + totalTax, AmountMst = total + totalTax, DueDate = date, TransType = LedgerTransType.Purch
+            };
+            Db.Set<VendTrans>().Add(vendorTransaction);
+            await unitOfWork.CompleteAsync(ct);
+            VendorOpenBalance.Add(Db, vendorTransaction);
             Db.Set<VendInvoiceJour>().Add(new VendInvoiceJour
             {
                 DataAreaId = area, InvoiceId = creditNoteId, InternalInvoiceId = internalId, InvoiceDate = date,
                 PurchId = order.PurchId, OrderAccount = order.OrderAccount, InvoiceAccount = order.InvoiceAccount,
                 CurrencyCode = order.CurrencyCode, LedgerVoucher = internalId, Qty = -totalQty,
-                SalesBalance = -total, InvoiceAmount = -total
+                SalesBalance = -total, SumTax = -totalTax, InvoiceAmount = -(total + totalTax), DueDate = date
             });
             if (lines.All(x => x.PurchStatus == PurchStatus.Invoiced)) order.PurchStatus = PurchStatus.Invoiced;
             order.DocumentStatus = DocumentStatus.Invoice;
             await unitOfWork.CompleteAsync(ct);
             await unitOfWork.CommitTransactionAsync(ct);
-            return new(200, new { invoiceId = creditNoteId, voucher = internalId, amount = total }, "Vendor credit note posted.");
+            return new(200, new { invoiceId = creditNoteId, voucher = internalId, amount = total + totalTax }, "Vendor credit note posted.");
         }
         catch (SubledgerPostingException ex)
         {

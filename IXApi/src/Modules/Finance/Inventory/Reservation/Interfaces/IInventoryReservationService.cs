@@ -12,6 +12,7 @@ public sealed record ReservationResultDto(
 
 public interface IInventoryReservationService : IBaseService<InventTrans>
 {
+    Task<(PickingResultDto? Result, string? Error)> SetPickedAsync(string inventTransId, decimal targetQuantity, CancellationToken ct);
     /// <summary>
     /// Sets a source's physical reservation to <paramref name="targetQuantity"/> (idempotent, D365
     /// "set reserved quantity" semantics). Reserves only physically available stock and never above
@@ -24,3 +25,5 @@ public interface IInventoryReservationService : IBaseService<InventTrans>
     Task<(ReservationResultDto? Result, string? Error)> ReleaseAsync(
         string inventTransId, decimal quantity, CancellationToken ct);
 }
+
+public sealed record PickingResultDto(string InventTransId, decimal Picked, decimal Reserved);

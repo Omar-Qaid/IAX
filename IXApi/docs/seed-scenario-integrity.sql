@@ -13,9 +13,10 @@ CROSS APPLY (SELECT SUM(t.LineAmount) AS Net, SUM(t.TaxAmount) AS Tax FROM CustI
 WHERE j.ParmId LIKE 'DEMO-%' AND (ABS(j.SalesBalance-COALESCE(x.Net,0))>0.01 OR ABS(j.SumTax-COALESCE(x.Tax,0))>0.01
       OR ABS(j.InvoiceAmount-j.SalesBalance-j.SumTax)>0.01)
 UNION ALL SELECT 'VendorInvoiceTotalsMismatch', COUNT(*) FROM VendInvoiceJour j
-CROSS APPLY (SELECT SUM(t.LineAmount) AS Net FROM VendInvoiceTrans t
+CROSS APPLY (SELECT SUM(t.LineAmount) AS Net, SUM(t.TaxAmount) AS Tax FROM VendInvoiceTrans t
              WHERE t.DataAreaId=j.DataAreaId AND t.InternalInvoiceId=j.InternalInvoiceId) x
-WHERE j.InvoiceId LIKE 'DEMO-%' AND ABS(j.InvoiceAmount-COALESCE(x.Net,0))>0.01
+WHERE j.InvoiceId LIKE 'DEMO-%' AND (ABS(j.SalesBalance-COALESCE(x.Net,0))>0.01
+      OR ABS(j.SumTax-COALESCE(x.Tax,0))>0.01 OR ABS(j.InvoiceAmount-j.SalesBalance-j.SumTax)>0.01)
 UNION ALL SELECT 'CustomerOpenBalanceMismatch', COUNT(*) FROM CustTransOpen o
 JOIN CustTrans t ON t.RECID=o.RefRecId AND t.DataAreaId=o.DataAreaId
 WHERE ABS(o.AmountCur-(t.AmountCur-t.SettleAmountCur))>0.01

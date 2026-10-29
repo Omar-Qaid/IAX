@@ -291,7 +291,7 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
             var transactions = await _dbContext.Context.Set<InventTrans>()
                 .Where(item => item.DataAreaId == line.DataAreaId
                     && item.InventTransOrigin == origin.RecId
-                    && item.StatusIssue == StatusIssue.Ordered)
+                    && (item.StatusIssue == StatusIssue.Ordered || item.StatusIssue == StatusIssue.ReservPhysical))
                 .ToListAsync(cancellationToken);
             if (transactions.Any(item => item.ItemId != line.ItemId))
                 throw new InvalidOperationException("The inventory transaction item does not match this sales line.");
@@ -303,13 +303,20 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
                 throw new InvalidOperationException(
                     "The inventory demand no longer matches the completely open sales quantity.");
             var demandToCancel = Math.Min(remainingDemand, Math.Max(0m, openTransactionDemand));
+            if (transactions.Any(item => item.InventDimId != line.InventDimId || item.Qty > 0))
+                throw new InvalidOperationException("Cancellation requires matching sales-line inventory dimensions and issue quantities.");
+            var reservedToCancel = -transactions.Where(item => item.StatusIssue == StatusIssue.ReservPhysical).Sum(item => item.Qty);
+            var orderedToCancel = demandToCancel - reservedToCancel;
             var inventorySummary = await _dbContext.Context.Set<InventSum>().SingleOrDefaultAsync(item =>
                 item.DataAreaId == line.DataAreaId && item.ItemId == line.ItemId
                 && item.InventDimId == line.InventDimId, cancellationToken)
                 ?? throw new InvalidOperationException("The sales line inventory summary was not found.");
-            if (inventorySummary.OnOrder < demandToCancel)
+            if (inventorySummary.OnOrder < orderedToCancel || inventorySummary.ReservPhysical < reservedToCancel)
                 throw new InvalidOperationException("The inventory summary has less open demand than this sales line.");
-            inventorySummary.OnOrder -= demandToCancel;
+            inventorySummary.OnOrder -= orderedToCancel;
+            inventorySummary.ReservPhysical -= reservedToCancel;
+            inventorySummary.AvailPhysical = inventorySummary.PhysicalInvent - inventorySummary.ReservPhysical - inventorySummary.Picked;
+            inventorySummary.AvailOrdered = inventorySummary.AvailPhysical + inventorySummary.Ordered - inventorySummary.OnOrder - inventorySummary.ReservOrdered;
             foreach (var transaction in transactions)
             {
                 transaction.Qty = 0;

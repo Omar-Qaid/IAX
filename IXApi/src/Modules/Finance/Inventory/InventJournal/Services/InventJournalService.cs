@@ -114,6 +114,8 @@ public sealed class InventJournalService : BaseService<InventJournalTable>, IInv
         if (dimensionError != null) return (null, dimensionError);
 
         var journalId = (await _numbers.NextAsync(nameof(InventJournalTable), companyId, ct)).Code;
+        if (await Db.Set<InventJournalTable>().IgnoreQueryFilters().AnyAsync(x => x.DataAreaId == companyId && x.JournalId == journalId, ct))
+            return (null, "The allocated inventory journal number already exists. Correct the number sequence before creating a journal.");
         var header = new InventJournalTable
         {
             DataAreaId = companyId,
@@ -175,6 +177,8 @@ public sealed class InventJournalService : BaseService<InventJournalTable>, IInv
                 x.ItemId == Normalize(input.ItemId) && x.InventDimId == validation.FromDimension!.InventDimId, ct))
             return (null, "This item and inventory dimension are already in the counting journal.");
         ApplyLine(line, header, input, validation.FromDimension!, validation.ToDimension);
+        // Make a concurrent freeze/post conflict with an in-flight line edit via the header rowversion.
+        Db.Entry(header).Property(x => x.NumOfLines).IsModified = true;
         await _unitOfWork.CompleteAsync(ct);
         return (await MapWithLinesAsync(header, companyId, ct), null);
     }
@@ -382,7 +386,7 @@ public sealed class InventJournalService : BaseService<InventJournalTable>, IInv
 
     private Task<InventJournalTable?> EditableHeaderAsync(string companyId, string journalId, CancellationToken ct) =>
         Db.Set<InventJournalTable>().FirstOrDefaultAsync(x => x.DataAreaId == companyId &&
-            x.JournalId == Normalize(journalId) && x.Posted == NoYes.No, ct);
+            x.JournalId == Normalize(journalId) && x.Posted == NoYes.No && !x.CountingFrozen, ct);
 
     private static void ApplyLine(InventJournalTrans line, InventJournalTable header, InventJournalLineInputDto input, InventDim from, InventDim? to)
     {
@@ -433,6 +437,7 @@ public sealed class InventJournalService : BaseService<InventJournalTable>, IInv
     {
         RecId = x.RecId, JournalId = x.JournalId, JournalNameId = x.JournalNameId, Description = x.Description,
         JournalType = x.JournalType, NumOfLines = x.NumOfLines, Posted = x.Posted == NoYes.Yes,
+        CountingFrozen = x.CountingFrozen, CountingConfirmed = x.CountingConfirmed,
         PostedDateTime = x.Posted == NoYes.Yes ? x.PostedDateTime : null,
         InventSiteId = x.InventSiteId, InventLocationId = x.InventLocationId
     };

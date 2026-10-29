@@ -60,12 +60,16 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
     {
         var area = company.GetDataAreaId();
         if (string.IsNullOrWhiteSpace(area)) return new(400, null, "A company must be selected.");
-        if (input.Amount <= 0) return new(400, null, "The payment amount must be greater than zero.");
+        if (input.Amount <= 0 || decimal.Round(input.Amount, 4) != input.Amount) return new(400, null, "The payment amount must be positive with at most four decimals.");
+        if (input.RequestId?.Length > FieldLengths.PaymReference)
+            return new(400, null, $"The payment request ID must not exceed {FieldLengths.PaymReference} characters.");
         var date = (input.PaymentDate ?? DateTime.UtcNow).Date;
         var support = new SubledgerPostingSupport(Db);
         await unitOfWork.BeginTransactionAsync(ct);
         try
         {
+            if (!string.IsNullOrWhiteSpace(input.RequestId))
+                await support.LockAsync($"CustPaymentRequest:{area}:{input.RequestId}", ct);
             await support.LockAsync($"CustPayment:{area}:{input.CustAccount}", ct);
             if (!string.IsNullOrWhiteSpace(input.RequestId))
             {
@@ -73,6 +77,16 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
                     && x.AccountType == LedgerJournalACType.Cust && x.PaymReference == input.RequestId, ct);
                 if (previous != null)
                 {
+                    var priorBank = await Db.Set<BankAccountTable>().AsNoTracking().SingleOrDefaultAsync(x => x.DataAreaId == area && x.AccountId == input.BankAccountId, ct);
+                    var priorMovement = await Db.Set<BankAccountTrans>().AsNoTracking().SingleOrDefaultAsync(x => x.DataAreaId == area
+                        && x.SourceTableId == FinanceTableNumbers.LedgerJournalTrans && x.SourceRecId == previous.RecId, ct);
+                    if (previous.LedgerDimensionName != input.CustAccount || previous.AmountCurCredit != input.Amount
+                        || priorBank == null || previous.OffsetLedgerDimension != priorBank.LedgerDimension
+                        || (priorMovement != null && priorMovement.AccountId != input.BankAccountId)
+                        || (input.PaymentDate.HasValue && previous.TransDate.Date != input.PaymentDate.Value.Date)
+                        || (input.PaymMode != null && previous.PaymMode != input.PaymMode)
+                        || (input.SettleInvoiceId != null && previous.MarkedInvoice != input.SettleInvoiceId))
+                        return await Fail(422, "The payment request ID already belongs to a different payment.", ct);
                     await unitOfWork.CommitTransactionAsync(ct);
                     return new(200, new { journalNum = previous.JournalNum, voucher = previous.Voucher, amount = previous.AmountCurCredit },
                         "Customer payment already posted for this request.");
@@ -82,15 +96,23 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
             var customer = await Db.Set<CustTable>().AsNoTracking()
                 .FirstOrDefaultAsync(x => x.DataAreaId == area && x.AccountNum == input.CustAccount, ct);
             if (customer == null) return await Fail(422, "The customer was not found in the selected company.", ct);
+            if (customer.Blocked == CustVendorBlocked.All)
+                return await Fail(422, "Payments are blocked for this customer.", ct);
             var bank = await Db.Set<BankAccountTable>().AsNoTracking()
                 .FirstOrDefaultAsync(x => x.DataAreaId == area && x.AccountId == input.BankAccountId, ct);
             if (bank == null || bank.LedgerDimension == 0)
                 return await Fail(422, "The bank account was not found or has no ledger account.", ct);
+            if (bank.BankAccountStatus != BankAccountStatus.Active)
+                return await Fail(422, "The selected bank account is not active.", ct);
 
             var ledger = await support.LoadLedgerContextAsync(area, date, ct);
             var customerAccount = await support.ResolveCustomerSummaryAsync(area, null, customer, ct);
             var bankAccount = await support.LoadDimensionAsync(area, bank.LedgerDimension, "bank", ct);
             var currency = string.IsNullOrWhiteSpace(customer.CurrencyCode) ? ledger.Ledger.AccountingCurrency : customer.CurrencyCode;
+            if (currency != ledger.Ledger.AccountingCurrency
+                || (!string.IsNullOrWhiteSpace(ledger.Ledger.ReportingCurrency) && currency != ledger.Ledger.ReportingCurrency)
+                || (!string.IsNullOrWhiteSpace(bank.CurrencyCode) && bank.CurrencyCode != currency))
+                return await Fail(422, "Payment currency conversion requires configured exchange-rate posting; a 1:1 conversion cannot be assumed.", ct);
             var journalNum = (await numbers.NextAsync("LedgerJournalTable", area, ct)).Code;
             var voucher = (await numbers.NextAsync("Voucher", area, ct)).Code;
 
@@ -110,6 +132,7 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
                                       join trans in Db.Set<CustTrans>() on open.RefRecId equals trans.RecId
                                       where open.DataAreaId == area && open.AccountNum == customer.AccountNum
                                           && trans.DataAreaId == area && open.AmountCur > 0
+                                          && trans.CurrencyCode == currency
                                       select new { Open = open, Trans = trans }).ToListAsync(ct);
             if (!string.IsNullOrWhiteSpace(input.SettleInvoiceId))
             {
@@ -123,6 +146,8 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
             foreach (var invoice in openInvoices.OrderBy(x => x.Open.DueDate).ThenBy(x => x.Trans.RecId))
             {
                 if (remaining <= 0) break;
+                if (invoice.Trans.TransDate.Date > date)
+                    return await Fail(422, "A payment cannot settle a future-dated invoice.", ct);
                 var settle = Math.Min(remaining, invoice.Open.AmountCur);
                 if (settlementVoucher.Length == 0)
                     settlementVoucher = (await numbers.NextAsync("CustSettlement", area, ct)).Code;
@@ -171,7 +196,7 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
                 OffsetAccountType = LedgerJournalACType.Bank, OffsetLedgerDimension = bank.LedgerDimension,
                 Posted = NoYes.Yes, PostedDateTime = DateTime.UtcNow
             });
-            Db.Set<LedgerJournalTrans>().Add(new LedgerJournalTrans
+            var paymentLine = new LedgerJournalTrans
             {
                 DataAreaId = area, JournalNum = journalNum, LineNum = 1, Voucher = voucher, TransDate = date, Company = area,
                 AccountType = LedgerJournalACType.Cust, LedgerDimension = customerAccount.RecId,
@@ -181,10 +206,20 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
                 CustTransId = paymentTrans.RecId, MarkedInvoice = input.SettleInvoiceId ?? string.Empty,
                 PaymMode = input.PaymMode ?? string.Empty, PaymReference = input.RequestId ?? string.Empty,
                 RemainAmount = remaining
-            });
+            };
+            Db.Set<LedgerJournalTrans>().Add(paymentLine);
             var entry = support.NewEntry(area, journalNum, voucher, date, ledger);
             Db.Add(entry);
             await unitOfWork.CompleteAsync(ct);
+            Db.Add(new BankAccountTrans
+            {
+                DataAreaId = area, AccountId = bank.AccountId, TransDate = date, Voucher = voucher,
+                Txt = $"Customer payment {customer.AccountNum}", LedgerTransType = LedgerTransType.Payment,
+                CurrencyCode = currency, BankTransCurrencyCode = currency, AmountCur = input.Amount,
+                AmountMst = input.Amount, AmountReportingCurrency = input.Amount, BankTransAmountCur = input.Amount,
+                LedgerDimension = bank.LedgerDimension, SourceTableId = FinanceTableNumbers.LedgerJournalTrans,
+                SourceRecId = paymentLine.RecId, PaymentMode = input.PaymMode ?? string.Empty, PaymReference = input.RequestId ?? string.Empty
+            });
             Db.AddRange(
                 SubledgerPostingSupport.AccountEntry(area, entry.RecId, bankAccount, LedgerPostingType.Bank, input.Amount, $"Customer payment {customer.AccountNum}", 0m, currency),
                 SubledgerPostingSupport.AccountEntry(area, entry.RecId, customerAccount, LedgerPostingType.CustBalance, -input.Amount, $"Customer payment {customer.AccountNum}", 0m, currency));

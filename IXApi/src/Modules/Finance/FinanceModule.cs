@@ -66,6 +66,7 @@ namespace IAX.IXApi.Modules.Finance
                     provider.GetRequiredService<Infrastructure.Persistence.Repositories.IUnitOfWork>(),
                     provider.GetRequiredService<Infrastructure.Identity.ICurrentUserService>()));
             services.AddScoped<AccountsReceivable.Payment.ICustPaymentService, AccountsReceivable.Payment.CustPaymentService>();
+            services.AddScoped<AccountsPayable.IVendPaymentService, AccountsPayable.VendPaymentService>();
             services.AddScoped<AccountsReceivable.Return.ICustReturnService, AccountsReceivable.Return.CustReturnService>();
             services.AddScoped<AccountsReceivable.IReturnDispositionCodeService, AccountsReceivable.ReturnDispositionCodeService>();
             services.AddScoped<AccountsReceivable.IReturnReasonCodeService, AccountsReceivable.ReturnReasonCodeService>();
@@ -247,6 +248,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<FluentValidation.IValidator<Inventory.InventJournalCreateDto>, Inventory.InventJournalCreateDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<Inventory.InventJournalLineInputDto>, Inventory.InventJournalLineInputDtoValidator>();
             services.AddScoped<Inventory.IInventJournalPostingService, Inventory.InventJournalPostingService>();
+            services.AddScoped<Inventory.IInventTransferOrderService, Inventory.InventTransferOrderService>();
             services.AddScoped<Inventory.IFifoCostPreviewService, Inventory.FifoCostPreviewService>();
             services.AddScoped<Inventory.IInventClosingQueryService, Inventory.InventClosingQueryService>();
             services.AddScoped<Inventory.IInventCloseService, Inventory.InventCloseService>();

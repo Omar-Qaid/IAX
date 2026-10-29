@@ -1,3 +1,4 @@
+using IAX.IXApi.Modules.Finance.Inventory;
 using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Infrastructure.Persistence.Services;
@@ -7,9 +8,6 @@ using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Shared.Application.Identity;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 
@@ -17,7 +15,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 /// Product receipt (physical update). Splits each line's Ordered receipt into a Received portion,
 /// increases physical on-hand and physical value, and records VendPackingSlipJour/Trans. Partial
 /// receipts are supported; over-receipt and duplicate product receipt numbers are rejected.
-/// Physical receipt ledger posting (receipt accrual) is not enabled in the basic scope.
+/// Configured physical-purchase posting records receipt accruals for matched invoice reversal.
 /// </summary>
 public sealed class ProductReceiptService : BaseService<VendPackingSlipJour>, IProductReceiptService
 {
@@ -70,7 +68,7 @@ public sealed class ProductReceiptService : BaseService<VendPackingSlipJour>, IP
         {
             var order = await Db.Set<PurchTable>().FirstOrDefaultAsync(x => x.RecId == recId && x.DataAreaId == area, ct);
             if (order == null) return await Fail(404, "Purchase order was not found in the selected company.", ct);
-            await LockAsync($"PurchReceive:{area}:{order.PurchId}", ct);
+            await new SubledgerPostingSupport(Db).LockAsync($"PurchDocument:{area}:{order.PurchId}", ct);
             if (order.PurchStatus == PurchStatus.Canceled) return await Fail(422, "The purchase order is canceled.", ct);
             if (order.PurchaseType == PurchaseType.ReturnItem)
                 return await Fail(422, "Vendor return orders are shipped through the return order shipment.", ct);
@@ -130,6 +128,8 @@ public sealed class ProductReceiptService : BaseService<VendPackingSlipJour>, IP
                     left -= take;
                 }
 
+                var countError = await InventoryCountProtection.CheckAsync(Db, area, line.ItemId, line.InventDimId, ct);
+                if (countError != null) return await Fail(422, countError, ct);
                 var summary = await Db.Set<InventSum>().SingleOrDefaultAsync(x => x.DataAreaId == area
                     && x.ItemId == line.ItemId && x.InventDimId == line.InventDimId, ct);
                 if (summary == null) return await Fail(422, $"Inventory summary is missing for item {line.ItemId}.", ct);
@@ -137,7 +137,7 @@ public sealed class ProductReceiptService : BaseService<VendPackingSlipJour>, IP
                 summary.Received += inventQty;
                 summary.PhysicalInvent += inventQty;
                 summary.PhysicalValue += cost;
-                summary.AvailPhysical = summary.PhysicalInvent - summary.ReservPhysical;
+                summary.AvailPhysical = summary.PhysicalInvent - summary.ReservPhysical - summary.Picked;
                 summary.AvailOrdered = summary.AvailPhysical + summary.Ordered - summary.OnOrder - summary.ReservOrdered;
                 summary.LastUpdDatePhysical = date;
 
@@ -145,14 +145,16 @@ public sealed class ProductReceiptService : BaseService<VendPackingSlipJour>, IP
                 line.RemainInventPhysical = Math.Max(0m, line.RemainInventPhysical - inventQty);
                 if (line.RemainPurchPhysical <= 0) line.PurchStatus = PurchStatus.Received;
 
-                Db.Set<VendPackingSlipTrans>().Add(new VendPackingSlipTrans
+                var receiptLine = new VendPackingSlipTrans
                 {
                     DataAreaId = area, PackingSlipId = slipId, InternalPackingSlipId = internalId, OrigPurchId = order.PurchId,
                     VendPackingSlipJour = journal.RecId, DeliveryDate = date, LineNum = line.LineNumber, ItemId = line.ItemId,
                     Name = line.Name, Qty = request.Qty, InventQty = inventQty, Ordered = line.PurchQty,
                     Remain = line.RemainPurchPhysical, RemainInvent = line.RemainInventPhysical, ValueMst = cost,
                     PurchUnit = line.PurchUnit, InventTransId = line.InventTransId, InventDimId = line.InventDimId
-                });
+                };
+                Db.Set<VendPackingSlipTrans>().Add(receiptLine);
+                await new PurchaseReceiptAccrualPosting(Db).PostAsync(order, receiptLine, ct);
                 journal.Qty += request.Qty;
             }
 
@@ -163,6 +165,10 @@ public sealed class ProductReceiptService : BaseService<VendPackingSlipJour>, IP
             await _unitOfWork.CompleteAsync(ct);
             await _unitOfWork.CommitTransactionAsync(ct);
             return new(200, journal, "Product receipt posted.");
+        }
+        catch (SubledgerPostingException ex)
+        {
+            return await Fail(422, ex.Message, ct);
         }
         catch
         {
@@ -178,21 +184,6 @@ public sealed class ProductReceiptService : BaseService<VendPackingSlipJour>, IP
         InventDimId = source.InventDimId, Qty = qty, StatusReceipt = StatusReceipt.Ordered, StatusIssue = StatusIssue.None,
         ValueOpen = InventTransOpen.Yes, CurrencyCode = source.CurrencyCode, DateExpected = source.DateExpected
     };
-
-    private async Task LockAsync(string key, CancellationToken ct)
-    {
-        if (Db.Database.ProviderName?.Contains("SqlServer", StringComparison.OrdinalIgnoreCase) != true) return;
-        var resource = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(key)));
-        await using var command = Db.Database.GetDbConnection().CreateCommand();
-        command.Transaction = Db.Database.CurrentTransaction!.GetDbTransaction();
-        command.CommandText = "DECLARE @result int; EXEC @result = sys.sp_getapplock @Resource = @resource, @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 10000; SELECT @result;";
-        var parameter = command.CreateParameter();
-        parameter.ParameterName = "@resource";
-        parameter.Value = "PurchReceive:" + resource;
-        command.Parameters.Add(parameter);
-        if (await command.ExecuteScalarAsync(ct) is not int code || code < 0)
-            throw new InvalidOperationException("Product receipt could not acquire its concurrency lock.");
-    }
 
     private async Task<PurchResult> Fail(int status, string message, CancellationToken ct)
     {

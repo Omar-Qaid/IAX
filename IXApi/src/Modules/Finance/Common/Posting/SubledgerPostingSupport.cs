@@ -13,6 +13,15 @@ internal sealed class SubledgerPostingException(string message) : Exception(mess
 
 internal sealed record SubledgerLedgerContext(Ledger Ledger, FiscalCalendarPeriod Period);
 
+/// <summary>Which side of the trade a physical (pre-invoice) document posts for.</summary>
+internal enum PhysicalPostingSide
+{
+    /// <summary>Product receipt against a purchase order.</summary>
+    Purchase,
+    /// <summary>Packing slip against a sales order.</summary>
+    Revenue
+}
+
 /// <summary>
 /// Shared AR/AP subledger posting resolution (sales invoice, credit note, customer payment, vendor
 /// invoice and vendor return): ledger period, customer/vendor/inventory/tax posting accounts, sales tax codes, voucher lines
@@ -20,6 +29,9 @@ internal sealed record SubledgerLedgerContext(Ledger Ledger, FiscalCalendarPerio
 /// </summary>
 internal sealed class SubledgerPostingSupport(DbContext db)
 {
+    /// <summary>One application-lock namespace for every finance posting key, so unrelated keys never alias.</summary>
+    private const string LockResourcePrefix = "FinancePosting:";
+
     public async Task<SubledgerLedgerContext> LoadLedgerContextAsync(string area, DateTime date, CancellationToken ct)
     {
         var ledger = await db.Set<Ledger>().AsNoTracking().FirstOrDefaultAsync(x => x.DataAreaId == area, ct)
@@ -86,11 +98,39 @@ internal sealed class SubledgerPostingSupport(DbContext db)
         return await LoadDimensionAsync(area, rule.SummaryLedgerDimension, "vendor summary", ct);
     }
 
-    /// <summary>Inventory posting: item (Table) -> item group (Group) -> All.</summary>
-    public async Task<DimensionAttributeValueCombination> ResolveInventPostingAsync(string area, string itemId,
-        InventAccountType type, CancellationToken ct)
+    /// <summary>
+    /// Item model group ledger policy for an item, or null when the item has no model group.
+    /// The model group decides whether a document posts to the ledger at all (D365 policy fields).
+    /// </summary>
+    public async Task<InventModelGroup?> ResolveItemModelPolicyAsync(string area, string itemId, CancellationToken ct) =>
+        await (from assignment in db.Set<InventModelGroupItem>()
+               join policy in db.Set<InventModelGroup>()
+                   on new { assignment.ModelGroupId, DataAreaId = assignment.ModelGroupDataAreaId }
+                   equals new { policy.ModelGroupId, policy.DataAreaId }
+               where assignment.ItemDataAreaId == area && assignment.ItemId == itemId
+               select policy).SingleOrDefaultAsync(ct);
+
+    /// <summary>
+    /// Whether a physical document (packing slip, product receipt) posts to the ledger for this item:
+    /// the model group must opt in to physical posting for the document's side, and physical on-hand
+    /// posting must be enabled, because the physical entry is reversed against on-hand value.
+    /// </summary>
+    public async Task<bool> PostsPhysicalAsync(string area, string itemId, PhysicalPostingSide side, CancellationToken ct)
     {
-        var itemGroup = await db.Set<InventItemGroupItem>().AsNoTracking()
+        var model = await ResolveItemModelPolicyAsync(area, itemId, ct);
+        var opted = side == PhysicalPostingSide.Purchase ? model?.PostPhysicalPurchase : model?.PostPhysicalRevenue;
+        if (opted != NoYes.Yes) return false;
+        if (model!.PostOnHandPhysical != NoYes.Yes)
+            throw new SubledgerPostingException($"{side} physical posting requires physical inventory ledger posting on the item model group.");
+        return true;
+    }
+
+    /// <summary>Inventory posting: item (Table) -> item group (Group) -> All.</summary>
+    /// <param name="itemGroupId">The item's group when the caller already loaded it; resolved here otherwise.</param>
+    public async Task<DimensionAttributeValueCombination> ResolveInventPostingAsync(string area, string itemId,
+        InventAccountType type, CancellationToken ct, string? itemGroupId = null)
+    {
+        var itemGroup = itemGroupId ?? await db.Set<InventItemGroupItem>().AsNoTracking()
             .Where(x => x.ItemDataAreaId == area && x.ItemId == itemId).Select(x => x.ItemGroupId).FirstOrDefaultAsync(ct) ?? string.Empty;
         var rules = await db.Set<InventPosting>().AsNoTracking()
             .Where(x => x.DataAreaId == area && x.InventAccountType == type && x.CustVendCode == TableGroupAll.All).ToListAsync(ct);
@@ -173,9 +213,9 @@ internal sealed class SubledgerPostingSupport(DbContext db)
         command.CommandText = "DECLARE @result int; EXEC @result = sys.sp_getapplock @Resource = @resource, @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 10000; SELECT @result;";
         var parameter = command.CreateParameter();
         parameter.ParameterName = "@resource";
-        parameter.Value = "SalesPosting:" + resource;
+        parameter.Value = LockResourcePrefix + resource;
         command.Parameters.Add(parameter);
         if (await command.ExecuteScalarAsync(ct) is not int code || code < 0)
-            throw new SubledgerPostingException("Sales posting could not acquire its concurrency lock.");
+            throw new SubledgerPostingException("Posting could not acquire its concurrency lock.");
     }
 }

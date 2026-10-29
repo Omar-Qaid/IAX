@@ -13,4 +13,5 @@ public sealed record InventCloseResultDto(
 public interface IInventCloseService
 {
     Task<(InventCloseResultDto? Result, string? Error)> CloseAsync(DateTime cutoff, CancellationToken ct = default);
+    Task<(InventCloseResultDto? Result, string? Error)> CloseItemAsync(string itemId, DateTime cutoff, CancellationToken ct = default);
 }

@@ -14,6 +14,11 @@ namespace IAX.IXApi.Modules.Finance.Foundation.Currency
 {
     public class ExchangeRateService : BaseService<ExchangeRate>, IExchangeRateService
     {
+        public Task<EffectiveExchangeRateDto> FindEffectiveAsync(long rateType, string fromCurrency, string toCurrency,
+            DateTime date, System.Threading.CancellationToken cancellationToken = default) =>
+            new EffectiveExchangeRateLookup(_unitOfWork.Context).FindAsync(_currentUser.GetDataAreaId(), rateType,
+                fromCurrency, toCurrency, date, cancellationToken);
+
         public ExchangeRateService(IUnitOfWork unitOfWork, ICurrentUserService currentUser)
             : base(unitOfWork, currentUser)
         {

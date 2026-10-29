@@ -18,7 +18,7 @@ namespace IAX.IXApi.Modules.Finance.Inventory;
 /// ReservPhysical states, and maintaining InventSum.ReservPhysical. It never changes physical
 /// on-hand, inventory value or the ledger (per D365 — reservation affects availability only).
 /// </summary>
-public sealed class InventoryReservationService : BaseService<InventTrans>, IInventoryReservationService
+public sealed partial class InventoryReservationService : BaseService<InventTrans>, IInventoryReservationService
 {
     private readonly ICompanyExecutionContext _company;
     private DbContext Db => _unitOfWork.Context;
@@ -59,6 +59,7 @@ public sealed class InventoryReservationService : BaseService<InventTrans>, IInv
             var origin = await Db.Set<InventTransOrigin>().FirstOrDefaultAsync(
                 x => x.DataAreaId == companyId && x.InventTransId == inventTransId, ct);
             if (origin == null) return await Fail("The inventory source was not found in the selected company.", ct);
+            await LockPostingKeyAsync($"InventStock:{companyId}:{origin.ItemId}:{origin.ItemInventDimId}", ct);
 
             var transactions = await Db.Set<InventTrans>()
                 .Where(x => x.DataAreaId == companyId && x.InventTransOrigin == origin.RecId
@@ -72,6 +73,9 @@ public sealed class InventoryReservationService : BaseService<InventTrans>, IInv
             var openDemand = ordered.Sum(x => -x.Qty);          // currently unreserved
             var currentReserved = reservedRows.Sum(x => -x.Qty); // already reserved
             var dimId = transactions[0].InventDimId;
+            if (transactions.Any(x => x.InventDimId != dimId || x.ItemId != origin.ItemId))
+                return await Fail("Reservation requires a single matching inventory dimension.", ct);
+            await LockPostingKeyAsync($"InventStock:{companyId}:{origin.ItemId}:{dimId}", ct);
 
             var summary = await Db.Set<InventSum>().FirstOrDefaultAsync(
                 x => x.DataAreaId == companyId && x.ItemId == origin.ItemId && x.InventDimId == dimId, ct);
@@ -91,7 +95,7 @@ public sealed class InventoryReservationService : BaseService<InventTrans>, IInv
                     await _unitOfWork.CommitTransactionAsync(ct);
                     return (Result(inventTransId, origin.ItemId, openDemand + currentReserved, currentReserved, summary), null);
                 }
-                var available = summary == null ? 0m : summary.PhysicalInvent - summary.ReservPhysical;
+                var available = summary == null ? 0m : summary.PhysicalInvent - summary.ReservPhysical - summary.Picked;
                 if (delta > available)
                 {
                     if (!allowPartial)
@@ -116,7 +120,7 @@ public sealed class InventoryReservationService : BaseService<InventTrans>, IInv
                 // the Ordered <-> ReservPhysical transaction split; physical stock is unchanged.
                 summary.OnOrder += isRelease ? delta : -delta;
                 summary.ReservPhysical += isRelease ? -delta : delta;
-                summary.AvailPhysical = summary.PhysicalInvent - summary.ReservPhysical;
+                summary.AvailPhysical = summary.PhysicalInvent - summary.ReservPhysical - summary.Picked;
                 summary.AvailOrdered = summary.AvailPhysical + summary.Ordered - summary.OnOrder - summary.ReservOrdered;
                 summary.LastUpdDatePhysical = DateTime.UtcNow;
             }
@@ -209,7 +213,7 @@ public sealed class InventoryReservationService : BaseService<InventTrans>, IInv
 
     private static ReservationResultDto Result(string inventTransId, string itemId,
         decimal demand, decimal reserved, InventSum? summary) =>
-        new(inventTransId, itemId, demand, reserved, summary == null ? 0m : summary.PhysicalInvent - summary.ReservPhysical);
+        new(inventTransId, itemId, demand, reserved, summary == null ? 0m : summary.PhysicalInvent - summary.ReservPhysical - summary.Picked);
 
     private async Task<(ReservationResultDto? Result, string? Error)> Fail(string message, CancellationToken ct)
     {
@@ -227,7 +231,7 @@ public sealed class InventoryReservationService : BaseService<InventTrans>, IInv
         command.CommandText = "DECLARE @result int; EXEC @result = sys.sp_getapplock @Resource = @resource, @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 10000; SELECT @result;";
         var parameter = command.CreateParameter();
         parameter.ParameterName = "@resource";
-        parameter.Value = "InventReservation:" + resource;
+        parameter.Value = (key.StartsWith("InventStock:", StringComparison.Ordinal) ? "InventJournal:" : "InventReservation:") + resource;
         command.Parameters.Add(parameter);
         if (await command.ExecuteScalarAsync(ct) is not int code || code < 0)
             throw new InvalidOperationException("Inventory reservation could not acquire its concurrency lock.");

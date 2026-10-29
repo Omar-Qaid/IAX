@@ -9,15 +9,13 @@ using IAX.IXApi.Modules.Finance.Inventory.InventoryStatus.Entities;
 using IAX.IXApi.Modules.Finance.Inventory.ProductLifecycle;
 using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
-using System.Security.Cryptography;
-using System.Text;
 using ReleasedItem = IAX.IXApi.Modules.Finance.Entities.InventTable;
 using ItemModelGroup = IAX.IXApi.Modules.Finance.Entities.InventModelGroup;
+using PostingValidationException = IAX.IXApi.Modules.Finance.Common.SubledgerPostingException;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public sealed class InventJournalPostingService : IInventJournalPostingService
+public sealed partial class InventJournalPostingService : IInventJournalPostingService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICompanyExecutionContext _company;
@@ -25,6 +23,7 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
     private readonly ISysNumberSequenceService _numbers;
     private readonly ISalesInventoryNumberService _inventoryNumbers;
     private DbContext Db => _unitOfWork.Context;
+    private SubledgerPostingSupport Support => new(Db);
 
     public InventJournalPostingService(IUnitOfWork unitOfWork, ICompanyExecutionContext company,
         ICurrentUserService user, ISysNumberSequenceService numbers, ISalesInventoryNumberService inventoryNumbers)
@@ -46,7 +45,7 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
         await _unitOfWork.BeginTransactionAsync(ct);
         try
         {
-            await LockPostingKeyAsync($"InventJournal:{companyId}:{Normalize(journalId)}", ct);
+            await Support.LockAsync($"InventJournal:{companyId}:{Normalize(journalId)}", ct);
             var header = await Db.Set<InventJournalTable>().FirstOrDefaultAsync(x => x.DataAreaId == companyId && x.JournalId == Normalize(journalId), ct)
                 ?? throw new PostingValidationException("Inventory journal was not found.");
             if (header.Posted == NoYes.Yes)
@@ -61,18 +60,26 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
                     Vouchers = priorVouchers.OrderBy(x => x.LineNum).Select(x => x.Voucher).ToList()
                 }, null);
             }
-            if (header.JournalType == InventJournalType.Counting)
+            if (header.JournalType == InventJournalType.Counting && (!header.CountingFrozen || !header.CountingConfirmed))
                 throw new PostingValidationException(
                     "Counting posting requires a confirmed count and durable movement freeze. The current journal has neither verified control, so posting is blocked.");
             var lines = (await Db.Set<InventJournalTrans>().Where(x => x.DataAreaId == companyId && x.JournalId == header.JournalId).ToListAsync(ct))
                 .OrderBy(x => x.LineNum).ToList();
             if (lines.Count == 0) throw new PostingValidationException("The inventory journal has no lines.");
             if (lines.Any(x => x.JournalType != header.JournalType)) throw new PostingValidationException("A journal line type does not match the journal header.");
-            foreach (var key in lines.Select(x => $"InventStock:{companyId}:{x.ItemId}:{x.InventDimId}")
+            foreach (var line in lines.OrderBy(x => x.ItemId).ThenBy(x => x.InventDimId))
+            {
+                var boundaryError = await InventoryFinancialBoundary.CheckAsync(Db, companyId, line.ItemId, line.TransDate, ct);
+                if (boundaryError != null) throw new PostingValidationException(boundaryError);
+            }
+            foreach (var key in lines.Select(x => new { x.ItemId, Dimension = x.InventDimId })
                          .Concat(lines.Where(x => x.ToInventDimId.Length > 0)
-                             .Select(x => $"InventStock:{companyId}:{x.ItemId}:{x.ToInventDimId}"))
-                         .Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal))
-                await LockPostingKeyAsync(key, ct);
+                             .Select(x => new { x.ItemId, Dimension = x.ToInventDimId }))
+                         .Distinct().OrderBy(x => x.ItemId, StringComparer.Ordinal).ThenBy(x => x.Dimension, StringComparer.Ordinal))
+            {
+                var freezeError = await InventoryCountProtection.CheckAsync(Db, companyId, key.ItemId, key.Dimension, ct, header.JournalId);
+                if (freezeError != null) throw new PostingValidationException(freezeError);
+            }
             if (header.JournalType == InventJournalType.Transfer)
             {
                 foreach (var group in lines.GroupBy(x => new { x.ItemId, x.InventDimId }))
@@ -120,7 +127,8 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
                 if (header.JournalType == InventJournalType.Counting)
                 {
                     var counted = await ConvertToInventoryUnitAsync(companyId, item.Product, item.ItemId, line.Unit, line.Counted, ct);
-                    line.InventOnHand = fromSum.PhysicalInvent;
+                    if (line.InventOnHand != fromSum.PhysicalInvent)
+                        throw new PostingValidationException("Inventory changed after the count was frozen; cancel and recount.");
                     signedQty = counted - fromSum.PhysicalInvent;
                     line.Qty = signedQty;
                 }
@@ -137,7 +145,7 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
 
                 await ValidateTrackingDimensionsAsync(item, fromDim, signedQty, ct);
 
-                if (signedQty < 0 && fromSum.PhysicalInvent - fromSum.ReservPhysical + signedQty < 0)
+                if (signedQty < 0 && fromSum.PhysicalInvent - fromSum.ReservPhysical - fromSum.Picked + signedQty < 0)
                     throw new PostingValidationException($"Line {line.LineNum} exceeds available physical inventory for item '{item.ItemId}'.");
 
                 if (signedQty == 0)
@@ -146,6 +154,13 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
                     continue;
                 }
                 var unitCost = await ResolveUnitCostAsync(companyId, item, fromSum, line, header.JournalType, signedQty, ct);
+                if (header.JournalType == InventJournalType.Transfer && header.Source == "TransferReceipt")
+                {
+                    var operation = await Db.Set<InventTransferPosting>().SingleOrDefaultAsync(x => x.DataAreaId == companyId && x.JournalId == header.JournalId && x.IsReceipt, ct);
+                    if (operation == null || lines.Count != 1 || operation.Quantity != Math.Abs(inventoryQty) || operation.CostAmount <= 0)
+                        throw new PostingValidationException("Transfer receipt must carry the verified cost of its shipment.");
+                    unitCost = operation.CostAmount / operation.Quantity;
+                }
                 if (unitCost <= 0 && signedQty < 0 && item.Model.NegativePhysical == NoYes.Yes)
                     unitCost = await GetDefaultItemCostAsync(companyId, item.ItemId, line.InventDimId, line.TransDate, ct);
                 if (unitCost <= 0 && signedQty > 0 && header.JournalType == InventJournalType.Counting)
@@ -195,6 +210,7 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
             }
 
             header.Posted = NoYes.Yes;
+            header.CountingFrozen = false;
             header.PostedDateTime = result.PostedDateTime;
             header.PostedUserId = _user.GetCurrentUserId();
             await _unitOfWork.CompleteAsync(ct);
@@ -384,21 +400,6 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
         return line.CostPrice;
     }
 
-    private async Task LockPostingKeyAsync(string key, CancellationToken ct)
-    {
-        if (Db.Database.ProviderName?.Contains("SqlServer", StringComparison.OrdinalIgnoreCase) != true) return;
-        var resource = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(key)));
-        await using var command = Db.Database.GetDbConnection().CreateCommand();
-        command.Transaction = Db.Database.CurrentTransaction!.GetDbTransaction();
-        command.CommandText = "DECLARE @result int; EXEC @result = sys.sp_getapplock @Resource = @resource, @LockMode = 'Exclusive', @LockOwner = 'Transaction', @LockTimeout = 10000; SELECT @result;";
-        var parameter = command.CreateParameter();
-        parameter.ParameterName = "@resource";
-        parameter.Value = "InventJournal:" + resource;
-        command.Parameters.Add(parameter);
-        if (await command.ExecuteScalarAsync(ct) is not int code || code < 0)
-            throw new PostingValidationException("Inventory posting could not acquire its concurrency lock.");
-    }
-
     private async Task<decimal> GetDefaultItemCostAsync(string companyId, string itemId, string inventDimId,
         DateTime transDate, CancellationToken ct)
     {
@@ -419,7 +420,7 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
     {
         sum.PostedQty += qty;
         sum.PhysicalInvent += qty;
-        sum.AvailPhysical = sum.PhysicalInvent - sum.ReservPhysical;
+        sum.AvailPhysical = sum.PhysicalInvent - sum.ReservPhysical - sum.Picked;
         sum.AvailOrdered = sum.AvailPhysical + sum.Ordered - sum.OnOrder - sum.ReservOrdered;
         sum.PostedValue += qty * unitCost;
         sum.LastUpdDatePhysical = DateTime.UtcNow;
@@ -427,108 +428,57 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
         sum.ClosedQty = sum.PhysicalInvent == 0 ? NoYes.Yes : NoYes.No;
     }
 
-    private async Task<LedgerContext> LoadLedgerContextAsync(string companyId, IReadOnlyCollection<InventJournalTrans> lines, CancellationToken ct)
+    private async Task<SubledgerLedgerContext> LoadLedgerContextAsync(string companyId, IReadOnlyCollection<InventJournalTrans> lines, CancellationToken ct)
     {
         var date = lines.Min(x => x.TransDate == default ? DateTime.Today : x.TransDate.Date);
         if (lines.Any(x => (x.TransDate == default ? DateTime.Today : x.TransDate.Date) != date))
             throw new PostingValidationException("All lines must use the same transaction date for basic journal posting.");
-        var ledger = await Db.Set<Ledger>().AsNoTracking().FirstOrDefaultAsync(x => x.DataAreaId == companyId, ct)
-            ?? throw new PostingValidationException("A ledger is required for the selected company.");
-        if (string.IsNullOrWhiteSpace(ledger.AccountingCurrency))
-            throw new PostingValidationException("The ledger accounting currency is required.");
-        if (!string.IsNullOrWhiteSpace(ledger.ReportingCurrency) &&
-            !string.Equals(ledger.ReportingCurrency, ledger.AccountingCurrency, StringComparison.OrdinalIgnoreCase))
+        var context = await Support.LoadLedgerContextAsync(companyId, date, ct);
+        if (!string.IsNullOrWhiteSpace(context.Ledger.ReportingCurrency) &&
+            !string.Equals(context.Ledger.ReportingCurrency, context.Ledger.AccountingCurrency, StringComparison.OrdinalIgnoreCase))
             throw new PostingValidationException("Inventory journal posting with a different reporting currency requires exchange-rate processing, which is not enabled in the basic inventory scope.");
-        var period = await Db.Set<FiscalCalendarPeriod>().AsNoTracking().FirstOrDefaultAsync(x => x.FiscalCalendar == ledger.FiscalCalendar && x.StartDate <= date && x.EndDate >= date && x.Type == FiscalPeriodType.Operating, ct)
-            ?? throw new PostingValidationException($"No operating fiscal period contains {date:d}.");
-        var ledgerPeriod = await Db.Set<LedgerFiscalCalendarPeriod>().AsNoTracking().FirstOrDefaultAsync(x => x.Ledger == ledger.RecId && x.FiscalCalendarPeriod == period.RecId, ct);
-        if (ledgerPeriod == null || ledgerPeriod.Status != FiscalPeriodStatus.Open)
-            throw new PostingValidationException($"The fiscal period for {date:d} is not open.");
-        return new LedgerContext(ledger, period);
+        return context;
     }
 
     private async Task<PostingAccounts> ResolveAccountsAsync(string companyId, string itemId, decimal qty,
         long movementOffset, InventJournalType journalType, CancellationToken ct)
     {
         var inventoryType = qty > 0 ? InventAccountType.InventReceipt : InventAccountType.InventIssue;
-        var inventory = await ResolvePostingDimensionAsync(companyId, itemId, inventoryType, ct);
+        var inventory = await Support.ResolveInventPostingAsync(companyId, itemId, inventoryType, ct);
         DimensionAttributeValueCombination offset;
         LedgerPostingType offsetType;
         if (journalType == InventJournalType.Movement)
         {
-            offset = await Db.Set<DimensionAttributeValueCombination>().AsNoTracking().FirstOrDefaultAsync(x => x.DataAreaId == companyId && x.RecId == movementOffset, ct)
-                ?? throw new PostingValidationException("The movement offset ledger account is invalid for the selected company.");
-            await ValidateMainAccountAsync(companyId, offset, ct);
+            offset = await Support.LoadDimensionAsync(companyId, movementOffset, "movement offset", ct);
             offsetType = LedgerPostingType.LedgerJournal;
         }
         else
         {
             var type = qty > 0 ? InventAccountType.InventProfit : InventAccountType.InventLoss;
-            offset = await ResolvePostingDimensionAsync(companyId, itemId, type, ct);
+            offset = await Support.ResolveInventPostingAsync(companyId, itemId, type, ct);
             offsetType = qty > 0 ? LedgerPostingType.InventProfit : LedgerPostingType.InventLoss;
         }
         return new PostingAccounts(inventory, offset,
             qty > 0 ? LedgerPostingType.InventReceipt : LedgerPostingType.InventIssue, offsetType);
     }
 
-    private async Task<DimensionAttributeValueCombination> ResolvePostingDimensionAsync(string companyId, string itemId, InventAccountType accountType, CancellationToken ct)
-    {
-        var itemGroup = await Db.Set<InventItemGroupItem>().AsNoTracking().Where(x => x.ItemDataAreaId == companyId && x.ItemId == itemId)
-            .Select(x => x.ItemGroupId).FirstOrDefaultAsync(ct) ?? string.Empty;
-        var rules = await Db.Set<InventPosting>().AsNoTracking().Where(x => x.DataAreaId == companyId && x.InventAccountType == accountType && x.CustVendCode == TableGroupAll.All).ToListAsync(ct);
-        var rule = rules.Where(x => x.ItemCode == TableGroupAll.Table && x.ItemRelation == itemId).OrderBy(x => x.RecId).FirstOrDefault()
-            ?? rules.Where(x => x.ItemCode == TableGroupAll.Group && x.ItemRelation == itemGroup).OrderBy(x => x.RecId).FirstOrDefault()
-            ?? rules.Where(x => x.ItemCode == TableGroupAll.All).OrderBy(x => x.RecId).FirstOrDefault();
-        if (rule == null || rule.LedgerDimension == 0)
-            throw new PostingValidationException($"Inventory posting setup is missing for {accountType} and item '{itemId}'.");
-        var dimension = await Db.Set<DimensionAttributeValueCombination>().AsNoTracking().FirstOrDefaultAsync(x => x.DataAreaId == companyId && x.RecId == rule.LedgerDimension, ct)
-            ?? throw new PostingValidationException($"The {accountType} posting rule references an invalid ledger dimension.");
-        await ValidateMainAccountAsync(companyId, dimension, ct);
-        return dimension;
-    }
-
-    private async Task ValidateMainAccountAsync(string companyId, DimensionAttributeValueCombination dimension, CancellationToken ct)
-    {
-        var valid = dimension.MainAccount > 0
-            ? await Db.Set<MainAccount>().AsNoTracking().AnyAsync(x => x.DataAreaId == companyId && x.RecId == dimension.MainAccount, ct)
-            : await Db.Set<MainAccount>().AsNoTracking().AnyAsync(x => x.DataAreaId == companyId && x.MainAccountId == dimension.MainAccountValue, ct);
-        if (!valid) throw new PostingValidationException($"Ledger dimension '{dimension.DisplayValue}' does not reference a valid main account.");
-    }
-
     private async Task CreateLedgerEntryAsync(string companyId, InventJournalTable header, InventJournalTrans line, string voucher,
-        decimal amount, PostingAccounts accounts, LedgerContext context, CancellationToken ct)
+        decimal amount, PostingAccounts accounts, SubledgerLedgerContext context, CancellationToken ct)
     {
-        var entry = new GeneralJournalEntry
-        {
-            DataAreaId = companyId, JournalNumber = header.JournalId, Ledger = context.Ledger.RecId,
-            JournalCategory = LedgerJournalCategory.General, PostingLayer = CurrentToOperationsPostingLayer.Current,
-            SubledgerVoucher = voucher, SubledgerVoucherDataAreaId = companyId, DocumentNumber = header.JournalId,
-            AccountingDate = line.TransDate, DocumentDate = line.TransDate,
-            FiscalCalendarPeriod = context.Period.RecId, FiscalCalendarYear = context.Period.FiscalCalendarYear
-        };
+        var entry = Support.NewEntry(companyId, header.JournalId, voucher, line.TransDate, context);
         Db.Add(entry);
         await _unitOfWork.CompleteAsync(ct);
+        var text = $"Inventory journal {line.JournalId} line {line.LineNum}";
+        var currency = context.Ledger.AccountingCurrency;
         Db.AddRange(
-            AccountEntry(companyId, entry.RecId, accounts.Inventory, accounts.InventoryPostingType, amount, line, context.Ledger.AccountingCurrency),
-            AccountEntry(companyId, entry.RecId, accounts.Offset, accounts.OffsetPostingType, -amount, line, context.Ledger.AccountingCurrency));
+            SubledgerPostingSupport.AccountEntry(companyId, entry.RecId, accounts.Inventory, accounts.InventoryPostingType, amount, text, line.Qty, currency),
+            SubledgerPostingSupport.AccountEntry(companyId, entry.RecId, accounts.Offset, accounts.OffsetPostingType, -amount, text, line.Qty, currency));
         Db.Add(new SubledgerVoucherGeneralJournalEntry
         {
             DataAreaId = companyId, GeneralJournalEntry = entry.RecId, Voucher = voucher,
             VoucherDataAreaId = companyId, AccountingDate = line.TransDate
         });
     }
-
-    private static GeneralJournalAccountEntry AccountEntry(string companyId, long entryId,
-        DimensionAttributeValueCombination dimension, LedgerPostingType type, decimal amount,
-        InventJournalTrans line, string currency) => new()
-    {
-        DataAreaId = companyId, GeneralJournalEntry = entryId, LedgerDimension = dimension.RecId,
-        MainAccount = dimension.MainAccount, LedgerAccount = dimension.DisplayValue.Length == 0 ? dimension.MainAccountValue : dimension.DisplayValue,
-        Text = $"Inventory journal {line.JournalId} line {line.LineNum}", PostingType = type,
-        TransactionCurrencyCode = currency, TransactionCurrencyAmount = amount,
-        AccountingCurrencyAmount = amount, ReportingCurrencyAmount = amount,
-        Quantity = line.Qty, IsCredit = amount < 0 ? NoYes.Yes : NoYes.No, PaymentReference = string.Empty
-    };
 
     private static decimal EffectiveFactor(UnitOfMeasureConversion conversion) =>
         conversion.Factor > 0 ? conversion.Factor :
@@ -548,8 +498,6 @@ public sealed class InventJournalPostingService : IInventJournalPostingService
 
     private static string Normalize(string value) => value.Trim().ToUpperInvariant();
     private sealed record ReadyItem(string ItemId, long Product, ItemModelGroup Model, long TrackingDimensionGroup);
-    private sealed record LedgerContext(Ledger Ledger, FiscalCalendarPeriod Period);
     private sealed record PostingAccounts(DimensionAttributeValueCombination Inventory,
         DimensionAttributeValueCombination Offset, LedgerPostingType InventoryPostingType, LedgerPostingType OffsetPostingType);
-    private sealed class PostingValidationException(string message) : Exception(message);
 }

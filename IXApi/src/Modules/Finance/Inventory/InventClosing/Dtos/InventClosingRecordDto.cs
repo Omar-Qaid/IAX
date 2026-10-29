@@ -8,6 +8,7 @@ public sealed class InventClosingRecordDto
     public DateTime TransDate { get; init; }
     public DateTime Executed { get; init; }
     public string Voucher { get; init; } = string.Empty;
+    public string ScopeItemId { get; init; } = string.Empty;
     public string PeriodCode { get; init; } = string.Empty;
     public int RunNum { get; init; }
     public InventAdjustmentType AdjustmentType { get; init; }

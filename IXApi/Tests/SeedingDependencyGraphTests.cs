@@ -59,7 +59,14 @@ namespace IXApi.Tests
                 ("Finance.Inventory.SitesAndWarehouses", "Finance.Inventory.Setup"),
                 ("Finance.GeneralLedger.MainAccounts", "Finance.Inventory.Setup"),
                 ("Finance.GeneralLedger.Tax", "Finance.Inventory.DemoProducts"),
-                ("Finance.GeneralLedger.Tax", "Finance.AccountsReceivable.DemoCustVend")
+                ("Finance.GeneralLedger.Tax", "Finance.AccountsReceivable.DemoCustVend"),
+                ("Finance.PurchasePartialInvoices", "Finance.PurchaseVatInvoices"),
+                ("Finance.OperationalExamples", "Finance.PurchaseVatInvoices"),
+                ("Finance.CommercialScenarios", "Finance.SalesCompletionScenarios"),
+                ("Finance.PurchaseVatInvoices", "Finance.SalesCompletionScenarios"),
+                ("Finance.SalesCompletionScenarios", "Finance.InventoryCompletionScenarios"),
+                ("Finance.InventoryScenarios", "Finance.InventoryCompletionScenarios"),
+                ("Finance.InventoryCompletionScenarios", "Finance.SalesAdvancedScenarios")
             })
                 Assert.True(ordered.IndexOf(parent) >= 0 && ordered.IndexOf(parent) < ordered.IndexOf(child), $"{parent} must precede {child}");
         }

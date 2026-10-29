@@ -22,6 +22,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
         public DocumentStatus DocumentStatus { get; set; } = DocumentStatus.None;
         public string CurrencyCode { get; set; } = string.Empty;
         public string Payment { get; set; } = string.Empty;
+        [StringLength(30)] public string TaxGroup { get; set; } = string.Empty;
         public DateTime DeliveryDate { get; set; }
         public DateTime OrderDate { get; set; }
         public string InventSiteId { get; set; } = string.Empty;

@@ -1086,7 +1086,7 @@ public sealed class InventoryArchitectureTests
             new InventSum
             {
                 RecId = 5, DataAreaId = "dat", ItemId = "ITEM-001", InventDimId = "DIM-1",
-                PhysicalInvent = 10, ReservPhysical = 2, AvailPhysical = 8,
+                PhysicalInvent = 10, ReservPhysical = 2, Picked = 3, AvailPhysical = 8,
                 Ordered = 4, OnOrder = 3, AvailOrdered = 9, PostedValue = 700, PhysicalValue = 100
             },
             new InventSum { RecId = 6, DataAreaId = "other", ItemId = "ITEM-001", InventDimId = "DIM-1", PhysicalInvent = 99 });
@@ -1102,10 +1102,10 @@ public sealed class InventoryArchitectureTests
         Assert.Equal("MAIN", row.Warehouse);
         Assert.Equal(10, row.PhysicalInventory);
         Assert.Equal(2, row.PhysicalReserved);
-        Assert.Equal(8, row.AvailablePhysical);
+        Assert.Equal(5, row.AvailablePhysical);
         Assert.Equal(4, row.OrderedReceipts);
         Assert.Equal(3, row.OrderedIssues);
-        Assert.Equal(9, row.AvailableOrdered);
+        Assert.Equal(6, row.AvailableOrdered);
         Assert.Equal(700, row.PostedValue);
         Assert.Equal(100, row.PhysicalValue);
 
@@ -1525,6 +1525,47 @@ public sealed class InventoryArchitectureTests
             await db.Set<InventSum>().Where(x => x.ItemId == "ITEM-001").SumAsync(x => x.PhysicalInvent));
         Assert.Equal(0, await db.Set<GeneralJournalAccountEntry>().SumAsync(x => x.AccountingCurrencyAmount));
 
+        Assert.Null(await posting.FreezeCountAsync(counting.Journal.JournalId, default));
+        db.ChangeTracker.Clear(); // Freeze must survive a new request, not just tracked state.
+        Assert.NotNull(await InventoryCountProtection.CheckAsync(db, "dat", "ITEM-001", line.InventDimId, default));
+        Assert.NotNull((await service.DeleteAsync(counting.Journal.JournalId, default)).Error);
+        var blockedJournal = await service.CreateAsync(new InventJournalCreateDto
+        { JournalNameId = "ADJ", Description = "Blocked during count", InventSiteId = "JED", InventLocationId = "MAIN" }, default);
+        Assert.Null((await service.AddLineAsync(blockedJournal.Journal!.JournalId, new InventJournalLineInputDto
+        { ItemId = "ITEM-001", InventSiteId = "JED", InventLocationId = "MAIN", Unit = "pcs", Qty = 1, CostPrice = 10, TransDate = DateTime.Today }, default)).Error);
+        Assert.Contains("frozen for counting", (await posting.PostAsync(blockedJournal.Journal.JournalId, default)).Error);
+        Assert.Equal(7m, (await db.Set<InventSum>().SingleAsync(x => x.InventDimId == line.InventDimId)).PhysicalInvent);
+        var frozenLine = await db.Set<InventJournalTrans>().SingleAsync(x => x.JournalId == counting.Journal.JournalId);
+        Assert.Null(await posting.ConfirmCountAsync(counting.Journal.JournalId, new Dictionary<long, decimal> { [frozenLine.RecId] = 10m }, default));
+        Assert.NotNull(await posting.ConfirmCountAsync(counting.Journal.JournalId, new Dictionary<long, decimal> { [frozenLine.RecId] = 11m }, default));
+        var confirmedCount = await posting.PostAsync(counting.Journal.JournalId, default);
+        Assert.Null(confirmedCount.Error);
+        Assert.Equal(10m, (await db.Set<InventSum>().SingleAsync(x => x.InventDimId == line.InventDimId)).PhysicalInvent);
+        var countTransactions = await db.Set<InventTrans>().CountAsync();
+        Assert.Null((await posting.PostAsync(counting.Journal.JournalId, default)).Error);
+        Assert.Equal(countTransactions, await db.Set<InventTrans>().CountAsync());
+        Assert.Null(await InventoryCountProtection.CheckAsync(db, "dat", "ITEM-001", line.InventDimId, default));
+
+        db.Add(new InventLocation { DataAreaId = "dat", InventLocationId = "TRANSIT", InventSiteId = "JED", Name = "In transit", InventLocationType = InventLocationType.Transit });
+        await db.SaveChangesAsync();
+        var transfers = new InventTransferOrderService(uow, identity, service, posting);
+        var transferInput = new TransferOrderInput("TR-DEMO", "ITEM-001", "pcs", 2m, "JED", "MAIN", "TRANSIT", "SHOW", "TRF");
+        Assert.Null((await transfers.CreateAsync(transferInput, default)).Error);
+        Assert.Null((await transfers.CreateAsync(transferInput, default)).Error);
+        Assert.NotNull((await transfers.CreateAsync(transferInput with { Quantity = 3 }, default)).Error);
+        Assert.NotNull((await transfers.PostAsync("TR-DEMO", new("EARLY", 1, DateTime.Today), true, default)).Error);
+        Assert.Null((await transfers.PostAsync("TR-DEMO", new("SHIP1", 1, DateTime.Today), false, default)).Error);
+        var shippedCount = await db.Set<InventTrans>().CountAsync();
+        Assert.Null((await transfers.PostAsync("TR-DEMO", new("SHIP1", 1, DateTime.Today), false, default)).Error);
+        Assert.Equal(shippedCount, await db.Set<InventTrans>().CountAsync());
+        Assert.Equal(1m, await db.Set<InventSum>().Where(x => x.InventLocationId == "TRANSIT").SumAsync(x => x.PhysicalInvent));
+        Assert.NotNull((await transfers.PostAsync("TR-DEMO", new("OVER", 2, DateTime.Today), true, default)).Error);
+        Assert.Null((await transfers.PostAsync("TR-DEMO", new("RECEIVE1", 1, DateTime.Today), true, default)).Error);
+        Assert.Null((await transfers.PostAsync("TR-DEMO", new("SHIP2", 1, DateTime.Today), false, default)).Error);
+        Assert.Null((await transfers.PostAsync("TR-DEMO", new("RECEIVE2", 1, DateTime.Today), true, default)).Error);
+        Assert.Equal(0m, await db.Set<InventSum>().Where(x => x.InventLocationId == "TRANSIT").SumAsync(x => x.PhysicalInvent));
+        Assert.Equal(2m, (await transfers.GetAsync("TR-DEMO", default))!.Received);
+
         var beforeRollbackTransactions = await db.Set<InventTrans>().CountAsync();
         var beforeRollbackEntries = await db.Set<GeneralJournalEntry>().CountAsync();
         var beforeRollbackQty = await db.Set<InventSum>().Where(x => x.ItemId == "ITEM-001").SumAsync(x => x.PhysicalInvent);
@@ -1626,6 +1667,10 @@ public sealed class InventoryArchitectureTests
             Configure<InventParameters>(builder);
             Configure<InventJournalName>(builder);
             Configure<InventJournalTable>(builder);
+            Configure<InventTransferOrder>(builder);
+            Configure<InventTransferPosting>(builder);
+            builder.ApplyConfiguration(new InventTransferOrderConfiguration());
+            builder.ApplyConfiguration(new InventTransferPostingConfiguration());
             Configure<InventJournalTrans>(builder);
             Configure<InventModelGroup>(builder);
             Configure<InventModelGroupItem>(builder);
@@ -1704,7 +1749,10 @@ public sealed class InventoryArchitectureTests
             if (++completeCount == failOnComplete) throw new InvalidOperationException("Injected save failure.");
             return context.SaveChangesAsync(ct);
         }
-        public async Task BeginTransactionAsync(CancellationToken ct = default) => transaction ??= await context.Database.BeginTransactionAsync(ct);
+        public async Task BeginTransactionAsync(CancellationToken ct = default)
+        {
+            if (context.Database.CurrentTransaction == null) transaction = await context.Database.BeginTransactionAsync(ct);
+        }
         public async Task CommitTransactionAsync(CancellationToken ct = default)
         { if (transaction != null) { await transaction.CommitAsync(ct); await transaction.DisposeAsync(); transaction = null; } }
         public async Task RollbackTransactionAsync(CancellationToken ct = default)

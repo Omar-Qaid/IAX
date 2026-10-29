@@ -45,6 +45,16 @@ public sealed class InventoryReservationController
 
     public sealed record ReserveRequest(string InventTransId, decimal Quantity, bool AllowPartial = false);
     public sealed record ReleaseRequest(string InventTransId, decimal Quantity);
+    public sealed record PickingRequest(string InventTransId, decimal TargetQuantity);
+
+    [HttpPost("picking")]
+    [DomainPermission("Inventory", "Transactions", "Edit")]
+    public async Task<IActionResult> SetPicked([FromBody] PickingRequest request, CancellationToken ct)
+    {
+        var (result, error) = await _reservationService.SetPickedAsync(request.InventTransId, request.TargetQuantity, ct);
+        return error is null ? Ok(APIResponse<PickingResultDto>.Ok(result!, "Picking updated."))
+            : UnprocessableEntity(APIResponse<object>.Fail(error));
+    }
 
     [HttpPost("reserve")]
     [DomainPermission("Inventory", "Transactions", "Edit")]

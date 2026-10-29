@@ -21,6 +21,8 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
         public string LedgerVoucher { get; set; } = string.Empty;
         public decimal Qty { get; set; }
         public decimal SalesBalance { get; set; }
+        public decimal SumTax { get; set; }
+        public DateTime? DueDate { get; set; }
         public decimal InvoiceAmount { get; set; }
     }
 
@@ -42,6 +44,10 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
         public decimal PurchPrice { get; set; }
         public decimal PriceUnit { get; set; }
         public decimal LineAmount { get; set; }
+        public decimal TaxAmount { get; set; }
+        public long? OriginalInvoiceTransRecId { get; set; }
+        [StringLength(30)] public string TaxGroup { get; set; } = string.Empty;
+        [StringLength(30)] public string TaxItemGroup { get; set; } = string.Empty;
         public string CurrencyCode { get; set; } = string.Empty;
         public string InventTransId { get; set; } = string.Empty;
         public string InventDimId { get; set; } = string.Empty;

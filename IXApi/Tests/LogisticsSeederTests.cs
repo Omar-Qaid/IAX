@@ -8,6 +8,37 @@ namespace IXApi.Tests;
 
 public sealed class LogisticsSeederTests
 {
+    [Fact]
+    public async Task Mixed_DAT_example_geography_is_repaired_without_duplicate_addresses()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new Fixture(new DbContextOptionsBuilder<Fixture>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        var seed = new LogisticsAddressSeeder();
+        await seed.SeedDataAsync(db);
+        var location = await db.Set<LogisticsLocation>().SingleAsync(x => x.LocationId == "DAT-LOC-1");
+        var address = await db.Set<LogisticsPostalAddress>().SingleAsync(x => x.Location == location.RecId);
+        var originalId = address.RecId;
+        address.State = "RIY";
+        address.County = "RUH";
+        address.City = "";
+        address.DistrictName = "";
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        await seed.SeedDataAsync(db);
+        await seed.SeedDataAsync(db);
+        var repaired = await db.Set<LogisticsPostalAddress>().SingleAsync(x => x.RecId == originalId);
+        Assert.Equal("Jeddah", repaired.City);
+        Assert.Equal("MAK", repaired.State);
+        Assert.Equal("JED", repaired.County);
+        Assert.Equal("Al Rawdah", repaired.DistrictName);
+        var zip = await db.Set<LogisticsAddressZipCode>().SingleAsync(x => x.RecId == repaired.ZipCodeRecId);
+        Assert.Equal(zip.CityRecId, repaired.CityRecId);
+        Assert.Equal(zip.District, repaired.District);
+        Assert.Equal(2, await db.Set<LogisticsPostalAddress>().CountAsync());
+    }
+
     [Theory]
     [InlineData("DAT", false)]
     [InlineData("DAT", true)]

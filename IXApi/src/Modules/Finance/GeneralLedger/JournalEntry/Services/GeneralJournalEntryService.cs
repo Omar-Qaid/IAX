@@ -6,7 +6,7 @@ using IAX.IXApi.Shared.Application.Identity;
 
 namespace IAX.IXApi.Modules.Finance.GeneralLedger.JournalEntry
 {
-    public class GeneralJournalEntryService : BaseService<GeneralJournalEntry>, IGeneralJournalEntryService
+    public class GeneralJournalEntryService : PostedLedgerReadService<GeneralJournalEntry>, IGeneralJournalEntryService
     {
         public GeneralJournalEntryService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)
         {

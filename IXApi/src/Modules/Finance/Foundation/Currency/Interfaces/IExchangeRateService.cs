@@ -9,5 +9,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.Currency
 {
     public interface IExchangeRateService : IBaseService<ExchangeRate>
     {
+        Task<EffectiveExchangeRateDto> FindEffectiveAsync(long rateType, string fromCurrency, string toCurrency,
+            System.DateTime date, CancellationToken cancellationToken = default);
     }
 }

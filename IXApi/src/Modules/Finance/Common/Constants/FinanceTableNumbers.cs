@@ -11,6 +11,7 @@ public static class FinanceTableNumbers
     public const int SalesTable = 2002;
     public const int SalesLine = 2003;
     public const int VendTable = 3001;
+    public const int VendInvoiceTrans = 1326239103;
     public const int HcmWorker = 4001;
     // Existing IXApp recordTableId fallback values (FNV-1a over normalized table names).
     public const int CustTransOpen = 472585700;
@@ -26,6 +27,7 @@ public static class FinanceTableNumbers
         var type when type == typeof(global::IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans) => LedgerJournalTrans,
         var type when type == typeof(global::IAX.IXApi.Modules.Finance.Entities.MarkupAutoTable) => MarkupAutoTable,
         var type when type == typeof(global::IAX.IXApi.Modules.Finance.Entities.VendTable) => VendTable,
+        var type when type == typeof(global::IAX.IXApi.Modules.Finance.AccountsPayable.VendInvoiceTrans) => VendInvoiceTrans,
         var type when type == typeof(global::IAX.IXApi.Modules.Finance.Foundation.HcmWorkers.HcmWorker) => HcmWorker,
         _ => throw new ArgumentException($"No Finance table number is registered for {typeof(TEntity).FullName}.")
     };

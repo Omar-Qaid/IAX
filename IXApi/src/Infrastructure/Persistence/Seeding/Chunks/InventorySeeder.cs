@@ -81,7 +81,7 @@ public sealed  class InventorySeeder : IAX.IXApi.Infrastructure.Persistence.Seed
             {
                 DataAreaId = Company, ModelGroupId = "FIFO", Name = "FIFO Stocked Items",
                 InventModel = InventModel.FIFO, StockedProduct = NoYes.Yes, PostOnHandPhysical = NoYes.Yes, PostOnHandFinancial = NoYes.Yes,
-                MandatoryReceive = NoYes.Yes, NegativeFinancial = NoYes.Yes, PdsDispositionCode = string.Empty
+                MandatoryReceive = NoYes.Yes, NegativePhysical = NoYes.No, NegativeFinancial = NoYes.No, PdsDispositionCode = string.Empty
             },
             new InventModelGroup
             {

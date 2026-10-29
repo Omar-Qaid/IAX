@@ -47,6 +47,8 @@ public sealed class FinanceOperationalExamplesSeeder : BaseModuleSeeder
             .SingleAsync(x => x.DataAreaId == "dat" && x.TaxAccountGroup == "VAT-STD", ct);
         if (taxPosting.TaxOutgoingLedgerDimension is null or 0)
             taxPosting.TaxOutgoingLedgerDimension = dimensions["22010005"];
+        if (taxPosting.TaxIncomingLedgerDimension is null or 0)
+            taxPosting.TaxIncomingLedgerDimension = dimensions["22010005"];
         foreach (var row in new[] {
             new LedgerJournalName { JournalName = "DEMO-GL", Name = "Example general journal", JournalType = LedgerJournalType.Daily },
             new LedgerJournalName { JournalName = "DEMO-AR", Name = "Example customer payments", JournalType = LedgerJournalType.CustPayment },

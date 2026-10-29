@@ -1,0 +1,122 @@
+using IAX.IXApi.Modules.Finance.Common;
+using IAX.IXApi.Modules.Finance.Entities;
+using Microsoft.EntityFrameworkCore;
+using JournalHeader = IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable;
+
+namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable;
+
+/// <summary>
+/// Posts an entered general journal to the ledger: LedgerJournalTable/Trans become
+/// GeneralJournalEntry, GeneralJournalAccountEntry and SubledgerVoucherGeneralJournalEntry
+/// through the shared subledger posting engine. One voucher and accounting date form one
+/// posted entry; a line with an offset produces two account entries under that voucher.
+///
+/// Scope is the ledger-account journal. Customer, vendor, bank and asset account types,
+/// intercompany lines, transaction currencies other than the accounting currency, journal
+/// tax calculation and automatic reversal entries are rejected rather than approximated,
+/// because each needs its own documented process.
+/// </summary>
+internal sealed class LedgerJournalPosting(DbContext db)
+{
+    public async Task<LedgerJournalPostResultDto> PostAsync(string area, JournalHeader header, CancellationToken ct)
+    {
+        var support = new SubledgerPostingSupport(db);
+        await support.LockAsync($"GeneralJournal:{area}:{header.JournalNum}", ct);
+
+        if (header.Posted == NoYes.Yes) throw new SubledgerPostingException("The journal is already posted.");
+        if (header.SystemBlocked == NoYes.Yes) throw new SubledgerPostingException("The journal is system blocked.");
+        if (header.ReverseEntry == NoYes.Yes)
+            throw new SubledgerPostingException("Automatic reversal journals are not supported; post the reversal as its own journal.");
+
+        var setup = await new LedgerJournalSetupCheck(db).CheckAsync(area, header.RecId, ct)
+            ?? throw new SubledgerPostingException("The journal setup could not be verified.");
+        if (setup.Errors.Count > 0) throw new SubledgerPostingException(setup.Errors[0]);
+
+        var lines = await db.Set<LedgerJournalTrans>()
+            .Where(x => x.DataAreaId == area && x.JournalNum == header.JournalNum).ToListAsync(ct);
+        lines = lines.OrderBy(x => x.LineNum).ThenBy(x => x.RecId).ToList();
+
+        var arithmetic = LedgerVoucherBalanceCheck.Check(lines);
+        if (arithmetic.Count > 0) throw new SubledgerPostingException(arithmetic[0]);
+
+        var accountingCurrency = await db.Set<Entities.Ledger>().AsNoTracking()
+            .Where(x => x.DataAreaId == area).Select(x => x.AccountingCurrency).FirstAsync(ct);
+        foreach (var line in lines) EnsureInScope(area, header, line, accountingCurrency);
+
+        var vouchers = 0;
+        var accountEntries = 0;
+        var totalDebit = 0m;
+        var totalCredit = 0m;
+        foreach (var voucher in lines.GroupBy(x => new { x.Voucher, Date = x.TransDate.Date })
+            .OrderBy(x => x.Key.Date).ThenBy(x => x.Key.Voucher, StringComparer.Ordinal))
+        {
+            var context = await support.LoadLedgerContextAsync(area, voucher.Key.Date, ct);
+            var entry = support.NewEntry(area, header.JournalNum, voucher.Key.Voucher, voucher.Key.Date, context);
+            db.Add(entry);
+            await db.SaveChangesAsync(ct); // Persists the posted header key inside the caller's transaction.
+
+            var posted = new List<GeneralJournalAccountEntry>();
+            foreach (var line in voucher)
+            {
+                var amount = line.AmountCurDebit - line.AmountCurCredit;
+                var dimension = await support.LoadDimensionAsync(area, line.LedgerDimension, $"line {line.LineNum} account", ct);
+                posted.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, dimension,
+                    LedgerPostingType.LedgerJournal, amount, line.Txt, 0m, accountingCurrency));
+                if (line.OffsetLedgerDimension != 0)
+                {
+                    var offset = await support.LoadDimensionAsync(area, line.OffsetLedgerDimension, $"line {line.LineNum} offset account", ct);
+                    posted.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, offset,
+                        LedgerPostingType.LedgerJournal, -amount, line.OffsetTxt.Length > 0 ? line.OffsetTxt : line.Txt, 0m, accountingCurrency));
+                }
+                totalDebit += line.AmountCurDebit;
+                totalCredit += line.AmountCurCredit;
+            }
+
+            // The posted entry must balance on its own signed accounting amounts, not on the entered lines.
+            if (posted.Sum(x => x.AccountingCurrencyAmount) != 0m)
+                throw new SubledgerPostingException(
+                    $"Voucher {voucher.Key.Voucher} on {voucher.Key.Date:yyyy-MM-dd} does not balance in the accounting currency.");
+            db.AddRange(posted);
+            db.Add(new SubledgerVoucherGeneralJournalEntry
+            {
+                DataAreaId = area, GeneralJournalEntry = entry.RecId, Voucher = voucher.Key.Voucher,
+                VoucherDataAreaId = area, AccountingDate = voucher.Key.Date
+            });
+            vouchers++;
+            accountEntries += posted.Count;
+        }
+
+        var postedAt = DateTime.UtcNow;
+        header.Posted = NoYes.Yes;
+        header.PostedDateTime = postedAt;
+        header.JournalTotalDebit = totalDebit;
+        header.JournalTotalCredit = totalCredit;
+        header.JournalBalance = totalDebit - totalCredit;
+        header.NumOfLines = lines.Count;
+        foreach (var line in lines) line.NoEdit = NoYes.Yes;
+        return new(header.JournalNum, vouchers, accountEntries, totalDebit, totalCredit, postedAt);
+    }
+
+    /// <summary>Rejects what this journal path does not implement, instead of posting an approximation.</summary>
+    private static void EnsureInScope(string area, JournalHeader header, LedgerJournalTrans line, string accountingCurrency)
+    {
+        var label = $"Line {line.LineNum}";
+        if (line.Cancel == NoYes.Yes)
+            throw new SubledgerPostingException($"{label} is canceled; remove it before posting the journal.");
+        if (line.AccountType != LedgerJournalACType.Ledger)
+            throw new SubledgerPostingException($"{label}: only the Ledger account type posts through the general journal.");
+        if (line.OffsetLedgerDimension != 0 && line.OffsetAccountType != LedgerJournalACType.Ledger)
+            throw new SubledgerPostingException($"{label}: only the Ledger offset account type posts through the general journal.");
+        if (line.LedgerDimension == 0)
+            throw new SubledgerPostingException($"{label}: a ledger account combination is required.");
+        if ((line.Company.Length > 0 && line.Company != area) || (line.OffsetCompany.Length > 0 && line.OffsetCompany != area))
+            throw new SubledgerPostingException($"{label}: intercompany journal posting is not supported.");
+        if (line.CurrencyCode != accountingCurrency)
+            throw new SubledgerPostingException(
+                $"{label}: currency '{line.CurrencyCode}' requires exchange-rate conversion, which this journal path does not perform.");
+        if (line.TaxCode.Length > 0 || header.LedgerJournalInclTax == NoYes.Yes)
+            throw new SubledgerPostingException($"{label}: journal tax calculation is not supported; post tax through its own process.");
+        if (line.ReverseEntry == NoYes.Yes)
+            throw new SubledgerPostingException($"{label}: automatic reversal is not supported; post the reversal as its own journal.");
+    }
+}

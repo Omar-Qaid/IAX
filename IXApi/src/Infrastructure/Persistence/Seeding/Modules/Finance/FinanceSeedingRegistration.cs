@@ -39,9 +39,14 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Registrations
             services.AddScoped<IModuleSeeder, BusinessSetupExamplesSeeder>();
             services.AddScoped<IModuleSeeder, PurchaseScenarioSeeder>();
             services.AddScoped<IModuleSeeder, PurchasePartialInvoiceSeeder>();
+            services.AddScoped<IModuleSeeder, PurchaseVatInvoiceSeeder>();
             services.AddScoped<IModuleSeeder, SalesScenarioSeeder>();
             services.AddScoped<IModuleSeeder, CommercialScenarioSeeder>();
+            services.AddScoped<IModuleSeeder, SalesCompletionScenarioSeeder>();
+            services.AddScoped<IModuleSeeder, SalesAdvancedScenarioSeeder>();
             services.AddScoped<IModuleSeeder, InventoryScenarioSeeder>();
+            services.AddScoped<IModuleSeeder, InventoryCompletionScenarioSeeder>();
+            services.AddScoped<IModuleSeeder, InventoryFullCycleSeeder>();
             services.AddScoped<IModuleSeeder, DraftFinanceExamplesSeeder>();
             services.AddScoped<IModuleSeeder, HcmExampleSeeder>();
             services.AddScoped<IModuleSeeder, OrganizationDemoSeeder>();

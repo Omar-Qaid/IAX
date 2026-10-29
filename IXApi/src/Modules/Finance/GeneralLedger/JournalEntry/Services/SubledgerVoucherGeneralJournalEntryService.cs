@@ -6,7 +6,7 @@ using IAX.IXApi.Shared.Application.Identity;
 
 namespace IAX.IXApi.Modules.Finance.GeneralLedger.JournalEntry
 {
-    public class SubledgerVoucherGeneralJournalEntryService : BaseService<SubledgerVoucherGeneralJournalEntry>, ISubledgerVoucherGeneralJournalEntryService
+    public class SubledgerVoucherGeneralJournalEntryService : PostedLedgerReadService<SubledgerVoucherGeneralJournalEntry>, ISubledgerVoucherGeneralJournalEntryService
     {
         public SubledgerVoucherGeneralJournalEntryService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)
         {

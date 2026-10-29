@@ -46,6 +46,20 @@ public sealed class InventJournalController
     public async Task<IActionResult> List(CancellationToken ct) =>
         Ok(APIResponse<object>.Ok(await _journalService.ListAsync(ct)));
 
+    [HttpPost("{journalId}/count/freeze")]
+    [DomainPermission("Inventory", "Transactions", "Edit")]
+    public async Task<IActionResult> FreezeCount(string journalId, CancellationToken ct) => CountResult(await _posting.FreezeCountAsync(journalId, ct));
+
+    [HttpPost("{journalId}/count/confirm")]
+    [DomainPermission("Inventory", "Transactions", "Edit")]
+    public async Task<IActionResult> ConfirmCount(string journalId, Dictionary<long, decimal> quantities, CancellationToken ct) => CountResult(await _posting.ConfirmCountAsync(journalId, quantities, ct));
+
+    [HttpPost("{journalId}/count/cancel")]
+    [DomainPermission("Inventory", "Transactions", "Edit")]
+    public async Task<IActionResult> CancelCount(string journalId, CancellationToken ct) => CountResult(await _posting.CancelCountAsync(journalId, ct));
+
+    private IActionResult CountResult(string? error) => error == null ? Ok(APIResponse<bool>.Ok(true)) : UnprocessableEntity(APIResponse<bool>.Fail(error));
+
     [HttpGet("{journalId}")]
     public async Task<IActionResult> Get(string journalId, CancellationToken ct)
     {

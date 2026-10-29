@@ -95,13 +95,13 @@ public sealed class InventOnHandService : BaseService<InventSum>, IInventOnHandS
                           PhysicalReserved = summary.ReservPhysical,
                           AvailablePhysical = unitOfWork.Context.Set<WHSInventStatus>().Any(status =>
                               status.DataAreaId == companyId && status.InventStatusId == dimension.InventStatusId &&
-                              status.InventStatusBlocking == NoYes.Yes) ? 0m : summary.PhysicalInvent - summary.ReservPhysical,
+                              status.InventStatusBlocking == NoYes.Yes) ? 0m : summary.PhysicalInvent - summary.ReservPhysical - summary.Picked,
                           OrderedReceipts = summary.Ordered,
                           OrderedIssues = summary.OnOrder,
                           AvailableOrdered = unitOfWork.Context.Set<WHSInventStatus>().Any(status =>
                               status.DataAreaId == companyId && status.InventStatusId == dimension.InventStatusId &&
                               status.InventStatusBlocking == NoYes.Yes) ? 0m :
-                                  summary.PhysicalInvent - summary.ReservPhysical + summary.Ordered - summary.OnOrder - summary.ReservOrdered,
+                                  summary.PhysicalInvent - summary.ReservPhysical - summary.Picked + summary.Ordered - summary.OnOrder - summary.ReservOrdered,
                           PostedValue = summary.PostedValue,
                           PhysicalValue = summary.PhysicalValue,
                       };

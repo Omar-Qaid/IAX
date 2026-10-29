@@ -13,6 +13,21 @@ public sealed class TaxTableService : BaseService<TaxTable>, ITaxTableService
     private readonly ITaxCodeRateService _rates;
     private readonly ILogger<TaxTableService> _logger;
 
+    private string SelectedCompany() => !string.IsNullOrWhiteSpace(_currentUser.GetDataAreaId())
+        ? _currentUser.GetDataAreaId() : throw new InvalidOperationException("A company must be selected before accessing tax codes.");
+
+    protected override IQueryable<TaxTable> ApplyDomainFilters(IQueryable<TaxTable> query)
+    {
+        var area = SelectedCompany();
+        return query.Where(x => x.DataAreaId == area);
+    }
+
+    private IQueryable<TaxTable> CompanyTaxCodes()
+    {
+        var area = SelectedCompany();
+        return _unitOfWork.Context.Set<TaxTable>().Where(x => x.DataAreaId == area);
+    }
+
     public TaxTableService(IUnitOfWork unitOfWork, ICurrentUserService currentUser,
         ITaxCodeRateService rates, ILogger<TaxTableService> logger) : base(unitOfWork, currentUser)
     {
@@ -21,6 +36,7 @@ public sealed class TaxTableService : BaseService<TaxTable>, ITaxTableService
     }
     public async Task<IEnumerable<TaxTableDto>> GetDetailsAsync(CancellationToken cancellationToken = default)
     {
+        var area = SelectedCompany();
         try
         {
             _logger.LogInformation("[TaxTable] - Fetching all sales tax codes with rate values");
@@ -31,7 +47,7 @@ public sealed class TaxTableService : BaseService<TaxTable>, ITaxTableService
             {
                 if (_unitOfWork.Context.Set<TaxData>() != null)
                 {
-                    var rates = await _unitOfWork.Context.Set<TaxData>().AsNoTracking().ToListAsync(cancellationToken);
+                    var rates = await _unitOfWork.Context.Set<TaxData>().AsNoTracking().Where(x => x.DataAreaId == area).ToListAsync(cancellationToken);
                     foreach (var dto in dtos)
                     {
                         var match = rates.FirstOrDefault(r => r.TaxCode == dto.TaxCode);
@@ -62,12 +78,12 @@ public sealed class TaxTableService : BaseService<TaxTable>, ITaxTableService
         TaxTable? entity = null;
         if (long.TryParse(searchCode, out var recId))
         {
-            entity = await _unitOfWork.Context.Set<TaxTable>().FirstOrDefaultAsync(x => x.RecId == recId, cancellationToken);
+            entity = await CompanyTaxCodes().FirstOrDefaultAsync(x => x.RecId == recId, cancellationToken);
         }
 
         if (entity == null)
         {
-            entity = await _unitOfWork.Context.Set<TaxTable>().FirstOrDefaultAsync(x => x.TaxCode == searchCode || x.TaxCode.ToUpper() == searchCode.ToUpper(), cancellationToken);
+            entity = await CompanyTaxCodes().FirstOrDefaultAsync(x => x.TaxCode == searchCode || x.TaxCode.ToUpper() == searchCode.ToUpper(), cancellationToken);
         }
 
         if (entity == null)
@@ -80,7 +96,7 @@ public sealed class TaxTableService : BaseService<TaxTable>, ITaxTableService
         {
             if (_unitOfWork.Context.Set<TaxData>() != null)
             {
-                var rate = await _unitOfWork.Context.Set<TaxData>().AsNoTracking().FirstOrDefaultAsync(r => r.TaxCode == dto.TaxCode, cancellationToken);
+                var rate = await _unitOfWork.Context.Set<TaxData>().AsNoTracking().FirstOrDefaultAsync(r => r.DataAreaId == entity.DataAreaId && r.TaxCode == dto.TaxCode, cancellationToken);
                 if (rate != null)
                 {
                     dto.TaxValue = rate.TaxValue;
@@ -95,10 +111,13 @@ public sealed class TaxTableService : BaseService<TaxTable>, ITaxTableService
         return dto;
     }
 
-    public async Task<TaxTableDto?> CreateFromDtoAsync(TaxTableDto dto, CancellationToken cancellationToken = default)
+    public Task<TaxTableDto?> CreateFromDtoAsync(TaxTableDto dto, CancellationToken cancellationToken = default) =>
+        TaxCodeSaveTransaction.RunAsync(_unitOfWork.Context, () => CreateCoreAsync(dto, cancellationToken), cancellationToken);
+
+    private async Task<TaxTableDto?> CreateCoreAsync(TaxTableDto dto, CancellationToken cancellationToken)
     {
         var entity = dto.Adapt<TaxTable>();
-        if (string.IsNullOrEmpty(entity.DataAreaId)) entity.DataAreaId = "dat";
+        entity.DataAreaId = SelectedCompany();
 
         TaxCodeRateService.SanitizeEntity(entity);
         var created = await AddAsync(entity, cancellationToken);
@@ -108,17 +127,20 @@ public sealed class TaxTableService : BaseService<TaxTable>, ITaxTableService
         return await GetDetailAsync(created.TaxCode, cancellationToken);
     }
 
-    public async Task<TaxTableDto?> UpdateFromDtoAsync(string id, TaxTableDto dto, CancellationToken cancellationToken = default)
+    public Task<TaxTableDto?> UpdateFromDtoAsync(string id, TaxTableDto dto, CancellationToken cancellationToken = default) =>
+        TaxCodeSaveTransaction.RunAsync(_unitOfWork.Context, () => UpdateCoreAsync(id, dto, cancellationToken), cancellationToken);
+
+    private async Task<TaxTableDto?> UpdateCoreAsync(string id, TaxTableDto dto, CancellationToken cancellationToken)
     {
         var searchCode = Uri.UnescapeDataString(id).Trim();
         TaxTable? existingEntity = null;
         if (long.TryParse(searchCode, out long recId))
         {
-            existingEntity = await _unitOfWork.Context.Set<TaxTable>().FirstOrDefaultAsync(x => x.RecId == recId, cancellationToken);
+            existingEntity = await CompanyTaxCodes().FirstOrDefaultAsync(x => x.RecId == recId, cancellationToken);
         }
         if (existingEntity == null)
         {
-            existingEntity = await _unitOfWork.Context.Set<TaxTable>().FirstOrDefaultAsync(x => x.TaxCode == searchCode || x.TaxCode.ToUpper() == searchCode.ToUpper(), cancellationToken);
+            existingEntity = await CompanyTaxCodes().FirstOrDefaultAsync(x => x.TaxCode == searchCode || x.TaxCode.ToUpper() == searchCode.ToUpper(), cancellationToken);
         }
         if (existingEntity == null)
         {
@@ -127,9 +149,11 @@ public sealed class TaxTableService : BaseService<TaxTable>, ITaxTableService
 
         var originalRecId = existingEntity.RecId;
         var originalCode = existingEntity.TaxCode;
+        var originalArea = existingEntity.DataAreaId;
 
         dto.Adapt(existingEntity);
         existingEntity.RecId = originalRecId;
+        existingEntity.DataAreaId = originalArea;
         if (!string.IsNullOrEmpty(originalCode))
         {
             existingEntity.TaxCode = originalCode;
@@ -149,11 +173,11 @@ public sealed class TaxTableService : BaseService<TaxTable>, ITaxTableService
         TaxTable? existingEntity = null;
         if (long.TryParse(searchCode, out long recId))
         {
-            existingEntity = await _unitOfWork.Context.Set<TaxTable>().FirstOrDefaultAsync(x => x.RecId == recId, cancellationToken);
+            existingEntity = await CompanyTaxCodes().FirstOrDefaultAsync(x => x.RecId == recId, cancellationToken);
         }
         if (existingEntity == null)
         {
-            existingEntity = await _unitOfWork.Context.Set<TaxTable>().FirstOrDefaultAsync(x => x.TaxCode == searchCode || x.TaxCode.ToUpper() == searchCode.ToUpper(), cancellationToken);
+            existingEntity = await CompanyTaxCodes().FirstOrDefaultAsync(x => x.TaxCode == searchCode || x.TaxCode.ToUpper() == searchCode.ToUpper(), cancellationToken);
         }
         if (existingEntity == null)
         {

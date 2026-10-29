@@ -12,11 +12,42 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
     [DomainPermission("GeneralLedger", "Journals")]
     public class LedgerJournalTableController : BaseController<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable, LedgerJournalTableDto>
     {
+        private readonly ILedgerJournalTableService _journalService;
+
+        [HttpGet("{recId:long}/setup-check")]
+        public async Task<IActionResult> CheckSetup(long recId, CancellationToken ct)
+        {
+            var result = await _journalService.CheckSetupAsync(recId, ct);
+            return result == null ? NotFound() : Ok(result);
+        }
+
+        [HttpGet("{recId:long}/voucher-balance-check")]
+        public async Task<IActionResult> CheckVoucherBalances(long recId, CancellationToken ct)
+        {
+            var errors = await _journalService.CheckVoucherBalancesAsync(recId, ct);
+            return errors == null ? NotFound() : Ok(new
+            {
+                errors,
+                balanced = errors.Count == 0,
+                scope = "Transaction-currency arithmetic only; not posting validation or approval."
+            });
+        }
+
+        [HttpPost("{recId:long}/post")]
+        [DomainPermission("GeneralLedger", "Journals", "Edit")]
+        public async Task<IActionResult> Post(long recId, CancellationToken ct)
+        {
+            var (result, error) = await _journalService.PostAsync(recId, ct);
+            if (result != null) return Ok(result);
+            return error == null ? NotFound() : UnprocessableEntity(new { error });
+        }
+
         public LedgerJournalTableController(
             ILedgerJournalTableService service,
             ILogger<LedgerJournalTableController>? logger = null)
             : base(service, logger ?? NullLogger<LedgerJournalTableController>.Instance)
         {
+            _journalService = service;
         }
     }
 }

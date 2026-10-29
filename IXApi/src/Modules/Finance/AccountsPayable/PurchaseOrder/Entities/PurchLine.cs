@@ -24,6 +24,9 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
         public decimal PurchPrice { get; set; }
         public decimal PriceUnit { get; set; } = 1m;
         public decimal LineAmount { get; set; }
+        [StringLength(30)] public string TaxGroup { get; set; } = string.Empty;
+        [StringLength(30)] public string TaxItemGroup { get; set; } = string.Empty;
+        public long? OriginalInvoiceTransRecId { get; set; }
 
         public decimal RemainPurchPhysical { get; set; }
         public decimal RemainPurchFinancial { get; set; }
