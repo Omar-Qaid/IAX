@@ -799,6 +799,11 @@ public sealed class InventoryCycleTests
         Assert.DoesNotContain(entries, x => x.LedgerDimension == 2);
         Assert.Equal(3000m, entries.Where(x => x.LedgerDimension == 1).Sum(x => x.AccountingCurrencyAmount));
         Assert.Equal(-3000m, (await db.Set<VendTransOpen>().ToListAsync()).Sum(x => x.AmountCur));
+        // The receipt's posting record drove the reversal accounts and is retired once fully matched.
+        var posting = await db.Set<InventTransPosting>().SingleAsync(x => x.InventTransPostingType == InventTransPostingType.Physical);
+        Assert.Equal(1, posting.LedgerDimension);
+        Assert.Equal(3, posting.OffsetLedgerDimension);
+        Assert.Equal(NoYes.No, posting.IsPosted);
         Assert.Equal(422, (await invoices.PostAsync(order.RecId, new VendorInvoicePostDto("ACCRUAL-I2", null, [new(line.RecId, 20)]), default)).StatusCode);
         Assert.Equal(2, await db.Set<VendInvoicePackingSlipQuantityMatch>().CountAsync());
     }

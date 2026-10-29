@@ -49,14 +49,40 @@ public sealed class PurchaseReceiptAccrualPosting(DbContext db)
         var amount = match.InventQuantity == remainingQty ? accrual.AmountMst - accrual.ReversedAmountMst
             : decimal.Round(accrual.AmountMst * match.InventQuantity / accrual.InventQuantity, 4, MidpointRounding.AwayFromZero);
         var support = new SubledgerPostingSupport(db);
-        var inventory = await support.LoadDimensionAsync(area, accrual.InventoryLedgerDimension, "original receipt inventory", ct);
-        var liability = await support.LoadDimensionAsync(area, accrual.AccrualLedgerDimension, "original receipt accrual", ct);
+        // The posting record is the account source, as on the sales side; the accrual row only
+        // tracks how much of the receipt is still un-matched. Older accruals predate the record.
+        var posting = await ReceiptPostingAsync(area, accrual.PackingSlipTransRecId, ct);
+        var inventoryDimension = posting?.LedgerDimension ?? accrual.InventoryLedgerDimension;
+        var liabilityDimension = posting?.OffsetLedgerDimension ?? accrual.AccrualLedgerDimension;
+        var inventory = await support.LoadDimensionAsync(area, inventoryDimension, "original receipt inventory", ct);
+        var liability = await support.LoadDimensionAsync(area, liabilityDimension, "original receipt accrual", ct);
         db.AddRange(
-            SubledgerPostingSupport.AccountEntry(area, entryId, liability, LedgerPostingType.LedgerJournal, amount, "Matched receipt accrual reversal", 0, currency),
-            SubledgerPostingSupport.AccountEntry(area, entryId, inventory, LedgerPostingType.PurchReceipt, -amount, "Matched receipt accrual reversal", -match.InventQuantity, currency));
+            SubledgerPostingSupport.AccountEntry(area, entryId, liability, posting?.PostingTypeOffset ?? LedgerPostingType.LedgerJournal, amount, "Matched receipt accrual reversal", 0, currency),
+            SubledgerPostingSupport.AccountEntry(area, entryId, inventory, posting?.PostingType ?? LedgerPostingType.PurchReceipt, -amount, "Matched receipt accrual reversal", -match.InventQuantity, currency));
+        // Fully matched: the physical posting is no longer in force, exactly as a sales invoice
+        // retires the packing slip's record.
+        if (posting != null && accrual.ReversedInventQuantity + match.InventQuantity == accrual.InventQuantity)
+            posting.IsPosted = NoYes.No;
         accrual.ReversedInventQuantity += match.InventQuantity;
         accrual.ReversedAmountMst += amount;
         match.ReceiptAccrualRecId = accrual.RecId;
         match.AccrualReversalAmountMst = amount;
+    }
+
+    /// <summary>The in-force physical posting record of the receipt line, when the receipt posted one.</summary>
+    private async Task<Entities.InventTransPosting?> ReceiptPostingAsync(string area, long packingSlipTransRecId, CancellationToken ct)
+    {
+        var transId = await db.Set<VendPackingSlipTrans>().AsNoTracking()
+            .Where(x => x.DataAreaId == area && x.RecId == packingSlipTransRecId)
+            .Select(x => x.InventTransId).FirstOrDefaultAsync(ct);
+        if (string.IsNullOrEmpty(transId)) return null;
+        // The origins are read separately: a no-tracking subquery would make the posting record
+        // itself untracked, and retiring it has to be saved.
+        var origins = await db.Set<InventTransOrigin>().AsNoTracking()
+            .Where(x => x.DataAreaId == area && x.InventTransId == transId).Select(x => x.RecId).ToListAsync(ct);
+        return await db.Set<Entities.InventTransPosting>()
+            .Where(x => x.DataAreaId == area && origins.Contains(x.InventTransOrigin)
+                && x.InventTransPostingType == InventTransPostingType.Physical && x.IsPosted == NoYes.Yes)
+            .OrderBy(x => x.RecId).FirstOrDefaultAsync(ct);
     }
 }
