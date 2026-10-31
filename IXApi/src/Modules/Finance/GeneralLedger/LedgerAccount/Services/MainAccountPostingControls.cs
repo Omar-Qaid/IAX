@@ -5,44 +5,66 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerAccount;
 
 /// <summary>
 /// Main account controls applied to a posted line. These fields were stored and read by nobody, so
-/// an account restricted to one side, or requiring a payment reference, posted as though it were
-/// unrestricted.
+/// an account restricted to one side, to one currency, or requiring a payment reference, posted as
+/// though it were unrestricted.
 ///
-/// Deliberately line-agnostic — an account, a signed posted amount and a payment reference — so any
-/// posting path can apply the same controls, and so the side is judged on the posted signed amount
-/// rather than on entered debit and credit columns.
+/// Takes the posted entry, because that is the shape every posting path builds and because the side
+/// must be judged on the posted signed amount rather than on entered debit and credit columns.
 ///
-/// Two controls are applied. The rest are reported by <see cref="Unenforced"/> rather than guessed:
-/// their meaning is not established by this repository's cycle documents or by the reduced enums
-/// carried here, and a guessed restriction refuses valid journals.
+/// Field semantics are the documented D365 ones (AX 2012 MainAccount table reference, carried
+/// forward in the Common Data Model entity):
 ///
-/// Assumption, stated because it is an inference and not a documented rule: this project's
-/// <see cref="DebitCreditCheck"/> is a switch with no side of its own (None/Check), so the side it
-/// enforces is read from <see cref="DebitCreditProposal"/>. An account set to Check with no
-/// proposed side names nothing to enforce and is reported, not applied. Confirm against target
-/// metadata before relying on it.
+/// - DebitCreditCheck and DebitCreditProposal share one enum, DebCredProposal (None, Debit,
+///   Credit). DebitCreditCheck ("DB/CR requirement") is the side a transaction *must* be on and is
+///   the only one that restricts posting. DebitCreditProposal ("DB/CR proposal") is the side a
+///   transaction is *usually* on — a default for entry that restricts nothing.
+/// - ValidateCurrency, ValidatePosting and ValidateUser are FieldControl: Optional performs no
+///   check, FillIn requires a value, Table compares against the value held on the main account,
+///   List compares against a defined list of allowed values.
+///
+/// List mode and ValidateUser are reported by <see cref="Unenforced"/> rather than applied: there
+/// is no allowed-value list table in this module, the main account has no UserInfoId to compare
+/// against, and the journal posting path carries no posting-user identity.
 /// </summary>
 public static class MainAccountPostingControls
 {
-    /// <summary>
-    /// The error refusing this posted line, or null when the account's applied controls allow it.
-    /// </summary>
-    /// <param name="amount">The posted signed accounting amount: positive debit, negative credit.</param>
-    public static string? Check(MainAccount account, string accountDisplay, decimal amount, string paymentReference)
+    /// <summary>The error refusing this posted line, or null when the account's controls allow it.</summary>
+    public static string? Check(MainAccount account, GeneralJournalAccountEntry line)
     {
-        if (account.MandatoryPaymentReference == NoYes.Yes && string.IsNullOrWhiteSpace(paymentReference))
-            return $"Main account '{accountDisplay}' requires a payment reference.";
+        var display = line.LedgerAccount.Length > 0 ? line.LedgerAccount : account.MainAccountId;
+
+        if (account.MandatoryPaymentReference == NoYes.Yes && string.IsNullOrWhiteSpace(line.PaymentReference))
+            return $"Main account '{display}' requires a payment reference.";
 
         // A zero amount is neither side. The voucher balance check owns that case.
-        if (account.DebitCreditCheck != DebitCreditCheck.Check || amount == 0m) return null;
-        return account.DebitCreditProposal switch
+        if (line.AccountingCurrencyAmount != 0m)
         {
-            DebitCreditProposal.Debit when amount < 0m =>
-                $"Main account '{accountDisplay}' accepts debit amounts only.",
-            DebitCreditProposal.Credit when amount > 0m =>
-                $"Main account '{accountDisplay}' accepts credit amounts only.",
-            _ => null
-        };
+            var side = account.DebitCreditCheck switch
+            {
+                DebitCreditProposal.Debit when line.AccountingCurrencyAmount < 0m =>
+                    $"Main account '{display}' accepts debit amounts only.",
+                DebitCreditProposal.Credit when line.AccountingCurrencyAmount > 0m =>
+                    $"Main account '{display}' accepts credit amounts only.",
+                _ => null
+            };
+            if (side != null) return side;
+        }
+
+        if (account.ValidateCurrency == FieldControl.FillIn && string.IsNullOrWhiteSpace(line.TransactionCurrencyCode))
+            return $"Main account '{display}' requires a currency.";
+        // Table mode compares against the account's own currency. An account set to Table without
+        // one has nothing to compare, which Unenforced reports rather than refusing here.
+        if (account.ValidateCurrency == FieldControl.Table && !string.IsNullOrWhiteSpace(account.CurrencyCode)
+            && !string.Equals(line.TransactionCurrencyCode, account.CurrencyCode, StringComparison.OrdinalIgnoreCase))
+            return $"Main account '{display}' accepts currency {account.CurrencyCode} only, not {line.TransactionCurrencyCode}.";
+
+        if (account.ValidatePosting == FieldControl.FillIn && line.PostingType == LedgerPostingType.None)
+            return $"Main account '{display}' requires a posting type.";
+        if (account.ValidatePosting == FieldControl.Table && account.PostingType != LedgerPostingType.None
+            && line.PostingType != account.PostingType)
+            return $"Main account '{display}' accepts posting type {account.PostingType} only, not {line.PostingType}.";
+
+        return null;
     }
 
     /// <summary>
@@ -53,17 +75,18 @@ public static class MainAccountPostingControls
         var items = new List<string>();
         var all = accounts.ToList();
 
-        Report(all.Where(x => x.DebitCreditCheck == DebitCreditCheck.Check
-                && x.DebitCreditProposal == DebitCreditProposal.None),
-            "require a debit or credit side but propose neither, so no side is enforced for them");
         Report(all.Where(x => x.DebitCreditBalanceDemand == DebitCreditDemand.Demand),
             "demand a debit or credit balance, which posting does not check");
-        Report(all.Where(x => x.ValidateCurrency != 0 || !string.IsNullOrWhiteSpace(x.CurrencyCode)),
-            "restrict their currency, which posting does not check");
-        Report(all.Where(x => x.ValidatePosting != 0),
-            "restrict their posting types, which posting does not check");
-        Report(all.Where(x => x.ValidateUser != 0),
-            "restrict which users may post to them, which posting does not check");
+        Report(all.Where(x => x.ValidateCurrency == FieldControl.List || x.ValidatePosting == FieldControl.List),
+            "validate a field against a list of allowed values, and no allowed-value list is set up");
+        Report(all.Where(x => x.ValidateCurrency == FieldControl.Table && string.IsNullOrWhiteSpace(x.CurrencyCode)),
+            "validate their currency against the account but have no currency, so nothing is compared");
+        Report(all.Where(x => x.ValidatePosting == FieldControl.Table && x.PostingType == LedgerPostingType.None),
+            "validate their posting type against the account but have none, so nothing is compared");
+        Report(all.Where(x => x.ValidateUser != FieldControl.Optional),
+            "validate the posting user, which this journal path does not carry");
+        Report(all.Where(x => x.UnitOfMeasure != 0),
+            "specify a unit of measure, which posting does not check");
         return items;
 
         void Report(IEnumerable<MainAccount> matched, string what)

@@ -60,11 +60,19 @@ Priority: **P1** blocks a documented basic cycle or lets wrong accounting throug
 |---|---|
 | **Existing** | `MainAccount` carries `DebitCreditCheck`, `DebitCreditProposal`, `DebitCreditBalanceDemand`, `CurrencyCode`, `ValidateCurrency`, `ValidatePosting`, `ValidateUser`, `MandatoryPaymentReference`, `UnitOfMeasure`, `PostingType`. Before this change no posting path read any of them, and `GeneralJournalAccountEntry.PaymentReference` was written as `string.Empty` by `SubledgerPostingSupport.AccountEntry` even though `LedgerJournalTrans.PaymReference` carried a value. |
 | **Expected (D365)** | Posting validates the posted side against the account's debit/credit requirement, restricts the account to its specified currency when `ValidateCurrency` requires it, restricts allowed posting types via `ValidatePosting`, and refuses a line with no payment reference when `MandatoryPaymentReference` is set. |
-| **Done** | `MainAccountPostingControls` applies two controls, judged on the **posted signed amount** so a line and its offset are each checked against the account they hit: <br>• **Debit/credit requirement** — an account with `DebitCreditCheck = Check` and a `DebitCreditProposal` side accepts only that side. <br>• **`MandatoryPaymentReference`** — a line on such an account must carry a payment reference. <br>The payment reference is now also **carried through** to `GeneralJournalAccountEntry.PaymentReference` instead of being dropped — a plain data-loss fix independent of the control. The remaining controls are reported per account by the setup-check, so the diagnostic no longer implies they are in force. 8 tests in `Tests/MainAccountPostingControlsTests.cs` plus two end-to-end tests in `LedgerJournalPostingTests`. |
-| **Assumption to confirm** | This repo reduced D365's enums: `DebitCreditCheck` is `None`/`Check` with **no side of its own**, and `DebitCreditProposal` is `None`/`Debit`/`Credit`. The implementation therefore reads the enforced side from `DebitCreditProposal` and treats `DebitCreditCheck` as the switch. That pairing is an **inference** from the field names — it is not stated in any cycle document here, and no target metadata was available. An account set to `Check` with no proposed side names nothing to enforce and is reported rather than guessed. Confirm before relying on it; if the intended reading differs, only `MainAccountPostingControls.Check` changes. |
-| **Still missing** | `DebitCreditBalanceDemand` (needs a balance basis and refuse-versus-warn semantics, neither established), `ValidateCurrency` / `ValidatePosting` / `ValidateUser` (still `int` with `// Map to … Enum if matching` — **UNCERTAIN**, confirm the D365 enums first), `MainAccount.CurrencyCode` as a restriction, and `UnitOfMeasure`. Separately, `GeneralJournalAccountEntry.PostingType` is always written as `LedgerJournal` from this path rather than from `MainAccount.PostingType` or the source document. |
-| **Affected** | `GeneralLedger/LedgerAccount/Services/MainAccountPostingControls.cs` (new), `Common/Posting/SubledgerPostingSupport.cs`, `LedgerJournalPosting.cs`, `LedgerJournalSetupCheck.cs`. |
-| **Revised priority** | **P2** for the remainder, gated on confirming the three `Validate*` enums. The silent-skip defect is gone for the two controls whose meaning is clear. |
+| **Enum semantics — now verified, and two repo enums were wrong** | Resolved from the AX 2012 `MainAccount` table reference, whose field-to-enum mapping is carried forward by the CDM entity (display names match: "DB/CR requirement", "DB/CR proposal", "Validate currency code"). <br>• **`DebitCreditCheck` and `DebitCreditProposal` share one enum**, `DebCredProposal` = None 0 / Debit 1 / Credit 2. `DebitCreditCheck` is "whether the transaction **must** be a debit or a credit"; `DebitCreditProposal` is "whether the typical transaction is **usually** a debit or a credit". So **the required side lives on `DebitCreditCheck`**, and `DebitCreditProposal` restricts nothing. The repo's `DebitCreditCheck` enum was `None`/`Check` — wrong shape, and it made the earlier implementation read the side from the wrong field. Corrected: `MainAccount.DebitCreditCheck` is now typed `DebitCreditProposal` and the bad enum is deleted. <br>• **`ValidateCurrency`, `ValidatePosting`, `ValidateUser` all use `FieldControl`** = Optional 0 / FillIn 1 / Table 2 / List 3: no check, require a value, compare against the value on the main account, compare against an allowed-value list. They were `int` with `// Map to … Enum if matching`; now typed `FieldControl`. <br>Both corrections are **schema-neutral** — the columns were already `int` and no seed data sets these fields. `dotnet ef migrations has-pending-model-changes` reports no model drift, so no migration. |
+| **Done** | `MainAccountPostingControls` takes the posted entry and applies, on the **posted signed amount**: <br>• **Debit/credit requirement** from `DebitCreditCheck`. <br>• **`MandatoryPaymentReference`**. <br>• **`ValidateCurrency`** in FillIn and Table modes. <br>• **`ValidatePosting`** in FillIn and Table modes. <br>The payment reference is also **carried through** to `GeneralJournalAccountEntry.PaymentReference` instead of being dropped — a data-loss fix independent of the control. 10 tests in `Tests/MainAccountPostingControlsTests.cs` plus two end-to-end tests in `LedgerJournalPostingTests`. |
+| **Still missing, with the reason** | • **List mode** for currency and posting type — no allowed-value list table exists in this module. <br>• **`ValidateUser`** — `MainAccount` has no `UserInfoId` to compare against (CDM has one; this repo's entity does not), and `LedgerJournalPosting` carries no posting-user identity. <br>• **`DebitCreditBalanceDemand`** — uses its own enum `DebCredBalanceDemand`, not checked here; needs a balance basis and refuse-versus-warn semantics. Still **UNCERTAIN**. <br>• **`UnitOfMeasure`** on the account. <br>All are reported per account by the setup-check. Separately, `GeneralJournalAccountEntry.PostingType` is always written as `LedgerJournal` from this path rather than from the source document, which limits how useful a `ValidatePosting` Table check can be. |
+| **Affected** | `GeneralLedger/LedgerAccount/Services/MainAccountPostingControls.cs` (new), `Common/Enums/Enumeration.cs`, `GeneralLedger/LedgerAccount/Entities/MainAccount.cs`, `Common/Posting/SubledgerPostingSupport.cs`, `LedgerJournalPosting.cs`, `LedgerJournalSetupCheck.cs`. |
+| **Revised priority** | **P3** for the remainder: each outstanding item is blocked on setup that does not exist (list tables, `UserInfoId`, posting-type derivation) rather than on undone work. |
+
+**Sources for the enum semantics** (public Microsoft metadata — evidence, not certification of your
+target version, per the standing caveat in §5):
+
+- [MainAccount table, AX 2012 reference](https://learn.microsoft.com/en-us/previous-versions/dynamics/ax-2012/reference/gg901309(v=ax.60)) — field-to-enum mapping and the "must be" versus "usually" wording
+- [DebCredProposal enumeration](https://learn.microsoft.com/en-us/previous-versions/dynamics/ax-2012/reference/gg847554(v=ax.60)) — None 0, Debit 1, Credit 2
+- [FieldControl enumeration](https://learn.microsoft.com/en-us/previous-versions/dynamics/ax-2012/reference/gg864586(v=ax.60)) — Optional 0, FillIn 1, Table 2, List 3
+- [MainAccount in Main, Common Data Model](https://learn.microsoft.com/en-us/common-data-model/schema/core/operationscommon/tables/finance/financialdimensions/main/mainaccount) — current display names, confirming the fields carry forward
 
 ### P1 — `LedgerParameters` voucher and rounding controls are not enforced — PARTLY ADDRESSED 2026-10-31; REPRIORITIZED
 
@@ -198,7 +206,7 @@ is built on:
 | # | Gap | Priority | Area |
 |---|---|---|---|
 | 1 | Account structures not modelled or validated | P1 | GL / Dimensions |
-| 2 | Main account posting controls unenforced | ~~P1~~ **P2** (two controls applied; rest gated on enums) | GL |
+| 2 | Main account posting controls unenforced | ~~P1~~ **P3** (four controls applied; rest blocked on missing setup) | GL |
 | 3 | `LedgerParameters` voucher/rounding controls unenforced | ~~P1~~ **P3, blocked** (silent skip fixed) | GL |
 | 4 | ~~Closed fiscal period reopenable via generic CRUD~~ | **FIXED** | GL |
 | 5 | No pending vendor invoice (`VendInvoiceInfoTable`) | P1 | AP |
@@ -222,19 +230,23 @@ posting), then 9, then 5 and 6.
 - Gap 3 **partly addressed and reprioritized to P3/blocked**: switched-on posting controls are now
   refused rather than silently skipped, but applying them is blocked on setup that does not exist
   (automatic transaction accounts) and on unverified check semantics. The P1 rating was wrong.
-- Gap 2 **partly done, reprioritized to P2**: the debit/credit requirement and the mandatory payment
-  reference are applied, and the payment reference now reaches the posted entry instead of being
-  dropped. The remaining controls are gated on confirming the three `Validate*` enums. The
-  debit/credit pairing rests on a stated assumption — see that entry.
+- Gap 2 **mostly done, reprioritized to P3**. The enum questions this document raised are now
+  **answered from public Microsoft metadata**, and the answers found **two wrong enums in this
+  repository**, both corrected: `DebitCreditCheck` carries the required side itself (it shares
+  `DebCredProposal` with `DebitCreditProposal`) rather than being a `None`/`Check` switch, and the
+  three `Validate*` fields are `FieldControl`, not bare `int`. The debit/credit requirement,
+  mandatory payment reference, and currency and posting-type validation in FillIn and Table modes
+  are applied; the payment reference now reaches the posted entry instead of being dropped. What
+  remains is blocked on setup that does not exist. Schema-neutral: no migration.
 - Next by this order is **gap 1**, account structures. It is the largest and needs its constraint
   tables confirmed against target metadata before any migration.
 
-**Two open questions for whoever picks this up**, both recorded here rather than guessed:
+**One open question remains** (the two raised on 2026-10-31 are resolved above):
 
-1. Does `MainAccount.DebitCreditCheck` (None/Check) enforce the side named by
-   `DebitCreditProposal`? The implementation assumes yes.
-2. What are the D365 enums behind `ValidateCurrency`, `ValidatePosting` and `ValidateUser`?
-   They block the rest of gap 2.
+1. `DebitCreditBalanceDemand` uses its own enum `DebCredBalanceDemand`, whose members were not
+   retrieved. Its basis (which balance, at what point) and whether it refuses or warns are still
+   unestablished. The repo's `DebitCreditDemand` (`None`/`Demand`) may be the wrong shape for the
+   same reason `DebitCreditCheck` was — **check it before using it**.
 
 A note on method, since two of the first three P1s turned out to be blocked rather than merely
 undone: a field that exists and is unread is not by itself evidence that the behavior behind it is

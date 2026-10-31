@@ -7,17 +7,21 @@ namespace IAX.IXApi.Tests;
 
 /// <summary>
 /// The main account controls were stored and read by nobody, so an account restricted to one side,
-/// or requiring a payment reference, posted as though it were unrestricted. The side is judged on
-/// the posted signed amount: positive debit, negative credit.
+/// to one currency, or requiring a payment reference, posted as though it were unrestricted.
+///
+/// Semantics are the documented D365 ones: DebitCreditCheck is the side a transaction must be on,
+/// DebitCreditProposal is only the usual side and restricts nothing, and the three Validate fields
+/// are FieldControl (Optional, FillIn, Table, List). The side is judged on the posted signed
+/// amount: positive debit, negative credit.
 /// </summary>
 public class MainAccountPostingControlsTests
 {
     [Fact]
     public void An_unrestricted_account_allows_either_side()
     {
-        var account = new MainAccount { RecId = 1, MainAccountId = "110100" };
-        Assert.Null(MainAccountPostingControls.Check(account, "110100", 100m, ""));
-        Assert.Null(MainAccountPostingControls.Check(account, "110100", -100m, ""));
+        var account = Account("110100");
+        Assert.Null(MainAccountPostingControls.Check(account, Line("110100", 100m)));
+        Assert.Null(MainAccountPostingControls.Check(account, Line("110100", -100m)));
         Assert.Empty(MainAccountPostingControls.Unenforced([account]));
     }
 
@@ -26,16 +30,12 @@ public class MainAccountPostingControlsTests
     [InlineData(DebitCreditProposal.Debit, -100, "debit amounts only")]
     [InlineData(DebitCreditProposal.Credit, -100, null)]
     [InlineData(DebitCreditProposal.Credit, 100, "credit amounts only")]
-    public void A_checked_account_accepts_only_the_proposed_side(
-        DebitCreditProposal proposal, int postedAmount, string? expected)
+    public void The_required_side_comes_from_DebitCreditCheck(
+        DebitCreditProposal required, int postedAmount, string? expected)
     {
-        decimal amount = postedAmount;
-        var account = new MainAccount
-        {
-            RecId = 1, MainAccountId = "611000",
-            DebitCreditCheck = DebitCreditCheck.Check, DebitCreditProposal = proposal
-        };
-        var result = MainAccountPostingControls.Check(account, "611000-ADMIN", amount, "");
+        var account = Account("611000");
+        account.DebitCreditCheck = required;
+        var result = MainAccountPostingControls.Check(account, Line("611000-ADMIN", postedAmount));
         if (expected == null) Assert.Null(result);
         else
         {
@@ -45,79 +45,124 @@ public class MainAccountPostingControlsTests
         }
     }
 
-    // A proposed side with the check switched off is a default for entry, not a restriction.
+    // DB/CR proposal is the side a transaction is usually on: a default for entry, not a rule.
     [Fact]
-    public void A_proposed_side_alone_restricts_nothing()
+    public void DebitCreditProposal_restricts_nothing_on_its_own()
     {
-        var account = new MainAccount
-        {
-            RecId = 1, MainAccountId = "611000", DebitCreditProposal = DebitCreditProposal.Debit
-        };
-        Assert.Null(MainAccountPostingControls.Check(account, "611000", -100m, ""));
+        var account = Account("611000");
+        account.DebitCreditProposal = DebitCreditProposal.Debit;
+        Assert.Null(MainAccountPostingControls.Check(account, Line("611000", -100m)));
         Assert.Empty(MainAccountPostingControls.Unenforced([account]));
+
+        // It also does not override the required side when the two disagree.
+        account.DebitCreditCheck = DebitCreditProposal.Credit;
+        Assert.Null(MainAccountPostingControls.Check(account, Line("611000", -100m)));
+        Assert.Contains("credit amounts only", MainAccountPostingControls.Check(account, Line("611000", 100m)));
     }
 
     // The voucher balance check owns the zero-amount case, so the side check stays out of it.
     [Fact]
     public void A_zero_amount_is_left_to_the_balance_check()
     {
-        var account = new MainAccount
-        {
-            RecId = 1, MainAccountId = "611000",
-            DebitCreditCheck = DebitCreditCheck.Check, DebitCreditProposal = DebitCreditProposal.Debit
-        };
-        Assert.Null(MainAccountPostingControls.Check(account, "611000", 0m, ""));
+        var account = Account("611000");
+        account.DebitCreditCheck = DebitCreditProposal.Debit;
+        Assert.Null(MainAccountPostingControls.Check(account, Line("611000", 0m)));
     }
 
     [Fact]
     public void A_mandatory_payment_reference_is_required_and_whitespace_does_not_satisfy_it()
     {
-        var account = new MainAccount
-        {
-            RecId = 1, MainAccountId = "110100", MandatoryPaymentReference = NoYes.Yes
-        };
+        var account = Account("110100");
+        account.MandatoryPaymentReference = NoYes.Yes;
         Assert.Contains("requires a payment reference",
-            MainAccountPostingControls.Check(account, "110100", 100m, ""));
+            MainAccountPostingControls.Check(account, Line("110100", 100m)));
         Assert.Contains("requires a payment reference",
-            MainAccountPostingControls.Check(account, "110100", 100m, "   "));
-        Assert.Null(MainAccountPostingControls.Check(account, "110100", 100m, "PAY-1"));
-    }
-
-    // The payment reference is checked before the side, so the missing reference is reported first.
-    [Fact]
-    public void A_missing_payment_reference_is_reported_before_a_wrong_side()
-    {
-        var account = new MainAccount
-        {
-            RecId = 1, MainAccountId = "110100", MandatoryPaymentReference = NoYes.Yes,
-            DebitCreditCheck = DebitCreditCheck.Check, DebitCreditProposal = DebitCreditProposal.Debit
-        };
-        Assert.Contains("payment reference", MainAccountPostingControls.Check(account, "110100", -5m, ""));
+            MainAccountPostingControls.Check(account, Line("110100", 100m, paymentReference: "   ")));
+        Assert.Null(MainAccountPostingControls.Check(account, Line("110100", 100m, paymentReference: "PAY-1")));
     }
 
     [Fact]
-    public void Controls_this_path_does_not_apply_are_reported_per_account()
+    public void Currency_validation_follows_FieldControl()
     {
-        var accounts = new[]
-        {
-            // Check with no proposed side names nothing to enforce.
-            new MainAccount { RecId = 1, MainAccountId = "130100", DebitCreditCheck = DebitCreditCheck.Check },
-            new MainAccount { RecId = 2, MainAccountId = "220100", DebitCreditBalanceDemand = DebitCreditDemand.Demand },
-            new MainAccount { RecId = 3, MainAccountId = "230100", CurrencyCode = "USD" },
-            new MainAccount { RecId = 4, MainAccountId = "310100", ValidateCurrency = 1 },
-            new MainAccount { RecId = 5, MainAccountId = "320100", ValidatePosting = 1 },
-            new MainAccount { RecId = 6, MainAccountId = "410100", ValidateUser = 1 }
-        };
+        var account = Account("110100");
+        account.CurrencyCode = "SAR";
 
-        var reported = MainAccountPostingControls.Unenforced(accounts);
-        Assert.Contains(reported, x => x.Contains("130100") && x.Contains("propose neither"));
+        // Optional performs no check at all, even against the account's own currency.
+        Assert.Null(MainAccountPostingControls.Check(account, Line("110100", 100m, currency: "USD")));
+
+        account.ValidateCurrency = FieldControl.FillIn;
+        Assert.Contains("requires a currency",
+            MainAccountPostingControls.Check(account, Line("110100", 100m, currency: "")));
+        // FillIn only wants a value; it does not compare it to the account.
+        Assert.Null(MainAccountPostingControls.Check(account, Line("110100", 100m, currency: "USD")));
+
+        account.ValidateCurrency = FieldControl.Table;
+        Assert.Null(MainAccountPostingControls.Check(account, Line("110100", 100m, currency: "SAR")));
+        var refusal = MainAccountPostingControls.Check(account, Line("110100", 100m, currency: "USD"));
+        Assert.Contains("accepts currency SAR only", refusal);
+        Assert.Contains("not USD", refusal);
+    }
+
+    [Fact]
+    public void Posting_type_validation_follows_FieldControl()
+    {
+        var account = Account("110100");
+        account.PostingType = LedgerPostingType.LedgerJournal;
+
+        account.ValidatePosting = FieldControl.FillIn;
+        Assert.Contains("requires a posting type",
+            MainAccountPostingControls.Check(account, Line("110100", 100m, postingType: LedgerPostingType.None)));
+
+        account.ValidatePosting = FieldControl.Table;
+        Assert.Null(MainAccountPostingControls.Check(account, Line("110100", 100m)));
+        Assert.Contains("accepts posting type LedgerJournal only",
+            MainAccountPostingControls.Check(account, Line("110100", 100m, postingType: LedgerPostingType.Bank)));
+    }
+
+    [Fact]
+    public void Controls_this_path_cannot_apply_are_reported_per_account()
+    {
+        var demand = Account("220100");
+        demand.DebitCreditBalanceDemand = DebitCreditDemand.Demand;
+        var list = Account("230100");
+        list.ValidateCurrency = FieldControl.List;
+        // Table mode with nothing on the account to compare against.
+        var tableWithoutCurrency = Account("310100");
+        tableWithoutCurrency.ValidateCurrency = FieldControl.Table;
+        var user = Account("320100");
+        user.ValidateUser = FieldControl.Table;
+        var uom = Account("410100");
+        uom.UnitOfMeasure = 7;
+
+        var reported = MainAccountPostingControls.Unenforced([demand, list, tableWithoutCurrency, user, uom]);
         Assert.Contains(reported, x => x.Contains("220100") && x.Contains("balance"));
-        // Both the account currency and the currency validation flag mean a currency restriction.
-        Assert.Contains(reported, x => x.Contains("230100") && x.Contains("310100") && x.Contains("currency"));
-        Assert.Contains(reported, x => x.Contains("320100") && x.Contains("posting types"));
-        Assert.Contains(reported, x => x.Contains("410100") && x.Contains("which users"));
+        Assert.Contains(reported, x => x.Contains("230100") && x.Contains("list of allowed values"));
+        Assert.Contains(reported, x => x.Contains("310100") && x.Contains("have no currency"));
+        Assert.Contains(reported, x => x.Contains("320100") && x.Contains("posting user"));
+        Assert.Contains(reported, x => x.Contains("410100") && x.Contains("unit of measure"));
 
-        // An applied control is not reported as unapplied.
+        // An applied control is never reported as unapplied.
         Assert.DoesNotContain(reported, x => x.Contains("payment reference"));
+        Assert.DoesNotContain(reported, x => x.Contains("debit amounts"));
     }
+
+    // Table mode that has something to compare is applied, so it is not also reported.
+    [Fact]
+    public void A_table_check_with_a_value_to_compare_is_not_reported_as_unapplied()
+    {
+        var account = Account("110100");
+        account.CurrencyCode = "SAR";
+        account.ValidateCurrency = FieldControl.Table;
+        Assert.Empty(MainAccountPostingControls.Unenforced([account]));
+    }
+
+    private static MainAccount Account(string id) => new() { RecId = 1, MainAccountId = id };
+
+    private static GeneralJournalAccountEntry Line(string ledgerAccount, decimal amount,
+        string paymentReference = "", string currency = "SAR",
+        LedgerPostingType postingType = LedgerPostingType.LedgerJournal) => new()
+        {
+            LedgerAccount = ledgerAccount, AccountingCurrencyAmount = amount,
+            PaymentReference = paymentReference, TransactionCurrencyCode = currency, PostingType = postingType
+        };
 }

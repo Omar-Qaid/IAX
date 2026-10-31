@@ -1695,6 +1695,11 @@ namespace IAX.IXApi.Modules.Finance.Common
         Detail = 0,
         Summary = 1
     }
+    /// <summary>
+    /// D365 DebCredProposal: the criterion, if any, for debit or credit transactions. One enum
+    /// serves both main account fields — DebitCreditProposal (the side a transaction is *usually*
+    /// on, a default for entry) and DebitCreditCheck (the side a transaction *must* be on).
+    /// </summary>
     public enum DebitCreditProposal
     {
         None = 0,
@@ -1706,10 +1711,18 @@ namespace IAX.IXApi.Modules.Finance.Common
         None = 0,
         Demand = 1
     }
-    public enum DebitCreditCheck
+
+    /// <summary>
+    /// How a main account field is validated when posting (D365 FieldControl). Optional performs no
+    /// check; FillIn requires a value; Table compares against the value on the main account; List
+    /// compares against a defined list of allowed values.
+    /// </summary>
+    public enum FieldControl
     {
-        None = 0,
-        Check = 1
+        Optional = 0,
+        FillIn = 1,
+        Table = 2,
+        List = 3
     }
     public enum CustVendNegInstProtestReason
     {

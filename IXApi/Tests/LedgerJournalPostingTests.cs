@@ -317,10 +317,10 @@ public class LedgerJournalPostingTests
         db.AddRange(
             Line(1, "V1", bank: true, credit: 100m),
             Line(2, "V1", bank: false, debit: 100m));
-        // Share capital is restricted to credit amounts, and this journal debits it.
+        // Share capital is required to be a credit, and this journal debits it. The requirement is
+        // DebitCreditCheck; DebitCreditProposal is only the usual side and restricts nothing.
         var shareCapital = await db.Set<MainAccount>().SingleAsync(x => x.RecId == 2);
-        shareCapital.DebitCreditCheck = DebitCreditCheck.Check;
-        shareCapital.DebitCreditProposal = DebitCreditProposal.Credit;
+        shareCapital.DebitCreditCheck = DebitCreditProposal.Credit;
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
 

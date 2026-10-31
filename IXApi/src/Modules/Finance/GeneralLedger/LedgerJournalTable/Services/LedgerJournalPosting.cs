@@ -124,8 +124,7 @@ internal sealed class LedgerJournalPosting(DbContext db)
         {
             var account = accounts.FirstOrDefault(x => x.RecId == line.MainAccount);
             if (account == null) continue; // LoadDimensionAsync already established the account exists.
-            if (LedgerAccount.MainAccountPostingControls.Check(
-                    account, line.LedgerAccount, line.AccountingCurrencyAmount, line.PaymentReference) is { } refusal)
+            if (LedgerAccount.MainAccountPostingControls.Check(account, line) is { } refusal)
                 throw new SubledgerPostingException(refusal);
         }
     }

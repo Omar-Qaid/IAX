@@ -52,8 +52,10 @@ namespace IAX.IXApi.Modules.Finance.Entities
 
         // Enum Properties
         public LedgerPostingType PostingType { get; set; }
+        // Both carry a side (D365 DebCredProposal): Proposal is the usual side, a default for
+        // entry; Check is the side a transaction must be on. Only Check restricts posting.
         public DebitCreditProposal DebitCreditProposal { get; set; }
-        public DebitCreditCheck DebitCreditCheck { get; set; }
+        public DebitCreditProposal DebitCreditCheck { get; set; }
         public DebitCreditDemand DebitCreditBalanceDemand { get; set; }
         public NoYes MandatoryPaymentReference { get; set; }
 
@@ -61,9 +63,10 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // Validation Rules & System Gates
         // ==========================================================
         // Enum Properties
-        public int ValidateCurrency { get; set; } // Map to CurrencyValidation Enum if matching
-        public int ValidatePosting { get; set; }  // Map to PostingValidation Enum if matching
-        public int ValidateUser { get; set; }     // Map to UserValidation Enum if matching
+        // All three are D365 FieldControl: Optional, FillIn, Table or List.
+        public FieldControl ValidateCurrency { get; set; }
+        public FieldControl ValidatePosting { get; set; }
+        public FieldControl ValidateUser { get; set; }
 
         // ==========================================================
         // Year-End Closing & Period Transitions
