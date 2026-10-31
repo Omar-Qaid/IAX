@@ -64,14 +64,16 @@ Priority: **P1** blocks a documented basic cycle or lets wrong accounting throug
 | **Affected** | `Common/Posting/SubledgerPostingSupport.cs`, `GeneralLedger/LedgerJournalTable/Services/LedgerJournalPosting.cs`, `LedgerJournalSetupCheck`. |
 | **Note** | Enum semantics for `ValidateCurrency` / `ValidatePosting` / `ValidateUser` are `int` in this repo with a `// Map to … Enum if matching` comment — **UNCERTAIN**; confirm the D365 enums before implementing. `DebitCreditCheck` and `MandatoryPaymentReference` are unambiguous and can proceed. |
 
-### P1 — `LedgerParameters` voucher and rounding controls are not enforced
+### P1 — `LedgerParameters` voucher and rounding controls are not enforced — PARTLY ADDRESSED 2026-10-31; REPRIORITIZED
 
 | | |
 |---|---|
-| **Existing** | `LedgerParameters` persists `CheckContinuous`, `CheckVoucher`, `CheckJournalizing`, `AllowMultipleTransactionsWithinOneVoucher`, `MaxRoundingDifferenceMst`, `MaxRoundingDifferenceMstSecond`, `AbortErrorAccount`, `ReverseOppositeSignAmounts`, `LimitedOpenFiscalPeriods`. Only two parameters are ever read anywhere: `TransactionReversalCorrection` (in `LedgerJournalReversalService`) and `EnableLedgerSettlement` (in `LedgerSettlementService`). |
-| **Expected (D365)** | GL cycle doc §4 Step 5 requires these controls to govern posting: voucher-number continuity and duplicate-voucher checks, whether one voucher may carry several unrelated transactions, and the rounding tolerance applied when a voucher does not balance exactly. |
-| **Missing** | All of it. A journal can post with duplicate or non-continuous vouchers and with several unrelated transactions in one voucher regardless of the parameter. |
-| **Affected** | `GeneralLedger/LedgerJournalTable/Services/LedgerJournalPosting.cs`, `LedgerVoucherBalanceCheck`, `GeneralLedger/LedgerParameters/Services/LedgerParametersService.cs`. |
+| **Existing** | `LedgerParameters` persists `CheckContinuous`, `CheckVoucher`, `CheckJournalizing`, `AllowMultipleTransactionsWithinOneVoucher`, `MaxRoundingDifferenceMst`, `MaxRoundingDifferenceMstSecond`, `AbortErrorAccount`, `ReverseOppositeSignAmounts`, `LimitedOpenFiscalPeriods`. Before this change only two parameters were read anywhere: `TransactionReversalCorrection` and `EnableLedgerSettlement`. |
+| **Expected (D365)** | GL cycle doc §4 Step 5 requires these controls to govern posting. §9.12 adds: "Use permitted rounding configuration and inspect generated rounding accounts. Never rely on silent plugs to a suspense account as a routine balancing method." |
+| **Done** | `LedgerJournalParameterControls` closes the silent-skip half. A **switched-on restriction** (`CheckVoucher`, `CheckContinuous`, `CheckJournalizing`) now **refuses** the journal naming the parameter, in both `LedgerJournalPosting` and the setup-check, instead of posting looser than the company configured. All three are off in the default record, so only a company that deliberately switched one on is affected. The remaining parameters are reported as not applied by the setup-check, so the diagnostic no longer implies they are in force. |
+| **Still missing, and why it is not P1** | The original P1 rating was wrong. Actually *applying* these controls is **blocked**, not merely undone: <br>• **Rounding tolerance** has nowhere to post a residual. This module has no automatic transaction account setup (`LedgerPostingAccounts` / `LedgerAutoTransType` do not exist; the only penny-difference accounts are `TaxLedgerAccountGroup`'s customer/vendor tax ones, which are not a GL voucher rounding account). Spending a tolerance without that setup means either dropping the residual or plugging it to an invented account — the silent plug §9.12 forbids. The current exact-balance requirement is **stricter than configured and never wrong**, so leaving it is correct until the account setup exists. <br>• **`AllowMultipleTransactionsWithinOneVoucher`** needs D365's rule for what counts as one transaction inside a voucher (its line/offset grouping). **UNCERTAIN** — not established from the repository or the cycle docs. It is also `No` in the default record, so enforcing a guessed reading would refuse ordinary journals. <br>• **`CheckVoucher` / `CheckContinuous` / `CheckJournalizing`** exact check semantics are **UNCERTAIN** against target metadata; hence refusal rather than a guessed implementation. <br>• **`ReverseOppositeSignAmounts`** governs reversal presentation (mirror versus negate) in `LedgerJournalReversalService`, which currently always mirrors. Not covered by this change. |
+| **Affected** | `GeneralLedger/LedgerJournalTable/Services/LedgerJournalParameterControls.cs` (new), `LedgerJournalPosting.cs`, `LedgerJournalSetupCheck.cs`. 9 tests in `Tests/LedgerJournalParameterControlsTests.cs` plus one end-to-end refusal test in `LedgerJournalPostingTests`. |
+| **Revised priority** | **P3, and blocked** on the automatic transaction account setup and on target metadata for the check semantics. Confirm both before scheduling; the silent-skip defect that made it feel P1 is gone. |
 
 ### ~~P1 — A permanently closed fiscal period can be reopened through generic CRUD~~ — FIXED 2026-10-31
 
@@ -195,7 +197,7 @@ is built on:
 |---|---|---|---|
 | 1 | Account structures not modelled or validated | P1 | GL / Dimensions |
 | 2 | Main account posting controls unenforced | P1 | GL |
-| 3 | `LedgerParameters` voucher/rounding controls unenforced | P1 | GL |
+| 3 | `LedgerParameters` voucher/rounding controls unenforced | ~~P1~~ **P3, blocked** (silent skip fixed) | GL |
 | 4 | ~~Closed fiscal period reopenable via generic CRUD~~ | **FIXED** | GL |
 | 5 | No pending vendor invoice (`VendInvoiceInfoTable`) | P1 | AP |
 | 5a | Period access by module and user group not modelled | P2 | GL |
@@ -209,12 +211,24 @@ is built on:
 | 13 | No inventory close cancellation | P3 | Inventory |
 | 14 | Duplicate ledger-context resolution; misplaced `VendSettlement` | P3 | Inventory / AP |
 
-Suggested order: ~~4~~ → 3 → 2 (contained, each closes a hole through which wrong accounting passes),
-then 1 (largest, and a prerequisite for trustworthy dimension posting), then 9, then 5 and 6.
+Suggested order: ~~4~~ → ~~3~~ → **2** (contained, each closes a hole through which wrong accounting
+passes), then **1** (largest, and a prerequisite for trustworthy dimension posting), then 9, then 5
+and 6.
 
-**Progress.** Gap 4 was fixed on 2026-10-31 (backend only: service, API, tests — no schema change
-and no IXApp work). Next by this order is gap 3, enforcing the `LedgerParameters` voucher and
-rounding controls in `LedgerJournalPosting`.
+**Progress (2026-10-31, backend only — services, API and tests; no schema change, no IXApp work).**
+
+- Gap 4 **fixed**: ledger period status transitions are guarded.
+- Gap 3 **partly addressed and reprioritized to P3/blocked**: switched-on posting controls are now
+  refused rather than silently skipped, but applying them is blocked on setup that does not exist
+  (automatic transaction accounts) and on unverified check semantics. The P1 rating was wrong.
+- Next by this order is **gap 2**, enforcing the main account posting controls (`DebitCreditCheck`
+  and `MandatoryPaymentReference` are unambiguous and can proceed; `ValidateCurrency` /
+  `ValidatePosting` / `ValidateUser` need their D365 enums confirmed first).
+
+A note on method, since two of the first three P1s turned out to be blocked rather than merely
+undone: a field that exists and is unread is not by itself evidence that the behavior behind it is
+implementable. Check what the control needs to *do* — and whether the setup it posts through
+exists — before rating it.
 
 ---
 

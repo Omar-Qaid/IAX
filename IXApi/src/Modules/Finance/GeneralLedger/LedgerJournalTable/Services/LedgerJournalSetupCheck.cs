@@ -73,6 +73,14 @@ public sealed class LedgerJournalSetupCheck(DbContext db)
         var rates = await new LedgerExchangeRateCheck(db).CheckAsync(area, ledger, lines, ct);
         errors.AddRange(rates.Errors);
         unverified.UnionWith(rates.Unverified);
+
+        // Posting controls the company configured that this journal path does not apply. A
+        // switched-on restriction is an error here, because posting refuses it rather than
+        // ignoring it; the rest are reported so the result never implies they are in force.
+        var parameters = await LedgerParameters.LedgerParametersService.PeekAsync(db, area, ct);
+        if (LedgerJournalParameterControls.Refusal(parameters) is { } refusal) errors.Add(refusal);
+        unverified.UnionWith(LedgerJournalParameterControls.Unenforced(parameters));
+
         return new(errors.Distinct().ToList(), unverified.OrderBy(x => x).ToList());
 
         void CheckAccount(LedgerJournalACType type, long id, string label)

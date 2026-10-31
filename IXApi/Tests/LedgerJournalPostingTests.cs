@@ -304,6 +304,43 @@ public class LedgerJournalPostingTests
         Assert.Equal(1, result.VouchersPosted);
     }
 
+    // A posting control the company switched on is refused, not skipped: posting looser than the
+    // configured control would be worse than refusing the journal.
+    [Fact]
+    public async Task Refuses_a_journal_when_a_posting_control_is_switched_on_but_not_applied()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        db.AddRange(
+            new IAX.IXApi.Modules.Finance.Entities.LedgerParameters
+            {
+                RecId = 1, DataAreaId = "dat", CheckVoucher = NoYes.Yes
+            },
+            Line(1, "V1", bank: true, debit: 100m),
+            Line(2, "V1", bank: false, credit: 100m));
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var header = await db.Set<LedgerJournalTable>().SingleAsync();
+        var error = await Assert.ThrowsAsync<SubledgerPostingException>(
+            () => new LedgerJournalPosting(db).PostAsync("dat", header, default));
+        Assert.Contains("Check voucher", error.Message);
+        db.ChangeTracker.Clear();
+        Assert.Empty(await db.Set<GeneralJournalEntry>().AsNoTracking().ToListAsync());
+
+        // Turning the control off lets the same journal post; a tolerance never blocks posting.
+        var parameters = await db.Set<IAX.IXApi.Modules.Finance.Entities.LedgerParameters>().SingleAsync();
+        parameters.CheckVoucher = NoYes.No;
+        parameters.MaxRoundingDifferenceMst = 0.05m;
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        var result = await new LedgerJournalPosting(db).PostAsync("dat", await db.Set<LedgerJournalTable>().SingleAsync(), default);
+        await db.SaveChangesAsync();
+        Assert.Equal(1, result.VouchersPosted);
+    }
+
     // The reversal carries IsCorrection only when the company's parameters ask for it.
     [Fact]
     public async Task Reversal_marks_correction_when_the_ledger_parameters_require_it()

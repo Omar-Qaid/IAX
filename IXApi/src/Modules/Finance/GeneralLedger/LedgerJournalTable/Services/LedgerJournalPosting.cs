@@ -32,6 +32,12 @@ internal sealed class LedgerJournalPosting(DbContext db)
             ?? throw new SubledgerPostingException("The journal setup could not be verified.");
         if (setup.Errors.Count > 0) throw new SubledgerPostingException(setup.Errors[0]);
 
+        // A posting control the company switched on must not be silently skipped. The setup check
+        // reports this too; posting does not rely on a diagnostic for its own correctness.
+        var parameters = await LedgerParameters.LedgerParametersService.PeekAsync(db, area, ct);
+        if (LedgerJournalParameterControls.Refusal(parameters) is { } refusal)
+            throw new SubledgerPostingException(refusal);
+
         var lines = await db.Set<LedgerJournalTrans>()
             .Where(x => x.DataAreaId == area && x.JournalNum == header.JournalNum).ToListAsync(ct);
         lines = lines.OrderBy(x => x.LineNum).ThenBy(x => x.RecId).ToList();
