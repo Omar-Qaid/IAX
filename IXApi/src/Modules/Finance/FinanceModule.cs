@@ -36,6 +36,8 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<GeneralLedger.LedgerJournalTable.ILedgerJournalTableService, GeneralLedger.LedgerJournalTable.LedgerJournalTableService>();
             services.AddScoped<GeneralLedger.LedgerJournalTable.ILedgerJournalReversalService, GeneralLedger.LedgerJournalTable.LedgerJournalReversalService>();
             services.AddScoped<GeneralLedger.Settlement.ILedgerSettlementService, GeneralLedger.Settlement.LedgerSettlementService>();
+            services.AddScoped<Foundation.Dimensions.AccountStructure.IAccountStructureService, Foundation.Dimensions.AccountStructure.AccountStructureService>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.Dimensions.AccountStructure.AccountStructureCreateDto>, Foundation.Dimensions.AccountStructure.Validation.AccountStructureCreateDtoValidator>();
             services.AddScoped<GeneralLedger.JournalEntry.ILedgerTrialBalanceService, GeneralLedger.JournalEntry.LedgerTrialBalanceService>();
             services.AddScoped<GeneralLedger.LedgerParameters.ILedgerParametersService, GeneralLedger.LedgerParameters.LedgerParametersService>();
             services.AddScoped<GeneralLedger.LedgerJournalTable.ILedgerJournalTransService, GeneralLedger.LedgerJournalTable.LedgerJournalTransService>();

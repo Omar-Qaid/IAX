@@ -15,6 +15,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Registrations
             services.AddScoped<IModuleSeeder, LogisticsAddressSeeder>();
             services.AddScoped<IModuleSeeder, FiscalCalendarSeeder>();
             services.AddScoped<IModuleSeeder, FinancialDimensionSeeder>();
+            services.AddScoped<IModuleSeeder, AccountStructureSeeder>();
             services.AddScoped<IModuleSeeder, CurrencyAndExchangeRateSeeder>();
             services.AddScoped<IModuleSeeder, UnitOfMeasureSeeder>();
             services.AddScoped<IModuleSeeder, InventItemGroupSeeder>();

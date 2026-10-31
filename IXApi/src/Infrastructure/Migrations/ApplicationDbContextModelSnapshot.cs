@@ -12703,6 +12703,251 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("DimensionAttributeValueGroupCombination", (string)null);
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DimensionConstraintNode", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<DateTime>("ActiveFrom")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ActiveTo")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<long>("DimensionConstraintTree")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("DimensionHierarchyLevel")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("HasErrorInChildren")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("IsOptional")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IsOverlapping")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<int>("Ordinal")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("ParentConstraintNode")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<long>("TemporaryConstraintNode")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("DimensionConstraintTree");
+
+                    b.HasIndex("DimensionHierarchyLevel");
+
+                    b.HasIndex("DataAreaId", "DimensionConstraintTree", "ParentConstraintNode", "Ordinal");
+
+                    b.ToTable("DimensionConstraintNode", (string)null);
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DimensionConstraintNodeCriteria", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<long>("DimensionConstraintNode")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("IsFromOpen")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IsToOpen")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Ordinal")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RangeFrom")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("RangeTo")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("TemporaryOrdinal")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WildCardString")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("DimensionConstraintNode");
+
+                    b.HasIndex("DataAreaId", "DimensionConstraintNode", "Ordinal")
+                        .IsUnique();
+
+                    b.ToTable("DimensionConstraintNodeCriteria", (string)null);
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DimensionConstraintTree", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<long>("ActivationBatchId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<long>("DimensionHierarchy")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("IsActivating")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("LastModifiedId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("DimensionHierarchy");
+
+                    b.HasIndex("DataAreaId", "DimensionHierarchy")
+                        .IsUnique();
+
+                    b.ToTable("DimensionConstraintTree", (string)null);
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DimensionHierarchy", b =>
                 {
                     b.Property<long>("RecId")
@@ -12791,6 +13036,77 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("DimensionHierarchy", (string)null);
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DimensionHierarchyLevel", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<long>("DimensionAttribute")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("DimensionHierarchy")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<long>("TemporaryDimensionHierarchyLevel")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("DimensionAttribute");
+
+                    b.HasIndex("DimensionHierarchy");
+
+                    b.HasIndex("DataAreaId", "DimensionHierarchy", "DimensionAttribute")
+                        .IsUnique();
+
+                    b.HasIndex("DataAreaId", "DimensionHierarchy", "Level")
+                        .IsUnique();
+
+                    b.ToTable("DimensionHierarchyLevel", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DirPartyLocation", b =>
@@ -20287,6 +20603,66 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("LedgerParameters", (string)null);
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.LedgerStructure", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<long>("DimensionHierarchy")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("Ledger")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("DimensionHierarchy");
+
+                    b.HasIndex("Ledger", "DimensionHierarchy")
+                        .IsUnique();
+
+                    b.ToTable("LedgerStructure", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.LedgerTransSettlement", b =>
@@ -30925,6 +31301,54 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DimensionConstraintNode", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.DimensionConstraintTree", null)
+                        .WithMany()
+                        .HasForeignKey("DimensionConstraintTree")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.DimensionHierarchyLevel", null)
+                        .WithMany()
+                        .HasForeignKey("DimensionHierarchyLevel")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DimensionConstraintNodeCriteria", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.DimensionConstraintNode", null)
+                        .WithMany()
+                        .HasForeignKey("DimensionConstraintNode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DimensionConstraintTree", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.DimensionHierarchy", null)
+                        .WithMany()
+                        .HasForeignKey("DimensionHierarchy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DimensionHierarchyLevel", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.DimensionAttribute", null)
+                        .WithMany()
+                        .HasForeignKey("DimensionAttribute")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.DimensionHierarchy", null)
+                        .WithMany()
+                        .HasForeignKey("DimensionHierarchy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DirPartyLocation", b =>
                 {
                     b.HasOne("IAX.IXApi.Modules.Finance.Entities.LogisticsLocation", "LogisticsLocationTable")
@@ -31171,6 +31595,21 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Navigation("FiscalCalendarYearTable");
 
                     b.Navigation("LedgerTable");
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.LedgerStructure", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.DimensionHierarchy", null)
+                        .WithMany()
+                        .HasForeignKey("DimensionHierarchy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.Ledger", null)
+                        .WithMany()
+                        .HasForeignKey("Ledger")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.LedgerTransSettlement", b =>
