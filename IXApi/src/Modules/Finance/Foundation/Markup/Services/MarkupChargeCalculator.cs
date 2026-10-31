@@ -1,4 +1,5 @@
 using IAX.IXApi.Modules.Finance.Entities;
+using IAX.IXApi.Modules.Finance.AccountsPayable;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Finance.Common;
@@ -25,6 +26,27 @@ public sealed class MarkupChargeCalculator : IMarkupChargeCalculator
             return charge.Value;
 
         var dataAreaId = _company.GetDataAreaId() ?? "dat";
+
+        // The module decides which document the basis comes from, and must be checked before the
+        // table id: a purchase header charge carries TransTableId Unspecified, which the sales
+        // branch below also accepts, so without this a purchase charge would be measured against a
+        // sales order with the same record id.
+        if (charge.ModuleType == MarkupModuleType.Vendor)
+        {
+            var purchase = await _db.Set<PurchTable>().AsNoTracking()
+                .Where(x => x.RecId == charge.TransRecId && x.DataAreaId == dataAreaId)
+                .Select(x => x.PurchId)
+                .SingleOrDefaultAsync(ct);
+            if (purchase == null) return charge.Value;
+            var purchaseLines = await _db.Set<PurchLine>().AsNoTracking()
+                .Where(x => x.PurchId == purchase && x.DataAreaId == dataAreaId
+                    && x.PurchStatus != PurchStatus.Canceled)
+                .Select(x => new { x.PurchQty, x.LineAmount })
+                .ToListAsync(ct);
+            return CalculateForBase(charge, purchaseLines.Sum(x => x.PurchQty),
+                purchaseLines.Sum(x => Math.Max(0m, x.LineAmount)));
+        }
+
         if (charge.TransTableId == FinanceTableNumbers.SalesLine)
         {
             var line = await _db.Set<SalesLine>().AsNoTracking()

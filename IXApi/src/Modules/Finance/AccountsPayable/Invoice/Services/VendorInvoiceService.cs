@@ -208,6 +208,13 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
                 totalQty += request.Qty;
             }
 
+            // Order charges post here, before the vendor entry, so a charge the vendor bills is part
+            // of what is owed and its input tax joins the voucher's tax.
+            var charges = await new PurchaseChargePosting(Db).PostAsync(area, order, entry.RecId, vendorInvoiceId,
+                internalId, date, context.Ledger.AccountingCurrency, support, ct);
+            total += charges.ChargedToVendor;
+            totalTax += charges.Tax;
+
             Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, vendorAccount, LedgerPostingType.VendBalance, -(total + totalTax),
                 $"Vendor invoice {vendorInvoiceId}", 0m, context.Ledger.AccountingCurrency));
             Db.Add(new SubledgerVoucherGeneralJournalEntry
@@ -229,7 +236,10 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
                 DataAreaId = area, InvoiceId = vendorInvoiceId, InternalInvoiceId = internalId, InvoiceDate = date,
                 PurchId = order.PurchId, OrderAccount = order.OrderAccount, InvoiceAccount = order.InvoiceAccount,
                 CurrencyCode = order.CurrencyCode, LedgerVoucher = internalId, Qty = totalQty,
-                SalesBalance = total, SumTax = totalTax, InvoiceAmount = total + totalTax, DueDate = dueDate
+                // SalesBalance stays the line total; the charges are in InvoiceAmount. They have no
+                // subtotal field of their own until VendInvoiceJour.SumMarkup exists.
+                SalesBalance = total - charges.ChargedToVendor,
+                SumTax = totalTax, InvoiceAmount = total + totalTax, DueDate = dueDate
             });
 
             var lines = await Db.Set<PurchLine>().Where(x => x.DataAreaId == area && x.PurchId == order.PurchId

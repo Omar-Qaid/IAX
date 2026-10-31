@@ -137,9 +137,25 @@ target version, per the standing caveat in §5):
 | **A field-naming trap, now documented** | The entity's own comments label `CustType`/`CustPosting`/`CustomerLedgerDimension` "Customer Side Mapping" and the `Vend*` trio "Vendor Side Mapping". **That is wrong and would lead straight to a wrong implementation.** CDM gives their display names as **"Debit type" / "Debit posting" / "Debit account"** and **"Credit type" / "Credit posting" / "Credit account"**: one charge code has a debit side and a credit side, and the `Cust`/`Vend` prefixes are historical. The type values are Ledger account `0`, Customer-or-vendor `1`, Item `2` — corroborated three ways: the entity comment, the seeder's own per-row comments, and the seeded configurations matching Microsoft's documented setups (sales charges `CustType=1`/`VendType=0` = "debit Customer, credit Ledger account"; purchase charges `CustType=0`/`VendType=1`). Sales does not allow the Item type; AP does, for landed cost. |
 | **Sales side done 2026-10-31** | `SalesChargePosting` posts the order's and lines' charges at invoice: debit Customer (billed, folded into the single summary customer entry) or debit Ledger account (absorbed, posts its own balanced pair and never touches the customer balance); credit always a ledger account. Charge amount follows `MarkupCategory` (Fixed, Pcs, Percent) recomputed from the same basis `SalesOrderChargeRefresh` uses, so it does not depend on that refresh having run. Charge tax resolves through the same path the lines use and joins the voucher's tax. `SumMarkup`/`SumMarkupMst` are populated and billed charges are in `InvoiceAmount` and the customer balance. Each charge posts **once**, recorded in `MarkupTrans.Posted`, so a later partial invoice does not bill it again. 13 tests in `Tests/SalesChargePostingTests.cs`. |
 | **Refused rather than approximated** | Item type on either side (sales forbids it; landed cost is not basic scope), a credit side set to customer-or-vendor (not a sales charge pattern), an unrecognised type value, and a ledger side with no account configured. |
-| **Still outstanding** | **Vendor invoice charges.** AP adds the Item type — the charge is added to the item cost, i.e. landed cost — which is explicitly out of basic scope, so the AP path needs its own refusal for that case alongside the implementable debit-Ledger / credit-Vendor pattern. Also not done: prorating a charge across partial invoices (`CalculatedProratedAmount`, `IsAdvancedLineProrated`), which is a separate D365 feature; a charge here posts once in full. |
-| **Affected** | `AccountsReceivable/Invoice/Services/SalesChargePosting.cs` (new), `SalesInvoiceService.cs`; later `AccountsPayable/Invoice/Services/VendorInvoiceService.cs`. No schema change. |
-| **Fixture cost** | The sales invoice path now reads `MarkupTrans` and `MarkupTable`, so a test context that posts a sales invoice must model both. |
+| **Payable side done 2026-10-31** | `PurchaseChargePosting` mirrors it for the vendor invoice, reversed as the documented purchase pattern requires: debit a ledger account for the charge's cost, credit the vendor so the charge increases what is owed. A both-sides-ledger charge is absorbed and posts its own balanced pair. Input tax on a vendor-billed charge posts to the incoming tax account and writes a `TaxTrans` keyed by the invoice voucher — with no source line, as the receivable side's invoice tax already does, because a charge is not an invoice line and no table number identifies one. Refused: **Item type on either side (landed cost, which D365 *does* allow for purchases — so this refusal matters more here than on the sales side)**, a debit side set to customer-or-vendor, unrecognised types, and a ledger side with no account. 13 tests in `Tests/PurchaseChargePostingTests.cs`. |
+| **A latent bug fixed on the way** | `MarkupChargeCalculator` branched on `TransTableId` before module, and a purchase **header** charge carries `TransTableId = Unspecified`, which the sales branch also accepts. So a Percent or Pcs purchase charge was measured against *a sales order with the same record id* — matching the wrong order, or throwing on `SingleAsync`. It now branches on `ModuleType` first and measures against the purchase order's own lines. Nothing posted purchase charges before, so this never reached the ledger; it would have the moment the payable path started using it. |
+| **Still outstanding** | • **`VendInvoiceJour.SumMarkup` / `SumMarkupMst`** — `APTables.md` documents them as the charges total but the entity has neither, so a payable charge is in `InvoiceAmount` with no subtotal of its own (it is `InvoiceAmount − SalesBalance − SumTax`). Adding them needs a migration; see the compiler note below. <br>• **Line-level purchase charges.** `MarkupTransService.ResolveTransTableId` maps `(Vendor, "line")` to null and `FinanceTableNumbers` has no `PurchTable`/`PurchLine` entry, so a purchase charge can only attach to the header. Adding line-level attach is its own change. <br>• **Proration across partial invoices** (`CalculatedProratedAmount`, `IsAdvancedLineProrated`), a separate D365 feature. A charge posts once in full on both sides. |
+| **Affected** | `AccountsReceivable/Invoice/Services/SalesChargePosting.cs`, `AccountsPayable/Invoice/Services/PurchaseChargePosting.cs` (both new), `SalesInvoiceService.cs`, `VendorInvoiceService.cs`, `Foundation/Markup/Services/MarkupChargeCalculator.cs`. No schema change. |
+| **Fixture cost** | Both invoice paths now read `MarkupTrans` and `MarkupTable`, so a test context that posts either invoice must model both. |
+
+### Build-environment note — a further EF migration cannot be compiled reliably (found 2026-10-31)
+
+`csc.exe` fails intermittently on `IAX.IXApi.Infrastructure` with `AccessViolationException` or
+`Internal CLR error (0x80131506)`, which looks like memory pressure: `src/Infrastructure/Migrations`
+holds **83 files totalling 41 MB**, and every migration adds another ~1.2 MB `.Designer.cs` that
+must compile. It first appeared while adding the `VendInvoiceJour.SumMarkup` migration and recurred
+after that migration was removed, so **the migration is not the cause** — it is a flaky failure that
+a `dotnet build-server shutdown` and a retry usually clear. It cost the `SumMarkup` field above,
+because a schema change is not worth shipping when its build cannot be confirmed.
+
+Worth addressing before the remaining gaps, several of which need migrations: squashing the
+migration history, or excluding old `.Designer.cs` files from compilation, would both shrink the
+compile unit. Neither is attempted here.
 
 ### P2 — No cash discount
 
@@ -232,7 +248,7 @@ is built on:
 | 4 | ~~Closed fiscal period reopenable via generic CRUD~~ | **FIXED** | GL |
 | 5 | No pending vendor invoice (`VendInvoiceInfoTable`) | P1 | AP |
 | 5a | Period access by module and user group not modelled | P2 | GL |
-| 6 | Charges (`MarkupTrans`) never invoiced or posted | **AR done**, AP outstanding | AR / AP |
+| 6 | ~~Charges (`MarkupTrans`) never invoiced or posted~~ | **FIXED** (AR + AP) | AR / AP |
 | 7 | No cash discount | P2 | AR / AP |
 | 8 | No settlement or payment reversal | P2 | AR / AP |
 | 9 | ~~No Validate / Simulate posting~~ | **FIXED** | GL |
