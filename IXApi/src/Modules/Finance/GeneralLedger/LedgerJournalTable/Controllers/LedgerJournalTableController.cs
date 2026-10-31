@@ -34,6 +34,27 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
             });
         }
 
+        /// <summary>The static checks, combined. Reads only and authorizes nothing.</summary>
+        [HttpGet("{recId:long}/validate")]
+        public async Task<IActionResult> Validate(long recId, CancellationToken ct)
+        {
+            var result = await _journalService.ValidateAsync(recId, ct);
+            return result == null ? NotFound() : Ok(result);
+        }
+
+        /// <summary>
+        /// Runs the posting path and rolls it back, reporting what would post or why it is refused.
+        /// A POST because it opens a transaction and takes the posting lock, not because it writes:
+        /// nothing survives the call.
+        /// </summary>
+        [HttpPost("{recId:long}/simulate")]
+        public async Task<IActionResult> Simulate(long recId, CancellationToken ct)
+        {
+            var (result, error) = await _journalService.SimulateAsync(recId, ct);
+            if (result != null) return Ok(result);
+            return error == null ? NotFound() : UnprocessableEntity(new { error });
+        }
+
         [HttpPost("{recId:long}/post")]
         [DomainPermission("GeneralLedger", "Journals", "Edit")]
         public async Task<IActionResult> Post(long recId, CancellationToken ct)

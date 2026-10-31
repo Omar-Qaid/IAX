@@ -155,14 +155,16 @@ target version, per the standing caveat in §5):
 | **Missing** | Payment reversal and settlement reversal for both subledgers. A mis-settled payment currently has no supported correction path. |
 | **Affected** | `AccountsReceivable/Payment/Services/CustPaymentService.cs`, `AccountsPayable/Payment/Services/VendPaymentService.cs`, `CustTransOpen` lifecycle, `CustSettlement`/`VendSettlement`. |
 
-### P2 — No Validate / Simulate posting action
+### ~~P2 — No Validate / Simulate posting action~~ — FIXED 2026-10-31
 
 | | |
 |---|---|
-| **Existing** | Two read-only diagnostics: `GET /LedgerJournalTable/{recId}/setup-check` and `/voucher-balance-check`. Both deliberately report `PostingValidated = false`. No `Validate` or `Simulate` action exists (`grep Simulate` → 0 hits). |
+| **Was** | Two read-only diagnostics, `setup-check` and `voucher-balance-check`, both reporting `PostingValidated = false`. No `Validate` or `Simulate` action existed. |
 | **Expected (D365)** | GL cycle doc §5 step 7 ("Validate, then Simulate posting where available"), §6.6 (validate/simulate checks ledger, period access, structures, accounts and rates and creates **no** posted voucher) and acceptance test **T15**. |
-| **Missing** | A single Validate action running the full posting rule set, and a Simulate action that runs the posting path and rolls back. Both are now feasible since `LedgerJournalPosting` already runs inside a caller-controlled transaction. |
-| **Affected** | `GeneralLedger/LedgerJournalTable/*` (service, interface, controller), reusing `LedgerJournalPosting`. |
+| **Fixed** | `GET /LedgerJournalTable/{recId}/validate` combines the setup check and the voucher arithmetic, reads only, and says in its own `Scope` that it never authorizes posting. `POST /LedgerJournalTable/{recId}/simulate` **runs the real posting path and rolls it back**, reporting either the vouchers, totals and individual account entries it would create, or the refusal and why. 5 tests in `Tests/LedgerJournalValidateSimulateTests.cs`. |
+| **Why Simulate runs the real path** | The alternative — a second implementation of the posting rules — would drift from the rules that actually post, and a validation that disagrees with posting is worse than none. Running `LedgerJournalPosting` inside a transaction and rolling back gives an answer that is correct by construction. It also means every rule added since (the parameter controls, the main account controls, the account structures) is covered without touching Validate or Simulate again. |
+| **T15 is tested directly** | After simulating: no `GeneralJournalEntry`, no `GeneralJournalAccountEntry`, no `SubledgerVoucherGeneralJournalEntry`, the header still `Posted = No` with no `PostedDateTime`, and every line still editable. A separate test asserts the change tracker is **empty** afterwards and then calls `SaveChangesAsync` — a leaked in-memory mutation would otherwise post on the next save — and that the journal still posts for real after being simulated twice. |
+| **Affected** | `GeneralLedger/LedgerJournalTable/` service, interface, controller and a new DTO file. No schema change. |
 
 ### P2 — No sales tax settlement ("Settle and post sales tax")
 
@@ -229,19 +231,20 @@ is built on:
 | 6 | Charges (`MarkupTrans`) never invoiced or posted | P2 | AR / AP |
 | 7 | No cash discount | P2 | AR / AP |
 | 8 | No settlement or payment reversal | P2 | AR / AP |
-| 9 | No Validate / Simulate posting | P2 | GL |
+| 9 | ~~No Validate / Simulate posting~~ | **FIXED** | GL |
 | 10 | No sales tax settlement | P2 | Tax |
 | 11 | Free text invoice entities with no process | P3 | AR |
 | 12 | `SpecTrans` marking unused | P3 | AR / AP |
 | 13 | No inventory close cancellation | P3 | Inventory |
 | 14 | Duplicate ledger-context resolution; misplaced `VendSettlement` | P3 | Inventory / AP |
 
-Suggested order: ~~4~~ → ~~3~~ → ~~2~~ → ~~1~~ → **9** (Validate / Simulate), then **5** (pending
-vendor invoice) and **6** (charges). All four P1 entries are now addressed; what is left is P2 and
-below.
+Suggested order: ~~4~~ → ~~3~~ → ~~2~~ → ~~1~~ → ~~9~~ → **6** (charges — the one most likely to
+produce a visible accounting error, since charges are configured, attached to orders and then
+dropped) and **5** (pending vendor invoice). All four P1 entries are addressed; what is left is P2
+and below.
 
 **Progress (2026-10-31, backend only — services, API, database and tests; no IXApp work).** Gaps 4,
-3 and 2 are schema-neutral; gap 1 added two migrations.
+3, 2 and 9 are schema-neutral; gap 1 added two migrations.
 
 - Gap 4 **fixed**: ledger period status transitions are guarded.
 - Gap 3 **partly addressed and reprioritized to P3/blocked**: switched-on posting controls are now
@@ -260,8 +263,10 @@ below.
   dimension; **B** added the four constraint tables, `LedgerStructure`, the criteria matcher and the
   define/activate/assign builder; **C** wired validation into `LoadDimensionAsync` and made the
   cycle doc's acceptance example pass. Two migrations, both verified free of model drift.
-- Next by this order is **gap 9**, Validate / Simulate posting, which is now cheap: the posting path
-  already runs inside a caller-controlled transaction, so Simulate is post-then-roll-back.
+- Gap 9 **fixed**: Validate combines the static checks; Simulate runs the real posting path and
+  rolls it back, so its answer cannot drift from the rules that actually post. T15 is tested
+  directly.
+- Next by this order is **gap 6**, posting order and invoice charges.
 
 **Open questions for whoever picks this up:**
 
