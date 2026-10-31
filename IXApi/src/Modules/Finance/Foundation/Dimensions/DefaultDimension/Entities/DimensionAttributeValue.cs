@@ -31,8 +31,12 @@ namespace IAX.IXApi.Modules.Finance.Entities
         public NoYes IsBlockedForManualEntry { get; set; }
         public NoYes IsSuspended { get; set; }
         public NoYes IsTotal { get; set; }
-        public new NoYes IsDeleted { get; set; }
         public NoYes PendingSuccessfulDeleteValidation { get; set; }
+
+        // D365's IsDeleted (NoYes) is carried by the base entity's IsDeleted, which has the same
+        // name and meaning. It must not be shadowed with an enum here: the global soft-delete query
+        // filter only applies when the IsDeleted property is a bool, so a NoYes override silently
+        // turns soft-delete filtering off for the table.
 
         // ==========================================================
         // Multi-Company & Classification Contexts
