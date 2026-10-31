@@ -23,10 +23,9 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
         public decimal SalesBalance { get; set; }
         public decimal SumTax { get; set; }
 
-        // SumMarkup / SumMarkupMst, the charges total APTables.md documents for this journal, are
-        // still missing. Adding them needs a migration, and a further migration currently cannot be
-        // compiled in this repository - see the gap analysis. Until then the charges total is
-        // InvoiceAmount minus SalesBalance and SumTax.
+        /// <summary>Charges total, as APTables.md documents it for the invoice journal.</summary>
+        public decimal SumMarkup { get; set; }
+        public decimal SumMarkupMst { get; set; }
         public DateTime? DueDate { get; set; }
         public decimal InvoiceAmount { get; set; }
     }

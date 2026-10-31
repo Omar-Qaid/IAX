@@ -138,24 +138,48 @@ target version, per the standing caveat in §5):
 | **Sales side done 2026-10-31** | `SalesChargePosting` posts the order's and lines' charges at invoice: debit Customer (billed, folded into the single summary customer entry) or debit Ledger account (absorbed, posts its own balanced pair and never touches the customer balance); credit always a ledger account. Charge amount follows `MarkupCategory` (Fixed, Pcs, Percent) recomputed from the same basis `SalesOrderChargeRefresh` uses, so it does not depend on that refresh having run. Charge tax resolves through the same path the lines use and joins the voucher's tax. `SumMarkup`/`SumMarkupMst` are populated and billed charges are in `InvoiceAmount` and the customer balance. Each charge posts **once**, recorded in `MarkupTrans.Posted`, so a later partial invoice does not bill it again. 13 tests in `Tests/SalesChargePostingTests.cs`. |
 | **Refused rather than approximated** | Item type on either side (sales forbids it; landed cost is not basic scope), a credit side set to customer-or-vendor (not a sales charge pattern), an unrecognised type value, and a ledger side with no account configured. |
 | **Payable side done 2026-10-31** | `PurchaseChargePosting` mirrors it for the vendor invoice, reversed as the documented purchase pattern requires: debit a ledger account for the charge's cost, credit the vendor so the charge increases what is owed. A both-sides-ledger charge is absorbed and posts its own balanced pair. Input tax on a vendor-billed charge posts to the incoming tax account and writes a `TaxTrans` keyed by the invoice voucher — with no source line, as the receivable side's invoice tax already does, because a charge is not an invoice line and no table number identifies one. Refused: **Item type on either side (landed cost, which D365 *does* allow for purchases — so this refusal matters more here than on the sales side)**, a debit side set to customer-or-vendor, unrecognised types, and a ledger side with no account. 13 tests in `Tests/PurchaseChargePostingTests.cs`. |
+| **`VendInvoiceJour.SumMarkup`** | Added with `SumMarkupMst` and a migration, after the build was made trustworthy. `APTables.md` documents them as the charges total; the entity had neither, so a payable charge sat in `InvoiceAmount` with no subtotal of its own. |
 | **A latent bug fixed on the way** | `MarkupChargeCalculator` branched on `TransTableId` before module, and a purchase **header** charge carries `TransTableId = Unspecified`, which the sales branch also accepts. So a Percent or Pcs purchase charge was measured against *a sales order with the same record id* — matching the wrong order, or throwing on `SingleAsync`. It now branches on `ModuleType` first and measures against the purchase order's own lines. Nothing posted purchase charges before, so this never reached the ledger; it would have the moment the payable path started using it. |
-| **Still outstanding** | • **`VendInvoiceJour.SumMarkup` / `SumMarkupMst`** — `APTables.md` documents them as the charges total but the entity has neither, so a payable charge is in `InvoiceAmount` with no subtotal of its own (it is `InvoiceAmount − SalesBalance − SumTax`). Adding them needs a migration; see the compiler note below. <br>• **Line-level purchase charges.** `MarkupTransService.ResolveTransTableId` maps `(Vendor, "line")` to null and `FinanceTableNumbers` has no `PurchTable`/`PurchLine` entry, so a purchase charge can only attach to the header. Adding line-level attach is its own change. <br>• **Proration across partial invoices** (`CalculatedProratedAmount`, `IsAdvancedLineProrated`), a separate D365 feature. A charge posts once in full on both sides. |
+| **Still outstanding** | • **Line-level purchase charges.** `MarkupTransService.ResolveTransTableId` maps `(Vendor, "line")` to null and `FinanceTableNumbers` has no `PurchTable`/`PurchLine` entry, so a purchase charge can only attach to the header. Adding line-level attach is its own change. <br>• **Proration across partial invoices** (`CalculatedProratedAmount`, `IsAdvancedLineProrated`), a separate D365 feature. A charge posts once in full on both sides. |
 | **Affected** | `AccountsReceivable/Invoice/Services/SalesChargePosting.cs`, `AccountsPayable/Invoice/Services/PurchaseChargePosting.cs` (both new), `SalesInvoiceService.cs`, `VendorInvoiceService.cs`, `Foundation/Markup/Services/MarkupChargeCalculator.cs`. No schema change. |
 | **Fixture cost** | Both invoice paths now read `MarkupTrans` and `MarkupTable`, so a test context that posts either invoice must model both. |
 
-### Build-environment note — a further EF migration cannot be compiled reliably (found 2026-10-31)
+### Build-environment note — the intermittent compiler crash, and its cause (found and fixed 2026-10-31)
 
-`csc.exe` fails intermittently on `IAX.IXApi.Infrastructure` with `AccessViolationException` or
-`Internal CLR error (0x80131506)`, which looks like memory pressure: `src/Infrastructure/Migrations`
-holds **83 files totalling 41 MB**, and every migration adds another ~1.2 MB `.Designer.cs` that
-must compile. It first appeared while adding the `VendInvoiceJour.SumMarkup` migration and recurred
-after that migration was removed, so **the migration is not the cause** — it is a flaky failure that
-a `dotnet build-server shutdown` and a retry usually clear. It cost the `SumMarkup` field above,
-because a schema change is not worth shipping when its build cannot be confirmed.
+`csc.exe` was failing intermittently on `IAX.IXApi.Infrastructure` with `AccessViolationException`,
+`Internal CLR error (0x80131506)` and exit code `-1073741819`, in varying stack traces
+(`BoundTreeWalker`, `CSharpDiagnosticFilter`, `CompileMethods`). It blocked adding a migration, since
+a schema change is not worth shipping when its build cannot be confirmed.
 
-Worth addressing before the remaining gaps, several of which need migrations: squashing the
-migration history, or excluding old `.Designer.cs` files from compilation, would both shrink the
-compile unit. Neither is attempted here.
+**Cause: an SDK mismatch, not the size of the migration history.** Every project targets `net9.0`
+and references EF Core `9.0.9`, but the repository had **no `global.json`**, so `dotnet` floated to
+the newest installed SDK — **10.0.103** — and compiled `net9.0` code with .NET 10's Roslyn. Measured,
+with forced recompiles of the project that was failing:
+
+| SDK | forced recompiles | crashes |
+|---|---|---|
+| 10.0.103 (unpinned) | 3 | 1 |
+| 9.0.311 (pinned via `global.json`) | 9 | 0 |
+
+At the observed ~33% failure rate, nine clean runs by chance is about 2.5%, and the nine include five
+taken **after** adding another migration, so the pin holds against a larger compile unit than the one
+that was failing. `dotnet ef migrations add` then succeeded first try, where it had crashed
+repeatedly.
+
+The size of the migration history — `Migrations` is **39 MB of the project's 40.3 MB**, 37
+`.Designer.cs` files at ~1.1–1.2 MB each — is real but was **not** the cause. An initial read blamed
+it, and that was wrong: the crash recurred after the suspect migration was removed, and disappeared
+on pinning the SDK while the migration was back in place. It remains worth reducing eventually, and
+the viable route is to move each migration's `[DbContext]`/`[Migration]` attributes into its main
+file and exclude the `.Designer.cs` files from compilation — `BuildTargetModel` is `protected
+override`, so the base is virtual and the bodies are droppable. That costs `TargetModel` on old
+migrations, which `dotnet ef migrations remove` uses, so the newest Designer should be kept whole.
+Not attempted; squashing the history is the other option and is riskier, because existing databases
+carry `__EFMigrationsHistory` rows for all 78 migrations.
+
+**Consequence of the pin:** a machine with only the .NET 10 SDK now fails the build with a clear
+"global.json not satisfied" error instead of silently using it. For a `net9.0` repository that is the
+intended trade; it means the 9.0 SDK is a prerequisite.
 
 ### P2 — No cash discount
 

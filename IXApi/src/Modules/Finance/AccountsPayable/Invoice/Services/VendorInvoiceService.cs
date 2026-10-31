@@ -236,9 +236,9 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
                 DataAreaId = area, InvoiceId = vendorInvoiceId, InternalInvoiceId = internalId, InvoiceDate = date,
                 PurchId = order.PurchId, OrderAccount = order.OrderAccount, InvoiceAccount = order.InvoiceAccount,
                 CurrencyCode = order.CurrencyCode, LedgerVoucher = internalId, Qty = totalQty,
-                // SalesBalance stays the line total; the charges are in InvoiceAmount. They have no
-                // subtotal field of their own until VendInvoiceJour.SumMarkup exists.
+                // SalesBalance is the line total; the charges have their own subtotal.
                 SalesBalance = total - charges.ChargedToVendor,
+                SumMarkup = charges.ChargedToVendor, SumMarkupMst = charges.ChargedToVendor,
                 SumTax = totalTax, InvoiceAmount = total + totalTax, DueDate = dueDate
             });
 

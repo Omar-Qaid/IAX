@@ -2230,6 +2230,14 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
+                    b.Property<decimal>("SumMarkup")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("SumMarkupMst")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<decimal>("SumTax")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
