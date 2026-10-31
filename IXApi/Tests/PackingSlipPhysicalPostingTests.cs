@@ -153,7 +153,8 @@ public class PackingSlipPhysicalPostingTests
         {
             Type[] types = [typeof(Ledger), typeof(FiscalCalendarPeriod), typeof(LedgerFiscalCalendarPeriod),
                 typeof(InventTransOrigin), typeof(InventModelGroup), typeof(InventModelGroupItem),
-                typeof(MainAccount), typeof(DimensionAttributeValueCombination), typeof(InventPosting),
+                typeof(MainAccount), typeof(DimensionAttributeValueCombination),
+                typeof(LedgerStructure), typeof(DimensionHierarchy), typeof(InventPosting),
                 typeof(InventItemGroupItem), typeof(PostingRecord),
                 typeof(GeneralJournalEntry), typeof(GeneralJournalAccountEntry), typeof(SubledgerVoucherGeneralJournalEntry)];
             foreach (var type in types)

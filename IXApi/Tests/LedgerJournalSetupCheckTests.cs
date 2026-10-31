@@ -111,7 +111,8 @@ public class LedgerJournalSetupCheckTests
         {
             Type[] types = [typeof(LedgerJournalTable), typeof(LedgerJournalName), typeof(LedgerJournalTrans),
                 typeof(Ledger), typeof(FiscalCalendarPeriod), typeof(LedgerFiscalCalendarPeriod),
-                typeof(MainAccount), typeof(DimensionAttributeValueCombination), typeof(ExchangeRateType),
+                typeof(MainAccount), typeof(DimensionAttributeValueCombination),
+                typeof(LedgerStructure), typeof(DimensionHierarchy), typeof(ExchangeRateType),
                 typeof(ExchangeRateCurrencyPair), typeof(ExchangeRate),
                 // The check reports general ledger posting controls it does not apply.
                 typeof(IAX.IXApi.Modules.Finance.Entities.LedgerParameters)];

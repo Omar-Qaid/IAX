@@ -1,6 +1,7 @@
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.AccountsPayable;
 using IAX.IXApi.Modules.Finance.Entities;
+using IAX.IXApi.Modules.Finance.Foundation.Dimensions.AccountStructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Security.Cryptography;
@@ -197,6 +198,12 @@ internal sealed class SubledgerPostingSupport(DbContext db)
         return result;
     }
 
+    /// <summary>
+    /// Validated once per posting operation, so a journal with many lines loads the ledger's
+    /// account structures once rather than per line.
+    /// </summary>
+    private AccountStructureValidator? _structures;
+
     public async Task<DimensionAttributeValueCombination> LoadDimensionAsync(string area, long recId, string purpose, CancellationToken ct)
     {
         var dimension = await db.Set<DimensionAttributeValueCombination>().AsNoTracking()
@@ -206,6 +213,12 @@ internal sealed class SubledgerPostingSupport(DbContext db)
             ? await db.Set<MainAccount>().AsNoTracking().AnyAsync(x => x.DataAreaId == area && x.RecId == dimension.MainAccount, ct)
             : await db.Set<MainAccount>().AsNoTracking().AnyAsync(x => x.DataAreaId == area && x.MainAccountId == dimension.MainAccountValue, ct);
         if (!valid) throw new SubledgerPostingException($"Ledger dimension '{dimension.DisplayValue}' does not reference a valid main account.");
+
+        // The account structures assigned to the ledger decide which dimension combinations may
+        // post. A company with none assigned is not validated, and posts as it did before.
+        _structures ??= new AccountStructureValidator(db);
+        if (await _structures.ValidateAsync(area, dimension, ct) is { } refusal)
+            throw new SubledgerPostingException($"The {purpose} account is not valid: {refusal}");
         return dimension;
     }
 

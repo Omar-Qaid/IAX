@@ -1722,6 +1722,9 @@ public sealed class InventoryArchitectureTests
             Configure<TaxItemGroupHeading>(builder);
             Configure<MainAccount>(builder);
             Configure<DimensionAttributeValueCombination>(builder);
+            // Posting validates a combination against the structures assigned to the ledger.
+            Configure<LedgerStructure>(builder);
+            Configure<DimensionHierarchy>(builder);
             Configure<Ledger>(builder);
             Configure<FiscalCalendarYear>(builder);
             Configure<FiscalCalendarPeriod>(builder);

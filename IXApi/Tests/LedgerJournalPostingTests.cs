@@ -487,6 +487,7 @@ public class LedgerJournalPostingTests
                 typeof(CompanyInfo), typeof(MainAccountLegalEntity), typeof(IAX.IXApi.Modules.Finance.Entities.LedgerParameters),
                 typeof(Ledger), typeof(FiscalCalendarPeriod), typeof(LedgerFiscalCalendarPeriod),
                 typeof(MainAccount), typeof(DimensionAttributeValueCombination),
+                typeof(LedgerStructure), typeof(DimensionHierarchy),
                 typeof(GeneralJournalEntry), typeof(GeneralJournalAccountEntry),
                 typeof(SubledgerVoucherGeneralJournalEntry), typeof(ExchangeRateType),
                 typeof(ExchangeRateCurrencyPair), typeof(ExchangeRate)];

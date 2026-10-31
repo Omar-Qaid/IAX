@@ -140,6 +140,16 @@ public sealed class LedgerDimensionResolver(DbContext db)
         columns.Display.SetValue(combination, value);
     }
 
+    /// <summary>
+    /// The combination's own column for a dimension, where one exists, or an empty string. Account
+    /// structure validation reads this as a fallback, so a combination written without a value
+    /// group chain is still validated rather than read as all blanks.
+    /// </summary>
+    public static string DenormalisedValue(DimensionAttributeValueCombination combination, string dimension) =>
+        DenormalisedColumns.TryGetValue(dimension, out var columns)
+            ? columns.Display.GetValue(combination) as string ?? string.Empty
+            : string.Empty;
+
     private static readonly Dictionary<string, (PropertyInfo Id, PropertyInfo Display)> DenormalisedColumns =
         BuildDenormalisedColumns();
 

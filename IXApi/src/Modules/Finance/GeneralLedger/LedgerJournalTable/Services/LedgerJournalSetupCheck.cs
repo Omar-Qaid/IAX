@@ -85,6 +85,26 @@ public sealed class LedgerJournalSetupCheck(DbContext db)
         // which ones are configured but not in force.
         unverified.UnionWith(LedgerAccount.MainAccountPostingControls.Unenforced(accounts));
 
+        // Dimension combinations are validated against the account structures assigned to the
+        // ledger. With none assigned, any combination posts, so the gap is reported rather than
+        // left to look like validation passed.
+        var assignedStructures = await (from link in db.Set<LedgerStructure>().AsNoTracking()
+                                        join structure in db.Set<DimensionHierarchy>().AsNoTracking()
+                                            on link.DimensionHierarchy equals structure.RecId
+                                        where link.Ledger == ledger.RecId && structure.IsDraft == NoYes.No
+                                        select structure.Name).ToListAsync(ct);
+        if (assignedStructures.Count == 0)
+        {
+            unverified.Remove("Account structures, dimension defaults and legal-entity account overrides.");
+            unverified.Add("No account structure is assigned to the ledger, so dimension combinations are not validated.");
+        }
+        else
+        {
+            unverified.Remove("Account structures, dimension defaults and legal-entity account overrides.");
+            unverified.Add($"Dimension combinations are validated against account structure(s) {string.Join(", ", assignedStructures.OrderBy(x => x, StringComparer.Ordinal))}. "
+                + "Dimension defaults and legal-entity account overrides are still not applied.");
+        }
+
         return new(errors.Distinct().ToList(), unverified.OrderBy(x => x).ToList());
 
         void CheckAccount(LedgerJournalACType type, long id, string label)

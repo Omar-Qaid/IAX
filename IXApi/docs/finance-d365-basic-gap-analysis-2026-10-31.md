@@ -53,7 +53,9 @@ Priority: **P1** blocks a documented basic cycle or lets wrong accounting throug
 | **Phase A done** | Six dimension entities now have configurations, indexes and a table (`20261031123628_AddFinancialDimensionTables`); `LedgerDimensionResolver` creates a combination with its `DimensionAttributeValueGroup` → `DimensionAttributeLevelValue` chain and the group-combination link, populating the denormalised per-dimension columns too, and reads the segments back for validation; `FinancialDimensionSeeder` seeds the Department dimension with ADMIN / SALES / SERVICE. Also fixed: `DimensionAttributeValue` shadowed the base `bool IsDeleted` with `new NoYes IsDeleted`, which would have silently disabled soft-delete filtering once the type was mapped (the global filter only applies when the property is a `bool`). |
 | **Phase B done** | The four constraint tables are in, with the field lists verified from CDM, plus `LedgerStructure` (`Ledger` + `DimensionHierarchy`, unique together — confirmed from the AX 2012 table reference, whose relation set matches current D365's "Ledger page → Account structures" behaviour). `AccountStructureBuilder` defines a structure as a draft, writing its `DimensionHierarchyLevel` segments and its `DimensionConstraintTree` / `DimensionConstraintNode` / `DimensionConstraintNodeCriteria` tree; activates it, refusing when its main account values overlap an already-active structure; and assigns it to the ledger. `DimensionCriteriaMatcher` implements the documented criteria rules. `AccountStructureSeeder` defines and activates the cycle doc's BS and PL structures. 33 tests across `DimensionCriteriaMatcherTests` and `AccountStructureBuilderTests`. |
 | **Decision taken in phase B** | The seeded BS and PL structures are **activated but not assigned to the ledger**. Validation (phase C) only consults assigned structures, and every ledger account combination in this database is main-account-only with no Department — so assigning PL, whose Department is mandatory, would refuse every existing demo revenue and expense combination. Assignment is left as a deliberate setup act, after departments are filled in where they are needed. **This is a decision to revisit**: either backfill departments onto the demo combinations and then assign, or relax PL's Department to `*;""` and accept that the cycle doc's acceptance example is only exercised by its own test fixture. |
-| **Phase C outstanding** | `AccountStructureValidator` wired into `SubledgerPostingSupport.LoadDimensionAsync`, the single chokepoint every posting path already uses. Posting will **fail open with a diagnostic** when no structure is assigned (user's decision), which deviates from D365's requirement that a structure be assigned, and keeps existing companies and fixtures posting. |
+| **Phase C done — gap 1 closed** | `AccountStructureValidator` is wired into `SubledgerPostingSupport.LoadDimensionAsync`, the single chokepoint `ResolveCustomerSummaryAsync`, `ResolveVendorSummaryAsync`, `ResolveInventPostingAsync`, `ResolveTaxPayableAsync` and the journal path all already call — so GL, AR, AP, tax and inventory posting are all covered by one edit. The main account value selects the structure; each remaining segment must satisfy that structure's criteria for its level; a blank segment is allowed only where the segment is optional. Segment values come from the value group chain, falling back to the combination's own per-dimension column so a combination written without a chain is validated rather than read as all blanks. The structures are loaded once per posting operation, not per line. The cycle doc's acceptance example is a test: `611000 ADMIN` posts, a blank Department on `611000` is refused, a blank Department on `130100` posts. |
+| **Fail-open, as decided** | A ledger with no assigned structure is **not validated** and posts exactly as before. `LedgerJournalSetupCheck` now reports either "No account structure is assigned to the ledger, so dimension combinations are not validated" or the names of the structures that are validating, replacing the old blanket "Account structures … not verified" line. This is a deliberate deviation from D365, which requires a structure on the ledger. |
+| **Fixture cost worth knowing** | Because `LoadDimensionAsync` now reads `LedgerStructure` and `DimensionHierarchy`, every hand-built test context that posts had to model them — six fixtures. A new posting test needs those two types in its context even when it never defines a structure. |
 | **Scope limit to note** | The builder writes a **single-path** structure: one set of allowed values per segment, which is exactly what the cycle doc's BS and PL structures are. A structure whose grid holds several rows, where a later segment's allowed values depend on the path taken through the earlier ones, needs a constraint node per branch. The tables model that; the builder does not construct it yet. |
 | **Affected** | `Foundation/Dimensions/*`, `GeneralLedger/Ledger`, `Common/Posting/SubledgerPostingSupport.cs`, `LedgerJournalSetupCheck`, every posting service via `LoadDimensionAsync`. |
 | **Note** | Matching must compare criteria **as strings, never numerically** — `1000000` falls inside the string range `100000..399999`. `*` allows all non-blank values; blank needs `""` separately. The plan at `.claude/plans/bubbly-jumping-cookie.md` carries the full rule set and sources. |
@@ -218,7 +220,7 @@ is built on:
 
 | # | Gap | Priority | Area |
 |---|---|---|---|
-| 1 | Account structures not modelled or validated | P1 | GL / Dimensions |
+| 1 | ~~Account structures not modelled or validated~~ | **FIXED** (phases A-C) | GL / Dimensions |
 | 2 | Main account posting controls unenforced | ~~P1~~ **P3** (four controls applied; rest blocked on missing setup) | GL |
 | 3 | `LedgerParameters` voucher/rounding controls unenforced | ~~P1~~ **P3, blocked** (silent skip fixed) | GL |
 | 4 | ~~Closed fiscal period reopenable via generic CRUD~~ | **FIXED** | GL |
@@ -234,10 +236,12 @@ is built on:
 | 13 | No inventory close cancellation | P3 | Inventory |
 | 14 | Duplicate ledger-context resolution; misplaced `VendSettlement` | P3 | Inventory / AP |
 
-Suggested order: ~~4~~ → ~~3~~ → ~~2~~ → **1** (largest, and a prerequisite for trustworthy dimension
-posting), then 9, then 5 and 6.
+Suggested order: ~~4~~ → ~~3~~ → ~~2~~ → ~~1~~ → **9** (Validate / Simulate), then **5** (pending
+vendor invoice) and **6** (charges). All four P1 entries are now addressed; what is left is P2 and
+below.
 
-**Progress (2026-10-31, backend only — services, API and tests; no schema change, no IXApp work).**
+**Progress (2026-10-31, backend only — services, API, database and tests; no IXApp work).** Gaps 4,
+3 and 2 are schema-neutral; gap 1 added two migrations.
 
 - Gap 4 **fixed**: ledger period status transitions are guarded.
 - Gap 3 **partly addressed and reprioritized to P3/blocked**: switched-on posting controls are now
@@ -251,20 +255,31 @@ posting), then 9, then 5 and 6.
   mandatory payment reference, and currency and posting-type validation in FillIn and Table modes
   are applied; the payment reference now reaches the posted entry instead of being dropped. What
   remains is blocked on setup that does not exist. Schema-neutral: no migration.
-- Next by this order is **gap 1**, account structures. It is the largest and needs its constraint
-  tables confirmed against target metadata before any migration.
+- Gap 1 **fixed across three phases**, and it was the largest by far because the dimension model had
+  no database at all. **A** gave financial dimensions tables, a resolver and a seeded Department
+  dimension; **B** added the four constraint tables, `LedgerStructure`, the criteria matcher and the
+  define/activate/assign builder; **C** wired validation into `LoadDimensionAsync` and made the
+  cycle doc's acceptance example pass. Two migrations, both verified free of model drift.
+- Next by this order is **gap 9**, Validate / Simulate posting, which is now cheap: the posting path
+  already runs inside a caller-controlled transaction, so Simulate is post-then-roll-back.
 
-**One open question remains** (the two raised on 2026-10-31 are resolved above):
+**Open questions for whoever picks this up:**
 
 1. `DebitCreditBalanceDemand` uses its own enum `DebCredBalanceDemand`, whose members were not
    retrieved. Its basis (which balance, at what point) and whether it refuses or warns are still
    unestablished. The repo's `DebitCreditDemand` (`None`/`Demand`) may be the wrong shape for the
    same reason `DebitCreditCheck` was — **check it before using it**.
+2. Whether to assign the seeded BS and PL structures to the ledger, which is what switches
+   validation on for the demo company. See the gap 1 entry: PL's Department is mandatory and no
+   seeded combination has one.
+3. `LedgerStructure`'s name and field set are confirmed from the AX 2012 reference, not from target
+   metadata. The relation set matches current D365 behaviour, but confirm before relying on it.
 
-A note on method, since two of the first three P1s turned out to be blocked rather than merely
-undone: a field that exists and is unread is not by itself evidence that the behavior behind it is
-implementable. Check what the control needs to *do* — and whether the setup it posts through
-exists — before rating it.
+A note on method, since three of the four P1 entries turned out to be mis-rated: a field or a class
+that exists and is unused is not evidence that the behaviour behind it is implementable, or even
+that it has a table. Check what the control needs to *do*, and whether the setup it depends on
+exists, before rating it. Gaps 3 and 2 were blocked rather than undone; gap 1 was far larger than
+the entry said.
 
 ---
 
