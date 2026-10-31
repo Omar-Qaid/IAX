@@ -304,6 +304,76 @@ public class LedgerJournalPostingTests
         Assert.Equal(1, result.VouchersPosted);
     }
 
+    // The account's own controls are judged on the posted signed amount, so the line and its offset
+    // are each checked against the account they actually hit.
+    [Fact]
+    public async Task Refuses_a_line_on_the_side_its_main_account_does_not_accept()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        await db.SaveChangesAsync();
+        db.AddRange(
+            Line(1, "V1", bank: true, credit: 100m),
+            Line(2, "V1", bank: false, debit: 100m));
+        // Share capital is restricted to credit amounts, and this journal debits it.
+        var shareCapital = await db.Set<MainAccount>().SingleAsync(x => x.RecId == 2);
+        shareCapital.DebitCreditCheck = DebitCreditCheck.Check;
+        shareCapital.DebitCreditProposal = DebitCreditProposal.Credit;
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var header = await db.Set<LedgerJournalTable>().SingleAsync();
+        var error = await Assert.ThrowsAsync<SubledgerPostingException>(
+            () => new LedgerJournalPosting(db).PostAsync("dat", header, default));
+        Assert.Contains("credit amounts only", error.Message);
+        Assert.Contains("310100", error.Message);
+        db.ChangeTracker.Clear();
+        Assert.Empty(await db.Set<GeneralJournalAccountEntry>().AsNoTracking().ToListAsync());
+    }
+
+    // The payment reference was dropped at posting even though both sides carry the field.
+    [Fact]
+    public async Task A_required_payment_reference_is_enforced_and_reaches_the_posted_entry()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        await db.SaveChangesAsync();
+        db.AddRange(
+            Line(1, "V1", bank: true, debit: 100m),
+            Line(2, "V1", bank: false, credit: 100m));
+        var bank = await db.Set<MainAccount>().SingleAsync(x => x.RecId == 1);
+        bank.MandatoryPaymentReference = NoYes.Yes;
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var header = await db.Set<LedgerJournalTable>().SingleAsync();
+        var error = await Assert.ThrowsAsync<SubledgerPostingException>(
+            () => new LedgerJournalPosting(db).PostAsync("dat", header, default));
+        Assert.Contains("requires a payment reference", error.Message);
+        db.ChangeTracker.Clear();
+        Assert.Empty(await db.Set<GeneralJournalAccountEntry>().AsNoTracking().ToListAsync());
+
+        var line = await db.Set<LedgerJournalTrans>().SingleAsync(x => x.RecId == 1);
+        line.PaymReference = "PAY-1";
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        var result = await new LedgerJournalPosting(db).PostAsync(
+            "dat", await db.Set<LedgerJournalTable>().SingleAsync(), default);
+        await db.SaveChangesAsync();
+        Assert.Equal(1, result.VouchersPosted);
+
+        db.ChangeTracker.Clear();
+        var posted = await db.Set<GeneralJournalAccountEntry>().AsNoTracking()
+            .OrderBy(x => x.RecId).ToListAsync();
+        Assert.Equal("PAY-1", posted.Single(x => x.LedgerAccount == "110100").PaymentReference);
+        // The other line carries its own reference, which is empty, and its account requires none.
+        Assert.Equal(string.Empty, posted.Single(x => x.LedgerAccount == "310100").PaymentReference);
+    }
+
     // A posting control the company switched on is refused, not skipped: posting looser than the
     // configured control would be worse than refusing the journal.
     [Fact]

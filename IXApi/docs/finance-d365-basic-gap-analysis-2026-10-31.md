@@ -54,15 +54,17 @@ Priority: **P1** blocks a documented basic cycle or lets wrong accounting throug
 | **Affected** | `Foundation/Dimensions/LedgerDimension/*`, `GeneralLedger/Ledger/Entities/Ledger.cs`, `Common/Posting/SubledgerPostingSupport.cs` (`LoadDimensionAsync`), `LedgerJournalSetupCheck`, every posting service (all resolve accounts through `LoadDimensionAsync`). |
 | **Note** | Exact D365 constraint-table shape should be confirmed against target metadata before adding tables. The *gap* is certain; the *table set* above is from Microsoft's published model and is **UNCERTAIN** in detail. |
 
-### P1 — Main account posting controls are stored but never enforced
+### P1 — Main account posting controls are stored but never enforced — PARTLY DONE 2026-10-31
 
 | | |
 |---|---|
-| **Existing** | `MainAccount` carries `DebitCreditCheck`, `DebitCreditProposal`, `DebitCreditBalanceDemand`, `CurrencyCode`, `ValidateCurrency`, `ValidatePosting`, `ValidateUser`, `MandatoryPaymentReference`, `UnitOfMeasure`, `PostingType`. No posting path reads any of them. `LedgerJournalPosting` reads only the dimension and the amount; `GeneralJournalAccountEntry.PaymentReference` is written as `string.Empty` by `SubledgerPostingSupport.AccountEntry`. |
-| **Expected (D365)** | Posting validates the entered side against `DebitCreditCheck`, restricts the account to its specified currency when `ValidateCurrency` requires it, restricts allowed posting types via `ValidatePosting`, and refuses a line with no payment reference when `MandatoryPaymentReference` is set. |
-| **Missing** | Enforcement of all of the above at posting time. |
-| **Affected** | `Common/Posting/SubledgerPostingSupport.cs`, `GeneralLedger/LedgerJournalTable/Services/LedgerJournalPosting.cs`, `LedgerJournalSetupCheck`. |
-| **Note** | Enum semantics for `ValidateCurrency` / `ValidatePosting` / `ValidateUser` are `int` in this repo with a `// Map to … Enum if matching` comment — **UNCERTAIN**; confirm the D365 enums before implementing. `DebitCreditCheck` and `MandatoryPaymentReference` are unambiguous and can proceed. |
+| **Existing** | `MainAccount` carries `DebitCreditCheck`, `DebitCreditProposal`, `DebitCreditBalanceDemand`, `CurrencyCode`, `ValidateCurrency`, `ValidatePosting`, `ValidateUser`, `MandatoryPaymentReference`, `UnitOfMeasure`, `PostingType`. Before this change no posting path read any of them, and `GeneralJournalAccountEntry.PaymentReference` was written as `string.Empty` by `SubledgerPostingSupport.AccountEntry` even though `LedgerJournalTrans.PaymReference` carried a value. |
+| **Expected (D365)** | Posting validates the posted side against the account's debit/credit requirement, restricts the account to its specified currency when `ValidateCurrency` requires it, restricts allowed posting types via `ValidatePosting`, and refuses a line with no payment reference when `MandatoryPaymentReference` is set. |
+| **Done** | `MainAccountPostingControls` applies two controls, judged on the **posted signed amount** so a line and its offset are each checked against the account they hit: <br>• **Debit/credit requirement** — an account with `DebitCreditCheck = Check` and a `DebitCreditProposal` side accepts only that side. <br>• **`MandatoryPaymentReference`** — a line on such an account must carry a payment reference. <br>The payment reference is now also **carried through** to `GeneralJournalAccountEntry.PaymentReference` instead of being dropped — a plain data-loss fix independent of the control. The remaining controls are reported per account by the setup-check, so the diagnostic no longer implies they are in force. 8 tests in `Tests/MainAccountPostingControlsTests.cs` plus two end-to-end tests in `LedgerJournalPostingTests`. |
+| **Assumption to confirm** | This repo reduced D365's enums: `DebitCreditCheck` is `None`/`Check` with **no side of its own**, and `DebitCreditProposal` is `None`/`Debit`/`Credit`. The implementation therefore reads the enforced side from `DebitCreditProposal` and treats `DebitCreditCheck` as the switch. That pairing is an **inference** from the field names — it is not stated in any cycle document here, and no target metadata was available. An account set to `Check` with no proposed side names nothing to enforce and is reported rather than guessed. Confirm before relying on it; if the intended reading differs, only `MainAccountPostingControls.Check` changes. |
+| **Still missing** | `DebitCreditBalanceDemand` (needs a balance basis and refuse-versus-warn semantics, neither established), `ValidateCurrency` / `ValidatePosting` / `ValidateUser` (still `int` with `// Map to … Enum if matching` — **UNCERTAIN**, confirm the D365 enums first), `MainAccount.CurrencyCode` as a restriction, and `UnitOfMeasure`. Separately, `GeneralJournalAccountEntry.PostingType` is always written as `LedgerJournal` from this path rather than from `MainAccount.PostingType` or the source document. |
+| **Affected** | `GeneralLedger/LedgerAccount/Services/MainAccountPostingControls.cs` (new), `Common/Posting/SubledgerPostingSupport.cs`, `LedgerJournalPosting.cs`, `LedgerJournalSetupCheck.cs`. |
+| **Revised priority** | **P2** for the remainder, gated on confirming the three `Validate*` enums. The silent-skip defect is gone for the two controls whose meaning is clear. |
 
 ### P1 — `LedgerParameters` voucher and rounding controls are not enforced — PARTLY ADDRESSED 2026-10-31; REPRIORITIZED
 
@@ -196,7 +198,7 @@ is built on:
 | # | Gap | Priority | Area |
 |---|---|---|---|
 | 1 | Account structures not modelled or validated | P1 | GL / Dimensions |
-| 2 | Main account posting controls unenforced | P1 | GL |
+| 2 | Main account posting controls unenforced | ~~P1~~ **P2** (two controls applied; rest gated on enums) | GL |
 | 3 | `LedgerParameters` voucher/rounding controls unenforced | ~~P1~~ **P3, blocked** (silent skip fixed) | GL |
 | 4 | ~~Closed fiscal period reopenable via generic CRUD~~ | **FIXED** | GL |
 | 5 | No pending vendor invoice (`VendInvoiceInfoTable`) | P1 | AP |
@@ -211,9 +213,8 @@ is built on:
 | 13 | No inventory close cancellation | P3 | Inventory |
 | 14 | Duplicate ledger-context resolution; misplaced `VendSettlement` | P3 | Inventory / AP |
 
-Suggested order: ~~4~~ → ~~3~~ → **2** (contained, each closes a hole through which wrong accounting
-passes), then **1** (largest, and a prerequisite for trustworthy dimension posting), then 9, then 5
-and 6.
+Suggested order: ~~4~~ → ~~3~~ → ~~2~~ → **1** (largest, and a prerequisite for trustworthy dimension
+posting), then 9, then 5 and 6.
 
 **Progress (2026-10-31, backend only — services, API and tests; no schema change, no IXApp work).**
 
@@ -221,9 +222,19 @@ and 6.
 - Gap 3 **partly addressed and reprioritized to P3/blocked**: switched-on posting controls are now
   refused rather than silently skipped, but applying them is blocked on setup that does not exist
   (automatic transaction accounts) and on unverified check semantics. The P1 rating was wrong.
-- Next by this order is **gap 2**, enforcing the main account posting controls (`DebitCreditCheck`
-  and `MandatoryPaymentReference` are unambiguous and can proceed; `ValidateCurrency` /
-  `ValidatePosting` / `ValidateUser` need their D365 enums confirmed first).
+- Gap 2 **partly done, reprioritized to P2**: the debit/credit requirement and the mandatory payment
+  reference are applied, and the payment reference now reaches the posted entry instead of being
+  dropped. The remaining controls are gated on confirming the three `Validate*` enums. The
+  debit/credit pairing rests on a stated assumption — see that entry.
+- Next by this order is **gap 1**, account structures. It is the largest and needs its constraint
+  tables confirmed against target metadata before any migration.
+
+**Two open questions for whoever picks this up**, both recorded here rather than guessed:
+
+1. Does `MainAccount.DebitCreditCheck` (None/Check) enforce the side named by
+   `DebitCreditProposal`? The implementation assumes yes.
+2. What are the D365 enums behind `ValidateCurrency`, `ValidatePosting` and `ValidateUser`?
+   They block the rest of gap 2.
 
 A note on method, since two of the first three P1s turned out to be blocked rather than merely
 undone: a field that exists and is unread is not by itself evidence that the behavior behind it is

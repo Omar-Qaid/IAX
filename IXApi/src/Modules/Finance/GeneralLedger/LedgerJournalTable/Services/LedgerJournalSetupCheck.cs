@@ -81,6 +81,10 @@ public sealed class LedgerJournalSetupCheck(DbContext db)
         if (LedgerJournalParameterControls.Refusal(parameters) is { } refusal) errors.Add(refusal);
         unverified.UnionWith(LedgerJournalParameterControls.Unenforced(parameters));
 
+        // Main account controls this path does not apply, named per account so the reader can see
+        // which ones are configured but not in force.
+        unverified.UnionWith(LedgerAccount.MainAccountPostingControls.Unenforced(accounts));
+
         return new(errors.Distinct().ToList(), unverified.OrderBy(x => x).ToList());
 
         void CheckAccount(LedgerJournalACType type, long id, string label)

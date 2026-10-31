@@ -68,16 +68,21 @@ internal sealed class LedgerJournalPosting(DbContext db)
                 var amount = line.AmountCurDebit - line.AmountCurCredit;
                 var dimension = await support.LoadDimensionAsync(area, line.LedgerDimension, $"line {line.LineNum} account", ct);
                 posted.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, dimension,
-                    LedgerPostingType.LedgerJournal, amount, line.Txt, 0m, accountingCurrency));
+                    LedgerPostingType.LedgerJournal, amount, line.Txt, 0m, accountingCurrency, line.PaymReference));
                 if (line.OffsetLedgerDimension != 0)
                 {
                     var offset = await support.LoadDimensionAsync(area, line.OffsetLedgerDimension, $"line {line.LineNum} offset account", ct);
                     posted.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, offset,
-                        LedgerPostingType.LedgerJournal, -amount, line.OffsetTxt.Length > 0 ? line.OffsetTxt : line.Txt, 0m, accountingCurrency));
+                        LedgerPostingType.LedgerJournal, -amount, line.OffsetTxt.Length > 0 ? line.OffsetTxt : line.Txt, 0m,
+                        accountingCurrency, line.PaymReference));
                 }
                 totalDebit += line.AmountCurDebit;
                 totalCredit += line.AmountCurCredit;
             }
+
+            // The account's own controls are judged on the posted signed amount, so a line and its
+            // offset are each checked against the account they actually hit.
+            await EnsureAccountControlsAllowAsync(area, posted, ct);
 
             // The posted entry must balance on its own signed accounting amounts, not on the entered lines.
             if (posted.Sum(x => x.AccountingCurrencyAmount) != 0m)
@@ -102,6 +107,27 @@ internal sealed class LedgerJournalPosting(DbContext db)
         header.NumOfLines = lines.Count;
         foreach (var line in lines) line.NoEdit = NoYes.Yes;
         return new(header.JournalNum, vouchers, accountEntries, totalDebit, totalCredit, postedAt);
+    }
+
+    /// <summary>
+    /// Main account controls that restrict a posted line: the debit or credit side the account
+    /// accepts, and a required payment reference. An account whose other controls this path does
+    /// not apply is reported by the setup check, not silently satisfied here.
+    /// </summary>
+    private async Task EnsureAccountControlsAllowAsync(string area, List<GeneralJournalAccountEntry> posted, CancellationToken ct)
+    {
+        var accountIds = posted.Select(x => x.MainAccount).Where(x => x > 0).Distinct().ToList();
+        if (accountIds.Count == 0) return;
+        var accounts = await db.Set<MainAccount>().AsNoTracking()
+            .Where(x => accountIds.Contains(x.RecId)).ToListAsync(ct);
+        foreach (var line in posted)
+        {
+            var account = accounts.FirstOrDefault(x => x.RecId == line.MainAccount);
+            if (account == null) continue; // LoadDimensionAsync already established the account exists.
+            if (LedgerAccount.MainAccountPostingControls.Check(
+                    account, line.LedgerAccount, line.AccountingCurrencyAmount, line.PaymentReference) is { } refusal)
+                throw new SubledgerPostingException(refusal);
+        }
     }
 
     /// <summary>

@@ -57,14 +57,19 @@ internal sealed class SubledgerPostingSupport(DbContext db)
         FiscalCalendarPeriod = context.Period.RecId, FiscalCalendarYear = context.Period.FiscalCalendarYear
     };
 
+    /// <param name="paymentReference">
+    /// The source line's payment reference. Carried onto the posted entry because a main account may
+    /// require one, and because the field exists on both sides and was being dropped.
+    /// </param>
     public static GeneralJournalAccountEntry AccountEntry(string area, long entryId, DimensionAttributeValueCombination dimension,
-        LedgerPostingType type, decimal amount, string text, decimal qty, string currency) => new()
+        LedgerPostingType type, decimal amount, string text, decimal qty, string currency,
+        string paymentReference = "") => new()
     {
         DataAreaId = area, GeneralJournalEntry = entryId, LedgerDimension = dimension.RecId, MainAccount = dimension.MainAccount,
         LedgerAccount = dimension.DisplayValue.Length == 0 ? dimension.MainAccountValue : dimension.DisplayValue,
         Text = text, PostingType = type, TransactionCurrencyCode = currency, TransactionCurrencyAmount = amount,
         AccountingCurrencyAmount = amount, ReportingCurrencyAmount = amount, Quantity = qty,
-        IsCredit = amount < 0 ? NoYes.Yes : NoYes.No, PaymentReference = string.Empty
+        IsCredit = amount < 0 ? NoYes.Yes : NoYes.No, PaymentReference = paymentReference
     };
 
     /// <summary>Customer posting profile: Table (customer) -> Group (customer group) -> All, within the profile.</summary>
