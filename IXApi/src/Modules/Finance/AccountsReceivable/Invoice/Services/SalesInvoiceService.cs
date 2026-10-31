@@ -190,6 +190,19 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
                 totalQty += qty;
             }
 
+            // Order and line charges post here, before tax, so a charge billed to the customer is
+            // part of the invoice total and its tax joins the rest of the voucher's tax.
+            var charges = await new SalesChargePosting(Db).PostAsync(area, order, entry.RecId, invoiceId,
+                date, currency, support, customerAccount, ct);
+            foreach (var (code, chargeBase, chargeTax, group, itemGroup) in charges.TaxByCode)
+            {
+                var current = taxByCode.GetValueOrDefault(code);
+                taxByCode[code] = (current.Base + chargeBase, current.Tax + chargeTax,
+                    current.Group.Length > 0 ? current.Group : group,
+                    current.ItemGroup.Length > 0 ? current.ItemGroup : itemGroup);
+            }
+            totalTax += charges.Tax;
+
             foreach (var (code, value) in taxByCode)
             {
                 if (value.Tax == 0m) continue;
@@ -200,7 +213,9 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
                     order.CurrencyCode, currency, -value.Base, -value.Tax));
             }
 
-            var total = totalRevenue + totalTax;
+            // Charges debited to the customer are part of what the customer owes; charges the
+            // company absorbs posted to their own accounts above and are not in the total.
+            var total = totalRevenue + charges.BilledToCustomer + totalTax;
             Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, customerAccount, LedgerPostingType.CustBalance, total,
                 $"Customer invoice {invoiceId}", 0m, currency));
             Db.Add(new SubledgerVoucherGeneralJournalEntry
@@ -217,6 +232,7 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
                 CurrencyCode = order.CurrencyCode, LedgerVoucher = invoiceId, ParmId = input.RequestId ?? string.Empty,
                 Qty = totalQty, SalesBalance = totalRevenue, SumTax = totalTax, InvoiceAmount = total,
                 SalesBalanceMst = totalRevenue, SumTaxMst = totalTax, InvoiceAmountMst = total,
+                SumMarkup = charges.BilledToCustomer, SumMarkupMst = charges.BilledToCustomer,
                 Payment = order.PaymTerm, PostingProfile = order.PostingProfile, DueDate = dueDate
             };
             Db.Set<CustInvoiceJour>().Add(journal);

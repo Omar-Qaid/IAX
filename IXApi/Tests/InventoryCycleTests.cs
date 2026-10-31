@@ -908,7 +908,9 @@ public sealed class InventoryCycleTests
             typeof(CustInvoiceJour), typeof(CustInvoiceTrans), typeof(CustTrans), typeof(CustTransOpen), typeof(CustSettlement), typeof(CustLedgerAccounts),
             typeof(TaxGroupData), typeof(TaxOnItem), typeof(TaxData), typeof(TaxTable), typeof(TaxLedgerAccountGroup), typeof(TaxTrans),
             typeof(InventTransOriginSalesLine), typeof(BankAccountTable), typeof(BankAccountTrans), typeof(LedgerJournalTable), typeof(LedgerJournalTrans),
-            typeof(ReturnDispositionCode), typeof(ReturnReasonCode)
+            typeof(ReturnDispositionCode), typeof(ReturnReasonCode),
+            // Invoicing posts the order's charges.
+            typeof(MarkupTable), typeof(MarkupTrans)
         ];
 
         protected override void OnModelCreating(ModelBuilder builder)
