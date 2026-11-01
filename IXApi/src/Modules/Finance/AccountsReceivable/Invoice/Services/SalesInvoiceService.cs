@@ -330,14 +330,27 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
             Voucher = invoiceId, Invoice = invoiceId, DocumentNum = invoiceId, DocumentDate = date, Txt = text,
             TransType = type, CurrencyCode = order.CurrencyCode, AmountCur = amount, AmountMst = amount,
             ReportingCurrencyAmount = amount, DueDate = dueDate, PaymTermId = order.PaymTerm, PaymMode = order.PaymMode,
-            PostingProfile = order.PostingProfile, DefaultDimension = order.DefaultDimension
+            PostingProfile = order.PostingProfile, DefaultDimension = order.DefaultDimension,
+            // The order's cash discount code travels to the transaction, which is where settlement
+            // reads it from. The base date is the invoice date unless the order set its own.
+            CashDiscCode = order.CashDisc,
+            CashDiscBaseDate = order.CashDiscBaseDate == default ? date : order.CashDiscBaseDate
         };
         Db.Set<CustTrans>().Add(custTrans);
         await _unitOfWork.CompleteAsync(ct);
+
+        // The open row carries the discount it could earn, so it can be read without re-deriving
+        // it. Settlement resolves the discount itself through the same resolver, so this is
+        // reporting detail rather than the figure settlement depends on.
+        var terms = await Foundation.CashDiscount.CashDiscountResolver.ResolveAsync(Db, area,
+            custTrans.CashDiscCode, custTrans.CashDiscBaseDate, amount, ct);
         Db.Set<CustTransOpen>().Add(new CustTransOpen
         {
             DataAreaId = area, AccountNum = invoiceAccount, RefRecId = custTrans.RecId, TransDate = date,
-            DueDate = dueDate, AmountCur = amount, AmountMst = amount, ReportingCurrencyAmount = amount
+            DueDate = dueDate, AmountCur = amount, AmountMst = amount, ReportingCurrencyAmount = amount,
+            CashDiscDate = terms.Applies ? terms.DiscountDate : default,
+            PossibleCashDisc = terms.PossibleAmount,
+            CashDiscountLedgerDimension = terms.Discount?.CashDiscLedgerDimension ?? 0
         });
     }
 

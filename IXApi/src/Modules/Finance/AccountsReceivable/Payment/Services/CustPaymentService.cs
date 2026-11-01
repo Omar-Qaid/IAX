@@ -148,19 +148,51 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
             var remaining = input.Amount;
             var settled = new List<object>();
             var settlementVoucher = string.Empty;
+            // Cash discount taken per discount account, so a voucher covering invoices on
+            // different discount codes debits each configured account for its own share.
+            var discountsByAccount = new Dictionary<long, decimal>();
             foreach (var invoice in openInvoices.OrderBy(x => x.Open.DueDate).ThenBy(x => x.Trans.RecId))
             {
                 if (remaining <= 0) break;
                 if (invoice.Trans.TransDate.Date > date)
                     return await Fail(422, "A payment cannot settle a future-dated invoice.", ct);
-                var settle = Math.Min(remaining, invoice.Open.AmountCur);
+
+                // A cash discount is taken only when the payment arrives in time and covers the
+                // whole invoice less the discount: a part payment earns no discount.
+                var terms = await Foundation.CashDiscount.CashDiscountResolver.ResolveAsync(Db, area,
+                    invoice.Trans.CashDiscCode,
+                    invoice.Trans.CashDiscBaseDate == default ? invoice.Trans.TransDate : invoice.Trans.CashDiscBaseDate,
+                    invoice.Open.AmountCur, ct);
+                var discount = 0m;
+                if (terms.Applies
+                    && Foundation.CashDiscount.CashDiscountCalculator.IsWithinPeriod(date, terms.DiscountDate)
+                    && remaining >= invoice.Open.AmountCur - terms.PossibleAmount)
+                {
+                    if (terms.Discount!.CashDiscLedgerDimension == 0)
+                        return await Fail(422, $"Cash discount '{terms.Discount.CashDiscCode}' has no ledger account configured.", ct);
+                    discount = terms.PossibleAmount;
+                    discountsByAccount[terms.Discount.CashDiscLedgerDimension] =
+                        discountsByAccount.GetValueOrDefault(terms.Discount.CashDiscLedgerDimension) + discount;
+                }
+
+                // The invoice is cleared by the full open amount; only the cash reduces what the
+                // payment has left to apply.
+                var settle = discount > 0m ? invoice.Open.AmountCur : Math.Min(remaining, invoice.Open.AmountCur);
+                var cash = settle - discount;
                 if (settlementVoucher.Length == 0)
                     settlementVoucher = (await numbers.NextAsync("CustSettlement", area, ct)).Code;
+                var invoiceRow = Settlement(area, customer.AccountNum, date, settlementVoucher, invoice.Trans.RecId,
+                    invoice.Open.RecId, paymentTrans.RecId, voucher, settle, invoice.Trans.TransType);
+                invoiceRow.UtilizedCashDisc = discount;
+                if (discount > 0m)
+                {
+                    invoiceRow.CustCashDiscDate = terms.DiscountDate;
+                    invoiceRow.CashDiscountLedgerDimension = terms.Discount!.CashDiscLedgerDimension;
+                }
                 Db.Set<CustSettlement>().AddRange(
-                    Settlement(area, customer.AccountNum, date, settlementVoucher, invoice.Trans.RecId, invoice.Open.RecId,
-                        paymentTrans.RecId, voucher, settle, invoice.Trans.TransType),
+                    invoiceRow,
                     Settlement(area, customer.AccountNum, date, settlementVoucher, paymentTrans.RecId, 0,
-                        invoice.Trans.RecId, invoice.Trans.Voucher, -settle, LedgerTransType.Payment));
+                        invoice.Trans.RecId, invoice.Trans.Voucher, -cash, LedgerTransType.Payment));
                 invoice.Trans.SettleAmountCur += settle;
                 invoice.Trans.SettleAmountMst += settle;
                 invoice.Trans.LastSettleDate = date;
@@ -175,11 +207,12 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
                     invoice.Trans.Settlement = CustSettlementStatus.Settled;
                     Db.Set<CustTransOpen>().Remove(invoice.Open);
                 }
-                paymentTrans.SettleAmountCur -= settle;
-                paymentTrans.SettleAmountMst -= settle;
-                remaining -= settle;
-                settled.Add(new { invoice = invoice.Trans.Invoice, amount = settle });
+                paymentTrans.SettleAmountCur -= cash;
+                paymentTrans.SettleAmountMst -= cash;
+                remaining -= cash;
+                settled.Add(new { invoice = invoice.Trans.Invoice, amount = settle, cashDiscount = discount });
             }
+            var totalDiscount = discountsByAccount.Values.Sum();
             if (remaining > 0)
                 Db.Set<CustTransOpen>().Add(new CustTransOpen
                 {
@@ -225,9 +258,20 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
                 LedgerDimension = bank.LedgerDimension, SourceTableId = FinanceTableNumbers.LedgerJournalTrans,
                 SourceRecId = paymentLine.RecId, PaymentMode = input.PaymMode ?? string.Empty, PaymReference = input.RequestId ?? string.Empty
             });
+            // Dr Bank for the cash, Dr each configured cash-discount account for the discount
+            // taken, Cr the customer for both: the customer's balance falls by what was cleared,
+            // not only by what was banked. With no discount this is the Dr Bank / Cr Customer pair
+            // it has always been.
             Db.AddRange(
                 SubledgerPostingSupport.AccountEntry(area, entry.RecId, bankAccount, LedgerPostingType.Bank, input.Amount, $"Customer payment {customer.AccountNum}", 0m, currency),
-                SubledgerPostingSupport.AccountEntry(area, entry.RecId, customerAccount, LedgerPostingType.CustBalance, -input.Amount, $"Customer payment {customer.AccountNum}", 0m, currency));
+                SubledgerPostingSupport.AccountEntry(area, entry.RecId, customerAccount, LedgerPostingType.CustBalance, -(input.Amount + totalDiscount), $"Customer payment {customer.AccountNum}", 0m, currency));
+            foreach (var (discountDimension, discountAmount) in discountsByAccount)
+            {
+                var discountAccount = await support.LoadDimensionAsync(area, discountDimension, "cash discount", ct);
+                Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, discountAccount,
+                    LedgerPostingType.CashDiscount, discountAmount,
+                    $"Cash discount {customer.AccountNum}", 0m, currency));
+            }
             Db.Add(new SubledgerVoucherGeneralJournalEntry
             {
                 DataAreaId = area, GeneralJournalEntry = entry.RecId, Voucher = voucher, VoucherDataAreaId = area, AccountingDate = date
