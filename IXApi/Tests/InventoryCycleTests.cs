@@ -1098,6 +1098,89 @@ public sealed class InventoryCycleTests
     private static ISysNumberSequenceService Sequence() =>
         DispatchProxy.Create<ISysNumberSequenceService, TestSequenceProxy>();
 
+    // ---- Inventory marking --------------------------------------------------------------------
+
+    [Fact]
+    public async Task Marking_links_an_issue_to_a_receipt_on_both_sides_and_rejects_remarking()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedMarkablePool(db);
+        await db.SaveChangesAsync();
+        var service = new InventoryMarkingService(new TestUnitOfWork(db), new TestCompany());
+
+        var (marked, error) = await service.MarkAsync("I1", "R2", default);
+        Assert.Null(error);
+        Assert.True(marked!.IsMarked);
+
+        // D365 holds the link on both transactions, each pointing at the other's origin.
+        var issue = await db.Set<InventTrans>().SingleAsync(x => x.RecId == 3);
+        var receipt = await db.Set<InventTrans>().SingleAsync(x => x.RecId == 2);
+        Assert.Equal(2L, issue.MarkingRefInventTransOrigin);   // origin RecId of R2
+        Assert.Equal(3L, receipt.MarkingRefInventTransOrigin); // origin RecId of I1
+
+        // The same pair again is a no-operation, a different pair is refused.
+        Assert.Null((await service.MarkAsync("I1", "R2", default)).Error);
+        Assert.Contains("already marked", (await service.MarkAsync("I1", "R1", default)).Error);
+        // Direction and item are enforced.
+        Assert.Contains("not an issue", (await service.MarkAsync("R1", "R2", default)).Error);
+        Assert.Contains("cannot be marked to itself", (await service.MarkAsync("I1", "I1", default)).Error);
+
+        var listed = Assert.Single(await service.ListAsync(null, default) ?? []);
+        Assert.Equal(("I1", "R2"), (listed.IssueInventTransId, listed.ReceiptInventTransId));
+
+        // Removing the marking clears both sides.
+        Assert.Null((await service.UnmarkAsync("I1", default)).Error);
+        Assert.Equal(0L, (await db.Set<InventTrans>().SingleAsync(x => x.RecId == 3)).MarkingRefInventTransOrigin);
+        Assert.Equal(0L, (await db.Set<InventTrans>().SingleAsync(x => x.RecId == 2)).MarkingRefInventTransOrigin);
+        Assert.Contains("not marked", (await service.UnmarkAsync("I1", default)).Error);
+    }
+
+    [Fact]
+    public async Task Marked_issue_settles_against_its_marked_receipt_instead_of_the_model_order()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedMarkablePool(db);
+        await db.SaveChangesAsync();
+        var work = new TestUnitOfWork(db);
+        // Marked to the dearer second receipt, so FIFO order is deliberately overridden.
+        Assert.Null((await new InventoryMarkingService(work, new TestCompany()).MarkAsync("I1", "R2", default)).Error);
+
+        var (result, error) = await new InventCloseService(work, new TestCompany(), new TestUser(), Sequence())
+            .CloseItemAsync("ITEM", new DateTime(2026, 6, 30), default);
+
+        Assert.Null(error);
+        Assert.Equal(1, result!.IssuesSettled);
+        var settlement = Assert.Single(await db.Set<InventSettlement>().ToListAsync());
+        Assert.Equal(2L, settlement.ReceiptTransRecId);          // the marked receipt, not the oldest
+        Assert.Equal(-600m, settlement.CostAmountSettled);       // 50 units at the marked receipt's 12
+        var issue = await db.Set<InventTrans>().SingleAsync(x => x.RecId == 3);
+        Assert.Equal(-600m, issue.CostAmountSettled);
+        Assert.Equal(-50m, issue.CostAmountAdjustment);          // provisional was 11 per unit
+        // The oldest receipt is untouched, which is the whole point of marking.
+        Assert.Equal(0m, (await db.Set<InventTrans>().SingleAsync(x => x.RecId == 1)).QtySettled);
+    }
+
+    /// <summary>Two receipts at different costs and one issue, so marking changes the outcome.</summary>
+    private static void SeedMarkablePool(CycleContext db)
+    {
+        db.Set<InventDim>().Add(new InventDim { RecId = 1, DataAreaId = "dat", InventDimId = "DIM", InventSiteId = "S1", InventLocationId = "WH" });
+        db.Set<InventModelGroup>().Add(new InventModelGroup { RecId = 1, DataAreaId = "dat", ModelGroupId = "FIFO", InventModel = InventModel.FIFO });
+        db.Set<InventModelGroupItem>().Add(new InventModelGroupItem { RecId = 1, ItemDataAreaId = "dat", ModelGroupDataAreaId = "dat", ModelGroupId = "FIFO", ItemId = "ITEM" });
+        db.Set<InventItemGroupItem>().Add(new InventItemGroupItem { RecId = 1, ItemDataAreaId = "dat", ItemId = "ITEM", ItemGroupId = "TRADE" });
+        db.Set<InventTransOrigin>().AddRange(
+            new InventTransOrigin { RecId = 1, DataAreaId = "dat", InventTransId = "R1", ItemId = "ITEM", ReferenceId = "IJ1", ReferenceCategory = InventRefType.InventoryJournal },
+            new InventTransOrigin { RecId = 2, DataAreaId = "dat", InventTransId = "R2", ItemId = "ITEM", ReferenceId = "IJ2", ReferenceCategory = InventRefType.InventoryJournal },
+            new InventTransOrigin { RecId = 3, DataAreaId = "dat", InventTransId = "I1", ItemId = "ITEM", ReferenceId = "IJ3", ReferenceCategory = InventRefType.InventoryJournal });
+        db.Set<InventTrans>().AddRange(
+            new InventTrans { RecId = 1, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM", InventTransOrigin = 1, Qty = 100, StatusReceipt = StatusReceipt.Purchased, CostAmountPosted = 1000, DateFinancial = new DateTime(2026, 6, 1), ValueOpen = InventTransOpen.Yes },
+            new InventTrans { RecId = 2, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM", InventTransOrigin = 2, Qty = 100, StatusReceipt = StatusReceipt.Purchased, CostAmountPosted = 1200, DateFinancial = new DateTime(2026, 6, 2), ValueOpen = InventTransOpen.Yes },
+            new InventTrans { RecId = 3, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM", InventTransOrigin = 3, Qty = -50, StatusIssue = StatusIssue.Sold, CostAmountPosted = -550, DateFinancial = new DateTime(2026, 6, 3), ValueOpen = InventTransOpen.Yes });
+        db.Set<InventSum>().Add(new InventSum { RecId = 1, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM", PhysicalInvent = 150, PostedValue = 1650 });
+    }
+
     // ---- Counting journal line generation -----------------------------------------------------
 
     [Fact]

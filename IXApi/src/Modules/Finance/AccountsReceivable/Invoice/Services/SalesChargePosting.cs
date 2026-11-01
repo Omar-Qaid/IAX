@@ -117,7 +117,7 @@ internal sealed class SalesChargePosting(DbContext db)
         var lineIds = lines.Select(x => x.RecId).ToList();
         var charges = await db.Set<MarkupTrans>()
             .Where(x => x.DataAreaId == area
-                && x.IsDeleted != NoYes.Yes
+                && !x.IsDeleted
                 && x.Posted == 0m
                 && (x.ModuleType == MarkupModuleType.Customer || x.ModuleType == MarkupModuleType.Sales)
                 && ((x.TransRecId == order.RecId

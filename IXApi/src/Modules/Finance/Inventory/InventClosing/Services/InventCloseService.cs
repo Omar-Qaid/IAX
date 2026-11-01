@@ -240,6 +240,16 @@ public sealed partial class InventCloseService : IInventCloseService
             while (needed > 0 && layers.Count > 0)
             {
                 var node = pool.Model == InventModel.LIFO ? layers.Last! : layers.First!;
+                if (trans.MarkingRefInventTransOrigin != 0)
+                {
+                    // A marked issue takes its cost from the receipt it is marked to, ahead of the
+                    // inventory model. Any quantity left over after that receipt is exhausted
+                    // follows the model order on the next pass.
+                    var marked = layers.First;
+                    while (marked != null && marked.Value.Receipt.InventTransOrigin != trans.MarkingRefInventTransOrigin)
+                        marked = marked.Next;
+                    if (marked != null) node = marked;
+                }
                 if (vendorReturns.TryGetValue(row.InventTransId, out var purchaseId))
                 {
                     // A vendor return must consume the very receipt it sends back.

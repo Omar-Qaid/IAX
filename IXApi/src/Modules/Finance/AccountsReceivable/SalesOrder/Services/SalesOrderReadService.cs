@@ -108,7 +108,7 @@ public sealed class SalesOrderReadService : ISalesOrderReadService
         var lineRecIds = lines.Select(line => line.RecId).ToList();
         var charges = await _unitOfWork.Context.Set<MarkupTrans>().AsNoTracking()
             .Where(charge => charge.DataAreaId == order.DataAreaId
-                && charge.IsDeleted != NoYes.Yes
+                && !charge.IsDeleted
                 && (charge.ModuleType == MarkupModuleType.Customer || charge.ModuleType == MarkupModuleType.Sales)
                 && ((charge.TransRecId == order.RecId
                         && (charge.TransTableId == FinanceTableNumbers.SalesTable || charge.TransTableId == FinanceTableNumbers.Unspecified))

@@ -45,10 +45,16 @@ Phase 1 matrix that called close, settlement and reversal "deferred" no longer d
   carrying `CancelClosing` and `CancelClosingRefRecId`. Only the latest live run can be cancelled,
   because later runs settled against the layers it consumed. A cancelled close stops binding
   `InventoryFinancialBoundary`.
-- **Inventory models**: FIFO, LIFO and Weighted average are settled. Weighted average uses one pool
-  average for the period, rounded to two decimals with the residual on the last consumption.
-  LIFO-date, Weighted-average-date, Standard cost and Moving average are **rejected with a named
-  error**, not approximated - their exact standard behaviour is not yet verified here.
+- **Inventory models**: FIFO, LIFO and Weighted average are settled, and item-model-group setup
+  accepts exactly those three, so a group cannot be created whose cost could never be settled.
+  Weighted average uses one pool average for the period, rounded to two decimals with the residual
+  on the last consumption. LIFO-date, Weighted-average-date, Standard cost and Moving average are
+  **rejected with a named error** in both setup and settlement, not approximated - their exact
+  standard behaviour is not yet verified here.
+- **Posting detail**: an inventory journal name may post Detail or Summary. Summary gives the whole
+  journal one voucher and one ledger entry whose account lines are totalled per account and posting
+  type; the inventory transactions and the per-line `InventTransPosting` records stay per line,
+  because summarizing is a ledger presentation and not a stock change.
 - **Partially settled issues** are completed for their remaining open quantity instead of aborting
   the run, and a receipt keeps its open quantity across runs.
 
@@ -60,10 +66,19 @@ individually and with their difference, because what belongs in "inventory on th
 depends on which accounts the posting profiles point at - the report shows the composition and
 leaves that judgement to the reader.
 
-Still missing in costing: standard-cost variances, moving-average maintenance, physical
-(non-financial) inventory value - `InventSum.PhysicalValue` is never written - and cost marking.
-`InventMark` is deliberately absent rather than approximated: its exact standard field names are
-not verified here, and guessing them would break the no-invented-schema rule.
+**Inventory marking** (`api/v1/inventory/markings`) ties an issue to the specific receipt its cost
+must come from, and cost settlement consumes that receipt ahead of the inventory model, letting any
+remaining quantity fall through to the model order. D365 keeps no separate marking table: the link
+lives on `InventTrans.MarkingRefInventTransOrigin`, referencing the counterpart's
+`InventTransOrigin`, and is written in both directions. That field already existed here, so marking
+added no schema. Because the reference is one field per transaction, D365 marks part of a quantity
+by splitting the transaction; this service marks whole transactions and rejects a split side with a
+named error rather than inventing a marked-quantity column.
+
+Still missing in costing: standard-cost variances, moving-average maintenance, and physical
+(non-financial) inventory value - `InventSum.PhysicalValue` is never written. An earlier revision of
+this file claimed a missing `InventMark` table; there is no such table in D365, and the gap was
+really the unused marking field named above.
 
 ## Existing feature coverage
 
@@ -119,7 +134,7 @@ Reference baseline: current Microsoft Dynamics 365 Supply Chain Management onlin
 | Posting setup | Posting profile page/API and journal posting account resolution | `InventPosting` | Limited basic posting paths consume configured rules; all type/profile combinations need relational verification | Verify each journal type and fail posting for missing applicable setup | Critical | [Microsoft inventory posting profiles](https://learn.microsoft.com/dynamics365/finance/general-ledger/inventory-posting-profiles) |
 | Costing and inventory value | Item model-group choice, journal cost fields, transaction and summary values | Item model group, `InventTrans`, `InventSum`, inventory close/recalculation and inventory value inquiry | Basic journal amounts use running-average-style behavior; FIFO/weighted-average settlement, standard-cost revaluation, closing/recalculation, and a reconciled value report are not implemented/verified | Expose only calculations that are implemented; add costing workflows/reporting and reconcile to ledger before claiming parity | Critical | [Inventory close](https://learn.microsoft.com/en-us/dynamics365/supply-chain/cost-management/inventory-close); [running average cost](https://learn.microsoft.com/en-us/dynamics365/supply-chain/cost-management/running-average-cost-price) |
 | Ledger integration | Journal posting creates ledger entries for tested basic paths | Inventory posting profiles and general-ledger entries | Not verified against SQL Server, all posting combinations, or period behavior | Complete relational verification; report unsupported combinations explicitly | Critical | [Microsoft inventory posting profiles](https://learn.microsoft.com/dynamics365/finance/general-ledger/inventory-posting-profiles) |
-| Permissions | Generic Inventory.Transactions permissions reused across pages | D365 duties/privileges concept | Present but too coarse for setup versus posting | Add least-privilege setup, journal maintain, journal post and inquiry permissions | Medium | Repository permission registry |
+| Permissions | Split into `Inventory.Setup`, `Inventory.Journals`, `Inventory.Posting` and `Inventory.Inquiry` | D365 duties/privileges concept | Done for Inventory. `Inventory.Transactions` is still seeded so existing grants are not orphaned, but no inventory endpoint requires it any more: **roles must be re-granted the new resources**. Product-master controllers still use the pre-existing `Inventory.Products` / `Inventory.Items` resources, and `Products` is not in the seeder - a separate pre-existing gap | Re-grant roles; seed or rename `Inventory.Products` | Medium | `IdentitySeeder.PermissionDefs`, inventory controllers |
 | Advanced WHS/manufacturing/variants | Some persistence columns exist but basic pages hide them | WHS, production, product masters/variants | Outside scope | Preserve stored columns; don't add services or UI workflows | Deferred | Agreed scope |
 
 ### Point-by-point scope confirmation

@@ -128,7 +128,12 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         // Enum Properties
         public DocumentStatus DocumentStatus { get; set; }
         public NoYes IsModified { get; set; }
-        public new NoYes IsDeleted { get; set; }
+
+        // IsDeleted is deliberately NOT redeclared here. It used to be shadowed as
+        // `public new NoYes IsDeleted`, which mapped the column as int and hid the base entity's
+        // bool. The global soft-delete filter only applies when the property's CLR type is bool,
+        // so this table silently had no filter at all and soft-deleted charges stayed visible to
+        // every query, including the posting paths once charges began to post.
         public NoYes IsOverriddenLine { get; set; }
         public NoYes IsOverriddenProratedLine { get; set; }
 

@@ -40,7 +40,7 @@ public sealed class MarkupTransService(
         var entities = await _db.Set<MarkupTrans>()
             .AsNoTracking()
             .Where(x => x.TransRecId == documentRecId
-                && x.IsDeleted != NoYes.Yes
+                && !x.IsDeleted
                 && (moduleType == MarkupModuleType.Customer
                     ? x.ModuleType == MarkupModuleType.Customer || x.ModuleType == MarkupModuleType.Sales
                     : x.ModuleType == moduleType)
@@ -96,7 +96,7 @@ public sealed class MarkupTransService(
     {
         var dataAreaId = _company.GetDataAreaId() ?? "dat";
         var entity = await _db.Set<MarkupTrans>().FirstOrDefaultAsync(
-            x => x.RecId == id && x.DataAreaId == dataAreaId && x.IsDeleted != NoYes.Yes,
+            x => x.RecId == id && x.DataAreaId == dataAreaId && !x.IsDeleted,
             cancellationToken);
         if (entity == null) return new(default, new("Charge transaction not found.", true));
         var validation = await ValidateInput(entity.ModuleType, entity.TransTableId, entity.TransRecId, input, cancellationToken);
@@ -109,7 +109,7 @@ public sealed class MarkupTransService(
     {
         var dataAreaId = _company.GetDataAreaId() ?? "dat";
         var entity = await _db.Set<MarkupTrans>().FirstOrDefaultAsync(
-            x => x.RecId == id && x.DataAreaId == dataAreaId && x.IsDeleted != NoYes.Yes,
+            x => x.RecId == id && x.DataAreaId == dataAreaId && !x.IsDeleted,
             cancellationToken);
         if (entity == null) return new(default, new("Charge transaction not found.", true));
         var editError = await ValidateSalesChargeEditable(entity.ModuleType, entity.TransTableId,

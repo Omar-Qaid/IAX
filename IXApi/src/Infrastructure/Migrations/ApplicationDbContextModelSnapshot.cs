@@ -7892,8 +7892,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<int>("IsCompound")
                         .HasColumnType("int");
 
-                    b.Property<int>("IsDeleted")
-                        .HasColumnType("int");
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<int>("IsModified")
                         .HasColumnType("int");

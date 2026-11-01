@@ -101,7 +101,7 @@ internal sealed class PurchaseChargePosting(DbContext db)
     {
         var charges = await db.Set<MarkupTrans>()
             .Where(x => x.DataAreaId == area
-                && x.IsDeleted != NoYes.Yes
+                && !x.IsDeleted
                 && x.Posted == 0m
                 && x.ModuleType == MarkupModuleType.Vendor
                 && x.TransRecId == order.RecId)
