@@ -24,7 +24,7 @@ internal enum PhysicalPostingSide
     Revenue
 }
 
-internal enum LedgerPostingModule { Ledger, Tax, Bank, Customer, Vendor }
+internal enum LedgerPostingModule { Ledger, Tax, Bank, Customer, Vendor, Inventory }
 
 /// <summary>
 /// Shared AR/AP subledger posting resolution (sales invoice, credit note, customer payment, vendor
@@ -63,6 +63,7 @@ internal sealed class SubledgerPostingSupport(DbContext db)
                     LedgerPostingModule.Bank => (access.BankAccessLevel, access.BankUserGroupInfo),
                     LedgerPostingModule.Customer => (access.CustAccessLevel, access.CustUserGroupInfo),
                     LedgerPostingModule.Vendor => (access.VendAccessLevel, access.VendUserGroupInfo),
+                    LedgerPostingModule.Inventory => (access.InventAccessLevel, access.InventUserGroupInfo),
                     _ => throw new SubledgerPostingException($"Unsupported fiscal-period posting module '{module}'.")
                 };
                 if (rule.Item1 == LedgerPeriodAccessLevel.None)

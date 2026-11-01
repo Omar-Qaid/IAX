@@ -58,7 +58,8 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
                 return (new InventJournalPostResultDto
                 {
                     JournalId = header.JournalId, Posted = true, PostedDateTime = header.PostedDateTime,
-                    Vouchers = priorVouchers.OrderBy(x => x.LineNum).Select(x => x.Voucher).ToList()
+                    Vouchers = priorVouchers.OrderBy(x => x.LineNum).Select(x => x.Voucher)
+                        .Distinct(StringComparer.Ordinal).ToList()
                 }, null);
             }
             if (header.JournalType == InventJournalType.Counting && (!header.CountingFrozen || !header.CountingConfirmed))
@@ -87,11 +88,6 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
                 {
                     if (group.Any(x => x.Qty <= 0))
                         throw new PostingValidationException("Transfer quantities must be positive.");
-                    var inventoryUnit = await Db.Set<InventTableModule>().AsNoTracking()
-                        .Where(x => x.DataAreaId == companyId && x.ItemId == group.Key.ItemId && x.ModuleType == ModuleInventPurchSales.Inventory)
-                        .Select(x => x.UnitId).FirstOrDefaultAsync(ct);
-                    if (string.IsNullOrWhiteSpace(inventoryUnit) || group.Any(x => !string.Equals(x.Unit, inventoryUnit, StringComparison.OrdinalIgnoreCase)))
-                        throw new PostingValidationException($"Transfer lines for item '{group.Key.ItemId}' must use the inventory unit.");
                     var initial = await Db.Set<InventSum>().AsNoTracking().FirstOrDefaultAsync(x =>
                         x.DataAreaId == companyId && x.ItemId == group.Key.ItemId && x.InventDimId == group.Key.InventDimId, ct);
                     var available = (initial?.PhysicalInvent ?? 0m) - (initial?.ReservPhysical ?? 0m);
@@ -118,10 +114,7 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
             // account lines are totalled per account and posting type. The inventory transactions
             // stay per line either way: summarizing is a ledger presentation, not a stock change.
             var summarize = header.DetailSummary == DetailSummary.Summary;
-            var journalVoucher = summarize
-                ? (await _numbers.NextAsync(voucherSequence.NumberSequence, companyId, ct)).Code
-                : null;
-            if (summarize) result.Vouchers.Add(journalVoucher!);
+            string? journalVoucher = null;
             var summaryLines = summarize ? new Dictionary<(long, LedgerPostingType), SummaryLine>() : null;
 
             foreach (var line in lines)
@@ -132,16 +125,17 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
                 var item = await LoadReadyItemAsync(companyId, line.ItemId, ct);
                 var fromDim = await Db.Set<InventDim>().FirstOrDefaultAsync(x => x.DataAreaId == companyId && x.InventDimId == line.InventDimId, ct)
                     ?? throw new PostingValidationException($"Inventory dimension '{line.InventDimId}' was not found for line {line.LineNum}.");
-                var inventoryQty = await ConvertToInventoryUnitAsync(companyId, item.Product, item.ItemId, line.Unit, line.Qty, ct);
+                var inventoryQty = line.Qty;
                 var fromSum = await Movement.GetOrCreateSummaryAsync(companyId, item.ItemId, fromDim, ct);
                 decimal signedQty;
                 if (header.JournalType == InventJournalType.Counting)
                 {
-                    var counted = await ConvertToInventoryUnitAsync(companyId, item.Product, item.ItemId, line.Unit, line.Counted, ct);
+                    var counted = line.Counted;
                     if (line.InventOnHand != fromSum.PhysicalInvent)
                         throw new PostingValidationException("Inventory changed after the count was frozen; cancel and recount.");
                     signedQty = counted - fromSum.PhysicalInvent;
                     line.Qty = signedQty;
+                    line.UnitQty = signedQty;
                 }
                 else signedQty = header.JournalType == InventJournalType.Transfer ? -Math.Abs(inventoryQty) : inventoryQty;
 
@@ -164,13 +158,18 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
                     line.Voucher = string.Empty;
                     continue;
                 }
-                var unitCost = await ResolveUnitCostAsync(companyId, item, fromSum, line, header.JournalType, signedQty, ct);
+                var unitCost = await ResolveUnitCostAsync(companyId, item, line, header.JournalType, signedQty, ct);
                 if (unitCost <= 0 && signedQty < 0 && item.Model.NegativePhysical == NoYes.Yes)
                     unitCost = await GetDefaultItemCostAsync(companyId, item.ItemId, line.InventDimId, line.TransDate, ct);
                 if (unitCost <= 0 && signedQty > 0 && header.JournalType == InventJournalType.Counting)
                     unitCost = await GetDefaultItemCostAsync(companyId, item.ItemId, line.InventDimId, line.TransDate, ct);
                 if (unitCost <= 0 && header.JournalType != InventJournalType.Transfer)
                     throw new PostingValidationException($"A positive inventory cost is required for item '{item.ItemId}' on line {line.LineNum}.");
+                if (summarize && journalVoucher is null)
+                {
+                    journalVoucher = (await _numbers.NextAsync(voucherSequence.NumberSequence, companyId, ct)).Code;
+                    result.Vouchers.Add(journalVoucher);
+                }
                 var voucher = journalVoucher ?? (await _numbers.NextAsync(voucherSequence.NumberSequence, companyId, ct)).Code;
                 if (!summarize) result.Vouchers.Add(voucher);
 
@@ -273,45 +272,6 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
         if (error != null) throw new PostingValidationException(error);
     }
 
-    private async Task<decimal> ConvertToInventoryUnitAsync(string companyId, long product, string itemId, string fromSymbol, decimal qty, CancellationToken ct)
-    {
-        var inventoryUnit = await Db.Set<InventTableModule>().AsNoTracking().Where(x => x.DataAreaId == companyId && x.ItemId == itemId && x.ModuleType == ModuleInventPurchSales.Inventory)
-            .Select(x => x.UnitId).FirstOrDefaultAsync(ct);
-        if (string.IsNullOrWhiteSpace(inventoryUnit)) throw new PostingValidationException($"Inventory unit is required for item '{itemId}'.");
-        if (string.Equals(fromSymbol, inventoryUnit, StringComparison.OrdinalIgnoreCase)) return qty;
-        var symbols = await Db.Set<UnitOfMeasure>().IgnoreQueryFilters().AsNoTracking()
-            .Where(x => x.Symbol == fromSymbol || x.Symbol == inventoryUnit).ToListAsync(ct);
-        var from = symbols.FirstOrDefault(x => x.Symbol == fromSymbol);
-        var to = symbols.FirstOrDefault(x => x.Symbol == inventoryUnit);
-        if (from == null || to == null) throw new PostingValidationException($"Unit conversion from '{fromSymbol}' to '{inventoryUnit}' is not configured.");
-        var direct = await Db.Set<UnitOfMeasureConversion>().AsNoTracking()
-            .Where(x => (x.Product == product || x.Product == 0) && x.FromUnitOfMeasure == from.RecId && x.ToUnitOfMeasure == to.RecId)
-            .OrderByDescending(x => x.Product == product).ThenByDescending(x => x.RecId).FirstOrDefaultAsync(ct);
-        var reverse = direct == null ? await Db.Set<UnitOfMeasureConversion>().AsNoTracking()
-            .Where(x => (x.Product == product || x.Product == 0) && x.FromUnitOfMeasure == to.RecId && x.ToUnitOfMeasure == from.RecId)
-            .OrderByDescending(x => x.Product == product).ThenByDescending(x => x.RecId).FirstOrDefaultAsync(ct) : null;
-        if (direct == null && reverse == null) throw new PostingValidationException($"Unit conversion from '{fromSymbol}' to '{inventoryUnit}' is not configured.");
-        decimal converted;
-        UnitOfMeasureRounding rounding;
-        if (direct != null)
-        {
-            var factor = EffectiveFactor(direct);
-            if (factor <= 0 || direct.InnerOffset != 0 || direct.OuterOffset != 0)
-                throw new PostingValidationException("Only positive linear unit conversions are supported for basic inventory.");
-            converted = qty * factor;
-            rounding = direct.Rounding;
-        }
-        else
-        {
-            var factor = EffectiveFactor(reverse!);
-            if (factor <= 0 || reverse!.InnerOffset != 0 || reverse.OuterOffset != 0)
-                throw new PostingValidationException("Only positive linear unit conversions are supported for basic inventory.");
-            converted = qty / factor;
-            rounding = reverse.Rounding;
-        }
-        return Round(converted, to.DecimalPrecision, rounding);
-    }
-
     /// <summary>Posts one journal line's movement and keeps the line's inventory references.</summary>
     private async Task CreateLineTransactionAsync(string companyId, InventJournalTable header, InventJournalTrans line,
         string itemId, string dimId, decimal qty, decimal unitCost, string currency, string voucher, CancellationToken ct)
@@ -329,7 +289,7 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
         dim.InventSerialId.Length == 0 && dim.InventStatusId.Length == 0 &&
         dim.WmsLocationId.Length == 0 && dim.LicensePlateId.Length == 0;
 
-    private async Task<decimal> ResolveUnitCostAsync(string companyId, ReadyItem item, InventSum summary, InventJournalTrans line,
+    private async Task<decimal> ResolveUnitCostAsync(string companyId, ReadyItem item, InventJournalTrans line,
         InventJournalType journalType, decimal signedQty, CancellationToken ct)
     {
         // FIFO, LIFO and weighted average post a provisional cost here and are corrected by
@@ -353,17 +313,11 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
 
         if (journalType == InventJournalType.Transfer || signedQty < 0 || journalType == InventJournalType.Counting)
         {
-            if (item.Model.InventModel != InventModel.FIFO) return InventoryMovement.RunningAverageCost(summary);
             var site = await Db.Set<InventDim>().AsNoTracking()
                 .Where(x => x.DataAreaId == companyId && x.InventDimId == line.InventDimId)
                 .Select(x => x.InventSiteId).FirstOrDefaultAsync(ct);
-            if (string.IsNullOrEmpty(site)) throw new PostingValidationException("The inventory site is required for FIFO cost estimation.");
-            var balances = await Db.Set<InventSum>().AsNoTracking()
-                .Where(x => x.DataAreaId == companyId && x.ItemId == item.ItemId && x.InventSiteId == site)
-                .Select(x => new { x.PhysicalInvent, x.PostedValue, x.PhysicalValue }).ToListAsync(ct);
-            var quantity = balances.Sum(x => x.PhysicalInvent);
-            var value = balances.Sum(x => x.PostedValue + x.PhysicalValue);
-            return quantity <= 0 ? 0m : Math.Abs(value / quantity);
+            if (string.IsNullOrEmpty(site)) throw new PostingValidationException("The inventory site is required for cost estimation.");
+            return await InventoryMovement.SiteRunningAverageCostAsync(Db, companyId, item.ItemId, site, ct);
         }
         return line.CostPrice;
     }
@@ -390,7 +344,7 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
         if (lines.Any(x => (x.TransDate == default ? DateTime.Today : x.TransDate.Date) != date))
             throw new PostingValidationException("All lines must use the same transaction date for basic journal posting.");
         var context = await Support.LoadLedgerContextAsync(companyId, date,
-            LedgerPostingModule.Ledger, _user.GetCurrentUserId(), ct);
+            LedgerPostingModule.Inventory, _user.GetCurrentUserId(), ct);
         if (!string.IsNullOrWhiteSpace(context.Ledger.ReportingCurrency) &&
             !string.Equals(context.Ledger.ReportingCurrency, context.Ledger.AccountingCurrency, StringComparison.OrdinalIgnoreCase))
             throw new PostingValidationException("Inventory journal posting with a different reporting currency requires exchange-rate processing, which is not enabled in the basic inventory scope.");
@@ -491,22 +445,6 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
 
     private sealed record SummaryLine(DimensionAttributeValueCombination Account,
         LedgerPostingType PostingType, decimal Amount, decimal Quantity);
-
-    private static decimal EffectiveFactor(UnitOfMeasureConversion conversion) =>
-        conversion.Factor > 0 ? conversion.Factor :
-        conversion.Numerator > 0 && conversion.Denominator > 0
-            ? (decimal)conversion.Numerator / conversion.Denominator : 0m;
-
-    private static decimal Round(decimal value, int precision, UnitOfMeasureRounding rounding)
-    {
-        var scale = (decimal)Math.Pow(10, precision);
-        return rounding switch
-        {
-            UnitOfMeasureRounding.Up => Math.Ceiling(value * scale) / scale,
-            UnitOfMeasureRounding.Down => Math.Floor(value * scale) / scale,
-            _ => Math.Round(value, precision, MidpointRounding.AwayFromZero)
-        };
-    }
 
     private static string Normalize(string value) => value.Trim().ToUpperInvariant();
     private sealed record ReadyItem(string ItemId, long Product, ItemModelGroup Model, long TrackingDimensionGroup);

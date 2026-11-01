@@ -79,23 +79,29 @@ internal sealed class InventoryMovement(IUnitOfWork unitOfWork, ISalesInventoryN
     }
 
     /// <summary>
-    /// The provisional cost of an issue: the weighted average of financially posted receipts in
-    /// the item and site pool. The packing slip and the invoice both use it, so the physical and
-    /// the financial posting of one delivery carry the same cost.
+    /// Provisional cost for the financially tracked site. The basic release does not include
+    /// physical value in cost, and warehouse is a physical (not financial) dimension.
     /// </summary>
-    public static async Task<decimal> ReceiptRunningAverageAsync(DbContext db, string companyId, string itemId, string inventSiteId, CancellationToken ct)
+    public static async Task<decimal> SiteRunningAverageCostAsync(DbContext db, string companyId,
+        string itemId, string siteId, CancellationToken ct)
     {
-        var dimIds = await db.Set<InventDim>().AsNoTracking()
-            .Where(x => x.DataAreaId == companyId && x.InventSiteId == inventSiteId).Select(x => x.InventDimId).ToListAsync(ct);
-        var receipts = await db.Set<InventTrans>().AsNoTracking()
-            .Where(x => x.DataAreaId == companyId && x.ItemId == itemId && dimIds.Contains(x.InventDimId)
-                && x.StatusReceipt == StatusReceipt.Purchased && x.Qty > 0)
-            .Select(x => new { x.Qty, x.CostAmountPosted, x.CostAmountAdjustment }).ToListAsync(ct);
-        var qty = receipts.Sum(x => x.Qty);
-        return qty <= 0 ? 0m : receipts.Sum(x => x.CostAmountPosted + x.CostAmountAdjustment) / qty;
-    }
+        var balances = await db.Set<InventSum>()
+            .Where(x => x.DataAreaId == companyId && x.ItemId == itemId && x.InventSiteId == siteId)
+            .ToListAsync(ct);
+        balances.AddRange(db.ChangeTracker.Entries<InventSum>()
+            .Where(x => x.State == EntityState.Added && x.Entity.DataAreaId == companyId
+                && x.Entity.ItemId == itemId && x.Entity.InventSiteId == siteId)
+            .Select(x => x.Entity));
+        var quantity = balances.Sum(x => x.PostedQty);
+        var value = balances.Sum(x => x.PostedValue);
+        if (quantity > 0 && value > 0) return value / quantity;
 
-    /// <summary>The running average cost carried by on-hand stock.</summary>
-    public static decimal RunningAverageCost(InventSum sum) =>
-        sum.PhysicalInvent == 0 ? 0m : Math.Abs((sum.PostedValue + sum.PhysicalValue) / sum.PhysicalInvent);
+        var itemCost = await db.Set<InventTableModule>().AsNoTracking()
+            .Where(x => x.DataAreaId == companyId && x.ItemId == itemId
+                && x.ModuleType == ModuleInventPurchSales.Inventory)
+            .Select(x => new { x.Price, x.PriceUnit }).FirstOrDefaultAsync(ct);
+        return itemCost is { Price: > 0 }
+            ? itemCost.Price / (itemCost.PriceUnit > 0 ? itemCost.PriceUnit : 1m)
+            : 0m;
+    }
 }

@@ -45,6 +45,7 @@ public sealed class InventJournalTransDto
     public string ToInventSiteId { get; set; } = string.Empty;
     public string ToInventLocationId { get; set; } = string.Empty;
     public decimal Qty { get; set; }
+    public decimal UnitQty { get; set; }
     public decimal InventOnHand { get; set; }
     public decimal Counted { get; set; }
     public string Unit { get; set; } = string.Empty;
@@ -67,6 +68,7 @@ public sealed class InventJournalLineInputDto
     public string ToInventLocationId { get; set; } = string.Empty;
     public string ToWmsLocationId { get; set; } = string.Empty;
     public decimal Qty { get; set; }
+    public decimal? UnitQty { get; set; }
     public decimal Counted { get; set; }
     public string Unit { get; set; } = string.Empty;
     public decimal CostPrice { get; set; }

@@ -2,6 +2,7 @@ using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
+using IAX.IXApi.Modules.Finance.Inventory.ProductLifecycle;
 using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.EntityFrameworkCore;
 using ReleasedItem = IAX.IXApi.Modules.Finance.Entities.InventTable;
@@ -94,6 +95,9 @@ public sealed class InventTransferOrderService(
                 || !await Db.Set<InventTableModule>().AsNoTracking().AnyAsync(x => x.DataAreaId == area && x.ItemId == itemId
                     && x.ModuleType == ModuleInventPurchSales.Inventory && x.UnitId == unitId, ct))
                 throw new InvalidOperationException($"Item '{itemId}' must be released with '{unitId}' as its inventory unit.");
+            var lifecycleError = await ProductLifecyclePolicy.ValidateAsync(Db, area, itemId,
+                ProductLifecycleProcess.Inventory, ct);
+            if (lifecycleError != null) throw new InvalidOperationException(lifecycleError);
             await RequireUntrackedItemAsync(area, itemId, ct);
             // The line's dimension is the source: the transit and destination legs resolve their own.
             var dim = await dimensions.ResolveAsync(area, site, from, ct);
@@ -137,14 +141,14 @@ public sealed class InventTransferOrderService(
             ?? throw new InvalidOperationException("Transfer order was not found in the selected company.");
         if (header.TransferStatus == InventTransferStatus.Cancelled)
             throw new InvalidOperationException("The transfer order is cancelled.");
-        if (header.TransferStatus == InventTransferStatus.Received)
-            throw new InvalidOperationException("The transfer order is fully received.");
 
         var transDate = (input.TransDate ?? DateTime.UtcNow).Date;
         var voucher = $"{id}:{requestId}";
         // The request identifier makes a repeated post request a no-operation, never a double post.
         if (await Db.Set<InventTrans>().AsNoTracking().AnyAsync(x => x.DataAreaId == area && x.Voucher == voucher, ct))
             return header;
+        if (header.TransferStatus == InventTransferStatus.Received)
+            throw new InvalidOperationException("The transfer order is fully received.");
 
         var lines = await Db.Set<InventTransferLine>().Where(x => x.DataAreaId == area && x.TransferId == id).ToListAsync(ct);
         var site = await Db.Set<InventDim>().AsNoTracking()
@@ -172,6 +176,16 @@ public sealed class InventTransferOrderService(
             await RequireUntrackedItemAsync(area, line.ItemId, ct);
             var fromDim = await dimensions.ResolveAsync(area, site, fromWarehouse, ct);
             var toDim = await dimensions.ResolveAsync(area, site, toWarehouse, ct);
+            var lifecycleError = await ProductLifecyclePolicy.ValidateAsync(Db, area, line.ItemId,
+                ProductLifecycleProcess.Inventory, ct);
+            if (lifecycleError != null) throw new InvalidOperationException(lifecycleError);
+            var boundaryError = await InventoryFinancialBoundary.CheckAsync(Db, area, line.ItemId, transDate, ct);
+            if (boundaryError != null) throw new InvalidOperationException(boundaryError);
+            foreach (var dim in new[] { fromDim, toDim }.OrderBy(x => x.InventDimId, StringComparer.Ordinal))
+            {
+                var freezeError = await InventoryCountProtection.CheckAsync(Db, area, line.ItemId, dim.InventDimId, ct);
+                if (freezeError != null) throw new InvalidOperationException(freezeError);
+            }
             foreach (var (dim, signedQty) in new[] { (fromDim, -quantity), (toDim, quantity) })
             {
                 var statusError = await InventoryDimensionPolicy.CheckStatusAsync(Db, area, dim, signedQty, ct);
@@ -185,7 +199,7 @@ public sealed class InventTransferOrderService(
                     : $"Line {lineNum}: available stock at the source warehouse is insufficient.");
 
             // A transfer moves cost with the goods; it does not revalue them.
-            var unitCost = InventoryMovement.RunningAverageCost(fromSum);
+            var unitCost = await InventoryMovement.SiteRunningAverageCostAsync(Db, area, line.ItemId, site, ct);
             var currency = accountingCurrency;
             var issueTransId = await Movement.CreateTransactionAsync(area, line.ItemId, fromDim.InventDimId,
                 -quantity, unitCost, currency, voucher, transDate, InventRefType.TransferOrder, id, ct);

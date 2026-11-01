@@ -5,6 +5,7 @@ using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
+using IAX.IXApi.Modules.Finance.Inventory.ProductLifecycle;
 using IAX.IXApi.Shared.Application.Identity;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
@@ -124,6 +125,9 @@ public sealed class PurchOrderService : BaseService<PurchTable>, IPurchOrderServ
             var item = await Db.Set<InventTable>().AsNoTracking()
                 .FirstOrDefaultAsync(x => x.DataAreaId == area && x.ItemId == input.ItemId, ct);
             if (item == null) return await Fail(422, "The item is not released to the selected company.", ct);
+            var lifecycleError = await ProductLifecyclePolicy.ValidateAsync(Db, area, item.ItemId,
+                ProductLifecycleProcess.Purchase, ct);
+            if (lifecycleError != null) return await Fail(422, lifecycleError, ct);
             var assignment = await Db.Set<InventModelGroupItem>().AsNoTracking()
                 .FirstOrDefaultAsync(x => x.ItemDataAreaId == area && x.ItemId == item.ItemId, ct);
             var model = assignment == null ? null : await Db.Set<InventModelGroup>().AsNoTracking()

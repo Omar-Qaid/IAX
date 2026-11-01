@@ -317,7 +317,7 @@ public sealed class PackingSlipJournalService : BaseService<CustPackingSlipJour>
                 var quantityLeft = inventQuantity;
                 decimal postedCatchWeightQuantity = 0;
                 var unitCost = await IAX.IXApi.Modules.Finance.Inventory.InventoryMovement
-                    .ReceiptRunningAverageAsync(Db, order.DataAreaId, line.ItemId, dimension.InventSiteId, ct);
+                    .SiteRunningAverageCostAsync(Db, order.DataAreaId, line.ItemId, dimension.InventSiteId, ct);
                 var physicalCost = 0m;
                 foreach (var source in sourceTransactions)
                 {

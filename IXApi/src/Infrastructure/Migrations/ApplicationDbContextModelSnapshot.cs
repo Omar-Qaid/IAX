@@ -20962,6 +20962,14 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasMaxLength(4)
                         .HasColumnType("nvarchar(4)");
 
+                    b.Property<int>("InventAccessLevel")
+                        .HasColumnType("int");
+
+                    b.Property<string>("InventUserGroupInfo")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 

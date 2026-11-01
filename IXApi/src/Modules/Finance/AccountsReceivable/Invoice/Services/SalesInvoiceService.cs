@@ -288,7 +288,7 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
 
         var site = await Db.Set<InventDim>().AsNoTracking().Where(x => x.DataAreaId == area && x.InventDimId == line.InventDimId)
             .Select(x => x.InventSiteId).FirstOrDefaultAsync(ct) ?? string.Empty;
-        var unitCost = await IAX.IXApi.Modules.Finance.Inventory.InventoryMovement.ReceiptRunningAverageAsync(Db, area, line.ItemId, site, ct);
+        var unitCost = await IAX.IXApi.Modules.Finance.Inventory.InventoryMovement.SiteRunningAverageCostAsync(Db, area, line.ItemId, site, ct);
         var left = inventQty;
         var physicalReleased = 0m;
         foreach (var source in deducted)

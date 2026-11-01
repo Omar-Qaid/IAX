@@ -229,9 +229,8 @@ public sealed partial class InventJournalService : BaseService<InventJournalTabl
             if (stocked != NoYes.Yes)
                 return ("Physical inventory journals require a stocked item model group.", null, null);
         }
-        else if (await Db.Set<ReleasedItem>().AnyAsync(x => x.DataAreaId == companyId &&
-                     x.ItemId == itemId && x.ItemType == ItemType.Service, ct))
-            return ("Physical inventory journals require a stocked item model group for services.", null, null);
+        else
+            return ("Physical inventory journals require a stocked item model group.", null, null);
         var fromError = await ValidateSiteWarehouseAsync(companyId, input.InventSiteId, input.InventLocationId, true, ct);
         if (fromError != null) return (fromError, null, null);
         var fromLocationError = await ValidateInventoryLocationAsync(companyId, itemId, input.InventLocationId, input.WmsLocationId, ct);
@@ -241,8 +240,31 @@ public sealed partial class InventJournalService : BaseService<InventJournalTabl
         var inventoryUnit = await Db.Set<InventTableModule>().AsNoTracking()
             .Where(x => x.DataAreaId == companyId && x.ItemId == itemId && x.ModuleType == ModuleInventPurchSales.Inventory)
             .Select(x => x.UnitId).FirstOrDefaultAsync(ct);
-        if (string.IsNullOrWhiteSpace(inventoryUnit) || !string.Equals(input.Unit.Trim(), inventoryUnit, StringComparison.OrdinalIgnoreCase))
-            return ("Journal quantity must use the item's inventory unit.", null, null);
+        if (string.IsNullOrWhiteSpace(inventoryUnit))
+            return ("The item's inventory unit is required.", null, null);
+        if (string.Equals(input.Unit.Trim(), inventoryUnit, StringComparison.OrdinalIgnoreCase))
+        {
+            if (input.UnitQty.HasValue && input.Qty != 0 && input.UnitQty.Value != input.Qty)
+                return ("Unit quantity must equal quantity when the inventory unit is selected.", null, null);
+            input.Qty = input.UnitQty ?? input.Qty;
+            input.UnitQty = input.Qty;
+        }
+        else
+        {
+            if (header.JournalType == InventJournalType.Counting)
+                return ("Counting journal lines must use the item's inventory unit.", null, null);
+            if (!input.UnitQty.HasValue)
+                return ("Unit quantity is required when the journal unit differs from the inventory unit.", null, null);
+            var item = await Db.Set<ReleasedItem>().AsNoTracking()
+                .FirstAsync(x => x.DataAreaId == companyId && x.ItemId == itemId, ct);
+            var converted = await InventJournalUnitConversion.ToInventoryQuantityAsync(
+                Db, item.Product, input.Unit.Trim(), inventoryUnit, input.UnitQty.Value, ct);
+            if (!converted.HasValue)
+                return ($"Unit conversion from '{input.Unit}' to '{inventoryUnit}' is not configured.", null, null);
+            if (input.Qty != 0 && input.Qty != converted.Value)
+                return ("Quantity does not match the converted unit quantity.", null, null);
+            input.Qty = converted.Value;
+        }
         if (header.JournalType == InventJournalType.Counting)
         {
             if (input.Counted < 0) return ("Counted quantity cannot be negative.", null, null);
@@ -277,7 +299,15 @@ public sealed partial class InventJournalService : BaseService<InventJournalTabl
             return ("Journal cost cannot be negative.", null, null);
         if (header.JournalType is InventJournalType.Movement or InventJournalType.Adjustment &&
             input.Qty > 0 && input.CostPrice == 0)
-            return ("A positive journal line requires an explicit receipt cost.", null, null);
+        {
+            var itemCost = await Db.Set<InventTableModule>().AsNoTracking()
+                .Where(x => x.DataAreaId == companyId && x.ItemId == itemId
+                    && x.ModuleType == ModuleInventPurchSales.Inventory)
+                .Select(x => new { x.Price, x.PriceUnit }).FirstOrDefaultAsync(ct);
+            if (itemCost is not { Price: > 0 })
+                return ("A positive journal receipt needs a cost price on the line or released item.", null, null);
+            input.CostPrice = itemCost.Price / (itemCost.PriceUnit > 0 ? itemCost.PriceUnit : 1m);
+        }
 
         var trackingError = await ValidateTrackingDimensionsAsync(companyId, itemId, input, ct);
         if (trackingError != null) return (trackingError, null, null);
@@ -398,7 +428,7 @@ public sealed partial class InventJournalService : BaseService<InventJournalTabl
         line.Qty = input.Qty;
         line.Counted = input.Counted;
         line.Unit = input.Unit.Trim();
-        line.UnitQty = 1m;
+        line.UnitQty = input.UnitQty ?? input.Qty;
         line.CostPrice = input.CostPrice;
         line.PriceUnit = 1m;
         line.CostAmount = header.JournalType == InventJournalType.Counting ? 0m : input.Qty * input.CostPrice;
@@ -453,7 +483,7 @@ public sealed partial class InventJournalService : BaseService<InventJournalTabl
             InventSiteId = from?.InventSiteId ?? string.Empty, InventLocationId = from?.InventLocationId ?? string.Empty,
             ToInventSiteId = to?.InventSiteId ?? string.Empty, ToInventLocationId = to?.InventLocationId ?? string.Empty,
             WmsLocationId = from?.WmsLocationId ?? string.Empty, ToWmsLocationId = to?.WmsLocationId ?? string.Empty,
-            Qty = x.Qty, InventOnHand = x.InventOnHand, Counted = x.Counted, Unit = x.Unit,
+            Qty = x.Qty, UnitQty = x.UnitQty, InventOnHand = x.InventOnHand, Counted = x.Counted, Unit = x.Unit,
             InventBatchId = from?.InventBatchId ?? string.Empty, InventSerialId = from?.InventSerialId ?? string.Empty,
             InventStatusId = from?.InventStatusId ?? string.Empty,
             CostPrice = x.CostPrice, CostAmount = x.CostAmount, LedgerDimension = x.LedgerDimension

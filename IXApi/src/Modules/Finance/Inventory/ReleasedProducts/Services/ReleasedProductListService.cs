@@ -173,6 +173,8 @@ public sealed class ReleasedProductListService : BaseService<ReleasedItem>, IRel
         if (string.IsNullOrWhiteSpace(companyId)) return (null, "A company must be selected.");
         var item = await Db.Set<ReleasedItem>().FirstOrDefaultAsync(x => x.RecId == recId && x.DataAreaId == companyId, ct);
         if (item is null) return (null, "The released product was not found.");
+        if (item.Product <= 0 || !await Db.Set<EcoResProduct>().AnyAsync(x => x.RecId == item.Product, ct))
+            return (null, "The released item does not reference an existing shared product.");
         if (input.PriceUnit <= 0) return (null, "Price unit must be greater than zero.");
         var inventoryUnitError = await ValidateInventoryUnitChangeAsync(companyId, item.ItemId, input.InventoryUnit, ct);
         if (inventoryUnitError is not null) return (null, inventoryUnitError);
@@ -263,6 +265,8 @@ public sealed class ReleasedProductListService : BaseService<ReleasedItem>, IRel
         if (string.IsNullOrWhiteSpace(companyId)) return (null, "A company must be selected.");
         var item = await Db.Set<ReleasedItem>().AsNoTracking().FirstOrDefaultAsync(x => x.RecId == recId && x.DataAreaId == companyId, ct);
         if (item is null) return (null, "The released product was not found.");
+        if (item.Product <= 0 || !await Db.Set<EcoResProduct>().AnyAsync(x => x.RecId == item.Product, ct))
+            return (null, "The released item does not reference an existing shared product.");
         var units = new[] { input.InventoryUnit.Trim(), input.PurchaseUnit.Trim(), input.SalesUnit.Trim() }.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         var unitRows = await Db.Set<UnitOfMeasure>().Where(x => units.Contains(x.Symbol)).ToListAsync(ct);
         if (units.Any(string.IsNullOrWhiteSpace) || unitRows.Count != units.Count)
@@ -277,6 +281,20 @@ public sealed class ReleasedProductListService : BaseService<ReleasedItem>, IRel
             return (null, "Purchase and sales conversion factors must match when they use the same unit.");
         var inventoryUnitError = await ValidateInventoryUnitChangeAsync(companyId, item.ItemId, input.InventoryUnit, ct);
         if (inventoryUnitError is not null) return (null, inventoryUnitError);
+        if (input.Commercial is not null)
+        {
+            var commercial = input.Commercial;
+            if (commercial.PurchasePrice < 0 || commercial.SalesPrice < 0 || commercial.PurchasePriceQuantity <= 0 || commercial.SalesPriceQuantity <= 0)
+                return (null, "Purchase and sales prices cannot be negative, and price quantities must be greater than zero.");
+            var taxGroups = new[] { commercial.PurchaseTaxItemGroupId.Trim(), commercial.SalesTaxItemGroupId.Trim() }.Where(x => x.Length > 0).Distinct().ToList();
+            if (taxGroups.Count > 0 && await Db.Set<TaxItemGroupHeading>().CountAsync(x => x.DataAreaId == companyId && taxGroups.Contains(x.TaxItemGroup), ct) != taxGroups.Count)
+                return (null, "Purchase and sales item tax groups must reference existing setup records.");
+        }
+        if (input.DefaultOrderSettings is not null)
+        {
+            var orderSettingsError = await ValidateOrderSettingsAsync(companyId, input.DefaultOrderSettings, ct);
+            if (orderSettingsError is not null) return (null, orderSettingsError);
+        }
         var modules = await Db.Set<InventTableModule>().Where(x => x.DataAreaId == companyId && x.ItemId == item.ItemId).ToListAsync(ct);
         if (input.Groups is not null)
         {
@@ -305,20 +323,11 @@ public sealed class ReleasedProductListService : BaseService<ReleasedItem>, IRel
         if (input.Commercial is not null)
         {
             var commercial = input.Commercial;
-            if (commercial.PurchasePrice < 0 || commercial.SalesPrice < 0 || commercial.PurchasePriceQuantity <= 0 || commercial.SalesPriceQuantity <= 0)
-                return (null, "Purchase and sales prices cannot be negative, and price quantities must be greater than zero.");
-            var taxGroups = new[] { commercial.PurchaseTaxItemGroupId.Trim(), commercial.SalesTaxItemGroupId.Trim() }.Where(x => x.Length > 0).Distinct().ToList();
-            if (taxGroups.Count > 0 && await Db.Set<TaxItemGroupHeading>().CountAsync(x => x.DataAreaId == companyId && taxGroups.Contains(x.TaxItemGroup), ct) != taxGroups.Count)
-                return (null, "Purchase and sales item tax groups must reference existing setup records.");
             SetCommercial(modules, ModuleInventPurchSales.Purchase, commercial.PurchasePrice, commercial.PurchasePriceQuantity, commercial.PurchaseTaxItemGroupId);
             SetCommercial(modules, ModuleInventPurchSales.Sales, commercial.SalesPrice, commercial.SalesPriceQuantity, commercial.SalesTaxItemGroupId);
         }
         if (input.DefaultOrderSettings is not null)
-        {
-            var orderSettingsError = await ValidateOrderSettingsAsync(companyId, input.DefaultOrderSettings, ct);
-            if (orderSettingsError is not null) return (null, orderSettingsError);
             await ApplyOrderSettingsAsync(item.ItemId, companyId, input.DefaultOrderSettings, ct);
-        }
         var conversions = await Db.Set<UnitOfMeasureConversion>().Where(x => x.Product == item.Product).ToListAsync(ct);
         SetConversion(conversions, unitRows, item.Product, input.PurchaseUnit, input.InventoryUnit, input.PurchaseToInventoryFactor);
         SetConversion(conversions, unitRows, item.Product, input.SalesUnit, input.InventoryUnit, input.SalesToInventoryFactor);
@@ -461,8 +470,10 @@ public sealed class ReleasedProductListService : BaseService<ReleasedItem>, IRel
             errors.Add("Batch and serial tracking are outside the basic inventory scope.");
         var modelGroupId = await Db.Set<InventModelGroupItem>().AsNoTracking().Where(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId).Select(x => x.ModelGroupId).FirstOrDefaultAsync(ct);
         if (!string.IsNullOrWhiteSpace(modelGroupId) && !await Db.Set<InventModelGroupEntity>().AnyAsync(x => x.DataAreaId == companyId && x.ModelGroupId == modelGroupId
-                && x.StockedProduct == NoYes.Yes && x.InventModel == InventModel.FIFO && x.NegativePhysical == NoYes.No && x.NegativeFinancial == NoYes.No, ct))
-            errors.Add("The item model group must be stocked FIFO with negative inventory disabled.");
+                && x.StockedProduct == NoYes.Yes
+                && (x.InventModel == InventModel.FIFO || x.InventModel == InventModel.LIFO || x.InventModel == InventModel.WeightedAvg)
+                && x.NegativePhysical == NoYes.No && x.NegativeFinancial == NoYes.No, ct))
+            errors.Add("The item model group must use a supported stocked inventory model with negative inventory disabled.");
         var purchaseSetup = await Db.Set<InventItemPurchSetup>().AsNoTracking().FirstOrDefaultAsync(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId && x.InventDimId == string.Empty, ct);
         var salesSetup = await Db.Set<InventItemSalesSetup>().AsNoTracking().FirstOrDefaultAsync(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId && x.InventDimId == string.Empty, ct);
         var inventorySetup = await Db.Set<InventItemInventSetup>().AsNoTracking().FirstOrDefaultAsync(x => x.ItemDataAreaId == companyId && x.ItemId == item.ItemId && x.InventDimId == string.Empty, ct);
@@ -754,7 +765,7 @@ public sealed class ReleasedProductListService : BaseService<ReleasedItem>, IRel
         if (modelGroup is null) return $"Item model group '{modelId.Trim()}' was not found in the selected company.";
         var modelProblem = BasicModelGroupProblem(modelGroup);
         if (modelProblem is not null)
-            return $"Item model group '{modelGroup.ModelGroupId}' needs setup: {modelProblem} Open Inventory > Item model groups and use a valid stocked FIFO group.";
+            return $"Item model group '{modelGroup.ModelGroupId}' needs setup: {modelProblem} Open Inventory > Item model groups and use a supported stocked inventory model.";
         var storage = await Db.Set<EcoResStorageDimensionGroup>().AsNoTracking()
             .FirstOrDefaultAsync(x => x.Name == storageId.Trim(), ct);
         if (storage is null) return "Storage dimension group was not found.";
@@ -776,7 +787,8 @@ public sealed class ReleasedProductListService : BaseService<ReleasedItem>, IRel
     {
         var problems = new List<string>();
         if (group.StockedProduct != NoYes.Yes) problems.Add("Stocked product must be Yes");
-        if (group.InventModel != InventModel.FIFO) problems.Add("Inventory model must be FIFO");
+        if (group.InventModel is not (InventModel.FIFO or InventModel.LIFO or InventModel.WeightedAvg))
+            problems.Add("Inventory model must be FIFO, LIFO, or weighted average");
         if (group.NegativePhysical != NoYes.No) problems.Add("Negative physical inventory must be No");
         if (group.NegativeFinancial != NoYes.No) problems.Add("Negative financial inventory must be No");
         if (group.PostOnHandFinancial != NoYes.Yes) problems.Add("Post financial inventory must be Yes");

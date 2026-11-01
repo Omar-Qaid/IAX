@@ -18,4 +18,6 @@ public class LedgerPeriodModuleAccessControl : Entity<long>
     [StringLength(FieldLengths.Name)] public string CustUserGroupInfo { get; set; } = string.Empty;
     public LedgerPeriodAccessLevel VendAccessLevel { get; set; }
     [StringLength(FieldLengths.Name)] public string VendUserGroupInfo { get; set; } = string.Empty;
+    public LedgerPeriodAccessLevel InventAccessLevel { get; set; }
+    [StringLength(FieldLengths.Name)] public string InventUserGroupInfo { get; set; } = string.Empty;
 }

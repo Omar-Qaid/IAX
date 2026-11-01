@@ -3,7 +3,8 @@ import type { InventJournal } from '../../modules/finance/inventory/api/inventJo
 import { canPostJournal, createJournalLineDraft } from '../../modules/finance/inventory/components/inventJournalDraft';
 
 const journal = (overrides: Partial<InventJournal> = {}): InventJournal => ({
-  journalId: 'IJ-1', journalType: 0, posted: false, inventSiteId: 'JED', inventLocationId: 'MAIN',
+  journalId: 'IJ-1', journalType: 0, posted: false, countingFrozen: false, countingConfirmed: false,
+  inventSiteId: 'JED', inventLocationId: 'MAIN',
   ...overrides,
 } as InventJournal);
 
@@ -14,10 +15,13 @@ describe('inventory journal draft', () => {
     expect(line.inventLocationId).toBe('MAIN');
     expect(line.toInventSiteId).toBe('');
     expect(line.toInventLocationId).toBe('');
+    expect(line.unitQty).toBe(1);
+    expect(line.qty).toBe(0);
   });
 
-  it('does not offer posting for counting or already posted journals', () => {
+  it('offers counting posting only after confirmation and never for posted journals', () => {
     expect(canPostJournal(journal({ journalType: 2 }))).toBe(false);
+    expect(canPostJournal(journal({ journalType: 2, countingConfirmed: true }))).toBe(true);
     expect(canPostJournal(journal({ posted: true }))).toBe(false);
     expect(canPostJournal(journal({ journalType: 0 }))).toBe(true);
   });

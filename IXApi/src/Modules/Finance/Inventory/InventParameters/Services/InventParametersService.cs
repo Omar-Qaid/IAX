@@ -35,32 +35,33 @@ public sealed class InventParametersService : BaseService<InventParametersEntity
         var issues = new List<InventoryReadinessIssueDto>();
         void Add(string code, string message) => issues.Add(new(code, message));
 
-        if (!await Db.Set<UnitOfMeasure>().AsNoTracking().AnyAsync(x => x.Symbol == "EA", ct))
-            Add("MISSING_INVENTORY_UNIT", "Configure the EA inventory unit.");
+        if (!await Db.Set<UnitOfMeasure>().AsNoTracking().AnyAsync(ct))
+            Add("MISSING_INVENTORY_UNIT", "Configure an inventory unit of measure.");
         if (!await Db.Set<InventSite>().AsNoTracking().AnyAsync(x => x.DataAreaId == companyId, ct))
             Add("MISSING_SITE", "Configure at least one inventory site.");
         if (!await Db.Set<InventLocation>().AsNoTracking().AnyAsync(x => x.DataAreaId == companyId, ct))
             Add("MISSING_WAREHOUSE", "Configure at least one warehouse under a site.");
-        var storageGroup = await Db.Set<EcoResStorageDimensionGroup>().AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Name == "SITE-WH", ct);
-        if (storageGroup is null || !await Db.Set<EcoResStorageDimensionGroupFldSetup>().AsNoTracking()
-                .AnyAsync(x => x.StorageDimensionGroup == storageGroup.RecId && x.DimensionFieldId == InventDimensionFields.Site
-                    && x.IsActive && x.IsPhysicalInventoryEnabled && x.IsFinancialInventoryEnabled && !x.IsAllowBlankReceiptEnabled && !x.IsAllowBlankIssueEnabled, ct)
-            || !await Db.Set<EcoResStorageDimensionGroupFldSetup>().AsNoTracking()
-                .AnyAsync(x => x.StorageDimensionGroup == storageGroup.RecId && x.DimensionFieldId == InventDimensionFields.Warehouse
-                    && x.IsActive && x.IsPhysicalInventoryEnabled && !x.IsFinancialInventoryEnabled && !x.IsAllowBlankReceiptEnabled && !x.IsAllowBlankIssueEnabled, ct))
-            Add("MISSING_BASIC_STORAGE_GROUP", "Configure SITE-WH with required site and warehouse, with site as the financial dimension.");
-        var trackingGroup = await Db.Set<EcoResTrackingDimensionGroup>().AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Name == "NONE", ct);
-        if (trackingGroup is null || await Db.Set<EcoResTrackingDimensionGroupFldSetup>().AsNoTracking()
-                .AnyAsync(x => x.TrackingDimensionGroup == trackingGroup.RecId && x.IsActive, ct))
-            Add("MISSING_BASIC_TRACKING_GROUP", "Configure NONE without active batch or serial tracking.");
-        if (!await Db.Set<InventItemGroup>().AsNoTracking().AnyAsync(x => x.DataAreaId == companyId && x.ItemGroupId == "TRADE", ct))
-            Add("MISSING_ITEM_GROUP", "Configure the TRADE item group.");
-        if (!await Db.Set<IAX.IXApi.Modules.Finance.Entities.InventModelGroup>().AsNoTracking().AnyAsync(x => x.DataAreaId == companyId && x.ModelGroupId == "FIFO-BASIC"
-                && x.InventModel == InventModel.FIFO && x.StockedProduct == NoYes.Yes && x.NegativePhysical == NoYes.No
+        var storageGroups = await Db.Set<EcoResStorageDimensionGroup>().AsNoTracking().Select(x => x.RecId).ToListAsync(ct);
+        var storageFields = await Db.Set<EcoResStorageDimensionGroupFldSetup>().AsNoTracking().Where(x => x.IsActive).ToListAsync(ct);
+        if (!storageGroups.Any(id => storageFields.Any(x => x.StorageDimensionGroup == id && x.DimensionFieldId == InventDimensionFields.Site
+                    && x.IsPhysicalInventoryEnabled && x.IsFinancialInventoryEnabled && !x.IsAllowBlankReceiptEnabled && !x.IsAllowBlankIssueEnabled)
+                && storageFields.Any(x => x.StorageDimensionGroup == id && x.DimensionFieldId == InventDimensionFields.Warehouse
+                    && x.IsPhysicalInventoryEnabled && !x.IsFinancialInventoryEnabled && !x.IsAllowBlankReceiptEnabled && !x.IsAllowBlankIssueEnabled)))
+            Add("MISSING_BASIC_STORAGE_GROUP", "Configure a storage dimension group with required site and warehouse, with site as the financial dimension.");
+        var trackingGroups = await Db.Set<EcoResTrackingDimensionGroup>().AsNoTracking().Select(x => x.RecId).ToListAsync(ct);
+        var activeTrackingGroups = await Db.Set<EcoResTrackingDimensionGroupFldSetup>().AsNoTracking()
+            .Where(x => x.IsActive).Select(x => x.TrackingDimensionGroup).Distinct().ToListAsync(ct);
+        if (!trackingGroups.Any(id => !activeTrackingGroups.Contains(id)))
+            Add("MISSING_BASIC_TRACKING_GROUP", "Configure a tracking dimension group without active batch or serial tracking.");
+        var itemGroupIds = await Db.Set<InventItemGroup>().AsNoTracking().Where(x => x.DataAreaId == companyId)
+            .Select(x => x.ItemGroupId).ToListAsync(ct);
+        if (itemGroupIds.Count == 0)
+            Add("MISSING_ITEM_GROUP", "Configure an item group.");
+        if (!await Db.Set<IAX.IXApi.Modules.Finance.Entities.InventModelGroup>().AsNoTracking().AnyAsync(x => x.DataAreaId == companyId
+                && (x.InventModel == InventModel.FIFO || x.InventModel == InventModel.LIFO || x.InventModel == InventModel.WeightedAvg)
+                && x.StockedProduct == NoYes.Yes && x.NegativePhysical == NoYes.No
                 && x.NegativeFinancial == NoYes.No && x.InclPhysicalValueInCost == NoYes.No && x.PostOnHandFinancial == NoYes.Yes, ct))
-            Add("MISSING_FIFO_MODEL_GROUP", "Configure FIFO-BASIC with stocked products, financial posting, and negative inventory disabled.");
+            Add("MISSING_MODEL_GROUP", "Configure a supported stocked item model group with financial posting and negative inventory disabled.");
 
         var readyForItemSetup = issues.Count == 0;
         var ledger = await Db.Set<Ledger>().AsNoTracking().FirstOrDefaultAsync(x => x.DataAreaId == companyId, ct);
@@ -97,11 +98,11 @@ public sealed class InventParametersService : BaseService<InventParametersEntity
         }
         var postingTypes = await Db.Set<InventPosting>().AsNoTracking().Where(x => x.DataAreaId == companyId && x.LedgerDimension != 0
                 && x.CustVendCode == TableGroupAll.All && (x.ItemCode == TableGroupAll.All
-                    || x.ItemCode == TableGroupAll.Group && x.ItemRelation == "TRADE"))
+                    || x.ItemCode == TableGroupAll.Group && itemGroupIds.Contains(x.ItemRelation)))
             .Select(x => x.InventAccountType).Distinct().ToListAsync(ct);
         foreach (var type in new[] { InventAccountType.InventReceipt, InventAccountType.InventIssue, InventAccountType.InventProfit, InventAccountType.InventLoss })
             if (!postingTypes.Contains(type))
-                Add($"MISSING_{type.ToString().ToUpperInvariant()}_ACCOUNT", $"Configure an inventory posting account for {type} that applies to item group TRADE.");
+                Add($"MISSING_{type.ToString().ToUpperInvariant()}_ACCOUNT", $"Configure an inventory posting account for {type} that applies to an item group or all items.");
         return new InventoryReadinessDto(readyForItemSetup, issues.Count == 0, issues);
     }
     public async Task<InventParametersDto?> GetAsync(CancellationToken ct = default)

@@ -145,6 +145,17 @@ public sealed class SalesOrderConfirmationTests
         Assert.Equal(24m, await service.ToInventoryQuantityAsync(item, "box", 2m, default));
         Assert.Equal(2m, await service.ToInventoryQuantityAsync(item, "ea", 2m, default));
         Assert.Null(await service.ToInventoryQuantityAsync(item, "pallet", 2m, default));
+        var conversion = await fixture.Db.Set<UnitOfMeasureConversion>().SingleAsync();
+        conversion.Factor = 2.2m;
+        conversion.Rounding = UnitOfMeasureRounding.Up;
+        await fixture.Db.SaveChangesAsync();
+        Assert.Equal(5m, await service.ToInventoryQuantityAsync(item, "box", 2m, default));
+        conversion.Rounding = UnitOfMeasureRounding.Down;
+        await fixture.Db.SaveChangesAsync();
+        Assert.Equal(4m, await service.ToInventoryQuantityAsync(item, "box", 2m, default));
+        conversion.Factor = 12m;
+        conversion.Rounding = UnitOfMeasureRounding.Nearest;
+        await fixture.Db.SaveChangesAsync();
         var inventoryModule = await fixture.Db.Set<InventTableModule>().SingleAsync();
         inventoryModule.UnitId = "box";
         (await fixture.Db.Set<UnitOfMeasure>().SingleAsync(unit => unit.Symbol == "box")).DecimalPrecision = 3;
@@ -153,7 +164,7 @@ public sealed class SalesOrderConfirmationTests
     }
 
     [Fact]
-    public async Task Sales_unit_conversion_uses_item_rule_when_product_is_unassigned()
+    public async Task Sales_unit_conversion_does_not_treat_item_record_id_as_product_scope()
     {
         await using var fixture = await Fixture.CreateAsync();
         fixture.Db.Set<InventTable>().AddRange(
@@ -172,8 +183,13 @@ public sealed class SalesOrderConfirmationTests
 
         var service = new SalesUnitConversionService(new TestUnitOfWork(fixture.Db));
         var items = await fixture.Db.Set<InventTable>().ToDictionaryAsync(item => item.ItemId);
-        Assert.Equal(48m, await service.ToInventoryQuantityAsync(items["WATER"], "CTN", 2m, default));
-        Assert.Equal(24m, await service.ToInventoryQuantityAsync(items["OIL"], "CTN", 2m, default));
+        Assert.Null(await service.ToInventoryQuantityAsync(items["WATER"], "CTN", 2m, default));
+        Assert.Null(await service.ToInventoryQuantityAsync(items["OIL"], "CTN", 2m, default));
+        fixture.Db.Set<UnitOfMeasureConversion>().Add(new UnitOfMeasureConversion
+        { RecId = 3, Product = 0, FromUnitOfMeasure = 2, ToUnitOfMeasure = 1, Factor = 6 });
+        await fixture.Db.SaveChangesAsync();
+        Assert.Equal(12m, await service.ToInventoryQuantityAsync(items["WATER"], "CTN", 2m, default));
+        Assert.Equal(12m, await service.ToInventoryQuantityAsync(items["OIL"], "CTN", 2m, default));
     }
 
     [Fact]

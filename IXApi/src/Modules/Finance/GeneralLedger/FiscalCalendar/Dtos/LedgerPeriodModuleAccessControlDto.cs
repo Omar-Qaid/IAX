@@ -16,4 +16,6 @@ public class LedgerPeriodModuleAccessControlDto : EntityDto<long>
     public string CustUserGroupInfo { get; set; } = string.Empty;
     public LedgerPeriodAccessLevel VendAccessLevel { get; set; }
     public string VendUserGroupInfo { get; set; } = string.Empty;
+    public LedgerPeriodAccessLevel InventAccessLevel { get; set; }
+    public string InventUserGroupInfo { get; set; } = string.Empty;
 }

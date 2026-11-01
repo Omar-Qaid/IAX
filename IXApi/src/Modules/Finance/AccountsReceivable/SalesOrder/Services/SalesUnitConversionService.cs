@@ -1,5 +1,6 @@
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
+using IAX.IXApi.Modules.Finance.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
@@ -30,10 +31,7 @@ public sealed class SalesUnitConversionService
         var to = units.FirstOrDefault(row => string.Equals(row.Symbol, inventoryUnit, StringComparison.OrdinalIgnoreCase));
         if (from == null || to == null) return null;
 
-        // Seeded released items can have no global Product record yet. In that case
-        // their InventTable RecId scopes the rule to the item instead of making a
-        // packaging conversion global to every item using the same two units.
-        var productScope = item.Product != 0 ? item.Product : item.RecId;
+        var productScope = item.Product;
         var rules = await _db.Context.Set<UnitOfMeasureConversion>().AsNoTracking()
             .Where(row => (row.Product == productScope || row.Product == 0)
                 && ((row.FromUnitOfMeasure == from.RecId && row.ToUnitOfMeasure == to.RecId)
@@ -51,6 +49,12 @@ public sealed class SalesUnitConversionService
         var converted = rule.FromUnitOfMeasure == from.RecId
             ? salesQuantity * factor : salesQuantity / factor;
         var precision = Math.Clamp(to.DecimalPrecision, 0, 28);
-        return decimal.Round(converted, precision, MidpointRounding.AwayFromZero);
+        var scale = (decimal)Math.Pow(10, precision);
+        return rule.Rounding switch
+        {
+            UnitOfMeasureRounding.Up => Math.Ceiling(converted * scale) / scale,
+            UnitOfMeasureRounding.Down => Math.Floor(converted * scale) / scale,
+            _ => decimal.Round(converted, precision, MidpointRounding.AwayFromZero)
+        };
     }
 }

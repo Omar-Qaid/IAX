@@ -56,7 +56,12 @@ public sealed partial class InventJournalPostingService
                         throw new PostingValidationException("Freeze the count, then provide a nonnegative counted inventory quantity for every line (maximum four decimals).");
                     if (header.CountingConfirmed && lines.Any(x => x.Counted != quantities[x.RecId]))
                         throw new PostingValidationException("A confirmed count cannot be changed; cancel and recount.");
-                    foreach (var line in lines) line.Counted = quantities[line.RecId];
+                    foreach (var line in lines)
+                    {
+                        line.Counted = quantities[line.RecId];
+                        line.Qty = line.Counted - line.InventOnHand;
+                        line.UnitQty = line.Qty;
+                    }
                     header.CountingConfirmed = true;
                 }
                 await _unitOfWork.CompleteAsync(ct);
