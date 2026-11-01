@@ -123,7 +123,8 @@ public sealed class CustPaymentReversalService : BaseService<CustTrans>, ICustPa
             }
             await _unitOfWork.CompleteAsync(ct);
 
-            var ledger = await support.LoadLedgerContextAsync(area, date, ct);
+            var ledger = await support.LoadLedgerContextAsync(area, date,
+                LedgerPostingModule.Customer, _currentUser.GetCurrentUserId(), ct);
             var customer = await Db.Set<CustTable>().AsNoTracking()
                 .FirstOrDefaultAsync(x => x.DataAreaId == area && x.AccountNum == paymentTrans.AccountNum, ct);
             if (customer == null) return await Fail(422, "The customer was not found in the selected company.", ct);

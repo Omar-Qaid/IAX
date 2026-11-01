@@ -68,8 +68,8 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
         foreach (var voucher in lines.GroupBy(x => new { x.Voucher, Date = x.TransDate.Date })
             .OrderBy(x => x.Key.Date).ThenBy(x => x.Key.Voucher, StringComparer.Ordinal))
         {
-            var context = await support.LoadLedgerContextAsync(area, voucher.Key.Date, ct,
-                LedgerPostingModule.Ledger, userId);
+            var context = await support.LoadLedgerContextAsync(area, voucher.Key.Date,
+                LedgerPostingModule.Ledger, userId, ct);
             var entry = support.NewEntry(area, header.JournalNum, voucher.Key.Voucher, voucher.Key.Date, context);
             db.Add(entry);
             await db.SaveChangesAsync(ct); // Persists the posted header key inside the caller's transaction.

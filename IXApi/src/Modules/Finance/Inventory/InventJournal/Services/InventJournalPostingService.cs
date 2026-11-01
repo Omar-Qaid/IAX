@@ -385,7 +385,8 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
         var date = lines.Min(x => x.TransDate == default ? DateTime.Today : x.TransDate.Date);
         if (lines.Any(x => (x.TransDate == default ? DateTime.Today : x.TransDate.Date) != date))
             throw new PostingValidationException("All lines must use the same transaction date for basic journal posting.");
-        var context = await Support.LoadLedgerContextAsync(companyId, date, ct);
+        var context = await Support.LoadLedgerContextAsync(companyId, date,
+            LedgerPostingModule.Ledger, _user.GetCurrentUserId(), ct);
         if (!string.IsNullOrWhiteSpace(context.Ledger.ReportingCurrency) &&
             !string.Equals(context.Ledger.ReportingCurrency, context.Ledger.AccountingCurrency, StringComparison.OrdinalIgnoreCase))
             throw new PostingValidationException("Inventory journal posting with a different reporting currency requires exchange-rate processing, which is not enabled in the basic inventory scope.");

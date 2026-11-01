@@ -10,9 +10,16 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Invoice;
 public sealed class FreeTextInvoiceService(
     IUnitOfWork unitOfWork,
     ICompanyExecutionContext company,
-    ISysNumberSequenceService numbers) : IFreeTextInvoiceService
+    ISysNumberSequenceService numbers,
+    ICurrentUserService currentUser) : IFreeTextInvoiceService
 {
     private DbContext Db => unitOfWork.Context;
+
+    public FreeTextInvoiceService(IUnitOfWork unitOfWork, ICompanyExecutionContext company,
+        ISysNumberSequenceService numbers)
+        : this(unitOfWork, company, numbers, NullCurrentUserService.Instance)
+    {
+    }
 
     public async Task<IReadOnlyList<FreeTextInvoiceDto>> ListAsync(CancellationToken ct)
     {
@@ -262,7 +269,8 @@ public sealed class FreeTextInvoiceService(
             if (customer == null) return await FailAsync(422, "The invoice customer was not found.", ct);
             if (customer.Blocked is CustVendorBlocked.All or CustVendorBlocked.Invoicing)
                 return await FailAsync(422, "The invoice customer is blocked for invoicing.", ct);
-            var ledger = await support.LoadLedgerContextAsync(area, header.InvoiceDate.Date, ct);
+            var ledger = await support.LoadLedgerContextAsync(area, header.InvoiceDate.Date,
+                LedgerPostingModule.Customer, currentUser.GetCurrentUserId(), ct);
             if (!string.Equals(header.CurrencyCode, ledger.Ledger.AccountingCurrency, StringComparison.OrdinalIgnoreCase))
                 return await FailAsync(422, "Free text invoice posting requires the ledger accounting currency; foreign-currency conversion is not supported.", ct);
             if (!string.IsNullOrWhiteSpace(ledger.Ledger.ReportingCurrency)

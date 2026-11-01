@@ -16,13 +16,17 @@ public sealed record InventValueReportRowDto(
     string InventLocationId,
     string InventoryUnit,
     decimal PhysicalQuantity,
+    decimal PhysicalValue,
     decimal FinancialQuantity,
     decimal FinancialValue,
     decimal AverageUnitCost,
     decimal SummaryQuantity,
+    decimal SummaryPostedValue,
+    decimal SummaryPhysicalValue,
     decimal SummaryValue,
     decimal QuantityDifference,
-    decimal ValueDifference);
+    decimal FinancialValueDifference,
+    decimal PhysicalValueDifference);
 
 /// <summary>
 /// The ledger amount posted under one inventory posting type, so the report shows which postings
@@ -35,6 +39,7 @@ public sealed record InventValueReportDto(
     int Page,
     int PageSize,
     int TotalRows,
+    decimal TotalPhysicalValue,
     decimal TotalFinancialValue,
     decimal TotalSummaryValue,
     decimal LedgerInventoryAmount,

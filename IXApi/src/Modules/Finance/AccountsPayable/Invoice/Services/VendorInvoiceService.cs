@@ -93,7 +93,8 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
                 try { dueDate = IAX.IXApi.Modules.Finance.Foundation.PaymentTerms.PaymentDueDateCalculator.Calculate(date, term); }
                 catch (InvalidOperationException ex) { return await Fail(422, ex.Message, ct); }
             }
-            var context = await support.LoadLedgerContextAsync(area, date, ct);
+            var context = await support.LoadLedgerContextAsync(area, date,
+                LedgerPostingModule.Vendor, _currentUser.GetCurrentUserId(), ct);
             if (order.CurrencyCode != context.Ledger.AccountingCurrency || (!string.IsNullOrEmpty(context.Ledger.ReportingCurrency) && context.Ledger.ReportingCurrency != context.Ledger.AccountingCurrency))
                 return await Fail(422, "Purchase invoice currency conversion requires supported accounting/reporting exchange rates.", ct);
             var vendorAccount = await support.ResolveVendorSummaryAsync(area, vendor, ct);
@@ -200,7 +201,8 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
                 {
                     var match = new VendInvoicePackingSlipQuantityMatch { DataAreaId = area, InvoiceTransRecId = invoiceLine.RecId,
                         PackingSlipTransRecId = receiptId, InventQuantity = matchedInventQty, Quantity = matchedInventQty * request.Qty / inventQty };
-                    await new PurchaseReceiptAccrualPosting(Db).ReverseAsync(area, match, entry.RecId, context.Ledger.AccountingCurrency, ct);
+                    await new PurchaseReceiptAccrualPosting(Db, _currentUser.GetCurrentUserId())
+                        .ReverseAsync(area, match, entry.RecId, context.Ledger.AccountingCurrency, ct);
                     Db.Add(match);
                 }
                 totalTax += await new PurchaseTaxPosting(Db).PostAsync(area, invoiceLine, entry.RecId, context.Ledger.AccountingCurrency, ct);

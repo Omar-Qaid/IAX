@@ -36,8 +36,8 @@ internal sealed class SubledgerPostingSupport(DbContext db)
     /// <summary>One application-lock namespace for every finance posting key, so unrelated keys never alias.</summary>
     private const string LockResourcePrefix = "FinancePosting:";
 
-    public async Task<SubledgerLedgerContext> LoadLedgerContextAsync(string area, DateTime date, CancellationToken ct,
-        LedgerPostingModule? module = null, string userId = "sys")
+    public async Task<SubledgerLedgerContext> LoadLedgerContextAsync(string area, DateTime date,
+        LedgerPostingModule module, string userId, CancellationToken ct)
     {
         var ledger = await db.Set<Ledger>().AsNoTracking().FirstOrDefaultAsync(x => x.DataAreaId == area, ct)
             ?? throw new SubledgerPostingException("A ledger is required for the selected company.");
@@ -50,7 +50,7 @@ internal sealed class SubledgerPostingSupport(DbContext db)
             x => x.Ledger == ledger.RecId && x.FiscalCalendarPeriod == period.RecId, ct);
         if (ledgerPeriod == null || ledgerPeriod.Status != FiscalPeriodStatus.Open)
             throw new SubledgerPostingException($"The fiscal period for {date:d} is not open.");
-        if (module != null && db.Model.FindEntityType(typeof(LedgerPeriodModuleAccessControl)) != null)
+        if (db.Model.FindEntityType(typeof(LedgerPeriodModuleAccessControl)) != null)
         {
             var access = await db.Set<LedgerPeriodModuleAccessControl>().AsNoTracking()
                 .SingleOrDefaultAsync(x => x.DataAreaId == area && x.LedgerFiscalCalendarPeriod == ledgerPeriod.RecId, ct);
@@ -62,7 +62,8 @@ internal sealed class SubledgerPostingSupport(DbContext db)
                     LedgerPostingModule.Tax => (access.TaxAccessLevel, access.TaxUserGroupInfo),
                     LedgerPostingModule.Bank => (access.BankAccessLevel, access.BankUserGroupInfo),
                     LedgerPostingModule.Customer => (access.CustAccessLevel, access.CustUserGroupInfo),
-                    _ => (access.VendAccessLevel, access.VendUserGroupInfo)
+                    LedgerPostingModule.Vendor => (access.VendAccessLevel, access.VendUserGroupInfo),
+                    _ => throw new SubledgerPostingException($"Unsupported fiscal-period posting module '{module}'.")
                 };
                 if (rule.Item1 == LedgerPeriodAccessLevel.None)
                     throw new SubledgerPostingException($"The {module} module is closed for the fiscal period containing {date:d}.");

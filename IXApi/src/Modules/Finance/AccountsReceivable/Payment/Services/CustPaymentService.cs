@@ -105,7 +105,8 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
             if (bank.BankAccountStatus != BankAccountStatus.Active)
                 return await Fail(422, "The selected bank account is not active.", ct);
 
-            var ledger = await support.LoadLedgerContextAsync(area, date, ct);
+            var ledger = await support.LoadLedgerContextAsync(area, date,
+                LedgerPostingModule.Customer, _currentUser.GetCurrentUserId(), ct);
             var customerAccount = await support.ResolveCustomerSummaryAsync(area, null, customer, ct);
             var bankAccount = await support.LoadDimensionAsync(area, bank.LedgerDimension, "bank", ct);
             var currency = string.IsNullOrWhiteSpace(customer.CurrencyCode) ? ledger.Ledger.AccountingCurrency : customer.CurrencyCode;

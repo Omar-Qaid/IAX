@@ -10,7 +10,9 @@ namespace IAX.IXApi.Modules.Finance.Inventory;
 /// <summary>
 /// The inventory value report: dated quantity and value per item and inventory dimension, built
 /// from inventory transactions rather than from the on-hand summary, with the summary reported
-/// alongside so drift between the two is visible.
+/// alongside so drift between the two is visible. Value is reported on both sides: the financial
+/// value of invoiced stock and the physical value of stock that is received or delivered but not
+/// yet invoiced, each compared against its own on-hand bucket so drift is attributable.
 ///
 /// It also totals the ledger amounts posted under each inventory posting type up to the same date.
 /// Those buckets are reported individually, because what belongs in "inventory on the balance
@@ -83,7 +85,14 @@ public sealed class InventValueReportService(
                     ? x.Qty : 0m),
                 FinancialValue = g.Sum(x => x.DateFinancial != default && x.DateFinancial < exclusiveEnd
                     && (x.StatusReceipt == StatusReceipt.Purchased || x.StatusIssue == StatusIssue.Sold)
-                    ? x.CostAmountPosted + x.CostAmountAdjustment : 0m)
+                    ? x.CostAmountPosted + x.CostAmountAdjustment : 0m),
+                // The value of stock that is physically but not financially updated: a product
+                // receipt not yet invoiced, or a packing slip not yet invoiced. The invoice moves
+                // the transaction to Purchased/Sold and clears its physical cost, so a transaction
+                // is only ever counted on one of the two sides.
+                PhysicalValue = g.Sum(x => x.DatePhysical != default && x.DatePhysical < exclusiveEnd
+                    && (x.StatusReceipt == StatusReceipt.Received || x.StatusIssue == StatusIssue.Deducted)
+                    ? x.CostAmountPhysical : 0m)
             }).ToListAsync(ct);
 
         var summaries = await Db.Set<InventSum>().AsNoTracking()
@@ -104,7 +113,8 @@ public sealed class InventValueReportService(
         var summaryByKey = summaries.GroupBy(x => (x.ItemId, x.InventDimId))
             .ToDictionary(x => x.Key, x => (
                 Quantity: x.Sum(y => y.PhysicalInvent),
-                Value: x.Sum(y => y.PostedValue + y.PhysicalValue)));
+                PostedValue: x.Sum(y => y.PostedValue),
+                PhysicalValue: x.Sum(y => y.PhysicalValue)));
 
         var rows = new List<InventValueReportRowDto>();
         foreach (var key in transactionByKey.Keys.Union(summaryByKey.Keys)
@@ -118,8 +128,10 @@ public sealed class InventValueReportService(
             var physicalQuantity = transaction?.PhysicalQuantity ?? 0m;
             var financialQuantity = transaction?.FinancialQuantity ?? 0m;
             var financialValue = transaction?.FinancialValue ?? 0m;
+            var physicalValue = transaction?.PhysicalValue ?? 0m;
             if (!includeZero && physicalQuantity == 0m && financialQuantity == 0m && financialValue == 0m
-                && summary.Quantity == 0m && summary.Value == 0m)
+                && physicalValue == 0m && summary.Quantity == 0m
+                && summary.PostedValue == 0m && summary.PhysicalValue == 0m)
                 continue;
 
             rows.Add(new InventValueReportRowDto(
@@ -131,13 +143,17 @@ public sealed class InventValueReportService(
                 dimension?.InventLocationId ?? string.Empty,
                 units.GetValueOrDefault(key.ItemId, string.Empty),
                 physicalQuantity,
+                physicalValue,
                 financialQuantity,
                 financialValue,
                 financialQuantity == 0m ? 0m : decimal.Round(financialValue / financialQuantity, 4, MidpointRounding.AwayFromZero),
                 summary.Quantity,
-                summary.Value,
+                summary.PostedValue,
+                summary.PhysicalValue,
+                summary.PostedValue + summary.PhysicalValue,
                 summary.Quantity - physicalQuantity,
-                summary.Value - financialValue));
+                summary.PostedValue - financialValue,
+                summary.PhysicalValue - physicalValue));
         }
 
         var buckets = await (
@@ -154,6 +170,7 @@ public sealed class InventValueReportService(
         var totalFinancialValue = rows.Sum(x => x.FinancialValue);
         var ledgerAmount = buckets.Sum(x => x.AccountingCurrencyAmount);
         return new InventValueReportDto(asOfDate, page, pageSize, rows.Count,
+            rows.Sum(x => x.PhysicalValue),
             totalFinancialValue, rows.Sum(x => x.SummaryValue), ledgerAmount,
             ledgerAmount - totalFinancialValue,
             buckets.OrderBy(x => x.PostingType).ToList(),

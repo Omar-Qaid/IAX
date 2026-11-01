@@ -1313,7 +1313,7 @@ public sealed class InventoryCycleTests
         Assert.Equal(60m, row.FinancialQuantity);
         Assert.Equal(600m, row.FinancialValue);
         Assert.Equal(10m, row.AverageUnitCost);
-        Assert.Equal(50m, row.ValueDifference);          // summary minus transactions
+        Assert.Equal(50m, row.FinancialValueDifference); // summary minus transactions
         Assert.Equal(0m, row.QuantityDifference);
         Assert.Equal(600m, report.TotalFinancialValue);
 
@@ -1326,6 +1326,71 @@ public sealed class InventoryCycleTests
         // An item group that nothing belongs to returns no rows.
         var filtered = await service.RunAsync(new DateOnly(2026, 6, 30), null, "OTHER", null, null, false, 1, 50, default);
         Assert.Empty(filtered!.Rows);
+    }
+
+    [Fact]
+    public async Task Inventory_value_report_values_received_and_delivered_stock_on_the_physical_side()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        db.Set<InventTable>().Add(new InventTable { RecId = 1, DataAreaId = "dat", ItemId = "ITEM", Name = "Example item" });
+        db.Set<InventTableModule>().Add(new InventTableModule
+        {
+            RecId = 1, DataAreaId = "dat", ItemId = "ITEM",
+            ModuleType = ModuleInventPurchSales.Inventory, UnitId = "EA"
+        });
+        db.Set<InventDim>().Add(new InventDim { RecId = 1, DataAreaId = "dat", InventDimId = "DIM1", InventSiteId = "S1", InventLocationId = "WH1" });
+        db.Set<InventTrans>().AddRange(
+            // Invoiced: counts on the financial side only.
+            new InventTrans
+            {
+                RecId = 1, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM1", Qty = 100m,
+                CostAmountPosted = 1000m, CostAmountPhysical = 0m, StatusReceipt = StatusReceipt.Purchased,
+                DatePhysical = new DateTime(2026, 6, 1), DateFinancial = new DateTime(2026, 6, 1)
+            },
+            // Received, not invoiced: counts on the physical side only.
+            new InventTrans
+            {
+                RecId = 2, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM1", Qty = 30m,
+                CostAmountPhysical = 330m, StatusReceipt = StatusReceipt.Received,
+                DatePhysical = new DateTime(2026, 6, 10)
+            },
+            // Delivered on a packing slip, not invoiced: physical side, issue direction.
+            new InventTrans
+            {
+                RecId = 3, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM1", Qty = -20m,
+                CostAmountPhysical = -200m, StatusIssue = StatusIssue.Deducted,
+                DatePhysical = new DateTime(2026, 6, 15)
+            });
+        db.Set<InventSum>().Add(new InventSum
+        {
+            RecId = 1, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM1",
+            PhysicalInvent = 110m, PostedValue = 1000m, PhysicalValue = 130m
+        });
+        await db.SaveChangesAsync();
+
+        var service = new InventValueReportService(new TestUnitOfWork(db), new TestCompany());
+        var report = await service.RunAsync(new DateOnly(2026, 6, 30), null, null, null, null, false, 1, 50, default);
+        var row = Assert.Single(report!.Rows);
+
+        // The financial side carries only the invoiced receipt; the physical side carries the
+        // receipt and the delivery that have no invoice yet.
+        Assert.Equal(100m, row.FinancialQuantity);
+        Assert.Equal(1000m, row.FinancialValue);
+        Assert.Equal(110m, row.PhysicalQuantity);
+        Assert.Equal(130m, row.PhysicalValue);
+        Assert.Equal(130m, report.TotalPhysicalValue);
+
+        // Each side reconciles against its own on-hand bucket, so drift is attributable.
+        Assert.Equal(1000m, row.SummaryPostedValue);
+        Assert.Equal(130m, row.SummaryPhysicalValue);
+        Assert.Equal(1130m, row.SummaryValue);
+        Assert.Equal(0m, row.FinancialValueDifference);
+        Assert.Equal(0m, row.PhysicalValueDifference);
+
+        // Before the delivery, only the receipt's physical value counts.
+        var earlier = await service.RunAsync(new DateOnly(2026, 6, 12), null, null, null, null, false, 1, 50, default);
+        Assert.Equal(330m, Assert.Single(earlier!.Rows).PhysicalValue);
     }
 
     /// <summary>The minimum released-item setup an inventory journal line needs to validate.</summary>

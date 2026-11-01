@@ -13,7 +13,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable.PackingSlip;
 /// The posting is recorded in InventTransPosting, which is what the sales invoice reads to reverse
 /// it when the same delivery is updated financially.
 /// </summary>
-internal sealed class PackingSlipPhysicalPosting(DbContext db)
+internal sealed class PackingSlipPhysicalPosting(DbContext db, string userId = "sys")
 {
     /// <summary>Posts the physical issue for one delivered line. Returns false when policy posts nothing.</summary>
     public async Task<bool> PostAsync(string area, string itemId, long inventTransOrigin, string packingSlipId,
@@ -23,7 +23,8 @@ internal sealed class PackingSlipPhysicalPosting(DbContext db)
         var support = new SubledgerPostingSupport(db);
         if (!await support.PostsPhysicalAsync(area, itemId, PhysicalPostingSide.Revenue, ct)) return false;
 
-        var context = await support.LoadLedgerContextAsync(area, deliveryDate, ct);
+        var context = await support.LoadLedgerContextAsync(area, deliveryDate,
+            LedgerPostingModule.Customer, userId, ct);
         if (!string.IsNullOrEmpty(context.Ledger.ReportingCurrency)
             && context.Ledger.ReportingCurrency != context.Ledger.AccountingCurrency)
             throw new SubledgerPostingException("Packing slip posting requires supported accounting/reporting exchange-rate conversion.");

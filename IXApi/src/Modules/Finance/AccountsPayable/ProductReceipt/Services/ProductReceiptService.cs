@@ -154,7 +154,7 @@ public sealed class ProductReceiptService : BaseService<VendPackingSlipJour>, IP
                     PurchUnit = line.PurchUnit, InventTransId = line.InventTransId, InventDimId = line.InventDimId
                 };
                 Db.Set<VendPackingSlipTrans>().Add(receiptLine);
-                await new PurchaseReceiptAccrualPosting(Db).PostAsync(order, receiptLine, ct);
+                await new PurchaseReceiptAccrualPosting(Db, _currentUser.GetCurrentUserId()).PostAsync(order, receiptLine, ct);
                 journal.Qty += request.Qty;
             }
 

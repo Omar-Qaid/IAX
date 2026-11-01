@@ -359,7 +359,8 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                 .Select(x => x.Line.OriginalInvoiceTransRecId!.Value).Distinct().OrderBy(x => x))
                 await support.LockAsync($"PurchTaxCredit:{area}:{originalLineId}", ct);
 
-            var context = await support.LoadLedgerContextAsync(area, date, ct);
+            var context = await support.LoadLedgerContextAsync(area, date,
+                LedgerPostingModule.Vendor, _currentUser.GetCurrentUserId(), ct);
             if (string.IsNullOrWhiteSpace(order.CurrencyCode) || string.IsNullOrWhiteSpace(context.Ledger.AccountingCurrency)
                 || !string.Equals(order.CurrencyCode.Trim(), context.Ledger.AccountingCurrency.Trim(), StringComparison.OrdinalIgnoreCase))
                 return await Fail(422, "Vendor credit note posting requires the return order currency to equal the ledger accounting currency; foreign-currency conversion is not supported.", ct);

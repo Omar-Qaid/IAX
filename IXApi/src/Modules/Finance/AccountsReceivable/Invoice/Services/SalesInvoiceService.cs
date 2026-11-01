@@ -122,7 +122,8 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
             }
             if (selection.Count == 0) return await Fail(422, "There is no delivered, uninvoiced quantity to invoice.", ct);
 
-            var ledger = await support.LoadLedgerContextAsync(area, date, ct);
+            var ledger = await support.LoadLedgerContextAsync(area, date,
+                LedgerPostingModule.Customer, _currentUser.GetCurrentUserId(), ct);
             // This posting path writes transaction, accounting, and reporting amounts equally.
             // Until monetary exchange-rate conversion is supported, reject currency combinations
             // that would silently misstate the customer, tax, and ledger balances.

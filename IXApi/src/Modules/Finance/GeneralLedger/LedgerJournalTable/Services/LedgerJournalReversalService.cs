@@ -43,7 +43,7 @@ public sealed class LedgerJournalReversalService(
                 return (null, null);
             }
             var reversal = await BuildReversalAsync(area, original, (reversalDate ?? DateTime.UtcNow).Date, ct);
-            var result = await new LedgerJournalPosting(Db).PostAsync(area, reversal, ct);
+            var result = await new LedgerJournalPosting(Db, currentUser.GetCurrentUserId()).PostAsync(area, reversal, ct);
             await unitOfWork.CompleteAsync(ct); // The posted lines must exist before they can be marked.
             await MarkCorrectionAsync(area, reversal.JournalNum, ct);
             await unitOfWork.CompleteAsync(ct);

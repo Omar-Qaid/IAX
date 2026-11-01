@@ -468,7 +468,8 @@ public sealed partial class InventCloseService : IInventCloseService
 
     private async Task<LedgerContext> LoadLedgerContextAsync(string companyId, DateTime date, CancellationToken ct)
     {
-        var context = await Support.LoadLedgerContextAsync(companyId, date, ct);
+        var context = await Support.LoadLedgerContextAsync(companyId, date,
+            LedgerPostingModule.Ledger, _user.GetCurrentUserId(), ct);
         if (!string.IsNullOrWhiteSpace(context.Ledger.ReportingCurrency) &&
             !string.Equals(context.Ledger.ReportingCurrency, context.Ledger.AccountingCurrency, StringComparison.OrdinalIgnoreCase))
             throw new PostingValidationException("Inventory close with a different reporting currency requires exchange-rate processing, which is not enabled in the basic inventory scope.");

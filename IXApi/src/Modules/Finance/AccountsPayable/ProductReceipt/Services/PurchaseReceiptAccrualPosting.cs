@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 
-public sealed class PurchaseReceiptAccrualPosting(DbContext db)
+public sealed class PurchaseReceiptAccrualPosting(DbContext db, string userId = "sys")
 {
     public async Task PostAsync(PurchTable order, VendPackingSlipTrans receipt, CancellationToken ct)
     {
@@ -14,7 +14,8 @@ public sealed class PurchaseReceiptAccrualPosting(DbContext db)
         if (!await support.PostsPhysicalAsync(area, receipt.ItemId, PhysicalPostingSide.Purchase, ct)) return;
         var boundary = await InventoryFinancialBoundary.CheckAsync(db, area, receipt.ItemId, receipt.DeliveryDate, ct);
         if (boundary != null) throw new SubledgerPostingException(boundary);
-        var context = await support.LoadLedgerContextAsync(area, receipt.DeliveryDate, ct);
+        var context = await support.LoadLedgerContextAsync(area, receipt.DeliveryDate,
+            LedgerPostingModule.Vendor, userId, ct);
         if (order.CurrencyCode != context.Ledger.AccountingCurrency || (!string.IsNullOrEmpty(context.Ledger.ReportingCurrency) && context.Ledger.ReportingCurrency != context.Ledger.AccountingCurrency))
             throw new SubledgerPostingException("Receipt accrual requires supported accounting/reporting exchange-rate conversion.");
         var inventory = await support.ResolveInventPostingAsync(area, receipt.ItemId, InventAccountType.PurchPackingSlip, ct);

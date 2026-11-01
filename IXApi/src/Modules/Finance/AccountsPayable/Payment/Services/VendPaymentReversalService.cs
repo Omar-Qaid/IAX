@@ -117,7 +117,8 @@ public sealed class VendPaymentReversalService : BaseService<VendTrans>, IVendPa
             }
             await _unitOfWork.CompleteAsync(ct);
 
-            var ledger = await support.LoadLedgerContextAsync(area, date, ct);
+            var ledger = await support.LoadLedgerContextAsync(area, date,
+                LedgerPostingModule.Vendor, _currentUser.GetCurrentUserId(), ct);
             var vendor = await Db.Set<VendTable>().AsNoTracking()
                 .FirstOrDefaultAsync(x => x.DataAreaId == area && x.AccountNum == paymentTrans.AccountNum, ct);
             if (vendor == null) return await Fail(422, "The vendor was not found in the selected company.", ct);

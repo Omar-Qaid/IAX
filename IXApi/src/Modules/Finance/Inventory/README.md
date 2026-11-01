@@ -60,7 +60,13 @@ Phase 1 matrix that called close, settlement and reversal "deferred" no longer d
 
 **Inventory value report** (`GET api/v1/inventory-reports/value`) gives dated quantity and value per
 item and inventory dimension, built from inventory transactions rather than from the on-hand summary,
-with the summary reported beside it so drift between the two is visible. It also totals the ledger
+with the summary reported beside it so drift between the two is visible. Value is reported on both
+sides: the financial value of invoiced stock from `CostAmountPosted` + `CostAmountAdjustment` on
+`DateFinancial`, and the physical value of received or delivered but not yet invoiced stock from
+`CostAmountPhysical` on `DatePhysical`. Each side is compared against its own on-hand bucket
+(`PostedValue`, `PhysicalValue`) so drift is attributable to one side rather than to a single blended
+total. A transaction counts on exactly one side, because the invoice moves it to Purchased/Sold and
+clears its physical cost. It also totals the ledger
 amounts posted under each inventory posting type up to the same date. Those buckets are reported
 individually and with their difference, because what belongs in "inventory on the balance sheet"
 depends on which accounts the posting profiles point at - the report shows the composition and
@@ -75,10 +81,23 @@ added no schema. Because the reference is one field per transaction, D365 marks 
 by splitting the transaction; this service marks whole transactions and rejects a split side with a
 named error rather than inventing a marked-quantity column.
 
-Still missing in costing: standard-cost variances, moving-average maintenance, and physical
-(non-financial) inventory value - `InventSum.PhysicalValue` is never written. An earlier revision of
-this file claimed a missing `InventMark` table; there is no such table in D365, and the gap was
-really the unused marking field named above.
+**Physical (non-financial) inventory value** is now maintained end to end. `InventTrans.CostAmountPhysical`
+and `InventSum.PhysicalValue` are written by the product receipt and the sales packing slip, released
+by the vendor and sales invoice, and reversed by both return flows, so the provisional value of
+delivered-not-invoiced stock is carried and handed over rather than dropped. `InventSum.Received` and
+`Deducted` track the physically-updated-not-invoiced quantities on each side. Ledger posting of the
+physical document is gated by the item model group (`PostPhysicalPurchase` / `PostPhysicalRevenue`,
+requiring `PostOnHandPhysical`), matching the D365 policy fields. An earlier revision of this file
+recorded this as missing; it was closed in the accounts payable and receivable posting flows.
+
+Still missing in costing: standard-cost variances and moving-average maintenance. Both are
+consequences of the model restriction above rather than independent gaps - Standard cost and Moving
+average are rejected at model-group setup, so no item can carry a standard cost for a receipt price
+to vary from, and no item can require moving-average maintenance. Lifting either one means
+implementing the model first.
+
+An earlier revision of this file also claimed a missing `InventMark` table; there is no such table in
+D365, and the gap was really the unused marking field named above.
 
 ## Existing feature coverage
 
@@ -132,7 +151,7 @@ Reference baseline: current Microsoft Dynamics 365 Supply Chain Management onlin
 | Transaction foundation | `InventDim`, `InventTransOrigin`, `InventTrans`, `InventSum`, journal posting service and focused tests | Same standard tables | SQLite lifecycle test covers opening stock through movement journal (including 1 box = 4 inventory pcs conversion), adjustment receipt/issue, transfer, movement, and counting; final on-hand reconciles to net `InventTrans.Qty`, generated ledger lines balance, and a later invalid line rolls back earlier writes. SQL Server rollback, duplicate/concurrent posting, and FIFO valuation reconciliation remain unverified | Verify SQL Server atomicity/idempotency and validate costing/ledger integration before claiming operational readiness | Critical | [Microsoft inventory journals](https://learn.microsoft.com/en-us/dynamics365/supply-chain/inventory/inventory-journals); [initialize stock levels](https://learn.microsoft.com/en-us/dynamics365/supply-chain/inventory/tasks/initialize-stock-levels-warehouse); [physical and financial updates](https://learn.microsoft.com/en-us/dynamics365/supply-chain/cost-management/physical-financial-updates) |
 | On-hand inquiry | Company-scoped `InventSum` inquiry joined to item/dimensions | `InventSum` and On-hand list | Basic inquiry implemented; no location/tracking/date filters | Add only filters backed by stored dimensions; reconcile after every journal test | High | Microsoft On-hand list documentation |
 | Posting setup | Posting profile page/API and journal posting account resolution | `InventPosting` | Limited basic posting paths consume configured rules; all type/profile combinations need relational verification | Verify each journal type and fail posting for missing applicable setup | Critical | [Microsoft inventory posting profiles](https://learn.microsoft.com/dynamics365/finance/general-ledger/inventory-posting-profiles) |
-| Costing and inventory value | Item model-group choice, journal cost fields, transaction and summary values | Item model group, `InventTrans`, `InventSum`, inventory close/recalculation and inventory value inquiry | Basic journal amounts use running-average-style behavior; FIFO/weighted-average settlement, standard-cost revaluation, closing/recalculation, and a reconciled value report are not implemented/verified | Expose only calculations that are implemented; add costing workflows/reporting and reconcile to ledger before claiming parity | Critical | [Inventory close](https://learn.microsoft.com/en-us/dynamics365/supply-chain/cost-management/inventory-close); [running average cost](https://learn.microsoft.com/en-us/dynamics365/supply-chain/cost-management/running-average-cost-price) |
+| Costing and inventory value | Item model-group choice, journal cost fields, transaction and summary values | Item model group, `InventTrans`, `InventSum`, inventory close/recalculation and inventory value inquiry | FIFO, LIFO and weighted-average settlement, inventory close, recalculation, close cancellation and a ledger-reconciling value report are implemented with SQLite tests. Standard cost and moving average are rejected at model-group setup, so standard-cost revaluation does not apply. SQL Server verification is pending | Verify the settlement and value report against SQL Server before claiming operational parity | Critical | [Inventory close](https://learn.microsoft.com/en-us/dynamics365/supply-chain/cost-management/inventory-close); [running average cost](https://learn.microsoft.com/en-us/dynamics365/supply-chain/cost-management/running-average-cost-price) |
 | Ledger integration | Journal posting creates ledger entries for tested basic paths | Inventory posting profiles and general-ledger entries | Not verified against SQL Server, all posting combinations, or period behavior | Complete relational verification; report unsupported combinations explicitly | Critical | [Microsoft inventory posting profiles](https://learn.microsoft.com/dynamics365/finance/general-ledger/inventory-posting-profiles) |
 | Permissions | Split into `Inventory.Setup`, `Inventory.Journals`, `Inventory.Posting` and `Inventory.Inquiry` | D365 duties/privileges concept | Done for Inventory. `Inventory.Transactions` is still seeded so existing grants are not orphaned, but no inventory endpoint requires it any more: **roles must be re-granted the new resources**. Product-master controllers still use the pre-existing `Inventory.Products` / `Inventory.Items` resources, and `Products` is not in the seeder - a separate pre-existing gap | Re-grant roles; seed or rename `Inventory.Products` | Medium | `IdentitySeeder.PermissionDefs`, inventory controllers |
 | Advanced WHS/manufacturing/variants | Some persistence columns exist but basic pages hide them | WHS, production, product masters/variants | Outside scope | Preserve stored columns; don't add services or UI workflows | Deferred | Agreed scope |
@@ -149,11 +168,11 @@ Reference baseline: current Microsoft Dynamics 365 Supply Chain Management onlin
 | Product variants (configuration, size, color, style) | Excluded by request | No variant creation or maintenance is in scope. |
 | Inventory parameters and number sequences | Partial | Basic parameters UI/API exists; journal sequence-reference integration and migration application are not verified. |
 | Units and unit conversions | Implemented; live database/API verification pending | Basic shared units and standard/product-specific conversions have CRUD, conversion behavior, and SQLite tests. |
-| Item model groups/costing methods | Partial | Setup supports several model labels, but FIFO, weighted-average settlement, and standard-cost revaluation are not implemented as costing parity. Sales-line inventory demand now respects the selected group's stocked flag (when configured); purchase integration is absent. |
+| Item model groups/costing methods | Implemented for the settled models | Setup accepts FIFO, LIFO and weighted average only, which are exactly the models settlement implements; the remaining model labels are rejected with a named error rather than approximated. Sales-line inventory demand now respects the selected group's stocked flag (when configured); purchase integration is absent. |
 | Site, warehouse, basic location; storage/tracking groups | Implemented in code; SQL Server/live flows pending | Basic setup exists. WHS execution and optional batch/serial processes remain out of scope; tracking-group assignment is present. |
 | Inventory status | Implemented in code; live verification pending | Company-scoped `WHSInventStatus` setup, dimension validation in journal/sales paths, blocked-issue guards, and blocked on-hand availability are present. Advanced warehouse execution remains outside scope. |
 | Posting profiles and ledger integration | Partial | Basic journal paths resolve `InventPosting` and create ledger lines; SQL Server, period handling, all account types, and reconciliation need verification. |
-| Inventory costing, adjustment, value reports, reconciliation | Partial | Journal costs and on-hand values exist; valuation support is limited and no verified cost close/recalculation or reconciled inventory value report exists. |
+| Inventory costing, adjustment, value reports, reconciliation | Implemented in code; SQL Server verification pending | FIFO/LIFO/weighted-average settlement, inventory close and recalculation with cancellation, marking, physical and financial inventory value, and a value report that reconciles transactions, on-hand and the ledger. |
 
 ### Phase classification
 

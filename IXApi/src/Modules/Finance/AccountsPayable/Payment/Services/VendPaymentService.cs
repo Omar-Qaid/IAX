@@ -51,7 +51,8 @@ public sealed class VendPaymentService(IUnitOfWork work, ICurrentUserService use
                 return await Fail("Payments are blocked for this vendor.", ct);
             if (bank == null || bank.LedgerDimension == 0 || bank.BankAccountStatus != BankAccountStatus.Active)
                 return await Fail("An active bank account with a ledger account is required.", ct);
-            var ledger = await support.LoadLedgerContextAsync(area, date, ct);
+            var ledger = await support.LoadLedgerContextAsync(area, date,
+                LedgerPostingModule.Vendor, user.GetCurrentUserId(), ct);
             var currency = string.IsNullOrWhiteSpace(vendor.Currency) ? ledger.Ledger.AccountingCurrency : vendor.Currency;
             if (currency != ledger.Ledger.AccountingCurrency
                 || (!string.IsNullOrWhiteSpace(ledger.Ledger.ReportingCurrency) && currency != ledger.Ledger.ReportingCurrency)

@@ -367,7 +367,8 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
             }
             if (selection.Count == 0) return await Fail(422, "There is nothing to credit: receive returned goods first, or the return is fully credited.", ct);
 
-            var ledger = await support.LoadLedgerContextAsync(area, date, ct);
+            var ledger = await support.LoadLedgerContextAsync(area, date,
+                LedgerPostingModule.Customer, _currentUser.GetCurrentUserId(), ct);
             if (string.IsNullOrWhiteSpace(order.CurrencyCode) || string.IsNullOrWhiteSpace(ledger.Ledger.AccountingCurrency)
                 || !string.Equals(order.CurrencyCode.Trim(), ledger.Ledger.AccountingCurrency.Trim(), StringComparison.OrdinalIgnoreCase))
                 return await Fail(422, "Credit note posting requires the return order currency to equal the ledger accounting currency; foreign-currency conversion is not supported.", ct);
