@@ -1,7 +1,6 @@
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using Microsoft.EntityFrameworkCore;
-using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.Foundation.Currency;
 using JournalHeader = IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable;
 
@@ -45,7 +44,9 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
             .Where(x => x.DataAreaId == area && x.JournalNum == header.JournalNum).ToListAsync(ct);
         lines = lines.OrderBy(x => x.LineNum).ThenBy(x => x.RecId).ToList();
 
-        await AllocateMissingVouchersAsync(area, header, lines, ct);
+        var journalName = await db.Set<LedgerJournalName>().AsNoTracking()
+            .SingleAsync(x => x.DataAreaId == area && x.JournalName == header.JournalName, ct);
+        await LedgerJournalVoucherNumberSequence.AllocateForPostingAsync(db, area, header, journalName, lines, ct);
 
         var arithmetic = LedgerVoucherBalanceCheck.Check(lines);
         if (arithmetic.Count > 0) throw new SubledgerPostingException(arithmetic[0]);
@@ -204,37 +205,4 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
             throw new SubledgerPostingException($"{label}: automatic reversal is not supported; post the reversal as its own journal.");
     }
 
-    private async Task AllocateMissingVouchersAsync(string area, JournalHeader header,
-        List<LedgerJournalTrans> lines, CancellationToken ct)
-    {
-        if (lines.All(x => !string.IsNullOrWhiteSpace(x.Voucher))) return;
-        var name = await db.Set<LedgerJournalName>().AsNoTracking()
-            .SingleAsync(x => x.DataAreaId == area && x.JournalName == header.JournalName, ct);
-        if (name.NumberSequenceTable == 0)
-            throw new SubledgerPostingException($"Journal name '{name.JournalName}' has no voucher number sequence.");
-        string? shared = null;
-        foreach (var line in lines.Where(x => string.IsNullOrWhiteSpace(x.Voucher)))
-        {
-            if (name.NewVoucher == LedgerJournalVoucherChange.None && shared != null) line.Voucher = shared;
-            else
-            {
-                line.Voucher = await NextVoucherAsync(area, name.NumberSequenceTable, ct);
-                shared ??= line.Voucher;
-            }
-        }
-    }
-
-    private async Task<string> NextVoucherAsync(string area, long sequenceRecId, CancellationToken ct)
-    {
-        var sequence = await db.Set<SysNumberSequence>().IgnoreQueryFilters()
-            .SingleOrDefaultAsync(x => x.RecId == sequenceRecId && x.DataAreaId == area && !x.IsDeleted, ct)
-            ?? throw new SubledgerPostingException("The journal voucher number sequence was not found in the selected company.");
-        if (!sequence.IsActive || sequence.Blocked == 1 || sequence.InUse == 0 || sequence.Manual == 1 || sequence.NoIncrement == 1)
-            throw new SubledgerPostingException($"Voucher number sequence '{sequence.NumberSequence}' is unavailable for automatic allocation.");
-        var next = sequence.NextRec ?? sequence.Lowest ?? 1;
-        if (next > (sequence.Highest ?? int.MaxValue))
-            throw new SubledgerPostingException($"Voucher number sequence '{sequence.NumberSequence}' is exhausted.");
-        sequence.NextRec = next + 1;
-        return SysNumberSequenceService.FormatCode(sequence, next);
-    }
 }

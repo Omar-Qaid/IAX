@@ -73,6 +73,56 @@ public class LedgerJournalPostingTests
         Assert.Contains("already posted", again.Message);
     }
 
+    [Fact]
+    public async Task Allocation_at_posting_replaces_each_temporary_voucher_group_from_configured_sequence()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        var header = await db.Set<LedgerJournalTable>().SingleAsync();
+        header.VoucherAllocatedAtPosting = NoYes.Yes;
+        var journalName = await db.Set<LedgerJournalName>().SingleAsync();
+        journalName.VoucherAllocatedAtPosting = NoYes.Yes;
+        journalName.NumberSequenceTable = 90;
+        db.Add(new SysNumberSequence
+        {
+            RecId = 90,
+            DataAreaId = "dat",
+            NumberSequence = "GEN-V",
+            Txt = "General journal voucher",
+            Format = "GV-######",
+            AnnotatedFormat = "{PREFIX}-{SEQ}",
+            Lowest = 100,
+            NextRec = 100,
+            Highest = 999,
+            IsActive = true,
+            InUse = 1,
+            Manual = 0,
+            NoIncrement = 0,
+            Blocked = 0
+        });
+        db.AddRange(
+            Line(1, "TMP-1", bank: true, debit: 100m),
+            Line(2, "TMP-1", bank: false, credit: 100m),
+            Line(3, "TMP-2", bank: true, debit: 200m),
+            Line(4, "TMP-2", bank: false, credit: 200m));
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var result = await new LedgerJournalPosting(db).PostAsync(
+            "dat", await db.Set<LedgerJournalTable>().SingleAsync(), default);
+        await db.SaveChangesAsync();
+
+        Assert.Equal(2, result.VouchersPosted);
+        var lines = await db.Set<LedgerJournalTrans>().AsNoTracking().OrderBy(x => x.RecId).ToListAsync();
+        Assert.Equal(lines[0].Voucher, lines[1].Voucher);
+        Assert.Equal(lines[2].Voucher, lines[3].Voucher);
+        Assert.NotEqual(lines[0].Voucher, lines[2].Voucher);
+        Assert.DoesNotContain(lines, x => x.Voucher.StartsWith("TMP-", StringComparison.Ordinal));
+        Assert.Equal(102, (await db.Set<SysNumberSequence>().AsNoTracking().SingleAsync()).NextRec);
+    }
+
     // A line with an offset is one entered line and two posted account entries under one voucher.
     [Fact]
     public async Task Posts_offset_line_as_two_account_entries_under_one_voucher()
@@ -486,6 +536,7 @@ public class LedgerJournalPostingTests
         protected override void OnModelCreating(ModelBuilder builder)
         {
             Type[] types = [typeof(LedgerJournalTable), typeof(LedgerJournalName), typeof(LedgerJournalTrans),
+                typeof(SysNumberSequence),
                 typeof(CompanyInfo), typeof(MainAccountLegalEntity), typeof(IAX.IXApi.Modules.Finance.Entities.LedgerParameters),
                 typeof(Ledger), typeof(FiscalCalendarPeriod), typeof(LedgerFiscalCalendarPeriod),
                 typeof(MainAccount), typeof(DimensionAttributeValueCombination),

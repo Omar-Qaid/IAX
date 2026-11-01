@@ -96,6 +96,11 @@ public sealed class LedgerJournalReversalService(
         var lines = await Db.Set<LedgerJournalTrans>().AsNoTracking()
             .Where(x => x.DataAreaId == area && x.JournalNum == original.JournalNum).ToListAsync(ct);
         if (lines.Count == 0) throw new SubledgerPostingException("The posted journal has no lines to reverse.");
+        var journalName = await Db.Set<LedgerJournalName>().AsNoTracking()
+            .SingleOrDefaultAsync(x => x.DataAreaId == area && x.JournalName == original.JournalName, ct)
+            ?? throw new SubledgerPostingException($"Journal name '{original.JournalName}' is not configured.");
+        if (journalName.NumberSequenceTable == 0)
+            throw new SubledgerPostingException($"Journal name '{journalName.JournalName}' has no voucher number sequence.");
 
         var header = new JournalHeader
         {
@@ -104,6 +109,8 @@ public sealed class LedgerJournalReversalService(
             JournalName = original.JournalName,
             Name = Truncate($"Reversal of {original.JournalNum}", FieldLengths.Name),
             JournalType = original.JournalType,
+            NumberSequenceTable = journalName.NumberSequenceTable,
+            VoucherAllocatedAtPosting = journalName.VoucherAllocatedAtPosting,
             CurrencyCode = original.CurrencyCode,
             OriginalJournalNum = original.JournalNum,
             OriginalCompany = area,
@@ -115,7 +122,9 @@ public sealed class LedgerJournalReversalService(
         // Each original voucher reverses under its own new voucher, on the reversal date.
         var replacements = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (var voucher in lines.Select(x => x.Voucher).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal))
-            replacements[voucher] = (await numbers.NextAsync("Voucher", area, ct)).Code;
+            replacements[voucher] = journalName.VoucherAllocatedAtPosting == NoYes.Yes
+                ? voucher
+                : await LedgerJournalVoucherNumberSequence.NextAsync(Db, area, journalName.NumberSequenceTable, ct);
 
         foreach (var line in lines.OrderBy(x => x.LineNum).ThenBy(x => x.RecId))
             Db.Add(Mirror(line, header.JournalNum, replacements[line.Voucher], reversalDate));

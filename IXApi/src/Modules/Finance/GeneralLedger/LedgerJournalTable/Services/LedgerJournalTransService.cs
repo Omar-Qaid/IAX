@@ -19,6 +19,15 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
             if (header.Posted == NoYes.Yes) throw new InvalidOperationException("Lines cannot be added to a posted journal.");
             entity.DataAreaId = area!;
             entity.Company = string.IsNullOrWhiteSpace(entity.Company) ? area! : entity.Company;
+            entity.OffsetCompany = string.IsNullOrWhiteSpace(entity.OffsetCompany) ? area! : entity.OffsetCompany;
+            entity.CurrencyCode = string.IsNullOrWhiteSpace(entity.CurrencyCode) ? header.CurrencyCode : entity.CurrencyCode;
+            if (header.FixedOffsetAccount == NoYes.Yes)
+            {
+                entity.OffsetAccountType = header.OffsetAccountType;
+                entity.OffsetLedgerDimension = header.OffsetLedgerDimension;
+            }
+            if (entity.DocumentDate == default) entity.DocumentDate = entity.TransDate;
+            entity.NoEdit = NoYes.No;
             if (entity.LineNum == 0)
                 entity.LineNum = (await _unitOfWork.Context.Set<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans>()
                     .Where(x => x.DataAreaId == area && x.JournalNum == entity.JournalNum)
@@ -27,7 +36,11 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
 
         public override async Task<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans> UpdateAsync(IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans entity, CancellationToken ct = default)
         {
-            await EnsureEditableAsync(entity.RecId, ct);
+            var current = await EnsureEditableAsync(entity.RecId, ct);
+            entity.DataAreaId = current.DataAreaId;
+            entity.JournalNum = current.JournalNum;
+            entity.Company = current.Company;
+            entity.NoEdit = current.NoEdit;
             return await base.UpdateAsync(entity, ct);
         }
 
@@ -37,14 +50,15 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
             await base.RemoveAsync(entity, ct);
         }
 
-        private async Task EnsureEditableAsync(long recId, CancellationToken ct)
+        private async Task<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans> EnsureEditableAsync(long recId, CancellationToken ct)
         {
             var row = await _unitOfWork.Context.Set<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans>().AsNoTracking()
-                .Where(x => x.RecId == recId).Select(x => new { x.NoEdit, x.JournalNum, x.DataAreaId }).SingleOrDefaultAsync(ct)
+                .SingleOrDefaultAsync(x => x.RecId == recId, ct)
                 ?? throw new InvalidOperationException("Journal line was not found.");
             var posted = await _unitOfWork.Context.Set<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable>().AsNoTracking()
                 .AnyAsync(x => x.DataAreaId == row.DataAreaId && x.JournalNum == row.JournalNum && x.Posted == NoYes.Yes, ct);
             if (row.NoEdit == NoYes.Yes || posted) throw new InvalidOperationException("Posted journal lines cannot be changed or deleted.");
+            return row;
         }
 
         public LedgerJournalTransService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)

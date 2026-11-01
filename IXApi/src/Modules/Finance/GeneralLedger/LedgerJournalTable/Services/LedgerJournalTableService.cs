@@ -26,6 +26,21 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
             entity.VoucherAllocatedAtPosting = setup.VoucherAllocatedAtPosting;
             entity.DefaultDimension = entity.DefaultDimension == 0 ? setup.DefaultDimension : entity.DefaultDimension;
             entity.CurrencyCode = string.IsNullOrWhiteSpace(entity.CurrencyCode) ? setup.CurrencyCode : entity.CurrencyCode;
+            entity.OffsetLedgerDimension = setup.FixedOffsetAccount == NoYes.Yes || entity.OffsetLedgerDimension == 0
+                ? setup.OffsetLedgerDimension : entity.OffsetLedgerDimension;
+            entity.OffsetAccountType = setup.FixedOffsetAccount == NoYes.Yes || entity.OffsetLedgerDimension == setup.OffsetLedgerDimension
+                ? setup.OffsetAccountType : entity.OffsetAccountType;
+            entity.FixedOffsetAccount = setup.FixedOffsetAccount;
+            entity.FixedExchRate = setup.FixedExchRate;
+            entity.Posted = NoYes.No;
+            entity.PostedDateTime = default;
+            entity.JournalBalance = 0m;
+            entity.JournalTotalDebit = 0m;
+            entity.JournalTotalCredit = 0m;
+            entity.JournalTotalDebitReportingCurrency = 0m;
+            entity.JournalTotalCreditReportingCurrency = 0m;
+            entity.NumOfLines = 0;
+            entity.SystemBlocked = NoYes.No;
             if (string.IsNullOrWhiteSpace(entity.JournalNum))
                 entity.JournalNum = _numbers == null
                     ? throw new InvalidOperationException("Journal batch number sequence service is unavailable.")
@@ -34,7 +49,25 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
 
         public override async Task<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable> UpdateAsync(IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable entity, CancellationToken ct = default)
         {
-            await EnsureEditableAsync(entity.RecId, ct);
+            var current = await EnsureEditableAsync(entity.RecId, ct);
+            entity.DataAreaId = current.DataAreaId;
+            entity.JournalNum = current.JournalNum;
+            entity.JournalName = current.JournalName;
+            entity.JournalType = current.JournalType;
+            entity.NumberSequenceTable = current.NumberSequenceTable;
+            entity.VoucherAllocatedAtPosting = current.VoucherAllocatedAtPosting;
+            entity.Posted = current.Posted;
+            entity.PostedDateTime = current.PostedDateTime;
+            entity.JournalBalance = current.JournalBalance;
+            entity.JournalTotalDebit = current.JournalTotalDebit;
+            entity.JournalTotalCredit = current.JournalTotalCredit;
+            entity.JournalTotalDebitReportingCurrency = current.JournalTotalDebitReportingCurrency;
+            entity.JournalTotalCreditReportingCurrency = current.JournalTotalCreditReportingCurrency;
+            entity.NumOfLines = current.NumOfLines;
+            entity.SystemBlocked = current.SystemBlocked;
+            entity.SystemBlockedReason = current.SystemBlockedReason;
+            entity.OriginalJournalNum = current.OriginalJournalNum;
+            entity.OriginalCompany = current.OriginalCompany;
             return await base.UpdateAsync(entity, ct);
         }
 
@@ -44,11 +77,13 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
             await base.RemoveAsync(entity, ct);
         }
 
-        private async Task EnsureEditableAsync(long recId, CancellationToken ct)
+        private async Task<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable> EnsureEditableAsync(long recId, CancellationToken ct)
         {
-            var posted = await _unitOfWork.Context.Set<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable>()
-                .AsNoTracking().Where(x => x.RecId == recId).Select(x => x.Posted).SingleOrDefaultAsync(ct);
-            if (posted == NoYes.Yes) throw new InvalidOperationException("Posted journals cannot be changed or deleted.");
+            var current = await _unitOfWork.Context.Set<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable>()
+                .AsNoTracking().SingleOrDefaultAsync(x => x.RecId == recId, ct)
+                ?? throw new InvalidOperationException("Journal header was not found.");
+            if (current.Posted == NoYes.Yes) throw new InvalidOperationException("Posted journals cannot be changed or deleted.");
+            return current;
         }
         public Task<LedgerJournalSetupCheckDto?> CheckSetupAsync(long recId, CancellationToken ct) =>
             new LedgerJournalSetupCheck(_unitOfWork.Context).CheckAsync(_currentUser.GetDataAreaId(), recId, ct);
