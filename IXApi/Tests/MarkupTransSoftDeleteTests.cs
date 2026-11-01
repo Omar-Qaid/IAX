@@ -1,3 +1,4 @@
+using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.Entities;
 using Microsoft.EntityFrameworkCore;
 using Xunit;

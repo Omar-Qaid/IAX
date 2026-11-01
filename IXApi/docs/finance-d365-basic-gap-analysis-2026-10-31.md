@@ -941,3 +941,65 @@ Gap 5a (period access by module) appears to have been taken by concurrent work
 (`LedgerPeriodModuleAccessControl*`). What remains unclaimed: gap 2 (`MarkupTrans.IsDeleted`
 shadow, now reachable), gap 12 (`SpecTrans` marking), gap 13 (inventory close cancellation), and
 the `VendSettlement` shape alignment noted in section 8.
+
+---
+
+## 12. Gap 2 fixed 2026-11-01 — MarkupTrans soft-delete filtering
+
+`MarkupTrans` declared `public new NoYes IsDeleted`, shadowing the base entity's `bool`. The global
+filter in `ApplicationDbContext.SetGlobalQueryFilters` is applied **only when the property's CLR
+type is `bool`** (`isDeletedProp.ClrType == typeof(bool)`), so this one table had no soft-delete
+filter at all and the column was mapped as `int`.
+
+The shadow is removed, so the table now takes part in the filter like every other entity.
+Migration `FixMarkupTransSoftDelete` converts the column from `int` to `bit`.
+
+### Why this was worth doing now rather than at its P3 rating
+
+The register rated it P3 when nothing read charges. That changed when charge posting shipped in
+section 2: `SalesChargePosting` and `PurchaseChargePosting` both query `MarkupTrans`, so a
+soft-deleted charge was visible to the posting paths. The defect moved from latent to live without
+its priority changing, which is why section 6.4 flagged it as "worth doing sooner than its priority
+suggests".
+
+### Eight call sites came with it
+
+Removing the shadow broke eight comparisons of the form `x.IsDeleted != NoYes.Yes`, across
+`MarkupTransService`, `SalesChargePosting`, `PurchaseChargePosting`, `SalesOrderChargeRefresh`,
+`SalesOrderReadService` and `SalesOrderConfirmationService`. Each became `!x.IsDeleted`. They are
+now redundant, because the global filter does the same work, but they were left in rather than
+removed: a query that later adds `IgnoreQueryFilters()` would still want them, and deleting them is
+a wider change than this fix needs.
+
+Checked before replacing: exactly eight occurrences existed and all were `MarkupTrans`. No other
+entity in the module declares a `NoYes IsDeleted`, so the shadow was unique to this table.
+
+### On the scaffolder's data-loss warning
+
+`dotnet ef migrations add` warned that the operation "may result in the loss of data". It is benign
+here and the migration says so: the column only ever held `NoYes`, whose members are `No = 0` and
+`Yes = 1`, and SQL Server converts those to `bit` exactly. A normalising
+`UPDATE [MarkupTrans] SET [IsDeleted] = 1 WHERE [IsDeleted] <> 0` runs first, so the conversion is
+provably lossless rather than merely probably so, and the guard holds if any other value ever
+reached the column.
+
+### Verification run
+
+- `dotnet build` → **0 errors**.
+- `dotnet ef migrations has-pending-model-changes` → **no drift**; the migration touches only this
+  column.
+- `dotnet test IXApi/Tests/IXApi.Tests.csproj` → **650 passed, 1 failed, 2 skipped** — back to the
+  single long-standing `Crud_controllers_use_registered_generic_services` failure. Nothing depended
+  on the unfiltered behaviour.
+- `dotnet test IXApi/Tests/InventoryCycle.Tests.csproj` → **24 passed, 0 failed**.
+- 3 new tests in `Tests/MarkupTransSoftDeleteTests.cs`: the property is the base `bool` and is not
+  redeclared, the **mapped** column's CLR type is `bool` (which is the condition the filter itself
+  tests), and a soft-deleted charge is filtered out of queries while still being reachable through
+  `IgnoreQueryFilters`. The first two pin the property's shape deliberately: that shape *is* the
+  defect, and a future redeclaration would silently disable the filter again without breaking
+  anything else.
+
+### Gap 2 status
+
+**Closed.** Note this is the `MarkupTrans` entry from section 6.6, not the main-account posting
+controls that also carry the number 2 in section 3's table.
