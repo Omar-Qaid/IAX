@@ -399,7 +399,10 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
                 }
 
                 // Reverse revenue (debit).
-                var revenueAccount = await support.ResolveInventPostingAsync(area, line.ItemId, InventAccountType.SalesRevenue, ct);
+                var customerScope = await support.CustomerScopeAsync(area,
+                    order.InvoiceAccount.Length > 0 ? order.InvoiceAccount : order.CustAccount, ct);
+                var revenueAccount = await support.ResolveInventPostingAsync(area, line.ItemId, InventAccountType.SalesRevenue, ct,
+                    custVendAccount: customerScope.Account, custVendGroup: customerScope.Group);
                 Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, revenueAccount, LedgerPostingType.SalesRevenue, revenue,
                     $"Return {order.ReturnItemNum} item {line.ItemId}", inventQty, currency));
 
@@ -409,8 +412,10 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
                     var cost = await ReceiptFinancialUpdateAsync(area, order, line, inventQty, invoiceId, date, ct);
                     if (cost != 0m)
                     {
-                        var issueAccount = await support.ResolveInventPostingAsync(area, line.ItemId, InventAccountType.SalesIssue, ct);
-                        var consumption = await support.ResolveInventPostingAsync(area, line.ItemId, InventAccountType.SalesConsump, ct);
+                        var issueAccount = await support.ResolveInventPostingAsync(area, line.ItemId, InventAccountType.SalesIssue, ct,
+                            custVendAccount: customerScope.Account, custVendGroup: customerScope.Group);
+                        var consumption = await support.ResolveInventPostingAsync(area, line.ItemId, InventAccountType.SalesConsump, ct,
+                            custVendAccount: customerScope.Account, custVendGroup: customerScope.Group);
                         Db.AddRange(
                             SubledgerPostingSupport.AccountEntry(area, entry.RecId, issueAccount, LedgerPostingType.SalesIssue, cost,
                                 $"Returned {line.ItemId} to inventory on {invoiceId}", inventQty, currency),

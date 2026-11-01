@@ -381,7 +381,8 @@ public sealed class PackingSlipJournalService : BaseService<CustPackingSlipJour>
                 if (quantityLeft > 0)
                     return new PackingSlipJournalResult(422, null, $"Inventory demand could not be allocated for item {line.ItemId}.");
                 await new PackingSlipPhysicalPosting(Db, _currentUser.GetCurrentUserId()).PostAsync(order.DataAreaId, line.ItemId, origin.RecId,
-                    packingSlipId, deliveryDate, physicalCost, ct);
+                    packingSlipId, deliveryDate, physicalCost, ct,
+                    order.InvoiceAccount.Length > 0 ? order.InvoiceAccount : order.CustAccount);
 
                 var lineAmount = line.PriceUnit > 0 ? salesQuantity * line.SalesPrice / line.PriceUnit : 0m;
                 Db.Set<CustPackingSlipTrans>().Add(new CustPackingSlipTrans

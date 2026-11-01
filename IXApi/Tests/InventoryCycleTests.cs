@@ -452,12 +452,96 @@ public sealed class InventoryCycleTests
     // ---- Sales order cycle (CycleSalesorder.md / ARTables.md Ãƒâ€šÃ‚Â§14 state table) -------------------
 
     [Fact]
-    public async Task Sales_invoice_rejects_unconverted_currencies_before_creating_postings()
+    public async Task Sales_invoice_without_an_exchange_rate_posts_nothing()
     {
         await using var fixture = await Fixture.CreateAsync();
         var db = fixture.Db;
         SeedLedgerAndPosting(db);
         SeedSalesMasterData(db);
+        SeedForeignOrder(db);
+        await db.SaveChangesAsync();
+        var order = await db.Set<SalesTable>().SingleAsync(x => x.SalesId == "SO-FX");
+        var invoices = new SalesInvoiceService(new TestUnitOfWork(db), new TestCompany(), Sequence());
+
+        // No rate is configured for USD/SAR, so the invoice is refused rather than posted at an
+        // assumed rate. Nothing is written.
+        var result = await invoices.PostAsync(order.RecId, new SalesInvoicePostDto(new DateTime(2026, 10, 7), "fx-1"), default);
+        Assert.Equal(422, result.StatusCode);
+        Assert.Contains("No exchange rate is available", result.Message);
+        Assert.Empty(await db.Set<CustInvoiceJour>().ToListAsync());
+        Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
+    }
+
+    [Fact]
+    public async Task Sales_invoice_translates_a_foreign_currency_order_into_the_accounting_currency()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        SeedSalesMasterData(db);
+        SeedRate(db, "USD", "SAR", 3.75m);
+        await db.SaveChangesAsync();
+        var numbers = new TestInventNumbers();
+
+        // Buy in SAR, sell 10 @ 100 USD + 15% VAT: 1,000 revenue and 150 tax, so the customer owes
+        // 1,150 USD. At 3.75 that is 3,750 / 562.50 / 4,312.50 in the accounting currency.
+        await StockAndSellTenAsync(db, numbers, salesCurrency: "USD");
+
+        var journal = await db.Set<CustInvoiceJour>().AsNoTracking().SingleAsync();
+        Assert.Equal("USD", journal.CurrencyCode);
+        Assert.Equal(1150m, journal.InvoiceAmount);
+        Assert.Equal(4312.5m, journal.InvoiceAmountMst);
+        Assert.Equal(1000m, journal.SalesBalance);
+        Assert.Equal(3750m, journal.SalesBalanceMst);
+        Assert.Equal(150m, journal.SumTax);
+        Assert.Equal(562.5m, journal.SumTaxMst);
+
+        // The customer's debt is held in both currencies.
+        var custTrans = await db.Set<CustTrans>().AsNoTracking().SingleAsync(x => x.Invoice == journal.InvoiceId);
+        Assert.Equal("USD", custTrans.CurrencyCode);
+        Assert.Equal(1150m, custTrans.AmountCur);
+        Assert.Equal(4312.5m, custTrans.AmountMst);
+        var open = await db.Set<CustTransOpen>().AsNoTracking().SingleAsync(x => x.RefRecId == custTrans.RecId);
+        Assert.Equal(1150m, open.AmountCur);
+        Assert.Equal(4312.5m, open.AmountMst);
+
+        // The invoice voucher covers the invoice entry and the reversal of the packing slip's
+        // physical posting, so both are read together.
+        var entryIds = await db.Set<GeneralJournalEntry>().AsNoTracking()
+            .Where(x => x.SubledgerVoucher == journal.InvoiceId).Select(x => x.RecId).ToListAsync();
+        var lines = await db.Set<GeneralJournalAccountEntry>().AsNoTracking()
+            .Where(x => entryIds.Contains(x.GeneralJournalEntry)).ToListAsync();
+
+        // Revenue keeps the order's currency on the transaction amount and is translated for the ledger.
+        var revenue = lines.Single(x => x.PostingType == LedgerPostingType.SalesRevenue);
+        Assert.Equal("USD", revenue.TransactionCurrencyCode);
+        Assert.Equal(-1000m, revenue.TransactionCurrencyAmount);
+        Assert.Equal(-3750m, revenue.AccountingCurrencyAmount);
+        var customer = lines.Single(x => x.PostingType == LedgerPostingType.CustBalance);
+        Assert.Equal(1150m, customer.TransactionCurrencyAmount);
+        Assert.Equal(4312.5m, customer.AccountingCurrencyAmount);
+
+        // Cost of goods came from inventory and is already an accounting-currency amount, so it is
+        // posted in that currency and is not translated: 10 units at cost 60 is 600 either way.
+        var cogs = lines.Single(x => x.PostingType == LedgerPostingType.SalesConsump);
+        Assert.Equal("SAR", cogs.TransactionCurrencyCode);
+        Assert.Equal(600m, cogs.TransactionCurrencyAmount);
+        Assert.Equal(600m, cogs.AccountingCurrencyAmount);
+
+        // The voucher balances in the accounting currency, which is the balance that must hold when
+        // its lines are in more than one transaction currency.
+        Assert.Equal(0m, lines.Sum(x => x.AccountingCurrencyAmount));
+
+        // Tax is stored in both currencies, so settlement sums accounting amounts.
+        var tax = await db.Set<TaxTrans>().AsNoTracking().SingleAsync(x => x.Voucher == journal.InvoiceId);
+        Assert.Equal(-150m, tax.TaxAmountCur);
+        Assert.Equal(-562.5m, tax.TaxAmount);
+    }
+
+    /// <summary>A one-line order of 100 USD against a ledger that keeps its accounts in SAR.</summary>
+    private static void SeedForeignOrder(CycleContext db)
+    {
         var order = new SalesTable
         {
             DataAreaId = "dat", SalesId = "SO-FX", CustAccount = "C-001", InvoiceAccount = "C-001",
@@ -470,25 +554,23 @@ public sealed class InventoryCycleTests
             SalesQty = 1, QtyOrdered = 1, RemainSalesFinancial = 1, RemainSalesPhysical = 0,
             LineAmount = 100, CurrencyCode = "USD"
         });
-        await db.SaveChangesAsync();
-        var invoices = new SalesInvoiceService(new TestUnitOfWork(db), new TestCompany(), Sequence());
+    }
 
-        var foreign = await invoices.PostAsync(order.RecId, new SalesInvoicePostDto(new DateTime(2026, 10, 7), "fx-1"), default);
-        Assert.Equal(422, foreign.StatusCode);
-        Assert.Contains("foreign-currency conversion", foreign.Message);
-        Assert.Empty(await db.Set<CustInvoiceJour>().ToListAsync());
-        Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
-
-        order = await db.Set<SalesTable>().SingleAsync();
-        order.CurrencyCode = "SAR";
-        var ledger = await db.Set<Ledger>().SingleAsync();
-        ledger.ReportingCurrency = "USD";
-        await db.SaveChangesAsync();
-        var reporting = await invoices.PostAsync(order.RecId, new SalesInvoicePostDto(new DateTime(2026, 10, 7), "fx-2"), default);
-        Assert.Equal(422, reporting.StatusCode);
-        Assert.Contains("reporting-currency conversion", reporting.Message);
-        Assert.Empty(await db.Set<CustInvoiceJour>().ToListAsync());
-        Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
+    /// <summary>An active rate type, currency pair and rate, which is what translation reads.</summary>
+    private static void SeedRate(CycleContext db, string from, string to, decimal rate)
+    {
+        db.Set<ExchangeRateType>().Add(new ExchangeRateType
+        { RecId = 1, DataAreaId = "dat", Name = "Default", IsActive = true });
+        db.Set<ExchangeRateCurrencyPair>().Add(new ExchangeRateCurrencyPair
+        {
+            RecId = 1, DataAreaId = "dat", ExchangeRateType = 1, FromCurrencyCode = from, ToCurrencyCode = to,
+            ExchangeRateDisplayFactor = ExchangeRateDisplayFactor.One, IsActive = true
+        });
+        db.Set<ExchangeRate>().Add(new ExchangeRate
+        {
+            RecId = 1, DataAreaId = "dat", ExchangeRateCurrencyPair = 1,
+            ExchangeRateValue = rate, ValidFrom = new DateTime(2026, 1, 1), IsActive = true
+        });
     }
 
     [Fact]
@@ -910,7 +992,10 @@ public sealed class InventoryCycleTests
     }
 
     // Stocks 100 @ 60 through the purchase cycle and sells/ships/invoices 10 @ 100 (+15% VAT); returns the invoice id.
-    private static async Task<string> StockAndSellTenAsync(CycleContext db, TestInventNumbers numbers)
+    // The sales side can be put in another currency to exercise translation; buying stays in the
+    // accounting currency so the inventory cost is unambiguous.
+    private static async Task<string> StockAndSellTenAsync(CycleContext db, TestInventNumbers numbers,
+        string salesCurrency = "SAR")
     {
         var work = new TestUnitOfWork(db);
         var company = new TestCompany();
@@ -924,7 +1009,7 @@ public sealed class InventoryCycleTests
 
         var order = new SalesTable
         {
-            DataAreaId = "dat", SalesId = "SO-0001", CustAccount = "C-001", InvoiceAccount = "C-001", CurrencyCode = "SAR",
+            DataAreaId = "dat", SalesId = "SO-0001", CustAccount = "C-001", InvoiceAccount = "C-001", CurrencyCode = salesCurrency,
             SalesStatus = SalesStatus.Backorder, SalesType = SalesType.Sales, InventSiteId = "S01", InventLocationId = "WH-01",
             OrderDate = new DateTime(2026, 10, 5)
         };
@@ -935,7 +1020,7 @@ public sealed class InventoryCycleTests
             DataAreaId = "dat", SalesId = order.SalesId, LineNum = 1, ItemId = "ITEM-001", SalesQty = 10, QtyOrdered = 10,
             RemainSalesPhysical = 10, RemainSalesFinancial = 10, RemainInventPhysical = 10, RemainInventFinancial = 10,
             SalesUnit = "PCS", SalesPrice = 100, PriceUnit = 1, LineAmount = 1000, SalesStatus = SalesStatus.Backorder,
-            SalesType = SalesType.Sales, StockedProduct = NoYes.Yes, CurrencyCode = "SAR", TaxGroup = "VAT15", TaxItemGroup = "VAT15",
+            SalesType = SalesType.Sales, StockedProduct = NoYes.Yes, CurrencyCode = salesCurrency, TaxGroup = "VAT15", TaxItemGroup = "VAT15",
             ReceiptDateRequested = new DateTime(2026, 10, 10)
         };
         await new SalesInventoryDemandService(work, numbers, new InventDimensionResolver(work, numbers)).CreateAsync(order, line, "S01", "WH-01");
@@ -1081,7 +1166,9 @@ public sealed class InventoryCycleTests
 
     private static void SeedLedgerAndPosting(CycleContext db)
     {
-        db.Set<Ledger>().Add(new Ledger { RecId = 1, DataAreaId = "dat", AccountingCurrency = "SAR", FiscalCalendar = 1 });
+        // DefaultExchangeRateType only matters to the foreign-currency tests: a document already
+        // in the accounting currency never looks a rate up.
+        db.Set<Ledger>().Add(new Ledger { RecId = 1, DataAreaId = "dat", AccountingCurrency = "SAR", FiscalCalendar = 1, DefaultExchangeRateType = 1 });
         db.Set<FiscalCalendarPeriod>().Add(new FiscalCalendarPeriod { RecId = 1, FiscalCalendar = 1, FiscalCalendarYear = 1, Type = FiscalPeriodType.Operating, StartDate = new DateTime(2026, 1, 1), EndDate = new DateTime(2026, 12, 31) });
         db.Set<LedgerFiscalCalendarPeriod>().Add(new LedgerFiscalCalendarPeriod { RecId = 1, Ledger = 1, FiscalCalendarPeriod = 1, Status = FiscalPeriodStatus.Open });
         db.Set<MainAccount>().AddRange(
@@ -1466,7 +1553,8 @@ public sealed class InventoryCycleTests
             typeof(InventSite), typeof(InventLocation), typeof(InventTable), typeof(InventTableModule), typeof(UnitOfMeasure), typeof(UnitOfMeasureConversion),
             typeof(SalesTable), typeof(SalesLine), typeof(CustTable), typeof(CustParameters), typeof(CustPackingSlipJour), typeof(CustPackingSlipTrans),
             typeof(CustInvoiceTable), typeof(CustInvoiceLine), typeof(CustInvoiceJour), typeof(CustInvoiceTrans), typeof(CustTrans), typeof(CustTransOpen), typeof(CustSettlement), typeof(CustLedgerAccounts),
-            typeof(Currency), typeof(DirPartyTable), typeof(CustPaymModeTable), typeof(TaxGroupHeading), typeof(TaxItemGroupHeading),
+            typeof(Currency), typeof(ExchangeRate), typeof(ExchangeRateType), typeof(ExchangeRateCurrencyPair),
+            typeof(DirPartyTable), typeof(CustPaymModeTable), typeof(TaxGroupHeading), typeof(TaxItemGroupHeading),
             typeof(TaxGroupData), typeof(TaxOnItem), typeof(TaxData), typeof(TaxTable), typeof(TaxLedgerAccountGroup), typeof(TaxTrans),
             typeof(InventTransOriginSalesLine), typeof(BankAccountTable), typeof(BankAccountTrans), typeof(LedgerJournalTable), typeof(LedgerJournalTrans),
             typeof(ReturnDispositionCode), typeof(ReturnReasonCode),

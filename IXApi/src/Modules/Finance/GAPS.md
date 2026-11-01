@@ -10,18 +10,20 @@ counted as gaps.
 | --- | --- | --- |
 | General ledger | [GeneralLedger/GAPS.md](GeneralLedger/GAPS.md) | Journal tax calculation, and customer/vendor/bank journal line types |
 | Accounts payable | [AccountsPayable/GAPS.md](AccountsPayable/GAPS.md) | Foreign currency; no AP parameters or method-of-payment entity |
-| Accounts receivable | [AccountsReceivable/GAPS.md](AccountsReceivable/GAPS.md) | Foreign currency; customer aging |
+| Accounts receivable | [AccountsReceivable/GAPS.md](AccountsReceivable/GAPS.md) | Customer aging; exchange gain/loss on settlement |
 | Inventory | [Inventory/GAPS.md](Inventory/GAPS.md) | SQL Server verification; four unsupported inventory models |
-| Foundation | [Foundation/GAPS.md](Foundation/GAPS.md) | Sales tax settlement — tax posts but can never be settled |
-| Common (shared posting) | [Common/GAPS.md](Common/GAPS.md) | Posting-profile `CustVendCode` scoping; posting lock unproven |
+| Foundation | [Foundation/GAPS.md](Foundation/GAPS.md) | Sales tax reporting; payment-term methods; exchange rate adjustment |
+| Common (shared posting) | [Common/GAPS.md](Common/GAPS.md) | Posting lock unproven under SQL Server; enum value drift unguarded |
 
 ## The two findings that cut across every module
 
-1. **Foreign currency is unsupported everywhere.** AP, AR and Inventory each reject any document
-   whose currency differs from the ledger accounting currency, with five near-identical messages.
-   The root cause is in `Common`: shared posting exposes the ledger's currencies but offers no
-   conversion helper, so each module guards instead of converting. Fixing it once in `Common`
-   unblocks all three.
+1. **Foreign currency is being lifted, flow by flow.** Every posting flow used to reject a document
+   whose currency differed from the accounting currency, with five near-identical messages. The
+   shared answer now exists in `Common` as `SubledgerCurrencyTranslation`, and the **AR sales
+   invoice** uses it. The vendor invoice, free text invoice and both credit notes still reject, and
+   wiring each is now mechanical. Separately, **exchange-rate gain/loss at settlement** is a real
+   feature that has not been started — translating a document is not the same as recognising the
+   gain or loss when it is paid.
 
 2. **Nothing is verified against SQL Server.** Every finance module is covered by SQLite in-memory
    tests only. Posting atomicity, concurrent posting of the same key, number-sequence contention and

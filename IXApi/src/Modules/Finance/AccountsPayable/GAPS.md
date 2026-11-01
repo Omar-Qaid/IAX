@@ -67,6 +67,7 @@ cannot be verified goes under *Flagged uncertainties* rather than being guessed 
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Posting now passes the vendor scope to inventory posting resolution, so an `InventPosting` rule configured for one vendor or vendor group is applied instead of silently falling back to the All rule. Fix is in `Common`. |
 | 2026-11-01 | File created from a source scan. Flagged the missing AP parameters and method-of-payment entities as asymmetries with AR, and foreign-currency support as the critical gap. |
 
 ## Sources

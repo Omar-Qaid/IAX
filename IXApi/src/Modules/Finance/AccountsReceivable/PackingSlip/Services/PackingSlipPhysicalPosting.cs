@@ -17,7 +17,7 @@ internal sealed class PackingSlipPhysicalPosting(DbContext db, string userId = "
 {
     /// <summary>Posts the physical issue for one delivered line. Returns false when policy posts nothing.</summary>
     public async Task<bool> PostAsync(string area, string itemId, long inventTransOrigin, string packingSlipId,
-        DateTime deliveryDate, decimal physicalCost, CancellationToken ct)
+        DateTime deliveryDate, decimal physicalCost, CancellationToken ct, string custAccount = "")
     {
         if (physicalCost == 0m) return false;
         var support = new SubledgerPostingSupport(db);
@@ -29,8 +29,11 @@ internal sealed class PackingSlipPhysicalPosting(DbContext db, string userId = "
             && context.Ledger.ReportingCurrency != context.Ledger.AccountingCurrency)
             throw new SubledgerPostingException("Packing slip posting requires supported accounting/reporting exchange-rate conversion.");
 
-        var inventory = await support.ResolveInventPostingAsync(area, itemId, InventAccountType.SalesPackingSlip, ct);
-        var offset = await support.ResolveInventPostingAsync(area, itemId, InventAccountType.SalesPackingSlipOffsetAccount, ct);
+        var customerScope = await support.CustomerScopeAsync(area, custAccount, ct);
+        var inventory = await support.ResolveInventPostingAsync(area, itemId, InventAccountType.SalesPackingSlip, ct,
+            custVendAccount: customerScope.Account, custVendGroup: customerScope.Group);
+        var offset = await support.ResolveInventPostingAsync(area, itemId, InventAccountType.SalesPackingSlipOffsetAccount, ct,
+            custVendAccount: customerScope.Account, custVendGroup: customerScope.Group);
         if (inventory.RecId == offset.RecId)
             throw new SubledgerPostingException("Packing slip inventory and cost accounts must be distinct.");
 

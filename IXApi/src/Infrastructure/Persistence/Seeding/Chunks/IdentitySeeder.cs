@@ -157,6 +157,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             ("Tax", "TaxAuthorities"),
             ("Tax", "LedgerAccountGroups"),
             ("Tax", "SettlementPeriods"),
+            ("Tax", "Settlement"),
             ("Tax", "ExemptCodes"),
             ("AccountsReceivable", "SalesPools"),
             ("AccountsReceivable", "PostingProfiles"),

@@ -49,7 +49,7 @@ internal sealed class SalesChargePosting(DbContext db)
         IReadOnlyList<(string Code, decimal Base, decimal Tax, string Group, string ItemGroup)> TaxByCode);
 
     public async Task<Result> PostAsync(string area, SalesTable order, long entryRecId, string invoiceId,
-        DateTime date, string currency, SubledgerPostingSupport support,
+        DateTime date, SubledgerCurrencyTranslation translation, SubledgerPostingSupport support,
         DimensionAttributeValueCombination customerAccount, CancellationToken ct)
     {
         var charges = await UnpostedChargesAsync(area, order, ct);
@@ -77,14 +77,14 @@ internal sealed class SalesChargePosting(DbContext db)
             if (code.CustType == TypeLedgerAccount)
             {
                 var debit = await LedgerSideAsync(area, code, code.CustomerLedgerDimension, "debit", support, ct);
-                db.Add(SubledgerPostingSupport.AccountEntry(area, entryRecId, debit,
-                    LedgerPostingType.LedgerJournal, amount, text, 0m, currency));
+                db.Add(translation.AccountEntry(area, entryRecId, debit,
+                    LedgerPostingType.LedgerJournal, amount, text, 0m));
             }
 
             // The credit side is always a ledger account on a sales charge.
             var credit = await LedgerSideAsync(area, code, code.VendorLedgerDimension, "credit", support, ct);
-            db.Add(SubledgerPostingSupport.AccountEntry(area, entryRecId, credit,
-                LedgerPostingType.LedgerJournal, -amount, text, 0m, currency));
+            db.Add(translation.AccountEntry(area, entryRecId, credit,
+                LedgerPostingType.LedgerJournal, -amount, text, 0m));
 
             if (code.CustType == TypeCustomerVendor)
             {

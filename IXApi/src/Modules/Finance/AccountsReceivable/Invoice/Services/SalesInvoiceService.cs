@@ -124,15 +124,14 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
 
             var ledger = await support.LoadLedgerContextAsync(area, date,
                 LedgerPostingModule.Customer, _currentUser.GetCurrentUserId(), ct);
-            // This posting path writes transaction, accounting, and reporting amounts equally.
-            // Until monetary exchange-rate conversion is supported, reject currency combinations
-            // that would silently misstate the customer, tax, and ledger balances.
-            if (string.IsNullOrWhiteSpace(order.CurrencyCode) || string.IsNullOrWhiteSpace(ledger.Ledger.AccountingCurrency)
-                || !string.Equals(order.CurrencyCode.Trim(), ledger.Ledger.AccountingCurrency.Trim(), StringComparison.OrdinalIgnoreCase))
-                return await Fail(422, "Sales invoice posting requires an order in the ledger accounting currency; foreign-currency conversion is not supported.", ct);
-            if (!string.IsNullOrWhiteSpace(ledger.Ledger.ReportingCurrency)
-                && !string.Equals(ledger.Ledger.ReportingCurrency.Trim(), ledger.Ledger.AccountingCurrency.Trim(), StringComparison.OrdinalIgnoreCase))
-                return await Fail(422, "Sales invoice posting requires the reporting currency to equal the accounting currency; reporting-currency conversion is not supported.", ct);
+            if (string.IsNullOrWhiteSpace(order.CurrencyCode))
+                return await Fail(422, "The sales order has no currency.", ct);
+            // The order amounts are translated into the ledger accounting and reporting currencies
+            // at the invoice date rate, resolved once so every line of the voucher uses the same
+            // rate. Inventory cost is already an accounting-currency amount, so the cost of goods
+            // lines below are posted in that currency and are not translated.
+            var translation = await SubledgerCurrencyTranslation.LoadAsync(Db, area, ledger.Ledger,
+                order.CurrencyCode, date, ct);
             var customerAccount = await support.ResolveCustomerSummaryAsync(area, order.PostingProfile, customer, ct);
             var invoiceId = (await _numbers.NextAsync("CustInvoiceJour", area, ct)).Code;
             var entry = support.NewEntry(area, invoiceId, invoiceId, date, ledger);
@@ -165,13 +164,18 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
                 }
 
                 var (cogs, physicalCost, inventOrigin) = await IssueInventoryAsync(area, order, line, inventQty, invoiceId, date, ct);
-                var revenueAccount = await support.ResolveInventPostingAsync(area, line.ItemId, InventAccountType.SalesRevenue, ct);
-                Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, revenueAccount, LedgerPostingType.SalesRevenue, -revenue,
-                    $"Sales {order.SalesId} item {line.ItemId}", -inventQty, currency));
+                var customerScope = await support.CustomerScopeAsync(area,
+                    order.InvoiceAccount.Length > 0 ? order.InvoiceAccount : order.CustAccount, ct);
+                var revenueAccount = await support.ResolveInventPostingAsync(area, line.ItemId, InventAccountType.SalesRevenue, ct,
+                    custVendAccount: customerScope.Account, custVendGroup: customerScope.Group);
+                Db.Add(translation.AccountEntry(area, entry.RecId, revenueAccount, LedgerPostingType.SalesRevenue, -revenue,
+                    $"Sales {order.SalesId} item {line.ItemId}", -inventQty));
                 if (cogs != 0m)
                 {
-                    var consumption = await support.ResolveInventPostingAsync(area, line.ItemId, InventAccountType.SalesConsump, ct);
-                    var issueAccount = await support.ResolveInventPostingAsync(area, line.ItemId, InventAccountType.SalesIssue, ct);
+                    var consumption = await support.ResolveInventPostingAsync(area, line.ItemId, InventAccountType.SalesConsump, ct,
+                        custVendAccount: customerScope.Account, custVendGroup: customerScope.Group);
+                    var issueAccount = await support.ResolveInventPostingAsync(area, line.ItemId, InventAccountType.SalesIssue, ct,
+                        custVendAccount: customerScope.Account, custVendGroup: customerScope.Group);
                     Db.AddRange(
                         SubledgerPostingSupport.AccountEntry(area, entry.RecId, consumption, LedgerPostingType.SalesConsump, cogs,
                             $"Cost of {line.ItemId} invoiced on {invoiceId}", inventQty, currency),
@@ -188,7 +192,7 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
                     LineNum = line.LineNum, ItemId = line.ItemId, InventDimId = line.InventDimId,
                     InventTransId = line.InventTransId, Qty = qty, QtyPhysical = qty, InventQty = inventQty,
                     SalesPrice = line.SalesPrice, PriceUnit = line.PriceUnit, SalesUnit = line.SalesUnit,
-                    LineAmount = revenue, LineAmountMst = revenue, TaxAmount = lineTax,
+                    LineAmount = revenue, LineAmountMst = translation.ToAccounting(revenue), TaxAmount = lineTax,
                     TaxGroup = line.TaxGroup, TaxItemGroup = line.TaxItemGroup, CurrencyCode = order.CurrencyCode
                 });
 
@@ -203,7 +207,7 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
             // Order and line charges post here, before tax, so a charge billed to the customer is
             // part of the invoice total and its tax joins the rest of the voucher's tax.
             var charges = await new SalesChargePosting(Db).PostAsync(area, order, entry.RecId, invoiceId,
-                date, currency, support, customerAccount, ct);
+                date, translation, support, customerAccount, ct);
             foreach (var (code, chargeBase, chargeTax, group, itemGroup) in charges.TaxByCode)
             {
                 var current = taxByCode.GetValueOrDefault(code);
@@ -217,23 +221,25 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
             {
                 if (value.Tax == 0m) continue;
                 var payable = await support.ResolveTaxPayableAsync(area, code, ct);
-                Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, payable, LedgerPostingType.Tax, -value.Tax,
-                    $"Sales tax {code} on {invoiceId}", 0m, currency));
+                Db.Add(translation.AccountEntry(area, entry.RecId, payable, LedgerPostingType.Tax, -value.Tax,
+                    $"Sales tax {code} on {invoiceId}", 0m));
                 Db.Set<TaxTrans>().Add(TaxTransaction(area, date, invoiceId, code, value.Group, value.ItemGroup,
-                    order.CurrencyCode, currency, -value.Base, -value.Tax));
+                    order.CurrencyCode, currency, -value.Base, -value.Tax,
+                    translation.ToAccounting(-value.Base), translation.ToAccounting(-value.Tax),
+                    translation.ToReporting(-value.Base), translation.ToReporting(-value.Tax)));
             }
 
             // Charges debited to the customer are part of what the customer owes; charges the
             // company absorbs posted to their own accounts above and are not in the total.
             var total = totalRevenue + charges.BilledToCustomer + totalTax;
-            Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, customerAccount, LedgerPostingType.CustBalance, total,
-                $"Customer invoice {invoiceId}", 0m, currency));
+            Db.Add(translation.AccountEntry(area, entry.RecId, customerAccount, LedgerPostingType.CustBalance, total,
+                $"Customer invoice {invoiceId}", 0m));
             Db.Add(new SubledgerVoucherGeneralJournalEntry
             {
                 DataAreaId = area, GeneralJournalEntry = entry.RecId, Voucher = invoiceId, VoucherDataAreaId = area, AccountingDate = date
             });
             await AddCustomerTransactionAsync(area, order, invoiceAccount, invoiceId, date, dueDate, total, LedgerTransType.Sales,
-                $"Sales order {order.SalesId}", ct);
+                $"Sales order {order.SalesId}", translation, ct);
 
             var journal = new CustInvoiceJour
             {
@@ -241,8 +247,9 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
                 OrderAccount = order.CustAccount, InvoiceAccount = invoiceAccount, CustGroup = order.CustGroup,
                 CurrencyCode = order.CurrencyCode, LedgerVoucher = invoiceId, ParmId = input.RequestId ?? string.Empty,
                 Qty = totalQty, SalesBalance = totalRevenue, SumTax = totalTax, InvoiceAmount = total,
-                SalesBalanceMst = totalRevenue, SumTaxMst = totalTax, InvoiceAmountMst = total,
-                SumMarkup = charges.BilledToCustomer, SumMarkupMst = charges.BilledToCustomer,
+                SalesBalanceMst = translation.ToAccounting(totalRevenue), SumTaxMst = translation.ToAccounting(totalTax),
+                InvoiceAmountMst = translation.ToAccounting(total),
+                SumMarkup = charges.BilledToCustomer, SumMarkupMst = translation.ToAccounting(charges.BilledToCustomer),
                 Payment = order.PaymTerm, PostingProfile = order.PostingProfile, DueDate = dueDate
             };
             Db.Set<CustInvoiceJour>().Add(journal);
@@ -323,14 +330,19 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
 
 
     private async Task AddCustomerTransactionAsync(string area, SalesTable order, string invoiceAccount, string invoiceId,
-        DateTime date, DateTime dueDate, decimal amount, LedgerTransType type, string text, CancellationToken ct)
+        DateTime date, DateTime dueDate, decimal amount, LedgerTransType type, string text,
+        SubledgerCurrencyTranslation translation, CancellationToken ct)
     {
+        // AmountCur is what the customer owes in the order currency; AmountMst and the reporting
+        // amount are the same debt translated, which is what the ledger and reports read.
+        var accountingAmount = translation.ToAccounting(amount);
+        var reportingAmount = translation.ToReporting(amount);
         var custTrans = new CustTrans
         {
             DataAreaId = area, AccountNum = invoiceAccount, OrderAccount = order.CustAccount, TransDate = date,
             Voucher = invoiceId, Invoice = invoiceId, DocumentNum = invoiceId, DocumentDate = date, Txt = text,
-            TransType = type, CurrencyCode = order.CurrencyCode, AmountCur = amount, AmountMst = amount,
-            ReportingCurrencyAmount = amount, DueDate = dueDate, PaymTermId = order.PaymTerm, PaymMode = order.PaymMode,
+            TransType = type, CurrencyCode = order.CurrencyCode, AmountCur = amount, AmountMst = accountingAmount,
+            ReportingCurrencyAmount = reportingAmount, DueDate = dueDate, PaymTermId = order.PaymTerm, PaymMode = order.PaymMode,
             PostingProfile = order.PostingProfile, DefaultDimension = order.DefaultDimension,
             // The order's cash discount code travels to the transaction, which is where settlement
             // reads it from. The base date is the invoice date unless the order set its own.
@@ -348,20 +360,28 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
         Db.Set<CustTransOpen>().Add(new CustTransOpen
         {
             DataAreaId = area, AccountNum = invoiceAccount, RefRecId = custTrans.RecId, TransDate = date,
-            DueDate = dueDate, AmountCur = amount, AmountMst = amount, ReportingCurrencyAmount = amount,
+            DueDate = dueDate, AmountCur = amount, AmountMst = accountingAmount, ReportingCurrencyAmount = reportingAmount,
             CashDiscDate = terms.Applies ? terms.DiscountDate : default,
             PossibleCashDisc = terms.PossibleAmount,
             CashDiscountLedgerDimension = terms.Discount?.CashDiscLedgerDimension ?? 0
         });
     }
 
+    /// <summary>
+    /// The posted tax row. The Cur amounts are in the document currency; the unsuffixed and Rep
+    /// amounts are the accounting and reporting translations, which is what tax settlement sums.
+    /// They default to the document amounts so a same-currency caller is unchanged.
+    /// </summary>
     internal static TaxTrans TaxTransaction(string area, DateTime date, string voucher, string code, string group,
-        string itemGroup, string sourceCurrency, string currency, decimal baseAmount, decimal taxAmount) => new()
+        string itemGroup, string sourceCurrency, string currency, decimal baseAmount, decimal taxAmount,
+        decimal? accountingBase = null, decimal? accountingTax = null,
+        decimal? reportingBase = null, decimal? reportingTax = null) => new()
     {
         DataAreaId = area, TransDate = date, Voucher = voucher, TaxCode = code, TaxGroup = group, TaxItemGroup = itemGroup,
         TaxDirection = TaxDirection.Outgoing, SourceCurrencyCode = sourceCurrency, CurrencyCode = currency,
         SourceBaseAmountCur = baseAmount, SourceTaxAmountCur = taxAmount, TaxBaseAmountCur = baseAmount, TaxAmountCur = taxAmount,
-        TaxBaseAmount = baseAmount, TaxAmount = taxAmount, TaxBaseAmountRep = baseAmount, TaxAmountRep = taxAmount
+        TaxBaseAmount = accountingBase ?? baseAmount, TaxAmount = accountingTax ?? taxAmount,
+        TaxBaseAmountRep = reportingBase ?? baseAmount, TaxAmountRep = reportingTax ?? taxAmount
     };
 
     private static object Summary(CustInvoiceJour journal) => new

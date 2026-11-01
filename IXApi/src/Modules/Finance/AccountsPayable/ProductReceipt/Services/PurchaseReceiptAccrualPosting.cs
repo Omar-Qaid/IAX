@@ -18,8 +18,11 @@ public sealed class PurchaseReceiptAccrualPosting(DbContext db, string userId = 
             LedgerPostingModule.Vendor, userId, ct);
         if (order.CurrencyCode != context.Ledger.AccountingCurrency || (!string.IsNullOrEmpty(context.Ledger.ReportingCurrency) && context.Ledger.ReportingCurrency != context.Ledger.AccountingCurrency))
             throw new SubledgerPostingException("Receipt accrual requires supported accounting/reporting exchange-rate conversion.");
-        var inventory = await support.ResolveInventPostingAsync(area, receipt.ItemId, InventAccountType.PurchPackingSlip, ct);
-        var liability = await support.ResolveInventPostingAsync(area, receipt.ItemId, InventAccountType.PurchPackingSlipOffsetAccount, ct);
+        var vendorScope = await support.VendorScopeAsync(area, order.InvoiceAccount.Length > 0 ? order.InvoiceAccount : order.OrderAccount, ct);
+        var inventory = await support.ResolveInventPostingAsync(area, receipt.ItemId, InventAccountType.PurchPackingSlip, ct,
+            custVendAccount: vendorScope.Account, custVendGroup: vendorScope.Group);
+        var liability = await support.ResolveInventPostingAsync(area, receipt.ItemId, InventAccountType.PurchPackingSlipOffsetAccount, ct,
+            custVendAccount: vendorScope.Account, custVendGroup: vendorScope.Group);
         if (inventory.RecId == liability.RecId) throw new SubledgerPostingException("Receipt inventory and accrual accounts must be distinct.");
         var entry = support.NewEntry(area, receipt.InternalPackingSlipId, receipt.InternalPackingSlipId, receipt.DeliveryDate, context);
         db.Add(entry);

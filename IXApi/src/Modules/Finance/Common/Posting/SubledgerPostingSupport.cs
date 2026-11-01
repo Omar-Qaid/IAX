@@ -163,21 +163,71 @@ internal sealed class SubledgerPostingSupport(DbContext db)
         return true;
     }
 
-    /// <summary>Inventory posting: item (Table) -> item group (Group) -> All.</summary>
+    /// <summary>
+    /// Inventory posting setup. A rule is scoped on two axes: the item (Table -> Group -> All) and
+    /// the customer or vendor (Table -> Group -> All). The most specific rule matching both axes
+    /// wins, item axis first, which is how the setup page is organised.
+    ///
+    /// A caller that has no customer or vendor in context - an inventory journal or the inventory
+    /// close - passes neither, and then only rules scoped to All customers/vendors can match.
+    /// </summary>
     /// <param name="itemGroupId">The item's group when the caller already loaded it; resolved here otherwise.</param>
+    /// <param name="custVendAccount">The vendor or customer account the document posts for, when there is one.</param>
+    /// <param name="custVendGroup">That vendor's or customer's group, when the caller already loaded it.</param>
     public async Task<DimensionAttributeValueCombination> ResolveInventPostingAsync(string area, string itemId,
-        InventAccountType type, CancellationToken ct, string? itemGroupId = null)
+        InventAccountType type, CancellationToken ct, string? itemGroupId = null,
+        string? custVendAccount = null, string? custVendGroup = null)
     {
         var itemGroup = itemGroupId ?? await db.Set<InventItemGroupItem>().AsNoTracking()
             .Where(x => x.ItemDataAreaId == area && x.ItemId == itemId).Select(x => x.ItemGroupId).FirstOrDefaultAsync(ct) ?? string.Empty;
         var rules = await db.Set<InventPosting>().AsNoTracking()
-            .Where(x => x.DataAreaId == area && x.InventAccountType == type && x.CustVendCode == TableGroupAll.All).ToListAsync(ct);
-        var rule = rules.Where(x => x.ItemCode == TableGroupAll.Table && x.ItemRelation == itemId).OrderBy(x => x.RecId).FirstOrDefault()
-            ?? rules.Where(x => x.ItemCode == TableGroupAll.Group && x.ItemRelation == itemGroup).OrderBy(x => x.RecId).FirstOrDefault()
-            ?? rules.Where(x => x.ItemCode == TableGroupAll.All).OrderBy(x => x.RecId).FirstOrDefault();
+            .Where(x => x.DataAreaId == area && x.InventAccountType == type).ToListAsync(ct);
+
+        // Rank: Table beats Group beats All on each axis. -1 means the rule does not match at all.
+        static int Rank(TableGroupAll code, string relation, string? specific, string? group) => code switch
+        {
+            TableGroupAll.Table => !string.IsNullOrEmpty(specific) && relation == specific ? 2 : -1,
+            TableGroupAll.Group => !string.IsNullOrEmpty(group) && relation == group ? 1 : -1,
+            _ => 0
+        };
+
+        var rule = rules
+            .Select(x => new
+            {
+                Rule = x,
+                ItemRank = Rank(x.ItemCode, x.ItemRelation, itemId, itemGroup),
+                CustVendRank = Rank(x.CustVendCode, x.CustVendRelation, custVendAccount, custVendGroup)
+            })
+            .Where(x => x.ItemRank >= 0 && x.CustVendRank >= 0)
+            .OrderByDescending(x => x.ItemRank).ThenByDescending(x => x.CustVendRank).ThenBy(x => x.Rule.RecId)
+            .Select(x => x.Rule)
+            .FirstOrDefault();
         if (rule == null || rule.LedgerDimension == 0)
             throw new SubledgerPostingException($"Inventory posting setup is missing for {type} and item '{itemId}'.");
         return await LoadDimensionAsync(area, rule.LedgerDimension, type.ToString(), ct);
+    }
+
+    /// <summary>
+    /// The vendor scope for inventory posting resolution: the account and its vendor group, so a
+    /// posting rule scoped to one vendor or to a vendor group can match.
+    /// </summary>
+    public async Task<(string Account, string Group)> VendorScopeAsync(string area, string vendAccount, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(vendAccount)) return (string.Empty, string.Empty);
+        var group = await db.Set<VendTable>().AsNoTracking()
+            .Where(x => x.DataAreaId == area && x.AccountNum == vendAccount)
+            .Select(x => x.VendGroup).FirstOrDefaultAsync(ct);
+        return (vendAccount, group ?? string.Empty);
+    }
+
+    /// <summary>The customer scope for inventory posting resolution: the account and its customer group.</summary>
+    public async Task<(string Account, string Group)> CustomerScopeAsync(string area, string custAccount, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(custAccount)) return (string.Empty, string.Empty);
+        var group = await db.Set<CustTable>().AsNoTracking()
+            .Where(x => x.DataAreaId == area && x.AccountNum == custAccount)
+            .Select(x => x.CustGroupId).FirstOrDefaultAsync(ct);
+        return (custAccount, group ?? string.Empty);
     }
 
     /// <summary>Sales tax payable account for a tax code: TaxTable.TaxAccountGroup -> TaxLedgerAccountGroup.</summary>

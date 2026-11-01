@@ -253,6 +253,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<Inventory.IInventPhysicalAsOfService, Inventory.InventPhysicalAsOfService>();
             services.AddScoped<Inventory.IInventValueReportService, Inventory.InventValueReportService>();
             services.AddScoped<Inventory.IInventoryMarkingService, Inventory.InventoryMarkingService>();
+        services.AddScoped<Foundation.Tax.ITaxSettlementService, Foundation.Tax.TaxSettlementService>();
             services.AddScoped<Inventory.IUnitOfMeasureService, Inventory.UnitOfMeasureService>();
             services.AddScoped<FluentValidation.IValidator<Inventory.UnitOfMeasureDto>, Inventory.UnitOfMeasureDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<Inventory.UnitOfMeasureInputDto>, Inventory.UnitOfMeasureInputDtoValidator>();

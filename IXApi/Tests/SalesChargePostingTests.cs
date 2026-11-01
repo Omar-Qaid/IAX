@@ -201,8 +201,12 @@ public class SalesChargePostingTests
         var order = await db.Set<SalesTable>().AsNoTracking().SingleAsync();
         var support = new SubledgerPostingSupport(db);
         var customer = await support.LoadDimensionAsync("dat", 1, "customer summary", default);
+        // Order and ledger share the currency, so the translation needs no exchange rate.
+        var ledger = await db.Set<Ledger>().AsNoTracking().FirstAsync();
+        var translation = await SubledgerCurrencyTranslation.LoadAsync(db, "dat", ledger, "SAR",
+            new DateTime(2026, 1, 15), default);
         return await new SalesChargePosting(db).PostAsync("dat", order, entryRecId: 1, "INV-1",
-            new DateTime(2026, 1, 15), "SAR", support, customer, default);
+            new DateTime(2026, 1, 15), translation, support, customer, default);
     }
 
     private static void AddCode(DbContext db, string markupCode, int debitType, int creditType,
@@ -234,6 +238,7 @@ public class SalesChargePostingTests
             // Quantity 4 and net 1000, so Pcs and Percent charges have a basis.
             new SalesLine { RecId = 1, DataAreaId = "dat", SalesId = "SO-1", LineNum = 1, ItemId = "ITEM-1",
                 SalesQty = 4, QtyOrdered = 4, LineAmount = 1000m },
+            new Ledger { RecId = 1, DataAreaId = "dat", AccountingCurrency = "SAR" },
             new MainAccount { RecId = 1, DataAreaId = "dat", MainAccountId = "11010000", LedgerChartOfAccounts = 10 },
             new MainAccount { RecId = 2, DataAreaId = "dat", MainAccountId = "410100", LedgerChartOfAccounts = 10 },
             new MainAccount { RecId = 3, DataAreaId = "dat", MainAccountId = "610100", LedgerChartOfAccounts = 10 },

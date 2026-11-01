@@ -427,7 +427,9 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                 summary.PostedQty -= inventQty;
                 summary.PostedValue -= cost;
 
-                var inventoryAccount = await support.ResolveInventPostingAsync(area, line.ItemId, InventAccountType.PurchReceipt, ct);
+                var vendorScope = await support.VendorScopeAsync(area, order.InvoiceAccount.Length > 0 ? order.InvoiceAccount : order.OrderAccount, ct);
+                var inventoryAccount = await support.ResolveInventPostingAsync(area, line.ItemId, InventAccountType.PurchReceipt, ct,
+                    custVendAccount: vendorScope.Account, custVendGroup: vendorScope.Group);
                 Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, inventoryAccount, LedgerPostingType.PurchReceipt, -cost,
                     $"Return {order.ReturnItemNum} item {line.ItemId}", -inventQty, currency));
                 var creditLine = new VendInvoiceTrans

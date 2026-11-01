@@ -183,7 +183,9 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
                 line.RemainInventFinancial = Math.Max(0m, line.RemainInventFinancial - inventQty);
                 if (line.RemainPurchFinancial <= 0 && line.RemainPurchPhysical <= 0) line.PurchStatus = PurchStatus.Invoiced;
 
-                var inventoryAccount = await support.ResolveInventPostingAsync(area, line.ItemId, InventAccountType.PurchReceipt, ct);
+                var vendorScope = await support.VendorScopeAsync(area, order.InvoiceAccount.Length > 0 ? order.InvoiceAccount : order.OrderAccount, ct);
+                var inventoryAccount = await support.ResolveInventPostingAsync(area, line.ItemId, InventAccountType.PurchReceipt, ct,
+                    custVendAccount: vendorScope.Account, custVendGroup: vendorScope.Group);
                 Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, inventoryAccount, LedgerPostingType.PurchReceipt, amount,
                     $"Purchase {order.PurchId} item {line.ItemId}", inventQty, context.Ledger.AccountingCurrency));
 

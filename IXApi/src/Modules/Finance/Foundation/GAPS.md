@@ -21,6 +21,7 @@ cannot be verified goes under *Flagged uncertainties* rather than being guessed 
 | Global address book: parties, locations, postal and electronic addresses, contacts | Implemented |
 | Currencies, exchange rate types, exchange rates, currency pairs | Implemented |
 | Sales tax: codes, rates, groups, item groups, ledger account groups, exempt codes, authorities, periods | Implemented |
+| Sales tax settlement (settle and post sales tax, with preview) | Implemented |
 | Payment terms, payment schedules, cash discount | Implemented |
 | Charges (`MarkupTable`, `MarkupTrans`) with AP/AR posting | Implemented |
 | Delivery terms and delivery modes | Implemented |
@@ -32,8 +33,7 @@ cannot be verified goes under *Flagged uncertainties* rather than being guessed 
 
 | Area | Existing behavior | Expected basic D365 F&O behavior | Missing | Affected components | Priority |
 | --- | --- | --- | --- | --- | --- |
-| Sales tax settlement and payment | Tax codes, rates, groups, periods and ledger account groups are configured, and tax posts with AP/AR documents into `TaxTrans`. | The **Settle and post sales tax** periodic process closes a tax period, posts the net tax to the settlement account, and produces the tax payment. | The settlement process and `TaxReportVoucher`. No service exists. | `Foundation/Tax`, `TaxPeriodService`, GL posting | **Critical** — tax is collected and posted but can never be settled, so the tax accounts only ever grow |
-| Sales tax reporting | Tax transactions are recorded per document. | Basic tax reporting lists tax per code, period and authority for a return. | Reporting over `TaxTrans` by period and authority. | `Foundation/Tax` | **High** — depends on settlement above |
+| Sales tax reporting | Tax posts per document and settlement stamps each transaction with its period and run number (`TaxPeriod`, `TaxRepCounter`), so the data a return needs is now present. | Basic tax reporting lists tax per code, period and authority for a return, and a sales tax payment report follows settlement. | The report itself. No longer blocked: settlement supplies the period stamping it needs. | `Foundation/Tax` | **High** — next tax gap |
 | Exchange rate adjustment | Rates, rate types and currency pairs exist and are stored. | Foreign-currency revaluation adjusts open customer/vendor balances and ledger accounts, posting unrealized gain/loss. | The adjustment process. Note that AP/AR currently reject any document currency other than the accounting currency, so there is little exposure to adjust yet — this gap unblocks only after those restrictions are lifted. | `Foundation/Currency`, AP/AR, GL | **High** (after AP/AR foreign currency) |
 | Payment term methods | Payment terms compute an invoice due date; an unsupported method is rejected with a named error. | Terms support net days, current month, current quarter, current year, specific day of month, and COD. | The method variants that are rejected. The exact set still missing should be read off `PaymTermService` before building. | `PaymTermService`, `PaymTerm` | **High** — due dates drive aging, cash discount and payment proposal |
 | Tax exempt / reverse charge behavior | `TaxExemptCode` setup exists. | Exempt and reverse-charge handling changes how tax posts on the document. | Whether the exempt code affects posting is not established; the setup may be inert. Verify before claiming either way. | `TaxExemptCodeService`, `PurchaseTaxPosting`, AR tax posting | Medium |
@@ -46,6 +46,9 @@ cannot be verified goes under *Flagged uncertainties* rather than being guessed 
 | Restriction | Message |
 | --- | --- |
 | Payment term method | `The configured payment-term method is not supported for invoice due-date calculation.` |
+| Corrective settlement | `The interval {from} to {to} is already settled. Corrective settlement of a settled interval is outside the basic scope.` |
+| Mixed settlement accounts | `The tax codes in this interval point at different sales tax settlement accounts, so the interval cannot be settled as one voucher.` |
+| Settlement reporting currency | `Sales tax settlement with a different reporting currency requires exchange-rate processing, which is not supported.` |
 
 Foundation carries far fewer explicit restrictions than the transactional modules. That is expected
 for setup data, but it also means its gaps are **silent**: a missing process such as tax settlement
@@ -53,6 +56,12 @@ raises no error, it simply never runs. Treat the *Open gaps* table, not the erro
 authority for this module.
 
 ## Flagged uncertainties
+
+- **Corrective settlement runs.** D365 distinguishes an *Original* settlement of an interval from
+  *Latest corrections* and *Total list* runs. Only the Original run is implemented, because the
+  specification enum's D365 values could not be verified and were not invented. A second run over a
+  settled interval is refused with a named error. `TaxReportPeriod.VersionNum` already tracks run
+  iterations, so the field a corrective run needs is in place.
 
 - **Which payment-term methods are actually supported.** The rejection message does not name the
   supported set. Read `PaymTermService` before recording the missing variants precisely.
@@ -68,6 +77,7 @@ authority for this module.
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | **Implemented sales tax settlement** (`POST api/v1/tax/settlement`, with a `preview`). Clears the input and output tax accounts for a period interval and moves the net to `TaxLedgerAccountGroup.TaxReportLedgerDimension`, posts offsetting `TaxTrans` rows unless the period sets `NotGenerateOffsetTaxTrans`, and stamps each settled row with its period and run number. No schema change: every field and table it needs already existed. Covered by `Tests/TaxSettlementTests.cs`. |
 | 2026-11-01 | File created from a source scan. Recorded sales tax settlement as the critical gap — tax posts but can never be settled — and noted that this module's gaps are silent rather than error-raising. |
 
 ## Sources
