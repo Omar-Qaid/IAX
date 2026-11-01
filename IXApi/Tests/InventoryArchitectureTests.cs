@@ -1790,6 +1790,12 @@ public sealed class InventoryArchitectureTests
 
         Assert.Null((await transfers.ShipAsync("TR-DEMO", Post("SHIP1", 1m), default)).Error);
         var shippedCount = await db.Set<InventTrans>().CountAsync();
+        var shipmentLegs = await db.Set<InventTrans>().Where(x => x.Voucher == "TR-DEMO:SHIP1").ToListAsync();
+        Assert.Equal(4, shipmentLegs.Count);
+        Assert.Single(shipmentLegs, x => x.StatusIssue == StatusIssue.ReservPhysical);
+        Assert.Single(shipmentLegs, x => x.StatusReceipt == StatusReceipt.Ordered);
+        Assert.Equal(1m, (await db.Set<InventSum>().SingleAsync(x => x.ItemId == "ITEM-001"
+            && x.InventLocationId == "TRANSIT")).ReservPhysical);
         // The request identifier makes a repeated shipment a no-operation.
         Assert.Null((await transfers.ShipAsync("TR-DEMO", Post("SHIP1", 1m), default)).Error);
         Assert.Equal(shippedCount, await db.Set<InventTrans>().CountAsync());
@@ -1802,15 +1808,39 @@ public sealed class InventoryArchitectureTests
         Assert.NotEqual(string.Empty, partlyShipped.Lines[0].InventTransId);
         Assert.NotEqual(string.Empty, partlyShipped.Lines[0].InventTransIdTransitTo);
 
+        var firstTransitCost = await db.Set<InventTrans>().Where(x => x.Voucher == "TR-DEMO:SHIP1"
+                && x.Qty > 0 && x.StatusReceipt == StatusReceipt.Purchased)
+            .Select(x => x.CostAmountPosted).SingleAsync();
+        var laterReceipt = await service.CreateAsync(new InventJournalCreateDto
+        { JournalNameId = "MOV", Description = "Later receipt changes site average", InventSiteId = "JED", InventLocationId = "OPEN" }, default);
+        Assert.Null((await service.AddLineAsync(laterReceipt.Journal!.JournalId, new InventJournalLineInputDto
+        { ItemId = "ITEM-001", InventSiteId = "JED", InventLocationId = "OPEN", Unit = "pcs", Qty = 1,
+            CostPrice = 100, LedgerDimension = 22, TransDate = DateTime.Today }, default)).Error);
+        Assert.Null((await posting.PostAsync(laterReceipt.Journal.JournalId, default)).Error);
+        Assert.Null((await transfers.CreateAsync(transferInput with { TransferId = "TR-OTHER", Lines = [new("ITEM-001", "pcs", 1m)] }, default)).Error);
+        Assert.Null((await transfers.ShipAsync("TR-OTHER", Post("SHIP", 1m), default)).Error);
+
         // A receipt cannot exceed the stock this order has in transit.
         Assert.NotNull((await transfers.ReceiveAsync("TR-DEMO", Post("OVER", 2m), default)).Error);
+        var destinationValueBefore = await db.Set<InventSum>().Where(x => x.InventLocationId == "SHOW").SumAsync(x => x.PostedValue);
         Assert.Null((await transfers.ReceiveAsync("TR-DEMO", Post("RECEIVE1", 1m), default)).Error);
+        Assert.Equal(shipmentLegs.Count, await db.Set<InventTrans>().CountAsync(x => x.Voucher == "TR-DEMO:SHIP1" || x.Voucher == "TR-DEMO:RECEIVE1"));
+        Assert.Empty(await db.Set<InventTrans>().Where(x => x.Voucher == "TR-DEMO:SHIP1"
+            && (x.StatusIssue == StatusIssue.ReservPhysical || x.StatusReceipt == StatusReceipt.Ordered)).ToListAsync());
+        var destinationValueAfter = await db.Set<InventSum>().Where(x => x.InventLocationId == "SHOW").SumAsync(x => x.PostedValue);
+        Assert.Equal(firstTransitCost, destinationValueAfter - destinationValueBefore);
+        Assert.Null((await transfers.ReceiveAsync("TR-OTHER", Post("RECEIVE", 1m), default)).Error);
         Assert.Null((await transfers.ShipAsync("TR-DEMO", Post("SHIP2", 1m), default)).Error);
         // The shipment is complete, so nothing more may be shipped.
         Assert.NotNull((await transfers.ShipAsync("TR-DEMO", Post("SHIP3", 1m), default)).Error);
-        Assert.Null((await transfers.ReceiveAsync("TR-DEMO", Post("RECEIVE2", 1m), default)).Error);
+        Assert.Null((await transfers.ReceiveAsync("TR-DEMO", Post("RECEIVE2", 0.5m), default)).Error);
+        Assert.Equal(0.5m, await db.Set<InventTrans>().Where(x => x.Voucher == "TR-DEMO:SHIP2"
+            && x.StatusReceipt == StatusReceipt.Ordered).SumAsync(x => x.Qty));
+        Assert.Equal(0.5m, (await db.Set<InventSum>().SingleAsync(x => x.ItemId == "ITEM-001"
+            && x.InventLocationId == "TRANSIT")).ReservPhysical);
+        Assert.Null((await transfers.ReceiveAsync("TR-DEMO", Post("RECEIVE3", 0.5m), default)).Error);
         var transactionsAfterFinalReceipt = await db.Set<InventTrans>().CountAsync();
-        Assert.Null((await transfers.ReceiveAsync("TR-DEMO", Post("RECEIVE2", 1m), default)).Error);
+        Assert.Null((await transfers.ReceiveAsync("TR-DEMO", Post("RECEIVE3", 0.5m), default)).Error);
         Assert.Equal(transactionsAfterFinalReceipt, await db.Set<InventTrans>().CountAsync());
 
         Assert.Equal(0m, await db.Set<InventSum>().Where(x => x.InventLocationId == "TRANSIT").SumAsync(x => x.PhysicalInvent));
@@ -1821,8 +1851,8 @@ public sealed class InventoryArchitectureTests
         Assert.Equal(InventTransferRemainStatus.Received, finished.Lines[0].RemainStatus);
         Assert.NotEqual(string.Empty, finished.Lines[0].InventTransIdTransitFrom);
         Assert.NotEqual(string.Empty, finished.Lines[0].InventTransIdReceive);
-        // Source, transit and destination reconcile: the two units left MAIN and arrived at SHOW.
-        Assert.Equal(destinationBefore + 2m, await db.Set<InventSum>().Where(x => x.InventLocationId == "SHOW").SumAsync(x => x.PhysicalInvent));
+        // Two units from this order and one from the second order arrived at SHOW.
+        Assert.Equal(destinationBefore + 3m, await db.Set<InventSum>().Where(x => x.InventLocationId == "SHOW").SumAsync(x => x.PhysicalInvent));
         // Transfers never post through an inventory journal.
         Assert.False(await db.Set<InventJournalTable>().AnyAsync(x => x.Description!.Contains("TR-DEMO")));
 
@@ -1996,8 +2026,14 @@ public sealed class InventoryArchitectureTests
             Configure<InventJournalTable>(builder);
             Configure<InventTransferTable>(builder);
             Configure<InventTransferLine>(builder);
+            Configure<InventTransOriginTransferTransitTo>(builder);
+            Configure<InventTransOriginTransferTransitFrom>(builder);
+            Configure<InventTransOriginTransferReceive>(builder);
             builder.ApplyConfiguration(new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransferTableConfiguration());
             builder.ApplyConfiguration(new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransferLineConfiguration());
+            builder.ApplyConfiguration(new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransOriginTransferTransitToConfiguration());
+            builder.ApplyConfiguration(new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransOriginTransferTransitFromConfiguration());
+            builder.ApplyConfiguration(new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransOriginTransferReceiveConfiguration());
             Configure<InventJournalTrans>(builder);
             Configure<InventModelGroup>(builder);
             Configure<InventModelGroupItem>(builder);
