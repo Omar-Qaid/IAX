@@ -69,73 +69,27 @@ public sealed class VendSettlementReversalService : BaseService<VendSettlement>,
         try
         {
             await support.LockAsync($"VendSettlement:{area}:{voucher}".ToUpperInvariant(), ct);
-            var rows = await Db.Set<VendSettlement>()
+            var rows = await Db.Set<VendSettlement>().AsNoTracking()
                 .Where(x => x.DataAreaId == area && x.Voucher == voucher).ToListAsync(ct);
             if (rows.Count == 0)
                 return await Fail(404, $"Settlement voucher '{voucher}' was not found in the selected company.", ct);
-            if (rows.Any(x => x.CanBeReversed != NoYes.Yes))
-                return await Fail(422, $"Settlement '{voucher}' cannot be reversed: it is either already reversed, or it was "
-                    + "settled before settlement reversal was supported and is not marked reversible.", ct);
 
             var date = (reversalDate ?? DateTime.UtcNow).Date;
             var reversalVoucher = $"{voucher}-REV";
-            if (await Db.Set<VendSettlement>().AnyAsync(x => x.DataAreaId == area && x.Voucher == reversalVoucher, ct))
-                return await Fail(422, $"Settlement '{voucher}' has already been reversed under '{reversalVoucher}'.", ct);
-
-            foreach (var row in rows)
-            {
-                Db.Set<VendSettlement>().Add(new VendSettlement
-                {
-                    DataAreaId = area, AccountNum = row.AccountNum,
-                    InvoiceTransRecId = row.InvoiceTransRecId, PaymentTransRecId = row.PaymentTransRecId,
-                    TransDate = date, Voucher = reversalVoucher,
-                    AmountCur = -row.AmountCur, AmountMst = -row.AmountMst,
-                    CanBeReversed = NoYes.No
-                });
-                row.CanBeReversed = NoYes.No;
-            }
-
-            // Both sides of each match give back what the settlement took: the invoice and the
-            // payment transaction each carry their own SettleAmount.
-            var restored = new List<object>();
-            var touched = rows.Select(x => x.InvoiceTransRecId)
-                .Concat(rows.Select(x => x.PaymentTransRecId)).Distinct().ToList();
-            foreach (var recId in touched)
-            {
-                var trans = await Db.Set<VendTrans>()
-                    .FirstOrDefaultAsync(x => x.DataAreaId == area && x.RecId == recId, ct);
-                if (trans == null)
-                    return await Fail(422, $"The vendor transaction behind settlement '{voucher}' no longer exists.", ct);
-
-                var asInvoice = rows.Where(x => x.InvoiceTransRecId == recId).ToList();
-                var asPayment = rows.Where(x => x.PaymentTransRecId == recId).ToList();
-                // Settling adds on the invoice side and subtracts on the payment side, so the
-                // reversal does the opposite of each.
-                trans.SettleAmountCur += asInvoice.Sum(x => x.AmountCur) - asPayment.Sum(x => x.AmountCur);
-                trans.SettleAmountMst += asInvoice.Sum(x => x.AmountMst) - asPayment.Sum(x => x.AmountMst);
-
-                var remaining = trans.AmountCur - trans.SettleAmountCur;
-                if (remaining != 0m) trans.Closed = default;
-
-                var open = await Db.Set<VendTransOpen>()
-                    .FirstOrDefaultAsync(x => x.DataAreaId == area && x.RefRecId == trans.RecId, ct);
-                if (remaining == 0m)
-                {
-                    if (open != null) Db.Set<VendTransOpen>().Remove(open);
-                }
-                else if (open == null)
-                {
-                    VendorOpenBalance.Add(Db, trans);
-                }
-                else
-                {
-                    open.AmountCur = remaining;
-                    open.AmountMst = trans.AmountMst - trans.SettleAmountMst;
-                }
-                restored.Add(new { trans.RecId, invoice = trans.Invoice, open = remaining });
-            }
+            var error = await VendSettlementRestore.ApplyAsync(Db, area, voucher, date, reversalVoucher, ct);
+            if (error != null) return await Fail(422, error, ct);
 
             await _unitOfWork.CompleteAsync(ct);
+
+            // Read back after the save: the restore mutates tracked entities, which an
+            // AsNoTracking read taken before the save would not see.
+            var touched = rows.Select(x => x.InvoiceTransRecId)
+                .Concat(rows.Select(x => x.PaymentTransRecId)).Distinct().ToList();
+            var restored = await Db.Set<VendTrans>().AsNoTracking()
+                .Where(x => x.DataAreaId == area && touched.Contains(x.RecId))
+                .Select(x => new { x.RecId, invoice = x.Invoice, open = x.AmountCur - x.SettleAmountCur })
+                .ToListAsync(ct);
+
             await _unitOfWork.CommitTransactionAsync(ct);
             return new(200, new { settlementVoucher = voucher, reversalVoucher, rows = rows.Count, restored },
                 "Vendor settlement reversed.");

@@ -15,7 +15,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Invoice
             builder.Property(t => t.AmountCur).HasPrecision(18, 4);
             builder.Property(t => t.TaxAmount).HasPrecision(18, 4);
 
-            builder.HasIndex(t => t.ParentRecId);
+            builder.HasIndex(t => new { t.DataAreaId, t.ParentRecId, t.LineNum }).IsUnique();
 
             builder.Property(x => x.DataAreaId)
                 .HasMaxLength(10)

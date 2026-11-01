@@ -11,9 +11,11 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Invoice
 
             builder.Property(t => t.CashDiscPercent).HasPrecision(18, 4);
 
-            builder.HasIndex(t => t.InvoiceId).IsUnique();
-            builder.HasIndex(t => t.OrderAccount);
-            builder.HasIndex(t => t.InvoiceDate);
+            builder.HasIndex(t => new { t.DataAreaId, t.InvoiceId })
+                .IsUnique()
+                .HasFilter("[InvoiceId] <> ''");
+            builder.HasIndex(t => new { t.DataAreaId, t.OrderAccount });
+            builder.HasIndex(t => new { t.DataAreaId, t.InvoiceDate });
        
 
             builder.Property(x => x.DataAreaId)

@@ -26,6 +26,121 @@ namespace IAX.IXApi.Tests;
 public sealed class InventoryCycleTests
 {
     [Fact]
+    public async Task Free_text_invoice_posts_services_tax_and_receivable_without_inventory()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        db.Set<Currency>().Add(new Currency { RecId = 1, DataAreaId = "dat", CurrencyCode = "SAR" });
+        db.Set<PaymTerm>().Add(new PaymTerm
+        {
+            RecId = 1, DataAreaId = "dat", PaymTermId = "NET30", Description = "30 days", NumOfDays = 30
+        });
+        db.Set<CustTable>().Add(new CustTable
+        {
+            RecId = 1, DataAreaId = "dat", AccountNum = "C-0001", InvoiceAccount = "C-0001",
+            CustGroupId = "LOCAL", CurrencyCode = "SAR", PaymTermId = "NET30", TaxGroupId = "DOMESTIC"
+        });
+        db.Set<Ledger>().Add(new Ledger
+        {
+            RecId = 1, DataAreaId = "dat", AccountingCurrency = "SAR", ReportingCurrency = "SAR", FiscalCalendar = 1
+        });
+        db.Set<FiscalCalendarPeriod>().Add(new FiscalCalendarPeriod
+        {
+            RecId = 1, FiscalCalendar = 1, FiscalCalendarYear = 1, Type = FiscalPeriodType.Operating,
+            StartDate = new DateTime(2026, 1, 1), EndDate = new DateTime(2026, 12, 31)
+        });
+        db.Set<LedgerFiscalCalendarPeriod>().Add(new LedgerFiscalCalendarPeriod
+        {
+            RecId = 1, Ledger = 1, FiscalCalendarPeriod = 1, Status = FiscalPeriodStatus.Open
+        });
+        db.Set<MainAccount>().AddRange(
+            new MainAccount { RecId = 1, DataAreaId = "dat", MainAccountId = "110100" },
+            new MainAccount { RecId = 2, DataAreaId = "dat", MainAccountId = "410100" },
+            new MainAccount { RecId = 3, DataAreaId = "dat", MainAccountId = "410200" },
+            new MainAccount { RecId = 4, DataAreaId = "dat", MainAccountId = "210200" });
+        db.Set<DimensionAttributeValueCombination>().AddRange(
+            new DimensionAttributeValueCombination { RecId = 1, DataAreaId = "dat", MainAccount = 1, MainAccountValue = "110100", DisplayValue = "110100" },
+            new DimensionAttributeValueCombination { RecId = 2, DataAreaId = "dat", MainAccount = 2, MainAccountValue = "410100", DisplayValue = "410100" },
+            new DimensionAttributeValueCombination { RecId = 3, DataAreaId = "dat", MainAccount = 3, MainAccountValue = "410200", DisplayValue = "410200" },
+            new DimensionAttributeValueCombination { RecId = 4, DataAreaId = "dat", MainAccount = 4, MainAccountValue = "210200", DisplayValue = "210200" });
+        db.Set<CustLedgerAccounts>().Add(new CustLedgerAccounts
+        {
+            RecId = 1, DataAreaId = "dat", PostingProfile = "GEN", AccountCode = AccountCode.Group,
+            Num = "LOCAL", SummaryLedgerDimension = 1
+        });
+        db.Set<TaxGroupHeading>().Add(new TaxGroupHeading
+        {
+            RecId = 1, DataAreaId = "dat", TaxGroup = "DOMESTIC", TaxGroupName = "Domestic"
+        });
+        db.Set<TaxItemGroupHeading>().Add(new TaxItemGroupHeading
+        {
+            RecId = 1, DataAreaId = "dat", TaxItemGroup = "SERVICE", Name = "Service"
+        });
+        db.Set<TaxGroupData>().Add(new TaxGroupData
+        {
+            RecId = 1, DataAreaId = "dat", TaxGroup = "DOMESTIC", TaxCode = "VAT15"
+        });
+        db.Set<TaxOnItem>().Add(new TaxOnItem
+        {
+            RecId = 1, DataAreaId = "dat", TaxItemGroup = "SERVICE", TaxCode = "VAT15"
+        });
+        db.Set<TaxData>().Add(new TaxData
+        {
+            RecId = 1, DataAreaId = "dat", TaxCode = "VAT15", TaxValue = 15m,
+            TaxFromDate = new DateTime(2026, 1, 1), TaxToDate = new DateTime(2026, 12, 31)
+        });
+        db.Set<TaxTable>().Add(new TaxTable
+        {
+            RecId = 1, DataAreaId = "dat", TaxCode = "VAT15", TaxAccountGroup = "VAT"
+        });
+        db.Set<TaxLedgerAccountGroup>().Add(new TaxLedgerAccountGroup
+        {
+            RecId = 1, DataAreaId = "dat", TaxAccountGroup = "VAT", TaxOutgoingLedgerDimension = 4
+        });
+        await db.SaveChangesAsync();
+
+        var service = new FreeTextInvoiceService(new TestUnitOfWork(db), new TestCompany(), Sequence());
+        var created = await service.CreateAsync(new FreeTextInvoiceSaveDto
+        {
+            CustomerAccount = "C-0001",
+            InvoiceDate = new DateTime(2026, 11, 1),
+            PostingProfile = "GEN",
+            Description = "November services",
+            Lines =
+            [
+                new() { Description = "Maintenance", Quantity = 1, UnitPrice = 10000, LedgerDimension = 2, TaxItemGroup = "SERVICE" },
+                new() { Description = "Consulting", Quantity = 4, UnitPrice = 500, LedgerDimension = 3, TaxItemGroup = "SERVICE" }
+            ]
+        }, default);
+
+        Assert.Equal(201, created.StatusCode);
+        Assert.Equal(12000m, created.Invoice!.NetAmount);
+        Assert.Equal(1800m, created.Invoice.TaxAmount);
+        Assert.Equal(new DateTime(2026, 12, 1), created.Invoice.DueDate);
+        Assert.Equal(string.Empty, created.Invoice.InvoiceId);
+        Assert.Empty(await db.Set<CustTrans>().ToListAsync());
+
+        var posted = await service.PostAsync(created.Invoice.RecId, default);
+
+        Assert.Equal(200, posted.StatusCode);
+        Assert.Equal("X-000001", posted.Invoice!.InvoiceId);
+        Assert.Equal(13800m, posted.Invoice.InvoiceAmount);
+        Assert.Equal(13800m, (await db.Set<CustTrans>().SingleAsync()).AmountCur);
+        Assert.Equal(13800m, (await db.Set<CustTransOpen>().SingleAsync()).AmountCur);
+        Assert.Equal(2, await db.Set<CustInvoiceTrans>().CountAsync());
+        Assert.Equal(-1800m, (await db.Set<TaxTrans>().SingleAsync()).TaxAmountCur);
+        Assert.Equal(new[] { -10000m, -2000m, -1800m, 13800m },
+            (await db.Set<GeneralJournalAccountEntry>().Select(x => x.AccountingCurrencyAmount).ToListAsync())
+                .OrderBy(x => x).ToArray());
+        Assert.Empty(await db.Set<InventTrans>().ToListAsync());
+
+        var repeated = await service.PostAsync(created.Invoice.RecId, default);
+        Assert.Equal("Free text invoice was already posted.", repeated.Message);
+        Assert.Single(await db.Set<CustInvoiceJour>().ToListAsync());
+        Assert.Single(await db.Set<CustTrans>().ToListAsync());
+    }
+
+    [Fact]
     public async Task Inventory_journal_creation_rejects_reused_sequence_without_changing_old_header()
     {
         await using var fixture = await Fixture.CreateAsync();
@@ -1019,7 +1134,8 @@ public sealed class InventoryCycleTests
             typeof(PaymTerm), typeof(VendTrans), typeof(VendTransOpen), typeof(VendSettlement), typeof(PurchReceiptAccrual), typeof(VendLedgerAccounts), typeof(InventTransOriginPurchLine), typeof(VendTable),
             typeof(InventSite), typeof(InventLocation), typeof(InventTable), typeof(InventTableModule), typeof(UnitOfMeasure), typeof(UnitOfMeasureConversion),
             typeof(SalesTable), typeof(SalesLine), typeof(CustTable), typeof(CustParameters), typeof(CustPackingSlipJour), typeof(CustPackingSlipTrans),
-            typeof(CustInvoiceJour), typeof(CustInvoiceTrans), typeof(CustTrans), typeof(CustTransOpen), typeof(CustSettlement), typeof(CustLedgerAccounts),
+            typeof(CustInvoiceTable), typeof(CustInvoiceLine), typeof(CustInvoiceJour), typeof(CustInvoiceTrans), typeof(CustTrans), typeof(CustTransOpen), typeof(CustSettlement), typeof(CustLedgerAccounts),
+            typeof(Currency), typeof(DirPartyTable), typeof(CustPaymModeTable), typeof(TaxGroupHeading), typeof(TaxItemGroupHeading),
             typeof(TaxGroupData), typeof(TaxOnItem), typeof(TaxData), typeof(TaxTable), typeof(TaxLedgerAccountGroup), typeof(TaxTrans),
             typeof(InventTransOriginSalesLine), typeof(BankAccountTable), typeof(BankAccountTrans), typeof(LedgerJournalTable), typeof(LedgerJournalTrans),
             typeof(ReturnDispositionCode), typeof(ReturnReasonCode),

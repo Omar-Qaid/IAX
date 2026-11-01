@@ -36,6 +36,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
         [
             ("AccountsReceivable", "SalesOrders", "Confirm"),
             ("AccountsReceivable", "SalesOrders", "Post"),
+            ("AccountsReceivable", "Invoices", "Post"),
             ("AccountsReceivable", "CustomerPayments", "Post"),
             ("AccountsReceivable", "ReturnOrders", "Post"),
             ("AccountsPayable", "PurchaseOrders", "Confirm"),

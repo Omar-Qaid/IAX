@@ -79,92 +79,26 @@ public sealed class CustSettlementReversalService : BaseService<CustSettlement>,
         try
         {
             await support.LockAsync($"CustSettlement:{area}:{voucher}".ToUpperInvariant(), ct);
-            var rows = await Db.Set<CustSettlement>()
+            var rows = await Db.Set<CustSettlement>().AsNoTracking()
                 .Where(x => x.DataAreaId == area && x.SettlementVoucher == voucher).ToListAsync(ct);
             if (rows.Count == 0)
                 return await Fail(404, $"Settlement voucher '{voucher}' was not found in the selected company.", ct);
-            if (rows.Any(x => x.CanBeReversed != NoYes.Yes))
-                return await Fail(422, $"Settlement '{voucher}' cannot be reversed: it is either already reversed, or it was "
-                    + "settled before settlement reversal was supported and is not marked reversible.", ct);
-            if (rows.Any(x => x.UtilizedCashDisc != 0m || x.ExchAdjustment != 0m || x.PennyDiff != 0m))
-                return await Fail(422, $"Settlement '{voucher}' carries a cash discount, exchange adjustment or penny "
-                    + "difference, which post to the ledger and cannot be reversed by this path.", ct);
 
             var date = (reversalDate ?? DateTime.UtcNow).Date;
             var reversalVoucher = (await _numbers.NextAsync("CustSettlement", area, ct)).Code;
-
-            // The originals stay as history; the reversal is its own set of rows with the amounts
-            // negated. There is no field linking a reversal back to the settlement it reverses, so
-            // the pair is identifiable by its Trans/Offset record ids.
-            foreach (var row in rows)
-            {
-                Db.Set<CustSettlement>().Add(new CustSettlement
-                {
-                    DataAreaId = area, AccountNum = row.AccountNum, TransDate = date,
-                    SettlementVoucher = reversalVoucher, TransCompany = row.TransCompany, TransType = row.TransType,
-                    TransRecId = row.TransRecId, TransOpen = row.TransOpen, OffsetRecId = row.OffsetRecId,
-                    OffsetAccountNum = row.OffsetAccountNum, OffsetCompany = row.OffsetCompany,
-                    OffsetTransVoucher = row.OffsetTransVoucher,
-                    SettleAmountCur = -row.SettleAmountCur,
-                    SettleAmountMst = -row.SettleAmountMst,
-                    SettleAmountReporting = -row.SettleAmountReporting,
-                    DueDate = row.DueDate, ClosedDate = date,
-                    DefaultDimension = row.DefaultDimension,
-                    CanBeReversed = NoYes.No
-                });
-                row.CanBeReversed = NoYes.No;
-            }
-
-            // Each transaction the settlement touched gives back exactly what it took.
-            var restored = new List<object>();
-            foreach (var group in rows.GroupBy(x => x.TransRecId))
-            {
-                var trans = await Db.Set<CustTrans>()
-                    .FirstOrDefaultAsync(x => x.DataAreaId == area && x.RecId == group.Key, ct);
-                if (trans == null)
-                    return await Fail(422, $"The customer transaction behind settlement '{voucher}' no longer exists.", ct);
-
-                trans.SettleAmountCur -= group.Sum(x => x.SettleAmountCur);
-                trans.SettleAmountMst -= group.Sum(x => x.SettleAmountMst);
-                if (trans.SettleAmountCur == 0m)
-                {
-                    trans.LastSettleDate = default;
-                    trans.LastSettleVoucher = string.Empty;
-                    trans.LastSettleAccountNum = string.Empty;
-                }
-                var remaining = trans.AmountCur - trans.SettleAmountCur;
-                if (remaining != 0m)
-                {
-                    trans.Closed = default;
-                    trans.Settlement = CustSettlementStatus.None;
-                }
-
-                var open = await Db.Set<CustTransOpen>()
-                    .FirstOrDefaultAsync(x => x.DataAreaId == area && x.RefRecId == trans.RecId, ct);
-                if (remaining == 0m)
-                {
-                    if (open != null) Db.Set<CustTransOpen>().Remove(open);
-                }
-                else if (open == null)
-                {
-                    Db.Set<CustTransOpen>().Add(new CustTransOpen
-                    {
-                        DataAreaId = area, AccountNum = trans.AccountNum, RefRecId = trans.RecId,
-                        TransDate = trans.TransDate, DueDate = trans.DueDate, AmountCur = remaining,
-                        AmountMst = trans.AmountMst - trans.SettleAmountMst,
-                        ReportingCurrencyAmount = trans.ReportingCurrencyAmount - trans.SettleAmountMst
-                    });
-                }
-                else
-                {
-                    open.AmountCur = remaining;
-                    open.AmountMst = trans.AmountMst - trans.SettleAmountMst;
-                    open.ReportingCurrencyAmount = trans.ReportingCurrencyAmount - trans.SettleAmountMst;
-                }
-                restored.Add(new { trans.RecId, invoice = trans.Invoice, open = remaining });
-            }
+            var error = await CustSettlementRestore.ApplyAsync(Db, area, voucher, date, reversalVoucher, ct);
+            if (error != null) return await Fail(422, error, ct);
 
             await _unitOfWork.CompleteAsync(ct);
+
+            // Read back after the save: the restore mutates tracked entities, which an
+            // AsNoTracking read taken before the save would not see.
+            var touched = rows.Select(r => r.TransRecId).ToList();
+            var restored = await Db.Set<CustTrans>().AsNoTracking()
+                .Where(x => x.DataAreaId == area && touched.Contains(x.RecId))
+                .Select(x => new { x.RecId, invoice = x.Invoice, open = x.AmountCur - x.SettleAmountCur })
+                .ToListAsync(ct);
+
             await _unitOfWork.CommitTransactionAsync(ct);
             return new(200, new { settlementVoucher = voucher, reversalVoucher, rows = rows.Count, restored },
                 "Customer settlement reversed.");

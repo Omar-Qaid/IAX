@@ -13,13 +13,34 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 public sealed class VendPaymentController : BaseController<VendTrans, VendPaymentPostDto>
 {
     private readonly IVendPaymentService _paymentService;
+    private readonly IVendPaymentReversalService _reversalService;
 
     public VendPaymentController(
         IVendPaymentService service,
+        IVendPaymentReversalService reversalService,
         ILogger<VendPaymentController>? logger = null)
         : base(service, logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<VendPaymentController>.Instance)
     {
         _paymentService = service;
+        _reversalService = reversalService;
+    }
+
+    /// <summary>
+    /// Reverses a posted vendor payment: unwinds its settlements, posts the counter-voucher and
+    /// reverses the bank movement.
+    /// </summary>
+    [HttpPost("{journalNum}/reverse")]
+    [DomainPermission("AccountsPayable", "VendorPayments", "Post")]
+    public async Task<IActionResult> Reverse(string journalNum, [FromQuery] DateTime? reversalDate, CancellationToken ct)
+    {
+        var result = await _reversalService.ReverseAsync(journalNum, reversalDate, ct);
+        return result.StatusCode switch
+        {
+            200 => Ok(APIResponse<object>.Ok(result.Data!, result.Message ?? string.Empty)),
+            400 => BadRequest(APIResponse<object>.Fail(result.Message!)),
+            404 => NotFound(APIResponse<object>.Fail(result.Message!)),
+            _ => UnprocessableEntity(APIResponse<object>.Fail(result.Message ?? "Vendor payment reversal failed."))
+        };
     }
 
     [NonAction]

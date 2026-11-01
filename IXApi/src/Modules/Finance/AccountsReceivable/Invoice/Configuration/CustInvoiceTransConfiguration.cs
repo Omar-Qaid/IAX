@@ -15,10 +15,10 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Invoice
             builder.Property(t => t.SalesPrice).HasPrecision(18, 4);
             builder.Property(t => t.LineAmount).HasPrecision(18, 4);
 
-            builder.HasIndex(t => t.InvoiceId);
-            builder.HasIndex(t => t.SalesId);
-            builder.HasIndex(t => t.ItemId);
-            builder.HasIndex(t => t.InventTransId);
+            builder.HasIndex(t => new { t.DataAreaId, t.InvoiceId });
+            builder.HasIndex(t => new { t.DataAreaId, t.SalesId });
+            builder.HasIndex(t => new { t.DataAreaId, t.ItemId });
+            builder.HasIndex(t => new { t.DataAreaId, t.InventTransId });
 
             builder.Property(x => x.DataAreaId)
                 .HasMaxLength(10)

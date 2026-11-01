@@ -13,13 +13,16 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Payment;
 public sealed class CustPaymentController : BaseController<CustTrans, CustPaymentPostDto>
 {
     private readonly ICustPaymentService _paymentService;
+    private readonly ICustPaymentReversalService _reversalService;
 
     public CustPaymentController(
         ICustPaymentService service,
+        ICustPaymentReversalService reversalService,
         ILogger<CustPaymentController>? logger = null)
         : base(service, logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<CustPaymentController>.Instance)
     {
         _paymentService = service;
+        _reversalService = reversalService;
     }
 
     [NonAction]
@@ -57,6 +60,24 @@ public sealed class CustPaymentController : BaseController<CustTrans, CustPaymen
             400 => BadRequest(APIResponse<object>.Fail(result.Message!)),
             404 => NotFound(APIResponse<object>.Fail(result.Message!)),
             _ => UnprocessableEntity(APIResponse<object>.Fail(result.Message ?? "Customer payment posting failed."))
+        };
+    }
+
+    /// <summary>
+    /// Reverses a posted customer payment: unwinds its settlements, posts the counter-voucher and
+    /// reverses the bank movement.
+    /// </summary>
+    [HttpPost("{journalNum}/reverse")]
+    [DomainPermission("AccountsReceivable", "CustomerPayments", "Post")]
+    public async Task<IActionResult> Reverse(string journalNum, [FromQuery] DateTime? reversalDate, CancellationToken ct)
+    {
+        var result = await _reversalService.ReverseAsync(journalNum, reversalDate, ct);
+        return result.StatusCode switch
+        {
+            200 => Ok(APIResponse<object>.Ok(result.Data!, result.Message ?? string.Empty)),
+            400 => BadRequest(APIResponse<object>.Fail(result.Message!)),
+            404 => NotFound(APIResponse<object>.Fail(result.Message!)),
+            _ => UnprocessableEntity(APIResponse<object>.Fail(result.Message ?? "Customer payment reversal failed."))
         };
     }
 }

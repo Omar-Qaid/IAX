@@ -4327,14 +4327,14 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasIndex("DataAreaId");
 
-                    b.HasIndex("InvoiceAccount");
+                    b.HasIndex("DataAreaId", "InvoiceAccount");
 
-                    b.HasIndex("InvoiceId")
+                    b.HasIndex("DataAreaId", "InvoiceId")
                         .IsUnique();
 
-                    b.HasIndex("OrderAccount");
+                    b.HasIndex("DataAreaId", "OrderAccount");
 
-                    b.HasIndex("SalesId");
+                    b.HasIndex("DataAreaId", "SalesId");
 
                     b.ToTable("CustInvoiceJour", (string)null);
                 });
@@ -4506,7 +4506,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.HasIndex("ParentRecId");
+                    b.HasIndex("DataAreaId", "ParentRecId", "LineNum")
+                        .IsUnique();
 
                     b.ToTable("CustInvoiceLine", (string)null);
                 });
@@ -4816,12 +4817,13 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
-                    b.HasIndex("InvoiceDate");
+                    b.HasIndex("DataAreaId", "InvoiceDate");
 
-                    b.HasIndex("InvoiceId")
-                        .IsUnique();
+                    b.HasIndex("DataAreaId", "InvoiceId")
+                        .IsUnique()
+                        .HasFilter("[InvoiceId] <> ''");
 
-                    b.HasIndex("OrderAccount");
+                    b.HasIndex("DataAreaId", "OrderAccount");
 
                     b.ToTable("CustInvoiceTable", (string)null);
                 });
@@ -5212,13 +5214,13 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasIndex("DataAreaId");
 
-                    b.HasIndex("InventTransId");
+                    b.HasIndex("DataAreaId", "InventTransId");
 
-                    b.HasIndex("InvoiceId");
+                    b.HasIndex("DataAreaId", "InvoiceId");
 
-                    b.HasIndex("ItemId");
+                    b.HasIndex("DataAreaId", "ItemId");
 
-                    b.HasIndex("SalesId");
+                    b.HasIndex("DataAreaId", "SalesId");
 
                     b.ToTable("CustInvoiceTrans", (string)null);
                 });

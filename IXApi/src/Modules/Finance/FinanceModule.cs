@@ -67,6 +67,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<AccountsReceivable.Confirm.ISalesOrderConfirmationService, AccountsReceivable.Confirm.SalesOrderConfirmationService>();
             services.AddScoped<AccountsReceivable.PackingSlip.IPackingSlipJournalService, AccountsReceivable.PackingSlip.PackingSlipJournalService>();
             services.AddScoped<AccountsReceivable.Invoice.ISalesInvoiceService, AccountsReceivable.Invoice.SalesInvoiceService>();
+            services.AddScoped<AccountsReceivable.Invoice.IFreeTextInvoiceService, AccountsReceivable.Invoice.FreeTextInvoiceService>();
             services.AddScoped<AccountsReceivable.ICustTransService>(provider =>
                 new AccountsReceivable.CustTransService(
                     provider.GetRequiredService<Infrastructure.Persistence.Repositories.IUnitOfWork>(),
@@ -74,7 +75,9 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<AccountsReceivable.Payment.ICustPaymentService, AccountsReceivable.Payment.CustPaymentService>();
             services.AddScoped<AccountsPayable.IVendPaymentService, AccountsPayable.VendPaymentService>();
             services.AddScoped<AccountsReceivable.Settlement.ICustSettlementReversalService, AccountsReceivable.Settlement.CustSettlementReversalService>();
+            services.AddScoped<AccountsReceivable.Payment.ICustPaymentReversalService, AccountsReceivable.Payment.CustPaymentReversalService>();
             services.AddScoped<AccountsPayable.IVendSettlementReversalService, AccountsPayable.VendSettlementReversalService>();
+            services.AddScoped<AccountsPayable.IVendPaymentReversalService, AccountsPayable.VendPaymentReversalService>();
             services.AddScoped<AccountsReceivable.Return.ICustReturnService, AccountsReceivable.Return.CustReturnService>();
             services.AddScoped<AccountsReceivable.IReturnDispositionCodeService, AccountsReceivable.ReturnDispositionCodeService>();
             services.AddScoped<AccountsReceivable.IReturnReasonCodeService, AccountsReceivable.ReturnReasonCodeService>();
@@ -83,6 +86,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<FluentValidation.IValidator<AccountsReceivable.Invoice.CustInvoiceJourDto>, AccountsReceivable.Invoice.CustInvoiceJourDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsReceivable.Invoice.CustInvoiceTableDto>, AccountsReceivable.Invoice.CustInvoiceTableDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsReceivable.Invoice.CustInvoiceTransDto>, AccountsReceivable.Invoice.CustInvoiceTransDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<AccountsReceivable.Invoice.FreeTextInvoiceSaveDto>, AccountsReceivable.Invoice.FreeTextInvoiceSaveDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsReceivable.CustTransDto>, AccountsReceivable.CustTransDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsReceivable.CustTransOpenDto>, AccountsReceivable.CustTransOpenDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsReceivable.SalesQuotation.CustQuotationJourDto>, AccountsReceivable.SalesQuotation.CustQuotationJourDtoValidator>();

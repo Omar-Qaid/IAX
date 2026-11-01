@@ -9,10 +9,10 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable.Invoice
         {
             builder.ToTable("CustInvoiceJour");
 
-            builder.HasIndex(j => j.InvoiceId).IsUnique();
-            builder.HasIndex(j => j.SalesId);
-            builder.HasIndex(j => j.OrderAccount);
-            builder.HasIndex(j => j.InvoiceAccount);
+            builder.HasIndex(j => new { j.DataAreaId, j.InvoiceId }).IsUnique();
+            builder.HasIndex(j => new { j.DataAreaId, j.SalesId });
+            builder.HasIndex(j => new { j.DataAreaId, j.OrderAccount });
+            builder.HasIndex(j => new { j.DataAreaId, j.InvoiceAccount });
 
             builder.Property(x => x.DataAreaId)
                 .HasMaxLength(10)
