@@ -66,6 +66,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 ("VendPurchOrderJour",  "PO Confirm Sequence",       "PCONF-######","{PREFIX}-{YYYY}-{SEQ}", 0),
                 ("VendPackingSlipJour", "Product Receipt Sequence",  "PR-######",  "{PREFIX}-{YYYY}-{SEQ}", 0),
                 ("VendInvoiceJour",     "Vendor Invoice Sequence",   "VINV-######","{PREFIX}-{YYYY}-{SEQ}", 0),
+                ("VendInvoiceInfoTable","Pending Vend Invoice Seq",  "PINV-######","{PREFIX}-{YYYY}-{SEQ}", 0),
                 ("VendTrans",           "Vend Transaction Sequence", "VTRX-######","{PREFIX}-{YYYY}-{SEQ}", 0),
                 ("VendInvoiceRegister", "Vend Invoice Register Seq", "VIR-######", "{PREFIX}-{YYYY}-{SEQ}", 1),
                 ("ExchAdjustment",      "Exch Adjustment Sequence",  "FXA-######", "{PREFIX}-{YYYY}-{SEQ}", 1),

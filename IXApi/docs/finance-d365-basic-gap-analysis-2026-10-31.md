@@ -470,3 +470,77 @@ No new accounting defect. Every gap above is something absent or unenforced, not
 wrongly — with one exception worth stating plainly: the `MarkupTrans` soft-delete shadow became
 reachable the moment charge posting shipped, so it moved from latent to live without its priority
 changing. The P1 that matters most is still a decision (§6.2), not a build.
+
+---
+
+## 7. Gap 5 implemented 2026-11-01 — pending vendor invoice
+
+The year-end-close decision in section 6.2 was answered: **basic ERP only, no advanced features**,
+so year-end close stays out of scope and its code is left in place untouched pending removal or a
+move into a service. The next basic gap in the section 6.6 order, gap 5, is now done.
+
+### What was built
+
+`VendInvoiceInfoTable` and `VendInvoiceInfoLine` with the field lists from `APTables.md` sections
+8.1 and 8.2, their configuration, a create/read/discard/post service, a controller, a number
+sequence, and migration `20261101071102_AddPendingVendorInvoiceTables`.
+
+| Decision | Why |
+|---|---|
+| **Posting is delegated, not reimplemented.** `VendInvoiceInfoService.PostAsync` maps the held invoice to `VendorInvoicePostDto` and calls `IVendorInvoiceService.PostAsync`. | The register's entry asked for exactly this: `VendorInvoiceService` posts *from* the pending invoice rather than from the PO. Quantity, period, profile, dimension, tax and charge rules stay in one place, so entry cannot drift from posting. |
+| **Lines belong to the header through `ParmId`.** | `APTables.md` documents `ParmId` as the invoice processing group on the line and the processing reference on the header. |
+| **The source link is `OrigPurchId` + `InventTransId`.** | Both are documented fields, and together they resolve the `PurchLine` that posting updates — so no convenience column was added to carry a `PurchLine` record id. The document's requirement to "preserve the association between the invoice line and the source PO/receipt lines" is met by the fields it names. |
+| **Default quantity selection is the received, uninvoiced amount** (`RemainPurchFinancial` less `RemainPurchPhysical`), taken when the caller sends no lines. | D365's default selection for an invoice. An explicit selection is validated against the same figure. |
+| **Duplicate invoice numbers are refused per vendor**, against both posted `VendInvoiceJour` and held pending invoices. | `APTables.md` section 8.1: check per the configured policy and **do not** impose uniqueness across all vendors and legal entities. |
+
+### Flagged for verification
+
+- **`TableRefId` is on both tables because the document lists it, and nothing depends on it.** What
+  generates it in D365 is not established from this repository or the cycle docs, and inventing a
+  generator would have been an invented rule. The column exists and stays zero. **Confirm against
+  target metadata before anything reads it.**
+- **A configurable duplicate-invoice policy has no setup to read.** `VendParameters` does not exist
+  in this module (`find -name "VendParameters*"` → nothing), so the per-vendor rule is applied
+  directly rather than from configuration. Adding the policy means adding `VendParameters` first.
+- **One purchase order per pending invoice.** A pending invoice whose lines span several orders is
+  refused by name rather than approximated, because the posting path takes one `PurchTable`.
+- The field lists come from the project's own `APTables.md`, not from target D365 metadata. The
+  section 5 caveat still applies.
+
+### Not included, deliberately
+
+Line-level purchase charges on the pending invoice, proration across partial invoices, and
+`VendInvoicePackingSlipQuantityMatch` selection at entry time — the match is written by the posting
+path, as it already was. Invoice-register and approval-journal flows are separate D365 features and
+were not touched.
+
+### Verification run
+
+- `dotnet build IXApi/IXApi.csproj` → **0 errors** (194 warnings, all pre-existing and in unrelated
+  seeding files).
+- `dotnet ef migrations has-pending-model-changes` → **no model drift**; the migration creates only
+  the two new tables.
+- `dotnet test IXApi/Tests/IXApi.Tests.csproj` → **578 passed, 1 failed, 2 skipped**. The failure is
+  `AccountsReceivableGenericArchitectureTests.Crud_controllers_use_registered_generic_services`, and
+  it is **pre-existing**: it fails identically with this work stashed on an otherwise clean tree, and
+  it scans only the `.AccountsReceivable` namespace, which this change does not touch.
+- `dotnet test IXApi/Tests/InventoryCycle.Tests.csproj` → **18 passed, 0 failed**.
+- 13 new tests in `Tests/VendInvoiceInfoTests.cs`, all passing: default selection, over-selection
+  refusal, nothing-received refusal, the per-vendor duplicate rule in both directions, the
+  already-posted refusal, a blocked vendor, the hand-off of line/quantity/price to the posting path
+  with the hold released after it, a refused posting leaving the hold in place, discard, read-back,
+  unknown `ParmId`, and a return order.
+
+### A build-environment correction
+
+`global.json` pinned `9.0.311` with `rollForward: latestFeature`, which requires SDK feature band
+`9.0.3xx` **or higher**. A machine with `9.0.201`/`9.0.202` therefore could not build at all —
+`dotnet build` failed with "a compatible .NET SDK was not found", not just the .NET 10 case the
+section 2 note anticipated. The floor is now `9.0.202`, which still resolves to the newest installed
+9.0 feature band (so `9.0.311` where it is installed) and still keeps the .NET 10 SDK out. The
+intent of the pin is unchanged; only its floor moved.
+
+### Next in the section 6.6 order
+
+Gap 8 (no settlement or payment reversal) and gap 16 (no customer/vendor open-balance read), which
+touch the same subledger correction and read surface.

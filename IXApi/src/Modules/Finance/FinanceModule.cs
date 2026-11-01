@@ -98,6 +98,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<AccountsPayable.IPurchConfirmationService, AccountsPayable.PurchConfirmationService>();
             services.AddScoped<AccountsPayable.IProductReceiptService, AccountsPayable.ProductReceiptService>();
             services.AddScoped<AccountsPayable.IVendorInvoiceService, AccountsPayable.VendorInvoiceService>();
+            services.AddScoped<AccountsPayable.IVendInvoiceInfoService, AccountsPayable.VendInvoiceInfoService>();
             services.AddScoped<AccountsPayable.IPurchReturnService, AccountsPayable.PurchReturnService>();
             services.AddScoped<FluentValidation.IValidator<AccountsReceivable.Confirm.PostConfirmationRequest>, AccountsReceivable.Confirm.SalesOrderConfirmationValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsReceivable.Confirm.CustConfirmJourDto>, AccountsReceivable.Confirm.CustConfirmJourDtoValidator>();
@@ -132,6 +133,8 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<FluentValidation.IValidator<AccountsPayable.VendPackingSlipJourDto>, AccountsPayable.VendPackingSlipJourDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsPayable.VendorInvoicePostDto>, AccountsPayable.VendorInvoicePostDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsPayable.VendInvoiceJourDto>, AccountsPayable.VendInvoiceJourDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<AccountsPayable.VendInvoiceInfoCreateDto>, AccountsPayable.VendInvoiceInfoCreateDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<AccountsPayable.VendInvoiceInfoTableDto>, AccountsPayable.VendInvoiceInfoTableDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsPayable.PurchReturnCreateDto>, AccountsPayable.PurchReturnCreateDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsPayable.PurchReturnShipDto>, AccountsPayable.PurchReturnShipDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsPayable.VendCreditNoteDto>, AccountsPayable.VendCreditNoteDtoValidator>();
