@@ -821,3 +821,123 @@ both subledgers, sharing one restore implementation.
 
 Gap 7 (cash discount) and gap 5a (period access by module). Gap 11 (free text invoice) was
 implemented outside this work and should be reviewed and re-rated by whoever owns it.
+
+---
+
+## 11. Gap 7 implemented 2026-11-01 — cash discount, AR and AP
+
+**Gap 7 is closed** for both subledgers: the `CashDisc` master, the date and amount calculation,
+derivation at invoicing, and the discount taken at settlement with its ledger posting.
+
+### What was built
+
+| Piece | Where |
+|---|---|
+| `CashDisc` master, configuration, DTO, validator, service, controller | `Foundation/CashDiscount/*` |
+| `CashDiscountCalculator` — discount date, amount, in-period test | alongside `PaymentDueDateCalculator`, following its shape of refusing what it cannot do |
+| `CashDiscountResolver` — the single derivation | used by both invoicing and settlement |
+| Derivation at invoicing | `SalesInvoiceService`, `VendorInvoiceService` |
+| Discount taken at settlement | `CustPaymentService`, `VendPaymentService` |
+| Reversal guard | `CustSettlementRestore`, `VendSettlementRestore` |
+| Migrations | `AddCashDiscount`, `AddPayableCashDiscount` |
+
+### The rule, and the two ways it refuses
+
+A discount is earned **only** when the payment arrives on or before the discount date **and**
+covers the whole invoice less the discount. A part payment earns nothing — tested both ways on both
+sides. When earned, the invoice is cleared in full for less cash and the difference posts to the
+account configured on the discount code. **A code with no account is refused**, because a discount
+cannot be taken without somewhere to post it and no default is assumed.
+
+The voucher gains a third line:
+
+- **Receivable**: Dr Bank for the cash, Dr the discount account, Cr the customer for both — the
+  customer's balance falls by what was *cleared*, not only by what was banked.
+- **Payable**: Dr the vendor for everything cleared, Cr Bank for the cash, Cr the discount account.
+
+Both are asserted to sum to zero by test. `LedgerPostingType.CashDiscount` already existed; no enum
+member was added.
+
+### One derivation, not two
+
+`CashDiscountResolver` is the only place a discount is derived. Invoicing calls it to populate
+`CustTransOpen.PossibleCashDisc`/`CashDiscDate`, and settlement calls it again rather than trusting
+that population — so the open row is reporting detail and cannot silently diverge from what
+settlement actually does. A blank or unknown code is the ordinary no-discount case, not an error.
+
+### Interaction with settlement reversal, closed deliberately
+
+A settlement that took a discount **posted to the ledger**, and the restore paths from section 8
+write no counter-voucher. Both now refuse such a settlement by name rather than reversing it and
+stranding the discount posting. The receivable side already refused on `UtilizedCashDisc`; the
+payable side had no field to check, so one was added.
+
+### Schema cost, and why the payable side cost more
+
+The receivable side needed **no** new columns: `SalesTable.CashDisc`, `CustTrans.CashDiscCode`,
+`CustTransOpen.PossibleCashDisc` and `CustSettlement.UtilizedCashDisc` all already existed and were
+never populated. Closing the gap there was wiring, not schema.
+
+The payable side had **nothing**: no cash discount field on `PurchTable`, `VendTrans`,
+`VendTransOpen` or `VendSettlement`. Five columns were added, each mirroring an existing receivable
+counterpart by name: `PurchTable.CashDisc` / `CashDiscBaseDate`, `VendTrans.CashDiscCode` /
+`CashDiscBaseDate`, `VendSettlement.UtilizedCashDisc`.
+
+### Flagged for verification
+
+- **The `CashDisc` table shape is not documented in this repository.** `ARTables.md` names
+  `CashDisc` only as a field on the order and the invoice, never as a table with a field list, and
+  the `d365-parity` basic-scope list names payment terms but not cash discount. The period is
+  modelled on `PaymTerm`'s own `NumOfMonths`/`NumOfDays`, which is the in-repo precedent for an
+  offset from a base date. Standard `CashDisc` also carries chained next-discount codes and a
+  comparison basis; both are out of basic scope and absent.
+- **Cash discount is not mentioned at all in the payable cycle docs.** `APTables.md` and
+  `CyclePurchorder.md` contain no reference to it, so the five payable columns rest on symmetry with
+  the receivable side rather than on project documentation. Confirm before relying on them.
+- **A discount is taken only on a full clearance.** D365 also supports taking a discount on a part
+  payment under some configurations; that is not implemented and the part-payment path simply earns
+  nothing, which is the conservative reading.
+
+### Verification run
+
+- `dotnet build` → **0 errors**.
+- `dotnet ef migrations has-pending-model-changes` → **no drift**; `AddPayableCashDiscount` adds
+  exactly the five columns and nothing else.
+- `dotnet test IXApi/Tests/IXApi.Tests.csproj` → **644 passed, 2 failed, 2 skipped**. Both failures
+  are outside this work: the long-standing
+  `AccountsReceivableGenericArchitectureTests.Crud_controllers_use_registered_generic_services`, and
+  `InventoryArchitectureTests.Journal_name_rejects_unsupported_policies`, whose own test file was
+  uncommitted and mid-edit by concurrent inventory work at the time of the run.
+- `dotnet test IXApi/Tests/InventoryCycle.Tests.csproj` → **22 passed, 0 failed**.
+- **26 new tests**: 15 in `Tests/CashDiscountTests.cs` on the calculator, and 11 in
+  `Tests/CashDiscountSettlementTests.cs` covering both subledgers — discount taken, voucher
+  balanced, late payment, part payment, no discount code, unknown code, missing discount account,
+  and the discount-bearing settlement refusing to reverse.
+
+### A fixture change worth knowing about
+
+Posting now requires an active account structure assigned to the ledger (see below), so every
+hand-built fixture that posts needs that setup: six rows across five tables, plus the
+account-structure and dimension-chain types in its model. `Tests/TestAccountStructures.cs` holds
+both, so a fixture needs one line and the shape lives in one place. Its structure allows any
+non-blank main account and constrains no further segment — a test about the structure rules
+themselves should still build its own through `AccountStructureBuilder`.
+
+### Note on a concurrent regression, since it bears on these numbers
+
+Commit `ebf0ab09`, made outside this work, changed `AccountStructureValidator` from the fail-open
+behaviour recorded in section 1 ("a ledger with no assigned structure is not validated") to
+**refusing** when no structure is assigned. Suite failures went from 1 to **66**, including that
+work's own test `A_draft_structure_assigned_to_nothing_constrains_nothing`, which asserts the
+fail-open. The decision taken was to keep the stricter, more D365-correct behaviour and repair the
+fixtures. `TestAccountStructures` repaired this work's fixtures; the concurrent work repaired its
+own. Section 1's "fail-open, as decided" entry is therefore **superseded** and its open question 2
+(whether to assign the seeded structures) is now live: the demo seed must assign a structure or the
+demo company cannot post.
+
+### Next in the section 6.6 order
+
+Gap 5a (period access by module) appears to have been taken by concurrent work
+(`LedgerPeriodModuleAccessControl*`). What remains unclaimed: gap 2 (`MarkupTrans.IsDeleted`
+shadow, now reachable), gap 12 (`SpecTrans` marking), gap 13 (inventory close cancellation), and
+the `VendSettlement` shape alignment noted in section 8.
