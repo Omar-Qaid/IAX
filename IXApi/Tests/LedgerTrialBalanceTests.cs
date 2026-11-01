@@ -176,7 +176,8 @@ public class LedgerTrialBalanceTests
         protected override void OnModelCreating(ModelBuilder builder)
         {
             Type[] types = [typeof(MainAccount), typeof(IAX.IXApi.Modules.Finance.Entities.Ledger),
-                typeof(GeneralJournalEntry), typeof(GeneralJournalAccountEntry)];
+                typeof(GeneralJournalEntry), typeof(GeneralJournalAccountEntry),
+                typeof(FiscalCalendarYear)];
             foreach (var type in types)
             {
                 var entity = builder.Entity(type);
