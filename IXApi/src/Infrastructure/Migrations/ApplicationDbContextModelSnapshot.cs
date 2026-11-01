@@ -11660,6 +11660,82 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("BankGroup");
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.CashDisc", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<string>("CashDiscCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<long>("CashDiscLedgerDimension")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<decimal>("DiscPct")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("decimal(18,6)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("NumOfDays")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NumOfMonths")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("DataAreaId", "CashDiscCode")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("CashDisc", (string)null);
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.CompanyInfo", b =>
                 {
                     b.Property<long>("RecId")
@@ -19505,6 +19581,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
+                    b.HasIndex("DataAreaId")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
                     b.ToTable("Ledger");
                 });
 
@@ -19845,6 +19925,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
+                    b.HasIndex("DataAreaId", "JournalName")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
                     b.ToTable("LedgerJournalName");
                 });
 
@@ -20110,6 +20194,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("RecId");
+
+                    b.HasIndex("DataAreaId", "JournalNum")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
 
                     b.ToTable("LedgerJournalTable");
                 });
@@ -20685,6 +20773,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
+                    b.HasIndex("DataAreaId", "JournalNum", "LineNum")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
                     b.ToTable("LedgerJournalTrans");
                 });
 
@@ -20812,6 +20904,105 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("LedgerParameters", (string)null);
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.LedgerPeriodModuleAccessControl", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<int>("BankAccessLevel")
+                        .HasColumnType("int");
+
+                    b.Property<string>("BankUserGroupInfo")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("CustAccessLevel")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CustUserGroupInfo")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("LedgerAccessLevel")
+                        .HasColumnType("int");
+
+                    b.Property<long>("LedgerFiscalCalendarPeriod")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("LedgerUserGroupInfo")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("TaxAccessLevel")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TaxUserGroupInfo")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.Property<int>("VendAccessLevel")
+                        .HasColumnType("int");
+
+                    b.Property<string>("VendUserGroupInfo")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("nvarchar(60)");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("LedgerFiscalCalendarPeriod")
+                        .IsUnique();
+
+                    b.HasIndex("DataAreaId", "LedgerFiscalCalendarPeriod")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("LedgerPeriodModuleAccessControl");
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.LedgerStructure", b =>
@@ -31804,6 +31995,15 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Navigation("FiscalCalendarYearTable");
 
                     b.Navigation("LedgerTable");
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.LedgerPeriodModuleAccessControl", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.LedgerFiscalCalendarPeriod", null)
+                        .WithOne()
+                        .HasForeignKey("IAX.IXApi.Modules.Finance.Entities.LedgerPeriodModuleAccessControl", "LedgerFiscalCalendarPeriod")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.LedgerStructure", b =>
