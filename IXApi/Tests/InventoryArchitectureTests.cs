@@ -1856,6 +1856,25 @@ public sealed class InventoryArchitectureTests
         // Transfers never post through an inventory journal.
         Assert.False(await db.Set<InventJournalTable>().AnyAsync(x => x.Description!.Contains("TR-DEMO")));
 
+        var duplicateItemLines = transferInput with { TransferId = "TR-TWO-LINES",
+            Lines = [new("ITEM-001", "pcs", 1m), new("ITEM-001", "pcs", 1m)] };
+        Assert.Null((await transfers.CreateAsync(duplicateItemLines, default)).Error);
+        Assert.Null((await transfers.ShipAsync("TR-TWO-LINES", new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransferPostDto(
+            "SHIP", DateTime.Today, new Dictionary<decimal, decimal> { [1m] = 1m, [2m] = 1m }), default)).Error);
+        Assert.Null((await transfers.ReceiveAsync("TR-TWO-LINES", new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransferPostDto(
+            "RECEIVE-2", DateTime.Today, new Dictionary<decimal, decimal> { [2m] = 1m }), default)).Error);
+        var firstLinePendingOriginIds = await db.Set<InventTransOriginTransferTransitFrom>()
+            .Where(x => x.TransferTransitFromId == "TR-TWO-LINES" && x.TransferTransitFromLineNum == 1m)
+            .Select(x => x.InventTransOrigin).ToListAsync();
+        var secondLinePendingOriginIds = await db.Set<InventTransOriginTransferTransitFrom>()
+            .Where(x => x.TransferTransitFromId == "TR-TWO-LINES" && x.TransferTransitFromLineNum == 2m)
+            .Select(x => x.InventTransOrigin).ToListAsync();
+        Assert.Equal(-1m, await db.Set<InventTrans>().Where(x => firstLinePendingOriginIds.Contains(x.InventTransOrigin)
+            && x.StatusIssue == StatusIssue.ReservPhysical).SumAsync(x => x.Qty));
+        Assert.Equal(0m, await db.Set<InventTrans>().Where(x => secondLinePendingOriginIds.Contains(x.InventTransOrigin)
+            && x.StatusIssue == StatusIssue.ReservPhysical).SumAsync(x => x.Qty));
+        Assert.Null((await transfers.ReceiveAsync("TR-TWO-LINES", Post("RECEIVE-1", 1m), default)).Error);
+
         var pendingTransfer = transferInput with { TransferId = "TR-GUARDED", Lines = [new("ITEM-001", "pcs", 1m)] };
         Assert.Null((await transfers.CreateAsync(pendingTransfer, default)).Error);
         var releasedForTransfer = await db.Set<ReleasedItem>().SingleAsync(x => x.DataAreaId == "dat" && x.ItemId == "ITEM-001");
