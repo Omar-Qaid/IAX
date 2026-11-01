@@ -49,6 +49,12 @@ public sealed class VendTransController : BaseController<VendTrans, VendTransDto
         return Ok(APIResponse<VendTransPageDto>.Ok(await _vendTransService.SearchAsync(query, ct)));
     }
 
+    /// <summary>The vendor's open balance and the open transactions behind it.</summary>
+    [HttpGet("open-balance")]
+    public async Task<ActionResult<APIResponse<VendOpenBalanceDto>>> OpenBalance(
+        [FromQuery] string? accountNum, [FromQuery] DateTime? asOfDate, CancellationToken ct) =>
+        Ok(APIResponse<VendOpenBalanceDto>.Ok(await _vendTransService.GetOpenBalanceAsync(accountNum, asOfDate, ct)));
+
     [NonAction]
     public override Task<ActionResult<APIResponse<VendTransDto>>> Create(
         VendTransDto dto,

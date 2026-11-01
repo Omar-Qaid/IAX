@@ -656,3 +656,62 @@ half; the register's stated harm is addressed, the feature is not complete.
 ### Next in the section 6.6 order
 
 Gap 16, the customer/vendor open-balance read.
+
+---
+
+## 9. Gap 16 implemented 2026-11-01 — customer and vendor open-balance read
+
+`GET /api/v1/CustTrans/open-balance?accountNum=&asOfDate=` ·
+`GET /api/v1/VendTrans/open-balance?accountNum=&asOfDate=`
+
+Both omit `accountNum` to read every customer or vendor in the company, and default `asOfDate` to
+today. Each returns the balance, the open transaction count and the open transactions behind it.
+
+### What it reads, and why that matters
+
+The balance comes from **`CustTransOpen` / `VendTransOpen`** — the tables the payment paths settle
+against — not from a sum recomputed over `CustTrans`/`VendTrans`. So the figure a caller sees is the
+figure settlement will actually work from. An unsettled payment remainder is an open transaction
+too and nets against the invoices, which is what makes the total the account's balance rather than
+just its receivables.
+
+`Reconciled` reports the condition the payment paths already enforce: both refuse to settle when an
+open row disagrees with its transaction ("Customer open balances require reconciliation before
+settlement"). The read surfaces that instead of presenting a balance settlement would reject. The
+amount reported stays the open table's, because that is what settlement reads.
+
+`DaysOverdue` is arithmetic on the due date and the as-of date, floored at zero. **No aging buckets
+were invented** — basic scope names "customer transactions and open balances", not an aging report,
+and the two are different features.
+
+### Implementation notes
+
+Extended the existing `ICustTransService` and `IVendTransReadService` rather than adding new
+services, so nothing new had to be registered. The payable side's amounts are credits, so a vendor
+balance owed reads negative; that is asserted by test rather than normalised away.
+
+### Verification run
+
+- `dotnet build IXApi/IXApi.csproj` → **0 errors**.
+- `dotnet ef migrations has-pending-model-changes` → **no drift**. This change adds no schema.
+- `dotnet test IXApi/Tests/IXApi.Tests.csproj` → **602 passed, 1 failed, 2 skipped** — the same
+  pre-existing `Crud_controllers_use_registered_generic_services` failure as sections 7 and 8.
+- `dotnet test IXApi/Tests/InventoryCycle.Tests.csproj` → **18 passed, 0 failed**.
+- 10 new tests in `Tests/OpenBalanceReadTests.cs`: the balance as the sum of open rows on both
+  sides, a payment remainder netting against invoices, due-date ordering with days overdue, the
+  as-of cutoff, all-accounts versus one account, the unreconciled report on both sides, and an
+  account with nothing open.
+
+**A caveat on those suite numbers.** The tree these runs measured also contained an uncommitted,
+in-progress **free text invoice** implementation (gap 11) written outside this work — `IdentitySeeder.cs`,
+the four `CustInvoice*Configuration` files, two `FinanceModule` registrations, and five new
+`AccountsReceivable/Invoice/FreeTextInvoice*` files. None of it is part of this change and none of it
+was committed here. It compiled and the suite passed with it present, but **602/1 is therefore not a
+clean measurement of this change alone**. The 10 new tests in this section exercise only the
+open-balance read and pass on their own.
+
+### Next in the section 6.6 order
+
+Gap 7 (cash discount) and gap 5a (period access by module), with gap 8's **payment reversal** half
+still outstanding from section 8. Gap 11 (free text invoice) appears to be under way outside this
+work.

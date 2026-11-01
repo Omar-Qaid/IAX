@@ -72,4 +72,46 @@ public class VendTransService : BaseService<VendTrans>, IVendTransService
             }).ToListAsync(ct);
         return new VendTransPageDto(query.Page, query.PageSize, totalCount, rows);
     }
+
+    /// <summary>
+    /// The balance comes from VendTransOpen, which is the table the payment path settles against,
+    /// rather than from a sum recomputed over VendTrans. An unsettled payment remainder is an open
+    /// transaction too, and nets against the invoices, so the total is the vendor's balance.
+    /// </summary>
+    public async Task<VendOpenBalanceDto> GetOpenBalanceAsync(string? accountNum, DateTime? asOfDate, CancellationToken ct)
+    {
+        var area = _company.GetDataAreaId();
+        var asOf = (asOfDate ?? DateTime.UtcNow).Date;
+        var account = string.IsNullOrWhiteSpace(accountNum) ? null : accountNum.Trim();
+
+        var rows = await (from open in _unitOfWork.Context.Set<VendTransOpen>().AsNoTracking()
+                          join trans in _unitOfWork.Context.Set<VendTrans>().AsNoTracking()
+                              on open.RefRecId equals trans.RecId
+                          where open.DataAreaId == area && trans.DataAreaId == area
+                              && (account == null || open.AccountNum == account)
+                              && trans.TransDate <= asOf
+                          select new
+                          {
+                              trans.RecId, trans.Invoice, trans.Voucher, trans.TransType, trans.TransDate,
+                              open.DueDate, trans.CurrencyCode, trans.AmountCur, trans.SettleAmountCur,
+                              trans.AmountMst, trans.SettleAmountMst,
+                              OpenAmountCur = open.AmountCur, OpenAmountMst = open.AmountMst
+                          }).ToListAsync(ct);
+
+        var transactions = rows
+            .OrderBy(x => x.DueDate).ThenBy(x => x.RecId)
+            .Select(x => new VendOpenTransDto(
+                x.RecId, x.Invoice, x.Voucher, x.TransType, x.TransDate, x.DueDate, x.CurrencyCode,
+                x.AmountCur, x.SettleAmountCur, x.OpenAmountCur, x.OpenAmountMst,
+                // Arithmetic on the two dates, not an aging policy: no buckets are implied.
+                x.DueDate.Date < asOf ? (asOf - x.DueDate.Date).Days : 0))
+            .ToList();
+
+        var reconciled = rows.All(x => x.OpenAmountCur == x.AmountCur - x.SettleAmountCur
+            && x.OpenAmountMst == x.AmountMst - x.SettleAmountMst);
+
+        return new VendOpenBalanceDto(account, asOf,
+            rows.Sum(x => x.OpenAmountCur), rows.Sum(x => x.OpenAmountMst),
+            transactions.Count, reconciled, transactions);
+    }
 }

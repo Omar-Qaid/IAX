@@ -12,12 +12,21 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
 [DomainPermission("AccountsReceivable", "Transactions", "View")]
 public class CustTransController : BaseController<CustTrans, CustTransDto>
 {
+    private readonly ICustTransService _custTransService;
+
     public CustTransController(
         ICustTransService service,
         ILogger<CustTransController>? logger = null)
         : base(service, logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<CustTransController>.Instance)
     {
+        _custTransService = service;
     }
+
+    /// <summary>The customer's open balance and the open transactions behind it.</summary>
+    [HttpGet("open-balance")]
+    public async Task<ActionResult<APIResponse<CustOpenBalanceDto>>> OpenBalance(
+        [FromQuery] string? accountNum, [FromQuery] DateTime? asOfDate, CancellationToken ct) =>
+        Ok(APIResponse<CustOpenBalanceDto>.Ok(await _custTransService.GetOpenBalanceAsync(accountNum, asOfDate, ct)));
 
     [NonAction]
     public override Task<ActionResult<APIResponse<CustTransDto>>> Create(CustTransDto dto, CancellationToken cancellationToken = default) =>
