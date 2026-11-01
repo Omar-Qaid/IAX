@@ -335,6 +335,7 @@ public class CashDiscountSettlementTests
                 typeof(CustParameters), typeof(CustLedgerAccounts), typeof(CashDisc),
                 typeof(VendTrans), typeof(VendTransOpen), typeof(VendSettlement), typeof(VendTable),
                 typeof(VendLedgerAccounts),
+                typeof(VendParameters),
                 typeof(LedgerJournalTable), typeof(LedgerJournalTrans),
                 typeof(BankAccountTable), typeof(BankAccountTrans),
                 typeof(Ledger), typeof(FiscalCalendarPeriod), typeof(LedgerFiscalCalendarPeriod),

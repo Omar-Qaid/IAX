@@ -2932,6 +2932,74 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("VendPackingSlipTrans");
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsPayable.VendParameters", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)")
+                        .HasDefaultValue("dat");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Key")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("Partition")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("VendPostingProfile")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("DataAreaId", "Key")
+                        .IsUnique();
+
+                    b.HasIndex("DataAreaId", "RecId")
+                        .IsUnique();
+
+                    b.ToTable("VendParameters", (string)null);
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsPayable.VendPurchOrderJour", b =>
                 {
                     b.Property<long>("RecId")

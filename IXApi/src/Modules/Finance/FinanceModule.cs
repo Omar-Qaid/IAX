@@ -127,6 +127,8 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<FluentValidation.IValidator<AccountsPayable.VendorDto>, AccountsPayable.VendorDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsPayable.VendorGroupDto>, AccountsPayable.VendorGroupDtoValidator>();
             services.AddScoped<AccountsPayable.IVendLedgerAccountsService, AccountsPayable.VendLedgerAccountsService>();
+            services.AddScoped<AccountsPayable.IVendParametersService, AccountsPayable.VendParametersService>();
+            services.AddScoped<FluentValidation.IValidator<AccountsPayable.VendParametersDto>, AccountsPayable.VendParametersDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<AccountsPayable.VendLedgerAccountsDto>, AccountsPayable.VendLedgerAccountsDtoValidator>();
             services.AddScoped<AccountsPayable.IVendTransService, AccountsPayable.VendTransService>();
             services.AddScoped<AccountsPayable.IVendTransReadService, AccountsPayable.VendTransService>();

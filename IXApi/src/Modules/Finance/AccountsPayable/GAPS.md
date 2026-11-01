@@ -35,7 +35,7 @@ cannot be verified goes under *Flagged uncertainties* rather than being guessed 
 | Price variance on credit notes | A credit amount differing from the original receipt cost is rejected with a named error. | The difference posts as a purchase price variance per the posting profile. | Variance calculation and posting. | `PurchReturnService`, `InventPosting` | Medium |
 | Pending invoice across several orders | A pending vendor invoice covering more than one purchase order is rejected with a named error. | One invoice may cover lines from several purchase orders. | Multi-order pending invoice composition. | `VendInvoiceInfoService` | Medium |
 | Invoice matching tolerances | Quantity matching to the product receipt is implemented via `VendInvoicePackingSlipQuantityMatch`. | Basic AP also supports price and total matching with configurable tolerances, and matching policy per vendor or item. | Price/total matching and tolerance configuration; matching policy setup. | `VendorInvoiceService`, `AccountsPayableParameters` (absent) | **High** |
-| Accounts payable parameters | No AP parameters entity or service. | `VendParameters` holds company-wide AP defaults (number sequences, matching policy, invoice defaults, posting controls). | The parameters table and its service. AR has `CustParameters`; AP has no counterpart. | `AccountsPayable` module root | **High** — asymmetric with AR and several other gaps depend on it |
+| Accounts payable parameters | `VendParameters` exists with the single-row-per-company shape of `CustParameters`, and holds the company's default posting profile, which vendor summary account resolution now reads. | `VendParameters` holds company-wide AP defaults (number sequences, matching policy, invoice defaults, posting controls). | The remaining defaults: matching policy and tolerances, invoice defaults, number sequence groups. Each is added with the flow that reads it — a setup field nothing reads is an invented one. Purchase order and trade agreement defaults are **not** missing from here: in D365 they live in `PurchParameters`. | `VendParameters/*`, `Common/Posting/SubledgerPostingSupport.cs` | ~~High~~ **Medium** — the table and the posting-profile default exist; the rest follows its consumers |
 | Payment proposal | Payments are entered and posted per invoice. | A payment proposal selects open invoices by due date, discount date or vendor and creates the payment lines. | The proposal generator. | `VendPaymentService` | **High** — core basic AP function |
 | Payment methods | No vendor method of payment setup. | `VendPaymModeTable` defines payment method, account, file format and posting behavior. | The entity and its setup. AR has `CustPaymMode`; AP has no counterpart. | `AccountsPayable/Payment` | **High** — asymmetric with AR |
 | Prepayments / prepayment invoices | Not present. | A prepayment is posted against a purchase order and applied to the final invoice. | Prepayment flow and application. | Purchase order, vendor invoice | Medium |
@@ -55,9 +55,11 @@ cannot be verified goes under *Flagged uncertainties* rather than being guessed 
 
 ## Flagged uncertainties
 
-- **Whether `VendParameters` is required for basic parity.** D365 has the table and AP setup depends
-  on it, but which of its fields are genuinely needed here is not established. Build only the fields
-  an implemented flow reads.
+- **`VendParameters` field names.** The table now exists with `VendPostingProfile`, named after the
+  receivable side's `CustParameters.CustPostingProfile`, which is the repository's convention. In
+  D365 metadata the field is believed to be `PostingProfile` on both tables, named after the EDT
+  rather than the EDT itself — **unverified against target metadata**. The remaining fields are
+  still built only when an implemented flow reads them.
 - **Purchase requisition and RFQ scope.** These are part of Procurement and sourcing rather than
   Accounts payable. Treated here as out of basic AP scope; confirm before building.
 - **Payment file formats.** Method-of-payment setup implies electronic payment file generation,
@@ -67,6 +69,7 @@ cannot be verified goes under *Flagged uncertainties* rather than being guessed 
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | `VendParameters` added (entity, configuration, DTO, validator, service, controller, migration `AddVendParameters`), holding the company's default vendor posting profile. `ResolveVendorSummaryAsync` now narrows `VendLedgerAccounts` to that profile before applying Table -> Group -> All, which is what the customer path has always done: without it, a company with two posting profiles resolved whichever rule matched first. A configured profile with no rules of its own still falls back to every rule, as on the receivable side. Covered by `Tests/VendParametersPostingProfileTests.cs`. |
 | 2026-11-01 | Posting now passes the vendor scope to inventory posting resolution, so an `InventPosting` rule configured for one vendor or vendor group is applied instead of silently falling back to the All rule. Fix is in `Common`. |
 | 2026-11-01 | File created from a source scan. Flagged the missing AP parameters and method-of-payment entities as asymmetries with AR, and foreign-currency support as the critical gap. |
 

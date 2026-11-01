@@ -488,6 +488,7 @@ public class PaymentReversalTests
                 typeof(CustParameters), typeof(CustLedgerAccounts),
                 typeof(VendTrans), typeof(VendTransOpen), typeof(VendSettlement), typeof(VendTable),
                 typeof(VendLedgerAccounts),
+                typeof(VendParameters),
                 typeof(LedgerJournalTable), typeof(LedgerJournalTrans), typeof(BankAccountTrans),
                 typeof(Ledger), typeof(FiscalCalendarPeriod), typeof(LedgerFiscalCalendarPeriod),
                 typeof(MainAccount), typeof(MainAccountLegalEntity), typeof(DimensionAttributeValueCombination),

@@ -9,7 +9,7 @@ counted as gaps.
 | Module | File | Highest-priority open gap |
 | --- | --- | --- |
 | General ledger | [GeneralLedger/GAPS.md](GeneralLedger/GAPS.md) | Journal tax calculation, and customer/vendor/bank journal line types |
-| Accounts payable | [AccountsPayable/GAPS.md](AccountsPayable/GAPS.md) | Foreign currency; no AP parameters or method-of-payment entity |
+| Accounts payable | [AccountsPayable/GAPS.md](AccountsPayable/GAPS.md) | Foreign currency; no method-of-payment entity; payment proposal |
 | Accounts receivable | [AccountsReceivable/GAPS.md](AccountsReceivable/GAPS.md) | Customer aging; exchange gain/loss on settlement |
 | Inventory | [Inventory/GAPS.md](Inventory/GAPS.md) | SQL Server verification; four unsupported inventory models |
 | Foundation | [Foundation/GAPS.md](Foundation/GAPS.md) | Sales tax reporting; payment-term methods; exchange rate adjustment |
