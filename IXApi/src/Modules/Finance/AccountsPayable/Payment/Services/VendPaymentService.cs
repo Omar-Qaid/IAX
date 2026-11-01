@@ -49,6 +49,13 @@ public sealed class VendPaymentService(IUnitOfWork work, ICurrentUserService use
             if (vendor == null) return await Fail("The vendor was not found in the selected company.", ct);
             if (vendor.Blocked is CustVendBlocked.All or CustVendBlocked.Payment)
                 return await Fail("Payments are blocked for this vendor.", ct);
+            // The method of payment: the vendor's own default applies when the request names none,
+            // as the free text invoice does with the customer's. An unknown method is refused
+            // rather than stored as a string pointing at nothing.
+            var paymMode = (input.PaymMode ?? vendor.PaymMode).Trim();
+            if (paymMode.Length > 0 && !await Db.Set<VendPaymModeTable>().AsNoTracking()
+                    .AnyAsync(x => x.DataAreaId == area && x.PaymMode == paymMode, ct))
+                return await Fail("The method of payment was not found in the selected company.", ct);
             if (bank == null || bank.LedgerDimension == 0 || bank.BankAccountStatus != BankAccountStatus.Active)
                 return await Fail("An active bank account with a ledger account is required.", ct);
             var ledger = await support.LoadLedgerContextAsync(area, date,
@@ -140,7 +147,7 @@ public sealed class VendPaymentService(IUnitOfWork work, ICurrentUserService use
                 Company = area, AccountType = LedgerJournalACType.Vend, LedgerDimension = vendorAccount.RecId, LedgerDimensionName = vendor.AccountNum,
                 AmountCurDebit = input.Amount, CurrencyCode = currency, OffsetAccountType = LedgerJournalACType.Bank, OffsetLedgerDimension = bank.LedgerDimension,
                 OffsetCompany = area, Txt = $"Payment to {vendor.AccountNum}", DocumentNum = journalNum, DocumentDate = date, VendTransId = payment.RecId,
-                MarkedInvoice = input.SettleInvoiceId ?? "", PaymMode = input.PaymMode ?? "", PaymReference = input.RequestId, RemainAmount = remaining };
+                MarkedInvoice = input.SettleInvoiceId ?? "", PaymMode = paymMode, PaymReference = input.RequestId, RemainAmount = remaining };
             Db.Add(journalLine);
             var entry = support.NewEntry(area, journalNum, voucher, date, ledger);
             Db.Add(entry);
@@ -162,7 +169,7 @@ public sealed class VendPaymentService(IUnitOfWork work, ICurrentUserService use
             Db.Add(new BankAccountTrans { DataAreaId = area, AccountId = bank.AccountId, TransDate = date, Voucher = voucher, Txt = journalLine.Txt,
                 LedgerTransType = LedgerTransType.Payment, CurrencyCode = currency, BankTransCurrencyCode = currency, AmountCur = -input.Amount,
                 AmountMst = -input.Amount, AmountReportingCurrency = -input.Amount, BankTransAmountCur = -input.Amount, LedgerDimension = bank.LedgerDimension,
-                SourceTableId = FinanceTableNumbers.LedgerJournalTrans, SourceRecId = journalLine.RecId, PaymentMode = input.PaymMode ?? "", PaymReference = input.RequestId });
+                SourceTableId = FinanceTableNumbers.LedgerJournalTrans, SourceRecId = journalLine.RecId, PaymentMode = paymMode, PaymReference = input.RequestId });
             await work.CompleteAsync(ct);
             await work.CommitTransactionAsync(ct);
             return new(200, new { journalNum, voucher, amount = input.Amount, unsettled = remaining }, "Vendor payment posted.");
