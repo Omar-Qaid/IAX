@@ -1,6 +1,7 @@
 # Finance modules — D365 F&O basic parity gap analysis
 
-Date: 2026-10-31. Branch `main` at `36c018bc`.
+Date: 2026-10-31. Branch `main` at `36c018bc`. **Revised 2026-11-01 at `f4439405`** — see
+§6, which re-verifies every open entry against the code and supersedes this header's commit.
 
 Scope: `IXApi/src/Modules/Finance` (Foundation, GeneralLedger, AccountsReceivable, AccountsPayable,
 Inventory, Common/Posting). **Basic D365 F&O only.** Advanced and optional features are excluded by
@@ -365,3 +366,107 @@ and it should be preserved.
   `BankTransType`) is generic CRUD only. `BankAccountTrans` is written correctly by both payment
   services, so there is no basic-scope gap there; statement handling is bank reconciliation, which
   is out of scope.
+
+---
+
+## 6. Revision 2026-11-01 — re-verification at `f4439405`
+
+Every open entry in §2 was re-checked against the code at `f4439405` rather than carried forward on
+this document's own "FIXED" annotations. Method and limits are unchanged: static reading plus grep,
+no build and no test run, so this revision makes no claim about test status either.
+
+### 6.1 Closed entries, confirmed in code
+
+Verified present and wired, not inferred from the annotations above: the account-structure tables
+with `AccountStructureValidator` reached from `SubledgerPostingSupport.LoadDimensionAsync`;
+`FiscalPeriodStatusTransition` with generic update sealed; `SalesChargePosting` and
+`PurchaseChargePosting`; Validate/Simulate; and the four main-account controls that have setup
+behind them. Gaps 1, 4, 6 and 9 of the §3 summary are closed.
+
+`FiscalPeriodStatusTransition` and the new year-end close are **consistent**: the transition machine
+deliberately refuses both to set and to leave `YearClosed`, deferring it to the close process. The
+apparent conflict with the gap-4 entry's "neither set nor left since year end close is out of scope"
+is wording that predates the close, not a defect.
+
+### 6.2 New entry — P1: year-end close exists, in a controller, and is out of basic scope
+
+From `2862b60e`. Three problems in one place, and a scope decision that is not ours to take.
+
+| | |
+|---|---|
+| **Existing** | `GeneralLedger/FiscalCalendar/Controllers/LedgerYearEndCloseController.cs` is 249 lines of posting logic in a controller, with no `Services/` or `Interfaces/` entry. It hand-builds `GeneralJournalEntry` (line 122) and `SubledgerVoucherGeneralJournalEntry` (line 134). It *does* take `SubledgerPostingSupport.LockAsync` (line 28) and use `SubledgerPostingSupport.AccountEntry` (lines 140, 179, 217), so this is not a full bypass of the engine — entry construction is what sits outside it. `GeneralLedger/JournalEntry/Controllers/LedgerFinancialStatementsController.cs` has the same shape: 80 lines of balance derivation in the controller, returning anonymous objects, with no service or interface. |
+| **Expected** | The `d365-parity` rules list year-end close as out of basic scope; require the seven-folder layout; and require that `GeneralJournalEntry`/`GeneralJournalAccountEntry` are never hand-built outside `SubledgerPostingSupport`. |
+| **Affected** | Both controllers; `Common/Posting/SubledgerPostingSupport.cs` would need a close-voucher path if the feature stays. |
+| **Decision needed** | Either year-end close is in scope now — in which case it belongs in a service with an interface and tests, constructing its entries through the engine — or it comes out. Both files were left untouched pending that call. |
+
+### 6.3 New entry — P2: no customer or vendor open-balance read
+
+| | |
+|---|---|
+| **Existing** | `CustTransController` and `VendTransController` return paged transaction lists (`VendTransPageDto` is `Page, PageSize, TotalCount, Rows`). No endpoint aggregates open balances or aging, and `CustTransOpen` / `VendTransOpen` have no read surface at all. |
+| **Expected** | Basic scope names "customer transactions **and open balances**" for both subledgers. The data is written correctly by the invoice, return and payment paths; it cannot be read as a balance. |
+| **Affected** | `AccountsReceivable/CustTrans/*`, `AccountsPayable/VendTrans/*`. |
+
+### 6.4 Still open, verified unchanged
+
+| Entry | Evidence at `f4439405` |
+|---|---|
+| **P1** No pending vendor invoice | A `VendInvoiceInfo` search across `src` hits only `APTables.md` and `CyclePurchorder.md`. |
+| **P2** No AR/AP payment or settlement reversal | One `Revers*` hit in both payment and settlement folders: `CustSettlement.cs:92` `CanBeReversed`, which nothing reads. `CustPaymentService.cs:176` still deletes the `CustTransOpen` row on full settlement. The most consequential P2 — a mis-settled payment has no correction path. |
+| **P2** No cash discount | No file matches `*CashDisc*`. The `CashDisc*` fields on `SalesTable`/`PurchTable`/`CustTrans` are written by the order services and read by nothing. |
+| **P2** Period access by module/user group | `LedgerFiscalCalendarPeriodDto.cs:14-18` still hard-codes five `"Open"` properties; `SubledgerPostingSupport.cs:47` still checks the single status only. |
+| **P2** No sales tax settlement | `TaxJournalTrans` still has entity, configuration and DTO and no service or controller. Nothing reads `TaxTrans` to settle, and no settlement stamp is written. |
+| **P3** `MarkupTrans.IsDeleted` shadow | `MarkupTrans.cs:131` unchanged. Now that charges post, a soft-deleted charge row is visible to the posting paths — worth doing sooner than its priority suggests. |
+| **P3** Free text invoice | `AccountsReceivable/Invoice/Services` holds only `SalesInvoiceService` and `SalesChargePosting`; `Controllers` only `SalesInvoiceController`. The validator is still registered at `FinanceModule.cs:82`, and the only non-definition read is `SalesDeliveryAddressCleanup.cs:39`. |
+| **P3** `SpecTrans` unused | No service reads or writes it; AP has none at all. |
+| **P3** No inventory close cancellation | `InventCloseService.cs:20` still states close reversal is unsupported; no `Cancel` method. The backdated-close refusal at line 76 limits the exposure. |
+| **P3** Main account / `LedgerParameters` remainders | Unchanged and still blocked on setup that does not exist, not on effort. Left refused rather than guessed, which is the correct state. |
+
+### 6.5 Architectural deviations — one resolved, one open
+
+- **Resolved.** `InventCloseService.LoadLedgerContextAsync` (line 347) now delegates to
+  `Support.LoadLedgerContextAsync` and only wraps the result in a local record, so period rules can
+  no longer drift between the two. §2's deviation 1 is closed.
+- **Open.** `VendSettlement` (line 18) and `VendSettlementConfiguration` (line 41) are still both
+  declared inside `AccountsPayable/Payment/Entities/VendTransOpen.cs`.
+- **New.** The two controllers in §6.2 are a third instance of the same class of problem: process
+  logic outside a service.
+
+### 6.6 Revised priority summary
+
+| # | Gap | Priority | Area |
+|---|---|---|---|
+| 5 | No pending vendor invoice | **P1** | AP |
+| 15 | Year-end close in a controller, and out of basic scope | **P1 (decision)** | GL |
+| 8 | No settlement or payment reversal | **P2** | AR / AP |
+| 16 | No customer/vendor open-balance read | **P2** | AR / AP |
+| 7 | No cash discount | P2 | AR / AP |
+| 5a | Period access by module and user group | P2 | GL |
+| 10 | No sales tax settlement | P2 (priority UNCERTAIN) | Tax |
+| 2 | `MarkupTrans.IsDeleted` shadow | P3 (raised in practice) | Foundation |
+| 11 | Free text invoice entities with no process | P3 (scope UNCERTAIN) | AR |
+| 12 | `SpecTrans` marking unused | P3 | AR / AP |
+| 13 | No inventory close cancellation | P3 | Inventory |
+| 2, 3 | Main account / `LedgerParameters` remainders | P3, blocked | GL |
+| 14 | Misplaced `VendSettlement`; controller-resident logic | P3 | AP / GL |
+
+Suggested order: **15** first, because it is a decision rather than work and it governs whether the
+year-end code is kept, moved or removed; then **5**, then **8** and **16** together since both touch
+the same subledger read and correction surface.
+
+### 6.7 Evidence limits carried forward
+
+§5 stands in full. Unchanged: no target D365 version, so `VendInvoiceInfoTable`, `CashDisc` and the
+module period-access tables are shaped from Microsoft's published model and must be confirmed before
+a migration. `DebCredBalanceDemand`'s members and basis,
+`AllowMultipleTransactionsWithinOneVoucher`'s grouping rule, and the exact `CheckVoucher` /
+`CheckContinuous` / `CheckJournalizing` semantics remain **UNCERTAIN**. Whether sales tax settlement
+and free text invoice belong to the agreed basic scope is still a judgment call, not an established
+fact.
+
+### 6.8 A note on what this pass did not find
+
+No new accounting defect. Every gap above is something absent or unenforced, not something posting
+wrongly — with one exception worth stating plainly: the `MarkupTrans` soft-delete shadow became
+reachable the moment charge posting shipped, so it moved from latent to live without its priority
+changing. The P1 that matters most is still a decision (§6.2), not a build.
