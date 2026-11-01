@@ -131,6 +131,7 @@ public class LedgerJournalPostingTests
     // A foreign transaction currency is stopped by the exchange-rate gate in the setup check,
     // before reaching the scope guard: either way the journal is refused, never approximated.
     [InlineData("currency", "no exchange rate type is configured")]
+    [InlineData("reporting", "reporting-currency conversion is not supported")]
     [InlineData("tax", "journal tax calculation")]
     [InlineData("company", "intercompany")]
     [InlineData("offsetAccountType", "only the Ledger offset account type")]
@@ -148,6 +149,7 @@ public class LedgerJournalPostingTests
         {
             case "accountType": debit.AccountType = LedgerJournalACType.Cust; break;
             case "currency": debit.CurrencyCode = "USD"; credit.CurrencyCode = "USD"; break;
+            case "reporting": db.Set<Ledger>().Local.Single().ReportingCurrency = "USD"; break;
             case "tax": debit.TaxCode = "VAT15"; break;
             // Both lines carry the foreign company so the voucher still balances within its group
             // and the intercompany guard is what refuses it.

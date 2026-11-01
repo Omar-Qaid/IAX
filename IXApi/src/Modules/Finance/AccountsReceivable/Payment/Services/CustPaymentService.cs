@@ -82,7 +82,7 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
                         && x.SourceTableId == FinanceTableNumbers.LedgerJournalTrans && x.SourceRecId == previous.RecId, ct);
                     if (previous.LedgerDimensionName != input.CustAccount || previous.AmountCurCredit != input.Amount
                         || priorBank == null || previous.OffsetLedgerDimension != priorBank.LedgerDimension
-                        || (priorMovement != null && priorMovement.AccountId != input.BankAccountId)
+                        || priorMovement?.AccountId != input.BankAccountId
                         || (input.PaymentDate.HasValue && previous.TransDate.Date != input.PaymentDate.Value.Date)
                         || (input.PaymMode != null && previous.PaymMode != input.PaymMode)
                         || (input.SettleInvoiceId != null && previous.MarkedInvoice != input.SettleInvoiceId))
@@ -131,7 +131,8 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
             var openInvoices = await (from open in Db.Set<CustTransOpen>()
                                       join trans in Db.Set<CustTrans>() on open.RefRecId equals trans.RecId
                                       where open.DataAreaId == area && open.AccountNum == customer.AccountNum
-                                          && trans.DataAreaId == area && open.AmountCur > 0
+                                          && trans.DataAreaId == area && trans.AccountNum == customer.AccountNum
+                                          && open.AmountCur > 0
                                           && trans.CurrencyCode == currency
                                       select new { Open = open, Trans = trans }).ToListAsync(ct);
             if (!string.IsNullOrWhiteSpace(input.SettleInvoiceId))
@@ -140,6 +141,10 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
                 if (openInvoices.Count == 0)
                     return await Fail(422, $"Invoice '{input.SettleInvoiceId}' has no open balance for this customer.", ct);
             }
+            if (openInvoices.Any(x => x.Open.AmountCur != x.Trans.AmountCur - x.Trans.SettleAmountCur
+                || x.Open.AmountMst != x.Trans.AmountMst - x.Trans.SettleAmountMst
+                || x.Open.ReportingCurrencyAmount != x.Trans.ReportingCurrencyAmount - x.Trans.SettleAmountMst))
+                return await Fail(422, "Customer open balances require reconciliation before settlement.", ct);
             var remaining = input.Amount;
             var settled = new List<object>();
             var settlementVoucher = string.Empty;

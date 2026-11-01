@@ -27,6 +27,10 @@ internal sealed class LedgerJournalPosting(DbContext db)
         if (header.SystemBlocked == NoYes.Yes) throw new SubledgerPostingException("The journal is system blocked.");
         if (header.ReverseEntry == NoYes.Yes)
             throw new SubledgerPostingException("Automatic reversal journals are not supported; post the reversal as its own journal.");
+        var ledger = await db.Set<Entities.Ledger>().AsNoTracking().FirstAsync(x => x.DataAreaId == area, ct);
+        if (!string.IsNullOrWhiteSpace(ledger.ReportingCurrency) &&
+            !string.Equals(ledger.ReportingCurrency.Trim(), ledger.AccountingCurrency.Trim(), StringComparison.OrdinalIgnoreCase))
+            throw new SubledgerPostingException("General journal reporting-currency conversion is not supported; posting requires the reporting and accounting currencies to match.");
 
         var setup = await new LedgerJournalSetupCheck(db).CheckAsync(area, header.RecId, ct)
             ?? throw new SubledgerPostingException("The journal setup could not be verified.");
@@ -45,7 +49,6 @@ internal sealed class LedgerJournalPosting(DbContext db)
         var arithmetic = LedgerVoucherBalanceCheck.Check(lines);
         if (arithmetic.Count > 0) throw new SubledgerPostingException(arithmetic[0]);
 
-        var ledger = await db.Set<Entities.Ledger>().AsNoTracking().FirstAsync(x => x.DataAreaId == area, ct);
         var accountingCurrency = ledger.AccountingCurrency;
         foreach (var line in lines) EnsureInScope(area, header, line, accountingCurrency);
         await EnsureManualEntryAllowedAsync(area, lines, ct);

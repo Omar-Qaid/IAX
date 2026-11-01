@@ -368,6 +368,12 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
             if (selection.Count == 0) return await Fail(422, "There is nothing to credit: receive returned goods first, or the return is fully credited.", ct);
 
             var ledger = await support.LoadLedgerContextAsync(area, date, ct);
+            if (string.IsNullOrWhiteSpace(order.CurrencyCode) || string.IsNullOrWhiteSpace(ledger.Ledger.AccountingCurrency)
+                || !string.Equals(order.CurrencyCode.Trim(), ledger.Ledger.AccountingCurrency.Trim(), StringComparison.OrdinalIgnoreCase))
+                return await Fail(422, "Credit note posting requires the return order currency to equal the ledger accounting currency; foreign-currency conversion is not supported.", ct);
+            if (!string.IsNullOrWhiteSpace(ledger.Ledger.ReportingCurrency)
+                && !string.Equals(ledger.Ledger.ReportingCurrency.Trim(), ledger.Ledger.AccountingCurrency.Trim(), StringComparison.OrdinalIgnoreCase))
+                return await Fail(422, "Credit note posting requires the reporting currency to equal the accounting currency; reporting-currency conversion is not supported.", ct);
             var customerAccount = await support.ResolveCustomerSummaryAsync(area, order.PostingProfile, customer, ct);
             var invoiceId = (await numbers.NextAsync("CustInvoiceJour", area, ct)).Code;
             var entry = support.NewEntry(area, invoiceId, invoiceId, date, ledger);

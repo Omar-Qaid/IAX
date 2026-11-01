@@ -1,4 +1,5 @@
 using IAX.IXApi.Modules.Finance.GeneralLedger.JournalEntry;
+using IAX.IXApi.Modules.Finance.GeneralLedger.Bank;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Infrastructure.Persistence.Services;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -16,6 +17,8 @@ public class PostedLedgerApiTests
         await RejectWrites<GeneralJournalEntry>(new GeneralJournalEntryService(null!));
         await RejectWrites<GeneralJournalAccountEntry>(new GeneralJournalAccountEntryService(null!));
         await RejectWrites<SubledgerVoucherGeneralJournalEntry>(new SubledgerVoucherGeneralJournalEntryService(null!));
+        await RejectWrites<BankAccountTrans>(new BankAccountTransService(null!));
+        await RejectWrites<BankAccountStatement>(new BankAccountStatementService(null!));
 
         static async Task RejectWrites<T>(IBaseService<T> service) where T : class, new()
         {
@@ -40,7 +43,8 @@ public class PostedLedgerApiTests
         var actions = provider.GetRequiredService<IActionDescriptorCollectionProvider>()
             .ActionDescriptors.Items.OfType<ControllerActionDescriptor>().ToList();
         foreach (var controller in new[] { typeof(GeneralJournalEntryController),
-            typeof(GeneralJournalAccountEntryController), typeof(SubledgerVoucherGeneralJournalEntryController) })
+            typeof(GeneralJournalAccountEntryController), typeof(SubledgerVoucherGeneralJournalEntryController),
+            typeof(BankAccountTransController), typeof(BankAccountStatementController) })
         {
             var names = actions.Where(x => x.ControllerTypeInfo.AsType() == controller)
                 .Select(x => x.ActionName).ToHashSet();

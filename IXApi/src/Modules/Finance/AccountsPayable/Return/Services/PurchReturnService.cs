@@ -360,6 +360,12 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                 await support.LockAsync($"PurchTaxCredit:{area}:{originalLineId}", ct);
 
             var context = await support.LoadLedgerContextAsync(area, date, ct);
+            if (string.IsNullOrWhiteSpace(order.CurrencyCode) || string.IsNullOrWhiteSpace(context.Ledger.AccountingCurrency)
+                || !string.Equals(order.CurrencyCode.Trim(), context.Ledger.AccountingCurrency.Trim(), StringComparison.OrdinalIgnoreCase))
+                return await Fail(422, "Vendor credit note posting requires the return order currency to equal the ledger accounting currency; foreign-currency conversion is not supported.", ct);
+            if (!string.IsNullOrWhiteSpace(context.Ledger.ReportingCurrency)
+                && !string.Equals(context.Ledger.ReportingCurrency.Trim(), context.Ledger.AccountingCurrency.Trim(), StringComparison.OrdinalIgnoreCase))
+                return await Fail(422, "Vendor credit note posting requires the reporting currency to equal the accounting currency; reporting-currency conversion is not supported.", ct);
             var vendorAccount = await support.ResolveVendorSummaryAsync(area, vendor, ct);
             var internalId = (await numbers.NextAsync("VendInvoiceJour", area, ct)).Code;
             var entry = support.NewEntry(area, internalId, internalId, date, context);

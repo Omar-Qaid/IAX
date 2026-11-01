@@ -337,6 +337,46 @@ public sealed class InventoryCycleTests
     // ---- Sales order cycle (CycleSalesorder.md / ARTables.md Ãƒâ€šÃ‚Â§14 state table) -------------------
 
     [Fact]
+    public async Task Sales_invoice_rejects_unconverted_currencies_before_creating_postings()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedSalesMasterData(db);
+        var order = new SalesTable
+        {
+            DataAreaId = "dat", SalesId = "SO-FX", CustAccount = "C-001", InvoiceAccount = "C-001",
+            CurrencyCode = "USD", SalesStatus = SalesStatus.Backorder
+        };
+        db.Set<SalesTable>().Add(order);
+        db.Set<SalesLine>().Add(new SalesLine
+        {
+            DataAreaId = "dat", SalesId = order.SalesId, LineNum = 1, ItemId = "ITEM-001",
+            SalesQty = 1, QtyOrdered = 1, RemainSalesFinancial = 1, RemainSalesPhysical = 0,
+            LineAmount = 100, CurrencyCode = "USD"
+        });
+        await db.SaveChangesAsync();
+        var invoices = new SalesInvoiceService(new TestUnitOfWork(db), new TestCompany(), Sequence());
+
+        var foreign = await invoices.PostAsync(order.RecId, new SalesInvoicePostDto(new DateTime(2026, 10, 7), "fx-1"), default);
+        Assert.Equal(422, foreign.StatusCode);
+        Assert.Contains("foreign-currency conversion", foreign.Message);
+        Assert.Empty(await db.Set<CustInvoiceJour>().ToListAsync());
+        Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
+
+        order = await db.Set<SalesTable>().SingleAsync();
+        order.CurrencyCode = "SAR";
+        var ledger = await db.Set<Ledger>().SingleAsync();
+        ledger.ReportingCurrency = "USD";
+        await db.SaveChangesAsync();
+        var reporting = await invoices.PostAsync(order.RecId, new SalesInvoicePostDto(new DateTime(2026, 10, 7), "fx-2"), default);
+        Assert.Equal(422, reporting.StatusCode);
+        Assert.Contains("reporting-currency conversion", reporting.Message);
+        Assert.Empty(await db.Set<CustInvoiceJour>().ToListAsync());
+        Assert.Empty(await db.Set<GeneralJournalEntry>().ToListAsync());
+    }
+
+    [Fact]
     public async Task Sales_order_partial_delivery_partial_invoice_and_payment_reconcile()
     {
         await using var fixture = await Fixture.CreateAsync();
@@ -459,6 +499,38 @@ public sealed class InventoryCycleTests
         var payments = new CustPaymentService(work, company, Sequence());
         Assert.Equal(400, (await payments.PostAsync(new CustPaymentPostDto("C-001", "BANK-1", 1150m,
             RequestId: new string('x', FieldLengths.PaymReference + 1)), default)).StatusCode);
+        var otherCustomerInvoice = new CustTrans
+        {
+            DataAreaId = "dat", AccountNum = "C-OTHER", Invoice = "OTHER-INV", CurrencyCode = "SAR",
+            AmountCur = 50m, AmountMst = 50m, ReportingCurrencyAmount = 50m,
+            TransDate = new DateTime(2026, 10, 1), DueDate = new DateTime(2026, 10, 31)
+        };
+        db.Add(otherCustomerInvoice);
+        await db.SaveChangesAsync();
+        var mislinkedOpen = new CustTransOpen
+        {
+            DataAreaId = "dat", AccountNum = "C-001", RefRecId = otherCustomerInvoice.RecId,
+            AmountCur = 50m, AmountMst = 50m, ReportingCurrencyAmount = 50m,
+            TransDate = otherCustomerInvoice.TransDate, DueDate = otherCustomerInvoice.DueDate
+        };
+        db.Add(mislinkedOpen);
+        await db.SaveChangesAsync();
+        Assert.Equal(422, (await payments.PostAsync(new CustPaymentPostDto("C-001", "BANK-1", 50m,
+            new DateTime(2026, 10, 15), "BANK", "OTHER-INV", "pay-cross-customer"), default)).StatusCode);
+        mislinkedOpen = await db.Set<CustTransOpen>().SingleAsync(x => x.RecId == mislinkedOpen.RecId);
+        db.Remove(mislinkedOpen);
+        otherCustomerInvoice = await db.Set<CustTrans>().SingleAsync(x => x.RecId == otherCustomerInvoice.RecId);
+        db.Remove(otherCustomerInvoice);
+        await db.SaveChangesAsync();
+        var mismatchedOpen = await db.Set<CustTransOpen>().OrderBy(x => x.RecId).FirstAsync();
+        mismatchedOpen.AmountMst += 1m;
+        await db.SaveChangesAsync();
+        Assert.Equal(422, (await payments.PostAsync(new CustPaymentPostDto("C-001", "BANK-1", 1150m,
+            new DateTime(2026, 10, 15), "BANK", null, "pay-mismatch"), default)).StatusCode);
+        Assert.Empty(await db.Set<BankAccountTrans>().ToListAsync());
+        mismatchedOpen = await db.Set<CustTransOpen>().SingleAsync(x => x.RecId == mismatchedOpen.RecId);
+        mismatchedOpen.AmountMst -= 1m;
+        await db.SaveChangesAsync();
         var paid = await payments.PostAsync(new CustPaymentPostDto("C-001", "BANK-1", 1150m, new DateTime(2026, 10, 15), "BANK", null, "pay-1"), default);
         Assert.Equal(200, paid.StatusCode);
         Assert.Empty(await db.Set<CustTransOpen>().ToListAsync());
@@ -474,6 +546,11 @@ public sealed class InventoryCycleTests
         Assert.Equal(422, (await payments.PostAsync(new CustPaymentPostDto("C-001", "BANK-1", 1151m, RequestId: "pay-1"), default)).StatusCode);
         Assert.Equal(422, (await payments.PostAsync(new CustPaymentPostDto("OTHER", "BANK-1", 1150m, RequestId: "pay-1"), default)).StatusCode);
         Assert.Single(await db.Set<BankAccountTrans>().ToListAsync());
+        db.Set<BankAccountTrans>().Remove(await db.Set<BankAccountTrans>().SingleAsync());
+        await db.SaveChangesAsync();
+        Assert.Equal(422, (await payments.PostAsync(new CustPaymentPostDto("C-001", "BANK-1", 1150m,
+            RequestId: "pay-1"), default)).StatusCode);
+        Assert.Single(await db.Set<LedgerJournalTable>().ToListAsync());
     }
 
     [Fact]
@@ -567,6 +644,26 @@ public sealed class InventoryCycleTests
         Assert.Equal(120m, sum.PhysicalValue);
 
         // Credit note: revenue 300 + VAT 45 reversed; received goods financially restored at 120.
+        rma = await db.Set<SalesTable>().SingleAsync(x => x.RecId == rma.RecId);
+        rma.CurrencyCode = "USD";
+        await db.SaveChangesAsync();
+        var rejectedCredit = await returns.CreditAsync(rma.RecId,
+            new CustCreditNoteDto(new DateTime(2026, 10, 21), "cn-fx"), default);
+        Assert.Equal(422, rejectedCredit.StatusCode);
+        Assert.Empty(await db.Set<CustInvoiceJour>().Where(x => x.SalesId == rma.SalesId).ToListAsync());
+        rma = await db.Set<SalesTable>().SingleAsync(x => x.RecId == rma.RecId);
+        rma.CurrencyCode = "SAR";
+        var creditLedger = await db.Set<Ledger>().SingleAsync();
+        creditLedger.ReportingCurrency = "USD";
+        await db.SaveChangesAsync();
+        var rejectedReporting = await returns.CreditAsync(rma.RecId,
+            new CustCreditNoteDto(new DateTime(2026, 10, 21), "cn-reporting"), default);
+        Assert.Equal(422, rejectedReporting.StatusCode);
+        Assert.Empty(await db.Set<CustInvoiceJour>().Where(x => x.SalesId == rma.SalesId).ToListAsync());
+        rma = await db.Set<SalesTable>().SingleAsync(x => x.RecId == rma.RecId);
+        creditLedger = await db.Set<Ledger>().SingleAsync();
+        creditLedger.ReportingCurrency = "SAR";
+        await db.SaveChangesAsync();
         var credit = await returns.CreditAsync(rma.RecId, new CustCreditNoteDto(new DateTime(2026, 10, 21), "cn-1"), default);
         Assert.Equal(200, credit.StatusCode);
         var note = await db.Set<CustInvoiceJour>().SingleAsync(x => x.SalesId == rma.SalesId);
@@ -631,6 +728,23 @@ public sealed class InventoryCycleTests
         Assert.Equal(90m, sum.PhysicalInvent);
         Assert.Equal(10m, sum.Deducted);
         Assert.Equal(0m, sum.OnOrder);
+        var vendorCreditLedger = await db.Set<Ledger>().SingleAsync();
+        vendorCreditLedger.ReportingCurrency = "USD";
+        await db.SaveChangesAsync();
+        Assert.Equal(422, (await returns.CreditAsync(ret.RecId,
+            new VendCreditNoteDto("VCN-FX", new DateTime(2026, 10, 6)), default)).StatusCode);
+        Assert.Empty(await db.Set<VendInvoiceJour>().Where(x => x.PurchId == ret.PurchId).ToListAsync());
+        vendorCreditLedger = await db.Set<Ledger>().SingleAsync();
+        vendorCreditLedger.ReportingCurrency = "SAR";
+        ret = await db.Set<PurchTable>().SingleAsync(x => x.RecId == ret.RecId);
+        ret.CurrencyCode = "USD";
+        await db.SaveChangesAsync();
+        Assert.Equal(422, (await returns.CreditAsync(ret.RecId,
+            new VendCreditNoteDto("VCN-FOREIGN", new DateTime(2026, 10, 6)), default)).StatusCode);
+        Assert.Empty(await db.Set<VendInvoiceJour>().Where(x => x.PurchId == ret.PurchId).ToListAsync());
+        ret = await db.Set<PurchTable>().SingleAsync(x => x.RecId == ret.RecId);
+        ret.CurrencyCode = "SAR";
+        await db.SaveChangesAsync();
         Assert.Equal(200, (await returns.CreditAsync(ret.RecId, new VendCreditNoteDto("VCN-1", new DateTime(2026, 10, 6)), default)).StatusCode);
 
         sum = await db.Set<InventSum>().SingleAsync();

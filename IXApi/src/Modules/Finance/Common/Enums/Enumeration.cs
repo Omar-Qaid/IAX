@@ -580,7 +580,9 @@ namespace IAX.IXApi.Modules.Finance.Common
     {
         SalesInvoice = 1,
         CustomerPayment = 2,
-        General = 3
+        General = 3,
+        YearEndClosing = 4,
+        YearEndOpening = 5
     }
     public enum FiscalYearStatus : byte
     {

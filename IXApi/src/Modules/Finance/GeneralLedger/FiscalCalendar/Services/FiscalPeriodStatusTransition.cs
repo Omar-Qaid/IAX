@@ -8,8 +8,8 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.FiscalCalendar;
 /// reopened; do not use it as the ordinary month end switch."
 ///
 /// Open and On hold convert into each other, and either may be permanently closed. Closed is
-/// terminal. Year closed is produced by the year end close process, which is not implemented, so
-/// it is neither set nor left from here.
+/// terminal. Year closed is produced by the year end close process, so
+/// it is neither set nor left from this manual status transition.
 /// </summary>
 public static class FiscalPeriodStatusTransition
 {

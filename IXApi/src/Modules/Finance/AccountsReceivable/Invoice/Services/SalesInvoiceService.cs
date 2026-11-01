@@ -123,6 +123,15 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
             if (selection.Count == 0) return await Fail(422, "There is no delivered, uninvoiced quantity to invoice.", ct);
 
             var ledger = await support.LoadLedgerContextAsync(area, date, ct);
+            // This posting path writes transaction, accounting, and reporting amounts equally.
+            // Until monetary exchange-rate conversion is supported, reject currency combinations
+            // that would silently misstate the customer, tax, and ledger balances.
+            if (string.IsNullOrWhiteSpace(order.CurrencyCode) || string.IsNullOrWhiteSpace(ledger.Ledger.AccountingCurrency)
+                || !string.Equals(order.CurrencyCode.Trim(), ledger.Ledger.AccountingCurrency.Trim(), StringComparison.OrdinalIgnoreCase))
+                return await Fail(422, "Sales invoice posting requires an order in the ledger accounting currency; foreign-currency conversion is not supported.", ct);
+            if (!string.IsNullOrWhiteSpace(ledger.Ledger.ReportingCurrency)
+                && !string.Equals(ledger.Ledger.ReportingCurrency.Trim(), ledger.Ledger.AccountingCurrency.Trim(), StringComparison.OrdinalIgnoreCase))
+                return await Fail(422, "Sales invoice posting requires the reporting currency to equal the accounting currency; reporting-currency conversion is not supported.", ct);
             var customerAccount = await support.ResolveCustomerSummaryAsync(area, order.PostingProfile, customer, ct);
             var invoiceId = (await _numbers.NextAsync("CustInvoiceJour", area, ct)).Code;
             var entry = support.NewEntry(area, invoiceId, invoiceId, date, ledger);

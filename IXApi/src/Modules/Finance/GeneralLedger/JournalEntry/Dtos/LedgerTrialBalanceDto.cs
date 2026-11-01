@@ -12,7 +12,11 @@ public sealed record LedgerTrialBalanceLineDto(
     decimal Debit,
     decimal Credit,
     decimal DebitBalance,
-    decimal CreditBalance);
+    decimal CreditBalance)
+{
+    public decimal OpeningDebit { get; init; }
+    public decimal OpeningCredit { get; init; }
+}
 
 /// <summary>
 /// Trial balance of posted accounting for one ledger, accounting-date range and posting layer.

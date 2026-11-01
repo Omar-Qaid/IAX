@@ -31,14 +31,22 @@ public sealed class LedgerTrialBalanceService(IUnitOfWork unitOfWork, ICurrentUs
 
         var ledger = await Db.Set<Entities.Ledger>().AsNoTracking().FirstOrDefaultAsync(x => x.DataAreaId == area, ct);
         if (ledger == null) return (null, "A ledger is required for the selected company.");
+        var fiscalYear = await Db.Set<FiscalCalendarYear>().AsNoTracking()
+            .FirstOrDefaultAsync(x => x.FiscalCalendar == ledger.FiscalCalendar && x.StartDate <= start && x.EndDate >= start, ct);
+        var hasOpeningTransfer = fiscalYear != null && await Db.Set<GeneralJournalEntry>().AsNoTracking().AnyAsync(x =>
+            x.Ledger == ledger.RecId && x.FiscalCalendarYear == fiscalYear.RecId &&
+            x.JournalCategory == LedgerJournalCategory.YearEndOpening && x.PostingLayer == postingLayer, ct);
 
         var rows = await (from line in Db.Set<GeneralJournalAccountEntry>().AsNoTracking()
                           join entry in Db.Set<GeneralJournalEntry>().AsNoTracking() on line.GeneralJournalEntry equals entry.RecId
                           where entry.Ledger == ledger.RecId && entry.PostingLayer == postingLayer
-                              && entry.AccountingDate >= start && entry.AccountingDate <= end
-                          select new { line.MainAccount, line.LedgerAccount, line.AccountingCurrencyAmount })
+                              && entry.AccountingDate <= end
+                          select new { line.MainAccount, line.LedgerAccount, line.AccountingCurrencyAmount,
+                              entry.AccountingDate, entry.JournalCategory })
             .ToListAsync(ct);
 
+        if (hasOpeningTransfer)
+            rows = rows.Where(x => x.AccountingDate >= fiscalYear!.StartDate.Date).ToList();
         var accountIds = rows.Select(x => x.MainAccount).Distinct().ToList();
         var accounts = await Db.Set<MainAccount>().AsNoTracking()
             .Where(x => accountIds.Contains(x.RecId))
@@ -49,15 +57,24 @@ public sealed class LedgerTrialBalanceService(IUnitOfWork unitOfWork, ICurrentUs
             .Select(group =>
             {
                 var account = accounts.FirstOrDefault(x => x.RecId == group.Key);
-                var debit = group.Where(x => x.AccountingCurrencyAmount > 0).Sum(x => x.AccountingCurrencyAmount);
-                var credit = -group.Where(x => x.AccountingCurrencyAmount < 0).Sum(x => x.AccountingCurrencyAmount);
-                var net = debit - credit;
+                var opening = group.Where(x => x.AccountingDate < start ||
+                    (x.AccountingDate == start && x.JournalCategory == LedgerJournalCategory.YearEndOpening))
+                    .Sum(x => x.AccountingCurrencyAmount);
+                var period = group.Where(x => x.AccountingDate >= start &&
+                    !(x.AccountingDate == start && x.JournalCategory == LedgerJournalCategory.YearEndOpening)).ToList();
+                var debit = period.Where(x => x.AccountingCurrencyAmount > 0).Sum(x => x.AccountingCurrencyAmount);
+                var credit = -period.Where(x => x.AccountingCurrencyAmount < 0).Sum(x => x.AccountingCurrencyAmount);
+                var net = opening + debit - credit;
                 return new LedgerTrialBalanceLineDto(
                     account?.MainAccountId ?? group.First().LedgerAccount,
                     account?.Name ?? string.Empty,
                     debit, credit,
                     net > 0 ? net : 0m,
-                    net < 0 ? -net : 0m);
+                    net < 0 ? -net : 0m)
+                {
+                    OpeningDebit = opening > 0 ? opening : 0m,
+                    OpeningCredit = opening < 0 ? -opening : 0m
+                };
             })
             .OrderBy(x => x.MainAccountId, StringComparer.Ordinal)
             .ToList();

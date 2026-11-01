@@ -91,7 +91,10 @@ public class LedgerTrialBalanceTests
 
         var (february, _) = await service.GetAsync(new DateTime(2026, 2, 1), new DateTime(2026, 2, 28),
             CurrentToOperationsPostingLayer.Current, default);
-        Assert.Equal(500m, february!.TotalDebitBalance);
+        Assert.Equal(131000m, february!.TotalDebitBalance);
+        Assert.Equal(131000m, february.Lines.Sum(x => x.OpeningDebit));
+        Assert.Equal(131000m, february.Lines.Sum(x => x.OpeningCredit));
+        Assert.Equal(500m, february.TotalDebit);
         Assert.True(february.Balanced);
 
         var (adjustment, _) = await service.GetAsync(new DateTime(2026, 1, 1), new DateTime(2026, 1, 31),
