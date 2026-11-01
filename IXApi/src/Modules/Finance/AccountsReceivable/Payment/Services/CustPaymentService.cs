@@ -255,7 +255,9 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
         DataAreaId = area, AccountNum = account, TransDate = date, SettlementVoucher = settlementVoucher, TransCompany = area,
         TransType = type, TransRecId = transRecId, TransOpen = transOpen, OffsetRecId = offsetRecId,
         OffsetAccountNum = account, OffsetCompany = area, OffsetTransVoucher = offsetVoucher,
-        SettleAmountCur = amount, SettleAmountMst = amount, SettleAmountReporting = amount, DueDate = date, ClosedDate = date
+        SettleAmountCur = amount, SettleAmountMst = amount, SettleAmountReporting = amount, DueDate = date, ClosedDate = date,
+        // Marks the match as in force, so CustSettlementReversalService can reverse it once.
+        CanBeReversed = NoYes.Yes
     };
 
     private async Task<CustPaymentResult> Fail(int status, string message, CancellationToken ct)

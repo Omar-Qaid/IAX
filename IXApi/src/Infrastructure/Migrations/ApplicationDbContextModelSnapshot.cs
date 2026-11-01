@@ -3121,6 +3121,9 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
+                    b.Property<int>("CanBeReversed")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -3176,7 +3179,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasIndex("PaymentTransRecId");
 
-                    b.HasIndex("DataAreaId", "InvoiceTransRecId", "PaymentTransRecId")
+                    b.HasIndex("DataAreaId", "InvoiceTransRecId", "PaymentTransRecId", "Voucher")
                         .IsUnique();
 
                     b.ToTable("VendSettlement", (string)null);

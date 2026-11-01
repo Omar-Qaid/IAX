@@ -544,3 +544,115 @@ intent of the pin is unchanged; only its floor moved.
 
 Gap 8 (no settlement or payment reversal) and gap 16 (no customer/vendor open-balance read), which
 touch the same subledger correction and read surface.
+
+---
+
+## 8. Gap 8 part one implemented 2026-11-01 — settlement reversal in AR and AP
+
+Gap 8 has two halves: **settlement reversal** and **payment reversal**. The settlement half is now
+done for both subledgers, which closes the harm the register named — "a mis-settled payment
+currently has no supported correction path". Payment reversal is **not** done; see the end of this
+section.
+
+### What was built
+
+`CustSettlementReversalService` and `VendSettlementReversalService`, each with an interface and a
+controller, plus migration `AddVendSettlementCanBeReversed`.
+
+`POST /api/v1/customer-settlements/{settlementVoucher}/reverse` ·
+`POST /api/v1/vendor-settlements/{voucher}/reverse`
+
+### The record pattern, decided rather than assumed
+
+The question was how the settlement rows should record a reversal: `CustSettlement` has
+`CanBeReversed` but no `IsReversed` or reversal-link field. Two patterns were put to the owner —
+mark in place, following this repository's own `LedgerSettlementService.ReverseAsync`, or keep the
+originals and write offsetting rows. **The owner chose offsetting rows, as the closer match to
+D365.** So:
+
+- the original rows are kept untouched as history, apart from `CanBeReversed` going to `No`;
+- offsetting rows are written with every amount negated, under a new settlement voucher, with
+  `CanBeReversed = No` so a reversal cannot itself be reversed;
+- the two vouchers net to zero, which is asserted by test.
+
+**Flagged:** there is **no field linking a reversal back to the settlement it reverses** — unlike
+`LedgerTransSettlement`, which has `OriginalSettleId`. The pair is discoverable only by its
+`TransRecId`/`OffsetRecId` values. No link field was invented. Confirm against target metadata
+whether standard `CustSettlement` carries one.
+
+### Why there is no ledger voucher, and why that is correct
+
+Settlement in this module **posts nothing to the general ledger**. The payment's voucher carries
+Dr Bank / Cr Customer (or Dr Vendor / Cr Bank); settlement only moves the open receivable or
+payable. Reversing it therefore has nothing to counter-post. This is an absence by correctness, not
+an omission.
+
+The things that *would* make a settlement post — cash discount, realised exchange adjustment, penny
+difference — are not implemented, so on the receivable side a settlement carrying `UtilizedCashDisc`,
+`ExchAdjustment` or `PennyDiff` is **refused by name** rather than reversed with its ledger effect
+left stranded. (The payable side's reduced `VendSettlement` has no such fields to check.)
+
+### How the restore is made exact
+
+Both payment paths assert an invariant before they settle: the open row equals
+`AmountCur` less `SettleAmountCur`. The reversal rebuilds the open row from that same invariant,
+which makes the restore correct whether the row was decremented on a partial settlement or
+**removed** on a full one — the deletion the register flagged as making the open amount
+unrecoverable. It is recoverable, because `CustTrans` still carries both amounts. The payable side
+reuses the existing `VendorOpenBalance.Add` helper, which already derives the row that way.
+
+The two subledgers have **opposite sign conventions**, and both were checked against their payment
+path rather than inferred: receivable settlement does `invoice += settle` / `payment -= settle`,
+payable settlement does `invoice -= settled` / `payment += settled`. The first test run caught a
+seed built on the wrong payable convention.
+
+### Also fixed on the way
+
+`VendSettlement` and `VendSettlementConfiguration` were declared inside
+`AccountsPayable/Payment/Entities/VendTransOpen.cs`. Both are now in their own files under
+`Entities/` and `Configuration/`, closing the layout half of gap 14.
+
+Its unique index moved from `(DataAreaId, InvoiceTransRecId, PaymentTransRecId)` to include
+`Voucher`: without that, an offsetting row for the same invoice and payment pair would collide with
+the settlement it reverses.
+
+### Flagged for verification
+
+- **`VendSettlement` is not D365's shape.** Standard `VendSettlement` carries the same field set as
+  `CustSettlement` — `SettlementVoucher`, `TransRecId`/`OffsetRecId` pairs, reporting-currency and
+  adjustment amounts. This repository's version is a reduced custom shape keyed by the payment
+  voucher, with one row per settled invoice instead of a pair. `CanBeReversed` was added because it
+  is a standard field; **aligning the rest is its own change** and was not attempted here. It is
+  noted on the entity.
+- **Settlements written before this change default to `CanBeReversed = No`** and are therefore
+  refused, with a message naming both possible reasons. Refusing is deliberate: nothing records what
+  those rows did, so reversing them would rest on an assumption. Existing demo data will need
+  re-settling to be reversible.
+
+### Verification run
+
+- `dotnet build IXApi/IXApi.csproj` → **0 errors**.
+- `dotnet ef migrations has-pending-model-changes` → **no drift**; the migration touches only
+  `VendSettlement`'s new column and its index.
+- `dotnet test IXApi/Tests/IXApi.Tests.csproj` → **592 passed, 1 failed, 2 skipped**. The failure is
+  the same pre-existing
+  `AccountsReceivableGenericArchitectureTests.Crud_controllers_use_registered_generic_services` at
+  the same line 49 assertion as before this change, already shown in section 7 to fail on a clean
+  tree. The new `CustSettlementReversalController` is in the scanned namespace and satisfies every
+  assertion that test makes.
+- `dotnet test IXApi/Tests/InventoryCycle.Tests.csproj` → **18 passed, 0 failed**.
+- 14 new tests in `Tests/SettlementReversalTests.cs`: full and partial reversal on both sides, the
+  offsetting rows netting to zero, double-reversal refusal, the not-marked-reversible refusal, the
+  three ledger-effect refusals, and unknown or empty vouchers.
+
+### Still open: payment reversal
+
+Reversing a **payment** — unwinding the cash, the bank movement and the GL voucher, not just the
+match — is not built. It needs a counter-voucher through `SubledgerPostingSupport` and a decision
+on whether D365 writes a reversing `CustTrans`/`VendTrans` or marks the original, which is the same
+class of unverified question as the settlement row pattern was. Gap 8 stays **open at P2** for that
+half; the register's stated harm is addressed, the feature is not complete.
+
+### Next in the section 6.6 order
+
+Gap 16, the customer/vendor open-balance read.

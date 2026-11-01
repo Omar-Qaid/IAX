@@ -84,7 +84,9 @@ public sealed class VendPaymentService(IUnitOfWork work, ICurrentUserService use
                 if (invoice.Trans.TransDate.Date > date) return await Fail("A payment cannot settle a future-dated invoice.", ct);
                 var settled = Math.Min(remaining, -invoice.Open.AmountCur);
                 Db.Add(new VendSettlement { DataAreaId = area, AccountNum = vendor.AccountNum, InvoiceTransRecId = invoice.Trans.RecId,
-                    PaymentTransRecId = payment.RecId, TransDate = date, Voucher = voucher, AmountCur = settled, AmountMst = settled });
+                    PaymentTransRecId = payment.RecId, TransDate = date, Voucher = voucher, AmountCur = settled, AmountMst = settled,
+                    // Marks the match as in force, so VendSettlementReversalService can reverse it once.
+                    CanBeReversed = NoYes.Yes });
                 invoice.Trans.SettleAmountCur -= settled;
                 invoice.Trans.SettleAmountMst -= settled;
                 invoice.Open.AmountCur += settled;

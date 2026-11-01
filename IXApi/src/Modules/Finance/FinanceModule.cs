@@ -73,6 +73,8 @@ namespace IAX.IXApi.Modules.Finance
                     provider.GetRequiredService<Infrastructure.Identity.ICurrentUserService>()));
             services.AddScoped<AccountsReceivable.Payment.ICustPaymentService, AccountsReceivable.Payment.CustPaymentService>();
             services.AddScoped<AccountsPayable.IVendPaymentService, AccountsPayable.VendPaymentService>();
+            services.AddScoped<AccountsReceivable.Settlement.ICustSettlementReversalService, AccountsReceivable.Settlement.CustSettlementReversalService>();
+            services.AddScoped<AccountsPayable.IVendSettlementReversalService, AccountsPayable.VendSettlementReversalService>();
             services.AddScoped<AccountsReceivable.Return.ICustReturnService, AccountsReceivable.Return.CustReturnService>();
             services.AddScoped<AccountsReceivable.IReturnDispositionCodeService, AccountsReceivable.ReturnDispositionCodeService>();
             services.AddScoped<AccountsReceivable.IReturnReasonCodeService, AccountsReceivable.ReturnReasonCodeService>();
