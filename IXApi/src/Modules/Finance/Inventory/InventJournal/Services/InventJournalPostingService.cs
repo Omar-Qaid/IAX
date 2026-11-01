@@ -332,9 +332,13 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
     private async Task<decimal> ResolveUnitCostAsync(string companyId, ReadyItem item, InventSum summary, InventJournalTrans line,
         InventJournalType journalType, decimal signedQty, CancellationToken ct)
     {
-        if (item.Model.InventModel is InventModel.WeightedAvg or InventModel.WeightedAvg_Date)
+        // FIFO, LIFO and weighted average post a provisional cost here and are corrected by
+        // inventory close, which settles them. The date-based variants have no settlement engine,
+        // so they are rejected rather than posted at a cost nothing will ever correct. Model-group
+        // setup rejects them too; this guard keeps the posting side independent of that.
+        if (item.Model.InventModel is InventModel.WeightedAvg_Date or InventModel.LIFO_Date)
             throw new PostingValidationException(
-                $"Inventory model '{item.Model.InventModel}' requires inventory close/settlement, which is not implemented in this basic journal engine. Select Moving average or defer posting until costing close is supported.");
+                $"Inventory model '{item.Model.InventModel}' has no settlement engine, so a journal cannot be posted for it. Use FIFO, LIFO or Weighted average.");
 
         if (item.Model.InventModel == InventModel.StandardCost)
         {
