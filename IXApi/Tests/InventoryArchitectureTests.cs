@@ -1870,6 +1870,9 @@ public sealed class InventoryArchitectureTests
         Assert.False((await service.GetAsync(rollbackJournal.Journal.JournalId, default))!.Posted);
 
         (await db.Set<InventModelGroup>().SingleAsync()).InventModel = InventModel.StandardCost;
+        await db.SaveChangesAsync();
+        Assert.Contains("FIFO, LIFO, or weighted average", (await transfers.CreateAsync(
+            transferInput with { TransferId = "TR-UNSUPPORTED", Lines = [new("ITEM-001", "pcs", 1m)] }, default)).Error);
         db.AddRange(
             new InventItemPrice { DataAreaId = "other", ItemId = "ITEM-001", InventDimId = line.InventDimId,
                 CostingType = CostingType.StandardCost, PriceType = PreferredPriceType.CostPrice,
@@ -1941,6 +1944,8 @@ public sealed class InventoryArchitectureTests
             new InventJournalLineInputDto { ItemId = "ITEM-001", InventSiteId = "JED", InventLocationId = "MAIN",
                 Unit = "pcs", Qty = 1, CostPrice = 6, LedgerDimension = 22 }, default);
         Assert.Equal("Physical inventory journals require a stocked item model group.", missingModelGroupLine.Error);
+        Assert.Contains("stocked item model group", (await transfers.CreateAsync(
+            transferInput with { TransferId = "TR-NONSTOCK", Lines = [new("ITEM-001", "pcs", 1m)] }, default)).Error);
     }
 
     private sealed class InventoryContext(DbContextOptions<InventoryContext> options) : DbContext(options)

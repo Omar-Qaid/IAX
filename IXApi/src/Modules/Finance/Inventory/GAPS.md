@@ -91,6 +91,9 @@ message quoted.
 
 | Date | Change |
 | --- | --- |
+| 2026-11-01 | Inventory close now verifies balanced same-site transfer-order issue and receipt legs by order, voucher and item, then excludes those internal movements from cost settlement. Incomplete or unbalanced movements are rejected. |
+| 2026-11-01 | Transfer orders now reject cost models that the basic inventory close engine cannot settle instead of moving their stock at an unrelated running-average cost. |
+| 2026-11-01 | Transfer-order create and posting now require a stocked item model group; released nonstocked items can no longer create physical inventory movements. |
 | 2026-11-01 | Transfer-order creation now checks the item's inventory lifecycle block; shipment and receipt recheck it and protect both inventory dimensions against a frozen count and a closed inventory date before moving stock. |
 | 2026-11-01 | Repeating the final transfer-order receipt with the same request ID now returns the posted order without moving stock again; the duplicate check runs before the fully-received status guard. |
 | 2026-11-01 | Summary journal vouchers are allocated only when a line creates a movement. A confirmed count with no variance now posts without consuming a voucher or creating inventory and ledger transactions. |

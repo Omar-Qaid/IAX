@@ -261,6 +261,44 @@ public sealed class InventoryCycleTests
 
     // ---- FIFO inventory close (Phase 7 worked example: 1,600 COGS / 600 remaining) -----------
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Close_excludes_balanced_transfer_order_movements_and_rejects_unbalanced_ones(bool balanced)
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        db.Set<InventDim>().AddRange(
+            new InventDim { RecId = 1, DataAreaId = "dat", InventDimId = "SOURCE", InventSiteId = "S1", InventLocationId = "WH1" },
+            new InventDim { RecId = 2, DataAreaId = "dat", InventDimId = "TRANSIT", InventSiteId = "S1", InventLocationId = "TRANSIT" });
+        db.Set<InventModelGroup>().Add(new InventModelGroup { RecId = 1, DataAreaId = "dat", ModelGroupId = "FIFO", InventModel = InventModel.FIFO });
+        db.Set<InventModelGroupItem>().Add(new InventModelGroupItem { RecId = 1, ItemDataAreaId = "dat", ModelGroupDataAreaId = "dat", ModelGroupId = "FIFO", ItemId = "ITEM" });
+        db.Set<InventItemGroupItem>().Add(new InventItemGroupItem { RecId = 1, ItemDataAreaId = "dat", ItemId = "ITEM", ItemGroupId = "TRADE" });
+        db.Set<InventTransOrigin>().AddRange(
+            new InventTransOrigin { RecId = 1, DataAreaId = "dat", InventTransId = "R1", ItemId = "ITEM", ReferenceId = "IJ1", ReferenceCategory = InventRefType.InventoryJournal },
+            new InventTransOrigin { RecId = 2, DataAreaId = "dat", InventTransId = "T1", ItemId = "ITEM", ReferenceId = "TO1", ReferenceCategory = InventRefType.TransferOrder },
+            new InventTransOrigin { RecId = 3, DataAreaId = "dat", InventTransId = "T2", ItemId = "ITEM", ReferenceId = "TO1", ReferenceCategory = InventRefType.TransferOrder });
+        db.Set<InventTrans>().AddRange(
+            new InventTrans { RecId = 1, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "SOURCE", InventTransOrigin = 1, Qty = 100, StatusReceipt = StatusReceipt.Purchased, CostAmountPosted = 1000, DateFinancial = new DateTime(2026, 6, 1), ValueOpen = InventTransOpen.Yes },
+            new InventTrans { RecId = 2, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "SOURCE", InventTransOrigin = 2, Qty = -10, StatusIssue = StatusIssue.Sold, CostAmountPosted = -100, Voucher = "TO1:SHIP", DateFinancial = new DateTime(2026, 6, 2), ValueOpen = InventTransOpen.Yes });
+        if (balanced)
+            db.Set<InventTrans>().Add(new InventTrans { RecId = 3, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "TRANSIT", InventTransOrigin = 3, Qty = 10, StatusReceipt = StatusReceipt.Purchased, CostAmountPosted = 100, Voucher = "TO1:SHIP", DateFinancial = new DateTime(2026, 6, 2), ValueOpen = InventTransOpen.Yes });
+        await db.SaveChangesAsync();
+
+        var (result, error) = await new InventCloseService(new TestUnitOfWork(db), new TestCompany(), new TestUser(), Sequence())
+            .CloseItemAsync("ITEM", new DateTime(2026, 6, 30), default);
+        if (balanced)
+        {
+            Assert.Null(error);
+            Assert.NotNull(result);
+            Assert.Equal(0, result.IssuesSettled);
+            Assert.Empty(await db.Set<InventSettlement>().ToListAsync());
+        }
+        else
+            Assert.Contains("transfer order must have balanced", error);
+    }
+
     [Fact]
     public async Task Fifo_close_settles_issue_to_actual_fifo_cost_and_posts_adjustment()
     {

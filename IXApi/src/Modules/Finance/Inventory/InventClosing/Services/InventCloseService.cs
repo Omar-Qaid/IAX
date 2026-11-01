@@ -378,6 +378,22 @@ public sealed partial class InventCloseService : IInventCloseService
                 || pair.Count(x => x.Qty > 0 && x.StatusReceipt == StatusReceipt.Purchased) != 1)
                 throw new PostingValidationException("A transfer must have balanced financial issue/receipt legs in the same item/site pool before close.");
         }
+        var transferOrderTransactions = transactions.Where(x => origins.TryGetValue(x.InventTransOrigin, out var origin)
+            && origin.ReferenceCategory == InventRefType.TransferOrder).ToList();
+        foreach (var movement in transferOrderTransactions.GroupBy(x =>
+            (origins[x.InventTransOrigin].ReferenceId, x.Voucher, x.ItemId)))
+        {
+            var legs = movement.ToList();
+            if (string.IsNullOrWhiteSpace(movement.Key.ReferenceId) || string.IsNullOrWhiteSpace(movement.Key.Voucher)
+                || legs.Count < 2 || legs.Count % 2 != 0
+                || legs.Count(x => x.Qty < 0 && x.StatusIssue == StatusIssue.Sold) != legs.Count / 2
+                || legs.Count(x => x.Qty > 0 && x.StatusReceipt == StatusReceipt.Purchased) != legs.Count / 2
+                || legs.Sum(x => x.Qty) != 0
+                || legs.Sum(x => x.CostAmountPosted + x.CostAmountAdjustment) != 0
+                || legs.Any(x => !dimensions.ContainsKey(x.InventDimId))
+                || legs.Select(x => dimensions[x.InventDimId].InventSiteId).Distinct().Count() != 1)
+                throw new PostingValidationException("A transfer order must have balanced financial issue/receipt legs in the same item/site pool before close.");
+        }
         var assignments = await Db.Set<InventModelGroupItem>().AsNoTracking()
             .Where(x => x.ItemDataAreaId == companyId).ToListAsync(ct);
         var models = await Db.Set<ItemModelGroup>().AsNoTracking()
@@ -393,6 +409,9 @@ public sealed partial class InventCloseService : IInventCloseService
                 throw new PostingValidationException($"Transaction {transaction.RecId} has no valid financial site dimension.");
             if (origins.TryGetValue(transaction.InventTransOrigin, out var transferOrigin) && transferSet.Contains(transferOrigin.InventTransId))
                 continue; // Verified internal movement does not consume or create a site-level layer.
+            if (origins.TryGetValue(transaction.InventTransOrigin, out var orderOrigin)
+                && orderOrigin.ReferenceCategory == InventRefType.TransferOrder)
+                continue; // The balanced transfer-order movement was verified above.
             var sourceSupported = origins.TryGetValue(transaction.InventTransOrigin, out var origin)
                 && (origin.ReferenceCategory == InventRefType.InventoryJournal
                     || origin.ReferenceCategory == InventRefType.PhysicalinventoryCount

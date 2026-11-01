@@ -6,6 +6,7 @@ using IAX.IXApi.Modules.Finance.Inventory.ProductLifecycle;
 using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.EntityFrameworkCore;
 using ReleasedItem = IAX.IXApi.Modules.Finance.Entities.InventTable;
+using ItemModelGroup = IAX.IXApi.Modules.Finance.Entities.InventModelGroup;
 
 namespace IAX.IXApi.Modules.Finance.Inventory.Transfer;
 
@@ -98,6 +99,7 @@ public sealed class InventTransferOrderService(
             var lifecycleError = await ProductLifecyclePolicy.ValidateAsync(Db, area, itemId,
                 ProductLifecycleProcess.Inventory, ct);
             if (lifecycleError != null) throw new InvalidOperationException(lifecycleError);
+            await RequireStockedItemAsync(area, itemId, ct);
             await RequireUntrackedItemAsync(area, itemId, ct);
             // The line's dimension is the source: the transit and destination legs resolve their own.
             var dim = await dimensions.ResolveAsync(area, site, from, ct);
@@ -126,6 +128,21 @@ public sealed class InventTransferOrderService(
         if (await InventoryDimensionPolicy.RequiresBatchOrSerialAsync(Db, group.Value, ct))
             throw new InvalidOperationException(
                 $"Item '{itemId}' is batch or serial tracked. Basic transfer orders carry site and warehouse dimensions only, so use an inventory transfer journal for tracked items.");
+    }
+
+    private async Task RequireStockedItemAsync(string area, string itemId, CancellationToken ct)
+    {
+        var modelGroupId = await Db.Set<InventModelGroupItem>().AsNoTracking()
+            .Where(x => x.ItemDataAreaId == area && x.ItemId == itemId)
+            .Select(x => x.ModelGroupId).FirstOrDefaultAsync(ct);
+        var model = string.IsNullOrWhiteSpace(modelGroupId) ? null :
+            await Db.Set<ItemModelGroup>().AsNoTracking()
+                .Where(x => x.DataAreaId == area && x.ModelGroupId == modelGroupId)
+                .FirstOrDefaultAsync(ct);
+        if (model?.StockedProduct != NoYes.Yes)
+            throw new InvalidOperationException($"Item '{itemId}' requires a stocked item model group for inventory transfer.");
+        if (model.InventModel is not (InventModel.FIFO or InventModel.LIFO or InventModel.WeightedAvg))
+            throw new InvalidOperationException("Inventory transfer requires FIFO, LIFO, or weighted average costing in the basic inventory cycle.");
     }
 
     private async Task<InventTransferTable> PostCoreAsync(string area, string transferId, InventTransferPostDto input, bool receive, CancellationToken ct)
@@ -179,6 +196,7 @@ public sealed class InventTransferOrderService(
             var lifecycleError = await ProductLifecyclePolicy.ValidateAsync(Db, area, line.ItemId,
                 ProductLifecycleProcess.Inventory, ct);
             if (lifecycleError != null) throw new InvalidOperationException(lifecycleError);
+            await RequireStockedItemAsync(area, line.ItemId, ct);
             var boundaryError = await InventoryFinancialBoundary.CheckAsync(Db, area, line.ItemId, transDate, ct);
             if (boundaryError != null) throw new InvalidOperationException(boundaryError);
             foreach (var dim in new[] { fromDim, toDim }.OrderBy(x => x.InventDimId, StringComparer.Ordinal))
