@@ -1869,6 +1869,12 @@ namespace IAX.IXApi.Modules.Finance.Common
         Thousand = 1000,
         TenThousand = 10000
     }
+    public enum LedgerPeriodAccessLevel
+    {
+        All = 0,
+        None = 1,
+        UserGroup = 2
+    }
     public enum DimensionAttributeType
     {
         Standard = 0,

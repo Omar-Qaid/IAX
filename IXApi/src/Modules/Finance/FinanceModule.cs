@@ -8,6 +8,7 @@ namespace IAX.IXApi.Modules.Finance
         public static IServiceCollection AddFinanceModule(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddScoped<GeneralLedger.FiscalCalendar.ILedgerFiscalCalendarPeriodService, GeneralLedger.FiscalCalendar.LedgerFiscalCalendarPeriodService>();
+            services.AddScoped<GeneralLedger.FiscalCalendar.ILedgerPeriodModuleAccessControlService, GeneralLedger.FiscalCalendar.LedgerPeriodModuleAccessControlService>();
             services.AddScoped<GeneralLedger.FiscalCalendar.IFiscalCalendarService, GeneralLedger.FiscalCalendar.FiscalCalendarService>();
             services.AddScoped<GeneralLedger.FiscalCalendar.IFiscalCalendarYearService, GeneralLedger.FiscalCalendar.FiscalCalendarYearService>();
             services.AddScoped<GeneralLedger.FiscalCalendar.IFiscalCalendarPeriodService, GeneralLedger.FiscalCalendar.FiscalCalendarPeriodService>();

@@ -49,6 +49,18 @@ namespace IAX.IXApi.Modules.Finance.Entities
                 .OnDelete(DeleteBehavior.Restrict);
             }
        }
+
+       public class LedgerPeriodModuleAccessControlConfiguration : IEntityTypeConfiguration<LedgerPeriodModuleAccessControl>
+       {
+           public void Configure(EntityTypeBuilder<LedgerPeriodModuleAccessControl> builder)
+           {
+               builder.HasIndex(x => new { x.DataAreaId, x.LedgerFiscalCalendarPeriod }).IsUnique()
+                   .HasFilter("[IsDeleted] = 0");
+               builder.HasOne<LedgerFiscalCalendarPeriod>().WithOne()
+                   .HasForeignKey<LedgerPeriodModuleAccessControl>(x => x.LedgerFiscalCalendarPeriod)
+                   .OnDelete(DeleteBehavior.Restrict);
+           }
+       }
     }
 }
 

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Security.Cryptography;
 using System.Text;
+using IAX.IXApi.Modules.Identity.Users;
 
 namespace IAX.IXApi.Modules.Finance.Common;
 
@@ -23,6 +24,8 @@ internal enum PhysicalPostingSide
     Revenue
 }
 
+internal enum LedgerPostingModule { Ledger, Tax, Bank, Customer, Vendor }
+
 /// <summary>
 /// Shared AR/AP subledger posting resolution (sales invoice, credit note, customer payment, vendor
 /// invoice and vendor return): ledger period, customer/vendor/inventory/tax posting accounts, sales tax codes, voucher lines
@@ -33,7 +36,8 @@ internal sealed class SubledgerPostingSupport(DbContext db)
     /// <summary>One application-lock namespace for every finance posting key, so unrelated keys never alias.</summary>
     private const string LockResourcePrefix = "FinancePosting:";
 
-    public async Task<SubledgerLedgerContext> LoadLedgerContextAsync(string area, DateTime date, CancellationToken ct)
+    public async Task<SubledgerLedgerContext> LoadLedgerContextAsync(string area, DateTime date, CancellationToken ct,
+        LedgerPostingModule? module = null, string userId = "sys")
     {
         var ledger = await db.Set<Ledger>().AsNoTracking().FirstOrDefaultAsync(x => x.DataAreaId == area, ct)
             ?? throw new SubledgerPostingException("A ledger is required for the selected company.");
@@ -46,6 +50,28 @@ internal sealed class SubledgerPostingSupport(DbContext db)
             x => x.Ledger == ledger.RecId && x.FiscalCalendarPeriod == period.RecId, ct);
         if (ledgerPeriod == null || ledgerPeriod.Status != FiscalPeriodStatus.Open)
             throw new SubledgerPostingException($"The fiscal period for {date:d} is not open.");
+        if (module != null)
+        {
+            var access = await db.Set<LedgerPeriodModuleAccessControl>().AsNoTracking()
+                .SingleOrDefaultAsync(x => x.DataAreaId == area && x.LedgerFiscalCalendarPeriod == ledgerPeriod.RecId, ct);
+            if (access != null)
+            {
+                var rule = module switch
+                {
+                    LedgerPostingModule.Ledger => (access.LedgerAccessLevel, access.LedgerUserGroupInfo),
+                    LedgerPostingModule.Tax => (access.TaxAccessLevel, access.TaxUserGroupInfo),
+                    LedgerPostingModule.Bank => (access.BankAccessLevel, access.BankUserGroupInfo),
+                    LedgerPostingModule.Customer => (access.CustAccessLevel, access.CustUserGroupInfo),
+                    _ => (access.VendAccessLevel, access.VendUserGroupInfo)
+                };
+                if (rule.Item1 == LedgerPeriodAccessLevel.None)
+                    throw new SubledgerPostingException($"The {module} module is closed for the fiscal period containing {date:d}.");
+                if (rule.Item1 == LedgerPeriodAccessLevel.UserGroup &&
+                    (string.IsNullOrWhiteSpace(rule.Item2) || !await db.Set<AspNetUserRole>().AsNoTracking()
+                        .AnyAsync(x => x.UserId == userId && x.RoleId == rule.Item2, ct)))
+                    throw new SubledgerPostingException($"User '{userId}' is not in the group allowed to post {module} transactions in this period.");
+            }
+        }
         return new SubledgerLedgerContext(ledger, period);
     }
 
@@ -64,13 +90,18 @@ internal sealed class SubledgerPostingSupport(DbContext db)
     /// </param>
     public static GeneralJournalAccountEntry AccountEntry(string area, long entryId, DimensionAttributeValueCombination dimension,
         LedgerPostingType type, decimal amount, string text, decimal qty, string currency,
-        string paymentReference = "") => new()
+        string paymentReference = "") => AccountEntry(area, entryId, dimension, type, amount, amount, amount,
+            text, qty, currency, paymentReference);
+
+    public static GeneralJournalAccountEntry AccountEntry(string area, long entryId, DimensionAttributeValueCombination dimension,
+        LedgerPostingType type, decimal transactionAmount, decimal accountingAmount, decimal reportingAmount,
+        string text, decimal qty, string currency, string paymentReference = "") => new()
     {
         DataAreaId = area, GeneralJournalEntry = entryId, LedgerDimension = dimension.RecId, MainAccount = dimension.MainAccount,
         LedgerAccount = dimension.DisplayValue.Length == 0 ? dimension.MainAccountValue : dimension.DisplayValue,
-        Text = text, PostingType = type, TransactionCurrencyCode = currency, TransactionCurrencyAmount = amount,
-        AccountingCurrencyAmount = amount, ReportingCurrencyAmount = amount, Quantity = qty,
-        IsCredit = amount < 0 ? NoYes.Yes : NoYes.No, PaymentReference = paymentReference
+        Text = text, PostingType = type, TransactionCurrencyCode = currency, TransactionCurrencyAmount = transactionAmount,
+        AccountingCurrencyAmount = accountingAmount, ReportingCurrencyAmount = reportingAmount, Quantity = qty,
+        IsCredit = accountingAmount < 0 ? NoYes.Yes : NoYes.No, PaymentReference = paymentReference
     };
 
     /// <summary>Customer posting profile: Table (customer) -> Group (customer group) -> All, within the profile.</summary>

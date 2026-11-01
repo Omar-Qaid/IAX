@@ -1,6 +1,8 @@
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using Microsoft.EntityFrameworkCore;
+using IAX.IXApi.Modules.Administration.NumberSequences;
+using IAX.IXApi.Modules.Finance.Foundation.Currency;
 using JournalHeader = IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable;
 
 namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable;
@@ -12,11 +14,11 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable;
 /// posted entry; a line with an offset produces two account entries under that voucher.
 ///
 /// Scope is the ledger-account journal. Customer, vendor, bank and asset account types,
-/// intercompany lines, transaction currencies other than the accounting currency, journal
+/// intercompany lines, journal
 /// tax calculation and automatic reversal entries are rejected rather than approximated,
 /// because each needs its own documented process.
 /// </summary>
-internal sealed class LedgerJournalPosting(DbContext db)
+internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
 {
     public async Task<LedgerJournalPostResultDto> PostAsync(string area, JournalHeader header, CancellationToken ct)
     {
@@ -28,9 +30,6 @@ internal sealed class LedgerJournalPosting(DbContext db)
         if (header.ReverseEntry == NoYes.Yes)
             throw new SubledgerPostingException("Automatic reversal journals are not supported; post the reversal as its own journal.");
         var ledger = await db.Set<Entities.Ledger>().AsNoTracking().FirstAsync(x => x.DataAreaId == area, ct);
-        if (!string.IsNullOrWhiteSpace(ledger.ReportingCurrency) &&
-            !string.Equals(ledger.ReportingCurrency.Trim(), ledger.AccountingCurrency.Trim(), StringComparison.OrdinalIgnoreCase))
-            throw new SubledgerPostingException("General journal reporting-currency conversion is not supported; posting requires the reporting and accounting currencies to match.");
 
         var setup = await new LedgerJournalSetupCheck(db).CheckAsync(area, header.RecId, ct)
             ?? throw new SubledgerPostingException("The journal setup could not be verified.");
@@ -46,21 +45,30 @@ internal sealed class LedgerJournalPosting(DbContext db)
             .Where(x => x.DataAreaId == area && x.JournalNum == header.JournalNum).ToListAsync(ct);
         lines = lines.OrderBy(x => x.LineNum).ThenBy(x => x.RecId).ToList();
 
+        await AllocateMissingVouchersAsync(area, header, lines, ct);
+
         var arithmetic = LedgerVoucherBalanceCheck.Check(lines);
         if (arithmetic.Count > 0) throw new SubledgerPostingException(arithmetic[0]);
 
-        var accountingCurrency = ledger.AccountingCurrency;
-        foreach (var line in lines) EnsureInScope(area, header, line, accountingCurrency);
+        var accountingCurrency = ledger.AccountingCurrency.Trim().ToUpperInvariant();
+        var reportingCurrency = string.IsNullOrWhiteSpace(ledger.ReportingCurrency)
+            ? accountingCurrency : ledger.ReportingCurrency.Trim().ToUpperInvariant();
+        foreach (var line in lines) EnsureInScope(area, header, line);
         await EnsureManualEntryAllowedAsync(area, lines, ct);
 
         var vouchers = 0;
         var accountEntries = 0;
         var totalDebit = 0m;
         var totalCredit = 0m;
+        var totalReportingDebit = 0m;
+        var totalReportingCredit = 0m;
+        var converter = new LedgerCurrencyConverter(db);
+        var defaulting = new LedgerJournalDimensionDefaulting(db);
         foreach (var voucher in lines.GroupBy(x => new { x.Voucher, Date = x.TransDate.Date })
             .OrderBy(x => x.Key.Date).ThenBy(x => x.Key.Voucher, StringComparer.Ordinal))
         {
-            var context = await support.LoadLedgerContextAsync(area, voucher.Key.Date, ct);
+            var context = await support.LoadLedgerContextAsync(area, voucher.Key.Date, ct,
+                LedgerPostingModule.Ledger, userId);
             var entry = support.NewEntry(area, header.JournalNum, voucher.Key.Voucher, voucher.Key.Date, context);
             db.Add(entry);
             await db.SaveChangesAsync(ct); // Persists the posted header key inside the caller's transaction.
@@ -69,18 +77,30 @@ internal sealed class LedgerJournalPosting(DbContext db)
             foreach (var line in voucher)
             {
                 var amount = line.AmountCurDebit - line.AmountCurCredit;
-                var dimension = await support.LoadDimensionAsync(area, line.LedgerDimension, $"line {line.LineNum} account", ct);
+                var entered = await support.LoadDimensionAsync(area, line.LedgerDimension, $"line {line.LineNum} account", ct);
+                var dimension = await defaulting.ApplyAsync(area, entered, header.DefaultDimension, line.DefaultDimension);
+                line.LedgerDimension = dimension.RecId;
+                var accountingAmount = await converter.ConvertAsync(area, amount, line.CurrencyCode,
+                    accountingCurrency, ledger.DefaultExchangeRateType, line.TransDate, ct);
+                var reportingAmount = await converter.ConvertAsync(area, amount, line.CurrencyCode,
+                    reportingCurrency, ledger.ReportingCurrencyExchangeRateType == 0
+                        ? ledger.DefaultExchangeRateType : ledger.ReportingCurrencyExchangeRateType, line.TransDate, ct);
                 posted.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, dimension,
-                    LedgerPostingType.LedgerJournal, amount, line.Txt, 0m, accountingCurrency, line.PaymReference));
+                    LedgerPostingType.LedgerJournal, amount, accountingAmount, reportingAmount,
+                    line.Txt, 0m, line.CurrencyCode, line.PaymReference));
                 if (line.OffsetLedgerDimension != 0)
                 {
-                    var offset = await support.LoadDimensionAsync(area, line.OffsetLedgerDimension, $"line {line.LineNum} offset account", ct);
+                    var enteredOffset = await support.LoadDimensionAsync(area, line.OffsetLedgerDimension, $"line {line.LineNum} offset account", ct);
+                    var offset = await defaulting.ApplyAsync(area, enteredOffset, header.DefaultDimension, line.OffsetDefaultDimension);
+                    line.OffsetLedgerDimension = offset.RecId;
                     posted.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, offset,
-                        LedgerPostingType.LedgerJournal, -amount, line.OffsetTxt.Length > 0 ? line.OffsetTxt : line.Txt, 0m,
-                        accountingCurrency, line.PaymReference));
+                        LedgerPostingType.LedgerJournal, -amount, -accountingAmount, -reportingAmount,
+                        line.OffsetTxt.Length > 0 ? line.OffsetTxt : line.Txt, 0m, line.CurrencyCode, line.PaymReference));
                 }
                 totalDebit += line.AmountCurDebit;
                 totalCredit += line.AmountCurCredit;
+                if (reportingAmount >= 0) totalReportingDebit += reportingAmount;
+                else totalReportingCredit += -reportingAmount;
             }
 
             // The account's own controls are judged on the posted signed amount, so a line and its
@@ -91,6 +111,9 @@ internal sealed class LedgerJournalPosting(DbContext db)
             if (posted.Sum(x => x.AccountingCurrencyAmount) != 0m)
                 throw new SubledgerPostingException(
                     $"Voucher {voucher.Key.Voucher} on {voucher.Key.Date:yyyy-MM-dd} does not balance in the accounting currency.");
+            if (posted.Sum(x => x.ReportingCurrencyAmount) != 0m)
+                throw new SubledgerPostingException(
+                    $"Voucher {voucher.Key.Voucher} on {voucher.Key.Date:yyyy-MM-dd} does not balance in the reporting currency.");
             db.AddRange(posted);
             db.Add(new SubledgerVoucherGeneralJournalEntry
             {
@@ -107,6 +130,8 @@ internal sealed class LedgerJournalPosting(DbContext db)
         header.JournalTotalDebit = totalDebit;
         header.JournalTotalCredit = totalCredit;
         header.JournalBalance = totalDebit - totalCredit;
+        header.JournalTotalDebitReportingCurrency = totalReportingDebit;
+        header.JournalTotalCreditReportingCurrency = totalReportingCredit;
         header.NumOfLines = lines.Count;
         foreach (var line in lines) line.NoEdit = NoYes.Yes;
         return new(header.JournalNum, vouchers, accountEntries, totalDebit, totalCredit, postedAt);
@@ -158,7 +183,7 @@ internal sealed class LedgerJournalPosting(DbContext db)
     }
 
     /// <summary>Rejects what this journal path does not implement, instead of posting an approximation.</summary>
-    private static void EnsureInScope(string area, JournalHeader header, LedgerJournalTrans line, string accountingCurrency)
+    private static void EnsureInScope(string area, JournalHeader header, LedgerJournalTrans line)
     {
         var label = $"Line {line.LineNum}";
         if (line.Cancel == NoYes.Yes)
@@ -171,12 +196,45 @@ internal sealed class LedgerJournalPosting(DbContext db)
             throw new SubledgerPostingException($"{label}: a ledger account combination is required.");
         if ((line.Company.Length > 0 && line.Company != area) || (line.OffsetCompany.Length > 0 && line.OffsetCompany != area))
             throw new SubledgerPostingException($"{label}: intercompany journal posting is not supported.");
-        if (line.CurrencyCode != accountingCurrency)
-            throw new SubledgerPostingException(
-                $"{label}: currency '{line.CurrencyCode}' requires exchange-rate conversion, which this journal path does not perform.");
+        if (string.IsNullOrWhiteSpace(line.CurrencyCode))
+            throw new SubledgerPostingException($"{label}: a transaction currency is required.");
         if (line.TaxCode.Length > 0 || header.LedgerJournalInclTax == NoYes.Yes)
             throw new SubledgerPostingException($"{label}: journal tax calculation is not supported; post tax through its own process.");
         if (line.ReverseEntry == NoYes.Yes)
             throw new SubledgerPostingException($"{label}: automatic reversal is not supported; post the reversal as its own journal.");
+    }
+
+    private async Task AllocateMissingVouchersAsync(string area, JournalHeader header,
+        List<LedgerJournalTrans> lines, CancellationToken ct)
+    {
+        if (lines.All(x => !string.IsNullOrWhiteSpace(x.Voucher))) return;
+        var name = await db.Set<LedgerJournalName>().AsNoTracking()
+            .SingleAsync(x => x.DataAreaId == area && x.JournalName == header.JournalName, ct);
+        if (name.NumberSequenceTable == 0)
+            throw new SubledgerPostingException($"Journal name '{name.JournalName}' has no voucher number sequence.");
+        string? shared = null;
+        foreach (var line in lines.Where(x => string.IsNullOrWhiteSpace(x.Voucher)))
+        {
+            if (name.NewVoucher == LedgerJournalVoucherChange.None && shared != null) line.Voucher = shared;
+            else
+            {
+                line.Voucher = await NextVoucherAsync(area, name.NumberSequenceTable, ct);
+                shared ??= line.Voucher;
+            }
+        }
+    }
+
+    private async Task<string> NextVoucherAsync(string area, long sequenceRecId, CancellationToken ct)
+    {
+        var sequence = await db.Set<SysNumberSequence>().IgnoreQueryFilters()
+            .SingleOrDefaultAsync(x => x.RecId == sequenceRecId && x.DataAreaId == area && !x.IsDeleted, ct)
+            ?? throw new SubledgerPostingException("The journal voucher number sequence was not found in the selected company.");
+        if (!sequence.IsActive || sequence.Blocked == 1 || sequence.InUse == 0 || sequence.Manual == 1 || sequence.NoIncrement == 1)
+            throw new SubledgerPostingException($"Voucher number sequence '{sequence.NumberSequence}' is unavailable for automatic allocation.");
+        var next = sequence.NextRec ?? sequence.Lowest ?? 1;
+        if (next > (sequence.Highest ?? int.MaxValue))
+            throw new SubledgerPostingException($"Voucher number sequence '{sequence.NumberSequence}' is exhausted.");
+        sequence.NextRec = next + 1;
+        return SysNumberSequenceService.FormatCode(sequence, next);
     }
 }

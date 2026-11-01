@@ -5,11 +5,51 @@ using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Shared.Application.Identity;
 using Microsoft.EntityFrameworkCore;
+using IAX.IXApi.Modules.Administration.NumberSequences;
 
 namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
 {
     public class LedgerJournalTableService : BaseService<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable>, ILedgerJournalTableService
     {
+        private readonly ISysNumberSequenceService? _numbers;
+
+        protected override async Task OnBeforeAddAsync(IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable entity, CancellationToken ct)
+        {
+            var area = string.IsNullOrWhiteSpace(entity.DataAreaId) ? _currentUser.GetDataAreaId() : entity.DataAreaId;
+            if (string.IsNullOrWhiteSpace(area)) throw new InvalidOperationException("A company must be selected.");
+            var setup = await _unitOfWork.Context.Set<LedgerJournalName>().AsNoTracking()
+                .SingleOrDefaultAsync(x => x.DataAreaId == area && x.JournalName == entity.JournalName && !x.IsDeleted, ct)
+                ?? throw new InvalidOperationException($"Journal name '{entity.JournalName}' is not configured.");
+            entity.DataAreaId = area;
+            entity.JournalType = setup.JournalType;
+            entity.NumberSequenceTable = setup.NumberSequenceTable;
+            entity.VoucherAllocatedAtPosting = setup.VoucherAllocatedAtPosting;
+            entity.DefaultDimension = entity.DefaultDimension == 0 ? setup.DefaultDimension : entity.DefaultDimension;
+            entity.CurrencyCode = string.IsNullOrWhiteSpace(entity.CurrencyCode) ? setup.CurrencyCode : entity.CurrencyCode;
+            if (string.IsNullOrWhiteSpace(entity.JournalNum))
+                entity.JournalNum = _numbers == null
+                    ? throw new InvalidOperationException("Journal batch number sequence service is unavailable.")
+                    : await _numbers.GetNextSequenceAsync(nameof(LedgerJournalTable), area, ct);
+        }
+
+        public override async Task<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable> UpdateAsync(IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable entity, CancellationToken ct = default)
+        {
+            await EnsureEditableAsync(entity.RecId, ct);
+            return await base.UpdateAsync(entity, ct);
+        }
+
+        public override async Task RemoveAsync(IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable entity, CancellationToken ct = default)
+        {
+            await EnsureEditableAsync(entity.RecId, ct);
+            await base.RemoveAsync(entity, ct);
+        }
+
+        private async Task EnsureEditableAsync(long recId, CancellationToken ct)
+        {
+            var posted = await _unitOfWork.Context.Set<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTable>()
+                .AsNoTracking().Where(x => x.RecId == recId).Select(x => x.Posted).SingleOrDefaultAsync(ct);
+            if (posted == NoYes.Yes) throw new InvalidOperationException("Posted journals cannot be changed or deleted.");
+        }
         public Task<LedgerJournalSetupCheckDto?> CheckSetupAsync(long recId, CancellationToken ct) =>
             new LedgerJournalSetupCheck(_unitOfWork.Context).CheckAsync(_currentUser.GetDataAreaId(), recId, ct);
 
@@ -73,7 +113,7 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
                 LedgerJournalSimulateResultDto result;
                 try
                 {
-                    var posted = await new LedgerJournalPosting(db).PostAsync(area, header, ct);
+                    var posted = await new LedgerJournalPosting(db, _currentUser.GetCurrentUserId()).PostAsync(area, header, ct);
                     await _unitOfWork.CompleteAsync(ct); // Inside the transaction, so the writes are exercised.
                     result = Describe(header.JournalNum, posted, await SimulatedEntriesAsync(db, area, header.JournalNum, ct));
                 }
@@ -129,7 +169,7 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
                     await _unitOfWork.RollbackTransactionAsync(ct);
                     return (null, null);
                 }
-                var result = await new LedgerJournalPosting(db).PostAsync(area, header, ct);
+                var result = await new LedgerJournalPosting(db, _currentUser.GetCurrentUserId()).PostAsync(area, header, ct);
                 await _unitOfWork.CompleteAsync(ct);
                 await _unitOfWork.CommitTransactionAsync(ct);
                 return (result, null);
@@ -148,9 +188,12 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
             }
         }
 
-        public LedgerJournalTableService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser)
+        public LedgerJournalTableService(IUnitOfWork unitOfWork, ICurrentUserService currentUser, ISysNumberSequenceService numbers) : base(unitOfWork, currentUser)
         {
+            _numbers = numbers;
         }
+
+        public LedgerJournalTableService(IUnitOfWork unitOfWork, ICurrentUserService currentUser) : base(unitOfWork, currentUser) { }
 
         public LedgerJournalTableService(IUnitOfWork unitOfWork) : this(unitOfWork, NullCurrentUserService.Instance)
         {

@@ -15,11 +15,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.Dimensions.AccountStructure;
 /// the rule behind the core cycle's acceptance example: a blank Department is valid on a balance
 /// sheet account and invalid on a profit and loss account.
 ///
-/// **A company with no assigned structure is not validated**, and posting proceeds as it did before
-/// this existed. D365 requires a structure on the ledger; this does not, because every ledger
-/// account combination already in this database is main-account-only, and refusing them all would
-/// stop every company and test fixture from posting. The journal setup check reports the gap so it
-/// is visible rather than silent.
+/// A company must have an active account structure assigned to its ledger before posting.
 ///
 /// The structures are read once per instance. One instance is held per posting operation, so a
 /// journal with many lines loads the setup once rather than per line.
@@ -33,7 +29,8 @@ public sealed class AccountStructureValidator(DbContext db)
         CancellationToken ct)
     {
         var snapshot = _snapshot ??= await LoadAsync(area, ct);
-        if (snapshot.Structures.Count == 0) return null; // Nothing assigned: not validated.
+        if (snapshot.Structures.Count == 0)
+            return "No active account structure is assigned to the ledger.";
 
         var accountValue = combination.MainAccountValue.Length > 0
             ? combination.MainAccountValue
@@ -62,6 +59,25 @@ public sealed class AccountStructureValidator(DbContext db)
                     + $"under account structure '{structure.Name}'.";
         }
         return null;
+    }
+
+    public async Task<AccountStructureResolution> ResolveAsync(string area,
+        DimensionAttributeValueCombination combination, CancellationToken ct)
+    {
+        var snapshot = _snapshot ??= await LoadAsync(area, ct);
+        if (snapshot.Structures.Count == 0)
+            throw new LedgerDimensionException("No active account structure is assigned to the ledger.");
+        var accountValue = combination.MainAccountValue.Length > 0
+            ? combination.MainAccountValue
+            : snapshot.MainAccountIds.GetValueOrDefault(combination.MainAccount, string.Empty);
+        var matched = snapshot.Structures
+            .Where(x => DimensionCriteriaMatcher.Allows(x.MainAccount.Criteria, NoYes.No, accountValue)).ToList();
+        if (matched.Count != 1)
+            throw new LedgerDimensionException(matched.Count == 0
+                ? $"Main account '{accountValue}' is not covered by an assigned account structure."
+                : $"Main account '{accountValue}' is covered by more than one assigned account structure.");
+        return new AccountStructureResolution(matched[0].RecId,
+            matched[0].Segments.Select(x => x.Dimension).ToList());
     }
 
     /// <summary>
@@ -136,7 +152,7 @@ public sealed class AccountStructureValidator(DbContext db)
                 else segments.Add(rules);
             }
             if (mainAccount == null) continue; // No main account segment, so nothing selects it.
-            structures.Add(new StructureRules(structure.Name, mainAccount, segments));
+            structures.Add(new StructureRules(structure.RecId, structure.Name, mainAccount, segments));
         }
 
         return new Snapshot(structures, mainAccountIds,
@@ -147,7 +163,7 @@ public sealed class AccountStructureValidator(DbContext db)
     private sealed record SegmentRules(string Dimension,
         IReadOnlyList<DimensionConstraintNodeCriteria> Criteria, NoYes IsOptional);
 
-    private sealed record StructureRules(string Name, SegmentRules MainAccount, IReadOnlyList<SegmentRules> Segments);
+    private sealed record StructureRules(long RecId, string Name, SegmentRules MainAccount, IReadOnlyList<SegmentRules> Segments);
 
     private sealed record Snapshot(IReadOnlyList<StructureRules> Structures,
         IReadOnlyDictionary<long, string> MainAccountIds, IReadOnlyList<string> Dimensions)
@@ -155,3 +171,5 @@ public sealed class AccountStructureValidator(DbContext db)
         public static Snapshot Empty { get; } = new([], new Dictionary<long, string>(), []);
     }
 }
+
+public sealed record AccountStructureResolution(long RecId, IReadOnlyList<string> Dimensions);
