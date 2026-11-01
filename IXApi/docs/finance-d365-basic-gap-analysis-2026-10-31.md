@@ -715,3 +715,109 @@ open-balance read and pass on their own.
 Gap 7 (cash discount) and gap 5a (period access by module), with gap 8's **payment reversal** half
 still outstanding from section 8. Gap 11 (free text invoice) appears to be under way outside this
 work.
+
+---
+
+## 10. Gap 8 completed 2026-11-01 — payment reversal in AR and AP
+
+The outstanding half of gap 8 from section 8 is now done, so **gap 8 is closed**.
+
+`POST /api/v1/customer-payments/{journalNum}/reverse` ·
+`POST /api/v1/vendor-payments/{journalNum}/reverse`
+
+### The pattern, taken from the repository rather than guessed
+
+Section 8 left this half open partly because it needed "a decision on whether D365 writes a
+reversing CustTrans/VendTrans or marks the original". That question was **answered from the
+repository**: `LedgerJournalReversalService` already establishes the house pattern for a reversal,
+and current D365 behaviour agrees with it. A reversal is **itself a posted document**:
+
+- a new `LedgerJournalTable` whose `OriginalJournalNum` points at the reversed journal, with its own
+  journal number, voucher and accounting date;
+- the date must fall in an **open period** — the original period is never reopened implicitly;
+- nothing posted is edited or deleted, the original stays exactly as it was;
+- a payment is reversed **once**, and a reversal **cannot itself be reversed**.
+
+So no new pattern was invented and no second posting path exists: the counter-voucher goes through
+`SubledgerPostingSupport` like everything else.
+
+### What a reversal does
+
+1. **Unwinds the payment's settlements first**, so the invoices go back to open. Without this the
+   counter-voucher would leave the subledger disagreeing with the ledger.
+2. **Posts the counter-voucher**: Dr Customer / Cr Bank for a receivable payment, Dr Bank /
+   Cr Vendor for a payable one — the mirror of what the payment posted.
+3. **Reverses the bank movement**, writing the opposite `BankAccountTrans` against the original
+   bank account, found through the payment line rather than guessed.
+4. **Settles the payment against its own reversal**, so neither is left sitting open. That closing
+   settlement is marked not reversible: reversing the payment is what undoes it.
+
+### The shared restore, extracted rather than duplicated
+
+Payment reversal needs the settlement unwind that section 8 built, but inside its own transaction.
+Rather than carry a second copy of those rules, the row work was extracted into
+`CustSettlementRestore` and `VendSettlementRestore` — static helpers that manage no transaction and
+call no save, so the caller owns atomicity. The settlement reversal services now delegate to the
+same helpers. **There is one implementation of the restore, used by both features**, which is the
+point: a payment reversal cannot drift from a settlement reversal.
+
+A consequence worth having: a payment reversal is atomic. A refusal part-way through — a closed
+period, for instance — rolls back the settlement unwind with it. That is asserted by test.
+
+### A bug caught while extracting it
+
+The settlement reversal services read their `restored` summary with `AsNoTracking` **before** the
+save, so it reported pre-restore values from the database rather than the restored ones. The read
+now happens after the save. The restore itself was always correct; only the response payload was
+stale.
+
+### Flagged for verification
+
+- **Single-line payment journals only.** Both payment services write one line, so a journal with
+  more is refused by name rather than reversed partially.
+- The closing settlement between a payment and its reversal is written with `CanBeReversed = No`.
+  Whether standard D365 records that link as a settlement at all was not established from the
+  repository — it is how a payment and its reversal stop showing as open here.
+- **Currency conversion is refused**, as the payment paths already refuse it.
+
+### Verification run
+
+- `dotnet build IXApi/IXApi.csproj` → **0 errors**.
+- 12 new tests in `Tests/PaymentReversalTests.cs`, **all passing on the first run**: the
+  counter-voucher and its signs on both sides, the reversal journal pointing at the one it reverses
+  with the original untouched, the invoice reopened, payment and reversal left settled against each
+  other, double-reversal refusal, a reversal journal refusing to be reversed, the closed-period
+  refusal rolling the settlement unwind back with it, and unknown or wrong-type journals.
+- `dotnet test IXApi/Tests/IXApi.Tests.csproj` → **615 passed, 1 failed, 2 skipped**, the same
+  pre-existing `Crud_controllers_use_registered_generic_services` failure as sections 7 to 9.
+
+**Two caveats on that run, both about concurrent work, not about this change.**
+
+1. The tree also contained an in-progress **free text invoice** implementation written outside this
+   work. It was subsequently committed together with this payment-reversal work as
+   `27c26fa8 feat(finance): add free text invoices and payment reversals` — a commit made outside
+   this work, bundling both. So **615/1 is not a clean measurement of payment reversal alone**,
+   though the 12 tests above exercise only it.
+2. **The build is currently broken by newer concurrent work, not by this change.**
+   `GeneralLedger/LedgerJournalTable/Configuration/LedgerJournalIdentityConfiguration.cs`
+   (uncommitted, written outside this work) fails with `CS0118: 'Ledger' is a namespace but is used
+   like a type` at lines 7 and 9. The cause: the file's namespace is
+   `...GeneralLedger.LedgerJournalTable`, which makes the bare identifier `Ledger` resolve to the
+   sibling **namespace** `...GeneralLedger.Ledger` instead of the entity. The same file already
+   works around this for `LedgerJournalTable` and `LedgerJournalTrans` by fully qualifying them;
+   `Ledger` was missed. The fix is to write
+   `IEntityTypeConfiguration<IAX.IXApi.Modules.Finance.Entities.Ledger>` and
+   `EntityTypeBuilder<IAX.IXApi.Modules.Finance.Entities.Ledger>`. **It was left untouched**, being
+   someone else's in-progress file. Until it is fixed, neither suite nor the drift check can run,
+   and the `InventoryCycle` failures observed afterwards are that build failure, not test
+   regressions.
+
+### Gap 8 status
+
+**Closed.** Settlement reversal (section 8) and payment reversal (this section) are both in, for
+both subledgers, sharing one restore implementation.
+
+### Next in the section 6.6 order
+
+Gap 7 (cash discount) and gap 5a (period access by module). Gap 11 (free text invoice) was
+implemented outside this work and should be reviewed and re-rated by whoever owns it.
