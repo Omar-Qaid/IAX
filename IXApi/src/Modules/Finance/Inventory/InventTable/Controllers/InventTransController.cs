@@ -9,7 +9,7 @@ namespace IAX.IXApi.Modules.Finance.Inventory;
 
 [ApiController]
 [Route("api/v1/InventTrans")]
-[DomainPermission("Inventory", "Transactions", "View")]
+[DomainPermission("Inventory", "Inquiry", "View")]
 public sealed class InventTransController
     : BaseController<InventTrans, InventTransListDto>
 {

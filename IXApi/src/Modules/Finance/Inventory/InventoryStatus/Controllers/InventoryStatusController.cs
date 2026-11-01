@@ -9,7 +9,7 @@ namespace IAX.IXApi.Modules.Finance.Inventory.InventoryStatus;
 
 [ApiController]
 [Route("api/v1/inventory-statuses")]
-[DomainPermission("Inventory", "Transactions")]
+[DomainPermission("Inventory", "Setup")]
 public sealed class InventoryStatusController : BaseController<WHSInventStatus, InventoryStatusDto>
 {
     private readonly IInventoryStatusService _statusService;

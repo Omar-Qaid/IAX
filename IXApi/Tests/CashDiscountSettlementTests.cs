@@ -1,6 +1,7 @@
 using System.Reflection;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.NumberSequences;
+using IAX.IXApi.Modules.Finance.AccountsPayable;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.Payment;
 using IAX.IXApi.Modules.Finance.Common;
@@ -174,7 +175,91 @@ public class CashDiscountSettlementTests
         Assert.Equal(2, (await db.Set<GeneralJournalAccountEntry>().AsNoTracking().ToListAsync()).Count);
     }
 
+    // ---------- Accounts payable ----------
+
+    [Fact]
+    public async Task A_vendor_payment_in_time_clears_the_invoice_for_less_cash_and_posts_the_discount()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+
+        var result = await NewVendService(db).PostAsync(
+            new VendPaymentPostDto("V-001", "BANK-1", 980m, "req-1", new DateTime(2026, 1, 10)), default);
+
+        Assert.True(result.StatusCode == 200, result.Message);
+        var invoice = await db.Set<VendTrans>().AsNoTracking().SingleAsync(x => x.RecId == 20);
+        // The payable path subtracts on the invoice side, so a cleared credit reads negative.
+        Assert.Equal(-Invoice, invoice.SettleAmountCur);
+        Assert.Empty(await db.Set<VendTransOpen>().AsNoTracking().Where(x => x.RefRecId == 20).ToListAsync());
+        var settlement = await db.Set<VendSettlement>().AsNoTracking().SingleAsync();
+        Assert.Equal(Invoice, settlement.AmountCur);
+        Assert.Equal(20m, settlement.UtilizedCashDisc);
+    }
+
+    [Fact]
+    public async Task The_vendor_voucher_balances_with_the_discount_included()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+
+        await NewVendService(db).PostAsync(
+            new VendPaymentPostDto("V-001", "BANK-1", 980m, "req-1", new DateTime(2026, 1, 10)), default);
+
+        var entries = await db.Set<GeneralJournalAccountEntry>().AsNoTracking().ToListAsync();
+        Assert.Equal(3, entries.Count);
+        Assert.Equal(0m, entries.Sum(x => x.AccountingCurrencyAmount));
+        // Dr the vendor for everything cleared, Cr Bank for the cash, Cr the discount account.
+        Assert.Equal(1000m, entries.Single(x => x.PostingType == LedgerPostingType.VendBalance).AccountingCurrencyAmount);
+        Assert.Equal(-980m, entries.Single(x => x.PostingType == LedgerPostingType.Bank).AccountingCurrencyAmount);
+        Assert.Equal(-20m, entries.Single(x => x.PostingType == LedgerPostingType.CashDiscount).AccountingCurrencyAmount);
+    }
+
+    [Fact]
+    public async Task A_late_vendor_payment_earns_nothing_and_leaves_the_invoice_open()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+
+        var result = await NewVendService(db).PostAsync(
+            new VendPaymentPostDto("V-001", "BANK-1", 980m, "req-1", new DateTime(2026, 1, 12)), default);
+
+        Assert.True(result.StatusCode == 200, result.Message);
+        var open = await db.Set<VendTransOpen>().AsNoTracking().SingleAsync(x => x.RefRecId == 20);
+        Assert.Equal(-20m, open.AmountCur);
+        Assert.Equal(0m, (await db.Set<VendSettlement>().AsNoTracking().SingleAsync()).UtilizedCashDisc);
+        Assert.Equal(2, (await db.Set<GeneralJournalAccountEntry>().AsNoTracking().ToListAsync()).Count);
+    }
+
+    /// <summary>
+    /// A payable settlement that took a discount posted to the ledger, and the restore path writes
+    /// no counter-voucher, so it refuses rather than stranding that posting.
+    /// </summary>
+    [Fact]
+    public async Task A_vendor_settlement_that_took_a_discount_cannot_be_reversed()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        await NewVendService(db).PostAsync(
+            new VendPaymentPostDto("V-001", "BANK-1", 980m, "req-1", new DateTime(2026, 1, 10)), default);
+        db.ChangeTracker.Clear();
+        var voucher = (await db.Set<VendSettlement>().AsNoTracking().SingleAsync()).Voucher;
+
+        var reversal = await new VendSettlementReversalService(new TestUnitOfWork(db), new TestCompany())
+            .ReverseAsync(voucher, new DateTime(2026, 1, 20), default);
+
+        Assert.Equal(422, reversal.StatusCode);
+        Assert.Contains("carries a cash discount", reversal.Message);
+    }
+
     // ---------- Fixture ----------
+
+    private static VendPaymentService NewVendService(DbContext db) =>
+        new(new TestUnitOfWork(db), new TestUser(), new TestCompany(),
+            DispatchProxy.Create<ISysNumberSequenceService, CashDiscountSequenceProxy>());
 
     private static CustPaymentService NewService(DbContext db) =>
         new(new TestUnitOfWork(db), new TestCompany(),
@@ -212,6 +297,21 @@ public class CashDiscountSettlementTests
                 TransType = LedgerTransType.Sales,
                 CashDiscCode = "2PCT10", CashDiscBaseDate = new DateTime(2026, 1, 1)
             },
+            new VendTable { RecId = 1, DataAreaId = "dat", AccountNum = "V-001", Currency = "SAR" },
+            new VendLedgerAccounts { RecId = 1, DataAreaId = "dat", AccountCode = AccountCode.All, SummaryLedgerDimension = 2 },
+            new VendTrans
+            {
+                RecId = 20, DataAreaId = "dat", AccountNum = "V-001", Invoice = "VINV-1", Voucher = "VOU-VINV",
+                TransDate = new DateTime(2026, 1, 1), DueDate = new DateTime(2026, 1, 31), CurrencyCode = "SAR",
+                AmountCur = -Invoice, AmountMst = -Invoice, TransType = LedgerTransType.Purch,
+                CashDiscCode = "2PCT10", CashDiscBaseDate = new DateTime(2026, 1, 1)
+            },
+            new VendTransOpen
+            {
+                RecId = 20, DataAreaId = "dat", AccountNum = "V-001", RefRecId = 20,
+                TransDate = new DateTime(2026, 1, 1), DueDate = new DateTime(2026, 1, 31),
+                AmountCur = -Invoice, AmountMst = -Invoice
+            },
             new CustTransOpen
             {
                 RecId = 10, DataAreaId = "dat", AccountNum = "C-001", RefRecId = 10,
@@ -233,6 +333,8 @@ public class CashDiscountSettlementTests
         {
             Type[] types = [typeof(CustTrans), typeof(CustTransOpen), typeof(CustSettlement), typeof(CustTable),
                 typeof(CustParameters), typeof(CustLedgerAccounts), typeof(CashDisc),
+                typeof(VendTrans), typeof(VendTransOpen), typeof(VendSettlement), typeof(VendTable),
+                typeof(VendLedgerAccounts),
                 typeof(LedgerJournalTable), typeof(LedgerJournalTrans),
                 typeof(BankAccountTable), typeof(BankAccountTrans),
                 typeof(Ledger), typeof(FiscalCalendarPeriod), typeof(LedgerFiscalCalendarPeriod),
@@ -260,6 +362,13 @@ public class CashDiscountSettlementTests
                         entity.Ignore(property.Name);
             }
         }
+    }
+
+    private sealed class TestUser : IAX.IXApi.Infrastructure.Identity.ICurrentUserService
+    {
+        public string GetCurrentUserId() => "tester";
+        public string GetOwnerAccountId() => "owner";
+        public string GetDataAreaId() => "dat";
     }
 
     private sealed class TestCompany : ICompanyExecutionContext

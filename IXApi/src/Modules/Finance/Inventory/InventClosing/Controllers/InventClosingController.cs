@@ -10,7 +10,7 @@ namespace IAX.IXApi.Modules.Finance.Inventory;
 
 [ApiController]
 [Route("api/v1/inventory-costing/closings")]
-[DomainPermission("Inventory", "Transactions", "View")]
+[DomainPermission("Inventory", "Inquiry", "View")]
 public sealed class InventClosingController : BaseController<InventClosing, InventClosingRecordDto>
 {
     private readonly IInventClosingQueryService _closingService;

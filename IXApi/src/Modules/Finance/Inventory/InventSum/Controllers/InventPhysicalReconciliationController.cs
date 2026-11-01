@@ -6,7 +6,7 @@ namespace IAX.IXApi.Modules.Finance.Inventory;
 
 [ApiController]
 [Route("api/v1/inventory-reconciliation/physical")]
-[DomainPermission("Inventory", "Transactions", "View")]
+[DomainPermission("Inventory", "Inquiry", "View")]
 public sealed class InventPhysicalReconciliationController(IInventPhysicalReconciliationService service) : ControllerBase
 {
     [HttpGet]

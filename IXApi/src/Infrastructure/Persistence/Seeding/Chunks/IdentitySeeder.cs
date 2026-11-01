@@ -95,7 +95,14 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             ("Inventory", "Items"),
             ("Inventory", "ItemGroups"),
             ("Inventory", "UOM"),
+            // Inventory is split by duty: setup maintenance, journal maintenance, the posting
+            // actions that move stock or settle cost, and read-only inquiries. "Transactions"
+            // stays seeded so existing role grants are not orphaned by the split.
             ("Inventory", "Transactions"),
+            ("Inventory", "Setup"),
+            ("Inventory", "Journals"),
+            ("Inventory", "Posting"),
+            ("Inventory", "Inquiry"),
 
             // ── System Administration ────────────────────────────────────────
             ("SystemAdministration", "Users"),

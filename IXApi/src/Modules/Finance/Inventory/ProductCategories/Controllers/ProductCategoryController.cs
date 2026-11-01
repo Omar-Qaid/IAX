@@ -9,7 +9,7 @@ namespace IAX.IXApi.Modules.Finance.Inventory.ProductCategories;
 
 [ApiController]
 [Route("api/v1/product-categories")]
-[DomainPermission("Inventory", "Transactions")]
+[DomainPermission("Inventory", "Setup")]
 public sealed class ProductCategoryController : BaseController<EcoResCategoryHierarchy, CategoryHierarchyDto>
 {
     private readonly IProductCategoryService _categoryService;

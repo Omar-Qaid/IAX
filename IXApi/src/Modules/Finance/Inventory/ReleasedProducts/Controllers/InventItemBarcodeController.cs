@@ -9,7 +9,7 @@ namespace IAX.IXApi.Modules.Finance.Inventory;
 
 [ApiController]
 [Route("api/v1/InventTable/released-products/{releasedProductRecId:long}/barcodes")]
-[DomainPermission("Inventory", "Transactions")]
+[DomainPermission("Inventory", "Setup")]
 public sealed class InventItemBarcodeController
     : BaseController<InventItemBarcode, InventItemBarcodeDto>
 {

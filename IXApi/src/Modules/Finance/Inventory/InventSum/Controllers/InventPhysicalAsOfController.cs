@@ -6,7 +6,7 @@ namespace IAX.IXApi.Modules.Finance.Inventory;
 
 [ApiController]
 [Route("api/v1/inventory-reports/physical-as-of")]
-[DomainPermission("Inventory", "Transactions", "View")]
+[DomainPermission("Inventory", "Inquiry", "View")]
 public sealed class InventPhysicalAsOfController(IInventPhysicalAsOfService service) : ControllerBase
 {
     [HttpGet]

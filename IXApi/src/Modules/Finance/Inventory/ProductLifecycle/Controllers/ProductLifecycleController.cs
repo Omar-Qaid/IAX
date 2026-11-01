@@ -9,7 +9,7 @@ namespace IAX.IXApi.Modules.Finance.Inventory.ProductLifecycle;
 
 [ApiController]
 [Route("api/v1/product-statuses")]
-[DomainPermission("Inventory", "Transactions")]
+[DomainPermission("Inventory", "Setup")]
 public sealed class ProductLifecycleController : BaseController<EcoResProductLifecycleState, ProductLifecycleStateDto>
 {
     private readonly IProductLifecycleService _lifecycleService;

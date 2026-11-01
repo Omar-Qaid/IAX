@@ -5,7 +5,7 @@ namespace IAX.IXApi.Modules.Finance.Inventory.Transfer
 {
     [ApiController]
     [Route("api/v1/InventTransferOrder")]
-    [DomainPermission("Inventory", "Transactions")]
+    [DomainPermission("Inventory", "Inquiry", "View")]
     public sealed class InventTransferOrderController(IInventTransferOrderService service) : ControllerBase
     {
         [HttpGet("{transferId}")]
@@ -17,17 +17,17 @@ namespace IAX.IXApi.Modules.Finance.Inventory.Transfer
         }
 
         [HttpPost]
-        [DomainPermission("Inventory", "Transactions", "Edit")]
+        [DomainPermission("Inventory", "Posting", "Edit")]
         public async Task<IActionResult> Create(InventTransferCreateDto input, CancellationToken ct) =>
             Result(await service.CreateAsync(input, ct));
 
         [HttpPost("{transferId}/ship")]
-        [DomainPermission("Inventory", "Transactions", "Edit")]
+        [DomainPermission("Inventory", "Posting", "Edit")]
         public async Task<IActionResult> Ship(string transferId, InventTransferPostDto input, CancellationToken ct) =>
             Result(await service.ShipAsync(transferId, input, ct));
 
         [HttpPost("{transferId}/receive")]
-        [DomainPermission("Inventory", "Transactions", "Edit")]
+        [DomainPermission("Inventory", "Posting", "Edit")]
         public async Task<IActionResult> Receive(string transferId, InventTransferPostDto input, CancellationToken ct) =>
             Result(await service.ReceiveAsync(transferId, input, ct));
 

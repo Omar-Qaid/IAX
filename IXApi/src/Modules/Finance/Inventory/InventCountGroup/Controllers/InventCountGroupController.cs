@@ -10,7 +10,7 @@ namespace IAX.IXApi.Modules.Finance.Inventory;
 
 [ApiController]
 [Route("api/v1/InventCountGroup")]
-[DomainPermission("Inventory", "Transactions")]
+[DomainPermission("Inventory", "Setup")]
 public sealed class InventCountGroupController : BaseController<InventCountGroup, InventCountGroupRecordDto>
 {
     private readonly IInventCountGroupService _groupService;

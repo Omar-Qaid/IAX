@@ -9,7 +9,7 @@ namespace IAX.IXApi.Modules.Finance.Inventory;
 
 [ApiController]
 [Route("api/v1/InventJournal")]
-[DomainPermission("Inventory", "Transactions")]
+[DomainPermission("Inventory", "Journals")]
 public sealed class InventJournalController
     : BaseController<InventJournalTable, InventJournalTableDto>
 {
@@ -47,7 +47,7 @@ public sealed class InventJournalController
         Ok(APIResponse<object>.Ok(await _journalService.ListAsync(ct)));
 
     [HttpPost("{journalId}/count/create-lines")]
-    [DomainPermission("Inventory", "Transactions", "Edit")]
+    [DomainPermission("Inventory", "Journals", "Edit")]
     public async Task<IActionResult> CreateCountingLines(string journalId, [FromBody] InventCountingLinesInputDto input, CancellationToken ct)
     {
         var (result, error) = await _journalService.CreateCountingLinesAsync(journalId, input ?? new InventCountingLinesInputDto(), ct);
@@ -57,15 +57,15 @@ public sealed class InventJournalController
     }
 
     [HttpPost("{journalId}/count/freeze")]
-    [DomainPermission("Inventory", "Transactions", "Edit")]
+    [DomainPermission("Inventory", "Journals", "Edit")]
     public async Task<IActionResult> FreezeCount(string journalId, CancellationToken ct) => CountResult(await _posting.FreezeCountAsync(journalId, ct));
 
     [HttpPost("{journalId}/count/confirm")]
-    [DomainPermission("Inventory", "Transactions", "Edit")]
+    [DomainPermission("Inventory", "Journals", "Edit")]
     public async Task<IActionResult> ConfirmCount(string journalId, Dictionary<long, decimal> quantities, CancellationToken ct) => CountResult(await _posting.ConfirmCountAsync(journalId, quantities, ct));
 
     [HttpPost("{journalId}/count/cancel")]
-    [DomainPermission("Inventory", "Transactions", "Edit")]
+    [DomainPermission("Inventory", "Journals", "Edit")]
     public async Task<IActionResult> CancelCount(string journalId, CancellationToken ct) => CountResult(await _posting.CancelCountAsync(journalId, ct));
 
     private IActionResult CountResult(string? error) => error == null ? Ok(APIResponse<bool>.Ok(true)) : UnprocessableEntity(APIResponse<bool>.Fail(error));
@@ -121,6 +121,7 @@ public sealed class InventJournalController
     }
 
     [HttpPost("{journalId}/post")]
+    [DomainPermission("Inventory", "Posting", "Edit")]
     public async Task<IActionResult> Post(string journalId, CancellationToken ct)
     {
         var result = await _posting.PostAsync(journalId, ct);

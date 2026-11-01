@@ -5,7 +5,7 @@ namespace IAX.IXApi.Modules.Finance.Inventory.InventTransPosting
 {
     [ApiController]
     [Route("api/v1/InventTransPosting")]
-    [DomainPermission("Inventory", "Transactions")]
+    [DomainPermission("Inventory", "Inquiry", "View")]
     public sealed class InventTransPostingController(IInventTransPostingService service) : ControllerBase
     {
         [HttpGet("by-invent-trans/{inventTransId}")]

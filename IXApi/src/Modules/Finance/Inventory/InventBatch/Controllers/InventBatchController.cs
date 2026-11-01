@@ -10,7 +10,7 @@ namespace IAX.IXApi.Modules.Finance.Inventory;
 
 [ApiController]
 [Route("api/v1/InventBatch")]
-[DomainPermission("Inventory", "Transactions")]
+[DomainPermission("Inventory", "Setup")]
 public sealed class InventBatchController : BaseController<InventBatch, InventBatchDto>
 {
     private readonly IInventBatchService _batchService;

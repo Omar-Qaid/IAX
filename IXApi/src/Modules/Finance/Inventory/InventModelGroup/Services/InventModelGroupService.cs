@@ -96,12 +96,20 @@ public sealed class InventModelGroupService : BaseService<InventModelGroupEntity
             || await Db.Set<InventSum>().AnyAsync(x => x.DataAreaId == companyId && itemIds.Contains(x.ItemId), ct);
     }
 
+    /// <summary>
+    /// The inventory models the cost-settlement engine actually settles. Setup is kept in step with
+    /// InventCloseService so a group cannot be created whose cost could never be settled.
+    /// </summary>
+    private static readonly InventModel[] SettledModels =
+        [InventModel.FIFO, InventModel.LIFO, InventModel.WeightedAvg];
+
     private static NoYes YesNo(bool value) => value ? NoYes.Yes : NoYes.No;
     private static bool Bool(NoYes value) => value == NoYes.Yes;
     private static string? Validate(string id, InventModelGroupRecordDto input) =>
         id.Length == 0 ? "Item model group is required." :
         string.IsNullOrWhiteSpace(input.Name) ? "Name is required." :
-        input.InventModel != (int)InventModel.FIFO ? "The basic inventory release supports FIFO only." :
+        !SettledModels.Contains((InventModel)input.InventModel)
+            ? $"The basic inventory release settles {string.Join(", ", SettledModels)} only." :
         !input.StockedProduct ? "The basic inventory model group must contain stocked products." :
         input.NegativePhysical || input.NegativeFinancial ? "Negative physical and financial inventory are disabled in the basic release." :
         input.InclPhysicalValueInCost ? "Include physical value in cost is disabled in the basic release." :

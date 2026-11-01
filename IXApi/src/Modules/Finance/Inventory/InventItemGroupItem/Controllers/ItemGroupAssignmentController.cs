@@ -9,7 +9,7 @@ namespace IAX.IXApi.Modules.Finance.Inventory;
 
 [ApiController]
 [Route("api/v1/InventItemGroupItem")]
-[DomainPermission("Inventory", "Transactions")]
+[DomainPermission("Inventory", "Setup")]
 public sealed class ItemGroupAssignmentController
     : BaseController<InventItemGroupItem, InventItemGroupItemDto>
 {

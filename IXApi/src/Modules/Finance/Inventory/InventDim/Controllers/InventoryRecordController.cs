@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
 [ApiController]
-[DomainPermission("Inventory", "Transactions", "View")]
+[DomainPermission("Inventory", "Inquiry", "View")]
 public sealed class InventoryRecordController
     : BaseController<InventDim, InventoryDimensionRecordDto>
 {

@@ -2024,6 +2024,14 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
 
+                    b.Property<string>("CashDisc")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<DateTime>("CashDiscBaseDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -3168,6 +3176,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<DateTime>("TransDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<decimal>("UtilizedCashDisc")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<string>("Voucher")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -3206,6 +3218,14 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<decimal>("AmountMst")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime>("CashDiscBaseDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CashDiscCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<DateTime>("Closed")
                         .HasColumnType("datetime2");

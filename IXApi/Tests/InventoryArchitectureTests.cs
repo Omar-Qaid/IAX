@@ -100,8 +100,9 @@ public sealed class InventoryArchitectureTests
         var valid = new InventJournalNameInputDto
         { JournalNameId = "COUNT", Description = "Count", JournalType = InventJournalType.Counting };
         Assert.True(validator.Validate(valid).IsValid);
+        // Summary posting is supported: the journal gets one voucher and one totalled ledger entry.
         valid.DetailSummary = DetailSummary.Summary;
-        Assert.False(validator.Validate(valid).IsValid);
+        Assert.True(validator.Validate(valid).IsValid);
         valid.DetailSummary = DetailSummary.Detail;
         valid.DeletePostedLines = true;
         Assert.False(validator.Validate(valid).IsValid);
@@ -897,18 +898,99 @@ public sealed class InventoryArchitectureTests
         var fifo = await service.CreateAsync(new InventModelGroupRecordDto
         { ModelGroupId = "FIFO-NEW", Name = "FIFO", InventModel = (int)InventModel.FIFO,
             StockedProduct = true, PostOnHandFinancial = true }, default);
+        // The models the cost-settlement engine settles are accepted.
         var weightedAverage = await service.CreateAsync(new InventModelGroupRecordDto
-        { ModelGroupId = "AVG-NEW", Name = "Weighted average", InventModel = (int)InventModel.WeightedAvg }, default);
+        { ModelGroupId = "AVG-NEW", Name = "Weighted average", InventModel = (int)InventModel.WeightedAvg,
+            StockedProduct = true, PostOnHandFinancial = true }, default);
+        var lifo = await service.CreateAsync(new InventModelGroupRecordDto
+        { ModelGroupId = "LIFO-NEW", Name = "LIFO", InventModel = (int)InventModel.LIFO,
+            StockedProduct = true, PostOnHandFinancial = true }, default);
+        // The models it does not settle are rejected rather than silently mis-costed.
         var standardCost = await service.CreateAsync(new InventModelGroupRecordDto
-        { ModelGroupId = "STD-NEW", Name = "Standard cost", InventModel = (int)InventModel.StandardCost }, default);
+        { ModelGroupId = "STD-NEW", Name = "Standard cost", InventModel = (int)InventModel.StandardCost,
+            StockedProduct = true, PostOnHandFinancial = true }, default);
         var movingAverage = await service.CreateAsync(new InventModelGroupRecordDto
-        { ModelGroupId = "MOV-AVG", Name = "Moving average", InventModel = (int)InventModel.MovingAverage }, default);
+        { ModelGroupId = "MOV-AVG", Name = "Moving average", InventModel = (int)InventModel.MovingAverage,
+            StockedProduct = true, PostOnHandFinancial = true }, default);
 
         Assert.Null(fifo.Error);
-        Assert.Contains("FIFO only", weightedAverage.Error);
-        Assert.Contains("FIFO only", standardCost.Error);
-        Assert.Contains("FIFO only", movingAverage.Error);
-        Assert.Single(await db.Set<InventModelGroup>().Where(x => x.ModelGroupId == "FIFO-NEW").ToListAsync());
+        Assert.Null(weightedAverage.Error);
+        Assert.Null(lifo.Error);
+        Assert.Contains("settles", standardCost.Error);
+        Assert.Contains("settles", movingAverage.Error);
+        Assert.Equal(new[] { "AVG-NEW", "FIFO-NEW", "LIFO-NEW" },
+            await db.Set<InventModelGroup>().Where(x => x.ModelGroupId.EndsWith("-NEW"))
+                .OrderBy(x => x.ModelGroupId).Select(x => x.ModelGroupId).ToArrayAsync());
+    }
+
+    [Fact]
+    public async Task Summary_journal_posting_uses_one_voucher_and_one_totalled_ledger_entry()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        var date = DateTime.Today;
+        db.AddRange(
+            new InventJournalTable
+            {
+                RecId = 1, DataAreaId = "dat", JournalId = "J-1", JournalNameId = "MOV",
+                JournalType = InventJournalType.Movement, VoucherNumberSequenceTable = 4,
+                DetailSummary = DetailSummary.Summary
+            },
+            // Two receipts on the same accounts: summary posting must total them into one entry.
+            new InventJournalTrans
+            {
+                RecId = 2, DataAreaId = "dat", JournalId = "J-1", JournalType = InventJournalType.Movement,
+                ItemId = "ITEM-1", InventDimId = "DIM-1", Unit = "pcs", Qty = 2, CostPrice = 10,
+                TransDate = date, LedgerDimension = 18
+            },
+            new InventJournalTrans
+            {
+                RecId = 17, DataAreaId = "dat", JournalId = "J-1", JournalType = InventJournalType.Movement,
+                ItemId = "ITEM-1", InventDimId = "DIM-1", Unit = "pcs", Qty = 3, CostPrice = 10,
+                TransDate = date, LedgerDimension = 18
+            },
+            new InventJournalName { RecId = 3, DataAreaId = "dat", JournalNameId = "MOV", JournalType = InventJournalType.Movement, VoucherNumberSequenceTable = 4, DetailSummary = DetailSummary.Summary },
+            new SysNumberSequence { RecId = 4, DataAreaId = "dat", NumberSequence = "INV-VOUCHER", Txt = "Inventory voucher", Format = "IV-#####", AnnotatedFormat = "IV-{SEQ}", InUse = 1, IsActive = true, NextRec = 1, Highest = 99999 },
+            new ReleasedItem { RecId = 5, DataAreaId = "dat", ItemId = "ITEM-1", Product = 6 },
+            new InventTableModule { RecId = 16, DataAreaId = "dat", ItemId = "ITEM-1", ModuleType = ModuleInventPurchSales.Inventory, UnitId = "pcs" },
+            new InventModelGroup { RecId = 7, DataAreaId = "dat", ModelGroupId = "FIFO", Name = "FIFO", InventModel = InventModel.FIFO, StockedProduct = NoYes.Yes },
+            new InventModelGroupItem { RecId = 8, DataAreaId = "dat", ItemId = "ITEM-1", ItemDataAreaId = "dat", ModelGroupId = "FIFO", ModelGroupDataAreaId = "dat" },
+            new EcoResTrackingDimensionGroupItem { RecId = 9, DataAreaId = "dat", ItemId = "ITEM-1", ItemDataAreaId = "dat", TrackingDimensionGroup = 10 },
+            new EcoResTrackingDimensionGroup { RecId = 10, Name = "No tracking" },
+            new InventDim { RecId = 11, DataAreaId = "dat", InventDimId = "DIM-1", InventSiteId = "JED", InventLocationId = "MAIN" },
+            new Ledger { RecId = 12, DataAreaId = "dat", FiscalCalendar = 13, AccountingCurrency = "SAR", ReportingCurrency = "SAR" },
+            new FiscalCalendarPeriod { RecId = 14, DataAreaId = "dat", FiscalCalendar = 13, StartDate = date.AddDays(-1), EndDate = date.AddDays(1), Type = FiscalPeriodType.Operating },
+            new LedgerFiscalCalendarPeriod { RecId = 15, DataAreaId = "dat", Ledger = 12, FiscalCalendarPeriod = 14, Status = FiscalPeriodStatus.Open },
+            new MainAccount { RecId = 19, DataAreaId = "dat", MainAccountId = "130100" },
+            new MainAccount { RecId = 20, DataAreaId = "dat", MainAccountId = "510100" },
+            new DimensionAttributeValueCombination { RecId = 21, DataAreaId = "dat", MainAccount = 19, DisplayValue = "130100" },
+            new DimensionAttributeValueCombination { RecId = 18, DataAreaId = "dat", MainAccount = 20, DisplayValue = "510100" },
+            new InventPosting { RecId = 22, DataAreaId = "dat", InventAccountType = InventAccountType.InventReceipt, ItemCode = TableGroupAll.All, CustVendCode = TableGroupAll.All, LedgerDimension = 21 });
+        await db.SaveChangesAsync();
+        var identity = new TestIdentity();
+        var unitOfWork = new TestUnitOfWork(db);
+        var posting = new InventJournalPostingService(unitOfWork, identity, identity,
+            new SysNumberSequenceService(unitOfWork, identity), new TestSalesInventoryNumbers());
+
+        var result = await posting.PostAsync("J-1", default);
+
+        Assert.Null(result.Error);
+        Assert.Equal(2, result.Result!.InventoryTransactionsCreated);   // stock still moves per line
+        Assert.Equal(1, result.Result.LedgerEntriesCreated);            // but the ledger is one entry
+        var voucher = Assert.Single(result.Result.Vouchers);
+        Assert.Equal(new[] { voucher, voucher },
+            await db.Set<InventJournalTrans>().OrderBy(x => x.RecId).Select(x => x.Voucher).ToArrayAsync());
+
+        Assert.Single(await db.Set<GeneralJournalEntry>().ToListAsync());
+        var ledgerLines = await db.Set<GeneralJournalAccountEntry>().ToListAsync();
+        Assert.Equal(2, ledgerLines.Count);                             // one per account, not per line
+        Assert.Equal(0m, ledgerLines.Sum(x => x.AccountingCurrencyAmount));
+        Assert.Contains(ledgerLines, x => x.AccountingCurrencyAmount == 50m);   // 2 + 3 units at 10
+        Assert.Contains(ledgerLines, x => x.AccountingCurrencyAmount == -50m);
+        // The per-line record of the financial update survives summarization.
+        Assert.Equal(2, await db.Set<IAX.IXApi.Modules.Finance.Entities.InventTransPosting>().CountAsync());
     }
 
     [Fact]

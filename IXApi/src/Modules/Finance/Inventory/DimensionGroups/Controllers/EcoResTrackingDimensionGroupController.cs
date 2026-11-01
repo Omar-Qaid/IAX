@@ -9,7 +9,7 @@ namespace IAX.IXApi.Modules.Finance.Inventory;
 
 [ApiController]
 [Route("api/v1/EcoResTrackingDimensionGroup")]
-[DomainPermission("Inventory", "Transactions")]
+[DomainPermission("Inventory", "Setup")]
 public sealed class EcoResTrackingDimensionGroupController
     : BaseController<EcoResTrackingDimensionGroup, TrackingDimensionGroupDto>
 {

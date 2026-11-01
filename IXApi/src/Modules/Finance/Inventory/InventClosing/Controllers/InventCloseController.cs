@@ -6,13 +6,13 @@ namespace IAX.IXApi.Modules.Finance.Inventory;
 
 [ApiController]
 [Route("api/v1/inventory-costing")]
-[DomainPermission("Inventory", "Transactions", "View")]
+[DomainPermission("Inventory", "Inquiry", "View")]
 public sealed class InventCloseController(IInventCloseService service) : ControllerBase
 {
     public sealed record CloseRequest(DateTime Cutoff);
 
     [HttpPost("items/{itemId}/close")]
-    [DomainPermission("Inventory", "Transactions", "Edit")]
+    [DomainPermission("Inventory", "Posting", "Edit")]
     public async Task<IActionResult> CloseItem(string itemId, [FromBody] CloseRequest request, CancellationToken ct)
     {
         if (request.Cutoff == default) return BadRequest(APIResponse<object>.Fail("A cutoff date is required."));
@@ -21,7 +21,7 @@ public sealed class InventCloseController(IInventCloseService service) : Control
     }
 
     [HttpPost("close")]
-    [DomainPermission("Inventory", "Transactions", "Edit")]
+    [DomainPermission("Inventory", "Posting", "Edit")]
     public async Task<IActionResult> Close([FromBody] CloseRequest request, CancellationToken ct)
     {
         if (request.Cutoff == default)
@@ -33,7 +33,7 @@ public sealed class InventCloseController(IInventCloseService service) : Control
     }
 
     [HttpPost("recalculate")]
-    [DomainPermission("Inventory", "Transactions", "Edit")]
+    [DomainPermission("Inventory", "Posting", "Edit")]
     public async Task<IActionResult> Recalculate([FromBody] CloseRequest request, CancellationToken ct)
     {
         if (request.Cutoff == default)
@@ -45,7 +45,7 @@ public sealed class InventCloseController(IInventCloseService service) : Control
     }
 
     [HttpPost("items/{itemId}/recalculate")]
-    [DomainPermission("Inventory", "Transactions", "Edit")]
+    [DomainPermission("Inventory", "Posting", "Edit")]
     public async Task<IActionResult> RecalculateItem(string itemId, [FromBody] CloseRequest request, CancellationToken ct)
     {
         if (request.Cutoff == default) return BadRequest(APIResponse<object>.Fail("A cutoff date is required."));
@@ -54,7 +54,7 @@ public sealed class InventCloseController(IInventCloseService service) : Control
     }
 
     [HttpPost("closings/{closingRecId:long}/cancel")]
-    [DomainPermission("Inventory", "Transactions", "Edit")]
+    [DomainPermission("Inventory", "Posting", "Edit")]
     public async Task<IActionResult> Cancel(long closingRecId, CancellationToken ct)
     {
         var (result, error) = await service.CancelAsync(closingRecId, ct);

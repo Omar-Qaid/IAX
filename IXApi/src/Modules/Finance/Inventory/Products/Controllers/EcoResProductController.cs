@@ -9,7 +9,7 @@ namespace IAX.IXApi.Modules.Finance.Inventory;
 
 [ApiController]
 [Route("api/v1/EcoResProduct")]
-[DomainPermission("Inventory", "Transactions", "View")]
+[DomainPermission("Inventory", "Inquiry", "View")]
 public sealed class EcoResProductController : BaseController<EcoResProduct, EcoResProductDto>
 {
     private readonly IEcoResProductService _productService;

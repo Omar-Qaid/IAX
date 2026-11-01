@@ -9,7 +9,7 @@ namespace IAX.IXApi.Modules.Finance.Inventory;
 
 [ApiController]
 [Route("api/v1/inventory/reservations")]
-[DomainPermission("Inventory", "Transactions", "View")]
+[DomainPermission("Inventory", "Inquiry", "View")]
 public sealed class InventoryReservationController
     : BaseController<InventTrans, ReservationResultDto>
 {
@@ -48,7 +48,7 @@ public sealed class InventoryReservationController
     public sealed record PickingRequest(string InventTransId, decimal TargetQuantity);
 
     [HttpPost("picking")]
-    [DomainPermission("Inventory", "Transactions", "Edit")]
+    [DomainPermission("Inventory", "Posting", "Edit")]
     public async Task<IActionResult> SetPicked([FromBody] PickingRequest request, CancellationToken ct)
     {
         var (result, error) = await _reservationService.SetPickedAsync(request.InventTransId, request.TargetQuantity, ct);
@@ -57,7 +57,7 @@ public sealed class InventoryReservationController
     }
 
     [HttpPost("reserve")]
-    [DomainPermission("Inventory", "Transactions", "Edit")]
+    [DomainPermission("Inventory", "Posting", "Edit")]
     public async Task<IActionResult> Reserve([FromBody] ReserveRequest request, CancellationToken ct)
     {
         var (result, error) = await _reservationService.ReserveAsync(request.InventTransId, request.Quantity, request.AllowPartial, ct);
@@ -67,7 +67,7 @@ public sealed class InventoryReservationController
     }
 
     [HttpPost("release")]
-    [DomainPermission("Inventory", "Transactions", "Edit")]
+    [DomainPermission("Inventory", "Posting", "Edit")]
     public async Task<IActionResult> Release([FromBody] ReleaseRequest request, CancellationToken ct)
     {
         var (result, error) = await _reservationService.ReleaseAsync(request.InventTransId, request.Quantity, ct);

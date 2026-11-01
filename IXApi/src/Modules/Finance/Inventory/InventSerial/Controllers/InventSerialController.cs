@@ -9,7 +9,7 @@ namespace IAX.IXApi.Modules.Finance.Inventory;
 
 [ApiController]
 [Route("api/v1/InventSerial")]
-[DomainPermission("Inventory", "Transactions")]
+[DomainPermission("Inventory", "Setup")]
 public sealed class InventSerialController : BaseController<InventSerial, InventSerialRecordDto>
 {
     private readonly IInventSerialService _serialService;
