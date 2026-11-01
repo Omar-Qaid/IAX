@@ -15,7 +15,7 @@ using ItemModelGroup = IAX.IXApi.Modules.Finance.Entities.InventModelGroup;
 
 namespace IAX.IXApi.Modules.Finance.Inventory;
 
-public sealed class InventJournalService : BaseService<InventJournalTable>, IInventJournalService
+public sealed partial class InventJournalService : BaseService<InventJournalTable>, IInventJournalService
 {
     private readonly ICompanyExecutionContext _company;
     private readonly ISysNumberSequenceService _numbers;

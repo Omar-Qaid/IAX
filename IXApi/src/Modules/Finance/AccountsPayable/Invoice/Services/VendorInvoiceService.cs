@@ -226,7 +226,11 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
             {
                 DataAreaId = area, AccountNum = order.InvoiceAccount, TransDate = date, Voucher = internalId,
                 Invoice = vendorInvoiceId, Txt = $"Purchase {order.PurchId}", CurrencyCode = order.CurrencyCode,
-                AmountCur = -(total + totalTax), AmountMst = -(total + totalTax), DueDate = dueDate, TransType = LedgerTransType.Purch
+                AmountCur = -(total + totalTax), AmountMst = -(total + totalTax), DueDate = dueDate, TransType = LedgerTransType.Purch,
+                // The order's cash discount code travels to the transaction, which is where
+                // settlement reads it from.
+                CashDiscCode = order.CashDisc,
+                CashDiscBaseDate = order.CashDiscBaseDate == default ? date : order.CashDiscBaseDate
             };
             Db.Set<VendTrans>().Add(vendorTransaction);
             await _unitOfWork.CompleteAsync(ct);

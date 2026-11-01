@@ -94,6 +94,7 @@ public sealed class InventTransferOrderService(
                 || !await Db.Set<InventTableModule>().AsNoTracking().AnyAsync(x => x.DataAreaId == area && x.ItemId == itemId
                     && x.ModuleType == ModuleInventPurchSales.Inventory && x.UnitId == unitId, ct))
                 throw new InvalidOperationException($"Item '{itemId}' must be released with '{unitId}' as its inventory unit.");
+            await RequireUntrackedItemAsync(area, itemId, ct);
             // The line's dimension is the source: the transit and destination legs resolve their own.
             var dim = await dimensions.ResolveAsync(area, site, from, ct);
             Db.Add(new InventTransferLine
@@ -105,6 +106,22 @@ public sealed class InventTransferOrderService(
             });
         }
         return header;
+    }
+
+    /// <summary>
+    /// A transfer order carries a site and warehouse dimension only. An item whose tracking
+    /// dimension group requires a batch or serial number on physical inventory is therefore not
+    /// transferable through this document, and saying so is better than recording stock under a
+    /// blank batch that the inventory journal would have rejected.
+    /// </summary>
+    private async Task RequireUntrackedItemAsync(string area, string itemId, CancellationToken ct)
+    {
+        var group = await InventoryDimensionPolicy.TrackingGroupAsync(Db, area, itemId, ct);
+        if (group is null)
+            throw new InvalidOperationException($"A tracking dimension group is required for item '{itemId}'.");
+        if (await InventoryDimensionPolicy.RequiresBatchOrSerialAsync(Db, group.Value, ct))
+            throw new InvalidOperationException(
+                $"Item '{itemId}' is batch or serial tracked. Basic transfer orders carry site and warehouse dimensions only, so use an inventory transfer journal for tracked items.");
     }
 
     private async Task<InventTransferTable> PostCoreAsync(string area, string transferId, InventTransferPostDto input, bool receive, CancellationToken ct)
@@ -150,8 +167,16 @@ public sealed class InventTransferOrderService(
                     ? $"Line {lineNum}: the receipt exceeds this line's stock in transit."
                     : $"Line {lineNum}: the shipment exceeds the remaining transfer quantity.");
 
+            // The dimension the order can carry is site and warehouse only, so an item that needs a
+            // batch or serial number is refused here rather than moved under a blank one.
+            await RequireUntrackedItemAsync(area, line.ItemId, ct);
             var fromDim = await dimensions.ResolveAsync(area, site, fromWarehouse, ct);
             var toDim = await dimensions.ResolveAsync(area, site, toWarehouse, ct);
+            foreach (var (dim, signedQty) in new[] { (fromDim, -quantity), (toDim, quantity) })
+            {
+                var statusError = await InventoryDimensionPolicy.CheckStatusAsync(Db, area, dim, signedQty, ct);
+                if (statusError != null) throw new InvalidOperationException($"Line {lineNum}: {statusError}");
+            }
             var fromSum = await Movement.GetOrCreateSummaryAsync(area, line.ItemId, fromDim, ct);
             var toSum = await Movement.GetOrCreateSummaryAsync(area, line.ItemId, toDim, ct);
             if (fromSum.AvailPhysical < quantity)

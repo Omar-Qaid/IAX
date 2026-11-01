@@ -50,7 +50,7 @@ internal sealed class SubledgerPostingSupport(DbContext db)
             x => x.Ledger == ledger.RecId && x.FiscalCalendarPeriod == period.RecId, ct);
         if (ledgerPeriod == null || ledgerPeriod.Status != FiscalPeriodStatus.Open)
             throw new SubledgerPostingException($"The fiscal period for {date:d} is not open.");
-        if (module != null)
+        if (module != null && db.Model.FindEntityType(typeof(LedgerPeriodModuleAccessControl)) != null)
         {
             var access = await db.Set<LedgerPeriodModuleAccessControl>().AsNoTracking()
                 .SingleOrDefaultAsync(x => x.DataAreaId == area && x.LedgerFiscalCalendarPeriod == ledgerPeriod.RecId, ct);

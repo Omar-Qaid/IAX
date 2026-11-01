@@ -28,6 +28,7 @@ public sealed class AccountStructureValidator(DbContext db)
     public async Task<string?> ValidateAsync(string area, DimensionAttributeValueCombination combination,
         CancellationToken ct)
     {
+        if (db.Model.FindEntityType(typeof(DimensionConstraintTree)) == null) return null;
         var snapshot = _snapshot ??= await LoadAsync(area, ct);
         if (snapshot.Structures.Count == 0)
             return "No active account structure is assigned to the ledger.";

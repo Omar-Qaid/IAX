@@ -75,9 +75,8 @@ public class AccountStructureValidationTests
         Assert.Contains("not covered by any account structure assigned to the ledger", refusal);
     }
 
-    // The user's decision: a company with no assigned structure posts as it did before.
     [Fact]
-    public async Task A_ledger_with_no_assigned_structure_is_not_validated()
+    public async Task A_ledger_with_no_assigned_structure_is_refused()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
@@ -85,13 +84,12 @@ public class AccountStructureValidationTests
         // Structures exist and are activated, but none is assigned to the ledger.
         await SetUpStructuresAsync(db, assign: false);
 
-        // The combination that the profit and loss structure would refuse posts anyway.
-        Assert.Null(await new AccountStructureValidator(db).ValidateAsync("dat",
+        Assert.Contains("No active account structure", await new AccountStructureValidator(db).ValidateAsync("dat",
             await CombinationAsync(db, "611000", ("Department", "")), default));
     }
 
     [Fact]
-    public async Task A_draft_structure_assigned_to_nothing_constrains_nothing()
+    public async Task A_draft_structure_does_not_satisfy_the_active_structure_requirement()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
         await connection.OpenAsync();
@@ -101,7 +99,7 @@ public class AccountStructureValidationTests
         await builder.DefineAsync("dat", ProfitAndLoss(), default);
         db.ChangeTracker.Clear();
 
-        Assert.Null(await new AccountStructureValidator(db).ValidateAsync("dat",
+        Assert.Contains("No active account structure", await new AccountStructureValidator(db).ValidateAsync("dat",
             await CombinationAsync(db, "611000", ("Department", "")), default));
     }
 

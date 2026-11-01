@@ -22,9 +22,48 @@ Phase A verification on 2026-10-22: focused category, barcode, lifecycle/status,
 
 ## Phase D costing (in progress, 2026-10-22)
 
-- FIFO journal issues now receive a provisional same-site running-average cost. Final FIFO costing, inventory close, settlement, reversal, and ledger adjustment remain unimplemented. Periodic weighted-average journal posting remains blocked.
+- Journal issues receive a provisional same-site running-average cost. Final costing happens in the cost-settlement engine described under Phase E.
 - Existing standard-cost journal lookup is now company-scoped, chooses the current dimension before a company-wide fallback, and respects the price unit. Receipt prices that differ from the active standard are rejected until variance accounting is implemented; matching-price posting remains supported for existing standard-cost items.
-- New item-model-group setup still accepts only Moving Average. Standard-cost activation/revaluation and purchase-price variances are absent. SQL Server migrations and live verification remain untouched.
+- New item-model-group setup accepts FIFO only. Standard-cost activation/revaluation and purchase-price variances are absent. SQL Server migrations and live verification remain untouched.
+
+## Phase E cost settlement (2026-11-01)
+
+`InventCloseService` is the shared engine for both periodic cost runs, and the sections of the
+Phase 1 matrix that called close, settlement and reversal "deferred" no longer describe the code.
+
+- **Close** (`POST api/v1/inventory-costing/close`, or `items/{itemId}/close`) settles financially
+  posted issues against financially posted receipts per item and financial site, adjusts each issue
+  to its settled cost, writes `InventSettlement` history, posts a balanced ledger correction,
+  revalues `InventSum`, and sets a financial boundary that blocks earlier postings.
+- **Recalculation** (`POST api/v1/inventory-costing/recalculate`, or `items/{itemId}/recalculate`)
+  runs the same cost adjustment but leaves transactions open and sets no boundary, so it can be
+  repeated and a later close still finishes the period. Its settlements carry
+  `InventSettleType.RecalculationAdjustment`.
+- **Cancellation** (`POST api/v1/inventory-costing/closings/{recId}/cancel`) reverses exactly what
+  one run wrote - settled quantities, cost adjustments, inventory value and the ledger correction -
+  marks its settlements `Cancelled`, flags the run `Cancellation`, and records a reversal row
+  carrying `CancelClosing` and `CancelClosingRefRecId`. Only the latest live run can be cancelled,
+  because later runs settled against the layers it consumed. A cancelled close stops binding
+  `InventoryFinancialBoundary`.
+- **Inventory models**: FIFO, LIFO and Weighted average are settled. Weighted average uses one pool
+  average for the period, rounded to two decimals with the residual on the last consumption.
+  LIFO-date, Weighted-average-date, Standard cost and Moving average are **rejected with a named
+  error**, not approximated - their exact standard behaviour is not yet verified here.
+- **Partially settled issues** are completed for their remaining open quantity instead of aborting
+  the run, and a receipt keeps its open quantity across runs.
+
+**Inventory value report** (`GET api/v1/inventory-reports/value`) gives dated quantity and value per
+item and inventory dimension, built from inventory transactions rather than from the on-hand summary,
+with the summary reported beside it so drift between the two is visible. It also totals the ledger
+amounts posted under each inventory posting type up to the same date. Those buckets are reported
+individually and with their difference, because what belongs in "inventory on the balance sheet"
+depends on which accounts the posting profiles point at - the report shows the composition and
+leaves that judgement to the reader.
+
+Still missing in costing: standard-cost variances, moving-average maintenance, physical
+(non-financial) inventory value - `InventSum.PhysicalValue` is never written - and cost marking.
+`InventMark` is deliberately absent rather than approximated: its exact standard field names are
+not verified here, and guessing them would break the no-invented-schema rule.
 
 ## Existing feature coverage
 
@@ -37,13 +76,14 @@ Phase A verification on 2026-10-22: focused category, barcode, lifecycle/status,
 | InventSum on-hand | Read-only company-scoped inquiry joins `InventSum`, `InventTable`, and `InventDim`; exposes basic site/warehouse quantities and values. |
 | UnitOfMeasure / UnitOfMeasureConversion | Shared UOM setup supports master CRUD plus global or product-specific conversion CRUD, duplicate validation, positive factors, and used-record restrictions. |
 | InventBatch | Backend master CRUD with company and released-item checks; batch tracking in transactions remains deferred. |
-| InventClosing | Read-only company-scoped closing history and a diagnostic FIFO preview. Settlement posting, close, recalculation, and reversal remain deferred. |
-| InventDim, InventSettlement | Company-scoped read-only inquiries. Dimension creation remains owned by the inventory engine; settlement posting remains deferred. |
+| InventClosing | Company-scoped closing history, a diagnostic FIFO preview, and the close / recalculation / cancellation engine described under Phase E. |
+| InventDim, InventSettlement | Company-scoped read-only inquiries. Dimension creation remains owned by the inventory engine; settlement rows are written by the cost-settlement engine. `InventoryDimensionPolicy` holds the batch/serial/status rules shared by the journal and transfer-order flows. |
 | InventItemGroupItem | Company-scoped inquiry and validated item-group assignment for released items. Historical postings are unchanged. |
 | InventItemLocation | Company-scoped inquiry and basic setup CRUD for released items at existing site/warehouse dimensions. Picking quantities are stored as setup only; warehouse picking automation is outside this release. |
 | InventSerial | Backend serial master CRUD with released-item checks and deletion guards; serial tracking in stock transactions remains deferred. |
 | InventPackaging | Company-scoped packaging group CRUD and packaging unit inquiry. The unit entity has no item/group relation key, so assignment and usage remain deferred. |
-| InventCountGroup | Company-scoped setup CRUD and optional validated assignment on item locations. Count policy is stored; automatic count scheduling is not implemented. |
+| InventTransferTable / Line | Transfer orders ship and receive through a transit warehouse, four inventory transactions per line, partial quantities, request-id idempotency. A transfer order carries site and warehouse dimensions only, so a batch- or serial-tracked item is refused with a named error instead of being moved under a blank batch, and blocked inventory status is rejected on both legs. Cross-site transfer, cancel/close actions and shipment document history are not implemented. |
+| InventCountGroup | Company-scoped setup CRUD and optional validated assignment on item locations. A counting journal generates its lines from on-hand stock by item, item group, count group or warehouse (`POST api/v1/InventJournal/{journalId}/count/create-lines`), capped at 1000 lines per call; candidates run the same line validation as hand-entered lines and failures are skipped and reported. Count-date scheduling from the count code and period is still not implemented, and `InventCountJour` history is still generic CRUD rather than written by posting. |
 
 Controllers retain their existing custom routes and response contracts. The shared BaseController introduces additional generic routes and different CRUD contracts, so these existing custom controllers continue to use ControllerBase. Warehouse and site services reuse BaseService/IBaseService. All Inventory service persistence now flows through IUnitOfWork.
 

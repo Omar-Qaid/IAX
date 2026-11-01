@@ -1098,6 +1098,189 @@ public sealed class InventoryCycleTests
     private static ISysNumberSequenceService Sequence() =>
         DispatchProxy.Create<ISysNumberSequenceService, TestSequenceProxy>();
 
+    // ---- Counting journal line generation -----------------------------------------------------
+
+    [Fact]
+    public async Task Counting_journal_generates_lines_from_on_hand_and_skips_what_it_cannot_count()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedCountableItem(db);
+        db.Add(new InventJournalName { DataAreaId = "dat", JournalNameId = "CNT", JournalType = InventJournalType.Counting });
+        db.Add(new InventJournalTable
+        {
+            DataAreaId = "dat", JournalId = "CNT-1", JournalNameId = "CNT",
+            JournalType = InventJournalType.Counting, Posted = NoYes.No
+        });
+        // Countable stock, batch-dimension stock the basic journal cannot count, and an empty bin.
+        db.Set<InventDim>().AddRange(
+            new InventDim { RecId = 1, DataAreaId = "dat", InventDimId = "DIM1", InventSiteId = "S1", InventLocationId = "WH1" },
+            new InventDim { RecId = 2, DataAreaId = "dat", InventDimId = "DIM2", InventSiteId = "S1", InventLocationId = "WH1", InventBatchId = "B1" },
+            new InventDim { RecId = 3, DataAreaId = "dat", InventDimId = "DIM3", InventSiteId = "S1", InventLocationId = "WH1" });
+        db.Set<InventSum>().AddRange(
+            new InventSum { RecId = 1, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM1", PhysicalInvent = 10m },
+            new InventSum { RecId = 2, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM2", PhysicalInvent = 4m },
+            new InventSum { RecId = 3, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM3", PhysicalInvent = 0m });
+        await db.SaveChangesAsync();
+
+        var work = new TestUnitOfWork(db);
+        var service = new InventJournalService(work, new TestCompany(), Sequence(),
+            new InventDimensionResolver(work, new TestInventNumbers()));
+
+        var (result, error) = await service.CreateCountingLinesAsync("CNT-1",
+            new InventCountingLinesInputDto { InventSiteId = "S1", InventLocationId = "WH1" }, default);
+
+        Assert.Null(error);
+        Assert.Equal(1, result!.LinesCreated);           // only the countable basic dimension
+        Assert.Equal(1, result.Skipped);                 // the batch dimension
+        Assert.Contains(result.Problems, x => x.Contains("batch", StringComparison.OrdinalIgnoreCase));
+
+        var line = await db.Set<InventJournalTrans>().SingleAsync();
+        Assert.Equal("ITEM", line.ItemId);
+        Assert.Equal("DIM1", line.InventDimId);
+        Assert.Equal(0m, line.Counted);                  // the counter still enters the count
+        Assert.Equal(InventRefType.PhysicalinventoryCount, line.InventRefType);
+        Assert.Equal(1, (await db.Set<InventJournalTable>().SingleAsync()).NumOfLines);
+
+        // A second run must not duplicate a line that is already in the journal.
+        var (second, secondError) = await service.CreateCountingLinesAsync("CNT-1",
+            new InventCountingLinesInputDto { InventSiteId = "S1", InventLocationId = "WH1" }, default);
+        Assert.Null(secondError);
+        Assert.Equal(0, second!.LinesCreated);
+        Assert.Single(await db.Set<InventJournalTrans>().ToListAsync());
+    }
+
+    [Fact]
+    public async Task Counting_line_generation_is_refused_for_the_wrong_journal_state()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        db.Add(new InventJournalName { DataAreaId = "dat", JournalNameId = "ADJ", JournalType = InventJournalType.Adjustment });
+        db.Add(new InventJournalTable
+        {
+            DataAreaId = "dat", JournalId = "ADJ-1", JournalNameId = "ADJ",
+            JournalType = InventJournalType.Adjustment, Posted = NoYes.No
+        });
+        db.Add(new InventJournalTable
+        {
+            DataAreaId = "dat", JournalId = "CNT-2", JournalNameId = "CNT",
+            JournalType = InventJournalType.Counting, Posted = NoYes.Yes
+        });
+        await db.SaveChangesAsync();
+        var work = new TestUnitOfWork(db);
+        var service = new InventJournalService(work, new TestCompany(), Sequence(),
+            new InventDimensionResolver(work, new TestInventNumbers()));
+
+        var wrongType = await service.CreateCountingLinesAsync("ADJ-1", new InventCountingLinesInputDto(), default);
+        Assert.Contains("counting journal", wrongType.Error);
+        var posted = await service.CreateCountingLinesAsync("CNT-2", new InventCountingLinesInputDto(), default);
+        Assert.Contains("already been posted", posted.Error);
+        Assert.Empty(await db.Set<InventJournalTrans>().ToListAsync());
+    }
+
+    // ---- Inventory value report ---------------------------------------------------------------
+
+    [Fact]
+    public async Task Inventory_value_report_values_stock_from_transactions_and_shows_summary_drift()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        db.Set<InventTable>().Add(new InventTable { RecId = 1, DataAreaId = "dat", ItemId = "ITEM", Name = "Example item" });
+        db.Set<InventTableModule>().Add(new InventTableModule
+        {
+            RecId = 1, DataAreaId = "dat", ItemId = "ITEM",
+            ModuleType = ModuleInventPurchSales.Inventory, UnitId = "EA"
+        });
+        db.Set<InventItemGroupItem>().Add(new InventItemGroupItem
+        {
+            RecId = 1, ItemDataAreaId = "dat", ItemId = "ITEM", ItemGroupId = "TRADE"
+        });
+        db.Set<InventDim>().Add(new InventDim { RecId = 1, DataAreaId = "dat", InventDimId = "DIM1", InventSiteId = "S1", InventLocationId = "WH1" });
+        db.Set<InventTrans>().AddRange(
+            new InventTrans
+            {
+                RecId = 1, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM1", Qty = 100m,
+                CostAmountPosted = 1000m, StatusReceipt = StatusReceipt.Purchased,
+                DatePhysical = new DateTime(2026, 6, 1), DateFinancial = new DateTime(2026, 6, 1)
+            },
+            new InventTrans
+            {
+                RecId = 2, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM1", Qty = -40m,
+                CostAmountPosted = -400m, StatusIssue = StatusIssue.Sold,
+                DatePhysical = new DateTime(2026, 6, 20), DateFinancial = new DateTime(2026, 6, 20)
+            });
+        // The summary carries 50 more than the transactions, which the report must surface.
+        db.Set<InventSum>().Add(new InventSum
+        {
+            RecId = 1, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM1",
+            PhysicalInvent = 60m, PostedValue = 650m
+        });
+        await db.SaveChangesAsync();
+
+        var service = new InventValueReportService(new TestUnitOfWork(db), new TestCompany());
+
+        var report = await service.RunAsync(new DateOnly(2026, 6, 30), null, null, null, null, false, 1, 50, default);
+        Assert.NotNull(report);
+        var row = Assert.Single(report!.Rows);
+        Assert.Equal("ITEM", row.ItemId);
+        Assert.Equal("TRADE", row.ItemGroupId);
+        Assert.Equal("S1", row.InventSiteId);
+        Assert.Equal("EA", row.InventoryUnit);
+        Assert.Equal(60m, row.PhysicalQuantity);
+        Assert.Equal(60m, row.FinancialQuantity);
+        Assert.Equal(600m, row.FinancialValue);
+        Assert.Equal(10m, row.AverageUnitCost);
+        Assert.Equal(50m, row.ValueDifference);          // summary minus transactions
+        Assert.Equal(0m, row.QuantityDifference);
+        Assert.Equal(600m, report.TotalFinancialValue);
+
+        // Before the issue, only the receipt counts.
+        var earlier = await service.RunAsync(new DateOnly(2026, 6, 10), null, null, null, null, false, 1, 50, default);
+        var earlierRow = Assert.Single(earlier!.Rows);
+        Assert.Equal(100m, earlierRow.FinancialQuantity);
+        Assert.Equal(1000m, earlierRow.FinancialValue);
+
+        // An item group that nothing belongs to returns no rows.
+        var filtered = await service.RunAsync(new DateOnly(2026, 6, 30), null, "OTHER", null, null, false, 1, 50, default);
+        Assert.Empty(filtered!.Rows);
+    }
+
+    /// <summary>The minimum released-item setup an inventory journal line needs to validate.</summary>
+    private static void SeedCountableItem(CycleContext db)
+    {
+        db.Set<InventTable>().Add(new InventTable { RecId = 1, DataAreaId = "dat", ItemId = "ITEM", Name = "Example item" });
+        db.Set<InventTableModule>().Add(new InventTableModule
+        {
+            RecId = 1, DataAreaId = "dat", ItemId = "ITEM",
+            ModuleType = ModuleInventPurchSales.Inventory, UnitId = "EA"
+        });
+        db.Set<UnitOfMeasure>().Add(new UnitOfMeasure { RecId = 1, Symbol = "EA", DecimalPrecision = 2 });
+        db.Set<InventModelGroup>().Add(new InventModelGroup
+        {
+            RecId = 1, DataAreaId = "dat", ModelGroupId = "FIFO",
+            InventModel = InventModel.FIFO, StockedProduct = NoYes.Yes
+        });
+        db.Set<InventModelGroupItem>().Add(new InventModelGroupItem
+        {
+            RecId = 1, ItemDataAreaId = "dat", ModelGroupDataAreaId = "dat", ModelGroupId = "FIFO", ItemId = "ITEM"
+        });
+        db.Set<InventItemGroupItem>().Add(new InventItemGroupItem
+        {
+            RecId = 1, ItemDataAreaId = "dat", ItemId = "ITEM", ItemGroupId = "TRADE"
+        });
+        db.Set<InventSite>().Add(new InventSite { RecId = 1, DataAreaId = "dat", SiteId = "S1" });
+        db.Set<InventLocation>().Add(new InventLocation
+        {
+            RecId = 1, DataAreaId = "dat", InventLocationId = "WH1", InventSiteId = "S1"
+        });
+        // Tracking is assigned but no dimension is active, so a basic site/warehouse line is valid.
+        db.Set<IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities.EcoResTrackingDimensionGroupItem>().Add(
+            new IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities.EcoResTrackingDimensionGroupItem
+        {
+            RecId = 1, ItemDataAreaId = "dat", ItemId = "ITEM", TrackingDimensionGroup = 1
+        });
+    }
+
     // ---- Harness ----------------------------------------------------------------------------
 
     private sealed class Fixture : IAsyncDisposable
@@ -1140,7 +1323,13 @@ public sealed class InventoryCycleTests
             typeof(InventTransOriginSalesLine), typeof(BankAccountTable), typeof(BankAccountTrans), typeof(LedgerJournalTable), typeof(LedgerJournalTrans),
             typeof(ReturnDispositionCode), typeof(ReturnReasonCode),
             // Invoicing posts the order's charges.
-            typeof(MarkupTable), typeof(MarkupTrans)
+            typeof(MarkupTable), typeof(MarkupTrans),
+            // Journal line validation reads the item's dimension groups and count-group setup.
+            typeof(IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities.EcoResStorageDimensionGroupItem),
+            typeof(IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities.EcoResStorageDimensionGroupFldSetup),
+            typeof(IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities.EcoResTrackingDimensionGroupItem),
+            typeof(IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities.EcoResTrackingDimensionGroupFldSetup),
+            typeof(InventItemLocation)
         ];
 
         protected override void OnModelCreating(ModelBuilder builder)

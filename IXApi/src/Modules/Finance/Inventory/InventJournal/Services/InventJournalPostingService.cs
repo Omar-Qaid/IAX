@@ -114,6 +114,16 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
                 throw new PostingValidationException("The ledger accounting currency is required.");
             var result = new InventJournalPostResultDto { JournalId = header.JournalId, PostedDateTime = DateTime.UtcNow };
 
+            // Summary posting gives the whole journal one voucher and one ledger entry whose
+            // account lines are totalled per account and posting type. The inventory transactions
+            // stay per line either way: summarizing is a ledger presentation, not a stock change.
+            var summarize = header.DetailSummary == DetailSummary.Summary;
+            var journalVoucher = summarize
+                ? (await _numbers.NextAsync(voucherSequence.NumberSequence, companyId, ct)).Code
+                : null;
+            if (summarize) result.Vouchers.Add(journalVoucher!);
+            var summaryLines = summarize ? new Dictionary<(long, LedgerPostingType), SummaryLine>() : null;
+
             foreach (var line in lines)
             {
                 var lifecycleError = await ProductLifecyclePolicy.ValidateAsync(Db, companyId, line.ItemId,
@@ -161,8 +171,8 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
                     unitCost = await GetDefaultItemCostAsync(companyId, item.ItemId, line.InventDimId, line.TransDate, ct);
                 if (unitCost <= 0 && header.JournalType != InventJournalType.Transfer)
                     throw new PostingValidationException($"A positive inventory cost is required for item '{item.ItemId}' on line {line.LineNum}.");
-                var voucher = (await _numbers.NextAsync(voucherSequence.NumberSequence, companyId, ct)).Code;
-                result.Vouchers.Add(voucher);
+                var voucher = journalVoucher ?? (await _numbers.NextAsync(voucherSequence.NumberSequence, companyId, ct)).Code;
+                if (!summarize) result.Vouchers.Add(voucher);
 
                 if (header.JournalType == InventJournalType.Transfer)
                 {
@@ -196,11 +206,27 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
                     InventoryMovement.ApplySummary(fromSum, signedQty, unitCost);
                     line.CostAmount = costAmount;
                     var accounts = await ResolveAccountsAsync(companyId, item.ItemId, signedQty, line.LedgerDimension, header.JournalType, ct);
-                    await CreateLedgerEntryAsync(companyId, header, line, voucher, costAmount, accounts, ledgerContext!, ct);
+                    if (summarize)
+                    {
+                        Accumulate(summaryLines!, accounts.Inventory, accounts.InventoryPostingType, costAmount, line.Qty);
+                        Accumulate(summaryLines!, accounts.Offset, accounts.OffsetPostingType, -costAmount, line.Qty);
+                    }
+                    else
+                    {
+                        await CreateLedgerEntryAsync(companyId, header, line, voucher, costAmount, accounts, ledgerContext!, ct);
+                        result.LedgerEntriesCreated++;
+                    }
+                    await WriteTransPostingAsync(companyId, line, voucher, accounts, ct);
                     result.InventoryTransactionsCreated++;
-                    result.LedgerEntriesCreated++;
                 }
                 line.Voucher = voucher;
+            }
+
+            if (summarize && summaryLines!.Count > 0)
+            {
+                await CreateSummaryLedgerEntryAsync(companyId, header, journalVoucher!, summaryLines,
+                    lines.Min(x => x.TransDate).Date, ledgerContext!, ct);
+                result.LedgerEntriesCreated++;
             }
 
             header.Posted = NoYes.Yes;
@@ -242,28 +268,9 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
 
     private async Task ValidateTrackingDimensionsAsync(ReadyItem item, InventDim dim, decimal signedQty, CancellationToken ct)
     {
-        var setup = await Db.Set<EcoResTrackingDimensionGroupFldSetup>().AsNoTracking()
-            .Where(x => x.TrackingDimensionGroup == item.TrackingDimensionGroup &&
-                (x.DimensionFieldId == InventDimensionFields.BatchNumber || x.DimensionFieldId == InventDimensionFields.SerialNumber))
-            .ToListAsync(ct);
-        var batch = setup.FirstOrDefault(x => x.DimensionFieldId == InventDimensionFields.BatchNumber);
-        var serial = setup.FirstOrDefault(x => x.DimensionFieldId == InventDimensionFields.SerialNumber);
-        var batchId = dim.InventBatchId.Trim();
-        var serialId = dim.InventSerialId.Trim();
-        var isIssue = signedQty < 0;
-        if (batch?.IsPhysicalInventoryEnabled == true && batchId.Length == 0 &&
-            !(isIssue ? batch.IsAllowBlankIssueEnabled : batch.IsAllowBlankReceiptEnabled))
-            throw new PostingValidationException($"A batch number is required for item '{item.ItemId}'.");
-        if (serial?.IsPhysicalInventoryEnabled == true && serialId.Length == 0 &&
-            !(isIssue ? serial.IsAllowBlankIssueEnabled : serial.IsAllowBlankReceiptEnabled))
-            throw new PostingValidationException($"A serial number is required for item '{item.ItemId}'.");
-        if (batchId.Length > 0 && !await Db.Set<InventBatch>().AnyAsync(x => x.ItemId == item.ItemId && x.InventBatchId == batchId, ct))
-            throw new PostingValidationException($"Batch '{batchId}' is not defined for item '{item.ItemId}'.");
-        if (serialId.Length > 0 && !await Db.Set<InventSerial>().AnyAsync(x => x.ItemId == item.ItemId && x.InventSerialId == serialId, ct))
-            throw new PostingValidationException($"Serial number '{serialId}' is not defined for item '{item.ItemId}'.");
-        if (serial?.IsPhysicalInventoryEnabled == true && signedQty != 0 &&
-            (serialId.Length == 0 || Math.Abs(signedQty) != 1m))
-            throw new PostingValidationException($"Each journal line for serial-tracked item '{item.ItemId}' must identify one serial-numbered unit.");
+        var error = await InventoryDimensionPolicy.CheckTrackingAsync(Db, item.ItemId,
+            item.TrackingDimensionGroup, dim, signedQty, ct);
+        if (error != null) throw new PostingValidationException(error);
     }
 
     private async Task<decimal> ConvertToInventoryUnitAsync(string companyId, long product, string itemId, string fromSymbol, decimal qty, CancellationToken ct)
@@ -423,8 +430,16 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
             DataAreaId = companyId, GeneralJournalEntry = entry.RecId, Voucher = voucher,
             VoucherDataAreaId = companyId, AccountingDate = line.TransDate
         });
-        // An inventory journal updates physically and financially in one operation, so the
-        // posting record covers the financial update.
+    }
+
+    /// <summary>
+    /// The per-line record of the financial update. An inventory journal updates physically and
+    /// financially in one operation, so it is written for every line whether the ledger entry is
+    /// posted per line or summarized for the journal.
+    /// </summary>
+    private async Task WriteTransPostingAsync(string companyId, InventJournalTrans line, string voucher,
+        PostingAccounts accounts, CancellationToken ct)
+    {
         var origin = await Db.Set<InventTransOrigin>().AsNoTracking()
             .Where(x => x.DataAreaId == companyId && x.InventTransId == line.InventTransId)
             .Select(x => x.RecId).FirstOrDefaultAsync(ct);
@@ -433,6 +448,44 @@ public sealed partial class InventJournalPostingService : IInventJournalPostingS
                 InventTransPostingType.Financial, line.TransDate, voucher,
                 accounts.Inventory, accounts.InventoryPostingType, accounts.Offset, accounts.OffsetPostingType));
     }
+
+    /// <summary>Totals one account and posting type across the journal's lines.</summary>
+    private static void Accumulate(Dictionary<(long, LedgerPostingType), SummaryLine> summary,
+        DimensionAttributeValueCombination account, LedgerPostingType postingType, decimal amount, decimal qty)
+    {
+        var key = (account.RecId, postingType);
+        if (summary.TryGetValue(key, out var existing))
+            summary[key] = existing with { Amount = existing.Amount + amount, Quantity = existing.Quantity + qty };
+        else
+            summary[key] = new SummaryLine(account, postingType, amount, qty);
+    }
+
+    /// <summary>
+    /// One ledger entry for the whole journal, with one account line per account and posting type.
+    /// The totals come from the same per-line amounts as detail posting, so the voucher balances
+    /// for the same reason.
+    /// </summary>
+    private async Task CreateSummaryLedgerEntryAsync(string companyId, InventJournalTable header, string voucher,
+        Dictionary<(long, LedgerPostingType), SummaryLine> summary, DateTime accountingDate,
+        SubledgerLedgerContext context, CancellationToken ct)
+    {
+        var entry = Support.NewEntry(companyId, header.JournalId, voucher, accountingDate, context);
+        Db.Add(entry);
+        await _unitOfWork.CompleteAsync(ct);
+        var text = $"Inventory journal {header.JournalId} summary";
+        var currency = context.Ledger.AccountingCurrency;
+        foreach (var line in summary.Values.Where(x => x.Amount != 0m))
+            Db.Add(SubledgerPostingSupport.AccountEntry(companyId, entry.RecId, line.Account,
+                line.PostingType, line.Amount, text, line.Quantity, currency));
+        Db.Add(new SubledgerVoucherGeneralJournalEntry
+        {
+            DataAreaId = companyId, GeneralJournalEntry = entry.RecId, Voucher = voucher,
+            VoucherDataAreaId = companyId, AccountingDate = accountingDate
+        });
+    }
+
+    private sealed record SummaryLine(DimensionAttributeValueCombination Account,
+        LedgerPostingType PostingType, decimal Amount, decimal Quantity);
 
     private static decimal EffectiveFactor(UnitOfMeasureConversion conversion) =>
         conversion.Factor > 0 ? conversion.Factor :

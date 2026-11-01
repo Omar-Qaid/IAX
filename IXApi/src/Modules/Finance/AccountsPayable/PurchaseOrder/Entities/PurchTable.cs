@@ -22,6 +22,16 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
         public DocumentStatus DocumentStatus { get; set; } = DocumentStatus.None;
         public string CurrencyCode { get; set; } = string.Empty;
         public string Payment { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Cash discount code, the payable counterpart of <c>SalesTable.CashDisc</c>. It travels to
+        /// <c>VendTrans.CashDiscCode</c> at invoicing, which is where settlement reads it.
+        /// </summary>
+        [StringLength(FieldLengths.CashDiscCode)]
+        public string CashDisc { get; set; } = string.Empty;
+
+        /// <summary>The date the discount period is counted from; the invoice date when unset.</summary>
+        public DateTime CashDiscBaseDate { get; set; }
         [StringLength(30)] public string TaxGroup { get; set; } = string.Empty;
         public DateTime DeliveryDate { get; set; }
         public DateTime OrderDate { get; set; }

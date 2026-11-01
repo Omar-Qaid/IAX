@@ -46,6 +46,16 @@ public sealed class InventJournalController
     public async Task<IActionResult> List(CancellationToken ct) =>
         Ok(APIResponse<object>.Ok(await _journalService.ListAsync(ct)));
 
+    [HttpPost("{journalId}/count/create-lines")]
+    [DomainPermission("Inventory", "Transactions", "Edit")]
+    public async Task<IActionResult> CreateCountingLines(string journalId, [FromBody] InventCountingLinesInputDto input, CancellationToken ct)
+    {
+        var (result, error) = await _journalService.CreateCountingLinesAsync(journalId, input ?? new InventCountingLinesInputDto(), ct);
+        return error == null
+            ? Ok(APIResponse<InventCountingLinesResultDto>.Ok(result!))
+            : UnprocessableEntity(APIResponse<object>.Fail(error));
+    }
+
     [HttpPost("{journalId}/count/freeze")]
     [DomainPermission("Inventory", "Transactions", "Edit")]
     public async Task<IActionResult> FreezeCount(string journalId, CancellationToken ct) => CountResult(await _posting.FreezeCountAsync(journalId, ct));

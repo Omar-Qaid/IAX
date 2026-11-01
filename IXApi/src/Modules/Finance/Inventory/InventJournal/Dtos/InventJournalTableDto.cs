@@ -73,6 +73,26 @@ public sealed class InventJournalLineInputDto
     public long LedgerDimension { get; set; }
 }
 
+/// <summary>The scope a counting journal generates its lines from. An empty value does not filter.</summary>
+public sealed class InventCountingLinesInputDto
+{
+    public DateTime? TransDate { get; set; }
+    public string? ItemId { get; set; }
+    public string? ItemGroupId { get; set; }
+    public string? CountGroupId { get; set; }
+    public string? InventSiteId { get; set; }
+    public string? InventLocationId { get; set; }
+
+    /// <summary>Count only item/dimension combinations that currently hold stock. On by default.</summary>
+    public bool OnHandOnly { get; set; } = true;
+}
+
+public sealed record InventCountingLinesResultDto(
+    int LinesCreated,
+    int Skipped,
+    IReadOnlyList<string> Problems,
+    InventJournalTableDto? Journal);
+
 public sealed record InventJournalLookupDto(string Code, string Description);
 
 public sealed class InventJournalLookupsDto

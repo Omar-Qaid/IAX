@@ -131,7 +131,7 @@ public class LedgerJournalPostingTests
     // A foreign transaction currency is stopped by the exchange-rate gate in the setup check,
     // before reaching the scope guard: either way the journal is refused, never approximated.
     [InlineData("currency", "no exchange rate type is configured")]
-    [InlineData("reporting", "reporting-currency conversion is not supported")]
+    [InlineData("reporting", "Reporting: no exchange rate type is configured")]
     [InlineData("tax", "journal tax calculation")]
     [InlineData("company", "intercompany")]
     [InlineData("offsetAccountType", "only the Ledger offset account type")]

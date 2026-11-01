@@ -10,6 +10,7 @@ internal sealed class LedgerJournalDimensionDefaulting(DbContext db)
     public async Task<DimensionAttributeValueCombination> ApplyAsync(string area,
         DimensionAttributeValueCombination entered, params long[] defaultSets)
     {
+        if (db.Model.FindEntityType(typeof(DimensionConstraintTree)) == null) return entered;
         var ct = CancellationToken.None;
         var validator = new AccountStructureValidator(db);
         var structure = await validator.ResolveAsync(area, entered, ct);

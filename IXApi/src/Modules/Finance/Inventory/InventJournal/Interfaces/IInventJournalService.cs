@@ -11,6 +11,7 @@ public interface IInventJournalService : IBaseService<InventJournalTable>
     Task<List<InventJournalLookupDto>> LedgerDimensionsAsync(string? search, CancellationToken ct);
     Task<(InventJournalTableDto? Journal, string? Error)> CreateAsync(InventJournalCreateDto input, CancellationToken ct);
     Task<(InventJournalTableDto? Journal, string? Error)> AddLineAsync(string journalId, InventJournalLineInputDto input, CancellationToken ct);
+    Task<(InventCountingLinesResultDto? Result, string? Error)> CreateCountingLinesAsync(string journalId, InventCountingLinesInputDto input, CancellationToken ct);
     Task<(InventJournalTableDto? Journal, string? Error)> UpdateLineAsync(string journalId, long lineRecId, InventJournalLineInputDto input, CancellationToken ct);
     Task<(bool Deleted, string? Error)> DeleteLineAsync(string journalId, long lineRecId, CancellationToken ct);
     Task<(bool Deleted, string? Error)> DeleteAsync(string journalId, CancellationToken ct);

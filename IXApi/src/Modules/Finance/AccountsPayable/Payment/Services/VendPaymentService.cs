@@ -78,13 +78,41 @@ public sealed class VendPaymentService(IUnitOfWork work, ICurrentUserService use
             Db.Add(payment);
             await work.CompleteAsync(ct);
             var remaining = input.Amount;
+            // Cash discount taken per discount account, so a voucher covering invoices on
+            // different discount codes credits each configured account for its own share.
+            var discountsByAccount = new Dictionary<long, decimal>();
             foreach (var invoice in invoices.OrderBy(x => x.Open.DueDate).ThenBy(x => x.Trans.RecId))
             {
                 if (remaining == 0) break;
                 if (invoice.Trans.TransDate.Date > date) return await Fail("A payment cannot settle a future-dated invoice.", ct);
-                var settled = Math.Min(remaining, -invoice.Open.AmountCur);
+
+                // A cash discount is taken only when the payment arrives in time and covers the
+                // whole invoice less the discount: a part payment earns no discount. Payable
+                // amounts are credits, so the resolver is given the open magnitude.
+                var openAmount = -invoice.Open.AmountCur;
+                var terms = await Foundation.CashDiscount.CashDiscountResolver.ResolveAsync(Db, area,
+                    invoice.Trans.CashDiscCode,
+                    invoice.Trans.CashDiscBaseDate == default ? invoice.Trans.TransDate : invoice.Trans.CashDiscBaseDate,
+                    openAmount, ct);
+                var discount = 0m;
+                if (terms.Applies
+                    && Foundation.CashDiscount.CashDiscountCalculator.IsWithinPeriod(date, terms.DiscountDate)
+                    && remaining >= openAmount - terms.PossibleAmount)
+                {
+                    if (terms.Discount!.CashDiscLedgerDimension == 0)
+                        return await Fail($"Cash discount '{terms.Discount.CashDiscCode}' has no ledger account configured.", ct);
+                    discount = terms.PossibleAmount;
+                    discountsByAccount[terms.Discount.CashDiscLedgerDimension] =
+                        discountsByAccount.GetValueOrDefault(terms.Discount.CashDiscLedgerDimension) + discount;
+                }
+
+                // The invoice is cleared by the full open amount; only the cash reduces what the
+                // payment has left to apply.
+                var settled = discount > 0m ? openAmount : Math.Min(remaining, openAmount);
+                var cash = settled - discount;
                 Db.Add(new VendSettlement { DataAreaId = area, AccountNum = vendor.AccountNum, InvoiceTransRecId = invoice.Trans.RecId,
                     PaymentTransRecId = payment.RecId, TransDate = date, Voucher = voucher, AmountCur = settled, AmountMst = settled,
+                    UtilizedCashDisc = discount,
                     // Marks the match as in force, so VendSettlementReversalService can reverse it once.
                     CanBeReversed = NoYes.Yes });
                 invoice.Trans.SettleAmountCur -= settled;
@@ -96,10 +124,11 @@ public sealed class VendPaymentService(IUnitOfWork work, ICurrentUserService use
                     invoice.Trans.Closed = date;
                     Db.Remove(invoice.Open);
                 }
-                payment.SettleAmountCur += settled;
-                payment.SettleAmountMst += settled;
-                remaining -= settled;
+                payment.SettleAmountCur += cash;
+                payment.SettleAmountMst += cash;
+                remaining -= cash;
             }
+            var totalDiscount = discountsByAccount.Values.Sum();
             if (remaining == 0) payment.Closed = date;
             else VendorOpenBalance.Add(Db, payment);
             Db.Add(new LedgerJournalTable { DataAreaId = area, JournalNum = journalNum, JournalName = "VendPaym", Name = $"Vendor payment {vendor.AccountNum}",
@@ -115,9 +144,19 @@ public sealed class VendPaymentService(IUnitOfWork work, ICurrentUserService use
             var entry = support.NewEntry(area, journalNum, voucher, date, ledger);
             Db.Add(entry);
             await work.CompleteAsync(ct);
+            // Dr the vendor for everything cleared, Cr Bank for the cash, Cr each configured
+            // cash-discount account for the discount taken. With no discount this is the
+            // Dr Vendor / Cr Bank pair it has always been.
             Db.AddRange(
-                SubledgerPostingSupport.AccountEntry(area, entry.RecId, vendorAccount, LedgerPostingType.VendBalance, input.Amount, journalLine.Txt, 0, currency),
+                SubledgerPostingSupport.AccountEntry(area, entry.RecId, vendorAccount, LedgerPostingType.VendBalance, input.Amount + totalDiscount, journalLine.Txt, 0, currency),
                 SubledgerPostingSupport.AccountEntry(area, entry.RecId, bankAccount, LedgerPostingType.Bank, -input.Amount, journalLine.Txt, 0, currency));
+            foreach (var (discountDimension, discountAmount) in discountsByAccount)
+            {
+                var discountAccount = await support.LoadDimensionAsync(area, discountDimension, "cash discount", ct);
+                Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, discountAccount,
+                    LedgerPostingType.CashDiscount, -discountAmount,
+                    $"Cash discount {vendor.AccountNum}", 0, currency));
+            }
             Db.Add(new SubledgerVoucherGeneralJournalEntry { DataAreaId = area, GeneralJournalEntry = entry.RecId, Voucher = voucher, VoucherDataAreaId = area, AccountingDate = date });
             Db.Add(new BankAccountTrans { DataAreaId = area, AccountId = bank.AccountId, TransDate = date, Voucher = voucher, Txt = journalLine.Txt,
                 LedgerTransType = LedgerTransType.Payment, CurrencyCode = currency, BankTransCurrencyCode = currency, AmountCur = -input.Amount,

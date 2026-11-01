@@ -24,6 +24,13 @@ public class VendSettlement : Entity<long>
     public decimal AmountCur { get; set; }
     public decimal AmountMst { get; set; }
 
+    /// <summary>
+    /// The cash discount taken on this match, the payable counterpart of
+    /// <c>CustSettlement.UtilizedCashDisc</c>. A settlement carrying one posts to the ledger, so
+    /// VendSettlementRestore refuses to reverse it rather than stranding that posting.
+    /// </summary>
+    public decimal UtilizedCashDisc { get; set; }
+
     /// <summary>Whether the match is still in force and may be reversed.</summary>
     public NoYes CanBeReversed { get; set; }
 }

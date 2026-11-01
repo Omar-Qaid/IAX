@@ -31,4 +31,35 @@ public sealed class InventCloseController(IInventCloseService service) : Control
             ? Ok(APIResponse<InventCloseResultDto>.Ok(result!, "Inventory close completed."))
             : UnprocessableEntity(APIResponse<object>.Fail(error));
     }
+
+    [HttpPost("recalculate")]
+    [DomainPermission("Inventory", "Transactions", "Edit")]
+    public async Task<IActionResult> Recalculate([FromBody] CloseRequest request, CancellationToken ct)
+    {
+        if (request.Cutoff == default)
+            return BadRequest(APIResponse<object>.Fail("A cutoff date is required."));
+        var (result, error) = await service.RecalculateAsync(request.Cutoff, ct);
+        return error is null
+            ? Ok(APIResponse<InventCloseResultDto>.Ok(result!, "Inventory recalculation completed."))
+            : UnprocessableEntity(APIResponse<object>.Fail(error));
+    }
+
+    [HttpPost("items/{itemId}/recalculate")]
+    [DomainPermission("Inventory", "Transactions", "Edit")]
+    public async Task<IActionResult> RecalculateItem(string itemId, [FromBody] CloseRequest request, CancellationToken ct)
+    {
+        if (request.Cutoff == default) return BadRequest(APIResponse<object>.Fail("A cutoff date is required."));
+        var (result, error) = await service.RecalculateItemAsync(itemId, request.Cutoff, ct);
+        return error == null ? Ok(APIResponse<InventCloseResultDto>.Ok(result!)) : UnprocessableEntity(APIResponse<object>.Fail(error));
+    }
+
+    [HttpPost("closings/{closingRecId:long}/cancel")]
+    [DomainPermission("Inventory", "Transactions", "Edit")]
+    public async Task<IActionResult> Cancel(long closingRecId, CancellationToken ct)
+    {
+        var (result, error) = await service.CancelAsync(closingRecId, ct);
+        return error is null
+            ? Ok(APIResponse<InventCloseCancelResultDto>.Ok(result!, "Inventory cost run cancelled."))
+            : UnprocessableEntity(APIResponse<object>.Fail(error));
+    }
 }

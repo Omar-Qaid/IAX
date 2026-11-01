@@ -23,8 +23,10 @@ public static class InventoryFinancialBoundary
             command.Parameters.Add(parameter);
             if (await command.ExecuteScalarAsync(ct) is not int result || result < 0) return "Inventory close is currently locking financial postings.";
         }
+        // A cancelled close no longer binds, and a cancellation record is history, not a boundary.
         var closed = await db.Set<InventClosing>().AsNoTracking().AnyAsync(x => x.DataAreaId == area
             && (x.ScopeItemId == "" || x.ScopeItemId == item) && x.AdjustmentType == InventAdjustmentType.Closing
+            && x.Cancellation == NoYes.No && x.CancelClosing == NoYes.No
             && x.InventCostStatus == InventCostStatus.Finished && x.TransDate >= date.Date, ct);
         return closed ? "Inventory is financially closed through this posting date for the selected item." : null;
     }
