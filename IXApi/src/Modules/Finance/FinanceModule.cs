@@ -338,6 +338,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<Foundation.PaymentSchedules.IPaymSchedLineService, Foundation.PaymentSchedules.PaymSchedLineService>();
             services.AddScoped<Foundation.PaymentSchedules.IPaymSchedService, Foundation.PaymentSchedules.PaymSchedService>();
             services.AddScoped<Foundation.PaymentTerms.IPaymTermService, Foundation.PaymentTerms.PaymTermService>();
+            services.AddScoped<Foundation.CashDiscount.ICashDiscService, Foundation.CashDiscount.CashDiscService>();
             services.AddScoped<Foundation.Genders.IGenderService, Foundation.Genders.GenderService>();
             services.AddScoped<Foundation.Nationalities.IHcmNationalityService, Foundation.Nationalities.HcmNationalityService>();
             services.AddScoped<Foundation.Occupations.IHcmOccupationService, Foundation.Occupations.HcmOccupationService>();
@@ -366,6 +367,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<FluentValidation.IValidator<Foundation.PaymentSchedules.PaymSchedDto>, Foundation.PaymentSchedules.PaymSchedDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<Foundation.PaymentSchedules.PaymSchedLineDto>, Foundation.PaymentSchedules.PaymSchedLineDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<Foundation.PaymentTerms.PaymTermDto>, Foundation.PaymentTerms.PaymTermDtoValidator>();
+            services.AddScoped<FluentValidation.IValidator<Foundation.CashDiscount.CashDiscDto>, Foundation.CashDiscount.CashDiscDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<Foundation.Genders.GenderDto>, Foundation.Genders.GenderDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<Foundation.Nationalities.HcmNationalityDto>, Foundation.Nationalities.HcmNationalityDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<Foundation.Occupations.HcmOccupationDto>, Foundation.Occupations.HcmOccupationDtoValidator>();
