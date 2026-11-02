@@ -711,8 +711,11 @@ public class LedgerJournalPostingTests
                 typeof(CustLedgerAccounts), typeof(VendTable), typeof(VendTrans), typeof(VendTransOpen),
                 typeof(VendParameters), typeof(VendLedgerAccounts),
                 typeof(BankAccountTable), typeof(BankAccountTrans)];
-            // CompanyInfo navigates to the party tables, which this harness does not map.
+            // CompanyInfo navigates to the party tables, and the customer/vendor tables reach the
+            // worker tables, none of which this harness maps.
             builder.Ignore<DirPartyTable>();
+            builder.Ignore<HcmWorker>();
+            builder.Ignore<HcmWorkerOrganizationAssignmentV1>();
             foreach (var type in types)
             {
                 var entity = builder.Entity(type);
