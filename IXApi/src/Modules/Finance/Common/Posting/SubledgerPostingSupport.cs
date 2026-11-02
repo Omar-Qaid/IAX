@@ -293,6 +293,31 @@ internal sealed class SubledgerPostingSupport(DbContext db)
     /// </summary>
     private AccountStructureValidator? _structures;
 
+    /// <summary>
+    /// The realized exchange gain or loss account for a currency. D365 looks for a
+    /// currency-specific `CurrencyLedgerGainLossAccount` row first and falls back to the ledger's
+    /// own `LedgerGainLossAccount` row. A missing account is refused, never defaulted.
+    /// </summary>
+    public async Task<DimensionAttributeValueCombination> ResolveRealizedGainLossAsync(string area,
+        long ledgerRecId, string currencyCode, bool isGain, CancellationToken ct)
+    {
+        var type = isGain ? CurrencyGainLossAccountType.RealizedGain : CurrencyGainLossAccountType.RealizedLoss;
+        var dimension = await db.Set<CurrencyLedgerGainLossAccount>().AsNoTracking()
+            .Where(x => x.DataAreaId == area && x.Ledger == ledgerRecId
+                && x.CurrencyCode == currencyCode && x.AccountType == type && x.LedgerDimension != 0)
+            .Select(x => x.LedgerDimension).FirstOrDefaultAsync(ct);
+        if (dimension == 0)
+            dimension = await db.Set<LedgerGainLossAccount>().AsNoTracking()
+                .Where(x => x.DataAreaId == area && x.Ledger == ledgerRecId
+                    && x.AccountType == type && x.LedgerDimension != 0)
+                .Select(x => x.LedgerDimension).FirstOrDefaultAsync(ct);
+        if (dimension == 0)
+            throw new SubledgerPostingException(
+                $"No realized exchange {(isGain ? "gain" : "loss")} account is configured for currency " +
+                $"'{currencyCode}'. Configure it on the currency gain/loss accounts or on the ledger.");
+        return await LoadDimensionAsync(area, dimension, $"realized exchange {(isGain ? "gain" : "loss")}", ct);
+    }
+
     public async Task<DimensionAttributeValueCombination> LoadDimensionAsync(string area, long recId, string purpose, CancellationToken ct)
     {
         var dimension = await db.Set<DimensionAttributeValueCombination>().AsNoTracking()

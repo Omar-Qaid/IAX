@@ -637,19 +637,19 @@ namespace IAX.IXApi.Modules.Finance.Common
 
     /// <summary>
     /// Account type on `LedgerGainLossAccount` / `CurrencyLedgerGainLossAccount`, matching the
-    /// ACCOUNTTYPE column of those D365 tables.
+    /// ACCOUNTTYPE column of those D365 tables. Backing values confirmed against the D365
+    /// AccountType enum values.
     ///
-    /// NOTE: the backing values 1-4 are taken from observed D365 data, where types 1 and 2 share
-    /// one ledger dimension and types 3 and 4 share another. The gain/loss and
-    /// unrealized/realized ordering has NOT been confirmed against the D365 enum definition, so
-    /// this mapping must be verified before the realized accounts are relied on in production.
+    /// The basic cycle uses the realized types only: the realized difference is posted when a
+    /// payment settles a foreign-currency transaction at a rate different from the document's.
+    /// The unrealized types belong to revaluation of open balances, which is outside basic scope.
     /// </summary>
     public enum CurrencyGainLossAccountType
     {
-        UnrealizedGain = 1,
-        UnrealizedLoss = 2,
-        RealizedGain = 3,
-        RealizedLoss = 4
+        RealizedGain = 1,
+        RealizedLoss = 2,
+        UnrealizedGain = 3,
+        UnrealizedLoss = 4
     }
 
     /// <summary>Which leg of a transfer order a posted transfer journal records.</summary>
