@@ -1335,6 +1335,11 @@ public sealed class InventoryCycleTests
         Assert.Equal(-140m, (await db.Set<InventTrans>().SingleAsync(x => x.InventTransOrigin == origin.RecId)).CostAmountPhysical);
         Assert.Equal(200, (await returns.CreditAsync(returnOrder.RecId, new VendCreditNoteDto("CREDIT-1", new DateTime(2026, 10, 6)), default)).StatusCode);
         Assert.Equal(-140m, (await db.Set<InventTrans>().SingleAsync(x => x.InventTransOrigin == origin.RecId)).CostAmountPosted);
+        var persistedReturn = await db.Set<PurchLine>().AsNoTracking().SingleAsync(x => x.RecId == returnLine.RecId);
+        Assert.Equal(selected.RecId, persistedReturn.OriginalInvoiceTransRecId);
+        Assert.Equal(selected.InventTransId, persistedReturn.InventTransIdReturn);
+        var selectedReceipt = await db.Set<InventTrans>().AsNoTracking().SingleAsync(x => x.InvoiceId == selected.InternalInvoiceId && x.StatusReceipt == StatusReceipt.Purchased);
+        Assert.Equal(10m, selectedReceipt.Qty);
         var close = await new InventCloseService(new TestUnitOfWork(db), new TestCompany(), new TestUser(), Sequence())
             .CloseItemAsync("ITEM-001", new DateTime(2026, 10, 31));
         Assert.Null(close.Error);
