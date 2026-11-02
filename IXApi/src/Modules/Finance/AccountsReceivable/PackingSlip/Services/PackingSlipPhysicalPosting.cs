@@ -60,18 +60,30 @@ internal sealed class PackingSlipPhysicalPosting(DbContext db, string userId = "
 
     /// <summary>
     /// Reverses the delivery's physical posting onto the invoice's voucher, using the accounts the
-    /// packing slip recorded. The posting record is marked as no longer in force, so a second
-    /// invoice for the same origin never reverses it twice.
+    /// packing slip recorded. Partial invoices keep the delivery's posting active until the
+    /// remaining delivered quantity is invoiced.
     /// </summary>
     public async Task ReverseAsync(string area, long inventTransOrigin, long entryId, DateTime date,
-        string currency, decimal physicalCost, CancellationToken ct)
+        string currency, decimal physicalCost, CancellationToken ct, string? packingSlipId = null, bool fullyInvoiced = true)
     {
         if (physicalCost == 0m) return;
+        if (packingSlipId != null && string.IsNullOrWhiteSpace(packingSlipId))
+        {
+            var hasPhysicalPosting = await db.Set<Entities.InventTransPosting>().AnyAsync(x => x.DataAreaId == area
+                && x.InventTransOrigin == inventTransOrigin && x.InventTransPostingType == InventTransPostingType.Physical
+                && x.IsPosted == NoYes.Yes, ct);
+            if (hasPhysicalPosting)
+                throw new SubledgerPostingException("The delivered inventory has no packing slip identifier for its physical posting reversal.");
+            return;
+        }
         var records = await db.Set<Entities.InventTransPosting>()
             .Where(x => x.DataAreaId == area && x.InventTransOrigin == inventTransOrigin
-                && x.InventTransPostingType == InventTransPostingType.Physical && x.IsPosted == NoYes.Yes)
+                && x.InventTransPostingType == InventTransPostingType.Physical && x.IsPosted == NoYes.Yes
+                && (packingSlipId == null || x.Voucher == packingSlipId))
             .ToListAsync(ct);
         if (records.Count == 0) return; // The delivery posted nothing physically, so nothing is reversed.
+        if (records.Count != 1)
+            throw new SubledgerPostingException("The original packing slip physical posting cannot be uniquely identified.");
 
         var support = new SubledgerPostingSupport(db);
         var record = records[0];
@@ -81,6 +93,6 @@ internal sealed class PackingSlipPhysicalPosting(DbContext db, string userId = "
         db.AddRange(
             SubledgerPostingSupport.AccountEntry(area, entryId, inventory, record.PostingType, physicalCost, text, 0m, currency),
             SubledgerPostingSupport.AccountEntry(area, entryId, offset, record.PostingTypeOffset, -physicalCost, text, 0m, currency));
-        foreach (var posted in records) posted.IsPosted = NoYes.No;
+        if (fullyInvoiced) record.IsPosted = NoYes.No;
     }
 }

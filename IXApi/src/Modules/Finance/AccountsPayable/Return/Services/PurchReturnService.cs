@@ -90,9 +90,22 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
         await unitOfWork.BeginTransactionAsync(ct);
         try
         {
-            var invoice = await Db.Set<VendInvoiceJour>().AsNoTracking()
-                .FirstOrDefaultAsync(x => x.DataAreaId == area && x.InvoiceId == input.VendInvoiceId, ct);
-            if (invoice == null) return await Fail(404, $"Vendor invoice '{input.VendInvoiceId}' was not found in the selected company.", ct);
+            var requestedIds = input.Lines.Select(x => x.VendInvoiceTransRecId).Distinct().ToList();
+            var selectedLines = await Db.Set<VendInvoiceTrans>().AsNoTracking()
+                .Where(x => x.DataAreaId == area && x.InvoiceId == input.VendInvoiceId && requestedIds.Contains(x.RecId))
+                .ToListAsync(ct);
+            if (selectedLines.Count != requestedIds.Count)
+                return await Fail(404, $"One or more invoice lines were not found on vendor invoice '{input.VendInvoiceId}'.", ct);
+            var selectedInvoice = selectedLines[0];
+            if (selectedLines.Any(x => x.InternalInvoiceId != selectedInvoice.InternalInvoiceId || x.PurchId != selectedInvoice.PurchId))
+                return await Fail(422, "All return lines must belong to the same posted vendor invoice.", ct);
+            var invoices = await Db.Set<VendInvoiceJour>().AsNoTracking()
+                .Where(x => x.DataAreaId == area && x.InvoiceId == input.VendInvoiceId
+                    && x.InternalInvoiceId == selectedInvoice.InternalInvoiceId && x.PurchId == selectedInvoice.PurchId)
+                .ToListAsync(ct);
+            if (invoices.Count != 1)
+                return await Fail(422, "The selected invoice lines do not identify one posted vendor invoice.", ct);
+            var invoice = invoices[0];
             var original = await Db.Set<PurchTable>().AsNoTracking()
                 .FirstOrDefaultAsync(x => x.DataAreaId == area && x.PurchId == invoice.PurchId, ct);
             if (original == null) return await Fail(422, "The invoice's original purchase order was not found.", ct);
@@ -115,9 +128,7 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
             var lineNumber = 0m;
             foreach (var request in input.Lines)
             {
-                var invoiced = await Db.Set<VendInvoiceTrans>().AsNoTracking().FirstOrDefaultAsync(x => x.RecId == request.VendInvoiceTransRecId
-                    && x.DataAreaId == area && x.InvoiceId == invoice.InvoiceId && x.PurchId == invoice.PurchId, ct);
-                if (invoiced == null) return await Fail(404, $"Invoice line {request.VendInvoiceTransRecId} was not found on vendor invoice {invoice.InvoiceId}.", ct);
+                var invoiced = selectedLines.Single(x => x.RecId == request.VendInvoiceTransRecId);
                 if (request.Qty <= 0 || invoiced.Qty <= 0) return await Fail(422, "The return quantity must be greater than zero.", ct);
                 var invoicedQty = (await Db.Set<VendInvoiceTrans>().AsNoTracking()
                     .Where(x => x.DataAreaId == area && x.InventTransId == invoiced.InventTransId && x.Qty > 0)
@@ -521,11 +532,26 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
         var originalOrigin = await Db.Set<InventTransOrigin>().AsNoTracking()
             .FirstOrDefaultAsync(x => x.DataAreaId == area && x.InventTransId == line.InventTransIdReturn, ct)
             ?? throw new SubledgerPostingException($"The original receipt of item {line.ItemId} was not found.");
+        var originalInvoice = line.OriginalInvoiceTransRecId.HasValue
+            ? await Db.Set<VendInvoiceTrans>().AsNoTracking().SingleOrDefaultAsync(x => x.DataAreaId == area
+                && x.RecId == line.OriginalInvoiceTransRecId.Value && x.InventTransId == line.InventTransIdReturn && x.Qty > 0, ct)
+            : null;
+        if (line.OriginalInvoiceTransRecId.HasValue && (originalInvoice == null || string.IsNullOrWhiteSpace(originalInvoice.InternalInvoiceId)))
+            throw new SubledgerPostingException("The selected original vendor invoice line cannot be identified for return costing.");
+        if (originalInvoice != null && await Db.Set<VendInvoiceTrans>().AsNoTracking().CountAsync(x => x.DataAreaId == area
+                && x.InternalInvoiceId == originalInvoice.InternalInvoiceId && x.InventTransId == originalInvoice.InventTransId && x.Qty > 0, ct) != 1)
+            throw new SubledgerPostingException("The selected vendor invoice contains multiple lines for the same inventory origin; return costing cannot identify its movements.");
         var receipts = await Db.Set<InventTrans>().AsNoTracking().Where(x => x.DataAreaId == area
-            && x.InventTransOrigin == originalOrigin.RecId && x.StatusReceipt == StatusReceipt.Purchased)
-            .Select(x => new { x.Qty, x.CostAmountPosted, x.CostAmountAdjustment }).ToListAsync(ct);
+            && x.InventTransOrigin == originalOrigin.RecId && x.StatusReceipt == StatusReceipt.Purchased
+            && (originalInvoice == null || x.InvoiceId == originalInvoice.InternalInvoiceId))
+            .Select(x => new { x.InvoiceId, x.Qty, x.CostAmountPosted, x.CostAmountAdjustment }).ToListAsync(ct);
         var qty = receipts.Sum(x => x.Qty);
         if (qty <= 0) throw new SubledgerPostingException($"The original receipt of item {line.ItemId} has not been invoiced.");
+        if (originalInvoice != null && qty != originalInvoice.InventQty)
+            throw new SubledgerPostingException("The selected vendor invoice line does not match its financial inventory quantity.");
+        if (originalInvoice == null && receipts.GroupBy(x => x.InvoiceId).Where(x => x.Sum(y => y.Qty) > 0m)
+            .Select(x => x.Sum(y => y.CostAmountPosted + y.CostAmountAdjustment) / x.Sum(y => y.Qty)).Distinct().Count() > 1)
+            throw new SubledgerPostingException("The original vendor invoices have different inventory costs and the selected invoice line is unavailable.");
         return receipts.Sum(x => x.CostAmountPosted + x.CostAmountAdjustment) / qty;
     }
 

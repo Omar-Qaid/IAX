@@ -58,6 +58,16 @@ public sealed class InventoryMarkingService(
             if (receipt!.Qty <= 0) return await Fail($"Inventory transaction '{receiptId}' is not a receipt.", ct);
             if (!string.Equals(issue.ItemId, receipt.ItemId, StringComparison.Ordinal))
                 return await Fail("An issue can only be marked to a receipt of the same item.", ct);
+            var dimensionIds = new[] { issue.InventDimId, receipt.InventDimId }.Distinct().ToArray();
+            var dimensions = await Db.Set<InventDim>().AsNoTracking()
+                .Where(x => x.DataAreaId == companyId && dimensionIds.Contains(x.InventDimId))
+                .Select(x => new { x.InventDimId, x.InventSiteId }).ToListAsync(ct);
+            var issueSite = dimensions.SingleOrDefault(x => x.InventDimId == issue.InventDimId)?.InventSiteId;
+            var receiptSite = dimensions.SingleOrDefault(x => x.InventDimId == receipt.InventDimId)?.InventSiteId;
+            if (string.IsNullOrWhiteSpace(issueSite) || string.IsNullOrWhiteSpace(receiptSite))
+                return await Fail("Both marked transactions require a valid inventory site.", ct);
+            if (!string.Equals(issueSite, receiptSite, StringComparison.Ordinal))
+                return await Fail("An issue can only be marked to a receipt in the same financial site.", ct);
             if (issue.ValueOpen == InventTransOpen.No || receipt.ValueOpen == InventTransOpen.No)
                 return await Fail("A financially settled transaction cannot be marked.", ct);
 

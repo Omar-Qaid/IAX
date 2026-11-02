@@ -155,8 +155,26 @@ public sealed partial class InventCloseService : IInventCloseService
                 throw new PostingValidationException("The selected item has no supported financial inventory to settle.");
             var salesReturns = await Db.Set<SalesLine>().AsNoTracking().Where(x => x.DataAreaId == companyId && (itemId == "" || x.ItemId == itemId) && x.InventTransIdReturn != "")
                 .ToDictionaryAsync(x => x.InventTransId, x => x.InventTransIdReturn, ct);
-            var vendorReturns = await Db.Set<PurchLine>().AsNoTracking().Where(x => x.DataAreaId == companyId && (itemId == "" || x.ItemId == itemId) && x.InventTransIdReturn != "")
-                .ToDictionaryAsync(x => x.InventTransId, x => x.InventTransIdReturn, ct);
+            var returnLines = await Db.Set<PurchLine>().AsNoTracking().Where(x => x.DataAreaId == companyId
+                && (itemId == "" || x.ItemId == itemId) && x.InventTransIdReturn != "").ToListAsync(ct);
+            var invoiceLineIds = returnLines.Where(x => x.OriginalInvoiceTransRecId.HasValue)
+                .Select(x => x.OriginalInvoiceTransRecId!.Value).Distinct().ToList();
+            var invoiceLines = await Db.Set<VendInvoiceTrans>().AsNoTracking()
+                .Where(x => x.DataAreaId == companyId && invoiceLineIds.Contains(x.RecId)).ToDictionaryAsync(x => x.RecId, ct);
+            var vendorReturns = new Dictionary<string, (string OriginId, string? InvoiceId)>();
+            foreach (var returnLine in returnLines)
+            {
+                string? invoiceId = null;
+                if (returnLine.OriginalInvoiceTransRecId is long invoiceLineId)
+                {
+                    if (!invoiceLines.TryGetValue(invoiceLineId, out var invoiceLine)
+                        || invoiceLine.InventTransId != returnLine.InventTransIdReturn
+                        || string.IsNullOrWhiteSpace(invoiceLine.InternalInvoiceId))
+                        throw new PostingValidationException("The original vendor invoice line cannot be identified for return settlement.");
+                    invoiceId = invoiceLine.InternalInvoiceId;
+                }
+                vendorReturns.Add(returnLine.InventTransId, (returnLine.InventTransIdReturn, invoiceId));
+            }
 
             var voucher = (await _numbers.NextAsync("InventClosing", companyId, ct)).Code;
             var run = new RunTotals();
@@ -206,7 +224,7 @@ public sealed partial class InventCloseService : IInventCloseService
     /// </summary>
     private async Task SettlePoolAsync(string companyId, Pool pool, bool isClose, string voucher,
         DateTime cutoffDate, LedgerContext context, IReadOnlyDictionary<string, string> salesReturns,
-        IReadOnlyDictionary<string, string> vendorReturns, RunTotals run, CancellationToken ct)
+        IReadOnlyDictionary<string, (string OriginId, string? InvoiceId)> vendorReturns, RunTotals run, CancellationToken ct)
     {
         var layers = new LinkedList<Layer>();
         foreach (var row in pool.Rows.Where(x => x.Transaction.Qty > 0))
@@ -253,6 +271,36 @@ public sealed partial class InventCloseService : IInventCloseService
                 layers.AddLast(new Layer { Receipt = trans, Remaining = openReceipt, UnitCost = receiptValue / trans.Qty });
         }
 
+        var openIssues = pool.Rows.Where(x => x.Transaction.Qty < x.Transaction.QtySettled).ToList();
+        var markedIssues = openIssues.Where(x => x.Transaction.MarkingRefInventTransOrigin != 0).ToList();
+        var markedOrigins = markedIssues.Select(x => x.Transaction.MarkingRefInventTransOrigin).ToList();
+        if (markedOrigins.Count != markedOrigins.Distinct().Count())
+            throw new PostingValidationException("Multiple open issues reference the same marked receipt origin; the marked quantities cannot be identified safely.");
+        if (pool.Model == InventModel.WeightedAvg && markedIssues.Count > 0 && openIssues.Count > markedIssues.Count)
+            throw new PostingValidationException("Weighted-average close with both marked and unmarked issues is not supported until marked quantities can be excluded from the average.");
+        if (markedIssues.Count > 0 && openIssues.Any(x => vendorReturns.ContainsKey(x.InventTransId)))
+            throw new PostingValidationException("Purchase returns cannot share a settlement pool with marked issues until their receipt allocations are verified.");
+        var reservedQuantities = new Dictionary<long, decimal>();
+        foreach (var markedIssue in markedIssues)
+        {
+            var issue = markedIssue.Transaction;
+            var receiptLayers = layers.Where(x => x.Receipt.InventTransOrigin == issue.MarkingRefInventTransOrigin).ToList();
+            if (receiptLayers.Count == 0)
+                throw new PostingValidationException($"Marked receipt for issue transaction {issue.RecId} has no available financial quantity in this item and site pool.");
+            if (receiptLayers.Count != 1)
+                throw new PostingValidationException("A marked receipt split across multiple movements cannot be identified safely.");
+            var reserved = issue.QtySettled - issue.Qty;
+            if (receiptLayers[0].Remaining < reserved)
+                throw new PostingValidationException(pool.Model == InventModel.WeightedAvg
+                    ? "A partially marked weighted-average issue cannot be costed until its marked quantity is known."
+                    : "A partially marked issue cannot be costed until its marked quantity is known.");
+            reservedQuantities.Add(issue.MarkingRefInventTransOrigin, reserved);
+        }
+
+        decimal AvailableForIssue(Layer layer, long markedOrigin) =>
+            layer.Receipt.InventTransOrigin == markedOrigin ? layer.Remaining
+                : Math.Max(0m, layer.Remaining - reservedQuantities.GetValueOrDefault(layer.Receipt.InventTransOrigin));
+
         // Weighted average costs every issue of the period at one pool average, so it is taken
         // before any consumption changes the open layers.
         var poolQty = layers.Sum(x => x.Remaining);
@@ -276,10 +324,23 @@ public sealed partial class InventCloseService : IInventCloseService
                 continue;
             }
             var openQty = needed;
-            if (layers.Sum(x => x.Remaining) < needed &&
+            if (trans.MarkingRefInventTransOrigin != 0)
+            {
+                var markedLayers = layers.Where(x => x.Receipt.InventTransOrigin == trans.MarkingRefInventTransOrigin).ToList();
+                if (markedLayers.Count == 0)
+                    throw new PostingValidationException($"Marked receipt for issue transaction {trans.RecId} has no available financial quantity in this item and site pool.");
+                if (markedLayers.Count != 1)
+                    throw new PostingValidationException("A marked receipt split across multiple movements cannot be identified safely.");
+                if (markedLayers[0].Remaining < needed)
+                    throw new PostingValidationException(pool.Model == InventModel.WeightedAvg
+                        ? "A partially marked weighted-average issue cannot be costed until its marked quantity is known."
+                        : "A partially marked issue cannot be costed until its marked quantity is known.");
+            }
+            var eligibleQty = layers.Sum(x => AvailableForIssue(x, trans.MarkingRefInventTransOrigin));
+            if (eligibleQty < needed &&
                 (trans.MarkingRefInventTransOrigin != 0 || vendorReturns.ContainsKey(row.InventTransId)))
                 throw new PostingValidationException("A marked issue or purchase return requires its linked receipt quantities to be financially available before settlement.");
-            var settledQty = Math.Min(needed, layers.Sum(x => x.Remaining));
+            var settledQty = Math.Min(needed, eligibleQty);
             // Recalculation does not record settled quantities, so a partial adjustment could
             // not be attributed safely on a subsequent run. Leave that issue unchanged.
             if (!isClose && settledQty < needed)
@@ -297,6 +358,9 @@ public sealed partial class InventCloseService : IInventCloseService
             while (needed > 0 && layers.Count > 0)
             {
                 var node = pool.Model == InventModel.LIFO ? layers.Last! : layers.First!;
+                while (node != null && AvailableForIssue(node.Value, trans.MarkingRefInventTransOrigin) == 0m)
+                    node = pool.Model == InventModel.LIFO ? node.Previous : node.Next;
+                if (node == null) throw new PostingValidationException("No unreserved receipt layer is available for this issue.");
                 if (trans.MarkingRefInventTransOrigin != 0)
                 {
                     // A marked issue takes its cost from the receipt it is marked to, ahead of the
@@ -307,17 +371,24 @@ public sealed partial class InventCloseService : IInventCloseService
                         marked = marked.Next;
                     if (marked != null) node = marked;
                 }
-                if (vendorReturns.TryGetValue(row.InventTransId, out var purchaseId))
+                if (vendorReturns.TryGetValue(row.InventTransId, out var purchase))
                 {
                     // A vendor return must consume the very receipt it sends back.
-                    var receiptIds = pool.Rows.Where(x => x.InventTransId == purchaseId && x.Transaction.Qty > 0)
+                    var candidates = pool.Rows.Where(x => x.InventTransId == purchase.OriginId && x.Transaction.Qty > 0
+                        && (purchase.InvoiceId == null || x.Transaction.InvoiceId == purchase.InvoiceId)).ToList();
+                    if (purchase.InvoiceId == null && candidates.GroupBy(x => x.Transaction.InvoiceId)
+                        .Where(x => x.Sum(y => y.Transaction.Qty) > 0m)
+                        .Select(x => x.Sum(y => y.Transaction.CostAmountPosted + y.Transaction.CostAmountAdjustment)
+                            / x.Sum(y => y.Transaction.Qty)).Distinct().Count() > 1)
+                        throw new PostingValidationException("The original vendor invoices have different inventory costs and the selected invoice line is unavailable.");
+                    var receiptIds = candidates
                         .Select(x => x.Transaction.RecId).ToHashSet();
                     while (node != null && !receiptIds.Contains(node.Value.Receipt.RecId))
                         node = pool.Model == InventModel.LIFO ? node.Previous : node.Next;
                     if (node == null) throw new PostingValidationException("Vendor return exceeds the open quantity of its original purchase receipt.");
                 }
                 var layer = node.Value;
-                var quantity = Math.Min(needed, layer.Remaining);
+                var quantity = Math.Min(needed, AvailableForIssue(layer, trans.MarkingRefInventTransOrigin));
                 needed -= quantity;
                 if (isClose) layer.Receipt.QtySettled += quantity;
                 layer.Remaining -= quantity;
@@ -332,6 +403,8 @@ public sealed partial class InventCloseService : IInventCloseService
             if (needed > 0)
                 throw new PostingValidationException(
                     $"Issue transaction {trans.RecId} lacks {needed} financially received units in its {pool.Model} pool.");
+            if (trans.MarkingRefInventTransOrigin != 0)
+                reservedQuantities.Remove(trans.MarkingRefInventTransOrigin);
 
             // The basic vendor-return path links the issue to its original receipt. Marked
             // issues likewise take their cost from the linked receipt, not the pool average.
@@ -529,46 +602,32 @@ public sealed partial class InventCloseService : IInventCloseService
     private async Task CreateLedgerCorrectionAsync(string companyId, string voucher, InventTrans issue,
         string inventTransId, InventRefType category, string itemGroupId, decimal adjustment, LedgerContext context, CancellationToken ct)
     {
-        // Journal, sales and purchase-return postings record the accounts and voucher used at
-        // posting time; the adjustment reuses that pair even if the profile changed since.
-        var isSale = category == InventRefType.SalesTable;
-        var isPurchase = category == InventRefType.PurchaseOrder;
+        // Journal, sales and purchase postings record the accounts and voucher used at posting
+        // time; the adjustment reuses that pair, so a later profile change cannot move the
+        // correction to different accounts.
         DimensionAttributeValueCombination inventory, cogs;
         LedgerPostingType inventoryPosting, offsetPosting;
-        var records = category is InventRefType.InventoryJournal or InventRefType.PhysicalinventoryCount
-                or InventRefType.SalesTable or InventRefType.PurchaseOrder
-            ? await Db.Set<Entities.InventTransPosting>().AsNoTracking().Where(x =>
-                x.DataAreaId == companyId && x.InventTransOrigin == issue.InventTransOrigin && x.ItemId == issue.ItemId
-                && x.Voucher == issue.Voucher && x.InventTransPostingType == InventTransPostingType.Financial
-                && x.IsPosted == NoYes.Yes).ToListAsync(ct)
-            : [];
-        if (records.Count == 1 && !string.IsNullOrWhiteSpace(issue.Voucher))
+        var record = string.IsNullOrWhiteSpace(issue.Voucher) ? null
+            : await OriginalFinancialPostingAsync(companyId, issue, ct);
+        if (record is not null)
         {
-            var record = records[0];
             inventory = await Support.LoadDimensionAsync(companyId, record.LedgerDimension, "original inventory posting", ct);
             cogs = await Support.LoadDimensionAsync(companyId, record.OffsetLedgerDimension, "original inventory offset", ct);
             inventoryPosting = record.PostingType;
             offsetPosting = record.PostingTypeOffset;
         }
-        else if (category is InventRefType.InventoryJournal or InventRefType.PhysicalinventoryCount or InventRefType.SalesTable)
+        else if (RequiresOriginalPostingRecord(category))
         {
             throw new PostingValidationException($"The original financial inventory posting for transaction {issue.RecId} could not be uniquely identified.");
         }
         else
         {
-            // No recorded pair: resolve the current profile for the cycle this transaction belongs
-            // to. The Inventory tab accounts apply only to transactions unrelated to sales,
-            // purchases or production, so a purchase-related issue uses the purchase pair instead.
-            var inventoryType = isSale ? InventAccountType.SalesIssue
-                : isPurchase ? InventAccountType.PurchReceipt : InventAccountType.InventReceipt;
-            var costType = isSale ? InventAccountType.SalesConsump
-                : isPurchase ? InventAccountType.PurchConsump : InventAccountType.InventIssue;
-            inventory = await Support.ResolveInventPostingAsync(companyId, issue.ItemId, inventoryType, ct, itemGroupId);
-            cogs = await Support.ResolveInventPostingAsync(companyId, issue.ItemId, costType, ct, itemGroupId);
-            inventoryPosting = isSale ? LedgerPostingType.SalesIssue
-                : isPurchase ? LedgerPostingType.PurchReceipt : LedgerPostingType.InventReceipt;
-            offsetPosting = isSale ? LedgerPostingType.SalesConsump
-                : isPurchase ? LedgerPostingType.PurchConsump : LedgerPostingType.InventIssue;
+            // No recorded pair: resolve the current profile for the cycle the transaction belongs to.
+            var accounts = CycleAccounts(category);
+            inventory = await Support.ResolveInventPostingAsync(companyId, issue.ItemId, accounts.Inventory, ct, itemGroupId);
+            cogs = await Support.ResolveInventPostingAsync(companyId, issue.ItemId, accounts.Offset, ct, itemGroupId);
+            inventoryPosting = accounts.InventoryPosting;
+            offsetPosting = accounts.OffsetPosting;
         }
         var entry = Support.NewEntry(companyId, voucher, voucher, context.AccountingDate,
             new SubledgerLedgerContext(context.Ledger, context.Period));
@@ -585,6 +644,46 @@ public sealed partial class InventCloseService : IInventCloseService
             VoucherDataAreaId = companyId, AccountingDate = context.AccountingDate
         });
     }
+
+    /// <summary>
+    /// The single financial posting record of an issue's own voucher, or null when none exists or
+    /// more than one matches and the original accounts cannot be identified.
+    /// </summary>
+    private async Task<Entities.InventTransPosting?> OriginalFinancialPostingAsync(string companyId,
+        InventTrans issue, CancellationToken ct)
+    {
+        var records = await Db.Set<Entities.InventTransPosting>().AsNoTracking().Where(x =>
+            x.DataAreaId == companyId && x.InventTransOrigin == issue.InventTransOrigin && x.ItemId == issue.ItemId
+            && x.Voucher == issue.Voucher && x.InventTransPostingType == InventTransPostingType.Financial
+            && x.IsPosted == NoYes.Yes).ToListAsync(ct);
+        return records.Count == 1 ? records[0] : null;
+    }
+
+    /// <summary>
+    /// Sources whose postings always record their accounts, so a missing record means the original
+    /// accounts are unknown and the adjustment must be refused rather than approximated.
+    /// </summary>
+    private static bool RequiresOriginalPostingRecord(InventRefType category) =>
+        category is InventRefType.InventoryJournal or InventRefType.PhysicalinventoryCount or InventRefType.SalesTable;
+
+    /// <summary>
+    /// The inventory and offset account pair of a cycle. The Inventory tab accounts apply only to
+    /// transactions unrelated to sales, purchases or production, so a sales or purchase transaction
+    /// uses its own cycle's pair: "Cost of units invoiced" offset by "Cost of units, invoiced" for
+    /// sales, and "Cost of purchased materials invoiced" offset by "Purchase expenditure for
+    /// product" for purchases.
+    /// </summary>
+    private static (InventAccountType Inventory, InventAccountType Offset,
+        LedgerPostingType InventoryPosting, LedgerPostingType OffsetPosting) CycleAccounts(InventRefType category) =>
+        category switch
+        {
+            InventRefType.SalesTable => (InventAccountType.SalesIssue, InventAccountType.SalesConsump,
+                LedgerPostingType.SalesIssue, LedgerPostingType.SalesConsump),
+            InventRefType.PurchaseOrder => (InventAccountType.PurchReceipt, InventAccountType.PurchConsump,
+                LedgerPostingType.PurchReceipt, LedgerPostingType.PurchConsump),
+            _ => (InventAccountType.InventReceipt, InventAccountType.InventIssue,
+                LedgerPostingType.InventReceipt, LedgerPostingType.InventIssue)
+        };
 
     private async Task<LedgerContext> LoadLedgerContextAsync(string companyId, DateTime date, CancellationToken ct)
     {

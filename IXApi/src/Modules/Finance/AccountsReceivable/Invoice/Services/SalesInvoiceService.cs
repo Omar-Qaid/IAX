@@ -163,7 +163,7 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
                     taxByCode[code] = (current.Base + revenue, current.Tax + codeTax, line.TaxGroup, line.TaxItemGroup);
                 }
 
-                var (cogs, physicalCost, inventOrigin) = await IssueInventoryAsync(area, order, line, inventQty, invoiceId, date, ct);
+                var (cogs, physicalReversals, inventOrigin) = await IssueInventoryAsync(area, order, line, inventQty, invoiceId, date, ct);
                 var customerScope = await support.CustomerScopeAsync(area,
                     order.InvoiceAccount.Length > 0 ? order.InvoiceAccount : order.CustAccount, ct);
                 var revenueAccount = await support.ResolveInventPostingAsync(area, line.ItemId, InventAccountType.SalesRevenue, ct,
@@ -186,8 +186,10 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
                         issueAccount, LedgerPostingType.SalesIssue, consumption, LedgerPostingType.SalesConsump));
                 }
                 // The financial update takes over from the delivery, so its physical posting is reversed.
-                await new PackingSlip.PackingSlipPhysicalPosting(Db)
-                    .ReverseAsync(area, inventOrigin, entry.RecId, date, currency, physicalCost, ct);
+                foreach (var reversal in physicalReversals)
+                    await new PackingSlip.PackingSlipPhysicalPosting(Db)
+                        .ReverseAsync(area, inventOrigin, entry.RecId, date, currency, reversal.Cost, ct,
+                            reversal.PackingSlipId, reversal.FullyInvoiced);
 
                 Db.Set<CustInvoiceTrans>().Add(new CustInvoiceTrans
                 {
@@ -284,7 +286,7 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
     }
 
     // Financial issue: Deducted -> Sold for the invoiced inventory quantity at provisional running-average cost.
-    private async Task<(decimal Cogs, decimal PhysicalCost, long InventTransOrigin)> IssueInventoryAsync(
+    private async Task<(decimal Cogs, List<(string PackingSlipId, decimal Cost, bool FullyInvoiced)> PhysicalReversals, long InventTransOrigin)> IssueInventoryAsync(
         string area, SalesTable order, SalesLine line, decimal inventQty, string invoiceId, DateTime date, CancellationToken ct)
     {
         var origin = await Db.Set<InventTransOrigin>().FirstOrDefaultAsync(x => x.DataAreaId == area
@@ -301,11 +303,15 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
         var unitCost = await IAX.IXApi.Modules.Finance.Inventory.InventoryMovement.SiteRunningAverageCostAsync(Db, area, line.ItemId, site, ct);
         var left = inventQty;
         var physicalReleased = 0m;
+        var remainingBySlip = deducted.GroupBy(x => x.PackingSlipId).ToDictionary(x => x.Key, x => x.Sum(y => -y.Qty));
+        var releasedBySlip = new Dictionary<string, decimal>();
         foreach (var source in deducted)
         {
             if (left <= 0) break;
             var available = -source.Qty;
             var take = Math.Min(available, left);
+            var released = take == available ? -source.CostAmountPhysical
+                : decimal.Round(-source.CostAmountPhysical * take / available, 4, MidpointRounding.AwayFromZero);
             if (take < available)
                 Db.Set<InventTrans>().Add(new InventTrans
                 {
@@ -313,7 +319,8 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
                     InventDimId = source.InventDimId, Qty = -(available - take), StatusIssue = StatusIssue.Deducted,
                     StatusReceipt = StatusReceipt.None, ValueOpen = InventTransOpen.Yes, CurrencyCode = source.CurrencyCode,
                     DateExpected = source.DateExpected, DatePhysical = source.DatePhysical, DateStatus = source.DateStatus,
-                    DateInvent = source.DateInvent, PackingSlipId = source.PackingSlipId, VoucherPhysical = source.VoucherPhysical
+                    DateInvent = source.DateInvent, PackingSlipId = source.PackingSlipId, VoucherPhysical = source.VoucherPhysical,
+                    CostAmountPhysical = source.CostAmountPhysical + released
                 });
             source.Qty = -take;
             source.StatusIssue = StatusIssue.Sold;
@@ -322,7 +329,9 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
             source.InvoiceId = invoiceId;
             source.Voucher = invoiceId;
             source.CostAmountPosted = -decimal.Round(take * unitCost, 2, MidpointRounding.AwayFromZero);
-            physicalReleased += -source.CostAmountPhysical;
+            physicalReleased += released;
+            releasedBySlip[source.PackingSlipId] = releasedBySlip.GetValueOrDefault(source.PackingSlipId) + released;
+            remainingBySlip[source.PackingSlipId] -= take;
             source.CostAmountPhysical = 0m;
             left -= take;
         }
@@ -335,7 +344,7 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
         summary.PostedValue -= cogs;
         summary.PhysicalValue += physicalReleased; // the delivery's provisional value is handed over
         summary.LastUpdDatePhysical = date;
-        return (cogs, physicalReleased, origin.RecId);
+        return (cogs, releasedBySlip.Select(x => (x.Key, x.Value, remainingBySlip[x.Key] == 0m)).ToList(), origin.RecId);
     }
 
 
