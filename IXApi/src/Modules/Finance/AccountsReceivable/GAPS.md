@@ -67,17 +67,11 @@ cannot be verified goes under *Flagged uncertainties* rather than being guessed 
 - **Partial settlement with cash discount.** Settlement reversal and cash discount are implemented;
   whether partial settlement recalculates the discount the way D365 does is not verified.
 
-## Known defect (not a parity gap)
-
-`AccountsReceivableGenericArchitectureTests.Crud_controllers_use_registered_generic_services` fails
-because `ICustTransService` is registered through a factory in `FinanceModule.cs`, leaving
-`ImplementationType` null for `CustTransController`. This is a registration-shape issue, not a
-functional gap, and predates the current inventory work.
-
 ## Changelog
 
 | Date | Change |
 | --- | --- |
+| 2026-11-02 | **Fixed the long-standing `Crud_controllers_use_registered_generic_services` failure.** `CustTransService` declared two same-arity constructors, `(IUnitOfWork, ICurrentUserService)` and `(IUnitOfWork, ICompanyExecutionContext)`; neither is a subset of the other, so the container could not choose between them and the service had been registered through a factory, which leaves `ImplementationType` null. The second constructor existed only for one test. It is gone, the registration is the ordinary `AddScoped<ICustTransService, CustTransService>()`, and that test now passes — the suite is green apart from work in flight elsewhere. The architecture test is itself the guard against the factory returning. |
 | 2026-11-01 | The free text invoice and the customer credit note now translate a foreign-currency document instead of rejecting it, using the same shared translation and exact balancing as the sales invoice. AR currency translation is complete; only exchange gain/loss at settlement remains. Covered by `A_foreign_currency_credit_note_translates_revenue_and_leaves_cost_in_the_accounting_currency`. |
 | 2026-11-01 | The sales invoice's customer line is now derived from the translated lines rather than translated independently, so a foreign-currency voucher balances to the cent and `CustTrans.AmountMst` equals what the ledger recorded. |
 | 2026-11-01 | The sales invoice now translates a foreign-currency order instead of rejecting it: transaction amounts stay in the order currency, `AmountMst` / `SalesBalanceMst` / `SumTaxMst` / `InvoiceAmountMst` and the ledger's accounting amounts are translated, and cost of goods stays in the accounting currency because inventory cost already is. Covered end to end by `Sales_invoice_translates_a_foreign_currency_order_into_the_accounting_currency`. |

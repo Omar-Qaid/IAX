@@ -9,11 +9,11 @@ counted as gaps.
 | Module | File | Highest-priority open gap |
 | --- | --- | --- |
 | General ledger | [GeneralLedger/GAPS.md](GeneralLedger/GAPS.md) | Journal tax calculation, and customer/vendor/bank journal line types |
-| Accounts payable | [AccountsPayable/GAPS.md](AccountsPayable/GAPS.md) | Foreign currency; no method-of-payment entity; payment proposal |
+| Accounts payable | [AccountsPayable/GAPS.md](AccountsPayable/GAPS.md) | Foreign currency; payment proposal; invoice matching tolerances |
 | Accounts receivable | [AccountsReceivable/GAPS.md](AccountsReceivable/GAPS.md) | Customer aging; exchange gain/loss on settlement |
 | Inventory | [Inventory/GAPS.md](Inventory/GAPS.md) | SQL Server verification; four unsupported inventory models |
 | Foundation | [Foundation/GAPS.md](Foundation/GAPS.md) | Realized gain/loss accounts have nowhere to live (schema decision); payment-term methods |
-| Common (shared posting) | [Common/GAPS.md](Common/GAPS.md) | Posting lock unproven under SQL Server; enum value drift unguarded |
+| Common (shared posting) | [Common/GAPS.md](Common/GAPS.md) | Posting lock unproven under SQL Server; implicit enum values still renumber on reorder |
 
 ## The two findings that cut across every module
 
