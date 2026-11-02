@@ -69,10 +69,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         [StringLength(FieldLengths.AgreementValue)]
         public string AgreementValue { get; set; } = string.Empty;
 
-        public long RetailChannel { get; set; }
-        [StringLength(FieldLengths.RetailChannelValue)]
-        public string RetailChannelValue { get; set; } = string.Empty;
-
         public long Terminal { get; set; }
         [StringLength(FieldLengths.TerminalValue)]
         public string TerminalValue { get; set; } = string.Empty;
@@ -160,4 +156,3 @@ namespace IAX.IXApi.Modules.Finance.Entities
         #endregion
     }
 }
-

@@ -47,7 +47,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public decimal Posted { get; set; }
         public decimal PreviousValue { get; set; }
         public decimal CalculatedAmount { get; set; }
-        public decimal CalculatedAmountMst_W { get; set; }
         public decimal CalculatedProratedAmount { get; set; }
         public decimal FromAmount { get; set; }
         public decimal ToAmount { get; set; }
@@ -68,7 +67,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         [StringLength(FieldLengths.TaxItemGroup)]
         public string TaxItemGroup { get; set; } = string.Empty;
         public decimal TaxAmount { get; set; }
-        public decimal TaxAmountMst_W { get; set; }
         public long TaxWithholdItemGroup { get; set; }
         public decimal TaxExemptPriceInclusiveOriginalPrice { get; set; }
         public decimal TaxExemptPriceInclusiveReductionAmount { get; set; }
@@ -91,17 +89,9 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         // Call Center & Retail (MCR / Promotion)
         // ==========================================================
         // Basic Properties
-        public decimal McrOriginalMiscChargeValue { get; set; }
-        public long McrSavedRecId { get; set; }
-        public int McrSavedTableId { get; set; }
-        public decimal RetailShippingPromotionDiscount { get; set; }
 
         // Enum Properties
         public NoYes McrBrokerContractFee { get; set; }
-        public NoYes McrCouponMarkup { get; set; }
-        public NoYes McrInstallmentEligible { get; set; }
-        public NoYes McrMiscChargeOverride { get; set; }
-        public int McrMarkupTransCreatedBy { get; set; }
 
         // ==========================================================
         // Invoicing Templates & Sub-Ledger Diagnostics
@@ -137,7 +127,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public NoYes IsOverriddenLine { get; set; }
         public NoYes IsOverriddenProratedLine { get; set; }
 
-
         #region Navigation Properties Row
 
 //         [ForeignKey(nameof(CurrencyCode))]
@@ -152,5 +141,3 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         #endregion
     }
 }
-
-

@@ -196,7 +196,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         public string? SubordinateCode { get; set; }
 
         // Enum Properties
-        public NoYes? Resident_W { get; set; } // Localized residency profile marker for central bank operations
 
         // ==========================================================
         // Internal HRM Core Mapping
@@ -204,8 +203,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // Basic Properties
         public long? HcmWorker { get; set; } // Links context back to HR system employee maps
 
-
-     
         #region Navigation Properties Row
         [ForeignKey(nameof(PrimaryContactFax))]
         public virtual LogisticsElectronicAddress? LogisticsElectronicAddress_Fax { get; set; }
@@ -234,10 +231,8 @@ namespace IAX.IXApi.Modules.Finance.Entities
         [ForeignKey(nameof(PrimaryContactEmail))]
         public virtual LogisticsElectronicAddress? LogisticsElectronicAddress_Email { get; set; }
 
-
         //DirPartyTable.PrimaryContactURL == LogisticsElectronicAddress.RecId
         public virtual LogisticsElectronicAddress? LogisticsElectronicAddress_Url { get; set; }
-
 
         // DirPartyTable.PrimaryAddressLocation == LogisticsLocation.RecId
         [ForeignKey(nameof(PrimaryAddressLocation))]
@@ -250,5 +245,3 @@ namespace IAX.IXApi.Modules.Finance.Entities
      
     }
 }
-
-

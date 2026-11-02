@@ -144,7 +144,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // Enum Properties
         public NoYes ReverseCharge_W { get; set; }
         public NoYes EuroTriangulation { get; set; }
-        public NoYes EmptyTaxBaseForOutgoingTax_W { get; set; }
         public TaxObligationCompany TaxObligationCompany { get; set; }
         public TaxPrintDetail TaxPrintDetail { get; set; }
 
@@ -160,7 +159,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
 
         // Enum Properties
         public NoYes IsOverUnderpayment { get; set; }
-
 
         #region Navigation Properties Row
 
@@ -182,4 +180,3 @@ namespace IAX.IXApi.Modules.Finance.Entities
         #endregion
     }
 }
-

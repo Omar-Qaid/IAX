@@ -16,11 +16,6 @@ public class MarkupAutoTable : Entity<long>
     public MarkupModuleCategory ModuleCategory { get; set; }
     public MarkupModuleType ModuleType { get; set; }
     public string ReturnRelation { get; set; } = string.Empty;
-    public int RetailConcessionFeeLegacy { get; set; }
-    public int RetailConcessionFee { get; set; }
     public string SHA256Hash { get; set; } = string.Empty;
-    public int RetailAdvancedChargesDeliveryProrate { get; set; }
-    public int RetailChannelCode { get; set; }
-    public string RetailChannelRelation { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
 }

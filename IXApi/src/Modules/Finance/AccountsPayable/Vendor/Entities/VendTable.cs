@@ -18,8 +18,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
 
         public long? Party { get; set; } // Foreign key link pointing directly to global DirPartyTable details
         
-   
-
         [Required]
         [StringLength(10)]
         public string VendGroup { get; set; } = string.Empty; // Grouping identifier for posting defaults and sub-ledger setup
@@ -219,7 +217,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         public string ContactPersonId { get; set; } = string.Empty;
 
         public long? MainContactWorker { get; set; }
-        public long? VendorPortalAdministratorRecId { get; set; }
 
         // Enum Properties
         public NoYes CxmlOrderEnable { get; set; }
@@ -268,24 +265,13 @@ namespace IAX.IXApi.Modules.Finance.Entities
         [StringLength(10)]
         public string NumberSequenceGroup { get; set; } = string.Empty;
 
-        [Required]
-        [StringLength(100)]
-        public string ItmCostTypeGroupId { get; set; } = string.Empty;
-
-        [Required]
-        [StringLength(10)]
-        public string ItmOverUnderToleranceGroupId { get; set; } = string.Empty;
-
         public long CompanyNafCode { get; set; }
         public long VendExceptionGroup { get; set; }
         public DateTime CisVerificationDate { get; set; }
 
         // Enum Properties
-        public NoYes ItmImportCostingVendor { get; set; }
-        public NoYes ItmServicesProvider { get; set; }
         public ItmVendType ItmVendType { get; set; }
         public CisStatus CisStatus { get; set; }
-
 
         #region Navigation Properties Row
 

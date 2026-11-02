@@ -7,7 +7,6 @@ namespace IAX.IXApi.Modules.Finance.Entities;
 public class MarkupAutoLine : Entity<long>
 {
     public string CurrencyCode { get; set; } = string.Empty;
-    public int CustomsAssessableValue_IN { get; set; }
     public decimal FromAmount { get; set; }
     public int Keep { get; set; }
     public decimal LineNum { get; set; }
@@ -17,8 +16,6 @@ public class MarkupAutoLine : Entity<long>
     public int MCRReturnMarkup { get; set; }
     public MarkupModuleCategory ModuleCategory { get; set; }
     public MarkupModuleType ModuleType { get; set; }
-    public int NotionalCharges_IN { get; set; }
-    public decimal NotionalPct_IN { get; set; }
     public long TableRecId { get; set; }
     public int TableTableId { get; set; }
     public string TaxGroup { get; set; } = string.Empty;

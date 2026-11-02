@@ -66,14 +66,11 @@ namespace IAX.IXApi.Modules.Finance.Entities
         public string ChannelReferenceId { get; set; } = string.Empty; // Synced UUID or reference ID from external e-commerce engines
 
         // Enum Properties
-        public NoYes RetailMarketingOptIn { get; set; } // Strategic GDPR compliant digital outbound marketing filter policy
-
 
         #region Navigation Properties Row
         //LogisticsElectronicAddress.Location == LogisticsLocation.RecId
         [ForeignKey(nameof(Location))]
         public virtual LogisticsLocation? LogisticsLocationTable { get; set; }
-
 
         //LogisticsElectronicAddress.PrivateForParty == DirPartyTable.RecId
         public virtual DirPartyTable? DirPartyTable { get; set; }
@@ -82,4 +79,3 @@ namespace IAX.IXApi.Modules.Finance.Entities
    
     }
 }
-
