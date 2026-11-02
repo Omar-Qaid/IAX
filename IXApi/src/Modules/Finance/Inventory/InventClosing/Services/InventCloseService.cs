@@ -226,6 +226,34 @@ public sealed partial class InventCloseService : IInventCloseService
         DateTime cutoffDate, LedgerContext context, IReadOnlyDictionary<string, string> salesReturns,
         IReadOnlyDictionary<string, (string OriginId, string? InvoiceId)> vendorReturns, RunTotals run, CancellationToken ct)
     {
+        // FIFO returns can depend on sales issues from this same close. Settle the chronological
+        // issue prefix against earlier, non-return receipts first, then build the return layer at
+        // its original issue's settled cost. Other models or interdependent marking/return cases
+        // retain the existing refusal rather than approximating their settlement order.
+        var returnReceipts = pool.Rows.Where(x => x.Transaction.Qty > 0 && salesReturns.ContainsKey(x.InventTransId)).ToList();
+        var dependencyOrigins = returnReceipts.Select(x => salesReturns[x.InventTransId]).ToHashSet(StringComparer.Ordinal);
+        var openDependencies = pool.Rows.Where(x => x.Transaction.Qty < 0 && dependencyOrigins.Contains(x.InventTransId)
+            && x.Transaction.ValueOpen != InventTransOpen.No).ToList();
+        if (isClose && pool.Model == InventModel.FIFO && openDependencies.Count > 0
+            && !pool.Rows.Any(x => x.Transaction.Qty < 0 &&
+                (x.Transaction.MarkingRefInventTransOrigin != 0 || vendorReturns.ContainsKey(x.InventTransId))))
+        {
+            var lastDependency = openDependencies.OrderBy(x => x.Transaction.DateFinancial)
+                .ThenBy(x => x.Transaction.RecId).Last().Transaction;
+            var firstReturnDate = returnReceipts.Min(x => x.Transaction.DateFinancial);
+            if (lastDependency.DateFinancial < firstReturnDate && pool.Rows
+                .Where(x => x.Transaction.Qty > 0 && !salesReturns.ContainsKey(x.InventTransId))
+                .All(x => x.Transaction.DateFinancial < firstReturnDate))
+            {
+                var prefix = pool.Rows.Where(x => x.Transaction.Qty > 0 && !salesReturns.ContainsKey(x.InventTransId)
+                    || x.Transaction.Qty < 0 && (x.Transaction.DateFinancial < lastDependency.DateFinancial
+                        || x.Transaction.DateFinancial == lastDependency.DateFinancial && x.Transaction.RecId <= lastDependency.RecId))
+                    .ToList();
+                await SettlePoolAsync(companyId, new Pool(pool.ItemId, pool.Site, pool.ItemGroupId, pool.Model, prefix),
+                    true, voucher, cutoffDate, context, salesReturns, vendorReturns, run, ct);
+            }
+        }
+
         var layers = new LinkedList<Layer>();
         foreach (var row in pool.Rows.Where(x => x.Transaction.Qty > 0))
         {

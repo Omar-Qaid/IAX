@@ -144,6 +144,13 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
                     .Select(x => x.Qty).ToListAsync(ct)).Sum();
                 if (request.Qty > invoicedOnLine - alreadyReturned)
                     return await Fail(422, $"Return quantity for item {sold.ItemId} exceeds the returnable quantity {invoicedOnLine - alreadyReturned}.", ct);
+                // Earlier returns carry only the original inventory origin, not the selected
+                // invoice line. Any of them may therefore belong to this invoice. Until that
+                // relationship is available, use the conservative remaining quantity instead of
+                // allowing several requests to return the selected invoice more than once.
+                var safelyReturnable = Math.Max(0m, sold.Qty - alreadyReturned);
+                if (request.Qty > safelyReturnable)
+                    return await Fail(422, $"Return quantity exceeds the safely verifiable quantity {safelyReturnable} for the selected invoice line; prior returns cannot be attributed to individual invoices.", ct);
 
                 var inventQty = decimal.Round(request.Qty * sold.InventQty / sold.Qty, 6);
                 var unitRevenue = sold.LineAmount / sold.Qty;
