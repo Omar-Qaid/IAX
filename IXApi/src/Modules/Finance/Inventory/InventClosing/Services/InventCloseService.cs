@@ -103,9 +103,15 @@ public sealed partial class InventCloseService : IInventCloseService
                     .OrderByDescending(x => x.RunNum).FirstOrDefault();
                 if (existing != null)
                 {
+                    var outstanding = (await LoadPoolsAsync(companyId, cutoffDate, itemId, ct))
+                        .SelectMany(x => x.Rows).Select(x => x.Transaction)
+                        .Where(x => x.StatusIssue == StatusIssue.Sold && x.ValueOpen == InventTransOpen.Yes
+                            && x.Qty < x.QtySettled)
+                        .Select(x => new InventCloseUnsettledIssueDto(x.RecId, x.ItemId, x.QtySettled - x.Qty))
+                        .ToList();
                     await _unitOfWork.CommitTransactionAsync(ct);
                     return (new InventCloseResultDto(existing.RecId, existing.Voucher, cutoffDate,
-                        existing.RunNum, InventAdjustmentType.Closing, 0, 0, 0, 0m), null);
+                        existing.RunNum, InventAdjustmentType.Closing, 0, 0, 0, 0m) { UnsettledIssues = outstanding }, null);
                 }
                 if (live.Any(x => x.AdjustmentType == InventAdjustmentType.Closing &&
                         (x.TransDate.Date > cutoffDate || (x.TransDate.Date == cutoffDate && x.ScopeItemId.Length == 0))))
@@ -176,7 +182,8 @@ public sealed partial class InventCloseService : IInventCloseService
             await _unitOfWork.CompleteAsync(ct);
             await _unitOfWork.CommitTransactionAsync(ct);
             return (new InventCloseResultDto(closing.RecId, voucher, cutoffDate, runNum, runType,
-                run.IssuesSettled, run.SettlementsCreated, run.LedgerEntriesCreated, run.TotalAdjustment), null);
+                run.IssuesSettled, run.SettlementsCreated, run.LedgerEntriesCreated, run.TotalAdjustment)
+                { UnsettledIssues = run.UnsettledIssues }, null);
         }
         catch (PostingValidationException ex)
         {
@@ -268,7 +275,24 @@ public sealed partial class InventCloseService : IInventCloseService
                 if (isClose && trans.ValueOpen != InventTransOpen.No) FinishIssue(trans, cutoffDate);
                 continue;
             }
-            var settledQty = needed;
+            var openQty = needed;
+            if (layers.Sum(x => x.Remaining) < needed &&
+                (trans.MarkingRefInventTransOrigin != 0 || vendorReturns.ContainsKey(row.InventTransId)))
+                throw new PostingValidationException("A marked issue or purchase return requires its linked receipt quantities to be financially available before settlement.");
+            var settledQty = Math.Min(needed, layers.Sum(x => x.Remaining));
+            // Recalculation does not record settled quantities, so a partial adjustment could
+            // not be attributed safely on a subsequent run. Leave that issue unchanged.
+            if (!isClose && settledQty < needed)
+            {
+                run.UnsettledIssues.Add(new(trans.RecId, trans.ItemId, needed));
+                continue;
+            }
+            if (settledQty == 0m)
+            {
+                run.UnsettledIssues.Add(new(trans.RecId, trans.ItemId, needed));
+                continue;
+            }
+            needed = settledQty;
             var consumed = new List<(Layer Layer, decimal Qty)>();
             while (needed > 0 && layers.Count > 0)
             {
@@ -324,13 +348,9 @@ public sealed partial class InventCloseService : IInventCloseService
             var target = -settledCost;
 
             // The provisional cost carried by exactly the quantity settled in this run.
-            var provisional = decimal.Round((trans.CostAmountPosted + trans.CostAmountAdjustment) * (settledQty / -trans.Qty),
+            var provisional = decimal.Round((trans.CostAmountPosted + trans.CostAmountAdjustment - trans.CostAmountSettled) * (settledQty / openQty),
                 4, MidpointRounding.AwayFromZero);
             var adjustment = target - provisional;
-            if (adjustment != 0m && row.Category == InventRefType.PurchaseOrder && vendorReturns.ContainsKey(row.InventTransId))
-                throw new PostingValidationException(
-                    "Purchase return cost adjustment requires the original inventory posting accounts; this accounting path is not implemented.");
-
             var allocated = 0m;
             var rawCost = 0m;
             var adjustmentAllocated = 0m;
@@ -357,7 +377,9 @@ public sealed partial class InventCloseService : IInventCloseService
             if (isClose) trans.QtySettled += -settledQty;
             trans.CostAmountAdjustment += adjustment;
             if (isClose) trans.CostAmountSettled += target;
-            if (isClose) FinishIssue(trans, cutoffDate);
+            if (isClose && settledQty == openQty) FinishIssue(trans, cutoffDate);
+            if (settledQty < openQty)
+                run.UnsettledIssues.Add(new(trans.RecId, trans.ItemId, openQty - settledQty));
             run.IssuesSettled++;
             run.TotalAdjustment += adjustment;
 
@@ -507,32 +529,46 @@ public sealed partial class InventCloseService : IInventCloseService
     private async Task CreateLedgerCorrectionAsync(string companyId, string voucher, InventTrans issue,
         string inventTransId, InventRefType category, string itemGroupId, decimal adjustment, LedgerContext context, CancellationToken ct)
     {
-        // Journal and sales postings record the accounts and voucher used at posting time.
+        // Journal, sales and purchase-return postings record the accounts and voucher used at
+        // posting time; the adjustment reuses that pair even if the profile changed since.
         var isSale = category == InventRefType.SalesTable;
+        var isPurchase = category == InventRefType.PurchaseOrder;
         DimensionAttributeValueCombination inventory, cogs;
         LedgerPostingType inventoryPosting, offsetPosting;
-        if (category is InventRefType.InventoryJournal or InventRefType.PhysicalinventoryCount or InventRefType.SalesTable)
-        {
-            var records = await Db.Set<Entities.InventTransPosting>().AsNoTracking().Where(x =>
+        var records = category is InventRefType.InventoryJournal or InventRefType.PhysicalinventoryCount
+                or InventRefType.SalesTable or InventRefType.PurchaseOrder
+            ? await Db.Set<Entities.InventTransPosting>().AsNoTracking().Where(x =>
                 x.DataAreaId == companyId && x.InventTransOrigin == issue.InventTransOrigin && x.ItemId == issue.ItemId
                 && x.Voucher == issue.Voucher && x.InventTransPostingType == InventTransPostingType.Financial
-                && x.IsPosted == NoYes.Yes).ToListAsync(ct);
-            if (string.IsNullOrWhiteSpace(issue.Voucher) || records.Count != 1)
-                throw new PostingValidationException($"The original financial inventory posting for transaction {issue.RecId} could not be uniquely identified.");
+                && x.IsPosted == NoYes.Yes).ToListAsync(ct)
+            : [];
+        if (records.Count == 1 && !string.IsNullOrWhiteSpace(issue.Voucher))
+        {
             var record = records[0];
             inventory = await Support.LoadDimensionAsync(companyId, record.LedgerDimension, "original inventory posting", ct);
             cogs = await Support.LoadDimensionAsync(companyId, record.OffsetLedgerDimension, "original inventory offset", ct);
             inventoryPosting = record.PostingType;
             offsetPosting = record.PostingTypeOffset;
         }
+        else if (category is InventRefType.InventoryJournal or InventRefType.PhysicalinventoryCount or InventRefType.SalesTable)
+        {
+            throw new PostingValidationException($"The original financial inventory posting for transaction {issue.RecId} could not be uniquely identified.");
+        }
         else
         {
-            var inventoryType = isSale ? InventAccountType.SalesIssue : InventAccountType.InventReceipt;
-            var costType = isSale ? InventAccountType.SalesConsump : InventAccountType.InventIssue;
+            // No recorded pair: resolve the current profile for the cycle this transaction belongs
+            // to. The Inventory tab accounts apply only to transactions unrelated to sales,
+            // purchases or production, so a purchase-related issue uses the purchase pair instead.
+            var inventoryType = isSale ? InventAccountType.SalesIssue
+                : isPurchase ? InventAccountType.PurchReceipt : InventAccountType.InventReceipt;
+            var costType = isSale ? InventAccountType.SalesConsump
+                : isPurchase ? InventAccountType.PurchConsump : InventAccountType.InventIssue;
             inventory = await Support.ResolveInventPostingAsync(companyId, issue.ItemId, inventoryType, ct, itemGroupId);
             cogs = await Support.ResolveInventPostingAsync(companyId, issue.ItemId, costType, ct, itemGroupId);
-            inventoryPosting = isSale ? LedgerPostingType.SalesIssue : LedgerPostingType.InventReceipt;
-            offsetPosting = isSale ? LedgerPostingType.SalesConsump : LedgerPostingType.InventIssue;
+            inventoryPosting = isSale ? LedgerPostingType.SalesIssue
+                : isPurchase ? LedgerPostingType.PurchReceipt : LedgerPostingType.InventReceipt;
+            offsetPosting = isSale ? LedgerPostingType.SalesConsump
+                : isPurchase ? LedgerPostingType.PurchConsump : LedgerPostingType.InventIssue;
         }
         var entry = Support.NewEntry(companyId, voucher, voucher, context.AccountingDate,
             new SubledgerLedgerContext(context.Ledger, context.Period));
@@ -576,6 +612,7 @@ public sealed partial class InventCloseService : IInventCloseService
         public int SettlementsCreated;
         public int LedgerEntriesCreated;
         public decimal TotalAdjustment;
+        public List<InventCloseUnsettledIssueDto> UnsettledIssues { get; } = [];
     }
 
     private sealed record Pool(string ItemId, string Site, string ItemGroupId, InventModel Model,

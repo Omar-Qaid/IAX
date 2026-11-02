@@ -81,13 +81,13 @@ public sealed  class InventorySeeder : IAX.IXApi.Infrastructure.Persistence.Seed
             {
                 DataAreaId = Company, ModelGroupId = "FIFO", Name = "FIFO Stocked Items",
                 InventModel = InventModel.FIFO, StockedProduct = NoYes.Yes, PostOnHandPhysical = NoYes.Yes, PostOnHandFinancial = NoYes.Yes,
-                MandatoryReceive = NoYes.Yes, NegativePhysical = NoYes.No, NegativeFinancial = NoYes.No, PdsDispositionCode = string.Empty
+                MandatoryReceive = NoYes.No, NegativePhysical = NoYes.No, NegativeFinancial = NoYes.No, PdsDispositionCode = string.Empty
             },
             new InventModelGroup
             {
-                DataAreaId = Company, ModelGroupId = "MA", Name = "Moving Average Stocked Items",
-                InventModel = InventModel.MovingAverage, StockedProduct = NoYes.Yes, PostOnHandPhysical = NoYes.Yes, PostOnHandFinancial = NoYes.Yes,
-                MandatoryReceive = NoYes.Yes, NegativeFinancial = NoYes.Yes, PdsDispositionCode = string.Empty
+                DataAreaId = Company, ModelGroupId = "WAVG", Name = "Weighted Average Stocked Items",
+                InventModel = InventModel.WeightedAvg, StockedProduct = NoYes.Yes, PostOnHandPhysical = NoYes.Yes, PostOnHandFinancial = NoYes.Yes,
+                MandatoryReceive = NoYes.No, NegativePhysical = NoYes.No, NegativeFinancial = NoYes.No, PdsDispositionCode = string.Empty
             },
             new InventModelGroup
             {
@@ -101,6 +101,16 @@ public sealed  class InventorySeeder : IAX.IXApi.Infrastructure.Persistence.Seed
             if (!await db.Set<InventModelGroup>().IgnoreQueryFilters().AnyAsync(x => x.DataAreaId == Company && x.ModelGroupId == mg.ModelGroupId, ct))
                 db.Add(mg);
         }
+
+        // Repair a legacy FIFO seed matching these basic fields; receive has no implemented workflow.
+        // Never change an existing group's costing model or a differently configured group.
+        var legacyFifo = await db.Set<InventModelGroup>().IgnoreQueryFilters().FirstOrDefaultAsync(x =>
+            x.DataAreaId == Company && x.ModelGroupId == "FIFO" && x.Name == "FIFO Stocked Items"
+            && x.InventModel == InventModel.FIFO && x.StockedProduct == NoYes.Yes
+            && x.PostOnHandPhysical == NoYes.Yes && x.PostOnHandFinancial == NoYes.Yes
+            && x.NegativePhysical == NoYes.No && x.NegativeFinancial == NoYes.No
+            && x.MandatoryReceive == NoYes.Yes, ct);
+        if (legacyFifo is not null) legacyFifo.MandatoryReceive = NoYes.No;
 
         // Storage Dimension Groups: SW and SWL
         var sw = await EnsureStorageGroupAsync(db, "SW", "Site and warehouse", false, ct);
@@ -348,7 +358,7 @@ public sealed  class InventorySeeder : IAX.IXApi.Infrastructure.Persistence.Seed
 
     private static async Task SeedPostingRulesAsync(ApplicationDbContext db, CancellationToken ct)
     {
-        var accountIds = new[] { "50010000", "40010000", "14010000", "40910000", "50910000" };
+        var accountIds = new[] { "50010000", "40010000", "14010000", "40910000", "50910000", "21010000", "21020000" };
         var accounts = await db.Set<MainAccount>().IgnoreQueryFilters()
             .Where(x => x.DataAreaId == Company && accountIds.Contains(x.MainAccountId))
             .ToDictionaryAsync(x => x.MainAccountId, ct);
@@ -398,6 +408,17 @@ public sealed  class InventorySeeder : IAX.IXApi.Infrastructure.Persistence.Seed
         if (dimensions.ContainsKey("50910000"))
         {
             await AddPostingAsync(db, InventAccountType.InventLoss, dimensions["50910000"], ct);
+        }
+        // Accrual offsets for physical (un-invoiced) updates. Posting a product receipt or a packing
+        // slip in the ledger credits these, so they must exist before either flag is enabled on an
+        // item model group.
+        if (dimensions.ContainsKey("21010000"))
+        {
+            await AddPostingAsync(db, InventAccountType.PurchPackingSlipOffsetAccount, dimensions["21010000"], ct);
+        }
+        if (dimensions.ContainsKey("21020000"))
+        {
+            await AddPostingAsync(db, InventAccountType.SalesPackingSlipOffsetAccount, dimensions["21020000"], ct);
         }
         await db.SaveChangesAsync(ct);
     }

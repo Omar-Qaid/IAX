@@ -11,7 +11,12 @@ public sealed record InventCloseResultDto(
     int IssuesSettled,
     int SettlementsCreated,
     int LedgerEntriesCreated,
-    decimal TotalAdjustment);
+    decimal TotalAdjustment)
+{
+    public IReadOnlyList<InventCloseUnsettledIssueDto> UnsettledIssues { get; init; } = [];
+}
+
+public sealed record InventCloseUnsettledIssueDto(long TransactionRecId, string ItemId, decimal RemainingQuantity);
 
 public sealed record InventCloseCancelResultDto(
     long CancellationRecId,

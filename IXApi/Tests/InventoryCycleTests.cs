@@ -1033,6 +1033,34 @@ public sealed class InventoryCycleTests
     }
 
     [Fact]
+    public async Task Customer_return_request_cannot_exceed_selected_partial_invoice_line()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        SeedSalesMasterData(db);
+        db.Set<ReturnDispositionCode>().Add(new ReturnDispositionCode { DataAreaId = "dat", DispositionCodeId = "CRONLY", DispositionAction = DispositionAction.CreditOnly });
+        await db.SaveChangesAsync();
+        var numbers = new TestInventNumbers();
+        var invoiceId = await StockAndSellTenAsync(db, numbers);
+        var invoiceLine = await db.Set<CustInvoiceTrans>().SingleAsync();
+        invoiceLine.Qty = 5m;
+        invoiceLine.InventQty = 5m;
+        db.Add(new CustInvoiceTrans { DataAreaId = "dat", InvoiceId = "SECOND-INVOICE", SalesId = invoiceLine.SalesId,
+            InventTransId = invoiceLine.InventTransId, ItemId = invoiceLine.ItemId, Qty = 5m, InventQty = 5m });
+        await db.SaveChangesAsync();
+        var returns = new CustReturnService(new TestUnitOfWork(db), new TestCompany(), Sequence(), numbers);
+
+        var result = await returns.CreateAsync(new CustReturnCreateDto(invoiceId, null,
+            [new(invoiceLine.RecId, 3m, "CRONLY"), new(invoiceLine.RecId, 3m, "CRONLY")]), default);
+
+        Assert.Equal(422, result.StatusCode);
+        Assert.Contains("selected invoice line", result.Message);
+        Assert.Empty(await db.Set<SalesTable>().Where(x => x.SalesType == SalesType.ReturnItem).ToListAsync());
+    }
+
+    [Fact]
     public async Task Customer_return_rejects_different_costs_across_partial_invoices_without_invoice_link()
     {
         await using var fixture = await Fixture.CreateAsync();
@@ -1984,6 +2012,82 @@ public sealed class InventoryCycleTests
         Assert.Equal(InventTransOpen.No, issue.ValueOpen);
         Assert.Equal(1700m, (await db.Set<InventSum>().SingleAsync()).PostedValue);
         Assert.Equal(0m, (await db.Set<GeneralJournalAccountEntry>().ToListAsync()).Sum(x => x.AccountingCurrencyAmount));
+    }
+
+    [Fact]
+    public async Task Recalculation_leaves_a_partially_coverable_issue_unchanged()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedMarkablePool(db);
+        var issue = db.Set<InventTrans>().Local.Single(x => x.RecId == 3);
+        issue.Qty = -150m;
+        issue.CostAmountPosted = -1650m;
+        db.Set<InventTrans>().Local.Single(x => x.RecId == 2).DateFinancial = new DateTime(2026, 6, 20);
+        await db.SaveChangesAsync();
+        var service = new InventCloseService(new TestUnitOfWork(db), new TestCompany(), new TestUser(), Sequence());
+
+        var run = await service.RecalculateItemAsync("ITEM", new DateTime(2026, 6, 10));
+        Assert.Null(run.Error);
+        Assert.Equal(150m, Assert.Single(run.Result!.UnsettledIssues).RemainingQuantity);
+        Assert.Equal(0m, issue.QtySettled);
+        Assert.Equal(0m, issue.CostAmountAdjustment);
+        Assert.Empty(await db.Set<InventSettlement>().ToListAsync());
+    }
+
+    [Fact]
+    public async Task Close_preserves_unsettled_quantity_for_a_later_receipt_and_reverses_both_runs()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedMarkablePool(db);
+        var issue = db.Set<InventTrans>().Local.Single(x => x.RecId == 3);
+        issue.Qty = -150m;
+        issue.CostAmountPosted = -1650m;
+        db.Set<InventTrans>().Local.Single(x => x.RecId == 2).DateFinancial = new DateTime(2026, 6, 20);
+        await db.SaveChangesAsync();
+
+        var service = new InventCloseService(new TestUnitOfWork(db), new TestCompany(), new TestUser(), Sequence());
+        var first = await service.CloseItemAsync("ITEM", new DateTime(2026, 6, 10));
+        Assert.Null(first.Error);
+        Assert.Equal(50m, Assert.Single(first.Result!.UnsettledIssues).RemainingQuantity);
+        Assert.Equal(-100m, issue.QtySettled);
+        Assert.Equal(-1000m, issue.CostAmountSettled);
+        Assert.Equal(100m, issue.CostAmountAdjustment);
+        Assert.Equal(InventTransOpen.Yes, issue.ValueOpen);
+        var retry = await service.CloseItemAsync("ITEM", new DateTime(2026, 6, 10));
+        Assert.Equal(50m, Assert.Single(retry.Result!.UnsettledIssues).RemainingQuantity);
+
+        var second = await service.CloseItemAsync("ITEM", new DateTime(2026, 6, 30));
+        Assert.Null(second.Error);
+        Assert.Empty(second.Result!.UnsettledIssues);
+        Assert.Equal(-150m, issue.QtySettled);
+        Assert.Equal(-1600m, issue.CostAmountSettled);
+        Assert.Equal(50m, issue.CostAmountAdjustment);
+        Assert.Equal(InventTransOpen.No, issue.ValueOpen);
+        Assert.Null((await service.CancelAsync(second.Result.ClosingRecId)).Error);
+        Assert.Equal(-100m, issue.QtySettled);
+        Assert.Null((await service.CancelAsync(first.Result.ClosingRecId)).Error);
+        Assert.Equal(0m, issue.QtySettled);
+        Assert.Equal(0m, issue.CostAmountAdjustment);
+    }
+
+    [Fact]
+    public async Task Inventory_summary_key_prevents_duplicate_on_hand_rows()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        db.Set<InventSum>().Add(new InventSum { DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM" });
+        await db.SaveChangesAsync();
+        db.Set<InventSum>().Add(new InventSum { DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM" });
+        await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
+        db.ChangeTracker.Clear();
+        Assert.Single(await db.Set<InventSum>().ToListAsync());
+        db.Set<InventSum>().Add(new InventSum { DataAreaId = "usmf", ItemId = "ITEM", InventDimId = "DIM" });
+        await db.SaveChangesAsync();
+        Assert.Equal(2, await db.Set<InventSum>().CountAsync());
     }
 
     /// <summary>Two receipts at different costs and one issue, so marking changes the outcome.</summary>

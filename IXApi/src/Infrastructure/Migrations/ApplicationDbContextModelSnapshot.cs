@@ -17842,6 +17842,9 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
+                    b.HasIndex("DataAreaId", "ItemId", "InventDimId")
+                        .IsUnique();
+
                     b.ToTable("InventSum");
                 });
 

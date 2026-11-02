@@ -179,6 +179,60 @@ public sealed class InventoryArchitectureTests
     }
 
     [Fact]
+    public async Task Inventory_readiness_requires_accrual_offsets_only_when_physical_posting_is_enabled()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        var model = new InventModelGroup { RecId = 1, DataAreaId = "dat", ModelGroupId = "FIFO",
+            InventModel = InventModel.FIFO, StockedProduct = NoYes.Yes, PostOnHandFinancial = NoYes.Yes };
+        db.Add(model);
+        await db.SaveChangesAsync();
+        var service = new InventParametersService(new TestUnitOfWork(db), new TestIdentity());
+
+        var initial = (await service.GetReadinessAsync())!;
+        Assert.Contains(initial.Issues, x => x.Code == "MISSING_SALESCONSUMP_ACCOUNT");
+        Assert.DoesNotContain(initial.Issues, x => x.Code == "MISSING_PURCHPACKINGSLIPOFFSETACCOUNT_ACCOUNT"
+            || x.Code == "MISSING_SALESPACKINGSLIPOFFSETACCOUNT_ACCOUNT");
+
+        model.PostPhysicalPurchase = NoYes.Yes;
+        model.PostPhysicalRevenue = NoYes.Yes;
+        await db.SaveChangesAsync();
+        var enabled = (await service.GetReadinessAsync())!;
+        Assert.Contains(enabled.Issues, x => x.Code == "MISSING_PURCHPACKINGSLIPOFFSETACCOUNT_ACCOUNT");
+        Assert.Contains(enabled.Issues, x => x.Code == "MISSING_SALESPACKINGSLIPOFFSETACCOUNT_ACCOUNT");
+
+        db.AddRange(new[] { InventAccountType.SalesConsump, InventAccountType.PurchPackingSlipOffsetAccount,
+            InventAccountType.SalesPackingSlipOffsetAccount }.Select((type, i) => new InventPosting
+            { RecId = i + 10, DataAreaId = "dat", InventAccountType = type, ItemCode = TableGroupAll.All,
+                CustVendCode = TableGroupAll.All, LedgerDimension = 1 }));
+        await db.SaveChangesAsync();
+        var configured = (await service.GetReadinessAsync())!;
+        Assert.DoesNotContain(configured.Issues, x => x.Code is "MISSING_SALESCONSUMP_ACCOUNT"
+            or "MISSING_PURCHPACKINGSLIPOFFSETACCOUNT_ACCOUNT" or "MISSING_SALESPACKINGSLIPOFFSETACCOUNT_ACCOUNT");
+    }
+
+    [Fact]
+    public async Task Inventory_readiness_does_not_accept_a_model_group_requiring_unimplemented_receiving()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        var model = new InventModelGroup { RecId = 1, DataAreaId = "dat", ModelGroupId = "FIFO",
+            InventModel = InventModel.FIFO, StockedProduct = NoYes.Yes, PostOnHandFinancial = NoYes.Yes,
+            MandatoryReceive = NoYes.Yes };
+        db.Add(model);
+        await db.SaveChangesAsync();
+        var service = new InventParametersService(new TestUnitOfWork(db), new TestIdentity());
+        Assert.Contains((await service.GetReadinessAsync())!.Issues, x => x.Code == "MISSING_MODEL_GROUP");
+        model.MandatoryReceive = NoYes.No;
+        await db.SaveChangesAsync();
+        Assert.DoesNotContain((await service.GetReadinessAsync())!.Issues, x => x.Code == "MISSING_MODEL_GROUP");
+    }
+
+    [Fact]
     public async Task Inventory_readiness_accepts_valid_setup_with_company_chosen_names()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");

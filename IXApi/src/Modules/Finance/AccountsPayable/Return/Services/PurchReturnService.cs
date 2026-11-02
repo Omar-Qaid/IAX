@@ -443,6 +443,15 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                 // guarantees.
                 Db.Add(translation.AccountEntry(area, entry.RecId, inventoryAccount, LedgerPostingType.PurchReceipt, -amount,
                     $"Return {order.ReturnItemNum} item {line.ItemId}", -inventQty));
+                // The account pair a later cost adjustment of this purchase-related transaction must
+                // use. Per Microsoft, the offset to "Cost of purchased materials invoiced" is
+                // "Purchase expenditure for product", so inventory close adjusts that pair rather
+                // than resolving whatever profile is current when it runs.
+                var consumption = await support.ResolveInventPostingAsync(area, line.ItemId, InventAccountType.PurchConsump, ct,
+                    custVendAccount: vendorScope.Account, custVendGroup: vendorScope.Group);
+                Db.Add(IAX.IXApi.Modules.Finance.Inventory.InventTransPosting.InventTransPostingService.Record(
+                    area, origin.RecId, line.ItemId, InventTransPostingType.Financial, date, internalId,
+                    inventoryAccount, LedgerPostingType.PurchReceipt, consumption, LedgerPostingType.PurchConsump));
                 var creditLine = new VendInvoiceTrans
                 {
                     DataAreaId = area, InvoiceId = creditNoteId, InternalInvoiceId = internalId, InvoiceDate = date,

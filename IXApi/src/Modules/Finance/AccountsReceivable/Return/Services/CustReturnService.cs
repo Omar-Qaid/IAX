@@ -85,6 +85,16 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
                     .AnyAsync(x => x.DataAreaId == area && x.ReasonCodeId == input.ReturnReasonCodeId, ct))
                 return await Fail(422, $"Return reason code '{input.ReturnReasonCodeId}' is not configured.", ct);
 
+            // Serialize entitlement checks across returns from the same original inventory origin.
+            // Acquire all keys in a stable order for requests containing several invoice lines.
+            var invoiceLineIds = input.Lines.Select(x => x.CustInvoiceTransRecId).Distinct().ToList();
+            var sourceIds = await Db.Set<CustInvoiceTrans>().AsNoTracking()
+                .Where(x => x.DataAreaId == area && x.InvoiceId == invoice.InvoiceId && invoiceLineIds.Contains(x.RecId))
+                .Select(x => x.InventTransId).Distinct().ToListAsync(ct);
+            var support = new SubledgerPostingSupport(Db);
+            foreach (var sourceId in sourceIds.OrderBy(x => x, StringComparer.Ordinal))
+                await support.LockAsync($"SalesReturnEntitlement:{area}:{sourceId}", ct);
+
             var order = new SalesTable
             {
                 DataAreaId = area, SalesId = (await numbers.NextAsync("SalesTable", area, ct)).Code,
@@ -101,6 +111,7 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
             await unitOfWork.CompleteAsync(ct);
 
             var lineNum = 0m;
+            var requestedPerInvoiceLine = new Dictionary<long, decimal>();
             foreach (var request in input.Lines)
             {
                 var sold = await Db.Set<CustInvoiceTrans>().AsNoTracking().FirstOrDefaultAsync(x => x.RecId == request.CustInvoiceTransRecId
@@ -108,6 +119,10 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
                 if (sold == null) return await Fail(404, $"Invoice line {request.CustInvoiceTransRecId} was not found on invoice {invoice.InvoiceId}.", ct);
                 if (request.Qty <= 0) return await Fail(422, "The return quantity must be greater than zero.", ct);
                 if (sold.Qty <= 0) return await Fail(422, "Only invoiced sales lines can be returned.", ct);
+                var selectedQty = requestedPerInvoiceLine.GetValueOrDefault(sold.RecId) + request.Qty;
+                if (selectedQty > sold.Qty)
+                    return await Fail(422, $"Return quantity for invoice line {sold.RecId} exceeds the returnable quantity {sold.Qty} on the selected invoice line.", ct);
+                requestedPerInvoiceLine[sold.RecId] = selectedQty;
                 var disposition = await Db.Set<ReturnDispositionCode>().AsNoTracking()
                     .FirstOrDefaultAsync(x => x.DataAreaId == area && x.DispositionCodeId == request.DispositionCodeId, ct);
                 if (disposition == null) return await Fail(422, $"Disposition code '{request.DispositionCodeId}' is not configured.", ct);
