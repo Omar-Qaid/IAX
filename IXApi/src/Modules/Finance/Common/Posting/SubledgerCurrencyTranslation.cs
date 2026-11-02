@@ -90,17 +90,45 @@ internal sealed class SubledgerCurrencyTranslation
         ? transactionAmount
         : Round(transactionAmount * _reportingRate, _reportingPrecision);
 
+    /// <summary>What has been posted through this translation so far, in the accounting currency.</summary>
+    public decimal PostedAccounting { get; private set; }
+
+    /// <summary>What has been posted through this translation so far, in the reporting currency.</summary>
+    public decimal PostedReporting { get; private set; }
+
     /// <summary>
     /// A ledger line for one transaction-currency amount, with its accounting and reporting
     /// amounts translated. Callers use this instead of the three-amount overload so a flow cannot
-    /// translate one line and forget another.
+    /// translate one line and forget another. Each line is accumulated, so the document's
+    /// balancing line can be derived from the lines actually posted.
     /// </summary>
     public GeneralJournalAccountEntry AccountEntry(string area, long entryId,
         DimensionAttributeValueCombination dimension, LedgerPostingType type, decimal transactionAmount,
+        string text, decimal qty, string paymentReference = "")
+    {
+        var accounting = ToAccounting(transactionAmount);
+        var reporting = ToReporting(transactionAmount);
+        PostedAccounting += accounting;
+        PostedReporting += reporting;
+        return SubledgerPostingSupport.AccountEntry(area, entryId, dimension, type, transactionAmount,
+            accounting, reporting, text, qty, TransactionCurrency, paymentReference);
+    }
+
+    /// <summary>
+    /// The document's balancing line - the customer or vendor summary entry - as the exact negation
+    /// of everything posted through this translation.
+    ///
+    /// It must not be an independent translation of the document total. Translating each line and
+    /// then translating the total separately can disagree by a rounding unit: at a rate of 0.3333,
+    /// two lines of 10 translate to 3.33 each, while their total of 20 translates to 6.67, which
+    /// would leave the voucher one cent out of balance. Deriving the balancing line from the lines
+    /// posted makes the accounting and reporting currencies balance exactly, by construction.
+    /// </summary>
+    public GeneralJournalAccountEntry BalancingEntry(string area, long entryId,
+        DimensionAttributeValueCombination dimension, LedgerPostingType type, decimal transactionAmount,
         string text, decimal qty, string paymentReference = "") =>
         SubledgerPostingSupport.AccountEntry(area, entryId, dimension, type, transactionAmount,
-            ToAccounting(transactionAmount), ToReporting(transactionAmount), text, qty,
-            TransactionCurrency, paymentReference);
+            -PostedAccounting, -PostedReporting, text, qty, TransactionCurrency, paymentReference);
 
     private static async Task<decimal> RateAsync(DbContext db, string area, string from, string to,
         long rateType, DateTime date, CancellationToken ct)

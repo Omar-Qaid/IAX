@@ -273,11 +273,17 @@ public sealed class FreeTextInvoiceService(
                 return await FailAsync(422, "The invoice customer is blocked for invoicing.", ct);
             var ledger = await support.LoadLedgerContextAsync(area, header.InvoiceDate.Date,
                 LedgerPostingModule.Customer, currentUser.GetCurrentUserId(), ct);
-            if (!string.Equals(header.CurrencyCode, ledger.Ledger.AccountingCurrency, StringComparison.OrdinalIgnoreCase))
-                return await FailAsync(422, "Free text invoice posting requires the ledger accounting currency; foreign-currency conversion is not supported.", ct);
-            if (!string.IsNullOrWhiteSpace(ledger.Ledger.ReportingCurrency)
-                && !string.Equals(ledger.Ledger.ReportingCurrency, ledger.Ledger.AccountingCurrency, StringComparison.OrdinalIgnoreCase))
-                return await FailAsync(422, "Free text invoice posting requires the reporting currency to equal the accounting currency; reporting-currency conversion is not supported.", ct);
+            if (string.IsNullOrWhiteSpace(header.CurrencyCode))
+                return await FailAsync(422, "The free text invoice has no currency.", ct);
+            // Every line of a free text invoice is in the invoice currency - there is no inventory
+            // cost on this document - so the whole voucher translates at the invoice date's rate.
+            SubledgerCurrencyTranslation translation;
+            try
+            {
+                translation = await SubledgerCurrencyTranslation.LoadAsync(Db, area, ledger.Ledger,
+                    header.CurrencyCode, header.InvoiceDate.Date, ct);
+            }
+            catch (SubledgerPostingException ex) { return await FailAsync(422, ex.Message, ct); }
 
             var customerAccount = await support.ResolveCustomerSummaryAsync(area, header.PostingProfile, customer, ct);
             var invoiceId = (await numbers.NextAsync("CustInvoiceJour", area, ct)).Code;
@@ -319,8 +325,8 @@ public sealed class FreeTextInvoiceService(
                 var lineTax = decimal.Round(amount * codes.Sum(x => x.Rate) / 100m, 2, MidpointRounding.AwayFromZero);
                 line.AmountCur = amount;
                 line.TaxAmount = lineTax;
-                Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, revenueAccount,
-                    LedgerPostingType.FreeTextInvoice, -amount, line.Description, 0m, header.CurrencyCode));
+                Db.Add(translation.AccountEntry(area, entry.RecId, revenueAccount,
+                    LedgerPostingType.FreeTextInvoice, -amount, line.Description, 0m));
                 signedVoucherTotal -= amount;
                 foreach (var (code, codeTax) in SubledgerPostingSupport.AllocateTax(codes, lineTax))
                 {
@@ -341,11 +347,11 @@ public sealed class FreeTextInvoiceService(
                     SalesPrice = line.UnitPrice,
                     PriceUnit = 1m,
                     LineAmount = amount,
-                    LineAmountMst = amount,
+                    LineAmountMst = translation.ToAccounting(amount),
                     TaxAmount = lineTax,
-                    TaxAmountMst = lineTax,
+                    TaxAmountMst = translation.ToAccounting(lineTax),
                     LineAmountTax = amount + lineTax,
-                    LineAmountTaxMst = amount + lineTax,
+                    LineAmountTaxMst = translation.ToAccounting(amount + lineTax),
                     LedgerDimension = line.LedgerDimension,
                     DefaultDimension = line.DefaultDimension,
                     TaxGroup = line.TaxGroup,
@@ -360,16 +366,23 @@ public sealed class FreeTextInvoiceService(
             {
                 if (value.Tax == 0m) continue;
                 var payable = await support.ResolveTaxPayableAsync(area, code, ct);
-                Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, payable, LedgerPostingType.Tax,
-                    -value.Tax, $"Sales tax {code} on {invoiceId}", 0m, header.CurrencyCode));
+                Db.Add(translation.AccountEntry(area, entry.RecId, payable, LedgerPostingType.Tax,
+                    -value.Tax, $"Sales tax {code} on {invoiceId}", 0m));
                 Db.Set<TaxTrans>().Add(TaxTransaction(area, header.InvoiceDate.Date, invoiceId, code,
-                    value.Group, value.ItemGroup, header.CurrencyCode, -value.Base, -value.Tax));
+                    value.Group, value.ItemGroup, header.CurrencyCode, -value.Base, -value.Tax,
+                    translation.ToAccounting(-value.Base), translation.ToAccounting(-value.Tax),
+                    translation.ToReporting(-value.Base), translation.ToReporting(-value.Tax)));
                 signedVoucherTotal -= value.Tax;
             }
 
             var total = netTotal + taxTotal;
-            Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, customerAccount, LedgerPostingType.CustBalance,
-                total, $"Free text invoice {invoiceId}", 0m, header.CurrencyCode));
+            // Derived from the lines already translated, so the accounting currency balances even
+            // when each line rounded independently.
+            var customerEntry = translation.BalancingEntry(area, entry.RecId, customerAccount,
+                LedgerPostingType.CustBalance, total, $"Free text invoice {invoiceId}", 0m);
+            Db.Add(customerEntry);
+            var totalAccounting = customerEntry.AccountingCurrencyAmount;
+            var totalReporting = customerEntry.ReportingCurrencyAmount;
             signedVoucherTotal += total;
             if (signedVoucherTotal != 0m)
                 throw new SubledgerPostingException("The free text invoice voucher is not balanced.");
@@ -396,8 +409,8 @@ public sealed class FreeTextInvoiceService(
                 TransType = LedgerTransType.Sales,
                 CurrencyCode = header.CurrencyCode,
                 AmountCur = total,
-                AmountMst = total,
-                ReportingCurrencyAmount = total,
+                AmountMst = totalAccounting,
+                ReportingCurrencyAmount = totalReporting,
                 DueDate = header.DueDate,
                 PaymTermId = header.Payment,
                 PaymMode = header.PaymMode,
@@ -414,16 +427,16 @@ public sealed class FreeTextInvoiceService(
                 TransDate = header.InvoiceDate.Date,
                 DueDate = header.DueDate,
                 AmountCur = total,
-                AmountMst = total,
-                ReportingCurrencyAmount = total
+                AmountMst = totalAccounting,
+                ReportingCurrencyAmount = totalReporting
             });
 
             journal.SalesBalance = netTotal;
-            journal.SalesBalanceMst = netTotal;
+            journal.SalesBalanceMst = translation.ToAccounting(netTotal);
             journal.SumTax = taxTotal;
-            journal.SumTaxMst = taxTotal;
+            journal.SumTaxMst = translation.ToAccounting(taxTotal);
             journal.InvoiceAmount = total;
-            journal.InvoiceAmountMst = total;
+            journal.InvoiceAmountMst = totalAccounting;
             journal.Qty = lines.Sum(x => x.Quantity);
             header.InvoiceId = invoiceId;
             header.Posted = NoYes.Yes;
@@ -454,7 +467,9 @@ public sealed class FreeTextInvoiceService(
     }
 
     private static TaxTrans TaxTransaction(string area, DateTime date, string voucher, string code,
-        string group, string itemGroup, string currency, decimal baseAmount, decimal taxAmount) => new()
+        string group, string itemGroup, string currency, decimal baseAmount, decimal taxAmount,
+        decimal? accountingBase = null, decimal? accountingTax = null,
+        decimal? reportingBase = null, decimal? reportingTax = null) => new()
     {
         DataAreaId = area,
         TransDate = date,
@@ -469,10 +484,12 @@ public sealed class FreeTextInvoiceService(
         SourceTaxAmountCur = taxAmount,
         TaxBaseAmountCur = baseAmount,
         TaxAmountCur = taxAmount,
-        TaxBaseAmount = baseAmount,
-        TaxAmount = taxAmount,
-        TaxBaseAmountRep = baseAmount,
-        TaxAmountRep = taxAmount
+        // The unsuffixed and Rep amounts are the accounting and reporting translations, which is
+        // what tax settlement sums; they default to the document amounts for a same-currency invoice.
+        TaxBaseAmount = accountingBase ?? baseAmount,
+        TaxAmount = accountingTax ?? taxAmount,
+        TaxBaseAmountRep = reportingBase ?? baseAmount,
+        TaxAmountRep = reportingTax ?? taxAmount
     };
 
     private async Task<FreeTextInvoiceResult> FailAsync(int statusCode, string message, CancellationToken ct)

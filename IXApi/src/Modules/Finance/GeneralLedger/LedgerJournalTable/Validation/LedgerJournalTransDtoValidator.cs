@@ -11,8 +11,9 @@ public sealed class LedgerJournalTransDtoValidator : BaseValidator<LedgerJournal
         RuleFor(x => x.JournalNum).NotEmpty();
         RuleFor(x => x.TransDate).NotEqual(default(DateTime));
         RuleFor(x => x.AccountType)
-            .Equal(LedgerJournalACType.Ledger)
-            .WithMessage("The basic general journal accepts Ledger account lines only.");
+            .Must(x => x is LedgerJournalACType.Ledger or LedgerJournalACType.Cust
+                         or LedgerJournalACType.Vend or LedgerJournalACType.Bank)
+            .WithMessage("The basic general journal accepts Ledger, Cust, Vend and Bank account lines.");
         RuleFor(x => x.LedgerDimension).GreaterThan(0);
         RuleFor(x => x.AmountCurDebit).GreaterThanOrEqualTo(0m);
         RuleFor(x => x.AmountCurCredit).GreaterThanOrEqualTo(0m);

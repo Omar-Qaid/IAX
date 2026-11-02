@@ -12,18 +12,19 @@ counted as gaps.
 | Accounts payable | [AccountsPayable/GAPS.md](AccountsPayable/GAPS.md) | Foreign currency; no method-of-payment entity; payment proposal |
 | Accounts receivable | [AccountsReceivable/GAPS.md](AccountsReceivable/GAPS.md) | Customer aging; exchange gain/loss on settlement |
 | Inventory | [Inventory/GAPS.md](Inventory/GAPS.md) | SQL Server verification; four unsupported inventory models |
-| Foundation | [Foundation/GAPS.md](Foundation/GAPS.md) | Sales tax reporting; payment-term methods; exchange rate adjustment |
+| Foundation | [Foundation/GAPS.md](Foundation/GAPS.md) | Realized gain/loss accounts have nowhere to live (schema decision); payment-term methods |
 | Common (shared posting) | [Common/GAPS.md](Common/GAPS.md) | Posting lock unproven under SQL Server; enum value drift unguarded |
 
 ## The two findings that cut across every module
 
 1. **Foreign currency is being lifted, flow by flow.** Every posting flow used to reject a document
-   whose currency differed from the accounting currency, with five near-identical messages. The
-   shared answer now exists in `Common` as `SubledgerCurrencyTranslation`, and the **AR sales
-   invoice** uses it. The vendor invoice, free text invoice and both credit notes still reject, and
-   wiring each is now mechanical. Separately, **exchange-rate gain/loss at settlement** is a real
-   feature that has not been started — translating a document is not the same as recognising the
-   gain or loss when it is paid.
+   whose currency differed from the accounting currency. The shared answer lives in `Common` as
+   `SubledgerCurrencyTranslation`, and **all three accounts receivable invoice flows** now use it:
+   sales invoice, free text invoice and credit note. Two things remain, and neither is mechanical:
+   the **vendor invoice**, because its inventory cost arrives from the document and must be
+   translated before it is written to inventory value; and **exchange-rate gain/loss at settlement**,
+   which has not been started - translating a document is not the same as recognising the gain or
+   loss when it is paid at a different rate.
 
 2. **Nothing is verified against SQL Server.** Every finance module is covered by SQLite in-memory
    tests only. Posting atomicity, concurrent posting of the same key, number-sequence contention and

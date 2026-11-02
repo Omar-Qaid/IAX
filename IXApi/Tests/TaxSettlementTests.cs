@@ -227,6 +227,97 @@ public class TaxSettlementTests
         Assert.Empty(await db.Set<GeneralJournalAccountEntry>().AsNoTracking().ToListAsync());
     }
 
+    [Fact]
+    public async Task The_posted_sales_tax_report_totals_each_code_and_direction()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        AddTax(db, 1, "VAT-OUT", TaxDirection.Outgoing, new DateTime(2026, 6, 5), -1000m);
+        AddTax(db, 2, "VAT-OUT", TaxDirection.Outgoing, new DateTime(2026, 6, 20), -500m);
+        AddTax(db, 3, "VAT-IN", TaxDirection.Incoming, new DateTime(2026, 6, 12), 400m);
+        AddTax(db, 4, "VAT-OUT", TaxDirection.Outgoing, new DateTime(2026, 7, 2), -900m); // outside the range
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var report = new TaxReportService(new TestUnitOfWork(db), new TestCompany());
+        var (result, error) = await report.RunAsync(new DateOnly(2026, 6, 1), new DateOnly(2026, 6, 30), null, null, default);
+
+        Assert.Null(error);
+        Assert.Equal(2, result!.Lines.Count);
+        var outgoing = result.Lines.Single(x => x.TaxCode == "VAT-OUT");
+        Assert.Equal("Outgoing", outgoing.Direction);
+        Assert.Equal(2, outgoing.TransactionCount);
+        Assert.Equal(-1500m, outgoing.TaxAmount);
+        Assert.Equal(-1500m, outgoing.UnsettledTaxAmount);
+        Assert.Equal(0m, outgoing.SettledTaxAmount);
+        Assert.Equal(400m, result.Lines.Single(x => x.TaxCode == "VAT-IN").TaxAmount);
+
+        Assert.Equal(-1500m, result.OutgoingTax);
+        Assert.Equal(400m, result.IncomingTax);
+        Assert.Equal(-1100m, result.NetTax);
+
+        // A code filter narrows it, and the July row stays out of a June range.
+        var (filtered, _) = await report.RunAsync(new DateOnly(2026, 6, 1), new DateOnly(2026, 6, 30), null, "VAT-IN", default);
+        Assert.Equal(400m, Assert.Single(filtered!.Lines).TaxAmount);
+    }
+
+    [Fact]
+    public async Task After_settlement_the_report_shows_the_tax_as_settled_and_ignores_the_offsets()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        AddTax(db, 1, "VAT-OUT", TaxDirection.Outgoing, new DateTime(2026, 6, 5), -1000m);
+        AddTax(db, 2, "VAT-IN", TaxDirection.Incoming, new DateTime(2026, 6, 12), 400m);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        await NewService(db).SettleAndPostAsync(
+            new TaxSettlementInputDto("MONTHLY", new DateOnly(2026, 6, 1), new DateOnly(2026, 6, 30)), default);
+        db.ChangeTracker.Clear();
+
+        // Settlement wrote an offsetting transaction against each settled row. The report must not
+        // count them, or a settled period would total zero and look as if no tax had been posted.
+        var (result, error) = await new TaxReportService(new TestUnitOfWork(db), new TestCompany())
+            .RunAsync(new DateOnly(2026, 6, 1), new DateOnly(2026, 6, 30), null, null, default);
+
+        Assert.Null(error);
+        Assert.Equal(-1000m, result!.OutgoingTax);
+        Assert.Equal(400m, result.IncomingTax);
+        Assert.Equal(-600m, result.SettledTax);
+        Assert.Equal(0m, result.UnsettledTax);
+        Assert.All(result.Lines, x => Assert.Equal(0m, x.UnsettledTaxAmount));
+    }
+
+    [Fact]
+    public async Task The_report_can_be_run_for_a_settlement_period_interval_and_names_its_authority()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        AddTax(db, 1, "VAT-OUT", TaxDirection.Outgoing, new DateTime(2026, 6, 5), -1000m);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var report = new TaxReportService(new TestUnitOfWork(db), new TestCompany());
+        // The interval supplies its own dates, so only its start date is given.
+        var (result, error) = await report.RunAsync(new DateOnly(2026, 6, 1), null, "MONTHLY", null, default);
+        Assert.Null(error);
+        Assert.Equal(new DateOnly(2026, 6, 30), result!.ToDate);
+        Assert.Equal("MONTHLY", result.TaxPeriod);
+        Assert.Equal("ZATCA", result.TaxAuthority);
+        Assert.Equal(-1000m, result.OutgoingTax);
+
+        // An interval that does not exist, and a range the wrong way round, are refused.
+        var (_, noInterval) = await report.RunAsync(new DateOnly(2026, 9, 1), null, "MONTHLY", null, default);
+        Assert.Contains("no interval starting", noInterval);
+        var (_, backwards) = await report.RunAsync(new DateOnly(2026, 6, 30), new DateOnly(2026, 6, 1), null, null, default);
+        Assert.Contains("cannot precede", backwards);
+        var (_, missing) = await report.RunAsync(null, null, null, null, default);
+        Assert.Contains("required", missing);
+    }
+
     private static TaxSettlementService NewService(TaxContext db) =>
         new(new TestUnitOfWork(db), new TestCompany(), new TestUser(), NewSequences());
 
@@ -273,7 +364,7 @@ public class TaxSettlementTests
             new TaxTable { RecId = 2, DataAreaId = Area, TaxCode = "VAT-IN", TaxAccountGroup = "STD" },
             new TaxPeriodHead
             {
-                RecId = 1, DataAreaId = Area, TaxPeriod = "MONTHLY", Name = "Monthly VAT",
+                RecId = 1, DataAreaId = Area, TaxPeriod = "MONTHLY", Name = "Monthly VAT", TaxAuthority = "ZATCA",
                 PeriodUnit = TaxPeriodUnit.Month, QtyUnit = 1,
                 NotGenerateOffsetTaxTrans = offsets ? NoYes.No : NoYes.Yes
             },

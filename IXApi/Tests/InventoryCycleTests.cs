@@ -577,6 +577,159 @@ public sealed class InventoryCycleTests
         Assert.Equal(-562.5m, tax.TaxAmount);
     }
 
+    [Fact]
+    public async Task A_foreign_currency_invoice_balances_exactly_when_the_rate_rounds()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        SeedSalesMasterData(db);
+        // A rate chosen so that translating each line and translating the total disagree: at
+        // 0.123456, revenue 1,000 gives 123.46 and tax 150 gives 18.52, summing to 141.98, while
+        // the total of 1,150 translates to 141.97. Deriving the customer line from the lines
+        // posted is what keeps the voucher balanced.
+        SeedRate(db, "USD", "SAR", 0.123456m);
+        await db.SaveChangesAsync();
+        var numbers = new TestInventNumbers();
+
+        await StockAndSellTenAsync(db, numbers, salesCurrency: "USD");
+
+        var journal = await db.Set<CustInvoiceJour>().AsNoTracking().SingleAsync();
+        var entryIds = await db.Set<GeneralJournalEntry>().AsNoTracking()
+            .Where(x => x.SubledgerVoucher == journal.InvoiceId).Select(x => x.RecId).ToListAsync();
+        var lines = await db.Set<GeneralJournalAccountEntry>().AsNoTracking()
+            .Where(x => entryIds.Contains(x.GeneralJournalEntry)).ToListAsync();
+
+        // The point of the test: both ledger currencies balance to the cent, even though the
+        // individual lines were rounded independently.
+        Assert.Equal(0m, lines.Sum(x => x.AccountingCurrencyAmount));
+        Assert.Equal(0m, lines.Sum(x => x.ReportingCurrencyAmount));
+
+        // And the customer's subledger balance is the same figure the ledger received, so the
+        // two cannot drift apart.
+        var customer = lines.Single(x => x.PostingType == LedgerPostingType.CustBalance);
+        var custTrans = await db.Set<CustTrans>().AsNoTracking().SingleAsync(x => x.Invoice == journal.InvoiceId);
+        Assert.Equal(customer.AccountingCurrencyAmount, custTrans.AmountMst);
+        Assert.Equal(customer.AccountingCurrencyAmount, journal.InvoiceAmountMst);
+        var open = await db.Set<CustTransOpen>().AsNoTracking().SingleAsync(x => x.RefRecId == custTrans.RecId);
+        Assert.Equal(custTrans.AmountMst, open.AmountMst);
+
+        // The transaction currency still holds the amount actually invoiced.
+        Assert.Equal(1150m, custTrans.AmountCur);
+    }
+
+    [Fact]
+    public async Task A_foreign_currency_credit_note_translates_revenue_and_leaves_cost_in_the_accounting_currency()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        SeedSalesMasterData(db);
+        db.Set<ReturnDispositionCode>().Add(new ReturnDispositionCode
+        { RecId = 1, DataAreaId = "dat", DispositionCodeId = "CREDIT", DispositionAction = DispositionAction.Credit });
+        db.Set<ReturnReasonCode>().Add(new ReturnReasonCode { RecId = 1, DataAreaId = "dat", ReasonCodeId = "DAMAGED" });
+        SeedRate(db, "USD", "SAR", 0.123456m);
+        await db.SaveChangesAsync();
+        var numbers = new TestInventNumbers();
+
+        // Sold 10 @ 100 USD + 15% VAT; return 2 of them, so revenue 200 USD and VAT 30 USD reverse.
+        var invoiceId = await StockAndSellTenAsync(db, numbers, salesCurrency: "USD");
+        var sold = await db.Set<CustInvoiceTrans>().SingleAsync();
+        var returns = new CustReturnService(new TestUnitOfWork(db), new TestCompany(), Sequence(), numbers);
+        Assert.Equal(200, (await returns.CreateAsync(new CustReturnCreateDto(invoiceId, "DAMAGED",
+            [new(sold.RecId, 2, "CREDIT")]), default)).StatusCode);
+        var rma = await db.Set<SalesTable>().SingleAsync(x => x.SalesType == SalesType.ReturnItem);
+        Assert.Equal("USD", rma.CurrencyCode);
+        var creditLine = await db.Set<SalesLine>().SingleAsync(x => x.SalesId == rma.SalesId);
+        Assert.Equal(200, (await returns.ReceiveAsync(rma.RecId,
+            new CustReturnReceiptDto("rr-1", new DateTime(2026, 10, 20), [new(creditLine.RecId, 2)]), default)).StatusCode);
+
+        var credit = await returns.CreditAsync(rma.RecId, new CustCreditNoteDto(new DateTime(2026, 10, 21), "cn-1"), default);
+        Assert.True(credit.StatusCode == 200, credit.Message);
+
+        var note = await db.Set<CustInvoiceJour>().AsNoTracking().SingleAsync(x => x.InvoiceAmount < 0);
+        var entryIds = await db.Set<GeneralJournalEntry>().AsNoTracking()
+            .Where(x => x.SubledgerVoucher == note.InvoiceId).Select(x => x.RecId).ToListAsync();
+        var lines = await db.Set<GeneralJournalAccountEntry>().AsNoTracking()
+            .Where(x => entryIds.Contains(x.GeneralJournalEntry)).ToListAsync();
+
+        // Revenue is credited in the order currency and translated for the ledger.
+        var revenue = lines.Single(x => x.PostingType == LedgerPostingType.SalesRevenue);
+        Assert.Equal("USD", revenue.TransactionCurrencyCode);
+        Assert.Equal(200m, revenue.TransactionCurrencyAmount);
+
+        // The returned goods go back into inventory at their original cost, which is already an
+        // accounting-currency amount and is not translated: 2 units at 60 is 120.
+        var issue = lines.Single(x => x.PostingType == LedgerPostingType.SalesIssue);
+        Assert.Equal("SAR", issue.TransactionCurrencyCode);
+        Assert.Equal(120m, issue.AccountingCurrencyAmount);
+
+        // Both ledger currencies balance to the cent despite independent per-line rounding.
+        Assert.Equal(0m, lines.Sum(x => x.AccountingCurrencyAmount));
+        Assert.Equal(0m, lines.Sum(x => x.ReportingCurrencyAmount));
+
+        // The customer's credit in the subledger is the figure the ledger received.
+        var customer = lines.Single(x => x.PostingType == LedgerPostingType.CustBalance);
+        var custTrans = await db.Set<CustTrans>().AsNoTracking().SingleAsync(x => x.Voucher == note.InvoiceId);
+        Assert.Equal(customer.AccountingCurrencyAmount, custTrans.AmountMst);
+        Assert.Equal(customer.AccountingCurrencyAmount, note.InvoiceAmountMst);
+        Assert.Equal(-230m, custTrans.AmountCur); // 200 revenue + 30 VAT, credited
+    }
+
+    [Fact]
+    public async Task A_foreign_currency_purchase_invoice_stores_inventory_cost_in_the_accounting_currency()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        SeedRate(db, "USD", "SAR", 3.75m);
+        await db.SaveChangesAsync();
+        var numbers = new TestInventNumbers();
+        var (orders, _, receipts, vendorInvoices) = PurchaseServices(db, numbers);
+
+        // Buy 100 @ 60 USD against a ledger that keeps its accounts in SAR.
+        await orders.CreateAsync(new PurchOrderCreateDto("V-0001", null, "USD", new DateTime(2026, 10, 1), "S01", "WH-01", null), default);
+        var po = await db.Set<PurchTable>().SingleAsync();
+        await orders.AddLineAsync(po.RecId, new PurchLineInputDto("ITEM-001", 100, "PCS", 60, 1, null, null, null, null), default);
+        var pl = await db.Set<PurchLine>().SingleAsync();
+        Assert.Equal(200, (await receipts.PostAsync(po.RecId,
+            new ProductReceiptPostDto("PR-1", new DateTime(2026, 10, 2), [new(pl.RecId, 100)]), default)).StatusCode);
+        var invoice = await vendorInvoices.PostAsync(po.RecId,
+            new VendorInvoicePostDto("VI-1", new DateTime(2026, 10, 3), [new(pl.RecId, 100)]), default);
+        Assert.True(invoice.StatusCode == 200, invoice.Message);
+
+        // The point of the test: inventory value is held in the accounting currency. 6,000 USD at
+        // 3.75 is 22,500 SAR, so the cost per unit that every later settlement reads is 225, not 60.
+        var purchased = await db.Set<InventTrans>().AsNoTracking()
+            .SingleAsync(x => x.StatusReceipt == StatusReceipt.Purchased);
+        Assert.Equal(22500m, purchased.CostAmountPosted);
+        var sum = await db.Set<InventSum>().AsNoTracking().SingleAsync();
+        Assert.Equal(100m, sum.PostedQty);
+        Assert.Equal(22500m, sum.PostedValue);
+
+        // The vendor is owed in the order currency, and the same debt translated.
+        var vendTrans = await db.Set<VendTrans>().AsNoTracking().SingleAsync();
+        Assert.Equal("USD", vendTrans.CurrencyCode);
+        Assert.Equal(-6000m, vendTrans.AmountCur);
+        Assert.Equal(-22500m, vendTrans.AmountMst);
+
+        // The invoice voucher balances in the accounting currency.
+        var journal = await db.Set<VendInvoiceJour>().AsNoTracking().SingleAsync();
+        var entryIds = await db.Set<GeneralJournalEntry>().AsNoTracking()
+            .Where(x => x.SubledgerVoucher == journal.LedgerVoucher).Select(x => x.RecId).ToListAsync();
+        var lines = await db.Set<GeneralJournalAccountEntry>().AsNoTracking()
+            .Where(x => entryIds.Contains(x.GeneralJournalEntry)).ToListAsync();
+        Assert.Equal(0m, lines.Sum(x => x.AccountingCurrencyAmount));
+        var inventory = lines.Single(x => x.PostingType == LedgerPostingType.PurchReceipt
+            && x.AccountingCurrencyAmount > 0);
+        Assert.Equal("USD", inventory.TransactionCurrencyCode);
+        Assert.Equal(6000m, inventory.TransactionCurrencyAmount);
+        Assert.Equal(22500m, inventory.AccountingCurrencyAmount);
+    }
+
     /// <summary>A one-line order of 100 USD against a ledger that keeps its accounts in SAR.</summary>
     private static void SeedForeignOrder(CycleContext db)
     {
@@ -803,6 +956,8 @@ public sealed class InventoryCycleTests
         db.Add(invoice);
         await db.SaveChangesAsync();
         VendorOpenBalance.Add(db, invoice);
+        // Vendor payment validates the method of payment against its setup table.
+        db.Set<VendPaymModeTable>().Add(new VendPaymModeTable { RecId = 1, DataAreaId = "dat", PaymMode = "BANK" });
         await db.SaveChangesAsync();
         var payments = new VendPaymentService(new TestUnitOfWork(db), new TestUser(), new TestCompany(), Sequence());
         var request = new VendPaymentPostDto("V-0001", "BANK-1", 40, "VP1", new DateTime(2026, 10, 15), "BANK", "INV-1");
@@ -1587,7 +1742,7 @@ public sealed class InventoryCycleTests
             typeof(GeneralJournalEntry), typeof(GeneralJournalAccountEntry), typeof(SubledgerVoucherGeneralJournalEntry),
             typeof(PurchTable), typeof(PurchLine), typeof(VendPurchOrderJour), typeof(VendPurchOrderTrans),
             typeof(VendPackingSlipJour), typeof(VendPackingSlipTrans), typeof(VendInvoiceJour), typeof(VendInvoiceTrans), typeof(VendInvoicePackingSlipQuantityMatch),
-            typeof(PaymTerm), typeof(VendTrans), typeof(VendTransOpen), typeof(VendSettlement), typeof(PurchReceiptAccrual), typeof(VendLedgerAccounts), typeof(InventTransOriginPurchLine), typeof(VendTable),
+            typeof(PaymTerm), typeof(VendTrans), typeof(VendTransOpen), typeof(VendSettlement), typeof(PurchReceiptAccrual), typeof(VendLedgerAccounts), typeof(InventTransOriginPurchLine), typeof(VendTable), typeof(VendParameters), typeof(VendPaymModeTable),
             typeof(InventSite), typeof(InventLocation), typeof(InventTable), typeof(InventTableModule), typeof(UnitOfMeasure), typeof(UnitOfMeasureConversion),
             typeof(SalesTable), typeof(SalesLine), typeof(CustTable), typeof(CustParameters), typeof(CustPackingSlipJour), typeof(CustPackingSlipTrans),
             typeof(CustInvoiceTable), typeof(CustInvoiceLine), typeof(CustInvoiceJour), typeof(CustInvoiceTrans), typeof(CustTrans), typeof(CustTransOpen), typeof(CustSettlement), typeof(CustLedgerAccounts),

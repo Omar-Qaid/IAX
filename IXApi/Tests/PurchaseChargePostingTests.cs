@@ -200,8 +200,12 @@ public class PurchaseChargePostingTests
     private static async Task<PurchaseChargePosting.Result> PostAsync(DbContext db)
     {
         var order = await db.Set<PurchTable>().AsNoTracking().SingleAsync();
+        // Order and ledger share the currency, so the translation needs no exchange rate.
+        var ledger = await db.Set<Ledger>().AsNoTracking().FirstAsync();
+        var translation = await SubledgerCurrencyTranslation.LoadAsync(db, "dat", ledger, "SAR",
+            new DateTime(2026, 1, 15), default);
         return await new PurchaseChargePosting(db).PostAsync("dat", order, entryRecId: 1, "INV-1", "V-1",
-            new DateTime(2026, 1, 15), "SAR", new SubledgerPostingSupport(db), default);
+            new DateTime(2026, 1, 15), translation, new SubledgerPostingSupport(db), default);
     }
 
     private static void AddCode(DbContext db, string markupCode, int debitType, int creditType,
@@ -231,6 +235,7 @@ public class PurchaseChargePostingTests
             new DbContextOptionsBuilder<PurchaseChargeContext>().UseSqlite(connection).Options);
         await db.Database.EnsureCreatedAsync();
         db.AddRange(
+            new Ledger { RecId = 1, DataAreaId = "dat", AccountingCurrency = "SAR" },
             new PurchTable { RecId = 1, DataAreaId = "dat", PurchId = "PO-1", OrderAccount = "V-001",
                 InvoiceAccount = "V-001", CurrencyCode = "SAR", TaxGroup = "DOM" },
             // 4 units totalling 1000, so Pcs and Percent charges have a basis.

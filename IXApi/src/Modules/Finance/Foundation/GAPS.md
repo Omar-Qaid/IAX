@@ -22,6 +22,7 @@ cannot be verified goes under *Flagged uncertainties* rather than being guessed 
 | Currencies, exchange rate types, exchange rates, currency pairs | Implemented |
 | Sales tax: codes, rates, groups, item groups, ledger account groups, exempt codes, authorities, periods | Implemented |
 | Sales tax settlement (settle and post sales tax, with preview) | Implemented |
+| Posted sales tax report, by date range or settlement period | Implemented |
 | Payment terms, payment schedules, cash discount | Implemented |
 | Charges (`MarkupTable`, `MarkupTrans`) with AP/AR posting | Implemented |
 | Delivery terms and delivery modes | Implemented |
@@ -33,7 +34,7 @@ cannot be verified goes under *Flagged uncertainties* rather than being guessed 
 
 | Area | Existing behavior | Expected basic D365 F&O behavior | Missing | Affected components | Priority |
 | --- | --- | --- | --- | --- | --- |
-| Sales tax reporting | Tax posts per document and settlement stamps each transaction with its period and run number (`TaxPeriod`, `TaxRepCounter`), so the data a return needs is now present. | Basic tax reporting lists tax per code, period and authority for a return, and a sales tax payment report follows settlement. | The report itself. No longer blocked: settlement supplies the period stamping it needs. | `Foundation/Tax` | **High** — next tax gap |
+| Realized exchange gain/loss accounts | There is nowhere to configure them. `LedgerParameters.EnableLedgerSettlementPostRealizedGainLoss` is an unused toggle. The transaction side is already D365-shaped: `CustTrans.CustExchAdjustmentRealized` and `ReportingExchAdjustmentRealized` exist, and `LedgerPostingType` has `ExchRateGain` and `ExchRateLoss`. | Settlement posts the realized difference to a configured gain or loss account. | The account storage. **`Ledger` is NOT the place** - a `select * from Ledger` against D365 confirms it has no realized gain/loss columns, and this repo's `Ledger` already matches that column list exactly. The owning D365 table is not yet identified, so nothing has been added. **Awaiting the exact D365 table and field names.** | `CustPaymentService`, `VendPaymentService`, settlement | **High** - blocked on identifying the D365 table |
 | Exchange rate adjustment | Rates, rate types and currency pairs exist and are stored. | Foreign-currency revaluation adjusts open customer/vendor balances and ledger accounts, posting unrealized gain/loss. | The adjustment process. Note that AP/AR currently reject any document currency other than the accounting currency, so there is little exposure to adjust yet — this gap unblocks only after those restrictions are lifted. | `Foundation/Currency`, AP/AR, GL | **High** (after AP/AR foreign currency) |
 | Payment term methods | Payment terms compute an invoice due date; an unsupported method is rejected with a named error. | Terms support net days, current month, current quarter, current year, specific day of month, and COD. | The method variants that are rejected. The exact set still missing should be read off `PaymTermService` before building. | `PaymTermService`, `PaymTerm` | **High** — due dates drive aging, cash discount and payment proposal |
 | Tax exempt / reverse charge behavior | `TaxExemptCode` setup exists. | Exempt and reverse-charge handling changes how tax posts on the document. | Whether the exempt code affects posting is not established; the setup may be inert. Verify before claiming either way. | `TaxExemptCodeService`, `PurchaseTaxPosting`, AR tax posting | Medium |
@@ -77,6 +78,8 @@ authority for this module.
 
 | Date | Change |
 | --- | --- |
+| 2026-11-02 | Corrected the gain/loss gap: `Ledger` does not hold the realized gain/loss accounts in D365 (confirmed against the real table), so the earlier suggestion to add columns there was wrong. This repo's `Ledger` already matches D365 column for column. |
+| 2026-11-02 | Added the **posted sales tax report** (`GET api/v1/tax/reports/posted-sales-tax`), by date range or settlement period interval, per tax code and direction, in accounting-currency amounts, showing settled versus unsettled tax. It excludes the offsetting transactions settlement writes, which would otherwise make a settled period total zero. Recorded that realized exchange gain/loss has nowhere to store its accounts. |
 | 2026-11-01 | **Implemented sales tax settlement** (`POST api/v1/tax/settlement`, with a `preview`). Clears the input and output tax accounts for a period interval and moves the net to `TaxLedgerAccountGroup.TaxReportLedgerDimension`, posts offsetting `TaxTrans` rows unless the period sets `NotGenerateOffsetTaxTrans`, and stamps each settled row with its period and run number. No schema change: every field and table it needs already existed. Covered by `Tests/TaxSettlementTests.cs`. |
 | 2026-11-01 | File created from a source scan. Recorded sales tax settlement as the critical gap — tax posts but can never be settled — and noted that this module's gaps are silent rather than error-raising. |
 

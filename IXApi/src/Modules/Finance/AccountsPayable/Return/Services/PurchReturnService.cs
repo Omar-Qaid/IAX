@@ -361,12 +361,18 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
 
             var context = await support.LoadLedgerContextAsync(area, date,
                 LedgerPostingModule.Vendor, _currentUser.GetCurrentUserId(), ct);
-            if (string.IsNullOrWhiteSpace(order.CurrencyCode) || string.IsNullOrWhiteSpace(context.Ledger.AccountingCurrency)
-                || !string.Equals(order.CurrencyCode.Trim(), context.Ledger.AccountingCurrency.Trim(), StringComparison.OrdinalIgnoreCase))
-                return await Fail(422, "Vendor credit note posting requires the return order currency to equal the ledger accounting currency; foreign-currency conversion is not supported.", ct);
-            if (!string.IsNullOrWhiteSpace(context.Ledger.ReportingCurrency)
-                && !string.Equals(context.Ledger.ReportingCurrency.Trim(), context.Ledger.AccountingCurrency.Trim(), StringComparison.OrdinalIgnoreCase))
-                return await Fail(422, "Vendor credit note posting requires the reporting currency to equal the accounting currency; reporting-currency conversion is not supported.", ct);
+            if (string.IsNullOrWhiteSpace(order.CurrencyCode))
+                return await Fail(422, "The return order has no currency.", ct);
+            // The credit is raised in the order's currency; the inventory it reverses is held in the
+            // accounting currency. The two must still agree once translated, which is what the
+            // price-variance check below enforces.
+            SubledgerCurrencyTranslation translation;
+            try
+            {
+                translation = await SubledgerCurrencyTranslation.LoadAsync(Db, area, context.Ledger,
+                    order.CurrencyCode, date, ct);
+            }
+            catch (SubledgerPostingException ex) { return await Fail(422, ex.Message, ct); }
             var vendorAccount = await support.ResolveVendorSummaryAsync(area, vendor, ct);
             var internalId = (await numbers.NextAsync("VendInvoiceJour", area, ct)).Code;
             var entry = support.NewEntry(area, internalId, internalId, date, context);
@@ -384,7 +390,9 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                 var amount = decimal.Round(qty * line.PurchPrice / line.PriceUnit, 2, MidpointRounding.AwayFromZero);
                 var unitCost = await OriginalReceiptUnitCostAsync(area, line, ct);
                 var cost = decimal.Round(inventQty * unitCost, 2, MidpointRounding.AwayFromZero);
-                if (Math.Abs(amount - cost) > 0.01m)
+                // The credit is in the order's currency and the original cost in the accounting
+                // currency, so they are compared after translation.
+                if (Math.Abs(translation.ToAccounting(amount) - cost) > 0.01m)
                     return await Fail(422, $"The credit amount for item {line.ItemId} differs from its original receipt cost; price variance posting is outside the basic scope.", ct);
 
                 var origin = await Db.Set<InventTransOrigin>().FirstAsync(x => x.DataAreaId == area
@@ -430,8 +438,11 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                 var vendorScope = await support.VendorScopeAsync(area, order.InvoiceAccount.Length > 0 ? order.InvoiceAccount : order.OrderAccount, ct);
                 var inventoryAccount = await support.ResolveInventPostingAsync(area, line.ItemId, InventAccountType.PurchReceipt, ct,
                     custVendAccount: vendorScope.Account, custVendGroup: vendorScope.Group);
-                Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, inventoryAccount, LedgerPostingType.PurchReceipt, -cost,
-                    $"Return {order.ReturnItemNum} item {line.ItemId}", -inventQty, currency));
+                // Posted on the credit's own amount so the voucher balances against the vendor
+                // line; its accounting amount equals the original cost, which the check above
+                // guarantees.
+                Db.Add(translation.AccountEntry(area, entry.RecId, inventoryAccount, LedgerPostingType.PurchReceipt, -amount,
+                    $"Return {order.ReturnItemNum} item {line.ItemId}", -inventQty));
                 var creditLine = new VendInvoiceTrans
                 {
                     DataAreaId = area, InvoiceId = creditNoteId, InternalInvoiceId = internalId, InvoiceDate = date,
@@ -443,7 +454,7 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                 Db.Add(creditLine);
                 await unitOfWork.CompleteAsync(ct);
                 if (line.OriginalInvoiceTransRecId.HasValue)
-                    totalTax -= await new PurchaseTaxPosting(Db).PostAsync(area, creditLine, entry.RecId, currency, ct, line.OriginalInvoiceTransRecId);
+                    totalTax -= await new PurchaseTaxPosting(Db).PostAsync(area, creditLine, entry.RecId, translation, ct, line.OriginalInvoiceTransRecId);
                 line.RemainPurchFinancial += qty;
                 line.RemainInventFinancial = Math.Min(0m, line.RemainInventFinancial + inventQty);
                 if (line.RemainPurchFinancial >= 0 && line.RemainPurchPhysical >= 0) line.PurchStatus = PurchStatus.Invoiced;
@@ -451,8 +462,12 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                 totalQty += qty;
             }
 
-            Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, vendorAccount, LedgerPostingType.VendBalance, total + totalTax,
-                $"Vendor credit note {creditNoteId}", 0m, currency));
+            // Derived from the lines already translated, so the accounting currency balances even
+            // when each line rounded independently.
+            var vendorEntry = translation.BalancingEntry(area, entry.RecId, vendorAccount,
+                LedgerPostingType.VendBalance, total + totalTax, $"Vendor credit note {creditNoteId}", 0m);
+            Db.Add(vendorEntry);
+            var totalAccounting = vendorEntry.AccountingCurrencyAmount;
             Db.Add(new SubledgerVoucherGeneralJournalEntry
             {
                 DataAreaId = area, GeneralJournalEntry = entry.RecId, Voucher = internalId, VoucherDataAreaId = area, AccountingDate = date
@@ -461,7 +476,7 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
             {
                 DataAreaId = area, AccountNum = order.InvoiceAccount, TransDate = date, Voucher = internalId,
                 Invoice = creditNoteId, Txt = $"Credit note for return {order.ReturnItemNum}", CurrencyCode = order.CurrencyCode,
-                AmountCur = total + totalTax, AmountMst = total + totalTax, DueDate = date, TransType = LedgerTransType.Purch
+                AmountCur = total + totalTax, AmountMst = totalAccounting, DueDate = date, TransType = LedgerTransType.Purch
             };
             Db.Set<VendTrans>().Add(vendorTransaction);
             await unitOfWork.CompleteAsync(ct);

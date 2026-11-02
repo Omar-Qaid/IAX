@@ -6,7 +6,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 
 internal sealed class PurchaseTaxPosting(DbContext db)
 {
-    public async Task<decimal> PostAsync(string area, VendInvoiceTrans line, long entryId, string currency, CancellationToken ct,
+    public async Task<decimal> PostAsync(string area, VendInvoiceTrans line, long entryId, SubledgerCurrencyTranslation translation, CancellationToken ct,
         long? originalInvoiceLine = null)
     {
         var support = new SubledgerPostingSupport(db);
@@ -48,14 +48,17 @@ internal sealed class PurchaseTaxPosting(DbContext db)
             if (group?.TaxIncomingLedgerDimension is not > 0)
                 throw new SubledgerPostingException($"Purchase input tax account is missing for tax code '{code}'.");
             var account = await support.LoadDimensionAsync(area, group.TaxIncomingLedgerDimension.Value, "purchase input tax", ct);
-            db.Add(SubledgerPostingSupport.AccountEntry(area, entryId, account, LedgerPostingType.Tax, amount,
-                $"Purchase input tax {code} on {line.InvoiceId}", 0m, currency));
+            db.Add(translation.AccountEntry(area, entryId, account, LedgerPostingType.Tax, amount,
+                $"Purchase input tax {code} on {line.InvoiceId}", 0m));
             db.Add(new TaxTrans { DataAreaId = area, SourceTableId = FinanceTableNumbers.VendInvoiceTrans, SourceRecId = line.RecId,
                 SourceDocumentLine = line.RecId, TransDate = line.InvoiceDate, Voucher = line.InternalInvoiceId, TaxCode = code,
                 TaxGroup = line.TaxGroup, TaxItemGroup = line.TaxItemGroup, TaxValue = rate, TaxDirection = TaxDirection.Incoming,
-                SourceCurrencyCode = line.CurrencyCode, CurrencyCode = currency,
+                SourceCurrencyCode = line.CurrencyCode, CurrencyCode = translation.TransactionCurrency,
                 SourceBaseAmountCur = line.LineAmount, SourceTaxAmountCur = amount, TaxBaseAmountCur = line.LineAmount, TaxAmountCur = amount,
-                TaxBaseAmount = line.LineAmount, TaxAmount = amount, TaxBaseAmountRep = line.LineAmount, TaxAmountRep = amount });
+                // The unsuffixed and Rep amounts are the accounting and reporting translations,
+                // which is what tax settlement sums.
+                TaxBaseAmount = translation.ToAccounting(line.LineAmount), TaxAmount = translation.ToAccounting(amount),
+                TaxBaseAmountRep = translation.ToReporting(line.LineAmount), TaxAmountRep = translation.ToReporting(amount) });
         }
         line.TaxAmount = taxes.Sum(x => x.Amount);
         return line.TaxAmount;

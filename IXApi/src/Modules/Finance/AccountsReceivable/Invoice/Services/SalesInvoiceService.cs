@@ -232,14 +232,21 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
             // Charges debited to the customer are part of what the customer owes; charges the
             // company absorbs posted to their own accounts above and are not in the total.
             var total = totalRevenue + charges.BilledToCustomer + totalTax;
-            Db.Add(translation.AccountEntry(area, entry.RecId, customerAccount, LedgerPostingType.CustBalance, total,
-                $"Customer invoice {invoiceId}", 0m));
+            // The customer line balances the voucher exactly against the lines already translated,
+            // rather than translating the total again, which could disagree by a rounding unit.
+            var customerEntry = translation.BalancingEntry(area, entry.RecId, customerAccount,
+                LedgerPostingType.CustBalance, total, $"Customer invoice {invoiceId}", 0m);
+            Db.Add(customerEntry);
+            // The customer's accounting-currency debt is the same figure the ledger received, so
+            // the subledger and the ledger cannot drift apart.
+            var totalAccounting = customerEntry.AccountingCurrencyAmount;
+            var totalReporting = customerEntry.ReportingCurrencyAmount;
             Db.Add(new SubledgerVoucherGeneralJournalEntry
             {
                 DataAreaId = area, GeneralJournalEntry = entry.RecId, Voucher = invoiceId, VoucherDataAreaId = area, AccountingDate = date
             });
             await AddCustomerTransactionAsync(area, order, invoiceAccount, invoiceId, date, dueDate, total, LedgerTransType.Sales,
-                $"Sales order {order.SalesId}", translation, ct);
+                $"Sales order {order.SalesId}", totalAccounting, totalReporting, ct);
 
             var journal = new CustInvoiceJour
             {
@@ -248,7 +255,7 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
                 CurrencyCode = order.CurrencyCode, LedgerVoucher = invoiceId, ParmId = input.RequestId ?? string.Empty,
                 Qty = totalQty, SalesBalance = totalRevenue, SumTax = totalTax, InvoiceAmount = total,
                 SalesBalanceMst = translation.ToAccounting(totalRevenue), SumTaxMst = translation.ToAccounting(totalTax),
-                InvoiceAmountMst = translation.ToAccounting(total),
+                InvoiceAmountMst = totalAccounting,
                 SumMarkup = charges.BilledToCustomer, SumMarkupMst = translation.ToAccounting(charges.BilledToCustomer),
                 Payment = order.PaymTerm, PostingProfile = order.PostingProfile, DueDate = dueDate
             };
@@ -331,12 +338,10 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
 
     private async Task AddCustomerTransactionAsync(string area, SalesTable order, string invoiceAccount, string invoiceId,
         DateTime date, DateTime dueDate, decimal amount, LedgerTransType type, string text,
-        SubledgerCurrencyTranslation translation, CancellationToken ct)
+        decimal accountingAmount, decimal reportingAmount, CancellationToken ct)
     {
         // AmountCur is what the customer owes in the order currency; AmountMst and the reporting
-        // amount are the same debt translated, which is what the ledger and reports read.
-        var accountingAmount = translation.ToAccounting(amount);
-        var reportingAmount = translation.ToReporting(amount);
+        // amount are the same debt as the ledger recorded it, passed in so the two cannot differ.
         var custTrans = new CustTrans
         {
             DataAreaId = area, AccountNum = invoiceAccount, OrderAccount = order.CustAccount, TransDate = date,

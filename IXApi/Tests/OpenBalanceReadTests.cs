@@ -265,10 +265,10 @@ public class OpenBalanceReadTests
     }
 
     private static CustTransService NewCustService(DbContext db) =>
-        new(new TestUnitOfWork(db), new TestCompany());
+        new(new TestUnitOfWork(db), new TestUser());
 
     private static VendTransService NewVendService(DbContext db) =>
-        new(new TestUnitOfWork(db), new TestCompany());
+        new(new TestUnitOfWork(db), new TestUser(), new TestCompany());
 
     private static async Task<OpenBalanceContext> NewContextAsync(SqliteConnection connection)
     {
@@ -310,6 +310,13 @@ public class OpenBalanceReadTests
     {
         public string GetDataAreaId() => "dat";
         public bool IsRequestedCompanyAuthorized() => true;
+    }
+
+    private sealed class TestUser : IAX.IXApi.Infrastructure.Identity.ICurrentUserService
+    {
+        public string GetCurrentUserId() => "tester";
+        public string GetOwnerAccountId() => "owner";
+        public string GetDataAreaId() => "dat";
     }
 
     public class OpenBalanceRepositoryProxy<T> : DispatchProxy where T : class

@@ -43,7 +43,7 @@ internal sealed class PurchaseChargePosting(DbContext db)
     internal sealed record Result(decimal ChargedToVendor, decimal Tax);
 
     public async Task<Result> PostAsync(string area, PurchTable order, long entryRecId, string invoiceId,
-        string voucher, DateTime date, string currency, SubledgerPostingSupport support, CancellationToken ct)
+        string voucher, DateTime date, SubledgerCurrencyTranslation translation, SubledgerPostingSupport support, CancellationToken ct)
     {
         var charges = await UnpostedChargesAsync(area, order, ct);
         if (charges.Count == 0) return new(0m, 0m);
@@ -64,22 +64,22 @@ internal sealed class PurchaseChargePosting(DbContext db)
 
             // The debit side is always a ledger account on a purchase charge: the cost of the charge.
             var debit = await LedgerSideAsync(area, code, code.CustomerLedgerDimension, "debit", support, ct);
-            db.Add(SubledgerPostingSupport.AccountEntry(area, entryRecId, debit,
-                LedgerPostingType.LedgerJournal, amount, text, 0m, currency));
+            db.Add(translation.AccountEntry(area, entryRecId, debit,
+                LedgerPostingType.LedgerJournal, amount, text, 0m));
 
             // The credit side. When it is the vendor, no entry is written here: the invoice posts
             // one summary vendor entry and the amount is folded into it through ChargedToVendor.
             if (code.VendType == TypeLedgerAccount)
             {
                 var credit = await LedgerSideAsync(area, code, code.VendorLedgerDimension, "credit", support, ct);
-                db.Add(SubledgerPostingSupport.AccountEntry(area, entryRecId, credit,
-                    LedgerPostingType.LedgerJournal, -amount, text, 0m, currency));
+                db.Add(translation.AccountEntry(area, entryRecId, credit,
+                    LedgerPostingType.LedgerJournal, -amount, text, 0m));
             }
             else
             {
                 charged += amount;
                 var tax = await ChargeInputTaxAsync(area, order, code, charge, amount, invoiceId, voucher,
-                    date, currency, entryRecId, support, ct);
+                    date, translation, entryRecId, support, ct);
                 totalTax += tax;
                 charge.TaxAmount = tax;
             }
@@ -154,7 +154,7 @@ internal sealed class PurchaseChargePosting(DbContext db)
     /// line and no table number identifies one.
     /// </summary>
     private async Task<decimal> ChargeInputTaxAsync(string area, PurchTable order, MarkupTable code,
-        MarkupTrans charge, decimal amount, string invoiceId, string voucher, DateTime date, string currency,
+        MarkupTrans charge, decimal amount, string invoiceId, string voucher, DateTime date, SubledgerCurrencyTranslation translation,
         long entryRecId, SubledgerPostingSupport support, CancellationToken ct)
     {
         var taxGroup = charge.TaxGroup.Length > 0 ? charge.TaxGroup : order.TaxGroup;
@@ -179,18 +179,18 @@ internal sealed class PurchaseChargePosting(DbContext db)
                     $"Purchase input tax account is missing for tax code '{taxCode}'.");
             var account = await support.LoadDimensionAsync(area, group.TaxIncomingLedgerDimension.Value,
                 "purchase input tax", ct);
-            db.Add(SubledgerPostingSupport.AccountEntry(area, entryRecId, account, LedgerPostingType.Tax, codeTax,
-                $"Purchase input tax {taxCode} on charge {code.MarkupCode} of {invoiceId}", 0m, currency));
+            db.Add(translation.AccountEntry(area, entryRecId, account, LedgerPostingType.Tax, codeTax,
+                $"Purchase input tax {taxCode} on charge {code.MarkupCode} of {invoiceId}", 0m));
             db.Add(new TaxTrans
             {
                 DataAreaId = area, TransDate = date, Voucher = voucher, TaxCode = taxCode,
                 TaxGroup = taxGroup, TaxItemGroup = itemGroup,
                 TaxValue = taxCodes.Single(x => x.Code == taxCode).Rate, TaxDirection = TaxDirection.Incoming,
-                SourceCurrencyCode = order.CurrencyCode, CurrencyCode = currency,
+                SourceCurrencyCode = order.CurrencyCode, CurrencyCode = translation.TransactionCurrency,
                 SourceBaseAmountCur = amount, SourceTaxAmountCur = codeTax,
                 TaxBaseAmountCur = amount, TaxAmountCur = codeTax,
-                TaxBaseAmount = amount, TaxAmount = codeTax,
-                TaxBaseAmountRep = amount, TaxAmountRep = codeTax
+                TaxBaseAmount = translation.ToAccounting(amount), TaxAmount = translation.ToAccounting(codeTax),
+                TaxBaseAmountRep = translation.ToReporting(amount), TaxAmountRep = translation.ToReporting(codeTax)
             });
         }
         return total;

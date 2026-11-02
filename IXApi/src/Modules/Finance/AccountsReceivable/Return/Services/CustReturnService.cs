@@ -369,12 +369,18 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
 
             var ledger = await support.LoadLedgerContextAsync(area, date,
                 LedgerPostingModule.Customer, _currentUser.GetCurrentUserId(), ct);
-            if (string.IsNullOrWhiteSpace(order.CurrencyCode) || string.IsNullOrWhiteSpace(ledger.Ledger.AccountingCurrency)
-                || !string.Equals(order.CurrencyCode.Trim(), ledger.Ledger.AccountingCurrency.Trim(), StringComparison.OrdinalIgnoreCase))
-                return await Fail(422, "Credit note posting requires the return order currency to equal the ledger accounting currency; foreign-currency conversion is not supported.", ct);
-            if (!string.IsNullOrWhiteSpace(ledger.Ledger.ReportingCurrency)
-                && !string.Equals(ledger.Ledger.ReportingCurrency.Trim(), ledger.Ledger.AccountingCurrency.Trim(), StringComparison.OrdinalIgnoreCase))
-                return await Fail(422, "Credit note posting requires the reporting currency to equal the accounting currency; reporting-currency conversion is not supported.", ct);
+            if (string.IsNullOrWhiteSpace(order.CurrencyCode))
+                return await Fail(422, "The return order has no currency.", ct);
+            // Revenue and tax are credited in the order's currency; the cost of the goods coming
+            // back is an inventory amount and is already in the accounting currency, so it is
+            // posted in that currency untranslated.
+            SubledgerCurrencyTranslation translation;
+            try
+            {
+                translation = await SubledgerCurrencyTranslation.LoadAsync(Db, area, ledger.Ledger,
+                    order.CurrencyCode, date, ct);
+            }
+            catch (SubledgerPostingException ex) { return await Fail(422, ex.Message, ct); }
             var customerAccount = await support.ResolveCustomerSummaryAsync(area, order.PostingProfile, customer, ct);
             var invoiceId = (await numbers.NextAsync("CustInvoiceJour", area, ct)).Code;
             var entry = support.NewEntry(area, invoiceId, invoiceId, date, ledger);
@@ -403,8 +409,8 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
                     order.InvoiceAccount.Length > 0 ? order.InvoiceAccount : order.CustAccount, ct);
                 var revenueAccount = await support.ResolveInventPostingAsync(area, line.ItemId, InventAccountType.SalesRevenue, ct,
                     custVendAccount: customerScope.Account, custVendGroup: customerScope.Group);
-                Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, revenueAccount, LedgerPostingType.SalesRevenue, revenue,
-                    $"Return {order.ReturnItemNum} item {line.ItemId}", inventQty, currency));
+                Db.Add(translation.AccountEntry(area, entry.RecId, revenueAccount, LedgerPostingType.SalesRevenue, revenue,
+                    $"Return {order.ReturnItemNum} item {line.ItemId}", inventQty));
 
                 if (physical)
                 {
@@ -430,7 +436,7 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
                     LineNum = line.LineNum, ItemId = line.ItemId, InventDimId = line.InventDimId,
                     InventTransId = line.InventTransId, Qty = -qty, QtyPhysical = physical ? -qty : 0m, InventQty = -inventQty,
                     SalesPrice = line.SalesPrice, PriceUnit = line.PriceUnit, SalesUnit = line.SalesUnit,
-                    LineAmount = -revenue, LineAmountMst = -revenue, TaxAmount = -lineTax,
+                    LineAmount = -revenue, LineAmountMst = translation.ToAccounting(-revenue), TaxAmount = -lineTax,
                     TaxGroup = line.TaxGroup, TaxItemGroup = line.TaxItemGroup, CurrencyCode = order.CurrencyCode
                 });
                 line.RemainSalesFinancial += qty;
@@ -451,15 +457,22 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
             {
                 if (value.Tax == 0m) continue;
                 var payable = await support.ResolveTaxPayableAsync(area, code, ct);
-                Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, payable, LedgerPostingType.Tax, value.Tax,
-                    $"Sales tax {code} credit on {invoiceId}", 0m, currency));
+                Db.Add(translation.AccountEntry(area, entry.RecId, payable, LedgerPostingType.Tax, value.Tax,
+                    $"Sales tax {code} credit on {invoiceId}", 0m));
                 Db.Set<TaxTrans>().Add(SalesInvoiceService.TaxTransaction(area, date, invoiceId, code, value.Group, value.ItemGroup,
-                    order.CurrencyCode, currency, value.Base, value.Tax));
+                    order.CurrencyCode, currency, value.Base, value.Tax,
+                    translation.ToAccounting(value.Base), translation.ToAccounting(value.Tax),
+                    translation.ToReporting(value.Base), translation.ToReporting(value.Tax)));
             }
 
             var total = totalRevenue + totalTax;
-            Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, customerAccount, LedgerPostingType.CustBalance, -total,
-                $"Credit note {invoiceId}", 0m, currency));
+            // Derived from the lines already translated, so the accounting currency balances even
+            // when each line rounded independently.
+            var customerEntry = translation.BalancingEntry(area, entry.RecId, customerAccount,
+                LedgerPostingType.CustBalance, -total, $"Credit note {invoiceId}", 0m);
+            Db.Add(customerEntry);
+            var totalAccounting = customerEntry.AccountingCurrencyAmount;
+            var totalReporting = customerEntry.ReportingCurrencyAmount;
             Db.Add(new SubledgerVoucherGeneralJournalEntry
             {
                 DataAreaId = area, GeneralJournalEntry = entry.RecId, Voucher = invoiceId, VoucherDataAreaId = area, AccountingDate = date
@@ -469,7 +482,8 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
                 DataAreaId = area, AccountNum = order.InvoiceAccount, OrderAccount = order.CustAccount, TransDate = date,
                 Voucher = invoiceId, Invoice = invoiceId, DocumentNum = order.ReturnItemNum, DocumentDate = date,
                 Txt = $"Credit note for return {order.ReturnItemNum}", TransType = LedgerTransType.Sales,
-                CurrencyCode = order.CurrencyCode, AmountCur = -total, AmountMst = -total, ReportingCurrencyAmount = -total,
+                CurrencyCode = order.CurrencyCode, AmountCur = -total, AmountMst = totalAccounting,
+                ReportingCurrencyAmount = totalReporting,
                 DueDate = date, PostingProfile = order.PostingProfile, DefaultDimension = order.DefaultDimension
             };
             Db.Set<CustTrans>().Add(custTrans);
@@ -477,7 +491,7 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
             Db.Set<CustTransOpen>().Add(new CustTransOpen
             {
                 DataAreaId = area, AccountNum = order.InvoiceAccount, RefRecId = custTrans.RecId, TransDate = date,
-                DueDate = date, AmountCur = -total, AmountMst = -total, ReportingCurrencyAmount = -total
+                DueDate = date, AmountCur = -total, AmountMst = totalAccounting, ReportingCurrencyAmount = totalReporting
             });
             Db.Set<CustInvoiceJour>().Add(new CustInvoiceJour
             {
@@ -485,7 +499,8 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
                 OrderAccount = order.CustAccount, InvoiceAccount = order.InvoiceAccount, CustGroup = order.CustGroup,
                 CurrencyCode = order.CurrencyCode, LedgerVoucher = invoiceId, ParmId = input.RequestId ?? string.Empty,
                 Qty = -totalQty, SalesBalance = -totalRevenue, SumTax = -totalTax, InvoiceAmount = -total,
-                SalesBalanceMst = -totalRevenue, SumTaxMst = -totalTax, InvoiceAmountMst = -total,
+                SalesBalanceMst = translation.ToAccounting(-totalRevenue), SumTaxMst = translation.ToAccounting(-totalTax),
+                InvoiceAmountMst = totalAccounting,
                 PostingProfile = order.PostingProfile, DueDate = date
             });
 

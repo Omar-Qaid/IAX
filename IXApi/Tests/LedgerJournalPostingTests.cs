@@ -1,6 +1,8 @@
 using System.Reflection;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.NumberSequences;
+using IAX.IXApi.Modules.Finance.AccountsPayable;
+using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Foundation.Features;
@@ -509,6 +511,151 @@ public class LedgerJournalPostingTests
             Txt = bank ? "Bank ledger control" : "Share capital"
         };
 
+    [Fact]
+    public async Task A_customer_line_posts_the_summary_account_and_the_customer_transaction()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        SeedSubledgers(db);
+        // Dr customer 500, Cr the ledger offset: the customer owes 500 more.
+        db.Add(new LedgerJournalTrans
+        {
+            RecId = 1, DataAreaId = "dat", JournalNum = "J1", Voucher = "V1", LineNum = 1,
+            TransDate = new DateTime(2026, 1, 15), CurrencyCode = "SAR",
+            AccountType = LedgerJournalACType.Cust, LedgerDimensionName = "C-001",
+            OffsetAccountType = LedgerJournalACType.Ledger, OffsetLedgerDimension = 2,
+            AmountCurDebit = 500m, Txt = "Customer adjustment"
+        });
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var header = await db.Set<LedgerJournalTable>().SingleAsync();
+        await new LedgerJournalPosting(db).PostAsync("dat", header, default);
+        await db.SaveChangesAsync();
+
+        // The ledger hit the customer summary account, under the customer posting type.
+        var lines = await db.Set<GeneralJournalAccountEntry>().AsNoTracking().ToListAsync();
+        Assert.Equal(0m, lines.Sum(x => x.AccountingCurrencyAmount));
+        var customerLine = lines.Single(x => x.PostingType == LedgerPostingType.CustBalance);
+        Assert.Equal("120100", customerLine.LedgerAccount);
+        Assert.Equal(500m, customerLine.AccountingCurrencyAmount);
+
+        // The subledger movement exists, which is the whole point: the balance the ledger shows is
+        // also on the customer's account, with an open row settlement can find.
+        var custTrans = await db.Set<CustTrans>().AsNoTracking().SingleAsync();
+        Assert.Equal("C-001", custTrans.AccountNum);
+        Assert.Equal(500m, custTrans.AmountCur);
+        Assert.Equal(500m, custTrans.AmountMst);
+        Assert.Equal("V1", custTrans.Voucher);
+        var open = await db.Set<CustTransOpen>().AsNoTracking().SingleAsync();
+        Assert.Equal(custTrans.RecId, open.RefRecId);
+        Assert.Equal(500m, open.AmountCur);
+    }
+
+    [Fact]
+    public async Task A_vendor_line_and_a_bank_line_post_their_own_subledger_movements()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        SeedSubledgers(db);
+        // Pay a vendor from the bank: Dr vendor 300 (what is owed falls), Cr bank 300.
+        db.AddRange(
+            new LedgerJournalTrans
+            {
+                RecId = 1, DataAreaId = "dat", JournalNum = "J1", Voucher = "V1", LineNum = 1,
+                TransDate = new DateTime(2026, 1, 15), CurrencyCode = "SAR",
+                AccountType = LedgerJournalACType.Vend, LedgerDimensionName = "V-001",
+                AmountCurDebit = 300m, Txt = "Vendor settlement"
+            },
+            new LedgerJournalTrans
+            {
+                RecId = 2, DataAreaId = "dat", JournalNum = "J1", Voucher = "V1", LineNum = 2,
+                TransDate = new DateTime(2026, 1, 15), CurrencyCode = "SAR",
+                AccountType = LedgerJournalACType.Bank, LedgerDimensionName = "BANK-1",
+                AmountCurCredit = 300m, Txt = "Bank payment"
+            });
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var header = await db.Set<LedgerJournalTable>().SingleAsync();
+        await new LedgerJournalPosting(db).PostAsync("dat", header, default);
+        await db.SaveChangesAsync();
+
+        var lines = await db.Set<GeneralJournalAccountEntry>().AsNoTracking().ToListAsync();
+        Assert.Equal(0m, lines.Sum(x => x.AccountingCurrencyAmount));
+        Assert.Equal(300m, lines.Single(x => x.PostingType == LedgerPostingType.VendBalance).AccountingCurrencyAmount);
+        Assert.Equal(-300m, lines.Single(x => x.PostingType == LedgerPostingType.Bank).AccountingCurrencyAmount);
+
+        var vendTrans = await db.Set<VendTrans>().AsNoTracking().SingleAsync();
+        Assert.Equal("V-001", vendTrans.AccountNum);
+        Assert.Equal(300m, vendTrans.AmountCur);
+        Assert.Equal(300m, (await db.Set<VendTransOpen>().AsNoTracking().SingleAsync()).AmountCur);
+
+        var bankTrans = await db.Set<BankAccountTrans>().AsNoTracking().SingleAsync();
+        Assert.Equal("BANK-1", bankTrans.AccountId);
+        Assert.Equal(-300m, bankTrans.AmountCur);
+        Assert.Equal(-300m, bankTrans.AmountMst);
+    }
+
+    [Fact]
+    public async Task Account_types_outside_the_basic_set_and_a_subledger_offset_are_refused()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = await NewContextAsync(connection);
+        Seed(db);
+        SeedSubledgers(db);
+        db.AddRange(
+            // A fixed-asset line: outside the basic set.
+            new LedgerJournalTrans
+            {
+                RecId = 1, DataAreaId = "dat", JournalNum = "J1", Voucher = "V1", LineNum = 1,
+                TransDate = new DateTime(2026, 1, 15), CurrencyCode = "SAR",
+                AccountType = LedgerJournalACType.FixedAssets, LedgerDimensionName = "FA-1",
+                AmountCurDebit = 100m
+            });
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var header = await db.Set<LedgerJournalTable>().SingleAsync();
+        var fixedAsset = await Assert.ThrowsAsync<SubledgerPostingException>(
+            () => new LedgerJournalPosting(db).PostAsync("dat", header, default));
+        Assert.Contains("does not post through the basic general journal", fixedAsset.Message);
+
+        // A customer line with no account named is refused rather than resolved to nothing.
+        db.ChangeTracker.Clear();
+        var line = await db.Set<LedgerJournalTrans>().SingleAsync();
+        line.AccountType = LedgerJournalACType.Cust;
+        line.LedgerDimensionName = string.Empty;
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        var reloaded = await db.Set<LedgerJournalTable>().SingleAsync();
+        var missing = await Assert.ThrowsAsync<SubledgerPostingException>(
+            () => new LedgerJournalPosting(db).PostAsync("dat", reloaded, default));
+        Assert.Contains("account is required", missing.Message);
+
+        // A subledger offset has no account field on the line, so it is refused by name.
+        db.ChangeTracker.Clear();
+        line = await db.Set<LedgerJournalTrans>().SingleAsync();
+        line.AccountType = LedgerJournalACType.Ledger;
+        line.LedgerDimension = 1;
+        line.LedgerDimensionName = string.Empty;
+        line.OffsetAccountType = LedgerJournalACType.Cust;
+        line.OffsetLedgerDimension = 2;
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+        var reloadedAgain = await db.Set<LedgerJournalTable>().SingleAsync();
+        var offset = await Assert.ThrowsAsync<SubledgerPostingException>(
+            () => new LedgerJournalPosting(db).PostAsync("dat", reloadedAgain, default));
+        Assert.Contains("offset account must be a Ledger account", offset.Message);
+
+        Assert.Empty(await db.Set<CustTrans>().AsNoTracking().ToListAsync());
+    }
+
     private static void Seed(PostingContext db)
     {
         db.AddRange(
@@ -522,6 +669,22 @@ public class LedgerJournalPostingTests
             new MainAccount { RecId = 2, DataAreaId = "dat", LedgerChartOfAccounts = 10, MainAccountId = "310100" },
             new DimensionAttributeValueCombination { RecId = 1, DataAreaId = "dat", MainAccount = 1, MainAccountValue = "110100", DisplayValue = "110100" },
             new DimensionAttributeValueCombination { RecId = 2, DataAreaId = "dat", MainAccount = 2, MainAccountValue = "310100", DisplayValue = "310100" });
+    }
+
+    /// <summary>A customer, a vendor and a bank account, each with the account its lines post to.</summary>
+    private static void SeedSubledgers(PostingContext db)
+    {
+        db.AddRange(
+            new MainAccount { RecId = 3, DataAreaId = "dat", LedgerChartOfAccounts = 10, MainAccountId = "120100" },
+            new MainAccount { RecId = 4, DataAreaId = "dat", LedgerChartOfAccounts = 10, MainAccountId = "210100" },
+            new DimensionAttributeValueCombination { RecId = 3, DataAreaId = "dat", MainAccount = 3, MainAccountValue = "120100", DisplayValue = "120100" },
+            new DimensionAttributeValueCombination { RecId = 4, DataAreaId = "dat", MainAccount = 4, MainAccountValue = "210100", DisplayValue = "210100" },
+            new CustTable { RecId = 1, DataAreaId = "dat", AccountNum = "C-001", CustGroupId = "DOM", CurrencyCode = "SAR" },
+            new CustLedgerAccounts { RecId = 1, DataAreaId = "dat", AccountCode = AccountCode.All, SummaryLedgerDimension = 3 },
+            new VendTable { RecId = 1, DataAreaId = "dat", AccountNum = "V-001", VendGroup = "DOM" },
+            new VendLedgerAccounts { RecId = 1, DataAreaId = "dat", AccountCode = AccountCode.All, SummaryLedgerDimension = 4 },
+            new BankAccountTable { RecId = 1, DataAreaId = "dat", AccountId = "BANK-1", LedgerDimension = 1,
+                BankAccountStatus = BankAccountStatus.Active, CurrencyCode = "SAR" });
     }
 
     private static async Task<PostingContext> NewContextAsync(SqliteConnection connection)
@@ -543,7 +706,11 @@ public class LedgerJournalPostingTests
                 typeof(LedgerStructure), typeof(DimensionHierarchy),
                 typeof(GeneralJournalEntry), typeof(GeneralJournalAccountEntry),
                 typeof(SubledgerVoucherGeneralJournalEntry), typeof(ExchangeRateType),
-                typeof(ExchangeRateCurrencyPair), typeof(ExchangeRate)];
+                typeof(ExchangeRateCurrencyPair), typeof(ExchangeRate),
+                typeof(CustTable), typeof(CustTrans), typeof(CustTransOpen), typeof(CustParameters),
+                typeof(CustLedgerAccounts), typeof(VendTable), typeof(VendTrans), typeof(VendTransOpen),
+                typeof(VendParameters), typeof(VendLedgerAccounts),
+                typeof(BankAccountTable), typeof(BankAccountTrans)];
             // CompanyInfo navigates to the party tables, which this harness does not map.
             builder.Ignore<DirPartyTable>();
             foreach (var type in types)

@@ -95,8 +95,19 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
             }
             var context = await support.LoadLedgerContextAsync(area, date,
                 LedgerPostingModule.Vendor, _currentUser.GetCurrentUserId(), ct);
-            if (order.CurrencyCode != context.Ledger.AccountingCurrency || (!string.IsNullOrEmpty(context.Ledger.ReportingCurrency) && context.Ledger.ReportingCurrency != context.Ledger.AccountingCurrency))
-                return await Fail(422, "Purchase invoice currency conversion requires supported accounting/reporting exchange rates.", ct);
+            if (string.IsNullOrWhiteSpace(order.CurrencyCode))
+                return await Fail(422, "The purchase order has no currency.", ct);
+            // The order's amounts translate at the invoice date's rate. Inventory value is kept in
+            // the accounting currency, so each line's cost is translated BEFORE it is written to
+            // InventTrans and InventSum - otherwise a foreign-currency purchase would store
+            // foreign-currency amounts as inventory cost and corrupt later cost settlement.
+            SubledgerCurrencyTranslation translation;
+            try
+            {
+                translation = await SubledgerCurrencyTranslation.LoadAsync(Db, area, context.Ledger,
+                    order.CurrencyCode, date, ct);
+            }
+            catch (SubledgerPostingException ex) { return await Fail(422, ex.Message, ct); }
             var vendorAccount = await support.ResolveVendorSummaryAsync(area, vendor, ct);
             var internalId = (await _numbers.NextAsync("VendInvoiceJour", area, ct)).Code;
             var entry = support.NewEntry(area, internalId, internalId, date, context);
@@ -122,7 +133,11 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
                     ? line.RemainInventFinancial
                     : decimal.Round(request.Qty * line.QtyOrdered / line.PurchQty, 6);
                 var amount = decimal.Round(request.Qty * unitPrice / (line.PriceUnit > 0 ? line.PriceUnit : 1m), 2, MidpointRounding.AwayFromZero);
-                var unitCost = inventQty == 0 ? 0m : amount / inventQty;
+                // The cost that goes into inventory is the accounting-currency amount, because
+                // InventTrans.CostAmountPosted and InventSum.PostedValue are kept in that currency
+                // and every later settlement reads them.
+                var accountingAmount = translation.ToAccounting(amount);
+                var unitCost = inventQty == 0 ? 0m : accountingAmount / inventQty;
 
                 var origin = await Db.Set<InventTransOrigin>().FirstOrDefaultAsync(x => x.DataAreaId == area
                     && x.InventTransId == line.InventTransId && x.ReferenceId == order.PurchId
@@ -177,7 +192,7 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
                 summary.Received -= inventQty;
                 summary.PostedQty += inventQty;
                 summary.PhysicalValue -= physicalReleased;
-                summary.PostedValue += amount;
+                summary.PostedValue += accountingAmount;
 
                 line.RemainPurchFinancial -= request.Qty;
                 line.RemainInventFinancial = Math.Max(0m, line.RemainInventFinancial - inventQty);
@@ -186,8 +201,8 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
                 var vendorScope = await support.VendorScopeAsync(area, order.InvoiceAccount.Length > 0 ? order.InvoiceAccount : order.OrderAccount, ct);
                 var inventoryAccount = await support.ResolveInventPostingAsync(area, line.ItemId, InventAccountType.PurchReceipt, ct,
                     custVendAccount: vendorScope.Account, custVendGroup: vendorScope.Group);
-                Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, inventoryAccount, LedgerPostingType.PurchReceipt, amount,
-                    $"Purchase {order.PurchId} item {line.ItemId}", inventQty, context.Ledger.AccountingCurrency));
+                Db.Add(translation.AccountEntry(area, entry.RecId, inventoryAccount, LedgerPostingType.PurchReceipt, amount,
+                    $"Purchase {order.PurchId} item {line.ItemId}", inventQty));
 
                 var invoiceLine = new VendInvoiceTrans
                 {
@@ -207,7 +222,7 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
                         .ReverseAsync(area, match, entry.RecId, context.Ledger.AccountingCurrency, ct);
                     Db.Add(match);
                 }
-                totalTax += await new PurchaseTaxPosting(Db).PostAsync(area, invoiceLine, entry.RecId, context.Ledger.AccountingCurrency, ct);
+                totalTax += await new PurchaseTaxPosting(Db).PostAsync(area, invoiceLine, entry.RecId, translation, ct);
                 total += amount;
                 totalQty += request.Qty;
             }
@@ -215,12 +230,16 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
             // Order charges post here, before the vendor entry, so a charge the vendor bills is part
             // of what is owed and its input tax joins the voucher's tax.
             var charges = await new PurchaseChargePosting(Db).PostAsync(area, order, entry.RecId, vendorInvoiceId,
-                internalId, date, context.Ledger.AccountingCurrency, support, ct);
+                internalId, date, translation, support, ct);
             total += charges.ChargedToVendor;
             totalTax += charges.Tax;
 
-            Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, vendorAccount, LedgerPostingType.VendBalance, -(total + totalTax),
-                $"Vendor invoice {vendorInvoiceId}", 0m, context.Ledger.AccountingCurrency));
+            // Derived from the lines already translated, so the accounting currency balances even
+            // when each line rounded independently.
+            var vendorEntry = translation.BalancingEntry(area, entry.RecId, vendorAccount,
+                LedgerPostingType.VendBalance, -(total + totalTax), $"Vendor invoice {vendorInvoiceId}", 0m);
+            Db.Add(vendorEntry);
+            var totalAccounting = vendorEntry.AccountingCurrencyAmount;
             Db.Add(new SubledgerVoucherGeneralJournalEntry
             {
                 DataAreaId = area, GeneralJournalEntry = entry.RecId, Voucher = internalId,
@@ -230,7 +249,7 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
             {
                 DataAreaId = area, AccountNum = order.InvoiceAccount, TransDate = date, Voucher = internalId,
                 Invoice = vendorInvoiceId, Txt = $"Purchase {order.PurchId}", CurrencyCode = order.CurrencyCode,
-                AmountCur = -(total + totalTax), AmountMst = -(total + totalTax), DueDate = dueDate, TransType = LedgerTransType.Purch,
+                AmountCur = -(total + totalTax), AmountMst = totalAccounting, DueDate = dueDate, TransType = LedgerTransType.Purch,
                 // The order's cash discount code travels to the transaction, which is where
                 // settlement reads it from.
                 CashDiscCode = order.CashDisc,
@@ -246,7 +265,7 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
                 CurrencyCode = order.CurrencyCode, LedgerVoucher = internalId, Qty = totalQty,
                 // SalesBalance is the line total; the charges have their own subtotal.
                 SalesBalance = total - charges.ChargedToVendor,
-                SumMarkup = charges.ChargedToVendor, SumMarkupMst = charges.ChargedToVendor,
+                SumMarkup = charges.ChargedToVendor, SumMarkupMst = translation.ToAccounting(charges.ChargedToVendor),
                 SumTax = totalTax, InvoiceAmount = total + totalTax, DueDate = dueDate
             });
 

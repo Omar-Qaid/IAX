@@ -69,10 +69,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<AccountsReceivable.PackingSlip.IPackingSlipJournalService, AccountsReceivable.PackingSlip.PackingSlipJournalService>();
             services.AddScoped<AccountsReceivable.Invoice.ISalesInvoiceService, AccountsReceivable.Invoice.SalesInvoiceService>();
             services.AddScoped<AccountsReceivable.Invoice.IFreeTextInvoiceService, AccountsReceivable.Invoice.FreeTextInvoiceService>();
-            services.AddScoped<AccountsReceivable.ICustTransService>(provider =>
-                new AccountsReceivable.CustTransService(
-                    provider.GetRequiredService<Infrastructure.Persistence.Repositories.IUnitOfWork>(),
-                    provider.GetRequiredService<Infrastructure.Identity.ICurrentUserService>()));
+            services.AddScoped<AccountsReceivable.ICustTransService, AccountsReceivable.CustTransService>();
             services.AddScoped<AccountsReceivable.Payment.ICustPaymentService, AccountsReceivable.Payment.CustPaymentService>();
             services.AddScoped<AccountsPayable.IVendPaymentService, AccountsPayable.VendPaymentService>();
             services.AddScoped<AccountsReceivable.Settlement.ICustSettlementReversalService, AccountsReceivable.Settlement.CustSettlementReversalService>();
@@ -258,6 +255,7 @@ namespace IAX.IXApi.Modules.Finance
             services.AddScoped<Inventory.IInventValueReportService, Inventory.InventValueReportService>();
             services.AddScoped<Inventory.IInventoryMarkingService, Inventory.InventoryMarkingService>();
         services.AddScoped<Foundation.Tax.ITaxSettlementService, Foundation.Tax.TaxSettlementService>();
+        services.AddScoped<Foundation.Tax.ITaxReportService, Foundation.Tax.TaxReportService>();
             services.AddScoped<Inventory.IUnitOfMeasureService, Inventory.UnitOfMeasureService>();
             services.AddScoped<FluentValidation.IValidator<Inventory.UnitOfMeasureDto>, Inventory.UnitOfMeasureDtoValidator>();
             services.AddScoped<FluentValidation.IValidator<Inventory.UnitOfMeasureInputDto>, Inventory.UnitOfMeasureInputDtoValidator>();
