@@ -1748,7 +1748,7 @@ public sealed class InventoryArchitectureTests
         { ItemId = "ITEM-001", InventSiteId = "JED", InventLocationId = "MAIN", Unit = "pcs", Qty = 1, CostPrice = 10, TransDate = DateTime.Today }, default)).Error);
         Assert.Contains("frozen for counting", (await posting.PostAsync(blockedJournal.Journal.JournalId, default)).Error);
         var frozenTransfers = new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransferOrderService(
-            uow, identity, dimensions, new TestSalesInventoryNumbers());
+            uow, identity, dimensions, new TestSalesInventoryNumbers(), numbers);
         var frozenTransferInput = new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransferCreateDto(
             "TR-FROZEN", "JED", "MAIN", "TRANSIT", "SHOW", DateTime.Today, DateTime.Today,
             [new("ITEM-001", "pcs", 1m)]);
@@ -1775,7 +1775,7 @@ public sealed class InventoryArchitectureTests
         Assert.Null(await InventoryCountProtection.CheckAsync(db, "dat", "ITEM-001", line.InventDimId, default));
 
         var transfers = new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransferOrderService(
-            uow, identity, dimensions, new TestSalesInventoryNumbers());
+            uow, identity, dimensions, new TestSalesInventoryNumbers(), numbers);
         var transferInput = new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransferCreateDto(
             "TR-DEMO", "JED", "MAIN", "TRANSIT", "SHOW", DateTime.Today, DateTime.Today,
             [new("ITEM-001", "pcs", 2m)]);
