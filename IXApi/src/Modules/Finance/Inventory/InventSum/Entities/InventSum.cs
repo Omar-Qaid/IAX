@@ -101,21 +101,12 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // Catch Weight (PDS) On-Hand Quantities
         // ==========================================================
         // Basic Properties
-        public decimal PdscwPostedQty { get; set; }
         public decimal PdscwDeducted { get; set; }
         public decimal PdscwPicked { get; set; }
-        public decimal PdscwReceived { get; set; }
-        public decimal PdscwRegistered { get; set; }
-        public decimal PdscwArrived { get; set; }
-        public decimal PdscwOrdered { get; set; }
         public decimal PdscwOnOrder { get; set; }
         public decimal PdscwReservPhysical { get; set; }
-        public decimal PdscwReservOrdered { get; set; }
-        public decimal PdscwQuotationReceipt { get; set; }
-        public decimal PdscwQuotationIssue { get; set; }
         public decimal PdscwPhysicalInvent { get; set; }
         public decimal PdscwAvailPhysical { get; set; }
-        public decimal PdscwAvailOrdered { get; set; }
 
         // ==========================================================
         // Custom/Localization Extensions
@@ -136,7 +127,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         public NoYes Closed { get; set; }
         public NoYes ClosedQty { get; set; }
         public NoYes IsExcludedFromInventoryValue { get; set; }
-
 
         #region Navigation Properties Row
 
@@ -161,4 +151,3 @@ namespace IAX.IXApi.Modules.Finance.Entities
         #endregion
     }
 }
-

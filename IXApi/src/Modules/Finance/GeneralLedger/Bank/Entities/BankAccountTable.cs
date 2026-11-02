@@ -156,9 +156,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // Regional Localization & Validities
         // ==========================================================
         // Basic Properties
-        [Required]
-        [StringLength(FieldLengths.CorrAccount_W)]
-        public string CorrAccount_W { get; set; } = string.Empty;
 
         public DateTime ActiveFrom { get; set; }
         public int ActiveFromTzId { get; set; }
@@ -171,7 +168,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         public NoYes LvDefaultBank { get; set; }
         public int LvPayOrderType { get; set; }
         public int TimeZonePreference { get; set; }
-
 
         #region Navigation Properties Row
 
@@ -208,4 +204,3 @@ namespace IAX.IXApi.Modules.Finance.Entities
         #endregion
     }
 }
-

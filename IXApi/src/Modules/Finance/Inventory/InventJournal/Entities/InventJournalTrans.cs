@@ -73,11 +73,8 @@ namespace IAX.IXApi.Modules.Finance.Entities
         public decimal UnitQty { get; set; }
 
         public decimal PdscwQty { get; set; }
-        public decimal PdscwInventOnHand { get; set; }
-        public decimal PdscwInventQtyCounted { get; set; }
 
         // Enum Properties
-        public NoYes PdsCopyBatchAttrib { get; set; }
 
         // ==========================================================
         // Financial Costings & Pricing Controls
@@ -148,7 +145,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         public long EntAssetWorkOrderLine { get; set; }
 
         // Enum Properties
-        public NoYes BomLine { get; set; }
         public AssetTransType AssetTransType { get; set; }
 
         // ==========================================================
@@ -158,7 +154,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         public long SubBillDeferralRecIdOriginal { get; set; }
 
         // Enum Properties
-        public int ItmOverUnderTransfer { get; set; } // Landed Cost over/under status mapping
 
         // ==========================================================
         // System Audit Details & Workers Contexts
@@ -169,7 +164,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         public DateTime ReleaseDate { get; set; }
         public int ReleaseDateTzId { get; set; }
         public int SysDataStateCode { get; set; }
-
 
         #region Navigation Properties Row
 
@@ -206,4 +200,3 @@ namespace IAX.IXApi.Modules.Finance.Entities
         #endregion
     }
 }
-

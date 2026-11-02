@@ -63,7 +63,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // Landed Cost & Extensibility Extensions
         // ==========================================================
         // Basic Properties
-        public long ItmCostTransRecId { get; set; } // Landed Cost reference map marker
 
         // ==========================================================
         // Lifecycle History & Audit Anchors
@@ -76,7 +75,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // Enum Properties
         public NoYes Posted { get; set; }
         public NoYes Cancelled { get; set; }
-
 
         #region Navigation Properties Row
 
@@ -98,4 +96,3 @@ namespace IAX.IXApi.Modules.Finance.Entities
         #endregion
     }
 }
-

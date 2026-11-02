@@ -57,8 +57,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         public string RetailVariantId { get; set; } = string.Empty;
 
         // Enum Properties
-        public NoYes RetailShowForItem { get; set; }
-
 
         #region Navigation Properties Row
 
@@ -74,4 +72,3 @@ namespace IAX.IXApi.Modules.Finance.Entities
         #endregion
     }
 }
-

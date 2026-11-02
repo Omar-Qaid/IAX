@@ -102,8 +102,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // ==========================================================
         // Enum Properties
         public NoYes IsRetailCommitted { get; set; }
-        public int RetailReplenishmentType { get; set; }
-        public int RetailRetailStatusType { get; set; }
 
         // ==========================================================
         // Active Concurrency, Sessions & System Locks
@@ -116,7 +114,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
 
         // Enum Properties
         public NoYes SystemBlocked { get; set; }
-
 
         #region Navigation Properties Row
 
@@ -138,4 +135,3 @@ namespace IAX.IXApi.Modules.Finance.Entities
         #endregion
     }
 }
-

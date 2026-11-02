@@ -49,7 +49,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         public NoYes FixedExchRate { get; set; }
         public NoYes IsAdvancedPayment { get; set; }
         public LedgerJournalFeePosting LedgerJournalFeePosting { get; set; }
-        public NoYes Prepayment_W { get; set; }
 
         // ==========================================================
         // Approval & Workflow Configurations
@@ -94,7 +93,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         [StringLength(FieldLengths.Configuration)]
         public string Configuration { get; set; } = string.Empty;
 
-
         #region Navigation Properties Row
 
 //         [ForeignKey(nameof(CurrencyCode))]
@@ -109,4 +107,3 @@ namespace IAX.IXApi.Modules.Finance.Entities
         #endregion
     }
 }
-

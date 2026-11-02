@@ -7,7 +7,6 @@ using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 using IAX.IXApi.Modules.Finance.Common;
 
-
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable
 {
     [Table("CustInvoiceTrans")]
@@ -161,7 +160,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         // ==========================================================
         // Basic Properties
         public long SalesCategory { get; set; }
-        public long RetailCategory { get; set; }
         [StringLength(FieldLengths.SalesGroupId)]
         public string SalesGroup { get; set; } = string.Empty;
         [StringLength(FieldLengths.Code)]
@@ -191,13 +189,10 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         // Basic Properties
         public DateTime PeriodChargeInvoiceLineBaseFromDate { get; set; }
         public DateTime PeriodChargeInvoiceLineBaseToDate { get; set; }
-        public decimal SubBillRevenueSplitParentAmount { get; set; }
-        public long SubBillRevenueSplitParentLineRecId { get; set; }
 
         // Enum Properties
         public NoYes RevRecDeferred { get; set; }
         public NoYes RevRecDeferredProcessed { get; set; }
-        public NoYes SubBillRevenueSplit { get; set; }
         public int SubBillRevenueSplitAllocationMethod { get; set; }
 
         // ==========================================================
@@ -212,7 +207,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
 
         // Enum Properties
         public SysDataStateCode SysDataStateCode { get; set; }
-
 
         #region Navigation Properties Row
 
@@ -252,4 +246,3 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         #endregion
     }
 }
-

@@ -98,11 +98,8 @@ namespace IAX.IXApi.Modules.Finance.Entities
         [StringLength(FieldLengths.GroupLevel03)]
         public string GroupLevel03 { get; set; } = string.Empty;
 
-        public long StandardMainAccount_W { get; set; }
-
         // Enum Properties
         public int ReportingAccountType { get; set; }
-
 
         #region Navigation Properties Row
 
@@ -124,4 +121,3 @@ namespace IAX.IXApi.Modules.Finance.Entities
         #endregion
     }
 }
-

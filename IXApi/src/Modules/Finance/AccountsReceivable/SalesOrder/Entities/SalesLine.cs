@@ -228,7 +228,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public long ManualEntryChangePolicy { get; set; }
         public long CreditNoteReasonCode { get; set; }
         public long FinTag { get; set; }
-        public long ProjFundingSource { get; set; }
         public long IntrastatCommodity { get; set; }
         public long SourceDocumentLine { get; set; }
 
@@ -251,8 +250,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         // ==========================================================
         // Electronic Invoice
         // ==========================================================
-        [StringLength(FieldLengths.Code)]
-        public string EInvoiceAccountCode { get; set; } = string.Empty;
 
         // ==========================================================
         // Packing
@@ -266,7 +263,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         // ==========================================================
         public decimal PsaProjProposalQty { get; set; }
         public decimal PsaProjProposalInventQty { get; set; }
-
 
         #region Navigation Properties Row
 
@@ -326,4 +322,3 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         #endregion
     }
 }
-

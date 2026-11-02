@@ -71,18 +71,11 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // Commerce / Retail Multi-Channel Constraints
         // ==========================================================
         // Basic Properties
-        public decimal RetailInventoryAvailabilityBuffer { get; set; }
-
-        [Required]
-        [StringLength(FieldLengths.RetailInventoryAvailabilityLevelProfile)]
-        public string RetailInventoryAvailabilityLevelProfile { get; set; } = string.Empty;
 
         // ==========================================================
         // Process Manufacturing Pricing Customization
         // ==========================================================
         // Basic Properties
-        public int PdsPricingPrecision { get; set; }
-
 
         #region Navigation Properties Row
 
@@ -98,4 +91,3 @@ namespace IAX.IXApi.Modules.Finance.Entities
         #endregion
     }
 }
-

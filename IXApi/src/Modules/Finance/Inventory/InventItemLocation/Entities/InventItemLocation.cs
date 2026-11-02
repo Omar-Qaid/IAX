@@ -30,8 +30,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // Catch Weight (PDS) Picking & Refill Controls
         // ==========================================================
         // Basic Properties
-        public decimal PdscwPickingLocationMaxQty { get; set; }
-        public decimal PdscwPickingLocationRefillMin { get; set; }
 
         // ==========================================================
         // Warehouse Management (WMS) Directives & Fallbacks
@@ -57,7 +55,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         [StringLength(FieldLengths.CountGroupId)]
         public string CountGroupId { get; set; } = string.Empty;
 
-
         #region Navigation Properties Row
 
 //         [ForeignKey(nameof(InventDimId))]
@@ -72,4 +69,3 @@ namespace IAX.IXApi.Modules.Finance.Entities
         #endregion
     }
 }
-

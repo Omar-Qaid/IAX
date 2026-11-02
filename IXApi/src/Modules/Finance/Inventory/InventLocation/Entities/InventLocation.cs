@@ -152,18 +152,12 @@ namespace IAX.IXApi.Modules.Finance.Entities
         public string RboDefaultWmsLocationID { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(FieldLengths.RetailWmsLocationIDDefaultReturn)]
-        public string RetailWmsLocationIDDefaultReturn { get; set; } = string.Empty;
-
-        [Required]
         [StringLength(FieldLengths.DefaultReturnCreditOnlyLocation)]
         public string DefaultReturnCreditOnlyLocation { get; set; } = string.Empty;
 
         [Required]
         [StringLength(FieldLengths.RejectOrderFulfillment)]
         public string RejectOrderFulfillment { get; set; } = string.Empty;
-
-        public decimal RetailWeightEx1 { get; set; }
 
         // Enum Properties
         public NoYes FshStore { get; set; } // Flags location as a retail store brick-and-mortar terminal
@@ -179,7 +173,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         public NoYes ReqRefill { get; set; }
         public NoYes EnableExternalWarehouse { get; set; } // Third-party logistics (3PL) synchronization flag
         public NoYes WorkflowApproval { get; set; }
-
 
         #region Navigation Properties Row
 
@@ -204,4 +197,3 @@ namespace IAX.IXApi.Modules.Finance.Entities
         #endregion
     }
 }
-

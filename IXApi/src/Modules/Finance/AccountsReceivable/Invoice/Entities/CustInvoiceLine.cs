@@ -79,8 +79,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         // Basic Properties
         public long ParentRecId { get; set; } // Contextual header link
         public long CorrectedCustInvoiceLine { get; set; }
-        public long RefReturnInvoiceTrans_W { get; set; }
-        public long ProjFundingSource { get; set; }
         public long IntrastatCommodity { get; set; }
         public long SourceDocumentLine { get; set; }
         public long ReasonRefRecId { get; set; }
@@ -88,7 +86,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
 
         // Enum Properties
         public SysDataStateCode SysDataStateCode { get; set; }
-
 
         #region Navigation Properties Row
 
@@ -110,4 +107,3 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         #endregion
     }
 }
-

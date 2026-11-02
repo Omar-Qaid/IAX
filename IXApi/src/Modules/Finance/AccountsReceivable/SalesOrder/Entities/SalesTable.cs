@@ -9,7 +9,6 @@ using IAX.IXApi.Modules.Finance.Common;
 using DocumentFormat.OpenXml.Spreadsheet;
 using IAX.IXApi.Modules.Finance.Inventory;
 
-
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable
 {
     [Table("SalesTable")]
@@ -85,8 +84,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         [StringLength(FieldLengths.Description)]
         public string CustRequisitionNum { get; set; } = string.Empty;
 
-
-
         [StringLength(FieldLengths.LanguageId)]
         public string LanguageId { get; set; } = string.Empty;
         //----------------------------------------- Sales & Customer
@@ -100,13 +97,10 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public int AddressRefTableId { get; set; }
         public long DeliveryPostalAddress { get; set; }
         public long ShipCarrierPostalAddress { get; set; }
-        public long SubBillBillToPostalAddress { get; set; }
 
         [StringLength(FieldLengths.Name)]
         public string DeliveryName { get; set; } = string.Empty;
 
-
-      
         //----------------------------------------- Dates
 
         public DateTime OrderDate { get; set; }
@@ -123,8 +117,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public DateTime RevRecContractStartDate { get; set; }
         public DateTime RevRecContractEndDate { get; set; }
  
-
-
         //----------------------------------------- Amounts & Pricing
 
         public decimal DiscPercent { get; set; }
@@ -136,18 +128,14 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public decimal ReportingCurrencyFixedExchRate { get; set; }
         public decimal SmmSalesAmountTotal { get; set; }
 
-
         //----------------------------------------- Payment & Financial
-
 
         public decimal CreditCardApprovalAmount { get; set; }
         public SalesCreditCardAuthorizationError CreditCardAuthorizationError { get; set; }
         public long CreditCardCustRefId { get; set; }
 
-
         //----------------------------------------- Financial Dimensions & Accounting
 
- 
         public long AccountingDistributionTemplate { get; set; }
         public long FundingSource { get; set; }
         public long FinTag { get; set; }
@@ -155,10 +143,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public long VatNumRecId { get; set; }
         public int VatNumTableType { get; set; }
 
-
-
         //----------------------------------------- Status
-
 
         public CovStatus CovStatus { get; set; }
         public SalesReleaseStatus ReleaseStatus { get; set; }
@@ -166,13 +151,8 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public ReturnStatusHeader ReturnStatus { get; set; }
         public bool ReturnReplacementCreated { get; set; }
 
-
         //----------------------------------------- Credit Management
 
-        public bool CredManExcludeSalesOrder { get; set; }
-        public bool CredManInCreditControl { get; set; }
-        public bool CredManRejected { get; set; }
-        public bool CredManReleasedFromCreditControl { get; set; }
         public long CreditNoteReasonCode { get; set; }
 
         //----------------------------------------- Intercompany
@@ -180,11 +160,8 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public bool IntercompanyOrder { get; set; }
         public bool IntercompanyAutoCreateOrders { get; set; }
         public bool IntercompanyDirectDelivery { get; set; }
-        public bool IntercompanyDirectDeliveryOrig { get; set; }
         public bool IntercompanyAllowIndirectCreation { get; set; }
-        public bool IntercompanyAllowIndirectCreationOrig { get; set; }
         public SalesIntercompanyOrigin IntercompanyOrigin { get; set; }
-
 
         //----------------------------------------- Logistics
 
@@ -195,30 +172,23 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public bool ShipCarrierResidential { get; set; }
         public NoYes ShipCarrierBlindShipment { get; set; }
 
-
-
         //----------------------------------------- Revenue Recognition
 
         public bool RevRecFollowOriginalPricingMethod { get; set; }
         public bool RevRecMultipleSoReallocation { get; set; }
         public long RevRecLatestReverseJournal { get; set; }
    
-
-
         //----------------------------------------- Tags
 
         public WHSCaseTaggingPolicy CaseTagging { get; set; }
         public int ItemTagging { get; set; }
         public WHSPalletTaggingPolicy PalletTagging { get; set; }
 
-
         //----------------------------------------- References
 
         public long SourceDocumentHeader { get; set; }
         public long TransportationDocument { get; set; }
-        public long RetailChannelTable { get; set; }
         public long ServiceCodeRefRecId { get; set; }
-        public long DirectDebitMandate { get; set; }
         public long ManualEntryChangePolicy { get; set; }
         public long SystemEntryChangePolicy { get; set; }
         public SalesSystemEntrySource SystemEntrySource { get; set; }
@@ -226,16 +196,8 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public long CreatedTransactionId { get; set; }
         public long ModifiedTransactionId { get; set; }
 
-
-   
-
-
-   
-
-
         //----------------------------------------- Miscellaneous
 
-        
         public BankDocumentType BankDocumentType { get; set; }
  
         public SalesListCode ListCode { get; set; }
@@ -247,16 +209,10 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public CustVendSettleVoucher SettleVoucher { get; set; }
         public SysDataStateCode SysDataStateCode { get; set; }
 
-
-
         //----------------------------------------- String References
-
-   
 
         [StringLength(FieldLengths.Email)]
         public string Email { get; set; } = string.Empty;
-
- 
 
         [StringLength(FieldLengths.Phone)]
         public string Phone { get; set; } = string.Empty;
@@ -267,21 +223,11 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         [StringLength(FieldLengths.ReasonCodeId)]
         public string ReturnReasonCodeId { get; set; } = string.Empty;
 
-   
-
-        [StringLength(FieldLengths.CredManId)]
-        public string CredManId { get; set; } = string.Empty;
-
-
         [StringLength(FieldLengths.QuotationId)]
         public string QuotationId { get; set; } = string.Empty;
 
-       
-
         [StringLength(FieldLengths.PurchOrderFormNum)]
         public string PurchOrderFormNum { get; set; } = string.Empty;
-
-    
 
         //----------------------------------------- Notes & References
 
@@ -290,8 +236,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         
         [StringLength(FieldLengths.Memo)]
         public string ReturnNotes { get; set; } = string.Empty;
-
-
 
         //----------------------------------------- others
         public DateTime DomProcessedDateTime { get; set; }
@@ -307,13 +251,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public string PdsCustRebateGroupId { get; set; } = string.Empty;
         [StringLength(FieldLengths.GroupId)]
         public string PdsRebateProgramTmaGroup { get; set; } = string.Empty;
-        public int SubBillCreatedFromSb { get; set; }
-        [StringLength(FieldLengths.Name)]
-        public string SubBillBillToName { get; set; } = string.Empty;
-        public NoYes SubBillSuppressChild { get; set; }
         public EInvoiceLineSpecification EInvoiceLineSpec { get; set; }
-        [StringLength(FieldLengths.Code)]
-        public string EInvoiceAccountCode { get; set; } = string.Empty;
 
         [StringLength(FieldLengths.Num)]
         public string EnterpriseNumber { get; set; } = string.Empty;
@@ -352,16 +290,9 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         [StringLength(FieldLengths.ProjId)]
         public string ProjId { get; set; } = string.Empty;
 
-        [StringLength(FieldLengths.IntercompanyPurchId)]
-        public string IntercompanyPurchId { get; set; } = string.Empty;
         [StringLength(FieldLengths.PaymentSched)]
         public string PaymentSched { get; set; } = string.Empty;
 
-        [StringLength(FieldLengths.IntercompanyOriginalCustAccount)]
-        public string IntercompanyOriginalCustAccount { get; set; } = string.Empty;
-
-        [StringLength(FieldLengths.IntercompanyOriginalSalesId)]
-        public string IntercompanyOriginalSalesId { get; set; } = string.Empty;
         [StringLength(FieldLengths.ReturnReplacementId)]
         public string ReturnReplacementId { get; set; } = string.Empty;
 
@@ -441,10 +372,8 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
 //         [ForeignKey(nameof(InvoiceAccount))]
 //         public virtual CustTable? InvoiceAccount_CustTable { get; set; }
 
-      
 //         [ForeignKey(nameof(TaxGroupId))]
 //         public virtual TaxGroupHeading? TaxGroupHeading { get; set; }
-
 
 //         [ForeignKey(nameof(ContactPersonId))]
 //         public virtual ContactPerson? ContactPerson { get; set; }
@@ -492,9 +421,5 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
 
         #endregion
 
-
-      
     }
 }
-
-

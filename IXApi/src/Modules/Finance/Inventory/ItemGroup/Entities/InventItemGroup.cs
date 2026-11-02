@@ -3,7 +3,6 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using IAX.IXApi.Modules.Finance.Common;
 
-
 namespace IAX.IXApi.Modules.Finance.Entities
 {
     [Table("InventItemGroup")]
@@ -35,18 +34,9 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // Advanced Revenue Recognition Policies (RevRec)
         // ==========================================================
         // Basic Properties
-        [Required]
-        [StringLength(FieldLengths.RevRecDefaultRevenueRecognitionSchedule)]
-        public string RevRecDefaultRevenueRecognitionSchedule { get; set; } = string.Empty;
-
-        public decimal RevRecMedianPriceMinimumTolerance { get; set; }
-        public decimal RevRecMedianPriceMaximumTolerance { get; set; }
 
         // Enum Properties
-        public NoYes RevRecRevenueRecognitionEnabled { get; set; }
         public RevRecRevenueType RevRecRevenueType { get; set; }
-        public NoYes RevRecMedianPrice { get; set; }
-        public NoYes RevRecExcludeFromCarveOut { get; set; }
 
         #region Navigation Properties Row
 
@@ -59,4 +49,3 @@ namespace IAX.IXApi.Modules.Finance.Entities
         #endregion
     }
 }
-

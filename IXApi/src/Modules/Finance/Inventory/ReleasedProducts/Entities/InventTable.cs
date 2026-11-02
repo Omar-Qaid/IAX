@@ -9,7 +9,6 @@ using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 using Microsoft.EntityFrameworkCore;
 using DocumentFormat.OpenXml.Vml.Office;
 
-
 namespace IAX.IXApi.Modules.Finance.Entities
 {
     [Table("InventTable")]
@@ -129,18 +128,9 @@ namespace IAX.IXApi.Modules.Finance.Entities
         public string BomUnitId { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(FieldLengths.BomCalcGroupId)]
-        public string BomCalcGroupId { get; set; } = string.Empty;
-
-        [Required]
-        [StringLength(FieldLengths.ProdOriginId)]
-        public string ProdOriginId { get; set; } = string.Empty;
-
-        [Required]
         [StringLength(FieldLengths.ProdGroupId)]
         public string ProdGroupId { get; set; } = string.Empty;
 
-        public int BomLevel { get; set; }
         public decimal ScrapConst { get; set; }
         public decimal ScrapVar { get; set; }
 
@@ -148,7 +138,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         public NoYes Phantom { get; set; }
         public NoYes Bundle { get; set; }
         public NoYes AutoReportFinished { get; set; }
-        public NoYes BomManualReceipt { get; set; }
         public BomWhsReleasePolicy BomWhsReleasePolicy { get; set; }
         public ProdFlushingPrincip ProdFlushingPrincip { get; set; }
 
@@ -178,14 +167,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // Process Manufacturing - Catch Weight (PDS) & Shelf Life
         // ==========================================================
         // Basic Properties
-        [Required]
-        [StringLength(FieldLengths.PdsBaseAttributeID)]
-        public string PdsBaseAttributeID { get; set; } = string.Empty;
-
-        public int PdsShelfLife { get; set; }
-        public int PdsShelfAdvice { get; set; }
-        public int PdsBestBefore { get; set; }
-        public decimal PdsTargetFactor { get; set; }
 
         // Enum Properties
         public NoYes PdsVendorCheckItem { get; set; }
@@ -195,20 +176,12 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // Warehouse Management (WMS) & Structural Constraints
         // ==========================================================
         // Basic Properties
-        [Required]
-        [StringLength(FieldLengths.WmsPalletTypeIdId)]
-        public string WmsPalletTypeIdId { get; set; } = string.Empty;
 
-        public int WmsArrivalHandlingTime { get; set; }
-        public int WmsPickingQtyTime { get; set; }
         public decimal QtyPerLayer { get; set; }
         public decimal StandardPalletQuantity { get; set; }
         public decimal MinimumPalletQuantity { get; set; }
 
         // Catch Weight (PDS) Specific WMS Properties
-        public decimal PdscwWmsQtyPerLayer { get; set; }
-        public decimal PdscwWmsStandardPalletQty { get; set; }
-        public decimal PdscwWmsMinimumPalletQty { get; set; }
 
         // ==========================================================
         // Master Planning & Replenishment Directives
@@ -245,11 +218,8 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // Quality Management System (QMS) Parameters
         // ==========================================================
         // Basic Properties
-        public decimal QmsOverDispensePct { get; set; }
-        public decimal QmsUnderDispensePct { get; set; }
 
         // Enum Properties
-        public NoYes QmsCustomerCheckItem { get; set; }
         public QmsDispensingControl QmsDispensingControl { get; set; }
         public QmsAuthorizedPersonnel QmsAuthorizedPersonnel { get; set; }
 
@@ -257,51 +227,23 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // Advanced Revenue Recognition Controls (RevRec)
         // ==========================================================
         // Basic Properties
-        [Required]
-        [StringLength(FieldLengths.RevRecDefaultRevenueRecognitionSchedule)]
-        public string RevRecDefaultRevenueRecognitionSchedule { get; set; } = string.Empty;
-
-        public decimal RevRecMedianPriceMinimumTolerance { get; set; }
-        public decimal RevRecMedianPriceMaximumTolerance { get; set; }
 
         // Enum Properties
-        public NoYes RevRecRevenueRecognitionEnabled { get; set; }
         public RevRecRevenueType RevRecRevenueType { get; set; }
-        public NoYes RevRecBundle { get; set; }
-        public NoYes RevRecMedianPrice { get; set; }
-        public NoYes RevRecExcludeFromCarveOut { get; set; }
 
         // ==========================================================
         // Landed Cost Framework (ITM) Attributes
         // ==========================================================
         // Basic Properties
-        [Required]
-        [StringLength(FieldLengths.ItmOverUnderToleranceGroupId)]
-        public string ItmOverUnderToleranceGroupId { get; set; } = string.Empty;
-
-        [Required]
-        [StringLength(FieldLengths.ItmCostTypeGroupId)]
-        public string ItmCostTypeGroupId { get; set; } = string.Empty;
-
-        [Required]
-        [StringLength(FieldLengths.ItmCostTransferGroupId)]
-        public string ItmCostTransferGroupId { get; set; } = string.Empty;
-
-        [Required]
-        [StringLength(FieldLengths.ItmArrivalGroupId)]
-        public string ItmArrivalGroupId { get; set; } = string.Empty;
 
         // ==========================================================
         // Intrastat, Customs & Regulatory Compliance
         // ==========================================================
         // Basic Properties
-        public long IntrastatCommodity { get; set; }
-        public decimal IntrastatChargePerKg { get; set; }
         public decimal TaxPackagingQty { get; set; }
         public long TaxRateType { get; set; }
 
         // Enum Properties
-        public NoYes IntrastatExclude { get; set; }
         public NoYes CooDualUseProduct { get; set; } // Strategic/Military export monitoring indicator
         public NoYes IsExclusiveHbmc { get; set; }
         public int HmimIndicator { get; set; } // Hazardous Material Index Indicator
@@ -320,7 +262,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
 
         public long DefaultDimension { get; set; }
 
-
         #region Navigation Properties Row
 
 //         [ForeignKey(nameof(DefaultDimension))]
@@ -332,7 +273,3 @@ namespace IAX.IXApi.Modules.Finance.Entities
         #endregion
     }
 }
-
-
-
-

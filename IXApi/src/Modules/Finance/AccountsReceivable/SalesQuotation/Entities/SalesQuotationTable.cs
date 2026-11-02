@@ -156,10 +156,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         // Project Management (PSA)
         // ==========================================================
         // Basic Properties
-        [StringLength(FieldLengths.ProjId)]
-        public string ProjIdRef { get; set; } = string.Empty;
-        [StringLength(FieldLengths.ProjId)]
-        public string ProjInvoiceProjId { get; set; } = string.Empty;
         public decimal PsaEstProjDuration { get; set; }
         public DateTime PsaEstProjStartDate { get; set; }
         public DateTime PsaEstProjEndDate { get; set; }
@@ -178,7 +174,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         // Retail & Channels
         // ==========================================================
         // Basic Properties
-        public long RetailChannelTable { get; set; }
 
         // ==========================================================
         // Miscellaneous & System Policy
@@ -196,7 +191,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public WHSPalletTaggingPolicy PalletTagging { get; set; }
         public int ItemTagging { get; set; }
         public SalesSystemEntrySource SystemEntrySource { get; set; }
-
 
         #region Navigation Properties Row
 
@@ -258,4 +252,3 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         #endregion
     }
 }
-

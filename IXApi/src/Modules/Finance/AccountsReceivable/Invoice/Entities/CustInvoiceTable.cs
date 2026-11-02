@@ -31,7 +31,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public string InvoiceAccount { get; set; } = string.Empty;
         public long OrderAccountRefRecId { get; set; }
         public string CustGroup { get; set; } = string.Empty;
-        public string ProjIntercompany { get; set; } = string.Empty;
 
         // Enum Properties
         public NoYes OneTimeCustomer { get; set; }
@@ -52,7 +51,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         // Basic Properties
         [StringLength(FieldLengths.CurrencyCode)]
         public string CurrencyCode { get; set; } = string.Empty;
-        public decimal ExchRate_W { get; set; }
         [StringLength(FieldLengths.Payment)]
         public string Payment { get; set; } = string.Empty;
         [StringLength(FieldLengths.PaymentSched)]
@@ -61,9 +59,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public string PaymMode { get; set; } = string.Empty;
         public DateTime DueDate { get; set; }
         public DateTime DocumentDate { get; set; }
-        public DateTime SalesDate_W { get; set; }
         public string CustBankAccountID { get; set; } = string.Empty;
-        public long DirectDebitMandate { get; set; }
         public decimal CashDiscPercent { get; set; }
         [StringLength(FieldLengths.CashDiscCode)]
         public string CashDiscCode { get; set; } = string.Empty;
@@ -98,7 +94,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         [StringLength(FieldLengths.VatNum)]
         public string VatNum { get; set; } = string.Empty;
         public long VatNumRecId { get; set; }
-        public DateTime VatDueDate_W { get; set; }
 
         // Enum Properties
         public NoYes OverrideSalesTax { get; set; }
@@ -117,7 +112,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
 
         // Enum Properties
         public NoYes EInvoiceLineSpec { get; set; }
-        public int InvoiceType_W { get; set; }
         public int InvoiceComplementaryType { get; set; }
 
         // ==========================================================
@@ -144,10 +138,8 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public NoYes UseDefaultFromCustomer { get; set; }
         public NoYes IntercompanyPosted { get; set; }
         public ListCode ListCode { get; set; }
-        public NoYes ManualNumbering_W { get; set; }
         public NoYes McrGiftCard { get; set; }
         public SysDataStateCode SysDataStateCode { get; set; }
-
 
         #region Navigation Properties Row
 
@@ -210,4 +202,3 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         #endregion
     }
 }
-

@@ -219,8 +219,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         [StringLength(FieldLengths.VatNumJournal)]
         public string VatNumJournal { get; set; } = string.Empty;
 
-        public decimal TaxBase_W { get; set; }
-        public DateTime VatDueDate_W { get; set; }
         public DateTime VendorVatDate { get; set; }
 
         // Enum Properties
@@ -311,22 +309,15 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // Advanced Revenue Recognition Engine Frameworks (RevRec)
         // ==========================================================
         // Basic Properties
-        public long RevRecId { get; set; }
-        public long RevRecDeferredLine { get; set; }
-        public decimal RevRecDeferredRecognizedQty { get; set; }
 
         // Enum Properties
         public RevRecDeferredType RevRecDeferredType { get; set; }
         public RevRecLedgerPostingType RevRecLedgerPostingType { get; set; }
-        public NoYes RevRecNewValuesFromReallocation { get; set; }
 
         // ==========================================================
         // Advanced Subscription Billing Frameworks (SubBill)
         // ==========================================================
         // Basic Properties
-        public long SubBillSchedLineRecId { get; set; }
-        public long SubBillRenewalLineRecId { get; set; }
-        public long SubBillEscalationTableRecId { get; set; }
 
         // ==========================================================
         // Operational Logistics Core Parameters
@@ -397,7 +388,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         public DateTime FileCreated { get; set; }
         public DateTime ImportDate { get; set; }
         public DateTime LoadingDate { get; set; }
-        public DateTime ReceiptDate_W { get; set; }
         public long ItmCostRefRecId { get; set; } // Landed cost module tracking index
 
         // Enum Properties
@@ -408,7 +398,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         public int FreqValue { get; set; }
         public ListCode ListCode { get; set; } // EU sales list reporting status metrics
         public ItmCostArea ItmCostArea { get; set; }
-
 
         #region Navigation Properties Row
 
@@ -448,4 +437,3 @@ namespace IAX.IXApi.Modules.Finance.Entities
         #endregion
     }
 }
-

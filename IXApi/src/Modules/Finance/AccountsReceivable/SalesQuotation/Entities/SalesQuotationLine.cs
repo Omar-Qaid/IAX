@@ -8,7 +8,6 @@ using IAX.IXApi.Modules.Finance.Foundation.HcmWorkers;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Inventory;
 
-
 namespace IAX.IXApi.Modules.Finance.AccountsReceivable
 {
     [Table("SalesQuotationLine")]
@@ -157,7 +156,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         // Basic Properties
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
-        public long ProjectResource { get; set; }
         public long PsaRefRecId { get; set; }
         public int Transferred2Forecast { get; set; }
         public int Transferred2ItemReq { get; set; }
@@ -201,7 +199,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         // ==========================================================
         // Basic Properties
         public decimal PackingUnitQty { get; set; }
-
 
         #region Navigation Properties Row
 
@@ -247,4 +244,3 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         #endregion
     }
 }
-

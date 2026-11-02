@@ -43,7 +43,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // ==========================================================
         // Basic Properties
         public DateTime Executed { get; set; }
-        public int BomLevel { get; set; }
         public int NumOfIteration { get; set; }
         public int MaxIterations { get; set; }
         public decimal MinTransferValue { get; set; }
@@ -64,8 +63,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // Enum Properties
         public NoYes Ledger { get; set; }
         public NoYes LedgerCorrection { get; set; }
-        public NoYes ItmAdjustment { get; set; }
-        public NoYes ProdJournal { get; set; }
 
         // ==========================================================
         // Execution Diagnostics & Run Controls

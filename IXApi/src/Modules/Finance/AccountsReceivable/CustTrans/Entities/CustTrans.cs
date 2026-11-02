@@ -121,7 +121,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         
         [StringLength(FieldLengths.AccountId)]
         public string ThirdPartyBankAccountID { get; set; } = string.Empty;
-        public long DirectDebitMandate { get; set; }
 
         // Enum Properties
         public NetCurrent PaymMethod { get; set; }
@@ -150,7 +149,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public NoYes Correct { get; set; }
         public NoYes Interest { get; set; }
         public NoYes InvoiceProject { get; set; }
-        public NoYes CredManExcludeFromCreditControl { get; set; }
 
         // ==========================================================
         // Collection Letters & Credit Automation
@@ -158,17 +156,11 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         // Enum Properties
         public NoYes CollectionLetter { get; set; }
         public CustCollectionLetterCode CollectionLetterCode { get; set; }
-        public NoYes CustAutomationExclude { get; set; }
-        public NoYes CustAutomationPredictionSent { get; set; }
-        public NoYes CustAutomationPredunningSent { get; set; }
 
         // ==========================================================
         // Bill Of Exchange (BOE)
         // ==========================================================
         // Basic Properties
-        [StringLength(FieldLengths.Num)]
-        public string BillOfExchangeId { get; set; } = string.Empty;
-        public int BillOfExchangeSeqNum { get; set; }
 
         // Enum Properties
         public BillOfExchangeStatus BillOfExchangeStatus { get; set; }
@@ -177,15 +169,8 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         // Retail Transactions
         // ==========================================================
         // Basic Properties
-        [StringLength(FieldLengths.Code)]
-        public string RetailStoreId { get; set; } = string.Empty;
-        [StringLength(FieldLengths.Code)]
-        public string RetailTerminalId { get; set; } = string.Empty;
-        [StringLength(FieldLengths.Num)]
-        public string RetailTransactionId { get; set; } = string.Empty;
 
         // Enum Properties
-        public NoYes RetailCustTrans { get; set; }
 
         // ==========================================================
         // Logistics & Trade
@@ -205,7 +190,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public long AccountingEvent { get; set; }
         public long CreatedTransactionId { get; set; }
         public long ModifiedTransactionId { get; set; }
-
 
         #region Navigation Properties Row
 
@@ -251,4 +235,3 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         #endregion
     }
 }
-

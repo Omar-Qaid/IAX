@@ -30,8 +30,6 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // ==========================================================
         // Basic Properties
         public DateTime PdsBestBeforeDate { get; set; }
-        public DateTime PdsShelfAdviceDate { get; set; }
-        public DateTime PdsFinishedGoodsDateTested { get; set; }
 
         [Required]
         [StringLength(FieldLengths.PdsDispositionCode)]
@@ -48,17 +46,10 @@ namespace IAX.IXApi.Modules.Finance.Entities
         [StringLength(FieldLengths.PdsVendBatchId)]
         public string PdsVendBatchId { get; set; } = string.Empty;
 
-        public DateTime PdsVendBatchDate { get; set; }
-        public DateTime PdsVendExpiryDate { get; set; }
         public long ManufacturerId { get; set; }
         public long OriginManufacturerId { get; set; }
 
         // Enum Properties
-        public NoYes PdsUseVendBatchDate { get; set; }
-        public NoYes PdsUseVendBatchExp { get; set; }
-        public NoYes PdsInheritBatchAttrib { get; set; }
-        public NoYes PdsInheritedShelfLife { get; set; }
-
 
         #region Navigation Properties Row
 
@@ -68,4 +59,3 @@ namespace IAX.IXApi.Modules.Finance.Entities
         #endregion
     }
 }
-

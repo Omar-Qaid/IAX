@@ -2,6 +2,7 @@ using System.Reflection;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.AccountsPayable;
+using IAX.IXApi.Shared.Domain.Entities;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
@@ -179,14 +180,14 @@ public class LedgerJournalPostingTests
     }
 
     [Theory]
-    [InlineData("accountType", "only the Ledger account type")]
+    [InlineData("accountType", "a Cust account is required")]
     // A foreign transaction currency is stopped by the exchange-rate gate in the setup check,
     // before reaching the scope guard: either way the journal is refused, never approximated.
     [InlineData("currency", "no exchange rate type is configured")]
     [InlineData("reporting", "Reporting: no exchange rate type is configured")]
     [InlineData("tax", "journal tax calculation")]
     [InlineData("company", "intercompany")]
-    [InlineData("offsetAccountType", "only the Ledger offset account type")]
+    [InlineData("offsetAccountType", "offset account must be a Ledger account")]
     [InlineData("canceled", "canceled")]
     [InlineData("unbalanced", "unbalanced")]
     public async Task Rejects_what_this_journal_path_does_not_implement(string scenario, string expected)
@@ -616,6 +617,9 @@ public class LedgerJournalPostingTests
                 RecId = 1, DataAreaId = "dat", JournalNum = "J1", Voucher = "V1", LineNum = 1,
                 TransDate = new DateTime(2026, 1, 15), CurrencyCode = "SAR",
                 AccountType = LedgerJournalACType.FixedAssets, LedgerDimensionName = "FA-1",
+                // Balanced by a ledger offset, so the account-type refusal is what surfaces rather
+                // than the voucher balance check.
+                OffsetAccountType = LedgerJournalACType.Ledger, OffsetLedgerDimension = 2,
                 AmountCurDebit = 100m
             });
         await db.SaveChangesAsync();
@@ -707,15 +711,19 @@ public class LedgerJournalPostingTests
                 typeof(GeneralJournalEntry), typeof(GeneralJournalAccountEntry),
                 typeof(SubledgerVoucherGeneralJournalEntry), typeof(ExchangeRateType),
                 typeof(ExchangeRateCurrencyPair), typeof(ExchangeRate),
+                typeof(Currency),
                 typeof(CustTable), typeof(CustTrans), typeof(CustTransOpen), typeof(CustParameters),
                 typeof(CustLedgerAccounts), typeof(VendTable), typeof(VendTrans), typeof(VendTransOpen),
                 typeof(VendParameters), typeof(VendLedgerAccounts),
                 typeof(BankAccountTable), typeof(BankAccountTrans)];
-            // CompanyInfo navigates to the party tables, and the customer/vendor tables reach the
-            // worker tables, none of which this harness maps.
+            // Everything this harness does not list is ignored outright. Naming the strays one by
+            // one does not hold: the customer and vendor tables reach the party, worker, group and
+            // payment-term tables, and those reach further still.
+            var included = new HashSet<Type>(types);
+            foreach (var type in typeof(LedgerJournalTrans).Assembly.GetTypes()
+                .Where(t => t.IsClass && !t.IsAbstract && typeof(Entity<long>).IsAssignableFrom(t) && !included.Contains(t)))
+                builder.Ignore(type);
             builder.Ignore<DirPartyTable>();
-            builder.Ignore<HcmWorker>();
-            builder.Ignore<HcmWorkerOrganizationAssignmentV1>();
             foreach (var type in types)
             {
                 var entity = builder.Entity(type);

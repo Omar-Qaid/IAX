@@ -34,7 +34,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         // ==========================================================
         // Basic Properties
 
-
         [StringLength(FieldLengths.OrderAccount)]
         public string OrderAccount { get; set; } = string.Empty;
 
@@ -108,8 +107,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public long WorkerSalesTaker { get; set; }
         public int IntercompanyPosted { get; set; }
         public int Triangulation { get; set; }
-        public int SubBillSuppressChildItems { get; set; }
-
 
         #region Navigation Properties Row
 
@@ -158,4 +155,3 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         #endregion
     }
 }
-

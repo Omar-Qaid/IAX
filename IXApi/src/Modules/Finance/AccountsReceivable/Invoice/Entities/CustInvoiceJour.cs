@@ -129,7 +129,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public DateTime DocumentDate { get; set; }
         public DateTime CashDiscDate { get; set; }
         public DateTime CashDiscBaseDate { get; set; }
-        public long DirectDebitMandate { get; set; }
 
         // ==========================================================
         // Tax & Localization
@@ -177,7 +176,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         // Basic Properties
         [StringLength(FieldLengths.SalesOriginId)]
         public string SalesOriginId { get; set; } = string.Empty;
-        public long RetailStoreIdTable { get; set; }
         [StringLength(FieldLengths.Num)]
         public string OfferId { get; set; } = string.Empty;
         [StringLength(FieldLengths.Num)]
@@ -222,7 +220,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public int PrintedOriginals { get; set; }
 
         // Enum Properties
-        public int InvoiceType_W { get; set; }
         public NoYes Proforma { get; set; }
         public NoYes IsCorrection { get; set; }
         public NoYes Updated { get; set; }
@@ -230,9 +227,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public NoYes Triangulation { get; set; }
         public NoYes PostedState { get; set; }
         public NoYes Prepayment { get; set; }
-        public NoYes SubBillSuppressChildItems { get; set; }
         public SysDataStateCode SysDataStateCode { get; set; }
-
 
         #region Navigation Properties Row
 
@@ -295,4 +290,3 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         #endregion
     }
 }
-

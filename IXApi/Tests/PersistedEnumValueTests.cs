@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Shared.Domain.Entities;
 using Xunit;
@@ -66,6 +67,44 @@ public class PersistedEnumValueTests
         var missing = PersistedEnums().Select(x => x.FullName!).Where(x => !covered.Contains(x)).ToList();
 
         Assert.Empty(missing);
+    }
+
+    /// <summary>
+    /// Every member in Enumeration.cs carries its value explicitly, so a member inserted in the
+    /// middle of an enum cannot renumber the members after it. The baseline above would catch that
+    /// renumbering; this stops it being possible in the first place, which matters because the
+    /// baseline is only consulted when someone runs the tests before shipping a schema change.
+    /// </summary>
+    [Fact]
+    public void Every_enum_member_declares_its_value()
+    {
+        var implicitMembers = new List<string>();
+        var enumName = string.Empty;
+        foreach (var raw in EnumerationSource().Split('\n'))
+        {
+            var line = raw.Trim();
+            var declaration = Regex.Match(line, @"^public enum (\w+)");
+            if (declaration.Success) { enumName = declaration.Groups[1].Value; continue; }
+            if (enumName.Length == 0 || line.StartsWith('}')) { if (line.StartsWith('}')) enumName = string.Empty; continue; }
+
+            var member = Regex.Replace(line, "//.*$", string.Empty).Trim().TrimEnd(',').Trim();
+            if (member.Length == 0 || member.StartsWith('{') || member.StartsWith('[')) continue;
+            if (!Regex.IsMatch(member, @"^\w+\s*=\s*-?\d+$")) implicitMembers.Add($"{enumName}.{member}");
+        }
+
+        Assert.True(implicitMembers.Count == 0,
+            "These enum members take their value from their position, so inserting a member before "
+            + "them renumbers them and remaps stored data. Write the value out:"
+            + Environment.NewLine + string.Join(Environment.NewLine, implicitMembers.Take(25)));
+    }
+
+    private static string EnumerationSource()
+    {
+        using var stream = typeof(PersistedEnumValueTests).Assembly
+            .GetManifestResourceStream("IXApi.Tests.Enumeration.cs")
+            ?? throw new InvalidOperationException("Enumeration.cs is not embedded in the test assembly.");
+        using var reader = new StreamReader(stream);
+        return reader.ReadToEnd().Replace("\r\n", "\n");
     }
 
     private static void Report(StringBuilder report, string heading, List<string> lines)

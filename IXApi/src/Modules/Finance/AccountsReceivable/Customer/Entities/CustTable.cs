@@ -130,37 +130,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public int CreditCardCvc { get; set; }
 
         //-----------------------------------------Credit Management
-        public decimal CredManCustCreditMaxAlt { get; set; }
-
-        public DateTime CredManCustomerSince { get; set; }
-
-        public int CredManCustUnlimitedCredit { get; set; }
-
-        public DateTime CredManEligibleCreditLimitDate { get; set; }
-
-        public decimal CredManEligibleCreditMax { get; set; }
-
-        public int CredManExclude { get; set; }
-
-        public DateTime CredManLastReviewDate { get; set; }
-
-        public DateTime CredManNextSchedReviewDate { get; set; }
-
-        public int CredManTitleHeld { get; set; }
-
-        public int CredManWithAgency { get; set; }
-
-        [StringLength(FieldLengths.CredManNotes)]
-        public string? CredManNotes { get; set; }
-
-        [StringLength(FieldLengths.CredManAccountStatusId)]
-        public string CredManAccountStatusId { get; set; } = string.Empty;
-
-        public DateTime CredManBusinessStarted { get; set; }
-
-        public DateTime CredManCreditLimitDate { get; set; }
-
-        public DateTime CredManCreditLimitExpiryDate { get; set; }
 
         //-----------------------------------------Collections & Settlement
         public int CustExcludeCollectionFee { get; set; }
@@ -175,10 +144,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
 
         //-----------------------------------------Electronic Documents
         public int DocValid { get; set; }
-
-        public int EInvoice { get; set; }
-
-        public int EInvoiceAttachment { get; set; }
 
         //-----------------------------------------Shipping & Export
         public int EntryCertificateRequiredW { get; set; }
@@ -298,4 +263,3 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         #endregion
     }
 }
-

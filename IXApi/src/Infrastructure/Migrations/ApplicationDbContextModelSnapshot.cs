@@ -3697,9 +3697,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<int>("SubBillSuppressChildItems")
-                        .HasColumnType("int");
-
                     b.Property<decimal>("SumLineDisc")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
@@ -4115,9 +4112,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<long>("DeliveryPostalAddress")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("DirectDebitMandate")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("DlvMode")
                         .IsRequired()
                         .HasMaxLength(10)
@@ -4216,9 +4210,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<decimal>("InvoiceRoundOffMst")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
-
-                    b.Property<int>("InvoiceType_W")
-                        .HasColumnType("int");
 
                     b.Property<string>("InvoicingName")
                         .IsRequired()
@@ -4349,9 +4340,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
-                    b.Property<long>("RetailStoreIdTable")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("ReturnItemNum")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -4408,9 +4396,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<long>("SourceDocumentLine")
                         .HasColumnType("bigint");
-
-                    b.Property<int>("SubBillSuppressChildItems")
-                        .HasColumnType("int");
 
                     b.Property<decimal>("SumLineDisc")
                         .HasPrecision(18, 4)
@@ -4611,9 +4596,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<DateTime>("PeriodChargeInvoiceLineBaseToDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<long>("ProjFundingSource")
-                        .HasColumnType("bigint");
-
                     b.Property<decimal>("Quantity")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
@@ -4623,9 +4605,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<int>("RecVersion")
                         .HasColumnType("int");
-
-                    b.Property<long>("RefReturnInvoiceTrans_W")
-                        .HasColumnType("bigint");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -4754,9 +4733,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<long>("DeliveryPostalAddress")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("DirectDebitMandate")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("DlvTerm")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -4769,10 +4745,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<int>("EInvoiceLineSpec")
                         .HasColumnType("int");
-
-                    b.Property<decimal>("ExchRate_W")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
 
                     b.Property<int>("ExcludeFromDecoupledPostingProcess")
                         .HasColumnType("int");
@@ -4805,9 +4777,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("InvoiceType_W")
-                        .HasColumnType("int");
-
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
@@ -4826,9 +4795,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("ListCode")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ManualNumbering_W")
                         .HasColumnType("int");
 
                     b.Property<int>("McrGiftCard")
@@ -4885,10 +4851,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<int>("PostponeVat")
                         .HasColumnType("int");
 
-                    b.Property<string>("ProjIntercompany")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("RecVersion")
                         .HasColumnType("int");
 
@@ -4903,9 +4865,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
-
-                    b.Property<DateTime>("SalesDate_W")
-                        .HasColumnType("datetime2");
 
                     b.Property<long>("ServiceCodeRefRecId")
                         .HasColumnType("bigint");
@@ -4946,9 +4905,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<int>("UseDefaultFromCustomer")
                         .HasColumnType("int");
-
-                    b.Property<DateTime>("VatDueDate_W")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("VatNum")
                         .IsRequired()
@@ -5242,9 +5198,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
-                    b.Property<long>("RetailCategory")
-                        .HasColumnType("bigint");
-
                     b.Property<DateTime>("ReturnArrivalDate")
                         .HasColumnType("datetime2");
 
@@ -5313,18 +5266,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<int>("StockedProduct")
                         .HasColumnType("int");
 
-                    b.Property<int>("SubBillRevenueSplit")
-                        .HasColumnType("int");
-
                     b.Property<int>("SubBillRevenueSplitAllocationMethod")
                         .HasColumnType("int");
-
-                    b.Property<decimal>("SubBillRevenueSplitParentAmount")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<long>("SubBillRevenueSplitParentLineRecId")
-                        .HasColumnType("bigint");
 
                     b.Property<decimal>("SumLineDisc")
                         .HasPrecision(18, 4)
@@ -6782,16 +6725,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
-                    b.Property<string>("ProjDescription")
-                        .IsRequired()
-                        .HasMaxLength(60)
-                        .HasColumnType("nvarchar(60)");
-
                     b.Property<int>("ProjTransType")
                         .HasColumnType("int");
-
-                    b.Property<long>("ProjectResource")
-                        .HasColumnType("bigint");
 
                     b.Property<decimal>("Qty")
                         .HasPrecision(18, 4)
@@ -7091,56 +7026,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("CredManAccountStatusId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("CredManBusinessStarted")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CredManCreditLimitDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CredManCreditLimitExpiryDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal>("CredManCustCreditMaxAlt")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<int>("CredManCustUnlimitedCredit")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CredManCustomerSince")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CredManEligibleCreditLimitDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal>("CredManEligibleCreditMax")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<int>("CredManExclude")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CredManLastReviewDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CredManNextSchedReviewDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CredManNotes")
-                        .HasMaxLength(2147483647)
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("CredManTitleHeld")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CredManWithAgency")
-                        .HasColumnType("int");
-
                     b.Property<int>("CreditCardAddressVerification")
                         .HasColumnType("int");
 
@@ -7203,12 +7088,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasColumnType("nvarchar(10)");
 
                     b.Property<int>("DocValid")
-                        .HasColumnType("int");
-
-                    b.Property<int>("EInvoice")
-                        .HasColumnType("int");
-
-                    b.Property<int>("EInvoiceAttachment")
                         .HasColumnType("int");
 
                     b.Property<int>("EntryCertificateRequiredW")
@@ -7502,14 +7381,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<long>("BankLcExportLine")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("BillOfExchangeId")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<int>("BillOfExchangeSeqNum")
-                        .HasColumnType("int");
-
                     b.Property<int>("BillOfExchangeStatus")
                         .HasColumnType("int");
 
@@ -7553,22 +7424,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<long>("CreatedTransactionId")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("CredManExcludeFromCreditControl")
-                        .HasColumnType("int");
-
                     b.Property<string>("CurrencyCode")
                         .IsRequired()
                         .HasMaxLength(3)
                         .HasColumnType("nvarchar(3)");
-
-                    b.Property<int>("CustAutomationExclude")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CustAutomationPredictionSent")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CustAutomationPredunningSent")
-                        .HasColumnType("int");
 
                     b.Property<long>("CustBillingClassification")
                         .HasColumnType("bigint");
@@ -7593,9 +7452,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
-
-                    b.Property<long>("DirectDebitMandate")
-                        .HasColumnType("bigint");
 
                     b.Property<DateTime>("DocumentDate")
                         .HasColumnType("datetime2");
@@ -7766,24 +7622,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<decimal>("ReportingExchAdjustmentUnrealized")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
-
-                    b.Property<int>("RetailCustTrans")
-                        .HasColumnType("int");
-
-                    b.Property<string>("RetailStoreId")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("RetailTerminalId")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("RetailTransactionId")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -9177,11 +9015,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<int>("DomExceptionType")
                         .HasColumnType("int");
 
-                    b.Property<string>("EInvoiceAccountCode")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
                     b.Property<decimal>("ExpectedRetQty")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
@@ -9371,9 +9204,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<decimal>("PriceUnit")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
-
-                    b.Property<long>("ProjFundingSource")
-                        .HasColumnType("bigint");
 
                     b.Property<decimal>("PsaProjProposalInventQty")
                         .HasPrecision(18, 4)
@@ -9903,9 +9733,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<int>("ProjTransType")
                         .HasColumnType("int");
 
-                    b.Property<long>("ProjectResource")
-                        .HasColumnType("bigint");
-
                     b.Property<long>("PsaRefRecId")
                         .HasColumnType("bigint");
 
@@ -10241,16 +10068,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
-                    b.Property<string>("ProjIdRef")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("ProjInvoiceProjId")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
                     b.Property<decimal>("PsaEstProjDuration")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
@@ -10319,9 +10136,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<decimal>("ReportingCurrencyFixedExchRate")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
-
-                    b.Property<long>("RetailChannelTable")
-                        .HasColumnType("bigint");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -10481,23 +10295,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<long>("CreatedTransactionId")
                         .HasColumnType("bigint");
 
-                    b.Property<bool>("CredManExcludeSalesOrder")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("CredManId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<bool>("CredManInCreditControl")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("CredManRejected")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("CredManReleasedFromCreditControl")
-                        .HasColumnType("bit");
-
                     b.Property<decimal>("CreditCardApprovalAmount")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
@@ -10573,9 +10370,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<long>("DeliveryPostalAddress")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("DirectDebitMandate")
-                        .HasColumnType("bigint");
-
                     b.Property<decimal>("DiscPercent")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
@@ -10619,11 +10413,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<int>("DomProcessedDateTimeTZID")
                         .HasColumnType("int");
-
-                    b.Property<string>("EInvoiceAccountCode")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
 
                     b.Property<int>("EInvoiceLineSpec")
                         .HasColumnType("int");
@@ -10688,9 +10477,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<bool>("IntercompanyAllowIndirectCreation")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IntercompanyAllowIndirectCreationOrig")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IntercompanyAutoCreateOrders")
                         .HasColumnType("bit");
 
@@ -10702,29 +10488,11 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<bool>("IntercompanyDirectDelivery")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IntercompanyDirectDeliveryOrig")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IntercompanyOrder")
                         .HasColumnType("bit");
 
                     b.Property<int>("IntercompanyOrigin")
                         .HasColumnType("int");
-
-                    b.Property<string>("IntercompanyOriginalCustAccount")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("IntercompanyOriginalSalesId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("IntercompanyPurchId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("InventLocationId")
                         .IsRequired()
@@ -10912,9 +10680,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<int>("Reservation")
                         .HasColumnType("int");
 
-                    b.Property<long>("RetailChannelTable")
-                        .HasColumnType("bigint");
-
                     b.Property<DateTime>("ReturnDeadline")
                         .HasColumnType("datetime2");
 
@@ -11080,20 +10845,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("SubBillBillToName")
-                        .IsRequired()
-                        .HasMaxLength(60)
-                        .HasColumnType("nvarchar(60)");
-
-                    b.Property<long>("SubBillBillToPostalAddress")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("SubBillCreatedFromSb")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SubBillSuppressChild")
-                        .HasColumnType("int");
 
                     b.Property<int>("SysDataStateCode")
                         .HasColumnType("int");
@@ -11367,11 +11118,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(35)
                         .HasColumnType("nvarchar(35)");
-
-                    b.Property<string>("CorrAccount_W")
-                        .IsRequired()
-                        .HasMaxLength(48)
-                        .HasColumnType("nvarchar(48)");
 
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -11743,11 +11489,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<int>("BankCodeType")
                         .HasColumnType("int");
-
-                    b.Property<string>("BankCorrAccount_W")
-                        .IsRequired()
-                        .HasMaxLength(48)
-                        .HasColumnType("nvarchar(48)");
 
                     b.Property<string>("BankGroupId")
                         .HasMaxLength(10)
@@ -14984,37 +14725,13 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
-                    b.Property<DateTime>("PdsFinishedGoodsDateTested")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("PdsInheritBatchAttrib")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PdsInheritedShelfLife")
-                        .HasColumnType("int");
-
                     b.Property<int>("PdsSameLot")
                         .HasColumnType("int");
-
-                    b.Property<DateTime>("PdsShelfAdviceDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("PdsUseVendBatchDate")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PdsUseVendBatchExp")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("PdsVendBatchDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("PdsVendBatchId")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
-
-                    b.Property<DateTime>("PdsVendExpiryDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("ProdDate")
                         .HasColumnType("datetime2");
@@ -15055,9 +14772,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<int>("AdjustmentType")
                         .HasColumnType("int");
 
-                    b.Property<int>("BomLevel")
-                        .HasColumnType("int");
-
                     b.Property<int>("CancelClosing")
                         .HasColumnType("int");
 
@@ -15095,9 +14809,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
-
-                    b.Property<int>("ItmAdjustment")
-                        .HasColumnType("int");
 
                     b.Property<DateTime?>("LastModifiedAt")
                         .HasColumnType("datetime2");
@@ -15137,9 +14848,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
-
-                    b.Property<int>("ProdJournal")
-                        .HasColumnType("int");
 
                     b.Property<int>("RecVersion")
                         .HasColumnType("int");
@@ -15543,9 +15251,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<int>("RecVersion")
                         .HasColumnType("int");
 
-                    b.Property<int>("RetailShowForItem")
-                        .HasColumnType("int");
-
                     b.Property<string>("RetailVariantId")
                         .IsRequired()
                         .HasMaxLength(10)
@@ -15619,28 +15324,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("RecVersion")
-                        .HasColumnType("int");
-
-                    b.Property<string>("RevRecDefaultRevenueRecognitionSchedule")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<int>("RevRecExcludeFromCarveOut")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RevRecMedianPrice")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("RevRecMedianPriceMaximumTolerance")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("RevRecMedianPriceMinimumTolerance")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<int>("RevRecRevenueRecognitionEnabled")
                         .HasColumnType("int");
 
                     b.Property<int>("RevRecRevenueType")
@@ -15749,24 +15432,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasColumnName("RECID");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
-
-                    b.Property<int?>("ATPApplyDemandTimeFence")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ATPApplySupplyTimeFence")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ATPBackwardDemandTimeFence")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ATPBackwardSupplyTimeFence")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ATPInclPlannedOrders")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ATPTimeFence")
-                        .HasColumnType("int");
 
                     b.Property<int?>("CalendarDays")
                         .HasColumnType("int");
@@ -15922,14 +15587,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("PdscwPickingLocationMaxQty")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("PdscwPickingLocationRefillMin")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("PickingLocationMaxQty")
                         .HasPrecision(18, 4)
@@ -16201,24 +15858,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasColumnName("RECID");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
-
-                    b.Property<int?>("ATPApplyDemandTimeFence")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ATPApplySupplyTimeFence")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ATPBackwardDemandTimeFence")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ATPBackwardSupplyTimeFence")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ATPInclPlannedOrders")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ATPTimeFence")
-                        .HasColumnType("int");
 
                     b.Property<int?>("CalendarDays")
                         .HasColumnType("int");
@@ -16609,12 +16248,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<int>("Reservation")
                         .HasColumnType("int");
 
-                    b.Property<int>("RetailReplenishmentType")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RetailRetailStatusType")
-                        .HasColumnType("int");
-
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .IsRequired()
@@ -16671,9 +16304,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
 
                     b.Property<int>("AssetTransType")
-                        .HasColumnType("int");
-
-                    b.Property<int>("BomLine")
                         .HasColumnType("int");
 
                     b.Property<decimal>("CostAmount")
@@ -16742,9 +16372,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<int>("ItmOverUnderTransfer")
-                        .HasColumnType("int");
-
                     b.Property<string>("JournalId")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -16768,17 +16395,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("PdsCopyBatchAttrib")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("PdscwInventOnHand")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("PdscwInventQtyCounted")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("PdscwQty")
                         .HasPrecision(18, 4)
@@ -17100,15 +16716,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<int>("RetailInventNegPhysical")
                         .HasColumnType("int");
-
-                    b.Property<decimal>("RetailWeightEx1")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<string>("RetailWmsLocationIDDefaultReturn")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -17837,9 +17444,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<long>("ItmCostTransRecId")
-                        .HasColumnType("bigint");
-
                     b.Property<DateTime?>("LastModifiedAt")
                         .HasColumnType("datetime2");
 
@@ -18139,14 +17743,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("PdscwArrived")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("PdscwAvailOrdered")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
                     b.Property<decimal>("PdscwAvailPhysical")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
@@ -18159,39 +17755,11 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
-                    b.Property<decimal>("PdscwOrdered")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
                     b.Property<decimal>("PdscwPhysicalInvent")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("PdscwPicked")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("PdscwPostedQty")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("PdscwQuotationIssue")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("PdscwQuotationReceipt")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("PdscwReceived")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("PdscwRegistered")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("PdscwReservOrdered")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
@@ -18294,17 +17862,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
-                    b.Property<string>("BomCalcGroupId")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<int>("BomLevel")
-                        .HasColumnType("int");
-
-                    b.Property<int>("BomManualReceipt")
-                        .HasColumnType("int");
-
                     b.Property<string>("BomUnitId")
                         .IsRequired()
                         .HasMaxLength(10)
@@ -18389,16 +17946,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<int>("HmimIndicator")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("IntrastatChargePerKg")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<long>("IntrastatCommodity")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("IntrastatExclude")
-                        .HasColumnType("int");
-
                     b.Property<long>("InventFiscalLifoGroup")
                         .HasColumnType("bigint");
 
@@ -18426,26 +17973,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<int>("ItemType")
                         .HasColumnType("int");
-
-                    b.Property<string>("ItmArrivalGroupId")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("ItmCostTransferGroupId")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("ItmCostTypeGroupId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("ItmOverUnderToleranceGroupId")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
 
                     b.Property<DateTime?>("LastModifiedAt")
                         .HasColumnType("datetime2");
@@ -18481,41 +18008,11 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PdsBaseAttributeID")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<int>("PdsBestBefore")
-                        .HasColumnType("int");
-
                     b.Property<int>("PdsPotencyAttribRecording")
                         .HasColumnType("int");
 
-                    b.Property<int>("PdsShelfAdvice")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PdsShelfLife")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("PdsTargetFactor")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
                     b.Property<int>("PdsVendorCheckItem")
                         .HasColumnType("int");
-
-                    b.Property<decimal>("PdscwWmsMinimumPalletQty")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("PdscwWmsQtyPerLayer")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("PdscwWmsStandardPalletQty")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
 
                     b.Property<int>("Phantom")
                         .HasColumnType("int");
@@ -18545,11 +18042,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
-                    b.Property<string>("ProdOriginId")
-                        .IsRequired()
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
-
                     b.Property<long>("Product")
                         .HasColumnType("bigint");
 
@@ -18569,19 +18061,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<int>("QmsAuthorizedPersonnel")
                         .HasColumnType("int");
 
-                    b.Property<int>("QmsCustomerCheckItem")
-                        .HasColumnType("int");
-
                     b.Property<int>("QmsDispensingControl")
                         .HasColumnType("int");
-
-                    b.Property<decimal>("QmsOverDispensePct")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("QmsUnderDispensePct")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
 
                     b.Property<decimal>("QtyPerLayer")
                         .HasPrecision(18, 4)
@@ -18594,31 +18075,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
-
-                    b.Property<int>("RevRecBundle")
-                        .HasColumnType("int");
-
-                    b.Property<string>("RevRecDefaultRevenueRecognitionSchedule")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<int>("RevRecExcludeFromCarveOut")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RevRecMedianPrice")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("RevRecMedianPriceMaximumTolerance")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("RevRecMedianPriceMinimumTolerance")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<int>("RevRecRevenueRecognitionEnabled")
-                        .HasColumnType("int");
 
                     b.Property<int>("RevRecRevenueType")
                         .HasColumnType("int");
@@ -18709,17 +18165,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
-                    b.Property<int>("WmsArrivalHandlingTime")
-                        .HasColumnType("int");
-
-                    b.Property<string>("WmsPalletTypeIdId")
-                        .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("nvarchar(15)");
-
-                    b.Property<int>("WmsPickingQtyTime")
-                        .HasColumnType("int");
-
                     b.HasKey("RecId");
 
                     b.HasIndex("Product");
@@ -18806,9 +18251,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("PdsPricingPrecision")
-                        .HasColumnType("int");
-
                     b.Property<decimal>("Price")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
@@ -18826,15 +18268,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<int>("RecVersion")
                         .HasColumnType("int");
-
-                    b.Property<decimal>("RetailInventoryAvailabilityBuffer")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<string>("RetailInventoryAvailabilityLevelProfile")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -20345,9 +19778,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Prepayment_W")
-                        .HasColumnType("int");
-
                     b.Property<int>("RecVersion")
                         .HasColumnType("int");
 
@@ -21033,9 +20463,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<int>("RecVersion")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("ReceiptDate_W")
-                        .HasColumnType("datetime2");
-
                     b.Property<DateTime>("ReleaseDate")
                         .HasColumnType("datetime2");
 
@@ -21060,23 +20487,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
-                    b.Property<long>("RevRecDeferredLine")
-                        .HasColumnType("bigint");
-
-                    b.Property<decimal>("RevRecDeferredRecognizedQty")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
                     b.Property<int>("RevRecDeferredType")
                         .HasColumnType("int");
 
-                    b.Property<long>("RevRecId")
-                        .HasColumnType("bigint");
-
                     b.Property<int>("RevRecLedgerPostingType")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RevRecNewValuesFromReallocation")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("ReverseDate")
@@ -21102,15 +20516,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<int>("SkipBlockedForManualEntryCheck")
                         .HasColumnType("int");
 
-                    b.Property<long>("SubBillEscalationTableRecId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("SubBillRenewalLineRecId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("SubBillSchedLineRecId")
-                        .HasColumnType("bigint");
-
                     b.Property<int>("SysDataStateCode")
                         .HasColumnType("int");
 
@@ -21125,10 +20530,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<decimal>("Tax1099StateAmount")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("TaxBase_W")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
@@ -21187,9 +20588,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
-
-                    b.Property<DateTime>("VatDueDate_W")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("VatNumJournal")
                         .IsRequired()
@@ -22692,9 +22090,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsRequired()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
-
-                    b.Property<long>("StandardMainAccount_W")
-                        .HasColumnType("bigint");
 
                     b.Property<int>("Type")
                         .HasColumnType("int");

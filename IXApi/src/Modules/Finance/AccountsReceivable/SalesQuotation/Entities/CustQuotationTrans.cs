@@ -119,11 +119,8 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public DateTime EndDate { get; set; }
         [StringLength(FieldLengths.ProjCategoryId)]
         public string ProjCategoryId { get; set; } = string.Empty;
-        [StringLength(FieldLengths.Description)]
-        public string ProjDescription { get; set; } = string.Empty;
         [StringLength(FieldLengths.ProjLinePropertyId)]
         public string LinePropertyId { get; set; } = string.Empty;
-        public long ProjectResource { get; set; }
 
         // Enum Properties
         public ProjTransType ProjTransType { get; set; }
@@ -138,7 +135,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public long SalesCategory { get; set; }
         [StringLength(FieldLengths.SalesGroupId)]
         public string SalesGroup { get; set; } = string.Empty;
-
 
         #region Navigation Properties Row
 
@@ -172,4 +168,3 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         #endregion
     }
 }
-

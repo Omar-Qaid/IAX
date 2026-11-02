@@ -49,12 +49,8 @@ namespace IAX.IXApi.Modules.Finance.Entities
         // Regional Localization & Logistics
         // ==========================================================
         // Basic Properties
-        [Required]
-        [StringLength(FieldLengths.BankCorrAccount_W)]
-        public string BankCorrAccount_W { get; set; } = string.Empty;
 
         public long Location { get; set; }
-
 
         #region Navigation Properties Row
 
@@ -67,4 +63,3 @@ namespace IAX.IXApi.Modules.Finance.Entities
         #endregion
     }
 }
-

@@ -20,12 +20,6 @@ public sealed class InventItemSalesSetup : Entity<long>
     [StringLength(FieldLengths.InventDimId)]
     public string? InventDimIdDefault { get; set; }
 
-    public int? ATPApplyDemandTimeFence { get; set; }
-    public int? ATPApplySupplyTimeFence { get; set; }
-    public int? ATPBackwardDemandTimeFence { get; set; }
-    public int? ATPBackwardSupplyTimeFence { get; set; }
-    public int? ATPInclPlannedOrders { get; set; }
-    public int? ATPTimeFence { get; set; }
     public int? CalendarDays { get; set; }
     public int? DeliveryDateControlType { get; set; }
     public decimal? HighestQty { get; set; }
