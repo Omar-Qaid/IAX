@@ -699,28 +699,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
 
 
-            migrationBuilder.CreateIndex(
-                name: "IX_VendParameters_DataAreaId_Key",
-                table: "VendParameters",
-                columns: new[] { "DataAreaId", "Key" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_VendParameters_DataAreaId_RECID",
-                table: "VendParameters",
-                columns: new[] { "DataAreaId", "RECID" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_VendPaymModeTable_DataAreaId",
-                table: "VendPaymModeTable",
-                column: "DataAreaId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_VendPaymModeTable_DataAreaId_PaymMode",
-                table: "VendPaymModeTable",
-                columns: new[] { "DataAreaId", "PaymMode" },
-                unique: true);
         }
 
         /// <inheritdoc />

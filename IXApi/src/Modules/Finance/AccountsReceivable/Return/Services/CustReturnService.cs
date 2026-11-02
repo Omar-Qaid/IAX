@@ -119,6 +119,11 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
                     .Where(x => x.DataAreaId == area && x.InventTransIdReturn == sold.InventTransId
                         && x.SalesType == SalesType.ReturnItem && x.SalesStatus != SalesStatus.Canceled)
                     .Select(x => x.SalesQty).ToListAsync(ct)).Sum();
+                // Earlier lines in the same request may not yet have been saved.
+                alreadyReturned -= Db.Set<SalesLine>().Local.Where(x => x.DataAreaId == area
+                    && x.InventTransIdReturn == sold.InventTransId && x.SalesType == SalesType.ReturnItem
+                    && x.SalesStatus != SalesStatus.Canceled && Db.Entry(x).State == EntityState.Added)
+                    .Sum(x => x.SalesQty);
                 var invoicedOnLine = (await Db.Set<CustInvoiceTrans>().AsNoTracking()
                     .Where(x => x.DataAreaId == area && x.InventTransId == sold.InventTransId && x.Qty > 0)
                     .Select(x => x.Qty).ToListAsync(ct)).Sum();
@@ -142,7 +147,11 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
                     CustAccount = order.CustAccount, CustGroupId = order.CustGroup
                 };
                 if (disposition.DispositionAction == DispositionAction.Credit)
+                {
+                    // Check the original invoice costs before accepting a physical return.
+                    await OriginalUnitCostAsync(area, line, ct);
                     await CreateExpectedReceiptAsync(area, order, line, inventQty, ct);
+                }
                 Db.Set<SalesLine>().Add(line);
             }
 
@@ -427,6 +436,11 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
                                 $"Returned {line.ItemId} to inventory on {invoiceId}", inventQty, currency),
                             SubledgerPostingSupport.AccountEntry(area, entry.RecId, consumption, LedgerPostingType.SalesConsump, -cost,
                                 $"Cost reversal for returned {line.ItemId} on {invoiceId}", -inventQty, currency));
+                        var returnOrigin = await Db.Set<InventTransOrigin>().AsNoTracking().SingleAsync(x =>
+                            x.DataAreaId == area && x.InventTransId == line.InventTransId && x.ReferenceId == order.SalesId, ct);
+                        Db.Add(IAX.IXApi.Modules.Finance.Inventory.InventTransPosting.InventTransPostingService.Record(
+                            area, returnOrigin.RecId, line.ItemId, InventTransPostingType.Financial, date, invoiceId,
+                            issueAccount, LedgerPostingType.SalesIssue, consumption, LedgerPostingType.SalesConsump));
                     }
                 }
 
@@ -584,9 +598,15 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
             ?? throw new SubledgerPostingException($"The original inventory transaction of item {line.ItemId} was not found.");
         var sold = await Db.Set<InventTrans>().AsNoTracking().Where(x => x.DataAreaId == area
             && x.InventTransOrigin == originalOrigin.RecId && x.StatusIssue == StatusIssue.Sold)
-            .Select(x => new { x.Qty, x.CostAmountPosted, x.CostAmountAdjustment }).ToListAsync(ct);
+            .Select(x => new { x.InvoiceId, x.Qty, x.CostAmountPosted, x.CostAmountAdjustment }).ToListAsync(ct);
         var qty = -sold.Sum(x => x.Qty);
         if (qty <= 0) throw new SubledgerPostingException($"The original issue of item {line.ItemId} has not been invoiced.");
+        var invoiceCosts = sold.GroupBy(x => x.InvoiceId)
+            .Where(x => x.Sum(y => y.Qty) != 0m)
+            .Select(x => x.Sum(y => y.CostAmountPosted + y.CostAmountAdjustment) / x.Sum(y => y.Qty))
+            .Distinct().ToList();
+        if (invoiceCosts.Count > 1)
+            throw new SubledgerPostingException($"The original sales invoices for item '{line.ItemId}' have different inventory costs; the selected invoice cannot be identified for return costing.");
         return -sold.Sum(x => x.CostAmountPosted + x.CostAmountAdjustment) / qty;
     }
 

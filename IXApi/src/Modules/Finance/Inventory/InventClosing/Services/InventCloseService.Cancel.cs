@@ -26,7 +26,26 @@ public sealed partial class InventCloseService
         try
         {
             await Support.LockAsync($"InventClose:{companyId}", ct);
+            var result = await CancelWithinTransactionAsync(companyId, closingRecId, ct);
+            await _unitOfWork.CommitTransactionAsync(ct);
+            return (result, null);
+        }
+        catch (PostingValidationException ex)
+        {
+            await _unitOfWork.RollbackTransactionAsync(ct);
+            Db.ChangeTracker.Clear();
+            return (null, ex.Message);
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync(ct);
+            Db.ChangeTracker.Clear();
+            throw;
+        }
+    }
 
+    private async Task<InventCloseCancelResultDto> CancelWithinTransactionAsync(string companyId, long closingRecId, CancellationToken ct)
+    {
             var closing = await Db.Set<InventClosing>()
                 .FirstOrDefaultAsync(x => x.DataAreaId == companyId && x.RecId == closingRecId, ct)
                 ?? throw new PostingValidationException("The cost run was not found in the selected company.");
@@ -121,21 +140,7 @@ public sealed partial class InventCloseService
             };
             Db.Add(reversal);
             await _unitOfWork.CompleteAsync(ct);
-            await _unitOfWork.CommitTransactionAsync(ct);
-            return (new InventCloseCancelResultDto(reversal.RecId, voucher, closing.RecId, closing.RunNum,
-                runNum, settlements.Count, ledgerEntriesCreated, totalReversed), null);
-        }
-        catch (PostingValidationException ex)
-        {
-            await _unitOfWork.RollbackTransactionAsync(ct);
-            Db.ChangeTracker.Clear();
-            return (null, ex.Message);
-        }
-        catch
-        {
-            await _unitOfWork.RollbackTransactionAsync(ct);
-            Db.ChangeTracker.Clear();
-            throw;
-        }
+            return new InventCloseCancelResultDto(reversal.RecId, voucher, closing.RecId, closing.RunNum,
+                runNum, settlements.Count, ledgerEntriesCreated, totalReversed);
     }
 }

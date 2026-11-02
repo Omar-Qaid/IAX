@@ -86,11 +86,11 @@ public sealed partial class InventCloseService : IInventCloseService
 
             // Run numbering spans both run types, so history reads as one ordered ledger of cost runs.
             var history = await Db.Set<InventClosing>()
-                .Where(x => x.DataAreaId == companyId && x.CancelClosing == NoYes.No)
+                .Where(x => x.DataAreaId == companyId)
                 .ToListAsync(ct);
             var runNum = history.Count == 0 ? 1 : history.Max(x => x.RunNum) + 1;
             var live = history
-                .Where(x => x.Cancellation == NoYes.No && x.InventCostStatus == InventCostStatus.Finished)
+                .Where(x => x.CancelClosing == NoYes.No && x.Cancellation == NoYes.No && x.InventCostStatus == InventCostStatus.Finished)
                 .Where(x => itemId.Length == 0 || x.ScopeItemId == itemId || x.ScopeItemId.Length == 0)
                 .ToList();
 
@@ -111,10 +111,37 @@ public sealed partial class InventCloseService : IInventCloseService
                         (x.TransDate.Date > cutoffDate || (x.TransDate.Date == cutoffDate && x.ScopeItemId.Length == 0))))
                     throw new PostingValidationException(
                         "A later or equal inventory close already exists; backdated close is not supported in the basic scope.");
+                var laterRecalculations = live
+                    .Where(x => x.AdjustmentType == InventAdjustmentType.Adjustment && x.TransDate.Date > cutoffDate)
+                    .OrderByDescending(x => x.RunNum).ToList();
+                if (itemId.Length > 0 && laterRecalculations.Any(x => x.ScopeItemId.Length == 0))
+                    throw new PostingValidationException(
+                        "An item close cannot automatically reverse a company-wide recalculation. Reverse later cost runs in reverse order before closing this item.");
+                foreach (var later in laterRecalculations)
+                    await CancelWithinTransactionAsync(companyId, later.RecId, ct);
+                if (laterRecalculations.Count > 0)
+                {
+                    live.RemoveAll(x => x.Cancellation == NoYes.Yes);
+                    var runNumbers = await Db.Set<InventClosing>().AsNoTracking()
+                        .Where(x => x.DataAreaId == companyId).Select(x => x.RunNum).ToListAsync(ct);
+                    runNum = runNumbers.Max() + 1;
+                }
             }
             else if (live.Any(x => x.AdjustmentType == InventAdjustmentType.Closing && x.TransDate.Date >= cutoffDate))
                 throw new PostingValidationException(
                     "The period is already closed through this date; recalculation can only cover an open period.");
+
+            // Older recalculations consumed settlement quantities. Their existing reversal path
+            // restores those quantities and accounting adjustments; do not silently close over them.
+            var recalculationVouchers = live.Where(x => x.AdjustmentType == InventAdjustmentType.Adjustment)
+                .Select(x => x.Voucher).ToList();
+            if (recalculationVouchers.Count > 0 && await Db.Set<InventSettlement>().AsNoTracking().AnyAsync(x =>
+                    x.DataAreaId == companyId && recalculationVouchers.Contains(x.Voucher)
+                    && x.SettleType == InventSettleType.RecalculationAdjustment && x.Cancelled == NoYes.No
+                    && (itemId == "" || x.ItemId == itemId)
+                    && (x.QtySettled != 0m || x.CostAmountSettled != 0m), ct))
+                throw new PostingValidationException(
+                    "An earlier inventory recalculation contains settled quantities or costs. Reverse affected cost runs in reverse order before running inventory recalculation or close.");
 
             var context = await LoadLedgerContextAsync(companyId, cutoffDate, ct);
             var pools = await LoadPoolsAsync(companyId, cutoffDate, itemId, ct);
@@ -189,6 +216,12 @@ public sealed partial class InventCloseService : IInventCloseService
                 var sold = pool.Rows.Where(x => x.InventTransId == soldId && x.Transaction.Qty < 0).Select(x => x.Transaction).ToList();
                 if (sold.Count == 0 || sold.Any(x => x.ValueOpen != InventTransOpen.No))
                     throw new PostingValidationException("A customer return requires its original financially settled sales issue in the same pool.");
+                var invoiceCosts = sold.GroupBy(x => x.InvoiceId)
+                    .Where(x => x.Sum(y => y.Qty) != 0m)
+                    .Select(x => x.Sum(y => y.CostAmountPosted + y.CostAmountAdjustment) / x.Sum(y => y.Qty))
+                    .Distinct().ToList();
+                if (invoiceCosts.Count > 1)
+                    throw new PostingValidationException($"The original sales invoices for item '{trans.ItemId}' have different inventory costs; the selected invoice cannot be identified for return costing.");
                 var targetReceipt = trans.Qty * sold.Sum(x => x.CostAmountPosted + x.CostAmountAdjustment) / sold.Sum(x => x.Qty);
                 var returnAdjustment = targetReceipt - receiptValue;
                 if (returnAdjustment != 0)
@@ -262,12 +295,12 @@ public sealed partial class InventCloseService : IInventCloseService
                 var layer = node.Value;
                 var quantity = Math.Min(needed, layer.Remaining);
                 needed -= quantity;
-                layer.Receipt.QtySettled += quantity;
+                if (isClose) layer.Receipt.QtySettled += quantity;
                 layer.Remaining -= quantity;
                 consumed.Add((layer, quantity));
                 if (layer.Remaining <= 0)
                 {
-                    if (layer.Receipt.Qty - layer.Receipt.QtySettled <= 0)
+                    if (isClose && layer.Receipt.Qty - layer.Receipt.QtySettled <= 0)
                         layer.Receipt.ValueOpen = InventTransOpen.No;
                     layers.Remove(node);
                 }
@@ -276,34 +309,54 @@ public sealed partial class InventCloseService : IInventCloseService
                 throw new PostingValidationException(
                     $"Issue transaction {trans.RecId} lacks {needed} financially received units in its {pool.Model} pool.");
 
+            // The basic vendor-return path links the issue to its original receipt. Marked
+            // issues likewise take their cost from the linked receipt, not the pool average.
+            var linkedReceiptCost = vendorReturns.ContainsKey(row.InventTransId) || trans.MarkingRefInventTransOrigin != 0;
+            if (pool.Model == InventModel.WeightedAvg && trans.MarkingRefInventTransOrigin != 0
+                && consumed.Any(x => x.Layer.Receipt.InventTransOrigin != trans.MarkingRefInventTransOrigin))
+                throw new PostingValidationException(
+                    "A partially marked weighted-average issue cannot be costed until its marked quantity is known.");
+            var useWeightedAverage = pool.Model == InventModel.WeightedAvg && !linkedReceiptCost;
             // The settled cost of the issued quantity, by inventory model.
-            var settledCost = pool.Model == InventModel.WeightedAvg
+            var settledCost = useWeightedAverage
                 ? decimal.Round(averageCost * settledQty, 2, MidpointRounding.AwayFromZero)
-                : consumed.Sum(x => x.Qty * x.Layer.UnitCost);
+                : decimal.Round(consumed.Sum(x => x.Qty * x.Layer.UnitCost), 4, MidpointRounding.AwayFromZero);
             var target = -settledCost;
 
             // The provisional cost carried by exactly the quantity settled in this run.
-            var provisional = trans.CostAmountPosted * (settledQty / -trans.Qty);
+            var provisional = decimal.Round((trans.CostAmountPosted + trans.CostAmountAdjustment) * (settledQty / -trans.Qty),
+                4, MidpointRounding.AwayFromZero);
             var adjustment = target - provisional;
+            if (adjustment != 0m && row.Category == InventRefType.PurchaseOrder && vendorReturns.ContainsKey(row.InventTransId))
+                throw new PostingValidationException(
+                    "Purchase return cost adjustment requires the original inventory posting accounts; this accounting path is not implemented.");
 
             var allocated = 0m;
+            var rawCost = 0m;
+            var adjustmentAllocated = 0m;
+            var allocatedQuantity = 0m;
             for (var i = 0; i < consumed.Count; i++)
             {
                 var (layer, quantity) = consumed[i];
-                var layerCost = pool.Model == InventModel.WeightedAvg
-                    ? (i == consumed.Count - 1 ? settledCost - allocated
-                        : decimal.Round(averageCost * quantity, 2, MidpointRounding.AwayFromZero))
-                    : quantity * layer.UnitCost;
+                rawCost += (useWeightedAverage ? averageCost : layer.UnitCost) * quantity;
+                allocatedQuantity += quantity;
+                var cumulativeCost = i == consumed.Count - 1 ? settledCost
+                    : decimal.Round(rawCost, useWeightedAverage ? 2 : 4, MidpointRounding.AwayFromZero);
+                var layerCost = cumulativeCost - allocated;
                 allocated += layerCost;
+                var cumulativeAdjustment = i == consumed.Count - 1 ? adjustment
+                    : decimal.Round(adjustment * allocatedQuantity / settledQty, 4, MidpointRounding.AwayFromZero);
+                var layerAdjustment = cumulativeAdjustment - adjustmentAllocated;
+                adjustmentAllocated += layerAdjustment;
                 await AddSettlementAsync(companyId, voucher, cutoffDate, pool, trans, row.InventTransId,
-                    layer.Receipt.RecId, -quantity, -layerCost,
-                    adjustment * (quantity / settledQty), isClose, ct);
+                    isClose ? layer.Receipt.RecId : null, isClose ? -quantity : 0m, isClose ? -layerCost : 0m,
+                    layerAdjustment, isClose, ct);
                 run.SettlementsCreated++;
             }
 
-            trans.QtySettled += -settledQty;
+            if (isClose) trans.QtySettled += -settledQty;
             trans.CostAmountAdjustment += adjustment;
-            trans.CostAmountSettled += target;
+            if (isClose) trans.CostAmountSettled += target;
             if (isClose) FinishIssue(trans, cutoffDate);
             run.IssuesSettled++;
             run.TotalAdjustment += adjustment;
@@ -444,7 +497,9 @@ public sealed partial class InventCloseService : IInventCloseService
     {
         var sum = await Db.Set<InventSum>().FirstOrDefaultAsync(
             x => x.DataAreaId == companyId && x.ItemId == itemId && x.InventDimId == dimId, ct);
-        if (sum == null) return;
+        if (sum == null)
+            throw new PostingValidationException(
+                $"Inventory summary is missing for item '{itemId}' and inventory dimension '{dimId}'; the cost adjustment cannot be posted.");
         sum.PostedValue += value;
         sum.LastUpdDatePhysical = DateTime.UtcNow;
     }
@@ -452,22 +507,32 @@ public sealed partial class InventCloseService : IInventCloseService
     private async Task CreateLedgerCorrectionAsync(string companyId, string voucher, InventTrans issue,
         string inventTransId, InventRefType category, string itemGroupId, decimal adjustment, LedgerContext context, CancellationToken ct)
     {
-        // The adjustment follows the issue's original posting: sales issues use the sales inventory-issue
-        // and cost-of-units-invoiced accounts; journal issues keep the inventory journal accounts.
+        // Journal and sales postings record the accounts and voucher used at posting time.
         var isSale = category == InventRefType.SalesTable;
-        var inventoryType = isSale ? InventAccountType.SalesIssue : InventAccountType.InventReceipt;
-        var costType = isSale ? InventAccountType.SalesConsump : InventAccountType.InventIssue;
-        var inventory = await Support.ResolveInventPostingAsync(companyId, issue.ItemId, inventoryType, ct, itemGroupId);
-        var cogs = await Support.ResolveInventPostingAsync(companyId, issue.ItemId, costType, ct, itemGroupId);
-        var journalLine = category is InventRefType.InventoryJournal or InventRefType.PhysicalinventoryCount
-            ? await Db.Set<InventJournalTrans>().AsNoTracking().SingleOrDefaultAsync(x => x.DataAreaId == companyId && x.InventTransId == inventTransId, ct)
-            : null;
-        if (journalLine != null)
+        DimensionAttributeValueCombination inventory, cogs;
+        LedgerPostingType inventoryPosting, offsetPosting;
+        if (category is InventRefType.InventoryJournal or InventRefType.PhysicalinventoryCount or InventRefType.SalesTable)
         {
-            inventory = await Support.ResolveInventPostingAsync(companyId, issue.ItemId, InventAccountType.InventIssue, ct, itemGroupId);
-            cogs = journalLine.JournalType == InventJournalType.Movement
-                ? await Db.Set<DimensionAttributeValueCombination>().SingleAsync(x => x.DataAreaId == companyId && x.RecId == journalLine.LedgerDimension, ct)
-                : await Support.ResolveInventPostingAsync(companyId, issue.ItemId, InventAccountType.InventLoss, ct, itemGroupId);
+            var records = await Db.Set<Entities.InventTransPosting>().AsNoTracking().Where(x =>
+                x.DataAreaId == companyId && x.InventTransOrigin == issue.InventTransOrigin && x.ItemId == issue.ItemId
+                && x.Voucher == issue.Voucher && x.InventTransPostingType == InventTransPostingType.Financial
+                && x.IsPosted == NoYes.Yes).ToListAsync(ct);
+            if (string.IsNullOrWhiteSpace(issue.Voucher) || records.Count != 1)
+                throw new PostingValidationException($"The original financial inventory posting for transaction {issue.RecId} could not be uniquely identified.");
+            var record = records[0];
+            inventory = await Support.LoadDimensionAsync(companyId, record.LedgerDimension, "original inventory posting", ct);
+            cogs = await Support.LoadDimensionAsync(companyId, record.OffsetLedgerDimension, "original inventory offset", ct);
+            inventoryPosting = record.PostingType;
+            offsetPosting = record.PostingTypeOffset;
+        }
+        else
+        {
+            var inventoryType = isSale ? InventAccountType.SalesIssue : InventAccountType.InventReceipt;
+            var costType = isSale ? InventAccountType.SalesConsump : InventAccountType.InventIssue;
+            inventory = await Support.ResolveInventPostingAsync(companyId, issue.ItemId, inventoryType, ct, itemGroupId);
+            cogs = await Support.ResolveInventPostingAsync(companyId, issue.ItemId, costType, ct, itemGroupId);
+            inventoryPosting = isSale ? LedgerPostingType.SalesIssue : LedgerPostingType.InventReceipt;
+            offsetPosting = isSale ? LedgerPostingType.SalesConsump : LedgerPostingType.InventIssue;
         }
         var entry = Support.NewEntry(companyId, voucher, voucher, context.AccountingDate,
             new SubledgerLedgerContext(context.Ledger, context.Period));
@@ -476,8 +541,8 @@ public sealed partial class InventCloseService : IInventCloseService
         var text = $"Inventory cost settlement adjustment for issue {inventTransId}";
         var currency = context.Ledger.AccountingCurrency;
         Db.AddRange(
-            SubledgerPostingSupport.AccountEntry(companyId, entry.RecId, inventory, isSale ? LedgerPostingType.SalesIssue : journalLine != null ? LedgerPostingType.InventIssue : LedgerPostingType.InventReceipt, adjustment, text, issue.Qty, currency),
-            SubledgerPostingSupport.AccountEntry(companyId, entry.RecId, cogs, isSale ? LedgerPostingType.SalesConsump : journalLine != null ? (journalLine.JournalType == InventJournalType.Movement ? LedgerPostingType.LedgerJournal : LedgerPostingType.InventLoss) : LedgerPostingType.InventIssue, -adjustment, text, issue.Qty, currency));
+            SubledgerPostingSupport.AccountEntry(companyId, entry.RecId, inventory, inventoryPosting, adjustment, text, issue.Qty, currency),
+            SubledgerPostingSupport.AccountEntry(companyId, entry.RecId, cogs, offsetPosting, -adjustment, text, issue.Qty, currency));
         Db.Add(new SubledgerVoucherGeneralJournalEntry
         {
             DataAreaId = companyId, GeneralJournalEntry = entry.RecId, Voucher = voucher,

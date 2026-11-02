@@ -181,6 +181,9 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
                             $"Cost of {line.ItemId} invoiced on {invoiceId}", inventQty, currency),
                         SubledgerPostingSupport.AccountEntry(area, entry.RecId, issueAccount, LedgerPostingType.SalesIssue, -cogs,
                             $"Inventory issue {line.ItemId} invoiced on {invoiceId}", -inventQty, currency));
+                    Db.Add(IAX.IXApi.Modules.Finance.Inventory.InventTransPosting.InventTransPostingService.Record(
+                        area, inventOrigin, line.ItemId, InventTransPostingType.Financial, date, invoiceId,
+                        issueAccount, LedgerPostingType.SalesIssue, consumption, LedgerPostingType.SalesConsump));
                 }
                 // The financial update takes over from the delivery, so its physical posting is reversed.
                 await new PackingSlip.PackingSlipPhysicalPosting(Db)

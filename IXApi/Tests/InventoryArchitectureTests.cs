@@ -1544,6 +1544,7 @@ public sealed class InventoryArchitectureTests
         await db.Database.EnsureCreatedAsync();
         db.AddRange(
             new SysNumberSequence { RecId = 1, DataAreaId = "dat", NumberSequence = "InventJournalTable", Txt = "Journal", Format = "IJ-#####", AnnotatedFormat = "IJ-{SEQ}", InUse = 1, IsActive = true, NextRec = 1, Highest = 99999 },
+            new SysNumberSequence { RecId = 51, DataAreaId = "dat", NumberSequence = "InventTransferJour", Txt = "Transfer voucher", Format = "TV-#####", AnnotatedFormat = "TV-{SEQ}", InUse = 1, IsActive = true, NextRec = 1, Highest = 99999 },
             new InventJournalName { RecId = 2, DataAreaId = "dat", JournalNameId = "TRF", Description = "Transfer", JournalType = InventJournalType.Transfer, VoucherNumberSequenceTable = 9 },
             new InventJournalName { RecId = 13, DataAreaId = "dat", JournalNameId = "MOV", Description = "Movement", JournalType = InventJournalType.Movement, VoucherNumberSequenceTable = 9 },
             new InventJournalName { RecId = 16, DataAreaId = "dat", JournalNameId = "COUNT", Description = "Counting", JournalType = InventJournalType.Counting, VoucherNumberSequenceTable = 9 },
@@ -1798,7 +1799,8 @@ public sealed class InventoryArchitectureTests
         Assert.Null((await transfers.ShipAsync("TR-DEMO", Post("SHIP1", 1m), default)).Error);
         Assert.Contains("other transfer operation", (await transfers.ReceiveAsync("TR-DEMO", Post("SHIP1", 1m), default)).Error);
         var shippedCount = await db.Set<InventTrans>().CountAsync();
-        var shipmentLegs = await db.Set<InventTrans>().Where(x => x.Voucher == "TR-DEMO:SHIP1").ToListAsync();
+        var ship1Voucher = (await db.Set<InventTransferJour>().SingleAsync(x => x.TransferId == "TR-DEMO" && x.PostingRequestId == "SHIP1")).Voucher;
+        var shipmentLegs = await db.Set<InventTrans>().Where(x => x.Voucher == ship1Voucher).ToListAsync();
         Assert.Equal(4, shipmentLegs.Count);
         Assert.Single(shipmentLegs, x => x.StatusIssue == StatusIssue.ReservPhysical);
         Assert.Single(shipmentLegs, x => x.StatusReceipt == StatusReceipt.Ordered);
@@ -1816,7 +1818,7 @@ public sealed class InventoryArchitectureTests
         Assert.NotEqual(string.Empty, partlyShipped.Lines[0].InventTransId);
         Assert.NotEqual(string.Empty, partlyShipped.Lines[0].InventTransIdTransitTo);
 
-        var firstTransitCost = await db.Set<InventTrans>().Where(x => x.Voucher == "TR-DEMO:SHIP1"
+        var firstTransitCost = await db.Set<InventTrans>().Where(x => x.Voucher == ship1Voucher
                 && x.Qty > 0 && x.StatusReceipt == StatusReceipt.Purchased)
             .Select(x => x.CostAmountPosted).SingleAsync();
         var laterReceipt = await service.CreateAsync(new InventJournalCreateDto
@@ -1833,8 +1835,9 @@ public sealed class InventoryArchitectureTests
         var destinationValueBefore = await db.Set<InventSum>().Where(x => x.InventLocationId == "SHOW").SumAsync(x => x.PostedValue);
         Assert.Null((await transfers.ReceiveAsync("TR-DEMO", Post("RECEIVE1", 1m), default)).Error);
         Assert.Contains("other transfer operation", (await transfers.ShipAsync("TR-DEMO", Post("RECEIVE1", 1m), default)).Error);
-        Assert.Equal(shipmentLegs.Count, await db.Set<InventTrans>().CountAsync(x => x.Voucher == "TR-DEMO:SHIP1" || x.Voucher == "TR-DEMO:RECEIVE1"));
-        Assert.Empty(await db.Set<InventTrans>().Where(x => x.Voucher == "TR-DEMO:SHIP1"
+        var receive1Voucher = (await db.Set<InventTransferJour>().SingleAsync(x => x.TransferId == "TR-DEMO" && x.PostingRequestId == "RECEIVE1")).Voucher;
+        Assert.Equal(shipmentLegs.Count, await db.Set<InventTrans>().CountAsync(x => x.Voucher == ship1Voucher || x.Voucher == receive1Voucher));
+        Assert.Empty(await db.Set<InventTrans>().Where(x => x.Voucher == ship1Voucher
             && (x.StatusIssue == StatusIssue.ReservPhysical || x.StatusReceipt == StatusReceipt.Ordered)).ToListAsync());
         var destinationValueAfter = await db.Set<InventSum>().Where(x => x.InventLocationId == "SHOW").SumAsync(x => x.PostedValue);
         Assert.Equal(firstTransitCost, destinationValueAfter - destinationValueBefore);
@@ -1843,7 +1846,8 @@ public sealed class InventoryArchitectureTests
         // The shipment is complete, so nothing more may be shipped.
         Assert.NotNull((await transfers.ShipAsync("TR-DEMO", Post("SHIP3", 1m), default)).Error);
         Assert.Null((await transfers.ReceiveAsync("TR-DEMO", Post("RECEIVE2", 0.5m), default)).Error);
-        Assert.Equal(0.5m, await db.Set<InventTrans>().Where(x => x.Voucher == "TR-DEMO:SHIP2"
+        var ship2Voucher = (await db.Set<InventTransferJour>().SingleAsync(x => x.TransferId == "TR-DEMO" && x.PostingRequestId == "SHIP2")).Voucher;
+        Assert.Equal(0.5m, await db.Set<InventTrans>().Where(x => x.Voucher == ship2Voucher
             && x.StatusReceipt == StatusReceipt.Ordered).SumAsync(x => x.Qty));
         Assert.Equal(0.5m, (await db.Set<InventSum>().SingleAsync(x => x.ItemId == "ITEM-001"
             && x.InventLocationId == "TRANSIT")).ReservPhysical);
@@ -2058,12 +2062,14 @@ public sealed class InventoryArchitectureTests
             Configure<InventJournalTable>(builder);
             Configure<InventTransferTable>(builder);
             Configure<InventTransferLine>(builder);
+            Configure<InventTransferJour>(builder);
             Configure<InventTransOriginTransferTransitTo>(builder);
             Configure<InventTransOriginTransferTransitFrom>(builder);
             Configure<InventTransOriginTransferReceive>(builder);
             Configure<InventTransOriginTransferShip>(builder);
             builder.ApplyConfiguration(new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransferTableConfiguration());
             builder.ApplyConfiguration(new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransferLineConfiguration());
+            builder.ApplyConfiguration(new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransferJourConfiguration());
             builder.ApplyConfiguration(new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransOriginTransferTransitToConfiguration());
             builder.ApplyConfiguration(new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransOriginTransferTransitFromConfiguration());
             builder.ApplyConfiguration(new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransOriginTransferReceiveConfiguration());
