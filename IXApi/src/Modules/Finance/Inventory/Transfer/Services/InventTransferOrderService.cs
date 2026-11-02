@@ -85,6 +85,9 @@ public sealed class InventTransferOrderService(
         };
         Db.Add(header);
 
+        var accountingCurrency = await Db.Set<Entities.Ledger>().AsNoTracking()
+            .Where(x => x.DataAreaId == area).Select(x => x.AccountingCurrency).FirstOrDefaultAsync(ct) ?? string.Empty;
+
         var lineNum = 0m;
         foreach (var line in input.Lines)
         {
@@ -103,13 +106,28 @@ public sealed class InventTransferOrderService(
             await RequireUntrackedItemAsync(area, itemId, ct);
             // The line's dimension is the source: the transit and destination legs resolve their own.
             var dim = await dimensions.ResolveAsync(area, site, from, ct);
-            Db.Add(new InventTransferLine
+            var transferLine = new InventTransferLine
             {
                 DataAreaId = area, TransferId = transferId, LineNum = ++lineNum, ItemId = itemId, UnitId = unitId,
                 InventDimId = dim.InventDimId, QtyTransfer = line.QtyTransfer, QtyRemainShip = line.QtyTransfer,
                 QtyRemainReceive = line.QtyTransfer, ShipDate = shipDate, ReceiveDate = receiveDate,
                 RemainStatus = InventTransferRemainStatus.None
-            });
+            };
+            Db.Add(transferLine);
+            var destinationDim = await dimensions.ResolveAsync(area, site, to, ct);
+            transferLine.InventTransId = await CreatePendingLegAsync(area, transferId, itemId, dim.InventDimId,
+                -line.QtyTransfer, accountingCurrency, $"{transferId}:ORDER", shipDate, ct, StatusIssue.Ordered);
+            LinkShip(area, transferId, lineNum, transferLine.InventTransId);
+            transferLine.InventTransIdReceive = await CreatePendingLegAsync(area, transferId, itemId, destinationDim.InventDimId,
+                line.QtyTransfer, accountingCurrency, $"{transferId}:ORDER", receiveDate, ct);
+            LinkReceive(area, transferId, lineNum, transferLine.InventTransIdReceive);
+            var sourceSum = await Movement.GetOrCreateSummaryAsync(area, itemId, dim, ct);
+            sourceSum.OnOrder += line.QtyTransfer;
+            sourceSum.AvailOrdered = sourceSum.AvailPhysical + sourceSum.Ordered - sourceSum.OnOrder - sourceSum.ReservOrdered;
+            var destinationSum = await Movement.GetOrCreateSummaryAsync(area, itemId, destinationDim, ct);
+            destinationSum.Ordered += line.QtyTransfer;
+            destinationSum.AvailOrdered = destinationSum.AvailPhysical + destinationSum.Ordered
+                - destinationSum.OnOrder - destinationSum.ReservOrdered;
         }
         return header;
     }
@@ -150,6 +168,8 @@ public sealed class InventTransferOrderService(
         var id = (transferId ?? string.Empty).Trim();
         var requestId = (input.RequestId ?? string.Empty).Trim();
         if (requestId.Length == 0) throw new InvalidOperationException("A posting request identifier is required.");
+        if (string.Equals(requestId, "ORDER", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("ORDER is reserved for the transfer order's initial transactions; choose another posting request identifier.");
         if (input.Quantities == null || input.Quantities.Count == 0)
             throw new InvalidOperationException("Select the quantities to post.");
         await LockAsync(area, id, ct);
@@ -161,9 +181,21 @@ public sealed class InventTransferOrderService(
 
         var transDate = (input.TransDate ?? DateTime.UtcNow).Date;
         var voucher = $"{id}:{requestId}";
-        // The request identifier makes a repeated post request a no-operation, never a double post.
-        if (await Db.Set<InventTrans>().AsNoTracking().AnyAsync(x => x.DataAreaId == area && x.Voucher == voucher, ct))
+        // The same request is idempotent only for the same operation. A shipment request ID
+        // reused for receipt (or the reverse) must not silently skip the movement.
+        var existingIssueWarehouses = await (from transaction in Db.Set<InventTrans>().AsNoTracking()
+            join dim in Db.Set<InventDim>().AsNoTracking()
+                on new { transaction.DataAreaId, transaction.InventDimId } equals new { dim.DataAreaId, dim.InventDimId }
+            where transaction.DataAreaId == area && transaction.Voucher == voucher
+                && transaction.StatusIssue == StatusIssue.Sold
+            select dim.InventLocationId).Distinct().ToListAsync(ct);
+        if (existingIssueWarehouses.Count > 0)
+        {
+            var expectedWarehouse = receive ? header.InventLocationIdTransit : header.InventLocationIdFrom;
+            if (existingIssueWarehouses.Count != 1 || existingIssueWarehouses[0] != expectedWarehouse)
+                throw new InvalidOperationException("This posting request identifier was already used for the other transfer operation.");
             return header;
+        }
         if (header.TransferStatus == InventTransferStatus.Received)
             throw new InvalidOperationException("The transfer order is fully received.");
 
@@ -222,16 +254,25 @@ public sealed class InventTransferOrderService(
                 ? await TransitUnitCostAsync(area, id, line.LineNum, line.ItemId, fromDim.InventDimId, quantity, ct)
                 : await InventoryMovement.SiteRunningAverageCostAsync(Db, area, line.ItemId, site, ct);
             var currency = accountingCurrency;
-            var issueTransId = receive ? string.Empty : await Movement.CreateTransactionAsync(area, line.ItemId, fromDim.InventDimId,
-                -quantity, unitCost, currency, voucher, transDate, InventRefType.TransferOrder, id, ct);
-            var receiptTransId = receive ? string.Empty : await Movement.CreateTransactionAsync(area, line.ItemId, toDim.InventDimId,
-                quantity, unitCost, currency, voucher, transDate, InventRefType.TransferOrder, id, ct);
+            var issueTransId = string.Empty;
+            var receiptTransId = string.Empty;
             if (receive)
             {
                 (issueTransId, receiptTransId) = await ReceivePendingLegsAsync(area, id, line.LineNum, line.ItemId,
                     fromDim.InventDimId, toDim.InventDimId, quantity, unitCost, currency, voucher, transDate, ct);
                 fromSum.ReservPhysical -= quantity;
                 toSum.Ordered -= quantity;
+            }
+            else
+            {
+                var destinationDim = await dimensions.ResolveAsync(area, site, header.InventLocationIdTo, ct);
+                (issueTransId, line.InventTransIdReceive) = await ShipOrderedLegsAsync(area, id, line.LineNum,
+                    line.ItemId, fromDim.InventDimId, destinationDim.InventDimId, quantity, unitCost,
+                    currency, voucher, transDate, ct);
+                receiptTransId = await Movement.CreateTransactionAsync(area, line.ItemId, toDim.InventDimId,
+                    quantity, unitCost, currency, voucher, transDate, InventRefType.TransferOrder, id, ct);
+                LinkTransitTo(area, id, line.LineNum, receiptTransId);
+                fromSum.OnOrder -= quantity;
             }
             InventoryMovement.ApplySummary(fromSum, -quantity, unitCost);
             InventoryMovement.ApplySummary(toSum, quantity, unitCost);
@@ -247,21 +288,12 @@ public sealed class InventTransferOrderService(
             }
             else
             {
-                LinkTransitTo(area, id, line.LineNum, receiptTransId);
                 line.InventTransIdTransitFrom = await CreatePendingLegAsync(area, id, line.ItemId,
                     toDim.InventDimId, -quantity, currency, voucher, transDate, ct);
                 LinkTransitFrom(area, id, line.LineNum, line.InventTransIdTransitFrom);
-                var destinationDim = await dimensions.ResolveAsync(area, site, header.InventLocationIdTo, ct);
-                line.InventTransIdReceive = await CreatePendingLegAsync(area, id, line.ItemId,
-                    destinationDim.InventDimId, quantity, currency, voucher, transDate, ct);
-                LinkReceive(area, id, line.LineNum, line.InventTransIdReceive);
                 toSum.ReservPhysical += quantity;
                 toSum.AvailPhysical = toSum.PhysicalInvent - toSum.ReservPhysical - toSum.Picked;
                 toSum.AvailOrdered = toSum.AvailPhysical + toSum.Ordered - toSum.OnOrder - toSum.ReservOrdered;
-                var destinationSum = await Movement.GetOrCreateSummaryAsync(area, line.ItemId, destinationDim, ct);
-                destinationSum.Ordered += quantity;
-                destinationSum.AvailOrdered = destinationSum.AvailPhysical + destinationSum.Ordered
-                    - destinationSum.OnOrder - destinationSum.ReservOrdered;
                 line.InventTransId = issueTransId;
                 line.InventTransIdTransitTo = receiptTransId;
                 line.QtyShipNow = quantity;
@@ -320,13 +352,15 @@ public sealed class InventTransferOrderService(
     }
 
     private async Task<string> CreatePendingLegAsync(string area, string transferId, string itemId,
-        string dimId, decimal qty, string currency, string voucher, DateTime expectedDate, CancellationToken ct)
+        string dimId, decimal qty, string currency, string voucher, DateTime expectedDate, CancellationToken ct,
+        StatusIssue issueStatus = StatusIssue.ReservPhysical)
     {
         var transId = await Movement.CreateTransactionAsync(area, itemId, dimId, qty, 0m, currency,
             voucher, expectedDate, InventRefType.TransferOrder, transferId, ct);
-        var origin = Db.Set<InventTransOrigin>().Local.Single(x => x.DataAreaId == area && x.InventTransId == transId);
+        var origin = Db.Set<InventTransOrigin>().Local.Single(x => x.DataAreaId == area
+            && x.ReferenceId == transferId && x.InventTransId == transId);
         var transaction = Db.Set<InventTrans>().Local.Single(x => x.InventTransOrigin == origin.RecId);
-        transaction.StatusIssue = qty < 0 ? StatusIssue.ReservPhysical : StatusIssue.None;
+        transaction.StatusIssue = qty < 0 ? issueStatus : StatusIssue.None;
         transaction.StatusReceipt = qty > 0 ? StatusReceipt.Ordered : StatusReceipt.None;
         transaction.DateFinancial = default;
         transaction.DatePhysical = default;
@@ -334,29 +368,86 @@ public sealed class InventTransferOrderService(
         return transId;
     }
 
-    private long OriginId(string area, string transId) => Db.Set<InventTransOrigin>().Local
-        .Single(x => x.DataAreaId == area && x.InventTransId == transId).RecId;
+    private long OriginId(string area, string transferId, string transId) => Db.Set<InventTransOrigin>().Local
+        .Single(x => x.DataAreaId == area && x.ReferenceId == transferId && x.InventTransId == transId).RecId;
+
+    private void LinkShip(string area, string transferId, decimal lineNum, string transId) =>
+        Db.Add(new InventTransOriginTransferShip
+        {
+            DataAreaId = area, InventTransOrigin = OriginId(area, transferId, transId),
+            TransferShipDataAreaId = area, TransferShipId = transferId, TransferShipLineNum = lineNum
+        });
 
     private void LinkTransitTo(string area, string transferId, decimal lineNum, string transId) =>
         Db.Add(new InventTransOriginTransferTransitTo
         {
-            DataAreaId = area, InventTransOrigin = OriginId(area, transId),
+            DataAreaId = area, InventTransOrigin = OriginId(area, transferId, transId),
             TransferTransitToDataAreaId = area, TransferTransitToId = transferId, TransferTransitToLineNum = lineNum
         });
 
     private void LinkTransitFrom(string area, string transferId, decimal lineNum, string transId) =>
         Db.Add(new InventTransOriginTransferTransitFrom
         {
-            DataAreaId = area, InventTransOrigin = OriginId(area, transId),
+            DataAreaId = area, InventTransOrigin = OriginId(area, transferId, transId),
             TransferTransitFromDataAreaId = area, TransferTransitFromId = transferId, TransferTransitFromLineNum = lineNum
         });
 
     private void LinkReceive(string area, string transferId, decimal lineNum, string transId) =>
         Db.Add(new InventTransOriginTransferReceive
         {
-            DataAreaId = area, InventTransOrigin = OriginId(area, transId),
+            DataAreaId = area, InventTransOrigin = OriginId(area, transferId, transId),
             TransferReceiveDataAreaId = area, TransferReceiveId = transferId, TransferReceiveLineNum = lineNum
         });
+
+    private async Task<(string IssueId, string ReceiptId)> ShipOrderedLegsAsync(string area, string transferId,
+        decimal lineNum, string itemId, string sourceDimId, string destinationDimId, decimal quantity,
+        decimal unitCost, string currency, string voucher, DateTime transDate, CancellationToken ct)
+    {
+        var shipOriginIds = await Db.Set<InventTransOriginTransferShip>().AsNoTracking()
+            .Where(x => x.TransferShipDataAreaId == area && x.TransferShipId == transferId
+                && x.TransferShipLineNum == lineNum)
+            .Select(x => x.InventTransOrigin).ToListAsync(ct);
+        var receiveOriginIds = await Db.Set<InventTransOriginTransferReceive>().AsNoTracking()
+            .Where(x => x.TransferReceiveDataAreaId == area && x.TransferReceiveId == transferId
+                && x.TransferReceiveLineNum == lineNum)
+            .Select(x => x.InventTransOrigin).ToListAsync(ct);
+        var orderVoucher = $"{transferId}:ORDER";
+        var source = await Db.Set<InventTrans>().SingleOrDefaultAsync(x => x.DataAreaId == area
+            && x.ItemId == itemId && x.InventDimId == sourceDimId && shipOriginIds.Contains(x.InventTransOrigin)
+            && x.StatusIssue == StatusIssue.Ordered && x.Voucher == orderVoucher, ct);
+        var destination = await Db.Set<InventTrans>().SingleOrDefaultAsync(x => x.DataAreaId == area
+            && x.ItemId == itemId && x.InventDimId == destinationDimId && receiveOriginIds.Contains(x.InventTransOrigin)
+            && x.StatusReceipt == StatusReceipt.Ordered && x.Voucher == orderVoucher, ct);
+        if (source == null || destination == null || -source.Qty != destination.Qty || -source.Qty < quantity)
+            throw new InvalidOperationException($"Transfer order '{transferId}' has no matching ordered source/destination legs for line {lineNum}.");
+        if (-source.Qty == quantity)
+        {
+            source.StatusIssue = StatusIssue.Sold;
+            source.CostAmountPosted = -quantity * unitCost;
+            source.CurrencyCode = currency;
+            source.Voucher = voucher;
+            source.VoucherPhysical = voucher;
+            source.DateStatus = transDate;
+            source.DatePhysical = transDate;
+            source.DateFinancial = transDate;
+            source.DateInvent = transDate;
+            destination.Voucher = voucher;
+            destination.VoucherPhysical = voucher;
+            var origins = await Db.Set<InventTransOrigin>().AsNoTracking()
+                .Where(x => x.RecId == source.InventTransOrigin || x.RecId == destination.InventTransOrigin)
+                .ToDictionaryAsync(x => x.RecId, ct);
+            return (origins[source.InventTransOrigin].InventTransId, origins[destination.InventTransOrigin].InventTransId);
+        }
+        source.Qty += quantity;
+        destination.Qty -= quantity;
+        var issueId = await Movement.CreateTransactionAsync(area, itemId, sourceDimId, -quantity,
+            unitCost, currency, voucher, transDate, InventRefType.TransferOrder, transferId, ct);
+        LinkShip(area, transferId, lineNum, issueId);
+        var receiptId = await CreatePendingLegAsync(area, transferId, itemId, destinationDimId, quantity,
+            currency, voucher, destination.DateExpected, ct);
+        LinkReceive(area, transferId, lineNum, receiptId);
+        return (issueId, receiptId);
+    }
 
     private async Task<(string IssueId, string ReceiptId)> ReceivePendingLegsAsync(string area, string transferId,
         decimal lineNum,

@@ -1,6 +1,6 @@
 # Inventory — gap analysis against basic D365 F&O
 
-**Last updated:** 2026-11-01
+**Last updated:** 2026-11-02
 **Scope:** basic (core) D365 F&O Inventory and Cost management only. Advanced warehouse (WHS),
 production, quality, and optional features are out of scope by request and are not listed as gaps.
 
@@ -23,7 +23,7 @@ alters behavior:
 | --- | --- |
 | Dimensions (`InventDim`), transactions (`InventTransOrigin`, `InventTrans`), on-hand (`InventSum`) | Implemented |
 | Inventory journals: movement, adjustment, transfer, counting (incl. line generation, summary posting) | Implemented |
-| Transfer orders (`InventTransferTable`/`Line`) | Shipment and receipt posting implemented; transaction lifecycle gap below |
+| Transfer orders (`InventTransferTable`/`Line`) | Basic transaction lifecycle implemented; SQL Server behavior unverified |
 | Cost settlement: FIFO, LIFO, weighted average | Implemented |
 | Inventory close, recalculation, close cancellation | Implemented |
 | Inventory marking (`InventTrans.MarkingRefInventTransOrigin`) | Implemented |
@@ -35,12 +35,11 @@ alters behavior:
 
 | Area | Existing behavior | Expected basic D365 F&O behavior | Missing | Affected components | Priority |
 | --- | --- | --- | --- | --- | --- |
-| Transfer-order transaction lifecycle | Shipment creates financially posted source/transit legs plus reserved-physical transit and ordered destination legs. Receipt updates or splits the pending legs for partial quantities. Standard origin relations now keep these transit and receipt legs tied to their transfer line. Order creation still has no ordered source issue or ordered destination receipt. | [Microsoft's inventory posting documentation](https://learn.microsoft.com/en-us/dynamics365/finance/general-ledger/inventory-posting) says creating an order establishes two transactions for each line/dimension, then shipment updates those and creates the two transit legs. | The initial ordered transactions and their shipment transitions, including partial quantity splitting. | `InventTransferOrderService`, `InventTransferLine`, `InventTrans` | High |
 | Inventory models | FIFO, LIFO and weighted average are accepted at model-group setup and settled by inventory close. Standard cost, moving average, LIFO-date and weighted-average-date are rejected with a named error. | All of these are basic inventory models, each with its own valuation and close behavior. | The four rejected models, and with them standard-cost revaluation and moving-average maintenance. | `InventModelGroupService.SettledModels`, `InventCloseService.SupportedModels`, `InventJournalPostingService.ResolveUnitCostAsync` | Medium — rejected explicitly, not approximated, so nothing is silently wrong |
 | Standard-cost variance posting | `InventJournalPostingService` rejects a receipt priced differently from the active standard cost. Unreachable in practice, because standard cost is rejected at setup. | Purchase price variance posts to a variance account per the posting profile. | Variance calculation and posting. Blocked behind the standard-cost model itself. | `InventJournalPostingService`, `InventPosting` | Low — dependent on the model above |
 | Physical dimension buckets | `Received`, `Deducted` and `Picked` are maintained by receipt, sales and picking flows. `Registered` and `Arrived` have no confirmed writer. | Arrival registration, when used, maintains its physical state. | Arrival/registration process, if required by the deployment. | `InventSum`, inbound arrival flow | Low — conditional |
 | Inventory status dimension | `InventDim.InventStatusId` is stored, `WHSInventStatus` setup exists, and blocked status excludes stock from available on-hand and blocks sales demand and journal issues. | Status is a full inventory dimension with its own setup, conversion and transfer behavior. | Status change/transfer processes; applicability depends on which dimensions are enabled. | `WHSInventStatus`, `InventoryDimensionPolicy` | Medium |
-| SQL Server verification | All inventory behavior is covered by SQLite in-memory tests. | — | Transaction atomicity under SQL Server, duplicate/concurrent posting, number-sequence contention, and migration application are unverified. Both approved migrations are code only and have not been applied. | Whole module, `src/Infrastructure/Migrations` | **Critical** — nothing here should be called operationally ready until this is done |
+| SQL Server verification | Inventory behavior is covered by SQLite in-memory tests. The transfer-origin relation migrations are generated but not applied to SQL Server. | — | Transaction atomicity under SQL Server, duplicate/concurrent posting, number-sequence contention, migration application, and handling transfer orders created before the new lifecycle are unverified. | Whole module, `src/Infrastructure/Migrations` | **Critical** — nothing here should be called operationally ready until this is done |
 | Quantity splitting for marking | Marking links whole transactions; a side already split across movements is rejected with a named error. | Part of a quantity is marked by **splitting** the inventory transaction. | Transaction splitting on marking. Deliberately not approximated with an invented marked-quantity column, because D365 has no such column. | `InventoryMarkingService.LoadSideAsync` | Low |
 
 ## Deliberate restrictions (verified in code)
@@ -70,6 +69,10 @@ message quoted.
 
 ## Flagged uncertainties
 
+- **Existing transfer orders at upgrade.** Orders created by the earlier implementation have no
+  ordered source/destination transactions or line-origin relations. A data backfill or an explicit
+  compatibility path is needed before the new shipment/receipt code can process those orders;
+  existing production data was not available to verify a safe backfill.
 - **Inventory status applicability.** Whether status setup and lookup should be exposed at all
   depends on which inventory dimensions are enabled in the storage dimension group. Not verified in
   a live D365 environment; only expose statuses when the dimension is enabled.
@@ -92,6 +95,8 @@ message quoted.
 
 | Date | Change |
 | --- | --- |
+| 2026-11-02 | A transfer posting request ID is idempotent only for its original shipment or receipt operation. Reusing it for the opposite operation now returns a named error instead of silently skipping the movement. `ORDER` is reserved for initial order transactions. |
+| 2026-11-02 | Transfer-order creation now writes ordered source and destination inventory transactions and ordered on-hand buckets. Shipment updates or splits those line-linked transactions, reduces source on-order quantity, and creates the transit pair. Added standard `InventTransOriginTransferShip` relation. |
 | 2026-11-02 | Added the standard `InventTransOriginTransferTransitTo`, `InventTransOriginTransferTransitFrom`, and `InventTransOriginTransferReceive` relations. Transfer receipt and transit costing now select the requested line's origins, so duplicate item lines do not consume each other's pending transactions or cost. |
 | 2026-11-02 | Transfer shipment creates a reserved-physical transit issue and ordered destination receipt in addition to the financially posted source/transit pair. Receipt updates those pending legs to Sold/Purchased, splitting a pending pair for partial receipts, and maintains transit reservations and destination ordered quantity. |
 | 2026-11-01 | Transfer-order receipt now carries the order's remaining posted transit value to the destination instead of recalculating from the current site average. Later purchases and other orders in transit cannot reprice this order's receipt. |

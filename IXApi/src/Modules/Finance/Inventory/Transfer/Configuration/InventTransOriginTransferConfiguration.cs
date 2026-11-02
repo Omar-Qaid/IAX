@@ -5,6 +5,18 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace IAX.IXApi.Modules.Finance.Inventory.Transfer;
 
+public sealed class InventTransOriginTransferShipConfiguration : IEntityTypeConfiguration<InventTransOriginTransferShip>
+{
+    public void Configure(EntityTypeBuilder<InventTransOriginTransferShip> builder)
+    {
+        builder.Property(x => x.TransferShipDataAreaId).HasMaxLength(FieldLengths.CompanyId);
+        builder.Property(x => x.TransferShipId).HasMaxLength(FieldLengths.TransferId);
+        builder.Property(x => x.TransferShipLineNum).HasPrecision(28, 16);
+        builder.HasIndex(x => new { x.DataAreaId, x.InventTransOrigin }).IsUnique();
+        builder.HasIndex(x => new { x.TransferShipDataAreaId, x.TransferShipId, x.TransferShipLineNum });
+    }
+}
+
 public sealed class InventTransOriginTransferTransitToConfiguration : IEntityTypeConfiguration<InventTransOriginTransferTransitTo>
 {
     public void Configure(EntityTypeBuilder<InventTransOriginTransferTransitTo> builder)
