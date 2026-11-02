@@ -386,8 +386,6 @@ namespace IAX.IXApi.Infrastructure.Persistence
         public DbSet<TaxGroupData> TaxGroupDatas => Set<TaxGroupData>();
         public DbSet<InventPosting> InventPostings => Set<InventPosting>();
         public DbSet< MarkupTable> MarkupTables => Set< MarkupTable>();
-        public DbSet<MarkupAutoTable> MarkupAutoTables => Set<MarkupAutoTable>();
-        public DbSet<MarkupAutoLine> MarkupAutoLines => Set<MarkupAutoLine>();
         public DbSet< MarkupTrans> MarkupTrans => Set< MarkupTrans>();
 
         public DbSet<Ledger> Ledgers => Set<Ledger>();

@@ -7813,10 +7813,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
-                    b.Property<decimal>("CalculatedAmountMst_W")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
                     b.Property<decimal>("CalculatedProratedAmount")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
@@ -7906,12 +7902,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
-                    b.Property<long>("MarkupAutoLineRecId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("MarkupAutoTableRecId")
-                        .HasColumnType("bigint");
-
                     b.Property<int>("MarkupCategory")
                         .HasColumnType("int");
 
@@ -7921,28 +7911,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasColumnType("nvarchar(10)");
 
                     b.Property<int>("McrBrokerContractFee")
-                        .HasColumnType("int");
-
-                    b.Property<int>("McrCouponMarkup")
-                        .HasColumnType("int");
-
-                    b.Property<int>("McrInstallmentEligible")
-                        .HasColumnType("int");
-
-                    b.Property<int>("McrMarkupTransCreatedBy")
-                        .HasColumnType("int");
-
-                    b.Property<int>("McrMiscChargeOverride")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("McrOriginalMiscChargeValue")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<long>("McrSavedRecId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("McrSavedTableId")
                         .HasColumnType("int");
 
                     b.Property<int>("ModuleCategory")
@@ -7977,10 +7945,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<int>("RecVersion")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("RetailShippingPromotionDiscount")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .IsRequired()
@@ -7994,10 +7958,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<decimal>("TaxAmount")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("TaxAmountMst_W")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
@@ -11981,6 +11941,72 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("Currency", (string)null);
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.CurrencyLedgerGainLossAccount", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<int>("AccountType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("Ledger")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("LedgerDimension")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("DataAreaId", "Ledger", "CurrencyCode", "AccountType")
+                        .IsUnique();
+
+                    b.ToTable("CurrencyLedgerGainLossAccount", (string)null);
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.DimensionAttribute", b =>
                 {
                     b.Property<long>("RecId")
@@ -12628,14 +12654,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<int>("RecVersion")
                         .HasColumnType("int");
-
-                    b.Property<long>("RetailChannel")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("RetailChannelValue")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -13719,9 +13737,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<long>("RelationType")
                         .HasColumnType("bigint");
-
-                    b.Property<int?>("Resident_W")
-                        .HasColumnType("int");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -19116,6 +19131,90 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("InventTransPosting", (string)null);
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.InventTransferJour", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("JournalId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PostingRequestId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime>("TransDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TransferId")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("UpdateType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Voucher")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("DataAreaId", "JournalId")
+                        .IsUnique();
+
+                    b.HasIndex("DataAreaId", "Voucher")
+                        .IsUnique();
+
+                    b.HasIndex("DataAreaId", "TransferId", "UpdateType", "PostingRequestId")
+                        .IsUnique();
+
+                    b.ToTable("InventTransferJour", (string)null);
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.InventTransferLine", b =>
                 {
                     b.Property<long>("RecId")
@@ -19656,6 +19755,67 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.HasIndex("Ledger");
 
                     b.ToTable("LedgerFiscalCalendarYear", (string)null);
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.LedgerGainLossAccount", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<int>("AccountType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("Ledger")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("LedgerDimension")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("DataAreaId", "Ledger", "AccountType")
+                        .IsUnique();
+
+                    b.ToTable("LedgerGainLossAccount", (string)null);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.LedgerJournalName", b =>
@@ -21623,9 +21783,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<int>("RecVersion")
                         .HasColumnType("int");
 
-                    b.Property<int>("RetailMarketingOptIn")
-                        .HasColumnType("int");
-
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .IsRequired()
@@ -22219,260 +22376,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("MainAccountLegalEntity", (string)null);
-                });
-
-            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.MarkupAutoLine", b =>
-                {
-                    b.Property<long>("RecId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("RECID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
-
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CurrencyCode")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("nvarchar(3)");
-
-                    b.Property<int>("CustomsAssessableValue_IN")
-                        .HasColumnType("int");
-
-                    b.Property<string>("DataAreaId")
-                        .IsRequired()
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)");
-
-                    b.Property<decimal>("FromAmount")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<string>("InventLocationId")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("InventSiteId")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("Keep")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("LastModifiedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("LastModifiedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("LineNum")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<int>("MCRReturnMarkup")
-                        .HasColumnType("int");
-
-                    b.Property<int>("MarkupCategory")
-                        .HasColumnType("int");
-
-                    b.Property<string>("MarkupCode")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("MarkupCurrencyCode")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("nvarchar(3)");
-
-                    b.Property<int>("ModuleCategory")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ModuleType")
-                        .HasColumnType("int");
-
-                    b.Property<int>("NotionalCharges_IN")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("NotionalPct_IN")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<string>("OwnerAccountId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("RecVersion")
-                        .HasColumnType("int");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<long>("TableRecId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("TableTableId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("TaxGroup")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("TaxItemGroup")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<decimal>("ToAmount")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<string>("Txt")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<decimal>("Value")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.HasKey("RecId");
-
-                    b.HasIndex("DataAreaId", "TableRecId", "LineNum");
-
-                    b.ToTable("MarkupAutoLine");
-                });
-
-            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.MarkupAutoTable", b =>
-                {
-                    b.Property<long>("RecId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("RECID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
-
-                    b.Property<int>("AccountCode")
-                        .HasColumnType("int");
-
-                    b.Property<string>("AccountRelation")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DataAreaId")
-                        .IsRequired()
-                        .HasMaxLength(4)
-                        .HasColumnType("nvarchar(4)");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
-
-                    b.Property<int>("DlvModeCode")
-                        .HasColumnType("int");
-
-                    b.Property<string>("DlvModeRelation")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("ItemCode")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ItemRelation")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<DateTime?>("LastModifiedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("LastModifiedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("MarkupReturn")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ModuleCategory")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ModuleType")
-                        .HasColumnType("int");
-
-                    b.Property<string>("OwnerAccountId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("RecVersion")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RetailAdvancedChargesDeliveryProrate")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RetailChannelCode")
-                        .HasColumnType("int");
-
-                    b.Property<string>("RetailChannelRelation")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("RetailConcessionFee")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RetailConcessionFeeLegacy")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ReturnRelation")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<string>("SHA256Hash")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
-                    b.HasKey("RecId");
-
-                    b.HasIndex("DataAreaId", "ModuleType", "AccountCode", "AccountRelation", "ItemCode", "ItemRelation");
-
-                    b.ToTable("MarkupAutoTable");
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.MarkupTable", b =>
@@ -24263,9 +24166,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasMaxLength(4)
                         .HasColumnType("nvarchar(4)");
 
-                    b.Property<int>("EmptyTaxBaseForOutgoingTax_W")
-                        .HasColumnType("int");
-
                     b.Property<int>("EuroTriangulation")
                         .HasColumnType("int");
 
@@ -25112,22 +25012,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
-                    b.Property<string>("ItmCostTypeGroupId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("ItmImportCostingVendor")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ItmOverUnderToleranceGroupId")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<int>("ItmServicesProvider")
-                        .HasColumnType("int");
-
                     b.Property<int>("ItmVendType")
                         .HasColumnType("int");
 
@@ -25323,9 +25207,6 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.Property<int>("VendVendorCollaborationType")
                         .HasColumnType("int");
-
-                    b.Property<long?>("VendorPortalAdministratorRecId")
-                        .HasColumnType("bigint");
 
                     b.Property<int>("VeteranOwned")
                         .HasColumnType("int");

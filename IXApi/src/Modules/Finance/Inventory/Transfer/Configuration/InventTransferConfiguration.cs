@@ -13,6 +13,18 @@ namespace IAX.IXApi.Modules.Finance.Inventory.Transfer
         }
     }
 
+    public class InventTransferJourConfiguration : IEntityTypeConfiguration<InventTransferJour>
+    {
+        public void Configure(EntityTypeBuilder<InventTransferJour> builder)
+        {
+            builder.ToTable("InventTransferJour");
+            builder.HasIndex(x => new { x.DataAreaId, x.JournalId }).IsUnique();
+            builder.HasIndex(x => new { x.DataAreaId, x.Voucher }).IsUnique();
+            // The duplicate-request guard: one posting per request identifier per transfer leg.
+            builder.HasIndex(x => new { x.DataAreaId, x.TransferId, x.UpdateType, x.PostingRequestId }).IsUnique();
+        }
+    }
+
     public class InventTransferLineConfiguration : IEntityTypeConfiguration<InventTransferLine>
     {
         public void Configure(EntityTypeBuilder<InventTransferLine> builder)

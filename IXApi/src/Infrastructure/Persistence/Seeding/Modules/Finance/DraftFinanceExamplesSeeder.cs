@@ -6,8 +6,6 @@ using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Foundation.Markup;
 using IAX.IXApi.Modules.Identity.Users;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance;
 
@@ -27,20 +25,6 @@ public sealed class DraftFinanceExamplesSeeder : BaseModuleSeeder
         var work = new UnitOfWork(db);
         var order = await db.Set<SalesTable>().SingleAsync(x => x.DataAreaId == "dat" && x.CustomerRef == "DEMO-SO-OPEN", ct);
         var line = await db.Set<SalesLine>().SingleAsync(x => x.DataAreaId == "dat" && x.SalesId == order.SalesId, ct);
-        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes("DEMO-CUST100-CHAIR-FREIGHT")));
-        var rule = await db.Set<MarkupAutoTable>().SingleOrDefaultAsync(x => x.DataAreaId == "dat" && x.SHA256Hash == hash, ct);
-        if (rule == null)
-        {
-            rule = new MarkupAutoTable { SHA256Hash = hash, Description = "Example customer-specific freight", AccountCode = (int)TableGroupAll.Table,
-                AccountRelation = "CUST-100", ItemCode = (int)TableGroupAll.Table, ItemRelation = "ITEM-001", DlvModeCode = (int)TableGroupAll.All,
-                ModuleType = MarkupModuleType.Customer };
-            db.Add(rule);
-            await db.SaveChangesAsync(ct);
-        }
-        if (!await db.Set<MarkupAutoLine>().AnyAsync(x => x.DataAreaId == "dat" && x.TableRecId == rule.RecId && x.LineNum == 1, ct))
-            db.Add(new MarkupAutoLine { TableRecId = rule.RecId, TableTableId = FinanceTableNumbers.MarkupAutoTable, LineNum = 1,
-                MarkupCode = "Freight", ModuleType = MarkupModuleType.Customer, CurrencyCode = "SAR", MarkupCurrencyCode = "SAR",
-                MarkupCategory = MarkupCategory.Fixed, Value = 10, Txt = "Example freight", TaxGroup = "DOM", TaxItemGroup = line.TaxItemGroup });
         if (!await db.Set<MarkupTrans>().AnyAsync(x => x.DataAreaId == "dat" && x.TransTableId == FinanceTableNumbers.SalesTable && x.TransRecId == order.RecId && x.MarkupCode == "Freight", ct))
             await new MarkupTransCommandService(work, actor, new MarkupChargeCalculator(work, actor)).CreateAsync(MarkupModuleType.Customer,
                 FinanceTableNumbers.SalesTable, order.RecId, new MarkupTransDto { ModuleType = MarkupModuleType.Customer,

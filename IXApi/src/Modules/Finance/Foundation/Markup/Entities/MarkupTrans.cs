@@ -103,8 +103,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public long VendInvoiceTableMarkupTrans { get; set; }
         public long VendInvoiceTemplate { get; set; }
         public long ItemBasePriceRecId { get; set; }
-        public long MarkupAutoLineRecId { get; set; }
-        public long MarkupAutoTableRecId { get; set; }
         public long SourceDocumentLine { get; set; }
 
         // ==========================================================

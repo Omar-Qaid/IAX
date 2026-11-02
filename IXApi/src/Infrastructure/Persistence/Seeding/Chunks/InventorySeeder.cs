@@ -139,10 +139,17 @@ public sealed  class InventorySeeder : IAX.IXApi.Infrastructure.Persistence.Seed
                 LossProfitJournalNameId = "IJ-ADJ",
                 TransferJournalNameId = "IJ-TRF",
                 CountJournalNameId = "IJ-CNT",
-                ReserveOnOrdered = NoYes.Yes,
+                ReserveOnOrdered = NoYes.No,
                 MandatoryItemTaxGroup = NoYes.No
             };
             db.Add(parameters);
+        }
+        else if (parameters.ReserveOnOrdered == NoYes.Yes)
+        {
+            // Ordered reservation is rejected by InventParametersService, and a company left with
+            // it enabled reports MISSING_INVENTORY_PARAMETERS and never becomes ready for item
+            // setup. Converge only this flag; the other values are the operator's choice.
+            parameters.ReserveOnOrdered = NoYes.No;
         }
 
         await db.SaveChangesAsync(ct);

@@ -16,7 +16,6 @@ public static class FinanceTableNumbers
     // Existing IXApp recordTableId fallback values (FNV-1a over normalized table names).
     public const int CustTransOpen = 472585700;
     public const int LedgerJournalTrans = 1864676057;
-    public const int MarkupAutoTable = 1802567218;
 
     public static int For<TEntity>() => typeof(TEntity) switch
     {
@@ -25,7 +24,6 @@ public static class FinanceTableNumbers
         var type when type == typeof(global::IAX.IXApi.Modules.Finance.AccountsReceivable.SalesLine) => SalesLine,
         var type when type == typeof(global::IAX.IXApi.Modules.Finance.AccountsReceivable.CustTransOpen) => CustTransOpen,
         var type when type == typeof(global::IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans) => LedgerJournalTrans,
-        var type when type == typeof(global::IAX.IXApi.Modules.Finance.Entities.MarkupAutoTable) => MarkupAutoTable,
         var type when type == typeof(global::IAX.IXApi.Modules.Finance.Entities.VendTable) => VendTable,
         var type when type == typeof(global::IAX.IXApi.Modules.Finance.AccountsPayable.VendInvoiceTrans) => VendInvoiceTrans,
         var type when type == typeof(global::IAX.IXApi.Modules.Finance.Foundation.HcmWorkers.HcmWorker) => HcmWorker,

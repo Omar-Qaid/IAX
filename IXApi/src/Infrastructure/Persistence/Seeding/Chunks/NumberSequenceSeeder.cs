@@ -83,6 +83,8 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 ("UnitOfMeasure",       "UOM Sequence",              "UOM-######", "{PREFIX}-{SEQ}",       0),
                 ("InventUOM",           "UOM Sequence",              "IUOM-######","{PREFIX}-{SEQ}",       0),
                 ("InventTrans",         "Inv Transaction Sequence",  "ITRX-######","{PREFIX}-{YYYY}{MM}-{SEQ}", 1),
+                ("InventTransferTable", "Transfer Order Sequence",   "TRF-######", "{PREFIX}-{YYYY}-{SEQ}", 0),
+                ("InventTransferJour",  "Transfer Journal Sequence", "TRFJ-######","{PREFIX}-{YYYY}-{SEQ}", 0),
 
                 // ─── Organization ────────────────────────────────────────────────
                 ("HcmWorker",         "HcmWorker Sequence",         "EMP-######", "{PREFIX}-{SEQ}",       0),

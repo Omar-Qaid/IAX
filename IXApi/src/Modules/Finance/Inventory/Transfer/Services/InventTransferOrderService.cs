@@ -1,3 +1,4 @@
+using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.SalesOrder.Interfaces;
 using IAX.IXApi.Modules.Finance.Common;
@@ -24,7 +25,8 @@ public sealed class InventTransferOrderService(
     IUnitOfWork unitOfWork,
     ICompanyExecutionContext company,
     IInventDimensionResolver dimensions,
-    ISalesInventoryNumberService inventoryNumbers) : IInventTransferOrderService
+    ISalesInventoryNumberService inventoryNumbers,
+    ISysNumberSequenceService numbers) : IInventTransferOrderService
 {
     private DbContext Db => unitOfWork.Context;
     private InventoryMovement Movement => new(unitOfWork, inventoryNumbers);
@@ -49,7 +51,11 @@ public sealed class InventTransferOrderService(
 
     private async Task<InventTransferTable> CreateCoreAsync(string area, InventTransferCreateDto input, CancellationToken ct)
     {
+        // A blank identifier is allocated from the transfer order number sequence, as D365 does.
+        // An explicitly supplied identifier is still accepted, which is the manual-sequence case.
         var transferId = (input.TransferId ?? string.Empty).Trim();
+        if (transferId.Length == 0)
+            transferId = (await numbers.NextAsync(nameof(InventTransferTable), area, ct)).Code;
         if (transferId.Length == 0 || transferId.Length > FieldLengths.TransferId)
             throw new InvalidOperationException($"A transfer identifier of at most {FieldLengths.TransferId} characters is required.");
         if (input.Lines == null || input.Lines.Count == 0)
@@ -180,24 +186,27 @@ public sealed class InventTransferOrderService(
             throw new InvalidOperationException("The transfer order is cancelled.");
 
         var transDate = (input.TransDate ?? DateTime.UtcNow).Date;
-        var voucher = $"{id}:{requestId}";
-        // The same request is idempotent only for the same operation. A shipment request ID
-        // reused for receipt (or the reverse) must not silently skip the movement.
-        var existingIssueWarehouses = await (from transaction in Db.Set<InventTrans>().AsNoTracking()
-            join dim in Db.Set<InventDim>().AsNoTracking()
-                on new { transaction.DataAreaId, transaction.InventDimId } equals new { dim.DataAreaId, dim.InventDimId }
-            where transaction.DataAreaId == area && transaction.Voucher == voucher
-                && transaction.StatusIssue == StatusIssue.Sold
-            select dim.InventLocationId).Distinct().ToListAsync(ct);
-        if (existingIssueWarehouses.Count > 0)
+        var updateType = receive ? InventTransferUpdateType.Receive : InventTransferUpdateType.Shipment;
+
+        // The posted transfer journal owns the duplicate-request guard. The same request is
+        // idempotent only for the same operation: a shipment request ID reused for receipt (or
+        // the reverse) must not silently skip the movement.
+        var posted = await Db.Set<InventTransferJour>().AsNoTracking()
+            .Where(x => x.DataAreaId == area && x.TransferId == id && x.PostingRequestId == requestId)
+            .ToListAsync(ct);
+        if (posted.Count > 0)
         {
-            var expectedWarehouse = receive ? header.InventLocationIdTransit : header.InventLocationIdFrom;
-            if (existingIssueWarehouses.Count != 1 || existingIssueWarehouses[0] != expectedWarehouse)
+            if (posted.Any(x => x.UpdateType != updateType))
                 throw new InvalidOperationException("This posting request identifier was already used for the other transfer operation.");
             return header;
         }
         if (header.TransferStatus == InventTransferStatus.Received)
             throw new InvalidOperationException("The transfer order is fully received.");
+
+        // The posting voucher comes from the transfer journal number sequence, not from the
+        // caller, so it stays unique and joinable to the ledger.
+        var journalId = (await numbers.NextAsync(nameof(InventTransferJour), area, ct)).Code;
+        var voucher = journalId;
 
         var lines = await Db.Set<InventTransferLine>().Where(x => x.DataAreaId == area && x.TransferId == id).ToListAsync(ct);
         var site = await Db.Set<InventDim>().AsNoTracking()
@@ -305,6 +314,12 @@ public sealed class InventTransferOrderService(
                 : line.QtyRemainShip == 0 ? InventTransferRemainStatus.Shipped
                 : InventTransferRemainStatus.None;
         }
+
+        Db.Add(new InventTransferJour
+        {
+            DataAreaId = area, TransferId = id, JournalId = journalId, UpdateType = updateType,
+            TransDate = transDate, Voucher = voucher, PostingRequestId = requestId
+        });
 
         header.TransferStatus = lines.All(x => x.QtyRemainReceive == 0) ? InventTransferStatus.Received
             : lines.Any(x => x.QtyShipped > 0) ? InventTransferStatus.Shipped

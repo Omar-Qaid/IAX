@@ -147,7 +147,7 @@ public sealed class InventoryFullCycleSeeder : BaseModuleSeeder
         await Journal("FIFO115-COUNT", "IJ-CNT", 0, counted: 98);
 
         var transfers = new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransferOrderService(
-            work, actor, resolver, inventoryNumbers);
+            work, actor, resolver, inventoryNumbers, numbers);
         Require((await transfers.CreateAsync(new("FIFO115-TRANSIT", "JED", From, Transit, To, date, date,
             [new(Item, "PCS", 40)]), ct)).Error);
         Require((await transfers.ShipAsync("FIFO115-TRANSIT", new("SHIP", date, new Dictionary<decimal, decimal> { [1m] = 40m }), ct)).Error);
