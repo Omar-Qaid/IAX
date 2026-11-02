@@ -1863,6 +1863,40 @@ public sealed class InventoryCycleTests
     }
 
     [Fact]
+    public async Task Item_close_reverses_its_recalculation_without_reversing_a_later_independent_item()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedMarkablePool(db);
+        await db.SaveChangesAsync();
+        db.Add(new InventModelGroupItem { ItemDataAreaId = "dat", ModelGroupDataAreaId = "dat", ModelGroupId = "FIFO", ItemId = "OTHER" });
+        db.Add(new InventItemGroupItem { ItemDataAreaId = "dat", ItemId = "OTHER", ItemGroupId = "TRADE" });
+        db.AddRange(
+            new InventTransOrigin { RecId = 10, DataAreaId = "dat", InventTransId = "OR", ItemId = "OTHER", ReferenceId = "O1", ReferenceCategory = InventRefType.InventoryJournal },
+            new InventTransOrigin { RecId = 11, DataAreaId = "dat", InventTransId = "OI", ItemId = "OTHER", ReferenceId = "O2", ReferenceCategory = InventRefType.InventoryJournal },
+            new InventTrans { RecId = 10, DataAreaId = "dat", ItemId = "OTHER", InventDimId = "DIM", InventTransOrigin = 10, Qty = 10, StatusReceipt = StatusReceipt.Purchased, CostAmountPosted = 100, DateFinancial = new DateTime(2026, 6, 1), ValueOpen = InventTransOpen.Yes },
+            new InventTrans { RecId = 11, DataAreaId = "dat", ItemId = "OTHER", InventDimId = "DIM", InventTransOrigin = 11, Qty = -5, StatusIssue = StatusIssue.Sold, CostAmountPosted = -60, Voucher = "OTHER-ISSUE", DateFinancial = new DateTime(2026, 6, 3), ValueOpen = InventTransOpen.Yes },
+            new InventSum { DataAreaId = "dat", ItemId = "OTHER", InventDimId = "DIM", PhysicalInvent = 5, PostedValue = 40 },
+            new InventTransPosting { DataAreaId = "dat", InventTransOrigin = 11, ItemId = "OTHER", Voucher = "OTHER-ISSUE", InventTransPostingType = InventTransPostingType.Financial, IsPosted = NoYes.Yes, LedgerDimension = 1, OffsetLedgerDimension = 2, PostingType = LedgerPostingType.InventIssue, PostingTypeOffset = LedgerPostingType.InventLoss, ProjId = "" });
+        await db.SaveChangesAsync();
+        var service = new InventCloseService(new TestUnitOfWork(db), new TestCompany(), new TestUser(), Sequence());
+        var first = await service.RecalculateItemAsync("ITEM", new DateTime(2026, 6, 30));
+        var second = await service.RecalculateItemAsync("OTHER", new DateTime(2026, 6, 30));
+        Assert.Null(first.Error);
+        Assert.Null(second.Error);
+        Assert.Equal(10m, (await db.Set<InventTrans>().SingleAsync(x => x.RecId == 11)).CostAmountAdjustment);
+
+        var close = await service.CloseItemAsync("ITEM", new DateTime(2026, 6, 3));
+
+        Assert.Null(close.Error);
+        Assert.Equal(NoYes.Yes, (await db.Set<InventClosing>().SingleAsync(x => x.RecId == first.Result!.ClosingRecId)).Cancellation);
+        Assert.Equal(NoYes.No, (await db.Set<InventClosing>().SingleAsync(x => x.RecId == second.Result!.ClosingRecId)).Cancellation);
+        Assert.Equal(10m, (await db.Set<InventTrans>().SingleAsync(x => x.RecId == 11)).CostAmountAdjustment);
+        Assert.Equal(50m, (await db.Set<InventSum>().SingleAsync(x => x.ItemId == "OTHER")).PostedValue);
+    }
+
+    [Fact]
     public async Task Item_close_does_not_reverse_a_company_wide_recalculation()
     {
         await using var fixture = await Fixture.CreateAsync();

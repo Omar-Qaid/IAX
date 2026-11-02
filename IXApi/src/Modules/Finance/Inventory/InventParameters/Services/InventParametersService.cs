@@ -104,7 +104,7 @@ public sealed class InventParametersService : BaseService<InventParametersEntity
         var requiredPostingTypes = new List<InventAccountType>
         {
             InventAccountType.InventReceipt, InventAccountType.InventIssue, InventAccountType.InventProfit,
-            InventAccountType.InventLoss, InventAccountType.SalesConsump
+            InventAccountType.InventLoss, InventAccountType.SalesConsump, InventAccountType.PurchConsump
         };
         var physicalPosting = await Db.Set<IAX.IXApi.Modules.Finance.Entities.InventModelGroup>().AsNoTracking()
             .Where(x => x.DataAreaId == companyId && x.StockedProduct == NoYes.Yes)

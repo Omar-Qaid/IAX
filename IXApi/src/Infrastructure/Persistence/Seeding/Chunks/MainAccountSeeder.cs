@@ -183,6 +183,17 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 },
                 new MainAccount
                 {
+                    MainAccountId = "60018000",
+                    Name = "Purchase Expenditure for Product",
+                    Type = MainAccountType.Expense,
+                    CurrencyCode = "SAR",
+                    ConsolidationMainAccount = "60018000",
+                    GroupLevel01 = "Expenses",
+                    GroupLevel02 = "Cost of Sales",
+                    GroupLevel03 = "Purchase Expenditure"
+                },
+                new MainAccount
+                {
                     MainAccountId = "21010000",
                     Name = "Accrued Purchases - Product Receipt",
                     Type = MainAccountType.Liability,

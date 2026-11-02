@@ -606,7 +606,8 @@ public sealed class ReleasedProductListService : BaseService<ReleasedItem>, IRel
         var modelGroup = string.IsNullOrWhiteSpace(modelGroupId) ? null
             : await Db.Set<IAX.IXApi.Modules.Finance.Entities.InventModelGroup>().AsNoTracking()
                 .FirstOrDefaultAsync(x => x.DataAreaId == companyId && x.ModelGroupId == modelGroupId, ct);
-        var purchaseTypes = new List<InventAccountType> { InventAccountType.PurchPackingSlip, InventAccountType.PurchReceipt };
+        var purchaseTypes = new List<InventAccountType>
+            { InventAccountType.PurchPackingSlip, InventAccountType.PurchReceipt, InventAccountType.PurchConsump };
         if (modelGroup?.PostPhysicalPurchase == NoYes.Yes) purchaseTypes.Add(InventAccountType.PurchPackingSlipOffsetAccount);
         var salesTypes = new List<InventAccountType>
         {

@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
+﻿using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities;
@@ -358,7 +358,7 @@ public sealed  class InventorySeeder : IAX.IXApi.Infrastructure.Persistence.Seed
 
     private static async Task SeedPostingRulesAsync(ApplicationDbContext db, CancellationToken ct)
     {
-        var accountIds = new[] { "50010000", "40010000", "14010000", "40910000", "50910000", "21010000", "21020000" };
+        var accountIds = new[] { "50010000", "40010000", "14010000", "40910000", "50910000", "21010000", "21020000", "60018000" };
         var accounts = await db.Set<MainAccount>().IgnoreQueryFilters()
             .Where(x => x.DataAreaId == Company && accountIds.Contains(x.MainAccountId))
             .ToDictionaryAsync(x => x.MainAccountId, ct);
@@ -419,6 +419,12 @@ public sealed  class InventorySeeder : IAX.IXApi.Infrastructure.Persistence.Seed
         if (dimensions.ContainsKey("21020000"))
         {
             await AddPostingAsync(db, InventAccountType.SalesPackingSlipOffsetAccount, dimensions["21020000"], ct);
+        }
+        // Offset to "Cost of purchased materials invoiced" on a financially updated purchase
+        // transaction; inventory close adjusts a purchase return against this account.
+        if (dimensions.ContainsKey("60018000"))
+        {
+            await AddPostingAsync(db, InventAccountType.PurchConsump, dimensions["60018000"], ct);
         }
         await db.SaveChangesAsync(ct);
     }
