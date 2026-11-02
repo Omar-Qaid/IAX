@@ -2058,6 +2058,7 @@ public sealed class InventoryArchitectureTests
             Configure<InventJournalTable>(builder);
             Configure<InventTransferTable>(builder);
             Configure<InventTransferLine>(builder);
+            Configure<InventTransferJour>(builder);
             Configure<InventTransOriginTransferTransitTo>(builder);
             Configure<InventTransOriginTransferTransitFrom>(builder);
             Configure<InventTransOriginTransferReceive>(builder);
