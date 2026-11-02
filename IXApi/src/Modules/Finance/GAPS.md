@@ -13,7 +13,7 @@ counted as gaps.
 | Accounts receivable | [AccountsReceivable/GAPS.md](AccountsReceivable/GAPS.md) | Customer aging; exchange gain/loss on settlement |
 | Inventory | [Inventory/GAPS.md](Inventory/GAPS.md) | SQL Server verification; four unsupported inventory models |
 | Foundation | [Foundation/GAPS.md](Foundation/GAPS.md) | Realized gain/loss accounts have nowhere to live (schema decision); payment-term methods |
-| Common (shared posting) | [Common/GAPS.md](Common/GAPS.md) | Posting lock unproven under SQL Server; implicit enum values still renumber on reorder |
+| Common (shared posting) | [Common/GAPS.md](Common/GAPS.md) | Posting lock unproven under SQL Server; two overlapping posting exception types |
 
 ## The two findings that cut across every module
 
