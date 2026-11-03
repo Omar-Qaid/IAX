@@ -14,21 +14,23 @@ public sealed class InventoryCycleExampleService
         // Add a separate, unposted adjustment for a user to review; never close unrelated company inventory.
         var db = context.Db;
         var journal = await db.Set<InventJournalTable>().IgnoreQueryFilters()
-            .SingleOrDefaultAsync(x => x.DataAreaId == Company && x.Description == Inventory, ct);
+            .SingleOrDefaultAsync(x => x.DataAreaId == Company && x.Description == InventoryJournal, ct);
         var journals = new InventJournalService(context.Work, context.Actor, context.Actor, context.Numbers, context.Dimensions);
         if (journal == null)
         {
             var result = await journals.CreateAsync(new InventJournalCreateDto { JournalNameId = "IJ-ADJ",
-                Description = Inventory, InventSiteId = Site, InventLocationId = Warehouse }, ct);
+                Description = InventoryJournal, InventSiteId = Site, InventLocationId = Warehouse }, ct);
             if (result.Error != null) throw new InvalidOperationException(result.Error);
-            journal = result.Journal!;
+            journal = await db.Set<InventJournalTable>().IgnoreQueryFilters().SingleAsync(
+                x => x.DataAreaId == Company && x.JournalId == result.Journal!.JournalId, ct);
         }
-        if (journal.IsDeleted || journal.JournalType != InventJournalType.LossProfit)
+        if (journal.IsDeleted || journal.JournalType != InventJournalType.Adjustment)
             throw new InvalidOperationException("ERP inventory example conflicts with an existing journal; it was preserved.");
-        var line = await db.Set<InventJournalTrans>().SingleOrDefaultAsync(x => x.JournalId == journal.JournalId, ct);
+        var line = await db.Set<InventJournalTrans>().IgnoreQueryFilters()
+            .SingleOrDefaultAsync(x => x.DataAreaId == Company && x.JournalId == journal.JournalId, ct);
         if (line != null)
         {
-            if (line.ItemId != Item || line.Qty != 2m || line.CostPrice != PurchasePrice)
+            if (line.IsDeleted || line.ItemId != Item || line.Qty != 2m || line.CostPrice != PurchasePrice)
                 throw new InvalidOperationException("ERP inventory example line was customized; it was preserved.");
             return;
         }

@@ -38,6 +38,21 @@
     "Source": "Modules/Administration/SysSettingsSeeder.cs"
   },
   {
+    "Type": "ErpCycleExampleService",
+    "Id": "ERP.TradingCycleExample",
+    "Version": 1,
+    "Category": "Demo",
+    "Policy": "RunOnce",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.InventoryFullCycle",
+      "Finance.DraftExamples"
+    ],
+    "Registered": true,
+    "OwnerModule": "ERP",
+    "Source": "CycleErpExamples/ErpCycleExampleService.cs"
+  },
+  {
     "Type": "VendSeeder",
     "Id": "Finance.AccountsPayable.Vendors",
     "Version": 1,

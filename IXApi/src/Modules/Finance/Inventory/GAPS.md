@@ -1,6 +1,6 @@
 ﻿# Inventory — gap analysis against basic D365 F&O
 
-**Last updated:** 2026-11-02
+**Last updated:** 2026-11-03
 **Scope:** basic (core) D365 F&O Inventory and Cost management only. Advanced warehouse (WHS),
 production, quality, and optional features are out of scope by request and are not listed as gaps.
 
@@ -126,6 +126,7 @@ message quoted.
 
 | Date | Change |
 | --- | --- |
+| 2026-11-03 | Sales and purchase order cancellation now release open demand and ordered supply for a partly processed order, affecting `InventSum.Ordered`, `OnOrder` and `ReservPhysical` and the `Ordered`/`ReservPhysical` inventory transactions behind them. Neither posts a ledger entry or checks a fiscal period, because ordered supply and reservations are neither physical nor financial inventory. A **picked** quantity blocks sales cancellation by name, leaving the `Picked` bucket to the existing `SetPickedAsync` unpick path rather than reversing a physical registration inside cancellation. See `AccountsPayable/GAPS.md` and `AccountsReceivable/GAPS.md`. |
 | 2026-11-03 | Marking removal can select an already-split movement by record ID. It refuses missing, ambiguous, or financially settled counterparts, and marking refuses a second origin pair that cannot be distinguished. Marking operations use the shared transaction lock. |
 | 2026-11-03 | Customer return entitlement now distinguishes returns linked to other invoice lines from genuinely unattributed legacy returns, including lines added earlier in the same request. Legacy returns still trigger the conservative origin-wide limit. |
 | 2026-11-03 | Verified the close/recalculation interaction against Microsoft: closing cancels all recalculations dated after the closing date, which the company-wide close already does automatically. No documented rule covers an item close against a later company-wide run, and scoping one would mean partially cancelling a cost run, so that case stays refused and moved from an open gap to a flagged uncertainty. No behavior changed. |

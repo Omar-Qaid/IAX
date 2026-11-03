@@ -25,15 +25,16 @@ public sealed class SalesCycleExampleService
         if (order == null)
         {
             var result = await orders.CreateAsync(new SalesOrderQuickCreateDto { CustomerAccount = Customer,
-                CustomerReference = Sales, SalesName = Sales, CurrencyCode = Currency,
+                CustomerReference = Sales, SalesName = Sales, CurrencyCode = CurrencyCode,
                 InventSiteId = Site, InventLocationId = Warehouse, RequestedReceiptDate = context.Date,
                 RequestedShipDate = context.Date, TaxGroupId = "DOM" }, ct);
             if (result.Error != null) throw new InvalidOperationException(result.Error);
             order = await db.Set<SalesTable>().SingleAsync(x => x.CustomerRef == Sales, ct);
         }
-        if (order.IsDeleted || order.CustAccount != Customer || order.CurrencyCode != Currency)
+        if (order.IsDeleted || order.CustAccount != Customer || order.CurrencyCode != CurrencyCode)
             throw new InvalidOperationException("ERP sales example conflicts with an existing order; it was preserved.");
-        var line = await db.Set<SalesLine>().SingleOrDefaultAsync(x => x.SalesId == order.SalesId, ct);
+        var line = await db.Set<SalesLine>().IgnoreQueryFilters()
+            .SingleOrDefaultAsync(x => x.DataAreaId == Company && x.SalesId == order.SalesId, ct);
         if (line == null)
         {
             var result = await lines.AddAsync(order.RecId, new SalesLineInputDto { ItemNumber = Item,
@@ -43,7 +44,7 @@ public sealed class SalesCycleExampleService
             if (result.Status != SalesLineWriteStatus.Success) throw new InvalidOperationException(result.Error);
             line = await db.Set<SalesLine>().SingleAsync(x => x.SalesId == order.SalesId, ct);
         }
-        if (line.ItemId != Item || line.SalesQty != SalesQuantity || line.SalesPrice != SalesPrice || line.SalesUnit != Unit)
+        if (line.IsDeleted || line.ItemId != Item || line.SalesQty != SalesQuantity || line.SalesPrice != SalesPrice || line.SalesUnit != Unit)
             throw new InvalidOperationException("ERP sales example lines were customized; no further posting was attempted.");
         if (!await db.Set<CustConfirmJour>().AnyAsync(x => x.SalesId == order.SalesId && x.ParmId == Sales, ct))
         {
