@@ -323,14 +323,16 @@ public sealed class CustPaymentService : BaseService<CustTrans>, ICustPaymentSer
                     $"Cash discount {customer.AccountNum}", 0m, currency));
             }
             // The plug is derived from the posted lines, not from the per-invoice differences, so
-            // the voucher balances to the cent regardless of per-amount rounding. A loss is a
-            // debit, a gain a credit, which is the sign the accumulated difference already has.
+            // the voucher balances to the cent regardless of per-amount rounding. The balancing
+            // entry is -plug: when the cash is worth less than the receivable it cleared, the plug
+            // is negative and the entry is a debit, which is a loss. The gain case is its mirror.
             if (plugAccounting != 0m || plugReporting != 0m)
             {
+                var isGain = plugAccounting > 0m;
                 var gainLossAccount = await support.ResolveRealizedGainLossAsync(area, ledger.Ledger.RecId,
-                    currency, plugAccounting < 0m, ct);
+                    currency, isGain, ct);
                 Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, gainLossAccount,
-                    plugAccounting < 0m ? LedgerPostingType.ExchRateGain : LedgerPostingType.ExchRateLoss,
+                    isGain ? LedgerPostingType.ExchRateGain : LedgerPostingType.ExchRateLoss,
                     0m, -plugAccounting, -plugReporting,
                     $"Realized exchange difference {customer.AccountNum}", 0m, currency));
                 paymentTrans.CustExchAdjustmentRealized = realizedExchange;

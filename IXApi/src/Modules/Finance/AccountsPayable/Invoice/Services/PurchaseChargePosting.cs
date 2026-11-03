@@ -164,23 +164,26 @@ internal sealed class PurchaseChargePosting(DbContext db)
         var taxCodes = await support.ApplicableTaxCodesAsync(area, taxGroup, itemGroup, date, ct);
         if (taxCodes.Count == 0) return 0m;
         var total = decimal.Round(amount * taxCodes.Sum(x => x.Rate) / 100m, 2, MidpointRounding.AwayFromZero);
-        if (total == 0m) return 0m;
 
         foreach (var (taxCode, codeTax) in SubledgerPostingSupport.AllocateTax(taxCodes, total))
         {
-            if (codeTax == 0m) continue;
             var table = await db.Set<TaxTable>().AsNoTracking()
                 .SingleOrDefaultAsync(x => x.DataAreaId == area && x.TaxCode == taxCode, ct)
                 ?? throw new SubledgerPostingException($"Purchase tax code '{taxCode}' was not found.");
-            var group = await db.Set<TaxLedgerAccountGroup>().AsNoTracking()
-                .SingleOrDefaultAsync(x => x.DataAreaId == area && x.TaxAccountGroup == table.TaxAccountGroup, ct);
-            if (group?.TaxIncomingLedgerDimension is not > 0)
-                throw new SubledgerPostingException(
-                    $"Purchase input tax account is missing for tax code '{taxCode}'.");
-            var account = await support.LoadDimensionAsync(area, group.TaxIncomingLedgerDimension.Value,
-                "purchase input tax", ct);
-            db.Add(translation.AccountEntry(area, entryRecId, account, LedgerPostingType.Tax, codeTax,
-                $"Purchase input tax {taxCode} on charge {code.MarkupCode} of {invoiceId}", 0m));
+            // A zero-rated charge needs no input tax account and posts no ledger line; its base is
+            // still recorded below so the charge's turnover is reportable under the code.
+            if (codeTax != 0m)
+            {
+                var group = await db.Set<TaxLedgerAccountGroup>().AsNoTracking()
+                    .SingleOrDefaultAsync(x => x.DataAreaId == area && x.TaxAccountGroup == table.TaxAccountGroup, ct);
+                if (group?.TaxIncomingLedgerDimension is not > 0)
+                    throw new SubledgerPostingException(
+                        $"Purchase input tax account is missing for tax code '{taxCode}'.");
+                var account = await support.LoadDimensionAsync(area, group.TaxIncomingLedgerDimension.Value,
+                    "purchase input tax", ct);
+                db.Add(translation.AccountEntry(area, entryRecId, account, LedgerPostingType.Tax, codeTax,
+                    $"Purchase input tax {taxCode} on charge {code.MarkupCode} of {invoiceId}", 0m));
+            }
             db.Add(new TaxTrans
             {
                 DataAreaId = area, TransDate = date, Voucher = voucher, TaxCode = taxCode,

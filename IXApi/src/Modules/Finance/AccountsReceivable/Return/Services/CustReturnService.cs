@@ -1,4 +1,4 @@
-using IAX.IXApi.Modules.Finance.Inventory;
+﻿using IAX.IXApi.Modules.Finance.Inventory;
 using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.NumberSequences;
@@ -440,7 +440,7 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
             var currency = ledger.Ledger.AccountingCurrency;
 
             decimal totalRevenue = 0, totalTax = 0, totalQty = 0;
-            var taxByCode = new Dictionary<string, (decimal Base, decimal Tax, string Group, string ItemGroup)>();
+            var taxByCode = new Dictionary<string, (decimal Base, decimal Tax, decimal Rate, string Group, string ItemGroup)>();
             foreach (var (line, qty, physical) in selection)
             {
                 var boundaryError = await InventoryFinancialBoundary.CheckAsync(Db, area, line.ItemId, date, ct);
@@ -452,7 +452,8 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
                 foreach (var (code, codeTax) in SubledgerPostingSupport.AllocateTax(codes, lineTax))
                 {
                     var current = taxByCode.GetValueOrDefault(code);
-                    taxByCode[code] = (current.Base + revenue, current.Tax + codeTax, line.TaxGroup, line.TaxItemGroup);
+                    taxByCode[code] = (current.Base + revenue, current.Tax + codeTax,
+                        codes.Single(x => x.Code == code).Rate, line.TaxGroup, line.TaxItemGroup);
                 }
 
                 // Reverse revenue (debit).
@@ -511,14 +512,18 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
 
             foreach (var (code, value) in taxByCode)
             {
-                if (value.Tax == 0m) continue;
-                var payable = await support.ResolveTaxPayableAsync(area, code, ct);
-                Db.Add(translation.AccountEntry(area, entry.RecId, payable, LedgerPostingType.Tax, value.Tax,
-                    $"Sales tax {code} credit on {invoiceId}", 0m));
+                // A zero-rated code posts no ledger line and resolves no payable account; its base
+                // is still credited so the reversed turnover can be reported under the code.
+                if (value.Tax != 0m)
+                {
+                    var payable = await support.ResolveTaxPayableAsync(area, code, ct);
+                    Db.Add(translation.AccountEntry(area, entry.RecId, payable, LedgerPostingType.Tax, value.Tax,
+                        $"Sales tax {code} credit on {invoiceId}", 0m));
+                }
                 Db.Set<TaxTrans>().Add(SalesInvoiceService.TaxTransaction(area, date, invoiceId, code, value.Group, value.ItemGroup,
                     order.CurrencyCode, currency, value.Base, value.Tax,
                     translation.ToAccounting(value.Base), translation.ToAccounting(value.Tax),
-                    translation.ToReporting(value.Base), translation.ToReporting(value.Tax)));
+                    translation.ToReporting(value.Base), translation.ToReporting(value.Tax), value.Rate));
             }
 
             var total = totalRevenue + totalTax;

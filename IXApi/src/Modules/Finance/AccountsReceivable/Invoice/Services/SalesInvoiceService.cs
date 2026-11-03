@@ -140,7 +140,7 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
             var currency = ledger.Ledger.AccountingCurrency;
 
             decimal totalRevenue = 0, totalTax = 0, totalQty = 0;
-            var taxByCode = new Dictionary<string, (decimal Base, decimal Tax, string Group, string ItemGroup)>();
+            var taxByCode = new Dictionary<string, (decimal Base, decimal Tax, decimal Rate, string Group, string ItemGroup)>();
             foreach (var (line, qty) in selection)
             {
                 var boundaryError = await IAX.IXApi.Modules.Finance.Inventory.InventoryFinancialBoundary.CheckAsync(Db, area, line.ItemId, date, ct);
@@ -160,7 +160,8 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
                 foreach (var (code, codeTax) in SubledgerPostingSupport.AllocateTax(codes, lineTax))
                 {
                     var current = taxByCode.GetValueOrDefault(code);
-                    taxByCode[code] = (current.Base + revenue, current.Tax + codeTax, line.TaxGroup, line.TaxItemGroup);
+                    taxByCode[code] = (current.Base + revenue, current.Tax + codeTax,
+                        codes.Single(x => x.Code == code).Rate, line.TaxGroup, line.TaxItemGroup);
                 }
 
                 var (cogs, physicalReversals, inventOrigin) = await IssueInventoryAsync(area, order, line, inventQty, invoiceId, date, ct);
@@ -213,10 +214,11 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
             // part of the invoice total and its tax joins the rest of the voucher's tax.
             var charges = await new SalesChargePosting(Db).PostAsync(area, order, entry.RecId, invoiceId,
                 date, translation, support, customerAccount, ct);
-            foreach (var (code, chargeBase, chargeTax, group, itemGroup) in charges.TaxByCode)
+            foreach (var (code, chargeBase, chargeTax, chargeRate, group, itemGroup) in charges.TaxByCode)
             {
                 var current = taxByCode.GetValueOrDefault(code);
                 taxByCode[code] = (current.Base + chargeBase, current.Tax + chargeTax,
+                    current.Rate != 0m ? current.Rate : chargeRate,
                     current.Group.Length > 0 ? current.Group : group,
                     current.ItemGroup.Length > 0 ? current.ItemGroup : itemGroup);
             }
@@ -224,14 +226,19 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
 
             foreach (var (code, value) in taxByCode)
             {
-                if (value.Tax == 0m) continue;
-                var payable = await support.ResolveTaxPayableAsync(area, code, ct);
-                Db.Add(translation.AccountEntry(area, entry.RecId, payable, LedgerPostingType.Tax, -value.Tax,
-                    $"Sales tax {code} on {invoiceId}", 0m));
+                // A zero-rated code has no amount to post, so it resolves no payable account and
+                // adds no ledger line - but its base is still recorded below, so the turnover can
+                // be reported under the code.
+                if (value.Tax != 0m)
+                {
+                    var payable = await support.ResolveTaxPayableAsync(area, code, ct);
+                    Db.Add(translation.AccountEntry(area, entry.RecId, payable, LedgerPostingType.Tax, -value.Tax,
+                        $"Sales tax {code} on {invoiceId}", 0m));
+                }
                 Db.Set<TaxTrans>().Add(TaxTransaction(area, date, invoiceId, code, value.Group, value.ItemGroup,
                     order.CurrencyCode, currency, -value.Base, -value.Tax,
                     translation.ToAccounting(-value.Base), translation.ToAccounting(-value.Tax),
-                    translation.ToReporting(-value.Base), translation.ToReporting(-value.Tax)));
+                    translation.ToReporting(-value.Base), translation.ToReporting(-value.Tax), value.Rate));
             }
 
             // Charges debited to the customer are part of what the customer owes; charges the
@@ -392,9 +399,12 @@ public sealed class SalesInvoiceService : BaseService<CustInvoiceJour>, ISalesIn
     internal static TaxTrans TaxTransaction(string area, DateTime date, string voucher, string code, string group,
         string itemGroup, string sourceCurrency, string currency, decimal baseAmount, decimal taxAmount,
         decimal? accountingBase = null, decimal? accountingTax = null,
-        decimal? reportingBase = null, decimal? reportingTax = null) => new()
+        decimal? reportingBase = null, decimal? reportingTax = null, decimal rate = 0m) => new()
     {
         DataAreaId = area, TransDate = date, Voucher = voucher, TaxCode = code, TaxGroup = group, TaxItemGroup = itemGroup,
+        // The rate applied, so a posted document stays explainable after the rate changes, and so a
+        // zero-rated row is distinguishable from one whose rate was never recorded.
+        TaxValue = rate,
         TaxDirection = TaxDirection.Outgoing, SourceCurrencyCode = sourceCurrency, CurrencyCode = currency,
         SourceBaseAmountCur = baseAmount, SourceTaxAmountCur = taxAmount, TaxBaseAmountCur = baseAmount, TaxAmountCur = taxAmount,
         TaxBaseAmount = accountingBase ?? baseAmount, TaxAmount = accountingTax ?? taxAmount,

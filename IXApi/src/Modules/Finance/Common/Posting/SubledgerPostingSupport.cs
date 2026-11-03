@@ -251,7 +251,18 @@ internal sealed class SubledgerPostingSupport(DbContext db)
         return await LoadDimensionAsync(area, group.TaxOutgoingLedgerDimension.Value, "sales tax payable", ct);
     }
 
-    /// <summary>Tax codes that apply when the customer tax group and item tax group share a code, at the rate valid on the date.</summary>
+    /// <summary>
+    /// Tax codes that apply when the customer tax group and item tax group share a code, at the rate
+    /// valid on the date.
+    /// <para>
+    /// A code is dropped only when it has <b>no</b> <see cref="TaxData"/> row covering the date, which
+    /// means it is not in force then. A code whose rate row says zero is <b>kept, at zero</b>: a
+    /// zero-rated code is an ordinary configuration, and its taxable base has to be recorded so the
+    /// turnover can be reported under that code. Callers must therefore expect a zero rate and must
+    /// not treat it as "no tax applies" - see the zero-tax handling where each flow writes its
+    /// <c>TaxTrans</c> rows.
+    /// </para>
+    /// </summary>
     public async Task<List<(string Code, decimal Rate)>> ApplicableTaxCodesAsync(string area, string taxGroup,
         string taxItemGroup, DateTime date, CancellationToken ct)
     {
@@ -264,18 +275,25 @@ internal sealed class SubledgerPostingSupport(DbContext db)
         var codes = groupCodes.Intersect(itemCodes).Distinct().OrderBy(x => x).ToList();
         var rates = await db.Set<TaxData>().AsNoTracking()
             .Where(x => x.DataAreaId == area && codes.Contains(x.TaxCode)).ToListAsync(ct);
-        return codes.Select(code => (code, rates.Where(x => x.TaxCode == code
+        return codes.Select(code => (Code: code, Row: rates.Where(x => x.TaxCode == code
                 && (x.TaxFromDate == default || x.TaxFromDate.Date <= date)
                 && (x.TaxToDate == default || x.TaxToDate.Date >= date))
-            .OrderByDescending(x => x.TaxFromDate).FirstOrDefault()?.TaxValue ?? 0m))
-            .Where(x => x.Item2 != 0m).ToList();
+            .OrderByDescending(x => x.TaxFromDate).FirstOrDefault()))
+            .Where(x => x.Row != null)
+            .Select(x => (x.Code, x.Row!.TaxValue)).ToList();
     }
 
-    /// <summary>Splits a line's tax across its codes so the parts always add up to the rounded total.</summary>
+    /// <summary>
+    /// Splits a line's tax across its codes so the parts always add up to the rounded total.
+    /// When every code is zero-rated the total is zero and each code takes zero, so a zero-rated
+    /// line still yields one entry per code for its <c>TaxTrans</c> row.
+    /// </summary>
     public static List<(string Code, decimal Tax)> AllocateTax(List<(string Code, decimal Rate)> codes, decimal lineTax)
     {
         var rate = codes.Sum(x => x.Rate);
         var result = new List<(string, decimal)>();
+        // Nothing to apportion, and apportioning by a zero rate would divide by zero.
+        if (rate == 0m) return codes.Select(x => (x.Code, 0m)).ToList();
         var allocated = 0m;
         for (var i = 0; i < codes.Count; i++)
         {

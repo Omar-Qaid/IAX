@@ -1,6 +1,6 @@
-# Common — gap analysis for shared finance infrastructure
+﻿# Common — gap analysis for shared finance infrastructure
 
-**Last updated:** 2026-11-01
+**Last updated:** 2026-11-03
 **Scope:** the cross-module posting and enumeration infrastructure that every finance module builds
 on. This is not a D365 functional module, so its "gaps" are not parity gaps against a D365 feature
 — they are correctness and consistency gaps in shared machinery. Rows that *are* parity gaps say so
@@ -59,6 +59,7 @@ that happens, note the affected modules in the *Changelog* line and update their
 
 | Date | Change |
 | --- | --- |
+| 2026-11-03 | `ApplicableTaxCodesAsync` and `AllocateTax` changed, affecting **AP and AR**. Resolution now keeps a tax code whose configured rate is zero and drops only a code with no rate row covering the date, so a zero-rated code reaches its flow instead of being discarded; `AllocateTax` returns one zero per code instead of dividing by zero when every rate is zero. Callers must now expect a zero rate and must not read it as "no tax applies". The five invoice and credit-note flows and both charge flows were updated to write the `TaxTrans` row while skipping the ledger line and the tax-account resolution. See `Foundation/GAPS.md` for the gap this closes and `AccountsPayable`/`AccountsReceivable` for their changelog lines. |
 | 2026-11-02 | **Enumeration drift closed.** Every one of the 175 members in `Enumeration.cs` that took its value from its position now declares it, so inserting a member can no longer renumber the members after it. The change is provably value-preserving: the file has the same line count, exactly 175 lines differ, every one of those differs only by an inserted `= <n>`, and the baseline test passes unchanged. `Every_enum_member_declares_its_value` keeps it that way, reading the source as an embedded resource and naming any member that drops its value; verified by removing one and confirming it is named. |
 | 2026-11-02 | Persisted enum values are now guarded. `Tests/PersistedEnumValueTests.cs` reflects over every class deriving from `Entity<long>` in the finance assembly, collects each enum reachable from a property (nullable ones included), and compares the whole surface against the embedded baseline `Tests/PersistedEnumValues.txt` — 993 members across 224 enums. A changed value fails with the exact lines that moved and the path of a regenerated baseline to replace it with once the change is confirmed deliberate. A second test pins the rule that produced the baseline, so a new entity property of a new enum type cannot widen the persisted surface unnoticed. Verified by perturbing a value and confirming the named diff. |
 | 2026-11-02 | Translation wired into the vendor invoice and vendor credit note, completing all five invoice and credit-note flows. Payments are not translated yet, and exchange gain/loss at settlement is still not started. |

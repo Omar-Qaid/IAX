@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Identity;
+﻿using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Modules.Administration.NumberSequences;
@@ -316,7 +316,7 @@ public sealed class FreeTextInvoiceService(
             decimal netTotal = 0m;
             decimal taxTotal = 0m;
             decimal signedVoucherTotal = 0m;
-            var taxByCode = new Dictionary<string, (decimal Base, decimal Tax, string Group, string ItemGroup)>();
+            var taxByCode = new Dictionary<string, (decimal Base, decimal Tax, decimal Rate, string Group, string ItemGroup)>();
             foreach (var line in lines)
             {
                 var revenueAccount = await support.LoadDimensionAsync(area, line.LedgerDimension, "free text invoice line", ct);
@@ -331,7 +331,8 @@ public sealed class FreeTextInvoiceService(
                 foreach (var (code, codeTax) in SubledgerPostingSupport.AllocateTax(codes, lineTax))
                 {
                     var current = taxByCode.GetValueOrDefault(code);
-                    taxByCode[code] = (current.Base + amount, current.Tax + codeTax, line.TaxGroup, line.TaxItemGroup);
+                    taxByCode[code] = (current.Base + amount, current.Tax + codeTax,
+                        codes.Single(x => x.Code == code).Rate, line.TaxGroup, line.TaxItemGroup);
                 }
                 Db.Set<CustInvoiceTrans>().Add(new CustInvoiceTrans
                 {
@@ -364,14 +365,18 @@ public sealed class FreeTextInvoiceService(
 
             foreach (var (code, value) in taxByCode)
             {
-                if (value.Tax == 0m) continue;
-                var payable = await support.ResolveTaxPayableAsync(area, code, ct);
-                Db.Add(translation.AccountEntry(area, entry.RecId, payable, LedgerPostingType.Tax,
-                    -value.Tax, $"Sales tax {code} on {invoiceId}", 0m));
+                // A zero-rated code posts no ledger line and resolves no payable account; its base
+                // is still recorded so the turnover can be reported under the code.
+                if (value.Tax != 0m)
+                {
+                    var payable = await support.ResolveTaxPayableAsync(area, code, ct);
+                    Db.Add(translation.AccountEntry(area, entry.RecId, payable, LedgerPostingType.Tax,
+                        -value.Tax, $"Sales tax {code} on {invoiceId}", 0m));
+                }
                 Db.Set<TaxTrans>().Add(TaxTransaction(area, header.InvoiceDate.Date, invoiceId, code,
                     value.Group, value.ItemGroup, header.CurrencyCode, -value.Base, -value.Tax,
                     translation.ToAccounting(-value.Base), translation.ToAccounting(-value.Tax),
-                    translation.ToReporting(-value.Base), translation.ToReporting(-value.Tax)));
+                    translation.ToReporting(-value.Base), translation.ToReporting(-value.Tax), value.Rate));
                 signedVoucherTotal -= value.Tax;
             }
 
@@ -469,7 +474,7 @@ public sealed class FreeTextInvoiceService(
     private static TaxTrans TaxTransaction(string area, DateTime date, string voucher, string code,
         string group, string itemGroup, string currency, decimal baseAmount, decimal taxAmount,
         decimal? accountingBase = null, decimal? accountingTax = null,
-        decimal? reportingBase = null, decimal? reportingTax = null) => new()
+        decimal? reportingBase = null, decimal? reportingTax = null, decimal rate = 0m) => new()
     {
         DataAreaId = area,
         TransDate = date,
@@ -477,6 +482,8 @@ public sealed class FreeTextInvoiceService(
         TaxCode = code,
         TaxGroup = group,
         TaxItemGroup = itemGroup,
+        // The rate applied, so a zero-rated row is distinguishable from an unrecorded rate.
+        TaxValue = rate,
         TaxDirection = TaxDirection.Outgoing,
         SourceCurrencyCode = currency,
         CurrencyCode = currency,

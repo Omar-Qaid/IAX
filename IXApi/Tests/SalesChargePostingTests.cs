@@ -135,10 +135,11 @@ public class SalesChargePostingTests
 
         Assert.Equal(100m, result.BilledToCustomer);
         Assert.Equal(15m, result.Tax);
-        var (code, chargeBase, tax, _, _) = Assert.Single(result.TaxByCode);
+        var (code, chargeBase, tax, rate, _, _) = Assert.Single(result.TaxByCode);
         Assert.Equal("VAT15", code);
         Assert.Equal(100m, chargeBase);
         Assert.Equal(15m, tax);
+        Assert.Equal(15m, rate);
     }
 
     [Theory]

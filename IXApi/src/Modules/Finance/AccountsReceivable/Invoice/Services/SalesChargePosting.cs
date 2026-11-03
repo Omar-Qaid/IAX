@@ -1,4 +1,4 @@
-using IAX.IXApi.Modules.Finance.Common;
+﻿using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Foundation.Markup;
 using Microsoft.EntityFrameworkCore;
@@ -46,7 +46,7 @@ internal sealed class SalesChargePosting(DbContext db)
     /// that reaches the customer balance, which is what SumMarkup and the invoice total carry.
     /// </summary>
     internal sealed record Result(decimal BilledToCustomer, decimal Tax,
-        IReadOnlyList<(string Code, decimal Base, decimal Tax, string Group, string ItemGroup)> TaxByCode);
+        IReadOnlyList<(string Code, decimal Base, decimal Tax, decimal Rate, string Group, string ItemGroup)> TaxByCode);
 
     public async Task<Result> PostAsync(string area, SalesTable order, long entryRecId, string invoiceId,
         DateTime date, SubledgerCurrencyTranslation translation, SubledgerPostingSupport support,
@@ -59,7 +59,7 @@ internal sealed class SalesChargePosting(DbContext db)
             .Where(x => x.DataAreaId == area).ToListAsync(ct);
         var billed = 0m;
         var totalTax = 0m;
-        var taxByCode = new List<(string, decimal, decimal, string, string)>();
+        var taxByCode = new List<(string, decimal, decimal, decimal, string, string)>();
 
         foreach (var (charge, amount) in charges)
         {
@@ -175,7 +175,7 @@ internal sealed class SalesChargePosting(DbContext db)
     /// </summary>
     private async Task<decimal> ChargeTaxAsync(string area, SalesTable order, MarkupTable code, MarkupTrans charge,
         decimal amount, DateTime date, SubledgerPostingSupport support,
-        List<(string, decimal, decimal, string, string)> taxByCode, CancellationToken ct)
+        List<(string, decimal, decimal, decimal, string, string)> taxByCode, CancellationToken ct)
     {
         var taxGroup = charge.TaxGroup.Length > 0 ? charge.TaxGroup : order.TaxGroupId;
         var itemGroup = charge.TaxItemGroup.Length > 0 ? charge.TaxItemGroup : code.TaxItemGroup;
@@ -183,12 +183,13 @@ internal sealed class SalesChargePosting(DbContext db)
 
         var codes = await support.ApplicableTaxCodesAsync(area, taxGroup, itemGroup, date, ct);
         var rate = codes.Sum(x => x.Rate);
-        if (rate == 0m) return 0m;
+        // A zero-rated charge still reports its base, so the codes are registered at zero tax
+        // rather than returning early. The invoice's tax loop posts no ledger line for them.
         var tax = order.InclTax
             ? decimal.Round(amount * rate / (100m + rate), 2, MidpointRounding.AwayFromZero)
             : decimal.Round(amount * rate / 100m, 2, MidpointRounding.AwayFromZero);
         foreach (var (taxCode, codeTax) in SubledgerPostingSupport.AllocateTax(codes, tax))
-            taxByCode.Add((taxCode, amount, codeTax, taxGroup, itemGroup));
+            taxByCode.Add((taxCode, amount, codeTax, codes.Single(x => x.Code == taxCode).Rate, taxGroup, itemGroup));
         return tax;
     }
 }

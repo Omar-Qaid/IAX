@@ -1,6 +1,6 @@
 # General ledger — gap analysis against basic D365 F&O
 
-**Last updated:** 2026-11-01
+**Last updated:** 2026-11-03
 **Scope:** basic (core) D365 F&O General ledger only. Budgeting, budget control, allocations,
 consolidation, elimination, financial reporting designer, and intercompany accounting are out of
 scope by request and are not listed as gaps.
@@ -20,6 +20,8 @@ cannot be verified goes under *Flagged uncertainties* rather than being guessed 
 | Account structures / financial dimensions (`DimensionAttributeValueCombination`) | Implemented |
 | Fiscal calendars, years, periods; ledger period status; per-module period access | Implemented |
 | General journals: names, header, lines, posting, reversal | Implemented |
+| Journal line account types: Ledger, Customer, Vendor, Bank | Implemented — writes `CustTrans`/`CustTransOpen`, `VendTrans` + open balance, `BankAccountTrans` |
+| Three `LedgerJournalPostingTests` failures | **Failing** — reproduced on 2026-11-03, same three as 2026-11-02 |
 | Posted ledger: `GeneralJournalEntry`, `GeneralJournalAccountEntry`, subledger vouchers | Implemented |
 | Trial balance, financial statements, year-end close | Implemented |
 | Ledger settlement | Implemented |
@@ -32,20 +34,21 @@ cannot be verified goes under *Flagged uncertainties* rather than being guessed 
 | Area | Existing behavior | Expected basic D365 F&O behavior | Missing | Affected components | Priority |
 | --- | --- | --- | --- | --- | --- |
 | Journal reversal | Reversal must be posted as its own journal; automatic reversal is rejected with a named error. Reversal of a posted journal is implemented via `LedgerJournalReversalService`. | A journal can be marked for automatic reversal on a future date, and the system posts the reversing entry when that date arrives. | The reversing-date flag and the batch that acts on it. | `LedgerJournalTable`, `LedgerJournalReversalService` | Medium |
-| Journal tax calculation | General journal lines reject tax calculation with a named error; tax posts through the AP/AR document flows. | A general journal line carries a sales tax group and item sales tax group, and tax is calculated and posted with the journal. | Tax calculation on general journal lines. | `LedgerJournalTrans`, `LedgerJournalPosting`, `Foundation/Tax` | **High** — a basic general journal is expected to handle tax |
-| Journal line account types | The basic general journal accepts **Ledger** account and offset lines only, rejecting other types with a named error. | Account type may be Ledger, Customer, Vendor, Bank, Fixed asset or Project, which posts to that subledger. | Customer, Vendor and Bank line types, which are the basic ones. Fixed asset and Project belong to modules not present here. | `LedgerJournalTrans`, `LedgerJournalPosting` | **High** — customer/vendor/bank journal lines are core basic function |
+| Journal tax calculation | General journal lines reject tax calculation with a named error (`LedgerJournalPosting` line 344); tax posts through the AP/AR document flows. | A general journal line carries a sales tax group and item sales tax group, and tax is calculated and posted with the journal. | Tax calculation on general journal lines. **Now more significant than when first recorded**, because the journal accepts Cust and Vend lines as of this scan: a manual customer or vendor invoice entered through the journal — the usual reason to use those line types — cannot carry tax, so it is only usable for net amounts. Depends on the two `Foundation` tax-calculation gaps being settled first, since it would reuse `ApplicableTaxCodesAsync`. | `LedgerJournalTrans`, `LedgerJournalPosting`, `Foundation/Tax` | **High** — a basic general journal is expected to handle tax |
+| Journal line **offset** account types | Offset accounts accept **Ledger** only, refused by name when another type carries an offset dimension (`LedgerJournalTransDtoValidator` line 23). The primary account side now accepts Cust, Vend and Bank. | An offset account may be any of the same types as the primary account, so a one-line journal can move an amount between, say, a customer and a bank. | The subledger offset. The writer it needs already exists — `WriteSubledgerAsync` is already called per `PostingSide` — so this is narrower than it was: the offset side simply never reaches it with a non-Ledger type. | `LedgerJournalTransDtoValidator`, `LedgerJournalPosting.WriteSubledgerAsync` | Medium — the primary-account path covers the common entry; a two-line journal is the workaround |
 | Periodic / recurring journals | Not present. | A saved periodic journal is copied forward on a schedule. | `LedgerJournalPeriodic` and the copy process. No such entity exists. | General journal | Medium |
 | Year-end close in reporting currency | Year-end transfer rejects a reporting currency that differs from the accounting currency, with a named error. | The close converts balances into the reporting currency as well. | Reporting-currency balance conversion. | `LedgerYearEndCloseController`, year-end close service | Medium |
 | Intercompany accounting | Intercompany journal posting is rejected with a named error. | Basic intercompany accounting posts the due-to/due-from legs in both companies. | Intercompany setup and the paired posting. | `LedgerJournalPosting` | Low — borders on optional; confirm before building |
 | Ledger period access: inventory | `LedgerPeriodModuleAccessControl` carries Ledger, Tax, Bank, Customer and Vendor access levels. | The ledger calendar also controls the **Inventory** module independently. | `InventAccessLevel` / `InventUserGroupInfo`. Inventory postings therefore ride on the Ledger module's access. Not invented here because it is a schema change. | `LedgerPeriodModuleAccessControl`, `SubledgerPostingSupport.LedgerPostingModule` | Medium |
 | Currency revaluation | Exchange rates, rate types and currency pairs exist; no revaluation process. | Foreign-currency revaluation of ledger balances posts unrealized gain/loss. | The revaluation process and its posting. Note that nearly every posting flow currently requires the document currency to equal the accounting currency, so there is little foreign-currency exposure to revalue yet. | `Foundation/Currency`, GL posting | Medium |
+| **Three failing journal posting tests** | `dotnet test Tests/IXApi.Tests.csproj` on 2026-11-03: 754 passed, **3 failed**, 2 skipped. All three are `LedgerJournalPostingTests`: `Reversal_posts_a_mirrored_journal_linked_to_the_original`, `Reversal_marks_correction_when_the_ledger_parameters_require_it` and `Allocation_at_posting_replaces_each_temporary_voucher_group_from_configured_sequence`. The two reversals report `Journal name 'GEN' has no voucher number sequence.`; allocation-at-posting fails because the fixture's journal-name query returns no row. | Journal reversal and voucher allocation are covered by passing tests. | Working tests. These are the **same three** failures recorded on 2026-11-02, so they are a standing baseline, not a regression. Whether the defect is in the fixture's setup or in `LedgerJournalSetupCheck` is **not established** — and it matters, because reversal and voucher allocation are the two things these tests exist to prove. Do not "fix" them by generating a voucher constant: the refusal for absent setup is correct behavior. | `Tests/LedgerJournalPostingTests.cs:86,256,491`, `LedgerJournalSetupCheck`, `LedgerJournalReversalService` | **Critical** — reversal and voucher allocation are unproven, and this file claims both as Implemented |
 | SQL Server verification | Covered by SQLite in-memory tests. | — | Posting atomicity, concurrent voucher allocation, and number-sequence contention under SQL Server. | Whole module | **Critical** |
 
 ## Deliberate restrictions (verified in code)
 
 | Restriction | Message |
 | --- | --- |
-| Account type on journal lines | `The basic general journal accepts Ledger account lines only.` |
+| Account type on journal lines | `The basic general journal accepts Ledger, Cust, Vend and Bank account lines.` |
 | Offset account type | `The basic general journal accepts Ledger offset accounts only.` |
 | Automatic reversal | `Automatic reversal journals are not supported; post the reversal as its own journal.` |
 | Journal tax | `{label}: journal tax calculation is not supported; post tax through its own process.` |
@@ -68,6 +71,7 @@ cannot be verified goes under *Flagged uncertainties* rather than being guessed 
 
 | Date | Change |
 | --- | --- |
+| 2026-11-03 | Source scan. **No behavior changed.** **Closed the journal line account types gap**, which this file still carried as High: `LedgerJournalTransDtoValidator` now accepts Cust, Vend and Bank alongside Ledger, and `LedgerJournalPosting.WriteSubledgerAsync` (lines 260-317) writes `CustTrans` + `CustTransOpen`, `VendTrans` + `VendorOpenBalance.Add`, and `BankAccountTrans` with its source table and record references. Replaced the row with the narrower offset-account restriction that remains, at Medium. Corrected the restriction table, which quoted a message the code no longer raises. Raised the journal tax row's justification: it is now the thing stopping those new Cust/Vend lines from being used for their usual purpose. Added the three standing `LedgerJournalPostingTests` failures as a Critical row — they were recorded in `docs/basic-erp-continuation-review-2026-11-02.md` but never reached this file, while the status table above claimed reversal as Implemented. |
 | 2026-11-01 | File created from a source scan. Recorded journal tax and journal account types as the two highest-priority gaps, and the inventory ledger-period-access gap. |
 
 ## Sources

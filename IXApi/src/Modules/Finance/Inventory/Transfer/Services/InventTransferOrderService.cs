@@ -203,10 +203,6 @@ public sealed class InventTransferOrderService(
         if (header.TransferStatus == InventTransferStatus.Received)
             throw new InvalidOperationException("The transfer order is fully received.");
 
-        // The posting voucher comes from the transfer journal number sequence, not from the
-        // caller, so it stays unique and joinable to the ledger.
-        var journalId = (await numbers.NextAsync(nameof(InventTransferJour), area, ct)).Code;
-        var voucher = journalId;
 
         var lines = await Db.Set<InventTransferLine>().Where(x => x.DataAreaId == area && x.TransferId == id).ToListAsync(ct);
         var site = await Db.Set<InventDim>().AsNoTracking()
@@ -216,6 +212,40 @@ public sealed class InventTransferOrderService(
             .Where(x => x.DataAreaId == area).Select(x => x.AccountingCurrency).FirstOrDefaultAsync(ct) ?? string.Empty;
         var fromWarehouse = receive ? header.InventLocationIdTransit : header.InventLocationIdFrom;
         var toWarehouse = receive ? header.InventLocationIdTo : header.InventLocationIdTransit;
+
+        // Every line is validated before a voucher number is drawn, so a refused posting reports
+        // the reason it was refused rather than failing on number allocation first. These are the
+        // same read-only guards the movement loop re-runs per line.
+        foreach (var (lineNum, quantity) in input.Quantities.OrderBy(x => x.Key))
+        {
+            var candidate = lines.SingleOrDefault(x => x.LineNum == lineNum)
+                ?? throw new InvalidOperationException($"Line {lineNum} does not belong to this transfer order.");
+            if (quantity <= 0 || decimal.Round(quantity, 4) != quantity)
+                throw new InvalidOperationException($"Line {lineNum} needs a positive quantity to post.");
+            var allowance = receive ? candidate.QtyShipped - candidate.QtyReceived : candidate.QtyRemainShip;
+            if (quantity > allowance)
+                throw new InvalidOperationException(receive
+                    ? $"Line {lineNum}: the receipt exceeds this line's stock in transit."
+                    : $"Line {lineNum}: the shipment exceeds the remaining transfer quantity.");
+            await RequireUntrackedItemAsync(area, candidate.ItemId, ct);
+            await RequireStockedItemAsync(area, candidate.ItemId, ct);
+            var candidateLifecycle = await ProductLifecyclePolicy.ValidateAsync(Db, area, candidate.ItemId,
+                ProductLifecycleProcess.Inventory, ct);
+            if (candidateLifecycle != null) throw new InvalidOperationException(candidateLifecycle);
+            var candidateBoundary = await InventoryFinancialBoundary.CheckAsync(Db, area, candidate.ItemId, transDate, ct);
+            if (candidateBoundary != null) throw new InvalidOperationException(candidateBoundary);
+            foreach (var warehouse in new[] { fromWarehouse, toWarehouse })
+            {
+                var dim = await dimensions.ResolveAsync(area, site, warehouse, ct);
+                var freeze = await InventoryCountProtection.CheckAsync(Db, area, candidate.ItemId, dim.InventDimId, ct);
+                if (freeze != null) throw new InvalidOperationException(freeze);
+            }
+        }
+
+        // The posting voucher comes from the transfer journal number sequence, not from the
+        // caller, so it stays unique and joinable to the ledger.
+        var journalId = (await numbers.NextAsync(nameof(InventTransferJour), area, ct)).Code;
+        var voucher = journalId;
 
         foreach (var (lineNum, quantity) in input.Quantities.OrderBy(x => x.Key))
         {

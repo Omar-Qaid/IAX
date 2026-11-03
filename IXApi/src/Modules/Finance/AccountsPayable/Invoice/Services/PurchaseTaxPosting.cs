@@ -44,12 +44,18 @@ internal sealed class PurchaseTaxPosting(DbContext db)
         {
             var table = await db.Set<TaxTable>().AsNoTracking().SingleOrDefaultAsync(x => x.DataAreaId == area && x.TaxCode == code, ct);
             if (table == null) throw new SubledgerPostingException($"Purchase tax code '{code}' was not found.");
-            var group = await db.Set<TaxLedgerAccountGroup>().AsNoTracking().SingleOrDefaultAsync(x => x.DataAreaId == area && x.TaxAccountGroup == table!.TaxAccountGroup, ct);
-            if (group?.TaxIncomingLedgerDimension is not > 0)
-                throw new SubledgerPostingException($"Purchase input tax account is missing for tax code '{code}'.");
-            var account = await support.LoadDimensionAsync(area, group.TaxIncomingLedgerDimension.Value, "purchase input tax", ct);
-            db.Add(translation.AccountEntry(area, entryId, account, LedgerPostingType.Tax, amount,
-                $"Purchase input tax {code} on {line.InvoiceId}", 0m));
+            // A zero-rated code has no amount to post, so it needs no input tax account and adds no
+            // ledger line. Its base is still recorded below for reporting. Requiring the account
+            // anyway would refuse a company whose zero-rated code has no account configured.
+            if (amount != 0m)
+            {
+                var group = await db.Set<TaxLedgerAccountGroup>().AsNoTracking().SingleOrDefaultAsync(x => x.DataAreaId == area && x.TaxAccountGroup == table!.TaxAccountGroup, ct);
+                if (group?.TaxIncomingLedgerDimension is not > 0)
+                    throw new SubledgerPostingException($"Purchase input tax account is missing for tax code '{code}'.");
+                var account = await support.LoadDimensionAsync(area, group.TaxIncomingLedgerDimension.Value, "purchase input tax", ct);
+                db.Add(translation.AccountEntry(area, entryId, account, LedgerPostingType.Tax, amount,
+                    $"Purchase input tax {code} on {line.InvoiceId}", 0m));
+            }
             db.Add(new TaxTrans { DataAreaId = area, SourceTableId = FinanceTableNumbers.VendInvoiceTrans, SourceRecId = line.RecId,
                 SourceDocumentLine = line.RecId, TransDate = line.InvoiceDate, Voucher = line.InternalInvoiceId, TaxCode = code,
                 TaxGroup = line.TaxGroup, TaxItemGroup = line.TaxItemGroup, TaxValue = rate, TaxDirection = TaxDirection.Incoming,

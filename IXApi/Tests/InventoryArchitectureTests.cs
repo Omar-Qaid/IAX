@@ -1615,6 +1615,7 @@ public sealed class InventoryArchitectureTests
             new UnitOfMeasureConversion { RecId = 46, DataAreaId = "dat", FromUnitOfMeasure = 45, ToUnitOfMeasure = 8,
                 Product = 0, Factor = 4, Numerator = 1, Denominator = 1, Rounding = UnitOfMeasureRounding.Nearest },
             new SysNumberSequence { RecId = 9, DataAreaId = "dat", NumberSequence = "InventJournalVoucher", Txt = "Voucher", Format = "IV-#####", AnnotatedFormat = "IV-{SEQ}", InUse = 1, IsActive = true, NextRec = 1, Highest = 99999 },
+            new SysNumberSequence { RecId = 12, DataAreaId = "dat", NumberSequence = "InventTransferJour", Txt = "Transfer journal", Format = "TRFJ-#####", AnnotatedFormat = "TRFJ-{SEQ}", InUse = 1, IsActive = true, NextRec = 1, Highest = 99999 },
             new InventModelGroup { RecId = 10, DataAreaId = "dat", ModelGroupId = "FIFO", Name = "FIFO", InventModel = InventModel.FIFO, StockedProduct = NoYes.Yes, PostOnHandFinancial = NoYes.Yes },
             new InventModelGroupItem { RecId = 11, DataAreaId = "dat", ItemId = "ITEM-001", ItemDataAreaId = "dat", ModelGroupId = "FIFO", ModelGroupDataAreaId = "dat" },
             new EcoResTrackingDimensionGroupItem { RecId = 40, DataAreaId = "dat", ItemId = "ITEM-001", ItemDataAreaId = "dat", TrackingDimensionGroup = 41 },
@@ -1850,10 +1851,16 @@ public sealed class InventoryArchitectureTests
         // Nothing is in transit yet, so there is nothing to receive.
         Assert.NotNull((await transfers.ReceiveAsync("TR-DEMO", Post("EARLY", 1m), default)).Error);
 
+        // The posting voucher is allocated from the transfer journal number sequence, so it is
+        // read back from the posted InventTransferJour rather than composed from the request ID.
+        async Task<string> PostedVoucher(string transferId, InventTransferUpdateType type, string requestId) =>
+            await db.Set<InventTransferJour>().Where(x => x.TransferId == transferId
+                && x.UpdateType == type && x.PostingRequestId == requestId).Select(x => x.Voucher).SingleAsync();
+
         Assert.Null((await transfers.ShipAsync("TR-DEMO", Post("SHIP1", 1m), default)).Error);
         Assert.Contains("other transfer operation", (await transfers.ReceiveAsync("TR-DEMO", Post("SHIP1", 1m), default)).Error);
+        var ship1Voucher = await PostedVoucher("TR-DEMO", InventTransferUpdateType.Shipment, "SHIP1");
         var shippedCount = await db.Set<InventTrans>().CountAsync();
-        var ship1Voucher = (await db.Set<InventTransferJour>().SingleAsync(x => x.TransferId == "TR-DEMO" && x.PostingRequestId == "SHIP1")).Voucher;
         var shipmentLegs = await db.Set<InventTrans>().Where(x => x.Voucher == ship1Voucher).ToListAsync();
         Assert.Equal(4, shipmentLegs.Count);
         Assert.Single(shipmentLegs, x => x.StatusIssue == StatusIssue.ReservPhysical);
@@ -1889,7 +1896,7 @@ public sealed class InventoryArchitectureTests
         var destinationValueBefore = await db.Set<InventSum>().Where(x => x.InventLocationId == "SHOW").SumAsync(x => x.PostedValue);
         Assert.Null((await transfers.ReceiveAsync("TR-DEMO", Post("RECEIVE1", 1m), default)).Error);
         Assert.Contains("other transfer operation", (await transfers.ShipAsync("TR-DEMO", Post("RECEIVE1", 1m), default)).Error);
-        var receive1Voucher = (await db.Set<InventTransferJour>().SingleAsync(x => x.TransferId == "TR-DEMO" && x.PostingRequestId == "RECEIVE1")).Voucher;
+        var receive1Voucher = await PostedVoucher("TR-DEMO", InventTransferUpdateType.Receive, "RECEIVE1");
         Assert.Equal(shipmentLegs.Count, await db.Set<InventTrans>().CountAsync(x => x.Voucher == ship1Voucher || x.Voucher == receive1Voucher));
         Assert.Empty(await db.Set<InventTrans>().Where(x => x.Voucher == ship1Voucher
             && (x.StatusIssue == StatusIssue.ReservPhysical || x.StatusReceipt == StatusReceipt.Ordered)).ToListAsync());
@@ -1900,7 +1907,7 @@ public sealed class InventoryArchitectureTests
         // The shipment is complete, so nothing more may be shipped.
         Assert.NotNull((await transfers.ShipAsync("TR-DEMO", Post("SHIP3", 1m), default)).Error);
         Assert.Null((await transfers.ReceiveAsync("TR-DEMO", Post("RECEIVE2", 0.5m), default)).Error);
-        var ship2Voucher = (await db.Set<InventTransferJour>().SingleAsync(x => x.TransferId == "TR-DEMO" && x.PostingRequestId == "SHIP2")).Voucher;
+        var ship2Voucher = await PostedVoucher("TR-DEMO", InventTransferUpdateType.Shipment, "SHIP2");
         Assert.Equal(0.5m, await db.Set<InventTrans>().Where(x => x.Voucher == ship2Voucher
             && x.StatusReceipt == StatusReceipt.Ordered).SumAsync(x => x.Qty));
         Assert.Equal(0.5m, (await db.Set<InventSum>().SingleAsync(x => x.ItemId == "ITEM-001"
