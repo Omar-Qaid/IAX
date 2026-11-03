@@ -31,7 +31,8 @@ public sealed class SalesCycleExampleService
             if (result.Error != null) throw new InvalidOperationException(result.Error);
             order = await db.Set<SalesTable>().SingleAsync(x => x.CustomerRef == Sales, ct);
         }
-        if (order.IsDeleted || order.CustAccount != Customer || order.CurrencyCode != CurrencyCode)
+        if (order.IsDeleted || order.CustAccount != Customer || order.InvoiceAccount != Customer || order.CurrencyCode != CurrencyCode
+            || order.InventSiteId != Site || order.InventLocationId != Warehouse || order.ReturnItemNum != "")
             throw new InvalidOperationException("ERP sales example conflicts with an existing order; it was preserved.");
         var line = await db.Set<SalesLine>().IgnoreQueryFilters()
             .SingleOrDefaultAsync(x => x.DataAreaId == Company && x.SalesId == order.SalesId, ct);
@@ -44,8 +45,10 @@ public sealed class SalesCycleExampleService
             if (result.Status != SalesLineWriteStatus.Success) throw new InvalidOperationException(result.Error);
             line = await db.Set<SalesLine>().SingleAsync(x => x.SalesId == order.SalesId, ct);
         }
-        if (line.IsDeleted || line.ItemId != Item || line.SalesQty != SalesQuantity || line.SalesPrice != SalesPrice || line.SalesUnit != Unit)
+        if (line.IsDeleted || line.ItemId != Item || line.SalesQty != SalesQuantity || line.QtyOrdered != SalesQuantity
+            || line.SalesPrice != SalesPrice || line.SalesUnit != Unit || line.PriceUnit != 1m || line.CustAccount != Customer)
             throw new InvalidOperationException("ERP sales example lines were customized; no further posting was attempted.");
+        await ErpCycleStorageIntegrity.RequireAsync(db, line.InventDimId, ct);
         if (!await db.Set<CustConfirmJour>().AnyAsync(x => x.SalesId == order.SalesId && x.ParmId == Sales, ct))
         {
             var result = await new SalesOrderConfirmationService(context.Work, context.Actor, context.Numbers,

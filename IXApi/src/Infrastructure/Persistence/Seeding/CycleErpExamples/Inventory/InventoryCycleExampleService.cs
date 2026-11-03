@@ -24,14 +24,17 @@ public sealed class InventoryCycleExampleService
             journal = await db.Set<InventJournalTable>().IgnoreQueryFilters().SingleAsync(
                 x => x.DataAreaId == Company && x.JournalId == result.Journal!.JournalId, ct);
         }
-        if (journal.IsDeleted || journal.JournalType != InventJournalType.Adjustment)
+        if (journal.IsDeleted || journal.JournalType != InventJournalType.Adjustment || journal.JournalNameId != "IJ-ADJ"
+            || journal.InventSiteId != Site || journal.InventLocationId != Warehouse)
             throw new InvalidOperationException("ERP inventory example conflicts with an existing journal; it was preserved.");
         var line = await db.Set<InventJournalTrans>().IgnoreQueryFilters()
             .SingleOrDefaultAsync(x => x.DataAreaId == Company && x.JournalId == journal.JournalId, ct);
         if (line != null)
         {
-            if (line.IsDeleted || line.ItemId != Item || line.Qty != 2m || line.CostPrice != PurchasePrice)
+            if (line.IsDeleted || line.ItemId != Item || line.Qty != 2m || line.CostPrice != PurchasePrice
+                || line.Unit != Unit || line.UnitQty != 2m || line.JournalType != InventJournalType.Adjustment)
                 throw new InvalidOperationException("ERP inventory example line was customized; it was preserved.");
+            await ErpCycleStorageIntegrity.RequireAsync(db, line.InventDimId, ct);
             return;
         }
         if (journal.Posted == NoYes.Yes)

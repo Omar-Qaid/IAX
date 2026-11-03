@@ -14,7 +14,7 @@ public sealed class LedgerCycleExampleService
         var bank = await db.Set<BankAccountTable>().SingleAsync(x => x.AccountId == "DEMO-SAR", ct);
         var cash = await db.Set<MainAccount>().SingleAsync(x => x.MainAccountId == "10010000", ct);
         // Reuse the main-account-only setup shape of FinanceOperationalExamplesSeeder.
-        var cashDimension = await db.Set<DimensionAttributeValueCombination>().SingleOrDefaultAsync(x =>
+        var cashDimension = await db.Set<DimensionAttributeValueCombination>().IgnoreQueryFilters().SingleOrDefaultAsync(x =>
             x.DataAreaId == Company && x.DisplayValue == cash.MainAccountId, ct);
         if (cashDimension == null)
         {
@@ -24,7 +24,7 @@ public sealed class LedgerCycleExampleService
             db.Add(cashDimension);
             await db.SaveChangesAsync(ct);
         }
-        if (cashDimension.MainAccount != cash.RecId)
+        if (cashDimension.IsDeleted || cashDimension.MainAccount != cash.RecId || cashDimension.MainAccountValue != cash.MainAccountId)
             throw new InvalidOperationException("The cash ledger combination conflicts with the ERP example; it was preserved.");
         var journals = new LedgerJournalTableService(context.Work, context.Actor, context.Numbers);
         var journal = await db.Set<LedgerJournalTable>().IgnoreQueryFilters()
@@ -51,7 +51,8 @@ public sealed class LedgerCycleExampleService
         }
         else if (line.IsDeleted || line.AccountType != LedgerJournalACType.Bank || line.LedgerDimensionName != bank.AccountId
             || line.LedgerDimension != bank.LedgerDimension || line.OffsetLedgerDimension != cashDimension.RecId
-            || line.AmountCurDebit != 250m || line.AmountCurCredit != 0m)
+            || line.OffsetAccountType != LedgerJournalACType.Ledger || line.CurrencyCode != CurrencyCode
+            || line.Company != Company || line.OffsetCompany != Company || line.AmountCurDebit != 250m || line.AmountCurCredit != 0m)
             throw new InvalidOperationException("ERP ledger example line was customized; no posting was attempted.");
         // The Bank account type makes the posting service generate the matching bank subledger movement.
         if (journal.Posted != NoYes.Yes)
