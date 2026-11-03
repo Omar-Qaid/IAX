@@ -19,13 +19,14 @@ UNION ALL SELECT 'CountPostedAndReleased',CASE WHEN COUNT(*)=1 THEN 0 ELSE 1 END
  FROM InventJournalTable h JOIN InventJournalTrans l ON l.DataAreaId=h.DataAreaId AND l.JournalId=h.JournalId
  WHERE h.DataAreaId='dat' AND h.Description='FIFO115-COUNT' AND h.Posted=1 AND h.CountingConfirmed=1 AND h.CountingFrozen=0
  AND l.ItemId=@item AND l.InventOnHand=95 AND l.Counted=98 AND l.Qty=3
-UNION ALL SELECT 'TransitOrderComplete',CASE WHEN COUNT(*)=1 THEN 0 ELSE 1 END FROM InventTransferOrder
- WHERE DataAreaId='dat' AND TransferId='FIFO115-TRANSIT' AND ItemId=@item AND Quantity=40 AND Shipped=40 AND Received=40
-UNION ALL SELECT 'TransitPostingCount',CASE WHEN COUNT(*)=2 AND SUM(CASE WHEN IsReceipt=1 THEN p.Quantity ELSE -p.Quantity END)=0
- AND ABS(SUM(CASE WHEN IsReceipt=1 THEN CostAmount ELSE -CostAmount END))<.01 THEN 0 ELSE 1 END
- FROM InventTransferPosting p JOIN InventTransferOrder o ON o.RECID=p.TransferOrderRecId AND o.DataAreaId=p.DataAreaId
- WHERE o.DataAreaId='dat' AND o.TransferId='FIFO115-TRANSIT'
-UNION ALL SELECT 'FifoClosePresent',CASE WHEN COUNT(*)=1 THEN 0 ELSE 1 END FROM InventClosing WHERE DataAreaId='dat' AND ScopeItemId=@item
+UNION ALL SELECT 'TransitOrderComplete',CASE WHEN COUNT(*)=1 THEN 0 ELSE 1 END
+ FROM InventTransferTable h JOIN InventTransferLine l ON l.DataAreaId=h.DataAreaId AND l.TransferId=h.TransferId
+ WHERE h.DataAreaId='dat' AND h.TransferId='FIFO115-TRANSIT' AND l.ItemId=@item
+ AND l.QtyTransfer=40 AND l.QtyShipped=40 AND l.QtyReceived=40 AND l.QtyRemainShip=0 AND l.QtyRemainReceive=0
+UNION ALL SELECT 'TransitPostingCount',CASE WHEN COUNT(*)=2 AND COUNT(DISTINCT UpdateType)=2 THEN 0 ELSE 1 END
+ FROM InventTransferJour WHERE DataAreaId='dat' AND TransferId='FIFO115-TRANSIT' AND Voucher<>''
+UNION ALL SELECT 'FifoClosePresent',CASE WHEN COUNT(*)=2 THEN 0 ELSE 1 END FROM InventClosing
+ WHERE DataAreaId='dat' AND ScopeItemId=@item AND CancelClosing=0 AND Cancellation=0
 UNION ALL SELECT 'FifoReceiptLinks',COUNT(*) FROM InventSettlement s LEFT JOIN InventTrans r ON r.RECID=s.ReceiptTransRecId AND r.DataAreaId=s.DataAreaId
  WHERE s.DataAreaId='dat' AND s.ItemId=@item AND (r.RECID IS NULL OR r.ItemId<>s.ItemId OR r.Qty<=0)
 UNION ALL SELECT 'InventoryTransactionQuantity',CASE WHEN SUM(Qty)=115 THEN 0 ELSE 1 END FROM InventTrans WHERE DataAreaId='dat' AND ItemId=@item
