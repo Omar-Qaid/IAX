@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Identity;
+﻿using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.Common;
@@ -153,8 +153,26 @@ public sealed partial class InventCloseService : IInventCloseService
             var pools = await LoadPoolsAsync(companyId, cutoffDate, itemId, ct);
             if (itemId.Length > 0 && pools.Count == 0)
                 throw new PostingValidationException("The selected item has no supported financial inventory to settle.");
-            var salesReturns = await Db.Set<SalesLine>().AsNoTracking().Where(x => x.DataAreaId == companyId && (itemId == "" || x.ItemId == itemId) && x.InventTransIdReturn != "")
-                .ToDictionaryAsync(x => x.InventTransId, x => x.InventTransIdReturn, ct);
+            var salesReturnLines = await Db.Set<SalesLine>().AsNoTracking().Where(x => x.DataAreaId == companyId
+                && (itemId == "" || x.ItemId == itemId) && x.InventTransIdReturn != "").ToListAsync(ct);
+            var salesInvoiceLineIds = salesReturnLines.Where(x => x.OriginalInvoiceTransRecId.HasValue)
+                .Select(x => x.OriginalInvoiceTransRecId!.Value).Distinct().ToList();
+            var salesInvoiceLines = await Db.Set<CustInvoiceTrans>().AsNoTracking()
+                .Where(x => x.DataAreaId == companyId && salesInvoiceLineIds.Contains(x.RecId)).ToDictionaryAsync(x => x.RecId, ct);
+            var salesReturns = new Dictionary<string, (string OriginId, string? InvoiceId)>();
+            foreach (var returnLine in salesReturnLines)
+            {
+                string? invoiceId = null;
+                if (returnLine.OriginalInvoiceTransRecId is long invoiceLineId)
+                {
+                    if (!salesInvoiceLines.TryGetValue(invoiceLineId, out var invoiceLine)
+                        || invoiceLine.InventTransId != returnLine.InventTransIdReturn
+                        || string.IsNullOrWhiteSpace(invoiceLine.InvoiceId))
+                        throw new PostingValidationException("The original sales invoice line cannot be identified for return settlement.");
+                    invoiceId = invoiceLine.InvoiceId;
+                }
+                salesReturns[returnLine.InventTransId] = (returnLine.InventTransIdReturn, invoiceId);
+            }
             var returnLines = await Db.Set<PurchLine>().AsNoTracking().Where(x => x.DataAreaId == companyId
                 && (itemId == "" || x.ItemId == itemId) && x.InventTransIdReturn != "").ToListAsync(ct);
             var invoiceLineIds = returnLines.Where(x => x.OriginalInvoiceTransRecId.HasValue)
@@ -223,7 +241,7 @@ public sealed partial class InventCloseService : IInventCloseService
     /// happen to precede it; this is what makes a periodic close different from posting-time cost.
     /// </summary>
     private async Task SettlePoolAsync(string companyId, Pool pool, bool isClose, string voucher,
-        DateTime cutoffDate, LedgerContext context, IReadOnlyDictionary<string, string> salesReturns,
+        DateTime cutoffDate, LedgerContext context, IReadOnlyDictionary<string, (string OriginId, string? InvoiceId)> salesReturns,
         IReadOnlyDictionary<string, (string OriginId, string? InvoiceId)> vendorReturns, RunTotals run, CancellationToken ct)
     {
         // FIFO returns can depend on sales issues from this same close. Settle the chronological
@@ -231,9 +249,11 @@ public sealed partial class InventCloseService : IInventCloseService
         // its original issue's settled cost. Other models or interdependent marking/return cases
         // retain the existing refusal rather than approximating their settlement order.
         var returnReceipts = pool.Rows.Where(x => x.Transaction.Qty > 0 && salesReturns.ContainsKey(x.InventTransId)).ToList();
-        var dependencyOrigins = returnReceipts.Select(x => salesReturns[x.InventTransId]).ToHashSet(StringComparer.Ordinal);
-        var openDependencies = pool.Rows.Where(x => x.Transaction.Qty < 0 && dependencyOrigins.Contains(x.InventTransId)
-            && x.Transaction.ValueOpen != InventTransOpen.No).ToList();
+        var returnDependencies = returnReceipts.Select(x => salesReturns[x.InventTransId]).Distinct().ToList();
+        var openDependencies = pool.Rows.Where(x => x.Transaction.Qty < 0
+            && x.Transaction.ValueOpen != InventTransOpen.No
+            && returnDependencies.Any(dependency => dependency.OriginId == x.InventTransId
+                && (string.IsNullOrEmpty(dependency.InvoiceId) || dependency.InvoiceId == x.Transaction.InvoiceId))).ToList();
         if (isClose && pool.Model == InventModel.FIFO && openDependencies.Count > 0
             && !pool.Rows.Any(x => x.Transaction.Qty < 0 &&
                 (x.Transaction.MarkingRefInventTransOrigin != 0 || vendorReturns.ContainsKey(x.InventTransId))))
@@ -241,16 +261,20 @@ public sealed partial class InventCloseService : IInventCloseService
             var lastDependency = openDependencies.OrderBy(x => x.Transaction.DateFinancial)
                 .ThenBy(x => x.Transaction.RecId).Last().Transaction;
             var firstReturnDate = returnReceipts.Min(x => x.Transaction.DateFinancial);
-            if (lastDependency.DateFinancial < firstReturnDate && pool.Rows
-                .Where(x => x.Transaction.Qty > 0 && !salesReturns.ContainsKey(x.InventTransId))
-                .All(x => x.Transaction.DateFinancial < firstReturnDate))
+            if (lastDependency.DateFinancial < firstReturnDate)
             {
                 var prefix = pool.Rows.Where(x => x.Transaction.Qty > 0 && !salesReturns.ContainsKey(x.InventTransId)
+                        && x.Transaction.DateFinancial < firstReturnDate
                     || x.Transaction.Qty < 0 && (x.Transaction.DateFinancial < lastDependency.DateFinancial
                         || x.Transaction.DateFinancial == lastDependency.DateFinancial && x.Transaction.RecId <= lastDependency.RecId))
                     .ToList();
-                await SettlePoolAsync(companyId, new Pool(pool.ItemId, pool.Site, pool.ItemGroupId, pool.Model, prefix),
-                    true, voucher, cutoffDate, context, salesReturns, vendorReturns, run, ct);
+                var available = prefix.Where(x => x.Transaction.Qty > 0)
+                    .Sum(x => Math.Max(0m, x.Transaction.Qty - x.Transaction.QtySettled));
+                var needed = prefix.Where(x => x.Transaction.Qty < 0)
+                    .Sum(x => Math.Max(0m, x.Transaction.QtySettled - x.Transaction.Qty));
+                if (available >= needed)
+                    await SettlePoolAsync(companyId, new Pool(pool.ItemId, pool.Site, pool.ItemGroupId, pool.Model, prefix),
+                        true, voucher, cutoffDate, context, salesReturns, vendorReturns, run, ct);
             }
         }
 
@@ -264,17 +288,27 @@ public sealed partial class InventCloseService : IInventCloseService
             var receiptValue = trans.CostAmountPosted + trans.CostAmountAdjustment;
 
             // A customer return re-enters stock at the cost its original sales issue carried.
-            if (salesReturns.TryGetValue(row.InventTransId, out var soldId))
+            if (salesReturns.TryGetValue(row.InventTransId, out var salesReturn))
             {
-                var sold = pool.Rows.Where(x => x.InventTransId == soldId && x.Transaction.Qty < 0).Select(x => x.Transaction).ToList();
+                var sold = pool.Rows.Where(x => x.InventTransId == salesReturn.OriginId && x.Transaction.Qty < 0).Select(x => x.Transaction).ToList();
+                // The return takes the cost of the invoice it was created from. Only a return line
+                // that predates the selected-invoice link has to fall back to the whole origin,
+                // which is ambiguous as soon as its invoices carried different costs.
+                var invoiceGroups = sold.GroupBy(x => x.InvoiceId).Where(x => x.Sum(y => y.Qty) != 0m).ToList();
+                if (salesReturn.InvoiceId is { Length: > 0 } selectedInvoiceId)
+                {
+                    sold = (invoiceGroups.SingleOrDefault(x => x.Key == selectedInvoiceId)
+                        ?? throw new PostingValidationException(
+                            $"The selected sales invoice '{selectedInvoiceId}' has no settled issue for item '{trans.ItemId}'.")).ToList();
+                }
+                else if (invoiceGroups
+                    .Select(x => x.Sum(y => y.CostAmountPosted + y.CostAmountAdjustment) / x.Sum(y => y.Qty))
+                    .Distinct().Count() > 1)
+                {
+                    throw new PostingValidationException($"The original sales invoices for item '{trans.ItemId}' have different inventory costs, and this return line predates the selected-invoice link; the invoice cannot be identified for return costing.");
+                }
                 if (sold.Count == 0 || sold.Any(x => x.ValueOpen != InventTransOpen.No))
                     throw new PostingValidationException("A customer return requires its original financially settled sales issue in the same pool.");
-                var invoiceCosts = sold.GroupBy(x => x.InvoiceId)
-                    .Where(x => x.Sum(y => y.Qty) != 0m)
-                    .Select(x => x.Sum(y => y.CostAmountPosted + y.CostAmountAdjustment) / x.Sum(y => y.Qty))
-                    .Distinct().ToList();
-                if (invoiceCosts.Count > 1)
-                    throw new PostingValidationException($"The original sales invoices for item '{trans.ItemId}' have different inventory costs; the selected invoice cannot be identified for return costing.");
                 var targetReceipt = trans.Qty * sold.Sum(x => x.CostAmountPosted + x.CostAmountAdjustment) / sold.Sum(x => x.Qty);
                 var returnAdjustment = targetReceipt - receiptValue;
                 if (returnAdjustment != 0)
@@ -304,8 +338,6 @@ public sealed partial class InventCloseService : IInventCloseService
         var markedOrigins = markedIssues.Select(x => x.Transaction.MarkingRefInventTransOrigin).ToList();
         if (markedOrigins.Count != markedOrigins.Distinct().Count())
             throw new PostingValidationException("Multiple open issues reference the same marked receipt origin; the marked quantities cannot be identified safely.");
-        if (pool.Model == InventModel.WeightedAvg && markedIssues.Count > 0 && openIssues.Count > markedIssues.Count)
-            throw new PostingValidationException("Weighted-average close with both marked and unmarked issues is not supported until marked quantities can be excluded from the average.");
         if (markedIssues.Count > 0 && openIssues.Any(x => vendorReturns.ContainsKey(x.InventTransId)))
             throw new PostingValidationException("Purchase returns cannot share a settlement pool with marked issues until their receipt allocations are verified.");
         var reservedQuantities = new Dictionary<long, decimal>();
@@ -329,12 +361,39 @@ public sealed partial class InventCloseService : IInventCloseService
             layer.Receipt.InventTransOrigin == markedOrigin ? layer.Remaining
                 : Math.Max(0m, layer.Remaining - reservedQuantities.GetValueOrDefault(layer.Receipt.InventTransOrigin));
 
-        // Weighted average costs every issue of the period at one pool average, so it is taken
-        // before any consumption changes the open layers.
-        var poolQty = layers.Sum(x => x.Remaining);
-        var averageCost = pool.Model == InventModel.WeightedAvg && poolQty > 0
-            ? layers.Sum(x => x.Remaining * x.UnitCost) / poolQty
-            : 0m;
+        // Reconstruct the value still in the pool from receipt values and the actual cost
+        // removed by earlier, non-cancelled closes. Direct receipt links alone retain their
+        // original layer prices, which are not the average carried to the next period.
+        var poolQty = layers.Sum(x => x.Remaining - reservedQuantities.GetValueOrDefault(x.Receipt.InventTransOrigin));
+        var averageCost = 0m;
+        if (pool.Model == InventModel.WeightedAvg)
+        {
+            var receipts = pool.Rows.Where(x => x.Transaction.Qty > 0).Select(x => x.Transaction).ToList();
+            var receiptIds = receipts.Select(x => x.RecId).ToList();
+            var history = await Db.Set<InventSettlement>().AsNoTracking().Where(x => x.DataAreaId == companyId
+                && x.Cancelled == NoYes.No && x.SettleType == InventSettleType.FinancialClose
+                && x.ReceiptTransRecId != null && receiptIds.Contains(x.ReceiptTransRecId.Value)).ToListAsync(ct);
+            foreach (var receipt in receipts)
+            {
+                if (receipt.QtySettled != -history.Where(x => x.ReceiptTransRecId == receipt.RecId).Sum(x => x.QtySettled))
+                    throw new PostingValidationException($"The settlement history for receipt {receipt.RecId} does not match its settled quantity; weighted-average carry-forward cannot be determined.");
+            }
+            var remainingValue = receipts.Sum(x => x.CostAmountPosted + x.CostAmountAdjustment)
+                + history.Sum(x => x.CostAmountSettled);
+            var layerValue = layers.Sum(x => x.Remaining * x.UnitCost);
+            if ((markedIssues.Count > 0 || openIssues.Any(x => vendorReturns.ContainsKey(x.InventTransId)))
+                && decimal.Round(remainingValue - layerValue, 4, MidpointRounding.AwayFromZero) != 0m)
+                throw new PostingValidationException("A marked issue or purchase return cannot be settled against original receipt layers after weighted-average carry-forward; the linked receipt value is unavailable.");
+            var reservedValue = layers.Sum(x => reservedQuantities.GetValueOrDefault(x.Receipt.InventTransOrigin) * x.UnitCost);
+            if (poolQty > 0m)
+            {
+                if (remainingValue - reservedValue <= 0m)
+                    throw new PostingValidationException("Weighted-average pool has no positive remaining financial value for its open receipt quantity.");
+                averageCost = (remainingValue - reservedValue) / poolQty;
+            }
+            else if (decimal.Round(remainingValue - reservedValue, 4, MidpointRounding.AwayFromZero) != 0m)
+                throw new PostingValidationException("Weighted-average pool has a remaining value without an unmarked receipt quantity.");
+        }
 
         foreach (var row in pool.Rows.Where(x => x.Transaction.Qty < 0))
         {

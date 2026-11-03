@@ -9103,6 +9103,9 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasMaxLength(60)
                         .HasColumnType("nvarchar(60)");
 
+                    b.Property<long?>("OriginalInvoiceTransRecId")
+                        .HasColumnType("bigint");
+
                     b.Property<decimal>("OverDeliveryPct")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
@@ -9389,6 +9392,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasColumnType("decimal(18,4)");
 
                     b.HasKey("RecId");
+
+                    b.HasIndex("OriginalInvoiceTransRecId");
 
                     b.ToTable("SalesLine", (string)null);
                 });
@@ -31331,6 +31336,14 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Navigation("PriceDiscAdmTable");
 
                     b.Navigation("PriceDiscTable");
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsReceivable.SalesLine", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Finance.AccountsReceivable.CustInvoiceTrans", null)
+                        .WithMany()
+                        .HasForeignKey("OriginalInvoiceTransRecId")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.CompanyInfo", b =>

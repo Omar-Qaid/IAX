@@ -175,6 +175,15 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         
         public long RefReturnInvoiceTransW { get; set; }
 
+        /// <summary>
+        /// The invoice line a return line was created from. A sales line invoiced in several parts
+        /// has one <see cref="CustInvoiceTrans"/> row per part, all sharing its inventory origin, so
+        /// the origin alone cannot say which part is being returned or what it cost. Deliberate
+        /// local extension, symmetric with <c>PurchLine.OriginalInvoiceTransRecId</c>; null on
+        /// return lines created before the link existed.
+        /// </summary>
+        public long? OriginalInvoiceTransRecId { get; set; }
+
         // ==========================================================
         // Revenue Recognition
         // ==========================================================

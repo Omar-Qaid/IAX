@@ -1133,12 +1133,87 @@ public sealed class InventoryCycleTests
         var second = await returns.CreateAsync(new CustReturnCreateDto(invoiceId, null,
             [new(invoiceLine.RecId, 2m, "CRONLY")]), default);
         Assert.Equal(422, second.StatusCode);
-        Assert.Contains("prior returns cannot be attributed", second.Message);
+        Assert.Contains("remaining quantity", second.Message);
         Assert.Equal(-4m, (await db.Set<SalesLine>().Where(x => x.SalesType == SalesType.ReturnItem).ToListAsync()).Sum(x => x.SalesQty));
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Customer_return_keeps_attributed_partial_invoice_entitlements_separate(bool sameRequest)
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        SeedSalesMasterData(db);
+        db.Add(new ReturnDispositionCode { DataAreaId = "dat", DispositionCodeId = "CRONLY", DispositionAction = DispositionAction.CreditOnly });
+        await db.SaveChangesAsync();
+        var numbers = new TestInventNumbers();
+        var invoiceId = await StockAndSellTenAsync(db, numbers);
+        var first = await db.Set<CustInvoiceTrans>().SingleAsync();
+        first.Qty = first.InventQty = 5m;
+        var secondInvoiceId = sameRequest ? invoiceId : "SECOND-INVOICE";
+        if (!sameRequest)
+            db.Add(new CustInvoiceJour { DataAreaId = "dat", InvoiceId = secondInvoiceId, SalesId = first.SalesId });
+        var second = new CustInvoiceTrans { DataAreaId = "dat", InvoiceId = secondInvoiceId, SalesId = first.SalesId,
+            InventTransId = first.InventTransId, ItemId = first.ItemId, Qty = 5m, InventQty = 5m };
+        db.Add(second);
+        await db.SaveChangesAsync();
+        var service = new CustReturnService(new TestUnitOfWork(db), new TestCompany(), Sequence(), numbers);
+
+        if (sameRequest)
+            Assert.Equal(200, (await service.CreateAsync(new CustReturnCreateDto(invoiceId, null,
+                [new(first.RecId, 4m, "CRONLY"), new(second.RecId, 4m, "CRONLY")]), default)).StatusCode);
+        else
+        {
+            Assert.Equal(200, (await service.CreateAsync(new CustReturnCreateDto(invoiceId, null,
+                [new(first.RecId, 4m, "CRONLY")]), default)).StatusCode);
+            Assert.Equal(200, (await service.CreateAsync(new CustReturnCreateDto(secondInvoiceId, null,
+                [new(second.RecId, 4m, "CRONLY")]), default)).StatusCode);
+        }
+        var returnLines = await db.Set<SalesLine>().Where(x => x.SalesType == SalesType.ReturnItem).ToListAsync();
+        Assert.Equal(2, returnLines.Count);
+        Assert.Equal(-4m, Assert.Single(returnLines, x => x.OriginalInvoiceTransRecId == first.RecId).SalesQty);
+        Assert.Equal(-4m, Assert.Single(returnLines, x => x.OriginalInvoiceTransRecId == second.RecId).SalesQty);
+        Assert.Equal(422, (await service.CreateAsync(new CustReturnCreateDto(secondInvoiceId, null,
+            [new(second.RecId, 2m, "CRONLY")]), default)).StatusCode);
+    }
+
     [Fact]
-    public async Task Customer_return_rejects_different_costs_across_partial_invoices_without_invoice_link()
+    public async Task Customer_return_with_unattributed_legacy_line_retains_conservative_limit()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        SeedSalesMasterData(db);
+        db.Add(new ReturnDispositionCode { DataAreaId = "dat", DispositionCodeId = "CRONLY", DispositionAction = DispositionAction.CreditOnly });
+        await db.SaveChangesAsync();
+        var numbers = new TestInventNumbers();
+        var invoiceId = await StockAndSellTenAsync(db, numbers);
+        var first = await db.Set<CustInvoiceTrans>().SingleAsync();
+        first.Qty = first.InventQty = 5m;
+        const string secondInvoiceId = "SECOND-INVOICE";
+        db.Add(new CustInvoiceJour { DataAreaId = "dat", InvoiceId = secondInvoiceId, SalesId = first.SalesId });
+        var second = new CustInvoiceTrans { DataAreaId = "dat", InvoiceId = secondInvoiceId, SalesId = first.SalesId,
+            InventTransId = first.InventTransId, ItemId = first.ItemId, Qty = 5m, InventQty = 5m };
+        db.Add(second);
+        await db.SaveChangesAsync();
+        var service = new CustReturnService(new TestUnitOfWork(db), new TestCompany(), Sequence(), numbers);
+        Assert.Equal(200, (await service.CreateAsync(new CustReturnCreateDto(invoiceId, null,
+            [new(first.RecId, 4m, "CRONLY")]), default)).StatusCode);
+        (await db.Set<SalesLine>().SingleAsync(x => x.SalesType == SalesType.ReturnItem)).OriginalInvoiceTransRecId = null;
+        await db.SaveChangesAsync();
+
+        var rejected = await service.CreateAsync(new CustReturnCreateDto(secondInvoiceId, null,
+            [new(second.RecId, 2m, "CRONLY")]), default);
+        Assert.Equal(422, rejected.StatusCode);
+        Assert.Single(await db.Set<SalesLine>().Where(x => x.SalesType == SalesType.ReturnItem).ToListAsync());
+    }
+
+    [Fact]
+    public async Task Customer_return_costs_from_the_selected_invoice_across_partial_invoices()
     {
         await using var fixture = await Fixture.CreateAsync();
         var db = fixture.Db;
@@ -1161,9 +1236,14 @@ public sealed class InventoryCycleTests
         var returns = new CustReturnService(new TestUnitOfWork(db), new TestCompany(), Sequence(), numbers);
         var result = await returns.CreateAsync(new CustReturnCreateDto(invoiceId, null,
             [new(invoiceLine.RecId, 1, "CREDIT")]), default);
-        Assert.Equal(422, result.StatusCode);
-        Assert.Contains("different inventory costs", result.Message);
-        Assert.Empty(await db.Set<SalesTable>().Where(x => x.SalesType == SalesType.ReturnItem).ToListAsync());
+
+        // The return records the invoice line it came from, so the 60.00 cost of the selected
+        // invoice is used instead of refusing the differing 70.00 cost of the other invoice.
+        Assert.Equal(200, result.StatusCode);
+        var returnLine = await db.Set<SalesLine>().SingleAsync(x => x.SalesType == SalesType.ReturnItem);
+        Assert.Equal(invoiceLine.RecId, returnLine.OriginalInvoiceTransRecId);
+
+        Assert.Equal(-1m, returnLine.SalesQty);
     }
 
     [Fact]
@@ -1691,6 +1771,78 @@ public sealed class InventoryCycleTests
     }
 
     [Fact]
+    public async Task Split_inventory_movement_can_be_unmarked_by_its_record_id()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedMarkablePool(db);
+        var first = db.Set<InventTrans>().Local.Single(x => x.RecId == 3);
+        first.Qty = -25m;
+        first.CostAmountPosted = -275m;
+        db.Add(new InventTrans { RecId = 4, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM", InventTransOrigin = 3,
+            Qty = -25m, StatusIssue = StatusIssue.Sold, CostAmountPosted = -275m,
+            DateFinancial = new DateTime(2026, 6, 3), ValueOpen = InventTransOpen.Yes });
+        await db.SaveChangesAsync();
+        var service = new InventoryMarkingService(new TestUnitOfWork(db), new TestCompany());
+        Assert.Null((await service.MarkAsync("I1", "R2", 3, null, default)).Error);
+        Assert.Contains("split across", (await service.UnmarkAsync("I1", default)).Error);
+        Assert.Contains("does not belong", (await service.UnmarkAsync("I1", 999, default)).Error);
+        Assert.Null((await service.UnmarkAsync("I1", 3, default)).Error);
+        var movements = await db.Set<InventTrans>().Where(x => x.RecId == 2 || x.RecId == 3 || x.RecId == 4).ToListAsync();
+        Assert.All(movements, x => Assert.Equal(0L, x.MarkingRefInventTransOrigin));
+    }
+
+    [Fact]
+    public async Task Split_marking_rejects_indistinguishable_pairs_and_refuses_ambiguous_removal()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedMarkablePool(db);
+        db.Add(new InventTrans { RecId = 4, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM", InventTransOrigin = 3,
+            Qty = -10m, StatusIssue = StatusIssue.Sold, CostAmountPosted = -110m,
+            DateFinancial = new DateTime(2026, 6, 3), ValueOpen = InventTransOpen.Yes });
+        db.Add(new InventTrans { RecId = 5, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM", InventTransOrigin = 2,
+            Qty = 10m, StatusReceipt = StatusReceipt.Purchased, CostAmountPosted = 120m,
+            DateFinancial = new DateTime(2026, 6, 2), ValueOpen = InventTransOpen.Yes });
+        await db.SaveChangesAsync();
+        var service = new InventoryMarkingService(new TestUnitOfWork(db), new TestCompany());
+        Assert.Null((await service.MarkAsync("I1", "R2", 3, 2, default)).Error);
+        Assert.Contains("cannot be identified safely", (await service.MarkAsync("I1", "R2", 4, 5, default)).Error);
+        var issue = await db.Set<InventTrans>().SingleAsync(x => x.RecId == 4);
+        var receipt = await db.Set<InventTrans>().SingleAsync(x => x.RecId == 5);
+        Assert.Equal(0L, issue.MarkingRefInventTransOrigin);
+        Assert.Equal(0L, receipt.MarkingRefInventTransOrigin);
+        // Existing ambiguous records must not cause removal of several counterpart markings.
+        issue.MarkingRefInventTransOrigin = 2;
+        receipt.MarkingRefInventTransOrigin = 3;
+        await db.SaveChangesAsync();
+        Assert.Contains("cannot be uniquely identified", (await service.UnmarkAsync("I1", 3, default)).Error);
+        var marked = await db.Set<InventTrans>().Where(x => x.RecId == 2 || x.RecId == 3 || x.RecId == 4 || x.RecId == 5).ToListAsync();
+        Assert.All(marked, x => Assert.NotEqual(0L, x.MarkingRefInventTransOrigin));
+    }
+
+    [Fact]
+    public async Task Marking_removal_refuses_a_settled_or_missing_counterpart()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedMarkablePool(db);
+        await db.SaveChangesAsync();
+        var service = new InventoryMarkingService(new TestUnitOfWork(db), new TestCompany());
+        Assert.Null((await service.MarkAsync("I1", "R2", default)).Error);
+        var receipt = await db.Set<InventTrans>().SingleAsync(x => x.RecId == 2);
+        receipt.ValueOpen = InventTransOpen.No;
+        await db.SaveChangesAsync();
+        Assert.Contains("financially settled", (await service.UnmarkAsync("I1", default)).Error);
+        receipt = await db.Set<InventTrans>().SingleAsync(x => x.RecId == 2);
+        receipt.ValueOpen = InventTransOpen.Yes;
+        receipt.MarkingRefInventTransOrigin = 0;
+        await db.SaveChangesAsync();
+        Assert.Contains("cannot be uniquely identified", (await service.UnmarkAsync("I1", default)).Error);
+        Assert.Equal(2L, (await db.Set<InventTrans>().SingleAsync(x => x.RecId == 3)).MarkingRefInventTransOrigin);
+    }
+
+    [Fact]
     public async Task Marked_issue_settles_against_its_marked_receipt_instead_of_the_model_order()
     {
         await using var fixture = await Fixture.CreateAsync();
@@ -1752,8 +1904,38 @@ public sealed class InventoryCycleTests
         Assert.Equal(-50m, marked.QtySettled);
     }
 
+    [Theory]
+    [InlineData(2)]
+    [InlineData(4)]
+    public async Task Weighted_average_close_excludes_marked_quantity_from_unmarked_issue_cost(int issueDay)
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedMarkablePool(db);
+        db.Set<InventModelGroup>().Local.Single().InventModel = InventModel.WeightedAvg;
+        db.Set<InventTrans>().Local.Single(x => x.RecId == 3).MarkingRefInventTransOrigin = 2;
+        db.Add(new InventTransOrigin { RecId = 4, DataAreaId = "dat", InventTransId = "OTHER-ISSUE", ItemId = "ITEM", ReferenceId = "IJ4", ReferenceCategory = InventRefType.InventoryJournal });
+        db.Add(new InventTrans { RecId = 4, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM", InventTransOrigin = 4,
+            Qty = -150m, StatusIssue = StatusIssue.Sold, CostAmountPosted = -1650m, Voucher = "OTHER-ISSUE",
+            DateFinancial = new DateTime(2026, 6, issueDay), ValueOpen = InventTransOpen.Yes });
+        db.Add(new InventTransPosting { DataAreaId = "dat", InventTransOrigin = 4, ItemId = "ITEM", Voucher = "OTHER-ISSUE",
+            InventTransPostingType = InventTransPostingType.Financial, IsPosted = NoYes.Yes,
+            LedgerDimension = 1, OffsetLedgerDimension = 2, PostingType = LedgerPostingType.InventIssue,
+            PostingTypeOffset = LedgerPostingType.InventLoss, ProjId = "" });
+        await db.SaveChangesAsync();
+        var result = await new InventCloseService(new TestUnitOfWork(db), new TestCompany(), new TestUser(), Sequence())
+            .CloseItemAsync("ITEM", new DateTime(2026, 6, 30));
+        Assert.Null(result.Error);
+        var settlements = await db.Set<InventSettlement>().ToListAsync();
+        var marked = Assert.Single(settlements, x => x.TransRecId == 3);
+        Assert.Equal(2L, marked.ReceiptTransRecId);
+        Assert.Equal(-600m, marked.CostAmountSettled);
+        Assert.Equal(-1600m, settlements.Where(x => x.TransRecId == 4).Sum(x => x.CostAmountSettled));
+    }
+
     [Fact]
-    public async Task Weighted_average_close_refuses_mixed_marked_and_unmarked_issues()
+    public async Task Weighted_average_mixed_pool_allows_remaining_stock()
     {
         await using var fixture = await Fixture.CreateAsync();
         var db = fixture.Db;
@@ -1765,11 +1947,71 @@ public sealed class InventoryCycleTests
         db.Add(new InventTrans { RecId = 4, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM", InventTransOrigin = 4,
             Qty = -1m, StatusIssue = StatusIssue.Sold, CostAmountPosted = -11m, Voucher = "OTHER-ISSUE",
             DateFinancial = new DateTime(2026, 6, 2), ValueOpen = InventTransOpen.Yes });
+        db.Add(new InventTransPosting { DataAreaId = "dat", InventTransOrigin = 4, ItemId = "ITEM", Voucher = "OTHER-ISSUE",
+            InventTransPostingType = InventTransPostingType.Financial, IsPosted = NoYes.Yes, LedgerDimension = 1,
+            OffsetLedgerDimension = 2, PostingType = LedgerPostingType.InventIssue, PostingTypeOffset = LedgerPostingType.InventLoss, ProjId = "" });
         await db.SaveChangesAsync();
         var result = await new InventCloseService(new TestUnitOfWork(db), new TestCompany(), new TestUser(), Sequence())
             .CloseItemAsync("ITEM", new DateTime(2026, 6, 30));
-        Assert.Contains("both marked and unmarked issues", result.Error);
-        Assert.Empty(await db.Set<InventSettlement>().ToListAsync());
+        Assert.Null(result.Error);
+        var settlements = await db.Set<InventSettlement>().ToListAsync();
+        Assert.Equal(-600m, settlements.Where(x => x.TransRecId == 3).Sum(x => x.CostAmountSettled));
+        Assert.Equal(-10.67m, settlements.Where(x => x.TransRecId == 4).Sum(x => x.CostAmountSettled));
+    }
+
+    [Fact]
+    public async Task Weighted_average_carries_remaining_value_to_next_period_and_reverses()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedMarkablePool(db);
+        db.Set<InventModelGroup>().Local.Single().InventModel = InventModel.WeightedAvg;
+        await db.SaveChangesAsync();
+        var service = new InventCloseService(new TestUnitOfWork(db), new TestCompany(), new TestUser(), Sequence());
+        var first = await service.CloseItemAsync("ITEM", new DateTime(2026, 6, 30));
+        Assert.Null(first.Error);
+
+        db.AddRange(
+            new InventTransOrigin { RecId = 4, DataAreaId = "dat", InventTransId = "R3", ItemId = "ITEM", ReferenceId = "IJ4", ReferenceCategory = InventRefType.InventoryJournal },
+            new InventTransOrigin { RecId = 5, DataAreaId = "dat", InventTransId = "I2", ItemId = "ITEM", ReferenceId = "IJ5", ReferenceCategory = InventRefType.InventoryJournal },
+            new InventTrans { RecId = 4, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM", InventTransOrigin = 4,
+                Qty = 50m, StatusReceipt = StatusReceipt.Purchased, CostAmountPosted = 1000m, DateFinancial = new DateTime(2026, 7, 1), ValueOpen = InventTransOpen.Yes },
+            new InventTrans { RecId = 5, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM", InventTransOrigin = 5,
+                Qty = -100m, StatusIssue = StatusIssue.Sold, CostAmountPosted = -1100m, Voucher = "I2-VOUCHER", DateFinancial = new DateTime(2026, 7, 2), ValueOpen = InventTransOpen.Yes },
+            new InventTransPosting { DataAreaId = "dat", InventTransOrigin = 5, ItemId = "ITEM", Voucher = "I2-VOUCHER",
+                InventTransPostingType = InventTransPostingType.Financial, IsPosted = NoYes.Yes, LedgerDimension = 1,
+                OffsetLedgerDimension = 2, PostingType = LedgerPostingType.InventIssue, PostingTypeOffset = LedgerPostingType.InventLoss, ProjId = "" });
+        await db.SaveChangesAsync();
+        var second = await service.CloseItemAsync("ITEM", new DateTime(2026, 7, 31));
+        Assert.Null(second.Error);
+        Assert.Equal(-1325m, (await db.Set<InventTrans>().SingleAsync(x => x.RecId == 5)).CostAmountSettled);
+        Assert.Null((await service.CancelAsync(second.Result!.ClosingRecId)).Error);
+        Assert.Equal(0m, (await db.Set<InventTrans>().SingleAsync(x => x.RecId == 5)).CostAmountSettled);
+        var repeated = await service.CloseItemAsync("ITEM", new DateTime(2026, 7, 31));
+        Assert.Null(repeated.Error);
+        Assert.Equal(-1325m, (await db.Set<InventTrans>().SingleAsync(x => x.RecId == 5)).CostAmountSettled);
+    }
+
+    [Fact]
+    public async Task Weighted_average_refuses_marking_an_original_layer_after_average_carry_forward()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedMarkablePool(db);
+        db.Set<InventModelGroup>().Local.Single().InventModel = InventModel.WeightedAvg;
+        await db.SaveChangesAsync();
+        var service = new InventCloseService(new TestUnitOfWork(db), new TestCompany(), new TestUser(), Sequence());
+        Assert.Null((await service.CloseItemAsync("ITEM", new DateTime(2026, 6, 30))).Error);
+        db.Add(new InventTransOrigin { RecId = 4, DataAreaId = "dat", InventTransId = "I2", ItemId = "ITEM", ReferenceId = "IJ4", ReferenceCategory = InventRefType.InventoryJournal });
+        db.Add(new InventTrans { RecId = 4, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM", InventTransOrigin = 4,
+            Qty = -1m, StatusIssue = StatusIssue.Sold, CostAmountPosted = -11m, Voucher = "I2", MarkingRefInventTransOrigin = 2,
+            DateFinancial = new DateTime(2026, 7, 2), ValueOpen = InventTransOpen.Yes });
+        await db.SaveChangesAsync();
+        var second = await service.CloseItemAsync("ITEM", new DateTime(2026, 7, 31));
+        Assert.Contains("linked receipt value is unavailable", second.Error);
+        Assert.Equal(0m, (await db.Set<InventTrans>().SingleAsync(x => x.RecId == 4)).QtySettled);
     }
 
     [Fact]
@@ -2022,8 +2264,63 @@ public sealed class InventoryCycleTests
         Assert.Empty(await db.Set<GeneralJournalAccountEntry>().ToListAsync());
     }
 
-    [Fact]
-    public async Task Fifo_close_settles_same_period_sale_before_costing_its_return_and_reverses_both()
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(false, false)]
+    public async Task Sales_return_close_requires_only_the_selected_invoice_to_be_settled(bool selectedSettled, bool recalculate)
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedMarkablePool(db);
+        var selected = db.Set<InventTrans>().Local.Single(x => x.RecId == 3);
+        selected.InvoiceId = "FIRST";
+        selected.DateFinancial = new DateTime(2026, 6, 3);
+        selected.ValueOpen = selectedSettled ? InventTransOpen.No : InventTransOpen.Yes;
+        selected.QtySettled = selectedSettled ? selected.Qty : 0m;
+        var otherOpen = selectedSettled || !recalculate;
+        db.Set<InventTrans>().Local.Single(x => x.RecId == 1).QtySettled = selectedSettled ? 50m : otherOpen ? 0m : 10m;
+        db.Add(new InventTrans { RecId = 5, DataAreaId = "dat", InventTransOrigin = 3, ItemId = "ITEM", InventDimId = "DIM",
+            Qty = -10m, StatusIssue = StatusIssue.Sold, CostAmountPosted = -150m, InvoiceId = "SECOND", Voucher = "SECOND",
+            DateFinancial = new DateTime(2026, 6, 5), ValueOpen = otherOpen ? InventTransOpen.Yes : InventTransOpen.No,
+            QtySettled = otherOpen ? 0m : -10m });
+        db.Add(new InventTransPosting { DataAreaId = "dat", InventTransOrigin = 3, ItemId = "ITEM", Voucher = "SECOND",
+            InventTransPostingType = InventTransPostingType.Financial, IsPosted = NoYes.Yes, LedgerDimension = 1,
+            OffsetLedgerDimension = 2, PostingType = LedgerPostingType.InventIssue, PostingTypeOffset = LedgerPostingType.InventLoss, ProjId = "" });
+        db.Add(new CustInvoiceTrans { RecId = 10, DataAreaId = "dat", InventTransId = "I1", InvoiceId = "FIRST" });
+        db.Add(new InventTransOrigin { RecId = 4, DataAreaId = "dat", InventTransId = "RETURN", ItemId = "ITEM", ReferenceId = "RET", ReferenceCategory = InventRefType.SalesTable });
+        db.Add(new SalesLine { DataAreaId = "dat", SalesId = "RET", ItemId = "ITEM", InventTransId = "RETURN", InventTransIdReturn = "I1", OriginalInvoiceTransRecId = 10 });
+        db.Add(new InventTrans { RecId = 4, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM", InventTransOrigin = 4,
+            Qty = 10m, StatusReceipt = StatusReceipt.Purchased, CostAmountPosted = 100m, Voucher = "CREDIT",
+            DateFinancial = new DateTime(2026, 6, 4), ValueOpen = InventTransOpen.Yes });
+        db.Add(new InventTransPosting { DataAreaId = "dat", InventTransOrigin = 4, ItemId = "ITEM", Voucher = "CREDIT",
+            InventTransPostingType = InventTransPostingType.Financial, IsPosted = NoYes.Yes, LedgerDimension = 1,
+            OffsetLedgerDimension = 2, PostingType = LedgerPostingType.SalesIssue, PostingTypeOffset = LedgerPostingType.SalesConsump, ProjId = "" });
+        await db.SaveChangesAsync();
+
+        var service = new InventCloseService(new TestUnitOfWork(db), new TestCompany(), new TestUser(), Sequence());
+        var close = recalculate
+            ? await service.RecalculateItemAsync("ITEM", new DateTime(2026, 6, 30))
+            : await service.CloseItemAsync("ITEM", new DateTime(2026, 6, 30));
+        if (recalculate)
+        {
+            Assert.Contains("original financially settled sales issue", close.Error);
+            Assert.Empty(await db.Set<InventSettlement>().ToListAsync());
+            return;
+        }
+        Assert.Null(close.Error);
+        Assert.Equal(selectedSettled ? 10m : 0m, (await db.Set<InventTrans>().SingleAsync(x => x.RecId == 4)).CostAmountAdjustment);
+        Assert.Null((await service.CancelAsync(close.Result!.ClosingRecId)).Error);
+        Assert.Equal(0m, (await db.Set<InventTrans>().SingleAsync(x => x.RecId == 4)).CostAmountAdjustment);
+        Assert.Equal(selectedSettled ? InventTransOpen.No : InventTransOpen.Yes, (await db.Set<InventTrans>().SingleAsync(x => x.RecId == 3)).ValueOpen);
+        Assert.Equal(InventTransOpen.Yes, (await db.Set<InventTrans>().SingleAsync(x => x.RecId == 5)).ValueOpen);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Fifo_close_settles_same_period_sale_before_costing_its_return_and_reverses_both(bool laterReceipt)
     {
         await using var fixture = await Fixture.CreateAsync();
         var db = fixture.Db;
@@ -2039,6 +2336,13 @@ public sealed class InventoryCycleTests
         db.Add(new InventTransPosting { DataAreaId = "dat", InventTransOrigin = 4, ItemId = "ITEM", Voucher = "CREDIT",
             InventTransPostingType = InventTransPostingType.Financial, IsPosted = NoYes.Yes, LedgerDimension = 1,
             OffsetLedgerDimension = 2, PostingType = LedgerPostingType.SalesIssue, PostingTypeOffset = LedgerPostingType.SalesConsump, ProjId = "" });
+        if (laterReceipt)
+        {
+            db.Add(new InventTransOrigin { RecId = 5, DataAreaId = "dat", InventTransId = "LATER", ItemId = "ITEM", ReferenceId = "IJ5", ReferenceCategory = InventRefType.InventoryJournal });
+            db.Add(new InventTrans { RecId = 5, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM", InventTransOrigin = 5,
+                Qty = 50m, StatusReceipt = StatusReceipt.Purchased, CostAmountPosted = 1000m,
+                DateFinancial = new DateTime(2026, 6, 5), ValueOpen = InventTransOpen.Yes });
+        }
         await db.SaveChangesAsync();
         var service = new InventCloseService(new TestUnitOfWork(db), new TestCompany(), new TestUser(), Sequence());
 
@@ -2057,6 +2361,37 @@ public sealed class InventoryCycleTests
         Assert.Equal(0m, receipt.CostAmountAdjustment);
         Assert.Equal(1760m, (await db.Set<InventSum>().SingleAsync()).PostedValue);
         Assert.Equal(0m, (await db.Set<GeneralJournalAccountEntry>().ToListAsync()).Sum(x => x.AccountingCurrencyAmount));
+    }
+
+    [Fact]
+    public async Task Same_period_sales_return_rolls_back_when_original_issue_cannot_be_fully_settled()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedMarkablePool(db);
+        var issue = db.Set<InventTrans>().Local.Single(x => x.RecId == 3);
+        issue.Qty = -250m;
+        issue.CostAmountPosted = -2750m;
+        db.Set<InventTransOrigin>().Local.Single(x => x.RecId == 3).ReferenceCategory = InventRefType.SalesTable;
+        db.Add(new InventTransOrigin { RecId = 4, DataAreaId = "dat", InventTransId = "RETURN", ItemId = "ITEM", ReferenceId = "RET", ReferenceCategory = InventRefType.SalesTable });
+        db.Add(new SalesLine { DataAreaId = "dat", SalesId = "RET", ItemId = "ITEM", InventTransId = "RETURN", InventTransIdReturn = "I1" });
+        db.Add(new InventTrans { RecId = 4, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM", InventTransOrigin = 4,
+            Qty = 10m, StatusReceipt = StatusReceipt.Purchased, CostAmountPosted = 110m, Voucher = "CREDIT",
+            DateFinancial = new DateTime(2026, 6, 4), ValueOpen = InventTransOpen.Yes });
+        db.Add(new InventTransOrigin { RecId = 5, DataAreaId = "dat", InventTransId = "LATER", ItemId = "ITEM", ReferenceId = "IJ5", ReferenceCategory = InventRefType.InventoryJournal });
+        db.Add(new InventTrans { RecId = 5, DataAreaId = "dat", ItemId = "ITEM", InventDimId = "DIM", InventTransOrigin = 5,
+            Qty = 50m, StatusReceipt = StatusReceipt.Purchased, CostAmountPosted = 1000m,
+            DateFinancial = new DateTime(2026, 6, 5), ValueOpen = InventTransOpen.Yes });
+        await db.SaveChangesAsync();
+
+        var result = await new InventCloseService(new TestUnitOfWork(db), new TestCompany(), new TestUser(), Sequence())
+            .CloseItemAsync("ITEM", new DateTime(2026, 6, 30));
+
+        Assert.Contains("original financially settled sales issue", result.Error);
+        Assert.Equal(0m, (await db.Set<InventTrans>().SingleAsync(x => x.RecId == 3)).QtySettled);
+        Assert.Empty(await db.Set<InventSettlement>().ToListAsync());
+        Assert.Empty(await db.Set<InventClosing>().ToListAsync());
     }
 
     [Fact]
