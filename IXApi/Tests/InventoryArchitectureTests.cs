@@ -179,6 +179,60 @@ public sealed class InventoryArchitectureTests
     }
 
     [Fact]
+    public async Task Inventory_readiness_requires_accrual_offsets_only_when_physical_posting_is_enabled()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        var model = new InventModelGroup { RecId = 1, DataAreaId = "dat", ModelGroupId = "FIFO",
+            InventModel = InventModel.FIFO, StockedProduct = NoYes.Yes, PostOnHandFinancial = NoYes.Yes };
+        db.Add(model);
+        await db.SaveChangesAsync();
+        var service = new InventParametersService(new TestUnitOfWork(db), new TestIdentity());
+
+        var initial = (await service.GetReadinessAsync())!;
+        Assert.Contains(initial.Issues, x => x.Code == "MISSING_SALESCONSUMP_ACCOUNT");
+        Assert.DoesNotContain(initial.Issues, x => x.Code == "MISSING_PURCHPACKINGSLIPOFFSETACCOUNT_ACCOUNT"
+            || x.Code == "MISSING_SALESPACKINGSLIPOFFSETACCOUNT_ACCOUNT");
+
+        model.PostPhysicalPurchase = NoYes.Yes;
+        model.PostPhysicalRevenue = NoYes.Yes;
+        await db.SaveChangesAsync();
+        var enabled = (await service.GetReadinessAsync())!;
+        Assert.Contains(enabled.Issues, x => x.Code == "MISSING_PURCHPACKINGSLIPOFFSETACCOUNT_ACCOUNT");
+        Assert.Contains(enabled.Issues, x => x.Code == "MISSING_SALESPACKINGSLIPOFFSETACCOUNT_ACCOUNT");
+
+        db.AddRange(new[] { InventAccountType.SalesConsump, InventAccountType.PurchPackingSlipOffsetAccount,
+            InventAccountType.SalesPackingSlipOffsetAccount }.Select((type, i) => new InventPosting
+            { RecId = i + 10, DataAreaId = "dat", InventAccountType = type, ItemCode = TableGroupAll.All,
+                CustVendCode = TableGroupAll.All, LedgerDimension = 1 }));
+        await db.SaveChangesAsync();
+        var configured = (await service.GetReadinessAsync())!;
+        Assert.DoesNotContain(configured.Issues, x => x.Code is "MISSING_SALESCONSUMP_ACCOUNT"
+            or "MISSING_PURCHPACKINGSLIPOFFSETACCOUNT_ACCOUNT" or "MISSING_SALESPACKINGSLIPOFFSETACCOUNT_ACCOUNT");
+    }
+
+    [Fact]
+    public async Task Inventory_readiness_does_not_accept_a_model_group_requiring_unimplemented_receiving()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync();
+        await using var db = new InventoryContext(new DbContextOptionsBuilder<InventoryContext>().UseSqlite(connection).Options);
+        await db.Database.EnsureCreatedAsync();
+        var model = new InventModelGroup { RecId = 1, DataAreaId = "dat", ModelGroupId = "FIFO",
+            InventModel = InventModel.FIFO, StockedProduct = NoYes.Yes, PostOnHandFinancial = NoYes.Yes,
+            MandatoryReceive = NoYes.Yes };
+        db.Add(model);
+        await db.SaveChangesAsync();
+        var service = new InventParametersService(new TestUnitOfWork(db), new TestIdentity());
+        Assert.Contains((await service.GetReadinessAsync())!.Issues, x => x.Code == "MISSING_MODEL_GROUP");
+        model.MandatoryReceive = NoYes.No;
+        await db.SaveChangesAsync();
+        Assert.DoesNotContain((await service.GetReadinessAsync())!.Issues, x => x.Code == "MISSING_MODEL_GROUP");
+    }
+
+    [Fact]
     public async Task Inventory_readiness_accepts_valid_setup_with_company_chosen_names()
     {
         await using var connection = new SqliteConnection("Data Source=:memory:");
@@ -1544,6 +1598,7 @@ public sealed class InventoryArchitectureTests
         await db.Database.EnsureCreatedAsync();
         db.AddRange(
             new SysNumberSequence { RecId = 1, DataAreaId = "dat", NumberSequence = "InventJournalTable", Txt = "Journal", Format = "IJ-#####", AnnotatedFormat = "IJ-{SEQ}", InUse = 1, IsActive = true, NextRec = 1, Highest = 99999 },
+            new SysNumberSequence { RecId = 51, DataAreaId = "dat", NumberSequence = "InventTransferJour", Txt = "Transfer voucher", Format = "TV-#####", AnnotatedFormat = "TV-{SEQ}", InUse = 1, IsActive = true, NextRec = 1, Highest = 99999 },
             new InventJournalName { RecId = 2, DataAreaId = "dat", JournalNameId = "TRF", Description = "Transfer", JournalType = InventJournalType.Transfer, VoucherNumberSequenceTable = 9 },
             new InventJournalName { RecId = 13, DataAreaId = "dat", JournalNameId = "MOV", Description = "Movement", JournalType = InventJournalType.Movement, VoucherNumberSequenceTable = 9 },
             new InventJournalName { RecId = 16, DataAreaId = "dat", JournalNameId = "COUNT", Description = "Counting", JournalType = InventJournalType.Counting, VoucherNumberSequenceTable = 9 },
@@ -1798,7 +1853,8 @@ public sealed class InventoryArchitectureTests
         Assert.Null((await transfers.ShipAsync("TR-DEMO", Post("SHIP1", 1m), default)).Error);
         Assert.Contains("other transfer operation", (await transfers.ReceiveAsync("TR-DEMO", Post("SHIP1", 1m), default)).Error);
         var shippedCount = await db.Set<InventTrans>().CountAsync();
-        var shipmentLegs = await db.Set<InventTrans>().Where(x => x.Voucher == "TR-DEMO:SHIP1").ToListAsync();
+        var ship1Voucher = (await db.Set<InventTransferJour>().SingleAsync(x => x.TransferId == "TR-DEMO" && x.PostingRequestId == "SHIP1")).Voucher;
+        var shipmentLegs = await db.Set<InventTrans>().Where(x => x.Voucher == ship1Voucher).ToListAsync();
         Assert.Equal(4, shipmentLegs.Count);
         Assert.Single(shipmentLegs, x => x.StatusIssue == StatusIssue.ReservPhysical);
         Assert.Single(shipmentLegs, x => x.StatusReceipt == StatusReceipt.Ordered);
@@ -1816,7 +1872,7 @@ public sealed class InventoryArchitectureTests
         Assert.NotEqual(string.Empty, partlyShipped.Lines[0].InventTransId);
         Assert.NotEqual(string.Empty, partlyShipped.Lines[0].InventTransIdTransitTo);
 
-        var firstTransitCost = await db.Set<InventTrans>().Where(x => x.Voucher == "TR-DEMO:SHIP1"
+        var firstTransitCost = await db.Set<InventTrans>().Where(x => x.Voucher == ship1Voucher
                 && x.Qty > 0 && x.StatusReceipt == StatusReceipt.Purchased)
             .Select(x => x.CostAmountPosted).SingleAsync();
         var laterReceipt = await service.CreateAsync(new InventJournalCreateDto
@@ -1833,8 +1889,9 @@ public sealed class InventoryArchitectureTests
         var destinationValueBefore = await db.Set<InventSum>().Where(x => x.InventLocationId == "SHOW").SumAsync(x => x.PostedValue);
         Assert.Null((await transfers.ReceiveAsync("TR-DEMO", Post("RECEIVE1", 1m), default)).Error);
         Assert.Contains("other transfer operation", (await transfers.ShipAsync("TR-DEMO", Post("RECEIVE1", 1m), default)).Error);
-        Assert.Equal(shipmentLegs.Count, await db.Set<InventTrans>().CountAsync(x => x.Voucher == "TR-DEMO:SHIP1" || x.Voucher == "TR-DEMO:RECEIVE1"));
-        Assert.Empty(await db.Set<InventTrans>().Where(x => x.Voucher == "TR-DEMO:SHIP1"
+        var receive1Voucher = (await db.Set<InventTransferJour>().SingleAsync(x => x.TransferId == "TR-DEMO" && x.PostingRequestId == "RECEIVE1")).Voucher;
+        Assert.Equal(shipmentLegs.Count, await db.Set<InventTrans>().CountAsync(x => x.Voucher == ship1Voucher || x.Voucher == receive1Voucher));
+        Assert.Empty(await db.Set<InventTrans>().Where(x => x.Voucher == ship1Voucher
             && (x.StatusIssue == StatusIssue.ReservPhysical || x.StatusReceipt == StatusReceipt.Ordered)).ToListAsync());
         var destinationValueAfter = await db.Set<InventSum>().Where(x => x.InventLocationId == "SHOW").SumAsync(x => x.PostedValue);
         Assert.Equal(firstTransitCost, destinationValueAfter - destinationValueBefore);
@@ -1843,7 +1900,8 @@ public sealed class InventoryArchitectureTests
         // The shipment is complete, so nothing more may be shipped.
         Assert.NotNull((await transfers.ShipAsync("TR-DEMO", Post("SHIP3", 1m), default)).Error);
         Assert.Null((await transfers.ReceiveAsync("TR-DEMO", Post("RECEIVE2", 0.5m), default)).Error);
-        Assert.Equal(0.5m, await db.Set<InventTrans>().Where(x => x.Voucher == "TR-DEMO:SHIP2"
+        var ship2Voucher = (await db.Set<InventTransferJour>().SingleAsync(x => x.TransferId == "TR-DEMO" && x.PostingRequestId == "SHIP2")).Voucher;
+        Assert.Equal(0.5m, await db.Set<InventTrans>().Where(x => x.Voucher == ship2Voucher
             && x.StatusReceipt == StatusReceipt.Ordered).SumAsync(x => x.Qty));
         Assert.Equal(0.5m, (await db.Set<InventSum>().SingleAsync(x => x.ItemId == "ITEM-001"
             && x.InventLocationId == "TRANSIT")).ReservPhysical);
@@ -2065,6 +2123,7 @@ public sealed class InventoryArchitectureTests
             Configure<InventTransOriginTransferShip>(builder);
             builder.ApplyConfiguration(new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransferTableConfiguration());
             builder.ApplyConfiguration(new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransferLineConfiguration());
+            builder.ApplyConfiguration(new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransferJourConfiguration());
             builder.ApplyConfiguration(new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransOriginTransferTransitToConfiguration());
             builder.ApplyConfiguration(new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransOriginTransferTransitFromConfiguration());
             builder.ApplyConfiguration(new IAX.IXApi.Modules.Finance.Inventory.Transfer.InventTransOriginTransferReceiveConfiguration());

@@ -183,6 +183,39 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
                 },
                 new MainAccount
                 {
+                    MainAccountId = "60018000",
+                    Name = "Purchase Expenditure for Product",
+                    Type = MainAccountType.Expense,
+                    CurrencyCode = "SAR",
+                    ConsolidationMainAccount = "60018000",
+                    GroupLevel01 = "Expenses",
+                    GroupLevel02 = "Cost of Sales",
+                    GroupLevel03 = "Purchase Expenditure"
+                },
+                new MainAccount
+                {
+                    MainAccountId = "21010000",
+                    Name = "Accrued Purchases - Product Receipt",
+                    Type = MainAccountType.Liability,
+                    CurrencyCode = "SAR",
+                    ConsolidationMainAccount = "21010000",
+                    GroupLevel01 = "Liabilities",
+                    GroupLevel02 = "Current Liabilities",
+                    GroupLevel03 = "Accrued Liabilities"
+                },
+                new MainAccount
+                {
+                    MainAccountId = "21020000",
+                    Name = "Accrued Cost of Goods Sold - Packing Slip",
+                    Type = MainAccountType.Liability,
+                    CurrencyCode = "SAR",
+                    ConsolidationMainAccount = "21020000",
+                    GroupLevel01 = "Liabilities",
+                    GroupLevel02 = "Current Liabilities",
+                    GroupLevel03 = "Accrued Liabilities"
+                },
+                new MainAccount
+                {
                     MainAccountId = "22010005",
                     Name = "Sales Tax / VAT Prepayments Account",
                     Type = MainAccountType.Liability,

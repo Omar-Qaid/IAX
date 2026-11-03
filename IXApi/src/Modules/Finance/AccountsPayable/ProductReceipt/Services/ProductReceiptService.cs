@@ -77,6 +77,9 @@ public sealed class ProductReceiptService : BaseService<VendPackingSlipJour>, IP
                 && x.PackingSlipId == slipId, ct))
                 return await Fail(422, $"Product receipt '{slipId}' has already been posted for this purchase order.", ct);
 
+            var ledger = await Db.Set<Ledger>().AsNoTracking().FirstOrDefaultAsync(x => x.DataAreaId == area, ct)
+                ?? throw new SubledgerPostingException("The company ledger and accounting currency are required for inventory receipt valuation.");
+            var translation = await SubledgerCurrencyTranslation.LoadAsync(Db, area, ledger, order.CurrencyCode, date, ct);
             var internalId = (await _numbers.NextAsync("VendPackingSlipJour", area, ct)).Code;
             var journal = new VendPackingSlipJour
             {
@@ -98,8 +101,8 @@ public sealed class ProductReceiptService : BaseService<VendPackingSlipJour>, IP
                 var inventQty = request.Qty == line.RemainPurchPhysical
                     ? line.RemainInventPhysical
                     : decimal.Round(request.Qty * line.QtyOrdered / line.PurchQty, 6);
-                var unitCost = line.QtyOrdered == 0 ? 0m : line.LineAmount / line.QtyOrdered;
-                var cost = inventQty * unitCost;
+                var documentCost = line.QtyOrdered == 0 ? 0m : inventQty * line.LineAmount / line.QtyOrdered;
+                var cost = decimal.Round(translation.ToAccounting(documentCost), 4, MidpointRounding.AwayFromZero);
 
                 var origin = await Db.Set<InventTransOrigin>().FirstOrDefaultAsync(x => x.DataAreaId == area
                     && x.InventTransId == line.InventTransId && x.ReferenceId == order.PurchId
@@ -111,6 +114,8 @@ public sealed class ProductReceiptService : BaseService<VendPackingSlipJour>, IP
                     return await Fail(422, $"Ordered inventory does not cover the receipt for item {line.ItemId}.", ct);
 
                 var left = inventQty;
+                var allocatedCost = 0m;
+                var allocatedQty = 0m;
                 foreach (var source in ordered)
                 {
                     if (left <= 0) break;
@@ -124,7 +129,11 @@ public sealed class ProductReceiptService : BaseService<VendPackingSlipJour>, IP
                     source.DateInvent = date;
                     source.PackingSlipId = internalId;
                     source.VoucherPhysical = internalId;
-                    source.CostAmountPhysical = take * unitCost;
+                    allocatedQty += take;
+                    var cumulativeCost = allocatedQty == inventQty ? cost
+                        : decimal.Round(cost * allocatedQty / inventQty, 4, MidpointRounding.AwayFromZero);
+                    source.CostAmountPhysical = cumulativeCost - allocatedCost;
+                    allocatedCost = cumulativeCost;
                     left -= take;
                 }
 

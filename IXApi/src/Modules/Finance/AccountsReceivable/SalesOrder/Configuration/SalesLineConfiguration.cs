@@ -9,8 +9,8 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable
         public void Configure(EntityTypeBuilder<SalesLine> builder)
         {
             builder.ToTable("SalesLine");
-
-
+            builder.HasOne<CustInvoiceTrans>().WithMany().HasForeignKey(x => x.OriginalInvoiceTransRecId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

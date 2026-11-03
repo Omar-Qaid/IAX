@@ -600,13 +600,28 @@ public sealed class ReleasedProductListService : BaseService<ReleasedItem>, IRel
                 Add($"MISSING_{type.ToString().ToUpperInvariant()}_ACCOUNT", $"Configure the {type} account for this item.");
                 journalReady = false;
             }
-        foreach (var type in new[] { InventAccountType.PurchPackingSlip, InventAccountType.PurchReceipt })
+        // The account types each cycle actually resolves when it posts. The two accrual offsets are
+        // only resolved when the item model group posts the physical (un-invoiced) update in the
+        // ledger, so they are required exactly when that flag is on.
+        var modelGroup = string.IsNullOrWhiteSpace(modelGroupId) ? null
+            : await Db.Set<IAX.IXApi.Modules.Finance.Entities.InventModelGroup>().AsNoTracking()
+                .FirstOrDefaultAsync(x => x.DataAreaId == companyId && x.ModelGroupId == modelGroupId, ct);
+        var purchaseTypes = new List<InventAccountType>
+            { InventAccountType.PurchPackingSlip, InventAccountType.PurchReceipt, InventAccountType.PurchConsump };
+        if (modelGroup?.PostPhysicalPurchase == NoYes.Yes) purchaseTypes.Add(InventAccountType.PurchPackingSlipOffsetAccount);
+        var salesTypes = new List<InventAccountType>
+        {
+            InventAccountType.SalesPackingSlip, InventAccountType.SalesIssue,
+            InventAccountType.SalesRevenue, InventAccountType.SalesConsump
+        };
+        if (modelGroup?.PostPhysicalRevenue == NoYes.Yes) salesTypes.Add(InventAccountType.SalesPackingSlipOffsetAccount);
+        foreach (var type in purchaseTypes)
             if (!await HasApplicablePostingRuleAsync(companyId, item.ItemId, itemGroupId, [type], ct))
             {
                 Add($"MISSING_{type.ToString().ToUpperInvariant()}_ACCOUNT", $"Configure the {type} account for this item.");
                 purchaseReady = false;
             }
-        foreach (var type in new[] { InventAccountType.SalesPackingSlip, InventAccountType.SalesIssue, InventAccountType.SalesRevenue })
+        foreach (var type in salesTypes)
             if (!await HasApplicablePostingRuleAsync(companyId, item.ItemId, itemGroupId, [type], ct))
             {
                 Add($"MISSING_{type.ToString().ToUpperInvariant()}_ACCOUNT", $"Configure the {type} account for this item.");

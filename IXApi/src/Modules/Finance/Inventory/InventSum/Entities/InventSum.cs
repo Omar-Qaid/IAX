@@ -2,10 +2,12 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using IAX.IXApi.Modules.Finance.Common;
+using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Modules.Finance.Entities
 {
     [Table("InventSum")]
+    [Index(nameof(DataAreaId), nameof(ItemId), nameof(InventDimId), IsUnique = true)]
     public class InventSum : Entity<long>
     {
         //----------------------------------------- Core Identity & Structural Links

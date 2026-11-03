@@ -85,6 +85,16 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
                     .AnyAsync(x => x.DataAreaId == area && x.ReasonCodeId == input.ReturnReasonCodeId, ct))
                 return await Fail(422, $"Return reason code '{input.ReturnReasonCodeId}' is not configured.", ct);
 
+            // Serialize entitlement checks across returns from the same original inventory origin.
+            // Acquire all keys in a stable order for requests containing several invoice lines.
+            var invoiceLineIds = input.Lines.Select(x => x.CustInvoiceTransRecId).Distinct().ToList();
+            var sourceIds = await Db.Set<CustInvoiceTrans>().AsNoTracking()
+                .Where(x => x.DataAreaId == area && x.InvoiceId == invoice.InvoiceId && invoiceLineIds.Contains(x.RecId))
+                .Select(x => x.InventTransId).Distinct().ToListAsync(ct);
+            var support = new SubledgerPostingSupport(Db);
+            foreach (var sourceId in sourceIds.OrderBy(x => x, StringComparer.Ordinal))
+                await support.LockAsync($"SalesReturnEntitlement:{area}:{sourceId}", ct);
+
             var order = new SalesTable
             {
                 DataAreaId = area, SalesId = (await numbers.NextAsync("SalesTable", area, ct)).Code,
@@ -101,6 +111,7 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
             await unitOfWork.CompleteAsync(ct);
 
             var lineNum = 0m;
+            var requestedPerInvoiceLine = new Dictionary<long, decimal>();
             foreach (var request in input.Lines)
             {
                 var sold = await Db.Set<CustInvoiceTrans>().AsNoTracking().FirstOrDefaultAsync(x => x.RecId == request.CustInvoiceTransRecId
@@ -108,6 +119,10 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
                 if (sold == null) return await Fail(404, $"Invoice line {request.CustInvoiceTransRecId} was not found on invoice {invoice.InvoiceId}.", ct);
                 if (request.Qty <= 0) return await Fail(422, "The return quantity must be greater than zero.", ct);
                 if (sold.Qty <= 0) return await Fail(422, "Only invoiced sales lines can be returned.", ct);
+                var selectedQty = requestedPerInvoiceLine.GetValueOrDefault(sold.RecId) + request.Qty;
+                if (selectedQty > sold.Qty)
+                    return await Fail(422, $"Return quantity for invoice line {sold.RecId} exceeds the returnable quantity {sold.Qty} on the selected invoice line.", ct);
+                requestedPerInvoiceLine[sold.RecId] = selectedQty;
                 var disposition = await Db.Set<ReturnDispositionCode>().AsNoTracking()
                     .FirstOrDefaultAsync(x => x.DataAreaId == area && x.DispositionCodeId == request.DispositionCodeId, ct);
                 if (disposition == null) return await Fail(422, $"Disposition code '{request.DispositionCodeId}' is not configured.", ct);
@@ -119,11 +134,42 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
                     .Where(x => x.DataAreaId == area && x.InventTransIdReturn == sold.InventTransId
                         && x.SalesType == SalesType.ReturnItem && x.SalesStatus != SalesStatus.Canceled)
                     .Select(x => x.SalesQty).ToListAsync(ct)).Sum();
+                // Earlier lines in the same request may not yet have been saved.
+                alreadyReturned -= Db.Set<SalesLine>().Local.Where(x => x.DataAreaId == area
+                    && x.InventTransIdReturn == sold.InventTransId && x.SalesType == SalesType.ReturnItem
+                    && x.SalesStatus != SalesStatus.Canceled && Db.Entry(x).State == EntityState.Added)
+                    .Sum(x => x.SalesQty);
                 var invoicedOnLine = (await Db.Set<CustInvoiceTrans>().AsNoTracking()
                     .Where(x => x.DataAreaId == area && x.InventTransId == sold.InventTransId && x.Qty > 0)
                     .Select(x => x.Qty).ToListAsync(ct)).Sum();
                 if (request.Qty > invoicedOnLine - alreadyReturned)
                     return await Fail(422, $"Return quantity for item {sold.ItemId} exceeds the returnable quantity {invoicedOnLine - alreadyReturned}.", ct);
+                // Entitlement of the selected invoice line itself, so a line invoiced in several
+                // parts can be returned part by part without one part consuming another's quantity.
+                var returnedFromInvoiceLine = -(await Db.Set<SalesLine>().AsNoTracking()
+                    .Where(x => x.DataAreaId == area && x.OriginalInvoiceTransRecId == sold.RecId
+                        && x.SalesStatus != SalesStatus.Canceled)
+                    .Select(x => x.SalesQty).ToListAsync(ct)).Sum();
+                // Earlier lines in the same request may not yet have been saved.
+                returnedFromInvoiceLine -= Db.Set<SalesLine>().Local.Where(x => x.DataAreaId == area
+                    && x.OriginalInvoiceTransRecId == sold.RecId && x.SalesStatus != SalesStatus.Canceled
+                    && Db.Entry(x).State == EntityState.Added).Sum(x => x.SalesQty);
+                // Return lines created before the invoice link existed carry only the inventory
+                // origin, so any of them may belong to this invoice line. While one exists, fall
+                // back to the conservative quantity rather than allow a double return.
+                var hasUnattributedReturns = await Db.Set<SalesLine>().AsNoTracking().AnyAsync(x =>
+                    x.DataAreaId == area && x.InventTransIdReturn == sold.InventTransId
+                    && x.SalesType == SalesType.ReturnItem && x.SalesStatus != SalesStatus.Canceled
+                    && x.OriginalInvoiceTransRecId == null, ct)
+                    || Db.Set<SalesLine>().Local.Any(x => x.DataAreaId == area
+                        && x.InventTransIdReturn == sold.InventTransId && x.SalesType == SalesType.ReturnItem
+                        && x.SalesStatus != SalesStatus.Canceled && x.OriginalInvoiceTransRecId == null
+                        && Db.Entry(x).State == EntityState.Added);
+                var returnableFromLine = hasUnattributedReturns
+                    ? Math.Max(0m, sold.Qty - alreadyReturned)
+                    : sold.Qty - returnedFromInvoiceLine;
+                if (request.Qty > returnableFromLine)
+                    return await Fail(422, $"Return quantity exceeds the remaining quantity {returnableFromLine} of the selected invoice line.", ct);
 
                 var inventQty = decimal.Round(request.Qty * sold.InventQty / sold.Qty, 6);
                 var unitRevenue = sold.LineAmount / sold.Qty;
@@ -138,11 +184,16 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
                     LineAmount = -decimal.Round(unitRevenue * request.Qty, 2, MidpointRounding.AwayFromZero),
                     CurrencyCode = sold.CurrencyCode, TaxGroup = sold.TaxGroup, TaxItemGroup = sold.TaxItemGroup,
                     InventDimId = sold.InventDimId, InventTransIdReturn = sold.InventTransId,
+                    OriginalInvoiceTransRecId = sold.RecId,
                     ReturnDispositionCodeId = disposition.DispositionCodeId, ReturnStatus = ReturnStatusLine.Awaiting,
                     CustAccount = order.CustAccount, CustGroupId = order.CustGroup
                 };
                 if (disposition.DispositionAction == DispositionAction.Credit)
+                {
+                    // Check the original invoice costs before accepting a physical return.
+                    await OriginalUnitCostAsync(area, line, ct);
                     await CreateExpectedReceiptAsync(area, order, line, inventQty, ct);
+                }
                 Db.Set<SalesLine>().Add(line);
             }
 
@@ -427,6 +478,11 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
                                 $"Returned {line.ItemId} to inventory on {invoiceId}", inventQty, currency),
                             SubledgerPostingSupport.AccountEntry(area, entry.RecId, consumption, LedgerPostingType.SalesConsump, -cost,
                                 $"Cost reversal for returned {line.ItemId} on {invoiceId}", -inventQty, currency));
+                        var returnOrigin = await Db.Set<InventTransOrigin>().AsNoTracking().SingleAsync(x =>
+                            x.DataAreaId == area && x.InventTransId == line.InventTransId && x.ReferenceId == order.SalesId, ct);
+                        Db.Add(IAX.IXApi.Modules.Finance.Inventory.InventTransPosting.InventTransPostingService.Record(
+                            area, returnOrigin.RecId, line.ItemId, InventTransPostingType.Financial, date, invoiceId,
+                            issueAccount, LedgerPostingType.SalesIssue, consumption, LedgerPostingType.SalesConsump));
                     }
                 }
 
@@ -584,9 +640,28 @@ public sealed class CustReturnService : BaseService<SalesTable>, ICustReturnServ
             ?? throw new SubledgerPostingException($"The original inventory transaction of item {line.ItemId} was not found.");
         var sold = await Db.Set<InventTrans>().AsNoTracking().Where(x => x.DataAreaId == area
             && x.InventTransOrigin == originalOrigin.RecId && x.StatusIssue == StatusIssue.Sold)
-            .Select(x => new { x.Qty, x.CostAmountPosted, x.CostAmountAdjustment }).ToListAsync(ct);
+            .Select(x => new { x.InvoiceId, x.Qty, x.CostAmountPosted, x.CostAmountAdjustment }).ToListAsync(ct);
         var qty = -sold.Sum(x => x.Qty);
         if (qty <= 0) throw new SubledgerPostingException($"The original issue of item {line.ItemId} has not been invoiced.");
+        // A return created from an invoice line takes that invoice's cost (D365 return cost price).
+        var selectedInvoiceId = line.OriginalInvoiceTransRecId.HasValue
+            ? await Db.Set<CustInvoiceTrans>().AsNoTracking()
+                .Where(x => x.DataAreaId == area && x.RecId == line.OriginalInvoiceTransRecId.Value)
+                .Select(x => x.InvoiceId).FirstOrDefaultAsync(ct)
+            : null;
+        var invoiceGroups = sold.GroupBy(x => x.InvoiceId).Where(x => x.Sum(y => y.Qty) != 0m).ToList();
+        if (!string.IsNullOrWhiteSpace(selectedInvoiceId))
+        {
+            var selected = invoiceGroups.SingleOrDefault(x => x.Key == selectedInvoiceId)
+                ?? throw new SubledgerPostingException(
+                    $"The selected invoice '{selectedInvoiceId}' has no open financial issue for item '{line.ItemId}'.");
+            return selected.Sum(y => y.CostAmountPosted + y.CostAmountAdjustment) / selected.Sum(y => y.Qty);
+        }
+        var invoiceCosts = invoiceGroups
+            .Select(x => x.Sum(y => y.CostAmountPosted + y.CostAmountAdjustment) / x.Sum(y => y.Qty))
+            .Distinct().ToList();
+        if (invoiceCosts.Count > 1)
+            throw new SubledgerPostingException($"The original sales invoices for item '{line.ItemId}' have different inventory costs, and this return line predates the selected-invoice link; the invoice cannot be identified for return costing.");
         return -sold.Sum(x => x.CostAmountPosted + x.CostAmountAdjustment) / qty;
     }
 

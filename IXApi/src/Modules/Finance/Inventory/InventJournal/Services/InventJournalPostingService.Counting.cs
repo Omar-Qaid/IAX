@@ -52,8 +52,28 @@ public sealed partial class InventJournalPostingService
                 else
                 {
                     if (!header.CountingFrozen || quantities.Count != lines.Count || lines.Any(x => !quantities.ContainsKey(x.RecId))
-                        || quantities.Values.Any(x => x < 0 || decimal.Round(x, 4) != x))
-                        throw new PostingValidationException("Freeze the count, then provide a nonnegative counted inventory quantity for every line (maximum four decimals).");
+                        || quantities.Values.Any(x => x < 0))
+                        throw new PostingValidationException("Freeze the count, then provide a nonnegative counted inventory quantity for every line.");
+                    foreach (var line in lines)
+                    {
+                        var inventoryUnit = await Db.Set<InventTableModule>().AsNoTracking()
+                            .Where(x => x.DataAreaId == area && x.ItemId == line.ItemId && x.ModuleType == ModuleInventPurchSales.Inventory)
+                            .Select(x => x.UnitId).SingleOrDefaultAsync(ct);
+                        if (string.IsNullOrWhiteSpace(inventoryUnit) ||
+                            !string.Equals(line.Unit, inventoryUnit, StringComparison.OrdinalIgnoreCase))
+                            throw new PostingValidationException($"Counting line {line.LineNum} must use the item's current inventory unit.");
+                        var precision = await Db.Set<UnitOfMeasure>().IgnoreQueryFilters().AsNoTracking()
+                            .Where(x => !x.IsDeleted && x.Symbol == inventoryUnit)
+                            .Select(x => (int?)x.DecimalPrecision).SingleOrDefaultAsync(ct);
+                        if (precision is null or < 0 or > 6)
+                            throw new PostingValidationException($"The inventory unit '{inventoryUnit}' has no valid decimal precision.");
+                        var counted = quantities[line.RecId];
+                        if (decimal.Round(counted, precision.Value) != counted)
+                            throw new PostingValidationException($"Counted quantity on line {line.LineNum} exceeds the {precision.Value}-decimal precision of unit '{inventoryUnit}'.");
+                        // Counted, Qty and InventSum quantities are stored as decimal(18,4).
+                        if (decimal.Round(counted, 4) != counted)
+                            throw new PostingValidationException("Counted quantities beyond four decimals are not supported by inventory storage.");
+                    }
                     if (header.CountingConfirmed && lines.Any(x => x.Counted != quantities[x.RecId]))
                         throw new PostingValidationException("A confirmed count cannot be changed; cancel and recount.");
                     foreach (var line in lines)

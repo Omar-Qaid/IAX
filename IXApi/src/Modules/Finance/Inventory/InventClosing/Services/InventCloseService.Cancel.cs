@@ -10,8 +10,8 @@ namespace IAX.IXApi.Modules.Finance.Inventory;
 /// rows, settled quantities, cost adjustments, inventory value and the ledger correction - and
 /// reopens the financial boundary, so a close made on wrong data is recoverable.
 ///
-/// Only the latest live run can be cancelled, because every later run settled against the layers
-/// this one consumed.
+/// A later run that can touch the same item must be cancelled first. Independent item-scoped
+/// recalculations do not depend on one another; close reversal keeps the global ordering rule.
 /// </summary>
 public sealed partial class InventCloseService
 {
@@ -26,7 +26,26 @@ public sealed partial class InventCloseService
         try
         {
             await Support.LockAsync($"InventClose:{companyId}", ct);
+            var result = await CancelWithinTransactionAsync(companyId, closingRecId, ct);
+            await _unitOfWork.CommitTransactionAsync(ct);
+            return (result, null);
+        }
+        catch (PostingValidationException ex)
+        {
+            await _unitOfWork.RollbackTransactionAsync(ct);
+            Db.ChangeTracker.Clear();
+            return (null, ex.Message);
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync(ct);
+            Db.ChangeTracker.Clear();
+            throw;
+        }
+    }
 
+    private async Task<InventCloseCancelResultDto> CancelWithinTransactionAsync(string companyId, long closingRecId, CancellationToken ct)
+    {
             var closing = await Db.Set<InventClosing>()
                 .FirstOrDefaultAsync(x => x.DataAreaId == companyId && x.RecId == closingRecId, ct)
                 ?? throw new PostingValidationException("The cost run was not found in the selected company.");
@@ -38,7 +57,10 @@ public sealed partial class InventCloseService
                 throw new PostingValidationException("Only a finished cost run can be cancelled.");
             if (await Db.Set<InventClosing>().AnyAsync(x => x.DataAreaId == companyId && x.CancelClosing == NoYes.No
                     && x.Cancellation == NoYes.No && x.InventCostStatus == InventCostStatus.Finished
-                    && x.RunNum > closing.RunNum, ct))
+                    && x.RunNum > closing.RunNum
+                    && (closing.AdjustmentType != InventAdjustmentType.Adjustment || closing.ScopeItemId == ""
+                        || x.AdjustmentType != InventAdjustmentType.Adjustment || x.ScopeItemId == ""
+                        || x.ScopeItemId == closing.ScopeItemId), ct))
                 throw new PostingValidationException(
                     "A later cost run exists. Cancel the runs in reverse order, starting with the most recent one.");
 
@@ -121,21 +143,7 @@ public sealed partial class InventCloseService
             };
             Db.Add(reversal);
             await _unitOfWork.CompleteAsync(ct);
-            await _unitOfWork.CommitTransactionAsync(ct);
-            return (new InventCloseCancelResultDto(reversal.RecId, voucher, closing.RecId, closing.RunNum,
-                runNum, settlements.Count, ledgerEntriesCreated, totalReversed), null);
-        }
-        catch (PostingValidationException ex)
-        {
-            await _unitOfWork.RollbackTransactionAsync(ct);
-            Db.ChangeTracker.Clear();
-            return (null, ex.Message);
-        }
-        catch
-        {
-            await _unitOfWork.RollbackTransactionAsync(ct);
-            Db.ChangeTracker.Clear();
-            throw;
-        }
+            return new InventCloseCancelResultDto(reversal.RecId, voucher, closing.RecId, closing.RunNum,
+                runNum, settlements.Count, ledgerEntriesCreated, totalReversed);
     }
 }

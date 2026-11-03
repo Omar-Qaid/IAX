@@ -56,6 +56,9 @@ public sealed class PurchaseReceiptAccrualPosting(DbContext db, string userId = 
         // The posting record is the account source, as on the sales side; the accrual row only
         // tracks how much of the receipt is still un-matched. Older accruals predate the record.
         var posting = await ReceiptPostingAsync(area, accrual.PackingSlipTransRecId, ct);
+        if (posting != null && (posting.LedgerDimension != accrual.InventoryLedgerDimension
+                || posting.OffsetLedgerDimension != accrual.AccrualLedgerDimension))
+            throw new SubledgerPostingException("The receipt accrual accounts do not match its original physical posting.");
         var inventoryDimension = posting?.LedgerDimension ?? accrual.InventoryLedgerDimension;
         var liabilityDimension = posting?.OffsetLedgerDimension ?? accrual.AccrualLedgerDimension;
         var inventory = await support.LoadDimensionAsync(area, inventoryDimension, "original receipt inventory", ct);
@@ -76,17 +79,21 @@ public sealed class PurchaseReceiptAccrualPosting(DbContext db, string userId = 
     /// <summary>The in-force physical posting record of the receipt line, when the receipt posted one.</summary>
     private async Task<Entities.InventTransPosting?> ReceiptPostingAsync(string area, long packingSlipTransRecId, CancellationToken ct)
     {
-        var transId = await db.Set<VendPackingSlipTrans>().AsNoTracking()
+        var receipt = await db.Set<VendPackingSlipTrans>().AsNoTracking()
             .Where(x => x.DataAreaId == area && x.RecId == packingSlipTransRecId)
-            .Select(x => x.InventTransId).FirstOrDefaultAsync(ct);
-        if (string.IsNullOrEmpty(transId)) return null;
+            .Select(x => new { x.InventTransId, x.InternalPackingSlipId, x.ItemId }).FirstOrDefaultAsync(ct);
+        if (receipt == null || string.IsNullOrEmpty(receipt.InventTransId) || string.IsNullOrEmpty(receipt.InternalPackingSlipId)) return null;
         // The origins are read separately: a no-tracking subquery would make the posting record
         // itself untracked, and retiring it has to be saved.
         var origins = await db.Set<InventTransOrigin>().AsNoTracking()
-            .Where(x => x.DataAreaId == area && x.InventTransId == transId).Select(x => x.RecId).ToListAsync(ct);
-        return await db.Set<Entities.InventTransPosting>()
+            .Where(x => x.DataAreaId == area && x.InventTransId == receipt.InventTransId).Select(x => x.RecId).ToListAsync(ct);
+        var postings = await db.Set<Entities.InventTransPosting>()
             .Where(x => x.DataAreaId == area && origins.Contains(x.InventTransOrigin)
+                && x.ItemId == receipt.ItemId && x.Voucher == receipt.InternalPackingSlipId
                 && x.InventTransPostingType == InventTransPostingType.Physical && x.IsPosted == NoYes.Yes)
-            .OrderBy(x => x.RecId).FirstOrDefaultAsync(ct);
+            .ToListAsync(ct);
+        if (postings.Count > 1)
+            throw new SubledgerPostingException("The original product receipt physical posting cannot be uniquely identified.");
+        return postings.SingleOrDefault();
     }
 }

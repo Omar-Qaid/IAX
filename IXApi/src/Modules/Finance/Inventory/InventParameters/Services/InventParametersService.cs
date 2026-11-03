@@ -60,7 +60,8 @@ public sealed class InventParametersService : BaseService<InventParametersEntity
         if (!await Db.Set<IAX.IXApi.Modules.Finance.Entities.InventModelGroup>().AsNoTracking().AnyAsync(x => x.DataAreaId == companyId
                 && (x.InventModel == InventModel.FIFO || x.InventModel == InventModel.LIFO || x.InventModel == InventModel.WeightedAvg)
                 && x.StockedProduct == NoYes.Yes && x.NegativePhysical == NoYes.No
-                && x.NegativeFinancial == NoYes.No && x.InclPhysicalValueInCost == NoYes.No && x.PostOnHandFinancial == NoYes.Yes, ct))
+                && x.NegativeFinancial == NoYes.No && x.InclPhysicalValueInCost == NoYes.No && x.PostOnHandFinancial == NoYes.Yes
+                && x.MandatoryReceive == NoYes.No, ct))
             Add("MISSING_MODEL_GROUP", "Configure a supported stocked item model group with financial posting and negative inventory disabled.");
 
         var readyForItemSetup = issues.Count == 0;
@@ -100,7 +101,19 @@ public sealed class InventParametersService : BaseService<InventParametersEntity
                 && x.CustVendCode == TableGroupAll.All && (x.ItemCode == TableGroupAll.All
                     || x.ItemCode == TableGroupAll.Group && itemGroupIds.Contains(x.ItemRelation)))
             .Select(x => x.InventAccountType).Distinct().ToListAsync(ct);
-        foreach (var type in new[] { InventAccountType.InventReceipt, InventAccountType.InventIssue, InventAccountType.InventProfit, InventAccountType.InventLoss })
+        var requiredPostingTypes = new List<InventAccountType>
+        {
+            InventAccountType.InventReceipt, InventAccountType.InventIssue, InventAccountType.InventProfit,
+            InventAccountType.InventLoss, InventAccountType.SalesConsump, InventAccountType.PurchConsump
+        };
+        var physicalPosting = await Db.Set<IAX.IXApi.Modules.Finance.Entities.InventModelGroup>().AsNoTracking()
+            .Where(x => x.DataAreaId == companyId && x.StockedProduct == NoYes.Yes)
+            .Select(x => new { x.PostPhysicalPurchase, x.PostPhysicalRevenue }).ToListAsync(ct);
+        if (physicalPosting.Any(x => x.PostPhysicalPurchase == NoYes.Yes))
+            requiredPostingTypes.Add(InventAccountType.PurchPackingSlipOffsetAccount);
+        if (physicalPosting.Any(x => x.PostPhysicalRevenue == NoYes.Yes))
+            requiredPostingTypes.Add(InventAccountType.SalesPackingSlipOffsetAccount);
+        foreach (var type in requiredPostingTypes)
             if (!postingTypes.Contains(type))
                 Add($"MISSING_{type.ToString().ToUpperInvariant()}_ACCOUNT", $"Configure an inventory posting account for {type} that applies to an item group or all items.");
         return new InventoryReadinessDto(readyForItemSetup, issues.Count == 0, issues);
