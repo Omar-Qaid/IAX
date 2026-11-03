@@ -1,145 +1,216 @@
-**Accounts Payable في D365 F&O** يغطي دورة المورد من الإعداد إلى الفاتورة، الدفع، التسوية، والإقفال. ولتغطية الدورة كاملة، نضم مراحل أمر الشراء والاستلام المرتبطة به.
+# Accounts Payable seeding documentation
 
-النطاق هنا **Core ERP**: مشتريات مخزنية وخدمية، دون WHS أو إنتاج أو تصنيع.
+This package contains the complete proposed Markdown documentation set for AP seed implementation. It includes shared-module ownership, build-first/reference-later dependencies, examples and validation. It does not contain executable ERP implementation or verified repository table mappings.
 
-## 1. Configuration — الإعداد
+## Start here
 
-| الإعداد | ما يجب ضبطه | الجداول الرئيسية |
-|---|---|---|
-| إعدادات الحسابات الدائنة | الفواتير، التكرار، المطابقة، التسوية، الترقيم | `VendParameters` |
-| مجموعات الموردين | تصنيف الموردين والقيم الافتراضية | `VendGroup` |
-| ملفات ترحيل الموردين | حساب مراقبة الموردين، وحسابات الدفعات المقدمة | `VendPosting` |
-| شروط الدفع | احتساب تاريخ الاستحقاق | `PaymTerm` |
-| طرق دفع الموردين | تحويل، شيك، وحساب البنك الافتراضي | `VendPaymModeTable` |
-| الخصم النقدي | نسبة الخصم وفترة الاستحقاق | `CashDisc` |
-| أسماء اليوميات | يوميات الفواتير والدفع والموافقات | `LedgerJournalName` |
-| الضرائب | أكواد ومجموعات الضرائب وحسابات الترحيل | `TaxTable`, `TaxGroupHeading`, `TaxGroupData`, `TaxItemGroupHeading`, `TaxOnItem` |
-| العملات وأسعار الصرف | عملة المحاسبة وأسعار صرف المعاملات | `Ledger`, `Currency`, `ExchangeRateType`, `ExchangeRateCurrencyPair`, `ExchangeRate` |
-| الحسابات والأبعاد | حسابات الموردين، المصروفات، البنوك، المخزون والأبعاد | `MainAccount`, `DimensionAttributeValueCombination` |
-| ترحيل المشتريات والمخزون | استلام غير مفوتر، استحقاق مشتريات، مخزون مفوتر، فروق | `InventPosting`, `InventModelGroup`, `InventParameters` |
-| المطابقة والموافقات | مطابقة السعر والكمية والتفاوتات واعتماد الفواتير | `VendParameters` وجداول سياسات المطابقة وWorkflow بحسب الإعداد |
+Read documents 01–14 in order, then implement the scenario folders. Build missing shared configuration/master data in its owning module before AP references it. Use actual business services for generated transactions.
 
-**ملف ترحيل المورد يحدد حساب مراقبة الموردين في الأستاذ العام.** أما حساب المخزون أو المصروف فيتحدد حسب نوع السطر وإعدادات الترحيل والتوزيع المحاسبي. [Microsoft Learn](https://learn.microsoft.com/en-us/dynamics365/finance/accounts-payable/vendor-posting-profiles?utm_source=chatgpt.com)
+## Documents
 
-## 2. Master data — البيانات الأساسية
+- [Documentation/01-Scope.md](Documentation/01-Scope.md)
+- [Documentation/02-Dependencies.md](Documentation/02-Dependencies.md)
+- [Documentation/03-Configuration.md](Documentation/03-Configuration.md)
+- [Documentation/04-MasterData.md](Documentation/04-MasterData.md)
+- [Documentation/05-PricesDiscountsAndTaxes.md](Documentation/05-PricesDiscountsAndTaxes.md)
+- [Documentation/06-TransactionFlow.md](Documentation/06-TransactionFlow.md)
+- [Documentation/07-ImpactedTables.md](Documentation/07-ImpactedTables.md)
+- [Documentation/08-PhysicalInventoryEffects.md](Documentation/08-PhysicalInventoryEffects.md)
+- [Documentation/09-FinancialPostingEffects.md](Documentation/09-FinancialPostingEffects.md)
+- [Documentation/10-SettlementAndOpenBalances.md](Documentation/10-SettlementAndOpenBalances.md)
+- [Documentation/11-CorrectionsAndReversals.md](Documentation/11-CorrectionsAndReversals.md)
+- [Documentation/12-Reconciliation.md](Documentation/12-Reconciliation.md)
+- [Documentation/13-ExecutionAndRerun.md](Documentation/13-ExecutionAndRerun.md)
+- [Documentation/14-ImplementationPrompt.md](Documentation/14-ImplementationPrompt.md)
+- [Reference/Original-Requirements.md](Reference/Original-Requirements.md)
+- [Scenarios/01-PurchaseToPayment/README.md](Scenarios/01-PurchaseToPayment/README.md)
+- [Scenarios/01-PurchaseToPayment/accounting-entries.md](Scenarios/01-PurchaseToPayment/accounting-entries.md)
+- [Scenarios/01-PurchaseToPayment/expected-results.md](Scenarios/01-PurchaseToPayment/expected-results.md)
+- [Scenarios/01-PurchaseToPayment/impacted-tables.md](Scenarios/01-PurchaseToPayment/impacted-tables.md)
+- [Scenarios/02-PartialReceiptsAndInvoices/README.md](Scenarios/02-PartialReceiptsAndInvoices/README.md)
+- [Scenarios/02-PartialReceiptsAndInvoices/accounting-entries.md](Scenarios/02-PartialReceiptsAndInvoices/accounting-entries.md)
+- [Scenarios/02-PartialReceiptsAndInvoices/expected-results.md](Scenarios/02-PartialReceiptsAndInvoices/expected-results.md)
+- [Scenarios/02-PartialReceiptsAndInvoices/impacted-tables.md](Scenarios/02-PartialReceiptsAndInvoices/impacted-tables.md)
+- [Scenarios/03-ServicePurchaseOrder/README.md](Scenarios/03-ServicePurchaseOrder/README.md)
+- [Scenarios/03-ServicePurchaseOrder/accounting-entries.md](Scenarios/03-ServicePurchaseOrder/accounting-entries.md)
+- [Scenarios/03-ServicePurchaseOrder/expected-results.md](Scenarios/03-ServicePurchaseOrder/expected-results.md)
+- [Scenarios/03-ServicePurchaseOrder/impacted-tables.md](Scenarios/03-ServicePurchaseOrder/impacted-tables.md)
+- [Scenarios/04-DirectExpenseInvoice/README.md](Scenarios/04-DirectExpenseInvoice/README.md)
+- [Scenarios/04-DirectExpenseInvoice/accounting-entries.md](Scenarios/04-DirectExpenseInvoice/accounting-entries.md)
+- [Scenarios/04-DirectExpenseInvoice/expected-results.md](Scenarios/04-DirectExpenseInvoice/expected-results.md)
+- [Scenarios/04-DirectExpenseInvoice/impacted-tables.md](Scenarios/04-DirectExpenseInvoice/impacted-tables.md)
+- [Scenarios/05-InvoiceAcrossMultipleReceipts/README.md](Scenarios/05-InvoiceAcrossMultipleReceipts/README.md)
+- [Scenarios/05-InvoiceAcrossMultipleReceipts/accounting-entries.md](Scenarios/05-InvoiceAcrossMultipleReceipts/accounting-entries.md)
+- [Scenarios/05-InvoiceAcrossMultipleReceipts/expected-results.md](Scenarios/05-InvoiceAcrossMultipleReceipts/expected-results.md)
+- [Scenarios/05-InvoiceAcrossMultipleReceipts/impacted-tables.md](Scenarios/05-InvoiceAcrossMultipleReceipts/impacted-tables.md)
+- [Scenarios/06-PriceAndQuantityMatching/README.md](Scenarios/06-PriceAndQuantityMatching/README.md)
+- [Scenarios/06-PriceAndQuantityMatching/accounting-entries.md](Scenarios/06-PriceAndQuantityMatching/accounting-entries.md)
+- [Scenarios/06-PriceAndQuantityMatching/expected-results.md](Scenarios/06-PriceAndQuantityMatching/expected-results.md)
+- [Scenarios/06-PriceAndQuantityMatching/impacted-tables.md](Scenarios/06-PriceAndQuantityMatching/impacted-tables.md)
+- [Scenarios/07-DiscountsAndCharges/README.md](Scenarios/07-DiscountsAndCharges/README.md)
+- [Scenarios/07-DiscountsAndCharges/accounting-entries.md](Scenarios/07-DiscountsAndCharges/accounting-entries.md)
+- [Scenarios/07-DiscountsAndCharges/expected-results.md](Scenarios/07-DiscountsAndCharges/expected-results.md)
+- [Scenarios/07-DiscountsAndCharges/impacted-tables.md](Scenarios/07-DiscountsAndCharges/impacted-tables.md)
+- [Scenarios/08-PartialPayment/README.md](Scenarios/08-PartialPayment/README.md)
+- [Scenarios/08-PartialPayment/accounting-entries.md](Scenarios/08-PartialPayment/accounting-entries.md)
+- [Scenarios/08-PartialPayment/expected-results.md](Scenarios/08-PartialPayment/expected-results.md)
+- [Scenarios/08-PartialPayment/impacted-tables.md](Scenarios/08-PartialPayment/impacted-tables.md)
+- [Scenarios/09-UnsettledPayment/README.md](Scenarios/09-UnsettledPayment/README.md)
+- [Scenarios/09-UnsettledPayment/accounting-entries.md](Scenarios/09-UnsettledPayment/accounting-entries.md)
+- [Scenarios/09-UnsettledPayment/expected-results.md](Scenarios/09-UnsettledPayment/expected-results.md)
+- [Scenarios/09-UnsettledPayment/impacted-tables.md](Scenarios/09-UnsettledPayment/impacted-tables.md)
+- [Scenarios/10-PurchaseOrderPrepayment/README.md](Scenarios/10-PurchaseOrderPrepayment/README.md)
+- [Scenarios/10-PurchaseOrderPrepayment/accounting-entries.md](Scenarios/10-PurchaseOrderPrepayment/accounting-entries.md)
+- [Scenarios/10-PurchaseOrderPrepayment/expected-results.md](Scenarios/10-PurchaseOrderPrepayment/expected-results.md)
+- [Scenarios/10-PurchaseOrderPrepayment/impacted-tables.md](Scenarios/10-PurchaseOrderPrepayment/impacted-tables.md)
+- [Scenarios/11-PaymentJournalPrepayment/README.md](Scenarios/11-PaymentJournalPrepayment/README.md)
+- [Scenarios/11-PaymentJournalPrepayment/accounting-entries.md](Scenarios/11-PaymentJournalPrepayment/accounting-entries.md)
+- [Scenarios/11-PaymentJournalPrepayment/expected-results.md](Scenarios/11-PaymentJournalPrepayment/expected-results.md)
+- [Scenarios/11-PaymentJournalPrepayment/impacted-tables.md](Scenarios/11-PaymentJournalPrepayment/impacted-tables.md)
+- [Scenarios/12-CashDiscount/README.md](Scenarios/12-CashDiscount/README.md)
+- [Scenarios/12-CashDiscount/accounting-entries.md](Scenarios/12-CashDiscount/accounting-entries.md)
+- [Scenarios/12-CashDiscount/expected-results.md](Scenarios/12-CashDiscount/expected-results.md)
+- [Scenarios/12-CashDiscount/impacted-tables.md](Scenarios/12-CashDiscount/impacted-tables.md)
+- [Scenarios/13-ForeignCurrencySettlement/README.md](Scenarios/13-ForeignCurrencySettlement/README.md)
+- [Scenarios/13-ForeignCurrencySettlement/accounting-entries.md](Scenarios/13-ForeignCurrencySettlement/accounting-entries.md)
+- [Scenarios/13-ForeignCurrencySettlement/expected-results.md](Scenarios/13-ForeignCurrencySettlement/expected-results.md)
+- [Scenarios/13-ForeignCurrencySettlement/impacted-tables.md](Scenarios/13-ForeignCurrencySettlement/impacted-tables.md)
+- [Scenarios/14-PurchaseReturn/README.md](Scenarios/14-PurchaseReturn/README.md)
+- [Scenarios/14-PurchaseReturn/accounting-entries.md](Scenarios/14-PurchaseReturn/accounting-entries.md)
+- [Scenarios/14-PurchaseReturn/expected-results.md](Scenarios/14-PurchaseReturn/expected-results.md)
+- [Scenarios/14-PurchaseReturn/impacted-tables.md](Scenarios/14-PurchaseReturn/impacted-tables.md)
+- [Scenarios/15-FinancialCreditNote/README.md](Scenarios/15-FinancialCreditNote/README.md)
+- [Scenarios/15-FinancialCreditNote/accounting-entries.md](Scenarios/15-FinancialCreditNote/accounting-entries.md)
+- [Scenarios/15-FinancialCreditNote/expected-results.md](Scenarios/15-FinancialCreditNote/expected-results.md)
+- [Scenarios/15-FinancialCreditNote/impacted-tables.md](Scenarios/15-FinancialCreditNote/impacted-tables.md)
+- [Scenarios/16-CancelRemainingQuantity/README.md](Scenarios/16-CancelRemainingQuantity/README.md)
+- [Scenarios/16-CancelRemainingQuantity/accounting-entries.md](Scenarios/16-CancelRemainingQuantity/accounting-entries.md)
+- [Scenarios/16-CancelRemainingQuantity/expected-results.md](Scenarios/16-CancelRemainingQuantity/expected-results.md)
+- [Scenarios/16-CancelRemainingQuantity/impacted-tables.md](Scenarios/16-CancelRemainingQuantity/impacted-tables.md)
+- [Scenarios/17-ReceiptCorrection/README.md](Scenarios/17-ReceiptCorrection/README.md)
+- [Scenarios/17-ReceiptCorrection/accounting-entries.md](Scenarios/17-ReceiptCorrection/accounting-entries.md)
+- [Scenarios/17-ReceiptCorrection/expected-results.md](Scenarios/17-ReceiptCorrection/expected-results.md)
+- [Scenarios/17-ReceiptCorrection/impacted-tables.md](Scenarios/17-ReceiptCorrection/impacted-tables.md)
+- [Scenarios/18-SettlementReversal/README.md](Scenarios/18-SettlementReversal/README.md)
+- [Scenarios/18-SettlementReversal/accounting-entries.md](Scenarios/18-SettlementReversal/accounting-entries.md)
+- [Scenarios/18-SettlementReversal/expected-results.md](Scenarios/18-SettlementReversal/expected-results.md)
+- [Scenarios/18-SettlementReversal/impacted-tables.md](Scenarios/18-SettlementReversal/impacted-tables.md)
+- [Scenarios/19-PaymentReversal/README.md](Scenarios/19-PaymentReversal/README.md)
+- [Scenarios/19-PaymentReversal/accounting-entries.md](Scenarios/19-PaymentReversal/accounting-entries.md)
+- [Scenarios/19-PaymentReversal/expected-results.md](Scenarios/19-PaymentReversal/expected-results.md)
+- [Scenarios/19-PaymentReversal/impacted-tables.md](Scenarios/19-PaymentReversal/impacted-tables.md)
+- [Scenarios/20-ValidationFailures/README.md](Scenarios/20-ValidationFailures/README.md)
+- [Scenarios/20-ValidationFailures/accounting-entries.md](Scenarios/20-ValidationFailures/accounting-entries.md)
+- [Scenarios/20-ValidationFailures/expected-results.md](Scenarios/20-ValidationFailures/expected-results.md)
+- [Scenarios/20-ValidationFailures/impacted-tables.md](Scenarios/20-ValidationFailures/impacted-tables.md)
 
-| البيانات | المطلوب | الجداول الرئيسية |
-|---|---|---|
-| المورد | الحساب، المجموعة، العملة، شروط وطريقة الدفع، الحظر | `VendTable` |
-| اسم وهوية المورد | اسم المؤسسة أو الشخص | `DirPartyTable` |
-| العناوين والاتصال | عنوان الفاتورة، البريد والهاتف | `DirPartyLocation`, `LogisticsLocation`, `LogisticsPostalAddress`, `LogisticsElectronicAddress` |
-| بنك المورد | IBAN، رقم الحساب وبيانات التحويل | `VendBankAccount` |
-| بنك الشركة | حساب الدفع والحساب المحاسبي المرتبط | `BankAccountTable` |
-| المنتجات المفرج عنها | الصنف، الوحدة، مجموعات المخزون والضرائب | `EcoResProduct`, `InventTable`, `InventTableModule` |
-| الموقع والمستودع | أبعاد استلام المخزون | `InventSite`, `InventLocation`, `InventDim` |
-| فئات المشتريات | خدمات ومصروفات دون مخزون | `EcoResCategory` |
-| الأسعار والخصومات | اتفاقيات أسعار المورد | `PriceDiscTable` |
+## Scenario folder contents
 
-الإعداد والبيانات الأساسية **لا ينشئان حركة مخزون أو قيدًا محاسبيًا** بمجرد إنشائهما.
+Each scenario contains README.md, expected-results.md, impacted-tables.md and accounting-entries.md. All values are demo assumptions; adapt account roles, tax configuration, supported corrections and service names after source inspection.
 
-## 3. Transactions — الدورة الكاملة
+## Delivery acceptance
 
-الجداول التالية هي **الجداول الرئيسية المتأثرة**؛ ليست قائمة بجميع الجداول الداخلية. تختلف التفاصيل بحسب مسار إدخال الفاتورة، الإعداد، الإصدار، والتخصيصات.
+Working seed execution must pass company-scoped reconciliations and a second-run duplicate check. Unsupported behavior is a blocker, not a successful skipped test. Original supplied reference is preserved under Reference.
 
-| المرحلة | الإجراء والنتيجة | الجداول الرئيسية المتأثرة | الأثر الفعلي على المخزون | الأثر المالي |
-|---|---|---|---|---|
-| 1. إنشاء أمر شراء | إدخال المورد والأصناف أو الخدمات والكميات والأسعار | `PurchTable`, `PurchLine`, `InventTransOrigin`, `InventTrans` للأصناف المخزنية | كمية متوقعة؛ لا يزيد المخزون الفعلي | لا قيد فعلي في الدورة الأساسية |
-| 2. تأكيد أمر الشراء | تثبيت وإصدار التأكيد | `PurchTable`, `PurchLine`, `PurchConfirmJour`, `PurchConfirmTrans` | لا استلام | لا مديونية مورد |
-| 3. استلام المنتج | استلام كلي أو جزئي | `VendPackingSlipJour`, `VendPackingSlipTrans`, `PurchLine`, `InventTrans` | يزيد المخزون المستلم للأصناف المخزنية | استحقاق واستلام غير مفوتر **إذا كانت إعدادات الترحيل مفعّلة** |
-| 4. إدخال فاتورة معلّقة | تسجيل رقم فاتورة المورد وتحديد الأسطر والاستلامات | `VendInvoiceInfoTable`, `VendInvoiceInfoLine`, `VendInvoiceInfoSubLine` | لا استلام إضافي بمجرد الحفظ | لا قيد مرحّل |
-| 5. مطابقة واعتماد | فحص السعر والكمية والضرائب والتفاوتات والموافقة | جداول الفاتورة المعلّقة، مستندات الشراء والاستلام، وسجل Workflow | لا تغيير | لا قيد بمجرد المطابقة أو الموافقة |
-| 6. ترحيل فاتورة الشراء | تحديث التكلفة المالية وإثبات مديونية المورد | `VendInvoiceJour`, `VendInvoiceTrans`, `VendTrans`, `VendTransOpen`, `TaxTrans`, `InventTrans` | لا زيادة إضافية للكمية المستلمة سابقًا | إثبات المورد والضريبة والتكلفة، وعكس استحقاق الجزء المفوتر |
-| 7. فاتورة دون PO | إثبات مصروف مباشر على المورد من يومية الفواتير | `LedgerJournalTable`, `LedgerJournalTrans`, `VendTrans`, `VendTransOpen`, `TaxTrans` | لا حركة مخزون | مدين مصروف/ضريبة، دائن مورد |
-| 8. اقتراح الدفع | اختيار الفواتير المستحقة وإنشاء أسطر الدفع | `LedgerJournalTable`, `LedgerJournalTrans` | لا أثر | لا قيد حتى الترحيل |
-| 9. توليد ملف/وسيلة الدفع | إعداد ملف البنك أو الشيك وتحديث حالة الدفع | يومية الدفع وجداول وسيلة الدفع | لا أثر | توليد الملف وحده لا يعني ترحيل الدفع |
-| 10. ترحيل الدفع | تسجيل خروج النقد وتخفيض صافي مديونية المورد | `LedgerJournalTable`, `LedgerJournalTrans`, `VendTrans`, `VendTransOpen`, `BankAccountTrans` | لا أثر | مدين مورد، دائن بنك، وفق الحساب المقابل |
-| 11. التسوية | ربط الدفع بالفاتورة كليًا أو جزئيًا | `VendTrans`, `VendTransOpen`, `VendSettlement` | لا أثر | قد تنشأ قيود خصم نقدي أو فرق صرف أو فروق تسوية |
-| 12. المراجعة والإقفال | أعمار الديون، مطابقة المورد مع GL، مراجعة الاستلام غير المفوتر | جداول الموردين والتسويات وGL والاستلام والفواتير | لا تغيير بمجرد التقرير | إعادة تقييم العملة أو التصحيحات قد تنشئ قيودًا |
 
-الاستلام والفاتورة مرحلتان منفصلتان: **الاستلام تحديث فعلي، والفاتورة تحديث مالي**. وترحيل الاستلام إلى الأستاذ العام يعتمد على إعدادات مثل `Post physical inventory` و`Accrue liability on product receipt` وترحيل استلام المنتج في GL. [GitHub](https://github.com/MicrosoftDocs/Dynamics-365-Unified-Operations-Public/blob/main/articles/finance/general-ledger/purchase-order-posting.md?utm_source=chatgpt.com)
+ACCOUNTS PAYABLE — CLASSIFIED TABLE LIST
+65 unique names extracted from the supplied document.
+Classification only: names are preserved as supplied, without metadata validation.
+Shared tables are listed once under their primary category.
 
-**تنبيه تقني:** يومية الفواتير المباشرة ليست نفس مسار فاتورة أمر الشراء؛ لا تفترض أن كل فاتورة مورد لها أسطر في `VendInvoiceTrans`.
+1. CONFIGURATION — ACCOUNTS PAYABLE AND PAYMENTS (7)
+VendParameters
+VendGroup
+VendPosting
+PaymTerm
+VendPaymModeTable
+CashDisc
+LedgerJournalName
 
-### جداول المحاسبة المشتركة
+2. CONFIGURATION — TAX (5)
+TaxTable
+TaxGroupHeading
+TaxGroupData
+TaxItemGroupHeading
+TaxOnItem
 
-عند الترحيل المحاسبي، تتبع القيود من خلال:
+3. CONFIGURATION / MASTER DATA — GENERAL LEDGER AND CURRENCY (7)
+Ledger
+Currency
+ExchangeRateType
+ExchangeRateCurrencyPair
+ExchangeRate
+MainAccount
+DimensionAttributeValueCombination
 
-| الغرض | الجداول |
-|---|---|
-| التوزيع المحاسبي للمستند | `AccountingDistribution` |
-| قيد دفتر الأستاذ الفرعي، في المسارات التي تستخدمه | `SubledgerJournalEntry`, `SubledgerJournalAccountEntry` |
-| رأس وأسطر القيد في GL | `GeneralJournalEntry`, `GeneralJournalAccountEntry` |
-| ربط سند دفتر الأستاذ الفرعي بـGL | `SubledgerVoucherGeneralJournalEntry` |
-| الضريبة المرحّلة | `TaxTrans` |
+4. CONFIGURATION — INVENTORY POSTING (3)
+InventPosting
+InventModelGroup
+InventParameters
 
-## 4. Physical vs. Financial — مثال كامل
+5. MASTER DATA — VENDORS, PARTIES AND CONTACTS (7)
+VendTable
+DirPartyTable
+DirPartyLocation
+LogisticsLocation
+LogisticsPostalAddress
+LogisticsElectronicAddress
+VendBankAccount
 
-**شراء 100 وحدة × 100 ريال، وضريبة افتراضية 15% قابلة للاسترداد بالكامل:**
+6. MASTER DATA — COMPANY BANK ACCOUNTS (1)
+BankAccountTable
 
-- صافي الشراء: **10,000**
-- الضريبة: **1,500**
-- إجمالي المورد: **11,500**
+7. MASTER / REFERENCE DATA — PRODUCTS, INVENTORY AND PRICES (8)
+EcoResProduct
+InventTable
+InventTableModule
+InventSite
+InventLocation
+InventDim
+EcoResCategory
+PriceDiscTable
 
-هذا المثال يوضح **صافي الأثر المحاسبي**؛ السند الفعلي قد يحتوي حسابات وسيطة وأسطرًا إضافية حسب إعدادات المخزون والتكلفة والضرائب.
+8. TRANSACTIONS — PURCHASE ORDERS AND CONFIRMATION (4)
+PurchTable
+PurchLine
+PurchConfirmJour
+PurchConfirmTrans
 
-| المرحلة | المخزون | مدين | دائن | المديونية المفتوحة |
-|---|---|---|---|---:|
-| أمر الشراء والتأكيد | لم يتم الاستلام | — | — | 0 |
-| استلام 100 وحدة | الفعلي يزيد 100 | استلام/مخزون غير مفوتر 10,000 | استحقاق مشتريات 10,000 | 0 في دفتر المورد |
-| ترحيل الفاتورة | الكمية نفسها، والتكلفة تصبح مالية | مخزون 10,000 + ضريبة مدخلات 1,500، مع عكس قيد الاستلام | المورد 11,500، مع عكس الحسابات المقابلة للاستلام | 11,500 |
-| دفع وتسوية 6,000 | لا تغيير | المورد 6,000 | البنك 6,000 | 5,500 |
-| دفع وتسوية 5,500 | لا تغيير | المورد 5,500 | البنك 5,500 | 0 |
+9. TRANSACTIONS — PRODUCT RECEIPTS (2)
+VendPackingSlipJour
+VendPackingSlipTrans
 
-**استحقاق الاستلام في GL لا يساوي فاتورة مفتوحة على المورد.** عند الفوترة يُعكس الاستحقاق المرتبط بالكمية المفوترة وتُثبت المديونية على حساب المورد. [Microsoft Learn](https://learn.microsoft.com/en-us/dynamics365/finance/general-ledger/pstg-prfles-ovrvw?utm_source=chatgpt.com)
+10. TRANSACTIONS — INVENTORY PHYSICAL / FINANCIAL UPDATES (2)
+InventTransOrigin
+InventTrans
 
-### مثال الاستلام والفوترة الجزئية
+11. TRANSACTIONS — PENDING VENDOR INVOICES (3)
+VendInvoiceInfoTable
+VendInvoiceInfoLine
+VendInvoiceInfoSubLine
 
-لنفس أمر الشراء، 100 وحدة:
+12. TRANSACTIONS — POSTED VENDOR INVOICES (2)
+VendInvoiceJour
+VendInvoiceTrans
 
-| الحدث | المستلم تراكميًا | المفوتر تراكميًا | النتيجة |
-|---|---:|---:|---|
-| استلام أول | 60 | 0 | 60 وحدة مستلمة غير مفوترة |
-| فوترة أولى لـ40 وحدة | 60 | 40 | 20 وحدة مستلمة غير مفوترة، ومديونية 4,600 |
-| استلام المتبقي | 100 | 40 | 60 وحدة مستلمة غير مفوترة |
-| فوترة المتبقي | 100 | 100 | اكتمال الكمية والفوترة؛ إجمالي الفواتير 11,500 |
+13. TRANSACTIONS — VENDOR BALANCES AND SETTLEMENT (3)
+VendTrans
+VendTransOpen
+VendSettlement
 
-تُراجع الكميات المتبقية في `PurchLine`، والاستلامات في `VendPackingSlipTrans`، والفواتير في `VendInvoiceTrans`، والحركات المخزنية في `InventTrans`.
+14. TRANSACTIONS — INVOICE / PAYMENT JOURNALS AND BANK (3)
+LedgerJournalTable
+LedgerJournalTrans
+BankAccountTrans
 
-## 5. الحالات التي يجب تغطيتها
+15. TRANSACTIONS — TAX AND CHARGES (2)
+TaxTrans
+MarkupTrans
 
-| الحالة | السلوك المطلوب التحقق منه | الجداول/الأثر الرئيسي |
-|---|---|---|
-| فاتورة خدمات دون مخزون | إثبات المصروف والضريبة والمورد دون كمية مخزنية | يومية الفاتورة أو مستند فاتورة المورد حسب المسار |
-| فاتورة تشمل عدة استلامات | ربط الكميات المفوترة بالاستلامات الصحيحة | جداول الفاتورة المعلّقة، الاستلام، والفاتورة المرحّلة |
-| اختلاف السعر أو الكمية | تطبيق سياسة المطابقة والتفاوتات والموافقة | مستندات PO والاستلام والفاتورة |
-| خصم تجاري أو مصاريف شراء | احتساب الصافي وتوزيع المصاريف على المصروف أو تكلفة الصنف | `MarkupTrans` مع جداول المستند والترحيل |
-| دفعة جزئية | إبقاء الرصيد المتبقي مفتوحًا | `VendTransOpen`, `VendSettlement` |
-| دفع دون تسوية | بقاء الفاتورة والدفع مفتوحين حتى الربط | `VendTrans`, `VendTransOpen` |
-| دفعة مقدمة | إثبات المقدم ثم تطبيقه على الفاتورة النهائية | إعداد المقدم، مستنداته، حركات المورد والتسوية |
-| خصم نقدي | إغلاق الفاتورة بالدفع والخصم المستحق | `VendSettlement` وقيود الخصم |
-| عملة أجنبية | إثبات الفاتورة والدفع بأسعارهما ومعالجة فرق الصرف | `VendTrans`, `VendSettlement` وGL |
-| مرتجع شراء مخزني | إخراج الكمية ثم إثبات إشعار دائن المورد | `PurchTable`, `PurchLine`, `InventTrans`, جداول الاستلام/الفاتورة |
-| إشعار دائن مالي فقط | تخفيض المديونية والمصروف/الضريبة دون إخراج مخزون | مستند الإشعار، `VendTrans`, `TaxTrans` وGL |
-| إلغاء كمية غير مستلمة | إلغاء المتبقي دون عكس حركات مكتملة | `PurchLine` وحركات المخزون المرتبطة |
-| تصحيح استلام | تصحيح الكمية والاستحقاق ضمن القيود المسموحة | جداول الاستلام، `InventTrans` وGL عند التطبيق |
-| إلغاء تسوية | إعادة فتح الأرصدة ومعالجة القيود المرتبطة | `VendSettlement`, `VendTransOpen`, `VendTrans` |
-| عكس دفعة | عكس الدفع وفق حالته وطريقة الدفع والمسار المدعوم | يوميات الدفع، البنك، المورد وGL |
-| فاتورة مكررة أو مورد محظور | تطبيق الفحص والمنع بحسب الإعداد | `VendParameters`, `VendTable` ومستند الفاتورة |
-
-توجد طريقتان مختلفتان للمقدم: **فاتورة دفعة مقدمة مرتبطة بأمر شراء**، و**دفعة مقدمة من يومية الدفع**. يجب اختبار كل مسار مستخدم بشكل مستقل. [Microsoft Learn](https://learn.microsoft.com/en-us/dynamics365/finance/accounts-payable/prepayments-invoices-vs-prepayments?utm_source=chatgpt.com)
-
-التسوية أيضًا مرحلة مستقلة عن الدفع؛ يمكن تنفيذها أثناء الترحيل أو لاحقًا، وقد تنتج عنها قيود إضافية بحسب الخصم وفروق العملة والحسابات والأبعاد. [Microsoft Learn](https://learn.microsoft.com/en-us/dynamics365/finance/cash-bank-management/settlement-overview?utm_source=chatgpt.com)
-
-## 6. متى نعتبر دورة AP مكتملة؟
-
-يجب أن تنجح هذه المطابقات بعد تنفيذ الحالات السابقة:
-
-- **المورد:** الفواتير + الإشعارات الدائنة + الدفعات = الرصيد الصحيح.
-- **المفتوح:** الأرصدة المتبقية تعكس التسويات الجزئية والكاملة.
-- **GL:** مجموع دفتر الموردين يطابق حسابات مراقبة الموردين.
-- **الاستلام غير المفوتر:** يبقى فقط للكمية المستلمة التي لم تُفوتر.
-- **المخزون:** الاستلام يزيد الكمية، والفاتورة لا تكرر الزيادة، والمرتجع يخفضها.
-- **البنك والضريبة:** كل مبلغ مرحّل قابل للتتبع إلى مستنده وسنده.
-- **التصحيحات:** تحفظ السجل الأصلي وروابط العكس والتسوية.
-
-**هذه خريطة الدورة القياسية ونطاق التحقق. تأكيد أن نظامك يغطيها بالكامل يحتاج فحص التنفيذ والبيانات ونتائج الترحيل لكل حالة.**
+16. ACCOUNTING — DISTRIBUTIONS, SUBLEDGER AND GENERAL LEDGER (6)
+AccountingDistribution
+SubledgerJournalEntry
+SubledgerJournalAccountEntry
+GeneralJournalEntry
+GeneralJournalAccountEntry
+SubledgerVoucherGeneralJournalEntry
