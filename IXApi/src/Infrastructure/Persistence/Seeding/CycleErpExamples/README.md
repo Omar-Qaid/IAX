@@ -47,3 +47,5 @@ Existing Administration, Human Resources, Organization and Workflow datasets wer
 ## Verification
 
 The focused seed suite verifies DI registration, dependency ordering, the opt-in/run-once contract, company isolation, preservation of custom setup, and repeatable setup behavior using isolated SQLite databases. The API build verifies service/DTO compatibility. A complete SQL Server posting run of the new trading dataset must be verified in an isolated development database before claiming that it has executed successfully; these checks do not run it against an existing application database.
+
+Verification on 2026-11-03: all 47 focused seed tests passed, and the API build passed with zero errors. Evidence is in the repository-root `.artifacts/erp-cycle-final-tests.log` and `.artifacts/erp-cycle-final-build.log`. Existing compiler warnings remain. No live application database was seeded.
