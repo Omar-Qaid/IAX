@@ -29,8 +29,7 @@ public sealed class SalesAdvancedScenarioSeeder : BaseModuleSeeder
     {
         var actor = new SalesScenarioSeeder.ExampleActor(await context.Db.Set<AspNetUser>().IgnoreQueryFilters()
             .Where(x => x.UserName == "sys").Select(x => x.Id).SingleAsync(ct));
-        await using var db = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseSqlServer(context.Db.Database.GetConnectionString()).Options, companyContext: actor);
+        await using var db = FinanceScenarioSupport.CreatePostingDb(context, actor);
         var work = new UnitOfWork(db);
         var numbers = new SysNumberSequenceService(work, actor);
         var inventNumbers = new SalesInventoryNumberService(numbers);

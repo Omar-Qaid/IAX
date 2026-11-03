@@ -22,8 +22,7 @@ public sealed class PurchaseSettlementSeeder : BaseModuleSeeder
     {
         var actor = new SalesScenarioSeeder.ExampleActor(await context.Db.Set<AspNetUser>().IgnoreQueryFilters()
             .Where(x => x.UserName == "sys").Select(x => x.Id).SingleAsync(ct));
-        await using var db = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseSqlServer(context.Db.Database.GetConnectionString()).Options, companyContext: actor);
+        await using var db = FinanceScenarioSupport.CreatePostingDb(context, actor);
         var work = new UnitOfWork(db);
         var payments = new VendPaymentService(work, actor, actor, new SysNumberSequenceService(work, actor));
         var order = await db.Set<PurchTable>().SingleAsync(x => x.DataAreaId == "dat"

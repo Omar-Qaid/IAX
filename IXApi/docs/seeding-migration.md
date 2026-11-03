@@ -12,18 +12,18 @@ The SQL Server identity-insert helper validates table identifiers and attempts `
 
 ## Seeder inventory
 
-Paths below are relative to `src/Infrastructure/Persistence/Seeding`. `C/` means `Chunks/`; `F/` means `Modules/Finance/`. All listed seeders are version 1. The source file is the authoritative list of exact text values and fixed keys; this table names the owned data and calls out explicit `RecId` literals. `dat` is a fixed company scope in the existing data, even where a metadata scope is `global`.
+Paths below are relative to `src/Infrastructure/Persistence/Seeding`. `C/` means retained legacy code in `Chunks/`; `F/` means `Modules/Finance/`. Active definitions are grouped under `Modules/<Owner>/`; their legacy CLR namespaces are preserved for compatibility. All listed seeders are version 1. The source file is the authoritative list of exact text values and fixed keys; this table names the owned data and calls out explicit `RecId` literals. `dat` is a fixed company scope in the existing data, even where a metadata scope is `global`.
 
 | Old seeder / current source | Stable ID or decision | Data and fixed-key source | Category / policy / scope | Dependencies / registration |
 | --- | --- | --- | --- | --- |
-| `C/SysSettingsSeeder.cs` | `Administration.Settings` | Settings, notification templates, batch examples | Required / repeatable / global | Registered; no dependency |
-| `C/NumberSequenceSeeder.cs` | `Administration.NumberSequences` | Number sequences and document references | Required / repeatable / global | Registered; no dependency |
-| `C/DocumentManagementSeeder.cs` | `Organization.DocumentManagement` | Document types | Required / repeatable / global | Registered; no dependency |
-| `C/IdentitySeeder.cs` | `Identity.MasterData` | Users, roles, permissions and assignments | Required / repeatable / global | Settings; registered |
-| `C/MainAccountSeeder.cs` | `Finance.GeneralLedger.MainAccounts` | Main accounts | Reference / repeatable / dat | CompanyInfo; registered |
-| `C/CustPaymModeSeeder.cs` | `Finance.AccountsReceivable.PaymModes` | Customer payment modes | Reference / repeatable / dat | CompanyInfo; registered |
-| `C/SalesPoolSeeder.cs` | `Finance.AccountsReceivable.SalesPools` | Sales pools | Reference / repeatable / dat | CompanyInfo; registered |
-| `C/MarkupTableSeeder.cs` | `Finance.AccountsReceivable.Markup` | Charge and markup tables | Reference / repeatable / dat | CompanyInfo; registered |
+| `Modules/Administration/SysSettingsSeeder.cs` | `Administration.Settings` | Settings, notification templates, batch examples | Required / repeatable / global | Registered; no dependency |
+| `Modules/Administration/NumberSequenceSeeder.cs` | `Administration.NumberSequences` | Number sequences and document references | Required / repeatable / global | Registered; no dependency |
+| `Modules/Organization/DocumentManagementSeeder.cs` | `Organization.DocumentManagement` | Document types | Required / repeatable / global | Registered; no dependency |
+| `Modules/Identity/IdentitySeeder.cs` | `Identity.MasterData` | Users, roles, permissions and assignments | Required / repeatable / global | Settings; registered |
+| `Modules/Finance/MainAccountSeeder.cs` | `Finance.GeneralLedger.MainAccounts` | Main accounts | Reference / repeatable / dat | CompanyInfo; registered |
+| `Modules/Finance/CustPaymModeSeeder.cs` | `Finance.AccountsReceivable.PaymModes` | Customer payment modes | Reference / repeatable / dat | CompanyInfo; registered |
+| `Modules/Finance/SalesPoolSeeder.cs` | `Finance.AccountsReceivable.SalesPools` | Sales pools | Reference / repeatable / dat | CompanyInfo; registered |
+| `Modules/Finance/MarkupTableSeeder.cs` | `Finance.AccountsReceivable.Markup` | Charge and markup tables | Reference / repeatable / dat | CompanyInfo; registered |
 | `C/ErpSeeder.cs` | Split; old class excluded | Company, logistics, ledger, units, customers, products and setup | Legacy class; no direct run | Split into the ten `F/` classes below to avoid running the old mixed dataset twice |
 | `F/CompanyInfoSeeder.cs` | `Finance.Foundation.CompanyInfo` | `CompanyInfo`, party roots; DAT and HBMC | Required / repeatable / dat | Registered; no dependency |
 | `F/LogisticsAddressSeeder.cs` | `Finance.Foundation.Logistics` | Geographic and postal address reference data | Reference / repeatable / dat | CompanyInfo; registered |
@@ -33,19 +33,19 @@ Paths below are relative to `src/Infrastructure/Persistence/Seeding`. `C/` means
 | `F/InventItemGroupSeeder.cs` | `Finance.Inventory.ItemGroups` | Inventory item groups | Reference / repeatable / global | CompanyInfo; registered |
 | `F/CustGroupSeeder.cs` | `Finance.AccountsReceivable.CustGroups` | Customer groups | Reference / repeatable / global | CompanyInfo; registered |
 | `F/SalesDeliverySetupSeeder.cs` | `Finance.AccountsReceivable.DeliverySetup` | Delivery and payment terms and schedules | Reference / repeatable / dat | CompanyInfo; registered |
-| `C/PriceDiscSeeder.cs` | `Finance.AccountsReceivable.PriceDisc` | Price and discount groups and agreements | Reference / repeatable / dat | CustGroups; registered |
-| `C/InventorySiteWarehouseSeeder.cs` | `Finance.Inventory.SitesAndWarehouses` | Sites, warehouses and WMS locations | Reference / repeatable / dat | CompanyInfo; registered |
-| `C/VendSeeder.cs` | `Finance.AccountsPayable.Vendors` | Vendor groups, vendors, parties | Reference / repeatable / dat | CompanyInfo; registered |
-| `C/TaxSeeder.cs` | `Finance.GeneralLedger.Tax` | Tax codes, groups, authorities, periods and posting | Reference / repeatable / dat | CompanyInfo; registered |
-| `C/InventorySeeder.cs` | `Finance.Inventory.Setup` | Groups, shared and released product, dimensions and posting rules | Reference / repeatable / dat | UnitOfMeasure; registered |
-| `C/CustLedgerSeeder.cs` | `Finance.AccountsReceivable.CustLedger` | Customer ledger accounts and setup | Reference / repeatable / dat | CompanyInfo; registered |
-| `C/OthersDBOrganizationEmployeeSeeder.cs` | `Finance.Foundation.LegacyEmployees` | Imported departments, occupations, genders, nationalities, parties and workers; source IDs retained | Legacy import / run-once / dat | CompanyInfo; registered, opt in |
-| `C/OrganizationStructureSeeder.cs` | `Finance.Foundation.Structure` | Organization units, roles, hierarchy, positions and assignments | Reference / repeatable / dat | CompanyInfo; registered |
-| `C/HcmExampleSeeder.cs` | `Finance.Foundation.HcmExamples` | Example workers and assignments | Demo / repeatable / dat | Structure; registered, opt in |
-| `C/OthersDBWorkflowMasterFromSeeder.cs` | `Workflow.LegacyMaster` | Imported workflow lookup and process graph; literal `RecId` 1–5 plus source IDs | Legacy import / run-once / global | Identity; registered, opt in |
-| `C/WfProcessSeedData.cs` and `Processes/Process590`, `Process603`, `Process651` | `Workflow.ProcessMaster` | Workflow masters, forms, templates and fixed process IDs 590, 603, 651 | Required / repeatable / global | Identity; registered |
-| `C/OthersDBWorkflowRequestFromSeeder.cs` | `Workflow.DemoRequestTracking` | Example requests, assignments, reports and history | Demo / repeatable / dat | ProcessMaster; registered, opt in |
-| `C/OrganizationSeeder.cs` (`OrganizationDemoSeeder`) | `Finance.Foundation.OrgDemo` | Synthetic organization data; literal `RecId` 1–5 among others | Demo / repeatable / dat | Structure; registered, opt in |
+| `Modules/Finance/PriceDiscSeeder.cs` | `Finance.AccountsReceivable.PriceDisc` | Price and discount groups and agreements | Reference / repeatable / dat | CustGroups; registered |
+| `Modules/Finance/InventorySiteWarehouseSeeder.cs` | `Finance.Inventory.SitesAndWarehouses` | Sites, warehouses and WMS locations | Reference / repeatable / dat | CompanyInfo; registered |
+| `Modules/Finance/VendSeeder.cs` | `Finance.AccountsPayable.Vendors` | Vendor groups, vendors, parties | Reference / repeatable / dat | CompanyInfo; registered |
+| `Modules/Finance/TaxSeeder.cs` | `Finance.GeneralLedger.Tax` | Tax codes, groups, authorities, periods and posting | Reference / repeatable / dat | CompanyInfo; registered |
+| `Modules/Finance/InventorySeeder.cs` | `Finance.Inventory.Setup` | Groups, shared and released product, dimensions and posting rules | Reference / repeatable / dat | UnitOfMeasure; registered |
+| `Modules/Finance/CustLedgerSeeder.cs` | `Finance.AccountsReceivable.CustLedger` | Customer ledger accounts and setup | Reference / repeatable / dat | CompanyInfo; registered |
+| `Modules/Finance/OthersDBOrganizationEmployeeSeeder.cs` | `Finance.Foundation.LegacyEmployees` | Imported departments, occupations, genders, nationalities, parties and workers; source IDs retained | Legacy import / run-once / dat | CompanyInfo; registered, opt in |
+| `Modules/Finance/OrganizationStructureSeeder.cs` | `Finance.Foundation.Structure` | Organization units, roles, hierarchy, positions and assignments | Reference / repeatable / dat | CompanyInfo; registered |
+| `Modules/Finance/HcmExampleSeeder.cs` | `Finance.Foundation.HcmExamples` | Example workers and assignments | Demo / repeatable / dat | Structure; registered, opt in |
+| `Modules/Workflow/OthersDBWorkflowMasterFromSeeder.cs` | `Workflow.LegacyMaster` | Imported workflow lookup and process graph; literal `RecId` 1–5 plus source IDs | Legacy import / run-once / global | Identity; registered, opt in |
+| `Modules/Workflow/WfProcessSeedData.cs` and `Processes/Process590`, `Process603`, `Process651` | `Workflow.ProcessMaster` | Workflow masters, forms, templates and fixed process IDs 590, 603, 651 | Required / repeatable / global | Identity; registered |
+| `Modules/Workflow/OthersDBWorkflowRequestFromSeeder.cs` | `Workflow.DemoRequestTracking` | Example requests, assignments, reports and history | Demo / repeatable / dat | ProcessMaster; registered, opt in |
+| `Modules/Finance/OrganizationSeeder.cs` (`OrganizationDemoSeeder`) | `Finance.Foundation.OrgDemo` | Synthetic organization data; literal `RecId` 1–5 among others | Demo / repeatable / dat | Structure; registered, opt in |
 | `F/SampleCustomerVendorSeeder.cs` | `Finance.AccountsReceivable.DemoCustVend` | Sample customers, vendors and parties | Demo / repeatable / dat | CustGroups, Logistics; registered, opt in |
 | `F/SampleProductSeeder.cs` | `Finance.Inventory.DemoProducts` | Sample products, units and packaging | Demo / repeatable / dat | ItemGroups, UnitOfMeasure; registered, opt in |
 | `C/DimensionSeeder.cs` | Intentionally excluded | Old dimension setup | Legacy `ISeeder`; no direct run | Unregistered in the old pipeline; preserve exclusion |
@@ -53,7 +53,7 @@ Paths below are relative to `src/Infrastructure/Persistence/Seeding`. `C/` means
 | `C/PostingProfileSeeder.cs` | Intentionally excluded | Posting profiles | Legacy `ISeeder`; no direct run | Unregistered in the old pipeline; preserve exclusion |
 | `C/WorkflowSeeder.cs` | Intentionally excluded | Workflow graph; literal IDs include 0–23 and 591–595 | Legacy `ISeeder`; no direct run | Replaced by ProcessMaster; preserve exclusion |
 | `C/WfValidateSeedData.cs` | Intentionally excluded | Workflow validation and repair | Legacy `ISeeder`; no direct run | Manual repair utility; preserve exclusion |
-| `C/OrganizationSeeder.cs` (`OrganizationSeeder`) | Intentionally excluded | Wrapper for legacy employee import | Legacy `ISeeder`; no direct run | Direct legacy-import registration owns this path |
+| `Modules/Finance/OrganizationSeeder.cs` (`OrganizationSeeder`) | Intentionally excluded | Wrapper for legacy employee import | Legacy `ISeeder`; no direct run | Direct legacy-import registration owns this path |
 
 `C/OthersDBSeedData.cs` is an abstract import helper, not a runnable seeder. `Data/*.json` and `wfData/wf.sql` are fixture/source files, not independent registrations. Partial files under `Processes/` execute through `WfProcessSeedData` and are not separate graph nodes. Many fixed IDs are derived from embedded JSON or workflow arrays; their exact values are in those source files and are not rewritten by this migration.
 

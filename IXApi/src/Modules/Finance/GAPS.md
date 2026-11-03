@@ -1,4 +1,4 @@
-# Finance — gap analysis index
+﻿# Finance — gap analysis index
 
 **Last updated:** 2026-11-03
 
@@ -9,7 +9,7 @@ counted as gaps.
 | Module | File | Highest-priority open gap |
 | --- | --- | --- |
 | General ledger | [GeneralLedger/GAPS.md](GeneralLedger/GAPS.md) | Three failing journal posting tests (reversal, voucher allocation); journal tax calculation |
-| Accounts payable | [AccountsPayable/GAPS.md](AccountsPayable/GAPS.md) | No purchase order cancellation; no purchase trade agreements; no forward settlement; vendor payment currency |
+| Accounts payable | [AccountsPayable/GAPS.md](AccountsPayable/GAPS.md) | No purchase trade agreements; no forward settlement; vendor payment currency |
 | Accounts receivable | [AccountsReceivable/GAPS.md](AccountsReceivable/GAPS.md) | No forward settlement; no cancellation of a partly processed order; realized gain/loss still untested |
 | Inventory | [Inventory/GAPS.md](Inventory/GAPS.md) | SQL Server verification; four unsupported inventory models |
 | Foundation | [Foundation/GAPS.md](Foundation/GAPS.md) | Tax calculation ignores every configured origin, silently; payment schedules make invoices unpostable |
@@ -23,7 +23,9 @@ counted as gaps.
    state, and `PaymSched` is the sharp case — configuring one makes its customers' invoices
    unpostable. Second, **documents can be started but not ended**: a purchase order cannot be
    cancelled at all, a partly delivered sales order cannot be cancelled either, and a credit note or
-   on-account payment on either side creates an open row that no process can ever apply. Third, this
+   on-account payment on either side creates an open row that no process can ever apply. The
+   purchase half of that was closed on 2026-11-03; the sales remainder and both settlement paths
+   remain. Third, this
    repository's habit is to **refuse** what it does not support, by name — which is why the tax
    calculation gap stands out as the exception worth fixing first: it accepts configuration it then
    ignores, and posts a wrong amount silently. The zero-rate half of that third theme was closed on

@@ -180,6 +180,98 @@ public sealed class PurchOrderService : BaseService<PurchTable>, IPurchOrderServ
         }
     }
 
+    public Task<PurchResult> CancelRemainderAsync(long recId, CancellationToken ct) =>
+        Db.Database.CreateExecutionStrategy().ExecuteAsync(() => CancelRemainderCoreAsync(recId, ct));
+
+    /// <summary>
+    /// Cancels the quantity a purchase order has not received, which is what D365's purchase order
+    /// cancellation does: only the part that has not been registered, received or invoiced goes
+    /// away, and the received part stays processable.
+    /// <para>
+    /// A quantity that was received but not yet invoiced therefore stays invoiceable. The physical
+    /// remainder goes to zero, and the financial remainder is reduced by that same unreceived
+    /// quantity - those units will never arrive, so they can never be invoiced - which leaves
+    /// exactly the received-but-uninvoiced quantity behind. Example: order 10, receive 6, invoice
+    /// none, then cancel. The physical remainder was 4 and the financial remainder 10; afterwards
+    /// they are 0 and 6, so the 6 delivered units can still be invoiced and nothing already posted
+    /// is disturbed.
+    /// </para>
+    /// <para>
+    /// A line that never received anything becomes Canceled and drops out of the header's status
+    /// derivation, which is why the receipt and invoice flows already exclude cancelled lines. A
+    /// line holding a received remainder keeps its real status so it can still be invoiced.
+    /// </para>
+    /// </summary>
+    private async Task<PurchResult> CancelRemainderCoreAsync(long recId, CancellationToken ct)
+    {
+        var area = _company.GetDataAreaId();
+        await _unitOfWork.BeginTransactionAsync(ct);
+        try
+        {
+            var order = await Db.Set<PurchTable>().FirstOrDefaultAsync(x => x.RecId == recId && x.DataAreaId == area, ct);
+            if (order == null) return await Fail(404, "Purchase order was not found in the selected company.", ct);
+            if (order.PurchStatus == PurchStatus.Canceled)
+                return await Fail(422, "The purchase order is already canceled.", ct);
+
+            var lines = await Db.Set<PurchLine>()
+                .Where(x => x.DataAreaId == area && x.PurchId == order.PurchId
+                    && x.PurchStatus != PurchStatus.Canceled).ToListAsync(ct);
+            if (lines.All(x => x.RemainPurchPhysical <= 0))
+                return await Fail(422, "The purchase order has no unreceived quantity left to cancel.", ct);
+
+            var cancelled = new List<object>();
+            foreach (var line in lines)
+            {
+                if (line.RemainPurchPhysical <= 0) continue;
+                var purchQty = line.RemainPurchPhysical;
+                decimal inventQty;
+                try
+                {
+                    inventQty = await _supply.CancelRemainingAsync(order, line, ct);
+                }
+                catch (InvalidOperationException error)
+                {
+                    return await Fail(422, error.Message, ct);
+                }
+
+                var receivedNothing = line.RemainPurchPhysical >= line.PurchQty;
+                // Units that will never arrive can never be invoiced, so the financial remainder
+                // loses the same quantity the physical one does and keeps only what was received.
+                line.RemainPurchFinancial = Math.Max(0m, line.RemainPurchFinancial - purchQty);
+                line.RemainInventFinancial = Math.Max(0m, line.RemainInventFinancial - inventQty);
+                line.RemainPurchPhysical = 0;
+                line.RemainInventPhysical = 0;
+                line.PurchStatus = receivedNothing ? PurchStatus.Canceled
+                    : line.RemainPurchFinancial <= 0 ? PurchStatus.Invoiced
+                    : PurchStatus.Received;
+                cancelled.Add(new
+                {
+                    lineNumber = line.LineNumber, itemId = line.ItemId, purchQty, inventQty,
+                    status = line.PurchStatus, remainToInvoice = line.RemainPurchFinancial
+                });
+            }
+
+            // Derived from the lines that still mean something, matching how the receipt and invoice
+            // flows derive it: a wholly cancelled order is Canceled, otherwise the order follows
+            // whatever its surviving lines still owe.
+            var surviving = lines.Where(x => x.PurchStatus != PurchStatus.Canceled).ToList();
+            order.PurchStatus = surviving.Count == 0 ? PurchStatus.Canceled
+                : surviving.All(x => x.RemainPurchFinancial <= 0 && x.RemainPurchPhysical <= 0) ? PurchStatus.Invoiced
+                : PurchStatus.Received;
+
+            await _unitOfWork.CompleteAsync(ct);
+            await _unitOfWork.CommitTransactionAsync(ct);
+            return new(200, new { purchId = order.PurchId, status = order.PurchStatus, lines = cancelled },
+                "Purchase order remainder canceled.");
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync(ct);
+            Db.ChangeTracker.Clear();
+            throw;
+        }
+    }
+
     public async Task<PurchResult> GetAsync(long recId, CancellationToken ct)
     {
         var area = _company.GetDataAreaId();

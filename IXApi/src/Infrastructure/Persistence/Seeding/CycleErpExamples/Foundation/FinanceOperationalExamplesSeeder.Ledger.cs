@@ -9,23 +9,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance;
 
-public sealed class FinanceOperationalExamplesSeeder : BaseModuleSeeder
+public sealed partial class FinanceOperationalExamplesSeeder
 {
-    public override string Id => "Finance.OperationalExamples";
-    public override SeederCategory Category => SeederCategory.Demo;
-    public override string Scope => "dat";
-    public override IReadOnlyCollection<string> DependsOn => new[] { "Finance.GeneralLedger.Examples", "Finance.Inventory.DemoProducts", "Finance.Inventory.Setup", "Administration.NumberSequences" };
-
-    public override async Task SeedAsync(SeedingContext context, CancellationToken ct)
+    private static async Task<Dictionary<string, long>> SeedLedgerDimensionsAsync(DbContext db, CancellationToken ct)
     {
-        var db = context.Db;
-        var voucherSequence = await db.Set<SysNumberSequence>().IgnoreQueryFilters()
-            .Where(x => x.NumberSequence == "Voucher" && (x.DataAreaId == "dat" || (x.DataAreaId == "" && x.NumberSequenceScope == null)))
-            .OrderByDescending(x => x.DataAreaId == "dat").FirstAsync(ct);
-        var inventoryJournalCodes = new[] { "IJ-ADJ", "IJ-MOV", "IJ-TRF", "IJ-CNT" };
-        foreach (var journal in await db.Set<InventJournalName>().IgnoreQueryFilters()
-            .Where(x => x.DataAreaId == "dat" && inventoryJournalCodes.Contains(x.JournalNameId) && x.VoucherNumberSequenceTable == 0).ToListAsync(ct))
-            journal.VoucherNumberSequenceTable = voucherSequence.RecId;
         var accounts = await db.Set<MainAccount>().IgnoreQueryFilters().Where(x => x.DataAreaId == "dat")
             .ToDictionaryAsync(x => x.MainAccountId, ct);
         var dimensions = new Dictionary<string, long>();
@@ -43,6 +30,11 @@ public sealed class FinanceOperationalExamplesSeeder : BaseModuleSeeder
             }
             dimensions[code] = dimension.RecId;
         }
+        return dimensions;
+    }
+
+    private static async Task SeedBankAndSubledgerSetupAsync(DbContext db, Dictionary<string, long> dimensions, CancellationToken ct)
+    {
         var taxPosting = await db.Set<TaxLedgerAccountGroup>().IgnoreQueryFilters()
             .SingleAsync(x => x.DataAreaId == "dat" && x.TaxAccountGroup == "VAT-STD", ct);
         if (taxPosting.TaxOutgoingLedgerDimension is null or 0)
@@ -73,24 +65,5 @@ public sealed class FinanceOperationalExamplesSeeder : BaseModuleSeeder
         if (!await db.Set<VendLedgerAccounts>().IgnoreQueryFilters().AnyAsync(x => x.DataAreaId == "dat" && x.PostingProfile == "DEMO" && x.AccountCode == AccountCode.All, ct))
             db.Add(new VendLedgerAccounts { DataAreaId = "dat", PostingProfile = "DEMO", AccountCode = AccountCode.All,
                 SummaryLedgerDimension = dimensions["20010000"], Num = "" });
-        foreach (var (code, text) in new[] { ("DAMAGED", "Goods damaged in transit"), ("WRONG-ITEM", "Incorrect item supplied"), ("UNWANTED", "Customer changed their mind") })
-            if (!await db.Set<ReturnReasonCode>().IgnoreQueryFilters().AnyAsync(x => x.DataAreaId == "dat" && x.ReasonCodeId == code, ct))
-                db.Add(new ReturnReasonCode { ReasonCodeId = code, Description = text, DataAreaId = "dat" });
-        foreach (var (code, action) in new[] { ("RESTOCK", DispositionAction.Credit), ("CREDIT-ONLY", DispositionAction.CreditOnly), ("SCRAP", DispositionAction.Scrap) })
-            if (!await db.Set<ReturnDispositionCode>().IgnoreQueryFilters().AnyAsync(x => x.DataAreaId == "dat" && x.DispositionCodeId == code, ct))
-                db.Add(new ReturnDispositionCode { DispositionCodeId = code, Description = "Example return: " + code, DispositionAction = action, DataAreaId = "dat" });
-        var storage = await db.Set<EcoResStorageDimensionGroup>().IgnoreQueryFilters().SingleAsync(x => x.Name == "SW", ct);
-        var tracking = await db.Set<EcoResTrackingDimensionGroup>().IgnoreQueryFilters().SingleAsync(x => x.Name == "NONE", ct);
-        var codes = new[] { "ITM-1001", "ITM-1002", "ITM-1003", "ITM-1004", "ITM-1005" };
-        foreach (var code in codes)
-        {
-            if (!await db.Set<InventModelGroupItem>().IgnoreQueryFilters().AnyAsync(x => x.ItemDataAreaId == "dat" && x.ItemId == code, ct))
-                db.Add(new InventModelGroupItem { ItemId = code, ModelGroupId = "FIFO", ItemDataAreaId = "dat", ModelGroupDataAreaId = "dat", DataAreaId = "dat" });
-            if (!await db.Set<EcoResStorageDimensionGroupItem>().IgnoreQueryFilters().AnyAsync(x => x.ItemDataAreaId == "dat" && x.ItemId == code, ct))
-                db.Add(new EcoResStorageDimensionGroupItem { ItemId = code, ItemDataAreaId = "dat", StorageDimensionGroup = storage.RecId, DataAreaId = "dat" });
-            if (!await db.Set<EcoResTrackingDimensionGroupItem>().IgnoreQueryFilters().AnyAsync(x => x.ItemDataAreaId == "dat" && x.ItemId == code, ct))
-                db.Add(new EcoResTrackingDimensionGroupItem { ItemId = code, ItemDataAreaId = "dat", TrackingDimensionGroup = tracking.RecId, DataAreaId = "dat" });
-        }
-        await db.SaveChangesAsync(ct);
     }
 }

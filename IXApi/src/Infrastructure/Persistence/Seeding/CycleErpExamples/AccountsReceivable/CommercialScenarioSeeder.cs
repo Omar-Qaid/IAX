@@ -24,8 +24,7 @@ public sealed class CommercialScenarioSeeder : BaseModuleSeeder
     {
         var userId = await context.Db.Set<AspNetUser>().IgnoreQueryFilters().Where(x => x.UserName == "sys").Select(x => x.Id).SingleAsync(ct);
         var actor = new SalesScenarioSeeder.ExampleActor(userId);
-        await using var db = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseSqlServer(context.Db.Database.GetConnectionString()).Options, companyContext: actor);
+        await using var db = FinanceScenarioSupport.CreatePostingDb(context, actor);
         var work = new UnitOfWork(db);
         var numbers = new SysNumberSequenceService(work, actor);
         var date = DateTime.UtcNow.Date;

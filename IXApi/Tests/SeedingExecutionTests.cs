@@ -304,6 +304,36 @@ namespace IXApi.Tests
         }
 
         [Fact]
+        public async Task Cancellation_RollsBackAndLeavesNoCompletionRecord()
+        {
+            var (connection, db) = await CreateSqliteDbAsync();
+            await using var _ = connection;
+            await using var __ = db;
+            using var cancellation = new CancellationTokenSource();
+            var seeder = new MockSeeder
+            {
+                Id = "Test.Cancel", Category = SeederCategory.Reference,
+                Action = async () =>
+                {
+                    db.SysDataSeedLogs.Add(new SysDataSeedLog { TableName = "cancelled-partial-data" });
+                    await db.SaveChangesAsync();
+                    cancellation.Cancel();
+                    cancellation.Token.ThrowIfCancellationRequested();
+                }
+            };
+            var service = new DatabaseSeederService(db, new[] { seeder }, new SeederDependencyGraph(),
+                new NullSeederLock(), Options.Create(new SeedingOptions { Enabled = true }),
+                new ConfigurationBuilder().Build(), NullLogger<DatabaseSeederService>.Instance,
+                new ServiceCollection().BuildServiceProvider());
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => service.SeedAsync(cancellation.Token));
+            Assert.Empty(await db.SysDataSeedLogs.ToListAsync());
+            seeder.Action = null;
+            await service.SeedAsync();
+            Assert.Equal(2, seeder.ExecutionCount);
+            Assert.Equal("Success", (await db.SysDataSeedLogs.SingleAsync()).Outcome);
+        }
+
+        [Fact]
         public async Task RunOnceSuccess_HasDatabaseUniquenessProtection()
         {
             var (connection, db) = await CreateSqliteDbAsync();

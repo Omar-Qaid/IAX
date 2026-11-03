@@ -28,10 +28,8 @@ public sealed class SalesScenarioSeeder : BaseModuleSeeder
     {
         var userId = await context.Db.Set<AspNetUser>().IgnoreQueryFilters().Where(x => x.UserName == "sys").Select(x => x.Id).SingleAsync(ct);
         var actor = new ExampleActor(userId);
-        // Sales posting services explicitly own transactions. Use a separate connection so
-        // they retain their existing locking/commit behavior, and resume by durable business keys.
-        await using var db = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseSqlServer(context.Db.Database.GetConnectionString()).Options, companyContext: actor);
+        // Sales services also open transactions directly, so they cannot join the orchestration transaction.
+        await using var db = FinanceScenarioSupport.CreatePostingDb(context, actor);
         var work = new UnitOfWork(db);
         var numbers = new SysNumberSequenceService(work, actor);
         var inventoryNumbers = new SalesInventoryNumberService(numbers);

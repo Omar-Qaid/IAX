@@ -4,11 +4,24 @@ using IAX.IXApi.Modules.Workflow.Requests;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
+using System.Text.Json;
 
 namespace IXApi.Tests;
 
 public sealed class SeedPostingModelTests
 {
+    [Fact]
+    public void Every_mapped_table_is_in_the_seed_coverage_review()
+    {
+        using var db = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseSqlServer("Server=localhost;Database=ModelOnly;Integrated Security=true;TrustServerCertificate=true").Options);
+        using var stream = typeof(SeedPostingModelTests).Assembly.GetManifestResourceStream("IXApi.Tests.SeedMappedTables.json")!;
+        var reviewed = JsonSerializer.Deserialize<string[]>(stream)!;
+        var actual = db.Model.GetEntityTypes().Select(x => x.GetTableName()).Where(x => x != null)
+            .Distinct().OrderBy(x => x, StringComparer.Ordinal).ToArray();
+        Assert.Equal(reviewed.OrderBy(x => x, StringComparer.Ordinal), actual);
+    }
+
     [Fact]
     public void Posting_links_and_multiple_request_variables_have_persistable_keys()
     {

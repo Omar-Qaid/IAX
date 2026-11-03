@@ -31,6 +31,16 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Core
 
             var allById = seederList.ToDictionary(s => s.Id, StringComparer.OrdinalIgnoreCase);
 
+            // Validate every registration before environment switches hide any broken graph nodes.
+            foreach (var seeder in seederList)
+                foreach (var dependency in seeder.DependsOn ?? Array.Empty<string>())
+                    if (!allById.ContainsKey(dependency))
+                        throw new MissingDependencyException(seeder.Id, dependency);
+
+            var registeredCycle = FindCyclePath(allById.Keys.ToHashSet(StringComparer.OrdinalIgnoreCase), allById);
+            if (registeredCycle != null)
+                throw new CyclicDependencyException(registeredCycle);
+
             // 2. Identify Active / Eligible seeders
             bool IsEligible(IModuleSeeder seeder) => seeder.Category switch
             {
@@ -121,13 +131,13 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Core
                 // Cycle detected! Reconstruct the exact cycle path using DFS
                 var remainingIds = eligibleSeeders.Select(s => s.Id).Except(result.Select(s => s.Id)).ToHashSet(StringComparer.OrdinalIgnoreCase);
                 var cyclePath = FindCyclePath(remainingIds, eligibleById);
-                throw new CyclicDependencyException(cyclePath);
+                throw new CyclicDependencyException(cyclePath!);
             }
 
             return result;
         }
 
-        private static List<string> FindCyclePath(
+        private static List<string>? FindCyclePath(
             HashSet<string> nodeSubset,
             Dictionary<string, IModuleSeeder> eligibleById)
         {
@@ -144,7 +154,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Core
                 }
             }
 
-            return nodeSubset.OrderBy(x => x).ToList();
+            return null;
         }
 
         private static List<string>? DfsCycle(

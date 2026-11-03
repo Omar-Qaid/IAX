@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.Confirm;
@@ -493,7 +493,7 @@ public sealed class SalesOrderConfirmationTests
         Assert.Equal(404, (await copy.GetSalesOrdersAsync(2, default)).StatusCode);
         Assert.Equal(SalesOrderCopyStatus.DestinationNotFound,
             (await copy.CopyAsync(2, new SalesOrderCopyRequest("fromAll", ["1"]), default)).Status);
-        Assert.Equal(SalesOrderCancelStatus.NotFound, await cancellation.CancelAsync(2, default));
+        Assert.Equal(SalesOrderCancelStatus.NotFound, (await cancellation.CancelAsync(2, default)).Status);
         Assert.Equal(SalesStatus.Backorder, (await fixture.Db.Set<SalesTable>().SingleAsync(x => x.RecId == 2)).SalesStatus);
         var reads = new SalesOrderReadService(work, company);
         Assert.Null(await reads.LinesAsync(2, default));

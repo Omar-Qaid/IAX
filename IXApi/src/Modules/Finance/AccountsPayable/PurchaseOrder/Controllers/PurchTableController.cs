@@ -62,6 +62,15 @@ public sealed class PurchTableController : BaseController<PurchTable, PurchTable
     public async Task<IActionResult> AddLine(long recId, [FromBody] PurchLineInputDto input, CancellationToken ct) =>
         Present(await _orders.AddLineAsync(recId, input, ct));
 
+    /// <summary>
+    /// Cancels the quantity the order has not received. Anything already received stays invoiceable,
+    /// so this is the ordinary way to close an order whose remainder will never arrive.
+    /// </summary>
+    [HttpPost("{recId:long}/cancel")]
+    [DomainPermission("AccountsPayable", "PurchaseOrders", "Edit")]
+    public async Task<IActionResult> Cancel(long recId, CancellationToken ct) =>
+        Present(await _orders.CancelRemainderAsync(recId, ct));
+
     [HttpPost("{recId:long}/confirm")]
     [DomainPermission("AccountsPayable", "PurchaseOrders", "Confirm")]
     public async Task<IActionResult> Confirm(long recId, CancellationToken ct) =>

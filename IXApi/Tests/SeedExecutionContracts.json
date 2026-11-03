@@ -1,0 +1,752 @@
+[
+  {
+    "Type": "AdministrationExampleSeeder",
+    "Id": "Administration.BatchExamples",
+    "Version": 1,
+    "Category": "Demo",
+    "Policy": "Repeatable",
+    "Scope": "global",
+    "Dependencies": [
+      "Administration.Settings"
+    ],
+    "Registered": true,
+    "OwnerModule": "Administration",
+    "Source": "CycleErpExamples/Administration/AdministrationExampleSeeder.cs"
+  },
+  {
+    "Type": "NumberSequenceSeeder",
+    "Id": "Administration.NumberSequences",
+    "Version": 1,
+    "Category": "Required",
+    "Policy": "Repeatable",
+    "Scope": "global",
+    "Dependencies": [],
+    "Registered": true,
+    "OwnerModule": "Administration",
+    "Source": "Modules/Administration/NumberSequenceSeeder.cs"
+  },
+  {
+    "Type": "SettingsSeeder",
+    "Id": "Administration.Settings",
+    "Version": 1,
+    "Category": "Required",
+    "Policy": "Repeatable",
+    "Scope": "global",
+    "Dependencies": [],
+    "Registered": true,
+    "OwnerModule": "Administration",
+    "Source": "Modules/Administration/SysSettingsSeeder.cs"
+  },
+  {
+    "Type": "VendSeeder",
+    "Id": "Finance.AccountsPayable.Vendors",
+    "Version": 1,
+    "Category": "Reference",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.AccountsReceivable.DeliverySetup",
+      "Finance.GeneralLedger.Currencies",
+      "Finance.AccountsReceivable.PaymModes"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "Modules/Finance/VendSeeder.cs"
+  },
+  {
+    "Type": "CustGroupSeeder",
+    "Id": "Finance.AccountsReceivable.CustGroups",
+    "Version": 1,
+    "Category": "Reference",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.Foundation.CompanyInfo"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "Modules/Finance/CustGroupSeeder.cs"
+  },
+  {
+    "Type": "CustLedgerSeeder",
+    "Id": "Finance.AccountsReceivable.CustLedger",
+    "Version": 1,
+    "Category": "Reference",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.AccountsReceivable.CustGroups"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "Modules/Finance/CustLedgerSeeder.cs"
+  },
+  {
+    "Type": "SalesDeliverySetupSeeder",
+    "Id": "Finance.AccountsReceivable.DeliverySetup",
+    "Version": 1,
+    "Category": "Reference",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.Foundation.CompanyInfo"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "Modules/Finance/SalesDeliverySetupSeeder.cs"
+  },
+  {
+    "Type": "SampleCustomerVendorSeeder",
+    "Id": "Finance.AccountsReceivable.DemoCustVend",
+    "Version": 1,
+    "Category": "Demo",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.AccountsReceivable.CustGroups",
+      "Finance.Foundation.Logistics",
+      "Finance.GeneralLedger.Currencies",
+      "Finance.GeneralLedger.Tax"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "CycleErpExamples/Foundation/SampleCustomerVendorSeeder.cs"
+  },
+  {
+    "Type": "MarkupTableSeeder",
+    "Id": "Finance.AccountsReceivable.Markup",
+    "Version": 1,
+    "Category": "Reference",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.Foundation.CompanyInfo"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "Modules/Finance/MarkupTableSeeder.cs"
+  },
+  {
+    "Type": "CustPaymModeSeeder",
+    "Id": "Finance.AccountsReceivable.PaymModes",
+    "Version": 1,
+    "Category": "Reference",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.Foundation.CompanyInfo"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "Modules/Finance/CustPaymModeSeeder.cs"
+  },
+  {
+    "Type": "PriceDiscSeeder",
+    "Id": "Finance.AccountsReceivable.PriceDisc",
+    "Version": 1,
+    "Category": "Reference",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.AccountsReceivable.CustGroups"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "Modules/Finance/PriceDiscSeeder.cs"
+  },
+  {
+    "Type": "SalesPoolSeeder",
+    "Id": "Finance.AccountsReceivable.SalesPools",
+    "Version": 1,
+    "Category": "Reference",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.Foundation.CompanyInfo"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "Modules/Finance/SalesPoolSeeder.cs"
+  },
+  {
+    "Type": "BusinessSetupExamplesSeeder",
+    "Id": "Finance.BusinessSetupExamples",
+    "Version": 1,
+    "Category": "Demo",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.OperationalExamples",
+      "Finance.Foundation.Logistics",
+      "Finance.Foundation.HcmExamples"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "CycleErpExamples/Foundation/BusinessSetupExamplesSeeder.cs"
+  },
+  {
+    "Type": "CommercialScenarioSeeder",
+    "Id": "Finance.CommercialScenarios",
+    "Version": 1,
+    "Category": "Demo",
+    "Policy": "RunOnce",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.SalesScenarios"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "CycleErpExamples/AccountsReceivable/CommercialScenarioSeeder.cs"
+  },
+  {
+    "Type": "DraftFinanceExamplesSeeder",
+    "Id": "Finance.DraftExamples",
+    "Version": 1,
+    "Category": "Demo",
+    "Policy": "RunOnce",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.CommercialScenarios"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "CycleErpExamples/AccountsReceivable/DraftFinanceExamplesSeeder.cs"
+  },
+  {
+    "Type": "AccountStructureSeeder",
+    "Id": "Finance.Foundation.AccountStructures",
+    "Version": 1,
+    "Category": "Reference",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.Foundation.FinancialDimensions"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "Modules/Finance/AccountStructureSeeder.cs"
+  },
+  {
+    "Type": "CompanyInfoSeeder",
+    "Id": "Finance.Foundation.CompanyInfo",
+    "Version": 1,
+    "Category": "Required",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "Modules/Finance/CompanyInfoSeeder.cs"
+  },
+  {
+    "Type": "FinancialDimensionSeeder",
+    "Id": "Finance.Foundation.FinancialDimensions",
+    "Version": 1,
+    "Category": "Reference",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.Foundation.CompanyInfo"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "Modules/Finance/FinancialDimensionSeeder.cs"
+  },
+  {
+    "Type": "HcmExampleSeeder",
+    "Id": "Finance.Foundation.HcmExamples",
+    "Version": 1,
+    "Category": "Demo",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.Foundation.Structure"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "CycleErpExamples/HumanResources/HcmExampleSeeder.cs"
+  },
+  {
+    "Type": "OthersDBOrganizationEmployeeSeeder",
+    "Id": "Finance.Foundation.LegacyEmployees",
+    "Version": 1,
+    "Category": "LegacyImport",
+    "Policy": "RunOnce",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.Foundation.CompanyInfo"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "Modules/Finance/OthersDBOrganizationEmployeeSeeder.cs"
+  },
+  {
+    "Type": "LogisticsAddressSeeder",
+    "Id": "Finance.Foundation.Logistics",
+    "Version": 1,
+    "Category": "Reference",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.Foundation.CompanyInfo"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "Modules/Finance/LogisticsAddressSeeder.cs"
+  },
+  {
+    "Type": "OrganizationDemoSeeder",
+    "Id": "Finance.Foundation.OrgDemo",
+    "Version": 1,
+    "Category": "Demo",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.Foundation.Structure"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "CycleErpExamples/HumanResources/OrganizationSeeder.cs"
+  },
+  {
+    "Type": "OrganizationStructureSeeder",
+    "Id": "Finance.Foundation.Structure",
+    "Version": 1,
+    "Category": "Reference",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.Foundation.CompanyInfo"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "Modules/Finance/OrganizationStructureSeeder.cs"
+  },
+  {
+    "Type": "CurrencyAndExchangeRateSeeder",
+    "Id": "Finance.GeneralLedger.Currencies",
+    "Version": 1,
+    "Category": "Reference",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.Foundation.CompanyInfo"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "Modules/Finance/CurrencyAndExchangeRateSeeder.cs"
+  },
+  {
+    "Type": "LedgerExampleSeeder",
+    "Id": "Finance.GeneralLedger.Examples",
+    "Version": 1,
+    "Category": "Demo",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.GeneralLedger.MainAccounts",
+      "Finance.GeneralLedger.Currencies",
+      "Finance.GeneralLedger.FiscalCalendars",
+      "Finance.AccountsReceivable.CustLedger",
+      "Finance.AccountsReceivable.DemoCustVend"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "CycleErpExamples/GeneralLedger/LedgerExampleSeeder.cs"
+  },
+  {
+    "Type": "FiscalCalendarSeeder",
+    "Id": "Finance.GeneralLedger.FiscalCalendars",
+    "Version": 1,
+    "Category": "Reference",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.Foundation.CompanyInfo"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "Modules/Finance/FiscalCalendarSeeder.cs"
+  },
+  {
+    "Type": "MainAccountSeeder",
+    "Id": "Finance.GeneralLedger.MainAccounts",
+    "Version": 1,
+    "Category": "Reference",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.Foundation.CompanyInfo"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "Modules/Finance/MainAccountSeeder.cs"
+  },
+  {
+    "Type": "TaxSeeder",
+    "Id": "Finance.GeneralLedger.Tax",
+    "Version": 1,
+    "Category": "Reference",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.AccountsPayable.Vendors",
+      "Finance.Inventory.UnitOfMeasure"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "Modules/Finance/TaxSeeder.cs"
+  },
+  {
+    "Type": "SampleProductSeeder",
+    "Id": "Finance.Inventory.DemoProducts",
+    "Version": 1,
+    "Category": "Demo",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.Inventory.ItemGroups",
+      "Finance.Inventory.UnitOfMeasure",
+      "Finance.GeneralLedger.Tax"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "CycleErpExamples/Inventory/SampleProductSeeder.cs"
+  },
+  {
+    "Type": "InventItemGroupSeeder",
+    "Id": "Finance.Inventory.ItemGroups",
+    "Version": 1,
+    "Category": "Reference",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.Foundation.CompanyInfo"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "Modules/Finance/InventItemGroupSeeder.cs"
+  },
+  {
+    "Type": "InventorySeeder",
+    "Id": "Finance.Inventory.Setup",
+    "Version": 1,
+    "Category": "Reference",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.Inventory.UnitOfMeasure",
+      "Finance.Inventory.SitesAndWarehouses",
+      "Finance.GeneralLedger.MainAccounts",
+      "Finance.GeneralLedger.Tax"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "Modules/Finance/InventorySeeder.cs"
+  },
+  {
+    "Type": "InventorySiteWarehouseSeeder",
+    "Id": "Finance.Inventory.SitesAndWarehouses",
+    "Version": 1,
+    "Category": "Reference",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.Foundation.CompanyInfo"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "Modules/Finance/InventorySiteWarehouseSeeder.cs"
+  },
+  {
+    "Type": "UnitOfMeasureSeeder",
+    "Id": "Finance.Inventory.UnitOfMeasure",
+    "Version": 1,
+    "Category": "Reference",
+    "Policy": "Repeatable",
+    "Scope": "global",
+    "Dependencies": [
+      "Finance.Foundation.CompanyInfo"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "Modules/Finance/UnitOfMeasureSeeder.cs"
+  },
+  {
+    "Type": "InventoryCompletionScenarioSeeder",
+    "Id": "Finance.InventoryCompletionScenarios",
+    "Version": 2,
+    "Category": "Demo",
+    "Policy": "RunOnce",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.InventoryScenarios",
+      "Finance.SalesCompletionScenarios"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "CycleErpExamples/Inventory/InventoryCompletionScenarioSeeder.cs"
+  },
+  {
+    "Type": "InventoryFullCycleSeeder",
+    "Id": "Finance.InventoryFullCycle",
+    "Version": 1,
+    "Category": "Demo",
+    "Policy": "RunOnce",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.SalesAdvancedScenarios"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "CycleErpExamples/Inventory/InventoryFullCycleSeeder.cs"
+  },
+  {
+    "Type": "InventoryScenarioSeeder",
+    "Id": "Finance.InventoryScenarios",
+    "Version": 1,
+    "Category": "Demo",
+    "Policy": "RunOnce",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.BusinessSetupExamples",
+      "Administration.NumberSequences",
+      "Identity.MasterData"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "CycleErpExamples/Inventory/InventoryScenarioSeeder.cs"
+  },
+  {
+    "Type": "FinanceOperationalExamplesSeeder",
+    "Id": "Finance.OperationalExamples",
+    "Version": 1,
+    "Category": "Demo",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.GeneralLedger.Examples",
+      "Finance.Inventory.DemoProducts",
+      "Finance.Inventory.Setup",
+      "Administration.NumberSequences"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "CycleErpExamples/Foundation/FinanceOperationalExamplesSeeder.cs"
+  },
+  {
+    "Type": "PurchasePartialInvoiceSeeder",
+    "Id": "Finance.PurchasePartialInvoices",
+    "Version": 1,
+    "Category": "Demo",
+    "Policy": "RunOnce",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.PurchaseScenarios"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "CycleErpExamples/AccountsPayable/PurchasePartialInvoiceSeeder.cs"
+  },
+  {
+    "Type": "PurchaseScenarioSeeder",
+    "Id": "Finance.PurchaseScenarios",
+    "Version": 1,
+    "Category": "Demo",
+    "Policy": "RunOnce",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.BusinessSetupExamples",
+      "Administration.NumberSequences",
+      "Identity.MasterData"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "CycleErpExamples/AccountsPayable/PurchaseScenarioSeeder.cs"
+  },
+  {
+    "Type": "PurchaseSettlementSeeder",
+    "Id": "Finance.PurchaseSettlements",
+    "Version": 1,
+    "Category": "Demo",
+    "Policy": "RunOnce",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.PurchaseVatInvoices",
+      "Finance.OperationalExamples"
+    ],
+    "Registered": false,
+    "OwnerModule": "Finance",
+    "Source": "CycleErpExamples/AccountsPayable/PurchaseSettlementSeeder.cs"
+  },
+  {
+    "Type": "PurchaseVatInvoiceSeeder",
+    "Id": "Finance.PurchaseVatInvoices",
+    "Version": 1,
+    "Category": "Demo",
+    "Policy": "RunOnce",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.PurchasePartialInvoices",
+      "Finance.OperationalExamples"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "CycleErpExamples/AccountsPayable/PurchaseVatInvoiceSeeder.cs"
+  },
+  {
+    "Type": "SalesAdvancedScenarioSeeder",
+    "Id": "Finance.SalesAdvancedScenarios",
+    "Version": 1,
+    "Category": "Demo",
+    "Policy": "RunOnce",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.InventoryCompletionScenarios"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "CycleErpExamples/AccountsReceivable/SalesAdvancedScenarioSeeder.cs"
+  },
+  {
+    "Type": "SalesCompletionScenarioSeeder",
+    "Id": "Finance.SalesCompletionScenarios",
+    "Version": 1,
+    "Category": "Demo",
+    "Policy": "RunOnce",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.CommercialScenarios",
+      "Finance.PurchaseVatInvoices"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "CycleErpExamples/AccountsReceivable/SalesCompletionScenarioSeeder.cs"
+  },
+  {
+    "Type": "SalesScenarioSeeder",
+    "Id": "Finance.SalesScenarios",
+    "Version": 1,
+    "Category": "Demo",
+    "Policy": "RunOnce",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.PurchaseScenarios"
+    ],
+    "Registered": true,
+    "OwnerModule": "Finance",
+    "Source": "CycleErpExamples/AccountsReceivable/SalesScenarioSeeder.cs"
+  },
+  {
+    "Type": "IdentitySeeder",
+    "Id": "Identity.MasterData",
+    "Version": 1,
+    "Category": "Required",
+    "Policy": "Repeatable",
+    "Scope": "global",
+    "Dependencies": [
+      "Administration.Settings"
+    ],
+    "Registered": true,
+    "OwnerModule": "Identity",
+    "Source": "Modules/Identity/IdentitySeeder.cs"
+  },
+  {
+    "Type": "CollaborationExampleSeeder",
+    "Id": "Organization.CollaborationExamples",
+    "Version": 1,
+    "Category": "Demo",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Identity.MasterData"
+    ],
+    "Registered": true,
+    "OwnerModule": "Organization",
+    "Source": "CycleErpExamples/Organization/CollaborationExampleSeeder.cs"
+  },
+  {
+    "Type": "DocumentExampleSeeder",
+    "Id": "Organization.DocumentExamples",
+    "Version": 1,
+    "Category": "Demo",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Organization.DocumentManagement",
+      "Finance.AccountsReceivable.DemoCustVend"
+    ],
+    "Registered": true,
+    "OwnerModule": "Organization",
+    "Source": "CycleErpExamples/Organization/DocumentExampleSeeder.cs"
+  },
+  {
+    "Type": "DocumentManagementSeeder",
+    "Id": "Organization.DocumentManagement",
+    "Version": 1,
+    "Category": "Required",
+    "Policy": "Repeatable",
+    "Scope": "global",
+    "Dependencies": [],
+    "Registered": true,
+    "OwnerModule": "Organization",
+    "Source": "Modules/Organization/DocumentManagementSeeder.cs"
+  },
+  {
+    "Type": "WorkflowRequestTrackingSeeder",
+    "Id": "Workflow.DemoRequestTracking",
+    "Version": 1,
+    "Category": "Demo",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Workflow.ProcessMaster",
+      "Finance.Foundation.HcmExamples"
+    ],
+    "Registered": true,
+    "OwnerModule": "Workflow",
+    "Source": "CycleErpExamples/Workflow/OthersDBWorkflowRequestFromSeeder.cs"
+  },
+  {
+    "Type": "OthersDBWorkflowMasterFromSeeder",
+    "Id": "Workflow.LegacyMaster",
+    "Version": 1,
+    "Category": "LegacyImport",
+    "Policy": "RunOnce",
+    "Scope": "global",
+    "Dependencies": [
+      "Identity.MasterData"
+    ],
+    "Registered": true,
+    "OwnerModule": "Workflow",
+    "Source": "Modules/Workflow/OthersDBWorkflowMasterFromSeeder.cs"
+  },
+  {
+    "Type": "WfProcessSeedData",
+    "Id": "Workflow.ProcessMaster",
+    "Version": 1,
+    "Category": "Required",
+    "Policy": "Repeatable",
+    "Scope": "global",
+    "Dependencies": [
+      "Identity.MasterData"
+    ],
+    "Registered": true,
+    "OwnerModule": "Workflow",
+    "Source": "Modules/Workflow/WfProcessSeedData.cs"
+  },
+  {
+    "Type": "WorkflowVariableExampleSeeder",
+    "Id": "Workflow.RequestVariableExamples",
+    "Version": 1,
+    "Category": "Demo",
+    "Policy": "Repeatable",
+    "Scope": "global",
+    "Dependencies": [
+      "Workflow.DemoRequestTracking"
+    ],
+    "Registered": true,
+    "OwnerModule": "Workflow",
+    "Source": "CycleErpExamples/Workflow/WorkflowVariableExampleSeeder.cs"
+  }
+]

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.Json;
 using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +13,37 @@ namespace IXApi.Tests
 {
     public class SeedingDependencyGraphTests
     {
+        private sealed record SeedContract(string Type, string Id, int Version, string Category,
+            string Policy, string Scope, string[] Dependencies, bool Registered);
+
+        [Fact]
+        public void RegisteredSeeders_PreserveExistingExecutionContracts()
+        {
+            using var stream = typeof(SeedingDependencyGraphTests).Assembly
+                .GetManifestResourceStream("IXApi.Tests.SeedExecutionContracts.json")!;
+            var baseline = JsonSerializer.Deserialize<SeedContract[]>(stream)!;
+            var services = new ServiceCollection();
+            services.AddLogging();
+            services.AddSeedingCore(new ConfigurationBuilder().Build());
+            using var provider = services.BuildServiceProvider();
+            var actual = provider.GetServices<IModuleSeeder>().OrderBy(x => x.Id, StringComparer.Ordinal).ToArray();
+            var expected = baseline.Where(x => x.Registered).OrderBy(x => x.Id, StringComparer.Ordinal).ToArray();
+            Assert.Equal(expected.Length, actual.Length);
+            for (var i = 0; i < expected.Length; i++)
+            {
+                Assert.Equal(expected[i].Type, actual[i].GetType().Name);
+                Assert.Equal(expected[i].Id, actual[i].Id);
+                Assert.Equal(expected[i].Version, actual[i].Version);
+                Assert.Equal(expected[i].Category, actual[i].Category.ToString());
+                Assert.Equal(expected[i].Policy, actual[i].Policy.ToString());
+                Assert.Equal(expected[i].Scope, actual[i].Scope);
+                Assert.Equal(expected[i].Dependencies.OrderBy(x => x), actual[i].DependsOn.OrderBy(x => x));
+            }
+            // Both opt-in branches must resolve without changing the default registration contract.
+            new SeederDependencyGraph().GetExecutionOrder(actual,
+                new SeedingOptions { EnableDemoData = true, EnableLegacyImports = true });
+        }
+
         private class TestSeeder : IModuleSeeder
         {
             public string Id { get; set; } = string.Empty;
@@ -69,6 +101,26 @@ namespace IXApi.Tests
                 ("Finance.InventoryCompletionScenarios", "Finance.SalesAdvancedScenarios")
             })
                 Assert.True(ordered.IndexOf(parent) >= 0 && ordered.IndexOf(parent) < ordered.IndexOf(child), $"{parent} must precede {child}");
+        }
+
+        [Fact]
+        public void DisabledDemoSeeders_StillValidateMissingDependencies()
+        {
+            var seeder = new TestSeeder { Id = "Demo.Broken", Category = SeederCategory.Demo,
+                DependsOn = new[] { "Missing.Setup" } };
+            Assert.Throws<MissingDependencyException>(() => new SeederDependencyGraph()
+                .GetExecutionOrder(new[] { seeder }, new SeedingOptions()));
+        }
+
+        [Fact]
+        public void DisabledDemoSeeders_StillValidateDependencyCycles()
+        {
+            var seeders = new[] {
+                new TestSeeder { Id = "Demo.A", Category = SeederCategory.Demo, DependsOn = new[] { "Demo.B" } },
+                new TestSeeder { Id = "Demo.B", Category = SeederCategory.Demo, DependsOn = new[] { "Demo.A" } }
+            };
+            Assert.Throws<CyclicDependencyException>(() => new SeederDependencyGraph()
+                .GetExecutionOrder(seeders, new SeedingOptions()));
         }
 
         [Fact]

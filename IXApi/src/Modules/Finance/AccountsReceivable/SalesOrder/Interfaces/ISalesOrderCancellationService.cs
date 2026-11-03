@@ -2,5 +2,6 @@ namespace IAX.IXApi.Modules.Finance.AccountsReceivable;
 
 public interface ISalesOrderCancellationService
 {
-    Task<SalesOrderCancelStatus> CancelAsync(long recId, CancellationToken cancellationToken);
+    /// <summary>Cancels the quantity the order has not delivered, leaving the delivered part invoiceable.</summary>
+    Task<SalesOrderCancelResult> CancelAsync(long recId, CancellationToken cancellationToken);
 }

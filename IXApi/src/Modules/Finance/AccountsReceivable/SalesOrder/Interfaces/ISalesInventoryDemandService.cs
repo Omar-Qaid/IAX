@@ -21,5 +21,10 @@ public interface ISalesInventoryDemandService
         string? serialNumber = null,
         IAX.IXApi.Modules.Finance.Entities.InventDim? dimensionTemplate = null);
     Task DeleteAsync(SalesLine line, CancellationToken cancellationToken = default);
-    Task CancelRemainingAsync(SalesLine line, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Releases the demand a sales line is still expecting to deliver, leaving everything already
+    /// delivered untouched and keeping a delivered-but-uninvoiced quantity invoiceable. Returns the
+    /// inventory quantity cancelled.
+    /// </summary>
+    Task<decimal> CancelRemainingAsync(SalesLine line, CancellationToken cancellationToken = default);
 }

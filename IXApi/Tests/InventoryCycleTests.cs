@@ -475,6 +475,156 @@ public sealed class InventoryCycleTests
         Assert.Equal(taxable ? 5750m : 5000m, ledger.Where(x => x.AccountingCurrencyAmount > 0).Sum(x => x.AccountingCurrencyAmount));
     }
 
+    // ---- Purchase order cancellation: only the unreceived remainder goes away ----
+
+    /// <summary>
+    /// The case the cycle had no ending for. Order 100, receive 60, invoice nothing, then cancel:
+    /// the 40 that will never arrive is released from ordered supply, and the 60 already delivered
+    /// stays invoiceable. Nothing already posted is disturbed and no ledger entry arises, because
+    /// ordered supply is neither physical nor financial inventory.
+    /// </summary>
+    [Fact]
+    public async Task Cancelling_a_partly_received_order_releases_the_remainder_and_keeps_the_receipt_invoiceable()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        await db.SaveChangesAsync();
+        var (orders, _, receipts, invoices) = PurchaseServices(db);
+
+        Assert.Equal(200, (await orders.CreateAsync(new PurchOrderCreateDto("V-0001", null, "SAR", new DateTime(2026, 10, 28), "S01", "WH-01", null), default)).StatusCode);
+        var po = await db.Set<PurchTable>().SingleAsync();
+        Assert.Equal(200, (await orders.AddLineAsync(po.RecId, new PurchLineInputDto("ITEM-001", 100, "PCS", 50, 1, null, null, null, null), default)).StatusCode);
+        var line = await db.Set<PurchLine>().SingleAsync();
+        Assert.Equal(200, (await receipts.PostAsync(po.RecId, new ProductReceiptPostDto("PR-0001", new DateTime(2026, 10, 28), [new(line.RecId, 60)]), default)).StatusCode);
+        var ledgerBefore = (await db.Set<GeneralJournalAccountEntry>().ToListAsync()).Count;
+
+        var cancelled = await orders.CancelRemainderAsync(po.RecId, default);
+
+        Assert.Equal(200, cancelled.StatusCode);
+        line = await db.Set<PurchLine>().SingleAsync();
+        var sum = await db.Set<InventSum>().SingleAsync();
+        // The 40 expected units are gone from ordered supply; the 60 received are untouched.
+        Assert.Equal(0m, sum.Ordered);
+        Assert.Equal(60m, sum.PhysicalInvent);
+        Assert.Equal(0m, line.RemainPurchPhysical);
+        // The receipt is still waiting to be invoiced, which is the whole point.
+        Assert.Equal(60m, line.RemainPurchFinancial);
+        Assert.Equal(PurchStatus.Received, line.PurchStatus);
+        // No ordered inventory transaction is left open.
+        Assert.DoesNotContain(await db.Set<InventTrans>().ToListAsync(), t => t.StatusReceipt == StatusReceipt.Ordered);
+        // Cancelling ordered supply has no accounting effect.
+        Assert.Equal(ledgerBefore, (await db.Set<GeneralJournalAccountEntry>().ToListAsync()).Count);
+
+        // And the delivered 60 can still be invoiced afterwards, closing the order properly.
+        Assert.Equal(200, (await invoices.PostAsync(po.RecId, new VendorInvoicePostDto("INV-0001", new DateTime(2026, 10, 29), [new(line.RecId, 60)]), default)).StatusCode);
+        line = await db.Set<PurchLine>().SingleAsync();
+        Assert.Equal(0m, line.RemainPurchFinancial);
+        Assert.Equal(PurchStatus.Invoiced, (await db.Set<PurchTable>().SingleAsync()).PurchStatus);
+        Assert.Equal(3000m, (await db.Set<InventSum>().SingleAsync()).PostedValue);
+    }
+
+    /// <summary>
+    /// An order that received nothing is cancelled outright: the line and the order both reach
+    /// Canceled and all the ordered supply is released.
+    /// </summary>
+    [Fact]
+    public async Task Cancelling_an_untouched_order_cancels_the_line_and_the_order()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        await db.SaveChangesAsync();
+        var (orders, _, receipts, _) = PurchaseServices(db);
+
+        Assert.Equal(200, (await orders.CreateAsync(new PurchOrderCreateDto("V-0001", null, "SAR", new DateTime(2026, 10, 28), "S01", "WH-01", null), default)).StatusCode);
+        var po = await db.Set<PurchTable>().SingleAsync();
+        Assert.Equal(200, (await orders.AddLineAsync(po.RecId, new PurchLineInputDto("ITEM-001", 100, "PCS", 50, 1, null, null, null, null), default)).StatusCode);
+        var line = await db.Set<PurchLine>().SingleAsync();
+        Assert.Equal(100m, (await db.Set<InventSum>().SingleAsync()).Ordered);
+
+        Assert.Equal(200, (await orders.CancelRemainderAsync(po.RecId, default)).StatusCode);
+
+        line = await db.Set<PurchLine>().SingleAsync();
+        po = await db.Set<PurchTable>().SingleAsync();
+        Assert.Equal(PurchStatus.Canceled, line.PurchStatus);
+        Assert.Equal(PurchStatus.Canceled, po.PurchStatus);
+        Assert.Equal(0m, line.RemainPurchPhysical);
+        Assert.Equal(0m, line.RemainPurchFinancial);
+        var sum = await db.Set<InventSum>().SingleAsync();
+        Assert.Equal(0m, sum.Ordered);
+        Assert.Equal(0m, sum.PhysicalInvent);
+
+        // Cancelling twice, and receiving against a cancelled order, are both refused.
+        Assert.Equal(422, (await orders.CancelRemainderAsync(po.RecId, default)).StatusCode);
+        Assert.Equal(422, (await receipts.PostAsync(po.RecId, new ProductReceiptPostDto("PR-0002", null, [new(line.RecId, 10)]), default)).StatusCode);
+    }
+
+    /// <summary>
+    /// A fully received and invoiced order has no remainder, so cancellation is refused by name
+    /// rather than quietly doing nothing.
+    /// </summary>
+    [Fact]
+    public async Task Cancelling_a_fully_received_order_is_refused()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        await db.SaveChangesAsync();
+        var (orders, _, receipts, invoices) = PurchaseServices(db);
+
+        Assert.Equal(200, (await orders.CreateAsync(new PurchOrderCreateDto("V-0001", null, "SAR", new DateTime(2026, 10, 28), "S01", "WH-01", null), default)).StatusCode);
+        var po = await db.Set<PurchTable>().SingleAsync();
+        Assert.Equal(200, (await orders.AddLineAsync(po.RecId, new PurchLineInputDto("ITEM-001", 10, "PCS", 50, 1, null, null, null, null), default)).StatusCode);
+        var line = await db.Set<PurchLine>().SingleAsync();
+        Assert.Equal(200, (await receipts.PostAsync(po.RecId, new ProductReceiptPostDto("PR-0001", new DateTime(2026, 10, 28), [new(line.RecId, 10)]), default)).StatusCode);
+        Assert.Equal(200, (await invoices.PostAsync(po.RecId, new VendorInvoicePostDto("INV-0001", new DateTime(2026, 10, 29), [new(line.RecId, 10)]), default)).StatusCode);
+
+        var refused = await orders.CancelRemainderAsync(po.RecId, default);
+
+        Assert.Equal(422, refused.StatusCode);
+        Assert.Contains("no unreceived quantity left to cancel", refused.Message);
+        // The invoiced order is left exactly as it was.
+        Assert.Equal(PurchStatus.Invoiced, (await db.Set<PurchTable>().SingleAsync()).PurchStatus);
+    }
+
+    /// <summary>
+    /// If the line's remainder and its ordered inventory transactions disagree, the supply is not
+    /// understood well enough to release the right quantity, so the whole cancellation rolls back
+    /// rather than cancelling a quantity that might belong to a receipt.
+    /// </summary>
+    [Fact]
+    public async Task Cancellation_is_refused_when_ordered_inventory_does_not_match_the_remainder()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        await db.SaveChangesAsync();
+        var (orders, _, _, _) = PurchaseServices(db);
+
+        Assert.Equal(200, (await orders.CreateAsync(new PurchOrderCreateDto("V-0001", null, "SAR", new DateTime(2026, 10, 28), "S01", "WH-01", null), default)).StatusCode);
+        var po = await db.Set<PurchTable>().SingleAsync();
+        Assert.Equal(200, (await orders.AddLineAsync(po.RecId, new PurchLineInputDto("ITEM-001", 100, "PCS", 50, 1, null, null, null, null), default)).StatusCode);
+        // Desynchronise the ordered transaction from the line, as stale data would be.
+        var ordered = await db.Set<InventTrans>().SingleAsync();
+        ordered.Qty = 70m;
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var refused = await orders.CancelRemainderAsync(po.RecId, default);
+
+        Assert.Equal(422, refused.StatusCode);
+        Assert.Contains("does not match the uninvoiced remainder", refused.Message);
+        // Rolled back: the line keeps its remainder and the order stays open.
+        var line = await db.Set<PurchLine>().SingleAsync();
+        Assert.Equal(100m, line.RemainPurchPhysical);
+        Assert.Equal(PurchStatus.Backorder, (await db.Set<PurchTable>().SingleAsync()).PurchStatus);
+    }
+
     [Fact]
     public async Task Purchase_line_rejects_warehouse_from_another_site_and_blocked_vendor()
     {
@@ -1458,6 +1608,187 @@ public sealed class InventoryCycleTests
         Assert.Equal(-140m, settlement.CostAmountSettled);
     }
 
+    // ---- Sales order cancellation of a partly delivered order ----
+
+    /// <summary>
+    /// The case the order-to-cash cycle had no ending for. Order 10, deliver 6, invoice nothing,
+    /// then cancel: the 4 that will never ship is released along with its reservation, and the 6
+    /// already delivered stays invoiceable. Cancelling demand touches no physical stock and posts
+    /// no ledger entry.
+    /// </summary>
+    [Fact]
+    public async Task Cancelling_a_partly_delivered_order_releases_the_remainder_and_keeps_the_delivery_invoiceable()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        var (work, company, numbers) = (new TestUnitOfWork(db), new TestCompany(), new TestInventNumbers());
+        var (order, line, demand) = await PartlyDeliveredSalesOrderAsync(db, work, company, numbers);
+
+        var beforeStock = await db.Set<InventSum>().SingleAsync();
+        Assert.Equal(4m, beforeStock.ReservPhysical); // the undelivered 4 are still reserved
+        var ledgerCount = await db.Set<GeneralJournalAccountEntry>().CountAsync();
+
+        var cancelled = await new SalesOrderCancellationService(work, demand, company).CancelAsync(order.RecId, default);
+
+        Assert.Equal(SalesOrderCancelStatus.Cancelled, cancelled.Status);
+        line = await db.Set<SalesLine>().SingleAsync();
+        var sum = await db.Set<InventSum>().SingleAsync();
+        // The reservation and the ordered demand behind the undelivered 4 are both released.
+        Assert.Equal(0m, sum.ReservPhysical);
+        Assert.Equal(0m, sum.OnOrder);
+        Assert.Equal(0m, line.RemainSalesPhysical);
+        // The delivery is still waiting to be invoiced, which is the whole point.
+        Assert.Equal(6m, line.RemainSalesFinancial);
+        Assert.Equal(SalesStatus.Delivered, line.SalesStatus);
+        // Physical stock and the ledger are untouched: 94 left after shipping 6 of 100.
+        Assert.Equal(94m, sum.PhysicalInvent);
+        Assert.Equal(ledgerCount, await db.Set<GeneralJournalAccountEntry>().CountAsync());
+
+        // And the delivered 6 still invoice afterwards, closing the order properly.
+        var invoiced = await new SalesInvoiceService(work, company, Sequence())
+            .PostAsync(order.RecId, new SalesInvoicePostDto(new DateTime(2026, 10, 8), "inv-cancel", [new(line.RecId, 6)]), default);
+        Assert.Equal(200, invoiced.StatusCode);
+        line = await db.Set<SalesLine>().SingleAsync();
+        Assert.Equal(0m, line.RemainSalesFinancial);
+        Assert.Equal(SalesStatus.Invoiced, (await db.Set<SalesTable>().SingleAsync(x => x.SalesId == order.SalesId)).SalesStatus);
+    }
+
+    /// <summary>
+    /// Picking is a physical registration, so cancellation refuses it by name and leaves it to the
+    /// existing unpick path rather than silently reversing it. After unpicking, the same
+    /// cancellation succeeds.
+    /// </summary>
+    [Fact]
+    public async Task Cancelling_an_order_with_a_picked_quantity_is_refused_until_it_is_unpicked()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        var (work, company, numbers) = (new TestUnitOfWork(db), new TestCompany(), new TestInventNumbers());
+        var (order, line, demand) = await PartlyDeliveredSalesOrderAsync(db, work, company, numbers);
+        var reservation = new InventoryReservationService(work, company);
+        // Pick 3 of the 4 still undelivered.
+        Assert.Null((await reservation.SetPickedAsync(line.InventTransId, 3m, default)).Error);
+
+        var refused = await new SalesOrderCancellationService(work, demand, company).CancelAsync(order.RecId, default);
+
+        Assert.Equal(SalesOrderCancelStatus.Refused, refused.Status);
+        Assert.Contains("must be unpicked", refused.Message);
+        // Rolled back: the line keeps its remainder and the pick is still there.
+        line = await db.Set<SalesLine>().SingleAsync();
+        Assert.Equal(4m, line.RemainSalesPhysical);
+        Assert.Equal(3m, (await db.Set<InventSum>().SingleAsync()).Picked);
+
+        // Unpick through the documented path, and the cancellation then goes through.
+        Assert.Null((await reservation.SetPickedAsync(line.InventTransId, 0m, default)).Error);
+        var cancelled = await new SalesOrderCancellationService(work, demand, company).CancelAsync(order.RecId, default);
+        Assert.Equal(SalesOrderCancelStatus.Cancelled, cancelled.Status);
+        line = await db.Set<SalesLine>().SingleAsync();
+        Assert.Equal(0m, line.RemainSalesPhysical);
+        Assert.Equal(6m, line.RemainSalesFinancial);
+        Assert.Equal(0m, (await db.Set<InventSum>().SingleAsync()).Picked);
+    }
+
+    /// <summary>
+    /// A fully delivered and invoiced order has no remainder, so cancellation is refused by name
+    /// rather than quietly doing nothing.
+    /// </summary>
+    [Fact]
+    public async Task Cancelling_a_fully_delivered_order_is_refused()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        var (work, company, numbers) = (new TestUnitOfWork(db), new TestCompany(), new TestInventNumbers());
+        var (order, line, demand) = await PartlyDeliveredSalesOrderAsync(db, work, company, numbers);
+        // Deliver and invoice everything.
+        Assert.Equal(200, (await new PackingSlipJournalService(work, company, Sequence()).PostAsync(order.RecId,
+            new PostPackingSlipRequest(new DateTime(2026, 10, 8), "All", true, "ps-rest",
+                [new PackingSlipPostingLineRequest(line.RecId.ToString(), 4)]), default)).StatusCode);
+        Assert.Equal(200, (await new SalesInvoiceService(work, company, Sequence()).PostAsync(order.RecId,
+            new SalesInvoicePostDto(new DateTime(2026, 10, 9), "inv-all", [new(line.RecId, 10)]), default)).StatusCode);
+
+        var refused = await new SalesOrderCancellationService(work, demand, company).CancelAsync(order.RecId, default);
+
+        Assert.Equal(SalesOrderCancelStatus.NothingToCancel, refused.Status);
+        Assert.Contains("no undelivered quantity left to cancel", refused.Message);
+    }
+
+    /// <summary>
+    /// Order 10, deliver 6, invoice 6, then cancel the rest: nothing is left owing, so the line and
+    /// the order both reach Invoiced rather than Canceled - part of the order really happened.
+    /// </summary>
+    [Fact]
+    public async Task Cancelling_the_rest_of_a_fully_invoiced_delivery_closes_the_order_as_invoiced()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        var (work, company, numbers) = (new TestUnitOfWork(db), new TestCompany(), new TestInventNumbers());
+        var (order, line, demand) = await PartlyDeliveredSalesOrderAsync(db, work, company, numbers);
+        Assert.Equal(200, (await new SalesInvoiceService(work, company, Sequence()).PostAsync(order.RecId,
+            new SalesInvoicePostDto(new DateTime(2026, 10, 7), "inv-6", [new(line.RecId, 6)]), default)).StatusCode);
+
+        var cancelled = await new SalesOrderCancellationService(work, demand, company).CancelAsync(order.RecId, default);
+
+        Assert.Equal(SalesOrderCancelStatus.Cancelled, cancelled.Status);
+        line = await db.Set<SalesLine>().SingleAsync();
+        Assert.Equal(0m, line.RemainSalesPhysical);
+        Assert.Equal(0m, line.RemainSalesFinancial);
+        Assert.Equal(SalesStatus.Invoiced, line.SalesStatus);
+        Assert.Equal(SalesStatus.Invoiced, (await db.Set<SalesTable>().SingleAsync(x => x.SalesId == order.SalesId)).SalesStatus);
+    }
+
+    /// <summary>
+    /// Stocks 100 and sells 10, reserving all of them and delivering 6, so the order is left partly
+    /// delivered with 4 reserved and nothing invoiced.
+    /// </summary>
+    private static async Task<(SalesTable Order, SalesLine Line, SalesInventoryDemandService Demand)>
+        PartlyDeliveredSalesOrderAsync(CycleContext db, TestUnitOfWork work, TestCompany company, TestInventNumbers numbers)
+    {
+        SeedLedgerAndPosting(db);
+        SeedPurchaseMasterData(db);
+        SeedSalesMasterData(db);
+        await db.SaveChangesAsync();
+
+        var (orders, _, receipts, vendorInvoices) = PurchaseServices(db, numbers);
+        await orders.CreateAsync(new PurchOrderCreateDto("V-0001", null, "SAR", new DateTime(2026, 10, 1), "S01", "WH-01", null), default);
+        var po = await db.Set<PurchTable>().SingleAsync();
+        await orders.AddLineAsync(po.RecId, new PurchLineInputDto("ITEM-001", 100, "PCS", 60, 1, null, null, null, null), default);
+        var pl = await db.Set<PurchLine>().SingleAsync();
+        await receipts.PostAsync(po.RecId, new ProductReceiptPostDto("PR-1", new DateTime(2026, 10, 2), [new(pl.RecId, 100)]), default);
+        Assert.Equal(200, (await vendorInvoices.PostAsync(po.RecId, new VendorInvoicePostDto("VI-1", new DateTime(2026, 10, 3), [new(pl.RecId, 100)]), default)).StatusCode);
+
+        var order = new SalesTable
+        {
+            DataAreaId = "dat", SalesId = "SO-PARTIAL", CustAccount = "C-001", InvoiceAccount = "C-001", CurrencyCode = "SAR",
+            SalesStatus = SalesStatus.Backorder, InventSiteId = "S01", InventLocationId = "WH-01",
+            OrderDate = new DateTime(2026, 10, 5), PaymTerm = "NET30"
+        };
+        db.Set<PaymTerm>().Add(new PaymTerm { DataAreaId = "dat", PaymTermId = "NET30", PaymMethod = PaymMethod.Net, NumOfDays = 30 });
+        db.Set<SalesTable>().Add(order);
+        await db.SaveChangesAsync();
+        var line = new SalesLine
+        {
+            DataAreaId = "dat", SalesId = order.SalesId, LineNum = 1, ItemId = "ITEM-001", SalesQty = 10, QtyOrdered = 10,
+            RemainSalesPhysical = 10, RemainSalesFinancial = 10, SalesUnit = "PCS", SalesPrice = 100, PriceUnit = 1,
+            LineAmount = 1000, SalesStatus = SalesStatus.Backorder, StockedProduct = NoYes.Yes, CurrencyCode = "SAR",
+            TaxGroup = "VAT15", TaxItemGroup = "VAT15", ReceiptDateRequested = new DateTime(2026, 10, 10)
+        };
+        var demand = new SalesInventoryDemandService(work, numbers, new InventDimensionResolver(work, numbers));
+        await demand.CreateAsync(order, line, "S01", "WH-01");
+        db.Set<SalesLine>().Add(line);
+        await db.SaveChangesAsync();
+
+        var reservation = new InventoryReservationService(work, company);
+        Assert.Null((await reservation.ReserveAsync(line.InventTransId, 10m, false, default)).Error);
+        // Deliver 6, leaving 4 reserved and undelivered and all 10 still to invoice.
+        Assert.Equal(200, (await new PackingSlipJournalService(work, company, Sequence()).PostAsync(order.RecId,
+            new PostPackingSlipRequest(new DateTime(2026, 10, 6), "All", true, "ps-partial",
+                [new PackingSlipPostingLineRequest(line.RecId.ToString(), 6)]), default)).StatusCode);
+        line = await db.Set<SalesLine>().SingleAsync();
+        Assert.Equal(4m, line.RemainSalesPhysical);
+        Assert.Equal(10m, line.RemainSalesFinancial);
+        return (order, line, demand);
+    }
+
     [Fact]
     public async Task Cancellation_releases_split_reserved_and_ordered_demand_without_stock_or_ledger_changes()
     {
@@ -1483,7 +1814,7 @@ public sealed class InventoryCycleTests
         Assert.Null((await reservation.ReserveAsync(line.InventTransId, 10, false, default)).Error);
         Assert.Null((await reservation.ReleaseAsync(line.InventTransId, 4, default)).Error);
         var ledgerCount = await db.Set<GeneralJournalAccountEntry>().CountAsync();
-        Assert.Equal(SalesOrderCancelStatus.Cancelled, await new SalesOrderCancellationService(work, demand, company).CancelAsync(order.RecId, default));
+        Assert.Equal(SalesOrderCancelStatus.Cancelled, (await new SalesOrderCancellationService(work, demand, company).CancelAsync(order.RecId, default)).Status);
         var sum = await db.Set<InventSum>().SingleAsync();
         Assert.Equal(0m, sum.ReservPhysical);
         Assert.Equal(0m, sum.OnOrder);

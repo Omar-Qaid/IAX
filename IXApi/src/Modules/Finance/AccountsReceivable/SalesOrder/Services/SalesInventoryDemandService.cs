@@ -278,9 +278,28 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
         _dbContext.Context.Set<InventTransOrigin>().Remove(origin);
     }
 
-    public async Task CancelRemainingAsync(SalesLine line, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Releases the open demand of a sales line, which is what D365's sales order cancellation does:
+    /// only the quantity not yet delivered or invoiced goes away, and the delivered part stays
+    /// processable.
+    /// <para>
+    /// Reservations are released along with plain ordered demand, because reserving only moves
+    /// demand between the <c>OnOrder</c> and <c>ReservPhysical</c> buckets and changes no physical
+    /// stock. A <b>picked</b> quantity is different: picking is a physical registration, so this
+    /// refuses by name and leaves it to the existing unpick path
+    /// (<c>IInventoryReservationService.SetPickedAsync</c>) rather than silently reversing it.
+    /// </para>
+    /// <para>
+    /// The financial remainder loses the same quantity the physical one does - units that will
+    /// never ship can never be invoiced - which leaves exactly the delivered-but-uninvoiced
+    /// quantity behind. For a line nothing has happened to, both remainders equal the ordered
+    /// quantity, so this reduces to zeroing them and the previous behavior is unchanged.
+    /// </para>
+    /// </summary>
+    public async Task<decimal> CancelRemainingAsync(SalesLine line, CancellationToken cancellationToken = default)
     {
         var remainingDemand = Math.Max(0m, line.RemainInventPhysical);
+        var cancelledInventQty = remainingDemand;
         if (!string.IsNullOrWhiteSpace(line.InventTransId))
         {
             var origin = await _dbContext.Context.Set<InventTransOrigin>().SingleOrDefaultAsync(item =>
@@ -288,6 +307,17 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
                 cancellationToken);
             if (origin == null) throw new InvalidOperationException("The sales line inventory origin was not found.");
             ValidateOrigin(line, origin);
+            // Picking is a physical registration, so it is reversed through the unpick path and not
+            // here. Checked before the demand comparison below, which would otherwise refuse a
+            // picked line with a message about mismatched quantities.
+            var pickedQty = -(await _dbContext.Context.Set<InventTrans>()
+                .Where(item => item.DataAreaId == line.DataAreaId
+                    && item.InventTransOrigin == origin.RecId
+                    && item.StatusIssue == StatusIssue.Picked)
+                .ToListAsync(cancellationToken)).Sum(item => item.Qty);
+            if (pickedQty > 0)
+                throw new InvalidOperationException(
+                    $"Item '{line.ItemId}' has {pickedQty} picked, which must be unpicked before the remaining quantity can be cancelled.");
             var transactions = await _dbContext.Context.Set<InventTrans>()
                 .Where(item => item.DataAreaId == line.DataAreaId
                     && item.InventTransOrigin == origin.RecId
@@ -325,13 +355,22 @@ public sealed class SalesInventoryDemandService : ISalesInventoryDemandService
             }
         }
 
+        var cancelledSalesQty = Math.Max(0m, line.RemainSalesPhysical);
+        var deliveredNothing = cancelledSalesQty >= line.SalesQty;
+        // Units that will never ship can never be invoiced, so the financial remainder loses the
+        // same quantity the physical one does and keeps only what was delivered.
+        line.RemainSalesFinancial = Math.Max(0m, line.RemainSalesFinancial - cancelledSalesQty);
+        line.RemainInventFinancial = Math.Max(0m, line.RemainInventFinancial - cancelledInventQty);
         line.RemainSalesPhysical = 0;
-        line.RemainSalesFinancial = 0;
         line.RemainInventPhysical = 0;
-        line.RemainInventFinancial = 0;
         line.SalesDeliverNow = 0;
         line.InventDeliverNow = 0;
-        line.SalesStatus = SalesStatus.Canceled;
+        // A line that delivered nothing is cancelled outright. One holding a delivered remainder
+        // keeps a real status so it can still be invoiced.
+        line.SalesStatus = deliveredNothing ? SalesStatus.Canceled
+            : line.RemainSalesFinancial <= 0 ? SalesStatus.Invoiced
+            : SalesStatus.Delivered;
+        return cancelledInventQty;
     }
 
     private static void ValidateOrigin(SalesLine line, InventTransOrigin origin)

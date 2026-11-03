@@ -185,14 +185,15 @@ public sealed class SalesTableController : BaseController<SalesTable, SalesTable
     [DomainPermission("AccountsReceivable", "SalesOrders", "Edit")]
     public async Task<IActionResult> Cancel(long recId, CancellationToken cancellationToken = default)
     {
-        var status = await _cancellation.CancelAsync(recId, cancellationToken);
-        return status switch
+        var result = await _cancellation.CancelAsync(recId, cancellationToken);
+        return result.Status switch
         {
             SalesOrderCancelStatus.NotFound => NotFound(APIResponse<object>.Fail("Sales order was not found.")),
-            SalesOrderCancelStatus.NotOpen => UnprocessableEntity(APIResponse<object>.Fail("Only an open sales order can be cancelled.")),
-            SalesOrderCancelStatus.Processed => UnprocessableEntity(APIResponse<object>.Fail(
-                "This cancellation currently supports only completely open, unprocessed sales orders.")),
-            _ => Ok(APIResponse<object>.Ok(new { cancelled = true }))
+            // Each refusal reports the reason the service named, rather than a generic restriction.
+            SalesOrderCancelStatus.NotOpen or SalesOrderCancelStatus.NothingToCancel
+                or SalesOrderCancelStatus.Refused =>
+                UnprocessableEntity(APIResponse<object>.Fail(result.Message ?? "The sales order cannot be cancelled.")),
+            _ => Ok(APIResponse<object>.Ok(result.Data ?? new { cancelled = true }, result.Message ?? string.Empty))
         };
     }
 

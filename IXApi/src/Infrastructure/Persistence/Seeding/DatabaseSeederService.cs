@@ -170,6 +170,11 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding
                     sw.Stop();
                     _logger.LogInformation("Completed seeder '{SeederId}' in {ElapsedMs} ms.", seeder.Id, sw.ElapsedMilliseconds);
                 }
+                catch (OperationCanceledException) when (ct.IsCancellationRequested)
+                {
+                    // The inner transaction has rolled back; cancellation is not a failed seed contract.
+                    throw;
+                }
                 catch (Exception ex)
                 {
                     sw.Stop();

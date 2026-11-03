@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Identity;
+﻿using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Modules.Administration.NumberSequences;
@@ -30,10 +30,8 @@ public sealed class SalesCompletionScenarioSeeder : BaseModuleSeeder
     {
         var userId = await context.Db.Set<AspNetUser>().IgnoreQueryFilters().Where(x => x.UserName == "sys").Select(x => x.Id).SingleAsync(ct);
         var actor = new ExampleActor(userId);
-        // Sales posting services explicitly own transactions. Use a separate connection so
-        // they retain their existing locking/commit behavior, and resume by durable business keys.
-        await using var db = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseSqlServer(context.Db.Database.GetConnectionString()).Options, companyContext: actor);
+        // Sales services also open transactions directly, so they cannot join the orchestration transaction.
+        await using var db = FinanceScenarioSupport.CreatePostingDb(context, actor);
         var work = new UnitOfWork(db);
         var numbers = new SysNumberSequenceService(work, actor);
         var inventoryNumbers = new SalesInventoryNumberService(numbers);
@@ -174,7 +172,9 @@ public sealed class SalesCompletionScenarioSeeder : BaseModuleSeeder
             var released = await reservation.ReleaseAsync(cancelLine.InventTransId, 4m, ct);
             if (released.Error != null) throw new InvalidOperationException(released.Error);
             var cancelled = await new SalesOrderCancellationService(work, demand, actor).CancelAsync(cancelOrder.RecId, ct);
-            if (cancelled != SalesOrderCancelStatus.Cancelled) throw new InvalidOperationException("Example sales cancellation failed: " + cancelled);
+            if (cancelled.Status != SalesOrderCancelStatus.Cancelled)
+                throw new InvalidOperationException(
+                    "Example sales cancellation failed: " + cancelled.Status + " " + cancelled.Message);
         }
     }
 
