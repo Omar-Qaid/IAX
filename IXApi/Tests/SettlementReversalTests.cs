@@ -5,6 +5,7 @@ using IAX.IXApi.Modules.Finance.AccountsPayable;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.AccountsReceivable.Settlement;
 using IAX.IXApi.Modules.Finance.Common;
+using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Shared.Application.Identity;
 using IAX.IXApi.Shared.Application.NumberSequences;
 using Microsoft.Data.Sqlite;
@@ -371,7 +372,7 @@ public class SettlementReversalTests
         protected override void OnModelCreating(ModelBuilder builder)
         {
             Type[] types = [typeof(CustTrans), typeof(CustTransOpen), typeof(CustSettlement),
-                typeof(VendTrans), typeof(VendTransOpen), typeof(VendSettlement)];
+                typeof(VendTrans), typeof(VendTransOpen), typeof(VendSettlement), typeof(GeneralJournalEntry)];
 
             // CustTrans and VendTrans reach the party and address graph, so everything not named
             // here is ignored outright rather than discovered one failure at a time.

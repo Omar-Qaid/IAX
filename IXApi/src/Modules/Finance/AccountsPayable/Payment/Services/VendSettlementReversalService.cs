@@ -75,6 +75,9 @@ public sealed class VendSettlementReversalService : BaseService<VendSettlement>,
                 return await Fail(404, $"Settlement voucher '{voucher}' was not found in the selected company.", ct);
 
             var date = (reversalDate ?? DateTime.UtcNow).Date;
+            if (await Db.Set<GeneralJournalEntry>().AnyAsync(x => x.DataAreaId == area && x.SubledgerVoucher == voucher
+                    && x.DocumentNumber == "Vendor prepayment settlement", ct))
+                return await Fail(422, "Prepayment application reversal requires reversal of its transfer voucher and is not supported by settlement undo.", ct);
             var reversalVoucher = $"{voucher}-REV";
             var error = await VendSettlementRestore.ApplyAsync(Db, area, voucher, date, reversalVoucher, ct);
             if (error != null) return await Fail(422, error, ct);

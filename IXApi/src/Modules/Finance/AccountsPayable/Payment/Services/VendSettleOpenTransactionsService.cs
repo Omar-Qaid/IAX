@@ -129,6 +129,7 @@ public sealed class VendSettleOpenTransactionsService : BaseService<VendSettleme
             var voucher = (await _numbers.NextAsync("Voucher", area, ct)).Code;
             var applied = new List<object>();
             var totalSettled = 0m;
+            GeneralJournalEntry? prepaymentEntry = null;
             var offsetIndex = 0;
             foreach (var invoice in invoices)
             {
@@ -140,6 +141,36 @@ public sealed class VendSettleOpenTransactionsService : BaseService<VendSettleme
                     if (amount <= 0m) break;
 
                     var accounting = Accounting(invoice.Trans, amount);
+                    var advanceLine = await Db.Set<LedgerJournalTrans>().AsNoTracking().SingleOrDefaultAsync(x =>
+                        x.DataAreaId == area && x.VendTransId == offset.Trans.RecId && x.Prepayment == NoYes.Yes, ct);
+                    if (advanceLine != null)
+                    {
+                        var source = await (from a in Db.Set<GeneralJournalAccountEntry>()
+                            join e in Db.Set<GeneralJournalEntry>() on a.GeneralJournalEntry equals e.RecId
+                            where e.DataAreaId == area && a.DataAreaId == area && e.SubledgerVoucher == invoice.Trans.Voucher
+                                && a.PostingType == LedgerPostingType.VendBalance
+                            select a.LedgerDimension).SingleAsync(ct);
+                        if (source != advanceLine.LedgerDimension)
+                        {
+                            var ledger = await support.LoadLedgerContextAsync(area, date, LedgerPostingModule.Vendor, _currentUser.GetCurrentUserId(), ct);
+                            if (invoice.Trans.CurrencyCode != ledger.Ledger.AccountingCurrency)
+                                return await Fail(422, "Prepayment application currently requires accounting currency.", ct);
+                            if (prepaymentEntry == null)
+                            {
+                                prepaymentEntry = support.NewEntry(area, "Vendor prepayment settlement", voucher, date, ledger);
+                                Db.Add(prepaymentEntry);
+                                await _unitOfWork.CompleteAsync(ct);
+                                Db.Add(new SubledgerVoucherGeneralJournalEntry { DataAreaId = area, GeneralJournalEntry = prepaymentEntry.RecId,
+                                    Voucher = voucher, VoucherDataAreaId = area, AccountingDate = date });
+                            }
+                            var payable = await support.LoadDimensionAsync(area, source, "original invoice payable", ct);
+                            var advance = await support.LoadDimensionAsync(area, advanceLine.LedgerDimension, "original vendor prepayment", ct);
+                            Db.AddRange(SubledgerPostingSupport.AccountEntry(area, prepaymentEntry.RecId, payable, LedgerPostingType.VendBalance, accounting,
+                                    "Apply vendor prepayment to invoice", 0m, ledger.Ledger.AccountingCurrency),
+                                SubledgerPostingSupport.AccountEntry(area, prepaymentEntry.RecId, advance, LedgerPostingType.VendBalance, -accounting,
+                                    "Clear vendor prepayment account", 0m, ledger.Ledger.AccountingCurrency));
+                        }
+                    }
                     Db.Set<VendSettlement>().Add(new VendSettlement
                     {
                         DataAreaId = area, AccountNum = account,

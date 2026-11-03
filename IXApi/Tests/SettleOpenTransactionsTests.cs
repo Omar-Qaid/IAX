@@ -370,7 +370,8 @@ public class SettleOpenTransactionsTests
         protected override void OnModelCreating(ModelBuilder builder)
         {
             Type[] types = [typeof(CustTrans), typeof(CustTransOpen), typeof(CustSettlement), typeof(CustTable),
-                typeof(VendTrans), typeof(VendTransOpen), typeof(VendSettlement), typeof(VendTable)];
+                typeof(VendTrans), typeof(VendTransOpen), typeof(VendSettlement), typeof(VendTable),
+                typeof(GeneralJournalEntry), typeof(GeneralJournalAccountEntry), typeof(LedgerJournalTrans)];
 
             // CustTable and VendTable reach the party and address graph, so everything not named
             // here is ignored outright rather than discovered one failure at a time.

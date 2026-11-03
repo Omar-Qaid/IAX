@@ -105,6 +105,7 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                     posted.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, offset,
                         LedgerPostingType.LedgerJournal, -amount, -accountingAmount, -reportingAmount,
                         line.OffsetTxt.Length > 0 ? line.OffsetTxt : line.Txt, 0m, line.CurrencyCode, line.PaymReference));
+                    posted.AddRange(await new VendorJournalTaxPosting(db).BuildAsync(area, header, line, entry.RecId, offset, ct));
                 }
                 totalDebit += line.AmountCurDebit;
                 totalCredit += line.AmountCurCredit;
@@ -231,7 +232,8 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                 var vendor = await db.Set<VendTable>().AsNoTracking()
                     .FirstOrDefaultAsync(x => x.DataAreaId == area && x.AccountNum == accountNum, ct)
                     ?? throw new SubledgerPostingException($"Vendor '{accountNum}' was not found for {what}.");
-                var dimension = await support.ResolveVendorSummaryAsync(area, vendor, ct);
+                var dimension = await support.ResolveVendorSummaryAsync(area, vendor, ct,
+                    string.IsNullOrWhiteSpace(line.PostingProfile) ? null : line.PostingProfile);
                 return new PostingSide(dimension, LedgerPostingType.VendBalance, line.AccountType, vendor.AccountNum, null);
             }
             case LedgerJournalACType.Bank:
@@ -289,14 +291,27 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
             }
             case LedgerJournalACType.Vend:
             {
+                var vendor = await db.Set<VendTable>().AsNoTracking().SingleAsync(x => x.DataAreaId == area && x.AccountNum == side.AccountNum, ct);
+                if (vendor.Blocked == CustVendBlocked.All || (line.Invoice.Length > 0 && vendor.Blocked == CustVendBlocked.Invoicing))
+                    throw new SubledgerPostingException("The vendor is blocked for this journal transaction.");
+                if (line.Invoice.Length > 0)
+                {
+                    await new SubledgerPostingSupport(db).LockAsync($"VendInvoice:{area}:{vendor.AccountNum}:{line.Invoice}".ToUpperInvariant(), ct);
+                    if (await db.Set<VendTrans>().AnyAsync(x => x.DataAreaId == area && x.AccountNum == vendor.AccountNum && x.Invoice == line.Invoice, ct)
+                        || await db.Set<VendInvoiceJour>().AnyAsync(x => x.DataAreaId == area && x.InvoiceAccount == vendor.AccountNum && x.InvoiceId == line.Invoice, ct))
+                        throw new SubledgerPostingException("The vendor invoice has already been posted in this company.");
+                }
                 var vendTrans = new VendTrans
                 {
                     DataAreaId = area, AccountNum = side.AccountNum, TransDate = date, Voucher = voucher,
                     Txt = line.Txt, TransType = LedgerTransType.Vend, CurrencyCode = line.CurrencyCode,
-                    AmountCur = amount, AmountMst = accountingAmount, DueDate = due
+                    AmountCur = amount, AmountMst = accountingAmount, DueDate = due,
+                    Invoice = line.Invoice, CashDiscCode = line.CashDiscCode,
+                    CashDiscBaseDate = line.CashDiscBaseDate == default ? date : line.CashDiscBaseDate
                 };
                 db.Set<VendTrans>().Add(vendTrans);
                 await db.SaveChangesAsync(ct); // The open row references the transaction key.
+                line.VendTransId = vendTrans.RecId;
                 VendorOpenBalance.Add(db, vendTrans);
                 return;
             }
@@ -340,7 +355,8 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
             throw new SubledgerPostingException($"{label}: intercompany journal posting is not supported.");
         if (string.IsNullOrWhiteSpace(line.CurrencyCode))
             throw new SubledgerPostingException($"{label}: a transaction currency is required.");
-        if (line.TaxCode.Length > 0 || header.LedgerJournalInclTax == NoYes.Yes)
+        if (line.TaxCode.Length > 0 || (header.LedgerJournalInclTax == NoYes.Yes &&
+            (line.AccountType != LedgerJournalACType.Vend || line.TaxGroup.Length == 0 || line.TaxItemGroup.Length == 0 || line.OffsetLedgerDimension == 0)))
             throw new SubledgerPostingException($"{label}: journal tax calculation is not supported; post tax through its own process.");
         if (line.ReverseEntry == NoYes.Yes)
             throw new SubledgerPostingException($"{label}: automatic reversal is not supported; post the reversal as its own journal.");

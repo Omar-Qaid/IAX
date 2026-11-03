@@ -126,13 +126,15 @@ internal sealed class SubledgerPostingSupport(DbContext db)
     }
 
     /// <summary>Vendor posting profile: Table (vendor) -> Group (vendor group) -> All, within the profile.</summary>
-    public async Task<DimensionAttributeValueCombination> ResolveVendorSummaryAsync(string area, VendTable vendor, CancellationToken ct)
+    public async Task<DimensionAttributeValueCombination> ResolveVendorSummaryAsync(string area, VendTable vendor, CancellationToken ct, string? postingProfile = null)
     {
         // The company's default profile from VendParameters, the payable mirror of the customer
         // path. Without it every rule in the company is a candidate and two posting profiles mix.
-        var profile = await db.Set<VendParameters>().AsNoTracking().Where(x => x.DataAreaId == area)
+        var profile = postingProfile ?? await db.Set<VendParameters>().AsNoTracking().Where(x => x.DataAreaId == area)
             .Select(x => x.VendPostingProfile).FirstOrDefaultAsync(ct) ?? string.Empty;
         var rules = await db.Set<VendLedgerAccounts>().AsNoTracking().Where(x => x.DataAreaId == area).ToListAsync(ct);
+        if (!string.IsNullOrWhiteSpace(postingProfile) && !rules.Any(x => x.PostingProfile == postingProfile))
+            throw new SubledgerPostingException($"Vendor posting profile '{postingProfile}' was not found in this company.");
         if (!string.IsNullOrWhiteSpace(profile) && rules.Any(x => x.PostingProfile == profile))
             rules = rules.Where(x => x.PostingProfile == profile).ToList();
         var rule = rules.Where(x => x.AccountCode == AccountCode.Table && x.Num == vendor.AccountNum).OrderBy(x => x.RecId).FirstOrDefault()
