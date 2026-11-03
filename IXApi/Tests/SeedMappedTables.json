@@ -223,6 +223,7 @@
   "UnitOfMeasureConversion",
   "UnitOfMeasureConversionCache",
   "UnitOfMeasureInternalCode",
+  "VendBankAccount",
   "VendGroup",
   "VendInvoiceInfoLine",
   "VendInvoiceInfoTable",

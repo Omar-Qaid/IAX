@@ -15,8 +15,14 @@ public sealed class SeedContext(ApplicationDbContext db, int fiscalYear, string 
     public IQueryable<T> Rows<T>() where T : BaseEntity<long> => Db.Set<T>().IgnoreQueryFilters()
         .Where(x => x.DataAreaId == Company);
 
-    public Task<T> RequireAsync<T>(Expression<Func<T, bool>> key, CancellationToken ct)
-        where T : BaseEntity<long> => Rows<T>().Where(x => !x.IsDeleted && x.IsActive).SingleAsync(key, ct);
+    public async Task<T> RequireAsync<T>(Expression<Func<T, bool>> key, CancellationToken ct)
+        where T : BaseEntity<long>
+    {
+        var row = await Rows<T>().SingleAsync(key, ct);
+        if (row.IsDeleted || !IsActive(row))
+            throw new InvalidOperationException($"Required {typeof(T).Name} is deleted or inactive in {Company}.");
+        return row;
+    }
 
     public async Task<T> EnsureAsync<T>(Expression<Func<T, bool>> key, T proposed,
         CancellationToken ct, params string[] fields) where T : BaseEntity<long>
@@ -24,11 +30,16 @@ public sealed class SeedContext(ApplicationDbContext db, int fiscalYear, string 
         var existing = await Rows<T>().SingleOrDefaultAsync(key, ct);
         if (existing != null)
         {
-            if (existing.IsDeleted || !((BaseEntity<long>)existing).IsActive)
+            if (existing.IsDeleted || !IsActive(existing))
                 throw new InvalidOperationException($"{typeof(T).Name} seed key is deleted or inactive in {Company}.");
+            if (fields.Length == 0)
+                fields = Db.Model.FindEntityType(typeof(T))!.GetProperties()
+                    .Where(p => p.PropertyInfo?.DeclaringType == typeof(T) && !p.IsPrimaryKey()
+                        && p.Name != "RowVersion" && p.Name != "IsActive")
+                    .Select(p => p.Name).ToArray();
             foreach (var field in fields)
             {
-                var property = typeof(T).GetProperty(field)
+                var property = Db.Model.FindEntityType(typeof(T))!.FindProperty(field)?.PropertyInfo
                     ?? throw new InvalidOperationException($"Unknown seed field {typeof(T).Name}.{field}.");
                 if (!Equals(property.GetValue(existing), property.GetValue(proposed)))
                     throw new InvalidOperationException($"Conflicting {typeof(T).Name}.{field} in {Company}; existing data was preserved.");
@@ -41,5 +52,11 @@ public sealed class SeedContext(ApplicationDbContext db, int fiscalYear, string 
         Db.Set<T>().Add(proposed);
         await Db.SaveChangesAsync(ct);
         return proposed;
+    }
+
+    private bool IsActive<T>(T row) where T : BaseEntity<long>
+    {
+        var value = Db.Entry(row).Property("IsActive").CurrentValue;
+        return value is bool active ? active : value != null && Convert.ToInt32(value) == 1;
     }
 }

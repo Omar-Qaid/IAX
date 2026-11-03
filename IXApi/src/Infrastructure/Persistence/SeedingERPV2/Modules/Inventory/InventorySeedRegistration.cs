@@ -1,0 +1,23 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
+namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Inventory;
+public static class InventorySeedRegistration
+{
+    public static IServiceCollection AddInventorySeeders(this IServiceCollection services)
+    {
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, UnitOfMeasureSeeder>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, InventModelGroupSeeder>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, ItemGroupSeeder>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, InventSiteSeeder>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, InventLocationSeeder>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, InventDimSeeder>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, InventParametersSeeder>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, InventPostingSeeder>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, EcoResProductSeeder>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, InventTableSeeder>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, InventTableModuleSeeder>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, EcoResCategorySeeder>());
+        return services;
+    }
+}
