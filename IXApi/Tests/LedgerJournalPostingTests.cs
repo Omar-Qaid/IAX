@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Modules.Administration.NumberSequences;
 using IAX.IXApi.Modules.Finance.AccountsPayable;
@@ -83,6 +83,8 @@ public class LedgerJournalPostingTests
         await connection.OpenAsync();
         await using var db = await NewContextAsync(connection);
         Seed(db);
+        // Seed only stages its rows; without this the queries below read an empty database.
+        await db.SaveChangesAsync();
         var header = await db.Set<LedgerJournalTable>().SingleAsync();
         header.VoucherAllocatedAtPosting = NoYes.Yes;
         var journalName = await db.Set<LedgerJournalName>().SingleAsync();
@@ -245,7 +247,7 @@ public class LedgerJournalPostingTests
             Line(1, "V1", bank: true, debit: 900m),
             Line(2, "V1", bank: false, credit: 900m));
         await db.SaveChangesAsync();
-        db.ChangeTracker.Clear();
+        await ConfigureVoucherSequenceAsync(db);
         await new LedgerJournalPosting(db).PostAsync("dat", await db.Set<LedgerJournalTable>().SingleAsync(), default);
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
@@ -482,7 +484,7 @@ public class LedgerJournalPostingTests
             Line(1, "V1", bank: true, debit: 400m),
             Line(2, "V1", bank: false, credit: 400m));
         await db.SaveChangesAsync();
-        db.ChangeTracker.Clear();
+        await ConfigureVoucherSequenceAsync(db);
         await new LedgerJournalPosting(db).PostAsync("dat", await db.Set<LedgerJournalTable>().SingleAsync(), default);
         await db.SaveChangesAsync();
         db.ChangeTracker.Clear();
@@ -658,6 +660,36 @@ public class LedgerJournalPostingTests
         Assert.Contains("offset account must be a Ledger account", offset.Message);
 
         Assert.Empty(await db.Set<CustTrans>().AsNoTracking().ToListAsync());
+    }
+
+    /// <summary>
+    /// Gives the fixture's journal name a usable voucher number sequence.
+    /// <para>
+    /// Reversal allocates a voucher for the reversing journal from the journal name's sequence and
+    /// refuses by name when none is configured, which is correct: a reversing journal needs its own
+    /// number. The fixture simply never configured one, so both reversal tests were failing on
+    /// missing setup rather than on the behavior they exist to prove.
+    /// </para>
+    /// <para>
+    /// Posting the original journal is unaffected: <c>AllocateForPostingAsync</c> returns early when
+    /// every line already carries a voucher and the header does not allocate at posting, so the
+    /// original still posts under its own "V1".
+    /// </para>
+    /// </summary>
+    private static async Task ConfigureVoucherSequenceAsync(PostingContext db)
+    {
+        db.ChangeTracker.Clear();
+        var journalName = await db.Set<LedgerJournalName>().SingleAsync();
+        journalName.NumberSequenceTable = 90;
+        db.Add(new SysNumberSequence
+        {
+            RecId = 90, DataAreaId = "dat", NumberSequence = "GEN-V", Txt = "General journal voucher",
+            Format = "GV-######", AnnotatedFormat = "{PREFIX}-{SEQ}",
+            Lowest = 100, NextRec = 100, Highest = 999,
+            IsActive = true, InUse = 1, Manual = 0, NoIncrement = 0, Blocked = 0
+        });
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
     }
 
     private static void Seed(PostingContext db)

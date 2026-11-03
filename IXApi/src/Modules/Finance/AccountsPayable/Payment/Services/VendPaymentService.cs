@@ -20,6 +20,8 @@ public sealed class VendPaymentService(IUnitOfWork work, ICurrentUserService use
     {
         var area = company.GetDataAreaId();
         if (string.IsNullOrWhiteSpace(area)) return new(400, null, "A company must be selected.");
+        if (!input.SettleAutomatically && !string.IsNullOrWhiteSpace(input.SettleInvoiceId))
+            return new(400, null, "An on-account payment cannot also select an invoice for automatic settlement.");
         if (input.Amount <= 0 || decimal.Round(input.Amount, 4) != input.Amount || string.IsNullOrWhiteSpace(input.RequestId) || input.RequestId.Length > FieldLengths.PaymReference)
             return new(400, null, $"A positive payment and request identifier of at most {FieldLengths.PaymReference} characters are required.");
         var date = (input.PaymentDate ?? DateTime.UtcNow).Date;
@@ -76,6 +78,8 @@ public sealed class VendPaymentService(IUnitOfWork work, ICurrentUserService use
                 where open.DataAreaId == area && trans.DataAreaId == area && open.AccountNum == input.VendAccount && trans.AccountNum == input.VendAccount
                     && open.AmountCur < 0 && trans.CurrencyCode == currency
                 select new { Open = open, Trans = trans }).ToListAsync(ct);
+            // Posting an on-account payment is independent from settling the open transactions.
+            if (!input.SettleAutomatically) invoices.Clear();
             if (!string.IsNullOrWhiteSpace(input.SettleInvoiceId))
             {
                 invoices = invoices.Where(x => x.Trans.Invoice == input.SettleInvoiceId).ToList();

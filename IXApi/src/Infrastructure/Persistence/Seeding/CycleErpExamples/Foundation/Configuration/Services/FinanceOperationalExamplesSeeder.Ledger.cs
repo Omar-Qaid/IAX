@@ -56,7 +56,7 @@ public sealed partial class FinanceOperationalExamplesSeeder
         await BankGroupSeeder.SeedAsync(db, ct);
         await db.SaveChangesAsync(ct);
         await BankAccountTableSeeder.SeedAsync(db, dimensions["10020000"], ct);
-        await CustParametersSeeder.SeedAsync(db, ct);
+        await new CustomerConfigurationExampleService().SeedAsync(db, ct);
         await VendLedgerAccountsSeeder.SeedAsync(db, dimensions["20010000"], ct);
     }
 }

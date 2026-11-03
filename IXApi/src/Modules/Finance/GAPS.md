@@ -46,14 +46,16 @@ counted as gaps.
    **different rates**, because that path posts no voucher to carry the difference. What is left is
    **revaluation** of open balances, not translation.
 
-3. **The test suite is not green, and the gap files said it was.** `dotnet test
-   Tests/IXApi.Tests.csproj` on 2026-11-03: **754 passed, 3 failed, 2 skipped**. All three failures
-   are `LedgerJournalPostingTests` covering journal reversal and voucher allocation, and they are the
-   same three recorded in `docs/basic-erp-continuation-review-2026-11-02.md` the day before — a
-   standing baseline, not a regression. They had never reached `GeneralLedger/GAPS.md`, whose status
-   table claimed reversal as Implemented. Separately, the realized exchange gain/loss posting written
-   on 2026-11-02 still has **no test at all**. Treat "implemented" in these files as "written", not
-   "proven", unless a test is named.
+3. **Two things that were only "written" are now proven, and the suite is green.** `dotnet test
+   Tests/IXApi.Tests.csproj` began 2026-11-03 at **754 passed, 3 failed, 2 skipped**. Both problems
+   behind that are closed. The three failures were `LedgerJournalPostingTests` covering journal
+   reversal and voucher allocation — red since at least 2026-11-02, recorded in
+   `docs/basic-erp-continuation-review-2026-11-02.md` but never in `GeneralLedger/GAPS.md`, whose
+   status table claimed reversal as Implemented. All three were **fixture** defects, so no production
+   code changed; what had been missing was the coverage itself, which had never once run. The
+   realized exchange gain/loss posting was likewise untested for a day, and is now covered in both
+   directions; it too was correct as written. Keep the reading rule either way: treat "implemented"
+   in these files as "written", not "proven", unless a test is named — and more rows now name one.
 
 4. **Nothing is verified against SQL Server.** Every finance module is covered by SQLite in-memory
    tests only. Posting atomicity, concurrent posting of the same key, number-sequence contention and

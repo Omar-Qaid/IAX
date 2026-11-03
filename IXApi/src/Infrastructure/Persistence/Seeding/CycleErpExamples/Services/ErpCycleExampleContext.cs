@@ -16,11 +16,12 @@ internal sealed class ErpCycleExampleContext : IAsyncDisposable
     internal SysNumberSequenceService Numbers { get; }
     internal SalesInventoryNumberService InventoryNumbers { get; }
     internal InventDimensionResolver Dimensions { get; }
-    internal DateTime Date { get; } = DateTime.UtcNow.Date;
+    internal DateTime Date { get; }
 
-    private ErpCycleExampleContext(ApplicationDbContext db, SalesScenarioSeeder.ExampleActor actor)
+    private ErpCycleExampleContext(ApplicationDbContext db, SalesScenarioSeeder.ExampleActor actor, DateTime? scenarioDate = null)
     {
         Db = db;
+        Date = (scenarioDate ?? DateTime.UtcNow).Date;
         Actor = actor;
         Work = new UnitOfWork(db);
         Numbers = new SysNumberSequenceService(Work, actor);
@@ -28,12 +29,12 @@ internal sealed class ErpCycleExampleContext : IAsyncDisposable
         Dimensions = new InventDimensionResolver(Work, InventoryNumbers);
     }
 
-    internal static async Task<ErpCycleExampleContext> CreateAsync(SeedingContext context, CancellationToken ct)
+    internal static async Task<ErpCycleExampleContext> CreateAsync(SeedingContext context, CancellationToken ct, DateTime? scenarioDate = null)
     {
         var user = await context.Db.Set<AspNetUser>().IgnoreQueryFilters()
             .Where(x => x.UserName == "sys").Select(x => x.Id).SingleAsync(ct);
         var actor = new SalesScenarioSeeder.ExampleActor(user);
-        return new ErpCycleExampleContext(FinanceScenarioSupport.CreatePostingDb(context, actor), actor);
+        return new ErpCycleExampleContext(FinanceScenarioSupport.CreatePostingDb(context, actor), actor, scenarioDate);
     }
 
     internal static void Require(int status, string? error)

@@ -26,7 +26,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
 
         public override async Task SeedAsync(SeedingContext context, CancellationToken cancellationToken)
         {
-            await IAX.IXApi.Infrastructure.Persistence.Seeding.CycleErpExamples.AccountsReceivable.CustTableSeeder.SeedAsync(context.Db, cancellationToken);
+            await new IAX.IXApi.Infrastructure.Persistence.Seeding.CycleErpExamples.AccountsReceivable.CustomerMasterDataExampleService().SeedAsync(context.Db, cancellationToken);
         }
     }
 }
