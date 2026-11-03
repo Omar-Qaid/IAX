@@ -1,6 +1,7 @@
 using IAX.IXApi.Modules.Finance.Common;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Foundation.Dimensions.AccountStructure;
+using IAX.IXApi.Modules.Finance.Foundation.Dimensions.AccountStructure.Configuration;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
@@ -31,7 +32,7 @@ public class AccountStructureBuilderTests
         db.ChangeTracker.Clear();
         var levels = await db.Set<DimensionHierarchyLevel>().AsNoTracking().OrderBy(x => x.Level).ToListAsync();
         Assert.Equal(2, levels.Count);
-        Assert.Equal(0, levels[0].DimensionAttribute); // The main account segment carries no dimension.
+        Assert.Null(levels[0].DimensionAttribute); // The main account segment carries no dimension principal.
         Assert.NotEqual(0, levels[1].DimensionAttribute);
 
         var nodes = await db.Set<DimensionConstraintNode>().AsNoTracking().ToListAsync();
@@ -225,6 +226,7 @@ public class AccountStructureBuilderTests
                 entity.HasKey("RecId");
                 entity.Ignore("RowVersion");
             }
+            builder.ApplyConfiguration(new DimensionHierarchyLevelConfiguration());
         }
     }
 }

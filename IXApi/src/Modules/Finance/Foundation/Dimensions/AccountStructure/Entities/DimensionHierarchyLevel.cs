@@ -11,7 +11,13 @@ namespace IAX.IXApi.Modules.Finance.Entities
     {
         //----------------------------------------- Core Identity
         // Basic Properties
-        public long DimensionAttribute { get; set; } // The financial dimension this segment constrains
+        private long? _dimensionAttribute;
+        // The main-account segment has no financial-dimension principal. Preserve incoming zero as "none".
+        public long? DimensionAttribute
+        {
+            get => _dimensionAttribute;
+            set => _dimensionAttribute = value == 0 ? null : value;
+        }
         public long DimensionHierarchy { get; set; } // The account structure that owns the segment
         public int Level { get; set; }               // Position of the segment within the structure
 

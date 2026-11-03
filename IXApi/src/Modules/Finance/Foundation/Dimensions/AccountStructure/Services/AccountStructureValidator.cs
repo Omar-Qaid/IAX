@@ -144,12 +144,12 @@ public sealed class AccountStructureValidator(DbContext db)
                     && x.DimensionHierarchyLevel == level.RecId);
                 if (node == null) continue;
                 var rules = new SegmentRules(
-                    level.DimensionAttribute == 0
+                    level.DimensionAttribute.GetValueOrDefault() == 0
                         ? AccountStructureBuilder.MainAccountSegment
-                        : attributeNames.GetValueOrDefault(level.DimensionAttribute, string.Empty),
+                        : attributeNames.GetValueOrDefault(level.DimensionAttribute.GetValueOrDefault(), string.Empty),
                     criteria.Where(x => x.DimensionConstraintNode == node.RecId).ToList(),
                     node.IsOptional);
-                if (level.DimensionAttribute == 0) mainAccount = rules;
+                if (level.DimensionAttribute.GetValueOrDefault() == 0) mainAccount = rules;
                 else segments.Add(rules);
             }
             if (mainAccount == null) continue; // No main account segment, so nothing selects it.

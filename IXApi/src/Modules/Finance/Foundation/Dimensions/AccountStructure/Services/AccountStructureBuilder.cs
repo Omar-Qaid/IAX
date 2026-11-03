@@ -153,9 +153,9 @@ public sealed class AccountStructureBuilder(DbContext db)
 
         var segments = levels.Select(level =>
         {
-            var dimension = level.DimensionAttribute == 0
+            var dimension = level.DimensionAttribute.GetValueOrDefault() == 0
                 ? MainAccountSegment
-                : names.GetValueOrDefault(level.DimensionAttribute, string.Empty);
+                : names.GetValueOrDefault(level.DimensionAttribute.GetValueOrDefault(), string.Empty);
             var node = nodes.FirstOrDefault(x => x.DimensionHierarchyLevel == level.RecId);
             var allowsBlank = node?.IsOptional == NoYes.Yes;
             var parts = node == null
