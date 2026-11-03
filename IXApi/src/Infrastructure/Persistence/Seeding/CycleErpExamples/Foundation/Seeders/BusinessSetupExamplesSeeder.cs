@@ -17,7 +17,7 @@ public sealed class BusinessSetupExamplesSeeder : BaseModuleSeeder
     public override string Id => "Finance.BusinessSetupExamples";
     public override SeederCategory Category => SeederCategory.Demo;
     public override string Scope => "dat";
-    public override IReadOnlyCollection<string> DependsOn => new[] { "Finance.OperationalExamples", "Finance.Foundation.Logistics", "Finance.Foundation.HcmExamples" };
+    public override IReadOnlyCollection<string> DependsOn => new[] { "Finance.OperationalExamples", "Finance.Foundation.Logistics", "Finance.Foundation.HcmExamples", "ERP.MasterSetupExamples" };
     public override Task SeedAsync(SeedingContext context, CancellationToken ct) => SeedDataAsync(context.Db, ct);
 
     public async Task SeedDataAsync(DbContext db, CancellationToken ct = default)

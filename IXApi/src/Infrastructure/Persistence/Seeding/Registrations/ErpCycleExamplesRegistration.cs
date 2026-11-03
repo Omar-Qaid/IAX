@@ -18,6 +18,7 @@ public static class ErpCycleExamplesRegistration
         services.AddScoped<SalesCycleExampleService>();
         services.AddScoped<InventoryCycleExampleService>();
         services.AddScoped<LedgerCycleExampleService>();
+        services.AddScoped<IModuleSeeder, ErpMasterSetupExampleSeeder>();
         services.AddScoped<IModuleSeeder, ErpCycleExampleService>();
         return services;
     }

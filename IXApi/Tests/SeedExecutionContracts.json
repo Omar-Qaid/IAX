@@ -11,7 +11,7 @@
     ],
     "Registered": true,
     "OwnerModule": "Administration",
-    "Source": "CycleErpExamples/Administration/AdministrationExampleSeeder.cs"
+    "Source": "CycleErpExamples/Administration/Seeders/AdministrationExampleSeeder.cs"
   },
   {
     "Type": "NumberSequenceSeeder",
@@ -38,6 +38,22 @@
     "Source": "Modules/Administration/SysSettingsSeeder.cs"
   },
   {
+    "Type": "ErpMasterSetupExampleSeeder",
+    "Id": "ERP.MasterSetupExamples",
+    "Version": 1,
+    "Category": "Demo",
+    "Policy": "Repeatable",
+    "Scope": "dat",
+    "Dependencies": [
+      "Finance.OperationalExamples",
+      "Finance.Foundation.AccountStructures",
+      "Finance.Foundation.HcmExamples"
+    ],
+    "Registered": true,
+    "OwnerModule": "ERP",
+    "Source": "CycleErpExamples/Foundation/Seeders/ErpMasterSetupExampleSeeder.cs"
+  },
+  {
     "Type": "ErpCycleExampleService",
     "Id": "ERP.TradingCycleExample",
     "Version": 1,
@@ -50,7 +66,7 @@
     ],
     "Registered": true,
     "OwnerModule": "ERP",
-    "Source": "CycleErpExamples/ErpCycleExampleService.cs"
+    "Source": "CycleErpExamples/Seeders/ErpCycleExampleService.cs"
   },
   {
     "Type": "VendSeeder",
@@ -125,7 +141,7 @@
     ],
     "Registered": true,
     "OwnerModule": "Finance",
-    "Source": "CycleErpExamples/Foundation/SampleCustomerVendorSeeder.cs"
+    "Source": "CycleErpExamples/Foundation/Seeders/SampleCustomerVendorSeeder.cs"
   },
   {
     "Type": "MarkupTableSeeder",
@@ -193,11 +209,12 @@
     "Dependencies": [
       "Finance.OperationalExamples",
       "Finance.Foundation.Logistics",
-      "Finance.Foundation.HcmExamples"
+      "Finance.Foundation.HcmExamples",
+      "ERP.MasterSetupExamples"
     ],
     "Registered": true,
     "OwnerModule": "Finance",
-    "Source": "CycleErpExamples/Foundation/BusinessSetupExamplesSeeder.cs"
+    "Source": "CycleErpExamples/Foundation/Seeders/BusinessSetupExamplesSeeder.cs"
   },
   {
     "Type": "CommercialScenarioSeeder",
@@ -211,7 +228,7 @@
     ],
     "Registered": true,
     "OwnerModule": "Finance",
-    "Source": "CycleErpExamples/AccountsReceivable/CommercialScenarioSeeder.cs"
+    "Source": "CycleErpExamples/AccountsReceivable/Seeders/CommercialScenarioSeeder.cs"
   },
   {
     "Type": "DraftFinanceExamplesSeeder",
@@ -225,7 +242,7 @@
     ],
     "Registered": true,
     "OwnerModule": "Finance",
-    "Source": "CycleErpExamples/AccountsReceivable/DraftFinanceExamplesSeeder.cs"
+    "Source": "CycleErpExamples/AccountsReceivable/Seeders/DraftFinanceExamplesSeeder.cs"
   },
   {
     "Type": "AccountStructureSeeder",
@@ -279,7 +296,7 @@
     ],
     "Registered": true,
     "OwnerModule": "Finance",
-    "Source": "CycleErpExamples/HumanResources/HcmExampleSeeder.cs"
+    "Source": "CycleErpExamples/HumanResources/Seeders/HcmExampleSeeder.cs"
   },
   {
     "Type": "OthersDBOrganizationEmployeeSeeder",
@@ -321,7 +338,7 @@
     ],
     "Registered": true,
     "OwnerModule": "Finance",
-    "Source": "CycleErpExamples/HumanResources/OrganizationSeeder.cs"
+    "Source": "CycleErpExamples/HumanResources/Seeders/OrganizationSeeder.cs"
   },
   {
     "Type": "OrganizationStructureSeeder",
@@ -363,11 +380,12 @@
       "Finance.GeneralLedger.Currencies",
       "Finance.GeneralLedger.FiscalCalendars",
       "Finance.AccountsReceivable.CustLedger",
-      "Finance.AccountsReceivable.DemoCustVend"
+      "Finance.AccountsReceivable.DemoCustVend",
+      "Finance.Foundation.AccountStructures"
     ],
     "Registered": true,
     "OwnerModule": "Finance",
-    "Source": "CycleErpExamples/GeneralLedger/LedgerExampleSeeder.cs"
+    "Source": "CycleErpExamples/GeneralLedger/Seeders/LedgerExampleSeeder.cs"
   },
   {
     "Type": "FiscalCalendarSeeder",
@@ -426,7 +444,7 @@
     ],
     "Registered": true,
     "OwnerModule": "Finance",
-    "Source": "CycleErpExamples/Inventory/SampleProductSeeder.cs"
+    "Source": "CycleErpExamples/Inventory/Seeders/SampleProductSeeder.cs"
   },
   {
     "Type": "InventItemGroupSeeder",
@@ -453,7 +471,8 @@
       "Finance.Inventory.UnitOfMeasure",
       "Finance.Inventory.SitesAndWarehouses",
       "Finance.GeneralLedger.MainAccounts",
-      "Finance.GeneralLedger.Tax"
+      "Finance.GeneralLedger.Tax",
+      "Finance.Foundation.AccountStructures"
     ],
     "Registered": true,
     "OwnerModule": "Finance",
@@ -500,7 +519,7 @@
     ],
     "Registered": true,
     "OwnerModule": "Finance",
-    "Source": "CycleErpExamples/Inventory/InventoryCompletionScenarioSeeder.cs"
+    "Source": "CycleErpExamples/Inventory/Seeders/InventoryCompletionScenarioSeeder.cs"
   },
   {
     "Type": "InventoryFullCycleSeeder",
@@ -514,7 +533,7 @@
     ],
     "Registered": true,
     "OwnerModule": "Finance",
-    "Source": "CycleErpExamples/Inventory/InventoryFullCycleSeeder.cs"
+    "Source": "CycleErpExamples/Inventory/Seeders/InventoryFullCycleSeeder.cs"
   },
   {
     "Type": "InventoryScenarioSeeder",
@@ -530,7 +549,7 @@
     ],
     "Registered": true,
     "OwnerModule": "Finance",
-    "Source": "CycleErpExamples/Inventory/InventoryScenarioSeeder.cs"
+    "Source": "CycleErpExamples/Inventory/Seeders/InventoryScenarioSeeder.cs"
   },
   {
     "Type": "FinanceOperationalExamplesSeeder",
@@ -547,7 +566,7 @@
     ],
     "Registered": true,
     "OwnerModule": "Finance",
-    "Source": "CycleErpExamples/Foundation/FinanceOperationalExamplesSeeder.cs"
+    "Source": "CycleErpExamples/Foundation/Seeders/FinanceOperationalExamplesSeeder.cs"
   },
   {
     "Type": "PurchasePartialInvoiceSeeder",
@@ -561,7 +580,7 @@
     ],
     "Registered": true,
     "OwnerModule": "Finance",
-    "Source": "CycleErpExamples/AccountsPayable/PurchasePartialInvoiceSeeder.cs"
+    "Source": "CycleErpExamples/AccountsPayable/Seeders/PurchasePartialInvoiceSeeder.cs"
   },
   {
     "Type": "PurchaseScenarioSeeder",
@@ -577,7 +596,7 @@
     ],
     "Registered": true,
     "OwnerModule": "Finance",
-    "Source": "CycleErpExamples/AccountsPayable/PurchaseScenarioSeeder.cs"
+    "Source": "CycleErpExamples/AccountsPayable/Seeders/PurchaseScenarioSeeder.cs"
   },
   {
     "Type": "PurchaseSettlementSeeder",
@@ -592,7 +611,7 @@
     ],
     "Registered": false,
     "OwnerModule": "Finance",
-    "Source": "CycleErpExamples/AccountsPayable/PurchaseSettlementSeeder.cs"
+    "Source": "CycleErpExamples/AccountsPayable/Seeders/PurchaseSettlementSeeder.cs"
   },
   {
     "Type": "PurchaseVatInvoiceSeeder",
@@ -607,7 +626,7 @@
     ],
     "Registered": true,
     "OwnerModule": "Finance",
-    "Source": "CycleErpExamples/AccountsPayable/PurchaseVatInvoiceSeeder.cs"
+    "Source": "CycleErpExamples/AccountsPayable/Seeders/PurchaseVatInvoiceSeeder.cs"
   },
   {
     "Type": "SalesAdvancedScenarioSeeder",
@@ -621,7 +640,7 @@
     ],
     "Registered": true,
     "OwnerModule": "Finance",
-    "Source": "CycleErpExamples/AccountsReceivable/SalesAdvancedScenarioSeeder.cs"
+    "Source": "CycleErpExamples/AccountsReceivable/Seeders/SalesAdvancedScenarioSeeder.cs"
   },
   {
     "Type": "SalesCompletionScenarioSeeder",
@@ -636,7 +655,7 @@
     ],
     "Registered": true,
     "OwnerModule": "Finance",
-    "Source": "CycleErpExamples/AccountsReceivable/SalesCompletionScenarioSeeder.cs"
+    "Source": "CycleErpExamples/AccountsReceivable/Seeders/SalesCompletionScenarioSeeder.cs"
   },
   {
     "Type": "SalesScenarioSeeder",
@@ -650,7 +669,7 @@
     ],
     "Registered": true,
     "OwnerModule": "Finance",
-    "Source": "CycleErpExamples/AccountsReceivable/SalesScenarioSeeder.cs"
+    "Source": "CycleErpExamples/AccountsReceivable/Seeders/SalesScenarioSeeder.cs"
   },
   {
     "Type": "IdentitySeeder",
@@ -678,7 +697,7 @@
     ],
     "Registered": true,
     "OwnerModule": "Organization",
-    "Source": "CycleErpExamples/Organization/CollaborationExampleSeeder.cs"
+    "Source": "CycleErpExamples/Organization/Seeders/CollaborationExampleSeeder.cs"
   },
   {
     "Type": "DocumentExampleSeeder",
@@ -693,7 +712,7 @@
     ],
     "Registered": true,
     "OwnerModule": "Organization",
-    "Source": "CycleErpExamples/Organization/DocumentExampleSeeder.cs"
+    "Source": "CycleErpExamples/Organization/Seeders/DocumentExampleSeeder.cs"
   },
   {
     "Type": "DocumentManagementSeeder",
@@ -720,7 +739,7 @@
     ],
     "Registered": true,
     "OwnerModule": "Workflow",
-    "Source": "CycleErpExamples/Workflow/OthersDBWorkflowRequestFromSeeder.cs"
+    "Source": "CycleErpExamples/Workflow/Seeders/OthersDBWorkflowRequestFromSeeder.cs"
   },
   {
     "Type": "OthersDBWorkflowMasterFromSeeder",
@@ -762,6 +781,6 @@
     ],
     "Registered": true,
     "OwnerModule": "Workflow",
-    "Source": "CycleErpExamples/Workflow/WorkflowVariableExampleSeeder.cs"
+    "Source": "CycleErpExamples/Workflow/Seeders/WorkflowVariableExampleSeeder.cs"
   }
 ]

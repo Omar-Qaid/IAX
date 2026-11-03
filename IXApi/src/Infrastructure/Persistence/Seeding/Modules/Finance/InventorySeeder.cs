@@ -1,5 +1,6 @@
 ﻿using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Modules.Finance.Common;
+using IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance;
 using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.Inventory.DimensionGroups.Entities;
 using IAX.IXApi.Modules.Finance.Inventory.InventTable;
@@ -19,7 +20,7 @@ public sealed  class InventorySeeder : IAX.IXApi.Infrastructure.Persistence.Seed
     public override string Id => "Finance.Inventory.Setup";
     public override int Version => 1;
     public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory Category => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory.Reference;
-    public override System.Collections.Generic.IReadOnlyCollection<string> DependsOn => new[] { "Finance.Inventory.UnitOfMeasure", "Finance.Inventory.SitesAndWarehouses", "Finance.GeneralLedger.MainAccounts", "Finance.GeneralLedger.Tax" };
+    public override System.Collections.Generic.IReadOnlyCollection<string> DependsOn => new[] { "Finance.Inventory.UnitOfMeasure", "Finance.Inventory.SitesAndWarehouses", "Finance.GeneralLedger.MainAccounts", "Finance.GeneralLedger.Tax", "Finance.Foundation.AccountStructures" };
     public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy Policy => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy.Repeatable;
     public override string Scope => "dat";
 
@@ -364,25 +365,9 @@ public sealed  class InventorySeeder : IAX.IXApi.Infrastructure.Persistence.Seed
             .ToDictionaryAsync(x => x.MainAccountId, ct);
         if (accounts.Count == 0) return;
 
+        var dimensions = new Dictionary<string, long>();
         foreach (var account in accounts.Values)
-        {
-            if (!await db.Set<DimensionAttributeValueCombination>().IgnoreQueryFilters().AnyAsync(
-                    x => x.DataAreaId == Company && x.MainAccount == account.RecId, ct))
-            {
-                db.Add(new DimensionAttributeValueCombination
-                {
-                    DataAreaId = Company,
-                    DisplayValue = account.MainAccountId,
-                    MainAccount = account.RecId,
-                    MainAccountValue = account.MainAccountId
-                });
-            }
-        }
-        await db.SaveChangesAsync(ct);
-
-        var dimensions = await db.Set<DimensionAttributeValueCombination>().IgnoreQueryFilters()
-            .Where(x => x.DataAreaId == Company && accountIds.Contains(x.MainAccountValue))
-            .ToDictionaryAsync(x => x.MainAccountValue, x => x.RecId, ct);
+            dimensions[account.MainAccountId] = (await SeedLedgerDimensionResolver.ResolveAsync(db, account, ct)).RecId;
 
         if (dimensions.ContainsKey("50010000"))
         {

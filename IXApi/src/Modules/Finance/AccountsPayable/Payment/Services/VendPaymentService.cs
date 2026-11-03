@@ -1,4 +1,4 @@
-using IAX.IXApi.Infrastructure.Identity;
+﻿using IAX.IXApi.Infrastructure.Identity;
 using IAX.IXApi.Infrastructure.Persistence.Repositories;
 using IAX.IXApi.Infrastructure.Persistence.Services;
 using IAX.IXApi.Modules.Administration.NumberSequences;
@@ -61,10 +61,15 @@ public sealed class VendPaymentService(IUnitOfWork work, ICurrentUserService use
             var ledger = await support.LoadLedgerContextAsync(area, date,
                 LedgerPostingModule.Vendor, user.GetCurrentUserId(), ct);
             var currency = string.IsNullOrWhiteSpace(vendor.Currency) ? ledger.Ledger.AccountingCurrency : vendor.Currency;
-            if (currency != ledger.Ledger.AccountingCurrency
-                || (!string.IsNullOrWhiteSpace(ledger.Ledger.ReportingCurrency) && currency != ledger.Ledger.ReportingCurrency)
-                || (!string.IsNullOrWhiteSpace(bank.CurrencyCode) && currency != bank.CurrencyCode))
-                return await Fail("Payment currency conversion requires configured exchange-rate posting; a 1:1 conversion cannot be assumed.", ct);
+            // The bank account must hold the payment currency: translating the bank side as well
+            // would be bank foreign-currency revaluation, which is a separate feature. Mirrors the
+            // same guard on the customer payment.
+            if (!string.IsNullOrWhiteSpace(bank.CurrencyCode) && bank.CurrencyCode != currency)
+                return await Fail("The bank account currency must match the payment currency; bank currency conversion is not supported.", ct);
+            // The payment translates at its own date's rate, through the same shared translation
+            // the vendor invoice uses. The invoice translated at its date's rate, so settling a
+            // foreign-currency invoice realizes the difference between the two.
+            var translation = await SubledgerCurrencyTranslation.LoadAsync(Db, area, ledger.Ledger, currency, date, ct);
             var vendorAccount = await support.ResolveVendorSummaryAsync(area, vendor, ct);
             var bankAccount = await support.LoadDimensionAsync(area, bank.LedgerDimension, "bank", ct);
             var invoices = await (from open in Db.Set<VendTransOpen>() join trans in Db.Set<VendTrans>() on open.RefRecId equals trans.RecId
@@ -81,11 +86,20 @@ public sealed class VendPaymentService(IUnitOfWork work, ICurrentUserService use
             var journalNum = (await numbers.NextAsync("LedgerJournalTable", area, ct)).Code;
             var voucher = (await numbers.NextAsync("Voucher", area, ct)).Code;
             var payment = new VendTrans { DataAreaId = area, AccountNum = vendor.AccountNum, TransDate = date, DueDate = date,
-                Voucher = voucher, Txt = $"Vendor payment {journalNum}", CurrencyCode = currency, AmountCur = input.Amount, AmountMst = input.Amount,
+                Voucher = voucher, Txt = $"Vendor payment {journalNum}", CurrencyCode = currency, AmountCur = input.Amount,
+                AmountMst = translation.ToAccounting(input.Amount),
                 TransType = LedgerTransType.Payment };
             Db.Add(payment);
             await work.CompleteAsync(ct);
             var remaining = input.Amount;
+            // What the cleared invoices were carried at in the accounting currency, accumulated at
+            // each invoice's own posted rate. The payment arrives at its own rate, so the two
+            // disagree whenever the rate moved, and that difference is the realized gain or loss.
+            // Only the accounting total is tracked. The customer side also records the per-invoice
+            // difference on CustTrans.CustExchAdjustmentRealized; VendTrans has no equivalent
+            // column in this repository, so the realized difference reaches the ledger but is not
+            // stamped on the vendor transaction. Recorded as a schema gap rather than invented.
+            var settledAccounting = 0m;
             // Cash discount taken per discount account, so a voucher covering invoices on
             // different discount codes credits each configured account for its own share.
             var discountsByAccount = new Dictionary<long, decimal>();
@@ -118,22 +132,33 @@ public sealed class VendPaymentService(IUnitOfWork work, ICurrentUserService use
                 // payment has left to apply.
                 var settled = discount > 0m ? openAmount : Math.Min(remaining, openAmount);
                 var cash = settled - discount;
+                // The payable clears at the accounting value the invoice itself carried, while the
+                // cash and discount leave at the payment date's rate. The difference between the
+                // two is the realized exchange gain or loss on this settlement.
+                var invoiceAccounting = invoice.Trans.AmountCur == 0m
+                    ? settled
+                    : decimal.Round(settled * Math.Abs(invoice.Trans.AmountMst / invoice.Trans.AmountCur), 2, MidpointRounding.AwayFromZero);
+                var paidAccounting = translation.ToAccounting(cash) + translation.ToAccounting(discount);
+                settledAccounting += invoiceAccounting;
                 Db.Add(new VendSettlement { DataAreaId = area, AccountNum = vendor.AccountNum, InvoiceTransRecId = invoice.Trans.RecId,
-                    PaymentTransRecId = payment.RecId, TransDate = date, Voucher = voucher, AmountCur = settled, AmountMst = settled,
+                    PaymentTransRecId = payment.RecId, TransDate = date, Voucher = voucher, AmountCur = settled,
+                    // The accounting amount the reversal restores from, so it must be what was
+                    // actually taken off the transaction rather than the transaction amount.
+                    AmountMst = invoiceAccounting,
                     UtilizedCashDisc = discount,
                     // Marks the match as in force, so VendSettlementReversalService can reverse it once.
                     CanBeReversed = NoYes.Yes });
                 invoice.Trans.SettleAmountCur -= settled;
-                invoice.Trans.SettleAmountMst -= settled;
+                invoice.Trans.SettleAmountMst -= invoiceAccounting;
                 invoice.Open.AmountCur += settled;
-                invoice.Open.AmountMst += settled;
+                invoice.Open.AmountMst += invoiceAccounting;
                 if (invoice.Open.AmountCur == 0)
                 {
                     invoice.Trans.Closed = date;
                     Db.Remove(invoice.Open);
                 }
                 payment.SettleAmountCur += cash;
-                payment.SettleAmountMst += cash;
+                payment.SettleAmountMst += translation.ToAccounting(cash);
                 remaining -= cash;
             }
             var totalDiscount = discountsByAccount.Values.Sum();
@@ -155,20 +180,50 @@ public sealed class VendPaymentService(IUnitOfWork work, ICurrentUserService use
             // Dr the vendor for everything cleared, Cr Bank for the cash, Cr each configured
             // cash-discount account for the discount taken. With no discount this is the
             // Dr Vendor / Cr Bank pair it has always been.
+            // The vendor line discharges the payable at the accounting value the invoices carried,
+            // plus any unapplied cash at the payment's own rate. Bank and cash discount leave at
+            // the payment date's rate. When those rates differ the accounting amounts no longer
+            // cancel, and the remainder is the realized exchange difference.
+            var vendorAccounting = settledAccounting + translation.ToAccounting(remaining);
+            var vendorReporting = settledAccounting + translation.ToReporting(remaining);
+            var bankAccounting = -translation.ToAccounting(input.Amount);
+            var bankReporting = -translation.ToReporting(input.Amount);
             Db.AddRange(
-                SubledgerPostingSupport.AccountEntry(area, entry.RecId, vendorAccount, LedgerPostingType.VendBalance, input.Amount + totalDiscount, journalLine.Txt, 0, currency),
-                SubledgerPostingSupport.AccountEntry(area, entry.RecId, bankAccount, LedgerPostingType.Bank, -input.Amount, journalLine.Txt, 0, currency));
+                SubledgerPostingSupport.AccountEntry(area, entry.RecId, vendorAccount, LedgerPostingType.VendBalance,
+                    input.Amount + totalDiscount, vendorAccounting, vendorReporting, journalLine.Txt, 0, currency),
+                SubledgerPostingSupport.AccountEntry(area, entry.RecId, bankAccount, LedgerPostingType.Bank,
+                    -input.Amount, bankAccounting, bankReporting, journalLine.Txt, 0, currency));
+            var plugAccounting = vendorAccounting + bankAccounting;
+            var plugReporting = vendorReporting + bankReporting;
             foreach (var (discountDimension, discountAmount) in discountsByAccount)
             {
                 var discountAccount = await support.LoadDimensionAsync(area, discountDimension, "cash discount", ct);
+                var discountAccounting = -translation.ToAccounting(discountAmount);
+                var discountReporting = -translation.ToReporting(discountAmount);
+                plugAccounting += discountAccounting;
+                plugReporting += discountReporting;
                 Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, discountAccount,
-                    LedgerPostingType.CashDiscount, -discountAmount,
+                    LedgerPostingType.CashDiscount, -discountAmount, discountAccounting, discountReporting,
                     $"Cash discount {vendor.AccountNum}", 0, currency));
+            }
+            // Derived from the posted lines rather than from the per-invoice differences, so the
+            // voucher balances to the cent regardless of per-amount rounding. A positive plug means
+            // the payable discharged was carried above what the cash cost, which is a gain; the
+            // balancing entry is its negation, so a gain posts as a credit.
+            if (plugAccounting != 0m || plugReporting != 0m)
+            {
+                var isGain = plugAccounting < 0m;
+                var gainLossAccount = await support.ResolveRealizedGainLossAsync(area, ledger.Ledger.RecId,
+                    currency, isGain, ct);
+                Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, gainLossAccount,
+                    isGain ? LedgerPostingType.ExchRateGain : LedgerPostingType.ExchRateLoss,
+                    0m, -plugAccounting, -plugReporting,
+                    $"Realized exchange difference {vendor.AccountNum}", 0m, currency));
             }
             Db.Add(new SubledgerVoucherGeneralJournalEntry { DataAreaId = area, GeneralJournalEntry = entry.RecId, Voucher = voucher, VoucherDataAreaId = area, AccountingDate = date });
             Db.Add(new BankAccountTrans { DataAreaId = area, AccountId = bank.AccountId, TransDate = date, Voucher = voucher, Txt = journalLine.Txt,
                 LedgerTransType = LedgerTransType.Payment, CurrencyCode = currency, BankTransCurrencyCode = currency, AmountCur = -input.Amount,
-                AmountMst = -input.Amount, AmountReportingCurrency = -input.Amount, BankTransAmountCur = -input.Amount, LedgerDimension = bank.LedgerDimension,
+                AmountMst = bankAccounting, AmountReportingCurrency = bankReporting, BankTransAmountCur = -input.Amount, LedgerDimension = bank.LedgerDimension,
                 SourceTableId = FinanceTableNumbers.LedgerJournalTrans, SourceRecId = journalLine.RecId, PaymentMode = paymMode, PaymReference = input.RequestId });
             await work.CompleteAsync(ct);
             await work.CommitTransactionAsync(ct);

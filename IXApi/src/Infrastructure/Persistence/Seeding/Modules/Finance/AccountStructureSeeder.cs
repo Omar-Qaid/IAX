@@ -12,12 +12,9 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance;
 /// Their main account ranges do not overlap, which is what lets the main account value select the
 /// structure.
 ///
-/// Both are defined and activated. **Neither is assigned to the ledger**, deliberately: posting
-/// validation only consults structures assigned to the ledger, and every ledger account combination
-/// seeded in this database is main-account-only with no Department. Assigning the profit and loss
-/// structure, whose Department is mandatory, would refuse every existing demo revenue and expense
-/// combination. Assignment is therefore left as a deliberate setup act, after departments are
-/// filled in on the combinations that need them.
+/// Both are defined and activated. LedgerExampleSeeder assigns them only when creating its own
+/// example ledger; example revenue/expense combinations include Department ADMIN. Existing ledger
+/// assignments and user-maintained structures are preserved.
 /// </summary>
 public sealed class AccountStructureSeeder : BaseModuleSeeder
 {
@@ -57,14 +54,20 @@ public sealed class AccountStructureSeeder : BaseModuleSeeder
     {
         var existing = await db.Set<DimensionHierarchy>().IgnoreQueryFilters()
             .FirstOrDefaultAsync(x => x.DataAreaId == Area && x.Name == input.Name, ct);
+        if (existing != null)
+        {
+            if (existing.IsDeleted || existing.IsDraft == IAX.IXApi.Modules.Finance.Common.NoYes.Yes)
+                throw new InvalidOperationException($"Existing account structure '{input.Name}' is deleted or a draft; review it before seeding.");
+            return;
+        }
         if (existing == null)
         {
             var (structure, error) = await builder.DefineAsync(Area, input, ct);
             if (structure == null)
                 throw new InvalidOperationException($"Account structure '{input.Name}' could not be seeded: {error}");
         }
-        var (_, activationError) = await builder.ActivateAsync(Area, input.Name, ct);
-        if (activationError != null)
+        var (activated, activationError) = await builder.ActivateAsync(Area, input.Name, ct);
+        if (activationError != null || activated == null)
             throw new InvalidOperationException(
                 $"Account structure '{input.Name}' could not be activated: {activationError}");
     }

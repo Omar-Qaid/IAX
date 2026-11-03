@@ -11,7 +11,7 @@ namespace IAX.IXApi.Modules.Finance.Foundation.Dimensions.AccountStructure.Confi
             builder.ToTable("DimensionHierarchyLevel");
             // A structure has one segment per position, and uses a dimension at most once.
             builder.HasIndex(x => new { x.DataAreaId, x.DimensionHierarchy, x.Level }).IsUnique();
-            builder.HasIndex(x => new { x.DataAreaId, x.DimensionHierarchy, x.DimensionAttribute }).IsUnique();
+            builder.HasIndex(x => new { x.DataAreaId, x.DimensionHierarchy, x.DimensionAttribute }).IsUnique().HasFilter(null);
             builder.HasOne<DimensionHierarchy>().WithMany()
                 .HasForeignKey(x => x.DimensionHierarchy).OnDelete(DeleteBehavior.Restrict);
             builder.HasOne<DimensionAttribute>().WithMany()

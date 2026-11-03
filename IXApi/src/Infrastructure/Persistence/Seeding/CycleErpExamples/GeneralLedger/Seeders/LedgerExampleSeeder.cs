@@ -3,6 +3,7 @@ using IAX.IXApi.Modules.Finance.Entities;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.Common;
 using Microsoft.EntityFrameworkCore;
+using IAX.IXApi.Modules.Finance.Foundation.Dimensions.AccountStructure;
 
 namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance;
 
@@ -13,7 +14,7 @@ public sealed class LedgerExampleSeeder : BaseModuleSeeder
     public override string Scope => "dat";
     public override IReadOnlyCollection<string> DependsOn => new[] {
         "Finance.GeneralLedger.MainAccounts", "Finance.GeneralLedger.Currencies", "Finance.GeneralLedger.FiscalCalendars",
-        "Finance.AccountsReceivable.CustLedger", "Finance.AccountsReceivable.DemoCustVend" };
+        "Finance.AccountsReceivable.CustLedger", "Finance.AccountsReceivable.DemoCustVend", "Finance.Foundation.AccountStructures" };
 
     public override async Task SeedAsync(SeedingContext context, CancellationToken ct)
     {
@@ -23,6 +24,7 @@ public sealed class LedgerExampleSeeder : BaseModuleSeeder
         var rates = await db.Set<ExchangeRateType>().IgnoreQueryFilters().Where(x => x.DataAreaId == "dat")
             .ToDictionaryAsync(x => x.Name, x => x.RecId, ct);
         var ledger = await db.Set<Ledger>().IgnoreQueryFilters().SingleOrDefaultAsync(x => x.DataAreaId == "dat", ct);
+        var createdLedger = ledger == null;
         if (ledger == null)
         {
             var chart = await db.Set<LedgerChartOfAccounts>().IgnoreQueryFilters()
@@ -45,11 +47,21 @@ public sealed class LedgerExampleSeeder : BaseModuleSeeder
         // Associate only known example accounts; never claim arbitrary user-created accounts.
         var exampleAccountCodes = new[] { "10010000", "10020000", "11010000", "14010000", "11020005", "11020010",
             "11020020", "11020099", "11030000", "11040000", "11050000", "11090001", "20010000", "22010005",
-            "30010000", "40010000", "40910000", "50010000", "50910000", "51030001", "51040001" };
+            "30010000", "40010000", "40910000", "50010000", "50910000", "51030001", "51040001",
+            "21010000", "21020000", "60018000" };
         var accounts = await db.Set<MainAccount>().IgnoreQueryFilters()
             .Where(x => x.DataAreaId == "dat" && x.LedgerChartOfAccounts == 0 && exampleAccountCodes.Contains(x.MainAccountId)).ToListAsync(ct);
         foreach (var account in accounts) account.LedgerChartOfAccounts = ledger.ChartOfAccounts;
         await db.SaveChangesAsync(ct);
+        if (createdLedger)
+        {
+            var structures = new AccountStructureBuilder(db);
+            foreach (var name in new[] { "BS", "PL" })
+            {
+                var (_, error) = await structures.AssignToLedgerAsync("dat", name, ct);
+                if (error != null) throw new InvalidOperationException(error);
+            }
+        }
         // The calendar seeder fills missing ledger/year/period links without replacing existing ones.
         await new FiscalCalendarSeeder().SeedAsync(context, ct);
         var seedAccounts = await db.Set<MainAccount>().IgnoreQueryFilters().Where(x => x.DataAreaId == "dat")

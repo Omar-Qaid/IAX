@@ -157,11 +157,15 @@ public sealed  class OrganizationStructureSeeder : IAX.IXApi.Infrastructure.Pers
         ("ORG-FIN-AR-LINE-MGR", 3), ("ORG-FIN-AR-EMP-01", 4)
     };
     var workers = await db.HcmWorkers.IgnoreQueryFilters()
-        .Where(x => x.IsActive && !x.IsDeleted).ToDictionaryAsync(x => x.RecId, ct);
+        .Where(x => x.DataAreaId == SeedCompany && x.IsActive && !x.IsDeleted).ToDictionaryAsync(x => x.RecId, ct);
+    var assignedWorkers = (await db.HcmWorkerOrganizationAssignments.IgnoreQueryFilters()
+        .Where(x => x.DataAreaId == SeedCompany).Select(x => x.HcmWorkerId).ToListAsync(ct)).ToHashSet();
     foreach (var (posCode, workerId) in assignmentSeeds)
     {
-        var targetWorkerId = workers.ContainsKey(workerId) ? workerId : workers.Keys.FirstOrDefault();
-        if (targetWorkerId == 0 || !positions.TryGetValue(posCode, out var position)) continue;
+        // Preserve historical assignments and never substitute an unrelated "first" worker.
+        if (!workers.ContainsKey(workerId) || assignedWorkers.Contains(workerId)
+            || !positions.TryGetValue(posCode, out var position)) continue;
+        var targetWorkerId = workerId;
         var exists = await db.HcmWorkerOrganizationAssignments.IgnoreQueryFilters()
             .AnyAsync(x => x.DataAreaId == SeedCompany && x.PositionId == position.RecId && x.HcmWorkerId == targetWorkerId, ct);
         if (!exists)
@@ -172,6 +176,7 @@ public sealed  class OrganizationStructureSeeder : IAX.IXApi.Infrastructure.Pers
                 OrganizationUnitId = position.OrganizationUnitId, OrganizationRoleId = position.RoleId, AssignmentRole = 1, IsPrimary = true,
                 IsActive = true, ValidFrom = EffectiveFrom
             });
+            assignedWorkers.Add(targetWorkerId);
         }
     }
     await db.SaveChangesAsync(ct);
