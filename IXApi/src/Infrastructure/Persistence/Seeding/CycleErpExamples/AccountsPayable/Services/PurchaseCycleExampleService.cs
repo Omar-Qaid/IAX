@@ -16,31 +16,8 @@ public sealed class PurchaseCycleExampleService
         var supply = new PurchInventorySupplyService(context.Work, context.InventoryNumbers, context.Dimensions);
         var orders = new PurchOrderService(context.Work, context.Actor, context.Actor, context.Numbers,
             supply, new SalesUnitConversionService(context.Work));
-        var order = await db.Set<PurchTable>().IgnoreQueryFilters().SingleOrDefaultAsync(x =>
-            x.DataAreaId == Company && x.PurchName == Purchase && x.ReturnItemNum == "", ct);
-        if (order == null)
-        {
-            var result = await orders.CreateAsync(new PurchOrderCreateDto(Vendor, null, CurrencyCode, context.Date, Site, Warehouse, Purchase), ct);
-            ErpCycleExampleContext.Require(result.StatusCode, result.Message);
-            order = (PurchTable)result.Data!;
-        }
-        if (order.IsDeleted || order.OrderAccount != Vendor || order.InvoiceAccount != Vendor || order.CurrencyCode != CurrencyCode
-            || order.InventSiteId != Site || order.InventLocationId != Warehouse || order.PurchaseType != PurchaseType.Purch)
-            throw new InvalidOperationException("ERP purchase example conflicts with an existing order; it was preserved.");
-        var line = await db.Set<PurchLine>().IgnoreQueryFilters()
-            .SingleOrDefaultAsync(x => x.DataAreaId == Company && x.PurchId == order.PurchId, ct);
-        if (line == null)
-        {
-            var result = await orders.AddLineAsync(order.RecId, new PurchLineInputDto(Item, PurchaseQuantity, Unit,
-                PurchasePrice, 1m, Site, Warehouse, context.Date, "ERP cycle: office chairs for resale"), ct);
-            ErpCycleExampleContext.Require(result.StatusCode, result.Message);
-            line = await db.Set<PurchLine>().SingleAsync(x => x.PurchId == order.PurchId, ct);
-        }
-        if (line.IsDeleted || line.ItemId != Item || line.QtyOrdered != PurchaseQuantity || line.PurchQty != PurchaseQuantity
-            || line.PurchPrice != PurchasePrice || line.PurchUnit != Unit || line.PriceUnit != 1m
-            || line.CurrencyCode != CurrencyCode || line.VendAccount != Vendor || line.LineAmount != PurchaseQuantity * PurchasePrice)
-            throw new InvalidOperationException("ERP purchase example lines were customized; no further posting was attempted.");
-        await ErpCycleStorageIntegrity.RequireAsync(db, line.InventDimId, ct);
+        var order = await PurchTableSeeder.SeedAsync(context, orders, ct);
+        var line = await PurchLineSeeder.SeedAsync(context, orders, order, ct);
         var hasReceipt = await db.Set<VendPackingSlipJour>().IgnoreQueryFilters()
             .AnyAsync(x => x.DataAreaId == Company && x.PurchId == order.PurchId, ct);
         await EnsureConfirmationAsync(db, order, line,

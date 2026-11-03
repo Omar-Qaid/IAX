@@ -20,35 +20,8 @@ public sealed class SalesCycleExampleService
         var demand = new SalesInventoryDemandService(context.Work, context.InventoryNumbers, context.Dimensions);
         var orders = new SalesOrderQuickCreateService(context.Work, context.Actor, context.Numbers, validation);
         var lines = new SalesOrderLineService(context.Work, context.Actor, validation, demand, new SalesUnitConversionService(context.Work));
-        var order = await db.Set<SalesTable>().IgnoreQueryFilters().SingleOrDefaultAsync(x =>
-            x.DataAreaId == Company && x.CustomerRef == Sales, ct);
-        if (order == null)
-        {
-            var result = await orders.CreateAsync(new SalesOrderQuickCreateDto { CustomerAccount = Customer,
-                CustomerReference = Sales, SalesName = Sales, CurrencyCode = CurrencyCode,
-                InventSiteId = Site, InventLocationId = Warehouse, RequestedReceiptDate = context.Date,
-                RequestedShipDate = context.Date, TaxGroupId = "DOM" }, ct);
-            if (result.Error != null) throw new InvalidOperationException(result.Error);
-            order = await db.Set<SalesTable>().SingleAsync(x => x.CustomerRef == Sales, ct);
-        }
-        if (order.IsDeleted || order.CustAccount != Customer || order.InvoiceAccount != Customer || order.CurrencyCode != CurrencyCode
-            || order.InventSiteId != Site || order.InventLocationId != Warehouse || order.ReturnItemNum != "")
-            throw new InvalidOperationException("ERP sales example conflicts with an existing order; it was preserved.");
-        var line = await db.Set<SalesLine>().IgnoreQueryFilters()
-            .SingleOrDefaultAsync(x => x.DataAreaId == Company && x.SalesId == order.SalesId, ct);
-        if (line == null)
-        {
-            var result = await lines.AddAsync(order.RecId, new SalesLineInputDto { ItemNumber = Item,
-                Quantity = SalesQuantity, Unit = Unit, UnitPrice = SalesPrice, PriceUnit = 1m,
-                InventSiteId = Site, InventLocationId = Warehouse, Description = "ERP cycle: office chairs sold",
-                DeliveryDate = context.Date, TaxGroup = "DOM" }, ct);
-            if (result.Status != SalesLineWriteStatus.Success) throw new InvalidOperationException(result.Error);
-            line = await db.Set<SalesLine>().SingleAsync(x => x.SalesId == order.SalesId, ct);
-        }
-        if (line.IsDeleted || line.ItemId != Item || line.SalesQty != SalesQuantity || line.QtyOrdered != SalesQuantity
-            || line.SalesPrice != SalesPrice || line.SalesUnit != Unit || line.PriceUnit != 1m || line.CustAccount != Customer)
-            throw new InvalidOperationException("ERP sales example lines were customized; no further posting was attempted.");
-        await ErpCycleStorageIntegrity.RequireAsync(db, line.InventDimId, ct);
+        var order = await SalesTableSeeder.SeedAsync(context, orders, ct);
+        var line = await SalesLineSeeder.SeedAsync(context, lines, order, ct);
         if (!await db.Set<CustConfirmJour>().AnyAsync(x => x.SalesId == order.SalesId && x.ParmId == Sales, ct))
         {
             var result = await new SalesOrderConfirmationService(context.Work, context.Actor, context.Numbers,

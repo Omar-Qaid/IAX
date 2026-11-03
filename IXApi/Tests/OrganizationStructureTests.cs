@@ -58,7 +58,6 @@ public sealed class OrganizationStructureTests
         Assert.Equal(new[] { "SH-A", "SUP-NJ", "REG-JED", "AREA-W", "ORG-BU", "ORG-COMPANY" },
             (await f.Service.GetAncestorsAsync(hierarchy.RecId, shop.RecId, Start)).Select(x => x.Code));
     }
-
     [Fact]
     public async Task Structure_seed_preserves_customized_closed_and_deleted_records_across_company_contexts()
     {
@@ -222,7 +221,7 @@ public sealed class OrganizationStructureTests
             await f.connection.OpenAsync();
             f.Db = new TestContext(new DbContextOptionsBuilder<TestContext>().UseSqlite(f.connection).Options, f.Company);
             await f.Db.Database.EnsureCreatedAsync();
-            f.Db.HcmWorkers.AddRange(new HcmWorker { RecId = 1, PersonnelNumber = "W1", DataAreaId = "dat" }, new HcmWorker { RecId = 2, PersonnelNumber = "W2", DataAreaId = "dat" });
+            f.Db.HcmWorkers.AddRange(new HcmWorker { RecId = 1, PersonnelNumber = "DEMO-DIRECTOR", DataAreaId = "dat" }, new HcmWorker { RecId = 2, PersonnelNumber = "DEMO-SALES-MGR", DataAreaId = "dat" });
             await f.Db.SaveChangesAsync();
             f.Service = new OrganizationStructureService(new StructureUnitOfWork(f.Db), f.Company);
             return f;

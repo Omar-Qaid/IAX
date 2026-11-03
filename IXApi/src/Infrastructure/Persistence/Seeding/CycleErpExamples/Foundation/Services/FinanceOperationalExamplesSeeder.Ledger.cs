@@ -1,3 +1,6 @@
+using IAX.IXApi.Infrastructure.Persistence.Seeding.CycleErpExamples.AccountsPayable;
+using IAX.IXApi.Infrastructure.Persistence.Seeding.CycleErpExamples.AccountsReceivable;
+using IAX.IXApi.Infrastructure.Persistence.Seeding.CycleErpExamples.GeneralLedger;
 using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.AccountsPayable;
@@ -50,20 +53,10 @@ public sealed partial class FinanceOperationalExamplesSeeder
             row.DataAreaId = "dat"; row.CurrencyCode = "SAR"; row.CreatedBy = "sys"; row.OwnerAccountId = "sys";
             db.Add(row);
         }
-        if (!await db.Set<BankGroup>().IgnoreQueryFilters().AnyAsync(x => x.DataAreaId == "dat" && x.BankGroupId == "DEMO", ct))
-            db.Add(new BankGroup { BankGroupId = "DEMO", Name = "Example bank - training only", CurrencyCode = "SAR", DataAreaId = "dat" });
+        await BankGroupSeeder.SeedAsync(db, ct);
         await db.SaveChangesAsync(ct);
-        if (!await db.Set<BankAccountTable>().IgnoreQueryFilters().AnyAsync(x => x.DataAreaId == "dat" && x.AccountId == "DEMO-SAR", ct))
-            db.Add(new BankAccountTable { AccountId = "DEMO-SAR", AccountNum = "TRAINING-001", Name = "Example SAR operating account",
-                BankGroupId = "DEMO", CurrencyCode = "SAR", LedgerDimension = dimensions["10020000"],
-                BankAccountStatus = BankAccountStatus.Active, ActiveFrom = new DateTime(2026,1,1), ActiveTo = new DateTime(2099,12,31),
-                CustPaymentJournalName = "DEMO-AR", VendPaymentJournalName = "DEMO-AP", DataAreaId = "dat" });
-        if (!await db.Set<CustParameters>().IgnoreQueryFilters().AnyAsync(x => x.DataAreaId == "dat", ct))
-            db.Add(new CustParameters { DataAreaId = "dat", CurrencyCode = "SAR", CustPostingProfile = "GEN",
-                PaymTermId = "Monthly", PaymMode = "Transfer", DlvMode = "DHL", TaxGroup = "DOM",
-                PriceDiscJournalNamePrice = "SALEPRICE", PriceDiscJournalNameLineDisc = "LINEDISC", PriceDiscJournalNameTotalDisc = "TOTALDISC" });
-        if (!await db.Set<VendLedgerAccounts>().IgnoreQueryFilters().AnyAsync(x => x.DataAreaId == "dat" && x.PostingProfile == "DEMO" && x.AccountCode == AccountCode.All, ct))
-            db.Add(new VendLedgerAccounts { DataAreaId = "dat", PostingProfile = "DEMO", AccountCode = AccountCode.All,
-                SummaryLedgerDimension = dimensions["20010000"], Num = "" });
+        await BankAccountTableSeeder.SeedAsync(db, dimensions["10020000"], ct);
+        await CustParametersSeeder.SeedAsync(db, ct);
+        await VendLedgerAccountsSeeder.SeedAsync(db, dimensions["20010000"], ct);
     }
 }

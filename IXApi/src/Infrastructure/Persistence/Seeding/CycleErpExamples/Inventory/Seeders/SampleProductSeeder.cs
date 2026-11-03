@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using IAX.IXApi.Infrastructure.Persistence.Seeding.CycleErpExamples.Inventory;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -37,56 +38,8 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
                 .ToDictionaryAsync(g => g.ItemGroupId, g => g.RecId, cancellationToken);
             var uomIdByCode = await db.Set<UnitOfMeasure>().IgnoreQueryFilters().ToDictionaryAsync(u => u.Symbol, u => u.RecId, cancellationToken);
 
-            var itemSeeds = new[]
-            {
-                new
-                {
-                    Code = "ITM-1001", Name = "Bottled Water 500ml", Group = "CONS", Description = "Drinking water, 500 ml bottle",
-                    Uoms = new (string Uom, decimal Pack, string? Barcode, bool Buy, bool Sell, bool Inv)[]
-                    {
-                        ("BTL", 1m, "6280001000017", false, true, true),
-                        ("CTN", 24m, "6280001000024", true, false, false),
-                    }
-                },
-                new
-                {
-                    Code = "ITM-1002", Name = "A4 Paper Ream", Group = "CONS", Description = "A4 printing paper, 500 sheets per ream",
-                    Uoms = new (string Uom, decimal Pack, string? Barcode, bool Buy, bool Sell, bool Inv)[]
-                    {
-                        ("PCK", 1m, "6280001000031", false, true, true),
-                        ("BOX", 5m, "6280001000048", true, false, false),
-                    }
-                },
-                new
-                {
-                    Code = "ITM-1003", Name = "Steel Rod 12mm", Group = "RAW", Description = "Reinforcement steel rod, 12 mm diameter",
-                    Uoms = new (string Uom, decimal Pack, string? Barcode, bool Buy, bool Sell, bool Inv)[]
-                    {
-                        ("M", 1m, "6280001000055", false, true, true),
-                        ("M", 1m, "6280001000062", true, false, false),
-                    }
-                },
-                new
-                {
-                    Code = "ITM-1004", Name = "T-Shirt Cotton", Group = "FIN", Description = "100% cotton T-shirt",
-                    Uoms = new (string Uom, decimal Pack, string? Barcode, bool Buy, bool Sell, bool Inv)[]
-                    {
-                        ("PCS", 1m, "6280001000079", false, true, true),
-                        ("DOZ", 12m, "6280001000086", true, false, false),
-                    }
-                },
-                new
-                {
-                    Code = "ITM-1005", Name = "Cooking Oil 1L", Group = "FIN", Description = "Vegetable cooking oil, 1 litre bottle",
-                    Uoms = new (string Uom, decimal Pack, string? Barcode, bool Buy, bool Sell, bool Inv)[]
-                    {
-                        ("BTL", 1m, "6280001000093", false, true, true),
-                        ("CTN", 12m, "6280001000109", true, false, false),
-                    }
-                },
-            };
+            var itemSeeds = EcoResProductDemoData.Items;
 
-            var modulesToAdd = new List<InventTableModule>();
 
             foreach (var seed in itemSeeds)
             {
@@ -112,74 +65,17 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
                     .SingleOrDefaultAsync(x => x.DisplayProductNumber == seed.Code, cancellationToken);
                 if (product == null)
                 {
-                    product = new EcoResProduct { DisplayProductNumber = seed.Code, SearchName = seed.Name, ProductType = ItemType.Item };
-                    db.Add(product);
-                    await db.SaveChangesAsync(cancellationToken);
+                    product = await EcoResProductSeeder.SeedAsync(db, seed.Code, seed.Name, cancellationToken);
                 }
-                if (!await db.Set<EcoResDistinctProduct>().IgnoreQueryFilters().AnyAsync(x => x.RecId == product.RecId, cancellationToken))
-                    db.Add(new EcoResDistinctProduct { RecId = product.RecId });
-                if (!await db.Set<EcoResProductTranslation>().IgnoreQueryFilters().AnyAsync(x => x.Product == product.RecId && x.LanguageId == "en-us", cancellationToken))
-                    db.Add(new EcoResProductTranslation { Product = product.RecId, LanguageId = "en-us", Name = seed.Name, Description = seed.Description });
-                if (item == null)
-                {
-                    item = new InventTable { ItemId = seed.Code, DataAreaId = "dat", IsActive = true,
-                        CreatedBy = createdBy, OwnerAccountId = createdBy, BomUnitId = baseRow.Uom };
-                    db.Add(item);
-                }
+                await EcoResDistinctProductSeeder.SeedAsync(db, product.RecId, cancellationToken);
+                await EcoResProductTranslationSeeder.SeedAsync(db, product.RecId, seed.Name, seed.Description, cancellationToken);
+                item ??= await InventTableSeeder.SeedAsync(db, seed.Code, baseRow.Uom, cancellationToken);
                 item.Product = product.RecId;
                 if (string.IsNullOrWhiteSpace(item.Name)) item.Name = seed.Name;
-                if (!await db.Set<InventItemGroupItem>().IgnoreQueryFilters().AnyAsync(x => x.ItemDataAreaId == "dat" && x.ItemId == seed.Code, cancellationToken))
-                    db.Add(new InventItemGroupItem { ItemId = seed.Code, ItemGroupId = seed.Group, ItemDataAreaId = "dat", ItemGroupDataAreaId = "dat" });
-
-                modulesToAdd.Add(new InventTableModule
-                {
-                    ItemId = seed.Code,
-                    ModuleType = ModuleInventPurchSales.Inventory,
-                    UnitId = baseRow.Uom,
-                    Price = 10m,
-                    PriceUnit = 1m,
-                    LineDisc = "",
-                    TaxItemGroupId = "FULL",
-                    IsActive = true,
-                    CreatedBy = createdBy,
-                    OwnerAccountId = createdBy
-                });
-
-                modulesToAdd.Add(new InventTableModule
-                {
-                    ItemId = seed.Code,
-                    ModuleType = ModuleInventPurchSales.Purchase,
-                    UnitId = buyRow.Uom,
-                    Price = 12m,
-                    PriceUnit = 1m,
-                    LineDisc = "",
-                    TaxItemGroupId = "FULL",
-                    IsActive = true,
-                    CreatedBy = createdBy,
-                    OwnerAccountId = createdBy
-                });
-
-                modulesToAdd.Add(new InventTableModule
-                {
-                    ItemId = seed.Code,
-                    ModuleType = ModuleInventPurchSales.Sales,
-                    UnitId = sellRow.Uom,
-                    Price = 15m,
-                    PriceUnit = 1m,
-                    LineDisc = "",
-                    TaxItemGroupId = "FULL",
-                    IsActive = true,
-                    CreatedBy = createdBy,
-                    OwnerAccountId = createdBy
-                });
-            }
-
-            var existingModules = await db.Set<InventTableModule>().IgnoreQueryFilters()
-                .Where(x => x.DataAreaId == "dat").Select(x => new { x.ItemId, x.ModuleType }).ToListAsync(cancellationToken);
-            foreach (var module in modulesToAdd.Where(x => !existingModules.Any(e => e.ItemId == x.ItemId && e.ModuleType == x.ModuleType)))
-            {
-                module.DataAreaId = "dat";
-                db.Add(module);
+                await InventItemGroupItemSeeder.SeedAsync(db, seed.Code, seed.Group, cancellationToken);
+                await InventTableModuleSeeder.SeedAsync(db, seed.Code, ModuleInventPurchSales.Inventory, baseRow.Uom, 10m, cancellationToken);
+                await InventTableModuleSeeder.SeedAsync(db, seed.Code, ModuleInventPurchSales.Purchase, buyRow.Uom, 12m, cancellationToken);
+                await InventTableModuleSeeder.SeedAsync(db, seed.Code, ModuleInventPurchSales.Sales, sellRow.Uom, 15m, cancellationToken);
             }
             await db.SaveChangesAsync(cancellationToken);
 
@@ -216,19 +112,8 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance
                         || (rule.FromUnitOfMeasure == to.RecId && rule.ToUnitOfMeasure == from.RecId))))
                     continue;
 
-                db.Set<UnitOfMeasureConversion>().Add(new UnitOfMeasureConversion
-                {
-                    Product = productScope,
-                    FromUnitOfMeasure = from.RecId,
-                    ToUnitOfMeasure = to.RecId,
-                    Factor = seed.Factor,
-                    Numerator = 1,
-                    Denominator = 1,
-                    DataAreaId = item.DataAreaId,
-                    IsActive = true,
-                    CreatedBy = createdBy,
-                    OwnerAccountId = createdBy,
-                });
+                await UnitOfMeasureConversionSeeder.SeedAsync(db, productScope, from.RecId, to.RecId,
+                    seed.Factor, item.DataAreaId, cancellationToken);
             }
             await db.SaveChangesAsync(cancellationToken);
         }

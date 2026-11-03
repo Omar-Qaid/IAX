@@ -1,3 +1,4 @@
+using IAX.IXApi.Infrastructure.Persistence.Seeding.CycleErpExamples.Workflow;
 using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Modules.Workflow.Requests;
 using IAX.IXApi.Modules.Workflow.Variables;
@@ -21,11 +22,6 @@ public sealed class WorkflowVariableExampleSeeder : BaseModuleSeeder
                             where request.DataAreaId == "dat" && request.Code.StartsWith("SEED-") && variable.ProcessId == request.ProcessId
                             select new { RequestId = request.RecId, VariableId = variable.RecId, detail.ControlValue }).ToListAsync(ct);
         foreach (var value in values.DistinctBy(x => new { x.RequestId, x.VariableId }))
-            if (!await db.Set<WfRequestVariable>().IgnoreQueryFilters().AnyAsync(x => x.RequestId == value.RequestId && x.VariableId == value.VariableId, ct))
-            {
-                db.Add(new WfRequestVariable { RequestId = value.RequestId, VariableId = value.VariableId,
-                    VariableValue = value.ControlValue, DataAreaId = "dat", CreatedBy = "sys", OwnerAccountId = "sys" });
-                await db.SaveChangesAsync(ct);
-            }
+            await WfRequestVariableSeeder.SeedAsync(db, value.RequestId, value.VariableId, value.ControlValue, ct);
     }
 }

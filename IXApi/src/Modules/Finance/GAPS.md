@@ -9,8 +9,8 @@ counted as gaps.
 | Module | File | Highest-priority open gap |
 | --- | --- | --- |
 | General ledger | [GeneralLedger/GAPS.md](GeneralLedger/GAPS.md) | Three failing journal posting tests (reversal, voucher allocation); journal tax calculation |
-| Accounts payable | [AccountsPayable/GAPS.md](AccountsPayable/GAPS.md) | No purchase trade agreements; vendor payment currency; invoice matching tolerances |
-| Accounts receivable | [AccountsReceivable/GAPS.md](AccountsReceivable/GAPS.md) | Realized gain/loss still untested; return dispositions |
+| Accounts payable | [AccountsPayable/GAPS.md](AccountsPayable/GAPS.md) | No purchase trade agreements; invoice matching tolerances; payment proposal |
+| Accounts receivable | [AccountsReceivable/GAPS.md](AccountsReceivable/GAPS.md) | Return dispositions; settlement priority and cash discount on the settlement path |
 | Inventory | [Inventory/GAPS.md](Inventory/GAPS.md) | SQL Server verification; four unsupported inventory models |
 | Foundation | [Foundation/GAPS.md](Foundation/GAPS.md) | Tax calculation ignores every configured origin, silently; payment schedules make invoices unpostable |
 | Common (shared posting) | [Common/GAPS.md](Common/GAPS.md) | Posting lock unproven under SQL Server; two overlapping posting exception types |
@@ -33,15 +33,18 @@ counted as gaps.
    ignores, and posts a wrong amount silently. The zero-rate half of that third theme was closed on
    2026-11-03; the origin half remains, and is the one that produces wrong amounts.
 
-2. **Foreign currency is being lifted, flow by flow, and is nearly done on documents.** Every posting
+2. **Foreign currency is now complete across every document and payment flow.** Every posting
    flow used to reject a document whose currency differed from the accounting currency. The shared
    answer lives in `Common` as `SubledgerCurrencyTranslation`, and **all five invoice and credit-note
    flows** now use it: sales invoice, free text invoice, customer credit note, vendor invoice and
    vendor credit note, the last two including the inventory cost translation that made them
-   non-mechanical. **Payments are where it stands now.** The customer payment translates and posts a
-   realized gain or loss, but that calculation has no test. The **vendor payment** still refuses a
-   foreign currency outright. Both sides' bank-currency mismatch is still refused, which is bank
-   revaluation and a separate feature.
+   non-mechanical. **Both payments were finished on 2026-11-03**: the customer payment's realized
+   gain/loss calculation, written on 2026-11-02 and untested, is now covered in both directions, and
+   the vendor payment translates and posts its own realized difference instead of refusing a foreign
+   currency. Two things are deliberately still refused by name: a **bank account in another
+   currency**, which is bank revaluation; and settling two transactions against each other at
+   **different rates**, because that path posts no voucher to carry the difference. What is left is
+   **revaluation** of open balances, not translation.
 
 3. **The test suite is not green, and the gap files said it was.** `dotnet test
    Tests/IXApi.Tests.csproj` on 2026-11-03: **754 passed, 3 failed, 2 skipped**. All three failures

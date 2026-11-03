@@ -1,4 +1,4 @@
-﻿using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
+using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Modules.Identity.Roles;
 using IAX.IXApi.Modules.Identity.Users;
 using IAX.IXApi.Modules.Finance.Foundation.OrganizationUnits;
@@ -67,7 +67,6 @@ public sealed  class OrganizationStructureSeeder : IAX.IXApi.Infrastructure.Pers
         }
         units[seed.Code] = unit;
     }
-
     var roleSeeds = new[] { ("AREA_MANAGER", "Area Manager", "مدير المنطقة"),
         ("REGION_MANAGER", "Region Manager", "مدير الإقليم"),
         ("SUPERVISOR", "Supervisor", "مشرف"), ("SELLER", "Seller", "بائع"),
@@ -148,24 +147,22 @@ public sealed  class OrganizationStructureSeeder : IAX.IXApi.Infrastructure.Pers
         positions[code] = pos;
     }
 
-    var assignmentSeeds = new (string PositionCode, long WorkerId)[]
+    var assignmentSeeds = new (string PositionCode, string PersonnelNumber)[]
     {
-        ("AREA-W-MGR", 1), ("REG-JED-MGR", 2), ("SUP-NJ-SUP", 3),
-        ("SH-A-SELLER-01", 4), ("SH-B-SELLER-01", 5),
-        ("ORG-FIN-MGR", 1), ("ORG-WH-MGR", 2),
-        ("ORG-FIN-ADMIN-MGR", 1), ("ORG-FIN-ACC-MGR", 2),
-        ("ORG-FIN-AR-LINE-MGR", 3), ("ORG-FIN-AR-EMP-01", 4)
+        ("AREA-W-MGR", "DEMO-DIRECTOR"), ("REG-JED-MGR", "DEMO-SALES-MGR"),
+        ("SUP-NJ-SUP", "DEMO-SUPERVISOR"), ("SH-A-SELLER-01", "DEMO-SELLER-A"),
+        ("SH-B-SELLER-01", "DEMO-SELLER-B"), ("ORG-FIN-MGR", "DEMO-FIN-MGR"),
+        ("ORG-FIN-AR-EMP-01", "DEMO-ACCOUNTANT")
     };
     var workers = await db.HcmWorkers.IgnoreQueryFilters()
-        .Where(x => x.DataAreaId == SeedCompany && x.IsActive && !x.IsDeleted).ToDictionaryAsync(x => x.RecId, ct);
-    var assignedWorkers = (await db.HcmWorkerOrganizationAssignments.IgnoreQueryFilters()
+        .Where(x => x.DataAreaId == SeedCompany && x.IsActive && !x.IsDeleted).ToDictionaryAsync(x => x.PersonnelNumber, ct);    var assignedWorkers = (await db.HcmWorkerOrganizationAssignments.IgnoreQueryFilters()
         .Where(x => x.DataAreaId == SeedCompany).Select(x => x.HcmWorkerId).ToListAsync(ct)).ToHashSet();
-    foreach (var (posCode, workerId) in assignmentSeeds)
+    foreach (var (posCode, personnelNumber) in assignmentSeeds)
     {
         // Preserve historical assignments and never substitute an unrelated "first" worker.
-        if (!workers.ContainsKey(workerId) || assignedWorkers.Contains(workerId)
+        if (!workers.TryGetValue(personnelNumber, out var worker) || assignedWorkers.Contains(worker.RecId)
             || !positions.TryGetValue(posCode, out var position)) continue;
-        var targetWorkerId = workerId;
+        var targetWorkerId = worker.RecId;
         var exists = await db.HcmWorkerOrganizationAssignments.IgnoreQueryFilters()
             .AnyAsync(x => x.DataAreaId == SeedCompany && x.PositionId == position.RecId && x.HcmWorkerId == targetWorkerId, ct);
         if (!exists)

@@ -13272,7 +13272,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasMaxLength(4)
                         .HasColumnType("nvarchar(4)");
 
-                    b.Property<long>("DimensionAttribute")
+                    b.Property<long?>("DimensionAttribute")
                         .HasColumnType("bigint");
 
                     b.Property<long>("DimensionHierarchy")
@@ -31488,8 +31488,7 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.HasOne("IAX.IXApi.Modules.Finance.Entities.DimensionAttribute", null)
                         .WithMany()
                         .HasForeignKey("DimensionAttribute")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("IAX.IXApi.Modules.Finance.Entities.DimensionHierarchy", null)
                         .WithMany()

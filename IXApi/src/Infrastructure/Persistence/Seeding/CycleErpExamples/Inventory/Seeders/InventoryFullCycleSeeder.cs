@@ -152,6 +152,10 @@ public sealed class InventoryFullCycleSeeder : BaseModuleSeeder
         Require((await transfers.ShipAsync("FIFO115-TRANSIT", new("SHIP", date, new Dictionary<decimal, decimal> { [1m] = 40m }), ct)).Error);
         Require((await transfers.ReceiveAsync("FIFO115-TRANSIT", new("RECEIVE", date, new Dictionary<decimal, decimal> { [1m] = 40m }), ct)).Error);
 
+        // Settle the original issue before a later return uses its financial cost.
+        // Keep returns after the resulting financial boundary; never rewrite an existing return.
+        Require((await new InventCloseService(work, actor, actor, numbers).CloseItemAsync(Item, date, ct)).Error);
+        date = date.AddDays(1);
         var customerReturns = new CustReturnService(work, actor, numbers, inventoryNumbers);
         var returnLine = await db.Set<SalesLine>().SingleOrDefaultAsync(x => x.DataAreaId == "dat" && x.InventTransIdReturn == sl.InventTransId && x.SalesType == SalesType.ReturnItem, ct);
         if (returnLine == null)

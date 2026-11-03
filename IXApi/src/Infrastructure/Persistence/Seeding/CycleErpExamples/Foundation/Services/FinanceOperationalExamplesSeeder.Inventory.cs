@@ -1,3 +1,4 @@
+using IAX.IXApi.Infrastructure.Persistence.Seeding.CycleErpExamples.Inventory;
 using IAX.IXApi.Infrastructure.Persistence.Seeding.Core;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
 using IAX.IXApi.Modules.Finance.AccountsPayable;
@@ -29,12 +30,9 @@ public sealed partial class FinanceOperationalExamplesSeeder
         var codes = new[] { "ITM-1001", "ITM-1002", "ITM-1003", "ITM-1004", "ITM-1005" };
         foreach (var code in codes)
         {
-            if (!await db.Set<InventModelGroupItem>().IgnoreQueryFilters().AnyAsync(x => x.ItemDataAreaId == "dat" && x.ItemId == code, ct))
-                db.Add(new InventModelGroupItem { ItemId = code, ModelGroupId = "FIFO", ItemDataAreaId = "dat", ModelGroupDataAreaId = "dat", DataAreaId = "dat" });
-            if (!await db.Set<EcoResStorageDimensionGroupItem>().IgnoreQueryFilters().AnyAsync(x => x.ItemDataAreaId == "dat" && x.ItemId == code, ct))
-                db.Add(new EcoResStorageDimensionGroupItem { ItemId = code, ItemDataAreaId = "dat", StorageDimensionGroup = storage.RecId, DataAreaId = "dat" });
-            if (!await db.Set<EcoResTrackingDimensionGroupItem>().IgnoreQueryFilters().AnyAsync(x => x.ItemDataAreaId == "dat" && x.ItemId == code, ct))
-                db.Add(new EcoResTrackingDimensionGroupItem { ItemId = code, ItemDataAreaId = "dat", TrackingDimensionGroup = tracking.RecId, DataAreaId = "dat" });
+            await InventModelGroupItemSeeder.SeedAsync(db, code, ct);
+            await EcoResStorageDimensionGroupItemSeeder.SeedAsync(db, storage.RecId, code, ct);
+            await EcoResTrackingDimensionGroupItemSeeder.SeedAsync(db, tracking.RecId, code, ct);
         }
         await db.SaveChangesAsync(ct);
     }

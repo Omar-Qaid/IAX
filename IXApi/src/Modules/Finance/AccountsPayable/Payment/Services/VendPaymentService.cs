@@ -212,7 +212,7 @@ public sealed class VendPaymentService(IUnitOfWork work, ICurrentUserService use
             // balancing entry is its negation, so a gain posts as a credit.
             if (plugAccounting != 0m || plugReporting != 0m)
             {
-                var isGain = plugAccounting < 0m;
+                var isGain = plugAccounting > 0m;
                 var gainLossAccount = await support.ResolveRealizedGainLossAsync(area, ledger.Ledger.RecId,
                     currency, isGain, ct);
                 Db.Add(SubledgerPostingSupport.AccountEntry(area, entry.RecId, gainLossAccount,
