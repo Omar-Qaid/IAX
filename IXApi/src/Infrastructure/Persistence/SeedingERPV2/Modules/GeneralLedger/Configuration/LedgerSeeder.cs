@@ -23,7 +23,7 @@ public sealed class LedgerSeeder : IDataSeeder
         var chart = await c.RequireAsync<LedgerChartOfAccounts>(x => x.Name == "APV2", ct);
         var calendar = await c.RequireAsync<FiscalCalendar>(x => x.CalendarId == "APV2", ct);
         var rate = await c.RequireAsync<ExchangeRateType>(x => x.Name == "APV2", ct);
-        var ledger = await c.EnsureAsync<Ledger>(x => x.PrimaryForLegalEntity == company.RecId,
+        var ledger = await c.EnsureAsync<Ledger>(x => x.DataAreaId == c.Company,
             new() { Name = "APV2", Description = "AP example ledger", PrimaryForLegalEntity = company.RecId, ChartOfAccounts = chart.RecId,
                 FiscalCalendar = calendar.RecId, AccountingCurrency = "SAR", DefaultExchangeRateType = rate.RecId }, ct);
         var yearName = c.FiscalYear.ToString(System.Globalization.CultureInfo.InvariantCulture);

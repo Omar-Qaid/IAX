@@ -18,12 +18,12 @@ public sealed class AccountsPayableNumberSequenceSeeder : IDataSeeder
     public async Task SeedAsync(SeedContext c, CancellationToken ct)
     {
 
-        foreach (var key in new[] { "APV2-VOUCH", "APV2-PAY" })
+        foreach (var key in new[] { "APV2-VEND", "APV2-PURCH" })
         {
             var sequence = await c.EnsureAsync<SysNumberSequence>(x => x.NumberSequence == key,
-                new() { NumberSequence = key, Txt = "AP example vouchers", Format = key + "-######", AnnotatedFormat = key + "-######",
+                new() { NumberSequence = key, Txt = "AP example vouchers", Format = key + "-######", AnnotatedFormat = key + "-{SEQ}",
                     Lowest = 1, Highest = 999999, NextRec = 1, InUse = 1, Blocked = 0, Manual = 0, NoIncrement = 0 }, ct,
-                nameof(SysNumberSequence.Format), nameof(SysNumberSequence.InUse), nameof(SysNumberSequence.Blocked), nameof(SysNumberSequence.Manual), nameof(SysNumberSequence.NoIncrement));
+                nameof(SysNumberSequence.Format), nameof(SysNumberSequence.AnnotatedFormat), nameof(SysNumberSequence.Lowest), nameof(SysNumberSequence.Highest), nameof(SysNumberSequence.InUse), nameof(SysNumberSequence.Blocked), nameof(SysNumberSequence.Manual), nameof(SysNumberSequence.NoIncrement));
             if ((sequence.NextRec ?? 0) < 1 || sequence.NextRec > sequence.Highest) throw new InvalidOperationException("AP voucher sequence is invalid or exhausted.");
         }
     }

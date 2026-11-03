@@ -22,7 +22,7 @@ public sealed class EcoResProductSeeder : IDataSeeder
         {
             var number = $"APV2-{c.Company}-{suffix}";
             await c.EnsureAsync<EcoResProduct>(x => x.DisplayProductNumber == number,
-                new() { DisplayProductNumber = number, SearchName = number, ProductType = suffix == "STOCK" ? ItemType.Item : ItemType.Service }, ct);
+                new() { DisplayProductNumber = number, SearchName = suffix == "STOCK" ? "A4-PAPER-REAM" : "PRINTER-MAINT", ProductType = suffix == "STOCK" ? ItemType.Item : ItemType.Service }, ct);
         }
     }
 }

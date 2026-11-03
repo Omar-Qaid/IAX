@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution;
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Contracts;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.AccountsPayable;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.CashAndBank;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.GeneralLedger;
@@ -12,6 +13,8 @@ public static class SeedingServiceCollectionExtensions
     public static IServiceCollection AddAccountsPayablePhaseOneSeeding(this IServiceCollection services)
     {
         services.TryAddScoped<SeedRunner>();
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<ISeedValidator, SeedModelIntegrityValidator>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<ISeedValidator, AccountsPayablePhaseOneValidator>());
         return services.AddGeneralLedgerSeeders().AddTaxSeeders().AddInventorySeeders()
             .AddCashAndBankSeeders().AddAccountsPayableSeeders();
     }

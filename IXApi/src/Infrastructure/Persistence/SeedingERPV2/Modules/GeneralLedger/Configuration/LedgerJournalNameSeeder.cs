@@ -14,7 +14,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.GeneralLedge
 public sealed class LedgerJournalNameSeeder : IDataSeeder
 {
     public string Id => "ERPV2.LedgerJournalNameSeeder";
-    public IReadOnlyCollection<string> Dependencies => ["ERPV2.AccountsPayableNumberSequenceSeeder", "ERPV2.CurrencySeeder"];
+    public IReadOnlyCollection<string> Dependencies => ["ERPV2.GeneralLedgerNumberSequenceSeeder", "ERPV2.CurrencySeeder"];
     public async Task SeedAsync(SeedContext c, CancellationToken ct)
     {
 

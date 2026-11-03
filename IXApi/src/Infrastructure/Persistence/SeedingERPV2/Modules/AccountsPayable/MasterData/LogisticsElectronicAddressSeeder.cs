@@ -25,7 +25,7 @@ public sealed class LogisticsElectronicAddressSeeder : IDataSeeder
             var location = await c.RequireAsync<LogisticsLocation>(x => x.LocationId == code, ct);
             var email = await c.EnsureAsync<LogisticsElectronicAddress>(x => x.ElectronicAddressId == code,
                 new() { ElectronicAddressId = code, Location = location.RecId, Type = ElectronicAddressType.Email,
-                    Locator = suffix.ToLowerInvariant() + "@ap-example.invalid", Description = "Synthetic AP email", IsPrimary = NoYes.Yes }, ct);
+                    Locator = VendorSeedExample.Email(suffix), Description = "Supplier accounts payable contact (demo)", IsPrimary = NoYes.Yes }, ct);
             if (party.PrimaryContactEmail != null && party.PrimaryContactEmail != email.RecId) throw new InvalidOperationException("Vendor primary email conflicts.");
             party.PrimaryContactEmail = email.RecId;
             await c.Db.SaveChangesAsync(ct);

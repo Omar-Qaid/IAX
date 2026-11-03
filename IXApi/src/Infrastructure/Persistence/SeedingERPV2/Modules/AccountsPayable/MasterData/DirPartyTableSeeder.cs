@@ -21,7 +21,7 @@ public sealed class DirPartyTableSeeder : IDataSeeder
         foreach (var suffix in new[] { "LOCAL", "USD" })
         {
             var number = $"APV2-{c.Company}-{suffix}";
-            await c.EnsureAsync<DirPartyTable>(x => x.PartyNumber == number, new() { PartyNumber = number, Name = "AP example vendor " + suffix, NameAlias = "AP example vendor " + suffix, LanguageId = "en-us", IsActive = NoYes.Yes }, ct,
+            await c.EnsureAsync<DirPartyTable>(x => x.PartyNumber == number, new() { PartyNumber = number, Name = VendorSeedExample.Name(suffix), NameAlias = VendorSeedExample.Name(suffix), LanguageId = "en-us", IsActive = NoYes.Yes }, ct,
                 nameof(DirPartyTable.Name), nameof(DirPartyTable.NameAlias), nameof(DirPartyTable.LanguageId), nameof(DirPartyTable.IsActive));
         }
     }

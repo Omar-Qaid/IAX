@@ -4,6 +4,9 @@ Phase one contains configuration and master data only. It does not create purcha
 receipts, invoices, vendor balances, inventory movements, bank movements, settlements or posted
 ledger entries. Those remain phase two and must use the owning business services.
 
+See [the realistic office-supplies example](REAL-EXAMPLE.md) for the named suppliers, product
+quotations, reference relationships and a SAR 3,680 purchasing exercise prepared for phase two.
+
 ## Invocation
 
 Register `AddAccountsPayablePhaseOneSeeding()` from `Core.Registration`. In a fresh dependency
@@ -27,6 +30,9 @@ Execution strategies can retry after clearing tracked state. Reruns insert missi
 validate existing business fields. Sequence counters are preserved, including after voucher use.
 Deleted, inactive, duplicate or conflicting seed keys cause failure. Closed existing periods are
 not reopened. Company predicates are explicit, including where query filters are bypassed.
+Registered integrity validators run after the seeders and before commit. They check storage
+lengths and the configured example's cross-table references; seed history rolls back with any
+validation failure.
 
 Some existing repository alternate keys (including currency, vendor-group and payment-term codes)
 are globally unique even though those entities carry company fields. This implementation does not
@@ -54,3 +60,38 @@ geography. Matching policy is configured on the existing vendor/item fields.
 Its field names follow [Microsoft's VendBankAccount metadata](https://learn.microsoft.com/en-us/common-data-model/schema/core/operationscommon/tables/supplychain/vendor/main/vendbankaccount).
 It carries identity, vendor, account number, name and currency; payment-file generation is outside
 this phase. `VendPostingSeeder` deliberately targets the existing posting-profile representation.
+
+## Validation
+
+Validation refreshed November 4, 2026:
+
+- API build: 0 errors; existing package warnings remain.
+- Full API suite: 797 passed, 2 skipped, including the enabled SQL Server integrity test.
+- Inventory cycle suite: 97 passed.
+- Focused integrity suite: 7 passed.
+
+The focused tests populate the 38 requested mappings, rerun without changing table counts,
+preserve sequence progress, validate the named supplier quotations and SAR 3,680 example,
+check company-scoped reads and reject excessive mapped string lengths. They demonstrate
+rollback both when next-year configuration has already been inserted and when a final seeder
+introduces a wrong quotation currency or cross-company ledger combination. Transaction tables
+remain empty in phase one.
+
+SQLite runs with foreign keys enabled; only storage types and Unicode-literal syntax are
+normalized for that provider. The SQL Server test uses the actual production EF model and
+storage types on `(localdb)\MSSQLLocalDB`, creates a generated `IXApi_APV2_Integrity_<guid>`
+database, performs the first run and rerun, compares supplier IDs and all mapped table counts,
+and deletes that database in `finally`. This verifies current-model SQL Server persistence,
+not replay of the historical migration chain or purchase-to-settlement posting.
+
+To opt into that disposable SQL Server test:
+
+```powershell
+$env:IXAPI_AP_PHASE_ONE_SQLSERVER = '(localdb)\MSSQLLocalDB'
+dotnet test IXApi/Tests/IXApi.Tests.csproj --filter FullyQualifiedName~AccountsPayablePhaseOneSeedTests
+```
+
+The SQL Server case is explicitly skipped when this environment variable is absent. It uses a
+generated database name, never an application connection string or application database. No
+application database has been migrated or seeded as part of this implementation. Cross-process
+concurrent seeding and phase-two transaction posting remain unverified by these checks.

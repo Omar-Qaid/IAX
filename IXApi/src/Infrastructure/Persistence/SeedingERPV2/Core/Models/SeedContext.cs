@@ -18,7 +18,10 @@ public sealed class SeedContext(ApplicationDbContext db, int fiscalYear, string 
     public async Task<T> RequireAsync<T>(Expression<Func<T, bool>> key, CancellationToken ct)
         where T : BaseEntity<long>
     {
-        var row = await Rows<T>().SingleAsync(key, ct);
+        var matches = await Rows<T>().Where(key).Take(2).ToListAsync(ct);
+        if (matches.Count != 1)
+            throw new InvalidOperationException($"Expected exactly one {typeof(T).Name} reference in {Company}; found {matches.Count}.");
+        var row = matches[0];
         if (row.IsDeleted || !IsActive(row))
             throw new InvalidOperationException($"Required {typeof(T).Name} is deleted or inactive in {Company}.");
         return row;
@@ -49,6 +52,9 @@ public sealed class SeedContext(ApplicationDbContext db, int fiscalYear, string 
         proposed.DataAreaId = Company;
         proposed.CreatedBy = Actor;
         proposed.OwnerAccountId = Actor;
+        foreach (var property in Db.Model.FindEntityType(typeof(T))!.GetProperties())
+            if (property.PropertyInfo?.GetValue(proposed) is string value && property.GetMaxLength() is int max && value.Length > max)
+                throw new InvalidOperationException($"{typeof(T).Name}.{property.Name} exceeds its mapped length {max}.");
         Db.Set<T>().Add(proposed);
         await Db.SaveChangesAsync(ct);
         return proposed;

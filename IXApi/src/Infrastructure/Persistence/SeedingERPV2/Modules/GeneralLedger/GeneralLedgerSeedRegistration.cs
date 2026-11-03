@@ -16,6 +16,7 @@ public static class GeneralLedgerSeedRegistration
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, LedgerSeeder>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, DimensionAttributeValueCombinationSeeder>());
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, LedgerJournalNameSeeder>());
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IDataSeeder, GeneralLedgerNumberSequenceSeeder>());
         return services;
     }
 }

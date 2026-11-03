@@ -7,11 +7,11 @@ using Microsoft.EntityFrameworkCore;
 namespace IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Core.Execution;
 
 /// <summary>Explicit phase-one entry point; never invoked by normal application startup.</summary>
-public sealed class SeedRunner(ApplicationDbContext db, IEnumerable<IDataSeeder> seeders)
+public sealed class SeedRunner(ApplicationDbContext db, IEnumerable<IDataSeeder> seeders, IEnumerable<ISeedValidator> validators)
 {
     public async Task<SeedResult> RunAsync(int fiscalYear, string actor, CancellationToken ct = default)
     {
-        if (fiscalYear is < 2000 or > 2099) throw new ArgumentOutOfRangeException(nameof(fiscalYear));
+        if (fiscalYear is < 1 or > 9999) throw new ArgumentOutOfRangeException(nameof(fiscalYear));
         if (string.IsNullOrWhiteSpace(actor)) throw new ArgumentException("An audit actor is required.", nameof(actor));
         if (db.ChangeTracker.Entries().Any()) throw new InvalidOperationException("Run seeding in a fresh DI scope.");
         var ordered = new SeedDependencyResolver().Resolve(seeders);
@@ -29,6 +29,8 @@ public sealed class SeedRunner(ApplicationDbContext db, IEnumerable<IDataSeeder>
                     await seeder.SeedAsync(context, ct);
                     await new SeedExecutionHistory().RecordAsync(db, seeder.Id, context.Company, ct);
                 }
+                foreach (var validator in validators)
+                    await validator.ValidateAsync(context, ct);
                 await transaction.CommitAsync(ct);
                 return new SeedResult(context.Company, ordered.Select(x => x.Id).ToArray());
             }

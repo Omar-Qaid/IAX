@@ -21,6 +21,6 @@ public sealed class InventTableModuleSeeder : IDataSeeder
         foreach (var item in new[] { "APV2-STOCK", "APV2-SVC" })
             foreach (var module in new[] { ModuleInventPurchSales.Inventory, ModuleInventPurchSales.Purchase, ModuleInventPurchSales.Sales })
                 await c.EnsureAsync<InventTableModule>(x => x.ItemId == item && x.ModuleType == module,
-                    new() { ItemId = item, ModuleType = module, UnitId = "EA", Price = 100m, PriceQty = 1m, PriceUnit = 1m, TaxItemGroupId = "APV2" }, ct);
+                    new() { ItemId = item, ModuleType = module, UnitId = "EA", Price = InventorySeedExample.PurchasePrice(item), PriceQty = 1m, PriceUnit = 1m, TaxItemGroupId = "APV2" }, ct);
     }
 }

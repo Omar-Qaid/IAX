@@ -18,6 +18,6 @@ public sealed class InventLocationSeeder : IDataSeeder
     public async Task SeedAsync(SeedContext c, CancellationToken ct)
     {
 
-        await c.EnsureAsync<InventLocation>(x => x.InventLocationId == "APV2-WH", new() { InventLocationId = "APV2-WH", Name = "AP example warehouse", InventSiteId = "APV2-SITE", WhsEnabled = NoYes.No }, ct);
+        await c.EnsureAsync<InventLocation>(x => x.InventLocationId == "APV2-WH", new() { InventLocationId = "APV2-WH", Name = "Office supplies warehouse (demo)", InventSiteId = "APV2-SITE", WhsEnabled = NoYes.No }, ct);
     }
 }

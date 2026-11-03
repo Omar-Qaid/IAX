@@ -21,7 +21,7 @@ public sealed class LogisticsLocationSeeder : IDataSeeder
         foreach (var suffix in new[] { "LOCAL", "USD" })
         {
             var code = $"APV2-{c.Company}-{suffix}";
-            await c.EnsureAsync<LogisticsLocation>(x => x.LocationId == code, new() { LocationId = code, Description = "AP example vendor location", IsPostalAddress = NoYes.Yes }, ct);
+            await c.EnsureAsync<LogisticsLocation>(x => x.LocationId == code, new() { LocationId = code, Description = VendorSeedExample.Name(suffix), IsPostalAddress = NoYes.Yes }, ct);
         }
     }
 }

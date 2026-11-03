@@ -34,7 +34,8 @@ public sealed class DimensionAttributeValueCombinationSeeder : IDataSeeder
         var (assigned, assignmentError) = await builder.AssignToLedgerAsync(c.Company, structure.Name, ct);
         if (assignmentError != null) throw new InvalidOperationException(assignmentError);
         var chart = await c.RequireAsync<LedgerChartOfAccounts>(x => x.Name == "APV2", ct);
-        foreach (var account in await c.Rows<MainAccount>().Where(x => x.LedgerChartOfAccounts == chart.RecId && !x.IsDeleted).ToListAsync(ct))
+        var codes = new[] { "181001", "181002", "181003", "181004", "181005", "281001", "281002", "481001", "481002", "681001", "681002" };
+        foreach (var account in await c.Rows<MainAccount>().Where(x => x.LedgerChartOfAccounts == chart.RecId && codes.Contains(x.MainAccountId) && !x.IsDeleted).ToListAsync(ct))
         {
             var combination = await new LedgerDimensionResolver(c.Db).ResolveAsync(c.Company, account, [], structure.RecId, ct);
             if (combination.MainAccount != account.RecId || combination.AccountStructure != structure.RecId || combination.IsDeleted || !combination.IsActive)

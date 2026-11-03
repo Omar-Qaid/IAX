@@ -21,7 +21,7 @@ public sealed class VendBankAccountSeeder : IDataSeeder
         foreach (var suffix in new[] { "LOCAL", "USD" })
         {
             var vendor = $"APV2-{c.Company}-{suffix}";
-            await c.EnsureAsync<VendBankAccount>(x => x.VendAccount == vendor && x.AccountID == "APV2", new() { AccountID = "APV2", VendAccount = vendor, AccountNum = "DEMO-ONLY", Name = "Synthetic vendor bank", CurrencyCode = suffix == "USD" ? "USD" : "SAR" }, ct);
+            await c.EnsureAsync<VendBankAccount>(x => x.VendAccount == vendor && x.AccountID == "APV2", new() { AccountID = "APV2", VendAccount = vendor, AccountNum = VendorSeedExample.BankNumber(suffix), Name = VendorSeedExample.Name(suffix), CurrencyCode = suffix == "USD" ? "USD" : "SAR" }, ct);
         }
     }
 }

@@ -25,9 +25,6 @@ public sealed class DirPartyLocationSeeder : IDataSeeder
             var location = await c.RequireAsync<LogisticsLocation>(x => x.LocationId == code, ct);
             await c.EnsureAsync<DirPartyLocation>(x => x.Party == party.RecId && x.Location == location.RecId,
                 new() { Party = party.RecId, Location = location.RecId, IsPrimary = NoYes.Yes, IsPostalAddress = NoYes.Yes, IsLocationOwner = NoYes.Yes, IsRoleInvoice = NoYes.Yes }, ct);
-            if (party.PrimaryAddressLocation != null && party.PrimaryAddressLocation != location.RecId) throw new InvalidOperationException("Vendor primary address conflicts.");
-            party.PrimaryAddressLocation = location.RecId;
-            await c.Db.SaveChangesAsync(ct);
         }
     }
 }
