@@ -29,31 +29,10 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Registrations
             services.AddScoped<IModuleSeeder, MarkupTableSeeder>();
             services.AddScoped<IModuleSeeder, PriceDiscSeeder>();
             services.AddScoped<IModuleSeeder, InventorySiteWarehouseSeeder>();
-            services.AddScoped<IModuleSeeder, VendSeeder>();
             services.AddScoped<IModuleSeeder, TaxSeeder>();
             services.AddScoped<IModuleSeeder, InventorySeeder>();
             services.AddScoped<IModuleSeeder, CustLedgerSeeder>();
             services.AddScoped<IModuleSeeder, OrganizationStructureSeeder>();
-
-            // Demo Seeders
-            services.AddScoped<IModuleSeeder, LedgerExampleSeeder>();
-            services.AddScoped<IModuleSeeder, FinanceOperationalExamplesSeeder>();
-            services.AddScoped<IModuleSeeder, BusinessSetupExamplesSeeder>();
-            services.AddScoped<IModuleSeeder, PurchaseScenarioSeeder>();
-            services.AddScoped<IModuleSeeder, PurchasePartialInvoiceSeeder>();
-            services.AddScoped<IModuleSeeder, PurchaseVatInvoiceSeeder>();
-            services.AddScoped<IModuleSeeder, SalesScenarioSeeder>();
-            services.AddScoped<IModuleSeeder, CommercialScenarioSeeder>();
-            services.AddScoped<IModuleSeeder, SalesCompletionScenarioSeeder>();
-            services.AddScoped<IModuleSeeder, SalesAdvancedScenarioSeeder>();
-            services.AddScoped<IModuleSeeder, InventoryScenarioSeeder>();
-            services.AddScoped<IModuleSeeder, InventoryCompletionScenarioSeeder>();
-            services.AddScoped<IModuleSeeder, InventoryFullCycleSeeder>();
-            services.AddScoped<IModuleSeeder, DraftFinanceExamplesSeeder>();
-            services.AddScoped<IModuleSeeder, HcmExampleSeeder>();
-            services.AddScoped<IModuleSeeder, OrganizationDemoSeeder>();
-            services.AddScoped<IModuleSeeder, SampleCustomerVendorSeeder>();
-            services.AddScoped<IModuleSeeder, SampleProductSeeder>();
 
             // Legacy External DB Imports
             services.AddScoped<IModuleSeeder>(sp =>

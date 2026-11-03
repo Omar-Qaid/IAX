@@ -37,7 +37,7 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
     public override string Id => "Finance.GeneralLedger.Tax";
     public override int Version => 1;
     public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory Category => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederCategory.Reference;
-    public override System.Collections.Generic.IReadOnlyCollection<string> DependsOn => new[] { "Finance.AccountsPayable.Vendors", "Finance.Inventory.UnitOfMeasure" };
+    public override System.Collections.Generic.IReadOnlyCollection<string> DependsOn => new[] { "Finance.Inventory.UnitOfMeasure" };
     public override IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy Policy => IAX.IXApi.Infrastructure.Persistence.Seeding.Core.SeederExecutionPolicy.Repeatable;
     public override string Scope => "dat";
 
@@ -644,6 +644,5 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
         }
     }
 }
-
 
 

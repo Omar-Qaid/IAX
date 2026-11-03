@@ -1,5 +1,7 @@
 # ERP example logic and data integrity review
 
+> Historical review: the `CycleErpExamples` implementation covered here has since been removed. This document records the state and verification at the time of review, not the current seeding configuration.
+
 Scope: `Persistence/Seeding/CycleErpExamples`. This review changes seed orchestration and guards only. It does not change accounting services, schema, historical data, seed IDs, versions, or execution policies.
 
 ## Confirmed defects and fixes

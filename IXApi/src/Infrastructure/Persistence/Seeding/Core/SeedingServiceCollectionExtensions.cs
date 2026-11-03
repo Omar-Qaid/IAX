@@ -27,7 +27,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Core
             services.AddOrganizationSeeding();
             services.AddFinanceSeeding(configuration);
             services.AddWorkflowSeeding(configuration);
-            services.AddErpCycleExamples();
 
             return services;
         }

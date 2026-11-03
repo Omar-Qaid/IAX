@@ -12,9 +12,8 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Modules.Finance;
 /// Their main account ranges do not overlap, which is what lets the main account value select the
 /// structure.
 ///
-/// Both are defined and activated. LedgerExampleSeeder assigns them only when creating its own
-/// example ledger; example revenue/expense combinations include Department ADMIN. Existing ledger
-/// assignments and user-maintained structures are preserved.
+/// Both are defined and activated but not automatically assigned to a ledger. Ledger assignments
+/// and user-maintained structures remain explicit configuration.
 /// </summary>
 public sealed class AccountStructureSeeder : BaseModuleSeeder
 {

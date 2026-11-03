@@ -35,25 +35,18 @@ Paths below are relative to `src/Infrastructure/Persistence/Seeding`. `C/` means
 | `F/SalesDeliverySetupSeeder.cs` | `Finance.AccountsReceivable.DeliverySetup` | Delivery and payment terms and schedules | Reference / repeatable / dat | CompanyInfo; registered |
 | `Modules/Finance/PriceDiscSeeder.cs` | `Finance.AccountsReceivable.PriceDisc` | Price and discount groups and agreements | Reference / repeatable / dat | CustGroups; registered |
 | `Modules/Finance/InventorySiteWarehouseSeeder.cs` | `Finance.Inventory.SitesAndWarehouses` | Sites, warehouses and WMS locations | Reference / repeatable / dat | CompanyInfo; registered |
-| `Modules/Finance/VendSeeder.cs` | `Finance.AccountsPayable.Vendors` | Vendor groups, vendors, parties | Reference / repeatable / dat | CompanyInfo; registered |
 | `Modules/Finance/TaxSeeder.cs` | `Finance.GeneralLedger.Tax` | Tax codes, groups, authorities, periods and posting | Reference / repeatable / dat | CompanyInfo; registered |
 | `Modules/Finance/InventorySeeder.cs` | `Finance.Inventory.Setup` | Groups, shared and released product, dimensions and posting rules | Reference / repeatable / dat | UnitOfMeasure; registered |
 | `Modules/Finance/CustLedgerSeeder.cs` | `Finance.AccountsReceivable.CustLedger` | Customer ledger accounts and setup | Reference / repeatable / dat | CompanyInfo; registered |
 | `Modules/Finance/OthersDBOrganizationEmployeeSeeder.cs` | `Finance.Foundation.LegacyEmployees` | Imported departments, occupations, genders, nationalities, parties and workers; source IDs retained | Legacy import / run-once / dat | CompanyInfo; registered, opt in |
 | `Modules/Finance/OrganizationStructureSeeder.cs` | `Finance.Foundation.Structure` | Organization units, roles, hierarchy, positions and assignments | Reference / repeatable / dat | CompanyInfo; registered |
-| `CycleErpExamples/HumanResources/HcmExampleSeeder.cs` | `Finance.Foundation.HcmExamples` | Example workers and assignments | Demo / repeatable / dat | Structure; registered, opt in |
 | `Modules/Workflow/OthersDBWorkflowMasterFromSeeder.cs` | `Workflow.LegacyMaster` | Imported workflow lookup and process graph; literal `RecId` 1–5 plus source IDs | Legacy import / run-once / global | Identity; registered, opt in |
 | `Modules/Workflow/WfProcessSeedData.cs` and `Processes/Process590`, `Process603`, `Process651` | `Workflow.ProcessMaster` | Workflow masters, forms, templates and fixed process IDs 590, 603, 651 | Required / repeatable / global | Identity; registered |
-| `CycleErpExamples/Workflow/OthersDBWorkflowRequestFromSeeder.cs` | `Workflow.DemoRequestTracking` | Example requests, assignments, reports and history | Demo / repeatable / dat | ProcessMaster; registered, opt in |
-| `CycleErpExamples/HumanResources/OrganizationSeeder.cs` (`OrganizationDemoSeeder`) | `Finance.Foundation.OrgDemo` | Synthetic organization data; literal `RecId` 1–5 among others | Demo / repeatable / dat | Structure; registered, opt in |
-| `CycleErpExamples/Foundation/SampleCustomerVendorSeeder.cs` | `Finance.AccountsReceivable.DemoCustVend` | Sample customers, vendors and parties | Demo / repeatable / dat | CustGroups, Logistics; registered, opt in |
-| `CycleErpExamples/Inventory/SampleProductSeeder.cs` | `Finance.Inventory.DemoProducts` | Sample products, units and packaging | Demo / repeatable / dat | ItemGroups, UnitOfMeasure; registered, opt in |
 | `C/DimensionSeeder.cs` | Intentionally excluded | Old dimension setup | Legacy `ISeeder`; no direct run | Unregistered in the old pipeline; preserve exclusion |
 | `C/OrganizationUnitSeeder.cs` | Intentionally excluded | Organization units | Legacy `ISeeder`; no direct run | Replaced by Structure seeder; preserve exclusion |
 | `C/PostingProfileSeeder.cs` | Intentionally excluded | Posting profiles | Legacy `ISeeder`; no direct run | Unregistered in the old pipeline; preserve exclusion |
 | `C/WorkflowSeeder.cs` | Intentionally excluded | Workflow graph; literal IDs include 0–23 and 591–595 | Legacy `ISeeder`; no direct run | Replaced by ProcessMaster; preserve exclusion |
 | `C/WfValidateSeedData.cs` | Intentionally excluded | Workflow validation and repair | Legacy `ISeeder`; no direct run | Manual repair utility; preserve exclusion |
-| `CycleErpExamples/HumanResources/OrganizationSeeder.cs` (`OrganizationSeeder`) | Intentionally excluded | Wrapper for legacy employee import | Legacy `ISeeder`; no direct run | Direct legacy-import registration owns this path |
 
 `C/OthersDBSeedData.cs` is an abstract import helper, not a runnable seeder. `Data/*.json` and `wfData/wf.sql` are fixture/source files, not independent registrations. Partial files under `Processes/` execute through `WfProcessSeedData` and are not separate graph nodes. Many fixed IDs are derived from embedded JSON or workflow arrays; their exact values are in those source files and are not rewritten by this migration.
 
@@ -71,6 +64,4 @@ Seeder classes remain in Infrastructure because many use `ApplicationDbContext` 
 
 No equivalent before/after SQL Server databases or source import database were supplied for a row-by-row comparison. Before enabling initialization for an existing database, compare row counts, keys, references, and company scope in a restored copy and test legacy imports separately. The Production initialization guard remains in `Program.cs`.
 
-## Connected ERP examples
-
-Optional demo definitions are grouped under `CycleErpExamples/<Module>/`. `ErpCycleExampleService` coordinates the new stable-key trading dataset through dedicated module services, while required/reference seeders remain under `Modules/`. See [the example layout and scenario guide](../src/Infrastructure/Persistence/Seeding/CycleErpExamples/README.md).
+ERP cycle example seeders have been removed. Required, reference, and explicitly opted-in legacy import seeders listed above remain registered through their owning modules.

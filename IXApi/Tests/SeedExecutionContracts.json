@@ -1,19 +1,5 @@
 [
   {
-    "Type": "AdministrationExampleSeeder",
-    "Id": "Administration.BatchExamples",
-    "Version": 1,
-    "Category": "Demo",
-    "Policy": "Repeatable",
-    "Scope": "global",
-    "Dependencies": [
-      "Administration.Settings"
-    ],
-    "Registered": true,
-    "OwnerModule": "Administration",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/Administration/Configuration/Seeders/AdministrationExampleSeeder.cs"
-  },
-  {
     "Type": "NumberSequenceSeeder",
     "Id": "Administration.NumberSequences",
     "Version": 1,
@@ -36,53 +22,6 @@
     "Registered": true,
     "OwnerModule": "Administration",
     "Source": "src/Infrastructure/Persistence/Seeding/Modules/Administration/SysSettingsSeeder.cs"
-  },
-  {
-    "Type": "ErpMasterSetupExampleSeeder",
-    "Id": "ERP.MasterSetupExamples",
-    "Version": 1,
-    "Category": "Demo",
-    "Policy": "Repeatable",
-    "Scope": "dat",
-    "Dependencies": [
-      "Finance.OperationalExamples",
-      "Finance.Foundation.AccountStructures",
-      "Finance.Foundation.HcmExamples"
-    ],
-    "Registered": true,
-    "OwnerModule": "ERP",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/Foundation/Configuration/Seeders/ErpMasterSetupExampleSeeder.cs"
-  },
-  {
-    "Type": "ErpCycleExampleService",
-    "Id": "ERP.TradingCycleExample",
-    "Version": 1,
-    "Category": "Demo",
-    "Policy": "RunOnce",
-    "Scope": "dat",
-    "Dependencies": [
-      "Finance.InventoryFullCycle",
-      "Finance.DraftExamples"
-    ],
-    "Registered": true,
-    "OwnerModule": "ERP",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/Seeders/ErpCycleExampleService.cs"
-  },
-  {
-    "Type": "VendSeeder",
-    "Id": "Finance.AccountsPayable.Vendors",
-    "Version": 1,
-    "Category": "Reference",
-    "Policy": "Repeatable",
-    "Scope": "dat",
-    "Dependencies": [
-      "Finance.AccountsReceivable.DeliverySetup",
-      "Finance.GeneralLedger.Currencies",
-      "Finance.AccountsReceivable.PaymModes"
-    ],
-    "Registered": true,
-    "OwnerModule": "Finance",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/AccountsPayable/MasterData/Seeders/VendSeeder.cs"
   },
   {
     "Type": "CustGroupSeeder",
@@ -125,23 +64,6 @@
     "Registered": true,
     "OwnerModule": "Finance",
     "Source": "src/Infrastructure/Persistence/Seeding/Modules/Finance/SalesDeliverySetupSeeder.cs"
-  },
-  {
-    "Type": "SampleCustomerVendorSeeder",
-    "Id": "Finance.AccountsReceivable.DemoCustVend",
-    "Version": 1,
-    "Category": "Demo",
-    "Policy": "Repeatable",
-    "Scope": "dat",
-    "Dependencies": [
-      "Finance.AccountsReceivable.CustGroups",
-      "Finance.Foundation.Logistics",
-      "Finance.GeneralLedger.Currencies",
-      "Finance.GeneralLedger.Tax"
-    ],
-    "Registered": true,
-    "OwnerModule": "Finance",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/AccountsReceivable/MasterData/Seeders/SampleCustomerVendorSeeder.cs"
   },
   {
     "Type": "MarkupTableSeeder",
@@ -200,51 +122,6 @@
     "Source": "src/Infrastructure/Persistence/Seeding/Modules/Finance/SalesPoolSeeder.cs"
   },
   {
-    "Type": "BusinessSetupExamplesSeeder",
-    "Id": "Finance.BusinessSetupExamples",
-    "Version": 1,
-    "Category": "Demo",
-    "Policy": "Repeatable",
-    "Scope": "dat",
-    "Dependencies": [
-      "Finance.OperationalExamples",
-      "Finance.Foundation.Logistics",
-      "Finance.Foundation.HcmExamples",
-      "ERP.MasterSetupExamples"
-    ],
-    "Registered": true,
-    "OwnerModule": "Finance",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/Foundation/Configuration/Seeders/BusinessSetupExamplesSeeder.cs"
-  },
-  {
-    "Type": "CommercialScenarioSeeder",
-    "Id": "Finance.CommercialScenarios",
-    "Version": 1,
-    "Category": "Demo",
-    "Policy": "RunOnce",
-    "Scope": "dat",
-    "Dependencies": [
-      "Finance.SalesScenarios"
-    ],
-    "Registered": true,
-    "OwnerModule": "Finance",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/AccountsReceivable/Transactions/Cycle/Seeders/CommercialScenarioSeeder.cs"
-  },
-  {
-    "Type": "DraftFinanceExamplesSeeder",
-    "Id": "Finance.DraftExamples",
-    "Version": 1,
-    "Category": "Demo",
-    "Policy": "RunOnce",
-    "Scope": "dat",
-    "Dependencies": [
-      "Finance.CommercialScenarios"
-    ],
-    "Registered": true,
-    "OwnerModule": "Finance",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/AccountsReceivable/Transactions/Drafts/Seeders/DraftFinanceExamplesSeeder.cs"
-  },
-  {
     "Type": "AccountStructureSeeder",
     "Id": "Finance.Foundation.AccountStructures",
     "Version": 1,
@@ -285,20 +162,6 @@
     "Source": "src/Infrastructure/Persistence/Seeding/Modules/Finance/FinancialDimensionSeeder.cs"
   },
   {
-    "Type": "HcmExampleSeeder",
-    "Id": "Finance.Foundation.HcmExamples",
-    "Version": 1,
-    "Category": "Demo",
-    "Policy": "Repeatable",
-    "Scope": "dat",
-    "Dependencies": [
-      "Finance.Foundation.Structure"
-    ],
-    "Registered": true,
-    "OwnerModule": "Finance",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/HumanResources/MasterData/Seeders/HcmExampleSeeder.cs"
-  },
-  {
     "Type": "OthersDBOrganizationEmployeeSeeder",
     "Id": "Finance.Foundation.LegacyEmployees",
     "Version": 1,
@@ -327,20 +190,6 @@
     "Source": "src/Infrastructure/Persistence/Seeding/Modules/Finance/LogisticsAddressSeeder.cs"
   },
   {
-    "Type": "OrganizationDemoSeeder",
-    "Id": "Finance.Foundation.OrgDemo",
-    "Version": 1,
-    "Category": "Demo",
-    "Policy": "Repeatable",
-    "Scope": "dat",
-    "Dependencies": [
-      "Finance.Foundation.Structure"
-    ],
-    "Registered": true,
-    "OwnerModule": "Finance",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/HumanResources/MasterData/Seeders/OrganizationSeeder.cs"
-  },
-  {
     "Type": "OrganizationStructureSeeder",
     "Id": "Finance.Foundation.Structure",
     "Version": 1,
@@ -367,25 +216,6 @@
     "Registered": true,
     "OwnerModule": "Finance",
     "Source": "src/Infrastructure/Persistence/Seeding/Modules/Finance/CurrencyAndExchangeRateSeeder.cs"
-  },
-  {
-    "Type": "LedgerExampleSeeder",
-    "Id": "Finance.GeneralLedger.Examples",
-    "Version": 1,
-    "Category": "Demo",
-    "Policy": "Repeatable",
-    "Scope": "dat",
-    "Dependencies": [
-      "Finance.GeneralLedger.MainAccounts",
-      "Finance.GeneralLedger.Currencies",
-      "Finance.GeneralLedger.FiscalCalendars",
-      "Finance.AccountsReceivable.CustLedger",
-      "Finance.AccountsReceivable.DemoCustVend",
-      "Finance.Foundation.AccountStructures"
-    ],
-    "Registered": true,
-    "OwnerModule": "Finance",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/GeneralLedger/MasterData/Seeders/LedgerExampleSeeder.cs"
   },
   {
     "Type": "FiscalCalendarSeeder",
@@ -423,28 +253,11 @@
     "Policy": "Repeatable",
     "Scope": "dat",
     "Dependencies": [
-      "Finance.AccountsPayable.Vendors",
       "Finance.Inventory.UnitOfMeasure"
     ],
     "Registered": true,
     "OwnerModule": "Finance",
     "Source": "src/Infrastructure/Persistence/Seeding/Modules/Finance/TaxSeeder.cs"
-  },
-  {
-    "Type": "SampleProductSeeder",
-    "Id": "Finance.Inventory.DemoProducts",
-    "Version": 1,
-    "Category": "Demo",
-    "Policy": "Repeatable",
-    "Scope": "dat",
-    "Dependencies": [
-      "Finance.Inventory.ItemGroups",
-      "Finance.Inventory.UnitOfMeasure",
-      "Finance.GeneralLedger.Tax"
-    ],
-    "Registered": true,
-    "OwnerModule": "Finance",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/Inventory/MasterData/Seeders/SampleProductSeeder.cs"
   },
   {
     "Type": "InventItemGroupSeeder",
@@ -507,171 +320,6 @@
     "Source": "src/Infrastructure/Persistence/Seeding/Modules/Finance/UnitOfMeasureSeeder.cs"
   },
   {
-    "Type": "InventoryCompletionScenarioSeeder",
-    "Id": "Finance.InventoryCompletionScenarios",
-    "Version": 2,
-    "Category": "Demo",
-    "Policy": "RunOnce",
-    "Scope": "dat",
-    "Dependencies": [
-      "Finance.InventoryScenarios",
-      "Finance.SalesCompletionScenarios"
-    ],
-    "Registered": true,
-    "OwnerModule": "Finance",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/Inventory/Transactions/Cycle/Seeders/InventoryCompletionScenarioSeeder.cs"
-  },
-  {
-    "Type": "InventoryFullCycleSeeder",
-    "Id": "Finance.InventoryFullCycle",
-    "Version": 1,
-    "Category": "Demo",
-    "Policy": "RunOnce",
-    "Scope": "dat",
-    "Dependencies": [
-      "Finance.SalesAdvancedScenarios"
-    ],
-    "Registered": true,
-    "OwnerModule": "Finance",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/Inventory/Transactions/Cycle/Seeders/InventoryFullCycleSeeder.cs"
-  },
-  {
-    "Type": "InventoryScenarioSeeder",
-    "Id": "Finance.InventoryScenarios",
-    "Version": 1,
-    "Category": "Demo",
-    "Policy": "RunOnce",
-    "Scope": "dat",
-    "Dependencies": [
-      "Finance.BusinessSetupExamples",
-      "Administration.NumberSequences",
-      "Identity.MasterData"
-    ],
-    "Registered": true,
-    "OwnerModule": "Finance",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/Inventory/Transactions/Cycle/Seeders/InventoryScenarioSeeder.cs"
-  },
-  {
-    "Type": "FinanceOperationalExamplesSeeder",
-    "Id": "Finance.OperationalExamples",
-    "Version": 1,
-    "Category": "Demo",
-    "Policy": "Repeatable",
-    "Scope": "dat",
-    "Dependencies": [
-      "Finance.GeneralLedger.Examples",
-      "Finance.Inventory.DemoProducts",
-      "Finance.Inventory.Setup",
-      "Administration.NumberSequences"
-    ],
-    "Registered": true,
-    "OwnerModule": "Finance",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/Foundation/Configuration/Seeders/FinanceOperationalExamplesSeeder.cs"
-  },
-  {
-    "Type": "PurchasePartialInvoiceSeeder",
-    "Id": "Finance.PurchasePartialInvoices",
-    "Version": 1,
-    "Category": "Demo",
-    "Policy": "RunOnce",
-    "Scope": "dat",
-    "Dependencies": [
-      "Finance.PurchaseScenarios"
-    ],
-    "Registered": true,
-    "OwnerModule": "Finance",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/AccountsPayable/Transactions/Invoice/Seeders/PurchasePartialInvoiceSeeder.cs"
-  },
-  {
-    "Type": "PurchaseScenarioSeeder",
-    "Id": "Finance.PurchaseScenarios",
-    "Version": 1,
-    "Category": "Demo",
-    "Policy": "RunOnce",
-    "Scope": "dat",
-    "Dependencies": [
-      "Finance.BusinessSetupExamples",
-      "Administration.NumberSequences",
-      "Identity.MasterData"
-    ],
-    "Registered": true,
-    "OwnerModule": "Finance",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/AccountsPayable/Transactions/Cycle/Seeders/PurchaseScenarioSeeder.cs"
-  },
-  {
-    "Type": "PurchaseSettlementSeeder",
-    "Id": "Finance.PurchaseSettlements",
-    "Version": 1,
-    "Category": "Demo",
-    "Policy": "RunOnce",
-    "Scope": "dat",
-    "Dependencies": [
-      "Finance.PurchaseVatInvoices",
-      "Finance.OperationalExamples"
-    ],
-    "Registered": false,
-    "OwnerModule": "Finance",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/AccountsPayable/Transactions/Settlement/Seeders/PurchaseSettlementSeeder.cs"
-  },
-  {
-    "Type": "PurchaseVatInvoiceSeeder",
-    "Id": "Finance.PurchaseVatInvoices",
-    "Version": 1,
-    "Category": "Demo",
-    "Policy": "RunOnce",
-    "Scope": "dat",
-    "Dependencies": [
-      "Finance.PurchasePartialInvoices",
-      "Finance.OperationalExamples"
-    ],
-    "Registered": true,
-    "OwnerModule": "Finance",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/AccountsPayable/Transactions/Invoice/Seeders/PurchaseVatInvoiceSeeder.cs"
-  },
-  {
-    "Type": "SalesAdvancedScenarioSeeder",
-    "Id": "Finance.SalesAdvancedScenarios",
-    "Version": 1,
-    "Category": "Demo",
-    "Policy": "RunOnce",
-    "Scope": "dat",
-    "Dependencies": [
-      "Finance.InventoryCompletionScenarios"
-    ],
-    "Registered": true,
-    "OwnerModule": "Finance",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/AccountsReceivable/Transactions/Cycle/Seeders/SalesAdvancedScenarioSeeder.cs"
-  },
-  {
-    "Type": "SalesCompletionScenarioSeeder",
-    "Id": "Finance.SalesCompletionScenarios",
-    "Version": 1,
-    "Category": "Demo",
-    "Policy": "RunOnce",
-    "Scope": "dat",
-    "Dependencies": [
-      "Finance.CommercialScenarios",
-      "Finance.PurchaseVatInvoices"
-    ],
-    "Registered": true,
-    "OwnerModule": "Finance",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/AccountsReceivable/Transactions/Cycle/Seeders/SalesCompletionScenarioSeeder.cs"
-  },
-  {
-    "Type": "SalesScenarioSeeder",
-    "Id": "Finance.SalesScenarios",
-    "Version": 1,
-    "Category": "Demo",
-    "Policy": "RunOnce",
-    "Scope": "dat",
-    "Dependencies": [
-      "Finance.PurchaseScenarios"
-    ],
-    "Registered": true,
-    "OwnerModule": "Finance",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/AccountsReceivable/Transactions/Cycle/Seeders/SalesScenarioSeeder.cs"
-  },
-  {
     "Type": "IdentitySeeder",
     "Id": "Identity.MasterData",
     "Version": 1,
@@ -686,35 +334,6 @@
     "Source": "src/Infrastructure/Persistence/Seeding/Modules/Identity/IdentitySeeder.cs"
   },
   {
-    "Type": "CollaborationExampleSeeder",
-    "Id": "Organization.CollaborationExamples",
-    "Version": 1,
-    "Category": "Demo",
-    "Policy": "Repeatable",
-    "Scope": "dat",
-    "Dependencies": [
-      "Identity.MasterData"
-    ],
-    "Registered": true,
-    "OwnerModule": "Organization",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/Organization/Transactions/Collaboration/Seeders/CollaborationExampleSeeder.cs"
-  },
-  {
-    "Type": "DocumentExampleSeeder",
-    "Id": "Organization.DocumentExamples",
-    "Version": 1,
-    "Category": "Demo",
-    "Policy": "Repeatable",
-    "Scope": "dat",
-    "Dependencies": [
-      "Organization.DocumentManagement",
-      "Finance.AccountsReceivable.DemoCustVend"
-    ],
-    "Registered": true,
-    "OwnerModule": "Organization",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/Organization/Transactions/Documents/Seeders/DocumentExampleSeeder.cs"
-  },
-  {
     "Type": "DocumentManagementSeeder",
     "Id": "Organization.DocumentManagement",
     "Version": 1,
@@ -725,21 +344,6 @@
     "Registered": true,
     "OwnerModule": "Organization",
     "Source": "src/Infrastructure/Persistence/Seeding/Modules/Organization/DocumentManagementSeeder.cs"
-  },
-  {
-    "Type": "WorkflowRequestTrackingSeeder",
-    "Id": "Workflow.DemoRequestTracking",
-    "Version": 1,
-    "Category": "Demo",
-    "Policy": "Repeatable",
-    "Scope": "dat",
-    "Dependencies": [
-      "Workflow.ProcessMaster",
-      "Finance.Foundation.HcmExamples"
-    ],
-    "Registered": true,
-    "OwnerModule": "Workflow",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/Workflow/Transactions/Requests/Seeders/OthersDBWorkflowRequestFromSeeder.cs"
   },
   {
     "Type": "OthersDBWorkflowMasterFromSeeder",
@@ -768,19 +372,5 @@
     "Registered": true,
     "OwnerModule": "Workflow",
     "Source": "src/Infrastructure/Persistence/Seeding/Modules/Workflow/WfProcessSeedData.cs"
-  },
-  {
-    "Type": "WorkflowVariableExampleSeeder",
-    "Id": "Workflow.RequestVariableExamples",
-    "Version": 1,
-    "Category": "Demo",
-    "Policy": "Repeatable",
-    "Scope": "global",
-    "Dependencies": [
-      "Workflow.DemoRequestTracking"
-    ],
-    "Registered": true,
-    "OwnerModule": "Workflow",
-    "Source": "src/Infrastructure/Persistence/Seeding/CycleErpExamples/Workflow/Transactions/RequestVariables/Seeders/WorkflowVariableExampleSeeder.cs"
   }
 ]

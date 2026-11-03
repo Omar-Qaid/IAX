@@ -11,7 +11,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Registrations
         {
             services.AddScoped<IModuleSeeder, SettingsSeeder>();
             services.AddScoped<IModuleSeeder, NumberSequenceSeeder>();
-            services.AddScoped<IModuleSeeder, AdministrationExampleSeeder>();
             return services;
         }
     }

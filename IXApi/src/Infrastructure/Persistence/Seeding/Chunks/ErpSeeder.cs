@@ -32,8 +32,6 @@ namespace IAX.IXApi.Infrastructure.Persistence.Seeding.Chunks
             await new UnitOfMeasureSeeder().SeedAsync(context, ct);
             await new InventItemGroupSeeder().SeedAsync(context, ct);
             await new SalesDeliverySetupSeeder().SeedAsync(context, ct);
-            await new SampleProductSeeder().SeedAsync(context, ct);
-            await new SampleCustomerVendorSeeder().SeedAsync(context, ct);
         }
     }
 }
