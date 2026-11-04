@@ -3171,6 +3171,16 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<string>("LastModifiedBy")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("MatchingPolicy")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("MatchingPolicyAllowOverride")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("OwnerAccountId")
                         .HasColumnType("nvarchar(max)");
 
@@ -3189,6 +3199,16 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<decimal>("TotalPriceTolerancePercentage")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(32, 6)");
+
+                    b.Property<int>("UseInvoiceMatching")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.Property<int>("UseTotalPriceMatching")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
 
                     b.Property<string>("VendPostingProfile")
                         .IsRequired()
