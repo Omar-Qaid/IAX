@@ -65,7 +65,9 @@ public sealed class PurchOrderService : BaseService<PurchTable>, IPurchOrderServ
         public string GetDataAreaId() => company.GetDataAreaId();
     }
 
-    public async Task<PurchResult> CreateAsync(PurchOrderCreateDto input, CancellationToken ct)
+    public Task<PurchResult> CreateAsync(PurchOrderCreateDto input, CancellationToken ct) =>
+        Db.Database.CreateExecutionStrategy().ExecuteAsync(() => CreateCoreAsync(input, ct));
+    private async Task<PurchResult> CreateCoreAsync(PurchOrderCreateDto input, CancellationToken ct)
     {
         var area = _company.GetDataAreaId();
         if (string.IsNullOrWhiteSpace(area)) return new(400, null, "A company must be selected.");
@@ -79,6 +81,12 @@ public sealed class PurchOrderService : BaseService<PurchTable>, IPurchOrderServ
         var siteError = await ValidateSiteWarehouseAsync(area, input.InventSiteId, input.InventLocationId, ct);
         if (siteError != null) return new(422, null, siteError);
 
+        var parameters = await Db.Set<PurchParameters>().AsNoTracking().SingleOrDefaultAsync(x => x.DataAreaId == area, ct);
+        if (parameters != null && parameters.PurchaseType != PurchaseType.Purch)
+            return new(422, null, "Only ordinary purchase orders are supported by this creation path.");
+        await _unitOfWork.BeginTransactionAsync(ct);
+        try
+        {
         var order = new PurchTable
         {
             DataAreaId = area,
@@ -89,8 +97,8 @@ public sealed class PurchOrderService : BaseService<PurchTable>, IPurchOrderServ
                 : input.InvoiceAccount.Trim(),
             PurchName = string.IsNullOrWhiteSpace(input.PurchName) ? vendor.AccountNum : input.PurchName.Trim(),
             CurrencyCode = string.IsNullOrWhiteSpace(input.CurrencyCode) ? vendor.Currency : input.CurrencyCode.Trim(),
-            Payment = vendor.PaymTermId, TaxGroup = vendor.TaxGroup, DefaultDimension = vendor.DefaultDimension ?? 0,
-            OrderDate = DateTime.UtcNow.Date,
+            CashDisc = vendor.CashDisc, Payment = vendor.PaymTermId, TaxGroup = vendor.TaxGroup, DefaultDimension = vendor.DefaultDimension ?? 0,
+            OrderDate = (input.OrderDate ?? DateTime.UtcNow).Date,
             DeliveryDate = (input.DeliveryDate ?? DateTime.UtcNow).Date,
             InventSiteId = input.InventSiteId.Trim(),
             InventLocationId = input.InventLocationId.Trim(),
@@ -98,10 +106,19 @@ public sealed class PurchOrderService : BaseService<PurchTable>, IPurchOrderServ
             DocumentStatus = DocumentStatus.None
         };
         if (string.IsNullOrWhiteSpace(order.CurrencyCode))
-            return new(422, null, "A currency is required for the purchase order.");
+            return await Fail(422, "A currency is required for the purchase order.", ct);
+        order.SourceDocumentHeader = await new PurchaseSourceAccounting(Db).HeaderAsync(area, FinanceTableNumbers.PurchTable, ct);
         Db.Set<PurchTable>().Add(order);
         await _unitOfWork.CompleteAsync(ct);
+        await _unitOfWork.CommitTransactionAsync(ct);
         return new(200, order, "Purchase order created.");
+        }
+        catch
+        {
+            await _unitOfWork.RollbackTransactionAsync(ct);
+            Db.ChangeTracker.Clear();
+            throw;
+        }
     }
 
     public Task<PurchResult> AddLineAsync(long recId, PurchLineInputDto input, CancellationToken ct) =>
@@ -132,14 +149,15 @@ public sealed class PurchOrderService : BaseService<PurchTable>, IPurchOrderServ
                 .FirstOrDefaultAsync(x => x.ItemDataAreaId == area && x.ItemId == item.ItemId, ct);
             var model = assignment == null ? null : await Db.Set<InventModelGroup>().AsNoTracking()
                 .FirstOrDefaultAsync(x => x.DataAreaId == area && x.ModelGroupId == assignment.ModelGroupId, ct);
-            if (model == null || model.StockedProduct != NoYes.Yes)
-                return await Fail(422, $"Item '{item.ItemId}' must have a stocked item model group.", ct);
+            if (model == null)
+                return await Fail(422, $"Item '{item.ItemId}' must have an item model group.", ct);
+            var stocked = model.StockedProduct == NoYes.Yes;
 
             var purchModule = await Db.Set<InventTableModule>().AsNoTracking().FirstOrDefaultAsync(x => x.DataAreaId == area
                 && x.ItemId == item.ItemId && x.ModuleType == ModuleInventPurchSales.Purchase, ct);
             var unit = string.IsNullOrWhiteSpace(input.PurchUnit) ? purchModule?.UnitId ?? string.Empty : input.PurchUnit.Trim();
             if (string.IsNullOrWhiteSpace(unit)) return await Fail(422, $"A purchase unit is required for item '{item.ItemId}'.", ct);
-            var inventQty = await _units.ToInventoryQuantityAsync(item, unit, input.PurchQty, ct);
+            var inventQty = stocked ? await _units.ToInventoryQuantityAsync(item, unit, input.PurchQty, ct) : input.PurchQty;
             if (inventQty == null || inventQty <= 0)
                 return await Fail(422, "A conversion from the purchase unit to the item's inventory unit is required.", ct);
 
@@ -157,15 +175,19 @@ public sealed class PurchOrderService : BaseService<PurchTable>, IPurchOrderServ
                 DataAreaId = area, PurchId = order.PurchId, LineNumber = lastLine + 1, ItemId = item.ItemId,
                 Name = string.IsNullOrWhiteSpace(input.Name) ? item.NameAlias : input.Name.Trim(),
                 VendAccount = order.OrderAccount, CurrencyCode = order.CurrencyCode,
-                PurchQty = input.PurchQty, PurchUnit = unit, QtyOrdered = inventQty.Value,
+                PurchQty = input.PurchQty, PurchUnit = unit, QtyOrdered = stocked ? inventQty.Value : 0m,
                 PurchPrice = input.PurchPrice, PriceUnit = priceUnit, TaxGroup = order.TaxGroup, TaxItemGroup = purchModule?.TaxItemGroupId ?? string.Empty,
                 LineAmount = input.PurchQty * input.PurchPrice / priceUnit,
                 RemainPurchPhysical = input.PurchQty, RemainPurchFinancial = input.PurchQty,
-                RemainInventPhysical = inventQty.Value, RemainInventFinancial = inventQty.Value,
+                RemainInventPhysical = stocked ? inventQty.Value : 0m, RemainInventFinancial = stocked ? inventQty.Value : 0m,
                 PurchStatus = PurchStatus.Backorder,
                 DeliveryDate = (input.DeliveryDate ?? order.DeliveryDate).Date
             };
-            await _supply.CreateAsync(order, line, site, warehouse, ct);
+            if (stocked) await _supply.CreateAsync(order, line, site, warehouse, ct);
+            else line.InventTransId = (await _numbers.NextAsync("InventTransId", area, ct)).Code;
+            order.SourceDocumentHeader ??= await new PurchaseSourceAccounting(Db).HeaderAsync(area, FinanceTableNumbers.PurchTable, ct);
+            line.SourceDocumentLine = await new PurchaseSourceAccounting(Db).LineAsync(area, order.SourceDocumentHeader.Value,
+                FinanceTableNumbers.PurchLine, line.PurchQty, order.OrderDate, ct);
             Db.Set<PurchLine>().Add(line);
             if (order.DocumentStatus == DocumentStatus.PurchaseOrder) order.DocumentStatus = DocumentStatus.None;
             await _unitOfWork.CompleteAsync(ct);

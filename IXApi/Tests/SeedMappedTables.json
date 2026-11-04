@@ -1,5 +1,6 @@
 [
   "AccountingDistribution",
+  "AccountingEvent",
   "Announcements",
   "AspNetPermissions",
   "AspNetRoleClaims",
@@ -189,8 +190,11 @@
   "SalesQuotationLine",
   "SalesQuotationTable",
   "SalesTable",
+  "SourceDocumentHeader",
+  "SourceDocumentLine",
   "SpecTrans",
   "SubledgerJournalAccountEntry",
+  "SubledgerJournalAccountEntryDistribution",
   "SubledgerJournalEntry",
   "SubledgerVoucherGeneralJournalEntry",
   "SysAuditLogs",

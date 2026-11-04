@@ -115,6 +115,10 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
             Db.Add(entry);
             await _unitOfWork.CompleteAsync(ct);
 
+            var sourceAccounting = new PurchaseSourceAccounting(Db);
+            var held = await Db.Set<VendInvoiceInfoTable>().SingleOrDefaultAsync(x => x.DataAreaId == area
+                && x.InvoiceAccount == order.InvoiceAccount && x.Num == vendorInvoiceId, ct);
+            var sourceHeader = held?.SourceDocumentHeader ?? await sourceAccounting.HeaderAsync(area, FinanceTableNumbers.VendInvoiceJour, ct);
             decimal total = 0m, totalQty = 0m, totalTax = 0m;
             foreach (var request in input.Lines)
             {
@@ -129,6 +133,9 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
                     return await Fail(422, $"Invoice quantity for item {line.ItemId} exceeds the received, uninvoiced quantity {receivedNotInvoiced}.", ct);
                 var unitPrice = request.UnitPrice ?? line.PurchPrice;
                 if (unitPrice < 0) return await Fail(422, "The invoice price cannot be negative.", ct);
+                var itemPolicy = await Db.Set<InventTable>().AsNoTracking().SingleAsync(x => x.DataAreaId == area && x.ItemId == line.ItemId, ct);
+                if (itemPolicy.MatchingPolicy is MatchingPolicy.TwoWay or MatchingPolicy.ThreeWay && unitPrice != line.PurchPrice)
+                    return await Fail(422, "Invoice price differs from the purchase order under the configured matching policy; tolerance approval is not implemented.", ct);
                 var inventQty = request.Qty == line.RemainPurchFinancial
                     ? line.RemainInventFinancial
                     : decimal.Round(request.Qty * line.QtyOrdered / line.PurchQty, 6);
@@ -139,6 +146,11 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
                 var accountingAmount = translation.ToAccounting(amount);
                 var unitCost = inventQty == 0 ? 0m : accountingAmount / inventQty;
 
+                var model = await support.ResolveItemModelPolicyAsync(area, line.ItemId, ct)
+                    ?? throw new SubledgerPostingException("The item model group is required.");
+                var receiptMatches = new Dictionary<long, decimal>();
+                if (model.StockedProduct == NoYes.Yes)
+                {
                 var origin = await Db.Set<InventTransOrigin>().FirstOrDefaultAsync(x => x.DataAreaId == area
                     && x.InventTransId == line.InventTransId && x.ReferenceId == order.PurchId
                     && x.ReferenceCategory == InventRefType.PurchaseOrder, ct);
@@ -150,7 +162,7 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
 
                 var left = inventQty;
                 decimal physicalReleased = 0m;
-                var receiptMatches = new Dictionary<long, decimal>();
+
                 foreach (var source in received)
                 {
                     if (left <= 0) break;
@@ -194,19 +206,40 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
                 summary.PhysicalValue -= physicalReleased;
                 summary.PostedValue += accountingAmount;
 
+                }
+                if (model.StockedProduct != NoYes.Yes)
+                {
+                    var receipts = await Db.Set<VendPackingSlipTrans>().Where(x => x.DataAreaId == area && x.OrigPurchId == order.PurchId
+                        && x.InventTransId == line.InventTransId).OrderBy(x => x.RecId).ToListAsync(ct);
+                    var leftQty = request.Qty;
+                    foreach (var receipt in receipts)
+                    {
+                        if (leftQty <= 0) break;
+                        var matched = await Db.Set<VendInvoicePackingSlipQuantityMatch>().Where(x => x.DataAreaId == area && x.PackingSlipTransRecId == receipt.RecId).Select(x => x.Quantity).ToListAsync(ct);
+                        var take = Math.Min(leftQty, receipt.Qty - matched.Sum());
+                        if (take <= 0) continue;
+                        receiptMatches[receipt.RecId] = take;
+                        leftQty -= take;
+                    }
+                    if (leftQty > 0) return await Fail(422, "Service receipt snapshots do not cover the invoice quantity.", ct);
+                }
                 line.RemainPurchFinancial -= request.Qty;
                 line.RemainInventFinancial = Math.Max(0m, line.RemainInventFinancial - inventQty);
                 if (line.RemainPurchFinancial <= 0 && line.RemainPurchPhysical <= 0) line.PurchStatus = PurchStatus.Invoiced;
 
                 var vendorScope = await support.VendorScopeAsync(area, order.InvoiceAccount.Length > 0 ? order.InvoiceAccount : order.OrderAccount, ct);
-                var inventoryAccount = await support.ResolveInventPostingAsync(area, line.ItemId, InventAccountType.PurchReceipt, ct,
+                var inventoryAccount = await support.ResolveInventPostingAsync(area, line.ItemId,
+                    model.StockedProduct == NoYes.Yes ? InventAccountType.PurchReceipt : InventAccountType.PurchConsump, ct,
                     custVendAccount: vendorScope.Account, custVendGroup: vendorScope.Group);
                 Db.Add(translation.AccountEntry(area, entry.RecId, inventoryAccount, LedgerPostingType.PurchReceipt, amount,
                     $"Purchase {order.PurchId} item {line.ItemId}", inventQty));
 
+                var pendingSource = held == null ? null : await Db.Set<VendInvoiceInfoLine>().SingleOrDefaultAsync(x => x.DataAreaId == area
+                    && x.ParmId == held.ParmId && x.OrigPurchId == order.PurchId && x.InventTransId == line.InventTransId, ct);
+                var sourceLineId = pendingSource?.SourceDocumentLine ?? await sourceAccounting.LineAsync(area, sourceHeader, FinanceTableNumbers.VendInvoiceTrans, request.Qty, date, ct);
                 var invoiceLine = new VendInvoiceTrans
                 {
-                    DataAreaId = area, InvoiceId = vendorInvoiceId, InternalInvoiceId = internalId, InvoiceDate = date,
+                    SourceDocumentLine = sourceLineId, DataAreaId = area, InvoiceId = vendorInvoiceId, InternalInvoiceId = internalId, InvoiceDate = date,
                     PurchId = order.PurchId, LineNum = line.LineNumber, ItemId = line.ItemId, Qty = request.Qty,
                     InventQty = inventQty, PurchUnit = line.PurchUnit, PurchPrice = unitPrice, PriceUnit = line.PriceUnit,
                     LineAmount = amount, CurrencyCode = order.CurrencyCode, TaxGroup = line.TaxGroup, TaxItemGroup = line.TaxItemGroup,
@@ -217,12 +250,14 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
                 foreach (var (receiptId, matchedInventQty) in receiptMatches)
                 {
                     var match = new VendInvoicePackingSlipQuantityMatch { DataAreaId = area, InvoiceTransRecId = invoiceLine.RecId,
-                        PackingSlipTransRecId = receiptId, InventQuantity = matchedInventQty, Quantity = matchedInventQty * request.Qty / inventQty };
+                        PackingSlipTransRecId = receiptId, InventQuantity = model.StockedProduct == NoYes.Yes ? matchedInventQty : 0m,
+                        Quantity = model.StockedProduct == NoYes.Yes ? matchedInventQty * request.Qty / inventQty : matchedInventQty };
                     await new PurchaseReceiptAccrualPosting(Db, _currentUser.GetCurrentUserId())
                         .ReverseAsync(area, match, entry.RecId, context.Ledger.AccountingCurrency, ct);
                     Db.Add(match);
                 }
                 totalTax += await new PurchaseTaxPosting(Db).PostAsync(area, invoiceLine, entry.RecId, translation, ct);
+                await sourceAccounting.CaptureAsync(area, entry, sourceHeader, sourceLineId, ct);
                 total += amount;
                 totalQty += request.Qty;
             }
@@ -264,7 +299,7 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
                 PurchId = order.PurchId, OrderAccount = order.OrderAccount, InvoiceAccount = order.InvoiceAccount,
                 CurrencyCode = order.CurrencyCode, LedgerVoucher = internalId, Qty = totalQty,
                 // SalesBalance is the line total; the charges have their own subtotal.
-                SalesBalance = total - charges.ChargedToVendor,
+                SourceDocumentHeader = sourceHeader, SalesBalance = total - charges.ChargedToVendor,
                 SumMarkup = charges.ChargedToVendor, SumMarkupMst = translation.ToAccounting(charges.ChargedToVendor),
                 SumTax = totalTax, InvoiceAmount = total + totalTax, DueDate = dueDate
             });
@@ -275,6 +310,9 @@ public sealed class VendorInvoiceService : BaseService<VendInvoiceJour>, IVendor
                 order.PurchStatus = PurchStatus.Invoiced;
             order.DocumentStatus = DocumentStatus.Invoice;
             await _unitOfWork.CompleteAsync(ct);
+            var headerSourceLine = await sourceAccounting.LineAsync(area, sourceHeader, FinanceTableNumbers.VendInvoiceJour, 0m, date, ct);
+            await sourceAccounting.CaptureAsync(area, entry, sourceHeader, headerSourceLine, ct);
+            await sourceAccounting.VerifyBalancedAsync(entry, ct);
             await _unitOfWork.CommitTransactionAsync(ct);
             return new(200, new { invoiceId = vendorInvoiceId, voucher = internalId, amount = total + totalTax, tax = totalTax, qty = totalQty },
                 "Vendor invoice posted.");

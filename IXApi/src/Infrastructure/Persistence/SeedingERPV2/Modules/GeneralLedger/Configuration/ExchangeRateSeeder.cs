@@ -23,5 +23,8 @@ public sealed class ExchangeRateSeeder : IDataSeeder
         var from = new DateTime(c.FiscalYear, 1, 1);
         await c.EnsureAsync<ExchangeRate>(x => x.ExchangeRateCurrencyPair == pair.RecId && x.ValidFrom == from,
             new() { ExchangeRateCurrencyPair = pair.RecId, ExchangeRateValue = 3.75m, ValidFrom = from, ValidTo = new(c.FiscalYear, 12, 31) }, ct);
+        var settlementDate = new DateTime(c.FiscalYear, 5, 20);
+        await c.EnsureAsync<ExchangeRate>(x => x.ExchangeRateCurrencyPair == pair.RecId && x.ValidFrom == settlementDate,
+            new() { ExchangeRateCurrencyPair = pair.RecId, ExchangeRateValue = 3.80m, ValidFrom = settlementDate, ValidTo = new(c.FiscalYear, 12, 31) }, ct);
     }
 }

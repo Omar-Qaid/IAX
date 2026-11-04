@@ -30,6 +30,8 @@ internal static class VendSettlementRestore
                 + "settled before settlement reversal was supported and is not marked reversible.";
         if (await db.Set<VendSettlement>().AnyAsync(x => x.DataAreaId == area && x.Voucher == reversalVoucher, ct))
             return $"Settlement '{voucher}' has already been reversed under '{reversalVoucher}'.";
+        if (rows.Any(x => x.ExchAdjustment != 0m))
+            return $"Settlement '{voucher}' carries a realized exchange adjustment; this reversal path does not reverse its ledger voucher.";
         if (rows.Any(x => x.UtilizedCashDisc != 0m))
             return $"Settlement '{voucher}' carries a cash discount, which posts to the ledger and "
                 + "cannot be reversed by this path.";

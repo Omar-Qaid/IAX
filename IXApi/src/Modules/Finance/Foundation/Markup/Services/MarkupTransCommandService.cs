@@ -24,14 +24,14 @@ public sealed class MarkupTransCommandService : IMarkupTransCommandService
     public async Task<MarkupTrans> CreateAsync(MarkupModuleType moduleType, int transTableId, long documentRecId, MarkupTransDto input, CancellationToken ct)
     {
         var dataAreaId = _company.GetDataAreaId() ?? "dat";
-        var nextLine = await _db.Set<MarkupTrans>()
+        var nextLine = (await _db.Set<MarkupTrans>()
             .Where(x => x.TransRecId == documentRecId
                 && (moduleType == MarkupModuleType.Customer
                     ? x.ModuleType == MarkupModuleType.Customer || x.ModuleType == MarkupModuleType.Sales
                     : x.ModuleType == moduleType)
                 && (x.TransTableId == transTableId || (transTableId == FinanceTableNumbers.SalesTable && x.TransTableId == FinanceTableNumbers.Unspecified))
                 && x.DataAreaId == dataAreaId)
-            .Select(x => (decimal?)x.LineNum).MaxAsync(ct) ?? 0;
+            .Select(x => x.LineNum).ToListAsync(ct)).DefaultIfEmpty(0m).Max();
         var entity = new MarkupTrans
         {
             DataAreaId = dataAreaId,
@@ -42,6 +42,13 @@ public sealed class MarkupTransCommandService : IMarkupTransCommandService
             ModuleType = moduleType
         };
         input.Adapt<MarkupTransDto, MarkupTrans>(entity);
+        // Document identity belongs to the validated route, even when a host has not
+        // installed the application's global Mapster configuration.
+        entity.DataAreaId = dataAreaId;
+        entity.TransRecId = documentRecId;
+        entity.TransTableId = transTableId;
+        entity.ModuleType = moduleType;
+        entity.LineNum = nextLine + 1;
         entity.CalculatedAmount = await _calculator.CalculateAmount(entity, ct);
         await _db.Set<MarkupTrans>().AddAsync(entity, ct);
         await ResetSalesConfirmationAsync(entity, ct);

@@ -142,6 +142,7 @@ public sealed class VendInvoiceInfoService : BaseService<VendInvoiceInfoTable>, 
                 DocumentDate = documentDate, TransDate = (input.TransDate ?? documentDate).Date,
                 CurrencyCode = order.CurrencyCode, Description = (input.Description ?? string.Empty).Trim()
             };
+            header.SourceDocumentHeader = await new PurchaseSourceAccounting(Db).HeaderAsync(area, FinanceTableNumbers.VendInvoiceInfoTable, ct);
             Db.Set<VendInvoiceInfoTable>().Add(header);
 
             var lines = new List<VendInvoiceInfoLine>();
@@ -154,8 +155,29 @@ public sealed class VendInvoiceInfoService : BaseService<VendInvoiceInfoTable>, 
                     ItemId = line.ItemId, InventTransId = line.InventTransId, InventDimId = line.InventDimId,
                     PurchUnit = line.PurchUnit, ReceiveNow = qty, PurchPrice = price, LineAmount = amount
                 };
+                pending.SourceDocumentLine = await new PurchaseSourceAccounting(Db).LineAsync(area, header.SourceDocumentHeader!.Value,
+                    FinanceTableNumbers.VendInvoiceInfoLine, qty, header.TransDate, ct);
                 lines.Add(pending);
                 Db.Set<VendInvoiceInfoLine>().Add(pending);
+                await _unitOfWork.CompleteAsync(ct);
+                var receipts = await Db.Set<VendPackingSlipTrans>().Where(x => x.DataAreaId == area && x.OrigPurchId == order.PurchId
+                    && x.InventTransId == line.InventTransId).OrderBy(x => x.RecId).ToListAsync(ct);
+                var left = qty;
+                foreach (var receipt in receipts)
+                {
+                    if (left <= 0) break;
+                    var matched = await Db.Set<VendInvoicePackingSlipQuantityMatch>().Where(x => x.DataAreaId == area && x.PackingSlipTransRecId == receipt.RecId)
+                        .Select(x => x.Quantity).ToListAsync(ct);
+                    var take = Math.Min(left, receipt.Qty - matched.Sum());
+                    if (take <= 0) continue;
+                    Db.Add(new VendInvoiceInfoSubLine { DataAreaId = area, DocumentId = receipt.PackingSlipId,
+                        ParmId = parmId, LineRefRecId = pending.RecId, JournalRefTableId = FinanceTableNumbers.VendPackingSlipTrans,
+                        JournalRefRecId = receipt.RecId, ReceiveNow = take, InventNow = receipt.Qty == 0 ? 0 : take * receipt.InventQty / receipt.Qty });
+                    left -= take;
+                }
+                // Legacy held records may have quantities without receipt snapshots. Posting still
+                // refuses them; entry never manufactures a receipt to repair historical data.
+                if (receipts.Count > 0 && left > 0) return await Fail(422, "Receipt snapshots do not cover the pending invoice quantity.", ct);
             }
 
             await _unitOfWork.CompleteAsync(ct);
@@ -199,6 +221,9 @@ public sealed class VendInvoiceInfoService : BaseService<VendInvoiceInfoTable>, 
             if (header == null) return await Fail(404, "Pending vendor invoice was not found in the selected company.", ct);
             var lines = await Db.Set<VendInvoiceInfoLine>()
                 .Where(x => x.DataAreaId == area && x.ParmId == parmId).ToListAsync(ct);
+            var lineIds = lines.Select(x => x.RecId).ToArray();
+            var connections = await Db.Set<VendInvoiceInfoSubLine>().Where(x => x.DataAreaId == area && x.LineRefRecId != null && lineIds.Contains(x.LineRefRecId.Value)).ToListAsync(ct);
+            Db.Set<VendInvoiceInfoSubLine>().RemoveRange(connections);
             Db.Set<VendInvoiceInfoLine>().RemoveRange(lines);
             Db.Set<VendInvoiceInfoTable>().Remove(header);
             await _unitOfWork.CompleteAsync(ct);
@@ -240,6 +265,14 @@ public sealed class VendInvoiceInfoService : BaseService<VendInvoiceInfoTable>, 
                 && x.PurchId == pending.OrigPurchId && x.InventTransId == pending.InventTransId, ct);
             if (line == null)
                 return new(422, null, $"The purchase line for item {pending.ItemId} no longer exists, so the pending invoice cannot be posted.");
+            var receiptLinks = await Db.Set<VendInvoiceInfoSubLine>().Where(x => x.DataAreaId == area && x.LineRefRecId == pending.RecId).ToListAsync(ct);
+            foreach (var link in receiptLinks)
+            {
+                var receipt = await Db.Set<VendPackingSlipTrans>().AsNoTracking().SingleOrDefaultAsync(x => x.DataAreaId == area && x.RecId == link.JournalRefRecId, ct);
+                if (receipt == null) return new(422, null, "The pending invoice's selected receipt no longer exists.");
+                var consumed = await Db.Set<VendInvoicePackingSlipQuantityMatch>().Where(x => x.DataAreaId == area && x.PackingSlipTransRecId == receipt.RecId).Select(x => x.Quantity).ToListAsync(ct);
+                if (receipt.Qty - consumed.Sum() < link.ReceiveNow.GetValueOrDefault()) return new(422, null, "A selected receipt quantity has already been invoiced.");
+            }
             requests.Add(new PurchPostLineDto(line.RecId, pending.ReceiveNow, pending.PurchPrice));
         }
 

@@ -7,7 +7,7 @@ namespace IAX.IXApi.Modules.Finance.Entities;
 public sealed class AccountingDistribution : SharedEntity<long>
 {
     public DateTime? AccountingDate { get; set; }
-    // Source-document/accounting-event references are reserved until that framework exists.
+    // Linked to the owning source document and its accounting events.
     public long? AccountingEvent { get; set; }
     public long? AccountingLegalEntity { get; set; }
     public decimal? AllocationFactor { get; set; }

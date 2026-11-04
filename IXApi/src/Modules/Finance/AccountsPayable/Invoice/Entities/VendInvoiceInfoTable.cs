@@ -19,6 +19,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
     [Table("VendInvoiceInfoTable")]
     public class VendInvoiceInfoTable : Entity<long>
     {
+        public long? SourceDocumentHeader { get; set; }
         [StringLength(FieldLengths.ParmId)]
         public string ParmId { get; set; } = string.Empty;
         public int TableRefId { get; set; }
@@ -50,6 +51,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
     [Table("VendInvoiceInfoLine")]
     public class VendInvoiceInfoLine : Entity<long>
     {
+        public long? SourceDocumentLine { get; set; }
         [StringLength(FieldLengths.ParmId)]
         public string ParmId { get; set; } = string.Empty;
         public int TableRefId { get; set; }

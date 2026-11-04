@@ -17,6 +17,20 @@ public static class FinanceTableNumbers
     public const int CustTransOpen = 472585700;
     public const int LedgerJournalTrans = 1864676057;
 
+    public const int PurchTable = 3002;
+
+    public const int PurchLine = 821905317;
+
+    public const int VendInvoiceInfoTable = 1180248369;
+
+    public const int VendInvoiceInfoLine = 852736745;
+
+    public const int VendInvoiceJour = 737742047;
+
+    public const int VendPackingSlipJour = 488159705;
+
+    public const int VendPackingSlipTrans = 1103935757;
+
     public static int For<TEntity>() => typeof(TEntity) switch
     {
         var type when type == typeof(global::IAX.IXApi.Modules.Finance.AccountsReceivable.CustTable) => CustTable,
@@ -27,6 +41,13 @@ public static class FinanceTableNumbers
         var type when type == typeof(global::IAX.IXApi.Modules.Finance.Entities.VendTable) => VendTable,
         var type when type == typeof(global::IAX.IXApi.Modules.Finance.AccountsPayable.VendInvoiceTrans) => VendInvoiceTrans,
         var type when type == typeof(global::IAX.IXApi.Modules.Finance.Foundation.HcmWorkers.HcmWorker) => HcmWorker,
+        var type when type == typeof(global::IAX.IXApi.Modules.Finance.AccountsPayable.PurchTable) => PurchTable,
+        var type when type == typeof(global::IAX.IXApi.Modules.Finance.AccountsPayable.PurchLine) => PurchLine,
+        var type when type == typeof(global::IAX.IXApi.Modules.Finance.AccountsPayable.VendInvoiceInfoTable) => VendInvoiceInfoTable,
+        var type when type == typeof(global::IAX.IXApi.Modules.Finance.AccountsPayable.VendInvoiceInfoLine) => VendInvoiceInfoLine,
+        var type when type == typeof(global::IAX.IXApi.Modules.Finance.AccountsPayable.VendInvoiceJour) => VendInvoiceJour,
+        var type when type == typeof(global::IAX.IXApi.Modules.Finance.AccountsPayable.VendPackingSlipJour) => VendPackingSlipJour,
+        var type when type == typeof(global::IAX.IXApi.Modules.Finance.AccountsPayable.VendPackingSlipTrans) => VendPackingSlipTrans,
         _ => throw new ArgumentException($"No Finance table number is registered for {typeof(TEntity).FullName}.")
     };
 }

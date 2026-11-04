@@ -8,6 +8,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
     [Table("VendPackingSlipJour")]
     public class VendPackingSlipJour : Entity<long>
     {
+        public long? SourceDocumentHeader { get; set; }
         [StringLength(FieldLengths.PackingSlipId)]
         public string PackingSlipId { get; set; } = string.Empty;
         [StringLength(FieldLengths.PackingSlipId)]
@@ -24,6 +25,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
     [Table("VendPackingSlipTrans")]
     public class VendPackingSlipTrans : Entity<long>
     {
+        public long? SourceDocumentLine { get; set; }
         [StringLength(FieldLengths.PackingSlipId)]
         public string PackingSlipId { get; set; } = string.Empty;
         [StringLength(FieldLengths.PackingSlipId)]

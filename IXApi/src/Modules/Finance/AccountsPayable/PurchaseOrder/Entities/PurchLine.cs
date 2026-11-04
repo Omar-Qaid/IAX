@@ -7,6 +7,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
     [Table("PurchLine")]
     public class PurchLine : Entity<long>
     {
+        public long? SourceDocumentLine { get; set; }
         [StringLength(FieldLengths.PurchId)]
         public string PurchId { get; set; } = string.Empty;
         public decimal LineNumber { get; set; }

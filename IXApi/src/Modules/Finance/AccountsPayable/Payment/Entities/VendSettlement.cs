@@ -23,6 +23,7 @@ public class VendSettlement : Entity<long>
     [MaxLength(20)] public string Voucher { get; set; } = "";
     public decimal AmountCur { get; set; }
     public decimal AmountMst { get; set; }
+    public decimal ExchAdjustment { get; set; }
 
     /// <summary>
     /// The cash discount taken on this match, the payable counterpart of

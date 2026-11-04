@@ -121,6 +121,7 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                 DeliveryDate = DateTime.UtcNow.Date, InventSiteId = original.InventSiteId, InventLocationId = original.InventLocationId,
                 DefaultDimension = original.DefaultDimension
             };
+            order.SourceDocumentHeader = await new PurchaseSourceAccounting(Db).HeaderAsync(area, FinanceTableNumbers.PurchTable, ct);
             Db.Set<PurchTable>().Add(order);
             await unitOfWork.CompleteAsync(ct);
 
@@ -163,6 +164,7 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                     OriginalInvoiceTransRecId = invoiced.RecId, TaxGroup = invoiced.TaxGroup, TaxItemGroup = invoiced.TaxItemGroup,
                     DeliveryDate = order.DeliveryDate
                 };
+                line.SourceDocumentLine = await new PurchaseSourceAccounting(Db).LineAsync(area, order.SourceDocumentHeader!.Value, FinanceTableNumbers.PurchLine, line.PurchQty, order.DeliveryDate, ct);
                 await CreateIssueDemandAsync(area, order, line, inventQty, ct);
                 Db.Set<PurchLine>().Add(line);
             }
@@ -243,6 +245,7 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                 DataAreaId = area, PackingSlipId = slipId, InternalPackingSlipId = internalId, PurchId = order.PurchId,
                 DeliveryDate = date, OrderAccount = order.OrderAccount, InvoiceAccount = order.InvoiceAccount, LedgerVoucher = internalId
             };
+            journal.SourceDocumentHeader = await new PurchaseSourceAccounting(Db).HeaderAsync(area, FinanceTableNumbers.VendPackingSlipJour, ct);
             Db.Set<VendPackingSlipJour>().Add(journal);
             await unitOfWork.CompleteAsync(ct);
 
@@ -304,7 +307,7 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                 line.RemainPurchPhysical += request.Qty;
                 line.RemainInventPhysical = Math.Min(0m, line.RemainInventPhysical + inventQty);
                 if (line.RemainPurchPhysical >= 0) line.PurchStatus = PurchStatus.Received;
-                Db.Set<VendPackingSlipTrans>().Add(new VendPackingSlipTrans
+                var receipt = new VendPackingSlipTrans
                 {
                     DataAreaId = area, PackingSlipId = slipId, InternalPackingSlipId = internalId, OrigPurchId = order.PurchId,
                     VendPackingSlipJour = journal.RecId, DeliveryDate = date, LineNum = line.LineNumber, ItemId = line.ItemId,
@@ -312,7 +315,12 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                     Remain = line.RemainPurchPhysical, RemainInvent = line.RemainInventPhysical,
                     ValueMst = -decimal.Round(inventQty * unitCost, 2, MidpointRounding.AwayFromZero),
                     PurchUnit = line.PurchUnit, InventTransId = line.InventTransId, InventDimId = line.InventDimId
-                });
+                };
+                receipt.SourceDocumentLine = await new PurchaseSourceAccounting(Db).LineAsync(area, journal.SourceDocumentHeader!.Value, FinanceTableNumbers.VendPackingSlipTrans, receipt.Qty, date, ct);
+                Db.Add(receipt);
+                await unitOfWork.CompleteAsync(ct);
+                await new PurchaseReceiptAccrualPosting(Db, _currentUser.GetCurrentUserId()).PostAsync(order, receipt, ct);
+
                 journal.Qty -= request.Qty;
             }
             var lines = await Db.Set<PurchLine>().Where(x => x.DataAreaId == area && x.PurchId == order.PurchId).ToListAsync(ct);
@@ -392,6 +400,7 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
             await unitOfWork.CompleteAsync(ct);
             var currency = context.Ledger.AccountingCurrency;
 
+            var creditSource = await new PurchaseSourceAccounting(Db).HeaderAsync(area, FinanceTableNumbers.VendInvoiceJour, ct);
             decimal total = 0m, totalQty = 0m, totalTax = 0m;
             foreach (var (line, qty) in selection)
             {
@@ -471,10 +480,26 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                     CurrencyCode = order.CurrencyCode, InventTransId = line.InventTransId, InventDimId = line.InventDimId,
                     TaxGroup = line.TaxGroup, TaxItemGroup = line.TaxItemGroup, OriginalInvoiceTransRecId = line.OriginalInvoiceTransRecId
                 };
+                creditLine.SourceDocumentLine = await new PurchaseSourceAccounting(Db).LineAsync(area, creditSource, FinanceTableNumbers.VendInvoiceTrans, creditLine.Qty, date, ct);
                 Db.Add(creditLine);
                 await unitOfWork.CompleteAsync(ct);
                 if (line.OriginalInvoiceTransRecId.HasValue)
                     totalTax -= await new PurchaseTaxPosting(Db).PostAsync(area, creditLine, entry.RecId, translation, ct, line.OriginalInvoiceTransRecId);
+                var returnReceipts = await Db.Set<VendPackingSlipTrans>().Where(x => x.DataAreaId == area && x.OrigPurchId == order.PurchId && x.InventTransId == line.InventTransId).ToListAsync(ct);
+                var unmatched = inventQty;
+                foreach (var receipt in returnReceipts.OrderBy(x => x.RecId))
+                {
+                    var prior = (await Db.Set<VendInvoicePackingSlipQuantityMatch>().Where(x => x.DataAreaId == area && x.PackingSlipTransRecId == receipt.RecId).Select(x => x.InventQuantity).ToListAsync(ct)).Sum();
+                    var take = Math.Min(unmatched, -(receipt.InventQty - prior));
+                    if (take <= 0m) continue;
+                    var match = new VendInvoicePackingSlipQuantityMatch { DataAreaId = area, InvoiceTransRecId = creditLine.RecId,
+                        PackingSlipTransRecId = receipt.RecId, InventQuantity = -take, Quantity = -take * qty / inventQty };
+                    Db.Add(match);
+                    await new PurchaseReceiptAccrualPosting(Db).ReverseAsync(area, match, entry.RecId, context.Ledger.AccountingCurrency, ct);
+                    unmatched -= take;
+                }
+                if (unmatched != 0m) return await Fail(422, "Return receipt quantities cannot be matched to this credit.", ct);
+                await new PurchaseSourceAccounting(Db).CaptureAsync(area, entry, creditSource, creditLine.SourceDocumentLine!.Value, ct);
                 line.RemainPurchFinancial += qty;
                 line.RemainInventFinancial = Math.Min(0m, line.RemainInventFinancial + inventQty);
                 if (line.RemainPurchFinancial >= 0 && line.RemainPurchPhysical >= 0) line.PurchStatus = PurchStatus.Invoiced;
@@ -506,8 +531,11 @@ public sealed class PurchReturnService : BaseService<PurchTable>, IPurchReturnSe
                 DataAreaId = area, InvoiceId = creditNoteId, InternalInvoiceId = internalId, InvoiceDate = date,
                 PurchId = order.PurchId, OrderAccount = order.OrderAccount, InvoiceAccount = order.InvoiceAccount,
                 CurrencyCode = order.CurrencyCode, LedgerVoucher = internalId, Qty = -totalQty,
-                SalesBalance = -total, SumTax = -totalTax, InvoiceAmount = -(total + totalTax), DueDate = date
+                SalesBalance = -total, SumTax = -totalTax, InvoiceAmount = -(total + totalTax), DueDate = date, SourceDocumentHeader = creditSource
             });
+            var headerSourceLine = await new PurchaseSourceAccounting(Db).LineAsync(area, creditSource, FinanceTableNumbers.VendInvoiceJour, 0m, date, ct);
+            await new PurchaseSourceAccounting(Db).CaptureAsync(area, entry, creditSource, headerSourceLine, ct);
+            await new PurchaseSourceAccounting(Db).VerifyBalancedAsync(entry, ct);
             if (lines.All(x => x.PurchStatus == PurchStatus.Invoiced)) order.PurchStatus = PurchStatus.Invoiced;
             order.DocumentStatus = DocumentStatus.Invoice;
             await unitOfWork.CompleteAsync(ct);

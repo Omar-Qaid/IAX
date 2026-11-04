@@ -8,6 +8,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
     [Table("VendInvoiceJour")]
     public class VendInvoiceJour : Entity<long>
     {
+        public long? SourceDocumentHeader { get; set; }
         [StringLength(FieldLengths.InvoiceId)]
         public string InvoiceId { get; set; } = string.Empty;
         [StringLength(FieldLengths.InvoiceId)]
@@ -33,6 +34,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
     [Table("VendInvoiceTrans")]
     public class VendInvoiceTrans : Entity<long>
     {
+        public long? SourceDocumentLine { get; set; }
         [StringLength(FieldLengths.InvoiceId)]
         public string InvoiceId { get; set; } = string.Empty;
         [StringLength(FieldLengths.InvoiceId)]

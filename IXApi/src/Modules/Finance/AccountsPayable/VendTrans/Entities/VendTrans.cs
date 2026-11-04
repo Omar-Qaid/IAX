@@ -19,6 +19,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
         public string CurrencyCode { get; set; } = string.Empty;
         public decimal AmountCur { get; set; }
         public decimal AmountMst { get; set; }
+        public decimal VendExchAdjustmentRealized { get; set; }
         public decimal SettleAmountCur { get; set; }
         public decimal SettleAmountMst { get; set; }
         public DateTime DueDate { get; set; }

@@ -87,6 +87,7 @@ public sealed class ProductReceiptService : BaseService<VendPackingSlipJour>, IP
                 DeliveryDate = date, OrderAccount = order.OrderAccount, InvoiceAccount = order.InvoiceAccount,
                 LedgerVoucher = internalId
             };
+            journal.SourceDocumentHeader = await new PurchaseSourceAccounting(Db).HeaderAsync(area, FinanceTableNumbers.VendPackingSlipJour, ct);
             Db.Set<VendPackingSlipJour>().Add(journal);
             await _unitOfWork.CompleteAsync(ct);
 
@@ -101,9 +102,14 @@ public sealed class ProductReceiptService : BaseService<VendPackingSlipJour>, IP
                 var inventQty = request.Qty == line.RemainPurchPhysical
                     ? line.RemainInventPhysical
                     : decimal.Round(request.Qty * line.QtyOrdered / line.PurchQty, 6);
-                var documentCost = line.QtyOrdered == 0 ? 0m : inventQty * line.LineAmount / line.QtyOrdered;
+                var documentCost = line.QtyOrdered == 0 ? request.Qty * line.PurchPrice / (line.PriceUnit > 0 ? line.PriceUnit : 1m)
+                    : inventQty * line.LineAmount / line.QtyOrdered;
                 var cost = decimal.Round(translation.ToAccounting(documentCost), 4, MidpointRounding.AwayFromZero);
 
+                var model = await new SubledgerPostingSupport(Db).ResolveItemModelPolicyAsync(area, line.ItemId, ct)
+                    ?? throw new SubledgerPostingException("The item model group is required.");
+                if (model.StockedProduct == NoYes.Yes)
+                {
                 var origin = await Db.Set<InventTransOrigin>().FirstOrDefaultAsync(x => x.DataAreaId == area
                     && x.InventTransId == line.InventTransId && x.ReferenceId == order.PurchId
                     && x.ReferenceCategory == InventRefType.PurchaseOrder, ct);
@@ -150,6 +156,7 @@ public sealed class ProductReceiptService : BaseService<VendPackingSlipJour>, IP
                 summary.AvailOrdered = summary.AvailPhysical + summary.Ordered - summary.OnOrder - summary.ReservOrdered;
                 summary.LastUpdDatePhysical = date;
 
+                }
                 line.RemainPurchPhysical -= request.Qty;
                 line.RemainInventPhysical = Math.Max(0m, line.RemainInventPhysical - inventQty);
                 if (line.RemainPurchPhysical <= 0) line.PurchStatus = PurchStatus.Received;
@@ -162,6 +169,8 @@ public sealed class ProductReceiptService : BaseService<VendPackingSlipJour>, IP
                     Remain = line.RemainPurchPhysical, RemainInvent = line.RemainInventPhysical, ValueMst = cost,
                     PurchUnit = line.PurchUnit, InventTransId = line.InventTransId, InventDimId = line.InventDimId
                 };
+                receiptLine.SourceDocumentLine = await new PurchaseSourceAccounting(Db).LineAsync(area, journal.SourceDocumentHeader!.Value,
+                    FinanceTableNumbers.VendPackingSlipTrans, request.Qty, date, ct);
                 Db.Set<VendPackingSlipTrans>().Add(receiptLine);
                 await new PurchaseReceiptAccrualPosting(Db, _currentUser.GetCurrentUserId()).PostAsync(order, receiptLine, ct);
                 journal.Qty += request.Qty;

@@ -20,5 +20,6 @@ public sealed class BankAccountTableSeeder : IDataSeeder
 
         var dimension = await c.RequireAsync<DimensionAttributeValueCombination>(x => x.MainAccountValue == "181001", ct);
         await c.EnsureAsync<BankAccountTable>(x => x.AccountId == "APV2-BANK", new() { AccountId = "APV2-BANK", AccountNum = "000000009001", Name = "Treasury operating account (demo)", CurrencyCode = "SAR", LedgerDimension = dimension.RecId, BankAccountStatus = BankAccountStatus.Active, VendPaymentJournalName = "APV2-PAY", ActiveFrom = new(2000, 1, 1), ActiveTo = new(2099, 12, 31) }, ct);
+        await c.EnsureAsync<BankAccountTable>(x => x.AccountId == "APV2-USD", new() { AccountId = "APV2-USD", AccountNum = "000000009002", Name = "USD treasury account (demo)", CurrencyCode = "USD", LedgerDimension = dimension.RecId, BankAccountStatus = BankAccountStatus.Active, VendPaymentJournalName = "APV2-PAY", ActiveFrom = new(2000, 1, 1), ActiveTo = new(2099, 12, 31) }, ct);
     }
 }

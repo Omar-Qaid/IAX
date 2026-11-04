@@ -279,3 +279,7 @@
 "SubledgerJournalEntry","","Mapped transaction storage only; not seeded by SeedingERPV2; application database coverage unverified"
 "SubledgerJournalAccountEntry","","Mapped transaction storage only; not seeded by SeedingERPV2; application database coverage unverified"
 "VendInvoiceInfoSubLine","","Mapped transaction storage only; not seeded by SeedingERPV2; application database coverage unverified"
+"SourceDocumentHeader","","Source-document accounting storage only; not a phase-one seed; application database coverage unverified"
+"SourceDocumentLine","","Source-document accounting storage only; not a phase-one seed; application database coverage unverified"
+"AccountingEvent","","Source-document accounting storage only; not a phase-one seed; application database coverage unverified"
+"SubledgerJournalAccountEntryDistribution","","Source-document accounting storage only; not a phase-one seed; application database coverage unverified"

@@ -33,7 +33,8 @@ public sealed class VendPaymentService(IUnitOfWork work, ICurrentUserService use
             await support.LockAsync($"VendPayment:{area}:{input.VendAccount}", ct);
             var bank = await Db.Set<BankAccountTable>().AsNoTracking().SingleOrDefaultAsync(x => x.DataAreaId == area && x.AccountId == input.BankAccountId, ct);
             var previous = await Db.Set<LedgerJournalTrans>().AsNoTracking().SingleOrDefaultAsync(x => x.DataAreaId == area
-                && x.AccountType == LedgerJournalACType.Vend && x.PaymReference == input.RequestId, ct);
+                && x.AccountType == LedgerJournalACType.Vend && x.PaymReference == input.RequestId
+                && !Db.Set<LedgerJournalTable>().Any(h => h.DataAreaId == area && h.JournalNum == x.JournalNum && h.OriginalJournalNum != ""), ct);
             if (previous != null)
             {
                 var bankMovement = await Db.Set<BankAccountTrans>().AsNoTracking().SingleOrDefaultAsync(x => x.DataAreaId == area
@@ -88,7 +89,18 @@ public sealed class VendPaymentService(IUnitOfWork work, ICurrentUserService use
             if (invoices.Any(x => x.Open.AmountCur != x.Trans.AmountCur - x.Trans.SettleAmountCur || x.Open.AmountMst != x.Trans.AmountMst - x.Trans.SettleAmountMst))
                 return await Fail("Vendor open balances require reconciliation before settlement.", ct);
             var journalNum = (await numbers.NextAsync("LedgerJournalTable", area, ct)).Code;
-            var voucher = (await numbers.NextAsync("Voucher", area, ct)).Code;
+            LedgerJournalName? journalSetup = null;
+            var voucherSequence = "Voucher";
+            if (!string.IsNullOrWhiteSpace(bank.VendPaymentJournalName))
+            {
+                journalSetup = await Db.Set<LedgerJournalName>().SingleOrDefaultAsync(x => x.DataAreaId == area && x.JournalName == bank.VendPaymentJournalName && !x.IsDeleted && x.IsActive, ct);
+                if (journalSetup == null || journalSetup.JournalType != LedgerJournalType.VendDisbursement)
+                    return await Fail("The bank vendor-payment journal name must be an active vendor disbursement journal.", ct);
+                var configuredSequence = await Db.Set<SysNumberSequence>().SingleOrDefaultAsync(x => x.DataAreaId == area && x.RecId == journalSetup.NumberSequenceTable && !x.IsDeleted && x.IsActive, ct);
+                if (configuredSequence == null) return await Fail("The vendor-payment journal voucher sequence is unavailable.", ct);
+                voucherSequence = configuredSequence.NumberSequence;
+            }
+            var voucher = (await numbers.NextAsync(voucherSequence, area, ct)).Code;
             var payment = new VendTrans { DataAreaId = area, AccountNum = vendor.AccountNum, TransDate = date, DueDate = date,
                 Voucher = voucher, Txt = $"Vendor payment {journalNum}", CurrencyCode = currency, AmountCur = input.Amount,
                 AmountMst = translation.ToAccounting(input.Amount),
@@ -99,10 +111,7 @@ public sealed class VendPaymentService(IUnitOfWork work, ICurrentUserService use
             // What the cleared invoices were carried at in the accounting currency, accumulated at
             // each invoice's own posted rate. The payment arrives at its own rate, so the two
             // disagree whenever the rate moved, and that difference is the realized gain or loss.
-            // Only the accounting total is tracked. The customer side also records the per-invoice
-            // difference on CustTrans.CustExchAdjustmentRealized; VendTrans has no equivalent
-            // column in this repository, so the realized difference reaches the ledger but is not
-            // stamped on the vendor transaction. Recorded as a schema gap rather than invented.
+            // Record the realized accounting adjustment on each settled invoice as well as in GL.
             var settledAccounting = 0m;
             // Cash discount taken per discount account, so a voucher covering invoices on
             // different discount codes credits each configured account for its own share.
@@ -143,6 +152,7 @@ public sealed class VendPaymentService(IUnitOfWork work, ICurrentUserService use
                     ? settled
                     : decimal.Round(settled * Math.Abs(invoice.Trans.AmountMst / invoice.Trans.AmountCur), 2, MidpointRounding.AwayFromZero);
                 var paidAccounting = translation.ToAccounting(cash) + translation.ToAccounting(discount);
+                invoice.Trans.VendExchAdjustmentRealized += invoiceAccounting - paidAccounting;
                 settledAccounting += invoiceAccounting;
                 Db.Add(new VendSettlement { DataAreaId = area, AccountNum = vendor.AccountNum, InvoiceTransRecId = invoice.Trans.RecId,
                     PaymentTransRecId = payment.RecId, TransDate = date, Voucher = voucher, AmountCur = settled,
@@ -151,7 +161,7 @@ public sealed class VendPaymentService(IUnitOfWork work, ICurrentUserService use
                     AmountMst = invoiceAccounting,
                     UtilizedCashDisc = discount,
                     // Marks the match as in force, so VendSettlementReversalService can reverse it once.
-                    CanBeReversed = NoYes.Yes });
+                    ExchAdjustment = invoiceAccounting - paidAccounting, CanBeReversed = NoYes.Yes });
                 invoice.Trans.SettleAmountCur -= settled;
                 invoice.Trans.SettleAmountMst -= invoiceAccounting;
                 invoice.Open.AmountCur += settled;
@@ -168,7 +178,7 @@ public sealed class VendPaymentService(IUnitOfWork work, ICurrentUserService use
             var totalDiscount = discountsByAccount.Values.Sum();
             if (remaining == 0) payment.Closed = date;
             else VendorOpenBalance.Add(Db, payment);
-            Db.Add(new LedgerJournalTable { DataAreaId = area, JournalNum = journalNum, JournalName = "VendPaym", Name = $"Vendor payment {vendor.AccountNum}",
+            Db.Add(new LedgerJournalTable { DataAreaId = area, JournalNum = journalNum, JournalName = journalSetup?.JournalName ?? "VendPaym", NumberSequenceTable = journalSetup?.NumberSequenceTable ?? 0, Name = $"Vendor payment {vendor.AccountNum}",
                 JournalType = LedgerJournalType.VendDisbursement, NumOfLines = 1, CurrencyCode = currency, JournalTotalCredit = input.Amount,
                 JournalTotalDebit = input.Amount, OffsetAccountType = LedgerJournalACType.Bank, OffsetLedgerDimension = bank.LedgerDimension,
                 Posted = NoYes.Yes, PostedDateTime = DateTime.UtcNow });

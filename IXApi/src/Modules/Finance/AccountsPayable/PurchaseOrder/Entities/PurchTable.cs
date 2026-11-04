@@ -7,6 +7,7 @@ namespace IAX.IXApi.Modules.Finance.AccountsPayable
     [Table("PurchTable")]
     public class PurchTable : Entity<long>
     {
+        public long? SourceDocumentHeader { get; set; }
         [StringLength(FieldLengths.PurchId)]
         public string PurchId { get; set; } = string.Empty;
         [StringLength(FieldLengths.VendAccount)]

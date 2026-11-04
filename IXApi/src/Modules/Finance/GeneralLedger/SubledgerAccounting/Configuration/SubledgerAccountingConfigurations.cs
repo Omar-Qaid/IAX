@@ -6,6 +6,10 @@ public sealed class AccountingDistributionConfiguration : IEntityTypeConfigurati
 {
     public void Configure(EntityTypeBuilder<AccountingDistribution> b)
     {
+        b.HasOne<AccountingEvent>().WithMany().HasForeignKey(x => x.AccountingEvent).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<AccountingEvent>().WithMany().HasForeignKey(x => x.FinalizeAccountingEvent).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<SourceDocumentHeader>().WithMany().HasForeignKey(x => x.SourceDocumentHeader).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<SourceDocumentLine>().WithMany().HasForeignKey(x => x.SourceDocumentLine).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<CompanyInfo>().WithMany().HasForeignKey(x => x.AccountingLegalEntity).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<DimensionAttributeValueCombination>().WithMany().HasForeignKey(x => x.LedgerDimension).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<Currency>().WithMany().HasForeignKey(x => x.TransactionCurrency).HasPrincipalKey(x => x.CurrencyCode).OnDelete(DeleteBehavior.Restrict);
@@ -24,7 +28,7 @@ public sealed class SubledgerJournalEntryConfiguration : IEntityTypeConfiguratio
         b.HasOne<IAX.IXApi.Modules.Finance.Entities.Ledger>().WithMany().HasForeignKey(x => x.Ledger).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<FiscalCalendarPeriod>().WithMany().HasForeignKey(x => x.FiscalCalendarPeriod).OnDelete(DeleteBehavior.Restrict);
         b.HasIndex(x => new { x.VoucherDataAreaId, x.Voucher });
-        b.HasIndex(x => x.AccountingEvent);
+        b.HasOne<AccountingEvent>().WithMany().HasForeignKey(x => x.AccountingEvent).OnDelete(DeleteBehavior.Restrict);
     }
 }
 public sealed class SubledgerJournalAccountEntryConfiguration : IEntityTypeConfiguration<SubledgerJournalAccountEntry>

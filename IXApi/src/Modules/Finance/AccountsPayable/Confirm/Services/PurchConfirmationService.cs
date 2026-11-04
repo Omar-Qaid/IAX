@@ -45,7 +45,7 @@ public sealed class PurchConfirmationService : BaseService<VendPurchOrderJour>, 
         public string GetDataAreaId() => company.GetDataAreaId();
     }
 
-    public async Task<PurchResult> ConfirmAsync(long recId, CancellationToken ct)
+    public async Task<PurchResult> ConfirmAsync(long recId, CancellationToken ct, DateTime? confirmationDate = null)
     {
         var area = _company.GetDataAreaId();
         var order = await Db.Set<PurchTable>().FirstOrDefaultAsync(x => x.RecId == recId && x.DataAreaId == area, ct);
@@ -59,7 +59,7 @@ public sealed class PurchConfirmationService : BaseService<VendPurchOrderJour>, 
         var docNum = (await _numbers.NextAsync("VendPurchOrderJour", area, ct)).Code;
         var journal = new VendPurchOrderJour
         {
-            DataAreaId = area, PurchId = order.PurchId, PurchOrderDocNum = docNum, PurchOrderDate = DateTime.UtcNow.Date,
+            DataAreaId = area, PurchId = order.PurchId, PurchOrderDocNum = docNum, PurchOrderDate = (confirmationDate ?? DateTime.UtcNow).Date,
             OrderAccount = order.OrderAccount, InvoiceAccount = order.InvoiceAccount, CurrencyCode = order.CurrencyCode,
             Qty = lines.Sum(x => x.PurchQty), Amount = lines.Sum(x => x.LineAmount)
         };

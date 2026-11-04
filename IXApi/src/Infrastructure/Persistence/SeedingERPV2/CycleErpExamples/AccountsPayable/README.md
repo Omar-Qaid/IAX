@@ -1,14 +1,13 @@
-# Accounts Payable examples: configuration and master data only
+# Accounts Payable examples
 
-This package prepares the existing module-owned demo configuration/master data and returns
-ordered preparation steps plus persisted record references. It does not create purchase orders,
-confirmations, receipts, invoices, inventory movements, vendor balances, payments, settlements,
-bank movements or posted ledger entries. No transaction scenario is registered or executed.
+This package has two explicit entry points. `AccountsPayableCycleSeeder.PrepareAsync` prepares configuration and master data only. `AccountsPayableTransactionExamples.RunAsync` prepares those prerequisites and executes the selected transaction examples through the owning business services. Neither entry point runs at application startup.
+
+See [phase two](PHASE-TWO.md) for the opt-in transaction API, implemented scenarios and boundaries.
 
 ## Implemented preparation
 
 1. Validate the embedded example manifests and the existing company context.
-2. Run the current 57 GL, Tax, Inventory, Cash/Bank and AP seeders in their actual dependency order.
+2. Run the current 58 GL, Tax, Inventory, Cash/Bank and AP seeders in their actual dependency order.
 3. Validate the stored configuration and master relationships inside the seed transaction.
 4. Commit the masters/history atomically and return their references and completed seeder order.
 
@@ -55,28 +54,8 @@ that transaction commits successfully.
 See [the realistic demo](../../REAL-EXAMPLE.md) and [phase-one setup](../../PHASE-ONE.md).
 Bank numbers and supplier identities are fictional demonstration data.
 
-## Future reference only
+## Scenario documentation
 
-The 20 folders under `Scenarios/` and transaction specifications in Documentation/06–12 are
-retained for a future implementation phase. Their illustrative transaction amounts are not
-runtime inputs or proof of posted results. The current implementation never invokes their
-procedures. Posted-balance validator placeholders are intentionally unused in this scope.
+The transaction runner currently implements IDs 01-09, 11-16 and 18-20. IDs 10 (PO prepayment invoice) and 17 (receipt correction) remain outside the executable catalog. Older scenario specifications describe intended behavior; the executable catalog and phase-two guide identify the current implementation. Phase-one manifests remain configuration/master data only.
 
-## Verified results
-
-- Build: 0 errors.
-- Configuration/master tests: 11 passed within the API suite, including disposable SQL Server preparation and rerun.
-- API suite: 801 passed, 2 skipped.
-- Inventory suite: 97 passed.
-
-The tests verify the four preparation steps, all 57 seeder IDs in execution order, persisted
-vendor/product/price references, JSON report scope, stable IDs and row counts across reruns,
-and zero rows in the 27 checked purchase/inventory/vendor/payment/tax/posting tables in a fresh
-SQLite example database. SQL Server uses a generated disposable database and deletes it after
-the first-run/rerun checks. These results validate preparation, not purchase-to-settlement posting.
-
-The additional basic reference package seeds legal-entity fallback, storage/tracking groups and
-stocked-item assignments, purchase/inventory order defaults, purchase type and purchase charge
-code. Existing legal-entity data is preserved. See ../../PHASE-ONE.md for table names and scope.
-`MasterData.AdditionalMasters` returns these persisted references. PurchParameters currently
-stores the basic default; its transaction-phase consumption is not implemented here.
+Historical validation results are recorded in PHASE-ONE.md. They do not certify transaction changes; use the transaction integration tests for current results.

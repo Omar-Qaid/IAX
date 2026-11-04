@@ -233,7 +233,7 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                     .FirstOrDefaultAsync(x => x.DataAreaId == area && x.AccountNum == accountNum, ct)
                     ?? throw new SubledgerPostingException($"Vendor '{accountNum}' was not found for {what}.");
                 var dimension = await support.ResolveVendorSummaryAsync(area, vendor, ct,
-                    string.IsNullOrWhiteSpace(line.PostingProfile) ? null : line.PostingProfile);
+                    string.IsNullOrWhiteSpace(line.PostingProfile) ? null : line.PostingProfile, prepayment: line.Prepayment == NoYes.Yes);
                 return new PostingSide(dimension, LedgerPostingType.VendBalance, line.AccountType, vendor.AccountNum, null);
             }
             case LedgerJournalACType.Bank:
@@ -304,7 +304,7 @@ internal sealed class LedgerJournalPosting(DbContext db, string userId = "sys")
                 var vendTrans = new VendTrans
                 {
                     DataAreaId = area, AccountNum = side.AccountNum, TransDate = date, Voucher = voucher,
-                    Txt = line.Txt, TransType = LedgerTransType.Vend, CurrencyCode = line.CurrencyCode,
+                    Txt = line.Txt, TransType = line.Prepayment == NoYes.Yes ? LedgerTransType.Payment : LedgerTransType.Vend, CurrencyCode = line.CurrencyCode,
                     AmountCur = amount, AmountMst = accountingAmount, DueDate = due,
                     Invoice = line.Invoice, CashDiscCode = line.CashDiscCode,
                     CashDiscBaseDate = line.CashDiscBaseDate == default ? date : line.CashDiscBaseDate

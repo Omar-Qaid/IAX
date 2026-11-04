@@ -31,7 +31,7 @@ namespace IAX.IXApi.Modules.Finance.GeneralLedger.LedgerJournalTable
             if (entity.LineNum == 0)
                 entity.LineNum = (await _unitOfWork.Context.Set<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans>()
                     .Where(x => x.DataAreaId == area && x.JournalNum == entity.JournalNum)
-                    .MaxAsync(x => (decimal?)x.LineNum, ct) ?? 0) + 1;
+                    .Select(x => x.LineNum).ToListAsync(ct)).DefaultIfEmpty(0m).Max() + 1;
         }
 
         public override async Task<IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans> UpdateAsync(IAX.IXApi.Modules.Finance.Entities.LedgerJournalTrans entity, CancellationToken ct = default)

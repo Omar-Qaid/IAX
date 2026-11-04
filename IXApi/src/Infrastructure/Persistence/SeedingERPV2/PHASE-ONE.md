@@ -72,9 +72,9 @@ this phase. `VendPostingSeeder` deliberately targets the existing posting-profil
 Validation refreshed November 4, 2026:
 
 - API build: 0 errors; existing package warnings remain.
-- Full API suite: 801 passed, 2 skipped, including the enabled SQL Server integrity test.
+- Full API suite: 803 passed, 2 skipped, including the enabled SQL Server integrity test.
 - Inventory cycle suite: 97 passed.
-- Phase-one integrity/preparation cases: 11 passed within the full API suite.
+- Phase-one and transaction-storage integrity cases: 12 passed within the full API suite.
 
 The focused tests populate the 49 covered mappings, rerun without changing table counts,
 preserve sequence progress, validate the named supplier quotations and SAR 3,680 example,
@@ -104,7 +104,7 @@ concurrent seeding and phase-two transaction posting remain unverified by these 
 
 ## Additional basic AP references
 
-The phase contains 57 registered seeders. Eleven additional table mappings extend the original
+The phase contains 58 registered seeders. Eleven additional table mappings extend the original
 38 concepts: CompanyInfo; EcoResStorageDimensionGroup, EcoResStorageDimensionGroupFldSetup,
 EcoResStorageDimensionGroupItem; EcoResTrackingDimensionGroup,
 EcoResTrackingDimensionGroupFldSetup, EcoResTrackingDimensionGroupItem;
@@ -134,7 +134,14 @@ same atomic seed transaction and are validated before commit.
 
 AccountingDistribution, SubledgerJournalEntry, SubledgerJournalAccountEntry and
 VendInvoiceInfoSubLine now have mapped entities and a separate generated migration. They are
-not seeders. Phase one leaves all 27 checked transaction/accounting tables empty. Mapping
+not seeders. Phase one leaves all 31 checked transaction/accounting tables empty. Mapping
 fields and references does not implement source-document generation or subledger transfer.
 See [Subledger accounting storage](../../../Modules/Finance/GeneralLedger/SubledgerAccounting/README.md)
 for the exact implementation boundary and Microsoft metadata references.
+
+The supporting SourceDocumentHeader, SourceDocumentLine, AccountingEvent and
+SubledgerJournalAccountEntryDistribution mappings and foreign keys are also present. Apply their
+generated migration before use. They remain empty during configuration/master seeding and must
+be populated by future business-service integration, not phase-one seeders.
+
+Phase-two prerequisites add a USD bank, a later USD/SAR settlement rate and currency-specific realized gain/loss account mappings. The configuration/master-only entry point still creates no business transactions. See CycleErpExamples/AccountsPayable/PHASE-TWO.md for the separate opt-in transaction API.

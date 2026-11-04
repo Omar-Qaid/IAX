@@ -1901,6 +1901,9 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<long?>("SourceDocumentLine")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("TaxGroup")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -1919,6 +1922,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.HasKey("RecId");
 
                     b.HasIndex("OriginalInvoiceTransRecId");
+
+                    b.HasIndex("SourceDocumentLine");
 
                     b.HasIndex("DataAreaId", "InventTransId");
 
@@ -2130,12 +2135,17 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<long?>("SourceDocumentHeader")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("TaxGroup")
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
                     b.HasKey("RecId");
+
+                    b.HasIndex("SourceDocumentHeader");
 
                     b.HasIndex("DataAreaId", "OrderAccount");
 
@@ -2316,10 +2326,15 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<long?>("SourceDocumentLine")
+                        .HasColumnType("bigint");
+
                     b.Property<int>("TableRefId")
                         .HasColumnType("int");
 
                     b.HasKey("RecId");
+
+                    b.HasIndex("SourceDocumentLine");
 
                     b.HasIndex("DataAreaId", "ParmId");
 
@@ -2487,6 +2502,9 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<long?>("SourceDocumentHeader")
+                        .HasColumnType("bigint");
+
                     b.Property<int>("TableRefId")
                         .HasColumnType("int");
 
@@ -2494,6 +2512,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("RecId");
+
+                    b.HasIndex("SourceDocumentHeader");
 
                     b.HasIndex("DataAreaId", "ParmId")
                         .IsUnique();
@@ -2596,6 +2616,9 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
+                    b.Property<long?>("SourceDocumentHeader")
+                        .HasColumnType("bigint");
+
                     b.Property<decimal>("SumMarkup")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
@@ -2609,6 +2632,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasColumnType("decimal(18,4)");
 
                     b.HasKey("RecId");
+
+                    b.HasIndex("SourceDocumentHeader");
 
                     b.ToTable("VendInvoiceJour");
                 });
@@ -2801,6 +2826,9 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<long?>("SourceDocumentLine")
+                        .HasColumnType("bigint");
+
                     b.Property<decimal>("TaxAmount")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
@@ -2818,6 +2846,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.HasKey("RecId");
 
                     b.HasIndex("OriginalInvoiceTransRecId");
+
+                    b.HasIndex("SourceDocumentLine");
 
                     b.ToTable("VendInvoiceTrans");
                 });
@@ -2968,7 +2998,12 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<long?>("SourceDocumentHeader")
+                        .HasColumnType("bigint");
+
                     b.HasKey("RecId");
+
+                    b.HasIndex("SourceDocumentHeader");
 
                     b.ToTable("VendPackingSlipJour");
                 });
@@ -3082,6 +3117,9 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<long?>("SourceDocumentLine")
+                        .HasColumnType("bigint");
+
                     b.Property<decimal>("ValueMst")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
@@ -3090,6 +3128,8 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasColumnType("bigint");
 
                     b.HasKey("RecId");
+
+                    b.HasIndex("SourceDocumentLine");
 
                     b.ToTable("VendPackingSlipTrans");
                 });
@@ -3450,6 +3490,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasMaxLength(4)
                         .HasColumnType("nvarchar(4)");
 
+                    b.Property<decimal>("ExchAdjustment")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<long>("InvoiceTransRecId")
                         .HasColumnType("bigint");
 
@@ -3601,6 +3645,10 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Property<string>("Txt")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("VendExchAdjustmentRealized")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
 
                     b.Property<string>("Voucher")
                         .IsRequired()
@@ -11242,7 +11290,11 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
                     b.HasKey("RecId");
 
+                    b.HasIndex("AccountingEvent");
+
                     b.HasIndex("AccountingLegalEntity");
+
+                    b.HasIndex("FinalizeAccountingEvent");
 
                     b.HasIndex("LedgerDimension");
 
@@ -11257,6 +11309,77 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.HasIndex("TransactionCurrency");
 
                     b.ToTable("AccountingDistribution");
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.AccountingEvent", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<DateTime>("AccountingDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<DateTime?>("EventDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("IsAccountingRequired")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<long?>("SourceDocumentHeader")
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("State")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("SourceDocumentHeader");
+
+                    b.HasIndex("AccountingDate", "Type", "SourceDocumentHeader");
+
+                    b.ToTable("AccountingEvent");
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.BankAccountTable", b =>
@@ -23140,6 +23263,158 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.ToTable("PurchParameters");
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.SourceDocumentHeader", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<int?>("AccountingStatus")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("SourceRelationType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TypeEnumName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TypeEnumValue")
+                        .HasColumnType("int");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("SourceRelationType", "TypeEnumValue");
+
+                    b.ToTable("SourceDocumentHeader");
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.SourceDocumentLine", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<int?>("AccountingStatus")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<int?>("DraftVersion")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ExchangeRateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("IsFinal")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long?>("ParentSourceDocumentLine")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<long>("SourceDocumentHeader")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("SourceRelationType")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("StateContainer")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<decimal?>("TermQuantity")
+                        .HasPrecision(28, 12)
+                        .HasColumnType("decimal(28,12)");
+
+                    b.Property<string>("TypeEnumName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TypeEnumValue")
+                        .HasColumnType("int");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("ParentSourceDocumentLine");
+
+                    b.HasIndex("SourceDocumentHeader");
+
+                    b.ToTable("SourceDocumentLine");
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.SubledgerJournalAccountEntry", b =>
                 {
                     b.Property<long>("RecId")
@@ -23260,6 +23535,78 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.HasIndex("TransactionCurrency");
 
                     b.ToTable("SubledgerJournalAccountEntry");
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.SubledgerJournalAccountEntryDistribution", b =>
+                {
+                    b.Property<long>("RecId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("RECID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RecId"));
+
+                    b.Property<decimal?>("AccountingCurrencyAmount")
+                        .HasPrecision(28, 12)
+                        .HasColumnType("decimal(28,12)");
+
+                    b.Property<long?>("AccountingDistribution")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DataAreaId")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OwnerAccountId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long?>("ParentDistribution")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("RecVersion")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("ReportingCurrencyAmount")
+                        .HasPrecision(28, 12)
+                        .HasColumnType("decimal(28,12)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<long?>("SubledgerJournalAccountEntry")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("RecId");
+
+                    b.HasIndex("AccountingDistribution");
+
+                    b.HasIndex("ParentDistribution");
+
+                    b.HasIndex("SubledgerJournalAccountEntry");
+
+                    b.ToTable("SubledgerJournalAccountEntryDistribution");
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.SubledgerJournalEntry", b =>
@@ -31745,6 +32092,11 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("OriginalInvoiceTransRecId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.SourceDocumentLine", null)
+                        .WithMany()
+                        .HasForeignKey("SourceDocumentLine")
+                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsPayable.PurchReceiptAccrual", b =>
@@ -31774,6 +32126,14 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsPayable.PurchTable", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.SourceDocumentHeader", null)
+                        .WithMany()
+                        .HasForeignKey("SourceDocumentHeader")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsPayable.VendBankAccount", b =>
                 {
                     b.HasOne("IAX.IXApi.Modules.Finance.Entities.Currency", null)
@@ -31791,11 +32151,35 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsPayable.VendInvoiceInfoLine", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.SourceDocumentLine", null)
+                        .WithMany()
+                        .HasForeignKey("SourceDocumentLine")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsPayable.VendInvoiceInfoSubLine", b =>
                 {
                     b.HasOne("IAX.IXApi.Modules.Finance.AccountsPayable.VendInvoiceInfoLine", null)
                         .WithMany()
                         .HasForeignKey("LineRefRecId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsPayable.VendInvoiceInfoTable", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.SourceDocumentHeader", null)
+                        .WithMany()
+                        .HasForeignKey("SourceDocumentHeader")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsPayable.VendInvoiceJour", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.SourceDocumentHeader", null)
+                        .WithMany()
+                        .HasForeignKey("SourceDocumentHeader")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
@@ -31824,6 +32208,27 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.HasOne("IAX.IXApi.Modules.Finance.AccountsPayable.VendInvoiceTrans", null)
                         .WithMany()
                         .HasForeignKey("OriginalInvoiceTransRecId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.SourceDocumentLine", null)
+                        .WithMany()
+                        .HasForeignKey("SourceDocumentLine")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsPayable.VendPackingSlipJour", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.SourceDocumentHeader", null)
+                        .WithMany()
+                        .HasForeignKey("SourceDocumentHeader")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.AccountsPayable.VendPackingSlipTrans", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.SourceDocumentLine", null)
+                        .WithMany()
+                        .HasForeignKey("SourceDocumentLine")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
@@ -31930,9 +32335,19 @@ namespace IAX.IXApi.Infrastructure.Migrations
 
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.AccountingDistribution", b =>
                 {
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.AccountingEvent", null)
+                        .WithMany()
+                        .HasForeignKey("AccountingEvent")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("IAX.IXApi.Modules.Finance.Entities.CompanyInfo", null)
                         .WithMany()
                         .HasForeignKey("AccountingLegalEntity")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.AccountingEvent", null)
+                        .WithMany()
+                        .HasForeignKey("FinalizeAccountingEvent")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("IAX.IXApi.Modules.Finance.Entities.DimensionAttributeValueCombination", null)
@@ -31950,10 +32365,28 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .HasForeignKey("ReferenceDistribution")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.SourceDocumentHeader", null)
+                        .WithMany()
+                        .HasForeignKey("SourceDocumentHeader")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.SourceDocumentLine", null)
+                        .WithMany()
+                        .HasForeignKey("SourceDocumentLine")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("IAX.IXApi.Modules.Finance.Entities.Currency", null)
                         .WithMany()
                         .HasForeignKey("TransactionCurrency")
                         .HasPrincipalKey("CurrencyCode")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.AccountingEvent", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.SourceDocumentHeader", null)
+                        .WithMany()
+                        .HasForeignKey("SourceDocumentHeader")
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
@@ -32615,6 +33048,20 @@ namespace IAX.IXApi.Infrastructure.Migrations
                     b.Navigation("PaymSchedTable");
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.SourceDocumentLine", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.SourceDocumentLine", null)
+                        .WithMany()
+                        .HasForeignKey("ParentSourceDocumentLine")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.SourceDocumentHeader", null)
+                        .WithMany()
+                        .HasForeignKey("SourceDocumentHeader")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.SubledgerJournalAccountEntry", b =>
                 {
                     b.HasOne("IAX.IXApi.Modules.Finance.Entities.GeneralJournalAccountEntry", null)
@@ -32640,8 +33087,31 @@ namespace IAX.IXApi.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
+            modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.SubledgerJournalAccountEntryDistribution", b =>
+                {
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.AccountingDistribution", null)
+                        .WithMany()
+                        .HasForeignKey("AccountingDistribution")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.AccountingDistribution", null)
+                        .WithMany()
+                        .HasForeignKey("ParentDistribution")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.SubledgerJournalAccountEntry", null)
+                        .WithMany()
+                        .HasForeignKey("SubledgerJournalAccountEntry")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
             modelBuilder.Entity("IAX.IXApi.Modules.Finance.Entities.SubledgerJournalEntry", b =>
                 {
+                    b.HasOne("IAX.IXApi.Modules.Finance.Entities.AccountingEvent", null)
+                        .WithMany()
+                        .HasForeignKey("AccountingEvent")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("IAX.IXApi.Modules.Finance.Entities.FiscalCalendarPeriod", null)
                         .WithMany()
                         .HasForeignKey("FiscalCalendarPeriod")

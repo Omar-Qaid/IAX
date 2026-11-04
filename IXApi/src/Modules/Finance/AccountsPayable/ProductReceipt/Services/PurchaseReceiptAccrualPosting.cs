@@ -16,7 +16,7 @@ public sealed class PurchaseReceiptAccrualPosting(DbContext db, string userId = 
         if (boundary != null) throw new SubledgerPostingException(boundary);
         var context = await support.LoadLedgerContextAsync(area, receipt.DeliveryDate,
             LedgerPostingModule.Vendor, userId, ct);
-        if (order.CurrencyCode != context.Ledger.AccountingCurrency || (!string.IsNullOrEmpty(context.Ledger.ReportingCurrency) && context.Ledger.ReportingCurrency != context.Ledger.AccountingCurrency))
+        if (!string.IsNullOrEmpty(context.Ledger.ReportingCurrency) && context.Ledger.ReportingCurrency != context.Ledger.AccountingCurrency)
             throw new SubledgerPostingException("Receipt accrual requires supported accounting/reporting exchange-rate conversion.");
         var vendorScope = await support.VendorScopeAsync(area, order.InvoiceAccount.Length > 0 ? order.InvoiceAccount : order.OrderAccount, ct);
         var inventory = await support.ResolveInventPostingAsync(area, receipt.ItemId, InventAccountType.PurchPackingSlip, ct,
@@ -39,6 +39,12 @@ public sealed class PurchaseReceiptAccrualPosting(DbContext db, string userId = 
             db.Add(IAX.IXApi.Modules.Finance.Inventory.InventTransPosting.InventTransPostingService.Record(area, origin, receipt.ItemId, InventTransPostingType.Physical,
                 receipt.DeliveryDate, receipt.InternalPackingSlipId, inventory, LedgerPostingType.PurchReceipt,
                 liability, LedgerPostingType.LedgerJournal));
+        if (receipt.SourceDocumentLine.HasValue)
+        {
+            var sourceLine = await db.Set<SourceDocumentLine>().SingleAsync(x => x.RecId == receipt.SourceDocumentLine.Value, ct);
+            await new PurchaseSourceAccounting(db).CaptureAsync(area, entry, sourceLine.SourceDocumentHeader, sourceLine.RecId, ct);
+            await new PurchaseSourceAccounting(db).VerifyBalancedAsync(entry, ct);
+        }
         db.Add(new PurchReceiptAccrual { DataAreaId = area, PackingSlipTransRecId = receipt.RecId, GeneralJournalEntryRecId = entry.RecId,
             InventoryLedgerDimension = inventory.RecId, AccrualLedgerDimension = liability.RecId, InventQuantity = receipt.InventQty, AmountMst = receipt.ValueMst });
     }
@@ -48,7 +54,7 @@ public sealed class PurchaseReceiptAccrualPosting(DbContext db, string userId = 
         var accrual = await db.Set<PurchReceiptAccrual>().SingleOrDefaultAsync(x => x.DataAreaId == area && x.PackingSlipTransRecId == match.PackingSlipTransRecId, ct);
         if (accrual == null) return; // Legacy or explicitly non-accruing receipt: never invent a historic accrual.
         var remainingQty = accrual.InventQuantity - accrual.ReversedInventQuantity;
-        if (match.InventQuantity <= 0 || match.InventQuantity > remainingQty)
+        if (match.InventQuantity == 0 || Math.Sign(match.InventQuantity) != Math.Sign(remainingQty) || Math.Abs(match.InventQuantity) > Math.Abs(remainingQty))
             throw new SubledgerPostingException("Matched invoice quantity exceeds the un-reversed receipt accrual.");
         var amount = match.InventQuantity == remainingQty ? accrual.AmountMst - accrual.ReversedAmountMst
             : decimal.Round(accrual.AmountMst * match.InventQuantity / accrual.InventQuantity, 4, MidpointRounding.AwayFromZero);

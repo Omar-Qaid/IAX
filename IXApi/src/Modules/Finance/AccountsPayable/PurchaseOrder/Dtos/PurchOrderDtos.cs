@@ -1,7 +1,7 @@
 namespace IAX.IXApi.Modules.Finance.AccountsPayable;
 
 public sealed record PurchOrderCreateDto(string OrderAccount, string? InvoiceAccount, string? CurrencyCode,
-    DateTime? DeliveryDate, string InventSiteId, string InventLocationId, string? PurchName);
+    DateTime? DeliveryDate, string InventSiteId, string InventLocationId, string? PurchName, DateTime? OrderDate = null);
 
 public sealed record PurchLineInputDto(string ItemId, decimal PurchQty, string? PurchUnit, decimal PurchPrice,
     decimal? PriceUnit, string? InventSiteId, string? InventLocationId, DateTime? DeliveryDate, string? Name);

@@ -27,11 +27,19 @@ public sealed class SeedPostingModelTests
     {
         using var db = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseSqlServer("Server=localhost;Database=ModelOnly;Integrated Security=true;TrustServerCertificate=true").Options);
-        foreach (var type in new[] { typeof(AccountingDistribution), typeof(SubledgerJournalEntry), typeof(SubledgerJournalAccountEntry) })
+        foreach (var type in new[] { typeof(AccountingDistribution), typeof(SubledgerJournalEntry), typeof(SubledgerJournalAccountEntry), typeof(SourceDocumentHeader), typeof(SourceDocumentLine), typeof(AccountingEvent), typeof(SubledgerJournalAccountEntryDistribution) })
         {
             Assert.False(typeof(IAX.IXApi.Shared.Domain.Entities.IMultiCompany).IsAssignableFrom(type));
             Assert.All(db.Model.FindEntityType(type)!.GetForeignKeys(), fk => Assert.Equal(DeleteBehavior.Restrict, fk.DeleteBehavior));
         }
+        var sourceLine = db.Model.FindEntityType(typeof(SourceDocumentLine))!;
+        Assert.False(sourceLine.FindProperty(nameof(SourceDocumentLine.SourceDocumentHeader))!.IsNullable);
+        Assert.Contains(sourceLine.GetForeignKeys(), fk => fk.PrincipalEntityType.ClrType == typeof(SourceDocumentHeader));
+        var distribution = db.Model.FindEntityType(typeof(AccountingDistribution))!;
+        Assert.Contains(distribution.GetForeignKeys(), fk => fk.Properties.Single().Name == "FinalizeAccountingEvent" && fk.PrincipalEntityType.ClrType == typeof(AccountingEvent));
+        Assert.Contains(distribution.GetForeignKeys(), fk => fk.PrincipalEntityType.ClrType == typeof(SourceDocumentLine));
+        Assert.Contains(db.Model.FindEntityType(typeof(SubledgerJournalEntry))!.GetForeignKeys(), fk => fk.PrincipalEntityType.ClrType == typeof(AccountingEvent));
+        Assert.Contains(db.Model.FindEntityType(typeof(SubledgerJournalAccountEntryDistribution))!.GetForeignKeys(), fk => fk.PrincipalEntityType.ClrType == typeof(SubledgerJournalAccountEntry));
         var entry = db.Model.FindEntityType(typeof(SubledgerJournalAccountEntry))!;
         Assert.False(entry.FindProperty(nameof(SubledgerJournalAccountEntry.LedgerDimension))!.IsNullable);
         Assert.True(entry.FindProperty(nameof(SubledgerJournalAccountEntry.GeneralJournalAccountEntry))!.IsNullable);

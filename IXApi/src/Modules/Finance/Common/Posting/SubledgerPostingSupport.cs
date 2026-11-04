@@ -126,7 +126,7 @@ internal sealed class SubledgerPostingSupport(DbContext db)
     }
 
     /// <summary>Vendor posting profile: Table (vendor) -> Group (vendor group) -> All, within the profile.</summary>
-    public async Task<DimensionAttributeValueCombination> ResolveVendorSummaryAsync(string area, VendTable vendor, CancellationToken ct, string? postingProfile = null)
+    public async Task<DimensionAttributeValueCombination> ResolveVendorSummaryAsync(string area, VendTable vendor, CancellationToken ct, string? postingProfile = null, bool prepayment = false)
     {
         // The company's default profile from VendParameters, the payable mirror of the customer
         // path. Without it every rule in the company is a candidate and two posting profiles mix.
@@ -140,9 +140,10 @@ internal sealed class SubledgerPostingSupport(DbContext db)
         var rule = rules.Where(x => x.AccountCode == AccountCode.Table && x.Num == vendor.AccountNum).OrderBy(x => x.RecId).FirstOrDefault()
             ?? rules.Where(x => x.AccountCode == AccountCode.Group && x.Num == vendor.VendGroup).OrderBy(x => x.RecId).FirstOrDefault()
             ?? rules.Where(x => x.AccountCode == AccountCode.All).OrderBy(x => x.RecId).FirstOrDefault();
-        if (rule == null || rule.SummaryLedgerDimension == 0)
-            throw new SubledgerPostingException($"Vendor posting profile summary account is missing for vendor '{vendor.AccountNum}'.");
-        return await LoadDimensionAsync(area, rule.SummaryLedgerDimension, "vendor summary", ct);
+        var dimension = prepayment ? rule?.ClearingLedgerDimension : rule?.SummaryLedgerDimension;
+        if (dimension is null or 0)
+            throw new SubledgerPostingException($"Vendor posting profile {(prepayment ? "advance" : "summary")} account is missing for vendor '{vendor.AccountNum}'.");
+        return await LoadDimensionAsync(area, dimension.Value, prepayment ? "vendor advance" : "vendor summary", ct);
     }
 
     /// <summary>
