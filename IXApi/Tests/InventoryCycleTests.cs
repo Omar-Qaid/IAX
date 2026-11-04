@@ -1998,17 +1998,22 @@ public sealed class InventoryCycleTests
     /// Order 100 @ 50 and receive it, so only the price side of matching is left to test.
     /// </summary>
     private static async Task<(VendorInvoiceService Invoices, PurchTable Order, PurchLine Line)> ReceivedOrderForMatchingAsync(
-        CycleContext db, MatchingPolicy itemPolicy, MatchingPolicy vendorPolicy, decimal? tolerance)
+        CycleContext db, MatchingPolicy itemPolicy, MatchingPolicy vendorPolicy, decimal? tolerance,
+        Action<VendParameters>? configure = null)
     {
         SeedLedgerAndPosting(db);
         SeedPurchaseMasterData(db);
         db.Set<InventTable>().Local.Single().MatchingPolicy = itemPolicy;
         db.Set<VendTable>().Local.Single().MatchingPolicy = vendorPolicy;
-        if (tolerance != null)
-            db.Set<VendParameters>().Add(new VendParameters
+        if (tolerance != null || configure != null)
+        {
+            var parameters = new VendParameters
             {
-                RecId = 1, DataAreaId = "dat", Key = 0, TotalPriceTolerancePercentage = tolerance.Value
-            });
+                RecId = 1, DataAreaId = "dat", Key = 0, TotalPriceTolerancePercentage = tolerance ?? 0m
+            };
+            configure?.Invoke(parameters);
+            db.Set<VendParameters>().Add(parameters);
+        }
         await db.SaveChangesAsync();
         var (orders, confirm, receipts, invoices) = PurchaseServices(db);
         Assert.Equal(200, (await orders.CreateAsync(new PurchOrderCreateDto("V-0001", null, "SAR",
@@ -2107,6 +2112,89 @@ public sealed class InventoryCycleTests
         Assert.Equal(200, (await invoices.PostAsync(po.RecId,
             new VendorInvoicePostDto("INV-1", new DateTime(2026, 10, 29), [new(line.RecId, 100, 54)]), default)).StatusCode);
         Assert.Equal(5400m, (await db.Set<VendInvoiceJour>().SingleAsync()).InvoiceAmount);
+    }
+
+    [Fact]
+    public async Task UseInvoiceMatching_No_switches_matching_off_entirely()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        var (invoices, po, line) = await ReceivedOrderForMatchingAsync(db, MatchingPolicy.ThreeWay,
+            MatchingPolicy.ThreeWay, null, x => x.UseInvoiceMatching = NoYes.No);
+
+        // The master switch wins over both policies.
+        Assert.Equal(200, (await invoices.PostAsync(po.RecId,
+            new VendorInvoicePostDto("INV-1", new DateTime(2026, 10, 29), [new(line.RecId, 100, 54)]), default)).StatusCode);
+        Assert.Equal(5400m, (await db.Set<VendInvoiceJour>().SingleAsync()).InvoiceAmount);
+    }
+
+    [Fact]
+    public async Task UseTotalPriceMatching_No_keeps_matching_on_but_stops_the_price_comparison()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        var (invoices, po, line) = await ReceivedOrderForMatchingAsync(db, MatchingPolicy.ThreeWay,
+            MatchingPolicy.None, null, x => x.UseTotalPriceMatching = NoYes.No);
+
+        Assert.Equal(200, (await invoices.PostAsync(po.RecId,
+            new VendorInvoicePostDto("INV-1", new DateTime(2026, 10, 29), [new(line.RecId, 100, 54)]), default)).StatusCode);
+        // The quantity side of the three-way policy still applies: more than received is refused.
+        Assert.Equal(422, (await invoices.PostAsync(po.RecId,
+            new VendorInvoicePostDto("INV-2", new DateTime(2026, 10, 29), [new(line.RecId, 1, 54)]), default)).StatusCode);
+    }
+
+    [Fact]
+    public async Task The_company_matching_policy_applies_when_neither_the_vendor_nor_the_item_sets_one()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        var (invoices, po, line) = await ReceivedOrderForMatchingAsync(db, MatchingPolicy.None,
+            MatchingPolicy.None, null, x => x.MatchingPolicy = MatchingPolicy.ThreeWay);
+
+        var result = await invoices.PostAsync(po.RecId,
+            new VendorInvoicePostDto("INV-1", new DateTime(2026, 10, 29), [new(line.RecId, 100, 54)]), default);
+        Assert.Equal(422, result.StatusCode);
+        Assert.Contains("under the configured matching policy", result.Message);
+    }
+
+    [Fact]
+    public async Task Forbidding_override_makes_the_company_policy_the_only_one_that_counts()
+    {
+        await using var fixture = await Fixture.CreateAsync();
+        var db = fixture.Db;
+        // Company None, item three-way, override forbidden: the item policy is ignored.
+        var (invoices, po, line) = await ReceivedOrderForMatchingAsync(db, MatchingPolicy.ThreeWay,
+            MatchingPolicy.None, null, x =>
+            {
+                x.MatchingPolicy = MatchingPolicy.None;
+                x.MatchingPolicyAllowOverride = NoYes.No;
+            });
+
+        Assert.Equal(200, (await invoices.PostAsync(po.RecId,
+            new VendorInvoicePostDto("INV-1", new DateTime(2026, 10, 29), [new(line.RecId, 100, 54)]), default)).StatusCode);
+        Assert.Equal(5400m, (await db.Set<VendInvoiceJour>().SingleAsync()).InvoiceAmount);
+    }
+
+    [Fact]
+    public async Task A_parameters_row_left_at_its_defaults_matches_exactly_as_no_row_does()
+    {
+        // Guards the deliberate deviation: D365 ships UseInvoiceMatching as No, but defaulting it to
+        // Yes here keeps invoices that are matched today matched.
+        await using var withRow = await Fixture.CreateAsync();
+        var (rowInvoices, rowPo, rowLine) = await ReceivedOrderForMatchingAsync(withRow.Db,
+            MatchingPolicy.ThreeWay, MatchingPolicy.None, null, _ => { });
+        var withRowResult = await rowInvoices.PostAsync(rowPo.RecId,
+            new VendorInvoicePostDto("INV-1", new DateTime(2026, 10, 29), [new(rowLine.RecId, 100, 54)]), default);
+
+        await using var withoutRow = await Fixture.CreateAsync();
+        var (bareInvoices, barePo, bareLine) = await ReceivedOrderForMatchingAsync(withoutRow.Db,
+            MatchingPolicy.ThreeWay, MatchingPolicy.None, null);
+        var withoutRowResult = await bareInvoices.PostAsync(barePo.RecId,
+            new VendorInvoicePostDto("INV-1", new DateTime(2026, 10, 29), [new(bareLine.RecId, 100, 54)]), default);
+
+        Assert.Equal(422, withRowResult.StatusCode);
+        Assert.Equal(withoutRowResult.StatusCode, withRowResult.StatusCode);
+        Assert.Equal(withoutRowResult.Message, withRowResult.Message);
     }
 
     // ---- Purchase trade agreements (D365: Procurement > Prices and discounts > purchase price) ----
