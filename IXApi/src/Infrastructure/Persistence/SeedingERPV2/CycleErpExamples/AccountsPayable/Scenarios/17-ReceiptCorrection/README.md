@@ -1,5 +1,7 @@
 # Receipt Correction
 
+> Future transaction specification only. Current CycleErpExamples prepares configuration/master data and does not execute these steps.
+
 ## Purpose and inputs
 
 Order 100 × 100; receive 60; none invoiced.

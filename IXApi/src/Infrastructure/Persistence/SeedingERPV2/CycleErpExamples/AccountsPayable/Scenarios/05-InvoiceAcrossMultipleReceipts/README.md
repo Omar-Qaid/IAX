@@ -1,5 +1,7 @@
 # Invoice Across Multiple Receipts
 
+> Future transaction specification only. Current CycleErpExamples prepares configuration/master data and does not execute these steps.
+
 ## Purpose and inputs
 
 Order 100 × 100; receipts 30 and 70.

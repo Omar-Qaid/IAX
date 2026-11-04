@@ -1,5 +1,7 @@
 # Payment Reversal
 
+> Future transaction specification only. Current CycleErpExamples prepares configuration/master data and does not execute these steps.
+
 ## Purpose and inputs
 
 Invoice 11,500 settled by eligible bank payment 11,500.

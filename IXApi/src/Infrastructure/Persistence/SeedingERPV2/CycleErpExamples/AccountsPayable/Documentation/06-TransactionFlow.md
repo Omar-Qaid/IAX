@@ -1,5 +1,7 @@
 # Transaction flow and business-service boundaries
 
+> Future transaction reference only; no transaction operations or posted reconciliation are implemented in the current configuration/master-data package.
+
 ## Process
 
 1. Create PO header and lines with resolved references and prices.

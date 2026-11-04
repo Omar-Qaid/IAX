@@ -1,5 +1,7 @@
 # Physical inventory effects
 
+> Future transaction reference only; no transaction operations or posted reconciliation are implemented in the current configuration/master-data package.
+
 ## Stocked item baseline
 
 | Event | Physical on-hand delta | Financial update |

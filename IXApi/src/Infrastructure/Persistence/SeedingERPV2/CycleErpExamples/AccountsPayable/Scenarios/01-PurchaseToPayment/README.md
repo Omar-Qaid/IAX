@@ -1,5 +1,7 @@
 # Purchase To Payment
 
+> Future transaction specification only. Current CycleErpExamples prepares configuration/master data and does not execute these steps.
+
 ## Purpose and inputs
 
 100 units × 100; tax 1,500; total 11,500.

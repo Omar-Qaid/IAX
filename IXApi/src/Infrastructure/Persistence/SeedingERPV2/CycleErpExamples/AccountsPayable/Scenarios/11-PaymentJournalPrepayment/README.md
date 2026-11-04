@@ -1,5 +1,7 @@
 # Payment Journal Prepayment
 
+> Future transaction specification only. Current CycleErpExamples prepares configuration/master data and does not execute these steps.
+
 ## Purpose and inputs
 
 No-tax final expense invoice 10,000; advance payment 2,000.

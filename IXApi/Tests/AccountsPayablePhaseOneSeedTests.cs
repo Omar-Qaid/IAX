@@ -10,6 +10,9 @@ using Microsoft.Data.SqlClient;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.AccountsPayable;
 using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.Modules.Inventory;
 using IAX.IXApi.Modules.Finance.AccountsReceivable;
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsPayable;
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsPayable.Data;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -158,23 +161,80 @@ public sealed class AccountsPayablePhaseOneSeedTests
         {
             await db.Database.EnsureCreatedAsync();
             await InitializeCompanyAsync(db);
-            using var services = new ServiceCollection().AddAccountsPayablePhaseOneSeeding().BuildServiceProvider();
+            using var services = new ServiceCollection().AddAccountsPayableConfigurationAndMasterDataExamples().BuildServiceProvider();
             using var scope = services.CreateScope();
             var runner = new SeedRunner(db, scope.ServiceProvider.GetServices<IDataSeeder>(), scope.ServiceProvider.GetServices<ISeedValidator>());
-            await runner.RunAsync(2026, "sql-integrity-test");
+            var examples = new AccountsPayableCycleSeeder(runner, scope.ServiceProvider.GetServices<ISeedValidator>());
+            var prepared = await examples.PrepareAsync(new(2026, "sql-integrity-test"));
+            Assert.False(prepared.TransactionsExecuted);
+            Assert.Equal(ExampleIdentifiers.Scope, prepared.Scope);
+            Assert.Equal(46, prepared.CompletedSeeders.Count);
+            Assert.Equal(2, prepared.MasterData.Vendors.Count);
+            Assert.Equal(2, prepared.MasterData.Products.Count);
+            Assert.Equal(3, prepared.MasterData.PurchasePrices.Count);
             await AssertBusinessExampleAsync(db);
             var vendorIds = await db.Set<VendTable>().OrderBy(x => x.AccountNum).Select(x => x.RecId).ToArrayAsync();
             var counts = await CountsAsync(db);
             db.ChangeTracker.Clear();
-            await runner.RunAsync(2026, "sql-integrity-test");
+            var repeated = await examples.PrepareAsync(new(2026, "sql-integrity-test"));
             Assert.Equal(counts, await CountsAsync(db));
             Assert.Equal(vendorIds, await db.Set<VendTable>().OrderBy(x => x.AccountNum).Select(x => x.RecId).ToArrayAsync());
+            Assert.Equal(prepared.MasterData.Vendors.Select(x => x.RecId), repeated.MasterData.Vendors.Select(x => x.RecId));
         }
         finally
         {
             Assert.StartsWith("IXApi_APV2_Integrity_", db.Database.GetDbConnection().Database);
             await db.Database.EnsureDeletedAsync();
         }
+    }
+
+    [Fact]
+    public async Task Cycle_examples_prepare_configuration_and_masters_only_and_return_persisted_references()
+    {
+        await using var connection = new SqliteConnection("Data Source=:memory:;Foreign Keys=True");
+        await connection.OpenAsync();
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlite(connection).Options;
+        using var provider = new ServiceCollection().AddScoped<ApplicationDbContext>(_ => new Fixture(options))
+            .AddAccountsPayableConfigurationAndMasterDataExamples().AddAccountsPayableConfigurationAndMasterDataExamples()
+            .BuildServiceProvider();
+        using var scope = provider.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await db.Database.ExecuteSqlRawAsync(db.Database.GenerateCreateScript().Replace("N'", "'"));
+        await InitializeCompanyAsync(db);
+        Assert.Empty(scope.ServiceProvider.GetServices<ISeedScenario>());
+        Assert.Equal(3, scope.ServiceProvider.GetServices<ISeedValidator>().Count());
+        var examples = scope.ServiceProvider.GetRequiredService<AccountsPayableCycleSeeder>();
+        var result = await examples.PrepareAsync(new(2026, "master-example-test"));
+        Assert.Equal(ExampleIdentifiers.Scope, result.Scope);
+        Assert.False(result.TransactionsExecuted);
+        Assert.Equal("dat", result.Company);
+        Assert.Equal(2026, result.FiscalYear);
+        Assert.Equal(4, result.PreparationSteps.Count);
+        Assert.Equal(Enumerable.Range(1, 46), result.CompletedSeeders.Select(x => x.Order));
+        Assert.Equal(46, result.CompletedSeeders.Select(x => x.SeederId).Distinct().Count());
+        Assert.All(result.MasterData.Vendors, x => Assert.True(x.RecId > 0 && x.PartyRecId > 0 && x.BankRecId > 0 && x.AddressRecId > 0));
+        Assert.Equal(2, result.MasterData.Vendors.Count);
+        Assert.Equal(2, result.MasterData.Products.Count);
+        Assert.Equal(3, result.MasterData.PurchasePrices.Count);
+        var local = result.MasterData.Vendors.Single(x => x.Currency == "SAR");
+        Assert.Equal("APV2-dat-LOCAL", local.AccountNum);
+        Assert.Equal(VendorSeedExample.Name("LOCAL"), local.Name);
+        Assert.Equal(25m, result.MasterData.PurchasePrices.Single(x => x.VendorAccount == local.AccountNum && x.ItemId == ExampleIdentifiers.StockItem).Amount);
+        Assert.Equal(350m, result.MasterData.PurchasePrices.Single(x => x.VendorAccount == local.AccountNum && x.ItemId == ExampleIdentifiers.ServiceItem).Amount);
+        using var json = JsonDocument.Parse(JsonSerializer.Serialize(result));
+        Assert.False(json.RootElement.GetProperty(nameof(result.TransactionsExecuted)).GetBoolean());
+        var counts = await CountsAsync(db);
+        var tables = counts.Split(';').Select(x => x.Split(':')).ToDictionary(x => x[0], x => long.Parse(x[1]));
+        foreach (var table in new[] { "PurchTable", "PurchLine", "VendPurchOrderJour", "VendPurchOrderTrans", "VendPackingSlipJour", "VendPackingSlipTrans",
+            "InventTransOrigin", "InventTrans", "VendInvoiceInfoTable", "VendInvoiceInfoLine", "VendInvoiceJour", "VendInvoiceTrans", "VendTrans", "VendTransOpen",
+            "VendSettlement", "LedgerJournalTable", "LedgerJournalTrans", "BankAccountTrans", "TaxTrans", "MarkupTrans", "GeneralJournalEntry", "GeneralJournalAccountEntry", "SubledgerVoucherGeneralJournalEntry" })
+            Assert.Equal(0, tables[table]);
+        db.ChangeTracker.Clear();
+        var repeated = await examples.PrepareAsync(new(2026, "master-example-test"));
+        Assert.Equal(counts, await CountsAsync(db));
+        Assert.Equal(result.MasterData.Vendors.Select(x => x.RecId), repeated.MasterData.Vendors.Select(x => x.RecId));
+        Assert.Equal(result.MasterData.Products.Select(x => x.RecId), repeated.MasterData.Products.Select(x => x.RecId));
+        Assert.Equal(result.MasterData.PurchasePrices.Select(x => x.RecId), repeated.MasterData.PurchasePrices.Select(x => x.RecId));
     }
 
     private static async Task InitializeCompanyAsync(ApplicationDbContext db)

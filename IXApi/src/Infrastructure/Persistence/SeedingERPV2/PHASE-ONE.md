@@ -15,6 +15,12 @@ injection scope, resolve `Core.Execution.SeedRunner` and call
 The runner uses the `ApplicationDbContext` company execution context. No startup hook runs it
 automatically. Apply migrations and create the selected legal entity first.
 
+For an opt-in configuration/master-data preparation report, use
+`AddAccountsPayableConfigurationAndMasterDataExamples()` and
+`AccountsPayableCycleSeeder.PrepareAsync(...)` from
+[CycleErpExamples](CycleErpExamples/AccountsPayable/README.md). This reuses the same module seeders
+and adds manifest/reference validation before commit; it executes no transaction scenarios.
+
 This is an explicit illustrative APV2 data set, with SAR accounting currency, USD reference rates,
 two synthetic vendors, stocked and service products, and a 15-percent example input tax code.
 It is intended for a clean demo legal entity. Existing incompatible ledger/parameter setup causes
@@ -66,9 +72,9 @@ this phase. `VendPostingSeeder` deliberately targets the existing posting-profil
 Validation refreshed November 4, 2026:
 
 - API build: 0 errors; existing package warnings remain.
-- Full API suite: 797 passed, 2 skipped, including the enabled SQL Server integrity test.
+- Full API suite: 798 passed, 2 skipped, including the enabled SQL Server integrity test.
 - Inventory cycle suite: 97 passed.
-- Focused integrity suite: 7 passed.
+- Focused integrity/preparation suite: 8 passed.
 
 The focused tests populate the 38 requested mappings, rerun without changing table counts,
 preserve sequence progress, validate the named supplier quotations and SAR 3,680 example,

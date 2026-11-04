@@ -1,5 +1,7 @@
 # Purchase Order Prepayment
 
+> Future transaction specification only. Current CycleErpExamples prepares configuration/master data and does not execute these steps.
+
 ## Purpose and inputs
 
 Isolated no-tax PO 10,000; prepayment invoice 2,000.

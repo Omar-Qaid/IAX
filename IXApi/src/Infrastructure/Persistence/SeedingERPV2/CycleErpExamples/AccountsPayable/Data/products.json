@@ -1,0 +1,22 @@
+[
+  {
+    "suffix": "STOCK",
+    "itemId": "APV2-STOCK",
+    "name": "A4 copier paper - 500 sheet ream",
+    "productType": "Item",
+    "unit": "EA",
+    "modelGroup": "APV2",
+    "itemGroup": "APV2",
+    "itemTaxGroup": "APV2"
+  },
+  {
+    "suffix": "SVC",
+    "itemId": "APV2-SVC",
+    "name": "Printer preventive maintenance visit",
+    "productType": "Service",
+    "unit": "EA",
+    "modelGroup": "APV2-SVC",
+    "itemGroup": "APV2",
+    "itemTaxGroup": "APV2"
+  }
+]

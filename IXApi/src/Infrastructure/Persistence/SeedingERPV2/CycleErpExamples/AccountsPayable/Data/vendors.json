@@ -1,0 +1,20 @@
+[
+  {
+    "suffix": "LOCAL",
+    "name": "Riyadh Office Supplies and Services (Demo)",
+    "currency": "SAR",
+    "paymentTerms": "APV2-N30",
+    "paymentMethod": "APV2",
+    "taxGroup": "APV2",
+    "bankAccount": "APV2"
+  },
+  {
+    "suffix": "USD",
+    "name": "Gulf Office Equipment Trading (Demo)",
+    "currency": "USD",
+    "paymentTerms": "APV2-N30",
+    "paymentMethod": "APV2",
+    "taxGroup": "APV2",
+    "bankAccount": "APV2"
+  }
+]

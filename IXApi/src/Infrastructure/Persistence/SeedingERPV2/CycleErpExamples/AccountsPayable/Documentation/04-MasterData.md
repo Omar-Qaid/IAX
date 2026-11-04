@@ -1,32 +1,24 @@
-# Master data and stable identifiers
+# Current master data and stable identifiers
 
-## Example records
+The selected legal entity already exists. In company `dat`, the prepared records include:
 
-| Key | Example | Owner |
+| Record | Stable key | Details |
 |---|---|---|
-| Company | APDEMO | Organization |
-| Local vendor | AP-VEND-001, SAR, NET30 | AP |
-| Foreign vendor | AP-VEND-USD, USD | AP |
-| Stocked item | AP-ITEM-001, unit EA | Inventory |
-| Service/category | AP-SERVICE-001 | Product/Purchasing |
-| Site / warehouse | AP-SITE / AP-WH | Inventory |
-| Company bank | AP-BANK-SAR | Bank |
-| Vendor price | Vendor + item + unit + currency + date range | Pricing |
+| Local supplier | APV2-dat-LOCAL | Riyadh Office Supplies and Services (Demo), SAR, APV2-N30 |
+| USD supplier | APV2-dat-USD | Gulf Office Equipment Trading (Demo), USD, APV2-N30 |
+| Paper ream | APV2-STOCK | Stocked/FIFO, EA, APV2 item/model group |
+| Maintenance visit | APV2-SVC | Nonstocked service, EA, APV2-SVC model group |
+| Site/warehouse | APV2-SITE / APV2-WH | Riyadh demo storage |
+| Inventory dimension | APV2-DIM | The same site/warehouse |
+| Company bank | APV2-BANK | SAR, valid configured bank ledger combination |
+| Vendor bank | APV2 per supplier | Scoped by vendor account and company |
+| Category/hierarchy | APV2-dat | Linked to the service product |
 
-These identifiers are proposals. Preserve compatible existing project conventions.
+The company portion of supplier/product keys is resolved from the execution context. Other
+companies are subject to the existing schema's global alternate-key limitations described in
+[PHASE-ONE.md](../../../PHASE-ONE.md). No existing records are silently renamed or overwritten.
 
-## Vendor fields
-
-Account, party/name, vendor group, currency, payment terms/method, tax group, invoice account if supported, blocked status, address and bank details. Use synthetic contact/bank data; do not invent a valid bank integration destination.
-
-## Product fields
-
-Product identity and released item, unit, item group, model group, item tax group, storage dimensions, purchasing defaults and supported inventory valuation method. Service lines must use the actual supported nonstocked/category path.
-
-## Referential integrity
-
-Resolve parents before children. Ensure warehouse belongs to the expected site; vendor belongs to the company; product is released to that company; profile accounts belong to the relevant chart; tax combinations are valid on the posting date.
-
-## Reuse and isolation
-
-Use distinct scenario document references with shared compatible master data. Avoid collisions with existing transactions. Assertions must filter by company, scenario and documents rather than relying on global balances being zero. Rerun validates existing values and reports incompatible changes instead of silently rewriting shared configuration.
+Names, premises, contacts and bank numbers are fictional. The manifests in `Data/` must match
+module-owned example definitions. Reports contain actual saved RecIds and business keys; no
+JSON fixture contains generated database IDs. This phase creates no on-hand balances, invoices
+or vendor transactions.

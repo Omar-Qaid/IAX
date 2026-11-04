@@ -1,5 +1,7 @@
 # Foreign Currency Settlement
 
+> Future transaction specification only. Current CycleErpExamples prepares configuration/master data and does not execute these steps.
+
 ## Purpose and inputs
 
 No-tax invoice USD 1,000; invoice rate 3.75 and payment rate 3.80 SAR/USD.

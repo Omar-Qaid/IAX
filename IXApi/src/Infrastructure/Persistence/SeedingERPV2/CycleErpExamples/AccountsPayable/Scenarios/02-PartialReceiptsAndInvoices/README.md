@@ -1,5 +1,7 @@
 # Partial Receipts And Invoices
 
+> Future transaction specification only. Current CycleErpExamples prepares configuration/master data and does not execute these steps.
+
 ## Purpose and inputs
 
 100 units × 100; illustrative tax 15%.

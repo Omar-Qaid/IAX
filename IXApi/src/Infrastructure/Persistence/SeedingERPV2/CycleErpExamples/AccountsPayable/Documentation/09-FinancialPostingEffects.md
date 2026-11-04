@@ -1,5 +1,7 @@
 # Financial posting examples
 
+> Future transaction reference only; no transaction operations or posted reconciliation are implemented in the current configuration/master-data package.
+
 All amounts are SAR unless specified. These are simplified net accounting expectations. Resolve actual interim accounts and additional lines from posting setup. Positive payable amounts below mean liability outstanding; database signs may differ.
 
 ## Baseline: 100 units at 100; illustrative fully recoverable 15% tax

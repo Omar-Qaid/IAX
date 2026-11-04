@@ -1,216 +1,76 @@
-# Accounts Payable seeding documentation
+# Accounts Payable examples: configuration and master data only
 
-This package contains the complete proposed Markdown documentation set for AP seed implementation. It includes shared-module ownership, build-first/reference-later dependencies, examples and validation. It does not contain executable ERP implementation or verified repository table mappings.
+This package prepares the existing module-owned demo configuration/master data and returns
+ordered preparation steps plus persisted record references. It does not create purchase orders,
+confirmations, receipts, invoices, inventory movements, vendor balances, payments, settlements,
+bank movements or posted ledger entries. No transaction scenario is registered or executed.
 
-## Start here
+## Implemented preparation
 
-Read documents 01–14 in order, then implement the scenario folders. Build missing shared configuration/master data in its owning module before AP references it. Use actual business services for generated transactions.
+1. Validate the embedded example manifests and the existing company context.
+2. Run the current 46 GL, Tax, Inventory, Cash/Bank and AP seeders in their actual dependency order.
+3. Validate the stored configuration and master relationships inside the seed transaction.
+4. Commit the masters/history atomically and return their references and completed seeder order.
 
-## Documents
+The module seeders own all writes; this folder does not duplicate their setup or insert business
+transactions. The existing legal entity must already exist. The existing APV2 conflict checks,
+company scope, database seeder lock and safe rerun behavior apply.
 
-- [Documentation/01-Scope.md](Documentation/01-Scope.md)
-- [Documentation/02-Dependencies.md](Documentation/02-Dependencies.md)
-- [Documentation/03-Configuration.md](Documentation/03-Configuration.md)
-- [Documentation/04-MasterData.md](Documentation/04-MasterData.md)
-- [Documentation/05-PricesDiscountsAndTaxes.md](Documentation/05-PricesDiscountsAndTaxes.md)
-- [Documentation/06-TransactionFlow.md](Documentation/06-TransactionFlow.md)
-- [Documentation/07-ImpactedTables.md](Documentation/07-ImpactedTables.md)
-- [Documentation/08-PhysicalInventoryEffects.md](Documentation/08-PhysicalInventoryEffects.md)
-- [Documentation/09-FinancialPostingEffects.md](Documentation/09-FinancialPostingEffects.md)
-- [Documentation/10-SettlementAndOpenBalances.md](Documentation/10-SettlementAndOpenBalances.md)
-- [Documentation/11-CorrectionsAndReversals.md](Documentation/11-CorrectionsAndReversals.md)
-- [Documentation/12-Reconciliation.md](Documentation/12-Reconciliation.md)
-- [Documentation/13-ExecutionAndRerun.md](Documentation/13-ExecutionAndRerun.md)
-- [Documentation/14-ImplementationPrompt.md](Documentation/14-ImplementationPrompt.md)
-- [Reference/Original-Requirements.md](Reference/Original-Requirements.md)
-- [Scenarios/01-PurchaseToPayment/README.md](Scenarios/01-PurchaseToPayment/README.md)
-- [Scenarios/01-PurchaseToPayment/accounting-entries.md](Scenarios/01-PurchaseToPayment/accounting-entries.md)
-- [Scenarios/01-PurchaseToPayment/expected-results.md](Scenarios/01-PurchaseToPayment/expected-results.md)
-- [Scenarios/01-PurchaseToPayment/impacted-tables.md](Scenarios/01-PurchaseToPayment/impacted-tables.md)
-- [Scenarios/02-PartialReceiptsAndInvoices/README.md](Scenarios/02-PartialReceiptsAndInvoices/README.md)
-- [Scenarios/02-PartialReceiptsAndInvoices/accounting-entries.md](Scenarios/02-PartialReceiptsAndInvoices/accounting-entries.md)
-- [Scenarios/02-PartialReceiptsAndInvoices/expected-results.md](Scenarios/02-PartialReceiptsAndInvoices/expected-results.md)
-- [Scenarios/02-PartialReceiptsAndInvoices/impacted-tables.md](Scenarios/02-PartialReceiptsAndInvoices/impacted-tables.md)
-- [Scenarios/03-ServicePurchaseOrder/README.md](Scenarios/03-ServicePurchaseOrder/README.md)
-- [Scenarios/03-ServicePurchaseOrder/accounting-entries.md](Scenarios/03-ServicePurchaseOrder/accounting-entries.md)
-- [Scenarios/03-ServicePurchaseOrder/expected-results.md](Scenarios/03-ServicePurchaseOrder/expected-results.md)
-- [Scenarios/03-ServicePurchaseOrder/impacted-tables.md](Scenarios/03-ServicePurchaseOrder/impacted-tables.md)
-- [Scenarios/04-DirectExpenseInvoice/README.md](Scenarios/04-DirectExpenseInvoice/README.md)
-- [Scenarios/04-DirectExpenseInvoice/accounting-entries.md](Scenarios/04-DirectExpenseInvoice/accounting-entries.md)
-- [Scenarios/04-DirectExpenseInvoice/expected-results.md](Scenarios/04-DirectExpenseInvoice/expected-results.md)
-- [Scenarios/04-DirectExpenseInvoice/impacted-tables.md](Scenarios/04-DirectExpenseInvoice/impacted-tables.md)
-- [Scenarios/05-InvoiceAcrossMultipleReceipts/README.md](Scenarios/05-InvoiceAcrossMultipleReceipts/README.md)
-- [Scenarios/05-InvoiceAcrossMultipleReceipts/accounting-entries.md](Scenarios/05-InvoiceAcrossMultipleReceipts/accounting-entries.md)
-- [Scenarios/05-InvoiceAcrossMultipleReceipts/expected-results.md](Scenarios/05-InvoiceAcrossMultipleReceipts/expected-results.md)
-- [Scenarios/05-InvoiceAcrossMultipleReceipts/impacted-tables.md](Scenarios/05-InvoiceAcrossMultipleReceipts/impacted-tables.md)
-- [Scenarios/06-PriceAndQuantityMatching/README.md](Scenarios/06-PriceAndQuantityMatching/README.md)
-- [Scenarios/06-PriceAndQuantityMatching/accounting-entries.md](Scenarios/06-PriceAndQuantityMatching/accounting-entries.md)
-- [Scenarios/06-PriceAndQuantityMatching/expected-results.md](Scenarios/06-PriceAndQuantityMatching/expected-results.md)
-- [Scenarios/06-PriceAndQuantityMatching/impacted-tables.md](Scenarios/06-PriceAndQuantityMatching/impacted-tables.md)
-- [Scenarios/07-DiscountsAndCharges/README.md](Scenarios/07-DiscountsAndCharges/README.md)
-- [Scenarios/07-DiscountsAndCharges/accounting-entries.md](Scenarios/07-DiscountsAndCharges/accounting-entries.md)
-- [Scenarios/07-DiscountsAndCharges/expected-results.md](Scenarios/07-DiscountsAndCharges/expected-results.md)
-- [Scenarios/07-DiscountsAndCharges/impacted-tables.md](Scenarios/07-DiscountsAndCharges/impacted-tables.md)
-- [Scenarios/08-PartialPayment/README.md](Scenarios/08-PartialPayment/README.md)
-- [Scenarios/08-PartialPayment/accounting-entries.md](Scenarios/08-PartialPayment/accounting-entries.md)
-- [Scenarios/08-PartialPayment/expected-results.md](Scenarios/08-PartialPayment/expected-results.md)
-- [Scenarios/08-PartialPayment/impacted-tables.md](Scenarios/08-PartialPayment/impacted-tables.md)
-- [Scenarios/09-UnsettledPayment/README.md](Scenarios/09-UnsettledPayment/README.md)
-- [Scenarios/09-UnsettledPayment/accounting-entries.md](Scenarios/09-UnsettledPayment/accounting-entries.md)
-- [Scenarios/09-UnsettledPayment/expected-results.md](Scenarios/09-UnsettledPayment/expected-results.md)
-- [Scenarios/09-UnsettledPayment/impacted-tables.md](Scenarios/09-UnsettledPayment/impacted-tables.md)
-- [Scenarios/10-PurchaseOrderPrepayment/README.md](Scenarios/10-PurchaseOrderPrepayment/README.md)
-- [Scenarios/10-PurchaseOrderPrepayment/accounting-entries.md](Scenarios/10-PurchaseOrderPrepayment/accounting-entries.md)
-- [Scenarios/10-PurchaseOrderPrepayment/expected-results.md](Scenarios/10-PurchaseOrderPrepayment/expected-results.md)
-- [Scenarios/10-PurchaseOrderPrepayment/impacted-tables.md](Scenarios/10-PurchaseOrderPrepayment/impacted-tables.md)
-- [Scenarios/11-PaymentJournalPrepayment/README.md](Scenarios/11-PaymentJournalPrepayment/README.md)
-- [Scenarios/11-PaymentJournalPrepayment/accounting-entries.md](Scenarios/11-PaymentJournalPrepayment/accounting-entries.md)
-- [Scenarios/11-PaymentJournalPrepayment/expected-results.md](Scenarios/11-PaymentJournalPrepayment/expected-results.md)
-- [Scenarios/11-PaymentJournalPrepayment/impacted-tables.md](Scenarios/11-PaymentJournalPrepayment/impacted-tables.md)
-- [Scenarios/12-CashDiscount/README.md](Scenarios/12-CashDiscount/README.md)
-- [Scenarios/12-CashDiscount/accounting-entries.md](Scenarios/12-CashDiscount/accounting-entries.md)
-- [Scenarios/12-CashDiscount/expected-results.md](Scenarios/12-CashDiscount/expected-results.md)
-- [Scenarios/12-CashDiscount/impacted-tables.md](Scenarios/12-CashDiscount/impacted-tables.md)
-- [Scenarios/13-ForeignCurrencySettlement/README.md](Scenarios/13-ForeignCurrencySettlement/README.md)
-- [Scenarios/13-ForeignCurrencySettlement/accounting-entries.md](Scenarios/13-ForeignCurrencySettlement/accounting-entries.md)
-- [Scenarios/13-ForeignCurrencySettlement/expected-results.md](Scenarios/13-ForeignCurrencySettlement/expected-results.md)
-- [Scenarios/13-ForeignCurrencySettlement/impacted-tables.md](Scenarios/13-ForeignCurrencySettlement/impacted-tables.md)
-- [Scenarios/14-PurchaseReturn/README.md](Scenarios/14-PurchaseReturn/README.md)
-- [Scenarios/14-PurchaseReturn/accounting-entries.md](Scenarios/14-PurchaseReturn/accounting-entries.md)
-- [Scenarios/14-PurchaseReturn/expected-results.md](Scenarios/14-PurchaseReturn/expected-results.md)
-- [Scenarios/14-PurchaseReturn/impacted-tables.md](Scenarios/14-PurchaseReturn/impacted-tables.md)
-- [Scenarios/15-FinancialCreditNote/README.md](Scenarios/15-FinancialCreditNote/README.md)
-- [Scenarios/15-FinancialCreditNote/accounting-entries.md](Scenarios/15-FinancialCreditNote/accounting-entries.md)
-- [Scenarios/15-FinancialCreditNote/expected-results.md](Scenarios/15-FinancialCreditNote/expected-results.md)
-- [Scenarios/15-FinancialCreditNote/impacted-tables.md](Scenarios/15-FinancialCreditNote/impacted-tables.md)
-- [Scenarios/16-CancelRemainingQuantity/README.md](Scenarios/16-CancelRemainingQuantity/README.md)
-- [Scenarios/16-CancelRemainingQuantity/accounting-entries.md](Scenarios/16-CancelRemainingQuantity/accounting-entries.md)
-- [Scenarios/16-CancelRemainingQuantity/expected-results.md](Scenarios/16-CancelRemainingQuantity/expected-results.md)
-- [Scenarios/16-CancelRemainingQuantity/impacted-tables.md](Scenarios/16-CancelRemainingQuantity/impacted-tables.md)
-- [Scenarios/17-ReceiptCorrection/README.md](Scenarios/17-ReceiptCorrection/README.md)
-- [Scenarios/17-ReceiptCorrection/accounting-entries.md](Scenarios/17-ReceiptCorrection/accounting-entries.md)
-- [Scenarios/17-ReceiptCorrection/expected-results.md](Scenarios/17-ReceiptCorrection/expected-results.md)
-- [Scenarios/17-ReceiptCorrection/impacted-tables.md](Scenarios/17-ReceiptCorrection/impacted-tables.md)
-- [Scenarios/18-SettlementReversal/README.md](Scenarios/18-SettlementReversal/README.md)
-- [Scenarios/18-SettlementReversal/accounting-entries.md](Scenarios/18-SettlementReversal/accounting-entries.md)
-- [Scenarios/18-SettlementReversal/expected-results.md](Scenarios/18-SettlementReversal/expected-results.md)
-- [Scenarios/18-SettlementReversal/impacted-tables.md](Scenarios/18-SettlementReversal/impacted-tables.md)
-- [Scenarios/19-PaymentReversal/README.md](Scenarios/19-PaymentReversal/README.md)
-- [Scenarios/19-PaymentReversal/accounting-entries.md](Scenarios/19-PaymentReversal/accounting-entries.md)
-- [Scenarios/19-PaymentReversal/expected-results.md](Scenarios/19-PaymentReversal/expected-results.md)
-- [Scenarios/19-PaymentReversal/impacted-tables.md](Scenarios/19-PaymentReversal/impacted-tables.md)
-- [Scenarios/20-ValidationFailures/README.md](Scenarios/20-ValidationFailures/README.md)
-- [Scenarios/20-ValidationFailures/accounting-entries.md](Scenarios/20-ValidationFailures/accounting-entries.md)
-- [Scenarios/20-ValidationFailures/expected-results.md](Scenarios/20-ValidationFailures/expected-results.md)
-- [Scenarios/20-ValidationFailures/impacted-tables.md](Scenarios/20-ValidationFailures/impacted-tables.md)
+## Invocation
 
-## Scenario folder contents
+```csharp
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsPayable;
+using IAX.IXApi.Infrastructure.Persistence.SeedingERPV2.CycleErpExamples.AccountsPayable.Data;
 
-Each scenario contains README.md, expected-results.md, impacted-tables.md and accounting-entries.md. All values are demo assumptions; adapt account roles, tax configuration, supported corrections and service names after source inspection.
+services.AddAccountsPayableConfigurationAndMasterDataExamples();
 
-## Delivery acceptance
+// Use a fresh scope with the intended ApplicationDbContext company execution context.
+using var scope = serviceProvider.CreateScope();
+var examples = scope.ServiceProvider.GetRequiredService<AccountsPayableCycleSeeder>();
+var report = await examples.PrepareAsync(new AccountsPayableExampleOptions(2026, actorUserId), ct);
+```
 
-Working seed execution must pass company-scoped reconciliations and a second-run duplicate check. Unsupported behavior is a blocker, not a successful skipped test. Original supplied reference is preserved under Reference.
+Registration is opt-in and idempotent. No application startup hook executes it. The report's
+`Scope` is `ConfigurationAndMasterData`; `TransactionsExecuted` is always `false`.
+`PreparedAtUtc` is the report timestamp, not a document posting date.
 
+## Data and ownership
 
-ACCOUNTS PAYABLE — CLASSIFIED TABLE LIST
-65 unique names extracted from the supplied document.
-Classification only: names are preserved as supplied, without metadata validation.
-Shared tables are listed once under their primary category.
+- `Data/vendors.json`: the two named fictional suppliers and their setup keys.
+- `Data/products.json`: stocked paper and nonstocked printer-maintenance master references.
+- `Data/purchase-prices.json`: the three existing supplier quotes (SAR 25, SAR 350, USD 7).
+- `Data/scenarios.json`: four configuration/master preparation steps, with transaction scenarios disabled.
 
-1. CONFIGURATION — ACCOUNTS PAYABLE AND PAYMENTS (7)
-VendParameters
-VendGroup
-VendPosting
-PaymTerm
-VendPaymModeTable
-CashDisc
-LedgerJournalName
+These embedded files describe and verify the module-owned fixtures. They are not a second data
+insertion mechanism. Edits that diverge from the owning seeders are rejected before writes;
+stored values are checked again before commit. Database RecIds are resolved from company and
+stable business keys, never copied from JSON.
 
-2. CONFIGURATION — TAX (5)
-TaxTable
-TaxGroupHeading
-TaxGroupData
-TaxItemGroupHeading
-TaxOnItem
+`Reports/ScenarioExecutionReport.cs` records preparation only. Despite its historical filename,
+`AccountsPayableReconciliationReport` contains master-data references, not posted reconciliation
+balances. It includes ledger/chart/calendar, bank, warehouse/dimension, vendor/party/address/bank,
+product/model-group and price references captured before commit. A report is returned only after
+that transaction commits successfully.
 
-3. CONFIGURATION / MASTER DATA — GENERAL LEDGER AND CURRENCY (7)
-Ledger
-Currency
-ExchangeRateType
-ExchangeRateCurrencyPair
-ExchangeRate
-MainAccount
-DimensionAttributeValueCombination
+See [the realistic demo](../../REAL-EXAMPLE.md) and [phase-one setup](../../PHASE-ONE.md).
+Bank numbers and supplier identities are fictional demonstration data.
 
-4. CONFIGURATION — INVENTORY POSTING (3)
-InventPosting
-InventModelGroup
-InventParameters
+## Future reference only
 
-5. MASTER DATA — VENDORS, PARTIES AND CONTACTS (7)
-VendTable
-DirPartyTable
-DirPartyLocation
-LogisticsLocation
-LogisticsPostalAddress
-LogisticsElectronicAddress
-VendBankAccount
+The 20 folders under `Scenarios/` and transaction specifications in Documentation/06–12 are
+retained for a future implementation phase. Their illustrative transaction amounts are not
+runtime inputs or proof of posted results. The current implementation never invokes their
+procedures. Posted-balance validator placeholders are intentionally unused in this scope.
 
-6. MASTER DATA — COMPANY BANK ACCOUNTS (1)
-BankAccountTable
+## Verified results
 
-7. MASTER / REFERENCE DATA — PRODUCTS, INVENTORY AND PRICES (8)
-EcoResProduct
-InventTable
-InventTableModule
-InventSite
-InventLocation
-InventDim
-EcoResCategory
-PriceDiscTable
+- Build: 0 errors.
+- Focused configuration/master tests: 8 passed, including disposable SQL Server preparation and rerun.
+- API suite: 798 passed, 2 skipped.
+- Inventory suite: 97 passed.
 
-8. TRANSACTIONS — PURCHASE ORDERS AND CONFIRMATION (4)
-PurchTable
-PurchLine
-PurchConfirmJour
-PurchConfirmTrans
-
-9. TRANSACTIONS — PRODUCT RECEIPTS (2)
-VendPackingSlipJour
-VendPackingSlipTrans
-
-10. TRANSACTIONS — INVENTORY PHYSICAL / FINANCIAL UPDATES (2)
-InventTransOrigin
-InventTrans
-
-11. TRANSACTIONS — PENDING VENDOR INVOICES (3)
-VendInvoiceInfoTable
-VendInvoiceInfoLine
-VendInvoiceInfoSubLine
-
-12. TRANSACTIONS — POSTED VENDOR INVOICES (2)
-VendInvoiceJour
-VendInvoiceTrans
-
-13. TRANSACTIONS — VENDOR BALANCES AND SETTLEMENT (3)
-VendTrans
-VendTransOpen
-VendSettlement
-
-14. TRANSACTIONS — INVOICE / PAYMENT JOURNALS AND BANK (3)
-LedgerJournalTable
-LedgerJournalTrans
-BankAccountTrans
-
-15. TRANSACTIONS — TAX AND CHARGES (2)
-TaxTrans
-MarkupTrans
-
-16. ACCOUNTING — DISTRIBUTIONS, SUBLEDGER AND GENERAL LEDGER (6)
-AccountingDistribution
-SubledgerJournalEntry
-SubledgerJournalAccountEntry
-GeneralJournalEntry
-GeneralJournalAccountEntry
-SubledgerVoucherGeneralJournalEntry
+The tests verify the four preparation steps, all 46 seeder IDs in execution order, persisted
+vendor/product/price references, JSON report scope, stable IDs and row counts across reruns,
+and zero rows in the 23 checked purchase/inventory/vendor/payment/tax/posting tables in a fresh
+SQLite example database. SQL Server uses a generated disposable database and deletes it after
+the first-run/rerun checks. These results validate preparation, not purchase-to-settlement posting.

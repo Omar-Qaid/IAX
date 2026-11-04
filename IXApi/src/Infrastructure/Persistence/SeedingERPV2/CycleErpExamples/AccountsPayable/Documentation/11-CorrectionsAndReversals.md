@@ -1,5 +1,7 @@
 # Corrections and reversals
 
+> Future transaction reference only; no transaction operations or posted reconciliation are implemented in the current configuration/master-data package.
+
 | Operation | Preconditions | Required result |
 |---|---|---|
 | Cancel unreceived balance | Open order with eligible remaining quantity | Reduce remaining obligation, retain posted history |

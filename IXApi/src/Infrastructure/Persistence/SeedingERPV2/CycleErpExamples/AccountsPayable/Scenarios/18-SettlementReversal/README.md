@@ -1,5 +1,7 @@
 # Settlement Reversal
 
+> Future transaction specification only. Current CycleErpExamples prepares configuration/master data and does not execute these steps.
+
 ## Purpose and inputs
 
 Invoice 11,500 and payment 11,500 already settled; no discount/FX.

@@ -1,13 +1,14 @@
-# Implementation prompt
+# Current implementation contract
 
-Implement the Accounts Payable cycle described by this documentation in the existing ERP.
+Prepare Accounts Payable configuration and master data only, reusing the existing module-owned
+phase-one seeders and integrity validators. CycleErpExamples owns the opt-in preparation entry
+point, embedded example descriptions and configuration/master reference report.
 
-Inspect the repository architecture, entities, services and seed registration first. Identify prerequisites owned by General Ledger, Inventory, Tax, Cash and Bank and Organization. Build missing prerequisite configuration/master seed data in its owning module, reuse compatible existing records, and reference those records from AP through stable keys resolved at runtime.
+Keep JSON and module fixtures consistent, validate definitions before mutation, validate stored
+references before commit, resolve RecIds at runtime by company/business key, and report the real
+completed seeder order. Preserve existing data and fail on incompatible setup. Prove rerun safety
+and the absence of transaction writes on SQLite and disposable SQL Server.
 
-Register dependencies explicitly and execute prerequisites first. Do not copy shared setup into AP or hardcode generated database IDs. Keep the seeding framework generic and module business rules in their owning modules.
-
-Implement the documented scenarios through business services, including realistic quantities, prices, discounts, taxes, partial receipts/invoices, payments, settlements, advances, foreign currency, returns and supported reversals. Implement missing basic business operations in the appropriate module. Never seed generated posting tables directly.
-
-Complete actual table/field mapping, physical and financial assertions, reconciliation, idempotency, company isolation and crash-safe rerun behavior. Follow existing conventions and avoid unnecessary abstractions. Scope is basic ERP, without WHS, production, manufacturing or dimension derivation.
-
-Continue through implementation, appropriate tests and reconciliation until all enabled scenarios pass. Report concrete blockers with affected scenarios; do not silently skip them or claim completion based only on documentation.
+Do not implement or call purchase-order, receipt, invoice, payment, settlement, inventory-movement
+or ledger-posting operations in this scope. The Scenarios directory and Documentation/06–12 are
+future transaction specifications, not an instruction to execute them in the current package.

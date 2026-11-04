@@ -1,5 +1,7 @@
 # Purchase Return
 
+> Future transaction specification only. Current CycleErpExamples prepares configuration/master data and does not execute these steps.
+
 ## Purpose and inputs
 
 Original 100 × 100 plus tax fully invoiced and unpaid; return 10 at original cost.

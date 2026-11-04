@@ -7,10 +7,10 @@
 | GL | Ledger and chart | Company association, accounting currency, valid accounts |
 | GL | Fiscal calendar | All example dates fall in an open supported period |
 | GL | Journal names | Valid invoice/payment journal type and voucher sequence |
-| AP | Parameters | Duplicate invoice behavior, posting and settlement rules |
+| AP | Parameters | Existing default posting-profile field and valid vendor control/advance references |
 | AP | Vendor groups/profiles | Valid payable control account and advance account |
 | AP | Terms/methods | Due-date logic, transfer method and default company bank |
-| AP | Matching | Explicit price/quantity tolerances and failure behavior |
+| AP | Matching | Existing vendor/item matching-policy fields; tolerance/approval engines are future transaction requirements |
 | Tax | Code/groups | Effective rate, fully recoverable demo treatment and posting accounts |
 | Inventory | Model group | Explicit physical/financial posting and receipt accrual flags |
 | Inventory | Posting profiles | Item/group-specific receipt, accrual and inventory accounts |

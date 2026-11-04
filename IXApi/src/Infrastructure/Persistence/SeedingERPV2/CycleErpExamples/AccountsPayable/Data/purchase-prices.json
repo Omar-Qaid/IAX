@@ -1,0 +1,29 @@
+[
+  {
+    "vendorSuffix": "LOCAL",
+    "itemId": "APV2-STOCK",
+    "currency": "SAR",
+    "amount": 25,
+    "priceUnit": 1,
+    "unit": "EA",
+    "inventDimId": "APV2-DIM"
+  },
+  {
+    "vendorSuffix": "LOCAL",
+    "itemId": "APV2-SVC",
+    "currency": "SAR",
+    "amount": 350,
+    "priceUnit": 1,
+    "unit": "EA",
+    "inventDimId": "APV2-DIM"
+  },
+  {
+    "vendorSuffix": "USD",
+    "itemId": "APV2-STOCK",
+    "currency": "USD",
+    "amount": 7,
+    "priceUnit": 1,
+    "unit": "EA",
+    "inventDimId": "APV2-DIM"
+  }
+]

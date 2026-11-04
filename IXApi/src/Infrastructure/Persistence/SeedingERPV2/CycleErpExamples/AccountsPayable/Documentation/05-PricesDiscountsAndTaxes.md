@@ -1,29 +1,15 @@
-# Prices, discounts, charges and taxes
+# Configured supplier quotes, discount setup and tax references
 
-## Input contract
+The current master quotes are local paper SAR 25/EA, local maintenance SAR 350/EA and USD
+supplier paper USD 7/EA. They apply from January 1 through December 31 of the requested fiscal
+year, with price unit 1 and minimum quantity 1, referencing APV2-DIM. These are illustrative
+supplier quotations; the USD quote need not equal the local supplier's SAR quote.
 
-Every line specifies quantity, unit, currency, price unit, selected unit price, discount inputs, charge treatment, tax groups and posting date. Vendor-price records additionally specify vendor/item scope, validity dates and quantity breaks. Use decimal arithmetic and explicit currency rounding.
+Both suppliers and purchasing modules reference the existing APV2 tax groups. Their intersection
+includes APV2-15, configured at 15 percent with a recoverable input-tax ledger reference. The
+optional APV2-2 cash-discount setup is 2 percent within 10 days. No discount is applied and no tax
+transaction is posted by this package. Document-level discounts, charges, cash-discount application
+and tax posting remain future transaction work.
 
-## Calculation example
-
-| Calculation | Amount SAR |
-|---|---:|
-| 100 units × 100 / price unit 1 | 10,000.00 |
-| 10% line discount | -1,000.00 |
-| Net goods | 9,000.00 |
-| Capitalized taxable purchase charge | 200.00 |
-| Tax base for this example | 9,200.00 |
-| Illustrative tax at 15% | 1,380.00 |
-| Total payable | 10,580.00 |
-
-For this example, inventory cost is 9,200 and recoverable tax is separate. Charge taxation and capitalization are explicit assumptions, not universal defaults.
-
-## Implementation rules
-
-Resolve trade prices through the pricing service; apply a manual override only through its supported operation. Preserve the selected price on the document. Define whether percentage discounts apply before fixed discounts and header allocations. Prevent applying the same charge twice at receipt and invoice. Store charge allocations with source links.
-
-Tax rates are illustrative configurable test data, not tax advice. Use tax-service results and date-effective setup. Explicitly document tax-inclusive/exclusive mode, recoverability, per-line versus document rounding and any rounding residual account. Reject missing rates or currencies before posting.
-
-## Assertions
-
-Recalculate expected net, discount, charges, tax and gross independently from the posted totals. Verify partial invoices consume only their allocated amounts and the final invoice handles the supported rounding remainder. Changing a future price record must not modify historical posted amounts.
+See [REAL-EXAMPLE.md](../../../REAL-EXAMPLE.md) for the illustrative SAR 3,680 exercise. Its
+amounts explain the stored master quotes and settings; it is not a saved or posted invoice.

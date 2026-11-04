@@ -1,5 +1,7 @@
 # Payments, settlement and open balances
 
+> Future transaction reference only; no transaction operations or posted reconciliation are implemented in the current configuration/master-data package.
+
 ## Independent operations
 
 Posting payment creates a vendor payment transaction. Settlement applies amounts between eligible transactions. Payment posting does not guarantee that a selected invoice is settled.

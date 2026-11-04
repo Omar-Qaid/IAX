@@ -1,0 +1,26 @@
+{
+  "scope": "ConfigurationAndMasterData",
+  "transactionScenariosEnabled": false,
+  "steps": [
+    {
+      "order": 1,
+      "id": "validate-definition",
+      "description": "Validate the existing legal entity and the embedded configuration/master-data definition."
+    },
+    {
+      "order": 2,
+      "id": "prepare-module-masters",
+      "description": "Run the current GL, Tax, Inventory, Bank and AP configuration/master seeders in dependency order."
+    },
+    {
+      "order": 3,
+      "id": "validate-and-commit",
+      "description": "Validate references and capture the master-data report before the atomic commit."
+    },
+    {
+      "order": 4,
+      "id": "return-prepared-references",
+      "description": "Return persisted record references and the completed seeder order; no transaction scenarios are executed."
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 # Direct Expense Invoice
 
+> Future transaction specification only. Current CycleErpExamples prepares configuration/master data and does not execute these steps.
+
 ## Purpose and inputs
 
 Expense net 1,000; tax 150; total 1,150.

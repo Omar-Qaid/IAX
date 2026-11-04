@@ -1,30 +1,20 @@
-# Execution, progress and safe reruns
+# Configuration/master preparation and safe reruns
 
-## Runner options
+Register `AddAccountsPayableConfigurationAndMasterDataExamples`, resolve
+`AccountsPayableCycleSeeder` in a fresh DI scope, and call `PrepareAsync` with fiscal year and
+audit actor. The existing ApplicationDbContext determines the selected company.
 
-Tenant/company; selected module/scenario; include dependencies; demo-data enable flag; base business date; currencies; quantities/prices; tax configuration; cancellation; repeatable/versioned policy. Keep demo scenarios opt-in under the project's environment controls.
+1. Read and validate the embedded master-data definitions before mutation.
+2. Run the existing seed dependency graph under the shared database guard and serializable transaction.
+3. Execute the existing module-owned configuration/master seeders.
+4. Run phase-one integrity checks and the cycle manifest/reference validator before commit.
+5. Commit the masters and existing seed-history records together.
+6. Return the captured references and ordered preparation report, with TransactionsExecuted=false.
 
-## Execution algorithm
+The report is in memory and can be serialized by its caller. It is not an ERP status table or a
+posted reconciliation result. On a failed prepare, return no success report. On a rerun, validate
+and reuse compatible records; do not recreate them or reset number-sequence counters.
 
-1. Discover registered seeders through DI.
-2. Validate dependency graph and execution scope before mutation.
-3. Resolve required preconditions and compatible existing records.
-4. Acquire a scope-specific concurrency guard.
-5. Read execution history for seeder ID, version, tenant/company and scenario.
-6. Execute or resume steps in deterministic order.
-7. Validate persisted results and persist completion with appropriate atomicity.
-8. Emit a report and release the guard even on failure.
-
-## History identity
-
-A suggested uniqueness scope is tenant + company + seeder ID + version + scenario key. Use normalized non-null scope keys if the database uniqueness behavior for nulls would permit duplicates. Store status, timestamps, attempt information and error summary. Keep attempt history separately if needed. Version increment does not authorize repeating a posted demo invoice; migrations must resolve existing scenario documents.
-
-## Transaction handling
-
-For simple configuration seeds, commit data and success marker together. For service-controlled posting commits, use a durable operation key, persist returned IDs, and reconcile existing postings after a crash before resuming. Do not mark success before durable business effects exist.
-
-## Recovery tests
-
-Run once, run again, cancel between steps, simulate failure before posting commit and after commit before progress checkpoint. Verify reruns neither duplicate nor omit postings. Concurrent invocation must result in one operation or a controlled conflict.
-
-CLI names and class names must be adapted to the repository. Do not document an executable command until it exists and has been exercised.
+Cancellation and any validation failure roll back the configuration/master writes. Transaction
+posting recovery, operation checkpoints and purchase-to-settlement reconciliation remain future
+work. No command-line posting runner or executable transaction scenario is provided here.

@@ -1,5 +1,7 @@
 # Financial Credit Note
 
+> Future transaction specification only. Current CycleErpExamples prepares configuration/master data and does not execute these steps.
+
 ## Purpose and inputs
 
 Service invoice net 1,000/tax 150; financial credit net 100/tax 15.

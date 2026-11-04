@@ -37,5 +37,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Persistence\Seeding\Data\LegacyWorkflowMasterData.json" />
     <EmbeddedResource Include="Persistence\Seeding\Data\LegacyOrganizationEmployeeData.json" />
+    <EmbeddedResource Include="Persistence\SeedingERPV2\CycleErpExamples\AccountsPayable\Data\*.json"
+                      LogicalName="SeedingERPV2.AccountsPayable.%(Filename)%(Extension)" />
   </ItemGroup>
 </Project>

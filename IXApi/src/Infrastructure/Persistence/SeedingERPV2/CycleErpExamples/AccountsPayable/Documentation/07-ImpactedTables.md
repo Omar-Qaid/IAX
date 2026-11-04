@@ -1,5 +1,7 @@
 # Impacted tables and mapping inventory
 
+> Future transaction reference only; no transaction operations or posted reconciliation are implemented in the current configuration/master-data package.
+
 This is the reference-table inventory supplied in the requirements, not an exhaustive D365 schema or a verified map of the target ERP. Version, configuration and document path can change the tables used. Do not fabricate missing workflow/matching/prepayment table names. Inspect metadata and repository code to complete those paths.
 
 | Area | Reference tables | Purpose |

@@ -1,5 +1,7 @@
 # Validation Failures
 
+> Future transaction specification only. Current CycleErpExamples prepares configuration/master data and does not execute these steps.
+
 ## Purpose and inputs
 
 Separate attempts: duplicate vendor invoice, blocked vendor, closed period, missing posting account, overreceipt/overinvoice.

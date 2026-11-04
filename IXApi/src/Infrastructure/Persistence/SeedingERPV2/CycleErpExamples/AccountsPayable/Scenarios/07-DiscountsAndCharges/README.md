@@ -1,5 +1,7 @@
 # Discounts And Charges
 
+> Future transaction specification only. Current CycleErpExamples prepares configuration/master data and does not execute these steps.
+
 ## Purpose and inputs
 
 100 × 100; discount 10%; capitalized taxable charge 200; tax 15%.
